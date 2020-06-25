@@ -1,14 +1,14 @@
 use super::StorageAdapter;
-use crate::account::Account;
 use std::collections::HashMap;
 
 /// In memory storage adapter.
 /// Useful for simple tests.
-pub struct MemoryStorageAdapter<'a> {
-  collection: HashMap<String, Account<'a>>,
+#[derive(Default, Clone)]
+pub struct MemoryStorageAdapter {
+  collection: HashMap<String, String>,
 }
 
-impl<'a> MemoryStorageAdapter<'a> {
+impl MemoryStorageAdapter {
   /// Initialises the memory storage adapter.
   pub fn new() -> Self {
     Self {
@@ -17,24 +17,20 @@ impl<'a> MemoryStorageAdapter<'a> {
   }
 }
 
-impl<'a> StorageAdapter<'a> for MemoryStorageAdapter<'a> {
-  fn get(&mut self, account_id: &str) -> std::result::Result<&Account<'a>, anyhow::Error> {
+impl StorageAdapter for MemoryStorageAdapter {
+  fn get(&mut self, account_id: &str) -> crate::Result<&String> {
     self
       .collection
       .get(account_id)
-      .ok_or(anyhow::anyhow!("Account not found"))
+      .ok_or_else(|| anyhow::anyhow!("Account not found"))
   }
 
-  fn get_all(&mut self) -> std::result::Result<std::vec::Vec<&Account<'a>>, anyhow::Error> {
+  fn get_all(&mut self) -> crate::Result<std::vec::Vec<&String>> {
     let accounts = self.collection.iter().map(|(_, v)| v).collect();
     Ok(accounts)
   }
 
-  fn set(
-    &mut self,
-    account_id: &str,
-    account: Account<'a>,
-  ) -> std::result::Result<(), anyhow::Error> {
+  fn set(&mut self, account_id: &str, account: String) -> std::result::Result<(), anyhow::Error> {
     self.collection.insert(account_id.to_string(), account);
     Ok(())
   }

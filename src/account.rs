@@ -24,7 +24,7 @@ pub enum Network {
 
 /// Account builder.
 #[derive(Default)]
-pub struct AccountBuilder<'a> {
+pub struct AccountInitialiserBuilder<'a> {
   alias: Option<&'a str>,
   nodes: Option<Vec<&'a str>>,
   quorum_size: Option<u64>,
@@ -36,9 +36,9 @@ pub struct AccountBuilder<'a> {
   addresses: Vec<Address>,
 }
 
-impl<'a> AccountBuilder<'a> {
+impl<'a> AccountInitialiserBuilder<'a> {
   /// Initialises the account builder.
-  pub fn new() -> AccountBuilder<'a> {
+  pub fn new() -> Self {
     Default::default()
   }
 
@@ -102,18 +102,17 @@ impl<'a> AccountBuilder<'a> {
   }
 
   /// Builds the account definition.
-  pub fn build(self) -> crate::Result<Account<'a>> {
-    let account = Account {
-      storage_adapter: None,
+  pub fn build(self) -> crate::Result<AccountInitialiser<'a>> {
+    let account = AccountInitialiser {
       alias: self.alias.unwrap_or_else(|| ""),
       nodes: self
         .nodes
-        .ok_or(anyhow::anyhow!("the `nodes` array is required"))?,
+        .ok_or_else(|| anyhow::anyhow!("the `nodes` array is required"))?,
       quorum_size: self.quorum_size,
       quorum_threshold: self.quorum_threshold,
       network: self.network,
       provider: self.provider,
-      created_at: self.created_at.unwrap_or_else(|| chrono::Utc::now()),
+      created_at: self.created_at.unwrap_or_else(chrono::Utc::now),
       transactions: self.transactions,
       addresses: self.addresses,
     };
@@ -121,12 +120,9 @@ impl<'a> AccountBuilder<'a> {
   }
 }
 
-/// Account definition.
+/// Account initialiser definition.
 #[derive(Getters, Serialize, Deserialize)]
-pub struct Account<'a> {
-  /// Storage adapter
-  #[serde(skip_serializing, skip_deserializing)]
-  storage_adapter: Option<Box<dyn StorageAdapter<'a>>>,
+pub struct AccountInitialiser<'a> {
   /// The account alias.
   #[getset(get = "pub")]
   alias: &'a str,
@@ -161,19 +157,52 @@ pub struct Account<'a> {
   addresses: Vec<Address>,
 }
 
-impl<'a> Account<'a> {
-  fn get_storage(&mut self) -> crate::Result<&mut Box<dyn StorageAdapter<'a>>> {
-    self
-      .storage_adapter
-      .as_mut()
-      .ok_or(anyhow::anyhow!("storage adapter is required"))
-  }
+/// Account definition.
+#[derive(Getters, Serialize, Deserialize)]
+pub struct Account<'a, T: StorageAdapter> {
+  /// Storage adapter
+  #[serde(skip_serializing, skip_deserializing)]
+  storage_adapter: T,
+  /// The account alias.
+  #[getset(get = "pub")]
+  alias: &'a str,
+  /// The list of nodes to connect to.
+  #[getset(get = "pub")]
+  nodes: Vec<&'a str>,
+  /// The quorum size.
+  /// If multiple nodes are defined, the quorum size determines
+  /// the number of nodes to query to check for quorum.
+  #[getset(get = "pub")]
+  quorum_size: Option<u64>,
+  /// The minimum number of nodes from the quorum pool
+  /// that need to agree for considering the result as true.
+  #[getset(get = "pub")]
+  quorum_threshold: Option<u64>,
+  /// The IOTA public network to use.
+  #[getset(get = "pub")]
+  network: Option<Network>,
+  /// Node URL.
+  #[getset(get = "pub")]
+  provider: Option<&'a str>,
+  /// Time of account creation.
+  #[getset(get = "pub")]
+  created_at: DateTime<Utc>,
+  /// Transactions associated with the seed.
+  /// The account can be initialised with locally stored transactions.
+  #[getset(get = "pub")]
+  transactions: Vec<Transaction<'a>>,
+  /// Address history associated with the seed.
+  /// The account can be initialised with locally stored address history.
+  #[getset(get = "pub")]
+  addresses: Vec<Address>,
+}
 
+impl<'a, T: StorageAdapter> Account<'a, T> {
   /// Gets the account's total balance.
   /// It's read directly from the storage. To read the latest account balance, you should `sync` first.
   pub fn total_balance(&mut self) -> crate::Result<f64> {
     let id = self.alias;
-    crate::storage::total_balance(self.get_storage()?, id)
+    crate::storage::total_balance(&mut self.storage_adapter, id)
   }
 
   /// Gets the account's available balance.
@@ -184,13 +213,13 @@ impl<'a> Account<'a> {
   /// the available balance should be (50i-30i) = 20i.
   pub fn available_balance(&mut self) -> crate::Result<f64> {
     let id = self.alias;
-    crate::storage::available_balance(self.get_storage()?, id)
+    crate::storage::available_balance(&mut self.storage_adapter, id)
   }
 
   /// Updates the account alias.
   pub fn set_alias(&mut self, alias: &str) -> crate::Result<()> {
     let id = self.alias;
-    crate::storage::set_alias(self.get_storage()?, id, alias)
+    crate::storage::set_alias(&mut self.storage_adapter, id, alias)
   }
 
   /// Gets a list of transactions on the given account.
@@ -204,13 +233,15 @@ impl<'a> Account<'a> {
   /// # Example
   ///
   /// ```
-  /// use iota_wallet::storage::TransactionType;
-  /// use iota_wallet::account::AccountBuilder;
+  /// use iota_wallet::storage::{TransactionType, MemoryStorageAdapter};
+  /// use iota_wallet::account::{AccountInitialiserBuilder, AccountManager};
   ///
   /// // gets 10 received transactions, skipping the first 5 most recent transactions.
-  /// let mut account = AccountBuilder::new()
+  /// let account_initialiser = AccountInitialiserBuilder::new()
   ///   .nodes(vec!["https://nodes.devnet.iota.org:443"])
   ///   .build().expect("failed to create account");
+  /// let mut manager = AccountManager::with_adapter(MemoryStorageAdapter::new());
+  /// let mut account = manager.add_account(&account_initialiser).expect("failed to add account");
   /// account.list_transactions(10, 5, Some(TransactionType::Received));
   /// ```
   pub fn list_transactions(
@@ -220,7 +251,7 @@ impl<'a> Account<'a> {
     transaction_type: Option<TransactionType>,
   ) -> crate::Result<Vec<Transaction<'a>>> {
     let id = self.alias;
-    crate::storage::list_transactions(self.get_storage()?, id, count, from, transaction_type)
+    crate::storage::list_transactions(&mut self.storage_adapter, id, count, from, transaction_type)
   }
 
   /// Gets the addresses linked to the given account.
@@ -228,13 +259,13 @@ impl<'a> Account<'a> {
   /// * `unspent` - Whether it should get only unspent addresses or not.
   pub fn list_addresses(&mut self, unspent: bool) -> crate::Result<Vec<Address>> {
     let id = self.alias;
-    crate::storage::list_addresses(self.get_storage()?, id, unspent)
+    crate::storage::list_addresses(&mut self.storage_adapter, id, unspent)
   }
 
   /// Gets a new unused address and links it to the given account.
   pub fn generate_address(&mut self) -> crate::Result<Address> {
     let id = self.alias;
-    crate::storage::generate_address(self.get_storage()?, id)
+    crate::storage::generate_address(&mut self.storage_adapter, id)
   }
 }
 
@@ -262,6 +293,6 @@ pub struct InitialisedAccount<'a> {
 }
 
 /// Initialises an account.
-pub fn init<'a>(account: Account<'a>) -> crate::Result<InitialisedAccount<'a>> {
+pub fn init<'a>(account: &AccountInitialiser<'a>) -> crate::Result<InitialisedAccount<'a>> {
   unimplemented!()
 }

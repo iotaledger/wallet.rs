@@ -40,13 +40,13 @@ impl AddressBuilder {
     let address = Address {
       address: self
         .address
-        .ok_or(anyhow::anyhow!("the `address` field is required"))?,
+        .ok_or_else(|| anyhow::anyhow!("the `address` field is required"))?,
       balance: self
         .balance
-        .ok_or(anyhow::anyhow!("the `balance` field is required"))?,
+        .ok_or_else(|| anyhow::anyhow!("the `balance` field is required"))?,
       key_index: self
         .key_index
-        .ok_or(anyhow::anyhow!("the `key_index` field is required"))?,
+        .ok_or_else(|| anyhow::anyhow!("the `key_index` field is required"))?,
     };
     Ok(address)
   }

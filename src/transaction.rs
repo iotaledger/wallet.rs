@@ -112,13 +112,19 @@ impl Value {
   }
 }
 
-// TODO Hash serde
+fn default_hash() -> Hash {
+  unimplemented!()
+}
+
+// TODO Hash serializer
+
 /// A transaction definition.
 #[derive(Getters, Serialize, Deserialize)]
 pub struct Transaction<'a> {
-  /*/// The transaction hash.
+  /// The transaction hash.
   #[getset(get = "pub")]
-  hash: Hash,*/
+  #[serde(skip_serializing, skip_deserializing, default = "default_hash")]
+  hash: Hash,
   /// The transaction address.
   #[getset(get = "pub")]
   address: IotaAddress,
@@ -137,15 +143,18 @@ pub struct Transaction<'a> {
   /// The transaction last index in the bundle.
   #[getset(get = "pub")]
   last_index: u64,
-  /*/// The transaction bundle hash.
+  /// The transaction bundle hash.
   #[getset(get = "pub")]
+  #[serde(skip_serializing, skip_deserializing, default = "default_hash")]
   bundle_hash: Hash,
   /// The trunk transaction hash.
   #[getset(get = "pub")]
+  #[serde(skip_serializing, skip_deserializing, default = "default_hash")]
   trunk_transaction: Hash,
   /// The branch transaction hash.
   #[getset(get = "pub")]
-  brach_transaction: Hash,*/
+  #[serde(skip_serializing, skip_deserializing, default = "default_hash")]
+  brach_transaction: Hash,
   /// The transaction nonce.
   #[getset(get = "pub")]
   nonce: &'a str,
