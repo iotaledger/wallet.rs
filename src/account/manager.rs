@@ -5,12 +5,13 @@ use std::path::Path;
 /// The account manager.
 ///
 /// Used to manage multiple accounts.
+#[derive(Default)]
 pub struct AccountManager {}
 
 impl<'a> AccountManager {
   /// Initialises a new instance of the account manager with the default storage adapter.
   pub fn new() -> Self {
-    Self {}
+    Default::default()
   }
 
   /// Adds a new account.

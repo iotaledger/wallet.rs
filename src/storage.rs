@@ -17,6 +17,7 @@ pub fn set_adapter(storage: impl StorageAdapter + Sync + Send + 'static) -> crat
 }
 
 /// gets the storage adapter
+#[allow(clippy::borrowed_box)]
 pub(crate) fn get_adapter() -> crate::Result<&'static Box<dyn StorageAdapter + Sync + Send>> {
   INSTANCE.get_or_try_init(|| {
     let instance = Box::new(KeyValueStorageAdapter::new("./example-database")?)
