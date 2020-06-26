@@ -5,7 +5,7 @@ pub use manager::*;
 pub use sync::*;
 
 use crate::address::Address;
-use crate::storage::{StorageAdapter, TransactionType};
+use crate::storage::TransactionType;
 use crate::transaction::Transaction;
 use chrono::prelude::{DateTime, Utc};
 use getset::Getters;
@@ -159,10 +159,7 @@ pub struct AccountInitialiser<'a> {
 
 /// Account definition.
 #[derive(Getters, Serialize, Deserialize)]
-pub struct Account<'a, T: StorageAdapter> {
-  /// Storage adapter
-  #[serde(skip_serializing, skip_deserializing)]
-  storage_adapter: T,
+pub struct Account<'a> {
   /// The account alias.
   #[getset(get = "pub")]
   alias: &'a str,
@@ -197,12 +194,12 @@ pub struct Account<'a, T: StorageAdapter> {
   addresses: Vec<Address>,
 }
 
-impl<'a, T: StorageAdapter> Account<'a, T> {
+impl<'a> Account<'a> {
   /// Gets the account's total balance.
   /// It's read directly from the storage. To read the latest account balance, you should `sync` first.
   pub fn total_balance(&mut self) -> crate::Result<f64> {
     let id = self.alias;
-    crate::storage::total_balance(&mut self.storage_adapter, id)
+    crate::storage::total_balance(id)
   }
 
   /// Gets the account's available balance.
@@ -213,13 +210,13 @@ impl<'a, T: StorageAdapter> Account<'a, T> {
   /// the available balance should be (50i-30i) = 20i.
   pub fn available_balance(&mut self) -> crate::Result<f64> {
     let id = self.alias;
-    crate::storage::available_balance(&mut self.storage_adapter, id)
+    crate::storage::available_balance(id)
   }
 
   /// Updates the account alias.
   pub fn set_alias(&mut self, alias: &str) -> crate::Result<()> {
     let id = self.alias;
-    crate::storage::set_alias(&mut self.storage_adapter, id, alias)
+    crate::storage::set_alias(id, alias)
   }
 
   /// Gets a list of transactions on the given account.
@@ -233,14 +230,14 @@ impl<'a, T: StorageAdapter> Account<'a, T> {
   /// # Example
   ///
   /// ```
-  /// use iota_wallet::storage::{TransactionType, MemoryStorageAdapter};
+  /// use iota_wallet::storage::TransactionType;
   /// use iota_wallet::account::{AccountInitialiserBuilder, AccountManager};
   ///
   /// // gets 10 received transactions, skipping the first 5 most recent transactions.
   /// let account_initialiser = AccountInitialiserBuilder::new()
   ///   .nodes(vec!["https://nodes.devnet.iota.org:443"])
   ///   .build().expect("failed to create account");
-  /// let mut manager = AccountManager::with_adapter(MemoryStorageAdapter::new());
+  /// let mut manager = AccountManager::new();
   /// let mut account = manager.add_account(&account_initialiser).expect("failed to add account");
   /// account.list_transactions(10, 5, Some(TransactionType::Received));
   /// ```
@@ -251,7 +248,7 @@ impl<'a, T: StorageAdapter> Account<'a, T> {
     transaction_type: Option<TransactionType>,
   ) -> crate::Result<Vec<Transaction<'a>>> {
     let id = self.alias;
-    crate::storage::list_transactions(&mut self.storage_adapter, id, count, from, transaction_type)
+    crate::storage::list_transactions(id, count, from, transaction_type)
   }
 
   /// Gets the addresses linked to the given account.
@@ -259,13 +256,13 @@ impl<'a, T: StorageAdapter> Account<'a, T> {
   /// * `unspent` - Whether it should get only unspent addresses or not.
   pub fn list_addresses(&mut self, unspent: bool) -> crate::Result<Vec<Address>> {
     let id = self.alias;
-    crate::storage::list_addresses(&mut self.storage_adapter, id, unspent)
+    crate::storage::list_addresses(id, unspent)
   }
 
   /// Gets a new unused address and links it to the given account.
   pub fn generate_address(&mut self) -> crate::Result<Address> {
     let id = self.alias;
-    crate::storage::generate_address(&mut self.storage_adapter, id)
+    crate::storage::generate_address(id)
   }
 }
 

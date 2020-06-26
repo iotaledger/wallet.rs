@@ -1,51 +1,24 @@
 use super::{Account, AccountInitialiser, SyncedAccount};
-use crate::storage::{MemoryStorageAdapter, StorageAdapter};
 use chrono::prelude::Utc;
-use std::marker::PhantomData;
 use std::path::Path;
 
 /// The account manager.
 ///
 /// Used to manage multiple accounts.
-pub struct AccountManager<'a, T: StorageAdapter> {
-  storage_adapter: T,
-  _phantom: &'a PhantomData<T>,
-}
+pub struct AccountManager {}
 
-impl<'a> Default for AccountManager<'a, MemoryStorageAdapter> {
-  fn default() -> Self {
-    Self {
-      storage_adapter: MemoryStorageAdapter::new(),
-      _phantom: &PhantomData,
-    }
-  }
-}
-
-impl<'a> AccountManager<'a, MemoryStorageAdapter> {
+impl<'a> AccountManager {
   /// Initialises a new instance of the account manager with the default storage adapter.
   pub fn new() -> Self {
-    Default::default()
-  }
-}
-
-impl<'a, T: StorageAdapter + Clone> AccountManager<'a, T> {
-  /// Initialises a new instance of the account manager with the given storage adapter.
-  pub fn with_adapter(adapter: T) -> Self {
-    Self {
-      storage_adapter: adapter,
-      _phantom: &PhantomData,
-    }
+    Self {}
   }
 
   /// Adds a new account.
-  pub fn add_account(&mut self, account: &AccountInitialiser<'a>) -> crate::Result<Account<'a, T>> {
+  pub fn add_account(&mut self, account: &AccountInitialiser<'a>) -> crate::Result<Account<'a>> {
     let alias = account.alias();
     // crate::account::init(&account)?;
-    self
-      .storage_adapter
-      .set(alias, serde_json::to_string(&account)?)?;
+    crate::storage::get_adapter()?.set(alias, serde_json::to_string(&account)?)?;
     Ok(Account {
-      storage_adapter: self.storage_adapter.clone(),
       alias,
       nodes: vec![],
       quorum_size: None,
@@ -60,7 +33,7 @@ impl<'a, T: StorageAdapter + Clone> AccountManager<'a, T> {
 
   /// Deletes an account.
   pub fn remove_account(&mut self, account_id: &str) -> crate::Result<()> {
-    self.storage_adapter.remove(account_id)
+    crate::storage::get_adapter()?.remove(account_id)
   }
 
   /// Syncs all accounts.
@@ -84,7 +57,7 @@ impl<'a, T: StorageAdapter + Clone> AccountManager<'a, T> {
   }
 
   /// Gets the account associated with the given address.
-  pub fn get_account_from_address(address: &str) -> crate::Result<Account<'a, T>> {
+  pub fn get_account_from_address(address: &str) -> crate::Result<Account<'a>> {
     unimplemented!()
   }
 }
