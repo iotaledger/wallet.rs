@@ -16,11 +16,12 @@ impl<'a> AccountManager {
 
   /// Adds a new account.
   pub fn add_account(&mut self, account: &AccountInitialiser<'a>) -> crate::Result<Account<'a>> {
-    let alias = account.alias();
+    let id = account.id();
     // crate::account::init(&account)?;
-    crate::storage::get_adapter()?.set(alias, serde_json::to_string(&account)?)?;
+    crate::storage::get_adapter()?.set(id, serde_json::to_string(&account)?)?;
     Ok(Account {
-      alias,
+      id,
+      alias: account.alias(),
       nodes: vec![],
       quorum_size: None,
       quorum_threshold: None,
@@ -71,9 +72,11 @@ mod tests {
   #[test]
   fn store_accounts() {
     let mut manager = AccountManager::new();
-    let alias = "test";
+    let id = "test";
     let account = AccountInitialiserBuilder::new()
-      .alias(alias)
+      .alias(id)
+      .id(id)
+      .mnemonic(id)
       .nodes(vec!["https://nodes.devnet.iota.org:443"])
       .build()
       .expect("failed to build account");
@@ -82,7 +85,7 @@ mod tests {
       .add_account(&account)
       .expect("failed to add account");
     manager
-      .remove_account(alias)
+      .remove_account(id)
       .expect("failed to remove account");
   }
 }

@@ -25,6 +25,8 @@ pub enum Network {
 /// Account builder.
 #[derive(Default)]
 pub struct AccountInitialiserBuilder<'a> {
+  mnemonic: Option<&'a str>,
+  id: Option<&'a str>,
   alias: Option<&'a str>,
   nodes: Option<Vec<&'a str>>,
   quorum_size: Option<u64>,
@@ -40,6 +42,21 @@ impl<'a> AccountInitialiserBuilder<'a> {
   /// Initialises the account builder.
   pub fn new() -> Self {
     Default::default()
+  }
+
+  /// Defines the account BIP-39 mnemonic.
+  /// When importing an account from stronghold, the mnemonic won't be required.
+  pub fn mnemonic(mut self, mnemonic: &'a str) -> Self {
+    self.mnemonic = Some(mnemonic);
+    self
+  }
+
+  /// SHA-256 hash of the first address on the seed.
+  /// Required for referencing a seed in stronghold.
+  /// The id should be provided by stronghold.
+  pub fn id(mut self, id: &'a str) -> Self {
+    self.id = Some(id);
+    self
   }
 
   /// Defines the account alias. If not defined, we'll generate one.
@@ -103,8 +120,13 @@ impl<'a> AccountInitialiserBuilder<'a> {
 
   /// Builds the account definition.
   pub fn build(self) -> crate::Result<AccountInitialiser<'a>> {
+    let alias = self.alias.unwrap_or_else(|| "");
     let account = AccountInitialiser {
-      alias: self.alias.unwrap_or_else(|| ""),
+      mnemonic: self
+        .mnemonic
+        .ok_or_else(|| anyhow::anyhow!("the `mnemonic` is required"))?,
+      id: self.id.unwrap_or(alias),
+      alias,
       nodes: self
         .nodes
         .ok_or_else(|| anyhow::anyhow!("the `nodes` array is required"))?,
@@ -123,6 +145,12 @@ impl<'a> AccountInitialiserBuilder<'a> {
 /// Account initialiser definition.
 #[derive(Getters, Serialize, Deserialize)]
 pub struct AccountInitialiser<'a> {
+  /// BIP-39 mnemonic
+  #[getset(get = "pub")]
+  mnemonic: &'a str,
+  /// The account identifier.
+  #[getset(get = "pub")]
+  id: &'a str,
   /// The account alias.
   #[getset(get = "pub")]
   alias: &'a str,
@@ -160,6 +188,9 @@ pub struct AccountInitialiser<'a> {
 /// Account definition.
 #[derive(Getters, Serialize, Deserialize)]
 pub struct Account<'a> {
+  /// The account identifier.
+  #[getset(get = "pub")]
+  id: &'a str,
   /// The account alias.
   #[getset(get = "pub")]
   alias: &'a str,
@@ -236,6 +267,7 @@ impl<'a> Account<'a> {
   /// // gets 10 received transactions, skipping the first 5 most recent transactions.
   /// let account_initialiser = AccountInitialiserBuilder::new()
   ///   .nodes(vec!["https://nodes.devnet.iota.org:443"])
+  ///   .mnemonic("some mnemonic")
   ///   .build().expect("failed to create account");
   /// let mut manager = AccountManager::new();
   /// let mut account = manager.add_account(&account_initialiser).expect("failed to add account");
