@@ -22,6 +22,6 @@ impl SyncedAccount {
 /// Syncs account with the tangle.
 /// Gets the latest balance for the account
 /// and finds new transactions associated with it.
-pub fn sync(account_id: &str) -> crate::Result<SyncedAccount> {
+pub(crate) fn sync(account_id: &str) -> crate::Result<SyncedAccount> {
   unimplemented!()
 }

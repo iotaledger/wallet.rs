@@ -322,6 +322,6 @@ pub struct InitialisedAccount<'a> {
 }
 
 /// Initialises an account.
-pub fn init<'a>(account: &AccountInitialiser<'a>) -> crate::Result<InitialisedAccount<'a>> {
+pub(crate) fn init<'a>(account: &AccountInitialiser<'a>) -> crate::Result<InitialisedAccount<'a>> {
   unimplemented!()
 }

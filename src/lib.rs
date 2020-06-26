@@ -1,7 +1,7 @@
 //! The IOTA Wallet Library
 
 #![warn(missing_docs, rust_2018_idioms)]
-#![allow(unused_variables)]
+#![allow(unused_variables, dead_code)]
 
 /// The account module.
 pub mod account;
