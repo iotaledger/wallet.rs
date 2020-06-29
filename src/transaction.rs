@@ -32,7 +32,7 @@ impl Tag {
 pub struct Transfer<'a> {
   /// The transfer value.
   #[getset(get = "pub")]
-  amount: f64,
+  amount: u64,
   /// The transfer address.
   #[getset(get = "pub")]
   address: IotaAddress,
@@ -46,7 +46,7 @@ pub struct Transfer<'a> {
 
 impl<'a> Transfer<'a> {
   /// Initialises a new transfer to the given address.
-  pub fn new(address: IotaAddress, amount: f64) -> Self {
+  pub fn new(address: IotaAddress, amount: u64) -> Self {
     Self {
       address,
       amount,
@@ -90,14 +90,14 @@ impl fmt::Display for ValueUnit {
 #[derive(Serialize, Deserialize)]
 pub struct Value {
   /// The value.
-  value: f64,
+  value: u64,
   /// The value's unit.
   unit: ValueUnit,
 }
 
 impl Value {
   /// Ititialises a new Value.
-  pub fn new(value: f64, unit: ValueUnit) -> Self {
+  pub fn new(value: u64, unit: ValueUnit) -> Self {
     Self { value, unit }
   }
 
@@ -107,7 +107,7 @@ impl Value {
   }
 
   /// The transaction value without its unit.
-  pub fn without_denomination(&self) -> f64 {
+  pub fn without_denomination(&self) -> u64 {
     self.value
   }
 }

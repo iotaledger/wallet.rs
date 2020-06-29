@@ -48,7 +48,7 @@ impl<'a> AccountManager {
     &self,
     from_account_id: &str,
     to_account_id: &str,
-    amount: f64,
+    amount: u64,
   ) -> crate::Result<()> {
     unimplemented!()
   }

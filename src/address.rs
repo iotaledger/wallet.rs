@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Default)]
 pub struct AddressBuilder {
   address: Option<IotaAddress>,
-  balance: Option<f64>,
+  balance: Option<u64>,
   key_index: Option<u64>,
   // TODO checksum:
 }
@@ -24,7 +24,7 @@ impl AddressBuilder {
   }
 
   /// Sets the address balance.
-  pub fn balance(mut self, balance: f64) -> Self {
+  pub fn balance(mut self, balance: u64) -> Self {
     self.balance = Some(balance);
     self
   }
@@ -60,7 +60,7 @@ pub struct Address {
   address: IotaAddress,
   /// The address balance.
   #[getset(get = "pub")]
-  balance: f64,
+  balance: u64,
   /// The address key index.
   #[getset(get = "pub")]
   key_index: u64,

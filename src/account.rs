@@ -228,7 +228,7 @@ pub struct Account<'a> {
 impl<'a> Account<'a> {
   /// Gets the account's total balance.
   /// It's read directly from the storage. To read the latest account balance, you should `sync` first.
-  pub fn total_balance(&mut self) -> crate::Result<f64> {
+  pub fn total_balance(&mut self) -> crate::Result<u64> {
     let id = self.alias;
     crate::storage::total_balance(id)
   }
@@ -239,7 +239,7 @@ impl<'a> Account<'a> {
   /// The available balance is the balance users are allowed to spend.
   /// For example, if a user with 50i total account balance has made a transaction spending 20i,
   /// the available balance should be (50i-30i) = 20i.
-  pub fn available_balance(&mut self) -> crate::Result<f64> {
+  pub fn available_balance(&mut self) -> crate::Result<u64> {
     let id = self.alias;
     crate::storage::available_balance(id)
   }

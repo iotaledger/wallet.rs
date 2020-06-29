@@ -48,7 +48,7 @@ pub enum TransactionType {
 
 /// Gets the account's total balance.
 /// It's read directly from the storage. To read the latest account balance, you should `sync` first.
-pub(crate) fn total_balance(account_id: &str) -> crate::Result<f64> {
+pub(crate) fn total_balance(account_id: &str) -> crate::Result<u64> {
   unimplemented!()
 }
 
@@ -58,7 +58,7 @@ pub(crate) fn total_balance(account_id: &str) -> crate::Result<f64> {
 /// The available balance is the balance users are allowed to spend.
 /// For example, if a user with 50i total account balance has made a transaction spending 20i,
 /// the available balance should be (50i-30i) = 20i.
-pub(crate) fn available_balance(account_id: &str) -> crate::Result<f64> {
+pub(crate) fn available_balance(account_id: &str) -> crate::Result<u64> {
   unimplemented!()
 }
 
