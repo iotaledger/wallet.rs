@@ -10,6 +10,7 @@ edition = "2018"
 iota-signing-preview = "0.1"
 iota-crypto-preview = "0.1"
 iota-bundle-preview = "0.1"
+iota-ternary-preview = "0.1"
 anyhow = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 getset = "0.1"

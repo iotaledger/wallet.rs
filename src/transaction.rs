@@ -1,7 +1,10 @@
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-use iota_bundle_preview::{Address as IotaAddress, Hash, Tag as IotaTag};
-use serde::{Deserialize, Serialize};
+use iota_bundle_preview::{Address as IotaAddress, Hash, Tag as IotaTag, TransactionField};
+use iota_ternary_preview::{T3B1Buf, Tryte, TryteBuf};
+use serde::de::Visitor;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::convert::TryInto;
 use std::fmt;
 
 /// A transaction tag.
@@ -112,21 +115,75 @@ impl Value {
   }
 }
 
-fn default_hash() -> Hash {
-  unimplemented!()
+struct HashStringVisitor;
+
+impl<'de> Visitor<'de> for HashStringVisitor {
+  type Value = HashDef;
+
+  fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+    formatter.write_str("a Hash string")
+  }
+
+  fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+  where
+    E: serde::de::Error,
+  {
+    let tryte_buf = TryteBuf::new();
+    for character in value.chars() {
+      let tryte: Tryte = character
+        .try_into()
+        .expect("failed to convert char to Tryte");
+    }
+
+    let mut trits = [0; 243];
+    trits.copy_from_slice(tryte_buf.as_trits().encode::<T3B1Buf>().as_i8_slice());
+    Ok(HashDef(trits))
+  }
 }
 
-// TODO Hash serializer
+/// Hash wrapper to facilitate serialize/deserialize operations.
+pub struct HashDef([i8; 243]);
+
+impl Serialize for HashDef {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+    S: Serializer,
+  {
+    let mut chars: Vec<char> = Vec::new();
+    for value in self.0.iter() {
+      let tryte: Tryte = (*value).try_into().expect("failed to convert to Tryte");
+      chars.push(tryte.into());
+    }
+    Vec::serialize(&chars, serializer)
+  }
+}
+
+impl<'de> Deserialize<'de> for HashDef {
+  fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+  where
+    D: Deserializer<'de>,
+  {
+    deserializer.deserialize_string(HashStringVisitor {})
+  }
+}
+
+impl From<&HashDef> for Hash {
+  fn from(def: &HashDef) -> Hash {
+    let mut tryte_buf = TryteBuf::new();
+    for value in def.0.iter() {
+      let tryte: Tryte = (*value).try_into().expect("failed to convert to Tryte");
+      tryte_buf.push(tryte);
+    }
+    Hash::from_inner_unchecked(tryte_buf.as_trits().encode())
+  }
+}
 
 /// A transaction definition.
 #[derive(Getters, Serialize, Deserialize)]
 pub struct Transaction<'a> {
   /// The transaction hash.
-  #[getset(get = "pub")]
-  #[serde(skip_serializing, skip_deserializing, default = "default_hash")]
-  hash: Hash,
+  hash: HashDef,
   /// The transaction address.
-  #[getset(get = "pub")]
   address: IotaAddress,
   /// The transaction amount.
   #[getset(get = "pub")]
@@ -144,17 +201,11 @@ pub struct Transaction<'a> {
   #[getset(get = "pub")]
   last_index: u64,
   /// The transaction bundle hash.
-  #[getset(get = "pub")]
-  #[serde(skip_serializing, skip_deserializing, default = "default_hash")]
-  bundle_hash: Hash,
+  bundle_hash: HashDef,
   /// The trunk transaction hash.
-  #[getset(get = "pub")]
-  #[serde(skip_serializing, skip_deserializing, default = "default_hash")]
-  trunk_transaction: Hash,
+  trunk_transaction: HashDef,
   /// The branch transaction hash.
-  #[getset(get = "pub")]
-  #[serde(skip_serializing, skip_deserializing, default = "default_hash")]
-  brach_transaction: Hash,
+  brach_transaction: HashDef,
   /// The transaction nonce.
   #[getset(get = "pub")]
   nonce: &'a str,
@@ -164,4 +215,11 @@ pub struct Transaction<'a> {
   /// Whether the transaction is broadcasted or not.
   #[getset(get = "pub")]
   broadcasted: bool,
+}
+
+impl<'a> Transaction<'a> {
+  /// The transaction hash.
+  pub fn hash(&self) -> Hash {
+    (&self.hash).into()
+  }
 }
