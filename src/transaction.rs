@@ -142,7 +142,7 @@ impl<'de> Visitor<'de> for HashStringVisitor {
 }
 
 /// Hash wrapper to facilitate serialize/deserialize operations.
-pub struct HashDef([i8; 243]);
+struct HashDef([i8; 243]);
 
 impl Serialize for HashDef {
   fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
