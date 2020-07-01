@@ -1,8 +1,8 @@
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
 use iota_bundle_preview::{Address as IotaAddress, Hash, Tag as IotaTag, TransactionField};
-use iota_ternary_preview::{T3B1Buf, Tryte, TryteBuf};
-use serde::de::Visitor;
+use iota_ternary_preview::{T1B1Buf, TritBuf, Trits, Tryte, TryteBuf, T1B1};
+use serde::ser::Error as SerError;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::convert::TryInto;
 use std::fmt;
@@ -115,46 +115,26 @@ impl Value {
   }
 }
 
-struct HashStringVisitor;
-
-impl<'de> Visitor<'de> for HashStringVisitor {
-  type Value = HashDef;
-
-  fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-    formatter.write_str("a Hash string")
-  }
-
-  fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
-  where
-    E: serde::de::Error,
-  {
-    let tryte_buf = TryteBuf::new();
-    for character in value.chars() {
-      let tryte: Tryte = character
-        .try_into()
-        .expect("failed to convert char to Tryte");
-    }
-
-    let mut trits = [0; 243];
-    trits.copy_from_slice(tryte_buf.as_trits().encode::<T3B1Buf>().as_i8_slice());
-    Ok(HashDef(trits))
-  }
-}
-
 /// Hash wrapper to facilitate serialize/deserialize operations.
 struct HashDef([i8; 243]);
+
+impl PartialEq for HashDef {
+  fn eq(&self, other: &HashDef) -> bool {
+    self.0.iter().zip(other.0.iter()).all(|(a, b)| a == b)
+  }
+}
 
 impl Serialize for HashDef {
   fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
   where
     S: Serializer,
   {
-    let mut chars: Vec<char> = Vec::new();
-    for value in self.0.iter() {
-      let tryte: Tryte = (*value).try_into().expect("failed to convert to Tryte");
-      chars.push(tryte.into());
-    }
-    Vec::serialize(&chars, serializer)
+    TritBuf::serialize(
+      &Trits::<T1B1>::try_from_raw(&self.0, 243)
+        .map_err(|_| SerError::custom("failed to get Trits from Hash"))?
+        .to_buf::<T1B1Buf>(),
+      serializer,
+    )
   }
 }
 
@@ -163,10 +143,15 @@ impl<'de> Deserialize<'de> for HashDef {
   where
     D: Deserializer<'de>,
   {
-    deserializer.deserialize_string(HashStringVisitor {})
+    TritBuf::deserialize(deserializer).map(|buf: TritBuf<T1B1Buf>| {
+      let mut trits = [0; 243];
+      trits.copy_from_slice(buf.as_slice().encode::<T1B1Buf>().as_i8_slice());
+      HashDef(trits)
+    })
   }
 }
 
+// TODO this seems wrong
 impl From<&HashDef> for Hash {
   fn from(def: &HashDef) -> Hash {
     let mut tryte_buf = TryteBuf::new();
@@ -221,5 +206,29 @@ impl<'a> Transaction<'a> {
   /// The transaction hash.
   pub fn hash(&self) -> Hash {
     (&self.hash).into()
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::HashDef;
+  use iota_ternary_preview::{T1B1Buf, TryteBuf};
+
+  #[test]
+  fn serde_hash() {
+    let tryte_buf = TryteBuf::try_from_str(
+      "RVORZ9SIIP9RCYMREUIXXVPQIPHVCNPQ9HZWYKFWYWZRE9JQKG9REPKIASHUUECPSQO9JT9XNMVKWYGVA",
+    )
+    .unwrap();
+
+    let mut trits = [0; 243];
+    trits.copy_from_slice(tryte_buf.as_trits().encode::<T1B1Buf>().as_i8_slice());
+    let hash = HashDef(trits);
+
+    let serialized = serde_json::to_string(&hash).expect("failed to serialize hash");
+    let deserialized: HashDef =
+      serde_json::from_str(&serialized).expect("failed to deserialize hash");
+
+    assert!(hash == deserialized);
   }
 }
