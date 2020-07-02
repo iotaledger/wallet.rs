@@ -7,10 +7,10 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-iota-signing-preview = "0.1"
-iota-crypto-preview = "0.1"
-iota-bundle-preview = "0.1"
-iota-ternary-preview = { version = "0.1", features = ["serde1"] }
+bee-signing = { git = "https://github.com/lucasfernog/bee-p", branch = "feat/serialize" }
+bee-crypto = { git = "https://github.com/lucasfernog/bee-p", branch = "feat/serialize" }
+bee-transaction = { git = "https://github.com/lucasfernog/bee-p", branch = "feat/serialize", features = ["serde1"] }
+bee-ternary = { git = "https://github.com/iotaledger/bee", features = ["serde1"] }
 anyhow = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 getset = "0.1"

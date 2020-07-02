@@ -1,5 +1,5 @@
+pub use bee_transaction::bundled::Address as IotaAddress;
 use getset::Getters;
-pub use iota_bundle_preview::Address as IotaAddress;
 use serde::{Deserialize, Serialize};
 
 /// The address builder.

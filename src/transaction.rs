@@ -1,7 +1,8 @@
+use bee_crypto::ternary::Hash;
+use bee_ternary::{T1B1Buf, TritBuf, Trits, Tryte, TryteBuf, T1B1};
+use bee_transaction::bundled::{Address as IotaAddress, BundledTransactionField, Tag as IotaTag};
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-use iota_bundle_preview::{Address as IotaAddress, Hash, Tag as IotaTag, TransactionField};
-use iota_ternary_preview::{T1B1Buf, TritBuf, Trits, Tryte, TryteBuf, T1B1};
 use serde::ser::Error as SerError;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::convert::TryInto;
@@ -212,7 +213,7 @@ impl<'a> Transaction<'a> {
 #[cfg(test)]
 mod tests {
   use super::HashDef;
-  use iota_ternary_preview::{T1B1Buf, TryteBuf};
+  use bee_ternary::{T1B1Buf, TryteBuf};
 
   #[test]
   fn serde_hash() {
