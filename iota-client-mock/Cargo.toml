@@ -1,0 +1,19 @@
+[package]
+name = "iota-client-mock"
+version = "0.1.0"
+authors = ["Lucas Nogueira <lucas@tauri.studio>"]
+edition = "2018"
+
+[lib]
+name = "iota_client"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0"
+chrono = "0.4"
+iota-conversion = "0.5"
+bee-signing = { git = "https://github.com/Alex6323/bee-p" }
+bee-crypto = { git = "https://github.com/Alex6323/bee-p" }
+bee-transaction = { git = "https://github.com/Alex6323/bee-p" }
+bee-ternary = { git = "https://github.com/iotaledger/bee", features = ["serde1"] }
