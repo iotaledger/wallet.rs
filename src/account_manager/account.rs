@@ -1,12 +1,7 @@
-mod manager;
-mod sync;
-
-pub use manager::*;
-pub use sync::*;
-
 use crate::address::Address;
 use crate::storage::TransactionType;
 use crate::transaction::Transaction;
+
 use chrono::prelude::{DateTime, Utc};
 use getset::Getters;
 use serde::{Deserialize, Serialize};
@@ -22,9 +17,9 @@ pub enum Network {
   Comnet,
 }
 
-/// Account builder.
+/// Account initialiser.
 #[derive(Default)]
-pub struct AccountInitialiserBuilder<'a> {
+pub struct AccountInitialiser<'a> {
   mnemonic: Option<&'a str>,
   id: Option<&'a str>,
   alias: Option<&'a str>,
@@ -38,9 +33,9 @@ pub struct AccountInitialiserBuilder<'a> {
   addresses: Vec<Address>,
 }
 
-impl<'a> AccountInitialiserBuilder<'a> {
+impl<'a> AccountInitialiser<'a> {
   /// Initialises the account builder.
-  pub fn new() -> Self {
+  pub(crate) fn new() -> Self {
     Default::default()
   }
 
@@ -118,13 +113,11 @@ impl<'a> AccountInitialiserBuilder<'a> {
     self
   }
 
-  /// Builds the account definition.
-  pub fn build(self) -> crate::Result<AccountInitialiser<'a>> {
+  /// Initialises the account.
+  pub fn initialise(self) -> crate::Result<Account<'a>> {
     let alias = self.alias.unwrap_or_else(|| "");
-    let account = AccountInitialiser {
-      mnemonic: self
-        .mnemonic
-        .ok_or_else(|| anyhow::anyhow!("the `mnemonic` is required"))?,
+
+    let account = Account {
       id: self.id.unwrap_or(alias),
       alias,
       nodes: self
@@ -140,49 +133,6 @@ impl<'a> AccountInitialiserBuilder<'a> {
     };
     Ok(account)
   }
-}
-
-/// Account initialiser definition.
-#[derive(Getters, Serialize, Deserialize)]
-pub struct AccountInitialiser<'a> {
-  /// BIP-39 mnemonic
-  #[getset(get = "pub")]
-  mnemonic: &'a str,
-  /// The account identifier.
-  #[getset(get = "pub")]
-  id: &'a str,
-  /// The account alias.
-  #[getset(get = "pub")]
-  alias: &'a str,
-  /// The list of nodes to connect to.
-  #[getset(get = "pub")]
-  nodes: Vec<&'a str>,
-  /// The quorum size.
-  /// If multiple nodes are defined, the quorum size determines
-  /// the number of nodes to query to check for quorum.
-  #[getset(get = "pub")]
-  quorum_size: Option<u64>,
-  /// The minimum number of nodes from the quorum pool
-  /// that need to agree for considering the result as true.
-  #[getset(get = "pub")]
-  quorum_threshold: Option<u64>,
-  /// The IOTA public network to use.
-  #[getset(get = "pub")]
-  network: Option<Network>,
-  /// Node URL.
-  #[getset(get = "pub")]
-  provider: Option<&'a str>,
-  /// Time of account creation.
-  #[getset(get = "pub")]
-  created_at: DateTime<Utc>,
-  /// Transactions associated with the seed.
-  /// The account can be initialised with locally stored transactions.
-  #[getset(get = "pub")]
-  transactions: Vec<Transaction<'a>>,
-  /// Address history associated with the seed.
-  /// The account can be initialised with locally stored address history.
-  #[getset(get = "pub")]
-  addresses: Vec<Address>,
 }
 
 /// Account definition.
@@ -262,15 +212,14 @@ impl<'a> Account<'a> {
   ///
   /// ```
   /// use iota_wallet::storage::TransactionType;
-  /// use iota_wallet::account::{AccountInitialiserBuilder, AccountManager};
+  /// use iota_wallet::account_manager::AccountManager;
   ///
   /// // gets 10 received transactions, skipping the first 5 most recent transactions.
-  /// let account_initialiser = AccountInitialiserBuilder::new()
-  ///   .nodes(vec!["https://nodes.devnet.iota.org:443"])
-  ///   .mnemonic("some mnemonic")
-  ///   .build().expect("failed to create account");
   /// let mut manager = AccountManager::new();
-  /// let mut account = manager.add_account(&account_initialiser).expect("failed to add account");
+  /// let mut account = manager.create_account()
+  ///   .nodes(vec!["https://nodes.devnet.iota.org:443"])
+  ///   .initialise()
+  ///   .expect("failed to add account");
   /// account.list_transactions(10, 5, Some(TransactionType::Received));
   /// ```
   pub fn list_transactions(
@@ -319,9 +268,4 @@ pub struct InitialisedAccount<'a> {
   /// Time when the account was last synced with the tangle.
   #[getset(get = "pub")]
   last_synced_at: DateTime<Utc>,
-}
-
-/// Initialises an account.
-pub(crate) fn init<'a>(account: &AccountInitialiser<'a>) -> crate::Result<InitialisedAccount<'a>> {
-  unimplemented!()
 }

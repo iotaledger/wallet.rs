@@ -3,8 +3,8 @@
 #![warn(missing_docs, rust_2018_idioms)]
 #![allow(unused_variables, dead_code)]
 
-/// The account module.
-pub mod account;
+/// The account manager module.
+pub mod account_manager;
 /// The address module.
 pub mod address;
 /// The storage module.

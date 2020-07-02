@@ -1,5 +1,8 @@
-use super::{Account, AccountInitialiser, SyncedAccount};
-use chrono::prelude::Utc;
+mod account;
+
+use crate::address::Address;
+use crate::transaction::Transfer;
+use account::{Account, AccountInitialiser};
 use std::path::Path;
 
 /// The account manager.
@@ -15,22 +18,8 @@ impl<'a> AccountManager {
   }
 
   /// Adds a new account.
-  pub fn add_account(&mut self, account: &AccountInitialiser<'a>) -> crate::Result<Account<'a>> {
-    let id = account.id();
-    // crate::account::init(&account)?;
-    crate::storage::get_adapter()?.set(id, serde_json::to_string(&account)?)?;
-    Ok(Account {
-      id,
-      alias: account.alias(),
-      nodes: vec![],
-      quorum_size: None,
-      quorum_threshold: None,
-      network: None,
-      provider: None,
-      created_at: Utc::now(),
-      transactions: vec![],
-      addresses: vec![],
-    })
+  pub fn create_account(&mut self) -> AccountInitialiser<'a> {
+    AccountInitialiser::new()
   }
 
   /// Deletes an account.
@@ -64,26 +53,42 @@ impl<'a> AccountManager {
   }
 }
 
+/// Data returned from account synchronization.
+pub struct SyncedAccount {
+  deposit_address: Address,
+}
+
+impl SyncedAccount {
+  /// The account's deposit address.
+  pub fn deposit_address(&self) -> &Address {
+    &self.deposit_address
+  }
+
+  /// Send transactions.
+  pub fn send<'a>(&self, transfers: Vec<Transfer<'a>>) {}
+
+  /// Retry transactions.
+  pub fn retry(&self) {}
+}
+
 #[cfg(test)]
 mod tests {
   use super::AccountManager;
-  use crate::account::AccountInitialiserBuilder;
 
   #[test]
   fn store_accounts() {
     let mut manager = AccountManager::new();
     let id = "test";
-    let account = AccountInitialiserBuilder::new()
+
+    manager
+      .create_account()
       .alias(id)
       .id(id)
       .mnemonic(id)
       .nodes(vec!["https://nodes.devnet.iota.org:443"])
-      .build()
-      .expect("failed to build account");
-
-    manager
-      .add_account(&account)
+      .initialise()
       .expect("failed to add account");
+
     manager
       .remove_account(id)
       .expect("failed to remove account");
