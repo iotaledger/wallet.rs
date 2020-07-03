@@ -1,5 +1,6 @@
 use bee_crypto::ternary::Hash;
 use bee_transaction::bundled::Address;
+use url::Url;
 
 mod send;
 use send::SendBuilder;
@@ -24,20 +25,21 @@ pub enum Network {
   Comnet,
 }
 
-#[derive(Default)]
-pub struct SingleNodeClientBuilder<'a> {
-  node: &'a str,
+pub struct SingleNodeClientBuilder {
+  node: Url,
   mwm: Option<u64>,
   checksum_required: bool,
 }
 
-impl<'a> SingleNodeClientBuilder<'a> {
-  fn new(node: &'a str) -> Self {
-    Self {
-      node,
+impl SingleNodeClientBuilder {
+  fn new(node: &str) -> crate::Result<Self> {
+    let node_url = Url::parse(node)?;
+    let builder = Self {
+      node: node_url,
+      mwm: None,
       checksum_required: true,
-      ..Default::default()
-    }
+    };
+    Ok(builder)
   }
 
   pub fn mwm(mut self, mwm: u64) -> Self {
@@ -50,7 +52,7 @@ impl<'a> SingleNodeClientBuilder<'a> {
     self
   }
 
-  pub fn build(self) -> Client<'a> {
+  pub fn build(self) -> Client {
     Client {
       node: Some(self.node),
       nodes: None,
@@ -64,9 +66,9 @@ impl<'a> SingleNodeClientBuilder<'a> {
   }
 }
 
-pub struct MultiNodeClientBuilder<'a> {
-  nodes: Option<&'a [&'a str]>,
-  node_pool_urls: Option<&'a [&'a str]>,
+pub struct MultiNodeClientBuilder {
+  nodes: Option<Vec<Url>>,
+  node_pool_urls: Option<Vec<Url>>,
   network: Option<Network>,
   mwm: Option<u64>,
   quorum_size: Option<u64>,
@@ -75,7 +77,27 @@ pub struct MultiNodeClientBuilder<'a> {
   // state_adapter:
 }
 
-impl Default for MultiNodeClientBuilder<'_> {
+fn convert_urls(urls: &[&str]) -> crate::Result<Vec<Url>> {
+  let mut err = None;
+  let urls: Vec<Option<Url>> = urls
+    .iter()
+    .map(|node| {
+      Url::parse(node).map(|url| Some(url)).unwrap_or_else(|e| {
+        err = Some(e);
+        None
+      })
+    })
+    .collect();
+
+  if let Some(err) = err {
+    Err(err.into())
+  } else {
+    let urls = urls.iter().map(|url| url.clone().unwrap()).collect();
+    Ok(urls)
+  }
+}
+
+impl Default for MultiNodeClientBuilder {
   fn default() -> Self {
     Self {
       nodes: None,
@@ -89,19 +111,23 @@ impl Default for MultiNodeClientBuilder<'_> {
   }
 }
 
-impl<'a> MultiNodeClientBuilder<'a> {
-  fn with_nodes(nodes: &'a [&'a str]) -> Self {
-    Self {
-      nodes: Some(nodes),
+impl MultiNodeClientBuilder {
+  fn with_nodes(nodes: &[&str]) -> crate::Result<Self> {
+    let nodes_urls = convert_urls(nodes)?;
+    let builder = Self {
+      nodes: Some(nodes_urls),
       ..Default::default()
-    }
+    };
+    Ok(builder)
   }
 
-  fn with_node_pool(node_pool_urls: &'a [&'a str]) -> Self {
-    Self {
-      node_pool_urls: Some(node_pool_urls),
+  fn with_node_pool(node_pool_urls: &[&str]) -> crate::Result<Self> {
+    let pool_urls = convert_urls(node_pool_urls)?;
+    let builder = Self {
+      node_pool_urls: Some(pool_urls),
       ..Default::default()
-    }
+    };
+    Ok(builder)
   }
 
   fn with_network(network: Network) -> Self {
@@ -131,7 +157,7 @@ impl<'a> MultiNodeClientBuilder<'a> {
     self
   }
 
-  pub fn build(self) -> Client<'a> {
+  pub fn build(self) -> Client {
     Client {
       node: None,
       nodes: self.nodes,
@@ -146,14 +172,9 @@ impl<'a> MultiNodeClientBuilder<'a> {
 }
 
 #[derive(Default)]
-pub struct ClientBuilder<'a> {
-  node: Option<&'a str>,
-  nodes: Option<&'a [&'a str]>,
-  node_pool_urls: Option<&'a [&'a str]>,
-  network: Option<Network>,
-}
+pub struct ClientBuilder;
 
-impl<'a> ClientBuilder<'a> {
+impl ClientBuilder {
   pub fn new() -> Self {
     Default::default()
   }
@@ -165,9 +186,10 @@ impl<'a> ClientBuilder<'a> {
   /// use iota_client::ClientBuilder;
   /// let client = ClientBuilder::new()
   ///   .node("https://nodes.devnet.iota.org:443")
+  ///   .expect("invalid node URL")
   ///   .build();
   /// ```
-  pub fn node(self, node: &'a str) -> SingleNodeClientBuilder<'a> {
+  pub fn node(self, node: &str) -> crate::Result<SingleNodeClientBuilder> {
     SingleNodeClientBuilder::new(node)
   }
 
@@ -178,9 +200,10 @@ impl<'a> ClientBuilder<'a> {
   /// use iota_client::ClientBuilder;
   /// let client = ClientBuilder::new()
   ///   .nodes(&["https://nodes.devnet.iota.org:443", "https://nodes.comnet.thetangle.org/"])
+  ///   .expect("invalid nodes URLs")
   ///   .build();
   /// ```
-  pub fn nodes(self, nodes: &'a [&'a str]) -> MultiNodeClientBuilder<'a> {
+  pub fn nodes(self, nodes: &[&str]) -> crate::Result<MultiNodeClientBuilder> {
     MultiNodeClientBuilder::with_nodes(nodes)
   }
 
@@ -191,9 +214,10 @@ impl<'a> ClientBuilder<'a> {
   /// use iota_client::ClientBuilder;
   /// let client = ClientBuilder::new()
   ///   .node_pool_urls(&["https://nodes.iota.works/api/ssl/live"])
+  ///   .expect("invalid pool URLs")
   ///   .build();
   /// ```
-  pub fn node_pool_urls(self, node_pool_urls: &'a [&'a str]) -> MultiNodeClientBuilder<'a> {
+  pub fn node_pool_urls(self, node_pool_urls: &[&str]) -> crate::Result<MultiNodeClientBuilder> {
     MultiNodeClientBuilder::with_node_pool(node_pool_urls)
   }
 
@@ -206,16 +230,16 @@ impl<'a> ClientBuilder<'a> {
   ///   .network(Network::Devnet)
   ///   .build();
   /// ```
-  pub fn network(self, network: Network) -> MultiNodeClientBuilder<'a> {
+  pub fn network(self, network: Network) -> MultiNodeClientBuilder {
     MultiNodeClientBuilder::with_network(network)
   }
 }
 
 #[derive(Default)]
-pub struct Client<'a> {
-  node: Option<&'a str>,
-  nodes: Option<&'a [&'a str]>,
-  node_pool_urls: Option<&'a [&'a str]>,
+pub struct Client {
+  node: Option<Url>,
+  nodes: Option<Vec<Url>>,
+  node_pool_urls: Option<Vec<Url>>,
   network: Option<Network>,
   mwm: Option<u64>,
   quorum_size: Option<u64>,
@@ -223,8 +247,8 @@ pub struct Client<'a> {
   checksum_required: bool,
 }
 
-impl<'a> Client<'a> {
-  pub fn send(address: Address) -> SendBuilder<'a> {
+impl Client {
+  pub fn send<'a>(address: Address) -> SendBuilder<'a> {
     SendBuilder::new(address)
   }
 
@@ -236,11 +260,11 @@ impl<'a> Client<'a> {
     FindTransactionsBuilder::new()
   }
 
-  pub fn generate_address() -> GenerateAddressBuilder<'a> {
+  pub fn generate_address<'a>() -> GenerateAddressBuilder<'a> {
     GenerateAddressBuilder::new()
   }
 
-  pub fn balance() -> GetBalanceBuilder<'a> {
+  pub fn balance<'a>() -> GetBalanceBuilder<'a> {
     GetBalanceBuilder::new()
   }
 

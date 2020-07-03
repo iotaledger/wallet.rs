@@ -17,3 +17,4 @@ bee-signing = { git = "https://github.com/Alex6323/bee-p" }
 bee-crypto = { git = "https://github.com/Alex6323/bee-p" }
 bee-transaction = { git = "https://github.com/Alex6323/bee-p" }
 bee-ternary = { git = "https://github.com/iotaledger/bee", features = ["serde1"] }
+url = "2.1"
