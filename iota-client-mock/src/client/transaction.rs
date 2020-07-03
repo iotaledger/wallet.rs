@@ -1,14 +1,13 @@
 use super::Converter;
 use bee_crypto::ternary::Hash;
-use bee_transaction::bundled::{Address, Tag};
-use chrono::prelude::{DateTime, Utc};
+use bee_transaction::bundled::{Address, BundledTransactionField, Tag, Timestamp};
 
 pub struct Transaction {
   hash: Hash,
   address: Address,
   tag: Option<Tag>,
-  created_at: DateTime<Utc>,
-  attached_at: DateTime<Utc>,
+  created_at: Timestamp,
+  attached_at: Timestamp,
 }
 
 pub struct GetTransactionBuilder {
@@ -34,8 +33,8 @@ impl GetTransactionBuilder {
       address: Address::zeros(),
       hash: Hash::zeros(),
       tag: None,
-      created_at: Utc::now(),
-      attached_at: Utc::now(),
+      created_at: Timestamp::from_inner_unchecked(0),
+      attached_at: Timestamp::from_inner_unchecked(0),
     };
     Ok(transaction)
   }
@@ -107,8 +106,8 @@ impl FindTransactionsBuilder {
         .map(|h| h[0])
         .unwrap_or(Hash::zeros()),
       tag: self.tag,
-      created_at: Utc::now(),
-      attached_at: Utc::now(),
+      created_at: Timestamp::from_inner_unchecked(0),
+      attached_at: Timestamp::from_inner_unchecked(0),
     }];
     Ok(transactions)
   }
