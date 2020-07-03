@@ -4,6 +4,7 @@ pub use key_value::KeyValueStorageAdapter;
 
 use crate::address::Address;
 use crate::transaction::Transaction;
+use bee_crypto::ternary::Hash;
 use once_cell::sync::OnceCell;
 
 static INSTANCE: OnceCell<Box<dyn StorageAdapter + Sync + Send>> = OnceCell::new();
@@ -44,6 +45,10 @@ pub enum TransactionType {
   Received,
   /// Transaction sent.
   Sent,
+  /// Transaction not broadcasted.
+  Failed,
+  /// Transaction not confirmed.
+  Unconfirmed,
 }
 
 /// Gets the account's total balance.
@@ -89,6 +94,10 @@ pub(crate) fn list_transactions<'a>(
 /// * `account_id` - The account identifier.
 /// * `unspent` - Whether it should get only unspent addresses or not.
 pub(crate) fn list_addresses(account_id: &str, unspent: bool) -> crate::Result<Vec<Address>> {
+  unimplemented!()
+}
+
+pub(crate) fn get_transaction<'a>(transaction_hash: Hash) -> crate::Result<Transaction<'a>> {
   unimplemented!()
 }
 

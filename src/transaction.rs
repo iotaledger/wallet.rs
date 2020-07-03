@@ -1,6 +1,7 @@
+use crate::address::Address;
 use bee_crypto::ternary::Hash;
 use bee_ternary::{T1B1Buf, TritBuf, Trits, Tryte, TryteBuf, T1B1};
-use bee_transaction::bundled::{Address as IotaAddress, BundledTransactionField, Tag as IotaTag};
+use bee_transaction::bundled::{BundledTransactionField, Tag as IotaTag};
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
 use serde::ser::Error as SerError;
@@ -39,7 +40,7 @@ pub struct Transfer<'a> {
   amount: u64,
   /// The transfer address.
   #[getset(get = "pub")]
-  address: IotaAddress,
+  address: Address,
   /// The transfer transaction tag.
   #[getset(get = "pub", set = "pub")]
   tag: Option<IotaTag>,
@@ -50,7 +51,7 @@ pub struct Transfer<'a> {
 
 impl<'a> Transfer<'a> {
   /// Initialises a new transfer to the given address.
-  pub fn new(address: IotaAddress, amount: u64) -> Self {
+  pub fn new(address: Address, amount: u64) -> Self {
     Self {
       address,
       amount,
@@ -170,7 +171,7 @@ pub struct Transaction<'a> {
   /// The transaction hash.
   hash: HashDef,
   /// The transaction address.
-  address: IotaAddress,
+  address: Address,
   /// The transaction amount.
   #[getset(get = "pub")]
   value: Value,

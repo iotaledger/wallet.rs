@@ -1,9 +1,40 @@
 mod account;
+mod api;
 
 use crate::address::Address;
-use crate::transaction::Transfer;
 use account::{Account, AccountInitialiser};
+use api::SyncedAccount;
 use std::path::Path;
+
+/// An acccount identifier.
+pub struct AccountIdentifier<T> {
+  value: T,
+}
+
+// When the identifier is an Address.
+impl From<Address> for AccountIdentifier<Address> {
+  fn from(value: Address) -> Self {
+    Self { value }
+  }
+}
+
+// When the identifier is a String (alias).
+impl<S: Into<String>> From<S> for AccountIdentifier<String> {
+  fn from(value: S) -> Self {
+    Self {
+      value: value.into(),
+    }
+  }
+}
+
+// When the identifier is an id.
+impl<S: Into<u64>> From<S> for AccountIdentifier<u64> {
+  fn from(value: S) -> Self {
+    Self {
+      value: value.into(),
+    }
+  }
+}
 
 /// The account manager.
 ///
@@ -18,13 +49,14 @@ impl<'a> AccountManager {
   }
 
   /// Adds a new account.
-  pub fn create_account(&mut self) -> AccountInitialiser<'a> {
+  pub fn create_account(&self) -> AccountInitialiser<'a> {
     AccountInitialiser::new()
   }
 
   /// Deletes an account.
-  pub fn remove_account(&mut self, account_id: &str) -> crate::Result<()> {
-    crate::storage::get_adapter()?.remove(account_id)
+  pub fn remove_account<T>(&self, account_id: AccountIdentifier<T>) -> crate::Result<()> {
+    let account = self.get_account(account_id)?;
+    crate::storage::get_adapter()?.remove(account.id())
   }
 
   /// Syncs all accounts.
@@ -33,10 +65,10 @@ impl<'a> AccountManager {
   }
 
   /// Transfers an amount from an account to another.
-  pub fn transfer(
+  pub fn transfer<F, T>(
     &self,
-    from_account_id: &str,
-    to_account_id: &str,
+    from_account_id: AccountIdentifier<F>,
+    to_account_id: AccountIdentifier<T>,
     amount: u64,
   ) -> crate::Result<()> {
     unimplemented!()
@@ -47,28 +79,21 @@ impl<'a> AccountManager {
     unimplemented!()
   }
 
-  /// Gets the account associated with the given address.
-  pub fn get_account_from_address(address: &str) -> crate::Result<Account<'a>> {
+  /// Import backed up accounts.
+  pub fn import_accounts(&self, accounts: Vec<Account<'a>>) -> crate::Result<()> {
     unimplemented!()
   }
-}
 
-/// Data returned from account synchronization.
-pub struct SyncedAccount {
-  deposit_address: Address,
-}
-
-impl SyncedAccount {
-  /// The account's deposit address.
-  pub fn deposit_address(&self) -> &Address {
-    &self.deposit_address
+  /// Gets the account associated with the given identifier.
+  pub fn get_account<T>(&self, account_id: AccountIdentifier<T>) -> crate::Result<Account<'a>> {
+    let account = Account::new("test");
+    Ok(account)
   }
 
-  /// Send transactions.
-  pub fn send<'a>(&self, transfers: Vec<Transfer<'a>>) {}
-
-  /// Retry transactions.
-  pub fn retry(&self) {}
+  /// Reattaches an unconfirmed transaction.
+  pub fn reattach<T>(&self, account_id: AccountIdentifier<T>) -> crate::Result<()> {
+    unimplemented!()
+  }
 }
 
 #[cfg(test)]
@@ -77,7 +102,7 @@ mod tests {
 
   #[test]
   fn store_accounts() {
-    let mut manager = AccountManager::new();
+    let manager = AccountManager::new();
     let id = "test";
 
     manager
@@ -90,7 +115,7 @@ mod tests {
       .expect("failed to add account");
 
     manager
-      .remove_account(id)
+      .remove_account(id.into())
       .expect("failed to remove account");
   }
 }

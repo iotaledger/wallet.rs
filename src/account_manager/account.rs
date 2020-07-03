@@ -176,6 +176,21 @@ pub struct Account<'a> {
 }
 
 impl<'a> Account<'a> {
+  pub(crate) fn new(account_id: &'a str) -> Self {
+    Self {
+      id: account_id,
+      alias: account_id,
+      nodes: vec![],
+      quorum_size: None,
+      quorum_threshold: None,
+      network: None,
+      provider: None,
+      created_at: Utc::now(),
+      transactions: vec![],
+      addresses: vec![],
+    }
+  }
+
   /// Gets the account's total balance.
   /// It's read directly from the storage. To read the latest account balance, you should `sync` first.
   pub fn total_balance(&mut self) -> crate::Result<u64> {
