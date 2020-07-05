@@ -10,7 +10,7 @@ use std::convert::TryInto;
 use std::fmt;
 
 /// A transaction tag.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Tag {
   tag: IotaTag,
 }
@@ -34,22 +34,21 @@ impl Tag {
 
 /// A transfer to make a transaction.
 #[derive(Getters, Setters)]
-pub struct Transfer<'a> {
+#[getset(get = "pub")]
+pub struct Transfer {
   /// The transfer value.
-  #[getset(get = "pub")]
   amount: u64,
   /// The transfer address.
-  #[getset(get = "pub")]
   address: Address,
   /// The transfer transaction tag.
-  #[getset(get = "pub", set = "pub")]
+  #[getset(set = "pub")]
   tag: Option<IotaTag>,
   /// The transfer transaction message.
-  #[getset(get = "pub", set = "pub")]
-  message: Option<&'a str>,
+  #[getset(set = "pub")]
+  message: Option<String>,
 }
 
-impl<'a> Transfer<'a> {
+impl Transfer {
   /// Initialises a new transfer to the given address.
   pub fn new(address: Address, amount: u64) -> Self {
     Self {
@@ -62,7 +61,7 @@ impl<'a> Transfer<'a> {
 }
 
 /// Possible Value units.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub enum ValueUnit {
   /// i
   I,
@@ -92,7 +91,7 @@ impl fmt::Display for ValueUnit {
 }
 
 /// The transaction Value struct.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Value {
   /// The value.
   value: u64,
@@ -118,6 +117,7 @@ impl Value {
 }
 
 /// Hash wrapper to facilitate serialize/deserialize operations.
+#[derive(Clone)]
 struct HashDef([i8; 243]);
 
 impl PartialEq for HashDef {
@@ -166,8 +166,8 @@ impl From<&HashDef> for Hash {
 }
 
 /// A transaction definition.
-#[derive(Getters, Serialize, Deserialize)]
-pub struct Transaction<'a> {
+#[derive(Getters, Serialize, Deserialize, Clone)]
+pub struct Transaction {
   /// The transaction hash.
   hash: HashDef,
   /// The transaction address.
@@ -195,7 +195,7 @@ pub struct Transaction<'a> {
   brach_transaction: HashDef,
   /// The transaction nonce.
   #[getset(get = "pub")]
-  nonce: &'a str,
+  nonce: String,
   /// Whether the transaction is confirmed or not.
   #[getset(get = "pub")]
   confirmed: bool,
@@ -204,7 +204,13 @@ pub struct Transaction<'a> {
   broadcasted: bool,
 }
 
-impl<'a> Transaction<'a> {
+impl PartialEq for Transaction {
+  fn eq(&self, other: &Self) -> bool {
+    self.hash() == other.hash()
+  }
+}
+
+impl Transaction {
   /// The transaction hash.
   pub fn hash(&self) -> Hash {
     (&self.hash).into()

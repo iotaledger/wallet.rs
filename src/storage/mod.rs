@@ -80,12 +80,12 @@ pub(crate) fn set_alias(account_id: &str, alias: &str) -> crate::Result<()> {
 /// * `count` - Number of (most recent) transactions to fetch.
 /// * `from` - Starting point of the subset to fetch.
 /// * `transaction_type` - Optional transaction type filter.
-pub(crate) fn list_transactions<'a>(
+pub(crate) fn list_transactions(
   account_id: &str,
   count: u64,
   from: u64,
   transaction_type: Option<TransactionType>,
-) -> crate::Result<Vec<Transaction<'a>>> {
+) -> crate::Result<Vec<Transaction>> {
   Ok(vec![])
 }
 
@@ -97,7 +97,7 @@ pub(crate) fn list_addresses(account_id: &str, unspent: bool) -> crate::Result<V
   unimplemented!()
 }
 
-pub(crate) fn get_transaction<'a>(transaction_hash: Hash) -> crate::Result<Transaction<'a>> {
+pub(crate) fn get_transaction(transaction_hash: Hash) -> crate::Result<Transaction> {
   unimplemented!()
 }
 

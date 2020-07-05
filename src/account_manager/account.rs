@@ -29,7 +29,7 @@ pub struct AccountInitialiser<'a> {
   network: Option<Network>,
   provider: Option<&'a str>,
   created_at: Option<DateTime<Utc>>,
-  transactions: Vec<Transaction<'a>>,
+  transactions: Vec<Transaction>,
   addresses: Vec<Address>,
 }
 
@@ -101,7 +101,7 @@ impl<'a> AccountInitialiser<'a> {
 
   /// Transactions associated with the seed.
   /// The account can be initialised with locally stored transactions.
-  pub fn transactions(mut self, transactions: Vec<Transaction<'a>>) -> Self {
+  pub fn transactions(mut self, transactions: Vec<Transaction>) -> Self {
     self.transactions = transactions;
     self
   }
@@ -137,41 +137,32 @@ impl<'a> AccountInitialiser<'a> {
 
 /// Account definition.
 #[derive(Getters, Serialize, Deserialize)]
+#[getset(get = "pub")]
 pub struct Account<'a> {
   /// The account identifier.
-  #[getset(get = "pub")]
   id: &'a str,
   /// The account alias.
-  #[getset(get = "pub")]
   alias: &'a str,
   /// The list of nodes to connect to.
-  #[getset(get = "pub")]
   nodes: Vec<&'a str>,
   /// The quorum size.
   /// If multiple nodes are defined, the quorum size determines
   /// the number of nodes to query to check for quorum.
-  #[getset(get = "pub")]
   quorum_size: Option<u64>,
   /// The minimum number of nodes from the quorum pool
   /// that need to agree for considering the result as true.
-  #[getset(get = "pub")]
   quorum_threshold: Option<u64>,
   /// The IOTA public network to use.
-  #[getset(get = "pub")]
   network: Option<Network>,
   /// Node URL.
-  #[getset(get = "pub")]
   provider: Option<&'a str>,
   /// Time of account creation.
-  #[getset(get = "pub")]
   created_at: DateTime<Utc>,
   /// Transactions associated with the seed.
   /// The account can be initialised with locally stored transactions.
-  #[getset(get = "pub")]
-  transactions: Vec<Transaction<'a>>,
+  transactions: Vec<Transaction>,
   /// Address history associated with the seed.
   /// The account can be initialised with locally stored address history.
-  #[getset(get = "pub")]
   addresses: Vec<Address>,
 }
 
@@ -242,7 +233,7 @@ impl<'a> Account<'a> {
     count: u64,
     from: u64,
     transaction_type: Option<TransactionType>,
-  ) -> crate::Result<Vec<Transaction<'a>>> {
+  ) -> crate::Result<Vec<Transaction>> {
     let id = self.alias;
     crate::storage::list_transactions(id, count, from, transaction_type)
   }
@@ -264,23 +255,18 @@ impl<'a> Account<'a> {
 
 /// Data returned from the account initialisation.
 #[derive(Getters)]
+#[getset(get = "pub")]
 pub struct InitialisedAccount<'a> {
   /// The account identifier.
-  #[getset(get = "pub")]
   id: &'a str,
   /// The account alias.
-  #[getset(get = "pub")]
   alias: &'a str,
   /// Seed address history.
-  #[getset(get = "pub")]
   addresses: Vec<Address>,
   /// Seed transaction history.
-  #[getset(get = "pub")]
-  transactions: Vec<Transaction<'a>>,
+  transactions: Vec<Transaction>,
   /// Account creation time.
-  #[getset(get = "pub")]
   created_at: DateTime<Utc>,
   /// Time when the account was last synced with the tangle.
-  #[getset(get = "pub")]
   last_synced_at: DateTime<Utc>,
 }

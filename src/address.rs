@@ -53,15 +53,13 @@ impl AddressBuilder {
 }
 
 /// An address.
-#[derive(Getters, Serialize, Deserialize)]
+#[derive(Getters, Serialize, Deserialize, Clone)]
+#[getset(get = "pub")]
 pub struct Address {
   /// The address.
-  #[getset(get = "pub")]
   address: IotaAddress,
   /// The address balance.
-  #[getset(get = "pub")]
   balance: u64,
   /// The address key index.
-  #[getset(get = "pub")]
   key_index: u64,
 }

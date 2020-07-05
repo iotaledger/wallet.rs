@@ -27,7 +27,7 @@ fn sync_addresses(
 
 /// Syncs transactions with the tangle.
 /// The method should ensures that the wallet local state has transactions associated with the address history.
-fn sync_transactions<'a>(new_transaction_hashes: Vec<Hash>) -> crate::Result<Vec<Transaction<'a>>> {
+fn sync_transactions(new_transaction_hashes: Vec<Hash>) -> crate::Result<Vec<Transaction>> {
   unimplemented!()
 }
 
@@ -91,18 +91,18 @@ impl SyncedAccount {
   }
 
   /// Send transactions.
-  pub fn transfer<'a>(&self, transfer_obj: Transfer<'a>) -> crate::Result<Transaction<'a>> {
+  pub fn transfer(&self, transfer_obj: Transfer) -> crate::Result<Transaction> {
     transfer(transfer_obj)
   }
 
   /// Retry transactions.
-  pub fn retry<'a>(&self) -> crate::Result<Transaction<'a>> {
+  pub fn retry(&self) -> crate::Result<Transaction> {
     retry(Hash::zeros())
   }
 }
 
 /// Starts the account sync process.
-pub(super) fn sync<'a>(account_id: &'a str) -> AccountSynchronizer<'a> {
+pub(super) fn sync(account_id: &'_ str) -> AccountSynchronizer<'_> {
   AccountSynchronizer::new(account_id)
 }
 
@@ -125,21 +125,21 @@ fn select_inputs(
 }
 
 /// Sends a value transaction to the tangle.
-pub(super) fn transfer<'a>(transfer: Transfer<'a>) -> crate::Result<Transaction<'a>> {
+pub(super) fn transfer(transfer: Transfer) -> crate::Result<Transaction> {
   select_inputs(*transfer.amount(), transfer.address())?;
   unimplemented!()
 }
 
-pub(super) fn send_message<'a>(transfer: Transfer<'a>) -> crate::Result<Transaction<'a>> {
+pub(super) fn send_message(transfer: Transfer) -> crate::Result<Transaction> {
   unimplemented!()
 }
 
 /// Rebroadcasts a failed transaction.
-pub(super) fn retry<'a>(transaction_hash: Hash) -> crate::Result<Transaction<'a>> {
+pub(super) fn retry(transaction_hash: Hash) -> crate::Result<Transaction> {
   let transaction = crate::storage::get_transaction(transaction_hash)?;
   unimplemented!()
 }
 
-pub(super) fn reattach<'a>(transaction_hash: Hash) -> crate::Result<Transaction<'a>> {
+pub(super) fn reattach(transaction_hash: Hash) -> crate::Result<Transaction> {
   unimplemented!()
 }
