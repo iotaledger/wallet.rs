@@ -7,6 +7,10 @@
 pub mod account_manager;
 /// The address module.
 pub mod address;
+/// The event module.
+pub mod event;
+/// The monitor module.
+pub mod monitor;
 /// The storage module.
 pub mod storage;
 /// The transaction module.
