@@ -1,4 +1,5 @@
 use super::StorageAdapter;
+use crate::account::AccountIdentifier;
 use kv::*;
 use std::path::Path;
 
@@ -27,8 +28,12 @@ impl<'a> KeyValueStorageAdapter<'a> {
 }
 
 impl<'a> StorageAdapter for KeyValueStorageAdapter<'a> {
-  fn get(&self, account_id: &str) -> crate::Result<String> {
-    let account = self.bucket.get(account_id)?;
+  fn get(&self, account_id: AccountIdentifier) -> crate::Result<String> {
+    let id = match account_id {
+      AccountIdentifier::Id(id) => id,
+      _ => return Err(anyhow::anyhow!("only Id is supported")),
+    };
+    let account = self.bucket.get(id)?;
     account.ok_or_else(|| anyhow::anyhow!("account isn't stored"))
   }
 
@@ -41,13 +46,25 @@ impl<'a> StorageAdapter for KeyValueStorageAdapter<'a> {
     Ok(accounts)
   }
 
-  fn set(&self, account_id: &str, account: String) -> std::result::Result<(), anyhow::Error> {
-    self.bucket.set(account_id, account)?;
+  fn set(
+    &self,
+    account_id: AccountIdentifier,
+    account: String,
+  ) -> std::result::Result<(), anyhow::Error> {
+    let id = match account_id {
+      AccountIdentifier::Id(id) => id,
+      _ => return Err(anyhow::anyhow!("only Id is supported")),
+    };
+    self.bucket.set(id, account)?;
     Ok(())
   }
 
-  fn remove(&self, account_id: &str) -> std::result::Result<(), anyhow::Error> {
-    self.bucket.remove(account_id)?;
+  fn remove(&self, account_id: AccountIdentifier) -> std::result::Result<(), anyhow::Error> {
+    let id = match account_id {
+      AccountIdentifier::Id(id) => id,
+      _ => return Err(anyhow::anyhow!("only Id is supported")),
+    };
+    self.bucket.remove(id)?;
     Ok(())
   }
 }

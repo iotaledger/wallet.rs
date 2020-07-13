@@ -63,3 +63,9 @@ pub struct Address {
   /// The address key index.
   key_index: u64,
 }
+
+impl PartialEq for Address {
+  fn eq(&self, other: &Address) -> bool {
+    self.key_index() == other.key_index()
+  }
+}

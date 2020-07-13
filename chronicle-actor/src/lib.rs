@@ -64,7 +64,7 @@ impl Account {
   fn remove_account(&self, account_id: &str) -> Result<ResponseMessage> {
     self
       .account_manager
-      .remove_account(account_id.into())
+      .remove_account(account_id.to_string().into())
       .map(|_| ResponseMessage::RemovedAccount)
   }
 
@@ -72,10 +72,9 @@ impl Account {
   fn create_account(&self, account: &AccountToCreate) -> Result<ResponseMessage> {
     self
       .account_manager
-      .create_account()
+      .create_account(account.client_options())
       .id(account.id())
       .mnemonic(account.id())
-      .nodes(vec!["https://nodes.devnet.iota.org:443"])
       .initialise()
       .map(|_| ResponseMessage::CreatedAccount)
   }
@@ -87,6 +86,7 @@ mod tests {
     message::{AccountToCreate, Message, MessageType, ResponseMessage},
     AccountBuilder,
   };
+  use iota_wallet::client::ClientOptionsBuilder;
   use tokio::sync::mpsc::{unbounded_channel, UnboundedSender};
 
   fn spawn_actor() -> UnboundedSender<Message> {
@@ -111,9 +111,12 @@ mod tests {
     let tx = spawn_actor();
 
     let account_id = "some id".to_string();
+    let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+      .expect("invalid node URL")
+      .build();
 
     // create an account
-    let account = AccountToCreate::new(account_id.clone());
+    let account = AccountToCreate::new(account_id.clone(), client_options);
     let response = send_message(&tx, MessageType::CreateAccount(account)).await;
     assert_eq!(response, ResponseMessage::CreatedAccount);
 

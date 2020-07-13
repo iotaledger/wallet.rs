@@ -1,39 +1,45 @@
-use bee_crypto::ternary::Hash;
-use bee_transaction::bundled::Address;
+pub use iota_client::Network;
+use iota_client::{Client, ClientBuilder};
+use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
-mod send;
-use send::SendBuilder;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 
-mod transaction;
-use transaction::{FindTransactionsBuilder, GetTransactionBuilder};
+type ClientInstanceMap = Arc<Mutex<HashMap<ClientOptions, Client>>>;
 
-mod get_balance;
-use get_balance::{GetBalanceBuilder, GetBalanceForAddressBuilder};
-
-mod generate_address;
-use generate_address::GenerateAddressBuilder;
-
-pub enum Converter {
-  UTF8,
-  Bytes,
+/// Gets the balance change listeners array.
+fn instances() -> &'static ClientInstanceMap {
+  static LISTENERS: Lazy<ClientInstanceMap> = Lazy::new(Default::default);
+  &LISTENERS
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Hash, Eq)]
-pub enum Network {
-  Mainnet,
-  Devnet,
-  Comnet,
+pub(crate) fn with_client<F: FnOnce(&Client)>(options: &ClientOptions, cb: F) {
+  let mut map = instances()
+    .lock()
+    .expect("failed to lock client instances: get_client()");
+
+  if !map.contains_key(&options) {
+    let client = ClientBuilder::node("")
+      .expect("failed to initialise ClientBuilder")
+      .build();
+
+    map.insert(options.clone(), client);
+  }
+
+  let client = map.get(&options).expect("client not initialised");
+  cb(client)
 }
 
-pub struct SingleNodeClientBuilder {
+/// The options builder for a client connected to a single node.
+pub struct SingleNodeClientOptionsBuilder {
   node: Url,
   mwm: Option<u64>,
   checksum_required: bool,
 }
 
-impl SingleNodeClientBuilder {
+impl SingleNodeClientOptionsBuilder {
   fn new(node: &str) -> crate::Result<Self> {
     let node_url = Url::parse(node)?;
     let builder = Self {
@@ -44,31 +50,35 @@ impl SingleNodeClientBuilder {
     Ok(builder)
   }
 
+  /// Sets the mwm.
   pub fn mwm(mut self, mwm: u64) -> Self {
     self.mwm = Some(mwm);
     self
   }
 
+  /// Whether the checksum is required or not.
   pub fn checksum_required(mut self, checksum_required: bool) -> Self {
     self.checksum_required = checksum_required;
     self
   }
 
-  pub fn build(self) -> Client {
-    Client {
+  /// Builds the options.
+  pub fn build(self) -> ClientOptions {
+    ClientOptions {
       node: Some(self.node),
       nodes: None,
       node_pool_urls: None,
       network: None,
       mwm: self.mwm,
       quorum_size: None,
-      quorum_threshold: 0.0,
+      quorum_threshold: 0,
       checksum_required: self.checksum_required,
     }
   }
 }
 
-pub struct MultiNodeClientBuilder {
+/// The options builder for a client connected to multiple nodes.
+pub struct MultiNodeClientOptionsBuilder {
   nodes: Option<Vec<Url>>,
   node_pool_urls: Option<Vec<Url>>,
   network: Option<Network>,
@@ -99,7 +109,7 @@ fn convert_urls(urls: &[&str]) -> crate::Result<Vec<Url>> {
   }
 }
 
-impl Default for MultiNodeClientBuilder {
+impl Default for MultiNodeClientOptionsBuilder {
   fn default() -> Self {
     Self {
       nodes: None,
@@ -113,7 +123,7 @@ impl Default for MultiNodeClientBuilder {
   }
 }
 
-impl MultiNodeClientBuilder {
+impl MultiNodeClientOptionsBuilder {
   fn with_nodes(nodes: &[&str]) -> crate::Result<Self> {
     let nodes_urls = convert_urls(nodes)?;
     let builder = Self {
@@ -139,129 +149,110 @@ impl MultiNodeClientBuilder {
     }
   }
 
+  /// Sets the mwm.
   pub fn mwm(mut self, mwm: u64) -> Self {
     self.mwm = Some(mwm);
     self
   }
 
+  /// Sets the quorum size.
   pub fn quorum_size(mut self, quorum_size: u64) -> Self {
     self.quorum_size = Some(quorum_size);
     self
   }
 
+  /// Sets the quorum threshold.
   pub fn quorum_threshold(mut self, quorum_threshold: f32) -> Self {
     self.quorum_threshold = quorum_threshold;
     self
   }
 
+  /// Whether the address checksum is required or not.
   pub fn checksum_required(mut self, checksum_required: bool) -> Self {
     self.checksum_required = checksum_required;
     self
   }
 
-  pub fn build(self) -> Client {
-    Client {
+  /// Builds the options.
+  pub fn build(self) -> ClientOptions {
+    ClientOptions {
       node: None,
       nodes: self.nodes,
       node_pool_urls: self.node_pool_urls,
       network: self.network,
       mwm: self.mwm,
       quorum_size: self.quorum_size,
-      quorum_threshold: self.quorum_threshold,
+      quorum_threshold: (self.quorum_threshold * 100.0) as u32,
       checksum_required: self.checksum_required,
     }
   }
 }
 
-pub struct ClientBuilder;
+/// The ClientOptions builder.
+pub struct ClientOptionsBuilder;
 
-impl ClientBuilder {
+impl ClientOptionsBuilder {
   /// Client connected to a single node.
   ///
   /// # Examples
   /// ```
-  /// use iota_client::ClientBuilder;
-  /// let client = ClientBuilder::node("https://nodes.devnet.iota.org:443")
+  /// use iota_wallet::client::ClientOptionsBuilder;
+  /// let clientOptions = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
   ///   .expect("invalid node URL")
   ///   .build();
   /// ```
-  pub fn node(node: &str) -> crate::Result<SingleNodeClientBuilder> {
-    SingleNodeClientBuilder::new(node)
+  pub fn node(node: &str) -> crate::Result<SingleNodeClientOptionsBuilder> {
+    SingleNodeClientOptionsBuilder::new(node)
   }
 
-  /// Client connected to a list of nodes.
+  /// ClientOptions connected to a list of nodes.
   ///
   /// # Examples
   /// ```
-  /// use iota_client::ClientBuilder;
-  /// let client = ClientBuilder::nodes(&["https://nodes.devnet.iota.org:443", "https://nodes.comnet.thetangle.org/"])
+  /// use iota_wallet::client::ClientOptionsBuilder;
+  /// let ClientOptions = ClientOptionsBuilder::nodes(&["https://nodes.devnet.iota.org:443", "https://nodes.comnet.thetangle.org/"])
   ///   .expect("invalid nodes URLs")
   ///   .build();
   /// ```
-  pub fn nodes(nodes: &[&str]) -> crate::Result<MultiNodeClientBuilder> {
-    MultiNodeClientBuilder::with_nodes(nodes)
+  pub fn nodes(nodes: &[&str]) -> crate::Result<MultiNodeClientOptionsBuilder> {
+    MultiNodeClientOptionsBuilder::with_nodes(nodes)
   }
 
-  /// Client connected to the response of a pool.
+  /// ClientOptions connected to the response of a pool.
   ///
   /// # Examples
   /// ```
-  /// use iota_client::ClientBuilder;
-  /// let client = ClientBuilder::node_pool_urls(&["https://nodes.iota.works/api/ssl/live"])
+  /// use iota_wallet::client::ClientOptionsBuilder;
+  /// let ClientOptions = ClientOptionsBuilder::node_pool_urls(&["https://nodes.iota.works/api/ssl/live"])
   ///   .expect("invalid pool URLs")
   ///   .build();
   /// ```
-  pub fn node_pool_urls(node_pool_urls: &[&str]) -> crate::Result<MultiNodeClientBuilder> {
-    MultiNodeClientBuilder::with_node_pool(node_pool_urls)
+  pub fn node_pool_urls(node_pool_urls: &[&str]) -> crate::Result<MultiNodeClientOptionsBuilder> {
+    MultiNodeClientOptionsBuilder::with_node_pool(node_pool_urls)
   }
 
-  /// Client connected to the default Network pool.
+  /// ClientOptions connected to the default Network pool.
   ///
   /// # Examples
   /// ```
-  /// use iota_client::{ClientBuilder, Network};
-  /// let client = ClientBuilder::network(Network::Devnet)
+  /// use iota_wallet::client::{ClientOptionsBuilder, Network};
+  /// let ClientOptions = ClientOptionsBuilder::network(Network::Devnet)
   ///   .build();
   /// ```
-  pub fn network(network: Network) -> MultiNodeClientBuilder {
-    MultiNodeClientBuilder::with_network(network)
+  pub fn network(network: Network) -> MultiNodeClientOptionsBuilder {
+    MultiNodeClientOptionsBuilder::with_network(network)
   }
 }
 
-#[derive(Default)]
-pub struct Client {
+/// The client options type.
+#[derive(Default, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+pub struct ClientOptions {
   node: Option<Url>,
   nodes: Option<Vec<Url>>,
   node_pool_urls: Option<Vec<Url>>,
   network: Option<Network>,
   mwm: Option<u64>,
   quorum_size: Option<u64>,
-  quorum_threshold: f32,
+  quorum_threshold: u32,
   checksum_required: bool,
-}
-
-impl Client {
-  pub fn send<'a>(&self, address: Address) -> SendBuilder<'a> {
-    SendBuilder::new(address)
-  }
-
-  pub fn transaction(&self, transaction_hash: Hash) -> GetTransactionBuilder {
-    GetTransactionBuilder::new(transaction_hash)
-  }
-
-  pub fn transactions(&self) -> FindTransactionsBuilder {
-    FindTransactionsBuilder::new()
-  }
-
-  pub fn generate_address<'a>(&self) -> GenerateAddressBuilder<'a> {
-    GenerateAddressBuilder::new()
-  }
-
-  pub fn balance<'a>(&self) -> GetBalanceBuilder<'a> {
-    GetBalanceBuilder::new()
-  }
-
-  pub fn balance_for_address(&self, address: Address) -> GetBalanceForAddressBuilder {
-    GetBalanceForAddressBuilder::new(address)
-  }
 }

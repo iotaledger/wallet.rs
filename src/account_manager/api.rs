@@ -1,6 +1,8 @@
-use crate::address::Address;
+use crate::address::{Address, AddressBuilder, IotaAddress};
+use crate::client::with_client;
 use crate::transaction::{Transaction, Transfer};
 use bee_crypto::ternary::Hash;
+use iota_client::Client;
 
 /// Syncs addresses with the tangle.
 /// The method ensures that the wallet local state has all used addresses plus an unused address.
@@ -18,35 +20,81 @@ use bee_crypto::ternary::Hash;
 /// Returns a (addresses, hashes) tuples representing the address history up to latest unused address,
 /// and the transaction hashes associated with the addresses.
 ///
-fn sync_addresses(
+fn sync_addresses<'a>(
+  client: &'a Client,
   address_index: u64,
   gap_limit: Option<u64>,
 ) -> crate::Result<(Vec<Address>, Vec<Hash>)> {
+  let accounts = crate::storage::get_adapter()?.get_all()?;
+  let accounts = crate::storage::parse_accounts(&accounts)?;
+
+  for account in accounts {
+    let addresses = account.addresses();
+    let transactions = account.transactions();
+    let latest_address = account.latest_address();
+    with_client(account.client_options(), |client| {
+      for transaction in transactions {}
+      for address in addresses {}
+      client.balance();
+    })
+  }
+
   unimplemented!()
 }
 
 /// Syncs transactions with the tangle.
 /// The method should ensures that the wallet local state has transactions associated with the address history.
-fn sync_transactions(new_transaction_hashes: Vec<Hash>) -> crate::Result<Vec<Transaction>> {
+fn sync_transactions<'a>(
+  client: &'a Client,
+  new_transaction_hashes: Vec<Hash>,
+) -> crate::Result<Vec<Transaction>> {
+  client.transactions();
   unimplemented!()
 }
 
+/// The high level client interface wrapper.
+pub struct ApiClient<'a> {
+  client: &'a Client,
+}
+
+impl<'a> ApiClient<'a> {
+  /// Initialises a new instance of the ApiClient.
+  pub fn new(client: &'a Client) -> Self {
+    Self { client }
+  }
+
+  /// Starts the account sync process.
+  pub fn sync(&self, account_id: &'a str) -> AccountSynchronizer<'a> {
+    AccountSynchronizer::new(account_id, &self.client)
+  }
+
+  pub fn send_message(self, transfer: Transfer) -> crate::Result<Transaction> {
+    unimplemented!()
+  }
+
+  pub fn reattach(self, transaction_hash: Hash) -> crate::Result<Transaction> {
+    unimplemented!()
+  }
+}
+
 /// Account sync helper.
-pub(super) struct AccountSynchronizer<'a> {
+pub struct AccountSynchronizer<'a> {
   account_id: &'a str,
   address_index: u64,
   gap_limit: Option<u64>,
   skip_persistance: bool,
+  client: &'a Client,
 }
 
 impl<'a> AccountSynchronizer<'a> {
   /// Initialises a new instance of the sync helper.
-  pub fn new(account_id: &'a str) -> Self {
+  pub fn new(account_id: &'a str, client: &'a Client) -> Self {
     Self {
       account_id,
       address_index: 1, // TODO By default the length of addresses stored for this account should be used as an index.
       gap_limit: None,
       skip_persistance: false,
+      client,
     }
   }
 
@@ -72,74 +120,62 @@ impl<'a> AccountSynchronizer<'a> {
   /// Syncs account with the tangle.
   /// The account syncing process ensures that the latest metadata (balance, transactions)
   /// associated with an account is fetched from the tangle and is stored locally.
-  pub fn sync(self) -> crate::Result<SyncedAccount> {
-    sync_addresses(self.address_index, self.gap_limit)?;
-    sync_transactions(vec![])?;
-    unimplemented!()
+  pub fn sync(self) -> crate::Result<SyncedAccount<'a>> {
+    sync_addresses(&self.client, self.address_index, self.gap_limit)?;
+    sync_transactions(&self.client, vec![])?;
+
+    let synced_account = SyncedAccount {
+      client: &self.client,
+      deposit_address: AddressBuilder::new()
+        .address(IotaAddress::zeros())
+        .balance(0)
+        .key_index(0)
+        .build()?,
+    };
+    Ok(synced_account)
   }
 }
 
 /// Data returned from account synchronization.
-pub struct SyncedAccount {
+pub struct SyncedAccount<'a> {
+  client: &'a Client,
   deposit_address: Address,
 }
 
-impl SyncedAccount {
+impl<'a> SyncedAccount<'a> {
   /// The account's deposit address.
   pub fn deposit_address(&self) -> &Address {
     &self.deposit_address
   }
 
+  /// Selects input addresses for a value transaction.
+  /// The method ensures that the recipient address doesn’t match any of the selected inputs or the remainder address.
+  ///
+  /// # Arguments
+  ///
+  /// * `threshold` Amount user wants to spend.
+  /// * `address` Recipient address.
+  ///
+  /// # Return value
+  ///
+  /// Returns a (addresses, address) tuple representing the selected input addresses and the remainder address if needed.
+  fn select_inputs(
+    &self,
+    threshold: &u64,
+    address: &Address,
+  ) -> crate::Result<(Vec<Address>, Option<Address>)> {
+    unimplemented!()
+  }
+
   /// Send transactions.
   pub fn transfer(&self, transfer_obj: Transfer) -> crate::Result<Transaction> {
-    transfer(transfer_obj)
+    self.select_inputs(transfer_obj.amount(), transfer_obj.address())?;
+    unimplemented!()
   }
 
   /// Retry transactions.
-  pub fn retry(&self) -> crate::Result<Transaction> {
-    retry(Hash::zeros())
+  pub fn retry(&self, transaction_hash: Hash) -> crate::Result<Transaction> {
+    let transaction = crate::storage::get_transaction(transaction_hash)?;
+    unimplemented!()
   }
-}
-
-/// Starts the account sync process.
-pub(super) fn sync(account_id: &'_ str) -> AccountSynchronizer<'_> {
-  AccountSynchronizer::new(account_id)
-}
-
-/// Selects input addresses for a value transaction.
-/// The method ensures that the recipient address doesn’t match any of the selected inputs or the remainder address.
-///
-/// # Arguments
-///
-/// * `threshold` Amount user wants to spend.
-/// * `address` Recipient address.
-///
-/// # Return value
-///
-/// Returns a (addresses, address) tuple representing the selected input addresses and the remainder address if needed.
-fn select_inputs(
-  threshold: u64,
-  address: &Address,
-) -> crate::Result<(Vec<Address>, Option<Address>)> {
-  unimplemented!()
-}
-
-/// Sends a value transaction to the tangle.
-pub(super) fn transfer(transfer: Transfer) -> crate::Result<Transaction> {
-  select_inputs(*transfer.amount(), transfer.address())?;
-  unimplemented!()
-}
-
-pub(super) fn send_message(transfer: Transfer) -> crate::Result<Transaction> {
-  unimplemented!()
-}
-
-/// Rebroadcasts a failed transaction.
-pub(super) fn retry(transaction_hash: Hash) -> crate::Result<Transaction> {
-  let transaction = crate::storage::get_transaction(transaction_hash)?;
-  unimplemented!()
-}
-
-pub(super) fn reattach(transaction_hash: Hash) -> crate::Result<Transaction> {
-  unimplemented!()
 }
