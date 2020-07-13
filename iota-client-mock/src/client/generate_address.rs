@@ -33,7 +33,7 @@ impl<'a> GenerateAddressBuilder<'a> {
         .unwrap()
         .generate_public_key()
         .unwrap()
-        .trits()
+        .to_trits()
         .to_owned(),
     )
     .unwrap();
