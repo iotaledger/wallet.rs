@@ -72,7 +72,7 @@ impl Account {
   fn create_account(&self, account: &AccountToCreate) -> Result<ResponseMessage> {
     self
       .account_manager
-      .create_account()
+      .create_account(account.client_options())
       .id(account.id())
       .mnemonic(account.id())
       .nodes(vec!["https://nodes.devnet.iota.org:443"])

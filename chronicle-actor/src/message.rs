@@ -1,3 +1,4 @@
+use iota_wallet::client::ClientOptions;
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -6,6 +7,7 @@ use tokio::sync::mpsc::UnboundedSender;
 pub struct AccountToCreate {
   /// The account id.
   id: String,
+  client_options: ClientOptions,
 }
 
 impl AccountToCreate {
@@ -15,6 +17,10 @@ impl AccountToCreate {
 
   pub fn id(&self) -> &String {
     &self.id
+  }
+
+  pub fn client_options(&self) -> &ClientOptions {
+    &self.client_options
   }
 }
 

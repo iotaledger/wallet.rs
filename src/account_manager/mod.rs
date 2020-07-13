@@ -1,40 +1,9 @@
-mod account;
 mod api;
 
-use crate::address::Address;
-use account::{Account, AccountInitialiser};
+use crate::account::{Account, AccountIdentifier, AccountInitialiser};
+use crate::client::ClientOptions;
 use api::SyncedAccount;
 use std::path::Path;
-
-/// An acccount identifier.
-pub struct AccountIdentifier<T> {
-  value: T,
-}
-
-// When the identifier is an Address.
-impl From<Address> for AccountIdentifier<Address> {
-  fn from(value: Address) -> Self {
-    Self { value }
-  }
-}
-
-// When the identifier is a String (alias).
-impl<S: Into<String>> From<S> for AccountIdentifier<String> {
-  fn from(value: S) -> Self {
-    Self {
-      value: value.into(),
-    }
-  }
-}
-
-// When the identifier is an id.
-impl<S: Into<u64>> From<S> for AccountIdentifier<u64> {
-  fn from(value: S) -> Self {
-    Self {
-      value: value.into(),
-    }
-  }
-}
 
 /// The account manager.
 ///
@@ -49,26 +18,25 @@ impl<'a> AccountManager {
   }
 
   /// Adds a new account.
-  pub fn create_account(&self) -> AccountInitialiser<'a> {
-    AccountInitialiser::new()
+  pub fn create_account(&self, client_options: ClientOptions) -> AccountInitialiser<'a> {
+    AccountInitialiser::new(client_options)
   }
 
   /// Deletes an account.
-  pub fn remove_account<T>(&self, account_id: AccountIdentifier<T>) -> crate::Result<()> {
-    let account = self.get_account(account_id)?;
-    crate::storage::get_adapter()?.remove(account.id())
+  pub fn remove_account(&self, account_id: AccountIdentifier) -> crate::Result<()> {
+    crate::storage::get_adapter()?.remove(account_id)
   }
 
   /// Syncs all accounts.
-  pub fn sync_accounts(&self) -> crate::Result<Vec<SyncedAccount>> {
+  pub fn sync_accounts(&self) -> crate::Result<Vec<SyncedAccount<'a>>> {
     unimplemented!()
   }
 
   /// Transfers an amount from an account to another.
-  pub fn transfer<F, T>(
+  pub fn transfer(
     &self,
-    from_account_id: AccountIdentifier<F>,
-    to_account_id: AccountIdentifier<T>,
+    from_account_id: AccountIdentifier,
+    to_account_id: AccountIdentifier,
     amount: u64,
   ) -> crate::Result<()> {
     unimplemented!()
@@ -85,13 +53,14 @@ impl<'a> AccountManager {
   }
 
   /// Gets the account associated with the given identifier.
-  pub fn get_account<T>(&self, account_id: AccountIdentifier<T>) -> crate::Result<Account<'a>> {
-    let account = Account::new("test");
-    Ok(account)
+  pub fn get_account(&self, account_id: AccountIdentifier) -> crate::Result<Account<'a>> {
+    let account_str = crate::storage::get_adapter()?.get(account_id)?;
+    // serde_json::from_str(&account_str).map_err(|e| e.into());
+    unimplemented!()
   }
 
   /// Reattaches an unconfirmed transaction.
-  pub fn reattach<T>(&self, account_id: AccountIdentifier<T>) -> crate::Result<()> {
+  pub fn reattach<T>(&self, account_id: AccountIdentifier) -> crate::Result<()> {
     unimplemented!()
   }
 }
@@ -99,23 +68,27 @@ impl<'a> AccountManager {
 #[cfg(test)]
 mod tests {
   use super::AccountManager;
+  use crate::client::ClientOptionsBuilder;
 
   #[test]
   fn store_accounts() {
     let manager = AccountManager::new();
     let id = "test";
+    let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+      .expect("invalid node URL")
+      .build();
 
     manager
-      .create_account()
+      .create_account(client_options)
       .alias(id)
       .id(id)
       .mnemonic(id)
-      .nodes(vec!["https://nodes.devnet.iota.org:443"])
+      // TODO .nodes(vec!["https://nodes.devnet.iota.org:443"])
       .initialise()
       .expect("failed to add account");
 
     manager
-      .remove_account(id.into())
+      .remove_account(id.to_string().into())
       .expect("failed to remove account");
   }
 }

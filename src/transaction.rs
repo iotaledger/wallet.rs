@@ -118,7 +118,7 @@ impl Value {
 
 /// Hash wrapper to facilitate serialize/deserialize operations.
 #[derive(Clone)]
-struct HashDef([i8; 243]);
+pub struct HashDef([i8; 243]);
 
 impl PartialEq for HashDef {
   fn eq(&self, other: &HashDef) -> bool {
@@ -167,25 +167,21 @@ impl From<&HashDef> for Hash {
 
 /// A transaction definition.
 #[derive(Getters, Serialize, Deserialize, Clone)]
+#[getset(get = "pub")]
 pub struct Transaction {
   /// The transaction hash.
   hash: HashDef,
   /// The transaction address.
   address: Address,
   /// The transaction amount.
-  #[getset(get = "pub")]
   value: Value,
   /// The transaction tag.
-  #[getset(get = "pub")]
   tag: Tag,
   /// The transaction timestamp.
-  #[getset(get = "pub")]
   timestamp: DateTime<Utc>,
   /// The transaction current index in the bundle.
-  #[getset(get = "pub")]
   current_index: u64,
   /// The transaction last index in the bundle.
-  #[getset(get = "pub")]
   last_index: u64,
   /// The transaction bundle hash.
   bundle_hash: HashDef,
@@ -194,26 +190,16 @@ pub struct Transaction {
   /// The branch transaction hash.
   brach_transaction: HashDef,
   /// The transaction nonce.
-  #[getset(get = "pub")]
   nonce: String,
   /// Whether the transaction is confirmed or not.
-  #[getset(get = "pub")]
   confirmed: bool,
   /// Whether the transaction is broadcasted or not.
-  #[getset(get = "pub")]
   broadcasted: bool,
 }
 
 impl PartialEq for Transaction {
   fn eq(&self, other: &Self) -> bool {
     self.hash() == other.hash()
-  }
-}
-
-impl Transaction {
-  /// The transaction hash.
-  pub fn hash(&self) -> Hash {
-    (&self.hash).into()
   }
 }
 

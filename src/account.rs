@@ -1,4 +1,5 @@
 use crate::address::Address;
+use crate::client::ClientOptions;
 use crate::storage::TransactionType;
 use crate::transaction::Transaction;
 
@@ -6,37 +7,52 @@ use chrono::prelude::{DateTime, Utc};
 use getset::Getters;
 use serde::{Deserialize, Serialize};
 
-/// Network type.
-#[derive(Serialize, Deserialize)]
-pub enum Network {
-  /// IOTA's main network.
-  Mainnet,
-  /// IOTA's dev network.
-  Devnet,
-  /// IOTA's community network.
-  Comnet,
+/// The account identifier.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum AccountIdentifier {
+  /// An Id (string) identifier.
+  Id(String),
+  /// An index identifier.
+  Index(u64),
+}
+
+// When the identifier is a String (id).
+impl From<String> for AccountIdentifier {
+  fn from(value: String) -> Self {
+    Self::Id(value)
+  }
+}
+
+// When the identifier is an id.
+impl From<u64> for AccountIdentifier {
+  fn from(value: u64) -> Self {
+    Self::Index(value)
+  }
 }
 
 /// Account initialiser.
-#[derive(Default)]
 pub struct AccountInitialiser<'a> {
   mnemonic: Option<&'a str>,
   id: Option<&'a str>,
   alias: Option<&'a str>,
-  nodes: Option<Vec<&'a str>>,
-  quorum_size: Option<u64>,
-  quorum_threshold: Option<u64>,
-  network: Option<Network>,
-  provider: Option<&'a str>,
   created_at: Option<DateTime<Utc>>,
   transactions: Vec<Transaction>,
   addresses: Vec<Address>,
+  client_options: ClientOptions,
 }
 
 impl<'a> AccountInitialiser<'a> {
   /// Initialises the account builder.
-  pub(crate) fn new() -> Self {
-    Default::default()
+  pub(crate) fn new(client_options: ClientOptions) -> Self {
+    Self {
+      mnemonic: None,
+      id: None,
+      alias: None,
+      created_at: None,
+      transactions: vec![],
+      addresses: vec![],
+      client_options,
+    }
   }
 
   /// Defines the account BIP-39 mnemonic.
@@ -57,39 +73,6 @@ impl<'a> AccountInitialiser<'a> {
   /// Defines the account alias. If not defined, we'll generate one.
   pub fn alias(mut self, alias: &'a str) -> Self {
     self.alias = Some(alias);
-    self
-  }
-
-  /// Defines the list of nodes to connect to.
-  pub fn nodes(mut self, nodes: Vec<&'a str>) -> Self {
-    self.nodes = Some(nodes);
-    self
-  }
-
-  /// Defines the quorum size.
-  /// If multiple nodes are defined, the quorum size determines
-  /// the number of nodes to query to check for quorum.
-  pub fn quorum_size(mut self, quorum_size: u64) -> Self {
-    self.quorum_size = Some(quorum_size);
-    self
-  }
-
-  /// Defines the minimum number of nodes from the quorum pool
-  /// that need to agree for considering the result as true.
-  pub fn quorum_threshold(mut self, quorum_threshold: u64) -> Self {
-    self.quorum_threshold = Some(quorum_threshold);
-    self
-  }
-
-  /// Defines the IOTA public network to use.
-  pub fn network(mut self, network: Network) -> Self {
-    self.network = Some(network);
-    self
-  }
-
-  /// Node URL.
-  pub fn provider(mut self, provider: &'a str) -> Self {
-    self.provider = Some(provider);
     self
   }
 
@@ -120,42 +103,23 @@ impl<'a> AccountInitialiser<'a> {
     let account = Account {
       id: self.id.unwrap_or(alias),
       alias,
-      nodes: self
-        .nodes
-        .ok_or_else(|| anyhow::anyhow!("the `nodes` array is required"))?,
-      quorum_size: self.quorum_size,
-      quorum_threshold: self.quorum_threshold,
-      network: self.network,
-      provider: self.provider,
       created_at: self.created_at.unwrap_or_else(chrono::Utc::now),
       transactions: self.transactions,
       addresses: self.addresses,
+      client_options: self.client_options,
     };
     Ok(account)
   }
 }
 
 /// Account definition.
-#[derive(Getters, Serialize, Deserialize)]
+#[derive(Getters, Serialize, Deserialize, Clone)]
 #[getset(get = "pub")]
 pub struct Account<'a> {
   /// The account identifier.
   id: &'a str,
   /// The account alias.
   alias: &'a str,
-  /// The list of nodes to connect to.
-  nodes: Vec<&'a str>,
-  /// The quorum size.
-  /// If multiple nodes are defined, the quorum size determines
-  /// the number of nodes to query to check for quorum.
-  quorum_size: Option<u64>,
-  /// The minimum number of nodes from the quorum pool
-  /// that need to agree for considering the result as true.
-  quorum_threshold: Option<u64>,
-  /// The IOTA public network to use.
-  network: Option<Network>,
-  /// Node URL.
-  provider: Option<&'a str>,
   /// Time of account creation.
   created_at: DateTime<Utc>,
   /// Transactions associated with the seed.
@@ -164,22 +128,13 @@ pub struct Account<'a> {
   /// Address history associated with the seed.
   /// The account can be initialised with locally stored address history.
   addresses: Vec<Address>,
+  /// The client options.
+  client_options: ClientOptions,
 }
 
 impl<'a> Account<'a> {
-  pub(crate) fn new(account_id: &'a str) -> Self {
-    Self {
-      id: account_id,
-      alias: account_id,
-      nodes: vec![],
-      quorum_size: None,
-      quorum_threshold: None,
-      network: None,
-      provider: None,
-      created_at: Utc::now(),
-      transactions: vec![],
-      addresses: vec![],
-    }
+  pub(crate) fn latest_address(&self) -> &Address {
+    &self.addresses.iter().max_by_key(|a| a.key_index()).unwrap()
   }
 
   /// Gets the account's total balance.
@@ -219,11 +174,14 @@ impl<'a> Account<'a> {
   /// ```
   /// use iota_wallet::storage::TransactionType;
   /// use iota_wallet::account_manager::AccountManager;
+  /// use iota_wallet::client::ClientOptionsBuilder;
   ///
   /// // gets 10 received transactions, skipping the first 5 most recent transactions.
+  /// let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+  ///  .expect("invalid node URL")
+  ///  .build();
   /// let mut manager = AccountManager::new();
-  /// let mut account = manager.create_account()
-  ///   .nodes(vec!["https://nodes.devnet.iota.org:443"])
+  /// let mut account = manager.create_account(client_options)
   ///   .initialise()
   ///   .expect("failed to add account");
   /// account.list_transactions(10, 5, Some(TransactionType::Received));

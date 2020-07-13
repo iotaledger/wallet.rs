@@ -2,6 +2,7 @@ mod key_value;
 
 pub use key_value::KeyValueStorageAdapter;
 
+use crate::account::{Account, AccountIdentifier};
 use crate::address::Address;
 use crate::transaction::Transaction;
 use bee_crypto::ternary::Hash;
@@ -30,13 +31,13 @@ pub(crate) fn get_adapter() -> crate::Result<&'static Box<dyn StorageAdapter + S
 /// The storage adapter.
 pub trait StorageAdapter {
   /// Gets the account with the given id/alias from the storage.
-  fn get(&self, key: &str) -> crate::Result<String>;
+  fn get(&self, key: AccountIdentifier) -> crate::Result<String>;
   /// Gets all the accounts from the storage.
   fn get_all(&self) -> crate::Result<Vec<String>>;
   /// Saves or updates an account on the storage.
-  fn set(&self, key: &str, account: String) -> crate::Result<()>;
+  fn set(&self, key: AccountIdentifier, account: String) -> crate::Result<()>;
   /// Removes an account from the storage.
-  fn remove(&self, key: &str) -> crate::Result<()>;
+  fn remove(&self, key: AccountIdentifier) -> crate::Result<()>;
 }
 
 /// Transaction type.
@@ -49,6 +50,32 @@ pub enum TransactionType {
   Failed,
   /// Transaction not confirmed.
   Unconfirmed,
+}
+
+pub(crate) fn parse_accounts<'a>(accounts: &'a Vec<String>) -> crate::Result<Vec<Account<'a>>> {
+  let mut err = None;
+  let accounts: Vec<Option<Account<'a>>> = accounts
+    .iter()
+    .map(|account| {
+      let res: Option<Account<'a>> = serde_json::from_str(&account)
+        .map(|v| Some(v))
+        .unwrap_or_else(|e| {
+          err = Some(e);
+          None
+        });
+      res
+    })
+    .collect();
+
+  if let Some(err) = err {
+    Err(err.into())
+  } else {
+    let accounts = accounts
+      .iter()
+      .map(|account| account.clone().unwrap())
+      .collect();
+    Ok(accounts)
+  }
 }
 
 /// Gets the account's total balance.
@@ -97,6 +124,7 @@ pub(crate) fn list_addresses(account_id: &str, unspent: bool) -> crate::Result<V
   unimplemented!()
 }
 
+/// Gets the transaction associated with the given hash.
 pub(crate) fn get_transaction(transaction_hash: Hash) -> crate::Result<Transaction> {
   unimplemented!()
 }
