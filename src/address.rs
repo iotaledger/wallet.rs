@@ -1,4 +1,11 @@
+use crate::account::Account;
+use bee_crypto::ternary::Kerl;
+use bee_signing::ternary::{
+  PrivateKey, PrivateKeyGenerator, PublicKey, Seed, WotsSecurityLevel,
+  WotsShakePrivateKeyGeneratorBuilder,
+};
 pub use bee_transaction::bundled::Address as IotaAddress;
+use bee_transaction::bundled::BundledTransactionField;
 use getset::Getters;
 use serde::{Deserialize, Serialize};
 
@@ -68,4 +75,44 @@ impl PartialEq for Address {
   fn eq(&self, other: &Address) -> bool {
     self.key_index() == other.key_index()
   }
+}
+
+/// Gets an unused address for the given account.
+pub(crate) fn get_new_address(account: &Account<'_>) -> crate::Result<Address> {
+  crate::client::with_client(account.client_options(), |client| {
+    let iota_address = client.generate_address().seed(account.seed()).generate()?;
+    let address = Address {
+      address: iota_address,
+      balance: 0,
+      key_index: 0,
+    };
+    Ok(address)
+  })
+}
+
+/// Batch address generation.
+pub(crate) fn get_addresses(account: &Account<'_>, count: u64) -> crate::Result<Vec<Address>> {
+  let mut addresses = vec![];
+  let seed_trits = account.seed().trits();
+  for i in 0..count {
+    let address: IotaAddress = IotaAddress::try_from_inner(
+      WotsShakePrivateKeyGeneratorBuilder::<Kerl>::default()
+        .security_level(WotsSecurityLevel::Medium)
+        .build()
+        .unwrap()
+        .generate_from_entropy(seed_trits)
+        .unwrap()
+        .generate_public_key()
+        .unwrap()
+        .to_trits()
+        .to_owned(),
+    )
+    .unwrap();
+    addresses.push(Address {
+      address,
+      balance: 0,
+      key_index: i,
+    })
+  }
+  Ok(addresses)
 }
