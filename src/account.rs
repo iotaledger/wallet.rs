@@ -3,6 +3,8 @@ use crate::client::ClientOptions;
 use crate::storage::TransactionType;
 use crate::transaction::Transaction;
 
+use bee_crypto::ternary::Kerl;
+use bee_signing::ternary::TernarySeed;
 use chrono::prelude::{DateTime, Utc};
 use getset::Getters;
 use serde::{Deserialize, Serialize};
@@ -137,6 +139,10 @@ impl<'a> Account<'a> {
     &self.addresses.iter().max_by_key(|a| a.key_index()).unwrap()
   }
 
+  pub(crate) fn seed(&self) -> &TernarySeed<Kerl> {
+    unimplemented!()
+  }
+
   /// Gets the account's total balance.
   /// It's read directly from the storage. To read the latest account balance, you should `sync` first.
   pub fn total_balance(&mut self) -> crate::Result<u64> {
@@ -207,7 +213,8 @@ impl<'a> Account<'a> {
   /// Gets a new unused address and links it to the given account.
   pub fn generate_address(&mut self) -> crate::Result<Address> {
     let id = self.alias;
-    crate::storage::generate_address(id)
+    let address = crate::address::get_new_address(&self)?;
+    crate::storage::save_address(id, &address)
   }
 }
 

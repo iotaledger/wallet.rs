@@ -130,6 +130,6 @@ pub(crate) fn get_transaction(transaction_hash: Hash) -> crate::Result<Transacti
 }
 
 /// Gets a new unused address and links it to the given account.
-pub(crate) fn generate_address(account_id: &str) -> crate::Result<Address> {
+pub(crate) fn save_address(account_id: &str, address: &Address) -> crate::Result<Address> {
   unimplemented!()
 }
