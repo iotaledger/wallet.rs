@@ -1,10 +1,10 @@
 # Wallet Library Spec
 
-## Table of Contents
+## Table of Contents <!-- omit in toc -->
 - [Wallet Library Spec](#wallet-library-spec)
-  - [Table of Contents](#table-of-contents)
   - [Introduction](#introduction)
   - [Considerations](#considerations)
+  - [Naming Conventions](#naming-conventions)
   - [Interfaces](#interfaces)
       - [Account Configuration Interface](#account-configuration-interface)
       - [Account Object Interface](#account-object-interface)
