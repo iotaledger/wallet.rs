@@ -85,6 +85,11 @@ To summarize, the main motivation behind this package is to offer a simplified (
 *   Seeds should be stored and managed separately in a secure enclave and should never leave the secure environment. Secure enclaves include software enclaves such as IOTA’s Rust-based Stronghold library or hardware enclaves such as a Ledger Nano.
 *   The secure enclave should have the ability to generate addresses and sign transactions upon receipt of a message, and return the output in a message. If the secure enclave is provided with a pre-generated seed, the sender process should immediately remove the seed traces from memory. 
 
+## Naming Conventions
+
+The primary development language for this library is [rust](https://github.com/rust-lang/rust). Therefore, the standard naming [conventions](https://doc.rust-lang.org/1.0.0/style/style/naming/README.html) for rust language are followed in this specification document. All interfaces (types) use _CamelCase_ while all function and variable names use _snake\_case_.
+
+
 ## Interfaces
 
 #### Account Configuration Interface
