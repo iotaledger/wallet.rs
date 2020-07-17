@@ -1,7 +1,6 @@
 use snapshot::{decrypt_snapshot, encrypt_snapshot, snapshot_dir};
 
-use std::fs::OpenOptions;
-use std::path::PathBuf;
+use std::{fs::OpenOptions, path::PathBuf};
 
 use super::{
   client::{Client, Snapshot},
@@ -47,6 +46,11 @@ pub(in crate) fn serialize_to_snapshot(snapshot: &PathBuf, pass: &str, client: C
     .expect(
       "Unable to access snapshot. Make sure that it exists or run encrypt to build a new one.",
     );
+
+  // clear contents of the file before writing.
+  file
+    .set_len(0)
+    .expect("unable to clear the contents of the file file");
 
   let snap: Snapshot<Provider> = Snapshot::new(client.id, client.db.key);
 
