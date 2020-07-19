@@ -100,10 +100,18 @@ Account configuration or initialisation object. It should support parameters acc
 
 <table>
   <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>
+      <strong>Property</strong>
+    </td>
+    <td>
+      <strong>Required</strong>
+    </td>
+    <td>
+      <strong>Type</strong>
+    </td>
+    <td>
+      <strong>Description</strong>
+    </td>
   </tr>
   <tr>
     <td>mnemonic</td>
@@ -115,8 +123,7 @@ Account configuration or initialisation object. It should support parameters acc
     <td>id</td>
     <td>&#10008;</td>
     <td>string</td>
-    <td>SHA-256 hash of the first address on the seed (m/44'/0'/0'/0/0). Required for referencing a seed in stronghold. The id should be provided by stronghold. 
-    </td>
+    <td>SHA-256 hash of the first address on the seed (m/44'/0'/0'/0/0). Required for referencing a seed in stronghold. The id should be provided by stronghold.</td>
   </tr>
   <tr>
     <td>index</td>
@@ -128,24 +135,18 @@ Account configuration or initialisation object. It should support parameters acc
     <td>alias</td>
     <td>&#10008;</td>
     <td>string</td>
-    <td>Account name. If not provided, a `Account + ${index}` should be used. When importing an account from stronghold backup, the alias will be required from stronghold.
-    </td>
+    <td>Account name. If not provided, a `Account + ${index}` should be used. When importing an account from stronghold backup, the alias will be required from stronghold.</td>
   </tr>
   <tr>
     <td>pow</td>
     <td>&#10008;</td>
     <td>‘local’ | ‘remote’</td>
-    <td>Proof of work settings. Defaults to ‘local’. 
-      ‘local’: Should be performed on device
-      ‘remote’: Should be performed on the node
-    </td>
+    <td>Proof of work settings. Defaults to ‘local’. ‘local’: Should be performed on device ‘remote’: Should be performed on the node</td>
   </tr>
   <tr>
     <td>nodes</td>
     <td>&#10004;</td>
-    <td>
-      <a href="#node">node</a>[]
-    </td>
+    <td><a href="#node">node</a>[]</td>
     <td>A list of nodes to connect to.</td>
   </tr>
   <tr>
@@ -158,8 +159,7 @@ Account configuration or initialisation object. It should support parameters acc
     <td>quorum_threshold</td>
     <td>&#10008;</td>
     <td>number</td>
-    <td>Minimum number of nodes from the quorum pool that need to agree for considering the result as true.
-    </td>
+    <td>Minimum number of nodes from the quorum pool that need to agree for considering the result as true.</td>
   </tr>
   <tr>
     <td>network</td>
@@ -189,16 +189,13 @@ Account configuration or initialisation object. It should support parameters acc
     <td>transactions</td>
     <td>&#10008;</td>
     <td><a href="#transaction">Transaction</a>[]</td>
-    <td>Transactions associated with seed. Accounts can be initialised with locally stored transactions.
-    </td>
+    <td>Transactions associated with seed. Accounts can be initialised with locally stored transactions.</td>
   </tr>
   <tr>
     <td>addresses</td>
     <td>&#10008;</td>
-    <td><a href="#address">Address</a>[]
-    </td>
-    <td>Address history  associated with seed. Accounts can be initialised with locally stored address history.
-    </td>
+    <td><a href="#address">Address</a>[]</td>
+    <td>Address history associated with seed. Accounts can be initialised with locally stored address history.</td>
   </tr>
 </table>
 
@@ -235,7 +232,7 @@ Account configuration or initialisation object. It should support parameters acc
     <td>string</td>
     <td>Time when the account was last synced with the tangle.</td>
   </tr>
-   <tr>
+  <tr>
     <td><a href="#sync">sync()</a></td>
     <td>&#10004;</td>
     <td>function</td>
@@ -371,7 +368,7 @@ Account configuration or initialisation object. It should support parameters acc
     <td><a href="#account">Account</a>[]</td>
     <td>Account objects.</td>
   </tr>
-   <tr>
+  <tr>
     <td><a href="#addaccount">add_account()</a></td>
     <td>&#10004;</td>
     <td>function</td>
@@ -435,8 +432,7 @@ Useful [reference](https://medium.com/@harshagoli/hd-wallets-explained-from-high
   <tr>
     <td><strong>Property</strong></td>
     <td><strong>Required</strong></td>
-    <td><strong>Type</strong>
-    </td>
+    <td><strong>Type</strong></td>
     <td><strong>Description</strong></td>
   </tr>
   <tr>
@@ -501,7 +497,7 @@ Useful [reference](https://medium.com/@harshagoli/hd-wallets-explained-from-high
   <tr>
     <td>network</td>
     <td>&#10004;</td>
-    <td>‘mainnet’ | ‘devnet’ | ‘comnet’ </td>
+    <td>‘mainnet’ | ‘devnet’ | ‘comnet’</td>
     <td>IOTA public network name.</td>
   </tr>
 </table>
@@ -722,8 +718,8 @@ Note: some of the transaction properties will be different.
     <td>broadcasted</td>
     <td>&#10004;</td>
     <td>boolean</td>
-    <td>Determines if the transaction was broadcasted to the network.
-      Will be true in the following scenarios:
+    <td>
+      Determines if the transaction was broadcasted to the network. Will be true in the following scenarios:
       <ul>
         <li>If the transaction was fetched from the network;</li>
         <li>If the transaction was successfully broadcasted from the client itself.</li>
@@ -749,9 +745,7 @@ Note: some of the transaction properties will be different.
     <td>Gets the account object for provided account name or id.</td>
   </tr>
   <tr>
-    <td>getAll():
-      <a href="#account">Account</a>[]
-    </td>
+    <td>getAll(): <a href="#account">Account</a>[]</td>
     <td>&#10004;</td>
     <td>function</td>
     <td>Gets all account objects from storage.</td>
@@ -807,58 +801,55 @@ Following should be considered when initialising an account:
 *   The `nodes` property should validate and remove duplicate node URLs;
 *   All the properties of the returned account object should be read-only. They should not be allowed to be manipulated directly.
 
-
 <table>
   <tr>
-   <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4"><strong>Parameters</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Required</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>config</td>
-   <td>&#10004;</td>
-   <td><a href="#accountconfiguration">AccountConfig</a></td>
-   <td>Initialisation method receives a configuration object.</td>
+    <td>config</td>
+    <td>&#10004;</td>
+    <td><a href="#accountconfiguration">AccountConfig</a></td>
+    <td>Initialisation method receives a configuration object.</td>
   </tr>
   <tr>
-   <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4"><strong>Returns</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Type</strong></td>
-   <td colspan="3"><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>account</td>
-   <td><a href="#accountobject">Account</a></td>
-   <td colspan="3">Account instance.</td>
+    <td>account</td>
+    <td><a href="#accountobject">Account</a></td>
+    <td colspan="3">Account instance.</td>
   </tr>
   <tr>
-   <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4"><strong>Additional Information</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>Access modifiers</td>
-   <td colspan="3">Public</td>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
   </tr>
   <tr>
-   <td>Errors</td>
-   <td colspan="3">List of error messages [TBD]</td>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
   </tr>
   <tr>
-   <td>Required client library methods</td>
-   <td>None</td>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
   </tr>
 </table>
-
-
 
 #### sync_addresses() 
 
@@ -872,68 +863,68 @@ Following should be considered when implementing this method:
 
 <table>
   <tr>
-   <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4"><strong>Parameters</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Required</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>index</td>
-   <td>&#10008;</td>
-   <td>number</td>
-   <td>Address index. By default the length of addresses stored for this account should be used as an index.</td>
+    <td>index</td>
+    <td>&#10008;</td>
+    <td>number</td>
+    <td>Address index. By default the length of addresses stored for this account should be used as an index.</td>
   </tr>
   <tr>
-   <td>gap_limit</td>
-   <td>&#10008;</td>
-   <td>number</td>
-   <td>Number of address indexes that are generated.</td>
+    <td>gap_limit</td>
+    <td>&#10008;</td>
+    <td>number</td>
+    <td>Number of address indexes that are generated.</td>
   </tr>
   <tr>
-   <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4"><strong>Returns</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Type</strong></td>
-   <td colspan="3"><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>addresses</td>
-   <td><a href="address">Address</a>[]</td>
-   <td colspan="3">Address history upto latest unused address.</td>
+    <td>addresses</td>
+    <td><a href="address">Address</a>[]</td>
+    <td colspan="3">Address history upto latest unused address.</td>
   </tr>
   <tr>
-   <td>hashes</td>
-   <td>string[]</td>
-   <td colspan="3">Transaction hashes associated with the addresses.</td>
+    <td>hashes</td>
+    <td>string[]</td>
+    <td colspan="3">Transaction hashes associated with the addresses.</td>
   </tr>
   <tr>
-   <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4"><strong>Additional Information</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>Access modifiers</td>
-   <td colspan="3">Private</td>
+    <td>Access modifiers</td>
+    <td colspan="3">Private</td>
   </tr>
   <tr>
-   <td>Errors</td>
-   <td colspan="3">List of error messages [TBD]</td>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
   </tr>
   <tr>
-   <td>Required client library methods</td>
-   <td>
-   <ul><li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.24v5faxy5apt">get_balance()</a></li>
-<li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.eoox82z3y6rj">find_transactions()</a>
-</li>
-</ul>
-</td>
-</tr>
+    <td>Required client library methods</td>
+    <td colspan="3">
+      <ul>
+        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.24v5faxy5apt">get_balance()</a></li>
+        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.eoox82z3y6rj">find_transactions()</a></li>
+      </ul>
+    </td>
+  </tr>
 </table>
 
 #### sync_transactions() 
@@ -948,54 +939,55 @@ Following should be considered when implementing this method:
 
 <table>
   <tr>
-   <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4"><strong>Parameters</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Required</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>hashes</td>
-   <td>&#10004;</td>
-   <td>string[]</td>
-   <td>Transaction hashes. New transaction hashes should be calculated by running a difference of local transaction hashes with latest transaction hashes on the tangle. </td>
+    <td>hashes</td>
+    <td>&#10004;</td>
+    <td>string[]</td>
+    <td>Transaction hashes. New transaction hashes should be calculated by running a difference of local transaction hashes with latest transaction hashes on the tangle.</td>
   </tr>
   <tr>
-   <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4"><strong>Returns</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Type</strong></td>
-   <td colspan="3"><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>transactions</td>
-   <td><a href="#transaction">Transaction</a>[]</td>
-   <td colspan="3">Transaction history</td>
+    <td>transactions</td>
+    <td><a href="#transaction">Transaction</a>[]</td>
+    <td colspan="3">Transaction history</td>
   </tr>
   <tr>
-   <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4"><strong>Additional Information</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>Access modifiers</td>
-   <td colspan="3">Private</td>
+    <td>Access modifiers</td>
+    <td colspan="3">Private</td>
   </tr>
   <tr>
-   <td>Errors</td>
-   <td colspan="3">List of error messages [TBD]</td>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
   </tr>
   <tr>
-   <td>Required client library methods</td>
-   <td>
-   <ul><li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.eoox82z3y6rj">find_transactions()</a></li>
-</ul>
-</td>
+    <td>Required client library methods</td>
+    <td colspan="3">
+      <ul>
+        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.eoox82z3y6rj">find_transactions()</a></li>
+      </ul>
+    </td>
   </tr>
 </table>
 
@@ -1009,63 +1001,63 @@ See [Input Selection Process](#input-selection) for implementation details.
 
 <table>
   <tr>
-   <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4"><strong>Parameters</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Required</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>threshold</td>
-   <td>&#10004;</td>
-   <td>number</td>
-   <td>Amount user wants to spend.</td>
+    <td>threshold</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Amount user wants to spend.</td>
   </tr>
   <tr>
-   <td>address</td>
-   <td>&#10004;</td>
-   <td>string</td>
-   <td>Recipient address.</td>
+    <td>address</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Recipient address.</td>
   </tr>
   <tr>
-   <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4"><strong>Returns</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Type</strong></td>
-   <td colspan="3"><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>inputs</td>
-   <td><a href="#address">Address</a>[]</td>
-   <td colspan="3">Selected Inputs</td>
+    <td>inputs</td>
+    <td><a href="#address">Address</a>[]</td>
+    <td colspan="3">Selected Inputs</td>
   </tr>
   <tr>
-   <td>remainder</td>
-   <td><a href="#address">Address</a></td>
-   <td colspan="3">Remainder address object. Empty or null if there’s no need for a remainder</td>
+    <td>remainder</td>
+    <td><a href="#address">Address</a></td>
+    <td colspan="3">Remainder address object. Empty or null if there’s no need for a remainder</td>
   </tr>
   <tr>
-<td colspan="4"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Private</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>None</td>
-</tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Private</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
 </table>
 
 #### send() 
@@ -1089,60 +1081,58 @@ Following is the process for sending a value transaction:
 
 <table>
   <tr>
-   <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4"><strong>Parameters</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Required</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>transfer</td>
-   <td>&#10004;</td>
-   <td><a href="#transfer">Transfer</a></td>
-   <td>Transfer object. </td>
+    <td>transfer</td>
+    <td>&#10004;</td>
+    <td><a href="#transfer">Transfer</a></td>
+    <td>Transfer object.</td>
   </tr>
   <tr>
-   <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4"><strong>Returns</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Type</strong></td>
-   <td colspan="3"><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>transactions</td>
-   <td><a href="#transaction">Transaction[]</a></td>
-   <td colspan="3">Newly made transaction.</td>
+    <td>transactions</td>
+    <td><a href="#transaction">Transaction[]</a></td>
+    <td colspan="3">Newly made transaction.</td>
   </tr>
-<tr>
-<td colspan="4"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Private</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>
-<ul>
-  <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.eoox82z3y6rj">find_transactions()</a></li>
-  <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.imyf0om5yhbq">send()</a></li>
-</ul>
-</td>
-</tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Private</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">
+      <ul>
+        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.eoox82z3y6rj">find_transactions()</a></li>
+        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.imyf0om5yhbq">send()</a></li>
+      </ul>
+    </td>
+  </tr>
 </table>
-
-
 
 #### retry() 
 
@@ -1158,59 +1148,57 @@ Following is the process for retrying a failed transaction:
 
 <table>
   <tr>
-   <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4"><strong>Parameters</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Required</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>hash</td>
-   <td>&#10004;</td>
-   <td>string</td>
-   <td>Transaction hash</td>
+    <td>hash</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Transaction hash</td>
   </tr>
   <tr>
-   <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4"><strong>Returns</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Type</strong></td>
-   <td colspan="3"><strong>Description</strong>
-   </td>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>transactions</td>
-   <td><a href="#transaction">Transaction[]</a></td>
-   <td>Newly made transaction.</td>
+    <td>transactions</td>
+    <td><a href="#transaction">Transaction[]</a></td>
+    <td>Newly made transaction.</td>
   </tr>
   <tr>
-<td colspan="4"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Private</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>
-<ul><li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.eoox82z3y6rj">broadcast_transactions()</a></li>
-</ul>
-</td>
-</tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Private</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">
+      <ul>
+        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.eoox82z3y6rj">broadcast_transactions()</a></li>
+      </ul>
+    </td>
+  </tr>
 </table>
-
-
 
 #### sync()
 
@@ -1225,72 +1213,73 @@ Following is the process for account syncing:_
 
 <table>
   <tr>
-   <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4"><strong>Parameters</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Required</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>index</td>
-   <td>&#10008;</td>
-   <td>number</td>
-   <td>Address index. By default the length of addresses stored for this account should be used as an index.</td>
+    <td>index</td>
+    <td>&#10008;</td>
+    <td>number</td>
+    <td>Address index. By default the length of addresses stored for this account should be used as an index.</td>
   </tr>
   <tr>
-   <td>gap_limit</td>
-   <td>&#10008;</td>
-   <td>number</td>
-   <td>Number of address indexes that are generated.</td>
+    <td>gap_limit</td>
+    <td>&#10008;</td>
+    <td>number</td>
+    <td>Number of address indexes that are generated.</td>
   </tr>
   <tr>
-   <td>skip_persistence</td>
-   <td>&#10008;</td>
-   <td>boolean</td>
-   <td>Skips write to the database if set to true. 
-This will be useful if a user wants to scan the tangle for further addresses to find balance.  
-See <a href="https://docs.iota.org/docs/wallets/0.1/trinity/how-to-guides/perform-a-snapshot-transition">snapshot transition</a> feature provided by Trinity wallet.
-   </td>
+    <td>skip_persistence</td>
+    <td>&#10008;</td>
+    <td>boolean</td>
+    <td>
+      Skips write to the database if set to true. This will be useful if a user wants to scan the tangle for further addresses to find balance. See
+      <a href="https://docs.iota.org/docs/wallets/0.1/trinity/how-to-guides/perform-a-snapshot-transition">snapshot transition</a> feature provided by Trinity wallet.
+    </td>
   </tr>
   <tr>
-   <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4"><strong>Returns</strong></td>
   </tr>
-<tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Type</strong></td>
-   <td colspan="3"><strong>Description</strong></td>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
-<tr>
-   <td>account</td>
-   <td><a href="#syncedaccountobject">SyncedAccount</a>
-   </td>
-   <td colspan="3">Synced account object.</td>
-</tr>
-<td colspan="4"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>
-<ul><li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.eoox82z3y6rj">find_transactions()</a></li>
-<li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.24v5faxy5apt">get_balance()</a></li>
-<li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.imyf0om5yhbq">send()</a></li>
-</ul>
-</td>
-</tr>
+  <tr>
+    <td>account</td>
+    <td><a href="#syncedaccountobject">SyncedAccount</a></td>
+    <td colspan="3">Synced account object.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">
+      <ul>
+        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.eoox82z3y6rj">find_transactions()</a></li>
+        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.24v5faxy5apt">get_balance()</a></li>
+        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.imyf0om5yhbq">send()</a></li>
+      </ul>
+    </td>
+  </tr>
 </table>
 
 ####  reattach() 
@@ -1305,55 +1294,56 @@ Following should be considered when implementing this method:
 
 <table>
   <tr>
-   <td colspan="3"><strong>Parameters</strong></td>
+    <td colspan="3"><strong>Parameters</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Required</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>hash</td>
-   <td>&#10004;</td>
-   <td>string</td>
-   <td>Transaction hash.</td>
+    <td>hash</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Transaction hash.</td>
   </tr>
   <tr>
-   <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4"><strong>Returns</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Type</strong></td>
-   <td colspan="3"><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>transaction</td>
-   <td><a href="#transaction">Transaction[]</a></td>
-   <td colspan="3">Newly reattached transaction.</td>
+    <td>transaction</td>
+    <td><a href="#transaction">Transaction[]</a></td>
+    <td colspan="3">Newly reattached transaction.</td>
   </tr>
   <tr>
-<td colspan="4"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>
-<ul><li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.s3d22j7lwxew">reattach()</a></li>
-</ul>
-</td>
-</tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">
+      <ul>
+        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.s3d22j7lwxew">reattach()</a></li>
+      </ul>
+    </td>
+  </tr>
 </table>
 
 #### send_message()
@@ -1370,58 +1360,57 @@ Following is the process for sending a zero value message:
 
 <table>
   <tr>
-   <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4"><strong>Parameters</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Required</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>message</td>
-   <td>&#10004;</td>
-   <td>string</td>
-   <td>Message to send to the tangle.</td>
+    <td>message</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Message to send to the tangle.</td>
   </tr>
   <tr>
-   <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4"><strong>Returns</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Type</strong></td>
-   <td colspan="3"><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>transaction</td>
-   <td><a href="#heading=h.mzpg65ps5g9y">Transaction[]</a></td>
-   <td colspan="3">Newly broadcasted transaction.</td>
+    <td>transaction</td>
+    <td><a href="#heading=h.mzpg65ps5g9y">Transaction[]</a></td>
+    <td colspan="3">Newly broadcasted transaction.</td>
   </tr>
   <tr>
-<td colspan="4"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>
-<ul><li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.imyf0om5yhbq">send()</a></li>
-</ul>
-</td>
-</tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">
+      <ul>
+        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.imyf0om5yhbq">send()</a></li>
+      </ul>
+    </td>
+  </tr>
 </table>
-
-
 
 #### total_balance()
 
@@ -1431,36 +1420,35 @@ Total balance should directly be read from the local storage. To read the latest
 
 <table>
   <tr>
-   <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4"><strong>Returns</strong></td>
   </tr>
   <tr>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-   <td><a href="#value">Value</a>
-   </td>
-   <td>Account total balance.</td>
+    <td><a href="#value">Value</a></td>
+    <td>Account total balance.</td>
   </tr>
   <tr>
-<td colspan="3"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>None</td>
-</tr>
+    <td colspan="3"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
 </table>
 
 #### available_balance()
@@ -1473,37 +1461,35 @@ Available balance should directly be read from the local storage. To read the la
 
 <table>
   <tr>
-   <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4"><strong>Returns</strong></td>
   </tr>
   <tr>
-   <td><strong>Type</strong>
-   </td>
-   <td colspan="3"><strong>Description</strong>
-   </td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-   <td><a href="value">Value</a></td>
-   <td>Account available balance.</td>
+    <td><a href="value">Value</a></td>
+    <td>Account available balance.</td>
   </tr>
-<tr>
-<td colspan="3"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>None</td>
-</tr>
+  <tr>
+    <td colspan="3"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
 </table>
 
 #### set_alias() 
@@ -1512,41 +1498,40 @@ Updates account name
 
 <table>
   <tr>
-   <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4"><strong>Parameters</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Required</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>alias</td>
-   <td>&#10004;</td>
-   <td>string</td>
-   <td>New account name.</td>
+    <td>alias</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>New account name.</td>
   </tr>
-<tr>
-<td colspan="4"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>None</td>
-</tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
 </table>
-
 
 #### list_transactions() 
 
@@ -1554,63 +1539,59 @@ Gets transactions. Transactions should be directly read from the local storage. 
 
 <table>
   <tr>
-   <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4"><strong>Parameters</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Required</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>count</td>
-   <td>&#10004;</td>
-   <td>number</td>
-   <td>Number of (most recent) transactions.</td>
+    <td>count</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Number of (most recent) transactions.</td>
   </tr>
   <tr>
-   <td>from</td>
-   <td>&#10004;</td>
-   <td>number</td>
-   <td>Subset of transactions. For example: count = 10, from = 5, it should return ten transactions skipping the most recent five transactions.
-   </td>
+    <td>from</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Subset of transactions. For example: count = 10, from = 5, it should return ten transactions skipping the most recent five transactions.</td>
   </tr>
   <tr>
-   <td colspan="4"><strong>Returns</strong>
-   </td>
+    <td colspan="4"><strong>Returns</strong></td>
   </tr>
   <tr>
-  <td><strong>Name</strong></td>
-   <td><strong>Type</strong></td>
-   <td colspan="3"><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-  <td>transactions</td>
-   <td><a href="#transaction">Transaction</a>[]</td>
-   <td colspan="3">All transactions.</td>
+    <td>transactions</td>
+    <td><a href="#transaction">Transaction</a>[]</td>
+    <td colspan="3">All transactions.</td>
   </tr>
   <tr>
-<td colspan="4"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>None</td>
-</tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
 </table>
-
-
 
 #### list_received_transactions()
 
@@ -1620,58 +1601,58 @@ Transactions should be directly read from the local storage. To ensure the local
 
 <table>
   <tr>
-   <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4"><strong>Parameters</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Required</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>count</td>
-   <td>&#10004;</td>
-   <td>number</td>
-   <td>Number of (most recent) received transactions.</td>
+    <td>count</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Number of (most recent) received transactions.</td>
   </tr>
   <tr>
-   <td>from</td>
-   <td>&#10004;</td>
-   <td>number</td>
-   <td>Subset of received transactions.</td>
+    <td>from</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Subset of received transactions.</td>
   </tr>
   <tr>
-   <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4"><strong>Returns</strong></td>
   </tr>
   <tr>
-	<td><strong>Name</strong></td>
-   <td><strong>Type</strong></td>
-   <td colspan="3"><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-  <td>transactions</td>
-   <td><a href="#transaction">Transaction</a>[]</td>
-   <td colspan="3">All received transactions.</td>
+    <td>transactions</td>
+    <td><a href="#transaction">Transaction</a>[]</td>
+    <td colspan="3">All received transactions.</td>
   </tr>
   <tr>
-<td colspan="4"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>None</td>
-</tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
 </table>
 
 #### list_sent_transactions()
@@ -1682,59 +1663,58 @@ Transactions should be directly read from the local storage. To ensure the local
 
 <table>
   <tr>
-   <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4"><strong>Parameters</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Required</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>count</td>
-   <td>&#10004;</td>
-   <td>number</td>
-   <td>Number of (most recent) sent transactions</td>
+    <td>count</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Number of (most recent) sent transactions</td>
   </tr>
   <tr>
-   <td>from</td>
-   <td>&#10004;</td>
-   <td>number</td>
-   <td>Subset of sent transactions.</td>
+    <td>from</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Subset of sent transactions.</td>
   </tr>
   <tr>
-   <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4"><strong>Returns</strong></td>
   </tr>
   <tr>
-	<td><strong>Name</strong></td>
-   <td><strong>Type</strong></td>
-   <td colspan="3"><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-  <td>transactions</td>
-   <td><a href="#transaction">Transaction</a>[]
-   </td>
-   <td colspan="3">All sent transactions.</td>
+    <td>transactions</td>
+    <td><a href="#transaction">Transaction</a>[]</td>
+    <td colspan="3">All sent transactions.</td>
   </tr>
-    <tr>
-<td colspan="4"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>None</td>
-</tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
 </table>
 
 #### list_failed_transactions()
@@ -1743,40 +1723,38 @@ Gets all failed (broadcasted property set as false) transactions. Transactions s
 
 <table>
   <tr>
-   <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4"><strong>Returns</strong></td>
   </tr>
   <tr>
-  <td><strong>Name</strong></td>
-   <td><strong>Type</strong></td>
-   <td colspan="3"><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-  <td>transactions</td>
-   <td><a href="#transaction">Transaction</a>[]</td>
-   <td>All failed transactions.</td>
+    <td>transactions</td>
+    <td><a href="#transaction">Transaction</a>[]</td>
+    <td>All failed transactions.</td>
   </tr>
   <tr>
-<td colspan="3"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>None</td>
-</tr>
+    <td colspan="3"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
 </table>
-
-
 
 #### list_unconfirmed_transactions()
 
@@ -1784,41 +1762,38 @@ Gets all unconfirmed (confirmed property set as false) transactions. Transaction
 
 <table>
   <tr>
-   <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4"><strong>Returns</strong></td>
   </tr>
   <tr>
-  <td><strong>Name</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-  <td>transactions</td>
-   <td><a href="#transaction">Transaction</a>[]
-   </td>
-   <td>All unconfirmed transactions.</td>
+    <td>transactions</td>
+    <td><a href="#transaction">Transaction</a>[]</td>
+    <td>All unconfirmed transactions.</td>
   </tr>
-<tr>
-<td colspan="3"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>None</td>
-</tr>
+  <tr>
+    <td colspan="3"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
 </table>
-
-
 
 #### get_transaction()
 
@@ -1828,55 +1803,56 @@ Transaction objects should be directly read from the local storage. To ensure th
 
 <table>
   <tr>
-   <td colspan="4"><strong>Parameters</strong></td>
-  </tr>
-  <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Required</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
-  </tr>
-  <tr>
-   <td>hash</td>
-   <td>&#10004;</td>
-   <td>string</td>
-   <td>Transaction hash.</td>
-  </tr>
-  <tr>
-   <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4"><strong>Parameters</strong></td>
   </tr>
   <tr>
     <td><strong>Name</strong></td>
-   <td><strong>Type</strong></td>
-   <td colspan="3"><strong>Description</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-  <td>transaction</td>
-   <td><a href="#transaction">Transaction</a></td>
-   <td>Transaction object.</td>
+    <td>hash</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Transaction hash.</td>
   </tr>
-<tr>
-<td colspan="4"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>
-<ul><li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.1am1x0wox7ld">get_transaction()</a></li>
-</ul>
-</td>
-</tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>transaction</td>
+    <td><a href="#transaction">Transaction</a></td>
+    <td>Transaction object.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">
+      <ul>
+        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.1am1x0wox7ld">get_transaction()</a></li>
+      </ul>
+    </td>
+  </tr>
 </table>
 
 #### list_addresses()
@@ -1885,37 +1861,37 @@ Gets all addresses.
 
 <table>
   <tr>
-   <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4"><strong>Returns</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Type</strong></td>
-   <td colspan="3"><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>addresses</td>
-   <td><a href="#address">Address</a>[]</td>
-   <td>All addresses.</td>
+    <td>addresses</td>
+    <td><a href="#address">Address</a>[]</td>
+    <td>All addresses.</td>
   </tr>
-<tr>
-<td colspan="3"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>None</td>
-</tr>
+  <tr>
+    <td colspan="3"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
 </table>
 
 #### list_unspent()
@@ -1924,37 +1900,37 @@ Gets all unspent input addresses
 
 <table>
   <tr>
-   <td><strong>Returns</strong></td>
+    <td><strong>Returns</strong></td>
   </tr>
   <tr>
-   <td>Name</td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+    <td>Name</td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>addresses</td>
-   <td><a href="#address">Address</a>[]</td>
-   <td>All unspent input addresses.</td>
+    <td>addresses</td>
+    <td><a href="#address">Address</a>[]</td>
+    <td>All unspent input addresses.</td>
   </tr>
   <tr>
-<td colspan="3"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>None</td>
-</tr>
+    <td colspan="3"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
 </table>
 
 #### generate_address()
@@ -1963,39 +1939,38 @@ Gets a new unused address.
 
 <table>
   <tr>
-   <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4"><strong>Returns</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Type</strong></td>
-   <td colspan="3"><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-  <td>address</td>
-   <td><a href="#address">Address</a></td>
-   <td>A new address object.</td>
+    <td>address</td>
+    <td><a href="#address">Address</a></td>
+    <td>A new address object.</td>
   </tr>
   <tr>
-<td colspan="3"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>None</td>
-</tr>
+    <td colspan="3"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
 </table>
-
 
 ## Accounts Manager
 
@@ -2009,53 +1984,52 @@ Initialises accounts manager. Accounts manager initialisation should validate th
 
 <table>
   <tr>
-   <td colspan="4"><strong>Parameters</strong>
-   </td>
+    <td colspan="4"><strong>Parameters</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Required</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>adapter</td>
-   <td>&#10008;</td>
-   <td><a href="#storageadapter">Adapter</a></td>
-   <td>Initialisation method receives an optional storage adapter.</td>
+    <td>adapter</td>
+    <td>&#10008;</td>
+    <td><a href="#storageadapter">Adapter</a></td>
+    <td>Initialisation method receives an optional storage adapter.</td>
   </tr>
   <tr>
-   <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4"><strong>Returns</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Type</strong></td>
-   <td colspan="3"><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>manager</td>
-   <td><a href="#accountsmanagerobject">AccountsManager</a></td>
-  <td colspan="3">Accounts manager instance.</td>
+    <td>manager</td>
+    <td><a href="#accountsmanagerobject">AccountsManager</a></td>
+    <td colspan="3">Accounts manager instance.</td>
   </tr>
   <tr>
-<td colspan="4"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>None</td>
-</tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
 </table>
 
 #### add_account()
@@ -2066,57 +2040,56 @@ See account [initialisation](#initialisation) for detailed implementation guidel
 
 <table>
   <tr>
-   <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4"><strong>Parameters</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Required</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>config</td>
-   <td>&#10004;</td>
-   <td>
-<a href="#accountconfiguration">AccountConfig</a>
-   </td>
-   <td>Account configuration object.
-   </td>
+    <td>config</td>
+    <td>&#10004;</td>
+    <td>
+      <a href="#accountconfiguration">AccountConfig</a>
+    </td>
+    <td>Account configuration object.</td>
   </tr>
   <tr>
-   <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4"><strong>Returns</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Type</strong></td>
-   <td colspan="3"><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>accounts</td>
-   <td>
-<a href="#account">Account</a>
-   </td>
-   <td colspan="3">Newly created account.</td>
+    <td>accounts</td>
+    <td>
+      <a href="#account">Account</a>
+    </td>
+    <td colspan="3">Newly created account.</td>
   </tr>
   <tr>
-<td colspan="4"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>None</td>
-</tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
 </table>
 
 #### remove_account()
@@ -2129,46 +2102,49 @@ Following should be considered when removing an account:
 
 <table>
   <tr>
-   <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4"><strong>Parameters</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Required</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>identifier</td>
-   <td>&#10004;</td>
-   <td>{ address: &lt;string> } |  
-{ alias: &lt;string>  } |
-<p>
-{ id: &lt;number> } |
-<p>
-{ index: &lt;number }
-   </td>
-   <td>Identifier. Could be one of address, alias, id or index. 
-   </td>
+    <td>identifier</td>
+    <td>&#10004;</td>
+    <td>
+      { address: &lt;string> } | { alias: &lt;string> } |
+      <p>
+        { id: &lt;number> } |
+      </p>
+
+      <p>
+        { index: &lt;number }
+      </p>
+    </td>
+
+    <td>Identifier. Could be one of address, alias, id or index.</td>
   </tr>
   <tr>
-<td colspan="4"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>None</td>
-</tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
 </table>
 
 #### sync_accounts() 
@@ -2179,41 +2155,37 @@ See [Accounts Syncing Process](#accounts-syncing-process).
 
 <table>
   <tr>
-   <td colspan="3" ><strong>Returns</strong>
-   </td>
+    <td colspan="3"><strong>Returns</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong>
-   </td>
-   <td><strong>Type</strong>
-   </td>
-   <td><strong>Description</strong>
-   </td>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>account</td>
-   <td><a href="#syncedaccountobject">SyncedAccount</a>[]</td>
-   <td>Synced accounts.</td>
+    <td>account</td>
+    <td><a href="#syncedaccountobject">SyncedAccount</a>[]</td>
+    <td>Synced accounts.</td>
   </tr>
   <tr>
-<td colspan="4"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>None</td>
-</tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
 </table>
 
 #### move()
@@ -2222,66 +2194,67 @@ Initiates an internal transaction between accounts. This method should leverage 
 
 <table>
   <tr>
-   <td colspan="4"><strong>Parameters</strong>
-   </td>
+    <td colspan="4"><strong>Parameters</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Required</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>from</td>
-   <td>&#10004;</td>
-   <td>{ address: &lt;string> } |  \
-{ alias: &lt;string>  } |
-<p>
-{ id: &lt;number> } |
-<p>
-{ index: &lt;number }
-   </td>
-   <td>Identifier. Could be one of address, alias, id or index. 
-   </td>
+    <td>from</td>
+    <td>&#10004;</td>
+    <td>
+      { address: &lt;string> } | \ { alias: &lt;string> } |
+      <p>
+        { id: &lt;number> } |
+      </p>
+      <p>
+        { index: &lt;number }
+      </p>
+    </td>
+    <td>Identifier. Could be one of address, alias, id or index.</td>
   </tr>
   <tr>
-   <td>to</td>
-   <td>&#10004;</td>
-   <td>{ address: &lt;string> } |  \
-{ alias: &lt;string>  } |
-<p>
-{ id: &lt;number> } |
-<p>
-{ index: &lt;number }
-   </td>
-   <td>Identifier. Could be one of address, alias, id or index. 
-   </td>
+    <td>to</td>
+    <td>&#10004;</td>
+    <td>
+      { address: &lt;string> } | \ { alias: &lt;string> } |
+      <p>
+        { id: &lt;number> } |
+      </p>
+      <p>
+        { index: &lt;number }
+      </p>
+    </td>
+    <td>Identifier. Could be one of address, alias, id or index.</td>
   </tr>
   <tr>
-   <td>amount</td>
-   <td>&#10004;</td>
-   <td>number</td>
-   <td>Transaction amount</td>
+    <td>amount</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Transaction amount</td>
   </tr>
-  <tr>	
-<td colspan="4"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>None</td>
-</tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
 </table>
 
 #### backup()
@@ -2292,43 +2265,40 @@ This method should provide the stronghold instance with metadata of all accounts
 
 <table>
   <tr>
-   <td colspan="4"><strong>Parameters</strong>
-   </td>
+    <td colspan="4"><strong>Parameters</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Required</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>destination</td>
-   <td>&#10004;</td>
-   <td>string</td>
-   <td>Path where the backup should be stored.</td>
+    <td>destination</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Path where the backup should be stored.</td>
   </tr>
   <tr>
-<td colspan="4"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>None</td>
-</tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
 </table>
-
-
 
 #### import_accounts
 
@@ -2450,70 +2420,66 @@ See [reattach()](#reattach) method on an account object for implementation detai
 
 <table>
   <tr>
-   <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4"><strong>Parameters</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Required</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>identifier</td>
-   <td>&#10004;</td>
-   <td>{ address: &lt;string> } |  \
-{ alias: &lt;string>  } |
-<p>
-{ id: &lt;number> } |
-<p>
-{ index: &lt;number }
-   </td>
-   <td>Identifier. Could be one of address, alias, id or index. 
-   </td>
+    <td>identifier</td>
+    <td>&#10004;</td>
+    <td>
+      { address: &lt;string> } | \ { alias: &lt;string> } |
+      <p>
+        { id: &lt;number> } |
+      </p>
+      <p>
+        { index: &lt;number }
+      </p>
+    </td>
+    <td>Identifier. Could be one of address, alias, id or index.</td>
   </tr>
   <tr>
-   <td>hash</td>
-   <td>&#10004;</td>
-   <td>string
-   </td>
-   <td>Transaction hash.</td>
+    <td>hash</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Transaction hash.</td>
   </tr>
   <tr>
-   <td colspan="4"><strong>Returns</strong>
-   </td>
+    <td colspan="4"><strong>Returns</strong></td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Type</strong></td>
-   <td colspan="3"><strong>Description</strong></td>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-   <td>transaction
-   </td>
-   <td>
-<a href="#transaction">Transaction</a>[]
-   </td>
-   <td colspan="3">Newly reattached transaction.</td>
+    <td>transaction</td>
+    <td><a href="#transaction">Transaction</a>[]</td>
+    <td colspan="3">Newly reattached transaction.</td>
   </tr>
   <tr>
-<td colspan="4"><strong>Additional Information</strong></td>
-</tr>
-<tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td>None</td>
-</tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
 </table>
 
 ## Events 
