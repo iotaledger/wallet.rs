@@ -1173,7 +1173,7 @@ Following is the process for retrying a failed transaction:
   <tr>
     <td>transactions</td>
     <td><a href="#transaction">Transaction[]</a></td>
-    <td>Newly made transaction.</td>
+    <td colspan="3">Newly made transaction.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Additional Information</strong></td>
@@ -1294,7 +1294,7 @@ Following should be considered when implementing this method:
 
 <table>
   <tr>
-    <td colspan="3"><strong>Parameters</strong></td>
+    <td colspan="4"><strong>Parameters</strong></td>
   </tr>
   <tr>
     <td><strong>Name</strong></td>
@@ -1828,7 +1828,7 @@ Transaction objects should be directly read from the local storage. To ensure th
   <tr>
     <td>transaction</td>
     <td><a href="#transaction">Transaction</a></td>
-    <td>Transaction object.</td>
+    <td colspan="3">Transaction object.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Additional Information</strong></td>
@@ -1900,7 +1900,7 @@ Gets all unspent input addresses
 
 <table>
   <tr>
-    <td><strong>Returns</strong></td>
+    <td colspan="4"><strong>Returns</strong></td>
   </tr>
   <tr>
     <td>Name</td>
@@ -1956,7 +1956,7 @@ Gets a new unused address.
   </tr>
   <tr>
     <td><strong>Name</strong></td>
-    <td><strong>Description</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -2118,12 +2118,10 @@ Following should be considered when removing an account:
       <p>
         { id: &lt;number> } |
       </p>
-
       <p>
         { index: &lt;number }
       </p>
     </td>
-
     <td>Identifier. Could be one of address, alias, id or index.</td>
   </tr>
   <tr>
@@ -2319,7 +2317,7 @@ Import (backed up) accounts.
   <tr>
    <td>accounts</td>
    <td>&#10004;</td>
-<td><a href="#heading=h.fh3sa4qi8f48">Account</a>[]
+<td><a href="#account">Account</a>[]
    </td>
    <td>Account object.</td>
   </tr>
@@ -2340,7 +2338,7 @@ Import (backed up) accounts.
 </tr>
 <tr>
 <td>Required client library methods</td>
-<td>None</td>
+<td colspan="3">None</td>
 </tr>
 </table>
 
@@ -2396,7 +2394,7 @@ Returns the account associated with the provided identifier.
 </tr>
 <tr>
 <td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
+<td colspan="3"><strong>Description</strong></td>
 </tr>
 <tr>
 <td>Access modifiers</td>
@@ -2408,7 +2406,7 @@ Returns the account associated with the provided identifier.
 </tr>
 <tr>
 <td>Required client library methods</td>
-<td>None</td>
+<td colspan="3">None</td>
 </tr>
 </table>
 
