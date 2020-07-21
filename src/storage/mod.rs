@@ -1,5 +1,7 @@
-#[cfg(not(feature = "stronghold"))]
+#[cfg(not(any(feature = "sqlite", feature = "stronghold")))]
 mod key_value;
+#[cfg(feature = "sqlite")]
+mod sqlite;
 #[cfg(feature = "stronghold")]
 mod stronghold;
 
@@ -23,7 +25,7 @@ pub fn set_adapter(storage: impl StorageAdapter + Sync + Send + 'static) -> crat
 #[allow(clippy::borrowed_box)]
 pub(crate) fn get_adapter() -> crate::Result<&'static Box<dyn StorageAdapter + Sync + Send>> {
   INSTANCE.get_or_try_init(|| {
-    #[cfg(not(feature = "stronghold"))]
+    #[cfg(not(any(feature = "sqlite", feature = "stronghold")))]
     {
       let instance = Box::new(key_value::KeyValueStorageAdapter::new(
         "./example-database",
@@ -35,6 +37,12 @@ pub(crate) fn get_adapter() -> crate::Result<&'static Box<dyn StorageAdapter + S
       let instance = Box::new(stronghold::StrongholdStorageAdapter::new(
         "./example-database",
       )?) as Box<dyn StorageAdapter + Sync + Send>;
+      Ok(instance)
+    }
+    #[cfg(feature = "sqlite")]
+    {
+      let instance = Box::new(sqlite::SqliteStorageAdapter::new("wallet.db".to_string())?)
+        as Box<dyn StorageAdapter + Sync + Send>;
       Ok(instance)
     }
   })

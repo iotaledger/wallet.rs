@@ -21,6 +21,9 @@ kv = "0.20"
 iota-client-mock = { path = "./iota-client-mock/" }
 url = { version = "2.1", features = [ "serde" ] }
 
+# sql
+rusqlite = { version = "0.23", optional = true }
+
 # stronghold
 vault = { git = "https://github.com/iotaledger/stronghold.rs/", optional = true }
 crypto = { git = "https://github.com/iotaledger/stronghold.rs/", optional = true }
@@ -31,3 +34,4 @@ bincode = { version = "1.3.1", optional = true }
 
 [features]
 stronghold = ["vault", "crypto", "random", "snapshot", "primitives", "bincode"]
+sqlite = ["rusqlite"]
