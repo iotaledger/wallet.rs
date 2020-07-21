@@ -86,11 +86,12 @@ impl PartialEq for Address {
 pub(crate) fn get_new_address(account: &Account<'_>) -> crate::Result<Address> {
   crate::client::with_client(account.client_options(), |client| {
     let iota_address = client.generate_address().seed(account.seed()).generate()?;
+    let balance = get_balance(&account, &iota_address)?;
     let checksum = generate_checksum(&iota_address)?;
     let address = Address {
       address: iota_address,
-      balance: 0,
-      key_index: 0,
+      balance,
+      key_index: 0, // TODO
       checksum,
     };
     Ok(address)
@@ -115,11 +116,12 @@ pub(crate) fn get_addresses(account: &Account<'_>, count: u64) -> crate::Result<
         .to_owned(),
     )
     .unwrap();
+    let balance = get_balance(&account, &address)?;
     let checksum = generate_checksum(&address)?;
     addresses.push(Address {
       address,
-      balance: 0,
-      key_index: i,
+      balance,
+      key_index: i, // TODO
       checksum,
     })
   }
@@ -127,7 +129,7 @@ pub(crate) fn get_addresses(account: &Account<'_>, count: u64) -> crate::Result<
 }
 
 /// Generates a checksum for the given address
-pub(crate) fn generate_checksum(address: &IotaAddress) -> crate::Result<TritBuf> {
+fn generate_checksum(address: &IotaAddress) -> crate::Result<TritBuf> {
   let mut kerl = Kerl::new();
   let mut hash = kerl
     .digest(address.to_inner())
@@ -143,4 +145,10 @@ pub(crate) fn generate_checksum(address: &IotaAddress) -> crate::Result<TritBuf>
   }
 
   Ok(TritBuf::from_trits(&trits[..]))
+}
+
+fn get_balance(account: &Account<'_>, address: &IotaAddress) -> crate::Result<u64> {
+  crate::client::with_client(account.client_options(), |client| {
+    client.balance_for_address(address).get()
+  })
 }

@@ -16,21 +16,21 @@ impl<'a> GetBalanceBuilder<'a> {
     self
   }
 
-  pub fn get() -> crate::Result<u64> {
+  pub fn get(&self) -> crate::Result<u64> {
     Ok(5)
   }
 }
 
-pub struct GetBalanceForAddressBuilder {
-  address: Address,
+pub struct GetBalanceForAddressBuilder<'a> {
+  address: &'a Address,
 }
 
-impl GetBalanceForAddressBuilder {
-  pub(crate) fn new(address: Address) -> Self {
+impl<'a> GetBalanceForAddressBuilder<'a> {
+  pub(crate) fn new(address: &'a Address) -> Self {
     Self { address }
   }
 
-  pub fn get() -> crate::Result<u64> {
+  pub fn get(&self) -> crate::Result<u64> {
     Ok(17)
   }
 }
