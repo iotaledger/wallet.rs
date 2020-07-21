@@ -1,9 +1,10 @@
 use crate::account::Account;
-use bee_crypto::ternary::Kerl;
+use bee_crypto::ternary::{Kerl, Sponge};
 use bee_signing::ternary::{
   PrivateKey, PrivateKeyGenerator, PublicKey, Seed, WotsSecurityLevel,
   WotsShakePrivateKeyGeneratorBuilder,
 };
+use bee_ternary::TritBuf;
 pub use bee_transaction::bundled::Address as IotaAddress;
 use bee_transaction::bundled::BundledTransactionField;
 use getset::Getters;
@@ -15,7 +16,6 @@ pub struct AddressBuilder {
   address: Option<IotaAddress>,
   balance: Option<u64>,
   key_index: Option<u64>,
-  // TODO checksum:
 }
 
 impl AddressBuilder {
@@ -44,16 +44,19 @@ impl AddressBuilder {
 
   /// Builds the address.
   pub fn build(self) -> crate::Result<Address> {
+    let iota_address = self
+      .address
+      .ok_or_else(|| anyhow::anyhow!("the `address` field is required"))?;
+    let checksum = generate_checksum(&iota_address)?;
     let address = Address {
-      address: self
-        .address
-        .ok_or_else(|| anyhow::anyhow!("the `address` field is required"))?,
+      address: iota_address,
       balance: self
         .balance
         .ok_or_else(|| anyhow::anyhow!("the `balance` field is required"))?,
       key_index: self
         .key_index
         .ok_or_else(|| anyhow::anyhow!("the `key_index` field is required"))?,
+      checksum,
     };
     Ok(address)
   }
@@ -69,6 +72,8 @@ pub struct Address {
   balance: u64,
   /// The address key index.
   key_index: u64,
+  /// The address checksum.
+  checksum: TritBuf,
 }
 
 impl PartialEq for Address {
@@ -81,10 +86,12 @@ impl PartialEq for Address {
 pub(crate) fn get_new_address(account: &Account<'_>) -> crate::Result<Address> {
   crate::client::with_client(account.client_options(), |client| {
     let iota_address = client.generate_address().seed(account.seed()).generate()?;
+    let checksum = generate_checksum(&iota_address)?;
     let address = Address {
       address: iota_address,
       balance: 0,
       key_index: 0,
+      checksum,
     };
     Ok(address)
   })
@@ -108,11 +115,32 @@ pub(crate) fn get_addresses(account: &Account<'_>, count: u64) -> crate::Result<
         .to_owned(),
     )
     .unwrap();
+    let checksum = generate_checksum(&address)?;
     addresses.push(Address {
       address,
       balance: 0,
       key_index: i,
+      checksum,
     })
   }
   Ok(addresses)
+}
+
+/// Generates a checksum for the given address
+pub(crate) fn generate_checksum(address: &IotaAddress) -> crate::Result<TritBuf> {
+  let mut kerl = Kerl::new();
+  let mut hash = kerl
+    .digest(address.to_inner())
+    .map_err(|e| anyhow::anyhow!("Erro hashing the address"))?;
+  let mut trits = vec![];
+
+  for _ in 1..10 {
+    if let Some(trit) = hash.pop() {
+      trits.push(trit);
+    } else {
+      return Err(anyhow::anyhow!("Hash error"));
+    }
+  }
+
+  Ok(TritBuf::from_trits(&trits[..]))
 }
