@@ -1,6 +1,7 @@
+#[cfg(not(feature = "stronghold"))]
 mod key_value;
-
-pub use key_value::KeyValueStorageAdapter;
+#[cfg(feature = "stronghold")]
+mod stronghold;
 
 use crate::account::{Account, AccountIdentifier};
 use crate::address::Address;
@@ -22,9 +23,20 @@ pub fn set_adapter(storage: impl StorageAdapter + Sync + Send + 'static) -> crat
 #[allow(clippy::borrowed_box)]
 pub(crate) fn get_adapter() -> crate::Result<&'static Box<dyn StorageAdapter + Sync + Send>> {
   INSTANCE.get_or_try_init(|| {
-    let instance = Box::new(KeyValueStorageAdapter::new("./example-database")?)
-      as Box<dyn StorageAdapter + Sync + Send>;
-    Ok(instance)
+    #[cfg(not(feature = "stronghold"))]
+    {
+      let instance = Box::new(key_value::KeyValueStorageAdapter::new(
+        "./example-database",
+      )?) as Box<dyn StorageAdapter + Sync + Send>;
+      Ok(instance)
+    }
+    #[cfg(feature = "stronghold")]
+    {
+      let instance = Box::new(stronghold::StrongholdStorageAdapter::new(
+        "./example-database",
+      )?) as Box<dyn StorageAdapter + Sync + Send>;
+      Ok(instance)
+    }
   })
 }
 

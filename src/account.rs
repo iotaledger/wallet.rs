@@ -99,15 +99,18 @@ impl<'a> AccountInitialiser<'a> {
   /// Initialises the account.
   pub fn initialise(self) -> crate::Result<Account<'a>> {
     let alias = self.alias.unwrap_or_else(|| "");
+    let id = self.id.unwrap_or(alias);
 
     let account = Account {
-      id: self.id.unwrap_or(alias),
+      id,
       alias,
       created_at: self.created_at.unwrap_or_else(chrono::Utc::now),
       transactions: self.transactions,
       addresses: self.addresses,
       client_options: self.client_options,
     };
+    let adapter = crate::storage::get_adapter()?;
+    adapter.set(id.to_string().into(), serde_json::to_string(&account)?)?;
     Ok(account)
   }
 }

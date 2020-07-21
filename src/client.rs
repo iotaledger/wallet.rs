@@ -197,7 +197,7 @@ impl ClientOptionsBuilder {
   /// # Examples
   /// ```
   /// use iota_wallet::client::ClientOptionsBuilder;
-  /// let clientOptions = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+  /// let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
   ///   .expect("invalid node URL")
   ///   .build();
   /// ```
@@ -210,7 +210,7 @@ impl ClientOptionsBuilder {
   /// # Examples
   /// ```
   /// use iota_wallet::client::ClientOptionsBuilder;
-  /// let ClientOptions = ClientOptionsBuilder::nodes(&["https://nodes.devnet.iota.org:443", "https://nodes.comnet.thetangle.org/"])
+  /// let client_options = ClientOptionsBuilder::nodes(&["https://nodes.devnet.iota.org:443", "https://nodes.comnet.thetangle.org/"])
   ///   .expect("invalid nodes URLs")
   ///   .build();
   /// ```
@@ -223,7 +223,7 @@ impl ClientOptionsBuilder {
   /// # Examples
   /// ```
   /// use iota_wallet::client::ClientOptionsBuilder;
-  /// let ClientOptions = ClientOptionsBuilder::node_pool_urls(&["https://nodes.iota.works/api/ssl/live"])
+  /// let client_options = ClientOptionsBuilder::node_pool_urls(&["https://nodes.iota.works/api/ssl/live"])
   ///   .expect("invalid pool URLs")
   ///   .build();
   /// ```
@@ -236,7 +236,7 @@ impl ClientOptionsBuilder {
   /// # Examples
   /// ```
   /// use iota_wallet::client::{ClientOptionsBuilder, Network};
-  /// let ClientOptions = ClientOptionsBuilder::network(Network::Devnet)
+  /// let client_options = ClientOptionsBuilder::network(Network::Devnet)
   ///   .build();
   /// ```
   pub fn network(network: Network) -> MultiNodeClientOptionsBuilder {
