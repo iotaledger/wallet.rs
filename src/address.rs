@@ -152,3 +152,10 @@ fn get_balance(account: &Account<'_>, address: &IotaAddress) -> crate::Result<u6
     client.balance_for_address(address).get()
   })
 }
+
+pub(crate) fn is_unspent(account: &Account<'_>, address: &IotaAddress) -> bool {
+  account
+    .transactions()
+    .iter()
+    .any(|tx| tx.address().address() == address)
+}

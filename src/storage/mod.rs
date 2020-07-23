@@ -61,6 +61,7 @@ pub trait StorageAdapter {
 }
 
 /// Transaction type.
+#[derive(Debug, Clone)]
 pub enum TransactionType {
   /// Transaction received.
   Received,
@@ -116,31 +117,6 @@ pub(crate) fn available_balance(account_id: &str) -> crate::Result<u64> {
 
 /// Updates the account alias.
 pub(crate) fn set_alias(account_id: &str, alias: &str) -> crate::Result<()> {
-  unimplemented!()
-}
-
-/// Gets a list of transactions on the given account.
-/// It's fetched from the storage. To ensure the database is updated with the latest transactions,
-/// `sync` should be called first.
-///
-/// * `account_id` - The account identifier
-/// * `count` - Number of (most recent) transactions to fetch.
-/// * `from` - Starting point of the subset to fetch.
-/// * `transaction_type` - Optional transaction type filter.
-pub(crate) fn list_transactions(
-  account_id: &str,
-  count: u64,
-  from: u64,
-  transaction_type: Option<TransactionType>,
-) -> crate::Result<Vec<Transaction>> {
-  Ok(vec![])
-}
-
-/// Gets the addresses linked to the given account.
-///
-/// * `account_id` - The account identifier.
-/// * `unspent` - Whether it should get only unspent addresses or not.
-pub(crate) fn list_addresses(account_id: &str, unspent: bool) -> crate::Result<Vec<Address>> {
   unimplemented!()
 }
 
