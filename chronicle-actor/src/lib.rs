@@ -5,8 +5,7 @@
 use chronicle_common::actor;
 use tokio::sync::mpsc::UnboundedReceiver;
 
-use iota_wallet::account_manager::AccountManager;
-use iota_wallet::Result;
+use iota_wallet::{account_manager::AccountManager, transaction::TransactionType, Result};
 
 /// The message module contains the actor's message and response types.
 pub mod message;
@@ -50,6 +49,12 @@ impl Account {
           }
         }
         MessageType::CreateAccount(account) => self.create_account(account),
+        MessageType::ListTransactions {
+          account_id,
+          count,
+          from,
+          transaction_type,
+        } => self.list_transactions(account_id, count, from, transaction_type),
       };
 
       let response = match response {
@@ -58,6 +63,23 @@ impl Account {
       };
       message.response_tx().send(response).unwrap();
     }
+  }
+
+  fn list_transactions(
+    &self,
+    account_id: &String,
+    count: &u64,
+    from: &u64,
+    transaction_type: &Option<TransactionType>,
+  ) -> Result<ResponseMessage> {
+    let transactions = self
+      .account_manager
+      .get_account(account_id.to_string().into())?
+      .list_transactions(*count, *from, transaction_type.clone())
+      .into_iter()
+      .cloned()
+      .collect();
+    Ok(ResponseMessage::Transactions(transactions))
   }
 
   /// The remove account message handler.

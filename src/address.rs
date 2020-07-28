@@ -63,7 +63,7 @@ impl AddressBuilder {
 }
 
 /// An address.
-#[derive(Getters, Serialize, Deserialize, Clone)]
+#[derive(Debug, Getters, Serialize, Deserialize, Clone)]
 #[getset(get = "pub")]
 pub struct Address {
   /// The address.

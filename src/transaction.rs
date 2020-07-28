@@ -10,7 +10,7 @@ use std::convert::TryInto;
 use std::fmt;
 
 /// A transaction tag.
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Tag {
   tag: IotaTag,
 }
@@ -33,7 +33,7 @@ impl Tag {
 }
 
 /// A transfer to make a transaction.
-#[derive(Getters, Setters)]
+#[derive(Debug, Getters, Setters)]
 #[getset(get = "pub")]
 pub struct Transfer {
   /// The transfer value.
@@ -61,7 +61,7 @@ impl Transfer {
 }
 
 /// Possible Value units.
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum ValueUnit {
   /// i
   I,
@@ -91,7 +91,8 @@ impl fmt::Display for ValueUnit {
 }
 
 /// The transaction Value struct.
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Getters, Serialize, Deserialize, Clone)]
+#[getset(get = "pub")]
 pub struct Value {
   /// The value.
   value: u64,
@@ -119,6 +120,12 @@ impl Value {
 /// Hash wrapper to facilitate serialize/deserialize operations.
 #[derive(Clone)]
 pub struct HashDef([i8; 243]);
+
+impl std::fmt::Debug for HashDef {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    f.write_str("OMITTED")
+  }
+}
 
 impl PartialEq for HashDef {
   fn eq(&self, other: &HashDef) -> bool {
@@ -166,7 +173,7 @@ impl From<&HashDef> for Hash {
 }
 
 /// A transaction definition.
-#[derive(Getters, Serialize, Deserialize, Clone)]
+#[derive(Debug, Getters, Serialize, Deserialize, Clone)]
 #[getset(get = "pub")]
 pub struct Transaction {
   /// The transaction hash.
@@ -201,6 +208,21 @@ impl PartialEq for Transaction {
   fn eq(&self, other: &Self) -> bool {
     self.hash() == other.hash()
   }
+}
+
+/// Transaction type.
+#[derive(Debug, Clone, Deserialize)]
+pub enum TransactionType {
+  /// Transaction received.
+  Received,
+  /// Transaction sent.
+  Sent,
+  /// Transaction not broadcasted.
+  Failed,
+  /// Transaction not confirmed.
+  Unconfirmed,
+  /// A value transaction.
+  Value,
 }
 
 #[cfg(test)]
