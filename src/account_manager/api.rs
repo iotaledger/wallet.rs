@@ -1,8 +1,8 @@
+use crate::account::Account;
 use crate::address::{Address, AddressBuilder, IotaAddress};
-use crate::client::with_client;
+use crate::client::{with_client, ClientOptions};
 use crate::transaction::{Transaction, Transfer};
 use bee_crypto::ternary::Hash;
-use iota_client::Client;
 
 /// Syncs addresses with the tangle.
 /// The method ensures that the wallet local state has all used addresses plus an unused address.
@@ -21,80 +21,51 @@ use iota_client::Client;
 /// and the transaction hashes associated with the addresses.
 ///
 fn sync_addresses<'a>(
-  client: &'a Client,
+  account: &'a Account<'_>,
   address_index: u64,
   gap_limit: Option<u64>,
 ) -> crate::Result<(Vec<Address>, Vec<Hash>)> {
-  let accounts = crate::storage::get_adapter()?.get_all()?;
-  let accounts = crate::storage::parse_accounts(&accounts)?;
-
-  for account in accounts {
-    let addresses = account.addresses();
-    let transactions = account.transactions();
-    let latest_address = account.latest_address();
-    with_client(account.client_options(), |client| {
-      for transaction in transactions {}
-      for address in addresses {}
-      client.balance();
-    })
-  }
-
+  let addresses = account.addresses();
+  let transactions = account.transactions();
+  let latest_address = account.latest_address();
+  with_client(account.client_options(), |client| {
+    for transaction in transactions {}
+    for address in addresses {}
+    client.balance();
+  });
   unimplemented!()
 }
 
 /// Syncs transactions with the tangle.
 /// The method should ensures that the wallet local state has transactions associated with the address history.
 fn sync_transactions<'a>(
-  client: &'a Client,
+  account: &'a Account<'_>,
   new_transaction_hashes: Vec<Hash>,
 ) -> crate::Result<Vec<Transaction>> {
-  client.transactions();
+  with_client(account.client_options(), |client| {
+    for address in account.addresses() {
+      client.transactions().address(address.address().clone());
+    }
+  });
   unimplemented!()
-}
-
-/// The high level client interface wrapper.
-pub struct ApiClient<'a> {
-  client: &'a Client,
-}
-
-impl<'a> ApiClient<'a> {
-  /// Initialises a new instance of the ApiClient.
-  pub fn new(client: &'a Client) -> Self {
-    Self { client }
-  }
-
-  /// Starts the account sync process.
-  pub fn sync(&self, account_id: &'a str) -> AccountSynchronizer<'a> {
-    AccountSynchronizer::new(account_id, &self.client)
-  }
-
-  pub fn send_message(self, transfer: Transfer) -> crate::Result<Transaction> {
-    unimplemented!()
-  }
-
-  pub fn reattach(self, transaction_hash: Hash) -> crate::Result<Transaction> {
-    unimplemented!()
-  }
 }
 
 /// Account sync helper.
 pub struct AccountSynchronizer<'a> {
-  account_id: &'a str,
+  account: &'a Account<'a>,
   address_index: u64,
   gap_limit: Option<u64>,
   skip_persistance: bool,
-  client: &'a Client,
 }
 
 impl<'a> AccountSynchronizer<'a> {
   /// Initialises a new instance of the sync helper.
-  pub fn new(account_id: &'a str, client: &'a Client) -> Self {
+  pub fn new(account: &'a Account<'_>) -> Self {
     Self {
-      account_id,
+      account,
       address_index: 1, // TODO By default the length of addresses stored for this account should be used as an index.
       gap_limit: None,
       skip_persistance: false,
-      client,
     }
   }
 
@@ -120,12 +91,12 @@ impl<'a> AccountSynchronizer<'a> {
   /// Syncs account with the tangle.
   /// The account syncing process ensures that the latest metadata (balance, transactions)
   /// associated with an account is fetched from the tangle and is stored locally.
-  pub fn sync(self) -> crate::Result<SyncedAccount<'a>> {
-    sync_addresses(&self.client, self.address_index, self.gap_limit)?;
-    sync_transactions(&self.client, vec![])?;
+  pub fn execute(self) -> crate::Result<SyncedAccount> {
+    sync_addresses(self.account, self.address_index, self.gap_limit)?;
+    sync_transactions(self.account, vec![])?;
 
     let synced_account = SyncedAccount {
-      client: &self.client,
+      client_options: self.account.client_options().clone(),
       deposit_address: AddressBuilder::new()
         .address(IotaAddress::zeros())
         .balance(0)
@@ -137,12 +108,12 @@ impl<'a> AccountSynchronizer<'a> {
 }
 
 /// Data returned from account synchronization.
-pub struct SyncedAccount<'a> {
-  client: &'a Client,
+pub struct SyncedAccount {
+  client_options: ClientOptions,
   deposit_address: Address,
 }
 
-impl<'a> SyncedAccount<'a> {
+impl SyncedAccount {
   /// The account's deposit address.
   pub fn deposit_address(&self) -> &Address {
     &self.deposit_address

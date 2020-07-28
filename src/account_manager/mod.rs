@@ -2,7 +2,7 @@ mod api;
 
 use crate::account::{Account, AccountIdentifier, AccountInitialiser};
 use crate::client::ClientOptions;
-use api::SyncedAccount;
+use api::{AccountSynchronizer, SyncedAccount};
 use std::path::Path;
 
 /// The account manager.
@@ -28,8 +28,15 @@ impl<'a> AccountManager {
   }
 
   /// Syncs all accounts.
-  pub fn sync_accounts(&self) -> crate::Result<Vec<SyncedAccount<'a>>> {
-    unimplemented!()
+  pub fn sync_accounts(&self) -> crate::Result<Vec<SyncedAccount>> {
+    let accounts = crate::storage::get_adapter()?.get_all()?;
+    let mut synced_accounts = vec![];
+    for account_str in accounts {
+      let account: Account<'_> = serde_json::from_str(&account_str)?;
+      let synced_account = AccountSynchronizer::new(&account).execute()?;
+      synced_accounts.push(synced_account);
+    }
+    Ok(synced_accounts)
   }
 
   /// Transfers an amount from an account to another.
