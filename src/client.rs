@@ -1,5 +1,5 @@
-pub use iota_client::Network;
-use iota_client::{Client, ClientBuilder};
+pub use iota::client::builder::Network;
+use iota::client::{Client, ClientBuilder};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use url::Url;
@@ -21,9 +21,11 @@ pub(crate) fn with_client<F: FnOnce(&Client)>(options: &ClientOptions, cb: F) {
     .expect("failed to lock client instances: get_client()");
 
   if !map.contains_key(&options) {
-    let client = ClientBuilder::node("")
+    let client = ClientBuilder::new()
+      .node("http://127.0.0.1:8080")
       .expect("failed to initialise ClientBuilder")
-      .build();
+      .build()
+      .expect("failed to initialise ClientBuilder");
 
     map.insert(options.clone(), client);
   }

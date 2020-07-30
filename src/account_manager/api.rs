@@ -2,7 +2,7 @@ use crate::address::{Address, AddressBuilder, IotaAddress};
 use crate::client::with_client;
 use crate::transaction::{Transaction, Transfer};
 use bee_crypto::ternary::Hash;
-use iota_client::Client;
+use iota::Client;
 
 /// Syncs addresses with the tangle.
 /// The method ensures that the wallet local state has all used addresses plus an unused address.
@@ -35,7 +35,8 @@ fn sync_addresses<'a>(
     with_client(account.client_options(), |client| {
       for transaction in transactions {}
       for address in addresses {}
-      client.balance();
+      // TODO add seed here
+      // client.get_balance();
     })
   }
 
@@ -48,7 +49,7 @@ fn sync_transactions<'a>(
   client: &'a Client,
   new_transaction_hashes: Vec<Hash>,
 ) -> crate::Result<Vec<Transaction>> {
-  client.transactions();
+  client.find_transactions();
   unimplemented!()
 }
 
