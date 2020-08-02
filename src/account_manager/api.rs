@@ -45,6 +45,7 @@ fn sync_transactions<'a>(
 ) -> crate::Result<Vec<Transaction>> {
   let mut transactions: Vec<Transaction> = account.transactions().iter().cloned().collect();
 
+  // sync `broadcasted` state
   transactions
     .iter_mut()
     .filter(|tx| !tx.broadcasted() && new_transaction_hashes.contains(tx.hash()))
@@ -52,6 +53,33 @@ fn sync_transactions<'a>(
       tx.set_broadcasted(true);
     });
 
+  // sync `confirmed` state
+  let mut unconfirmed_transactions: Vec<&mut Transaction> = transactions
+    .iter_mut()
+    .filter(|tx| !tx.confirmed())
+    .collect();
+  with_client(account.client_options(), |client| {
+    futures::executor::block_on(async move {
+      let unconfirmed_transaction_hashes: Vec<Hash> = unconfirmed_transactions
+        .iter()
+        .map(|tx| tx.hash().clone())
+        .collect();
+      let confirmed_states = client
+        .is_confirmed(&unconfirmed_transaction_hashes[..])
+        .await
+        .unwrap();
+      for (tx, confirmed) in unconfirmed_transactions
+        .iter_mut()
+        .zip(confirmed_states.iter())
+      {
+        if *confirmed {
+          tx.set_confirmed(true);
+        }
+      }
+    })
+  });
+
+  // get new transactions
   let new_transactions = with_client(account.client_options(), |client| {
     futures::executor::block_on(async move {
       let mut new_transactions = vec![];
