@@ -129,6 +129,7 @@ pub(crate) fn get_addresses(account: &Account<'_>, count: u64) -> crate::Result<
 }
 
 /// Generates a checksum for the given address
+// TODO: maybe this should be part of the crypto lib
 fn generate_checksum(address: &IotaAddress) -> crate::Result<TritBuf> {
   let mut kerl = Kerl::new();
   let mut hash = kerl
@@ -157,5 +158,5 @@ pub(crate) fn is_unspent(account: &Account<'_>, address: &IotaAddress) -> bool {
   account
     .transactions()
     .iter()
-    .any(|tx| tx.address().address() == address)
+    .any(|tx| *tx.value().value() < 0 && tx.address().address() == address)
 }
