@@ -261,7 +261,7 @@ impl Client {
     GetBalanceBuilder::new()
   }
 
-  pub fn balance_for_address(&self, address: Address) -> GetBalanceForAddressBuilder {
+  pub fn balance_for_address<'a>(&self, address: &'a Address) -> GetBalanceForAddressBuilder<'a> {
     GetBalanceForAddressBuilder::new(address)
   }
 }

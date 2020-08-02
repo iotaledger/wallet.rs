@@ -15,7 +15,7 @@ fn instances() -> &'static ClientInstanceMap {
   &LISTENERS
 }
 
-pub(crate) fn with_client<F: FnOnce(&Client)>(options: &ClientOptions, cb: F) {
+pub(crate) fn with_client<T, F: FnOnce(&Client) -> T>(options: &ClientOptions, cb: F) -> T {
   let mut map = instances()
     .lock()
     .expect("failed to lock client instances: get_client()");

@@ -3,6 +3,8 @@ use crate::client::ClientOptions;
 use crate::storage::TransactionType;
 use crate::transaction::Transaction;
 
+use bee_crypto::ternary::Kerl;
+use bee_signing::ternary::TernarySeed;
 use chrono::prelude::{DateTime, Utc};
 use getset::Getters;
 use serde::{Deserialize, Serialize};
@@ -140,6 +142,10 @@ impl<'a> Account<'a> {
     &self.addresses.iter().max_by_key(|a| a.key_index()).unwrap()
   }
 
+  pub(crate) fn seed(&self) -> &TernarySeed<Kerl> {
+    unimplemented!()
+  }
+
   /// Gets the account's total balance.
   /// It's read directly from the storage. To read the latest account balance, you should `sync` first.
   pub fn total_balance(&mut self) -> crate::Result<u64> {
@@ -164,7 +170,7 @@ impl<'a> Account<'a> {
     crate::storage::set_alias(id, alias)
   }
 
-  /// Gets a list of transactions on the given account.
+  /// Gets a list of transactions on this account.
   /// It's fetched from the storage. To ensure the database is updated with the latest transactions,
   /// `sync` should be called first.
   ///
@@ -194,23 +200,37 @@ impl<'a> Account<'a> {
     count: u64,
     from: u64,
     transaction_type: Option<TransactionType>,
-  ) -> crate::Result<Vec<Transaction>> {
+  ) -> Vec<&Transaction> {
     let id = self.alias;
-    crate::storage::list_transactions(id, count, from, transaction_type)
+    self
+      .transactions
+      .iter()
+      .filter(|tx| {
+        if let Some(tx_type) = transaction_type.clone() {
+          true
+        } else {
+          true
+        }
+      })
+      .collect()
   }
 
-  /// Gets the addresses linked to the given account.
+  /// Gets the addresses linked to this account.
   ///
   /// * `unspent` - Whether it should get only unspent addresses or not.
-  pub fn list_addresses(&mut self, unspent: bool) -> crate::Result<Vec<Address>> {
-    let id = self.alias;
-    crate::storage::list_addresses(id, unspent)
+  pub fn list_addresses(&mut self, unspent: bool) -> Vec<&Address> {
+    self
+      .addresses
+      .iter()
+      .filter(|address| crate::address::is_unspent(&self, address.address()) == unspent)
+      .collect()
   }
 
-  /// Gets a new unused address and links it to the given account.
+  /// Gets a new unused address and links it to this account.
   pub fn generate_address(&mut self) -> crate::Result<Address> {
     let id = self.alias;
-    crate::storage::generate_address(id)
+    let address = crate::address::get_new_address(&self)?;
+    crate::storage::save_address(id, &address)
   }
 }
 
