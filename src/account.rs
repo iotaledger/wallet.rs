@@ -2,8 +2,7 @@ use crate::address::Address;
 use crate::client::ClientOptions;
 use crate::transaction::{Transaction, TransactionType};
 
-use bee_crypto::ternary::Kerl;
-use bee_signing::ternary::TernarySeed;
+use bee_signing::ternary::seed::Seed;
 use chrono::prelude::{DateTime, Utc};
 use getset::Getters;
 use serde::{Deserialize, Serialize};
@@ -128,9 +127,11 @@ pub struct Account<'a> {
   created_at: DateTime<Utc>,
   /// Transactions associated with the seed.
   /// The account can be initialised with locally stored transactions.
+  #[serde(skip)]
   transactions: Vec<Transaction>,
   /// Address history associated with the seed.
   /// The account can be initialised with locally stored address history.
+  #[serde(skip)]
   addresses: Vec<Address>,
   /// The client options.
   client_options: ClientOptions,
@@ -141,7 +142,7 @@ impl<'a> Account<'a> {
     &self.addresses.iter().max_by_key(|a| a.key_index()).unwrap()
   }
 
-  pub(crate) fn seed(&self) -> &TernarySeed<Kerl> {
+  pub(crate) fn seed(&self) -> &Seed {
     unimplemented!()
   }
 
