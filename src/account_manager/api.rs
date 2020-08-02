@@ -31,7 +31,8 @@ fn sync_addresses<'a>(
   with_client(account.client_options(), |client| {
     for transaction in transactions {}
     for address in addresses {}
-    client.balance();
+    // TODO add seed here
+    // client.balance();
   });
   unimplemented!()
 }
@@ -44,7 +45,10 @@ fn sync_transactions<'a>(
 ) -> crate::Result<Vec<Transaction>> {
   with_client(account.client_options(), |client| {
     for address in account.addresses() {
-      client.transactions().address(address.address().clone());
+      // TODO: implement this when iota.rs and wallet.rs uses the same bee-transaction
+      /*client
+      .find_transactions()
+      .addresses(&[address.address().clone()]);*/
     }
   });
   unimplemented!()

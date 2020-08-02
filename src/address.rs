@@ -85,16 +85,23 @@ impl PartialEq for Address {
 /// Gets an unused address for the given account.
 pub(crate) fn get_new_address(account: &Account<'_>) -> crate::Result<Address> {
   crate::client::with_client(account.client_options(), |client| {
-    let iota_address = client.generate_address().seed(account.seed()).generate()?;
+    unimplemented!()
+    // TODO: implement this when iota.rs and wallet.rs uses the same bee-transaction
+    /*let (key_index, iota_address) = futures::executor::block_on(async move {
+      client
+        .generate_new_address(account.seed())
+        .generate()
+        .await?
+    });
     let balance = get_balance(&account, &iota_address)?;
     let checksum = generate_checksum(&iota_address)?;
     let address = Address {
       address: iota_address,
       balance,
-      key_index: 0, // TODO
+      key_index,
       checksum,
     };
-    Ok(address)
+    Ok(address)*/
   })
 }
 
@@ -129,6 +136,7 @@ pub(crate) fn get_addresses(account: &Account<'_>, count: u64) -> crate::Result<
 }
 
 /// Generates a checksum for the given address
+// TODO: maybe this should be part of the crypto lib
 fn generate_checksum(address: &IotaAddress) -> crate::Result<TritBuf> {
   let mut kerl = Kerl::new();
   let mut hash = kerl
@@ -149,7 +157,9 @@ fn generate_checksum(address: &IotaAddress) -> crate::Result<TritBuf> {
 
 fn get_balance(account: &Account<'_>, address: &IotaAddress) -> crate::Result<u64> {
   crate::client::with_client(account.client_options(), |client| {
-    client.balance_for_address(address).get()
+    unimplemented!()
+    // TODO: implement this when iota.rs and wallet.rs uses the same bee-transaction
+    // client.get_balances().addresses(&[*address]).send()
   })
 }
 
@@ -157,5 +167,5 @@ pub(crate) fn is_unspent(account: &Account<'_>, address: &IotaAddress) -> bool {
   account
     .transactions()
     .iter()
-    .any(|tx| tx.address().address() == address)
+    .any(|tx| *tx.value().value() < 0 && tx.address().address() == address)
 }

@@ -95,14 +95,14 @@ impl fmt::Display for ValueUnit {
 #[getset(get = "pub")]
 pub struct Value {
   /// The value.
-  value: u64,
+  value: i64,
   /// The value's unit.
   unit: ValueUnit,
 }
 
 impl Value {
   /// Ititialises a new Value.
-  pub fn new(value: u64, unit: ValueUnit) -> Self {
+  pub fn new(value: i64, unit: ValueUnit) -> Self {
     Self { value, unit }
   }
 
@@ -112,7 +112,7 @@ impl Value {
   }
 
   /// The transaction value without its unit.
-  pub fn without_denomination(&self) -> u64 {
+  pub fn without_denomination(&self) -> i64 {
     self.value
   }
 }
