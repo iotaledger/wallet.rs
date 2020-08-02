@@ -43,15 +43,36 @@ fn sync_transactions<'a>(
   account: &'a Account<'_>,
   new_transaction_hashes: Vec<Hash>,
 ) -> crate::Result<Vec<Transaction>> {
-  with_client(account.client_options(), |client| {
-    for address in account.addresses() {
-      // TODO: implement this when iota.rs and wallet.rs uses the same bee-transaction
-      /*client
-      .find_transactions()
-      .addresses(&[address.address().clone()]);*/
-    }
+  let mut transactions: Vec<Transaction> = account.transactions().iter().cloned().collect();
+
+  transactions
+    .iter_mut()
+    .filter(|tx| !tx.broadcasted() && new_transaction_hashes.contains(tx.hash()))
+    .for_each(|tx| {
+      tx.set_broadcasted(true);
+    });
+
+  let new_transactions = with_client(account.client_options(), |client| {
+    futures::executor::block_on(async move {
+      let mut new_transactions = vec![];
+      let response = client
+        .get_trytes(&new_transaction_hashes[..])
+        .await
+        .unwrap();
+      let mut hashes_iter = new_transaction_hashes.iter();
+
+      for tx in response.trytes {
+        let hash = hashes_iter.next().unwrap();
+        new_transactions.push(Transaction::from_bundled(*hash, tx).unwrap());
+      }
+      new_transactions
+    })
   });
-  unimplemented!()
+  for tx in new_transactions {
+    transactions.push(tx);
+  }
+
+  Ok(transactions)
 }
 
 /// Account sync helper.
@@ -96,8 +117,36 @@ impl<'a> AccountSynchronizer<'a> {
   /// The account syncing process ensures that the latest metadata (balance, transactions)
   /// associated with an account is fetched from the tangle and is stored locally.
   pub fn execute(self) -> crate::Result<SyncedAccount> {
+    let new_transaction_hashes = with_client(self.account.client_options(), |client| {
+      let mut addresses = vec![];
+      for address in self.account.addresses() {
+        addresses.push(address.address().clone());
+      }
+
+      let mut hashes = vec![];
+      let find_transactions_response = futures::executor::block_on(async move {
+        client
+          .find_transactions()
+          .addresses(&addresses[..])
+          .send()
+          .await
+          .unwrap()
+      });
+      for tx_hash in find_transactions_response.hashes {
+        if !self
+          .account
+          .transactions()
+          .iter()
+          .any(|tx| tx.hash() == &tx_hash)
+        {
+          hashes.push(tx_hash);
+        }
+      }
+      hashes
+    });
+
     sync_addresses(self.account, self.address_index, self.gap_limit)?;
-    sync_transactions(self.account, vec![])?;
+    sync_transactions(self.account, new_transaction_hashes)?;
 
     let synced_account = SyncedAccount {
       client_options: self.account.client_options().clone(),
