@@ -1,14 +1,13 @@
 use crate::account::Account;
-use bee_crypto::ternary::{Kerl, Sponge};
+use bee_crypto::ternary::sponge::{Kerl, Sponge};
 use bee_signing::ternary::{
-  PrivateKey, PrivateKeyGenerator, PublicKey, Seed, WotsSecurityLevel,
-  WotsShakePrivateKeyGeneratorBuilder,
+  wots::{WotsSecurityLevel, WotsShakePrivateKeyGeneratorBuilder},
+  PrivateKey, PrivateKeyGenerator, PublicKey,
 };
 use bee_ternary::TritBuf;
 pub use bee_transaction::bundled::Address as IotaAddress;
 use bee_transaction::bundled::BundledTransactionField;
 use getset::Getters;
-use serde::{Deserialize, Serialize};
 
 /// The address builder.
 #[derive(Default)]
@@ -63,7 +62,7 @@ impl AddressBuilder {
 }
 
 /// An address.
-#[derive(Getters, Serialize, Deserialize, Clone)]
+#[derive(Debug, Getters, Clone)]
 #[getset(get = "pub")]
 pub struct Address {
   /// The address.
@@ -108,18 +107,18 @@ pub(crate) fn get_new_address(account: &Account<'_>) -> crate::Result<Address> {
 /// Batch address generation.
 pub(crate) fn get_addresses(account: &Account<'_>, count: u64) -> crate::Result<Vec<Address>> {
   let mut addresses = vec![];
-  let seed_trits = account.seed().trits();
+  let seed_trits = account.seed().as_trits();
   for i in 0..count {
     let address: IotaAddress = IotaAddress::try_from_inner(
       WotsShakePrivateKeyGeneratorBuilder::<Kerl>::default()
-        .security_level(WotsSecurityLevel::Medium)
+        .with_security_level(WotsSecurityLevel::Medium)
         .build()
         .unwrap()
         .generate_from_entropy(seed_trits)
         .unwrap()
         .generate_public_key()
         .unwrap()
-        .to_trits()
+        .as_trits()
         .to_owned(),
     )
     .unwrap();

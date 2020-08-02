@@ -1,16 +1,13 @@
 use crate::address::Address;
 use bee_crypto::ternary::Hash;
-use bee_ternary::{T1B1Buf, TritBuf, Trits, Tryte, TryteBuf, T1B1};
-use bee_transaction::bundled::{BundledTransactionField, Tag as IotaTag};
+use bee_transaction::bundled::Tag as IotaTag;
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-use serde::ser::Error as SerError;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::convert::TryInto;
+use serde::{Deserialize, Serialize};
 use std::fmt;
 
 /// A transaction tag.
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Clone)]
 pub struct Tag {
   tag: IotaTag,
 }
@@ -117,61 +114,12 @@ impl Value {
   }
 }
 
-/// Hash wrapper to facilitate serialize/deserialize operations.
-#[derive(Clone)]
-pub struct HashDef([i8; 243]);
-
-impl PartialEq for HashDef {
-  fn eq(&self, other: &HashDef) -> bool {
-    self.0.iter().zip(other.0.iter()).all(|(a, b)| a == b)
-  }
-}
-
-impl Serialize for HashDef {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-    S: Serializer,
-  {
-    TritBuf::serialize(
-      &Trits::<T1B1>::try_from_raw(&self.0, 243)
-        .map_err(|_| SerError::custom("failed to get Trits from Hash"))?
-        .to_buf::<T1B1Buf>(),
-      serializer,
-    )
-  }
-}
-
-impl<'de> Deserialize<'de> for HashDef {
-  fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-  where
-    D: Deserializer<'de>,
-  {
-    TritBuf::deserialize(deserializer).map(|buf: TritBuf<T1B1Buf>| {
-      let mut trits = [0; 243];
-      trits.copy_from_slice(buf.as_slice().encode::<T1B1Buf>().as_i8_slice());
-      HashDef(trits)
-    })
-  }
-}
-
-// TODO this seems wrong
-impl From<&HashDef> for Hash {
-  fn from(def: &HashDef) -> Hash {
-    let mut tryte_buf = TryteBuf::new();
-    for value in def.0.iter() {
-      let tryte: Tryte = (*value).try_into().expect("failed to convert to Tryte");
-      tryte_buf.push(tryte);
-    }
-    Hash::from_inner_unchecked(tryte_buf.as_trits().encode())
-  }
-}
-
 /// A transaction definition.
-#[derive(Getters, Serialize, Deserialize, Clone)]
+#[derive(Getters, Clone)]
 #[getset(get = "pub")]
 pub struct Transaction {
   /// The transaction hash.
-  hash: HashDef,
+  hash: Hash,
   /// The transaction address.
   address: Address,
   /// The transaction amount.
@@ -185,11 +133,11 @@ pub struct Transaction {
   /// The transaction last index in the bundle.
   last_index: u64,
   /// The transaction bundle hash.
-  bundle_hash: HashDef,
+  bundle_hash: Hash,
   /// The trunk transaction hash.
-  trunk_transaction: HashDef,
+  trunk_transaction: Hash,
   /// The branch transaction hash.
-  brach_transaction: HashDef,
+  brach_transaction: Hash,
   /// The transaction nonce.
   nonce: String,
   /// Whether the transaction is confirmed or not.
@@ -204,26 +152,17 @@ impl PartialEq for Transaction {
   }
 }
 
-#[cfg(test)]
-mod tests {
-  use super::HashDef;
-  use bee_ternary::{T1B1Buf, TryteBuf};
-
-  #[test]
-  fn serde_hash() {
-    let tryte_buf = TryteBuf::try_from_str(
-      "RVORZ9SIIP9RCYMREUIXXVPQIPHVCNPQ9HZWYKFWYWZRE9JQKG9REPKIASHUUECPSQO9JT9XNMVKWYGVA",
-    )
-    .unwrap();
-
-    let mut trits = [0; 243];
-    trits.copy_from_slice(tryte_buf.as_trits().encode::<T1B1Buf>().as_i8_slice());
-    let hash = HashDef(trits);
-
-    let serialized = serde_json::to_string(&hash).expect("failed to serialize hash");
-    let deserialized: HashDef =
-      serde_json::from_str(&serialized).expect("failed to deserialize hash");
-
-    assert!(hash == deserialized);
-  }
+/// Transaction type.
+#[derive(Debug, Clone, Deserialize)]
+pub enum TransactionType {
+  /// Transaction received.
+  Received,
+  /// Transaction sent.
+  Sent,
+  /// Transaction not broadcasted.
+  Failed,
+  /// Transaction not confirmed.
+  Unconfirmed,
+  /// A value transaction.
+  Value,
 }
