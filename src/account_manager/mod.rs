@@ -4,6 +4,8 @@ use crate::account::{Account, AccountIdentifier, AccountInitialiser};
 use crate::client::ClientOptions;
 use api::{AccountSynchronizer, SyncedAccount};
 use std::path::Path;
+use std::thread;
+use std::time::Duration;
 
 /// The account manager.
 ///
@@ -15,6 +17,15 @@ impl<'a> AccountManager {
   /// Initialises a new instance of the account manager with the default storage adapter.
   pub fn new() -> Self {
     Default::default()
+  }
+
+  /// Starts the polling mechanism.
+  pub fn start_polling(&self) -> &Self {
+    thread::spawn(move || {
+      let _ = sync_accounts();
+      thread::sleep(Duration::from_millis(5000));
+    });
+    self
   }
 
   /// Adds a new account.
@@ -29,14 +40,7 @@ impl<'a> AccountManager {
 
   /// Syncs all accounts.
   pub fn sync_accounts(&self) -> crate::Result<Vec<SyncedAccount>> {
-    let accounts = crate::storage::get_adapter()?.get_all()?;
-    let mut synced_accounts = vec![];
-    for account_str in accounts {
-      let account: Account<'_> = serde_json::from_str(&account_str)?;
-      let synced_account = AccountSynchronizer::new(&account).execute()?;
-      synced_accounts.push(synced_account);
-    }
-    Ok(synced_accounts)
+    sync_accounts()
   }
 
   /// Transfers an amount from an account to another.
@@ -70,6 +74,17 @@ impl<'a> AccountManager {
   pub fn reattach<T>(&self, account_id: AccountIdentifier) -> crate::Result<()> {
     unimplemented!()
   }
+}
+
+fn sync_accounts() -> crate::Result<Vec<SyncedAccount>> {
+  let accounts = crate::storage::get_adapter()?.get_all()?;
+  let mut synced_accounts = vec![];
+  for account_str in accounts {
+    let account: Account<'_> = serde_json::from_str(&account_str)?;
+    let synced_account = AccountSynchronizer::new(&account).execute()?;
+    synced_accounts.push(synced_account);
+  }
+  Ok(synced_accounts)
 }
 
 #[cfg(test)]
