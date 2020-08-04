@@ -4,7 +4,7 @@ use crate::transaction::{Transaction, TransactionType};
 
 use bee_signing::ternary::seed::Seed;
 use chrono::prelude::{DateTime, Utc};
-use getset::Getters;
+use getset::{Getters, Setters};
 use serde::{Deserialize, Serialize};
 
 /// The account identifier.
@@ -116,7 +116,7 @@ impl<'a> AccountInitialiser<'a> {
 }
 
 /// Account definition.
-#[derive(Getters, Serialize, Deserialize, Clone)]
+#[derive(Getters, Setters, Serialize, Deserialize, Clone)]
 #[getset(get = "pub")]
 pub struct Account<'a> {
   /// The account identifier.
@@ -128,6 +128,7 @@ pub struct Account<'a> {
   /// Transactions associated with the seed.
   /// The account can be initialised with locally stored transactions.
   #[serde(skip)]
+  #[getset(set = "pub(crate)")]
   transactions: Vec<Transaction>,
   /// Address history associated with the seed.
   /// The account can be initialised with locally stored address history.
