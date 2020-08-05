@@ -251,10 +251,14 @@ impl ClientOptionsBuilder {
 pub struct ClientOptions {
   node: Option<Url>,
   nodes: Option<Vec<Url>>,
+  #[serde(rename = "nodePoolUrls")]
   node_pool_urls: Option<Vec<Url>>,
   network: Option<Network>,
   mwm: Option<u64>,
+  #[serde(rename = "quorumSize")]
   quorum_size: Option<u64>,
+  #[serde(rename = "quorumThreshold")]
   quorum_threshold: u32,
+  #[serde(rename = "checksumRequired")]
   checksum_required: bool,
 }
