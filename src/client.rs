@@ -257,8 +257,8 @@ pub struct ClientOptions {
   mwm: Option<u64>,
   #[serde(rename = "quorumSize")]
   quorum_size: Option<u64>,
-  #[serde(rename = "quorumThreshold")]
+  #[serde(rename = "quorumThreshold", default)]
   quorum_threshold: u32,
-  #[serde(rename = "checksumRequired")]
+  #[serde(rename = "checksumRequired", default)]
   checksum_required: bool,
 }
