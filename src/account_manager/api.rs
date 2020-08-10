@@ -1,6 +1,6 @@
 use crate::account::Account;
 use crate::address::{Address, AddressBuilder, IotaAddress};
-use crate::client::{with_client, ClientOptions};
+use crate::client::{get_client, ClientOptions};
 use crate::transaction::{Transaction, Transfer};
 use bee_crypto::ternary::Hash;
 
@@ -28,18 +28,17 @@ fn sync_addresses<'a>(
   let addresses = account.addresses();
   let transactions = account.transactions();
   let latest_address = account.latest_address();
-  with_client(account.client_options(), |client| {
-    for transaction in transactions {}
-    for address in addresses {}
-    // TODO add seed here
-    // client.balance();
-  });
+  let client = get_client(account.client_options());
+  for transaction in transactions {}
+  for address in addresses {}
+  // TODO add seed here
+  // client.balance();
   unimplemented!()
 }
 
 /// Syncs transactions with the tangle.
 /// The method should ensures that the wallet local state has transactions associated with the address history.
-fn sync_transactions<'a>(
+async fn sync_transactions<'a>(
   account: &'a Account<'_>,
   new_transaction_hashes: Vec<Hash>,
 ) -> crate::Result<Vec<Transaction>> {
@@ -58,46 +57,34 @@ fn sync_transactions<'a>(
     .iter_mut()
     .filter(|tx| !tx.confirmed())
     .collect();
-  with_client(account.client_options(), |client| {
-    futures::executor::block_on(async move {
-      let unconfirmed_transaction_hashes: Vec<Hash> = unconfirmed_transactions
-        .iter()
-        .map(|tx| tx.hash().clone())
-        .collect();
-      let confirmed_states = client
-        .is_confirmed(&unconfirmed_transaction_hashes[..])
-        .await
-        .unwrap();
-      for (tx, confirmed) in unconfirmed_transactions
-        .iter_mut()
-        .zip(confirmed_states.iter())
-      {
-        if *confirmed {
-          tx.set_confirmed(true);
-        }
-      }
-    })
-  });
+  let client = get_client(account.client_options());
+  let unconfirmed_transaction_hashes: Vec<Hash> = unconfirmed_transactions
+    .iter()
+    .map(|tx| tx.hash().clone())
+    .collect();
+  let confirmed_states = client
+    .is_confirmed(&unconfirmed_transaction_hashes[..])
+    .await
+    .unwrap();
+  for (tx, confirmed) in unconfirmed_transactions
+    .iter_mut()
+    .zip(confirmed_states.iter())
+  {
+    if *confirmed {
+      tx.set_confirmed(true);
+    }
+  }
 
   // get new transactions
-  let new_transactions = with_client(account.client_options(), |client| {
-    futures::executor::block_on(async move {
-      let mut new_transactions = vec![];
-      let response = client
-        .get_trytes(&new_transaction_hashes[..])
-        .await
-        .unwrap();
-      let mut hashes_iter = new_transaction_hashes.iter();
+  let response = client
+    .get_trytes(&new_transaction_hashes[..])
+    .await
+    .unwrap();
+  let mut hashes_iter = new_transaction_hashes.iter();
 
-      for tx in response.trytes {
-        let hash = hashes_iter.next().unwrap();
-        new_transactions.push(Transaction::from_bundled(*hash, tx).unwrap());
-      }
-      new_transactions
-    })
-  });
-  for tx in new_transactions {
-    transactions.push(tx);
+  for tx in response.trytes {
+    let hash = hashes_iter.next().unwrap();
+    transactions.push(Transaction::from_bundled(*hash, tx).unwrap());
   }
 
   Ok(transactions)
@@ -144,37 +131,33 @@ impl<'a> AccountSynchronizer<'a> {
   /// Syncs account with the tangle.
   /// The account syncing process ensures that the latest metadata (balance, transactions)
   /// associated with an account is fetched from the tangle and is stored locally.
-  pub fn execute(self) -> crate::Result<SyncedAccount> {
-    let new_transaction_hashes = with_client(self.account.client_options(), |client| {
-      let mut addresses = vec![];
-      for address in self.account.addresses() {
-        addresses.push(address.address().clone());
-      }
+  pub async fn execute(self) -> crate::Result<SyncedAccount> {
+    let client = get_client(self.account.client_options());
+    let mut addresses = vec![];
+    for address in self.account.addresses() {
+      addresses.push(address.address().clone());
+    }
 
-      let mut hashes = vec![];
-      let find_transactions_response = futures::executor::block_on(async move {
-        client
-          .find_transactions()
-          .addresses(&addresses[..])
-          .send()
-          .await
-          .unwrap()
-      });
-      for tx_hash in find_transactions_response.hashes {
-        if !self
-          .account
-          .transactions()
-          .iter()
-          .any(|tx| tx.hash() == &tx_hash)
-        {
-          hashes.push(tx_hash);
-        }
+    let mut new_transaction_hashes = vec![];
+    let find_transactions_response = client
+      .find_transactions()
+      .addresses(&addresses[..])
+      .send()
+      .await
+      .unwrap();
+    for tx_hash in find_transactions_response.hashes {
+      if !self
+        .account
+        .transactions()
+        .iter()
+        .any(|tx| tx.hash() == &tx_hash)
+      {
+        new_transaction_hashes.push(tx_hash);
       }
-      hashes
-    });
+    }
 
     sync_addresses(self.account, self.address_index, self.gap_limit)?;
-    sync_transactions(self.account, new_transaction_hashes)?;
+    sync_transactions(self.account, new_transaction_hashes).await?;
 
     let synced_account = SyncedAccount {
       client_options: self.account.client_options().clone(),

@@ -65,13 +65,13 @@ impl AccountManager {
       let _ = mutate_account_transaction(
         event.account_id().clone().into(),
         |account, transactions| {
-          let tx = crate::client::with_client(account.client_options(), |client| {
-            futures::executor::block_on(async move {
-              let response = client.get_trytes(&[transaction_hash]).await.unwrap();
-              response.trytes.first().unwrap().clone()
-            })
+          let mut rt = tokio::runtime::Runtime::new().expect("failed to create tokio runtime");
+          rt.block_on(async move {
+            let client = crate::client::get_client(account.client_options());
+            let response = client.get_trytes(&[transaction_hash]).await.unwrap();
+            let tx = response.trytes.first().unwrap().clone();
+            transactions.push(Transaction::from_bundled(*event.transaction_hash(), tx).unwrap());
           });
-          transactions.push(Transaction::from_bundled(*event.transaction_hash(), tx).unwrap());
         },
       );
     });
@@ -96,8 +96,8 @@ impl AccountManager {
   }
 
   /// Syncs all accounts.
-  pub fn sync_accounts(&self) -> crate::Result<Vec<SyncedAccount>> {
-    sync_accounts()
+  pub async fn sync_accounts(&self) -> crate::Result<Vec<SyncedAccount>> {
+    sync_accounts().await
   }
 
   /// Transfers an amount from an account to another.
@@ -131,12 +131,12 @@ impl AccountManager {
   }
 }
 
-fn sync_accounts() -> crate::Result<Vec<SyncedAccount>> {
+async fn sync_accounts() -> crate::Result<Vec<SyncedAccount>> {
   let accounts = crate::storage::get_adapter()?.get_all()?;
   let mut synced_accounts = vec![];
   for account_str in accounts {
     let account: Account<'_> = serde_json::from_str(&account_str)?;
-    let synced_account = AccountSynchronizer::new(&account).execute()?;
+    let synced_account = AccountSynchronizer::new(&account).execute().await?;
     synced_accounts.push(synced_account);
   }
   Ok(synced_accounts)

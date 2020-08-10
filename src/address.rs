@@ -82,30 +82,28 @@ impl PartialEq for Address {
 }
 
 /// Gets an unused address for the given account.
-pub(crate) fn get_new_address(account: &Account<'_>) -> crate::Result<Address> {
-  crate::client::with_client(account.client_options(), |client| {
-    unimplemented!()
-    // TODO: implement this when iota.rs and wallet.rs uses the same bee-transaction
-    /*let (key_index, iota_address) = futures::executor::block_on(async move {
-      client
-        .generate_new_address(account.seed())
-        .generate()
-        .await?
-    });
-    let balance = get_balance(&account, &iota_address)?;
-    let checksum = generate_checksum(&iota_address)?;
-    let address = Address {
-      address: iota_address,
-      balance,
-      key_index,
-      checksum,
-    };
-    Ok(address)*/
-  })
+pub(crate) async fn get_new_address(account: &Account<'_>) -> crate::Result<Address> {
+  let client = crate::client::get_client(account.client_options());
+  let (key_index, iota_address) = client
+    .generate_new_address(account.seed())
+    .generate()
+    .await?;
+  let balance = get_balance(&account, &iota_address).await?;
+  let checksum = generate_checksum(&iota_address)?;
+  let address = Address {
+    address: iota_address,
+    balance,
+    key_index,
+    checksum,
+  };
+  Ok(address)
 }
 
 /// Batch address generation.
-pub(crate) fn get_addresses(account: &Account<'_>, count: u64) -> crate::Result<Vec<Address>> {
+pub(crate) async fn get_addresses(
+  account: &Account<'_>,
+  count: u64,
+) -> crate::Result<Vec<Address>> {
   let mut addresses = vec![];
   let seed_trits = account.seed().as_trits();
   for i in 0..count {
@@ -122,7 +120,7 @@ pub(crate) fn get_addresses(account: &Account<'_>, count: u64) -> crate::Result<
         .to_owned(),
     )
     .unwrap();
-    let balance = get_balance(&account, &address)?;
+    let balance = get_balance(&account, &address).await?;
     let checksum = generate_checksum(&address)?;
     addresses.push(Address {
       address,
@@ -154,12 +152,17 @@ fn generate_checksum(address: &IotaAddress) -> crate::Result<TritBuf> {
   Ok(TritBuf::from_trits(&trits[..]))
 }
 
-fn get_balance(account: &Account<'_>, address: &IotaAddress) -> crate::Result<u64> {
-  crate::client::with_client(account.client_options(), |client| {
-    unimplemented!()
-    // TODO: implement this when iota.rs and wallet.rs uses the same bee-transaction
-    // client.get_balances().addresses(&[*address]).send()
-  })
+async fn get_balance(account: &Account<'_>, address: &IotaAddress) -> crate::Result<u64> {
+  let client = crate::client::get_client(account.client_options());
+  client
+    .get_balances()
+    .addresses(&[address.clone()])
+    .send()
+    .await?
+    .balances
+    .first()
+    .map(|v| *v)
+    .ok_or_else(|| anyhow::anyhow!("Balances response empty"))
 }
 
 pub(crate) fn is_unspent(account: &Account<'_>, address: &IotaAddress) -> bool {

@@ -233,9 +233,9 @@ impl<'a> Account<'a> {
   }
 
   /// Gets a new unused address and links it to this account.
-  pub fn generate_address(&mut self) -> crate::Result<Address> {
+  pub async fn generate_address(&mut self) -> crate::Result<Address> {
     let id = self.alias;
-    let address = crate::address::get_new_address(&self)?;
+    let address = crate::address::get_new_address(&self).await?;
     crate::storage::save_address(id, &address)
   }
 }

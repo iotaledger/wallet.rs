@@ -7,7 +7,7 @@ use url::Url;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-type ClientInstanceMap = Arc<Mutex<HashMap<ClientOptions, Client>>>;
+type ClientInstanceMap = Arc<Mutex<HashMap<ClientOptions, Arc<Client>>>>;
 
 /// Gets the balance change listeners array.
 fn instances() -> &'static ClientInstanceMap {
@@ -15,7 +15,7 @@ fn instances() -> &'static ClientInstanceMap {
   &LISTENERS
 }
 
-pub(crate) fn with_client<T, F: FnOnce(&Client) -> T>(options: &ClientOptions, cb: F) -> T {
+pub(crate) fn get_client(options: &ClientOptions) -> Arc<Client> {
   let mut map = instances()
     .lock()
     .expect("failed to lock client instances: get_client()");
@@ -27,11 +27,11 @@ pub(crate) fn with_client<T, F: FnOnce(&Client) -> T>(options: &ClientOptions, c
       .build()
       .expect("failed to initialise ClientBuilder");
 
-    map.insert(options.clone(), client);
+    map.insert(options.clone(), Arc::new(client));
   }
 
   let client = map.get(&options).expect("client not initialised");
-  cb(client)
+  client.clone()
 }
 
 /// The options builder for a client connected to a single node.
