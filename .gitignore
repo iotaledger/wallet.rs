@@ -2,3 +2,4 @@
 Cargo.lock
 example-database
 wallet.db
+.DS_Store
