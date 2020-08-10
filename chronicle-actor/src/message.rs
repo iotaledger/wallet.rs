@@ -1,4 +1,7 @@
-use iota_wallet::client::ClientOptions;
+use iota_wallet::{
+  client::ClientOptions,
+  transaction::{Transaction, TransactionType},
+};
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -31,6 +34,13 @@ pub enum MessageType {
   RemoveAccount(String),
   /// Creates an account.
   CreateAccount(AccountToCreate),
+  /// List transactions
+  ListTransactions {
+    account_id: String,
+    transaction_type: Option<TransactionType>,
+    count: u64,
+    from: u64,
+  },
 }
 
 /// The response message.
@@ -40,6 +50,8 @@ pub enum ResponseMessage {
   RemovedAccount,
   /// Account succesfully created.
   CreatedAccount,
+  /// ListTransactions response.
+  Transactions(Vec<Transaction>),
   /// An error occurred.
   Error(String),
 }

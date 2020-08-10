@@ -1,11 +1,10 @@
 use crate::address::Address;
 use crate::client::ClientOptions;
-use crate::storage::TransactionType;
-use crate::transaction::Transaction;
+use crate::transaction::{Transaction, TransactionType};
 
 use bee_signing::ternary::seed::Seed;
 use chrono::prelude::{DateTime, Utc};
-use getset::Getters;
+use getset::{Getters, Setters};
 use serde::{Deserialize, Serialize};
 
 /// The account identifier.
@@ -117,7 +116,7 @@ impl<'a> AccountInitialiser<'a> {
 }
 
 /// Account definition.
-#[derive(Getters, Serialize, Deserialize, Clone)]
+#[derive(Getters, Setters, Serialize, Deserialize, Clone)]
 #[getset(get = "pub")]
 pub struct Account<'a> {
   /// The account identifier.
@@ -129,6 +128,7 @@ pub struct Account<'a> {
   /// Transactions associated with the seed.
   /// The account can be initialised with locally stored transactions.
   #[serde(skip)]
+  #[getset(set = "pub(crate)")]
   transactions: Vec<Transaction>,
   /// Address history associated with the seed.
   /// The account can be initialised with locally stored address history.
@@ -182,7 +182,7 @@ impl<'a> Account<'a> {
   /// # Example
   ///
   /// ```
-  /// use iota_wallet::storage::TransactionType;
+  /// use iota_wallet::transaction::TransactionType;
   /// use iota_wallet::account_manager::AccountManager;
   /// use iota_wallet::client::ClientOptionsBuilder;
   ///
@@ -202,13 +202,18 @@ impl<'a> Account<'a> {
     from: u64,
     transaction_type: Option<TransactionType>,
   ) -> Vec<&Transaction> {
-    let id = self.alias;
     self
       .transactions
       .iter()
       .filter(|tx| {
         if let Some(tx_type) = transaction_type.clone() {
-          true
+          match tx_type {
+            TransactionType::Received => self.addresses.contains(tx.address()),
+            TransactionType::Sent => !self.addresses.contains(tx.address()),
+            TransactionType::Failed => !tx.broadcasted(),
+            TransactionType::Unconfirmed => !tx.confirmed(),
+            TransactionType::Value => *tx.value().value() > 0,
+          }
         } else {
           true
         }
@@ -228,9 +233,9 @@ impl<'a> Account<'a> {
   }
 
   /// Gets a new unused address and links it to this account.
-  pub fn generate_address(&mut self) -> crate::Result<Address> {
+  pub async fn generate_address(&mut self) -> crate::Result<Address> {
     let id = self.alias;
-    let address = crate::address::get_new_address(&self)?;
+    let address = crate::address::get_new_address(&self).await?;
     crate::storage::save_address(id, &address)
   }
 }

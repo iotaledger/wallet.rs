@@ -60,19 +60,6 @@ pub trait StorageAdapter {
   fn remove(&self, key: AccountIdentifier) -> crate::Result<()>;
 }
 
-/// Transaction type.
-#[derive(Debug, Clone)]
-pub enum TransactionType {
-  /// Transaction received.
-  Received,
-  /// Transaction sent.
-  Sent,
-  /// Transaction not broadcasted.
-  Failed,
-  /// Transaction not confirmed.
-  Unconfirmed,
-}
-
 pub(crate) fn parse_accounts<'a>(accounts: &'a Vec<String>) -> crate::Result<Vec<Account<'a>>> {
   let mut err = None;
   let accounts: Vec<Option<Account<'a>>> = accounts
