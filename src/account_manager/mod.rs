@@ -81,7 +81,7 @@ impl AccountManager {
   pub fn start_polling(&self) {
     thread::spawn(move || {
       let _ = sync_accounts();
-      thread::sleep(Duration::from_millis(5000));
+      thread::sleep(Duration::from_secs(5));
     });
   }
 
