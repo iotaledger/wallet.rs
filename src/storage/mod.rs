@@ -11,13 +11,24 @@ use crate::transaction::Transaction;
 use bee_crypto::ternary::Hash;
 use once_cell::sync::OnceCell;
 
-static INSTANCE: OnceCell<Box<dyn StorageAdapter + Sync + Send>> = OnceCell::new();
+use std::path::{Path, PathBuf};
 
-/// sets the storage adapter
+static INSTANCE: OnceCell<Box<dyn StorageAdapter + Sync + Send>> = OnceCell::new();
+static STORAGE_PATH: OnceCell<PathBuf> = OnceCell::new();
+
+/// Sets the storage adapter.
 pub fn set_adapter(storage: impl StorageAdapter + Sync + Send + 'static) -> crate::Result<()> {
   INSTANCE
     .set(Box::new(storage))
-    .map_err(|_| anyhow::anyhow!("failed to globall set the storage instance"))?;
+    .map_err(|_| anyhow::anyhow!("failed to globally set the storage instance"))?;
+  Ok(())
+}
+
+/// Sets the storage path for the default storage adapter.
+pub fn set_storage_path(path: impl AsRef<Path>) -> crate::Result<()> {
+  STORAGE_PATH
+    .set(path.as_ref().to_path_buf())
+    .map_err(|_| anyhow::anyhow!("failed to globally set the storage path"))?;
   Ok(())
 }
 
@@ -27,21 +38,22 @@ pub(crate) fn get_adapter() -> crate::Result<&'static Box<dyn StorageAdapter + S
   INSTANCE.get_or_try_init(|| {
     #[cfg(not(any(feature = "sqlite", feature = "stronghold")))]
     {
-      let instance = Box::new(key_value::KeyValueStorageAdapter::new(
-        "./example-database",
-      )?) as Box<dyn StorageAdapter + Sync + Send>;
+      let storage_path = STORAGE_PATH.get_or_init(|| "./example-database".into());
+      let instance = Box::new(key_value::KeyValueStorageAdapter::new(storage_path)?)
+        as Box<dyn StorageAdapter + Sync + Send>;
       Ok(instance)
     }
     #[cfg(feature = "stronghold")]
     {
-      let instance = Box::new(stronghold::StrongholdStorageAdapter::new(
-        "./example-database",
-      )?) as Box<dyn StorageAdapter + Sync + Send>;
+      let storage_path = STORAGE_PATH.get_or_init(|| "./example-database".into());
+      let instance = Box::new(stronghold::StrongholdStorageAdapter::new(storage_path)?)
+        as Box<dyn StorageAdapter + Sync + Send>;
       Ok(instance)
     }
     #[cfg(feature = "sqlite")]
     {
-      let instance = Box::new(sqlite::SqliteStorageAdapter::new("wallet.db".to_string())?)
+      let storage_path = STORAGE_PATH.get_or_init(|| "wallet.db".into());
+      let instance = Box::new(sqlite::SqliteStorageAdapter::new(storage_path)?)
         as Box<dyn StorageAdapter + Sync + Send>;
       Ok(instance)
     }
