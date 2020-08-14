@@ -4,6 +4,8 @@ use crate::client::{get_client, ClientOptions};
 use crate::transaction::{Transaction, Transfer};
 use bee_crypto::ternary::Hash;
 
+mod input_selection;
+
 /// Syncs addresses with the tangle.
 /// The method ensures that the wallet local state has all used addresses plus an unused address.
 ///
