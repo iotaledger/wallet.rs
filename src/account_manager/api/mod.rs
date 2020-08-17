@@ -1,8 +1,13 @@
 use crate::account::Account;
 use crate::address::{Address, AddressBuilder, IotaAddress};
 use crate::client::{get_client, ClientOptions};
-use crate::transaction::{Transaction, Transfer};
+use crate::transaction::{Transaction, Transfer, Value, ValueUnit};
+
 use bee_crypto::ternary::Hash;
+use chrono::prelude::{DateTime, Utc};
+use iota::client::response::Transfer as IotaTransfer;
+
+use std::convert::TryInto;
 
 mod input_selection;
 
@@ -198,16 +203,70 @@ impl SyncedAccount {
   /// Returns a (addresses, address) tuple representing the selected input addresses and the remainder address if needed.
   fn select_inputs(
     &self,
-    threshold: &u64,
+    threshold: u64,
     address: &Address,
   ) -> crate::Result<(Vec<Address>, Option<Address>)> {
+    // TODO
+    let inputs = input_selection::select_input(threshold, &mut vec![])?;
     unimplemented!()
   }
 
   /// Send transactions.
-  pub fn transfer(&self, transfer_obj: Transfer) -> crate::Result<Transaction> {
-    self.select_inputs(transfer_obj.amount(), transfer_obj.address())?;
-    unimplemented!()
+  pub async fn transfer(&self, transfer_obj: Transfer) -> crate::Result<Transaction> {
+    if *transfer_obj.amount() == 0 {
+      return Err(anyhow::anyhow!("amount can't be zero"));
+    }
+    if transfer_obj.address().checksum()
+      != &crate::address::generate_checksum(transfer_obj.address().address())?
+    {
+      return Err(anyhow::anyhow!("invalid address checksum"));
+    }
+
+    let client = get_client(&self.client_options);
+
+    let (inputs, remainder) = self.select_inputs(*transfer_obj.amount(), transfer_obj.address())?;
+    let transactions_to_approve = client.get_transactions_to_approve().send().await?;
+    // TODO add seed here
+    let mut builder = client.prepare_transfers(None).transfers(vec![IotaTransfer {
+      address: transfer_obj.address().address().clone(),
+      value: *transfer_obj.amount(),
+      message: None,
+      tag: None,
+    }]); /*.inputs(
+           inputs
+             .iter()
+             .map(|address| IotaInput {
+               address: address.address().clone(),
+               balance: *address.balance(),
+               index: *address.key_index(),
+             })
+             .collect(),
+         );*/
+    if let Some(remainder) = remainder {
+      builder = builder.remainder(remainder.address().clone());
+    }
+
+    let transaction = if let Ok(bundle) = builder.build().await {
+      Transaction::from_bundled(*bundle.hash(), bundle.tail().clone())?
+    } else {
+      Transaction {
+        hash: Hash::zeros(),
+        address: transfer_obj.address().clone(),
+        value: Value::new((*transfer_obj.amount()).try_into()?, ValueUnit::I),
+        tag: Default::default(),
+        timestamp: DateTime::from(Utc::now()),
+        current_index: 0,
+        last_index: 0,
+        bundle_hash: Hash::zeros(),
+        trunk_transaction: transactions_to_approve.trunk_transaction,
+        branch_transaction: transactions_to_approve.branch_transaction,
+        nonce: Default::default(),
+        confirmed: false,
+        broadcasted: false,
+      }
+    };
+
+    Ok(transaction)
   }
 
   /// Retry transactions.

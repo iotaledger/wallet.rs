@@ -15,6 +15,15 @@ pub struct Tag {
   tag: IotaTag,
 }
 
+impl Default for Tag {
+  /// Initialises an empty tag.
+  fn default() -> Self {
+    Self {
+      tag: IotaTag::zeros(),
+    }
+  }
+}
+
 impl Tag {
   /// Initialises a new tag.
   pub fn new(tag: IotaTag) -> Self {
@@ -122,31 +131,31 @@ impl Value {
 #[getset(get = "pub", set = "pub(crate)")]
 pub struct Transaction {
   /// The transaction hash.
-  hash: Hash,
+  pub(crate) hash: Hash,
   /// The transaction address.
-  address: Address,
+  pub(crate) address: Address,
   /// The transaction amount.
-  value: Value,
+  pub(crate) value: Value,
   /// The transaction tag.
-  tag: Tag,
+  pub(crate) tag: Tag,
   /// The transaction timestamp.
-  timestamp: DateTime<Utc>,
+  pub(crate) timestamp: DateTime<Utc>,
   /// The transaction current index in the bundle.
-  current_index: u64,
+  pub(crate) current_index: u64,
   /// The transaction last index in the bundle.
-  last_index: u64,
+  pub(crate) last_index: u64,
   /// The transaction bundle hash.
-  bundle_hash: Hash,
+  pub(crate) bundle_hash: Hash,
   /// The trunk transaction hash.
-  trunk_transaction: Hash,
+  pub(crate) trunk_transaction: Hash,
   /// The branch transaction hash.
-  branch_transaction: Hash,
+  pub(crate) branch_transaction: Hash,
   /// The transaction nonce.
-  nonce: String,
+  pub(crate) nonce: String,
   /// Whether the transaction is confirmed or not.
-  confirmed: bool,
+  pub(crate) confirmed: bool,
   /// Whether the transaction is broadcasted or not.
-  broadcasted: bool,
+  pub(crate) broadcasted: bool,
 }
 
 impl Transaction {
