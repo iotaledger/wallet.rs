@@ -238,6 +238,10 @@ impl<'a> Account<'a> {
     let address = crate::address::get_new_address(&self).await?;
     crate::storage::save_address(id, &address)
   }
+
+  pub(crate) fn append_transactions(&mut self, transactions: Vec<Transaction>) {
+    self.transactions.extend(transactions.iter().cloned());
+  }
 }
 
 /// Data returned from the account initialisation.

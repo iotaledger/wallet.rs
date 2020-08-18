@@ -1,11 +1,13 @@
-use crate::account::Account;
+use crate::account::{Account, AccountIdentifier};
 use crate::address::{Address, AddressBuilder, IotaAddress};
-use crate::client::{get_client, ClientOptions};
-use crate::transaction::{Transaction, Transfer, Value, ValueUnit};
+use crate::client::get_client;
+use crate::transaction::{Transaction, Transfer};
 
 use bee_crypto::ternary::Hash;
-use chrono::prelude::{DateTime, Utc};
-use iota::client::response::Transfer as IotaTransfer;
+use bee_transaction::{
+  bundled::{BundledTransactionBuilder, BundledTransactionField, Value as IotaValue},
+  Vertex,
+};
 
 use std::convert::TryInto;
 
@@ -167,7 +169,7 @@ impl<'a> AccountSynchronizer<'a> {
     sync_transactions(self.account, new_transaction_hashes).await?;
 
     let synced_account = SyncedAccount {
-      client_options: self.account.client_options().clone(),
+      account_id: self.account.id().to_string(),
       deposit_address: AddressBuilder::new()
         .address(IotaAddress::zeros())
         .balance(0)
@@ -180,7 +182,7 @@ impl<'a> AccountSynchronizer<'a> {
 
 /// Data returned from account synchronization.
 pub struct SyncedAccount {
-  client_options: ClientOptions,
+  account_id: String,
   deposit_address: Address,
 }
 
@@ -221,52 +223,44 @@ impl SyncedAccount {
     {
       return Err(anyhow::anyhow!("invalid address checksum"));
     }
+    let value = (*transfer_obj.amount()).try_into()?;
+    let account_id: AccountIdentifier = self.account_id.clone().into();
 
-    let client = get_client(&self.client_options);
+    let adapter = crate::storage::get_adapter()?;
+
+    let account_str = adapter.get(account_id.clone())?;
+    let mut account: Account<'_> = serde_json::from_str(&account_str)?;
+    let client = get_client(account.client_options());
 
     let (inputs, remainder) = self.select_inputs(*transfer_obj.amount(), transfer_obj.address())?;
     let transactions_to_approve = client.get_transactions_to_approve().send().await?;
-    // TODO add seed here
-    let mut builder = client.prepare_transfers(None).transfers(vec![IotaTransfer {
-      address: transfer_obj.address().address().clone(),
-      value: *transfer_obj.amount(),
-      message: None,
-      tag: None,
-    }]); /*.inputs(
-           inputs
-             .iter()
-             .map(|address| IotaInput {
-               address: address.address().clone(),
-               balance: *address.balance(),
-               index: *address.key_index(),
-             })
-             .collect(),
-         );*/
-    if let Some(remainder) = remainder {
-      builder = builder.remainder(remainder.address().clone());
-    }
 
-    let transaction = if let Ok(bundle) = builder.build().await {
-      Transaction::from_bundled(*bundle.hash(), bundle.tail().clone())?
-    } else {
-      Transaction {
-        hash: Hash::zeros(),
-        address: transfer_obj.address().clone(),
-        value: Value::new((*transfer_obj.amount()).try_into()?, ValueUnit::I),
-        tag: Default::default(),
-        timestamp: DateTime::from(Utc::now()),
-        current_index: 0,
-        last_index: 0,
-        bundle_hash: Hash::zeros(),
-        trunk_transaction: transactions_to_approve.trunk_transaction,
-        branch_transaction: transactions_to_approve.branch_transaction,
-        nonce: Default::default(),
-        confirmed: false,
-        broadcasted: false,
-      }
-    };
+    let transaction = BundledTransactionBuilder::new()
+      .with_address(transfer_obj.address().address().clone())
+      .with_value(IotaValue::try_from_inner(value).unwrap()) // TODO error handling
+      .with_trunk(transactions_to_approve.trunk_transaction)
+      .with_branch(transactions_to_approve.branch_transaction)
+      .build()
+      .unwrap(); // TODO error handling
 
-    Ok(transaction)
+    let attached = client
+      .attach_to_tangle()
+      .trunk_transaction(transaction.trunk())
+      .branch_transaction(transaction.branch())
+      .trytes(&[transaction])
+      .send()
+      .await?;
+
+    let transactions = client.send_trytes().trytes(attached.trytes).send().await?;
+    let transactions: Vec<Transaction> = transactions
+      .iter()
+      .map(|tx| Transaction::from_bundled(tx.bundle().clone(), tx.clone()).unwrap())
+      .collect();
+    let tx = transactions.first().unwrap().clone();
+    account.append_transactions(transactions);
+    adapter.set(account_id, serde_json::to_string(&account)?)?;
+
+    Ok(tx)
   }
 
   /// Retry transactions.
