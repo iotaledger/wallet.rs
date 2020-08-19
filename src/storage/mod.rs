@@ -6,7 +6,6 @@ mod sqlite;
 mod stronghold;
 
 use crate::account::{Account, AccountIdentifier};
-use crate::address::Address;
 use once_cell::sync::OnceCell;
 
 use std::path::{Path, PathBuf};
@@ -100,9 +99,4 @@ pub(crate) fn get_account(account_id: AccountIdentifier) -> crate::Result<Accoun
   let account_str = crate::storage::get_adapter()?.get(account_id)?;
   let account: Account = serde_json::from_str(&account_str)?;
   Ok(account)
-}
-
-/// Gets a new unused address and links it to the given account.
-pub(crate) fn save_address(account_id: String, address: &Address) -> crate::Result<Address> {
-  unimplemented!()
 }
