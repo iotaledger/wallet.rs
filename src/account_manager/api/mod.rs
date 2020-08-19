@@ -30,7 +30,7 @@ mod input_selection;
 /// and the transaction hashes associated with the addresses.
 ///
 fn sync_addresses<'a>(
-  account: &'a Account<'_>,
+  account: &'a Account,
   address_index: u64,
   gap_limit: Option<u64>,
 ) -> crate::Result<(Vec<Address>, Vec<Hash>)> {
@@ -48,7 +48,7 @@ fn sync_addresses<'a>(
 /// Syncs transactions with the tangle.
 /// The method should ensures that the wallet local state has transactions associated with the address history.
 async fn sync_transactions<'a>(
-  account: &'a Account<'_>,
+  account: &'a Account,
   new_transaction_hashes: Vec<Hash>,
 ) -> crate::Result<Vec<Transaction>> {
   let mut transactions: Vec<Transaction> = account.transactions().iter().cloned().collect();
@@ -101,7 +101,7 @@ async fn sync_transactions<'a>(
 
 /// Account sync helper.
 pub struct AccountSynchronizer<'a> {
-  account: &'a Account<'a>,
+  account: &'a Account,
   address_index: u64,
   gap_limit: Option<u64>,
   skip_persistance: bool,
@@ -109,7 +109,7 @@ pub struct AccountSynchronizer<'a> {
 
 impl<'a> AccountSynchronizer<'a> {
   /// Initialises a new instance of the sync helper.
-  pub fn new(account: &'a Account<'_>) -> Self {
+  pub fn new(account: &'a Account) -> Self {
     Self {
       account,
       address_index: 1, // TODO By default the length of addresses stored for this account should be used as an index.
@@ -229,7 +229,7 @@ impl SyncedAccount {
     let adapter = crate::storage::get_adapter()?;
 
     let account_str = adapter.get(account_id.clone())?;
-    let mut account: Account<'_> = serde_json::from_str(&account_str)?;
+    let mut account: Account = serde_json::from_str(&account_str)?;
     let client = get_client(account.client_options());
 
     let (inputs, remainder) = self.select_inputs(*transfer_obj.amount(), transfer_obj.address())?;
@@ -270,7 +270,7 @@ impl SyncedAccount {
   }
 }
 
-pub async fn reattach(account: &mut Account<'_>, transaction_hash: &Hash) -> crate::Result<()> {
+pub async fn reattach(account: &mut Account, transaction_hash: &Hash) -> crate::Result<()> {
   let mut transactions: Vec<Transaction> = account.transactions().iter().cloned().collect();
   let transaction = transactions
     .iter_mut()

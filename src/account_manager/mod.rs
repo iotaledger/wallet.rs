@@ -17,7 +17,7 @@ use bee_crypto::ternary::Hash;
 #[derive(Default)]
 pub struct AccountManager {}
 
-fn mutate_account_transaction<F: FnOnce(&Account<'_>, &mut Vec<Transaction>)>(
+fn mutate_account_transaction<F: FnOnce(&Account, &mut Vec<Transaction>)>(
   account_id: AccountIdentifier,
   handler: F,
 ) -> crate::Result<()> {
@@ -90,7 +90,7 @@ impl AccountManager {
   }
 
   /// Adds a new account.
-  pub fn create_account<'a>(&self, client_options: ClientOptions) -> AccountInitialiser<'a> {
+  pub fn create_account<'a>(&self, client_options: ClientOptions) -> AccountInitialiser {
     AccountInitialiser::new(client_options)
   }
 
@@ -120,12 +120,12 @@ impl AccountManager {
   }
 
   /// Import backed up accounts.
-  pub fn import_accounts<'a>(&self, accounts: Vec<Account<'a>>) -> crate::Result<()> {
+  pub fn import_accounts<'a>(&self, accounts: Vec<Account>) -> crate::Result<()> {
     unimplemented!()
   }
 
   /// Gets the account associated with the given identifier.
-  pub fn get_account<'a>(&self, account_id: AccountIdentifier) -> crate::Result<Account<'a>> {
+  pub fn get_account(&self, account_id: AccountIdentifier) -> crate::Result<Account> {
     get_account(account_id)
   }
 
@@ -144,27 +144,27 @@ async fn sync_accounts() -> crate::Result<Vec<SyncedAccount>> {
   let accounts = crate::storage::get_adapter()?.get_all()?;
   let mut synced_accounts = vec![];
   for account_str in accounts {
-    let account: Account<'_> = serde_json::from_str(&account_str)?;
+    let account: Account = serde_json::from_str(&account_str)?;
     let synced_account = AccountSynchronizer::new(&account).execute().await?;
     synced_accounts.push(synced_account);
   }
   Ok(synced_accounts)
 }
 
-fn get_account<'a>(account_id: AccountIdentifier) -> crate::Result<Account<'a>> {
+fn get_account<'a>(account_id: AccountIdentifier) -> crate::Result<Account> {
   let account_str = crate::storage::get_adapter()?.get(account_id)?;
-  // TODO serde_json::from_str(&account_str).map_err(|e| e.into());
-  unimplemented!()
+  let account: Account = serde_json::from_str(&account_str)?;
+  Ok(account)
 }
 
 async fn reattach_unconfirmed_transactions() -> crate::Result<()> {
   let adapter = crate::storage::get_adapter()?;
   let accounts_str = adapter.get_all()?;
   for account_str in accounts_str {
-    let account: Account<'_> = serde_json::from_str(&account_str)?;
+    let account: Account = serde_json::from_str(&account_str)?;
     let unconfirmed_transactions =
       account.list_transactions(1000, 0, Some(TransactionType::Unconfirmed));
-    let mut account: Account<'_> = serde_json::from_str(&account_str)?;
+    let mut account: Account = serde_json::from_str(&account_str)?;
     for tx in unconfirmed_transactions {
       api::reattach(&mut account, tx.hash()).await?;
     }
@@ -190,7 +190,6 @@ mod tests {
       .alias(id)
       .id(id)
       .mnemonic(id)
-      // TODO .nodes(vec!["https://nodes.devnet.iota.org:443"])
       .initialise()
       .expect("failed to add account");
 

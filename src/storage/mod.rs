@@ -72,12 +72,12 @@ pub trait StorageAdapter {
   fn remove(&self, key: AccountIdentifier) -> crate::Result<()>;
 }
 
-pub(crate) fn parse_accounts<'a>(accounts: &'a Vec<String>) -> crate::Result<Vec<Account<'a>>> {
+pub(crate) fn parse_accounts(accounts: &Vec<String>) -> crate::Result<Vec<Account>> {
   let mut err = None;
-  let accounts: Vec<Option<Account<'a>>> = accounts
+  let accounts: Vec<Option<Account>> = accounts
     .iter()
     .map(|account| {
-      let res: Option<Account<'a>> = serde_json::from_str(&account)
+      let res: Option<Account> = serde_json::from_str(&account)
         .map(|v| Some(v))
         .unwrap_or_else(|e| {
           err = Some(e);
@@ -100,7 +100,7 @@ pub(crate) fn parse_accounts<'a>(accounts: &'a Vec<String>) -> crate::Result<Vec
 
 /// Gets the account's total balance.
 /// It's read directly from the storage. To read the latest account balance, you should `sync` first.
-pub(crate) fn total_balance(account_id: &str) -> crate::Result<u64> {
+pub(crate) fn total_balance(account_id: String) -> crate::Result<u64> {
   unimplemented!()
 }
 
@@ -110,12 +110,7 @@ pub(crate) fn total_balance(account_id: &str) -> crate::Result<u64> {
 /// The available balance is the balance users are allowed to spend.
 /// For example, if a user with 50i total account balance has made a transaction spending 20i,
 /// the available balance should be (50i-30i) = 20i.
-pub(crate) fn available_balance(account_id: &str) -> crate::Result<u64> {
-  unimplemented!()
-}
-
-/// Updates the account alias.
-pub(crate) fn set_alias(account_id: &str, alias: &str) -> crate::Result<()> {
+pub(crate) fn available_balance(account_id: String) -> crate::Result<u64> {
   unimplemented!()
 }
 
@@ -125,6 +120,6 @@ pub(crate) fn get_transaction(transaction_hash: Hash) -> crate::Result<Transacti
 }
 
 /// Gets a new unused address and links it to the given account.
-pub(crate) fn save_address(account_id: &str, address: &Address) -> crate::Result<Address> {
+pub(crate) fn save_address(account_id: String, address: &Address) -> crate::Result<Address> {
   unimplemented!()
 }

@@ -31,17 +31,17 @@ impl From<u64> for AccountIdentifier {
 }
 
 /// Account initialiser.
-pub struct AccountInitialiser<'a> {
-  mnemonic: Option<&'a str>,
-  id: Option<&'a str>,
-  alias: Option<&'a str>,
+pub struct AccountInitialiser {
+  mnemonic: Option<String>,
+  id: Option<String>,
+  alias: Option<String>,
   created_at: Option<DateTime<Utc>>,
   transactions: Vec<Transaction>,
   addresses: Vec<Address>,
   client_options: ClientOptions,
 }
 
-impl<'a> AccountInitialiser<'a> {
+impl AccountInitialiser {
   /// Initialises the account builder.
   pub(crate) fn new(client_options: ClientOptions) -> Self {
     Self {
@@ -57,22 +57,22 @@ impl<'a> AccountInitialiser<'a> {
 
   /// Defines the account BIP-39 mnemonic.
   /// When importing an account from stronghold, the mnemonic won't be required.
-  pub fn mnemonic(mut self, mnemonic: &'a str) -> Self {
-    self.mnemonic = Some(mnemonic);
+  pub fn mnemonic(mut self, mnemonic: impl AsRef<str>) -> Self {
+    self.mnemonic = Some(mnemonic.as_ref().to_string());
     self
   }
 
   /// SHA-256 hash of the first address on the seed.
   /// Required for referencing a seed in stronghold.
   /// The id should be provided by stronghold.
-  pub fn id(mut self, id: &'a str) -> Self {
-    self.id = Some(id);
+  pub fn id(mut self, id: impl AsRef<str>) -> Self {
+    self.id = Some(id.as_ref().to_string());
     self
   }
 
   /// Defines the account alias. If not defined, we'll generate one.
-  pub fn alias(mut self, alias: &'a str) -> Self {
-    self.alias = Some(alias);
+  pub fn alias(mut self, alias: impl AsRef<str>) -> Self {
+    self.alias = Some(alias.as_ref().to_string());
     self
   }
 
@@ -97,9 +97,10 @@ impl<'a> AccountInitialiser<'a> {
   }
 
   /// Initialises the account.
-  pub fn initialise(self) -> crate::Result<Account<'a>> {
-    let alias = self.alias.unwrap_or_else(|| "");
-    let id = self.id.unwrap_or(alias);
+  pub fn initialise(self) -> crate::Result<Account> {
+    let alias = self.alias.unwrap_or_else(|| "".to_string());
+    let id = self.id.unwrap_or(alias.clone());
+    let account_id: AccountIdentifier = id.to_string().into();
 
     let account = Account {
       id,
@@ -110,7 +111,7 @@ impl<'a> AccountInitialiser<'a> {
       client_options: self.client_options,
     };
     let adapter = crate::storage::get_adapter()?;
-    adapter.set(id.to_string().into(), serde_json::to_string(&account)?)?;
+    adapter.set(account_id, serde_json::to_string(&account)?)?;
     Ok(account)
   }
 }
@@ -118,11 +119,11 @@ impl<'a> AccountInitialiser<'a> {
 /// Account definition.
 #[derive(Getters, Setters, Serialize, Deserialize, Clone)]
 #[getset(get = "pub")]
-pub struct Account<'a> {
+pub struct Account {
   /// The account identifier.
-  id: &'a str,
+  id: String,
   /// The account alias.
-  alias: &'a str,
+  alias: String,
   /// Time of account creation.
   created_at: DateTime<Utc>,
   /// Transactions associated with the seed.
@@ -138,7 +139,7 @@ pub struct Account<'a> {
   client_options: ClientOptions,
 }
 
-impl<'a> Account<'a> {
+impl Account {
   pub(crate) fn latest_address(&self) -> &Address {
     &self.addresses.iter().max_by_key(|a| a.key_index()).unwrap()
   }
@@ -150,8 +151,7 @@ impl<'a> Account<'a> {
   /// Gets the account's total balance.
   /// It's read directly from the storage. To read the latest account balance, you should `sync` first.
   pub fn total_balance(&mut self) -> crate::Result<u64> {
-    let id = self.alias;
-    crate::storage::total_balance(id)
+    crate::storage::total_balance(self.id.clone())
   }
 
   /// Gets the account's available balance.
@@ -161,14 +161,14 @@ impl<'a> Account<'a> {
   /// For example, if a user with 50i total account balance has made a transaction spending 20i,
   /// the available balance should be (50i-30i) = 20i.
   pub fn available_balance(&mut self) -> crate::Result<u64> {
-    let id = self.alias;
-    crate::storage::available_balance(id)
+    crate::storage::available_balance(self.id.clone())
   }
 
   /// Updates the account alias.
-  pub fn set_alias(&mut self, alias: &str) -> crate::Result<()> {
-    let id = self.alias;
-    crate::storage::set_alias(id, alias)
+  pub fn set_alias(&mut self, alias: impl AsRef<str>) -> crate::Result<()> {
+    self.alias = alias.as_ref().to_string();
+    crate::storage::get_adapter()?.set(self.id.to_string().into(), serde_json::to_string(self)?)?;
+    Ok(())
   }
 
   /// Gets a list of transactions on this account.
@@ -234,9 +234,8 @@ impl<'a> Account<'a> {
 
   /// Gets a new unused address and links it to this account.
   pub async fn generate_address(&mut self) -> crate::Result<Address> {
-    let id = self.alias;
     let address = crate::address::get_new_address(&self).await?;
-    crate::storage::save_address(id, &address)
+    crate::storage::save_address(self.id.clone(), &address)
   }
 
   pub(crate) fn append_transactions(&mut self, transactions: Vec<Transaction>) {
@@ -260,4 +259,39 @@ pub struct InitialisedAccount<'a> {
   created_at: DateTime<Utc>,
   /// Time when the account was last synced with the tangle.
   last_synced_at: DateTime<Utc>,
+}
+
+#[cfg(test)]
+mod tests {
+  use crate::account_manager::AccountManager;
+  use crate::client::ClientOptionsBuilder;
+
+  #[test]
+  fn set_alias() {
+    let manager = AccountManager::new();
+    let id = "test";
+    let updated_alias = "updated alias";
+    let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+      .expect("invalid node URL")
+      .build();
+
+    let mut account = manager
+      .create_account(client_options)
+      .alias(id)
+      .id(id)
+      .mnemonic(id)
+      .initialise()
+      .expect("failed to add account");
+
+    account
+      .set_alias(updated_alias)
+      .expect("failed to update alias");
+    let account_in_storage = manager
+      .get_account(id.to_string().into())
+      .expect("failed to get account from storage");
+    assert_eq!(
+      account_in_storage.alias().to_string(),
+      updated_alias.to_string()
+    );
+  }
 }
