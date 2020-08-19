@@ -269,3 +269,42 @@ impl SyncedAccount {
     unimplemented!()
   }
 }
+
+pub async fn reattach(account: &mut Account<'_>, transaction_hash: &Hash) -> crate::Result<()> {
+  let mut transactions: Vec<Transaction> = account.transactions().iter().cloned().collect();
+  let transaction = transactions
+    .iter_mut()
+    .find(|tx| tx.hash() == transaction_hash)
+    .ok_or_else(|| anyhow::anyhow!("transaction not found"))?;
+
+  if transaction.confirmed {
+    Err(anyhow::anyhow!("transaction is already confirmed"))
+  } else if transaction.is_above_max_depth() {
+    Err(anyhow::anyhow!("transaction is above max depth"))
+  } else {
+    let client = get_client(account.client_options());
+    let inclusion_states = client
+      .get_inclusion_states()
+      .transactions(&[transaction.hash().clone()])
+      .send()
+      .await?;
+    if *inclusion_states.states.first().unwrap() {
+      // transaction is already confirmed; do nothing
+      transaction.set_confirmed(true);
+    } else {
+      // reattach the transaction
+      let reattachment_transactions = client.reattach(transaction_hash).await?.send().await?;
+      transactions.push(Transaction::from_bundled(
+        *transaction_hash,
+        reattachment_transactions.first().unwrap().clone(),
+      )?);
+    }
+    // update the transactions in storage
+    account.set_transactions(transactions);
+    crate::storage::get_adapter()?.set(
+      account.id().to_string().into(),
+      serde_json::to_string(&account)?,
+    )?;
+    Ok(())
+  }
+}

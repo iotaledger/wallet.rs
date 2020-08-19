@@ -2,11 +2,14 @@ mod api;
 
 use crate::account::{Account, AccountIdentifier, AccountInitialiser};
 use crate::client::ClientOptions;
-use crate::transaction::Transaction;
+use crate::transaction::{Transaction, TransactionType};
 use api::{AccountSynchronizer, SyncedAccount};
+
 use std::path::Path;
 use std::thread;
 use std::time::Duration;
+
+use bee_crypto::ternary::Hash;
 
 /// The account manager.
 ///
@@ -79,8 +82,9 @@ impl AccountManager {
 
   /// Starts the polling mechanism.
   pub fn start_polling(&self) {
-    thread::spawn(move || {
+    thread::spawn(move || async move {
       let _ = sync_accounts();
+      let _ = reattach_unconfirmed_transactions();
       thread::sleep(Duration::from_secs(5));
     });
   }
@@ -126,8 +130,13 @@ impl AccountManager {
   }
 
   /// Reattaches an unconfirmed transaction.
-  pub fn reattach<T>(&self, account_id: AccountIdentifier) -> crate::Result<()> {
-    unimplemented!()
+  pub async fn reattach<T>(
+    &self,
+    account_id: AccountIdentifier,
+    transaction_hash: &Hash,
+  ) -> crate::Result<()> {
+    let mut account = self.get_account(account_id)?;
+    api::reattach(&mut account, transaction_hash).await
   }
 }
 
@@ -144,8 +153,23 @@ async fn sync_accounts() -> crate::Result<Vec<SyncedAccount>> {
 
 fn get_account<'a>(account_id: AccountIdentifier) -> crate::Result<Account<'a>> {
   let account_str = crate::storage::get_adapter()?.get(account_id)?;
-  // serde_json::from_str(&account_str).map_err(|e| e.into());
+  // TODO serde_json::from_str(&account_str).map_err(|e| e.into());
   unimplemented!()
+}
+
+async fn reattach_unconfirmed_transactions() -> crate::Result<()> {
+  let adapter = crate::storage::get_adapter()?;
+  let accounts_str = adapter.get_all()?;
+  for account_str in accounts_str {
+    let account: Account<'_> = serde_json::from_str(&account_str)?;
+    let unconfirmed_transactions =
+      account.list_transactions(1000, 0, Some(TransactionType::Unconfirmed));
+    let mut account: Account<'_> = serde_json::from_str(&account_str)?;
+    for tx in unconfirmed_transactions {
+      api::reattach(&mut account, tx.hash()).await?;
+    }
+  }
+  Ok(())
 }
 
 #[cfg(test)]

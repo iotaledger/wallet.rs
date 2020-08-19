@@ -197,7 +197,7 @@ impl<'a> Account<'a> {
   /// account.list_transactions(10, 5, Some(TransactionType::Received));
   /// ```
   pub fn list_transactions(
-    &mut self,
+    &self,
     count: u64,
     from: u64,
     transaction_type: Option<TransactionType>,

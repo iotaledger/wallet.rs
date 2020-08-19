@@ -190,6 +190,14 @@ impl Transaction {
 
     Ok(transaction)
   }
+
+  /// Check if attachment timestamp on transaction is above max depth (~11 minutes)
+  pub(crate) fn is_above_max_depth(&self) -> bool {
+    let current_timestamp = Utc::now().timestamp();
+    let attachment_timestamp = self.timestamp.timestamp();
+    attachment_timestamp < current_timestamp
+      && current_timestamp - attachment_timestamp < 11 * 60 * 1000
+  }
 }
 
 impl PartialEq for Transaction {
