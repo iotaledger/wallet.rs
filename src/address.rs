@@ -166,5 +166,5 @@ pub(crate) fn is_unspent(account: &Account, address: &IotaAddress) -> bool {
   account
     .transactions()
     .iter()
-    .any(|tx| *tx.value().value() < 0 && tx.address().address() == address)
+    .any(|tx| tx.value().without_denomination() < 0 && tx.address().address() == address)
 }
