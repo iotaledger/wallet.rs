@@ -2,6 +2,7 @@ use crate::address::Address;
 use crate::client::ClientOptions;
 use crate::transaction::{Transaction, TransactionType};
 
+use bee_crypto::ternary::Hash;
 use bee_signing::ternary::seed::Seed;
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
@@ -252,6 +253,11 @@ impl Account {
 
   pub(crate) fn append_transactions(&mut self, transactions: Vec<Transaction>) {
     self.transactions.extend(transactions.iter().cloned());
+  }
+
+  /// Gets a transaction with the given hash associated with this account.
+  pub fn get_transaction(&self, hash: &Hash) -> Option<&Transaction> {
+    self.transactions.iter().find(|tx| tx.hash() == hash)
   }
 }
 

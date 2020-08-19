@@ -7,8 +7,6 @@ mod stronghold;
 
 use crate::account::{Account, AccountIdentifier};
 use crate::address::Address;
-use crate::transaction::Transaction;
-use bee_crypto::ternary::Hash;
 use once_cell::sync::OnceCell;
 
 use std::path::{Path, PathBuf};
@@ -98,9 +96,10 @@ pub(crate) fn parse_accounts(accounts: &Vec<String>) -> crate::Result<Vec<Accoun
   }
 }
 
-/// Gets the transaction associated with the given hash.
-pub(crate) fn get_transaction(transaction_hash: Hash) -> crate::Result<Transaction> {
-  unimplemented!()
+pub(crate) fn get_account(account_id: AccountIdentifier) -> crate::Result<Account> {
+  let account_str = crate::storage::get_adapter()?.get(account_id)?;
+  let account: Account = serde_json::from_str(&account_str)?;
+  Ok(account)
 }
 
 /// Gets a new unused address and links it to the given account.

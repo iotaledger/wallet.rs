@@ -228,8 +228,7 @@ impl SyncedAccount {
 
     let adapter = crate::storage::get_adapter()?;
 
-    let account_str = adapter.get(account_id.clone())?;
-    let mut account: Account = serde_json::from_str(&account_str)?;
+    let mut account = crate::storage::get_account(account_id.clone())?;
     let client = get_client(account.client_options());
 
     let (inputs, remainder) = self.select_inputs(*transfer_obj.amount(), transfer_obj.address())?;
@@ -264,8 +263,11 @@ impl SyncedAccount {
   }
 
   /// Retry transactions.
-  pub fn retry(&self, transaction_hash: Hash) -> crate::Result<Transaction> {
-    let transaction = crate::storage::get_transaction(transaction_hash)?;
+  pub fn retry(&self, transaction_hash: &Hash) -> crate::Result<Transaction> {
+    let account: Account = crate::storage::get_account(self.account_id.clone().into())?;
+    let transaction = account
+      .get_transaction(transaction_hash)
+      .ok_or_else(|| anyhow::anyhow!("transaction with the given hash not found"));
     unimplemented!()
   }
 }
