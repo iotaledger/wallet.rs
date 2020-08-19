@@ -122,7 +122,15 @@ impl Value {
 
   /// The transaction value without its unit.
   pub fn without_denomination(&self) -> i64 {
-    self.value
+    let multiplier = match self.unit {
+      ValueUnit::I => 1,
+      ValueUnit::Ki => 1000,
+      ValueUnit::Mi => 1000000,
+      ValueUnit::Gi => 1000000000,
+      ValueUnit::Ti => 1000000000000,
+      ValueUnit::Pi => 1000000000000000,
+    };
+    self.value * multiplier
   }
 }
 

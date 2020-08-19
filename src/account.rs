@@ -150,8 +150,11 @@ impl Account {
 
   /// Gets the account's total balance.
   /// It's read directly from the storage. To read the latest account balance, you should `sync` first.
-  pub fn total_balance(&mut self) -> crate::Result<u64> {
-    crate::storage::total_balance(self.id.clone())
+  pub fn total_balance(&mut self) -> u64 {
+    self
+      .addresses
+      .iter()
+      .fold(0, |acc, address| acc + address.balance())
   }
 
   /// Gets the account's available balance.
@@ -160,8 +163,17 @@ impl Account {
   /// The available balance is the balance users are allowed to spend.
   /// For example, if a user with 50i total account balance has made a transaction spending 20i,
   /// the available balance should be (50i-30i) = 20i.
-  pub fn available_balance(&mut self) -> crate::Result<u64> {
-    crate::storage::available_balance(self.id.clone())
+  pub fn available_balance(&mut self) -> u64 {
+    let total_balance = self.total_balance();
+    let spent = self.transactions.iter().fold(0, |acc, tx| {
+      let val = if *tx.confirmed() {
+        0
+      } else {
+        tx.value().without_denomination()
+      };
+      acc + val
+    });
+    total_balance - (spent as u64)
   }
 
   /// Updates the account alias.
@@ -212,7 +224,7 @@ impl Account {
             TransactionType::Sent => !self.addresses.contains(tx.address()),
             TransactionType::Failed => !tx.broadcasted(),
             TransactionType::Unconfirmed => !tx.confirmed(),
-            TransactionType::Value => *tx.value().value() > 0,
+            TransactionType::Value => tx.value().without_denomination() > 0,
           }
         } else {
           true

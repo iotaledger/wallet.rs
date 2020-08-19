@@ -98,22 +98,6 @@ pub(crate) fn parse_accounts(accounts: &Vec<String>) -> crate::Result<Vec<Accoun
   }
 }
 
-/// Gets the account's total balance.
-/// It's read directly from the storage. To read the latest account balance, you should `sync` first.
-pub(crate) fn total_balance(account_id: String) -> crate::Result<u64> {
-  unimplemented!()
-}
-
-/// Gets the account's available balance.
-/// It's read directly from the storage. To read the latest account balance, you should `sync` first.
-///
-/// The available balance is the balance users are allowed to spend.
-/// For example, if a user with 50i total account balance has made a transaction spending 20i,
-/// the available balance should be (50i-30i) = 20i.
-pub(crate) fn available_balance(account_id: String) -> crate::Result<u64> {
-  unimplemented!()
-}
-
 /// Gets the transaction associated with the given hash.
 pub(crate) fn get_transaction(transaction_hash: Hash) -> crate::Result<Transaction> {
   unimplemented!()
