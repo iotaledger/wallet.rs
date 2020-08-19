@@ -21,7 +21,7 @@ fn mutate_account_transaction<F: FnOnce(&Account, &mut Vec<Transaction>)>(
   account_id: AccountIdentifier,
   handler: F,
 ) -> crate::Result<()> {
-  let mut account = get_account(account_id.clone())?;
+  let mut account = crate::storage::get_account(account_id.clone())?;
   let mut transactions: Vec<Transaction> = account.transactions().iter().cloned().collect();
   handler(&account, &mut transactions);
   account.set_transactions(transactions);
@@ -126,7 +126,7 @@ impl AccountManager {
 
   /// Gets the account associated with the given identifier.
   pub fn get_account(&self, account_id: AccountIdentifier) -> crate::Result<Account> {
-    get_account(account_id)
+    crate::storage::get_account(account_id)
   }
 
   /// Reattaches an unconfirmed transaction.
@@ -151,16 +151,9 @@ async fn sync_accounts() -> crate::Result<Vec<SyncedAccount>> {
   Ok(synced_accounts)
 }
 
-fn get_account<'a>(account_id: AccountIdentifier) -> crate::Result<Account> {
-  let account_str = crate::storage::get_adapter()?.get(account_id)?;
-  let account: Account = serde_json::from_str(&account_str)?;
-  Ok(account)
-}
-
 async fn reattach_unconfirmed_transactions() -> crate::Result<()> {
-  let adapter = crate::storage::get_adapter()?;
-  let accounts_str = adapter.get_all()?;
-  for account_str in accounts_str {
+  let accounts = crate::storage::get_adapter()?.get_all()?;
+  for account_str in accounts {
     let account: Account = serde_json::from_str(&account_str)?;
     let unconfirmed_transactions =
       account.list_transactions(1000, 0, Some(TransactionType::Unconfirmed));
