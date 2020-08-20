@@ -8,6 +8,9 @@ use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
 use serde::{Deserialize, Serialize};
 
+mod sync;
+pub use sync::{AccountSynchronizer, SyncedAccount};
+
 /// The account identifier.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AccountIdentifier {
@@ -147,6 +150,11 @@ impl Account {
 
   pub(crate) fn seed(&self) -> &Seed {
     unimplemented!()
+  }
+
+  /// Returns the builder to setup the process to synchronize this account with the Tangle.
+  pub fn sync(&self) -> AccountSynchronizer<'_> {
+    AccountSynchronizer::new(self)
   }
 
   /// Gets the account's total balance.

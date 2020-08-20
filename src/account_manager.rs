@@ -1,9 +1,6 @@
-mod api;
-
-use crate::account::{Account, AccountIdentifier, AccountInitialiser};
+use crate::account::{Account, AccountIdentifier, AccountInitialiser, SyncedAccount};
 use crate::client::ClientOptions;
-use crate::transaction::{Transaction, TransactionType};
-use api::{AccountSynchronizer, SyncedAccount};
+use crate::transaction::{Transaction, TransactionType, Transfer};
 
 use std::path::Path;
 use std::thread;
@@ -96,7 +93,9 @@ impl AccountManager {
 
   /// Deletes an account.
   pub fn remove_account(&self, account_id: AccountIdentifier) -> crate::Result<()> {
-    crate::storage::get_adapter()?.remove(account_id)
+    crate::storage::get_adapter()?.remove(account_id)?;
+    // TODO remove seed from stronghold
+    Ok(())
   }
 
   /// Syncs all accounts.
@@ -105,13 +104,18 @@ impl AccountManager {
   }
 
   /// Transfers an amount from an account to another.
-  pub fn transfer(
+  pub async fn internal_transfer(
     &self,
     from_account_id: AccountIdentifier,
     to_account_id: AccountIdentifier,
     amount: u64,
-  ) -> crate::Result<()> {
-    unimplemented!()
+  ) -> crate::Result<Transaction> {
+    let from_account = self.get_account(from_account_id)?;
+    let to_account = self.get_account(to_account_id)?;
+    let from_synchronized = from_account.sync().execute().await?;
+    from_synchronized
+      .transfer(Transfer::new(to_account.latest_address().clone(), amount))
+      .await
   }
 
   /// Backups the accounts to the given destination
@@ -136,7 +140,7 @@ impl AccountManager {
     transaction_hash: &Hash,
   ) -> crate::Result<()> {
     let mut account = self.get_account(account_id)?;
-    api::reattach(&mut account, transaction_hash).await
+    reattach(&mut account, transaction_hash).await
   }
 }
 
@@ -145,7 +149,7 @@ async fn sync_accounts() -> crate::Result<Vec<SyncedAccount>> {
   let mut synced_accounts = vec![];
   for account_str in accounts {
     let account: Account = serde_json::from_str(&account_str)?;
-    let synced_account = AccountSynchronizer::new(&account).execute().await?;
+    let synced_account = account.sync().execute().await?;
     synced_accounts.push(synced_account);
   }
   Ok(synced_accounts)
@@ -159,10 +163,49 @@ async fn reattach_unconfirmed_transactions() -> crate::Result<()> {
       account.list_transactions(1000, 0, Some(TransactionType::Unconfirmed));
     let mut account: Account = serde_json::from_str(&account_str)?;
     for tx in unconfirmed_transactions {
-      api::reattach(&mut account, tx.hash()).await?;
+      reattach(&mut account, tx.hash()).await?;
     }
   }
   Ok(())
+}
+
+async fn reattach(account: &mut Account, transaction_hash: &Hash) -> crate::Result<()> {
+  let mut transactions: Vec<Transaction> = account.transactions().iter().cloned().collect();
+  let transaction = transactions
+    .iter_mut()
+    .find(|tx| tx.hash() == transaction_hash)
+    .ok_or_else(|| anyhow::anyhow!("transaction not found"))?;
+
+  if transaction.confirmed {
+    Err(anyhow::anyhow!("transaction is already confirmed"))
+  } else if transaction.is_above_max_depth() {
+    Err(anyhow::anyhow!("transaction is above max depth"))
+  } else {
+    let client = crate::client::get_client(account.client_options());
+    let inclusion_states = client
+      .get_inclusion_states()
+      .transactions(&[transaction.hash().clone()])
+      .send()
+      .await?;
+    if *inclusion_states.states.first().unwrap() {
+      // transaction is already confirmed; do nothing
+      transaction.set_confirmed(true);
+    } else {
+      // reattach the transaction
+      let reattachment_transactions = client.reattach(transaction_hash).await?.send().await?;
+      transactions.push(Transaction::from_bundled(
+        *transaction_hash,
+        reattachment_transactions.first().unwrap().clone(),
+      )?);
+    }
+    // update the transactions in storage
+    account.set_transactions(transactions);
+    crate::storage::get_adapter()?.set(
+      account.id().to_string().into(),
+      serde_json::to_string(&account)?,
+    )?;
+    Ok(())
+  }
 }
 
 #[cfg(test)]
