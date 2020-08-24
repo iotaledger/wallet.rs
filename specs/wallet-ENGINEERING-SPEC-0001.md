@@ -133,7 +133,7 @@ Account configuration or initialization object. It should support parameters acc
     <td>id</td>
     <td>&#10008;</td>
     <td>string</td>
-    <td>SHA-256 hash of the first address on the seed (m/44'/0'/0'/0/0). Required for referencing a seed in Stronghold. The id should be provided by Stronghold.</td>
+    <td>SHA-256 hash of the first address on the seed (m/44'/0'/0'/0'/0'). Required for referencing a seed in Stronghold. The id should be provided by Stronghold.</td>
   </tr>
   <tr>
     <td>index</td>
