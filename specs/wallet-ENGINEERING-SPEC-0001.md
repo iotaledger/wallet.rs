@@ -52,7 +52,7 @@
       - [list_unconfirmed_messages()](#list_unconfirmed_messages)
       - [get_message()](#get_message)
       - [list_addresses()](#list_addresses)
-      - [list_unspent()](#list_unspent)
+      - [list_unspent_addresses()](#list_unspent_addresses)
       - [generate_address()](#generate_address)
   - [Account Manager](#account-manager)
     - [API](#api-1)
@@ -321,7 +321,7 @@ Account configuration or initialization object. It should support parameters acc
     <td>Gets all addresses.</td>
   </tr>
   <tr>
-    <td><a href="#listunspent">list_unspent()</a></td>
+    <td><a href="#listunspent">list_unspent_addresses()</a></td>
     <td>&#10004;</td>
     <td>function</td>
     <td>Gets all unspent input addresses.</td>
@@ -2183,7 +2183,7 @@ Gets all addresses.
   </tr>
 </table>
 
-#### list_unspent()
+#### list_unspent_addresses()
 
 Gets all unspent input addresses
 
