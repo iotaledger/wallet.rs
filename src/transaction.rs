@@ -135,7 +135,7 @@ impl Value {
 }
 
 /// A transaction definition.
-#[derive(Getters, Setters, Clone)]
+#[derive(Debug, Getters, Setters, Clone)]
 #[getset(get = "pub", set = "pub(crate)")]
 pub struct Transaction {
   /// The transaction hash.
@@ -215,7 +215,7 @@ impl PartialEq for Transaction {
 }
 
 /// Transaction type.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, PartialEq)]
 pub enum TransactionType {
   /// Transaction received.
   Received,

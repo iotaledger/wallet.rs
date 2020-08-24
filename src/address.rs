@@ -77,7 +77,7 @@ pub struct Address {
 
 impl PartialEq for Address {
   fn eq(&self, other: &Address) -> bool {
-    self.key_index() == other.key_index()
+    self.address() == other.address()
   }
 }
 

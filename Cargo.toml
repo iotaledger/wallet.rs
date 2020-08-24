@@ -32,6 +32,9 @@ snapshot = { git = "https://github.com/iotaledger/stronghold.rs/", optional = tr
 primitives = { git = "https://github.com/iotaledger/stronghold.rs/", optional = true, rev = "a81191f" }
 bincode = { version = "1.3.1", optional = true }
 
+[dev-dependencies]
+tokio = { version = "0.2", features = ["full"] }
+
 [features]
 stronghold = ["vault", "crypto", "random", "snapshot", "primitives", "bincode"]
 sqlite = ["rusqlite"]
