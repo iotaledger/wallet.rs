@@ -138,8 +138,29 @@ impl AccountManager {
   pub fn import_accounts<P: AsRef<Path>>(&self, source: P) -> crate::Result<()> {
     let storage = crate::storage::get_adapter()?;
     let backup_storage = crate::storage::get_adapter_from_path(source)?;
+
     let accounts = storage.get_all()?;
     let accounts = crate::storage::parse_accounts(&accounts)?;
+
+    let stored_accounts = storage.get_all()?;
+    let stored_accounts = crate::storage::parse_accounts(&stored_accounts)?;
+    let already_imported_account = stored_accounts.iter().find(|stored_account| {
+      stored_account.addresses().iter().any(|stored_address| {
+        accounts.iter().any(|account| {
+          account
+            .addresses()
+            .iter()
+            .any(|address| address.address() == stored_address.address())
+        })
+      })
+    });
+    if let Some(imported_account) = already_imported_account {
+      return Err(anyhow::anyhow!(
+        "Account {} already imported",
+        imported_account.alias()
+      ));
+    }
+
     for account in accounts {
       storage.set(
         account.id().clone().into(),
