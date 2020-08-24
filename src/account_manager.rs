@@ -155,7 +155,7 @@ impl AccountManager {
   }
 
   /// Reattaches an unconfirmed transaction.
-  pub async fn reattach<T>(
+  pub async fn reattach(
     &self,
     account_id: AccountIdentifier,
     transaction_hash: &Hash,
