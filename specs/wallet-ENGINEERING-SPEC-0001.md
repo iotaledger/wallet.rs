@@ -1982,12 +1982,33 @@ Gets all failed (broadcasted = false) messages. Messages should be read directly
     <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-    <td>messages</td>
-    <td><a href="#message">Message</a>[]</td>
-    <td>All failed messages.</td>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-    <td colspan="3"><strong>Additional Information</strong></td>
+    <td>count</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Number of (most recent) failed messages.</td>
+  </tr>
+  <tr>
+    <td>from</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Subset of failed messages.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td>messages</td>
+    <td><a href="#message">Message</a>[]</td>
+    <td colspan="3">All failed messages.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
   </tr>
   <tr>
     <td><strong>Name</strong></td>
@@ -2017,16 +2038,37 @@ Gets all unconfirmed (confirmed = false) messages. Messages should be read direc
   </tr>
   <tr>
     <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
     <td><strong>Type</strong></td>
     <td><strong>Description</strong></td>
   </tr>
   <tr>
-    <td>messages</td>
-    <td><a href="#message">Message</a>[]</td>
-    <td>All unconfirmed messages.</td>
+    <td>count</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Number of (most recent) unconfirmed messages.</td>
   </tr>
   <tr>
-    <td colspan="3"><strong>Additional Information</strong></td>
+    <td>from</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Subset of unconfirmed messages.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>messages</td>
+    <td><a href="#message">Message</a>[]</td>
+    <td colspan="3">All unconfirmed messages.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
   </tr>
   <tr>
     <td><strong>Name</strong></td>
