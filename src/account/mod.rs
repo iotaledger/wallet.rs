@@ -121,7 +121,7 @@ impl AccountInitialiser {
 }
 
 /// Account definition.
-#[derive(Getters, Setters, Serialize, Deserialize, Clone)]
+#[derive(Getters, Setters, Serialize, Deserialize, Clone, PartialEq)]
 #[getset(get = "pub")]
 pub struct Account {
   /// The account identifier.
