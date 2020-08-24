@@ -1190,13 +1190,13 @@ The following should be considered when implementing this method:
   </tr>
   <tr>
     <td>index</td>
-    <td>&#10008;</td>
+    <td>&#10004;</td>
     <td>number</td>
     <td>Address index. By default the length of addresses stored for this account should be used as an index.</td>
   </tr>
   <tr>
     <td>gap_limit</td>
-    <td>&#10008;</td>
+    <td>&#10004;</td>
     <td>number</td>
     <td>Number of address indexes that are generated.</td>
   </tr>
