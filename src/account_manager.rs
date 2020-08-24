@@ -2,7 +2,8 @@ use crate::account::{Account, AccountIdentifier, AccountInitialiser, SyncedAccou
 use crate::client::ClientOptions;
 use crate::transaction::{Transaction, TransactionType, Transfer};
 
-use std::path::Path;
+use std::fs;
+use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::Duration;
 
@@ -120,12 +121,32 @@ impl AccountManager {
 
   /// Backups the accounts to the given destination
   pub fn backup<P: AsRef<Path>>(&self, destination: P) -> crate::Result<()> {
-    unimplemented!()
+    let storage_path = crate::storage::get_storage_path();
+    if storage_path.exists() {
+      let metadata = fs::metadata(&storage_path)?;
+      let backup_path = destination.as_ref().join("backup");
+      if metadata.is_dir() {
+        copy_dir(storage_path, backup_path)?;
+      } else {
+        fs::copy(storage_path, backup_path)?;
+      }
+    }
+    Ok(())
   }
 
   /// Import backed up accounts.
-  pub fn import_accounts<'a>(&self, accounts: Vec<Account>) -> crate::Result<()> {
-    unimplemented!()
+  pub fn import_accounts<P: AsRef<Path>>(&self, source: P) -> crate::Result<()> {
+    let storage = crate::storage::get_adapter()?;
+    let backup_storage = crate::storage::get_adapter_from_path(source)?;
+    let accounts = storage.get_all()?;
+    let accounts = crate::storage::parse_accounts(&accounts)?;
+    for account in accounts {
+      storage.set(
+        account.id().clone().into(),
+        serde_json::to_string(&account)?,
+      )?;
+    }
+    Ok(())
   }
 
   /// Gets the account associated with the given identifier.
@@ -206,6 +227,42 @@ async fn reattach(account: &mut Account, transaction_hash: &Hash) -> crate::Resu
     )?;
     Ok(())
   }
+}
+
+fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std::io::Error> {
+  let mut stack = Vec::new();
+  stack.push(PathBuf::from(from.as_ref()));
+
+  let output_root = PathBuf::from(to.as_ref());
+  let input_root = PathBuf::from(from.as_ref()).components().count();
+
+  while let Some(working_path) = stack.pop() {
+    let src: PathBuf = working_path.components().skip(input_root).collect();
+
+    let dest = if src.components().count() == 0 {
+      output_root.clone()
+    } else {
+      output_root.join(&src)
+    };
+    if fs::metadata(&dest).is_err() {
+      fs::create_dir_all(&dest)?;
+    }
+
+    for entry in fs::read_dir(working_path)? {
+      let entry = entry?;
+      let path = entry.path();
+      if path.is_dir() {
+        stack.push(path);
+      } else {
+        if let Some(filename) = path.file_name() {
+          let dest_path = dest.join(filename);
+          fs::copy(&path, &dest_path)?;
+        }
+      }
+    }
+  }
+
+  Ok(())
 }
 
 #[cfg(test)]

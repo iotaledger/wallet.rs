@@ -29,32 +29,47 @@ pub fn set_storage_path(path: impl AsRef<Path>) -> crate::Result<()> {
   Ok(())
 }
 
+pub(crate) fn get_storage_path() -> &'static PathBuf {
+  #[cfg(not(feature = "sqlite"))]
+  {
+    STORAGE_PATH.get_or_init(|| "./example-database".into())
+  }
+  #[cfg(feature = "sqlite")]
+  {
+    STORAGE_PATH.get_or_init(|| "wallet.db".into())
+  }
+}
+
 /// gets the storage adapter
 #[allow(clippy::borrowed_box)]
 pub(crate) fn get_adapter() -> crate::Result<&'static Box<dyn StorageAdapter + Sync + Send>> {
   INSTANCE.get_or_try_init(|| {
-    #[cfg(not(any(feature = "sqlite", feature = "stronghold")))]
-    {
-      let storage_path = STORAGE_PATH.get_or_init(|| "./example-database".into());
-      let instance = Box::new(key_value::KeyValueStorageAdapter::new(storage_path)?)
-        as Box<dyn StorageAdapter + Sync + Send>;
-      Ok(instance)
-    }
-    #[cfg(feature = "stronghold")]
-    {
-      let storage_path = STORAGE_PATH.get_or_init(|| "./example-database".into());
-      let instance = Box::new(stronghold::StrongholdStorageAdapter::new(storage_path)?)
-        as Box<dyn StorageAdapter + Sync + Send>;
-      Ok(instance)
-    }
-    #[cfg(feature = "sqlite")]
-    {
-      let storage_path = STORAGE_PATH.get_or_init(|| "wallet.db".into());
-      let instance = Box::new(sqlite::SqliteStorageAdapter::new(storage_path)?)
-        as Box<dyn StorageAdapter + Sync + Send>;
-      Ok(instance)
-    }
+    let storage_path = get_storage_path();
+    let instance =
+      Box::new(get_adapter_from_path(storage_path)?) as Box<dyn StorageAdapter + Sync + Send>;
+    Ok(instance)
   })
+}
+
+#[cfg(not(any(feature = "sqlite", feature = "stronghold")))]
+pub(crate) fn get_adapter_from_path<'a, P: AsRef<Path>>(
+  storage_path: P,
+) -> crate::Result<key_value::KeyValueStorageAdapter<'a>> {
+  key_value::KeyValueStorageAdapter::new(storage_path)
+}
+
+#[cfg(feature = "stronghold")]
+pub(crate) fn get_adapter_from_path<P: AsRef<Path>>(
+  storage_path: P,
+) -> crate::Result<stronghold::StrongholdStorageAdapter> {
+  stronghold::StrongholdStorageAdapter::new(storage_path)
+}
+
+#[cfg(feature = "sqlite")]
+pub(crate) fn get_adapter_from_path<P: AsRef<Path>>(
+  storage_path: P,
+) -> crate::Result<sqlite::SqliteStorageAdapter> {
+  sqlite::SqliteStorageAdapter::new(storage_path)
 }
 
 /// The storage adapter.
