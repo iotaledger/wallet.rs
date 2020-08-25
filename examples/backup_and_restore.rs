@@ -3,7 +3,7 @@ use iota_wallet::{account_manager::AccountManager, client::ClientOptionsBuilder}
 fn main() -> iota_wallet::Result<()> {
   let manager = AccountManager::new();
 
-  // first we'll create an example account and store it
+  // first we'll create an example account
   let id = "test";
   let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")?.build();
   let account = manager

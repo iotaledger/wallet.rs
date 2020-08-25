@@ -159,7 +159,7 @@ impl Account {
 
   /// Gets the account's total balance.
   /// It's read directly from the storage. To read the latest account balance, you should `sync` first.
-  pub fn total_balance(&mut self) -> u64 {
+  pub fn total_balance(&self) -> u64 {
     self
       .addresses
       .iter()
@@ -172,7 +172,7 @@ impl Account {
   /// The available balance is the balance users are allowed to spend.
   /// For example, if a user with 50i total account balance has made a transaction spending 20i,
   /// the available balance should be (50i-30i) = 20i.
-  pub fn available_balance(&mut self) -> u64 {
+  pub fn available_balance(&self) -> u64 {
     let total_balance = self.total_balance();
     let spent = self.transactions.iter().fold(0, |acc, tx| {
       let val = if *tx.confirmed() {
@@ -245,7 +245,7 @@ impl Account {
   /// Gets the addresses linked to this account.
   ///
   /// * `unspent` - Whether it should get only unspent addresses or not.
-  pub fn list_addresses(&mut self, unspent: bool) -> Vec<&Address> {
+  pub fn list_addresses(&self, unspent: bool) -> Vec<&Address> {
     self
       .addresses
       .iter()
