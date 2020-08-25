@@ -7,7 +7,14 @@ pub fn select_input(target: u64, available_utxos: &mut Vec<u64>) -> crate::Resul
 
   available_utxos.sort_by(|a, b| b.cmp(&a));
   let mut selected_coins = Vec::new();
-  let result = branch_and_bound(target, available_utxos, 0, &mut selected_coins, 0, 100000);
+  let result = branch_and_bound(
+    target,
+    available_utxos,
+    0,
+    &mut selected_coins,
+    0,
+    2u64.pow(available_utxos.len() as u32),
+  );
 
   if result {
     Ok(selected_coins)
@@ -118,6 +125,18 @@ mod tests {
         selected.into_iter().fold(0, |acc, x| acc + x),
         sum_utxos_picked
       );
+    }
+  }
+
+  #[test]
+  fn non_exact_match() {
+    let seed: &[_] = &[1, 2, 3, 4];
+    let mut rng: StdRng = SeedableRng::from_seed(seed);
+    for _i in 0..20 {
+      let mut available_utxos = generate_random_utxos(&mut rng, 5);
+      let target = available_utxos.iter().sum::<u64>() - 1;
+      let selected = select_input(target, &mut available_utxos).unwrap();
+      assert!(selected.into_iter().fold(0, |acc, x| acc + x) >= target);
     }
   }
 
