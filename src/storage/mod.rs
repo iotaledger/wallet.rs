@@ -1,8 +1,6 @@
-#[cfg(not(any(feature = "sqlite", feature = "stronghold")))]
-mod key_value;
 #[cfg(feature = "sqlite")]
 mod sqlite;
-#[cfg(feature = "stronghold")]
+#[cfg(not(feature = "sqlite"))]
 mod stronghold;
 
 use crate::account::{Account, AccountIdentifier};
@@ -51,14 +49,7 @@ pub(crate) fn get_adapter() -> crate::Result<&'static Box<dyn StorageAdapter + S
   })
 }
 
-#[cfg(not(any(feature = "sqlite", feature = "stronghold")))]
-pub(crate) fn get_adapter_from_path<'a, P: AsRef<Path>>(
-  storage_path: P,
-) -> crate::Result<key_value::KeyValueStorageAdapter<'a>> {
-  key_value::KeyValueStorageAdapter::new(storage_path)
-}
-
-#[cfg(feature = "stronghold")]
+#[cfg(not(feature = "sqlite"))]
 pub(crate) fn get_adapter_from_path<'a, P: AsRef<Path>>(
   storage_path: P,
 ) -> crate::Result<stronghold::StrongholdStorageAdapter<'a>> {

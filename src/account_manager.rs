@@ -1,5 +1,6 @@
 use crate::account::{Account, AccountIdentifier, AccountInitialiser, SyncedAccount};
 use crate::client::ClientOptions;
+use crate::storage::StorageAdapter;
 use crate::transaction::{Transaction, TransactionType, Transfer};
 
 use std::fs;
@@ -120,18 +121,21 @@ impl AccountManager {
   }
 
   /// Backups the accounts to the given destination
-  pub fn backup<P: AsRef<Path>>(&self, destination: P) -> crate::Result<()> {
+  pub fn backup<P: AsRef<Path>>(&self, destination: P) -> crate::Result<PathBuf> {
     let storage_path = crate::storage::get_storage_path();
     if storage_path.exists() {
       let metadata = fs::metadata(&storage_path)?;
       let backup_path = destination.as_ref().join("backup");
       if metadata.is_dir() {
-        copy_dir(storage_path, backup_path)?;
+        copy_dir(storage_path, &backup_path)?;
       } else {
-        fs::copy(storage_path, backup_path)?;
+        fs::create_dir_all(destination)?;
+        fs::copy(storage_path, &backup_path)?;
       }
+      Ok(backup_path)
+    } else {
+      Err(anyhow::anyhow!("storage file doesn't exist"))
     }
-    Ok(())
   }
 
   /// Import backed up accounts.
@@ -139,7 +143,7 @@ impl AccountManager {
     let storage = crate::storage::get_adapter()?;
     let backup_storage = crate::storage::get_adapter_from_path(source)?;
 
-    let accounts = storage.get_all()?;
+    let accounts = backup_storage.get_all()?;
     let accounts = crate::storage::parse_accounts(&accounts)?;
 
     let stored_accounts = storage.get_all()?;
