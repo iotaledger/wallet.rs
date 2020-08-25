@@ -1,8 +1,17 @@
-use crate::account::Account;
+use crate::account::{Account, AccountIdentifier};
 use crate::address::{Address, AddressBuilder, IotaAddress};
-use crate::client::{get_client, ClientOptions};
+use crate::client::get_client;
 use crate::transaction::{Transaction, Transfer};
+
 use bee_crypto::ternary::Hash;
+use bee_transaction::{
+  bundled::{BundledTransactionBuilder, BundledTransactionField, Value as IotaValue},
+  Vertex,
+};
+
+use std::convert::TryInto;
+
+mod input_selection;
 
 /// Syncs addresses with the tangle.
 /// The method ensures that the wallet local state has all used addresses plus an unused address.
@@ -160,7 +169,7 @@ impl<'a> AccountSynchronizer<'a> {
     sync_transactions(self.account, new_transaction_hashes).await?;
 
     let synced_account = SyncedAccount {
-      client_options: self.account.client_options().clone(),
+      account_id: self.account.id().to_string(),
       deposit_address: AddressBuilder::new()
         .address(IotaAddress::zeros())
         .balance(0)
@@ -173,7 +182,7 @@ impl<'a> AccountSynchronizer<'a> {
 
 /// Data returned from account synchronization.
 pub struct SyncedAccount {
-  client_options: ClientOptions,
+  account_id: String,
   deposit_address: Address,
 }
 
@@ -196,21 +205,106 @@ impl SyncedAccount {
   /// Returns a (addresses, address) tuple representing the selected input addresses and the remainder address if needed.
   fn select_inputs(
     &self,
-    threshold: &u64,
+    threshold: u64,
     address: &Address,
   ) -> crate::Result<(Vec<Address>, Option<Address>)> {
+    // TODO
+    let inputs = input_selection::select_input(threshold, &mut vec![])?;
     unimplemented!()
   }
 
   /// Send transactions.
-  pub fn transfer(&self, transfer_obj: Transfer) -> crate::Result<Transaction> {
-    self.select_inputs(transfer_obj.amount(), transfer_obj.address())?;
-    unimplemented!()
+  pub async fn transfer(&self, transfer_obj: Transfer) -> crate::Result<Transaction> {
+    if *transfer_obj.amount() == 0 {
+      return Err(anyhow::anyhow!("amount can't be zero"));
+    }
+    if transfer_obj.address().checksum()
+      != &crate::address::generate_checksum(transfer_obj.address().address())?
+    {
+      return Err(anyhow::anyhow!("invalid address checksum"));
+    }
+    let value = (*transfer_obj.amount()).try_into()?;
+    let account_id: AccountIdentifier = self.account_id.clone().into();
+
+    let adapter = crate::storage::get_adapter()?;
+
+    let account_str = adapter.get(account_id.clone())?;
+    let mut account: Account<'_> = serde_json::from_str(&account_str)?;
+    let client = get_client(account.client_options());
+
+    let (inputs, remainder) = self.select_inputs(*transfer_obj.amount(), transfer_obj.address())?;
+    let transactions_to_approve = client.get_transactions_to_approve().send().await?;
+
+    let transaction = BundledTransactionBuilder::new()
+      .with_address(transfer_obj.address().address().clone())
+      .with_value(IotaValue::try_from_inner(value).unwrap()) // TODO error handling
+      .with_trunk(transactions_to_approve.trunk_transaction)
+      .with_branch(transactions_to_approve.branch_transaction)
+      .build()
+      .unwrap(); // TODO error handling
+
+    let attached = client
+      .attach_to_tangle()
+      .trunk_transaction(transaction.trunk())
+      .branch_transaction(transaction.branch())
+      .trytes(&[transaction])
+      .send()
+      .await?;
+
+    let transactions = client.send_trytes().trytes(attached.trytes).send().await?;
+    let transactions: Vec<Transaction> = transactions
+      .iter()
+      .map(|tx| Transaction::from_bundled(tx.bundle().clone(), tx.clone()).unwrap())
+      .collect();
+    let tx = transactions.first().unwrap().clone();
+    account.append_transactions(transactions);
+    adapter.set(account_id, serde_json::to_string(&account)?)?;
+
+    Ok(tx)
   }
 
   /// Retry transactions.
   pub fn retry(&self, transaction_hash: Hash) -> crate::Result<Transaction> {
     let transaction = crate::storage::get_transaction(transaction_hash)?;
     unimplemented!()
+  }
+}
+
+pub async fn reattach(account: &mut Account<'_>, transaction_hash: &Hash) -> crate::Result<()> {
+  let mut transactions: Vec<Transaction> = account.transactions().iter().cloned().collect();
+  let transaction = transactions
+    .iter_mut()
+    .find(|tx| tx.hash() == transaction_hash)
+    .ok_or_else(|| anyhow::anyhow!("transaction not found"))?;
+
+  if transaction.confirmed {
+    Err(anyhow::anyhow!("transaction is already confirmed"))
+  } else if transaction.is_above_max_depth() {
+    Err(anyhow::anyhow!("transaction is above max depth"))
+  } else {
+    let client = get_client(account.client_options());
+    let inclusion_states = client
+      .get_inclusion_states()
+      .transactions(&[transaction.hash().clone()])
+      .send()
+      .await?;
+    if *inclusion_states.states.first().unwrap() {
+      // transaction is already confirmed; do nothing
+      transaction.set_confirmed(true);
+    } else {
+      // reattach the transaction
+      let reattachment_transactions = client.reattach(transaction_hash).await?.send().await?;
+      transactions.push(Transaction::from_bundled(
+        *transaction_hash,
+        reattachment_transactions.first().unwrap().clone(),
+      )?);
+    }
+    // update the transactions in storage
+    account.set_transactions(transactions);
+    crate::storage::get_adapter()?.set(
+      account.id().to_string().into(),
+      serde_json::to_string(&account)?,
+    )?;
+    Ok(())
   }
 }

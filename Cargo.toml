@@ -19,6 +19,7 @@ kv = "0.20"
 iota-core = { git = "https://github.com/iotaledger/iota.rs", branch = "dev" }
 url = { version = "2.1", features = [ "serde" ] }
 tokio = "0.2"
+rand = "0.3"
 
 # sql
 rusqlite = { version = "0.23", optional = true }

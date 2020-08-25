@@ -197,7 +197,7 @@ impl<'a> Account<'a> {
   /// account.list_transactions(10, 5, Some(TransactionType::Received));
   /// ```
   pub fn list_transactions(
-    &mut self,
+    &self,
     count: u64,
     from: u64,
     transaction_type: Option<TransactionType>,
@@ -237,6 +237,10 @@ impl<'a> Account<'a> {
     let id = self.alias;
     let address = crate::address::get_new_address(&self).await?;
     crate::storage::save_address(id, &address)
+  }
+
+  pub(crate) fn append_transactions(&mut self, transactions: Vec<Transaction>) {
+    self.transactions.extend(transactions.iter().cloned());
   }
 }
 

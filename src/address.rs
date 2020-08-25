@@ -134,7 +134,7 @@ pub(crate) async fn get_addresses(
 
 /// Generates a checksum for the given address
 // TODO: maybe this should be part of the crypto lib
-fn generate_checksum(address: &IotaAddress) -> crate::Result<TritBuf> {
+pub(crate) fn generate_checksum(address: &IotaAddress) -> crate::Result<TritBuf> {
   let mut kerl = Kerl::new();
   let mut hash = kerl
     .digest(address.to_inner())
