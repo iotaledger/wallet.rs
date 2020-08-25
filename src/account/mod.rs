@@ -144,7 +144,8 @@ pub struct Account {
 }
 
 impl Account {
-  pub(crate) fn latest_address(&self) -> &Address {
+  /// Returns the most recent address of the account.
+  pub fn latest_address(&self) -> &Address {
     &self.addresses.iter().max_by_key(|a| a.key_index()).unwrap()
   }
 
