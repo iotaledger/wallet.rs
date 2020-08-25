@@ -135,7 +135,7 @@ impl Value {
 }
 
 /// A transaction definition.
-#[derive(Getters, Setters, Clone)]
+#[derive(Debug, Getters, Setters, Clone)]
 #[getset(get = "pub", set = "pub(crate)")]
 pub struct Transaction {
   /// The transaction hash.
