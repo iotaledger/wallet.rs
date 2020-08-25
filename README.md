@@ -44,6 +44,15 @@ If you'd like to explore the implementation in more depth, the following command
 cargo doc --document-private-items --no-deps --open
 ```
 
+## Examples
+
+You can see the examples in [examples](examples/) directory and try them with:
+
+```
+cargo run --example # lists the available examples
+cargo run --example transfer # execute the `transfer` example
+```
+
 ## License
 
 The MIT license can be found [here](LICENSE).
