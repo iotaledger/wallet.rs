@@ -445,11 +445,35 @@ mod tests {
       false,
       false,
     );
-    let (account, _, balance) = _generate_account(vec![unconfirmed_transaction.clone()]);
+    let confirmed_transaction =
+      _generate_transaction(10, account.addresses().first().unwrap().clone(), true, true);
+    let (account, _, balance) =
+      _generate_account(vec![unconfirmed_transaction.clone(), confirmed_transaction]);
     assert_eq!(
       account.available_balance(),
       balance - unconfirmed_transaction.value().without_denomination() as u64
     );
+  }
+
+  #[test]
+  fn list_all_transactions() {
+    let (mut account, _, _) = _generate_account(vec![]);
+    let received_transaction =
+      _generate_transaction(0, account.latest_address().clone(), true, true);
+    let failed_transaction =
+      _generate_transaction(0, account.latest_address().clone(), true, false);
+    let unconfirmed_transaction =
+      _generate_transaction(0, account.latest_address().clone(), false, true);
+    let value_transaction = _generate_transaction(4, account.latest_address().clone(), true, true);
+    account.append_transactions(vec![
+      received_transaction,
+      failed_transaction,
+      unconfirmed_transaction,
+      value_transaction,
+    ]);
+
+    let txs = account.list_transactions(4, 0, None);
+    assert_eq!(txs.len(), 4);
   }
 
   #[test]
@@ -529,4 +553,5 @@ mod tests {
     let (account, _, _) = _generate_account(vec![]);
     account.sync().execute().await.unwrap();
   }*/
+  // TODO list_addresses, generate_addresses tests
 }
