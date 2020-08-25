@@ -82,7 +82,7 @@ impl PartialEq for Address {
 }
 
 /// Gets an unused address for the given account.
-pub(crate) async fn get_new_address(account: &Account<'_>) -> crate::Result<Address> {
+pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address> {
   let client = crate::client::get_client(account.client_options());
   let (key_index, iota_address) = client
     .generate_new_address(account.seed())
@@ -100,10 +100,7 @@ pub(crate) async fn get_new_address(account: &Account<'_>) -> crate::Result<Addr
 }
 
 /// Batch address generation.
-pub(crate) async fn get_addresses(
-  account: &Account<'_>,
-  count: u64,
-) -> crate::Result<Vec<Address>> {
+pub(crate) async fn get_addresses(account: &Account, count: u64) -> crate::Result<Vec<Address>> {
   let mut addresses = vec![];
   let seed_trits = account.seed().as_trits();
   for i in 0..count {
@@ -152,7 +149,7 @@ pub(crate) fn generate_checksum(address: &IotaAddress) -> crate::Result<TritBuf>
   Ok(TritBuf::from_trits(&trits[..]))
 }
 
-async fn get_balance(account: &Account<'_>, address: &IotaAddress) -> crate::Result<u64> {
+async fn get_balance(account: &Account, address: &IotaAddress) -> crate::Result<u64> {
   let client = crate::client::get_client(account.client_options());
   client
     .get_balances()
@@ -165,9 +162,9 @@ async fn get_balance(account: &Account<'_>, address: &IotaAddress) -> crate::Res
     .ok_or_else(|| anyhow::anyhow!("Balances response empty"))
 }
 
-pub(crate) fn is_unspent(account: &Account<'_>, address: &IotaAddress) -> bool {
+pub(crate) fn is_unspent(account: &Account, address: &IotaAddress) -> bool {
   account
     .transactions()
     .iter()
-    .any(|tx| *tx.value().value() < 0 && tx.address().address() == address)
+    .any(|tx| tx.value().without_denomination() < 0 && tx.address().address() == address)
 }

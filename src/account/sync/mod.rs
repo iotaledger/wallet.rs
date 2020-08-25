@@ -30,7 +30,7 @@ mod input_selection;
 /// and the transaction hashes associated with the addresses.
 ///
 fn sync_addresses<'a>(
-  account: &'a Account<'_>,
+  account: &'a Account,
   address_index: u64,
   gap_limit: Option<u64>,
 ) -> crate::Result<(Vec<Address>, Vec<Hash>)> {
@@ -48,7 +48,7 @@ fn sync_addresses<'a>(
 /// Syncs transactions with the tangle.
 /// The method should ensures that the wallet local state has transactions associated with the address history.
 async fn sync_transactions<'a>(
-  account: &'a Account<'_>,
+  account: &'a Account,
   new_transaction_hashes: Vec<Hash>,
 ) -> crate::Result<Vec<Transaction>> {
   let mut transactions: Vec<Transaction> = account.transactions().iter().cloned().collect();
@@ -101,7 +101,7 @@ async fn sync_transactions<'a>(
 
 /// Account sync helper.
 pub struct AccountSynchronizer<'a> {
-  account: &'a Account<'a>,
+  account: &'a Account,
   address_index: u64,
   gap_limit: Option<u64>,
   skip_persistance: bool,
@@ -109,7 +109,7 @@ pub struct AccountSynchronizer<'a> {
 
 impl<'a> AccountSynchronizer<'a> {
   /// Initialises a new instance of the sync helper.
-  pub fn new(account: &'a Account<'_>) -> Self {
+  pub(super) fn new(account: &'a Account) -> Self {
     Self {
       account,
       address_index: 1, // TODO By default the length of addresses stored for this account should be used as an index.
@@ -228,8 +228,7 @@ impl SyncedAccount {
 
     let adapter = crate::storage::get_adapter()?;
 
-    let account_str = adapter.get(account_id.clone())?;
-    let mut account: Account<'_> = serde_json::from_str(&account_str)?;
+    let mut account = crate::storage::get_account(account_id.clone())?;
     let client = get_client(account.client_options());
 
     let (inputs, remainder) = self.select_inputs(*transfer_obj.amount(), transfer_obj.address())?;
@@ -264,47 +263,11 @@ impl SyncedAccount {
   }
 
   /// Retry transactions.
-  pub fn retry(&self, transaction_hash: Hash) -> crate::Result<Transaction> {
-    let transaction = crate::storage::get_transaction(transaction_hash)?;
+  pub fn retry(&self, transaction_hash: &Hash) -> crate::Result<Transaction> {
+    let account: Account = crate::storage::get_account(self.account_id.clone().into())?;
+    let transaction = account
+      .get_transaction(transaction_hash)
+      .ok_or_else(|| anyhow::anyhow!("transaction with the given hash not found"));
     unimplemented!()
-  }
-}
-
-pub async fn reattach(account: &mut Account<'_>, transaction_hash: &Hash) -> crate::Result<()> {
-  let mut transactions: Vec<Transaction> = account.transactions().iter().cloned().collect();
-  let transaction = transactions
-    .iter_mut()
-    .find(|tx| tx.hash() == transaction_hash)
-    .ok_or_else(|| anyhow::anyhow!("transaction not found"))?;
-
-  if transaction.confirmed {
-    Err(anyhow::anyhow!("transaction is already confirmed"))
-  } else if transaction.is_above_max_depth() {
-    Err(anyhow::anyhow!("transaction is above max depth"))
-  } else {
-    let client = get_client(account.client_options());
-    let inclusion_states = client
-      .get_inclusion_states()
-      .transactions(&[transaction.hash().clone()])
-      .send()
-      .await?;
-    if *inclusion_states.states.first().unwrap() {
-      // transaction is already confirmed; do nothing
-      transaction.set_confirmed(true);
-    } else {
-      // reattach the transaction
-      let reattachment_transactions = client.reattach(transaction_hash).await?.send().await?;
-      transactions.push(Transaction::from_bundled(
-        *transaction_hash,
-        reattachment_transactions.first().unwrap().clone(),
-      )?);
-    }
-    // update the transactions in storage
-    account.set_transactions(transactions);
-    crate::storage::get_adapter()?.set(
-      account.id().to_string().into(),
-      serde_json::to_string(&account)?,
-    )?;
-    Ok(())
   }
 }
