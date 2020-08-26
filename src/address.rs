@@ -158,7 +158,7 @@ async fn get_balance(account: &Account, address: &IotaAddress) -> crate::Result<
         .await?
         .balances
         .first()
-        .map(|v| *v)
+        .copied()
         .ok_or_else(|| anyhow::anyhow!("Balances response empty"))
 }
 

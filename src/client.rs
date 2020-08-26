@@ -88,7 +88,7 @@ fn convert_urls(urls: &[&str]) -> crate::Result<Vec<Url>> {
     let urls: Vec<Option<Url>> = urls
         .iter()
         .map(|node| {
-            Url::parse(node).map(|url| Some(url)).unwrap_or_else(|e| {
+            Url::parse(node).map(Some).unwrap_or_else(|e| {
                 err = Some(e);
                 None
             })

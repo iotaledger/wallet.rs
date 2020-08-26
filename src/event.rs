@@ -125,7 +125,7 @@ pub(crate) fn emit_transaction_event(
         if listener.event_type == event_type {
             (listener.on_event)(TransactionEvent {
                 account_id: account_id.clone(),
-                transaction_hash: transaction_hash.clone(),
+                transaction_hash,
             })
         }
     }

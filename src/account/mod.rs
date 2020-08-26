@@ -103,7 +103,7 @@ impl AccountInitialiser {
     /// Initialises the account.
     pub fn initialise(self) -> crate::Result<Account> {
         let alias = self.alias.unwrap_or_else(|| "".to_string());
-        let id = self.id.unwrap_or(alias.clone());
+        let id = self.id.unwrap_or_else(|| alias.clone());
         let account_id: AccountIdentifier = id.to_string().into();
 
         let account = Account {
