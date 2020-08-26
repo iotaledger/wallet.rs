@@ -10,9 +10,9 @@ pub struct SqliteStorageAdapter {
 }
 
 impl SqliteStorageAdapter {
-  /// Initialises the storage adapter.
-  pub fn new(db_name: impl AsRef<Path>) -> crate::Result<Self> {
-    let connection = Connection::open(db_name)?;
+    /// Initialises the storage adapter.
+    pub fn new(db_name: impl AsRef<Path>) -> crate::Result<Self> {
+        let connection = Connection::open(db_name)?;
 
         connection.execute(
             "CREATE TABLE IF NOT EXISTS accounts (
