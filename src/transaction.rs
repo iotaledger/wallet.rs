@@ -1,8 +1,8 @@
 use crate::address::{Address, AddressBuilder};
 use bee_crypto::ternary::Hash;
 use bee_transaction::{
-  bundled::{BundledTransaction, BundledTransactionField, Tag as IotaTag},
-  Vertex,
+    bundled::{BundledTransaction, BundledTransactionField, Tag as IotaTag},
+    Vertex,
 };
 use chrono::prelude::{DateTime, NaiveDateTime, Utc};
 use getset::{Getters, Setters};
@@ -12,7 +12,7 @@ use std::fmt;
 /// A transaction tag.
 #[derive(Debug, Clone)]
 pub struct Tag {
-  tag: IotaTag,
+    tag: IotaTag,
 }
 
 impl Default for Tag {
@@ -25,88 +25,88 @@ impl Default for Tag {
 }
 
 impl Tag {
-  /// Initialises a new tag.
-  pub fn new(tag: IotaTag) -> Self {
-    Self { tag }
-  }
+    /// Initialises a new tag.
+    pub fn new(tag: IotaTag) -> Self {
+        Self { tag }
+    }
 
-  /// Returns the tag as trytes.
-  pub fn as_trytes(&self) -> &str {
-    "trytes"
-  }
+    /// Returns the tag as trytes.
+    pub fn as_trytes(&self) -> &str {
+        "trytes"
+    }
 
-  /// Returns the tag formatted as ASCII.
-  pub fn as_ascii(&self) -> &str {
-    "ascii"
-  }
+    /// Returns the tag formatted as ASCII.
+    pub fn as_ascii(&self) -> &str {
+        "ascii"
+    }
 }
 
 /// A transfer to make a transaction.
 #[derive(Debug, Getters, Setters)]
 #[getset(get = "pub")]
 pub struct Transfer {
-  /// The transfer value.
-  amount: u64,
-  /// The transfer address.
-  address: Address,
-  /// The transfer transaction tag.
-  #[getset(set = "pub")]
-  tag: Option<IotaTag>,
-  /// The transfer transaction message.
-  #[getset(set = "pub")]
-  message: Option<String>,
+    /// The transfer value.
+    amount: u64,
+    /// The transfer address.
+    address: Address,
+    /// The transfer transaction tag.
+    #[getset(set = "pub")]
+    tag: Option<IotaTag>,
+    /// The transfer transaction message.
+    #[getset(set = "pub")]
+    message: Option<String>,
 }
 
 impl Transfer {
-  /// Initialises a new transfer to the given address.
-  pub fn new(address: Address, amount: u64) -> Self {
-    Self {
-      address,
-      amount,
-      tag: None,
-      message: None,
+    /// Initialises a new transfer to the given address.
+    pub fn new(address: Address, amount: u64) -> Self {
+        Self {
+            address,
+            amount,
+            tag: None,
+            message: None,
+        }
     }
-  }
 }
 
 /// Possible Value units.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum ValueUnit {
-  /// i
-  I,
-  /// Ki
-  Ki,
-  /// Mi
-  Mi,
-  /// Gi
-  Gi,
-  /// Ti
-  Ti,
-  /// Pi
-  Pi,
+    /// i
+    I,
+    /// Ki
+    Ki,
+    /// Mi
+    Mi,
+    /// Gi
+    Gi,
+    /// Ti
+    Ti,
+    /// Pi
+    Pi,
 }
 
 impl fmt::Display for ValueUnit {
-  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    match *self {
-      ValueUnit::I => write!(f, "i"),
-      ValueUnit::Ki => write!(f, "Ki"),
-      ValueUnit::Mi => write!(f, "Mi"),
-      ValueUnit::Gi => write!(f, "Gi"),
-      ValueUnit::Ti => write!(f, "Ti"),
-      ValueUnit::Pi => write!(f, "Pi"),
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            ValueUnit::I => write!(f, "i"),
+            ValueUnit::Ki => write!(f, "Ki"),
+            ValueUnit::Mi => write!(f, "Mi"),
+            ValueUnit::Gi => write!(f, "Gi"),
+            ValueUnit::Ti => write!(f, "Ti"),
+            ValueUnit::Pi => write!(f, "Pi"),
+        }
     }
-  }
 }
 
 /// The transaction Value struct.
 #[derive(Debug, Getters, Serialize, Deserialize, Clone)]
 #[getset(get = "pub")]
 pub struct Value {
-  /// The value.
-  value: i64,
-  /// The value's unit.
-  unit: ValueUnit,
+    /// The value.
+    value: i64,
+    /// The value's unit.
+    unit: ValueUnit,
 }
 
 impl Value {
@@ -209,22 +209,22 @@ impl Transaction {
 }
 
 impl PartialEq for Transaction {
-  fn eq(&self, other: &Self) -> bool {
-    self.hash() == other.hash()
-  }
+    fn eq(&self, other: &Self) -> bool {
+        self.hash() == other.hash()
+    }
 }
 
 /// Transaction type.
 #[derive(Debug, Clone, Deserialize)]
 pub enum TransactionType {
-  /// Transaction received.
-  Received,
-  /// Transaction sent.
-  Sent,
-  /// Transaction not broadcasted.
-  Failed,
-  /// Transaction not confirmed.
-  Unconfirmed,
-  /// A value transaction.
-  Value,
+    /// Transaction received.
+    Received,
+    /// Transaction sent.
+    Sent,
+    /// Transaction not broadcasted.
+    Failed,
+    /// Transaction not confirmed.
+    Unconfirmed,
+    /// A value transaction.
+    Value,
 }

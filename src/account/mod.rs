@@ -14,24 +14,24 @@ pub use sync::{AccountSynchronizer, SyncedAccount};
 /// The account identifier.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AccountIdentifier {
-  /// An Id (string) identifier.
-  Id(String),
-  /// An index identifier.
-  Index(u64),
+    /// An Id (string) identifier.
+    Id(String),
+    /// An index identifier.
+    Index(u64),
 }
 
 // When the identifier is a String (id).
 impl From<String> for AccountIdentifier {
-  fn from(value: String) -> Self {
-    Self::Id(value)
-  }
+    fn from(value: String) -> Self {
+        Self::Id(value)
+    }
 }
 
 // When the identifier is an id.
 impl From<u64> for AccountIdentifier {
-  fn from(value: u64) -> Self {
-    Self::Index(value)
-  }
+    fn from(value: u64) -> Self {
+        Self::Index(value)
+    }
 }
 
 /// Account initialiser.
@@ -80,25 +80,25 @@ impl AccountInitialiser {
     self
   }
 
-  /// Time of account creation.
-  pub fn created_at(mut self, created_at: DateTime<Utc>) -> Self {
-    self.created_at = Some(created_at);
-    self
-  }
+    /// Time of account creation.
+    pub fn created_at(mut self, created_at: DateTime<Utc>) -> Self {
+        self.created_at = Some(created_at);
+        self
+    }
 
-  /// Transactions associated with the seed.
-  /// The account can be initialised with locally stored transactions.
-  pub fn transactions(mut self, transactions: Vec<Transaction>) -> Self {
-    self.transactions = transactions;
-    self
-  }
+    /// Transactions associated with the seed.
+    /// The account can be initialised with locally stored transactions.
+    pub fn transactions(mut self, transactions: Vec<Transaction>) -> Self {
+        self.transactions = transactions;
+        self
+    }
 
-  // Address history associated with the seed.
-  /// The account can be initialised with locally stored address history.
-  pub fn addresses(mut self, addresses: Vec<Address>) -> Self {
-    self.addresses = addresses;
-    self
-  }
+    // Address history associated with the seed.
+    /// The account can be initialised with locally stored address history.
+    pub fn addresses(mut self, addresses: Vec<Address>) -> Self {
+        self.addresses = addresses;
+        self
+    }
 
   /// Initialises the account.
   pub fn initialise(self) -> crate::Result<Account> {
@@ -149,9 +149,9 @@ impl Account {
     &self.addresses.iter().max_by_key(|a| a.key_index()).unwrap()
   }
 
-  pub(crate) fn seed(&self) -> &Seed {
-    unimplemented!()
-  }
+    pub(crate) fn seed(&self) -> &Seed {
+        unimplemented!()
+    }
 
   /// Returns the builder to setup the process to synchronize this account with the Tangle.
   pub fn sync(&self) -> AccountSynchronizer<'_> {
@@ -276,18 +276,18 @@ impl Account {
 #[derive(Getters)]
 #[getset(get = "pub")]
 pub struct InitialisedAccount<'a> {
-  /// The account identifier.
-  id: &'a str,
-  /// The account alias.
-  alias: &'a str,
-  /// Seed address history.
-  addresses: Vec<Address>,
-  /// Seed transaction history.
-  transactions: Vec<Transaction>,
-  /// Account creation time.
-  created_at: DateTime<Utc>,
-  /// Time when the account was last synced with the tangle.
-  last_synced_at: DateTime<Utc>,
+    /// The account identifier.
+    id: &'a str,
+    /// The account alias.
+    alias: &'a str,
+    /// Seed address history.
+    addresses: Vec<Address>,
+    /// Seed transaction history.
+    transactions: Vec<Transaction>,
+    /// Account creation time.
+    created_at: DateTime<Utc>,
+    /// Time when the account was last synced with the tangle.
+    last_synced_at: DateTime<Utc>,
 }
 
 #[cfg(test)]

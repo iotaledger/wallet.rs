@@ -65,14 +65,14 @@ pub(crate) fn get_adapter_from_path<P: AsRef<Path>>(
 
 /// The storage adapter.
 pub trait StorageAdapter {
-  /// Gets the account with the given id/alias from the storage.
-  fn get(&self, key: AccountIdentifier) -> crate::Result<String>;
-  /// Gets all the accounts from the storage.
-  fn get_all(&self) -> crate::Result<Vec<String>>;
-  /// Saves or updates an account on the storage.
-  fn set(&self, key: AccountIdentifier, account: String) -> crate::Result<()>;
-  /// Removes an account from the storage.
-  fn remove(&self, key: AccountIdentifier) -> crate::Result<()>;
+    /// Gets the account with the given id/alias from the storage.
+    fn get(&self, key: AccountIdentifier) -> crate::Result<String>;
+    /// Gets all the accounts from the storage.
+    fn get_all(&self) -> crate::Result<Vec<String>>;
+    /// Saves or updates an account on the storage.
+    fn set(&self, key: AccountIdentifier, account: String) -> crate::Result<()>;
+    /// Removes an account from the storage.
+    fn remove(&self, key: AccountIdentifier) -> crate::Result<()>;
 }
 
 pub(crate) fn parse_accounts(accounts: &Vec<String>) -> crate::Result<Vec<Account>> {
@@ -90,15 +90,15 @@ pub(crate) fn parse_accounts(accounts: &Vec<String>) -> crate::Result<Vec<Accoun
     })
     .collect();
 
-  if let Some(err) = err {
-    Err(err.into())
-  } else {
-    let accounts = accounts
-      .iter()
-      .map(|account| account.clone().unwrap())
-      .collect();
-    Ok(accounts)
-  }
+    if let Some(err) = err {
+        Err(err.into())
+    } else {
+        let accounts = accounts
+            .iter()
+            .map(|account| account.clone().unwrap())
+            .collect();
+        Ok(accounts)
+    }
 }
 
 pub(crate) fn get_account(account_id: AccountIdentifier) -> crate::Result<Account> {

@@ -34,15 +34,15 @@ fn sync_addresses<'a>(
   address_index: u64,
   gap_limit: Option<u64>,
 ) -> crate::Result<(Vec<Address>, Vec<Hash>)> {
-  let addresses = account.addresses();
-  let transactions = account.transactions();
-  let latest_address = account.latest_address();
-  let client = get_client(account.client_options());
-  for transaction in transactions {}
-  for address in addresses {}
-  // TODO add seed here
-  // client.balance();
-  unimplemented!()
+    let addresses = account.addresses();
+    let transactions = account.transactions();
+    let latest_address = account.latest_address();
+    let client = get_client(account.client_options());
+    for transaction in transactions {}
+    for address in addresses {}
+    // TODO add seed here
+    // client.balance();
+    unimplemented!()
 }
 
 /// Syncs transactions with the tangle.
@@ -51,52 +51,52 @@ async fn sync_transactions<'a>(
   account: &'a Account,
   new_transaction_hashes: Vec<Hash>,
 ) -> crate::Result<Vec<Transaction>> {
-  let mut transactions: Vec<Transaction> = account.transactions().iter().cloned().collect();
+    let mut transactions: Vec<Transaction> = account.transactions().iter().cloned().collect();
 
-  // sync `broadcasted` state
-  transactions
-    .iter_mut()
-    .filter(|tx| !tx.broadcasted() && new_transaction_hashes.contains(tx.hash()))
-    .for_each(|tx| {
-      tx.set_broadcasted(true);
-    });
+    // sync `broadcasted` state
+    transactions
+        .iter_mut()
+        .filter(|tx| !tx.broadcasted() && new_transaction_hashes.contains(tx.hash()))
+        .for_each(|tx| {
+            tx.set_broadcasted(true);
+        });
 
-  // sync `confirmed` state
-  let mut unconfirmed_transactions: Vec<&mut Transaction> = transactions
-    .iter_mut()
-    .filter(|tx| !tx.confirmed())
-    .collect();
-  let client = get_client(account.client_options());
-  let unconfirmed_transaction_hashes: Vec<Hash> = unconfirmed_transactions
-    .iter()
-    .map(|tx| tx.hash().clone())
-    .collect();
-  let confirmed_states = client
-    .is_confirmed(&unconfirmed_transaction_hashes[..])
-    .await
-    .unwrap();
-  for (tx, confirmed) in unconfirmed_transactions
-    .iter_mut()
-    .zip(confirmed_states.iter())
-  {
-    if *confirmed {
-      tx.set_confirmed(true);
+    // sync `confirmed` state
+    let mut unconfirmed_transactions: Vec<&mut Transaction> = transactions
+        .iter_mut()
+        .filter(|tx| !tx.confirmed())
+        .collect();
+    let client = get_client(account.client_options());
+    let unconfirmed_transaction_hashes: Vec<Hash> = unconfirmed_transactions
+        .iter()
+        .map(|tx| tx.hash().clone())
+        .collect();
+    let confirmed_states = client
+        .is_confirmed(&unconfirmed_transaction_hashes[..])
+        .await
+        .unwrap();
+    for (tx, confirmed) in unconfirmed_transactions
+        .iter_mut()
+        .zip(confirmed_states.iter())
+    {
+        if *confirmed {
+            tx.set_confirmed(true);
+        }
     }
-  }
 
-  // get new transactions
-  let response = client
-    .get_trytes(&new_transaction_hashes[..])
-    .await
-    .unwrap();
-  let mut hashes_iter = new_transaction_hashes.iter();
+    // get new transactions
+    let response = client
+        .get_trytes(&new_transaction_hashes[..])
+        .await
+        .unwrap();
+    let mut hashes_iter = new_transaction_hashes.iter();
 
-  for tx in response.trytes {
-    let hash = hashes_iter.next().unwrap();
-    transactions.push(Transaction::from_bundled(*hash, tx).unwrap());
-  }
+    for tx in response.trytes {
+        let hash = hashes_iter.next().unwrap();
+        transactions.push(Transaction::from_bundled(*hash, tx).unwrap());
+    }
 
-  Ok(transactions)
+    Ok(transactions)
 }
 
 /// Account sync helper.
@@ -116,53 +116,17 @@ impl<'a> AccountSynchronizer<'a> {
       gap_limit: None,
       skip_persistance: false,
     }
-  }
 
-  /// Sets the address index.
-  /// By default the length of addresses stored for this account should be used as an index.
-  pub fn address_index(mut self, index: u64) -> Self {
-    self.address_index = index;
-    self
-  }
-
-  /// Number of address indexes that are generated.
-  pub fn gap_limit(mut self, limit: u64) -> Self {
-    self.gap_limit = Some(limit);
-    self
-  }
-
-  /// Skip write to the database.
-  pub fn skip_persistance(mut self) -> Self {
-    self.skip_persistance = true;
-    self
-  }
-
-  /// Syncs account with the tangle.
-  /// The account syncing process ensures that the latest metadata (balance, transactions)
-  /// associated with an account is fetched from the tangle and is stored locally.
-  pub async fn execute(self) -> crate::Result<SyncedAccount> {
-    let client = get_client(self.account.client_options());
-    let mut addresses = vec![];
-    for address in self.account.addresses() {
-      addresses.push(address.address().clone());
+    /// Number of address indexes that are generated.
+    pub fn gap_limit(mut self, limit: u64) -> Self {
+        self.gap_limit = Some(limit);
+        self
     }
 
-    let mut new_transaction_hashes = vec![];
-    let find_transactions_response = client
-      .find_transactions()
-      .addresses(&addresses[..])
-      .send()
-      .await
-      .unwrap();
-    for tx_hash in find_transactions_response.hashes {
-      if !self
-        .account
-        .transactions()
-        .iter()
-        .any(|tx| tx.hash() == &tx_hash)
-      {
-        new_transaction_hashes.push(tx_hash);
-      }
+    /// Skip write to the database.
+    pub fn skip_persistance(mut self) -> Self {
+        self.skip_persistance = true;
+        self
     }
 
     sync_addresses(self.account, self.address_index, self.gap_limit)?;
