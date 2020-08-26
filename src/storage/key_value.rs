@@ -1,16 +1,14 @@
-mod interface;
-
 use super::StorageAdapter;
 use crate::account::AccountIdentifier;
 use kv::*;
 use std::path::Path;
 
 /// Key value storage adapter.
-pub struct StrongholdStorageAdapter<'a> {
-    id_bucket: Bucket<'a, String, String>,
+pub struct KeyValueStorageAdapter<'a> {
+    bucket: Bucket<'a, String, String>,
 }
 
-impl<'a> StrongholdStorageAdapter<'a> {
+impl<'a> KeyValueStorageAdapter<'a> {
     /// Initialises the storage adapter.
     pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
         // Configure the database
@@ -20,35 +18,31 @@ impl<'a> StrongholdStorageAdapter<'a> {
         let store = Store::new(cfg)?;
 
         // A Bucket provides typed access to a section of the key/value store
-        let id_bucket = store.bucket::<String, String>(Some("ids"))?;
+        let account_bucket = store.bucket::<String, String>(Some("accounts"))?;
 
-        let adapter = Self { id_bucket };
+        let adapter = Self {
+            bucket: account_bucket,
+        };
         Ok(adapter)
     }
 }
 
-impl<'a> StorageAdapter for StrongholdStorageAdapter<'a> {
+impl<'a> StorageAdapter for KeyValueStorageAdapter<'a> {
     fn get(&self, account_id: AccountIdentifier) -> crate::Result<String> {
         let id = match account_id {
             AccountIdentifier::Id(id) => id,
             _ => return Err(anyhow::anyhow!("only Id is supported")),
         };
-        let stronghold_id = self.id_bucket.get(id)?.unwrap();
-        let account = interface::read("password", stronghold_id);
-        Ok(account.expect("failed to read account"))
+        let account = self.bucket.get(id)?;
+        account.ok_or_else(|| anyhow::anyhow!("account isn't stored"))
     }
 
     fn get_all(&self) -> crate::Result<std::vec::Vec<String>> {
-        let mut accounts = vec![];
-        let ids: Vec<String> = self
-            .id_bucket
+        let accounts = self
+            .bucket
             .iter()
             .map(|item| item.unwrap().value().unwrap())
             .collect();
-        for id in ids {
-            let account = interface::read("password", id);
-            accounts.push(account.expect("failed to read account"));
-        }
         Ok(accounts)
     }
 
@@ -61,8 +55,7 @@ impl<'a> StorageAdapter for StrongholdStorageAdapter<'a> {
             AccountIdentifier::Id(id) => id,
             _ => return Err(anyhow::anyhow!("only Id is supported")),
         };
-        let stronghold_id = interface::encrypt("password", &account);
-        self.id_bucket.set(id, format!("{:?}", stronghold_id))?;
+        self.bucket.set(id, account)?;
         Ok(())
     }
 
@@ -71,8 +64,7 @@ impl<'a> StorageAdapter for StrongholdStorageAdapter<'a> {
             AccountIdentifier::Id(id) => id,
             _ => return Err(anyhow::anyhow!("only Id is supported")),
         };
-        let stronghold_id = self.id_bucket.get(id)?.unwrap();
-        interface::revoke("password", stronghold_id);
+        self.bucket.remove(id)?;
         Ok(())
     }
 }

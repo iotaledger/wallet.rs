@@ -12,201 +12,201 @@ type ClientInstanceMap = Arc<Mutex<HashMap<ClientOptions, Arc<Client>>>>;
 
 /// Gets the balance change listeners array.
 fn instances() -> &'static ClientInstanceMap {
-  static LISTENERS: Lazy<ClientInstanceMap> = Lazy::new(Default::default);
-  &LISTENERS
+    static LISTENERS: Lazy<ClientInstanceMap> = Lazy::new(Default::default);
+    &LISTENERS
 }
 
 pub(crate) fn get_client(options: &ClientOptions) -> Arc<Client> {
-  let mut map = instances()
-    .lock()
-    .expect("failed to lock client instances: get_client()");
+    let mut map = instances()
+        .lock()
+        .expect("failed to lock client instances: get_client()");
 
-  if !map.contains_key(&options) {
-    let mut client_builder = ClientBuilder::new().quorum_threshold(*options.quorum_threshold());
+    if !map.contains_key(&options) {
+        let mut client_builder = ClientBuilder::new().quorum_threshold(*options.quorum_threshold());
 
-    // we validate the URL beforehand so it's safe to unwrap here
-    if let Some(node) = options.node() {
-      client_builder = client_builder.node(node.as_str()).unwrap();
-    } else if let Some(nodes) = options.nodes() {
-      client_builder = client_builder
-        .nodes(&nodes.iter().map(|url| url.as_str()).collect::<Vec<&str>>()[..])
-        .unwrap();
-    } else if let Some(network) = options.network() {
-      client_builder = client_builder.network(network.clone());
+        // we validate the URL beforehand so it's safe to unwrap here
+        if let Some(node) = options.node() {
+            client_builder = client_builder.node(node.as_str()).unwrap();
+        } else if let Some(nodes) = options.nodes() {
+            client_builder = client_builder
+                .nodes(&nodes.iter().map(|url| url.as_str()).collect::<Vec<&str>>()[..])
+                .unwrap();
+        } else if let Some(network) = options.network() {
+            client_builder = client_builder.network(network.clone());
+        }
+
+        if let Some(quorum_size) = options.quorum_size() {
+            client_builder = client_builder.quorum_size(*quorum_size);
+        }
+
+        let client = client_builder
+            .build()
+            .expect("failed to initialise ClientBuilder");
+
+        map.insert(options.clone(), Arc::new(client));
     }
 
-    if let Some(quorum_size) = options.quorum_size() {
-      client_builder = client_builder.quorum_size(*quorum_size);
-    }
-
-    let client = client_builder
-      .build()
-      .expect("failed to initialise ClientBuilder");
-
-    map.insert(options.clone(), Arc::new(client));
-  }
-
-  let client = map.get(&options).expect("client not initialised");
-  client.clone()
+    let client = map.get(&options).expect("client not initialised");
+    client.clone()
 }
 
 /// The options builder for a client connected to a single node.
 pub struct SingleNodeClientOptionsBuilder {
-  node: Url,
+    node: Url,
 }
 
 impl SingleNodeClientOptionsBuilder {
-  fn new(node: &str) -> crate::Result<Self> {
-    let node_url = Url::parse(node)?;
-    let builder = Self { node: node_url };
-    Ok(builder)
-  }
-
-  /// Builds the options.
-  pub fn build(self) -> ClientOptions {
-    ClientOptions {
-      node: Some(self.node),
-      nodes: None,
-      network: None,
-      quorum_size: None,
-      quorum_threshold: 0,
+    fn new(node: &str) -> crate::Result<Self> {
+        let node_url = Url::parse(node)?;
+        let builder = Self { node: node_url };
+        Ok(builder)
     }
-  }
+
+    /// Builds the options.
+    pub fn build(self) -> ClientOptions {
+        ClientOptions {
+            node: Some(self.node),
+            nodes: None,
+            network: None,
+            quorum_size: None,
+            quorum_threshold: 0,
+        }
+    }
 }
 
 /// The options builder for a client connected to multiple nodes.
 pub struct MultiNodeClientOptionsBuilder {
-  nodes: Option<Vec<Url>>,
-  network: Option<Network>,
-  quorum_size: Option<u8>,
-  quorum_threshold: f32,
-  // state_adapter:
+    nodes: Option<Vec<Url>>,
+    network: Option<Network>,
+    quorum_size: Option<u8>,
+    quorum_threshold: f32,
+    // state_adapter:
 }
 
 fn convert_urls(urls: &[&str]) -> crate::Result<Vec<Url>> {
-  let mut err = None;
-  let urls: Vec<Option<Url>> = urls
-    .iter()
-    .map(|node| {
-      Url::parse(node).map(|url| Some(url)).unwrap_or_else(|e| {
-        err = Some(e);
-        None
-      })
-    })
-    .collect();
+    let mut err = None;
+    let urls: Vec<Option<Url>> = urls
+        .iter()
+        .map(|node| {
+            Url::parse(node).map(|url| Some(url)).unwrap_or_else(|e| {
+                err = Some(e);
+                None
+            })
+        })
+        .collect();
 
-  if let Some(err) = err {
-    Err(err.into())
-  } else {
-    let urls = urls.iter().map(|url| url.clone().unwrap()).collect();
-    Ok(urls)
-  }
+    if let Some(err) = err {
+        Err(err.into())
+    } else {
+        let urls = urls.iter().map(|url| url.clone().unwrap()).collect();
+        Ok(urls)
+    }
 }
 
 impl Default for MultiNodeClientOptionsBuilder {
-  fn default() -> Self {
-    Self {
-      nodes: None,
-      network: None,
-      quorum_size: None,
-      quorum_threshold: 0.5,
+    fn default() -> Self {
+        Self {
+            nodes: None,
+            network: None,
+            quorum_size: None,
+            quorum_threshold: 0.5,
+        }
     }
-  }
 }
 
 impl MultiNodeClientOptionsBuilder {
-  fn with_nodes(nodes: &[&str]) -> crate::Result<Self> {
-    let nodes_urls = convert_urls(nodes)?;
-    let builder = Self {
-      nodes: Some(nodes_urls),
-      ..Default::default()
-    };
-    Ok(builder)
-  }
-
-  fn with_network(network: Network) -> Self {
-    Self {
-      network: Some(network),
-      ..Default::default()
+    fn with_nodes(nodes: &[&str]) -> crate::Result<Self> {
+        let nodes_urls = convert_urls(nodes)?;
+        let builder = Self {
+            nodes: Some(nodes_urls),
+            ..Default::default()
+        };
+        Ok(builder)
     }
-  }
 
-  /// Sets the quorum size.
-  pub fn quorum_size(mut self, quorum_size: u8) -> Self {
-    self.quorum_size = Some(quorum_size);
-    self
-  }
-
-  /// Sets the quorum threshold.
-  pub fn quorum_threshold(mut self, quorum_threshold: f32) -> Self {
-    self.quorum_threshold = quorum_threshold;
-    self
-  }
-
-  /// Builds the options.
-  pub fn build(self) -> ClientOptions {
-    ClientOptions {
-      node: None,
-      nodes: self.nodes,
-      network: self.network,
-      quorum_size: self.quorum_size,
-      quorum_threshold: (self.quorum_threshold * 100.0) as u8,
+    fn with_network(network: Network) -> Self {
+        Self {
+            network: Some(network),
+            ..Default::default()
+        }
     }
-  }
+
+    /// Sets the quorum size.
+    pub fn quorum_size(mut self, quorum_size: u8) -> Self {
+        self.quorum_size = Some(quorum_size);
+        self
+    }
+
+    /// Sets the quorum threshold.
+    pub fn quorum_threshold(mut self, quorum_threshold: f32) -> Self {
+        self.quorum_threshold = quorum_threshold;
+        self
+    }
+
+    /// Builds the options.
+    pub fn build(self) -> ClientOptions {
+        ClientOptions {
+            node: None,
+            nodes: self.nodes,
+            network: self.network,
+            quorum_size: self.quorum_size,
+            quorum_threshold: (self.quorum_threshold * 100.0) as u8,
+        }
+    }
 }
 
 /// The ClientOptions builder.
 pub struct ClientOptionsBuilder;
 
 impl ClientOptionsBuilder {
-  /// Client connected to a single node.
-  ///
-  /// # Examples
-  /// ```
-  /// use iota_wallet::client::ClientOptionsBuilder;
-  /// let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-  ///   .expect("invalid node URL")
-  ///   .build();
-  /// ```
-  pub fn node(node: &str) -> crate::Result<SingleNodeClientOptionsBuilder> {
-    SingleNodeClientOptionsBuilder::new(node)
-  }
+    /// Client connected to a single node.
+    ///
+    /// # Examples
+    /// ```
+    /// use iota_wallet::client::ClientOptionsBuilder;
+    /// let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+    ///   .expect("invalid node URL")
+    ///   .build();
+    /// ```
+    pub fn node(node: &str) -> crate::Result<SingleNodeClientOptionsBuilder> {
+        SingleNodeClientOptionsBuilder::new(node)
+    }
 
-  /// ClientOptions connected to a list of nodes.
-  ///
-  /// # Examples
-  /// ```
-  /// use iota_wallet::client::ClientOptionsBuilder;
-  /// let client_options = ClientOptionsBuilder::nodes(&["https://nodes.devnet.iota.org:443", "https://nodes.comnet.thetangle.org/"])
-  ///   .expect("invalid nodes URLs")
-  ///   .build();
-  /// ```
-  pub fn nodes(nodes: &[&str]) -> crate::Result<MultiNodeClientOptionsBuilder> {
-    MultiNodeClientOptionsBuilder::with_nodes(nodes)
-  }
+    /// ClientOptions connected to a list of nodes.
+    ///
+    /// # Examples
+    /// ```
+    /// use iota_wallet::client::ClientOptionsBuilder;
+    /// let client_options = ClientOptionsBuilder::nodes(&["https://nodes.devnet.iota.org:443", "https://nodes.comnet.thetangle.org/"])
+    ///   .expect("invalid nodes URLs")
+    ///   .build();
+    /// ```
+    pub fn nodes(nodes: &[&str]) -> crate::Result<MultiNodeClientOptionsBuilder> {
+        MultiNodeClientOptionsBuilder::with_nodes(nodes)
+    }
 
-  /// ClientOptions connected to the default Network pool.
-  ///
-  /// # Examples
-  /// ```
-  /// use iota_wallet::client::{ClientOptionsBuilder, Network};
-  /// let client_options = ClientOptionsBuilder::network(Network::Devnet)
-  ///   .build();
-  /// ```
-  pub fn network(network: Network) -> MultiNodeClientOptionsBuilder {
-    MultiNodeClientOptionsBuilder::with_network(network)
-  }
+    /// ClientOptions connected to the default Network pool.
+    ///
+    /// # Examples
+    /// ```
+    /// use iota_wallet::client::{ClientOptionsBuilder, Network};
+    /// let client_options = ClientOptionsBuilder::network(Network::Devnet)
+    ///   .build();
+    /// ```
+    pub fn network(network: Network) -> MultiNodeClientOptionsBuilder {
+        MultiNodeClientOptionsBuilder::with_network(network)
+    }
 }
 
 /// The client options type.
 #[derive(Default, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Getters)]
 #[getset(get = "pub(crate)")]
 pub struct ClientOptions {
-  node: Option<Url>,
-  nodes: Option<Vec<Url>>,
-  network: Option<Network>,
-  #[serde(rename = "quorumSize")]
-  quorum_size: Option<u8>,
-  #[serde(rename = "quorumThreshold", default)]
-  quorum_threshold: u8,
+    node: Option<Url>,
+    nodes: Option<Vec<Url>>,
+    network: Option<Network>,
+    #[serde(rename = "quorumSize")]
+    quorum_size: Option<u8>,
+    #[serde(rename = "quorumThreshold", default)]
+    quorum_threshold: u8,
 }
