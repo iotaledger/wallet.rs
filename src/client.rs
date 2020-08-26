@@ -1,3 +1,4 @@
+use getset::Getters;
 pub use iota::client::builder::Network;
 use iota::client::{Client, ClientBuilder};
 use once_cell::sync::Lazy;
@@ -21,9 +22,24 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<Client> {
         .expect("failed to lock client instances: get_client()");
 
     if !map.contains_key(&options) {
-        let client = ClientBuilder::new()
-            .node("http://127.0.0.1:8080")
-            .expect("failed to initialise ClientBuilder")
+        let mut client_builder = ClientBuilder::new().quorum_threshold(*options.quorum_threshold());
+
+        // we validate the URL beforehand so it's safe to unwrap here
+        if let Some(node) = options.node() {
+            client_builder = client_builder.node(node.as_str()).unwrap();
+        } else if let Some(nodes) = options.nodes() {
+            client_builder = client_builder
+                .nodes(&nodes.iter().map(|url| url.as_str()).collect::<Vec<&str>>()[..])
+                .unwrap();
+        } else if let Some(network) = options.network() {
+            client_builder = client_builder.network(network.clone());
+        }
+
+        if let Some(quorum_size) = options.quorum_size() {
+            client_builder = client_builder.quorum_size(*quorum_size);
+        }
+
+        let client = client_builder
             .build()
             .expect("failed to initialise ClientBuilder");
 
@@ -37,31 +53,13 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<Client> {
 /// The options builder for a client connected to a single node.
 pub struct SingleNodeClientOptionsBuilder {
     node: Url,
-    mwm: Option<u64>,
-    checksum_required: bool,
 }
 
 impl SingleNodeClientOptionsBuilder {
     fn new(node: &str) -> crate::Result<Self> {
         let node_url = Url::parse(node)?;
-        let builder = Self {
-            node: node_url,
-            mwm: None,
-            checksum_required: true,
-        };
+        let builder = Self { node: node_url };
         Ok(builder)
-    }
-
-    /// Sets the mwm.
-    pub fn mwm(mut self, mwm: u64) -> Self {
-        self.mwm = Some(mwm);
-        self
-    }
-
-    /// Whether the checksum is required or not.
-    pub fn checksum_required(mut self, checksum_required: bool) -> Self {
-        self.checksum_required = checksum_required;
-        self
     }
 
     /// Builds the options.
@@ -69,12 +67,9 @@ impl SingleNodeClientOptionsBuilder {
         ClientOptions {
             node: Some(self.node),
             nodes: None,
-            node_pool_urls: None,
             network: None,
-            mwm: self.mwm,
             quorum_size: None,
             quorum_threshold: 0,
-            checksum_required: self.checksum_required,
         }
     }
 }
@@ -82,12 +77,9 @@ impl SingleNodeClientOptionsBuilder {
 /// The options builder for a client connected to multiple nodes.
 pub struct MultiNodeClientOptionsBuilder {
     nodes: Option<Vec<Url>>,
-    node_pool_urls: Option<Vec<Url>>,
     network: Option<Network>,
-    mwm: Option<u64>,
-    quorum_size: Option<u64>,
+    quorum_size: Option<u8>,
     quorum_threshold: f32,
-    checksum_required: bool,
     // state_adapter:
 }
 
@@ -96,7 +88,7 @@ fn convert_urls(urls: &[&str]) -> crate::Result<Vec<Url>> {
     let urls: Vec<Option<Url>> = urls
         .iter()
         .map(|node| {
-            Url::parse(node).map(|url| Some(url)).unwrap_or_else(|e| {
+            Url::parse(node).map(Some).unwrap_or_else(|e| {
                 err = Some(e);
                 None
             })
@@ -115,12 +107,9 @@ impl Default for MultiNodeClientOptionsBuilder {
     fn default() -> Self {
         Self {
             nodes: None,
-            node_pool_urls: None,
             network: None,
-            mwm: None,
             quorum_size: None,
             quorum_threshold: 0.5,
-            checksum_required: true,
         }
     }
 }
@@ -135,15 +124,6 @@ impl MultiNodeClientOptionsBuilder {
         Ok(builder)
     }
 
-    fn with_node_pool(node_pool_urls: &[&str]) -> crate::Result<Self> {
-        let pool_urls = convert_urls(node_pool_urls)?;
-        let builder = Self {
-            node_pool_urls: Some(pool_urls),
-            ..Default::default()
-        };
-        Ok(builder)
-    }
-
     fn with_network(network: Network) -> Self {
         Self {
             network: Some(network),
@@ -151,14 +131,8 @@ impl MultiNodeClientOptionsBuilder {
         }
     }
 
-    /// Sets the mwm.
-    pub fn mwm(mut self, mwm: u64) -> Self {
-        self.mwm = Some(mwm);
-        self
-    }
-
     /// Sets the quorum size.
-    pub fn quorum_size(mut self, quorum_size: u64) -> Self {
+    pub fn quorum_size(mut self, quorum_size: u8) -> Self {
         self.quorum_size = Some(quorum_size);
         self
     }
@@ -169,23 +143,14 @@ impl MultiNodeClientOptionsBuilder {
         self
     }
 
-    /// Whether the address checksum is required or not.
-    pub fn checksum_required(mut self, checksum_required: bool) -> Self {
-        self.checksum_required = checksum_required;
-        self
-    }
-
     /// Builds the options.
     pub fn build(self) -> ClientOptions {
         ClientOptions {
             node: None,
             nodes: self.nodes,
-            node_pool_urls: self.node_pool_urls,
             network: self.network,
-            mwm: self.mwm,
             quorum_size: self.quorum_size,
-            quorum_threshold: (self.quorum_threshold * 100.0) as u32,
-            checksum_required: self.checksum_required,
+            quorum_threshold: (self.quorum_threshold * 100.0) as u8,
         }
     }
 }
@@ -220,19 +185,6 @@ impl ClientOptionsBuilder {
         MultiNodeClientOptionsBuilder::with_nodes(nodes)
     }
 
-    /// ClientOptions connected to the response of a pool.
-    ///
-    /// # Examples
-    /// ```
-    /// use iota_wallet::client::ClientOptionsBuilder;
-    /// let client_options = ClientOptionsBuilder::node_pool_urls(&["https://nodes.iota.works/api/ssl/live"])
-    ///   .expect("invalid pool URLs")
-    ///   .build();
-    /// ```
-    pub fn node_pool_urls(node_pool_urls: &[&str]) -> crate::Result<MultiNodeClientOptionsBuilder> {
-        MultiNodeClientOptionsBuilder::with_node_pool(node_pool_urls)
-    }
-
     /// ClientOptions connected to the default Network pool.
     ///
     /// # Examples
@@ -247,18 +199,14 @@ impl ClientOptionsBuilder {
 }
 
 /// The client options type.
-#[derive(Default, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Default, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Getters)]
+#[getset(get = "pub(crate)")]
 pub struct ClientOptions {
     node: Option<Url>,
     nodes: Option<Vec<Url>>,
-    #[serde(rename = "nodePoolUrls")]
-    node_pool_urls: Option<Vec<Url>>,
     network: Option<Network>,
-    mwm: Option<u64>,
     #[serde(rename = "quorumSize")]
-    quorum_size: Option<u64>,
+    quorum_size: Option<u8>,
     #[serde(rename = "quorumThreshold", default)]
-    quorum_threshold: u32,
-    #[serde(rename = "checksumRequired", default)]
-    checksum_required: bool,
+    quorum_threshold: u8,
 }

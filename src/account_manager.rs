@@ -21,7 +21,7 @@ fn mutate_account_transaction<F: FnOnce(&Account, &mut Vec<Transaction>)>(
     handler: F,
 ) -> crate::Result<()> {
     let mut account = crate::storage::get_account(account_id.clone())?;
-    let mut transactions: Vec<Transaction> = account.transactions().iter().cloned().collect();
+    let mut transactions: Vec<Transaction> = account.transactions().to_vec();
     handler(&account, &mut transactions);
     account.set_transactions(transactions);
     let adapter = crate::storage::get_adapter()?;
@@ -67,7 +67,7 @@ impl AccountManager {
         });
 
         crate::event::on_new_transaction(|event| {
-            let transaction_hash = event.transaction_hash().clone();
+            let transaction_hash = *event.transaction_hash();
             let _ = mutate_account_transaction(
                 event.account_id().clone().into(),
                 |account, transactions| {
@@ -96,7 +96,7 @@ impl AccountManager {
     }
 
     /// Adds a new account.
-    pub fn create_account<'a>(&self, client_options: ClientOptions) -> AccountInitialiser {
+    pub fn create_account(&self, client_options: ClientOptions) -> AccountInitialiser {
         AccountInitialiser::new(client_options)
     }
 
@@ -223,7 +223,7 @@ async fn reattach_unconfirmed_transactions() -> crate::Result<()> {
 }
 
 async fn reattach(account: &mut Account, transaction_hash: &Hash) -> crate::Result<()> {
-    let mut transactions: Vec<Transaction> = account.transactions().iter().cloned().collect();
+    let mut transactions: Vec<Transaction> = account.transactions().to_vec();
     let transaction = transactions
         .iter_mut()
         .find(|tx| tx.hash() == transaction_hash)
@@ -237,7 +237,7 @@ async fn reattach(account: &mut Account, transaction_hash: &Hash) -> crate::Resu
         let client = crate::client::get_client(account.client_options());
         let inclusion_states = client
             .get_inclusion_states()
-            .transactions(&[transaction.hash().clone()])
+            .transactions(&[*transaction.hash()])
             .send()
             .await?;
         if *inclusion_states.states.first().unwrap() {
@@ -285,11 +285,9 @@ fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std::i
             let path = entry.path();
             if path.is_dir() {
                 stack.push(path);
-            } else {
-                if let Some(filename) = path.file_name() {
-                    let dest_path = dest.join(filename);
-                    fs::copy(&path, &dest_path)?;
-                }
+            } else if let Some(filename) = path.file_name() {
+                let dest_path = dest.join(filename);
+                fs::copy(&path, &dest_path)?;
             }
         }
     }

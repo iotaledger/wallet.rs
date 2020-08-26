@@ -22,7 +22,7 @@ fn single_random_draw(target: u64, available_utxos: &mut Vec<u64>) -> crate::Res
     let mut sum = 0;
 
     let selected_coins = available_utxos
-        .into_iter()
+        .iter_mut()
         .map(|x| *x)
         .take_while(|x| {
             let value = *x;
@@ -41,7 +41,7 @@ fn branch_and_bound(
     depth: usize,
     current_selection: &mut Vec<u64>,
     effective_value: u64,
-    mut tries: u64,
+    mut tries: i64,
 ) -> bool {
     if effective_value > target {
         return false;
@@ -55,7 +55,7 @@ fn branch_and_bound(
         return false;
     }
 
-    tries = tries - 1;
+    tries -= 1;
 
     // Exploring omission and inclusion branch
     let current_utxo_value = available_utxos[depth];
