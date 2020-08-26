@@ -2,10 +2,10 @@ use crate::address::Address;
 use crate::client::ClientOptions;
 use crate::transaction::{Transaction, TransactionType};
 
-use bee_crypto::ternary::Hash;
-use bee_signing::ternary::seed::Seed;
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
+use iota::crypto::ternary::Hash;
+use iota::signing::ternary::seed::Seed;
 use serde::{Deserialize, Serialize};
 
 mod sync;

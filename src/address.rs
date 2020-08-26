@@ -1,13 +1,13 @@
 use crate::account::Account;
-use bee_crypto::ternary::sponge::{Kerl, Sponge};
-use bee_signing::ternary::{
+use getset::Getters;
+use iota::crypto::ternary::sponge::{Kerl, Sponge};
+use iota::signing::ternary::{
     wots::{WotsSecurityLevel, WotsShakePrivateKeyGeneratorBuilder},
     PrivateKey, PrivateKeyGenerator, PublicKey,
 };
-use bee_ternary::TritBuf;
-pub use bee_transaction::bundled::Address as IotaAddress;
-use bee_transaction::bundled::BundledTransactionField;
-use getset::Getters;
+use iota::ternary::TritBuf;
+pub use iota::transaction::bundled::Address as IotaAddress;
+use iota::transaction::bundled::BundledTransactionField;
 
 /// The address builder.
 #[derive(Default)]
