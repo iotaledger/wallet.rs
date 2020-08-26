@@ -29,8 +29,8 @@ mod input_selection;
 /// Returns a (addresses, hashes) tuples representing the address history up to latest unused address,
 /// and the transaction hashes associated with the addresses.
 ///
-fn sync_addresses<'a>(
-    account: &'a Account,
+fn sync_addresses(
+    account: &'_ Account,
     address_index: u64,
     gap_limit: Option<u64>,
 ) -> crate::Result<(Vec<Address>, Vec<Hash>)> {
@@ -51,7 +51,7 @@ async fn sync_transactions<'a>(
     account: &'a Account,
     new_transaction_hashes: Vec<Hash>,
 ) -> crate::Result<Vec<Transaction>> {
-    let mut transactions: Vec<Transaction> = account.transactions().iter().cloned().collect();
+    let mut transactions: Vec<Transaction> = account.transactions().to_vec();
 
     // sync `broadcasted` state
     transactions
@@ -69,7 +69,7 @@ async fn sync_transactions<'a>(
     let client = get_client(account.client_options());
     let unconfirmed_transaction_hashes: Vec<Hash> = unconfirmed_transactions
         .iter()
-        .map(|tx| tx.hash().clone())
+        .map(|tx| *tx.hash())
         .collect();
     let confirmed_states = client
         .is_confirmed(&unconfirmed_transaction_hashes[..])
@@ -248,7 +248,7 @@ impl SyncedAccount {
         let transactions = client.send_trytes().trytes(attached.trytes).send().await?;
         let transactions: Vec<Transaction> = transactions
             .iter()
-            .map(|tx| Transaction::from_bundled(tx.bundle().clone(), tx.clone()).unwrap())
+            .map(|tx| Transaction::from_bundled(*tx.bundle(), tx.clone()).unwrap())
             .collect();
         let tx = transactions.first().unwrap().clone();
         account.append_transactions(transactions);

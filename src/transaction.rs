@@ -188,9 +188,9 @@ impl Transaction {
             ),
             current_index: *tx.index().to_inner() as u64,
             last_index: *tx.last_index().to_inner() as u64,
-            trunk_transaction: tx.trunk().clone(),
-            branch_transaction: tx.branch().clone(),
-            bundle_hash: tx.bundle().clone(),
+            trunk_transaction: *tx.trunk(),
+            branch_transaction: *tx.branch(),
+            bundle_hash: *tx.bundle(),
             nonce: "TX NONCE".to_string(), // TODO
             confirmed: false,
             broadcasted: true,
