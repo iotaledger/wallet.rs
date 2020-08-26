@@ -1,5 +1,5 @@
 use crate::address::Address;
-use crate::transaction::Transaction;
+use bee_crypto::ternary::Hash;
 
 use getset::Getters;
 use once_cell::sync::Lazy;
@@ -24,8 +24,20 @@ pub struct BalanceEvent {
 pub struct TransactionEvent {
   /// The associated account identifier.
   account_id: String,
-  /// The event transaction.
-  transaction: Transaction,
+  /// The event transaction hash.
+  transaction_hash: Hash,
+}
+
+/// A transaction-related event data.
+#[derive(Getters)]
+#[getset(get = "pub")]
+pub struct TransactionConfirmationChangeEvent {
+  /// The associated account identifier.
+  account_id: String,
+  /// The event transaction hash.
+  transaction_hash: Hash,
+  /// The confirmed state of the transaction.
+  confirmed: bool,
 }
 
 struct BalanceEventHandler {
@@ -36,7 +48,6 @@ struct BalanceEventHandler {
 #[derive(PartialEq)]
 pub(crate) enum TransactionEventType {
   NewTransaction,
-  ConfirmationState,
   Reattachment,
   Broadcast,
 }
@@ -47,8 +58,15 @@ struct TransactionEventHandler {
   on_event: Box<dyn Fn(TransactionEvent) + Send>,
 }
 
+struct TransactionConfirmationChangeEventHandler {
+  /// The on event callback.
+  on_event: Box<dyn Fn(TransactionConfirmationChangeEvent) + Send>,
+}
+
 type BalanceListeners = Arc<Mutex<Vec<BalanceEventHandler>>>;
 type TransactionListeners = Arc<Mutex<Vec<TransactionEventHandler>>>;
+type TransactionConfirmationChangeListeners =
+  Arc<Mutex<Vec<TransactionConfirmationChangeEventHandler>>>;
 
 /// Gets the balance change listeners array.
 fn balance_listeners() -> &'static BalanceListeners {
@@ -59,6 +77,12 @@ fn balance_listeners() -> &'static BalanceListeners {
 /// Gets the transaction listeners array.
 fn transaction_listeners() -> &'static TransactionListeners {
   static LISTENERS: Lazy<TransactionListeners> = Lazy::new(Default::default);
+  &LISTENERS
+}
+
+/// Gets the transaction confirmation change listeners array.
+fn transaction_confirmation_change_listeners() -> &'static TransactionConfirmationChangeListeners {
+  static LISTENERS: Lazy<TransactionConfirmationChangeListeners> = Lazy::new(Default::default);
   &LISTENERS
 }
 
@@ -91,7 +115,7 @@ pub(crate) fn emit_balance_change(account_id: impl Into<String>, address: Addres
 pub(crate) fn emit_transaction_event(
   event_type: TransactionEventType,
   account_id: impl Into<String>,
-  transaction: Transaction,
+  transaction_hash: Hash,
 ) {
   let account_id = account_id.into();
   let listeners = transaction_listeners()
@@ -101,7 +125,7 @@ pub(crate) fn emit_transaction_event(
     if listener.event_type == event_type {
       (listener.on_event)(TransactionEvent {
         account_id: account_id.clone(),
-        transaction: transaction.clone(),
+        transaction_hash: transaction_hash.clone(),
       })
     }
   }
@@ -127,8 +151,15 @@ pub fn on_new_transaction<F: Fn(TransactionEvent) + Send + 'static>(cb: F) {
 }
 
 /// Listen to transaction confirmation state change.
-pub fn on_confirmation_state_change<F: Fn(TransactionEvent) + Send + 'static>(cb: F) {
-  add_transaction_listener(TransactionEventType::ConfirmationState, cb);
+pub fn on_confirmation_state_change<F: Fn(TransactionConfirmationChangeEvent) + Send + 'static>(
+  cb: F,
+) {
+  let mut l = transaction_confirmation_change_listeners().lock().expect(
+    "Failed to lock transaction_confirmation_change_listeners: on_confirmation_state_change()",
+  );
+  l.push(TransactionConfirmationChangeEventHandler {
+    on_event: Box::new(cb),
+  })
 }
 
 /// Listen to transaction reattachment.

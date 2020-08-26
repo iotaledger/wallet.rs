@@ -1,51 +1,66 @@
-#[cfg(not(any(feature = "sqlite", feature = "stronghold")))]
-mod key_value;
 #[cfg(feature = "sqlite")]
 mod sqlite;
-#[cfg(feature = "stronghold")]
+#[cfg(not(feature = "sqlite"))]
 mod stronghold;
 
 use crate::account::{Account, AccountIdentifier};
-use crate::address::Address;
-use crate::transaction::Transaction;
-use bee_crypto::ternary::Hash;
 use once_cell::sync::OnceCell;
 
-static INSTANCE: OnceCell<Box<dyn StorageAdapter + Sync + Send>> = OnceCell::new();
+use std::path::{Path, PathBuf};
 
-/// sets the storage adapter
+static INSTANCE: OnceCell<Box<dyn StorageAdapter + Sync + Send>> = OnceCell::new();
+static STORAGE_PATH: OnceCell<PathBuf> = OnceCell::new();
+
+/// Sets the storage adapter.
 pub fn set_adapter(storage: impl StorageAdapter + Sync + Send + 'static) -> crate::Result<()> {
   INSTANCE
     .set(Box::new(storage))
-    .map_err(|_| anyhow::anyhow!("failed to globall set the storage instance"))?;
+    .map_err(|_| anyhow::anyhow!("failed to globally set the storage instance"))?;
   Ok(())
+}
+
+/// Sets the storage path for the default storage adapter.
+pub fn set_storage_path(path: impl AsRef<Path>) -> crate::Result<()> {
+  STORAGE_PATH
+    .set(path.as_ref().to_path_buf())
+    .map_err(|_| anyhow::anyhow!("failed to globally set the storage path"))?;
+  Ok(())
+}
+
+pub(crate) fn get_storage_path() -> &'static PathBuf {
+  #[cfg(not(feature = "sqlite"))]
+  {
+    STORAGE_PATH.get_or_init(|| "./example-database".into())
+  }
+  #[cfg(feature = "sqlite")]
+  {
+    STORAGE_PATH.get_or_init(|| "wallet.db".into())
+  }
 }
 
 /// gets the storage adapter
 #[allow(clippy::borrowed_box)]
 pub(crate) fn get_adapter() -> crate::Result<&'static Box<dyn StorageAdapter + Sync + Send>> {
   INSTANCE.get_or_try_init(|| {
-    #[cfg(not(any(feature = "sqlite", feature = "stronghold")))]
-    {
-      let instance = Box::new(key_value::KeyValueStorageAdapter::new(
-        "./example-database",
-      )?) as Box<dyn StorageAdapter + Sync + Send>;
-      Ok(instance)
-    }
-    #[cfg(feature = "stronghold")]
-    {
-      let instance = Box::new(stronghold::StrongholdStorageAdapter::new(
-        "./example-database",
-      )?) as Box<dyn StorageAdapter + Sync + Send>;
-      Ok(instance)
-    }
-    #[cfg(feature = "sqlite")]
-    {
-      let instance = Box::new(sqlite::SqliteStorageAdapter::new("wallet.db".to_string())?)
-        as Box<dyn StorageAdapter + Sync + Send>;
-      Ok(instance)
-    }
+    let storage_path = get_storage_path();
+    let instance =
+      Box::new(get_adapter_from_path(storage_path)?) as Box<dyn StorageAdapter + Sync + Send>;
+    Ok(instance)
   })
+}
+
+#[cfg(not(feature = "sqlite"))]
+pub(crate) fn get_adapter_from_path<'a, P: AsRef<Path>>(
+  storage_path: P,
+) -> crate::Result<stronghold::StrongholdStorageAdapter<'a>> {
+  stronghold::StrongholdStorageAdapter::new(storage_path)
+}
+
+#[cfg(feature = "sqlite")]
+pub(crate) fn get_adapter_from_path<P: AsRef<Path>>(
+  storage_path: P,
+) -> crate::Result<sqlite::SqliteStorageAdapter> {
+  sqlite::SqliteStorageAdapter::new(storage_path)
 }
 
 /// The storage adapter.
@@ -60,25 +75,12 @@ pub trait StorageAdapter {
   fn remove(&self, key: AccountIdentifier) -> crate::Result<()>;
 }
 
-/// Transaction type.
-#[derive(Debug, Clone)]
-pub enum TransactionType {
-  /// Transaction received.
-  Received,
-  /// Transaction sent.
-  Sent,
-  /// Transaction not broadcasted.
-  Failed,
-  /// Transaction not confirmed.
-  Unconfirmed,
-}
-
-pub(crate) fn parse_accounts<'a>(accounts: &'a Vec<String>) -> crate::Result<Vec<Account<'a>>> {
+pub(crate) fn parse_accounts(accounts: &Vec<String>) -> crate::Result<Vec<Account>> {
   let mut err = None;
-  let accounts: Vec<Option<Account<'a>>> = accounts
+  let accounts: Vec<Option<Account>> = accounts
     .iter()
     .map(|account| {
-      let res: Option<Account<'a>> = serde_json::from_str(&account)
+      let res: Option<Account> = serde_json::from_str(&account)
         .map(|v| Some(v))
         .unwrap_or_else(|e| {
           err = Some(e);
@@ -99,33 +101,8 @@ pub(crate) fn parse_accounts<'a>(accounts: &'a Vec<String>) -> crate::Result<Vec
   }
 }
 
-/// Gets the account's total balance.
-/// It's read directly from the storage. To read the latest account balance, you should `sync` first.
-pub(crate) fn total_balance(account_id: &str) -> crate::Result<u64> {
-  unimplemented!()
-}
-
-/// Gets the account's available balance.
-/// It's read directly from the storage. To read the latest account balance, you should `sync` first.
-///
-/// The available balance is the balance users are allowed to spend.
-/// For example, if a user with 50i total account balance has made a transaction spending 20i,
-/// the available balance should be (50i-30i) = 20i.
-pub(crate) fn available_balance(account_id: &str) -> crate::Result<u64> {
-  unimplemented!()
-}
-
-/// Updates the account alias.
-pub(crate) fn set_alias(account_id: &str, alias: &str) -> crate::Result<()> {
-  unimplemented!()
-}
-
-/// Gets the transaction associated with the given hash.
-pub(crate) fn get_transaction(transaction_hash: Hash) -> crate::Result<Transaction> {
-  unimplemented!()
-}
-
-/// Gets a new unused address and links it to the given account.
-pub(crate) fn save_address(account_id: &str, address: &Address) -> crate::Result<Address> {
-  unimplemented!()
+pub(crate) fn get_account(account_id: AccountIdentifier) -> crate::Result<Account> {
+  let account_str = crate::storage::get_adapter()?.get(account_id)?;
+  let account: Account = serde_json::from_str(&account_str)?;
+  Ok(account)
 }

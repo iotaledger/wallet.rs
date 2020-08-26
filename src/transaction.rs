@@ -1,7 +1,10 @@
-use crate::address::Address;
+use crate::address::{Address, AddressBuilder};
 use bee_crypto::ternary::Hash;
-use bee_transaction::bundled::Tag as IotaTag;
-use chrono::prelude::{DateTime, Utc};
+use bee_transaction::{
+  bundled::{BundledTransaction, BundledTransactionField, Tag as IotaTag},
+  Vertex,
+};
+use chrono::prelude::{DateTime, NaiveDateTime, Utc};
 use getset::{Getters, Setters};
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -10,6 +13,15 @@ use std::fmt;
 #[derive(Debug, Clone)]
 pub struct Tag {
   tag: IotaTag,
+}
+
+impl Default for Tag {
+  /// Initialises an empty tag.
+  fn default() -> Self {
+    Self {
+      tag: IotaTag::zeros(),
+    }
+  }
 }
 
 impl Tag {
@@ -30,7 +42,7 @@ impl Tag {
 }
 
 /// A transfer to make a transaction.
-#[derive(Getters, Setters)]
+#[derive(Debug, Getters, Setters)]
 #[getset(get = "pub")]
 pub struct Transfer {
   /// The transfer value.
@@ -58,7 +70,7 @@ impl Transfer {
 }
 
 /// Possible Value units.
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum ValueUnit {
   /// i
   I,
@@ -88,7 +100,7 @@ impl fmt::Display for ValueUnit {
 }
 
 /// The transaction Value struct.
-#[derive(Getters, Serialize, Deserialize, Clone)]
+#[derive(Debug, Getters, Serialize, Deserialize, Clone)]
 #[getset(get = "pub")]
 pub struct Value {
   /// The value.
@@ -110,40 +122,90 @@ impl Value {
 
   /// The transaction value without its unit.
   pub fn without_denomination(&self) -> i64 {
-    self.value
+    let multiplier = match self.unit {
+      ValueUnit::I => 1,
+      ValueUnit::Ki => 1000,
+      ValueUnit::Mi => 1000000,
+      ValueUnit::Gi => 1000000000,
+      ValueUnit::Ti => 1000000000000,
+      ValueUnit::Pi => 1000000000000000,
+    };
+    self.value * multiplier
   }
 }
 
 /// A transaction definition.
-#[derive(Getters, Clone)]
-#[getset(get = "pub")]
+#[derive(Debug, Getters, Setters, Clone)]
+#[getset(get = "pub", set = "pub(crate)")]
 pub struct Transaction {
   /// The transaction hash.
-  hash: Hash,
+  pub(crate) hash: Hash,
   /// The transaction address.
-  address: Address,
+  pub(crate) address: Address,
   /// The transaction amount.
-  value: Value,
+  pub(crate) value: Value,
   /// The transaction tag.
-  tag: Tag,
+  pub(crate) tag: Tag,
   /// The transaction timestamp.
-  timestamp: DateTime<Utc>,
+  pub(crate) timestamp: DateTime<Utc>,
   /// The transaction current index in the bundle.
-  current_index: u64,
+  pub(crate) current_index: u64,
   /// The transaction last index in the bundle.
-  last_index: u64,
+  pub(crate) last_index: u64,
   /// The transaction bundle hash.
-  bundle_hash: Hash,
+  pub(crate) bundle_hash: Hash,
   /// The trunk transaction hash.
-  trunk_transaction: Hash,
+  pub(crate) trunk_transaction: Hash,
   /// The branch transaction hash.
-  brach_transaction: Hash,
+  pub(crate) branch_transaction: Hash,
   /// The transaction nonce.
-  nonce: String,
+  pub(crate) nonce: String,
   /// Whether the transaction is confirmed or not.
-  confirmed: bool,
+  pub(crate) confirmed: bool,
   /// Whether the transaction is broadcasted or not.
-  broadcasted: bool,
+  pub(crate) broadcasted: bool,
+}
+
+impl Transaction {
+  pub(crate) fn from_bundled(hash: Hash, tx: BundledTransaction) -> crate::Result<Self> {
+    let transaction = Self {
+      hash,
+      address: AddressBuilder::new()
+        .address(tx.address().clone())
+        .key_index(0)
+        .balance(0)
+        .build()?,
+      value: Value {
+        value: *tx.value().to_inner(),
+        unit: ValueUnit::I,
+      },
+      tag: Tag {
+        tag: tx.tag().clone(),
+      },
+      timestamp: DateTime::<Utc>::from_utc(
+        NaiveDateTime::from_timestamp(*tx.attachment_ts().to_inner() as i64, 0),
+        Utc,
+      ),
+      current_index: *tx.index().to_inner() as u64,
+      last_index: *tx.last_index().to_inner() as u64,
+      trunk_transaction: tx.trunk().clone(),
+      branch_transaction: tx.branch().clone(),
+      bundle_hash: tx.bundle().clone(),
+      nonce: "TX NONCE".to_string(), // TODO
+      confirmed: false,
+      broadcasted: true,
+    };
+
+    Ok(transaction)
+  }
+
+  /// Check if attachment timestamp on transaction is above max depth (~11 minutes)
+  pub(crate) fn is_above_max_depth(&self) -> bool {
+    let current_timestamp = Utc::now().timestamp();
+    let attachment_timestamp = self.timestamp.timestamp();
+    attachment_timestamp < current_timestamp
+      && current_timestamp - attachment_timestamp < 11 * 60 * 1000
+  }
 }
 
 impl PartialEq for Transaction {

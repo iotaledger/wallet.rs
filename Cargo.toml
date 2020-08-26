@@ -4,13 +4,11 @@ version = "0.1.0"
 authors = ["Lucas Nogueira <lucas.nogueira@iota.org>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-bee-signing = { git = "https://github.com/iotaledger/bee" }
-bee-crypto = { git = "https://github.com/iotaledger/bee" }
+bee-signing = { git = "https://github.com/iotaledger/bee", branch = "dev" }
+bee-crypto = { git = "https://github.com/iotaledger/bee", branch = "dev" }
 bee-transaction = { git = "https://github.com/Alex6323/bee-p" }
-bee-ternary = { git = "https://github.com/iotaledger/bee", features = ["serde1"] }
+bee-ternary = { git = "https://github.com/iotaledger/bee", branch = "dev", features = ["serde1"] }
 anyhow = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 getset = "0.1"
@@ -18,10 +16,10 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 once_cell = "1.4"
 kv = "0.20"
-#iota-client-mock = { path = "./iota-client-mock/" }
-iota-core = { git = "https://github.com/iotaledger/iota.rs", rev = "ed04249" }
+iota-core = { git = "https://github.com/iotaledger/iota.rs", branch = "dev" }
 url = { version = "2.1", features = [ "serde" ] }
-futures = "0.3"
+tokio = "0.2"
+rand = "0.3"
 
 # sql
 rusqlite = { version = "0.23", optional = true }
@@ -34,6 +32,9 @@ snapshot = { git = "https://github.com/iotaledger/stronghold.rs/", optional = tr
 primitives = { git = "https://github.com/iotaledger/stronghold.rs/", optional = true, rev = "a81191f" }
 bincode = { version = "1.3.1", optional = true }
 
+[dev-dependencies]
+tokio = { version = "0.2", features = ["full"] }
+
 [features]
-stronghold = ["vault", "crypto", "random", "snapshot", "primitives", "bincode"]
+default = ["vault", "crypto", "random", "snapshot", "primitives", "bincode"]
 sqlite = ["rusqlite"]
