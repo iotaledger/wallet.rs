@@ -113,6 +113,8 @@ mod tests {
     use super::StorageAdapter;
     use crate::account::AccountIdentifier;
 
+    use rand::Rng;
+
     #[test]
     // asserts that the adapter defined by `set_adapter` is globally available with `get_adapter`
     fn set_adapter() {
@@ -157,16 +159,19 @@ mod tests {
     fn _create_account() -> crate::account::Account {
         let manager = crate::account_manager::AccountManager::new();
 
-        let id = "test";
+        let id = rand::thread_rng()
+            .gen_ascii_chars()
+            .take(5)
+            .collect::<String>();
         let client_options =
             crate::client::ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
                 .unwrap()
                 .build();
         let account = manager
             .create_account(client_options)
-            .alias(id)
-            .id(id)
-            .mnemonic(id)
+            .alias(&id)
+            .id(&id)
+            .mnemonic(&id)
             .initialise()
             .unwrap();
         account

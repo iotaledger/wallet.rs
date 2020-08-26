@@ -305,12 +305,13 @@ mod tests {
     };
     use iota::ternary::{T1B1Buf, TryteBuf};
     use iota::transaction::bundled::{Address as IotaAddress, BundledTransactionField};
+    use rand::Rng;
 
     #[test]
     // asserts that the `set_alias` function updates the account alias in storage
     fn set_alias() {
         let manager = AccountManager::new();
-        let id = "test";
+        let id = "test_alias";
         let updated_alias = "updated alias";
         let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
             .expect("invalid node URL")
@@ -363,7 +364,10 @@ mod tests {
 
     fn _generate_account(transactions: Vec<Transaction>) -> (Account, Address, u64) {
         let manager = AccountManager::new();
-        let id = "test";
+        let id = rand::thread_rng()
+            .gen_ascii_chars()
+            .take(5)
+            .collect::<String>();
         let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
             .expect("invalid node URL")
             .build();
@@ -388,9 +392,9 @@ mod tests {
         let addresses = vec![second_address.clone(), first_address];
         let account = manager
             .create_account(client_options)
-            .alias(id)
-            .id(id)
-            .mnemonic(id)
+            .alias(&id)
+            .id(&id)
+            .mnemonic(&id)
             .addresses(addresses)
             .transactions(transactions)
             .initialise()

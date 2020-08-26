@@ -162,25 +162,6 @@ mod tests {
             if target > sum_utxos {
                 assert!(response.is_err());
             }
-
-            #[test]
-            fn random_target() {
-                let seed: &[_] = &[1, 2, 3, 4];
-                let mut rng: StdRng = SeedableRng::from_seed(seed);
-                for _ in 0..20 {
-                    let mut available_utxos = generate_random_utxos(&mut rng, 30);
-                    let sum_utxos = available_utxos.iter().sum::<u64>();
-                    let target = rng.gen_range(sum_utxos / 2, sum_utxos * 2);
-                    let response = select_input(target, &mut available_utxos);
-                    if target > sum_utxos {
-                        assert!(response.is_err());
-                    } else {
-                        assert!(response.is_ok());
-                        let selected = response.unwrap();
-                        assert!(selected.into_iter().fold(0, |acc, x| acc + x) >= target);
-                    }
-                }
-            }
         }
     }
 }

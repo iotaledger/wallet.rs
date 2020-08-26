@@ -180,19 +180,23 @@ mod tests {
     use bee_crypto::ternary::Hash;
     use bee_transaction::bundled::BundledTransactionField;
     use iota::ternary::TryteBuf;
+    use rand::Rng;
 
     fn _create_account() -> Account {
         let manager = AccountManager::new();
 
-        let id = "test";
+        let id = rand::thread_rng()
+            .gen_ascii_chars()
+            .take(5)
+            .collect::<String>();
         let client_options = ClientOptionsBuilder::node("https://nodes.comnet.thetangle.org")
             .unwrap()
             .build();
         let account = manager
             .create_account(client_options)
-            .alias(id)
-            .id(id)
-            .mnemonic(id)
+            .alias(&id)
+            .id(&id)
+            .mnemonic(&id)
             .initialise()
             .unwrap();
 
