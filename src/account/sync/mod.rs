@@ -5,8 +5,8 @@ use crate::transaction::{Transaction, Transfer};
 
 use bee_crypto::ternary::Hash;
 use bee_transaction::{
-  bundled::{BundledTransactionBuilder, BundledTransactionField, Value as IotaValue},
-  Vertex,
+    bundled::{BundledTransactionBuilder, BundledTransactionField, Value as IotaValue},
+    Vertex,
 };
 
 use std::convert::TryInto;
@@ -30,9 +30,9 @@ mod input_selection;
 /// and the transaction hashes associated with the addresses.
 ///
 fn sync_addresses<'a>(
-  account: &'a Account,
-  address_index: u64,
-  gap_limit: Option<u64>,
+    account: &'a Account,
+    address_index: u64,
+    gap_limit: Option<u64>,
 ) -> crate::Result<(Vec<Address>, Vec<Hash>)> {
     let addresses = account.addresses();
     let transactions = account.transactions();
@@ -48,8 +48,8 @@ fn sync_addresses<'a>(
 /// Syncs transactions with the tangle.
 /// The method should ensures that the wallet local state has transactions associated with the address history.
 async fn sync_transactions<'a>(
-  account: &'a Account,
-  new_transaction_hashes: Vec<Hash>,
+    account: &'a Account,
+    new_transaction_hashes: Vec<Hash>,
 ) -> crate::Result<Vec<Transaction>> {
     let mut transactions: Vec<Transaction> = account.transactions().iter().cloned().collect();
 
@@ -101,20 +101,21 @@ async fn sync_transactions<'a>(
 
 /// Account sync helper.
 pub struct AccountSynchronizer<'a> {
-  account: &'a Account,
-  address_index: u64,
-  gap_limit: Option<u64>,
-  skip_persistance: bool,
+    account: &'a Account,
+    address_index: u64,
+    gap_limit: Option<u64>,
+    skip_persistance: bool,
 }
 
 impl<'a> AccountSynchronizer<'a> {
-  /// Initialises a new instance of the sync helper.
-  pub(super) fn new(account: &'a Account) -> Self {
-    Self {
-      account,
-      address_index: 1, // TODO By default the length of addresses stored for this account should be used as an index.
-      gap_limit: None,
-      skip_persistance: false,
+    /// Initialises a new instance of the sync helper.
+    pub(super) fn new(account: &'a Account) -> Self {
+        Self {
+            account,
+            address_index: 1, // TODO By default the length of addresses stored for this account should be used as an index.
+            gap_limit: None,
+            skip_persistance: false,
+        }
     }
 
     /// Number of address indexes that are generated.
@@ -129,109 +130,139 @@ impl<'a> AccountSynchronizer<'a> {
         self
     }
 
-    sync_addresses(self.account, self.address_index, self.gap_limit)?;
-    sync_transactions(self.account, new_transaction_hashes).await?;
+    /// Syncs account with the tangle.
+    /// The account syncing process ensures that the latest metadata (balance, transactions)
+    /// associated with an account is fetched from the tangle and is stored locally.
+    pub async fn execute(self) -> crate::Result<SyncedAccount> {
+        let client = get_client(self.account.client_options());
+        let mut addresses = vec![];
+        for address in self.account.addresses() {
+            addresses.push(address.address().clone());
+        }
 
-    let synced_account = SyncedAccount {
-      account_id: self.account.id().to_string(),
-      deposit_address: AddressBuilder::new()
-        .address(IotaAddress::zeros())
-        .balance(0)
-        .key_index(0)
-        .build()?,
-    };
-    Ok(synced_account)
-  }
+        let mut new_transaction_hashes = vec![];
+        let find_transactions_response = client
+            .find_transactions()
+            .addresses(&addresses[..])
+            .send()
+            .await
+            .unwrap();
+
+        for tx_hash in find_transactions_response.hashes {
+            if !self
+                .account
+                .transactions()
+                .iter()
+                .any(|tx| tx.hash() == &tx_hash)
+            {
+                new_transaction_hashes.push(tx_hash);
+            }
+        }
+
+        sync_addresses(self.account, self.address_index, self.gap_limit)?;
+        sync_transactions(self.account, new_transaction_hashes).await?;
+
+        let synced_account = SyncedAccount {
+            account_id: self.account.id().to_string(),
+            deposit_address: AddressBuilder::new()
+                .address(IotaAddress::zeros())
+                .balance(0)
+                .key_index(0)
+                .build()?,
+        };
+        Ok(synced_account)
+    }
 }
 
 /// Data returned from account synchronization.
 pub struct SyncedAccount {
-  account_id: String,
-  deposit_address: Address,
+    account_id: String,
+    deposit_address: Address,
 }
 
 impl SyncedAccount {
-  /// The account's deposit address.
-  pub fn deposit_address(&self) -> &Address {
-    &self.deposit_address
-  }
-
-  /// Selects input addresses for a value transaction.
-  /// The method ensures that the recipient address doesn’t match any of the selected inputs or the remainder address.
-  ///
-  /// # Arguments
-  ///
-  /// * `threshold` Amount user wants to spend.
-  /// * `address` Recipient address.
-  ///
-  /// # Return value
-  ///
-  /// Returns a (addresses, address) tuple representing the selected input addresses and the remainder address if needed.
-  fn select_inputs(
-    &self,
-    threshold: u64,
-    address: &Address,
-  ) -> crate::Result<(Vec<Address>, Option<Address>)> {
-    // TODO
-    let inputs = input_selection::select_input(threshold, &mut vec![])?;
-    unimplemented!()
-  }
-
-  /// Send transactions.
-  pub async fn transfer(&self, transfer_obj: Transfer) -> crate::Result<Transaction> {
-    if *transfer_obj.amount() == 0 {
-      return Err(anyhow::anyhow!("amount can't be zero"));
+    /// The account's deposit address.
+    pub fn deposit_address(&self) -> &Address {
+        &self.deposit_address
     }
-    if transfer_obj.address().checksum()
-      != &crate::address::generate_checksum(transfer_obj.address().address())?
-    {
-      return Err(anyhow::anyhow!("invalid address checksum"));
+
+    /// Selects input addresses for a value transaction.
+    /// The method ensures that the recipient address doesn’t match any of the selected inputs or the remainder address.
+    ///
+    /// # Arguments
+    ///
+    /// * `threshold` Amount user wants to spend.
+    /// * `address` Recipient address.
+    ///
+    /// # Return value
+    ///
+    /// Returns a (addresses, address) tuple representing the selected input addresses and the remainder address if needed.
+    fn select_inputs(
+        &self,
+        threshold: u64,
+        address: &Address,
+    ) -> crate::Result<(Vec<Address>, Option<Address>)> {
+        // TODO
+        let inputs = input_selection::select_input(threshold, &mut vec![])?;
+        unimplemented!()
     }
-    let value = (*transfer_obj.amount()).try_into()?;
-    let account_id: AccountIdentifier = self.account_id.clone().into();
 
-    let adapter = crate::storage::get_adapter()?;
+    /// Send transactions.
+    pub async fn transfer(&self, transfer_obj: Transfer) -> crate::Result<Transaction> {
+        if *transfer_obj.amount() == 0 {
+            return Err(anyhow::anyhow!("amount can't be zero"));
+        }
+        if transfer_obj.address().checksum()
+            != &crate::address::generate_checksum(transfer_obj.address().address())?
+        {
+            return Err(anyhow::anyhow!("invalid address checksum"));
+        }
+        let value = (*transfer_obj.amount()).try_into()?;
+        let account_id: AccountIdentifier = self.account_id.clone().into();
 
-    let mut account = crate::storage::get_account(account_id.clone())?;
-    let client = get_client(account.client_options());
+        let adapter = crate::storage::get_adapter()?;
 
-    let (inputs, remainder) = self.select_inputs(*transfer_obj.amount(), transfer_obj.address())?;
-    let transactions_to_approve = client.get_transactions_to_approve().send().await?;
+        let mut account = crate::storage::get_account(account_id.clone())?;
+        let client = get_client(account.client_options());
 
-    let transaction = BundledTransactionBuilder::new()
-      .with_address(transfer_obj.address().address().clone())
-      .with_value(IotaValue::try_from_inner(value).unwrap()) // TODO error handling
-      .with_trunk(transactions_to_approve.trunk_transaction)
-      .with_branch(transactions_to_approve.branch_transaction)
-      .build()
-      .unwrap(); // TODO error handling
+        let (inputs, remainder) =
+            self.select_inputs(*transfer_obj.amount(), transfer_obj.address())?;
+        let transactions_to_approve = client.get_transactions_to_approve().send().await?;
 
-    let attached = client
-      .attach_to_tangle()
-      .trunk_transaction(transaction.trunk())
-      .branch_transaction(transaction.branch())
-      .trytes(&[transaction])
-      .send()
-      .await?;
+        let transaction = BundledTransactionBuilder::new()
+            .with_address(transfer_obj.address().address().clone())
+            .with_value(IotaValue::try_from_inner(value).unwrap()) // TODO error handling
+            .with_trunk(transactions_to_approve.trunk_transaction)
+            .with_branch(transactions_to_approve.branch_transaction)
+            .build()
+            .unwrap(); // TODO error handling
 
-    let transactions = client.send_trytes().trytes(attached.trytes).send().await?;
-    let transactions: Vec<Transaction> = transactions
-      .iter()
-      .map(|tx| Transaction::from_bundled(tx.bundle().clone(), tx.clone()).unwrap())
-      .collect();
-    let tx = transactions.first().unwrap().clone();
-    account.append_transactions(transactions);
-    adapter.set(account_id, serde_json::to_string(&account)?)?;
+        let attached = client
+            .attach_to_tangle()
+            .trunk_transaction(transaction.trunk())
+            .branch_transaction(transaction.branch())
+            .trytes(&[transaction])
+            .send()
+            .await?;
 
-    Ok(tx)
-  }
+        let transactions = client.send_trytes().trytes(attached.trytes).send().await?;
+        let transactions: Vec<Transaction> = transactions
+            .iter()
+            .map(|tx| Transaction::from_bundled(tx.bundle().clone(), tx.clone()).unwrap())
+            .collect();
+        let tx = transactions.first().unwrap().clone();
+        account.append_transactions(transactions);
+        adapter.set(account_id, serde_json::to_string(&account)?)?;
 
-  /// Retry transactions.
-  pub fn retry(&self, transaction_hash: &Hash) -> crate::Result<Transaction> {
-    let account: Account = crate::storage::get_account(self.account_id.clone().into())?;
-    let transaction = account
-      .get_transaction(transaction_hash)
-      .ok_or_else(|| anyhow::anyhow!("transaction with the given hash not found"));
-    unimplemented!()
-  }
+        Ok(tx)
+    }
+
+    /// Retry transactions.
+    pub fn retry(&self, transaction_hash: &Hash) -> crate::Result<Transaction> {
+        let account: Account = crate::storage::get_account(self.account_id.clone().into())?;
+        let transaction = account
+            .get_transaction(transaction_hash)
+            .ok_or_else(|| anyhow::anyhow!("transaction with the given hash not found"));
+        unimplemented!()
+    }
 }
