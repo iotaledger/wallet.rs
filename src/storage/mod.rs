@@ -106,3 +106,92 @@ pub(crate) fn get_account(account_id: AccountIdentifier) -> crate::Result<Accoun
   let account: Account = serde_json::from_str(&account_str)?;
   Ok(account)
 }
+
+#[cfg(test)]
+mod tests {
+  use super::StorageAdapter;
+  use crate::account::AccountIdentifier;
+
+  #[test]
+  // asserts that the adapter defined by `set_adapter` is globally available with `get_adapter`
+  fn set_adapter() {
+    struct MyAdapter;
+    impl StorageAdapter for MyAdapter {
+      fn get(&self, key: AccountIdentifier) -> crate::Result<String> {
+        Ok("MY_ADAPTER_GET_RESPONSE".to_string())
+      }
+      fn get_all(&self) -> crate::Result<Vec<String>> {
+        Ok(vec![])
+      }
+      fn set(&self, key: AccountIdentifier, account: String) -> crate::Result<()> {
+        Ok(())
+      }
+      fn remove(&self, key: AccountIdentifier) -> crate::Result<()> {
+        Ok(())
+      }
+    }
+
+    super::set_adapter(MyAdapter {}).unwrap();
+    let adapter = super::get_adapter().unwrap();
+    assert_eq!(
+      adapter.get("".to_string().into()).unwrap(),
+      "MY_ADAPTER_GET_RESPONSE".to_string()
+    );
+  }
+
+  #[test]
+  // asserts that the path defined by `set_storage_path` is globally available with `get_storage_path`
+  fn set_storage_path() {
+    let path: std::path::PathBuf = "/path/to/storage/system/".into();
+    super::set_storage_path(&path).unwrap();
+    assert_eq!(super::get_storage_path(), &path);
+  }
+
+  #[test]
+  fn parse_accounts_invalid() {
+    let response = super::parse_accounts(&vec!["{}".to_string()]);
+    assert!(response.is_err());
+  }
+
+  fn _create_account() -> crate::account::Account {
+    let manager = crate::account_manager::AccountManager::new();
+
+    let id = "test";
+    let client_options =
+      crate::client::ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+        .unwrap()
+        .build();
+    let account = manager
+      .create_account(client_options)
+      .alias(id)
+      .id(id)
+      .mnemonic(id)
+      .initialise()
+      .unwrap();
+    account
+  }
+
+  #[test]
+  fn parse_accounts_valid() {
+    let account = _create_account();
+    let response = super::parse_accounts(&vec![serde_json::to_string(&account).unwrap()]);
+    assert!(response.is_ok());
+    assert_eq!(response.unwrap().first().unwrap(), &account);
+  }
+
+  #[test]
+  fn get_account() {
+    let account = _create_account();
+    let storage = super::get_adapter().unwrap();
+    storage
+      .set(
+        account.id().clone().into(),
+        serde_json::to_string(&account).unwrap(),
+      )
+      .unwrap();
+    assert_eq!(
+      super::get_account(account.id().clone().into()).unwrap(),
+      account
+    );
+  }
+}
