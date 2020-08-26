@@ -5,7 +5,11 @@
 ## Introduction
 
 The wallet library is a stateful package with a standardised interface for developers to build applications involving IOTA value transactions.
-It offers abstractions to handle IOTA payments, seed security and state backup through [stronghold](https://github.com/iotaledger/stronghold.rs/) and account privacy.
+It offers abstractions to handle IOTA payments and is designed to interact with [IOTA Stronghold](https://github.com/iotaledger/stronghold.rs/) for seed handling, seed storage and state backup. See the full specification [here](https://github.com/iotaledger/wallet.rs/blob/master/specs/wallet-ENGINEERING-SPEC-0000.md).
+
+## Warning
+
+This library is in active development. It does not work with the current IOTA mainnet and is being developed for Chrysalis Part 2 in Q4 2020. It should be considered experimental and only used as a reference for now.
 
 ## Prerequisites
 
@@ -53,6 +57,6 @@ cargo run --example # lists the available examples
 cargo run --example transfer # execute the `transfer` example
 ```
 
-## License
+## Joining the discussion
 
-The MIT license can be found [here](LICENSE).
+If you want to get involved in discussions about this library, or you're looking for support, go to the #new-wallet-discussion channel on Discord.
