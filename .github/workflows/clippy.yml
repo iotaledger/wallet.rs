@@ -8,6 +8,8 @@ on:
     branches:
       - master
       - dev
+    paths-ignore:
+      - 'specs/**'
 
 jobs:
   clippy:
