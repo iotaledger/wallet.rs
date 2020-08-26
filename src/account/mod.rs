@@ -262,7 +262,7 @@ impl Account {
     Ok(address)
   }
 
-  fn append_transactions(&mut self, transactions: Vec<Transaction>) {
+  pub(crate) fn append_transactions(&mut self, transactions: Vec<Transaction>) {
     self.transactions.extend(transactions.iter().cloned());
   }
 

@@ -168,3 +168,92 @@ pub(crate) fn is_unspent(account: &Account, address: &IotaAddress) -> bool {
     .iter()
     .any(|tx| tx.value().without_denomination() < 0 && tx.address().address() == address)
 }
+
+#[cfg(test)]
+mod tests {
+  use super::{Address, IotaAddress};
+  use crate::account::Account;
+  use crate::account_manager::AccountManager;
+  use crate::client::ClientOptionsBuilder;
+  use crate::transaction::{Tag, Transaction, Value, ValueUnit};
+
+  use bee_crypto::ternary::Hash;
+  use bee_transaction::bundled::BundledTransactionField;
+  use iota::ternary::TryteBuf;
+
+  fn _create_account() -> Account {
+    let manager = AccountManager::new();
+
+    let id = "test";
+    let client_options = ClientOptionsBuilder::node("https://nodes.comnet.thetangle.org")
+      .unwrap()
+      .build();
+    let account = manager
+      .create_account(client_options)
+      .alias(id)
+      .id(id)
+      .mnemonic(id)
+      .initialise()
+      .unwrap();
+
+    account
+  }
+
+  fn _create_address() -> IotaAddress {
+    IotaAddress::from_inner_unchecked(
+      TryteBuf::try_from_str(
+        "XUERGHWTYRTFUYKFKXURKHMFEVLOIFTTCNTXOGLDPCZ9CJLKHROOPGNAQYFJEPGK9OKUQROUECBAVNXRY",
+      )
+      .unwrap()
+      .as_trits()
+      .encode(),
+    )
+  }
+
+  fn _generate_transaction(value: i64, address: Address) -> Transaction {
+    Transaction {
+      hash: Hash::zeros(),
+      address,
+      value: Value::new(value, ValueUnit::I),
+      tag: Tag::default(),
+      timestamp: chrono::Utc::now(),
+      current_index: 0,
+      last_index: 0,
+      bundle_hash: Hash::zeros(),
+      trunk_transaction: Hash::zeros(),
+      branch_transaction: Hash::zeros(),
+      nonce: String::default(),
+      confirmed: true,
+      broadcasted: true,
+    }
+  }
+
+  #[tokio::test]
+  async fn get_balance() {
+    let account = _create_account();
+    let address = _create_address();
+
+    let response = super::get_balance(&account, &address).await;
+    assert!(response.is_ok());
+  }
+
+  #[test]
+  fn is_unspent_false() {
+    let account = _create_account();
+    let address = _create_address();
+
+    let response = super::is_unspent(&account, &address);
+    assert_eq!(response, false);
+  }
+
+  #[tokio::test]
+  async fn is_unspent_true() {
+    let mut account = _create_account();
+    let address = super::get_new_address(&account).await.unwrap();
+    let spent_tx = _generate_transaction(-50, address.clone());
+    account.append_transactions(vec![spent_tx]);
+
+    let response = super::is_unspent(&account, address.address());
+    assert_eq!(response, true);
+  }
+}
