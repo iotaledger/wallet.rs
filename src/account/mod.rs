@@ -57,6 +57,7 @@ impl AccountInitialiser {
       addresses: vec![],
       client_options,
     }
+  }
 
   /// Defines the account BIP-39 mnemonic.
   /// When importing an account from stronghold, the mnemonic won't be required.
