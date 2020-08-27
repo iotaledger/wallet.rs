@@ -299,13 +299,11 @@ fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std::i
 mod tests {
     use super::AccountManager;
     use crate::client::ClientOptionsBuilder;
-    use serial_test::serial;
 
     #[test]
-    #[serial]
     fn store_accounts() {
         let manager = AccountManager::new();
-        let id = "test";
+        let id = "test_store";
         let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
             .expect("invalid node URL")
             .build();
