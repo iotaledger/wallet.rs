@@ -1,21 +1,20 @@
 name: Audit
 
 on:
-  # schedule:
-  #   - cron: '0 0 * * *'
-    push:
-      branches:
-  #     - master
-        - do-not-run
-  #   paths:
-  #     - "**/Cargo.lock"
-  #     - "**/Cargo.toml"
-  # pull_request:
-  #   branches:
-  #     - master
-  #   paths:
-  #     - "**/Cargo.lock"
-  #     - "**/Cargo.toml"
+  schedule:
+    - cron: '0 0 * * *'
+  push:
+    branches:
+      - master
+    paths:
+      - "**/Cargo.lock"
+      - "**/Cargo.toml"
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "**/Cargo.lock"
+      - "**/Cargo.toml"
 
 jobs:
   audit:
