@@ -13,7 +13,7 @@ This library is in active development. It does not work with the current IOTA ma
 
 ## Prerequisites
 
-To use the library, we recommend you update Rust to the latest stable version [`rustup update stable`](https://github.com/rust-lang/rustup.rs#keeping-rust-up-to-date). Nightly should be fine but there's a chance some changes are not compatable.
+To use the library, we recommend you update Rust to the latest stable version [`rustup update stable`](https://github.com/rust-lang/rustup.rs#keeping-rust-up-to-date). Nightly should be fine but there's a chance some changes are not compatible.
 
 `no_std` is not supported currently, but we are working on it in [Bee](https://github.com/iotaledger/bee), and will provide it as a feature once the new library implementation is ready.
 
