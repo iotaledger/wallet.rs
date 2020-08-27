@@ -1,11 +1,11 @@
 use crate::address::{Address, AddressBuilder};
-use bee_crypto::ternary::Hash;
-use bee_transaction::{
+use chrono::prelude::{DateTime, NaiveDateTime, Utc};
+use getset::{Getters, Setters};
+use iota::crypto::ternary::Hash;
+use iota::transaction::{
     bundled::{BundledTransaction, BundledTransactionField, Tag as IotaTag},
     Vertex,
 };
-use chrono::prelude::{DateTime, NaiveDateTime, Utc};
-use getset::{Getters, Setters};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 

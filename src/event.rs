@@ -1,5 +1,5 @@
 use crate::address::Address;
-use bee_crypto::ternary::Hash;
+use iota::crypto::ternary::Hash;
 
 use getset::Getters;
 use once_cell::sync::Lazy;
@@ -179,7 +179,7 @@ pub fn on_error<F: Fn(anyhow::Error)>(cb: F) {}
 mod tests {
     use super::{emit_balance_change, on_balance_change};
     use crate::address::AddressBuilder;
-    use bee_transaction::bundled::Address;
+    use iota::transaction::bundled::Address;
 
     #[test]
     fn balance_events() {

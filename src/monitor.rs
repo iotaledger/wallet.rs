@@ -1,6 +1,6 @@
 use crate::address::Address;
 use crate::transaction::Transaction;
-use bee_crypto::ternary::Hash;
+use iota::crypto::ternary::Hash;
 
 /// Monitor address for balance changes.
 pub fn on_address_balance_change<F: Fn((Address, u64))>(cb: F) {}

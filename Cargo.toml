@@ -5,10 +5,6 @@ authors = ["Lucas Nogueira <lucas.nogueira@iota.org>"]
 edition = "2018"
 
 [dependencies]
-bee-signing = { git = "https://github.com/iotaledger/bee", branch = "dev" }
-bee-crypto = { git = "https://github.com/iotaledger/bee", branch = "dev" }
-bee-transaction = { git = "https://github.com/Alex6323/bee-p" }
-bee-ternary = { git = "https://github.com/iotaledger/bee", branch = "dev", features = ["serde1"] }
 anyhow = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 getset = "0.1"
