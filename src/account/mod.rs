@@ -293,8 +293,10 @@ pub struct InitialisedAccount<'a> {
 mod tests {
     use crate::account_manager::AccountManager;
     use crate::client::ClientOptionsBuilder;
+    use serial_test::serial;
 
     #[test]
+    #[serial]
     fn set_alias() {
         let manager = AccountManager::new();
         let id = "test";

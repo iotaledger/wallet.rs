@@ -299,8 +299,10 @@ fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std::i
 mod tests {
     use super::AccountManager;
     use crate::client::ClientOptionsBuilder;
+    use serial_test::serial;
 
     #[test]
+    #[serial]
     fn store_accounts() {
         let manager = AccountManager::new();
         let id = "test";
