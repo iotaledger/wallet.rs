@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::Duration;
 
-use bee_crypto::ternary::Hash;
+use iota::crypto::ternary::Hash;
 
 /// The account manager.
 ///
