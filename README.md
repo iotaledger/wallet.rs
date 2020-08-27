@@ -13,9 +13,9 @@ This library is in active development. It does not work with the current IOTA ma
 
 ## Prerequisites
 
-To use the library, we recommend update your Rust to latest stable version [`rustup update stable`](https://github.com/rust-lang/rustup.rs#keeping-rust-up-to-date). Nightly should be fine but you are expected some changes might not be compatable.
+To use the library, we recommend you update Rust to the latest stable version [`rustup update stable`](https://github.com/rust-lang/rustup.rs#keeping-rust-up-to-date). Nightly should be fine but there's a chance some changes are not compatable.
 
-`no_std` is not supported currently, but we are working on it in [bee](https://github.com/iotaledger/bee), and will provide it as feature once new library implementation is ready.
+`no_std` is not supported currently, but we are working on it in [Bee](https://github.com/iotaledger/bee), and will provide it as a feature once the new library implementation is ready.
 
 ## Usage
 
@@ -40,7 +40,7 @@ fn main() {
 
 ## API reference
 
-You can read the [API reference](https://docs.rs/iota-wallet) here, or generate them on your own.
+You can read the [API reference](https://docs.rs/iota-wallet) here, or generate them yourself.
 
 If you'd like to explore the implementation in more depth, the following command generates docs for the whole crate, including private modules:
 
@@ -50,7 +50,7 @@ cargo doc --document-private-items --no-deps --open
 
 ## Examples
 
-You can see the examples in [examples](examples/) directory and try them with:
+You can see the examples in the [examples](examples/) directory and try them with:
 
 ```
 cargo run --example # lists the available examples
