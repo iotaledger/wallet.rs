@@ -9,83 +9,93 @@
       - [AccountConfiguration](#accountconfiguration)
       - [AccountObject](#accountobject)
       - [SyncedAccountObject](#syncedaccountobject)
-      - [AccountsManagerObject](#accountsmanagerobject)
+      - [AccountManagerObject](#accountmanagerobject)
       - [Address](#address)
       - [Node](#node)
       - [Tag](#tag)
       - [Timestamp](#timestamp)
       - [Transfer](#transfer)
       - [Value](#value)
-      - [SignatureMessageFragment](#signaturemessagefragment)
-      - [Transaction](#transaction)
+      - [Input](#input)
+      - [OutputAddress](#outputaddress)
+      - [Output](#output)
+      - [UnsignedDataPayload](#unsigneddatapayload)
+      - [SignedDataPayload](#signeddatapayload)
+      - [IndexationPayload](#indexationpayload)
+      - [UnsignedTransaction](#unsignedtransaction)
+      - [WOTSSignature](#wotssignature)
+      - [Ed25519Signature](#ed25519signature)
+      - [SignatureUnblockBlock](#signatureunblockblock)
+      - [ReferenceUnblockBlock](#referenceunblockblock)
+      - [SignedTransactionPayload](#signedtransactionpayload)
+      - [Message](#message)
       - [StorageAdapter](#storageadapter)
   - [Storage](#storage)
   - [Storage Adapter](#storage-adapter)
   - [Account](#account)
     - [API](#api)
       - [Initialisation](#initialisation)
-      - [sync_addresses()](#syncaddresses)
-      - [sync_transactions()](#synctransactions)
-      - [select_inputs()](#selectinputs)
+      - [sync_addresses()](#sync_addresses)
+      - [sync_messages()](#sync_messages)
+      - [select_inputs()](#select_inputs)
       - [send()](#send)
       - [retry()](#retry)
       - [sync()](#sync)
       - [reattach()](#reattach)
-      - [send_message()](#sendmessage)
-      - [total_balance()](#totalbalance)
-      - [available_balance()](#availablebalance)
-      - [set_alias()](#setalias)
-      - [list_transactions()](#listtransactions)
-      - [list_received_transactions()](#listreceivedtransactions)
-      - [list_sent_transactions()](#listsenttransactions)
-      - [list_failed_transactions()](#listfailedtransactions)
-      - [list_unconfirmed_transactions()](#listunconfirmedtransactions)
-      - [get_transaction()](#gettransaction)
-      - [list_addresses()](#listaddresses)
-      - [list_unspent()](#listunspent)
-      - [generate_address()](#generateaddress)
-  - [Accounts Manager](#accounts-manager)
+      - [total_balance()](#total_balance)
+      - [available_balance()](#available_balance)
+      - [set_alias()](#set_alias)
+      - [list_messages()](#list_messages)
+      - [list_received_messages()](#list_received_messages)
+      - [list_sent_messages()](#list_sent_messages)
+      - [list_failed_messages()](#list_failed_messages)
+      - [list_unconfirmed_messages()](#list_unconfirmed_messages)
+      - [get_message()](#get_message)
+      - [list_addresses()](#list_addresses)
+      - [list_unspent_addresses()](#list_unspent_addresses)
+      - [generate_address()](#generate_address)
+  - [Account Manager](#account-manager)
     - [API](#api-1)
       - [Initialisation](#initialisation-1)
-      - [add_account()](#addaccount)
-      - [remove_account()](#removeaccount)
-      - [sync_accounts()](#syncaccounts)
+      - [add_account()](#add_account)
+      - [remove_account()](#remove_account)
+      - [sync_accounts()](#sync_accounts)
       - [move()](#move)
       - [backup()](#backup)
-      - [import_accounts](#importaccounts)
-      - [get_account()](#getaccount)
+      - [import_accounts](#import_accounts)
+      - [get_account()](#get_account)
       - [reattach()](#reattach-1)
   - [Events](#events)
+    - [Category 1 events](#category-1-events)
       - [Monitor address for balance changes](#monitor-address-for-balance-changes)
-      - [Monitor address for new transactions](#monitor-address-for-new-transactions)
-      - [Monitor transaction for confirmation state](#monitor-transaction-for-confirmation-state)
+      - [Monitor address for new messages](#monitor-address-for-new-messages)
+      - [Monitor message for confirmation state](#monitor-message-for-confirmation-state)
+    - [Category 2 events](#category-2-events)
       - [Monitor for balance changes](#monitor-for-balance-changes)
-      - [Monitor for new transactions](#monitor-for-new-transactions)
+      - [Monitor for new messages](#monitor-for-new-messages)
       - [Monitor for confirmation state](#monitor-for-confirmation-state)
       - [Monitor for reattachments](#monitor-for-reattachments)
       - [Monitor for broadcasts](#monitor-for-broadcasts)
       - [Monitor for errors](#monitor-for-errors)
   - [Privacy](#privacy)
   - [Input Selection](#input-selection)
-  - [Accounts Syncing Process](#accounts-syncing-process)
+  - [Account Syncing Process](#account-syncing-process)
   - [Polling](#polling)
 
 ## Introduction
 
 The wallet library is a stateful package with a standardised interface to build applications with IOTA value transactions. The package will be compatible with different platforms such as web, desktop and mobile. 
 
-The package introduces the concept of an _account_. An account is a reference or a label to a [seed](https://docs.iota.org/docs/getting-started/0.1/clients/seeds). An account has certain properties such as [addresses](https://docs.iota.org/docs/getting-started/0.1/clients/addresses#) and [transactions](https://docs.iota.org/docs/getting-started/0.1/transactions/transactions). An account has various possible behaviours, including moving funds, looking for new transactions, and making copies of transaction histories. An account should also be able to provide a degree of financial/transaction privacy and this should not incur any overhead. 
+The package introduces the concept of an _account_. An account is a reference or a label to a [seed](https://docs.iota.org/docs/getting-started/0.1/clients/seeds). An account has certain properties such as [addresses](https://github.com/Wollac/protocol-rfcs/blob/bech32-address-format/text/0020-bech32-address-format/0020-bech32-address-format.md) and [messages](https://github.com/GalRogozinski/protocol-rfcs/blob/message/text/0017-message/0017-message.md). An account has various possible behaviours, including moving funds, looking for new messages, and making copies of message histories. An account should also be able to provide a degree of financial privacy and this should not incur any overhead. 
 
-A similar [package](https://docs.iota.org/docs/client-libraries/0.1/account-module/introduction/overview) was previously developed but this becomes obsolete with the introduction of Ed25 signatures. The previous account package was limited to a single account. As an improvement, the (new) package will be able to manage multiple accounts. 
+A similar [package](https://docs.iota.org/docs/client-libraries/0.1/account-module/introduction/overview) was previously developed but this becomes obsolete with the introduction of Ed25519 signatures. The previous account package was limited to a single account. As an improvement, the (new) package will be able to manage multiple accounts. 
 
 To summarize, the main motivation behind this package is to offer a simplified (stateful) approach to handle IOTA payments.
 
 ## Considerations
 
-*   The structure of some interfaces are not final and will be changed. For example, some of the properties in the [Transaction](#transaction) structure will be different with the introduction of Chrysalis;
-*   Methods of some interfaces e.g. [Tag](#tag), [Timestamp](#timestamp), [Value](#value) and [SignatureMessageFragment](#signaturemessagefragment) may be offered as separate helper methods instead of embedding them in the [Transaction](#transaction) interface;
 *   Seeds should be stored and managed separately in a secure enclave and should never leave the secure environment. Secure enclaves include software enclaves such as IOTA’s Rust-based Stronghold library or hardware enclaves such as a Ledger Nano;
-*   The secure enclave should have the ability to generate addresses and sign transactions upon receipt of a message, and return the output in a message. If the secure enclave is initialised with a pre-generated seed, the sender process should immediately remove the seed traces from memory. 
+*   The secure enclave should have the ability to generate addresses and sign messages upon receipt of a message, and return the output in a message. If the secure enclave is initialised with a pre-generated seed, the sender process should immediately remove the seed traces from memory. 
 
 ## Naming Conventions
 
@@ -123,25 +133,31 @@ Account configuration or initialization object. It should support parameters acc
     <td>id</td>
     <td>&#10008;</td>
     <td>string</td>
-    <td>SHA-256 hash of the first address on the seed (m/44'/0'/0'/0/0). Required for referencing a seed in Stronghold. The id should be provided by Stronghold.</td>
+    <td>SHA-256 hash of the first address on the seed (m/44'/0'/0'/0'/0'). Required for referencing a seed in Stronghold. The id should be provided by Stronghold.</td>
   </tr>
   <tr>
     <td>index</td>
     <td>&#10004;</td>
     <td>number</td>
-    <td>Account index in BIP-44 derivation path.</td>
+    <td>Account index in <a href="https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki">BIP-44</a> derivation path.</td>
   </tr>
   <tr>
     <td>alias</td>
     <td>&#10008;</td>
     <td>string</td>
-    <td>Account name. If not provided, `Account + ${index}` should be used. When importing an account from Stronghold backup, the alias will be required from Stronghold.</td>
+    <td>Account name. If not provided, <code>Account + ${index}</code> should be used. When importing an account from Stronghold backup, the alias will be required from Stronghold.</td>
   </tr>
   <tr>
     <td>pow</td>
     <td>&#10008;</td>
     <td>‘local’ | ‘remote’</td>
-    <td>Proof of work settings. Defaults to ‘local’. ‘local’: Should be performed on device ‘remote’: Should be performed on the node</td>
+    <td>
+    Proof of work settings. Defaults to ‘local’. 
+      <ul>
+        <li>‘local’: Should be performed on device;</li>
+        <li>‘remote’: Should be performed on the node.</li>
+      </ul>
+    </td>
   </tr>
   <tr>
     <td>nodes</td>
@@ -186,10 +202,10 @@ Account configuration or initialization object. It should support parameters acc
     <td>Time of account creation.</td>
   </tr>
   <tr>
-    <td>transactions</td>
+    <td>messages</td>
     <td>&#10008;</td>
-    <td><a href="#transaction">Transaction</a>[]</td>
-    <td>Transactions associated with account. Accounts can be initialised with locally stored transactions.</td>
+    <td><a href="#message">Message</a>[]</td>
+    <td>Messages associated with account. Accounts can be initialised with locally stored messages.</td>
   </tr>
   <tr>
     <td>addresses</td>
@@ -212,7 +228,7 @@ Account configuration or initialization object. It should support parameters acc
     <td>id</td>
     <td>&#10004;</td>
     <td>string</td>
-    <td>First address on the account. Required for referencing an account in the secure enclave/storage.</td>
+    <td>SHA-256 hash of the first address on the seed (m/44'/0'/0'/0/0). Required for referencing a seed in Stronghold.</td>
   </tr>
   <tr>
     <td>alias</td>
@@ -245,12 +261,6 @@ Account configuration or initialization object. It should support parameters acc
     <td>Reattaches unconfirmed transaction to the Tangle.</td>
   </tr>
   <tr>
-    <td><a href="#sendmessage">send_message()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Sends a zero value transaction to the Tangle.</td>
-  </tr>
-  <tr>
     <td><a href="#totalbalance">total_balance()</a></td>
     <td>&#10004;</td>
     <td>function</td>
@@ -269,40 +279,40 @@ Account configuration or initialization object. It should support parameters acc
     <td>Updates account name.</td>
   </tr>
   <tr>
-    <td><a href="#listtransactions">list_transactions()</a></td>
+    <td><a href="#listmessages">list_messages()</a></td>
     <td>&#10004;</td>
     <td>function</td>
-    <td>Gets transactions.</td>
+    <td>Gets messages.</td>
   </tr>
   <tr>
-    <td><a href="#listreceivedtransactions">list_received_transactions()</a></td>
+    <td><a href="#listreceivedmessages">list_received_messages()</a></td>
     <td>&#10004;</td>
     <td>function</td>
-    <td>Gets all received transactions.</td>
+    <td>Gets all received messages.</td>
   </tr>
   <tr>
-    <td><a href="#listsenttransactions">list_sent_transactions()</a></td>
+    <td><a href="#listsentmessages">list_sent_messages()</a></td>
     <td>&#10004;</td>
     <td>function</td>
-    <td>Gets all sent transactions.</td>
+    <td>Gets all sent messages.</td>
   </tr>
   <tr>
-    <td><a href="#listfailedtransactions">list_failed_transactions()</a></td>
+    <td><a href="#listfailedmessages">list_failed_messages()</a></td>
     <td>&#10004;</td>
     <td>function</td>
-    <td>Gets all failed transactions.</td>
+    <td>Gets all failed messages.</td>
   </tr>
   <tr>
-    <td><a href="#listunconfirmedtransactions">list_unconfirmed_transactions()</a></td>
+    <td><a href="#listunconfirmedmessages">list_unconfirmed_messages()</a></td>
     <td>&#10004;</td>
     <td>function</td>
-    <td>Gets all unconfirmed transactions.</td>
+    <td>Gets all unconfirmed messages.</td>
   </tr>
   <tr>
-    <td><a href="#gettransaction">get_transaction()</a></td>
+    <td><a href="#getmessage">get_message()</a></td>
     <td>&#10004;</td>
     <td>function</td>
-    <td>Gets transaction for provided hash.</td>
+    <td>Gets message for provided id.</td>
   </tr>
   <tr>
     <td><a href="#listaddresses">list_addresses()</a></td>
@@ -311,7 +321,7 @@ Account configuration or initialization object. It should support parameters acc
     <td>Gets all addresses.</td>
   </tr>
   <tr>
-    <td><a href="#listunspent">list_unspent()</a></td>
+    <td><a href="#listunspent">list_unspent_addresses()</a></td>
     <td>&#10004;</td>
     <td>function</td>
     <td>Gets all unspent input addresses.</td>
@@ -416,17 +426,13 @@ Account configuration or initialization object. It should support parameters acc
     <td>function</td>
     <td>Reattaches an unconfirmed transaction.</td>
   </tr>
-  <tr>
-    <td><a href="#listsenttransactions">list_sent_transactions()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Gets all sent transactions.</td>
-  </tr>
 </table>
 
 #### Address 
 
 Useful [reference](https://medium.com/@harshagoli/hd-wallets-explained-from-high-level-to-nuts-and-bolts-9a41545f5b0) for address management in Hierarchical Deterministic (HD) wallets.
+
+Note: The library only supports Ed25519 addresses. Therefore a `type` property for distinguishing between WOTS and Ed25519 addresses is unncecessary.
 
 <table>
   <tr>
@@ -439,7 +445,7 @@ Useful [reference](https://medium.com/@harshagoli/hd-wallets-explained-from-high
     <td>address</td>
     <td>&#10004;</td>
     <td>string</td>
-    <td>Address trytes.</td>
+    <td>Address <a href="https://github.com/Wollac/protocol-rfcs/blob/bech32-address-format/text/0020-bech32-address-format/0020-bech32-address-format.md">(Bech32)</a> string.</td>
   </tr>
   <tr>
     <td>balance</td>
@@ -466,7 +472,7 @@ Useful [reference](https://medium.com/@harshagoli/hd-wallets-explained-from-high
 <table>
   <tr>
     <td><strong>Property</strong></td>
-    <td><strong>Type</strong></td>
+    <td><strong>Required</strong></td>
     <td><strong>Type</strong></td>
     <td><strong>Description</strong></td>
   </tr>
@@ -512,10 +518,10 @@ Useful [reference](https://medium.com/@harshagoli/hd-wallets-explained-from-high
     <td><strong>Description</strong></td>
   </tr>
   <tr>
-    <td>as_trytes():string</td>
+    <td>as_bytes():array</td>
     <td>&#10004;</td>
     <td>function</td>
-    <td>Transaction tag as trytes.</td>
+    <td>Transaction tag as byte array.</td>
   </tr>
   <tr>
     <td>as_ascii():string</td>
@@ -544,7 +550,9 @@ Useful [reference](https://medium.com/@harshagoli/hd-wallets-explained-from-high
 
 #### Transfer 
 
-Transfer object required for creating a transaction. It allows end-users to specify the transaction amount and recipient address along with a message and/or tag.
+Transfer object required for creating a transaction. It allows end-users to specify the transaction amount and recipient address.
+
+Note: Currently, it is not possible to send multiple payloads as part of the message. That is why tag property is omitted from this interface. See [this](https://github.com/iotaledger/protocol-rfcs/pull/18#discussion_r468432794) for details.
 
 <table>
   <tr>
@@ -566,16 +574,10 @@ Transfer object required for creating a transaction. It allows end-users to spec
     <td>Transfer address.</td>
   </tr>
   <tr>
-    <td>tag</td>
+    <td>data</td>
     <td>&#10008;</td>
     <td>string</td>
-    <td>Transfer tag.</td>
-  </tr>
-  <tr>
-    <td>message</td>
-    <td>&#10008;</td>
-    <td>string</td>
-    <td>Transfer message.</td>
+    <td>(Optional) transfer data.</td>
   </tr>
 </table>
 
@@ -602,7 +604,15 @@ Transfer object required for creating a transaction. It allows end-users to spec
   </tr>
 </table>
 
-#### SignatureMessageFragment
+
+
+
+
+
+
+
+
+#### Input
 
 <table>
   <tr>
@@ -612,22 +622,26 @@ Transfer object required for creating a transaction. It allows end-users to spec
     <td><strong>Description</strong></td>
   </tr>
   <tr>
-    <td>get_signature():string</td>
+    <td>type</td>
     <td>&#10004;</td>
-    <td>function</td>
-    <td>Transaction signature.</td>
+    <td>number</td>
+    <td>Input type. Defaults to <code>0</code>.</td>
   </tr>
   <tr>
-    <td>get_message():number</td>
+    <td>id</td>
     <td>&#10004;</td>
-    <td>function</td>
-    <td>Message extracted from signature.</td>
+    <td>string</td>
+    <td>BLAKE2b-256 hash of the transaction.</td>
+  </tr>
+  <tr>
+    <td>output_index</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Index of the output on the referenced transaction.</td>
   </tr>
 </table>
 
-#### Transaction
-
-Note: some of the transaction properties will be different.
+#### OutputAddress
 
 <table>
   <tr>
@@ -637,70 +651,373 @@ Note: some of the transaction properties will be different.
     <td><strong>Description</strong></td>
   </tr>
   <tr>
-    <td>hash</td>
+    <td>type</td>
     <td>&#10004;</td>
-    <td>string</td>
-    <td>Transaction hash.</td>
-  </tr>
-  <tr>
-    <td>signature_message_fragment</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Signature of the private key.</td>
+    <td>number</td>
+    <td>Set to value <code>0</code> to denote a WOTS Address and <code>1</code> to denote an Ed25519 address.</td>
   </tr>
   <tr>
     <td>address</td>
     <td>&#10004;</td>
     <td>string</td>
-    <td>Transaction address.</td>
+    <td>If type is set to <code>0</code>, this should contain a WOTS address. Otherwise (if type is set to <code>1</code>), it should contain an Ed25519 address.</td>
+  </tr>
+</table>
+
+#### Output
+
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
   </tr>
   <tr>
-    <td>value</td>
+    <td>type</td>
     <td>&#10004;</td>
-    <td><a href="#value">Value</a></td>
-    <td>Transaction amount (exposed as a custom type with additional methods).</td>
+    <td>number</td>
+    <td>Output type. Defaults to <code>0</code>.</td>
+  </tr>
+  <tr>
+    <td>address</td>
+    <td>&#10004;</td>
+    <td><a href="#outputaddress">OutputAddress</a></td>
+    <td>Output address.</td>
+  </tr>
+  <tr>
+    <td>amount</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Amount of tokens to deposit.</td>
+  </tr>
+</table>
+
+#### UnsignedDataPayload
+
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Set to <code>2</code> to denote a unsigned data payload.</td>
+  </tr>
+  <tr>
+    <td>data</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Data of unsigned payload.</td>
+  </tr>
+</table>
+
+#### SignedDataPayload
+
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Set to <code>3</code> to denote a signed data payload.</td>
+  </tr>
+  <tr>
+    <td>data</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Data of signed data payload.</td>
+  </tr>
+  <tr>
+    <td>public_key</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Ed25519 public key used to verify the signature.</td>
+  </tr>
+  <tr>
+    <td>signature</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Signature of signing data.</td>
+  </tr>
+</table>
+
+#### IndexationPayload
+
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Set to <code>4</code> to denote an indexation payload.</td>
   </tr>
   <tr>
     <td>tag</td>
     <td>&#10004;</td>
-    <td><a href="#tag">Tag</a></td>
-    <td>Transaction tag (exposed as a custom type with additional methods).</td>
+    <td>string</td>
+    <td>Tag which is used to index the signed transaction hash.</td>
+  </tr>
+</table>
+
+#### UnsignedTransaction
+
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Transaction type. Defaults to <code>0</code>.</td>
+  </tr>
+  <tr>
+    <td>inputs_count</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Amount of inputs proceeding.</td>
+  </tr>
+  <tr>
+    <td>inputs</td>
+    <td>&#10004;</td>
+    <td><a href="#input">Input</a>[]</td>
+    <td>Transaction inputs.</td>
+  </tr>
+  <tr>
+    <td>outputs_count</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Amount of outputs proceeding.</td>
+  </tr>
+  <tr>
+    <td>outputs</td>
+    <td>&#10004;</td>
+    <td><a href="#outputs">Output</a>[]</td>
+    <td>Output address.</td>
+  </tr>
+  <tr>
+    <td>payload_length</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Length of optional payload.</td>
+  </tr>
+  <tr>
+    <td>payload</td>
+    <td>&#10004;</td>
+    <td>
+    <a href="#unsigneddatapayload">UnsignedDataPayload</a> | 
+    <a href="#signeddatapayload">SignedDataPayload</a> |
+    <a href="#indexationpayload">IndexationPayload</a>
+    </td>
+    <td>Payload containing data. As multiple payloads are not yet supported, only <a href="#unsigneddatapayload">unsigned data payload</a> should be used.</td>
+  </tr>
+</table>
+
+#### WOTSSignature
+
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Set to value <code>0</code> to denote a WOTS Signature.</td>
+  </tr>
+  <tr>
+    <td>signature</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Signature signing the serialized unsigned transaction.</td>
+  </tr>
+</table>
+
+#### Ed25519Signature
+
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Set to value <code>1</code> to denote an Ed25519 signature.</td>
+  </tr>
+  <tr>
+    <td>public_key</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Public key of the Ed25519 keypair which is used to verify the signature.</td>
+  </tr>
+  <tr>
+    <td>signature</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Signature signing the serialized unsigned transaction.</td>
+  </tr>
+</table>
+
+#### SignatureUnblockBlock
+
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Set to value <code>0</code> to denote a signature unlock block.</td>
+  </tr>
+  <tr>
+    <td>signature</td>
+    <td>&#10004;</td>
+    <td>
+        <a href="#wotssignature">WOTSSignature</a> |
+        <a href="#ed25519signature">Ed25519Signature</a>
+    </td>
+    <td>An unlock block containing signature(s) unlocking input(s).</td>
+  </tr>
+</table>
+
+#### ReferenceUnblockBlock
+
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Set to value <code>1</code> to denote a reference unlock block.</td>
+  </tr>
+  <tr>
+    <td>reference</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Index of a previous unlock block.</td>
+  </tr>
+</table>
+
+#### SignedTransactionPayload
+
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Payload type. Defaults to `0`.</td>
+  </tr>
+  <tr>
+    <td>transaction</td>
+    <td>&#10004;</td>
+    <td><a href="#unsignedtransaction">UnsignedTransaction</a></td>
+    <td>Essence data making up a transaction by defining its inputs and outputs and an optional payload.</td>
+  </tr>
+  <tr>
+    <td>unblock_blocks_count</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Number of inputs specifed.</td>
+  </tr>
+  <tr>
+    <td>unblock_blocks</td>
+    <td>&#10004;</td>
+    <td>
+        <a href="#signatureunblockblock">SignatureUnblockBlock</a> |
+        <a href="#referenceunblockblock">ReferenceUnblockBlock</a>
+    </td>
+    <td>Holds the unlock blocks unlocking inputs within an Unsigned Transaction</td>
+  </tr>
+</table>
+
+#### Message
+
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>version</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Message version. Defaults to `1`.</td>
+  </tr>
+  <tr>
+    <td>trunk</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Message id of the first message this message refers to.</td>
+  </tr>
+  <tr>
+    <td>branch</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Message id of the second message this message refers to.</td>
+  </tr>
+  <tr>
+    <td>payload_length</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Length of the payload.</td>
+  </tr>
+    <tr>
+    <td>payload</td>
+    <td>&#10004;</td>
+    <td>
+        <a href="#signedtransactionpayload">SignedTransactionPayload</a> |
+        <a href="#unsigneddatapayload">UnsignedDataPayload</a> |
+        <a href="#signeddatapayload">SignedDataPayload</a>
+    </td>
+    <td>Transaction amount (exposed as a custom type with additional methods).</td>
   </tr>
   <tr>
     <td>timestamp</td>
     <td>&#10004;</td>
     <td><a href="#timestamp">Timestamp</a></td>
     <td>Transaction timestamp (exposed as a custom type with additional methods).</td>
-  </tr>
-  <tr>
-    <td>current_index</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Current index in the bundle.</td>
-  </tr>
-  <tr>
-    <td>last_index</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Last index in the bundle.</td>
-  </tr>
-  <tr>
-    <td>bundle</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Bundle hash.</td>
-  </tr>
-  <tr>
-    <td>trunk_transaction</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Trunk transaction.</td>
-  </tr>
-  <tr>
-    <td>branch_transaction</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Branch transaction.</td>
   </tr>
   <tr>
     <td>nonce</td>
@@ -875,13 +1192,13 @@ The following should be considered when implementing this method:
   </tr>
   <tr>
     <td>index</td>
-    <td>&#10008;</td>
+    <td>&#10004;</td>
     <td>number</td>
     <td>Address index. By default the length of addresses stored for this account should be used as an index.</td>
   </tr>
   <tr>
     <td>gap_limit</td>
-    <td>&#10008;</td>
+    <td>&#10004;</td>
     <td>number</td>
     <td>Number of address indexes that are generated.</td>
   </tr>
@@ -895,13 +1212,13 @@ The following should be considered when implementing this method:
   </tr>
   <tr>
     <td>addresses</td>
-    <td><a href="address">Address</a>[]</td>
+    <td><a href="#address">Address</a>[]</td>
     <td colspan="3">Address history upto latest unused address.</td>
   </tr>
   <tr>
-    <td>hashes</td>
+    <td>ids</td>
     <td>string[]</td>
-    <td colspan="3">Transaction hashes associated with the addresses.</td>
+    <td colspan="3">Message ids associated with the addresses.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Additional Information</strong></td>
@@ -922,22 +1239,22 @@ The following should be considered when implementing this method:
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.24v5faxy5apt">get_balance()</a></li>
-        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.eoox82z3y6rj">find_transactions()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#getbalanceofaddresses">get_balance()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#FindTransactions">find_transactions()</a></li>
       </ul>
     </td>
   </tr>
 </table>
 
-#### sync_transactions() 
+#### sync_messages() 
 
-Syncs transactions with the Tangle. The method should ensure that the wallet's local state contains transactions associated with the address history. 
+Syncs messages with the Tangle. The method should ensure that the wallet's local state has all messages associated with the address history. 
 
 The following should be considered when implementing this method:
 
-*   The updated transaction history should not be written down in the database/persistent storage. Instead the method should only return the updated transaction history (with transaction hashes);
-*   This method should check if there are any local transactions (with “broadcasted: false”) matching the transactions fetched from the network. If there are such transactions, their “broadcasted” property should be set to true;
-*   For newly-confirmed transactions, the method should ensure that it updates the “confirmed” property of all its reattachments 
+*   The updated message history should not be written down in the database/persistent storage. Instead the method should only return the updated message history (with message ids);
+*   This method should check if there are any local messages (with “broadcasted: false”) matching the messages fetched from the network. If there are such messages, their “broadcasted” property should be set to true;
+*   For newly-confirmed messages, the method should ensure that it updates the “confirmed” property of all its reattachments.
 
 <table>
   <tr>
@@ -950,10 +1267,10 @@ The following should be considered when implementing this method:
     <td><strong>Description</strong></td>
   </tr>
   <tr>
-    <td>hashes</td>
+    <td>ids</td>
     <td>&#10004;</td>
     <td>string[]</td>
-    <td>Transaction hashes. New transaction hashes should be calculated by running a difference of local transaction hashes with latest transaction hashes on the Tangle.</td>
+    <td>Message ids. New message ids should be calculated by running a difference of local message ids with latest message ids on the Tangle.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Returns</strong></td>
@@ -964,9 +1281,9 @@ The following should be considered when implementing this method:
     <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-    <td>transactions</td>
-    <td><a href="#transaction">Transaction</a>[]</td>
-    <td colspan="3">Transaction history</td>
+    <td>messages</td>
+    <td><a href="#message">Message</a>[]</td>
+    <td colspan="3">Message history</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Additional Information</strong></td>
@@ -987,7 +1304,7 @@ The following should be considered when implementing this method:
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.eoox82z3y6rj">find_transactions()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#FindTransactions">find_transactions()</a></li>
       </ul>
     </td>
   </tr>
@@ -995,7 +1312,7 @@ The following should be considered when implementing this method:
 
 #### select_inputs() 
 
-Selects input addresses for a value transaction.
+Selects input addresses for funds transfer.
 
 Note: This method should only be used internally by [send()](#send). Also, the input selection method should ensure that the recipient address doesn’t match any of the selected inputs or the remainder address. 
 
@@ -1064,22 +1381,23 @@ See [Input Selection Process](#input-selection) for implementation details.
 
 #### send() 
 
-Sends a value transaction to the Tangle.  
+Sends a message to the Tangle.  
 
 Note: This method should only be exposed as a successful response from [sync()](#sync). 
+
+Currently, it is not possible to send multiple payloads. 
 
 The process for sending a value transaction:
 *   Ensure `amount` is not set to zero;
 *   Ensure `amount` does not exceed the total balance;
 *   Ensure recipient address has correct checksum;
-*   Validate `message` property semantics and size;
-*   Validate `tag`  property semantics and size. If not provided, a default tag should be used;
+*   Validate `data` property semantics and size;
 *   Select inputs by using [select_inputs()](#selectinputs);
-*   Pass the transaction to the Stronghold for signing with its “signTransaction” method;
+*   Pass the seralized [unsigned transaction](#unsignedtransaction) to the Stronghold for signing with its “signTransaction” method;
 *   Perform proof-of-work. `pow` property in the account object should determine if the proof of work should be offloaded;
-*   Once proof-of-work is successfully performed, the transaction should be validated and stored in the persistent storage;
+*   Once proof-of-work is successfully performed, the message should be validated and stored in the persistent storage;
 *   After persisting the transaction, it should be broadcasted to the network;
-*   In the event of a broadcast error, there should be (three) attempts for automatic rebroadcasting. If all attempts fail, the send process should terminate and it should be left to the user to retry the failed transaction. For failed transactions, the “broadcasted” property in the transaction objects should be set to false. 
+*   In the event of a broadcast error, there should be (three) attempts for automatic rebroadcasting. If all attempts fail, the send process should terminate and it should be left to the user to retry the failed message. For failed messages, the “broadcasted” property in the transaction objects should be set to false. 
 
 <table>
   <tr>
@@ -1106,9 +1424,9 @@ The process for sending a value transaction:
     <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-    <td>transactions</td>
-    <td><a href="#transaction">Transaction[]</a></td>
-    <td colspan="3">Newly made transaction.</td>
+    <td>message</td>
+    <td><a href="#message">Message</a></td>
+    <td colspan="3">Newly made message.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Additional Information</strong></td>
@@ -1129,8 +1447,8 @@ The process for sending a value transaction:
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.eoox82z3y6rj">find_transactions()</a></li>
-        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.imyf0om5yhbq">send()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#FindTransactions">find_transactions()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#Send">send()</a></li>
       </ul>
     </td>
   </tr>
@@ -1138,14 +1456,14 @@ The process for sending a value transaction:
 
 #### retry() 
 
-Rebroadcasts failed transaction.
+Rebroadcasts failed message.
 
 Note: This method should only be exposed as a successful response from [sync()](#sync). 
 
-The process for retrying a failed transaction:
+The process for retrying a failed message:
 
-*   Get transaction by using [get_transaction()](#gettransaction);
-*   Rebroadcast transaction;
+*   Get message by using [get_message()](#getmessage);
+*   Rebroadcast message;
 *   Update account in persistent storage.
 
 <table>
@@ -1159,10 +1477,10 @@ The process for retrying a failed transaction:
     <td><strong>Description</strong></td>
   </tr>
   <tr>
-    <td>hash</td>
+    <td>id</td>
     <td>&#10004;</td>
     <td>string</td>
-    <td>Transaction hash</td>
+    <td>Message id</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Returns</strong></td>
@@ -1173,9 +1491,9 @@ The process for retrying a failed transaction:
     <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-    <td>transactions</td>
-    <td><a href="#transaction">Transaction[]</a></td>
-    <td colspan="3">Newly made transaction.</td>
+    <td>message</td>
+    <td><a href="#message">Message</a></td>
+    <td colspan="3">Newly made message.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Additional Information</strong></td>
@@ -1196,7 +1514,7 @@ The process for retrying a failed transaction:
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.eoox82z3y6rj">broadcast_transactions()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#BroadcastTransactions">broadcast_transactions()</a></li>
       </ul>
     </td>
   </tr>
@@ -1204,14 +1522,14 @@ The process for retrying a failed transaction:
 
 #### sync()
 
-Syncs account with the Tangle. The account syncing process should ensure that the latest metadata (balance, transactions) associated with an account is fetched from the Tangle and stored locally.  
-Note that it is a proposed design decision to enforce account syncing before every send. An alternative way would be to have the _send_ method always exposed and internally ensuring that the account is synced before every transaction. 
+Syncs account with the Tangle. The account syncing process should ensure that the latest metadata (balance, messages) associated with an account is fetched from the Tangle and stored locally.  
+Note that it is a proposed design decision to enforce account syncing before every send. An alternative way would be to have the _send_ method always exposed and internally ensuring that the account is synced before every message. 
 
 The process for account syncing:_
 
 *   Sync addresses using [sync_addresses()](#syncaddresses);
-*   Sync transactions using [sync_transactions()](#synctransactions);
-*   Store updated addresses and transactions information in persistent storage (if not explicitly set otherwise by the user). 
+*   Sync messages using [sync_messages()](#syncmessages);
+*   Store updated addresses and messages information in persistent storage (if not explicitly set otherwise by the user). 
 
 <table>
   <tr>
@@ -1276,9 +1594,8 @@ The process for account syncing:_
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.eoox82z3y6rj">find_transactions()</a></li>
-        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.24v5faxy5apt">get_balance()</a></li>
-        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.imyf0om5yhbq">send()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#FindTransactions">find_transactions()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#GetBalanceOfAddresses">get_balance()</a></li>
       </ul>
     </td>
   </tr>
@@ -1286,13 +1603,13 @@ The process for account syncing:_
 
 ####  reattach() 
 
-Reattaches unconfirmed transaction to the Tangle. 
+Reattaches unconfirmed message to the Tangle. 
 The following should be considered when implementing this method:
 
-*   Only an unconfirmed transaction can be reattached. The method should validate the confirmation state of the provided transaction. If a confirmed transaction hash is provided, the method should error out;
-*   The method should also validate if reattachment is necessary, by checking if the transaction falls below max depth. The criteria for whether the transaction has fallen below max depth is determined through its timestamp. If 11 minutes have passed since the timestamp of the most recent (reattachment), the transaction can be be reattached. See [this](https://github.com/iotaledger/trinity-wallet/blob/3fab4f671c97e805a2b0ade99b4abb8b508c2842/src/shared/libs/iota/transfers.js#L141) implementation for reference;
-*   Once reattached, the transaction should be stored in the persistent storage;
-*   If the transaction was reattached via polling, a [reattachment](#monitor-for-reattachments) event should be emitted to notify all subscribers. 
+*   Only an unconfirmed message can be reattached. The method should validate the confirmation state of the provided transaction. If a confirmed message id is provided, the method should error out;
+*   The method should also validate if reattachment is necessary, by checking if the message falls below max depth. The criteria for whether the message has fallen below max depth is determined through its timestamp. If 11 minutes have passed since the timestamp of the most recent (reattachment), the message can be be reattached. See [this](https://github.com/iotaledger/trinity-wallet/blob/3fab4f671c97e805a2b0ade99b4abb8b508c2842/src/shared/libs/iota/transfers.js#L141) implementation for reference;
+*   Once reattached, the message should be stored in the persistent storage;
+*   If the message was reattached via polling, a [reattachment](#monitor-for-reattachments) event should be emitted to notify all subscribers. 
 
 <table>
   <tr>
@@ -1305,10 +1622,10 @@ The following should be considered when implementing this method:
     <td><strong>Description</strong></td>
   </tr>
   <tr>
-    <td>hash</td>
+    <td>id</td>
     <td>&#10004;</td>
     <td>string</td>
-    <td>Transaction hash.</td>
+    <td>Message id.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Returns</strong></td>
@@ -1317,77 +1634,11 @@ The following should be considered when implementing this method:
     <td><strong>Name</strong></td>
     <td><strong>Type</strong></td>
     <td colspan="3"><strong>Description</strong></td>
-  </tr>
-  <tr>
-    <td>transaction</td>
-    <td><a href="#transaction">Transaction[]</a></td>
-    <td colspan="3">Newly reattached transaction.</td>
-  </tr>
-  <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
-  </tr>
-  <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">
-      <ul>
-        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.s3d22j7lwxew">reattach()</a></li>
-      </ul>
-    </td>
-  </tr>
-</table>
-
-#### send_message()
-
-Sends a zero value transaction to the Tangle
-
-The process for sending a zero value message:
-
-*   Ensure `amount` is set to zero;
-*   Ensure recipient address has correct checksum;
-*   Validate `message` property semantics and size;
-*   Validate `tag`  property semantics and size. If not provided, a default tag should be used;
-*   On successful broadcast of the zero value transaction, the new transaction should be stored in the persistent storage and its “broadcasted” property should be set to true.
-
-<table>
-  <tr>
-    <td colspan="4"><strong>Parameters</strong></td>
-  </tr>
-  <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
   </tr>
   <tr>
     <td>message</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Message to send to the Tangle.</td>
-  </tr>
-  <tr>
-    <td colspan="4"><strong>Returns</strong></td>
-  </tr>
-  <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Type</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
-  </tr>
-  <tr>
-    <td>transaction</td>
-    <td><a href="#heading=h.mzpg65ps5g9y">Transaction[]</a></td>
-    <td colspan="3">Newly broadcasted transaction.</td>
+    <td><a href="#message">Message</a></td>
+    <td colspan="3">Newly reattached message.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Additional Information</strong></td>
@@ -1408,7 +1659,7 @@ The process for sending a zero value message:
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.imyf0om5yhbq">send()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#Reattach">reattach()</a></li>
       </ul>
     </td>
   </tr>
@@ -1416,7 +1667,7 @@ The process for sending a zero value message:
 
 #### total_balance()
 
-Gets total account balance
+Gets total account balance.
 
 Total balance should be read directly from the local storage. To read the latest account balance from the network, [sync()](#sync) should be used first. 
 
@@ -1470,7 +1721,7 @@ Available balance should be read directly from the local storage. To read the la
     <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-    <td><a href="value">Value</a></td>
+    <td><a href="#value">Value</a></td>
     <td>Account available balance.</td>
   </tr>
   <tr>
@@ -1535,9 +1786,9 @@ Updates account name
   </tr>
 </table>
 
-#### list_transactions() 
+#### list_messages() 
 
-Gets transactions. Transactions should be read directly from the local storage. To ensure the local database is updated with the latest transactions, [sync()](#sync) should be used first.
+Gets messages. Messages should be read directly from the local storage. To ensure the local database is updated with the latest messages, [sync()](#sync) should be used first.
 
 <table>
   <tr>
@@ -1553,13 +1804,13 @@ Gets transactions. Transactions should be read directly from the local storage. 
     <td>count</td>
     <td>&#10004;</td>
     <td>number</td>
-    <td>Number of (most recent) transactions.</td>
+    <td>Number of (most recent) messages.</td>
   </tr>
   <tr>
     <td>from</td>
     <td>&#10004;</td>
     <td>number</td>
-    <td>Subset of transactions. For example: count = 10, from = 5, it should return ten transactions skipping the most recent five transactions.</td>
+    <td>Subset of messages. For example: count = 10, from = 5, it should return ten messages skipping the most recent five messages.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Returns</strong></td>
@@ -1570,9 +1821,9 @@ Gets transactions. Transactions should be read directly from the local storage. 
     <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-    <td>transactions</td>
-    <td><a href="#transaction">Transaction</a>[]</td>
-    <td colspan="3">All transactions.</td>
+    <td>messages</td>
+    <td><a href="#message">Message</a>[]</td>
+    <td colspan="3">All messages.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Additional Information</strong></td>
@@ -1595,11 +1846,11 @@ Gets transactions. Transactions should be read directly from the local storage. 
   </tr>
 </table>
 
-#### list_received_transactions()
+#### list_received_messages()
 
-Gets all received transactions.
+Gets all received messages.
 
-Transactions should be read directly from the local storage. To ensure the local database is updated with the latest transactions, [sync()](#sync) should be used first. 
+Messages should be read directly from the local storage. To ensure the local database is updated with the latest messages, [sync()](#sync) should be used first. 
 
 <table>
   <tr>
@@ -1615,13 +1866,13 @@ Transactions should be read directly from the local storage. To ensure the local
     <td>count</td>
     <td>&#10004;</td>
     <td>number</td>
-    <td>Number of (most recent) received transactions.</td>
+    <td>Number of (most recent) received messages.</td>
   </tr>
   <tr>
     <td>from</td>
     <td>&#10004;</td>
     <td>number</td>
-    <td>Subset of received transactions.</td>
+    <td>Subset of received messages.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Returns</strong></td>
@@ -1632,9 +1883,9 @@ Transactions should be read directly from the local storage. To ensure the local
     <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-    <td>transactions</td>
-    <td><a href="#transaction">Transaction</a>[]</td>
-    <td colspan="3">All received transactions.</td>
+    <td>messages</td>
+    <td><a href="#message">Message</a>[]</td>
+    <td colspan="3">All received messages.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Additional Information</strong></td>
@@ -1657,11 +1908,11 @@ Transactions should be read directly from the local storage. To ensure the local
   </tr>
 </table>
 
-#### list_sent_transactions()
+#### list_sent_messages()
 
-Gets all sent transactions
+Gets all sent messages.
 
-Transactions should be directly read from the local storage. To ensure the local database is updated with the latest transactions, [sync()](#sync) should be used first.
+Messages should be directly read from the local storage. To ensure the local database is updated with the latest messages, [sync()](#sync) should be used first.
 
 <table>
   <tr>
@@ -1677,13 +1928,13 @@ Transactions should be directly read from the local storage. To ensure the local
     <td>count</td>
     <td>&#10004;</td>
     <td>number</td>
-    <td>Number of (most recent) sent transactions.</td>
+    <td>Number of (most recent) sent messages.</td>
   </tr>
   <tr>
     <td>from</td>
     <td>&#10004;</td>
     <td>number</td>
-    <td>Subset of sent transactions.</td>
+    <td>Subset of sent messages.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Returns</strong></td>
@@ -1694,9 +1945,9 @@ Transactions should be directly read from the local storage. To ensure the local
     <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-    <td>transactions</td>
-    <td><a href="#transaction">Transaction</a>[]</td>
-    <td colspan="3">All sent transactions.</td>
+    <td>messages</td>
+    <td><a href="#message">Message</a>[]</td>
+    <td colspan="3">All sent messages.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Additional Information</strong></td>
@@ -1719,9 +1970,9 @@ Transactions should be directly read from the local storage. To ensure the local
   </tr>
 </table>
 
-#### list_failed_transactions()
+#### list_failed_messages()
 
-Gets all failed (broadcasted = false) transactions. Transactions should be read directly from the local storage.
+Gets all failed (broadcasted = false) messages. Messages should be read directly from the local storage.
 
 <table>
   <tr>
@@ -1733,51 +1984,33 @@ Gets all failed (broadcasted = false) transactions. Transactions should be read 
     <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-    <td>transactions</td>
-    <td><a href="#transaction">Transaction</a>[]</td>
-    <td>All failed transactions.</td>
-  </tr>
-  <tr>
-    <td colspan="3"><strong>Additional Information</strong></td>
-  </tr>
-  <tr>
     <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">None</td>
-  </tr>
-</table>
-
-#### list_unconfirmed_transactions()
-
-Gets all unconfirmed (confirmed = false) transactions. Transactions should be read directly from the local storage.  
-
-<table>
-  <tr>
-    <td colspan="4"><strong>Returns</strong></td>
-  </tr>
-  <tr>
-    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
     <td><strong>Type</strong></td>
     <td><strong>Description</strong></td>
   </tr>
   <tr>
-    <td>transactions</td>
-    <td><a href="#transaction">Transaction</a>[]</td>
-    <td>All unconfirmed transactions.</td>
+    <td>count</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Number of (most recent) failed messages.</td>
   </tr>
   <tr>
-    <td colspan="3"><strong>Additional Information</strong></td>
+    <td>from</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Subset of failed messages.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td>messages</td>
+    <td><a href="#message">Message</a>[]</td>
+    <td colspan="3">All failed messages.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
   </tr>
   <tr>
     <td><strong>Name</strong></td>
@@ -1797,11 +2030,71 @@ Gets all unconfirmed (confirmed = false) transactions. Transactions should be re
   </tr>
 </table>
 
-#### get_transaction()
+#### list_unconfirmed_messages()
 
-Gets transaction for provided hash.
+Gets all unconfirmed (confirmed = false) messages. Messages should be read directly from the local storage.  
 
-Transaction objects should be read directly from the local storage. To ensure the local database is updated with the latest transactions, [sync()](#sync) should be used first. 
+<table>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>count</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Number of (most recent) unconfirmed messages.</td>
+  </tr>
+  <tr>
+    <td>from</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Subset of unconfirmed messages.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>messages</td>
+    <td><a href="#message">Message</a>[]</td>
+    <td colspan="3">All unconfirmed messages.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
+</table>
+
+#### get_message()
+
+Gets message for provided id.
+
+Messages should be read directly from the local storage. To ensure the local database is updated with the latest messages, [sync()](#sync) should be used first. 
 
 <table>
   <tr>
@@ -1814,10 +2107,10 @@ Transaction objects should be read directly from the local storage. To ensure th
     <td><strong>Description</strong></td>
   </tr>
   <tr>
-    <td>hash</td>
+    <td>id</td>
     <td>&#10004;</td>
     <td>string</td>
-    <td>Transaction hash.</td>
+    <td>Message id.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Returns</strong></td>
@@ -1828,9 +2121,9 @@ Transaction objects should be read directly from the local storage. To ensure th
     <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-    <td>transaction</td>
-    <td><a href="#transaction">Transaction</a></td>
-    <td colspan="3">Transaction object.</td>
+    <td>message</td>
+    <td><a href="#message">Message</a></td>
+    <td colspan="3">Message object.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Additional Information</strong></td>
@@ -1849,11 +2142,7 @@ Transaction objects should be read directly from the local storage. To ensure th
   </tr>
   <tr>
     <td>Required client library methods</td>
-    <td colspan="3">
-      <ul>
-        <li><a href="https://docs.google.com/document/d/1mH0_mjlPv5jZZWFEe20BTzVzXJ6XEXOqtY7jkvNHyiY/edit#heading=h.1am1x0wox7ld">get_transaction()</a></li>
-      </ul>
-    </td>
+    <td colspan="3">None</td>
   </tr>
 </table>
 
@@ -1896,7 +2185,7 @@ Gets all addresses.
   </tr>
 </table>
 
-#### list_unspent()
+#### list_unspent_addresses()
 
 Gets all unspent input addresses
 
@@ -2149,7 +2438,7 @@ The following should be considered when removing an account:
 
 #### sync_accounts() 
 
-Syncs all stored accounts with the Tangle. Syncing should get the latest balance for all accounts, find any new transactions associated with the stored account.
+Syncs all stored accounts with the Tangle. Syncing should get the latest balance for all accounts and should find any new messages associated with the stored account.
 
 See [Accounts Syncing Process](#accounts-syncing-process).
 
@@ -2190,7 +2479,7 @@ See [Accounts Syncing Process](#accounts-syncing-process).
 
 #### move()
 
-Initiates an internal transaction between accounts. This method should leverage the [send()](#send) method from the sender account and should initiate a transaction to the receiver account.
+Moves funds from one account to another. This method should leverage the [send()](#send) method from the sender account and should initiate a message to the receiver account.
 
 <table>
   <tr>
@@ -2414,7 +2703,7 @@ Returns the account associated with the provided identifier.
 
 #### reattach()
 
-Reattaches an unconfirmed transaction.
+Reattaches an unconfirmed message.
 
 See [reattach()](#reattach) method for implementation details. This method is a wrapper method provided for convenience. A user could directly access the [reattach()](#reattach) method on an account object. 
 
@@ -2443,10 +2732,10 @@ See [reattach()](#reattach) method for implementation details. This method is a 
     <td>Identifier. Could be one of address, alias, id or index.</td>
   </tr>
   <tr>
-    <td>hash</td>
+    <td>id</td>
     <td>&#10004;</td>
     <td>string</td>
-    <td>Transaction hash.</td>
+    <td>Message id.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Returns</strong></td>
@@ -2457,9 +2746,9 @@ See [reattach()](#reattach) method for implementation details. This method is a 
     <td colspan="3"><strong>Description</strong></td>
   </tr>
   <tr>
-    <td>transaction</td>
-    <td><a href="#transaction">Transaction</a>[]</td>
-    <td colspan="3">Newly reattached transaction.</td>
+    <td>message</td>
+    <td><a href="#message">Message</a></td>
+    <td colspan="3">Newly reattached message.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Additional Information</strong></td>
@@ -2486,7 +2775,7 @@ See [reattach()](#reattach) method for implementation details. This method is a 
 
 Events are categorised as the following:
 
-1. Reactive messages emitted from the node software whenever the state on the node changes. For example, emitting new transaction data received by the node. Clients (Wallet) can subscribe to these events to get notified if any relevant change occurs on the node. See [example](https://github.com/iotaledger/wallet-spec/tree/events).
+1. Reactive messages emitted from the node software whenever the state on the node changes. For example, emitting new messages received by the node. Clients (Wallet) can subscribe to these events to get notified if any relevant change occurs on the node. See [example](https://github.com/iotaledger/wallet-spec/tree/events).
    
 2. Messages emitted from the wallet library whenever there are any important state changes. Note that in cases where a user triggered action leads to a state change, the messages would not be emitted. For example, if a user explicitly triggers a [sync()](#sync) action leading to a state change, an explicit event is not necessary.
 
@@ -2507,13 +2796,13 @@ On every update sent from the node software via an event, the wallet library sho
    <td>
     <ul>
       <li>Index 1: Address</li>
-      <li>Index 2: New Balance on the address</li>
+      <li>Index 2: New balance on the address</li>
     </ul>
    </td>
   </tr>
 </table>
 
-#### Monitor address for new transactions 
+#### Monitor address for new messages 
 
 <table>
   <tr>
@@ -2522,17 +2811,17 @@ On every update sent from the node software via an event, the wallet library sho
    <td><strong>Returned Data</strong></td>
   </tr>
   <tr>
-   <td colspan="3">&lt;Address : Transaction></td>
+   <td colspan="3">&lt;Address : Message></td>
    <td>
    <ul>
       <li>Index 1: Address</li>
-      <li>Index 2: Transaction hash of the new transaction</li>
+      <li>Index 2: Id of the new message</li>
     </ul>
    </td>
   </tr>
 </table>
 
-#### Monitor transaction for confirmation state 
+#### Monitor message for confirmation state 
 
 <table>
   <tr>
@@ -2542,11 +2831,11 @@ On every update sent from the node software via an event, the wallet library sho
    </td>
   </tr>
   <tr>
-   <td colspan="3">&lt;TransactionHash>
+   <td colspan="3">&lt;MessageId>
    </td>
    <td>
     <ul>
-      <li>Index 1: Transaction hash</li>
+      <li>Index 1: Message Id</li>
       <li>Index 2: Confirmation state</li>
     </ul>
    </td>
@@ -2572,7 +2861,7 @@ They could be triggered via events from **category 1** or through [polling](#pol
   </tr>
 </table>
 
-#### Monitor for new transactions 
+#### Monitor for new messages 
 
 <table>
   <tr>
@@ -2581,8 +2870,8 @@ They could be triggered via events from **category 1** or through [polling](#pol
    <td><strong>Returned Data</strong></td>
   </tr>
   <tr>
-   <td colspan="3">transactions</td>
-   <td>[{ accountId, transactions }]</td>
+   <td colspan="3">messages</td>
+   <td>[{ accountId, messages }]</td>
   </tr>
 </table>
 
@@ -2595,7 +2884,7 @@ They could be triggered via events from **category 1** or through [polling](#pol
   </tr>
   <tr>
    <td colspan="3">confirmations</td>
-   <td>[{ accountId, transactions  }]</td>
+   <td>[{ accountId, messages  }]</td>
   </tr>
 </table>
 
@@ -2608,7 +2897,7 @@ They could be triggered via events from **category 1** or through [polling](#pol
   </tr>
   <tr>
    <td colspan="3">reattachments</td>
-   <td>[{ accountId, transactions  }]</td>
+   <td>[{ accountId, messages  }]</td>
   </tr>
 </table>
 
@@ -2622,7 +2911,7 @@ They could be triggered via events from **category 1** or through [polling](#pol
   </tr>
   <tr>
    <td colspan="3">broadcasts</td>
-   <td>[{ accountId, transactions  }]</td>
+   <td>[{ accountId, messages  }]</td>
   </tr>
 </table>
 
@@ -2635,7 +2924,7 @@ They could be triggered via events from **category 1** or through [polling](#pol
   </tr>
   <tr>
    <td colspan="3">error</td>
-   <td>{ type, message  }</td>
+   <td>{ type, error  }</td>
   </tr>
 </table>
 
@@ -2643,9 +2932,10 @@ They could be triggered via events from **category 1** or through [polling](#pol
 
 To maintain the financial privacy of wallet users, the application/wallet should enforce strategies that will guarantee a certain level of anonymity. These strategies should be followed:
 
-1. The wallet should only use a single address per transaction i.e. if an address is already used in a transaction, it should not be used as a deposit address and instead a new address should be generated;
-2. If funds (accidentally) arrive at a spent address, the wallet should do an internal sweep before allowing the funds to be spent;
-3. The input selection strategy should expose as little information as possible. See input selection for details.
+<ul>
+  <li>The wallet should only use a single address per message i.e. if an address is already used in a message, it should not be used as a deposit address and instead a new address should be generated;</li>
+  <li>The input selection strategy should expose as little information as possible. See input selection for details.</li>
+</ul>
 
 Some other privacy enhancing techniques can be found [here](https://docs.google.com/document/d/1frk4r1Eq4hnGGOiKWkDiGTK5QQxKbfrvl7Iol7OZ-dc/edit#). 
 
@@ -2663,17 +2953,17 @@ Also, the implementation of step no. 2 is quite similar to the [subset sum probl
 
 ## Account Syncing Process
 
-The account syncing process should detect all (used) accounts on a seed with their corresponding address and transaction history. Once, all accounts and histories are detected, the wallet should accumulate total balance. The syncing process should work as follows: 
+The account syncing process should detect all (used) accounts on a seed with their corresponding address and message history. Once, all accounts and histories are detected, the wallet should accumulate total balance. The syncing process should work as follows: 
 
 1. Start with the account at index 0, generate [gap limit](https://blog.blockonomics.co/bitcoin-what-is-this-gap-limit-4f098e52d7e1) number of addresses, default to 20;
-2. Check for transactions and balances on the generated addresses;
-3. If there are no transactions and balances of 0 on all addresses, the process for generating addresses and finding transactions and balances should be stopped; 
-4. If any address has balance or associated transactions, generate gap limit number of addresses from the index of the last address with transactions or balance; 
-5. Steps (1-4) should also be peformed for account at index 1. The general idea is that _n + 1_ accounts should be checked if account _n_ has any transactions or balance.
+2. Check for messages and balances on the generated addresses;
+3. If there are no messages and balances of 0 on all addresses, the process for generating addresses and finding messages and balances should be stopped; 
+4. If any address has balance or associated messages, generate gap limit number of addresses from the index of the last address with messages or balance; 
+5. Steps (1-4) should also be peformed for account at index 1. The general idea is that _n + 1_ accounts should be checked if account _n_ has any messages or balance.
 
 Treat accounts like addresses. Only allow 1 latest unused account.
 
-_Scenario 1_: Wallet transaction and address history stored in Stronghold backup
+_Scenario 1_: Wallet message and address history stored in Stronghold backup
 
 *   Start syncing from the latest address index stored in the Stronghold backup
 *   Also provide a “Full sync” function to resync from index 0 across all accounts
@@ -2687,11 +2977,10 @@ _Scenario 2_: User has no backup file
 
  A background process that automatically performs several tasks periodically should be part of the wallet library. The goal of the background process is to perform the following tasks:  
 
-*   _Sync accounts_: The background process should sync all accounts with the network. This should be done using the [sync_accounts()](#syncaccounts) method. If new transactions are detected, a [transactions](#monitor-for-new-transactions) event should be used to notify all subscribers. If new balances are detected, a [balances](#monitor-for-balance-changes) event should be used to notify all subscribers. If new confirmations are detected, a [confirmations](#monitor-for-confirmation-state) event should be used to notify all subscribers; 
-*   _Retry failed transactions_: The background process should check if there are any transactions that failed to broadcast to the network. On a successful broadcast, an event should be [emitted](#monitor-for-broadcasts) to all subscribers. To list failed transactions, [listFailedTransaction()](#listfailedtransactions) should be used;
+*   _Sync accounts_: The background process should sync all accounts with the network. This should be done using the [sync_accounts()](#syncaccounts) method. If new messages are detected, a [messages](#monitor-for-new-messages) event should be used to notify all subscribers. If new balances are detected, a [balances](#monitor-for-balance-changes) event should be used to notify all subscribers. If new confirmations are detected, a [confirmations](#monitor-for-confirmation-state) event should be used to notify all subscribers; 
 
-Note that if there are multiple failed transactions, priority should be given to the old ones. 
-*   _Reattach_: The background process should check if there are any (unconfirmed) transactions that require reattachments. The detailed implementation flow for reattachment can be found [here](#reattach). 
+Note that if there are multiple failed messages, priority should be given to the old ones. 
+*   _Reattach_: The background process should check if there are any (unconfirmed) messages that require reattachments. The detailed implementation flow for reattachment can be found [here](#reattach). 
 
 The following should be considered for implementation:
 

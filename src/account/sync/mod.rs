@@ -3,8 +3,8 @@ use crate::address::{Address, AddressBuilder, IotaAddress};
 use crate::client::get_client;
 use crate::transaction::{Transaction, Transfer};
 
-use bee_crypto::ternary::Hash;
-use bee_transaction::{
+use iota::crypto::ternary::Hash;
+use iota::transaction::{
     bundled::{BundledTransactionBuilder, BundledTransactionField, Value as IotaValue},
     Vertex,
 };

@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::Duration;
 
-use bee_crypto::ternary::Hash;
+use iota::crypto::ternary::Hash;
 
 /// The account manager.
 ///
@@ -303,7 +303,7 @@ mod tests {
     #[test]
     fn store_accounts() {
         let manager = AccountManager::new();
-        let id = "test";
+        let id = "test_store";
         let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
             .expect("invalid node URL")
             .build();

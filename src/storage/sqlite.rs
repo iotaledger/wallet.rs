@@ -6,23 +6,28 @@ use std::sync::{Arc, Mutex};
 
 /// Key value storage adapter.
 pub struct SqliteStorageAdapter {
+    table_name: String,
     connection: Arc<Mutex<Connection>>,
 }
 
 impl SqliteStorageAdapter {
     /// Initialises the storage adapter.
-    pub fn new(db_name: impl AsRef<Path>) -> crate::Result<Self> {
+    pub fn new(db_name: impl AsRef<Path>, table_name: impl AsRef<str>) -> crate::Result<Self> {
         let connection = Connection::open(db_name)?;
 
         connection.execute(
-            "CREATE TABLE IF NOT EXISTS accounts (
-          key TEXT NOT NULL UNIQUE,
-          value TEXT
-        )",
+            &format!(
+                "CREATE TABLE IF NOT EXISTS {} (
+                    key TEXT NOT NULL UNIQUE,
+                    value TEXT
+                )",
+                table_name.as_ref()
+            ),
             NO_PARAMS,
         )?;
 
         Ok(Self {
+            table_name: table_name.as_ref().to_string(),
             connection: Arc::new(Mutex::new(connection)),
         })
     }
@@ -38,7 +43,10 @@ impl StorageAdapter for SqliteStorageAdapter {
             .connection
             .lock()
             .expect("failed to get connection lock");
-        let mut query = connection.prepare("SELECT value FROM accounts WHERE key = ?1")?;
+        let mut query = connection.prepare(&format!(
+            "SELECT value FROM {} WHERE key = ?1",
+            self.table_name
+        ))?;
         let results = query
             .query_and_then(params![id], |row| row.get(0))?
             .collect::<Vec<rusqlite::Result<String>>>();
@@ -54,7 +62,7 @@ impl StorageAdapter for SqliteStorageAdapter {
             .connection
             .lock()
             .expect("failed to get connection lock");
-        let mut query = connection.prepare("SELECT value FROM accounts")?;
+        let mut query = connection.prepare(&format!("SELECT value FROM {}", self.table_name))?;
         let accounts = query
             .query_and_then(NO_PARAMS, |row| row.get(0))?
             .map(|val| val.unwrap())
@@ -77,7 +85,7 @@ impl StorageAdapter for SqliteStorageAdapter {
             .expect("failed to get connection lock");
         let result = connection
             .execute(
-                "INSERT OR REPLACE INTO accounts VALUES (?1, ?2)",
+                &format!("INSERT OR REPLACE INTO {} VALUES (?1, ?2)", self.table_name),
                 params![id, account],
             )
             .map_err(|_| anyhow::anyhow!("failed to insert data"))?;
@@ -94,7 +102,10 @@ impl StorageAdapter for SqliteStorageAdapter {
             .lock()
             .expect("failed to get connection lock");
         let result = connection
-            .execute("DELETE FROM accounts WHERE key = ?1", params![id])
+            .execute(
+                &format!("DELETE FROM {} WHERE key = ?1", self.table_name),
+                params![id],
+            )
             .map_err(|_| anyhow::anyhow!("failed to delete data"))?;
         Ok(())
     }
