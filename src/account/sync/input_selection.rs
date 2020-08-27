@@ -98,12 +98,10 @@ mod tests {
         available_utxos
     }
 
-    fn sum_random_utxos<'a>(rng: &mut StdRng, available_utxos: &mut Vec<u64>) -> u64 {
+    fn sum_random_utxos(rng: &mut StdRng, available_utxos: &mut Vec<u64>) -> u64 {
         let utxos_picked_len = rng.gen_range(2, available_utxos.len() / 2);
         thread_rng().shuffle(available_utxos);
-        available_utxos[..utxos_picked_len]
-            .iter()
-            .fold(0, |acc, x| acc + x)
+        available_utxos[..utxos_picked_len].iter().sum()
     }
 
     #[test]
@@ -114,10 +112,7 @@ mod tests {
             let mut available_utxos = generate_random_utxos(&mut rng, 30);
             let sum_utxos_picked = sum_random_utxos(&mut rng, &mut available_utxos);
             let selected = select_input(sum_utxos_picked, &mut available_utxos).unwrap();
-            assert_eq!(
-                selected.into_iter().fold(0, |acc, x| acc + x),
-                sum_utxos_picked
-            );
+            assert_eq!(selected.into_iter().sum::<u64>(), sum_utxos_picked);
         }
     }
 
@@ -145,7 +140,7 @@ mod tests {
             } else {
                 assert!(response.is_ok());
                 let selected = response.unwrap();
-                assert!(selected.into_iter().fold(0, |acc, x| acc + x) >= target);
+                assert!(selected.into_iter().sum::<u64>() >= target);
             }
         }
     }
