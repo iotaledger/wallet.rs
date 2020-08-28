@@ -12,6 +12,9 @@ pub struct SqliteStorageAdapter {
 impl SqliteStorageAdapter {
     /// Initialises the storage adapter.
     pub fn new(db_name: impl AsRef<Path>) -> crate::Result<Self> {
+        if let Some(folder) = db_name.as_ref().parent() {
+            std::fs::create_dir_all(folder)?;
+        }
         let connection = Connection::open(db_name)?;
 
         connection.execute(
