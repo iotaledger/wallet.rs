@@ -85,7 +85,7 @@ impl PartialEq for Address {
 pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address> {
     let client = crate::client::get_client(account.client_options());
     let (key_index, iota_address) = client
-        .generate_new_address(account.seed())
+        .generate_new_address(&account.seed())
         .generate()
         .await?;
     let balance = get_balance(&account, &iota_address).await?;
@@ -102,7 +102,8 @@ pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address>
 /// Batch address generation.
 pub(crate) async fn get_addresses(account: &Account, count: u64) -> crate::Result<Vec<Address>> {
     let mut addresses = vec![];
-    let seed_trits = account.seed().as_trits();
+    let seed = account.seed();
+    let seed_trits = seed.as_trits();
     for i in 0..count {
         let address: IotaAddress = IotaAddress::try_from_inner(
             WotsShakePrivateKeyGeneratorBuilder::<Kerl>::default()

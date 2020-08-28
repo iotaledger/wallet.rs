@@ -149,8 +149,19 @@ impl Account {
         &self.addresses.iter().max_by_key(|a| a.key_index()).unwrap()
     }
 
-    pub(crate) fn seed(&self) -> &Seed {
-        unimplemented!()
+    pub(crate) fn seed(&self) -> Seed {
+        #[cfg(test)]
+        {
+            use std::str::FromStr;
+            Seed::from_str(
+                "RVORZ9SIIP9RCYMREUIXXVPQIPHVCNPQ9HZWYKFWYWZRE9JQKG9REPKIASHUUECPSQO9JT9XNMVKWYGVA",
+            )
+            .unwrap()
+        }
+        #[cfg(not(test))]
+        {
+            unimplemented!()
+        }
     }
 
     /// Returns the builder to setup the process to synchronize this account with the Tangle.
@@ -308,6 +319,7 @@ mod tests {
     use rand::Rng;
 
     #[test]
+    // asserts that the `set_alias` function updates the account alias in storage
     fn set_alias() {
         let manager = AccountManager::new();
         let id = "test_alias";
