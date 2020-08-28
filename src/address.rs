@@ -8,6 +8,7 @@ use iota::signing::ternary::{
 use iota::ternary::TritBuf;
 pub use iota::transaction::bundled::Address as IotaAddress;
 use iota::transaction::bundled::BundledTransactionField;
+use serde::{Deserialize, Serialize};
 
 /// The address builder.
 #[derive(Default)]
@@ -62,10 +63,11 @@ impl AddressBuilder {
 }
 
 /// An address.
-#[derive(Debug, Getters, Clone)]
+#[derive(Debug, Getters, Clone, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct Address {
     /// The address.
+    #[serde(skip, default = "IotaAddress::zeros")]
     address: IotaAddress,
     /// The address balance.
     balance: u64,

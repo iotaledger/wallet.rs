@@ -137,7 +137,6 @@ pub struct Account {
     transactions: Vec<Transaction>,
     /// Address history associated with the seed.
     /// The account can be initialised with locally stored address history.
-    #[serde(skip)]
     addresses: Vec<Address>,
     /// The client options.
     client_options: ClientOptions,

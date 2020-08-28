@@ -298,26 +298,128 @@ fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std::i
 #[cfg(test)]
 mod tests {
     use super::AccountManager;
+    use crate::account::Account;
+    use crate::address::{Address, AddressBuilder};
     use crate::client::ClientOptionsBuilder;
 
-    #[test]
-    fn store_accounts() {
-        let manager = AccountManager::new();
-        let id = "test_store";
+    use iota::crypto::ternary::sponge::Kerl;
+    use iota::signing::ternary::{
+        seed::Seed,
+        wots::{WotsSecurityLevel, WotsSpongePrivateKeyGeneratorBuilder},
+        PrivateKey, PrivateKeyGenerator, PublicKey,
+    };
+    use iota::ternary::{T1B1Buf, TryteBuf};
+    use iota::transaction::bundled::{Address as IotaAddress, BundledTransactionField};
+    use rusty_fork::rusty_fork_test;
+
+    fn _generate_iota_address(seed: &str) -> IotaAddress {
+        let seed = Seed::from_trits(
+            TryteBuf::try_from_str(seed)
+                .unwrap()
+                .as_trits()
+                .encode::<T1B1Buf>(),
+        )
+        .unwrap();
+
+        IotaAddress::try_from_inner(
+            WotsSpongePrivateKeyGeneratorBuilder::<Kerl>::default()
+                .with_security_level(WotsSecurityLevel::Medium)
+                .build()
+                .unwrap()
+                .generate_from_seed(&seed, 3)
+                .unwrap()
+                .generate_public_key()
+                .unwrap()
+                .as_trits()
+                .to_owned(),
+        )
+        .unwrap()
+    }
+
+    fn _create_account(manager: &AccountManager, id: &str, addresses: Vec<Address>) -> Account {
         let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
             .expect("invalid node URL")
             .build();
 
         manager
             .create_account(client_options)
+            .addresses(addresses)
             .alias(id)
             .id(id)
             .mnemonic(id)
             .initialise()
-            .expect("failed to add account");
+            .expect("failed to add account")
+    }
+
+    #[test]
+    fn store_accounts() {
+        let manager = AccountManager::new();
+        let id = "test_store_accounts";
+        _create_account(&manager, id, vec![]);
 
         manager
             .remove_account(id.to_string().into())
             .expect("failed to remove account");
+    }
+
+    fn _clear_db_and_backup(storage_path: &str) -> crate::Result<()> {
+        let _ = std::fs::remove_dir_all(storage_path);
+        #[cfg(feature = "sqlite")]
+        crate::storage::set_storage_path(std::path::PathBuf::from(storage_path).join("wallet.db"))?;
+        #[cfg(not(feature = "sqlite"))]
+        crate::storage::set_storage_path(storage_path)?;
+        let _ = std::fs::remove_dir_all("./backup");
+        Ok(())
+    }
+
+    rusty_fork_test! {
+        #[test]
+        fn backup_and_restore_happy_path() {
+            _clear_db_and_backup("./example-database/backup-test").unwrap();
+            let manager = AccountManager::new();
+
+            let id = "test_backup_and_restore";
+            let account = _create_account(&manager, id, vec![]);
+
+            // backup the stored accounts to ./backup/${backup_name}
+            let backup_path = manager.backup("./backup").unwrap();
+
+            // delete the account on the current storage
+            manager.remove_account(id.to_string().into()).unwrap();
+
+            // import the accounts from the backup and assert that it's the same
+            manager.import_accounts(backup_path).unwrap();
+            let imported_account = manager.get_account(id.to_string().into()).unwrap();
+            assert_eq!(account, imported_account);
+        }
+
+        #[test]
+        fn backup_and_restore_account_already_exists() {
+            _clear_db_and_backup("./example-database/backup-test2").unwrap();
+            let manager = AccountManager::new();
+
+            // first we'll create an example account
+            let id = "test_backup_and_restore_account_already_exists";
+            let address = _generate_iota_address(
+                "RVORZ9SIIP9RCYMREUIXXVPQIPHVCNPQ9HZWYKFWYWZRE9JQKG9REPKIASHUUECPSQO9JT9XNMVKWYGVA",
+            );
+            let address = AddressBuilder::new()
+                .address(address.clone())
+                .key_index(0)
+                .balance(0)
+                .build()
+                .unwrap();
+            let account = _create_account(&manager, id, vec![address]);
+
+            let backup_path = manager.backup("./backup").unwrap();
+
+            let response = manager.import_accounts(backup_path);
+            assert!(response.is_err());
+            let err = response.unwrap_err();
+            assert_eq!(
+                err.to_string(),
+                format!("Account {} already imported", account.alias())
+            );
+        }
     }
 }
