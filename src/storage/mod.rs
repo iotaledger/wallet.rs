@@ -1,20 +1,22 @@
-#[cfg(feature = "sqlite")]
+#[cfg(any(feature = "stronghold", feature = "sqlite"))]
 mod sqlite;
-#[cfg(not(feature = "sqlite"))]
+#[cfg(feature = "stronghold")]
 mod stronghold;
 
 use crate::account::{Account, AccountIdentifier};
 use once_cell::sync::OnceCell;
 
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex, MutexGuard};
 
-static INSTANCE: OnceCell<Box<dyn StorageAdapter + Sync + Send>> = OnceCell::new();
+type Storage = Arc<Mutex<Box<dyn StorageAdapter + Sync + Send>>>;
+static INSTANCE: OnceCell<Storage> = OnceCell::new();
 static STORAGE_PATH: OnceCell<PathBuf> = OnceCell::new();
 
 /// Sets the storage adapter.
 pub fn set_adapter(storage: impl StorageAdapter + Sync + Send + 'static) -> crate::Result<()> {
     INSTANCE
-        .set(Box::new(storage))
+        .set(Arc::new(Mutex::new(Box::new(storage))))
         .map_err(|_| anyhow::anyhow!("failed to globally set the storage instance"))?;
     Ok(())
 }
@@ -40,19 +42,22 @@ pub(crate) fn get_storage_path() -> &'static PathBuf {
 
 /// gets the storage adapter
 #[allow(clippy::borrowed_box)]
-pub(crate) fn get_adapter() -> crate::Result<&'static Box<dyn StorageAdapter + Sync + Send>> {
-    INSTANCE.get_or_try_init(|| {
+pub(crate) fn get_adapter(
+) -> crate::Result<MutexGuard<'static, Box<dyn StorageAdapter + Sync + Send>>> {
+    let instance: crate::Result<&Storage> = INSTANCE.get_or_try_init(|| {
         let storage_path = get_storage_path();
         let instance =
-            Box::new(get_adapter_from_path(storage_path)?) as Box<dyn StorageAdapter + Sync + Send>;
+            Arc::new(Mutex::new(Box::new(get_adapter_from_path(storage_path)?)
+                as Box<dyn StorageAdapter + Sync + Send>));
         Ok(instance)
-    })
+    });
+    Ok(instance?.lock().unwrap())
 }
 
 #[cfg(not(feature = "sqlite"))]
 pub(crate) fn get_adapter_from_path<'a, P: AsRef<Path>>(
     storage_path: P,
-) -> crate::Result<stronghold::StrongholdStorageAdapter<'a>> {
+) -> crate::Result<stronghold::StrongholdStorageAdapter> {
     stronghold::StrongholdStorageAdapter::new(storage_path)
 }
 
@@ -60,7 +65,7 @@ pub(crate) fn get_adapter_from_path<'a, P: AsRef<Path>>(
 pub(crate) fn get_adapter_from_path<P: AsRef<Path>>(
     storage_path: P,
 ) -> crate::Result<sqlite::SqliteStorageAdapter> {
-    sqlite::SqliteStorageAdapter::new(storage_path)
+    sqlite::SqliteStorageAdapter::new(storage_path, "accounts")
 }
 
 /// The storage adapter.
@@ -103,7 +108,8 @@ pub(crate) fn parse_accounts(accounts: &[String]) -> crate::Result<Vec<Account>>
 }
 
 pub(crate) fn get_account(account_id: AccountIdentifier) -> crate::Result<Account> {
-    let account_str = crate::storage::get_adapter()?.get(account_id)?;
+    let adapter = crate::storage::get_adapter()?;
+    let account_str = adapter.get(account_id)?;
     let account: Account = serde_json::from_str(&account_str)?;
     Ok(account)
 }
