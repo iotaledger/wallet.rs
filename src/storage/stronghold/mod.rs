@@ -1,5 +1,6 @@
 mod interface;
 
+use super::sqlite::SqliteStorageAdapter;
 use super::StorageAdapter;
 use crate::account::AccountIdentifier;
 use std::path::{Path, PathBuf};
@@ -10,7 +11,7 @@ pub struct StrongholdStorageAdapter {
     id_storage: SqliteStorageAdapter,
 }
 
-impl<'a> StrongholdStorageAdapter<'a> {
+impl StrongholdStorageAdapter {
     /// Initialises the storage adapter.
     pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
         std::fs::create_dir_all(&path)?;
@@ -24,7 +25,7 @@ impl<'a> StrongholdStorageAdapter<'a> {
     }
 }
 
-impl<'a> StorageAdapter for StrongholdStorageAdapter<'a> {
+impl StorageAdapter for StrongholdStorageAdapter {
     fn get(&self, account_id: AccountIdentifier) -> crate::Result<String> {
         let stronghold_id = self.id_storage.get(account_id)?;
         let account = interface::read(&self.storage_path, "password", stronghold_id);
