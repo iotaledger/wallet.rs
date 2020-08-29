@@ -1,4 +1,6 @@
+#[cfg(any(feature = "stronghold", feature = "sqlite"))]
 mod sqlite;
+#[cfg(feature = "stronghold")]
 mod stronghold;
 
 use crate::account::{Account, AccountIdentifier};
