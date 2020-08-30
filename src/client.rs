@@ -131,6 +131,19 @@ impl MultiNodeClientOptionsBuilder {
         }
     }
 
+    /// Sets the nodes.
+    pub fn nodes(mut self, nodes: &[&str]) -> crate::Result<Self> {
+        let nodes_urls = convert_urls(nodes)?;
+        self.nodes = Some(nodes_urls);
+        Ok(self)
+    }
+
+    /// Sets the IOTA network the nodes belong to.
+    pub fn network(mut self, network: Network) -> Self {
+        self.network = Some(network);
+        self
+    }
+
     /// Sets the quorum size.
     pub fn quorum_size(mut self, quorum_size: u8) -> Self {
         self.quorum_size = Some(quorum_size);
@@ -144,14 +157,22 @@ impl MultiNodeClientOptionsBuilder {
     }
 
     /// Builds the options.
-    pub fn build(self) -> ClientOptions {
-        ClientOptions {
+    pub fn build(self) -> crate::Result<ClientOptions> {
+        let node_len = match &self.nodes {
+            Some(nodes) => nodes.len(),
+            None => 0,
+        };
+        if node_len == 0 {
+            return Err(anyhow::anyhow!("Empty node list"));
+        }
+        let options = ClientOptions {
             node: None,
             nodes: self.nodes,
             network: self.network,
             quorum_size: self.quorum_size,
             quorum_threshold: (self.quorum_threshold * 100.0) as u8,
-        }
+        };
+        Ok(options)
     }
 }
 
@@ -164,7 +185,7 @@ impl ClientOptionsBuilder {
     /// # Examples
     /// ```
     /// use iota_wallet::client::ClientOptionsBuilder;
-    /// let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+    /// let client_options = ClientOptionsBuilder::node("https://tangle.iotaqubic.us:14267")
     ///   .expect("invalid node URL")
     ///   .build();
     /// ```
@@ -177,7 +198,7 @@ impl ClientOptionsBuilder {
     /// # Examples
     /// ```
     /// use iota_wallet::client::ClientOptionsBuilder;
-    /// let client_options = ClientOptionsBuilder::nodes(&["https://nodes.devnet.iota.org:443", "https://nodes.comnet.thetangle.org/"])
+    /// let client_options = ClientOptionsBuilder::nodes(&["https://tangle.iotaqubic.us:14267", "https://gewirr.com:14267/"])
     ///   .expect("invalid nodes URLs")
     ///   .build();
     /// ```
@@ -209,4 +230,163 @@ pub struct ClientOptions {
     quorum_size: Option<u8>,
     #[serde(rename = "quorumThreshold", default)]
     quorum_threshold: u8,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ClientOptionsBuilder, Network};
+
+    #[test]
+    fn single_node_valid_url() {
+        let builder_res = ClientOptionsBuilder::node("https://tangle.iotaqubic.us:14267");
+        assert!(builder_res.is_ok());
+    }
+
+    #[test]
+    fn single_node_invalid_url() {
+        let builder_res = ClientOptionsBuilder::node("some.invalid url");
+        assert!(builder_res.is_err());
+    }
+
+    #[test]
+    fn multi_node_valid_url() {
+        let builder_res = ClientOptionsBuilder::nodes(&["https://tangle.iotaqubic.us:14267"]);
+        assert!(builder_res.is_ok());
+    }
+
+    #[test]
+    fn multi_node_invalid_url() {
+        let builder_res = ClientOptionsBuilder::nodes(&["some.invalid url"]);
+        assert!(builder_res.is_err());
+    }
+
+    #[test]
+    fn multi_node_empty() {
+        let builder_res = ClientOptionsBuilder::nodes(&[]).unwrap().build();
+        assert!(builder_res.is_err());
+    }
+
+    #[test]
+    fn network_node_empty() {
+        let builder_res = ClientOptionsBuilder::network(Network::Comnet).build();
+        assert!(builder_res.is_err());
+    }
+
+    #[test]
+    fn single_node_constructor() {
+        let node = "https://tangle.iotaqubic.us:14267";
+        let node_url: url::Url = url::Url::parse(node).unwrap();
+        let client = ClientOptionsBuilder::node(node).unwrap().build();
+        assert_eq!(client.node(), &Some(node_url));
+        assert!(client.nodes().is_none());
+        assert!(client.network().is_none());
+        assert!(client.quorum_size().is_none());
+        assert_eq!(*client.quorum_threshold(), 0);
+    }
+
+    #[test]
+    fn multi_node_constructor() {
+        let nodes = ["https://tangle.iotaqubic.us:14267"];
+        let quorum_size = 5;
+        let quorum_threshold = 0.5;
+        let client = ClientOptionsBuilder::nodes(&nodes)
+            .unwrap()
+            .quorum_size(quorum_size)
+            .quorum_threshold(quorum_threshold)
+            .build()
+            .unwrap();
+        assert!(client.node().is_none());
+        assert_eq!(client.nodes(), &Some(super::convert_urls(&nodes).unwrap()));
+        assert!(client.network().is_none());
+        assert_eq!(*client.quorum_size(), Some(quorum_size));
+        assert_eq!(*client.quorum_threshold() as f32 / 100.0, quorum_threshold);
+    }
+
+    #[test]
+    fn network_constructor() {
+        let nodes = ["https://tangle.iotaqubic.us:14267"];
+        let network = Network::Comnet;
+        let quorum_size = 50;
+        let quorum_threshold = 0.9;
+        let client = ClientOptionsBuilder::network(network.clone())
+            .quorum_size(quorum_size)
+            .quorum_threshold(quorum_threshold)
+            .nodes(&nodes)
+            .unwrap()
+            .build()
+            .unwrap();
+        assert!(client.node().is_none());
+        assert_eq!(client.nodes(), &Some(super::convert_urls(&nodes).unwrap()));
+        assert_eq!(*client.network(), Some(network));
+        assert_eq!(*client.quorum_size(), Some(quorum_size));
+        assert_eq!(*client.quorum_threshold() as f32 / 100.0, quorum_threshold);
+    }
+
+    #[test]
+    fn get_client() {
+        let test_cases = vec![
+            ClientOptionsBuilder::node("https://tangle.iotaqubic.us:14267")
+                .unwrap()
+                .build(),
+            ClientOptionsBuilder::node("https://gewirr.com:14267")
+                .unwrap()
+                .build(),
+            ClientOptionsBuilder::nodes(&["https://tangle.iotaqubic.us:14267"])
+                .unwrap()
+                .build()
+                .unwrap(),
+            ClientOptionsBuilder::nodes(&["https://gewirr.com:14267"])
+                .unwrap()
+                .build()
+                .unwrap(),
+            ClientOptionsBuilder::nodes(&["https://tangle.iotaqubic.us:14267"])
+                .unwrap()
+                .quorum_size(55)
+                .build()
+                .unwrap(),
+            ClientOptionsBuilder::nodes(&["https://tangle.iotaqubic.us:14267"])
+                .unwrap()
+                .quorum_size(55)
+                .quorum_threshold(0.6)
+                .build()
+                .unwrap(),
+            ClientOptionsBuilder::network(Network::Comnet)
+                .nodes(&["https://tangle.iotaqubic.us:14267"])
+                .unwrap()
+                .build()
+                .unwrap(),
+            ClientOptionsBuilder::network(Network::Devnet)
+                .nodes(&["https://tangle.iotaqubic.us:14267"])
+                .unwrap()
+                .build()
+                .unwrap(),
+            ClientOptionsBuilder::network(Network::Comnet)
+                .nodes(&["https://tangle.iotaqubic.us:14267"])
+                .unwrap()
+                .quorum_size(55)
+                .build()
+                .unwrap(),
+            ClientOptionsBuilder::network(Network::Comnet)
+                .nodes(&["https://tangle.iotaqubic.us:14267"])
+                .unwrap()
+                .quorum_size(55)
+                .quorum_threshold(0.6)
+                .build()
+                .unwrap(),
+        ];
+
+        // assert that each different client_options create a new client instance
+        for case in &test_cases {
+            let len = super::instances().lock().unwrap().len();
+            super::get_client(&case);
+            assert_eq!(super::instances().lock().unwrap().len() - len, 1);
+        }
+
+        // assert that subsequent calls with options already initialized doesn't create new clients
+        let len = super::instances().lock().unwrap().len();
+        for case in &test_cases {
+            super::get_client(&case);
+            assert_eq!(super::instances().lock().unwrap().len(), len);
+        }
+    }
 }
