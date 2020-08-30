@@ -30,14 +30,7 @@ pub fn set_storage_path(path: impl AsRef<Path>) -> crate::Result<()> {
 }
 
 pub(crate) fn get_storage_path() -> &'static PathBuf {
-    #[cfg(not(feature = "sqlite"))]
-    {
-        STORAGE_PATH.get_or_init(|| "./example-database".into())
-    }
-    #[cfg(feature = "sqlite")]
-    {
-        STORAGE_PATH.get_or_init(|| "wallet.db".into())
-    }
+    STORAGE_PATH.get_or_init(|| "./example-database".into())
 }
 
 /// gets the storage adapter
