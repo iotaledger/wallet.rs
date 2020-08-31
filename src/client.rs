@@ -31,7 +31,9 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<Client> {
             client_builder = client_builder
                 .nodes(&nodes.iter().map(|url| url.as_str()).collect::<Vec<&str>>()[..])
                 .unwrap();
-        } else if let Some(network) = options.network() {
+        }
+
+        if let Some(network) = options.network() {
             client_builder = client_builder.network(network.clone());
         }
 
