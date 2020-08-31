@@ -31,7 +31,9 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<Client> {
             client_builder = client_builder
                 .nodes(&nodes.iter().map(|url| url.as_str()).collect::<Vec<&str>>()[..])
                 .unwrap();
-        } else if let Some(network) = options.network() {
+        }
+
+        if let Some(network) = options.network() {
             client_builder = client_builder.network(network.clone());
         }
 
@@ -185,7 +187,7 @@ impl ClientOptionsBuilder {
     /// # Examples
     /// ```
     /// use iota_wallet::client::ClientOptionsBuilder;
-    /// let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+    /// let client_options = ClientOptionsBuilder::node("https://tangle.iotaqubic.us:14267")
     ///   .expect("invalid node URL")
     ///   .build();
     /// ```
@@ -198,7 +200,7 @@ impl ClientOptionsBuilder {
     /// # Examples
     /// ```
     /// use iota_wallet::client::ClientOptionsBuilder;
-    /// let client_options = ClientOptionsBuilder::nodes(&["https://nodes.devnet.iota.org:443", "https://nodes.comnet.thetangle.org/"])
+    /// let client_options = ClientOptionsBuilder::nodes(&["https://tangle.iotaqubic.us:14267", "https://gewirr.com:14267/"])
     ///   .expect("invalid nodes URLs")
     ///   .build();
     /// ```
