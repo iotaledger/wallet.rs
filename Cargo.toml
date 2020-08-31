@@ -18,17 +18,12 @@ rand = "0.3"
 rusqlite = { version = "0.23", optional = true }
 
 # stronghold
-vault = { git = "https://github.com/iotaledger/stronghold.rs/", optional = true, rev = "a81191f" }
-crypto = { git = "https://github.com/iotaledger/stronghold.rs/", optional = true, rev = "a81191f" }
-random = { git = "https://github.com/iotaledger/stronghold.rs/", optional = true, rev = "a81191f" }
-snapshot = { git = "https://github.com/iotaledger/stronghold.rs/", optional = true, rev = "a81191f" }
-primitives = { git = "https://github.com/iotaledger/stronghold.rs/", optional = true, rev = "a81191f" }
-bincode = { version = "1.3.1", optional = true }
+iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", branch = "dev", optional = true }
 
 [dev-dependencies]
 tokio = { version = "0.2", features = ["full"] }
 
 [features]
 default = ["stronghold"]
-stronghold = ["vault", "crypto", "random", "snapshot", "primitives", "bincode", "rusqlite"]
+stronghold = ["iota-stronghold", "rusqlite"]
 sqlite = ["rusqlite"]
