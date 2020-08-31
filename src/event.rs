@@ -131,6 +131,25 @@ pub(crate) fn emit_transaction_event(
     }
 }
 
+/// Emits a confirmation state change event.
+pub(crate) fn emit_confirmation_state_change(
+    account_id: impl Into<String>,
+    transaction_hash: Hash,
+    confirmed: bool,
+) {
+    let account_id = account_id.into();
+    let listeners = transaction_confirmation_change_listeners()
+        .lock()
+        .expect("Failed to lock transaction_confirmation_change_listeners: emit_confirmation_state_change()");
+    for listener in listeners.deref() {
+        (listener.on_event)(TransactionConfirmationChangeEvent {
+            account_id: account_id.clone(),
+            transaction_hash: transaction_hash.clone(),
+            confirmed,
+        })
+    }
+}
+
 /// Adds a transaction-related event listener.
 fn add_transaction_listener<F: Fn(TransactionEvent) + Send + 'static>(
     event_type: TransactionEventType,
@@ -177,19 +196,24 @@ pub fn on_error<F: Fn(anyhow::Error)>(cb: F) {}
 
 #[cfg(test)]
 mod tests {
-    use super::{emit_balance_change, on_balance_change};
+    use super::{
+        emit_balance_change, emit_confirmation_state_change, emit_transaction_event,
+        on_balance_change, on_broadcast, on_confirmation_state_change, on_new_transaction,
+        on_reattachment, TransactionEventType,
+    };
     use crate::address::AddressBuilder;
     use iota::transaction::bundled::Address;
 
     #[test]
     fn balance_events() {
-        on_balance_change(|event| {
-            assert!(event.account_id == "the account id");
+        let account_id = "the account id";
+        on_balance_change(move |event| {
+            assert!(event.account_id == account_id);
             assert!(event.balance == 0);
         });
 
         emit_balance_change(
-            "the account id",
+            account_id,
             AddressBuilder::new()
                 .address(Address::zeros())
                 .balance(0)
@@ -198,5 +222,67 @@ mod tests {
                 .expect("failed to build address"),
             0,
         );
+    }
+
+    #[test]
+    fn on_new_transaction_event() {
+        let account_id = "the account id";
+        let transaction_hash = iota::crypto::ternary::Hash::zeros();
+        on_new_transaction(move |event| {
+            assert!(event.account_id == account_id);
+            assert!(event.transaction_hash == transaction_hash);
+        });
+
+        emit_transaction_event(
+            TransactionEventType::NewTransaction,
+            account_id,
+            transaction_hash,
+        );
+    }
+
+    #[test]
+    fn on_reattachment_event() {
+        let account_id = "the account id";
+        let transaction_hash = iota::crypto::ternary::Hash::zeros();
+        on_reattachment(move |event| {
+            assert!(event.account_id == account_id);
+            assert!(event.transaction_hash == transaction_hash);
+        });
+
+        emit_transaction_event(
+            TransactionEventType::Reattachment,
+            account_id,
+            transaction_hash,
+        );
+    }
+
+    #[test]
+    fn on_broadcast_event() {
+        let account_id = "the account id";
+        let transaction_hash = iota::crypto::ternary::Hash::zeros();
+        on_broadcast(move |event| {
+            assert!(event.account_id == account_id);
+            assert!(event.transaction_hash == transaction_hash);
+        });
+
+        emit_transaction_event(
+            TransactionEventType::Broadcast,
+            account_id,
+            transaction_hash,
+        );
+    }
+
+    #[test]
+    fn on_confirmation_state_change_event() {
+        let account_id = "the account id";
+        let transaction_hash = iota::crypto::ternary::Hash::zeros();
+        let confirmed = true;
+        on_confirmation_state_change(move |event| {
+            assert!(event.account_id == account_id);
+            assert!(event.transaction_hash == transaction_hash);
+            assert!(event.confirmed == confirmed);
+        });
+
+        emit_confirmation_state_change(account_id, transaction_hash, confirmed);
     }
 }
