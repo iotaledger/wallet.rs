@@ -30,14 +30,14 @@ impl Tag {
         Self { tag }
     }
 
-    /// Returns the tag as trytes.
-    pub fn as_trytes(&self) -> &str {
-        "trytes"
-    }
-
     /// Returns the tag formatted as ASCII.
-    pub fn as_ascii(&self) -> &str {
-        "ascii"
+    pub fn as_ascii(&self) -> String {
+        let buf = self.tag.to_inner().encode::<T3B1Buf>();
+        let trytes = buf.as_slice().as_trytes();
+        trytes
+            .iter()
+            .map(|tryte| char::from(*tryte))
+            .collect::<String>()
     }
 }
 
