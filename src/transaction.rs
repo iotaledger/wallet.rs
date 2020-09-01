@@ -229,3 +229,21 @@ pub enum TransactionType {
     /// A value transaction.
     Value,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{BundledTransactionField, IotaTag, Tag};
+    use iota::ternary::{T1B1Buf, TryteBuf};
+
+    #[test]
+    fn tag_trytes() {
+        let tag_str = "THETAGSTR";
+        let tag = Tag::new(IotaTag::from_inner_unchecked(
+            TryteBuf::try_from_str(tag_str)
+                .unwrap()
+                .as_trits()
+                .encode::<T1B1Buf>(),
+        ));
+        assert_eq!(tag.as_ascii(), tag_str);
+    }
+}
