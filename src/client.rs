@@ -31,7 +31,9 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<Client> {
             client_builder = client_builder
                 .nodes(&nodes.iter().map(|url| url.as_str()).collect::<Vec<&str>>()[..])
                 .unwrap();
-        } else if let Some(network) = options.network() {
+        }
+
+        if let Some(network) = options.network() {
             client_builder = client_builder.network(network.clone());
         }
 
@@ -131,6 +133,19 @@ impl MultiNodeClientOptionsBuilder {
         }
     }
 
+    /// Sets the nodes.
+    pub fn nodes(mut self, nodes: &[&str]) -> crate::Result<Self> {
+        let nodes_urls = convert_urls(nodes)?;
+        self.nodes = Some(nodes_urls);
+        Ok(self)
+    }
+
+    /// Sets the IOTA network the nodes belong to.
+    pub fn network(mut self, network: Network) -> Self {
+        self.network = Some(network);
+        self
+    }
+
     /// Sets the quorum size.
     pub fn quorum_size(mut self, quorum_size: u8) -> Self {
         self.quorum_size = Some(quorum_size);
@@ -144,14 +159,22 @@ impl MultiNodeClientOptionsBuilder {
     }
 
     /// Builds the options.
-    pub fn build(self) -> ClientOptions {
-        ClientOptions {
+    pub fn build(self) -> crate::Result<ClientOptions> {
+        let node_len = match &self.nodes {
+            Some(nodes) => nodes.len(),
+            None => 0,
+        };
+        if node_len == 0 {
+            return Err(anyhow::anyhow!("Empty node list"));
+        }
+        let options = ClientOptions {
             node: None,
             nodes: self.nodes,
             network: self.network,
             quorum_size: self.quorum_size,
             quorum_threshold: (self.quorum_threshold * 100.0) as u8,
-        }
+        };
+        Ok(options)
     }
 }
 
@@ -164,7 +187,7 @@ impl ClientOptionsBuilder {
     /// # Examples
     /// ```
     /// use iota_wallet::client::ClientOptionsBuilder;
-    /// let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+    /// let client_options = ClientOptionsBuilder::node("https://tangle.iotaqubic.us:14267")
     ///   .expect("invalid node URL")
     ///   .build();
     /// ```
@@ -177,7 +200,7 @@ impl ClientOptionsBuilder {
     /// # Examples
     /// ```
     /// use iota_wallet::client::ClientOptionsBuilder;
-    /// let client_options = ClientOptionsBuilder::nodes(&["https://nodes.devnet.iota.org:443", "https://nodes.comnet.thetangle.org/"])
+    /// let client_options = ClientOptionsBuilder::nodes(&["https://tangle.iotaqubic.us:14267", "https://gewirr.com:14267/"])
     ///   .expect("invalid nodes URLs")
     ///   .build();
     /// ```

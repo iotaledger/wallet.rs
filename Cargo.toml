@@ -22,6 +22,7 @@ iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", branch 
 
 [dev-dependencies]
 tokio = { version = "0.2", features = ["full"] }
+rocksdb = "0.15"
 
 [features]
 default = ["stronghold"]
