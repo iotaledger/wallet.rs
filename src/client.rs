@@ -330,14 +330,14 @@ mod tests {
             ClientOptionsBuilder::node("https://tangle.iotaqubic.us:14267")
                 .unwrap()
                 .build(),
-            ClientOptionsBuilder::node("https://gewirr.com:14267")
+            ClientOptionsBuilder::node("https://nodes.iota.cafe:443")
                 .unwrap()
                 .build(),
             ClientOptionsBuilder::nodes(&["https://tangle.iotaqubic.us:14267"])
                 .unwrap()
                 .build()
                 .unwrap(),
-            ClientOptionsBuilder::nodes(&["https://gewirr.com:14267"])
+            ClientOptionsBuilder::nodes(&["https://nodes.iota.cafe:443"])
                 .unwrap()
                 .build()
                 .unwrap(),
@@ -393,6 +393,7 @@ mod tests {
 
         // assert that each different client_options create a new client instance
         for case in &test_cases {
+            println!("{:?}", case);
             let len = super::instances().lock().unwrap().len();
             super::get_client(&case);
             assert_eq!(super::instances().lock().unwrap().len() - len, 1);
