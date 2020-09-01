@@ -2,6 +2,7 @@ use crate::address::{Address, AddressBuilder};
 use chrono::prelude::{DateTime, NaiveDateTime, Utc};
 use getset::{Getters, Setters};
 use iota::crypto::ternary::Hash;
+use iota::ternary::T3B1Buf;
 use iota::transaction::{
     bundled::{BundledTransaction, BundledTransactionField, Tag as IotaTag},
     Vertex,
