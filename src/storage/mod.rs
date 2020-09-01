@@ -112,7 +112,7 @@ mod tests {
     use super::StorageAdapter;
     use crate::account::AccountIdentifier;
 
-    use rand::Rng;
+    use rand::{distributions::Alphanumeric, thread_rng, Rng};
     use rusty_fork::rusty_fork_test;
 
     rusty_fork_test! {
@@ -161,10 +161,7 @@ mod tests {
     fn _create_account() -> crate::account::Account {
         let manager = crate::account_manager::AccountManager::new();
 
-        let id = rand::thread_rng()
-            .gen_ascii_chars()
-            .take(5)
-            .collect::<String>();
+        let id: String = thread_rng().sample_iter(&Alphanumeric).take(5).collect();
         let client_options =
             crate::client::ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
                 .unwrap()

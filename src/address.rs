@@ -183,15 +183,12 @@ mod tests {
     use iota::crypto::ternary::Hash;
     use iota::ternary::TryteBuf;
     use iota::transaction::bundled::BundledTransactionField;
-    use rand::Rng;
+    use rand::{distributions::Alphanumeric, thread_rng, Rng};
 
     fn _create_account() -> Account {
         let manager = AccountManager::new();
 
-        let id = rand::thread_rng()
-            .gen_ascii_chars()
-            .take(5)
-            .collect::<String>();
+        let id: String = thread_rng().sample_iter(&Alphanumeric).take(5).collect();
         let client_options = ClientOptionsBuilder::node("https://nodes.comnet.thetangle.org")
             .unwrap()
             .build();

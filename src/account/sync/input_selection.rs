@@ -1,4 +1,4 @@
-use rand::{thread_rng, Rng};
+use rand::{prelude::SliceRandom, thread_rng};
 
 pub fn select_input(target: u64, available_utxos: &mut Vec<u64>) -> crate::Result<Vec<u64>> {
     if target > available_utxos.iter().sum::<u64>() {
@@ -25,7 +25,7 @@ pub fn select_input(target: u64, available_utxos: &mut Vec<u64>) -> crate::Resul
 }
 
 fn single_random_draw(target: u64, available_utxos: &mut Vec<u64>) -> crate::Result<Vec<u64>> {
-    thread_rng().shuffle(available_utxos);
+    available_utxos.shuffle(&mut thread_rng());
     let mut sum = 0;
 
     let selected_coins = available_utxos
@@ -95,7 +95,7 @@ fn branch_and_bound(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand::{Rng, SeedableRng, StdRng};
+    use rand::prelude::{Rng, SeedableRng, StdRng};
 
     fn generate_random_utxos(rng: &mut StdRng, utxos_number: i32) -> Vec<u64> {
         let mut available_utxos = Vec::new();
@@ -107,13 +107,13 @@ mod tests {
 
     fn sum_random_utxos(rng: &mut StdRng, available_utxos: &mut Vec<u64>) -> u64 {
         let utxos_picked_len = rng.gen_range(2, available_utxos.len() / 2);
-        thread_rng().shuffle(available_utxos);
+        available_utxos.shuffle(&mut thread_rng());
         available_utxos[..utxos_picked_len].iter().sum()
     }
 
     #[test]
     fn exact_match() {
-        let seed: &[_] = &[1, 2, 3, 4];
+        let seed: [u8; 32] = [1; 32];
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         for _i in 0..20 {
             let mut available_utxos = generate_random_utxos(&mut rng, 30);
@@ -125,7 +125,7 @@ mod tests {
 
     #[test]
     fn non_exact_match() {
-        let seed: &[_] = &[1, 2, 3, 4];
+        let seed: [u8; 32] = [1; 32];
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         for _i in 0..20 {
             let mut available_utxos = generate_random_utxos(&mut rng, 5);
@@ -137,7 +137,7 @@ mod tests {
 
     #[test]
     fn insufficient_funds() {
-        let seed: &[_] = &[1, 2, 3, 4];
+        let seed: [u8; 32] = [1; 32];
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         let mut available_utxos = generate_random_utxos(&mut rng, 30);
         let target = available_utxos.iter().sum::<u64>() + 1;
@@ -147,7 +147,7 @@ mod tests {
 
     #[test]
     fn random_target() {
-        let seed: &[_] = &[1, 2, 3, 4];
+        let seed: [u8; 32] = [1; 32];
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         for _ in 0..20 {
             let mut available_utxos = generate_random_utxos(&mut rng, 30);
