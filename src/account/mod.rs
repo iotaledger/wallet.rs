@@ -5,8 +5,9 @@ use crate::transaction::{Transaction, TransactionType};
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
 use iota::crypto::ternary::Hash;
-use iota::signing::ternary::seed::Seed;
 use serde::{Deserialize, Serialize};
+
+use std::convert::TryInto;
 
 mod sync;
 pub use sync::{AccountSynchronizer, SyncedAccount};
@@ -37,7 +38,6 @@ impl From<u64> for AccountIdentifier {
 /// Account initialiser.
 pub struct AccountInitialiser {
     mnemonic: Option<String>,
-    id: Option<String>,
     alias: Option<String>,
     created_at: Option<DateTime<Utc>>,
     transactions: Vec<Transaction>,
@@ -50,7 +50,6 @@ impl AccountInitialiser {
     pub(crate) fn new(client_options: ClientOptions) -> Self {
         Self {
             mnemonic: None,
-            id: None,
             alias: None,
             created_at: None,
             transactions: vec![],
@@ -63,14 +62,6 @@ impl AccountInitialiser {
     /// When importing an account from stronghold, the mnemonic won't be required.
     pub fn mnemonic(mut self, mnemonic: impl AsRef<str>) -> Self {
         self.mnemonic = Some(mnemonic.as_ref().to_string());
-        self
-    }
-
-    /// SHA-256 hash of the first address on the seed.
-    /// Required for referencing a seed in stronghold.
-    /// The id should be provided by stronghold.
-    pub fn id(mut self, id: impl AsRef<str>) -> Self {
-        self.id = Some(id.as_ref().to_string());
         self
     }
 
@@ -103,13 +94,29 @@ impl AccountInitialiser {
     /// Initialises the account.
     pub fn initialise(self) -> crate::Result<Account> {
         let alias = self.alias.unwrap_or_else(|| "".to_string());
-        let id = self.id.unwrap_or_else(|| alias.clone());
-        let account_id: AccountIdentifier = id.to_string().into();
+        let created_at = self.created_at.unwrap_or_else(chrono::Utc::now);
+        let timestamp: u128 = created_at.timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
+        let mnemonic = self.mnemonic;
+
+        let stronghold_account = crate::with_stronghold(|stronghold| match mnemonic {
+            Some(mnemonic) => stronghold.account_import(
+                timestamp,
+                timestamp,
+                mnemonic.to_string(),
+                Some("password"),
+                "password",
+                vec![],
+            ),
+            None => stronghold.account_create(Some("password".to_string()), "password"),
+        });
+
+        let id = stronghold_account.id().to_string();
+        let account_id: AccountIdentifier = id.clone().into();
 
         let account = Account {
             id,
             alias,
-            created_at: self.created_at.unwrap_or_else(chrono::Utc::now),
+            created_at,
             transactions: self.transactions,
             addresses: self.addresses,
             client_options: self.client_options,
@@ -297,7 +304,6 @@ mod tests {
     #[test]
     fn set_alias() {
         let manager = AccountManager::new();
-        let id = "test_alias";
         let updated_alias = "updated alias";
         let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
             .expect("invalid node URL")
@@ -305,9 +311,7 @@ mod tests {
 
         let mut account = manager
             .create_account(client_options)
-            .alias(id)
-            .id(id)
-            .mnemonic(id)
+            .alias("alias")
             .initialise()
             .expect("failed to add account");
 
@@ -315,7 +319,7 @@ mod tests {
             .set_alias(updated_alias)
             .expect("failed to update alias");
         let account_in_storage = manager
-            .get_account(id.to_string().into())
+            .get_account(account.id().to_string().into())
             .expect("failed to get account from storage");
         assert_eq!(
             account_in_storage.alias().to_string(),
