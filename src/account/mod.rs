@@ -156,10 +156,6 @@ impl Account {
         &self.addresses.iter().max_by_key(|a| a.key_index()).unwrap()
     }
 
-    pub(crate) fn seed(&self) -> &Seed {
-        unimplemented!()
-    }
-
     /// Returns the builder to setup the process to synchronize this account with the Tangle.
     pub fn sync(&self) -> AccountSynchronizer<'_> {
         AccountSynchronizer::new(self)
