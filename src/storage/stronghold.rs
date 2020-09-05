@@ -3,7 +3,7 @@ use super::StorageAdapter;
 use crate::account::AccountIdentifier;
 use std::path::Path;
 
-use stronghold::{Base64Decodable, Id as StrongholdId};
+use stronghold::{Base64Decodable, RecordId};
 
 /// Stronghold storage adapter.
 pub struct StrongholdStorageAdapter {
@@ -19,9 +19,9 @@ impl StrongholdStorageAdapter {
     }
 }
 
-fn create_stronghold_id(id: String) -> crate::Result<StrongholdId> {
+fn create_stronghold_id(id: String) -> crate::Result<RecordId> {
     let bytes = Vec::from_base64(id.as_bytes())?;
-    let id = StrongholdId::load(&bytes)?;
+    let id = RecordId::load(&bytes)?;
     Ok(id)
 }
 
@@ -52,7 +52,7 @@ impl StorageAdapter for StrongholdStorageAdapter {
         account: String,
     ) -> std::result::Result<(), anyhow::Error> {
         let stronghold_id = crate::with_stronghold(|stronghold| {
-            stronghold.record_create("", account.as_str(), "password")
+            stronghold.record_create(account.as_str(), "password")
         });
 
         self.id_storage

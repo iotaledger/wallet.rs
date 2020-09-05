@@ -3,6 +3,7 @@ use crate::client::ClientOptions;
 use crate::storage::StorageAdapter;
 use crate::transaction::{Transaction, TransactionType, Transfer};
 
+use std::convert::TryInto;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::thread;
@@ -152,7 +153,7 @@ impl AccountManager {
     /// Import backed up accounts.
     pub fn import_accounts<P: AsRef<Path>>(&self, source: P) -> crate::Result<()> {
         let storage = crate::storage::get_adapter()?;
-        let backup_storage = crate::storage::get_adapter_from_path(source)?;
+        let backup_storage = crate::storage::get_adapter_from_path(&source)?;
 
         let accounts = backup_storage.get_all()?;
         let accounts = crate::storage::parse_accounts(&accounts)?;
@@ -176,7 +177,24 @@ impl AccountManager {
             ));
         }
 
+        let backup_stronghold = stronghold::Stronghold::new(
+            source
+                .as_ref()
+                .join(crate::storage::stronghold_snapshot_filename()),
+        );
         for account in accounts {
+            let stronghold_account = backup_stronghold.account_export(account.id(), "password");
+            let created_at_timestamp: u128 = account.created_at().timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
+            let stronghold_account = crate::with_stronghold(|stronghold| {
+                stronghold.account_import(
+                    created_at_timestamp,
+                    created_at_timestamp,
+                    stronghold_account.mnemonic().to_string(),
+                    Some("password"),
+                    "password",
+                    vec![],
+                )
+            });
             storage.set(
                 account.id().clone().into(),
                 serde_json::to_string(&account)?,

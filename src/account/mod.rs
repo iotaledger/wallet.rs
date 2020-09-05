@@ -95,13 +95,13 @@ impl AccountInitialiser {
     pub fn initialise(self) -> crate::Result<Account> {
         let alias = self.alias.unwrap_or_else(|| "".to_string());
         let created_at = self.created_at.unwrap_or_else(chrono::Utc::now);
-        let timestamp: u128 = created_at.timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
+        let created_at_timestamp: u128 = created_at.timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
         let mnemonic = self.mnemonic;
 
         let stronghold_account = crate::with_stronghold(|stronghold| match mnemonic {
             Some(mnemonic) => stronghold.account_import(
-                timestamp,
-                timestamp,
+                created_at_timestamp,
+                created_at_timestamp,
                 mnemonic.to_string(),
                 Some("password"),
                 "password",
