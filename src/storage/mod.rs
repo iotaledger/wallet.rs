@@ -56,7 +56,7 @@ pub(crate) fn get_adapter(
 }
 
 #[cfg(not(feature = "sqlite"))]
-pub(crate) fn get_adapter_from_path<'a, P: AsRef<Path>>(
+pub(crate) fn get_adapter_from_path<P: AsRef<Path>>(
     storage_path: P,
 ) -> crate::Result<stronghold::StrongholdStorageAdapter> {
     stronghold::StrongholdStorageAdapter::new(storage_path)

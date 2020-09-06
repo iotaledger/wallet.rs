@@ -102,7 +102,7 @@ impl AccountInitialiser {
             Some(mnemonic) => stronghold.account_import(
                 created_at_timestamp,
                 created_at_timestamp,
-                mnemonic.to_string(),
+                mnemonic,
                 Some("password"),
                 "password",
                 vec![],
