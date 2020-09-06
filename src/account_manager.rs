@@ -3,6 +3,7 @@ use crate::client::ClientOptions;
 use crate::storage::StorageAdapter;
 use crate::transaction::{Transaction, TransactionType, Transfer};
 
+use std::convert::TryInto;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::thread;
@@ -102,8 +103,12 @@ impl AccountManager {
 
     /// Deletes an account.
     pub fn remove_account(&self, account_id: AccountIdentifier) -> crate::Result<()> {
-        crate::storage::get_adapter()?.remove(account_id)?;
-        // TODO remove seed from stronghold
+        let adapter = crate::storage::get_adapter()?;
+        let account: Account = serde_json::from_str(&adapter.get(account_id.clone())?)?;
+        crate::with_stronghold(|stronghold| {
+            stronghold.account_remove(account.id(), "password");
+        });
+        adapter.remove(account_id)?;
         Ok(())
     }
 
@@ -148,7 +153,7 @@ impl AccountManager {
     /// Import backed up accounts.
     pub fn import_accounts<P: AsRef<Path>>(&self, source: P) -> crate::Result<()> {
         let storage = crate::storage::get_adapter()?;
-        let backup_storage = crate::storage::get_adapter_from_path(source)?;
+        let backup_storage = crate::storage::get_adapter_from_path(&source)?;
 
         let accounts = backup_storage.get_all()?;
         let accounts = crate::storage::parse_accounts(&accounts)?;
@@ -172,7 +177,24 @@ impl AccountManager {
             ));
         }
 
+        let backup_stronghold = stronghold::Stronghold::new(
+            source
+                .as_ref()
+                .join(crate::storage::stronghold_snapshot_filename()),
+        );
         for account in accounts {
+            let stronghold_account = backup_stronghold.account_export(account.id(), "password");
+            let created_at_timestamp: u128 = account.created_at().timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
+            let stronghold_account = crate::with_stronghold(|stronghold| {
+                stronghold.account_import(
+                    created_at_timestamp,
+                    created_at_timestamp,
+                    stronghold_account.mnemonic().to_string(),
+                    Some("password"),
+                    "password",
+                    vec![],
+                )
+            });
             storage.set(
                 account.id().clone().into(),
                 serde_json::to_string(&account)?,
@@ -336,17 +358,14 @@ mod tests {
         .unwrap()
     }
 
-    fn _create_account(manager: &AccountManager, id: &str, addresses: Vec<Address>) -> Account {
+    fn _create_account(manager: &AccountManager, addresses: Vec<Address>) -> Account {
         let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
             .expect("invalid node URL")
             .build();
 
         manager
             .create_account(client_options)
-            .addresses(addresses)
-            .alias(id)
-            .id(id)
-            .mnemonic(id)
+            .alias("alias")
             .initialise()
             .expect("failed to add account")
     }
@@ -354,11 +373,10 @@ mod tests {
     #[test]
     fn store_accounts() {
         let manager = AccountManager::new();
-        let id = "test_store_accounts";
-        _create_account(&manager, id, vec![]);
+        let account = _create_account(&manager, vec![]);
 
         manager
-            .remove_account(id.to_string().into())
+            .remove_account(account.id().to_string().into())
             .expect("failed to remove account");
     }
 
@@ -378,18 +396,17 @@ mod tests {
             _clear_db_and_backup("./example-database/backup-test").unwrap();
             let manager = AccountManager::new();
 
-            let id = "test_backup_and_restore";
-            let account = _create_account(&manager, id, vec![]);
+            let account = _create_account(&manager, vec![]);
 
             // backup the stored accounts to ./backup/${backup_name}
             let backup_path = manager.backup("./backup").unwrap();
 
             // delete the account on the current storage
-            manager.remove_account(id.to_string().into()).unwrap();
+            manager.remove_account(account.id().to_string().into()).unwrap();
 
             // import the accounts from the backup and assert that it's the same
             manager.import_accounts(backup_path).unwrap();
-            let imported_account = manager.get_account(id.to_string().into()).unwrap();
+            let imported_account = manager.get_account(account.id().to_string().into()).unwrap();
             assert_eq!(account, imported_account);
         }
 
@@ -399,7 +416,6 @@ mod tests {
             let manager = AccountManager::new();
 
             // first we'll create an example account
-            let id = "test_backup_and_restore_account_already_exists";
             let address = _generate_iota_address(
                 "RVORZ9SIIP9RCYMREUIXXVPQIPHVCNPQ9HZWYKFWYWZRE9JQKG9REPKIASHUUECPSQO9JT9XNMVKWYGVA",
             );
@@ -409,7 +425,7 @@ mod tests {
                 .balance(0)
                 .build()
                 .unwrap();
-            let account = _create_account(&manager, id, vec![address]);
+            let account = _create_account(&manager, vec![address]);
 
             let backup_path = manager.backup("./backup").unwrap();
 
