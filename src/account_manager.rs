@@ -3,6 +3,7 @@ use crate::client::ClientOptions;
 use crate::storage::StorageAdapter;
 use crate::transaction::{Transaction, TransactionType, Transfer};
 
+use std::convert::TryInto;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::thread;
@@ -102,8 +103,12 @@ impl AccountManager {
 
     /// Deletes an account.
     pub fn remove_account(&self, account_id: AccountIdentifier) -> crate::Result<()> {
-        crate::storage::get_adapter()?.remove(account_id)?;
-        // TODO remove seed from stronghold
+        let adapter = crate::storage::get_adapter()?;
+        let account: Account = serde_json::from_str(&adapter.get(account_id.clone())?)?;
+        crate::with_stronghold(|stronghold| {
+            stronghold.account_remove(account.id(), "password");
+        });
+        adapter.remove(account_id)?;
         Ok(())
     }
 
@@ -148,7 +153,7 @@ impl AccountManager {
     /// Import backed up accounts.
     pub fn import_accounts<P: AsRef<Path>>(&self, source: P) -> crate::Result<()> {
         let storage = crate::storage::get_adapter()?;
-        let backup_storage = crate::storage::get_adapter_from_path(source)?;
+        let backup_storage = crate::storage::get_adapter_from_path(&source)?;
 
         let accounts = backup_storage.get_all()?;
         let accounts = crate::storage::parse_accounts(&accounts)?;
@@ -172,7 +177,24 @@ impl AccountManager {
             ));
         }
 
+        let backup_stronghold = stronghold::Stronghold::new(
+            source
+                .as_ref()
+                .join(crate::storage::stronghold_snapshot_filename()),
+        );
         for account in accounts {
+            let stronghold_account = backup_stronghold.account_export(account.id(), "password");
+            let created_at_timestamp: u128 = account.created_at().timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
+            let stronghold_account = crate::with_stronghold(|stronghold| {
+                stronghold.account_import(
+                    created_at_timestamp,
+                    created_at_timestamp,
+                    stronghold_account.mnemonic().to_string(),
+                    Some("password"),
+                    "password",
+                    vec![],
+                )
+            });
             storage.set(
                 account.id().clone().into(),
                 serde_json::to_string(&account)?,
@@ -303,21 +325,18 @@ mod tests {
     #[test]
     fn store_accounts() {
         let manager = AccountManager::new();
-        let id = "test_store";
         let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
             .expect("invalid node URL")
             .build();
 
-        manager
+        let account = manager
             .create_account(client_options)
-            .alias(id)
-            .id(id)
-            .mnemonic(id)
+            .alias("alias")
             .initialise()
             .expect("failed to add account");
 
         manager
-            .remove_account(id.to_string().into())
+            .remove_account(account.id().to_string().into())
             .expect("failed to remove account");
     }
 }

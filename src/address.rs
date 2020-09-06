@@ -1,11 +1,7 @@
 use crate::account::Account;
 use getset::Getters;
 use iota::crypto::ternary::sponge::{Kerl, Sponge};
-use iota::signing::ternary::{
-    wots::{WotsSecurityLevel, WotsShakePrivateKeyGeneratorBuilder},
-    PrivateKey, PrivateKeyGenerator, PublicKey,
-};
-use iota::ternary::TritBuf;
+use iota::ternary::{TritBuf, TryteBuf};
 pub use iota::transaction::bundled::Address as IotaAddress;
 use iota::transaction::bundled::BundledTransactionField;
 
@@ -14,7 +10,7 @@ use iota::transaction::bundled::BundledTransactionField;
 pub struct AddressBuilder {
     address: Option<IotaAddress>,
     balance: Option<u64>,
-    key_index: Option<u64>,
+    key_index: Option<usize>,
 }
 
 impl AddressBuilder {
@@ -36,7 +32,7 @@ impl AddressBuilder {
     }
 
     /// Sets the address key index.
-    pub fn key_index(mut self, key_index: u64) -> Self {
+    pub fn key_index(mut self, key_index: usize) -> Self {
         self.key_index = Some(key_index);
         self
     }
@@ -70,7 +66,7 @@ pub struct Address {
     /// The address balance.
     balance: u64,
     /// The address key index.
-    key_index: u64,
+    key_index: usize,
     /// The address checksum.
     checksum: TritBuf,
 }
@@ -83,11 +79,17 @@ impl PartialEq for Address {
 
 /// Gets an unused address for the given account.
 pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address> {
-    let client = crate::client::get_client(account.client_options());
-    let (key_index, iota_address) = client
-        .generate_new_address(account.seed())
-        .generate()
-        .await?;
+    let (key_index, iota_address) = crate::with_stronghold(|stronghold| {
+        let (address_index, address_str) =
+            stronghold.address_get(account.id().as_str(), 0, false, "password");
+        let iota_address = IotaAddress::from_inner_unchecked(
+            TryteBuf::try_from_str(&address_str)
+                .expect("failed to get TryteBuf from address")
+                .as_trits()
+                .encode(),
+        );
+        (address_index, iota_address)
+    });
     let balance = get_balance(&account, &iota_address).await?;
     let checksum = generate_checksum(&iota_address)?;
     let address = Address {
@@ -100,29 +102,26 @@ pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address>
 }
 
 /// Batch address generation.
-pub(crate) async fn get_addresses(account: &Account, count: u64) -> crate::Result<Vec<Address>> {
+pub(crate) async fn get_addresses(account: &Account, count: usize) -> crate::Result<Vec<Address>> {
     let mut addresses = vec![];
-    let seed_trits = account.seed().as_trits();
     for i in 0..count {
-        let address: IotaAddress = IotaAddress::try_from_inner(
-            WotsShakePrivateKeyGeneratorBuilder::<Kerl>::default()
-                .with_security_level(WotsSecurityLevel::Medium)
-                .build()
-                .unwrap()
-                .generate_from_entropy(seed_trits)
-                .unwrap()
-                .generate_public_key()
-                .unwrap()
-                .as_trits()
-                .to_owned(),
-        )
-        .unwrap();
+        let (index, address) = crate::with_stronghold(|stronghold| {
+            let (address_index, address_str) =
+                stronghold.address_get(account.id().as_str(), 0, false, "password");
+            let iota_address = IotaAddress::from_inner_unchecked(
+                TryteBuf::try_from_str(&address_str)
+                    .expect("failed to get TryteBuf from address")
+                    .as_trits()
+                    .encode(),
+            );
+            (address_index, iota_address)
+        });
         let balance = get_balance(&account, &address).await?;
         let checksum = generate_checksum(&address)?;
         addresses.push(Address {
             address,
             balance,
-            key_index: i, // TODO
+            key_index: index,
             checksum,
         })
     }

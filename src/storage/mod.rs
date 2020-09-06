@@ -29,6 +29,14 @@ pub fn set_storage_path(path: impl AsRef<Path>) -> crate::Result<()> {
     Ok(())
 }
 
+pub(crate) fn get_stronghold_snapshot_path() -> PathBuf {
+    get_storage_path().join(stronghold_snapshot_filename())
+}
+
+pub(crate) fn stronghold_snapshot_filename() -> &'static str {
+    "snapshot"
+}
+
 pub(crate) fn get_storage_path() -> &'static PathBuf {
     STORAGE_PATH.get_or_init(|| "./example-database".into())
 }
@@ -48,7 +56,7 @@ pub(crate) fn get_adapter(
 }
 
 #[cfg(not(feature = "sqlite"))]
-pub(crate) fn get_adapter_from_path<'a, P: AsRef<Path>>(
+pub(crate) fn get_adapter_from_path<P: AsRef<Path>>(
     storage_path: P,
 ) -> crate::Result<stronghold::StrongholdStorageAdapter> {
     stronghold::StrongholdStorageAdapter::new(storage_path)
