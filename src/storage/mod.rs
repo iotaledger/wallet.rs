@@ -79,19 +79,6 @@ pub trait StorageAdapter {
     fn set(&self, account_id: AccountIdentifier, account: String) -> crate::Result<()>;
     /// Removes an account from the storage.
     fn remove(&self, account_id: AccountIdentifier) -> crate::Result<()>;
-    /// Gets the account id (string) from the AccountIdentifier (which might be an account index).
-    fn key_from_identifier(&self, account_id: AccountIdentifier) -> crate::Result<String> {
-        let id = match account_id {
-            AccountIdentifier::Id(id) => id,
-            AccountIdentifier::Index(index) => {
-                let accounts = self.get_all()?;
-                let account = &accounts[index as usize];
-                let account: Account = serde_json::from_str(&account)?;
-                account.id().clone()
-            }
-        };
-        Ok(id)
-    }
 }
 
 pub(crate) fn parse_accounts(accounts: &[String]) -> crate::Result<Vec<Account>> {

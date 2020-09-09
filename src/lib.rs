@@ -32,7 +32,7 @@ static STRONGHOLD_INSTANCE: OnceCell<GlobalStronghold> = OnceCell::new();
 pub(crate) fn with_stronghold<T, F: FnOnce(MutexGuard<'static, Stronghold>) -> T>(cb: F) -> T {
     let stronghold = STRONGHOLD_INSTANCE.get_or_init(|| {
         let path = storage::get_stronghold_snapshot_path();
-        let stronghold = Stronghold::new(&path, path.exists(), "password");
+        let stronghold = Stronghold::new(&path, !path.exists(), "password");
         Arc::new(Mutex::new(stronghold))
     });
     cb(stronghold.lock().expect("failed to get stronghold lock"))

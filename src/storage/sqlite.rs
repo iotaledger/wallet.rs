@@ -35,6 +35,31 @@ impl SqliteStorageAdapter {
             connection: Arc::new(Mutex::new(connection)),
         })
     }
+
+    /// Gets the account id (string) from the AccountIdentifier (which might be an account index).
+    fn key_from_identifier(&self, account_id: AccountIdentifier) -> crate::Result<String> {
+        let id = match account_id {
+            AccountIdentifier::Id(id) => id,
+            AccountIdentifier::Index(index) => {
+                let connection = self
+                    .connection
+                    .lock()
+                    .expect("failed to get connection lock");
+                let mut query = connection.prepare(&format!(
+                    "SELECT key FROM {} LIMIT 1 OFFSET {}",
+                    self.table_name, index
+                ))?;
+                let results = query
+                    .query_and_then(params![], |row| row.get(0))?
+                    .collect::<Vec<rusqlite::Result<String>>>();
+                results
+                    .first()
+                    .map(|val| val.as_ref().unwrap().to_string())
+                    .ok_or_else(|| anyhow::anyhow!("account index ({}) not found", index))?
+            }
+        };
+        Ok(id)
+    }
 }
 
 impl StorageAdapter for SqliteStorageAdapter {
