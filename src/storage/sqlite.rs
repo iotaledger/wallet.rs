@@ -1,5 +1,6 @@
 use super::StorageAdapter;
 use crate::account::AccountIdentifier;
+use chrono::Utc;
 use rusqlite::{params, Connection, NO_PARAMS};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -21,7 +22,8 @@ impl SqliteStorageAdapter {
             &format!(
                 "CREATE TABLE IF NOT EXISTS {} (
                     key TEXT NOT NULL UNIQUE,
-                    value TEXT
+                    value TEXT,
+                    created_at INTEGER
                 )",
                 table_name.as_ref()
             ),
@@ -37,10 +39,7 @@ impl SqliteStorageAdapter {
 
 impl StorageAdapter for SqliteStorageAdapter {
     fn get(&self, account_id: AccountIdentifier) -> crate::Result<String> {
-        let id = match account_id {
-            AccountIdentifier::Id(id) => id,
-            _ => return Err(anyhow::anyhow!("only Id is supported")),
-        };
+        let id = self.key_from_identifier(account_id)?;
         let connection = self
             .connection
             .lock()
@@ -64,7 +63,10 @@ impl StorageAdapter for SqliteStorageAdapter {
             .connection
             .lock()
             .expect("failed to get connection lock");
-        let mut query = connection.prepare(&format!("SELECT value FROM {}", self.table_name))?;
+        let mut query = connection.prepare(&format!(
+            "SELECT value FROM {} ORDER BY created_at",
+            self.table_name
+        ))?;
         let accounts = query
             .query_and_then(NO_PARAMS, |row| row.get(0))?
             .map(|val| val.unwrap())
@@ -77,28 +79,25 @@ impl StorageAdapter for SqliteStorageAdapter {
         account_id: AccountIdentifier,
         account: String,
     ) -> std::result::Result<(), anyhow::Error> {
-        let id = match account_id {
-            AccountIdentifier::Id(id) => id,
-            _ => return Err(anyhow::anyhow!("only Id is supported")),
-        };
+        let id = self.key_from_identifier(account_id)?;
         let connection = self
             .connection
             .lock()
             .expect("failed to get connection lock");
         let result = connection
             .execute(
-                &format!("INSERT OR REPLACE INTO {} VALUES (?1, ?2)", self.table_name),
-                params![id, account],
+                &format!(
+                    "INSERT OR REPLACE INTO {} VALUES (?1, ?2, ?3)",
+                    self.table_name
+                ),
+                params![id, account, Utc::now().timestamp()],
             )
             .map_err(|_| anyhow::anyhow!("failed to insert data"))?;
         Ok(())
     }
 
     fn remove(&self, account_id: AccountIdentifier) -> std::result::Result<(), anyhow::Error> {
-        let id = match account_id {
-            AccountIdentifier::Id(id) => id,
-            _ => return Err(anyhow::anyhow!("only Id is supported")),
-        };
+        let id = self.key_from_identifier(account_id)?;
         let connection = self
             .connection
             .lock()
