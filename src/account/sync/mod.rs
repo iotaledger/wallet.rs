@@ -29,20 +29,70 @@ mod input_selection;
 /// Returns a (addresses, hashes) tuples representing the address history up to latest unused address,
 /// and the transaction hashes associated with the addresses.
 ///
-fn sync_addresses(
+async fn sync_addresses(
     account: &'_ Account,
-    address_index: u64,
-    gap_limit: Option<u64>,
+    address_index: usize,
+    gap_limit: Option<usize>,
 ) -> crate::Result<(Vec<Address>, Vec<Hash>)> {
-    let addresses = account.addresses();
-    let transactions = account.transactions();
-    let latest_address = account.latest_address();
+    let mut address_index = address_index;
+    let account_addresses = account.addresses();
+    let account_transactions = account.transactions();
+    let account_latest_address = account.latest_address();
+
     let client = get_client(account.client_options());
-    for transaction in transactions {}
-    for address in addresses {}
-    // TODO add seed here
-    // client.balance();
-    unimplemented!()
+    let gap_limit = gap_limit.unwrap_or(20);
+
+    let mut generated_addresses = vec![];
+    let mut found_transactions = vec![];
+    loop {
+        let mut generated_iota_addresses = vec![];
+        for i in address_index..gap_limit {
+            let existing_address = account_addresses.iter().find(|a| *a.key_index() == i);
+            let (_, iota_address) = match existing_address {
+                Some(address) => (
+                    account_addresses.iter().position(|a| a == address).unwrap(),
+                    address.address().clone(),
+                ),
+                None => crate::address::get_new_iota_address(&account)?,
+            };
+            generated_iota_addresses.push(iota_address);
+        }
+
+        let curr_found_transactions = client
+            .find_transactions()
+            .addresses(&generated_iota_addresses[..])
+            .send()
+            .await?
+            .hashes;
+        found_transactions.extend(curr_found_transactions.iter().cloned());
+
+        let balances = client
+            .get_balances()
+            .addresses(&generated_iota_addresses[..])
+            .send()
+            .await?
+            .balances;
+        let mut balances_iter = balances.iter();
+
+        for iota_address in generated_iota_addresses {
+            let balance = balances_iter
+                .next()
+                .ok_or_else(|| anyhow::anyhow!("Address balance not found"))?;
+            let address = AddressBuilder::new()
+                .address(iota_address)
+                .key_index(address_index)
+                .balance(*balance)
+                .build()?;
+            generated_addresses.push(address);
+            address_index += 1;
+        }
+
+        if found_transactions.len() == 0 && balances.iter().all(|b| *b == 0) {
+            break;
+        }
+    }
+
+    Ok((generated_addresses, found_transactions))
 }
 
 /// Syncs transactions with the tangle.
@@ -102,8 +152,8 @@ async fn sync_transactions<'a>(
 /// Account sync helper.
 pub struct AccountSynchronizer<'a> {
     account: &'a Account,
-    address_index: u64,
-    gap_limit: Option<u64>,
+    address_index: usize,
+    gap_limit: Option<usize>,
     skip_persistance: bool,
 }
 
@@ -112,14 +162,14 @@ impl<'a> AccountSynchronizer<'a> {
     pub(super) fn new(account: &'a Account) -> Self {
         Self {
             account,
-            address_index: 1, // TODO By default the length of addresses stored for this account should be used as an index.
+            address_index: account.addresses().len(),
             gap_limit: None,
             skip_persistance: false,
         }
     }
 
     /// Number of address indexes that are generated.
-    pub fn gap_limit(mut self, limit: u64) -> Self {
+    pub fn gap_limit(mut self, limit: usize) -> Self {
         self.gap_limit = Some(limit);
         self
     }
@@ -159,7 +209,7 @@ impl<'a> AccountSynchronizer<'a> {
             }
         }
 
-        sync_addresses(self.account, self.address_index, self.gap_limit)?;
+        sync_addresses(self.account, self.address_index, self.gap_limit).await?;
         sync_transactions(self.account, new_transaction_hashes).await?;
 
         let synced_account = SyncedAccount {

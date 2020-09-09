@@ -98,16 +98,20 @@ impl AccountInitialiser {
         let created_at_timestamp: u128 = created_at.timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
         let mnemonic = self.mnemonic;
 
-        let stronghold_account = crate::with_stronghold(|stronghold| match mnemonic {
-            Some(mnemonic) => stronghold.account_import(
-                created_at_timestamp,
-                created_at_timestamp,
-                mnemonic,
-                Some("password"),
-                "password",
-                vec![],
-            ),
-            None => stronghold.account_create(Some("password".to_string()), "password"),
+        let stronghold_account = crate::with_stronghold(|stronghold| {
+            let account = match mnemonic {
+                Some(mnemonic) => stronghold.account_import(
+                    created_at_timestamp,
+                    created_at_timestamp,
+                    mnemonic,
+                    Some("password"),
+                    "password",
+                    vec![],
+                ),
+                None => stronghold.account_create(Some("password".to_string()), "password"),
+            };
+            stronghold.subaccount_add(&alias, account.id(), "password");
+            account
         });
 
         let id = stronghold_account.id().to_string();
@@ -152,8 +156,8 @@ pub struct Account {
 
 impl Account {
     /// Returns the most recent address of the account.
-    pub fn latest_address(&self) -> &Address {
-        &self.addresses.iter().max_by_key(|a| a.key_index()).unwrap()
+    pub fn latest_address(&self) -> Option<&Address> {
+        self.addresses.iter().max_by_key(|a| a.key_index())
     }
 
     /// Returns the builder to setup the process to synchronize this account with the Tangle.

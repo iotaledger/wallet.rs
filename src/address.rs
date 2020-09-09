@@ -77,8 +77,7 @@ impl PartialEq for Address {
     }
 }
 
-/// Gets an unused address for the given account.
-pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address> {
+pub(crate) fn get_new_iota_address(account: &Account) -> crate::Result<(usize, IotaAddress)> {
     let (key_index, iota_address) = crate::with_stronghold(|stronghold| {
         let (address_index, address_str) =
             stronghold.address_get(account.id().as_str(), 0, false, "password");
@@ -90,6 +89,12 @@ pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address>
         );
         (address_index, iota_address)
     });
+    Ok((key_index, iota_address))
+}
+
+/// Gets an unused address for the given account.
+pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address> {
+    let (key_index, iota_address) = get_new_iota_address(&account)?;
     let balance = get_balance(&account, &iota_address).await?;
     let checksum = generate_checksum(&iota_address)?;
     let address = Address {

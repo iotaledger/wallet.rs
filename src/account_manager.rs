@@ -126,9 +126,13 @@ impl AccountManager {
     ) -> crate::Result<Transaction> {
         let from_account = self.get_account(from_account_id)?;
         let to_account = self.get_account(to_account_id)?;
+        let to_address = to_account
+            .latest_address()
+            .ok_or_else(|| anyhow::anyhow!("destination account address list empty"))?
+            .clone();
         let from_synchronized = from_account.sync().execute().await?;
         from_synchronized
-            .transfer(Transfer::new(to_account.latest_address().clone(), amount))
+            .transfer(Transfer::new(to_address, amount))
             .await
     }
 
@@ -181,9 +185,11 @@ impl AccountManager {
             source
                 .as_ref()
                 .join(crate::storage::stronghold_snapshot_filename()),
+            false,
+            "",
         );
         for account in accounts {
-            let stronghold_account = backup_stronghold.account_export(account.id(), "password");
+            let stronghold_account = backup_stronghold.account_get_by_id(account.id(), "password");
             let created_at_timestamp: u128 = account.created_at().timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
             let stronghold_account = crate::with_stronghold(|stronghold| {
                 stronghold.account_import(
