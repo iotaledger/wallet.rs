@@ -28,6 +28,18 @@ impl From<String> for AccountIdentifier {
     }
 }
 
+// When the identifier is a stronghold id.
+impl From<[u8; 32]> for AccountIdentifier {
+    fn from(value: [u8; 32]) -> Self {
+        Self::Id(String::from_utf8_lossy(&value).to_string())
+    }
+}
+impl From<&[u8; 32]> for AccountIdentifier {
+    fn from(value: &[u8; 32]) -> Self {
+        Self::Id(String::from_utf8_lossy(value).to_string())
+    }
+}
+
 // When the identifier is an id.
 impl From<u64> for AccountIdentifier {
     fn from(value: u64) -> Self {
@@ -98,34 +110,36 @@ impl AccountInitialiser {
         let created_at_timestamp: u128 = created_at.timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
         let mnemonic = self.mnemonic;
 
-        let stronghold_account = crate::with_stronghold(|stronghold| {
-            let account = match mnemonic {
-                Some(mnemonic) => stronghold.account_import(
-                    created_at_timestamp,
-                    created_at_timestamp,
-                    mnemonic,
-                    Some("password"),
-                    "password",
-                    vec![],
-                ),
-                None => stronghold.account_create(Some("password".to_string()), "password"),
-            };
-            stronghold.subaccount_add(&alias, account.id(), "password");
-            account
-        });
+        let adapter = crate::storage::get_adapter()?;
 
-        let id = stronghold_account.id().to_string();
+        let stronghold_account_res: crate::Result<stronghold::Account> =
+            crate::with_stronghold(|stronghold| {
+                let account = match mnemonic {
+                    Some(mnemonic) => stronghold.account_import(
+                        adapter.get_all()?.len(),
+                        created_at_timestamp,
+                        created_at_timestamp,
+                        mnemonic,
+                        Some("password"),
+                        "password",
+                    ),
+                    None => stronghold.account_create(Some("password".to_string()), "password"),
+                };
+                Ok(account)
+            });
+        let stronghold_account = stronghold_account_res?;
+
+        let id = stronghold_account.id();
         let account_id: AccountIdentifier = id.clone().into();
 
         let account = Account {
-            id,
+            id: *id,
             alias,
             created_at,
             transactions: self.transactions,
             addresses: self.addresses,
             client_options: self.client_options,
         };
-        let adapter = crate::storage::get_adapter()?;
         adapter.set(account_id, serde_json::to_string(&account)?)?;
         Ok(account)
     }
@@ -136,7 +150,7 @@ impl AccountInitialiser {
 #[getset(get = "pub")]
 pub struct Account {
     /// The account identifier.
-    id: String,
+    id: [u8; 32],
     /// The account alias.
     alias: String,
     /// Time of account creation.
@@ -195,8 +209,7 @@ impl Account {
     /// Updates the account alias.
     pub fn set_alias(&mut self, alias: impl AsRef<str>) -> crate::Result<()> {
         self.alias = alias.as_ref().to_string();
-        crate::storage::get_adapter()?
-            .set(self.id.to_string().into(), serde_json::to_string(self)?)?;
+        crate::storage::get_adapter()?.set(self.id.into(), serde_json::to_string(self)?)?;
         Ok(())
     }
 
@@ -263,8 +276,7 @@ impl Account {
     pub async fn generate_address(&mut self) -> crate::Result<Address> {
         let address = crate::address::get_new_address(&self).await?;
         self.addresses.push(address.clone());
-        crate::storage::get_adapter()?
-            .set(self.id.to_string().into(), serde_json::to_string(self)?)?;
+        crate::storage::get_adapter()?.set(self.id.into(), serde_json::to_string(self)?)?;
         Ok(address)
     }
 
@@ -319,7 +331,7 @@ mod tests {
             .set_alias(updated_alias)
             .expect("failed to update alias");
         let account_in_storage = manager
-            .get_account(account.id().to_string().into())
+            .get_account(account.id().into())
             .expect("failed to get account from storage");
         assert_eq!(
             account_in_storage.alias().to_string(),

@@ -79,8 +79,8 @@ impl PartialEq for Address {
 
 pub(crate) fn get_new_iota_address(account: &Account) -> crate::Result<(usize, IotaAddress)> {
     let (key_index, iota_address) = crate::with_stronghold(|stronghold| {
-        let (address_index, address_str) =
-            stronghold.address_get(account.id().as_str(), 0, false, "password");
+        let address_index = account.addresses().len();
+        let address_str = stronghold.address_get(account.id(), address_index, false, "password");
         let iota_address = IotaAddress::from_inner_unchecked(
             TryteBuf::try_from_str(&address_str)
                 .expect("failed to get TryteBuf from address")
@@ -110,23 +110,22 @@ pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address>
 pub(crate) async fn get_addresses(account: &Account, count: usize) -> crate::Result<Vec<Address>> {
     let mut addresses = vec![];
     for i in 0..count {
-        let (index, address) = crate::with_stronghold(|stronghold| {
-            let (address_index, address_str) =
-                stronghold.address_get(account.id().as_str(), 0, false, "password");
+        let address = crate::with_stronghold(|stronghold| {
+            let address_str = stronghold.address_get(account.id(), i, false, "password");
             let iota_address = IotaAddress::from_inner_unchecked(
                 TryteBuf::try_from_str(&address_str)
                     .expect("failed to get TryteBuf from address")
                     .as_trits()
                     .encode(),
             );
-            (address_index, iota_address)
+            iota_address
         });
         let balance = get_balance(&account, &address).await?;
         let checksum = generate_checksum(&address)?;
         addresses.push(Address {
             address,
             balance,
-            key_index: index,
+            key_index: i,
             checksum,
         })
     }

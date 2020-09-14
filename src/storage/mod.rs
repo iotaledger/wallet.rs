@@ -72,13 +72,13 @@ pub(crate) fn get_adapter_from_path<P: AsRef<Path>>(
 /// The storage adapter.
 pub trait StorageAdapter {
     /// Gets the account with the given id/alias from the storage.
-    fn get(&self, key: AccountIdentifier) -> crate::Result<String>;
+    fn get(&self, account_id: AccountIdentifier) -> crate::Result<String>;
     /// Gets all the accounts from the storage.
     fn get_all(&self) -> crate::Result<Vec<String>>;
     /// Saves or updates an account on the storage.
-    fn set(&self, key: AccountIdentifier, account: String) -> crate::Result<()>;
+    fn set(&self, account_id: AccountIdentifier, account: String) -> crate::Result<()>;
     /// Removes an account from the storage.
-    fn remove(&self, key: AccountIdentifier) -> crate::Result<()>;
+    fn remove(&self, account_id: AccountIdentifier) -> crate::Result<()>;
 }
 
 pub(crate) fn parse_accounts(accounts: &[String]) -> crate::Result<Vec<Account>> {
