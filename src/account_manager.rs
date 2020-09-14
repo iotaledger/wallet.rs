@@ -184,8 +184,7 @@ impl AccountManager {
             false,
             "",
         );
-        let mut index = 0;
-        for account in accounts {
+        for (index, account) in accounts.iter().enumerate() {
             let stronghold_account = backup_stronghold.account_get_by_id(account.id(), "password");
             let created_at_timestamp: u128 = account.created_at().timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
             let stronghold_account = crate::with_stronghold(|stronghold| {
@@ -198,7 +197,6 @@ impl AccountManager {
                     "password",
                 )
             });
-            index += 1;
             storage.set(
                 account.id().clone().into(),
                 serde_json::to_string(&account)?,
