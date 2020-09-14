@@ -460,6 +460,12 @@ Note: The library only supports Ed25519 addresses. Therefore a `type` property f
     <td>Address index.</td>
   </tr>
   <tr>
+    <td>internal</td>
+    <td>&#10004;</td>
+    <td>boolean</td>
+    <td>Determines if an address is a public or an internal (change) address. See the concept of <a href="https://medium.com/@harshagoli/hd-wallets-explained-from-high-level-to-nuts-and-bolts-9a41545f5b0">chain node</a> for more details.</td>
+  </tr>
+  <tr>
     <td>checksum</td>
     <td>&#10004;</td>
     <td>string</td>
