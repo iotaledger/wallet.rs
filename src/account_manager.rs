@@ -184,17 +184,17 @@ impl AccountManager {
             false,
             "",
         );
-        for account in accounts {
+        for (index, account) in accounts.iter().enumerate() {
             let stronghold_account = backup_stronghold.account_get_by_id(account.id(), "password");
             let created_at_timestamp: u128 = account.created_at().timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
             let stronghold_account = crate::with_stronghold(|stronghold| {
                 stronghold.account_import(
+                    index,
                     created_at_timestamp,
                     created_at_timestamp,
                     stronghold_account.mnemonic().to_string(),
                     Some("password"),
                     "password",
-                    vec![],
                 )
             });
             storage.set(
@@ -277,10 +277,8 @@ async fn reattach(account: &mut Account, transaction_hash: &Hash) -> crate::Resu
         }
         // update the transactions in storage
         account.set_transactions(transactions);
-        crate::storage::get_adapter()?.set(
-            account.id().to_string().into(),
-            serde_json::to_string(&account)?,
-        )?;
+        crate::storage::get_adapter()?
+            .set(account.id().into(), serde_json::to_string(&account)?)?;
         Ok(())
     }
 }
@@ -338,7 +336,7 @@ mod tests {
             .expect("failed to add account");
 
         manager
-            .remove_account(account.id().to_string().into())
+            .remove_account(account.id().into())
             .expect("failed to remove account");
     }
 }

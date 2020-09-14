@@ -163,7 +163,7 @@ impl<'a> AccountSynchronizer<'a> {
         sync_transactions(self.account, new_transaction_hashes).await?;
 
         let synced_account = SyncedAccount {
-            account_id: self.account.id().to_string(),
+            account_id: *self.account.id(),
             deposit_address: AddressBuilder::new()
                 .address(IotaAddress::zeros())
                 .balance(0)
@@ -176,7 +176,7 @@ impl<'a> AccountSynchronizer<'a> {
 
 /// Data returned from account synchronization.
 pub struct SyncedAccount {
-    account_id: String,
+    account_id: [u8; 32],
     deposit_address: Address,
 }
 
