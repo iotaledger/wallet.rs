@@ -1,5 +1,5 @@
 ---
-name: Request a feature for Bee
+name: Request a feature for wallet.rs
 about: Request a feature
 ---
 
