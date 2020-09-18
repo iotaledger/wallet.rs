@@ -1,9 +1,7 @@
 use crate::account::Account;
 use getset::Getters;
-use iota::crypto::ternary::sponge::{Kerl, Sponge};
-use iota::ternary::{TritBuf, TryteBuf};
-pub use iota::transaction::bundled::Address as IotaAddress;
-use iota::transaction::bundled::BundledTransactionField;
+pub use iota::transaction::prelude::Address as IotaAddress;
+use std::convert::TryInto;
 
 /// The address builder.
 #[derive(Default)]
@@ -58,7 +56,7 @@ impl AddressBuilder {
 }
 
 /// An address.
-#[derive(Debug, Getters, Clone)]
+#[derive(Debug, Getters, Clone, Eq)]
 #[getset(get = "pub")]
 pub struct Address {
     /// The address.
@@ -68,7 +66,7 @@ pub struct Address {
     /// The address key index.
     key_index: usize,
     /// The address checksum.
-    checksum: TritBuf,
+    checksum: String,
 }
 
 impl PartialEq for Address {
@@ -79,17 +77,13 @@ impl PartialEq for Address {
 
 /// Gets an unused address for the given account.
 pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address> {
-    let (key_index, iota_address) = crate::with_stronghold(|stronghold| {
+    let address_res: crate::Result<(usize, IotaAddress)> = crate::with_stronghold(|stronghold| {
         let address_index = account.addresses().len();
-        let address_str = stronghold.address_get(account.id(), address_index, false, "password");
-        let iota_address = IotaAddress::from_inner_unchecked(
-            TryteBuf::try_from_str(&address_str)
-                .expect("failed to get TryteBuf from address")
-                .as_trits()
-                .encode(),
-        );
-        (address_index, iota_address)
+        let address_str = stronghold.address_get(account.id(), address_index, false);
+        let iota_address = IotaAddress::from_ed25519_bytes(address_str.as_bytes().try_into()?);
+        Ok((address_index, iota_address))
     });
+    let (key_index, iota_address) = address_res?;
     let balance = get_balance(&account, &iota_address).await?;
     let checksum = generate_checksum(&iota_address)?;
     let address = Address {
@@ -105,16 +99,12 @@ pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address>
 pub(crate) async fn get_addresses(account: &Account, count: usize) -> crate::Result<Vec<Address>> {
     let mut addresses = vec![];
     for i in 0..count {
-        let address = crate::with_stronghold(|stronghold| {
-            let address_str = stronghold.address_get(account.id(), i, false, "password");
-            let iota_address = IotaAddress::from_inner_unchecked(
-                TryteBuf::try_from_str(&address_str)
-                    .expect("failed to get TryteBuf from address")
-                    .as_trits()
-                    .encode(),
-            );
-            iota_address
+        let address_res: crate::Result<IotaAddress> = crate::with_stronghold(|stronghold| {
+            let address_str = stronghold.address_get(account.id(), i, false);
+            let iota_address = IotaAddress::from_ed25519_bytes(address_str.as_bytes().try_into()?);
+            Ok(iota_address)
         });
+        let address = address_res?;
         let balance = get_balance(&account, &address).await?;
         let checksum = generate_checksum(&address)?;
         addresses.push(Address {
@@ -129,40 +119,21 @@ pub(crate) async fn get_addresses(account: &Account, count: usize) -> crate::Res
 
 /// Generates a checksum for the given address
 // TODO: maybe this should be part of the crypto lib
-pub(crate) fn generate_checksum(address: &IotaAddress) -> crate::Result<TritBuf> {
-    let mut kerl = Kerl::new();
-    let mut hash = kerl
-        .digest(address.to_inner())
-        .map_err(|e| anyhow::anyhow!("Erro hashing the address"))?;
-    let mut trits = vec![];
-
-    for _ in 1..10 {
-        if let Some(trit) = hash.pop() {
-            trits.push(trit);
-        } else {
-            return Err(anyhow::anyhow!("Hash error"));
-        }
-    }
-
-    Ok(TritBuf::from_trits(&trits[..]))
+pub(crate) fn generate_checksum(address: &IotaAddress) -> crate::Result<String> {
+    Ok("".to_string())
 }
 
 async fn get_balance(account: &Account, address: &IotaAddress) -> crate::Result<u64> {
     let client = crate::client::get_client(account.client_options());
-    client
-        .get_balances()
-        .addresses(&[address.clone()])
-        .send()
-        .await?
-        .balances
-        .first()
-        .copied()
-        .ok_or_else(|| anyhow::anyhow!("Balances response empty"))
+    let amount = client
+        .get_addresses_balance(&[address.clone()])?
+        .iter()
+        .fold(0, |acc, output| output.amount);
+    Ok(amount)
 }
 
 pub(crate) fn is_unspent(account: &Account, address: &IotaAddress) -> bool {
-    account
-        .transactions()
-        .iter()
-        .any(|tx| tx.value().without_denomination() < 0 && tx.address().address() == address)
+    account.messages().iter().any(|message| {
+        message.value().without_denomination() < 0 && message.address().address() == address
+    })
 }
