@@ -69,7 +69,7 @@ fn branch_and_bound(
     tries -= 1;
 
     // Exploring omission and inclusion branch
-    let current_utxo_value = available_utxos[depth].balance().clone();
+    let current_utxo_value = *available_utxos[depth].balance();
     current_selection.push(available_utxos[depth].clone());
 
     if branch_and_bound(
