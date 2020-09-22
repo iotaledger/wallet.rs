@@ -1,7 +1,7 @@
 use crate::account::{Account, AccountIdentifier, AccountInitialiser, SyncedAccount};
 use crate::client::ClientOptions;
+use crate::message::{Message, MessageType, Transfer};
 use crate::storage::StorageAdapter;
-use crate::transaction::{Transaction, TransactionType, Transfer};
 
 use std::convert::TryInto;
 use std::fs;
@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::Duration;
 
-use iota::crypto::ternary::Hash;
+use iota::transaction::prelude::Hash;
 
 /// The account manager.
 ///
@@ -17,14 +17,14 @@ use iota::crypto::ternary::Hash;
 #[derive(Default)]
 pub struct AccountManager {}
 
-fn mutate_account_transaction<F: FnOnce(&Account, &mut Vec<Transaction>)>(
+fn mutate_account_transaction<F: FnOnce(&Account, &mut Vec<Message>)>(
     account_id: AccountIdentifier,
     handler: F,
 ) -> crate::Result<()> {
     let mut account = crate::storage::get_account(account_id.clone())?;
-    let mut transactions: Vec<Transaction> = account.transactions().to_vec();
+    let mut transactions: Vec<Message> = account.messages().to_vec();
     handler(&account, &mut transactions);
-    account.set_transactions(transactions);
+    account.set_messages(transactions);
     let adapter = crate::storage::get_adapter()?;
     adapter.set(account_id, serde_json::to_string(&account)?)?;
     Ok(())
@@ -44,11 +44,11 @@ impl AccountManager {
                 let _ = mutate_account_transaction(
                     event.account_id().clone().into(),
                     |_, transactions| {
-                        if let Some(tx) = transactions
+                        if let Some(message) = transactions
                             .iter_mut()
-                            .find(|tx| tx.hash() == event.transaction_hash())
+                            .find(|message| message.hash() == event.transaction_hash())
                         {
-                            tx.set_confirmed(true);
+                            message.set_confirmed(true);
                         }
                     },
                 );
@@ -58,29 +58,31 @@ impl AccountManager {
         crate::event::on_broadcast(|event| {
             let _ =
                 mutate_account_transaction(event.account_id().clone().into(), |_, transactions| {
-                    if let Some(tx) = transactions
+                    if let Some(message) = transactions
                         .iter_mut()
-                        .find(|tx| tx.hash() == event.transaction_hash())
+                        .find(|message| message.hash() == event.transaction_hash())
                     {
-                        tx.set_broadcasted(true);
+                        message.set_broadcasted(true);
                     }
                 });
         });
 
         crate::event::on_new_transaction(|event| {
-            let transaction_hash = *event.transaction_hash();
+            let transaction_hash = event.transaction_hash().clone();
             let _ = mutate_account_transaction(
                 event.account_id().clone().into(),
-                |account, transactions| {
+                |account, messages| {
                     let mut rt =
                         tokio::runtime::Runtime::new().expect("failed to create tokio runtime");
                     rt.block_on(async move {
                         let client = crate::client::get_client(account.client_options());
-                        let response = client.get_trytes(&[transaction_hash]).await.unwrap();
-                        let tx = response.trytes.first().unwrap().clone();
-                        transactions.push(
-                            Transaction::from_bundled(*event.transaction_hash(), tx).unwrap(),
-                        );
+                        let response = client
+                            .get_messages()
+                            .hashes(&[transaction_hash])
+                            .get()
+                            .unwrap();
+                        let message = response.first().unwrap().clone();
+                        messages.push(Message::from_iota_message(message).unwrap());
                     });
                 },
             );
@@ -106,7 +108,7 @@ impl AccountManager {
         let adapter = crate::storage::get_adapter()?;
         let account: Account = serde_json::from_str(&adapter.get(account_id.clone())?)?;
         crate::with_stronghold(|stronghold| {
-            stronghold.account_remove(account.id(), "password");
+            stronghold.account_remove(account.id());
         });
         adapter.remove(account_id)?;
         Ok(())
@@ -123,7 +125,7 @@ impl AccountManager {
         from_account_id: AccountIdentifier,
         to_account_id: AccountIdentifier,
         amount: u64,
-    ) -> crate::Result<Transaction> {
+    ) -> crate::Result<Message> {
         let from_account = self.get_account(from_account_id)?;
         let to_account = self.get_account(to_account_id)?;
         let to_address = to_account
@@ -186,10 +188,11 @@ impl AccountManager {
                 .as_ref()
                 .join(crate::storage::stronghold_snapshot_filename()),
             false,
-            "",
+            "password".to_string(),
+            None,
         );
         for (index, account) in accounts.iter().enumerate() {
-            let stronghold_account = backup_stronghold.account_get_by_id(account.id(), "password");
+            let stronghold_account = backup_stronghold.account_get_by_id(account.id());
             let created_at_timestamp: u128 = account.created_at().timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
             let stronghold_account = crate::with_stronghold(|stronghold| {
                 stronghold.account_import(
@@ -198,7 +201,6 @@ impl AccountManager {
                     created_at_timestamp,
                     stronghold_account.mnemonic().to_string(),
                     Some("password"),
-                    "password",
                 )
             });
             storage.set(
@@ -240,47 +242,44 @@ async fn reattach_unconfirmed_transactions() -> crate::Result<()> {
     let accounts = crate::storage::get_adapter()?.get_all()?;
     for account_str in accounts {
         let account: Account = serde_json::from_str(&account_str)?;
-        let unconfirmed_transactions =
-            account.list_transactions(1000, 0, Some(TransactionType::Unconfirmed));
+        let unconfirmed_messages = account.list_messages(1000, 0, Some(MessageType::Unconfirmed));
         let mut account: Account = serde_json::from_str(&account_str)?;
-        for tx in unconfirmed_transactions {
-            reattach(&mut account, tx.hash()).await?;
+        for message in unconfirmed_messages {
+            reattach(&mut account, &message.hash()).await?;
         }
     }
     Ok(())
 }
 
-async fn reattach(account: &mut Account, transaction_hash: &Hash) -> crate::Result<()> {
-    let mut transactions: Vec<Transaction> = account.transactions().to_vec();
-    let transaction = transactions
+async fn reattach(account: &mut Account, message_hash: &Hash) -> crate::Result<()> {
+    let mut messages: Vec<Message> = account.messages().to_vec();
+    let message = messages
         .iter_mut()
-        .find(|tx| tx.hash() == transaction_hash)
-        .ok_or_else(|| anyhow::anyhow!("transaction not found"))?;
+        .find(|message| message.hash() == message_hash)
+        .ok_or_else(|| anyhow::anyhow!("message not found"))?;
 
-    if transaction.confirmed {
-        Err(anyhow::anyhow!("transaction is already confirmed"))
-    } else if transaction.is_above_max_depth() {
-        Err(anyhow::anyhow!("transaction is above max depth"))
+    if message.confirmed {
+        Err(anyhow::anyhow!("message is already confirmed"))
+    } else if message.is_above_max_depth() {
+        Err(anyhow::anyhow!("message is above max depth"))
     } else {
         let client = crate::client::get_client(account.client_options());
-        let inclusion_states = client
-            .get_inclusion_states()
-            .transactions(&[*transaction.hash()])
-            .send()
-            .await?;
-        if *inclusion_states.states.first().unwrap() {
-            // transaction is already confirmed; do nothing
-            transaction.set_confirmed(true);
+        if *client
+            .is_confirmed(&[message_hash.clone()])?
+            .get(message.hash())
+            .ok_or_else(|| anyhow::anyhow!("invalid `is_confirmed` response"))?
+        {
+            // message is already confirmed; do nothing
+            message.set_confirmed(true);
         } else {
-            // reattach the transaction
-            let reattachment_transactions = client.reattach(transaction_hash).await?.send().await?;
-            transactions.push(Transaction::from_bundled(
-                *transaction_hash,
-                reattachment_transactions.first().unwrap().clone(),
+            // reattach the message
+            let reattachment_messages = client.reattach(&[message_hash.clone()])?;
+            messages.push(Message::from_iota_message(
+                reattachment_messages.first().unwrap().clone(),
             )?);
         }
-        // update the transactions in storage
-        account.set_transactions(transactions);
+        // update the messages in storage
+        account.set_messages(messages);
         crate::storage::get_adapter()?
             .set(account.id().into(), serde_json::to_string(&account)?)?;
         Ok(())
