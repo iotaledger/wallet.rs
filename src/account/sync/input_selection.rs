@@ -107,7 +107,7 @@ mod tests {
         for i in 0..utxos_number {
             available_utxos.push(
                 AddressBuilder::new()
-                    .address(IotaAddress::from_ed25519_bytes([0; 32]))
+                    .address(IotaAddress::from_ed25519_bytes(&[0; 32]))
                     .balance(rng.gen_range(0, 2000))
                     .key_index(i)
                     .build()

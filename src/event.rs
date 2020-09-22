@@ -190,7 +190,7 @@ mod tests {
         emit_balance_change(
             "the account id",
             AddressBuilder::new()
-                .address(IotaAddress::from_ed25519_bytes([0; 32]))
+                .address(IotaAddress::from_ed25519_bytes(&[0; 32]))
                 .balance(0)
                 .key_index(0)
                 .build()
