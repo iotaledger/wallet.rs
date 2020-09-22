@@ -1,5 +1,5 @@
 use iota_wallet::{
-    account_manager::AccountManager, client::ClientOptionsBuilder, transaction::TransactionType,
+    account_manager::AccountManager, client::ClientOptionsBuilder, message::MessageType,
 };
 
 #[tokio::main]
@@ -23,8 +23,8 @@ async fn main() -> iota_wallet::Result<()> {
     // generate a new unused address
     let _ = account.generate_address().await?;
 
-    // list transactions
-    let _ = account.list_transactions(5, 0, Some(TransactionType::Failed));
+    // list messages
+    let _ = account.list_messages(5, 0, Some(MessageType::Failed));
 
     Ok(())
 }
