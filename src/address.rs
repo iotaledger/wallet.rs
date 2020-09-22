@@ -76,13 +76,12 @@ impl PartialEq for Address {
 }
 
 pub(crate) fn get_new_iota_address(account: &Account) -> crate::Result<(usize, IotaAddress)> {
-    let (key_index, iota_address) = crate::with_stronghold(|stronghold| {
+    crate::with_stronghold(|stronghold| {
         let address_index = account.addresses().len();
         let address_str = stronghold.address_get(account.id(), address_index, false);
         let iota_address = IotaAddress::from_ed25519_bytes(address_str.as_bytes().try_into()?);
         Ok((address_index, iota_address))
-    });
-    Ok((key_index, iota_address))
+    })
 }
 
 /// Gets an unused address for the given account.

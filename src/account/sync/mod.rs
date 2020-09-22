@@ -1,5 +1,5 @@
 use crate::account::{Account, AccountIdentifier};
-use crate::address::Address;
+use crate::address::{Address, AddressBuilder};
 use crate::client::get_client;
 use crate::message::{Message, Transfer};
 
@@ -23,17 +23,16 @@ mod input_selection;
 ///
 /// # Return value
 ///
-/// Returns a (addresses, hashes) tuples representing the address history up to latest unused address,
-/// and the transaction hashes associated with the addresses.
+/// Returns a (addresses, messages) tuples representing the address history up to latest unused address,
+/// and the messages associated with the addresses.
 ///
 async fn sync_addresses(
     account: &'_ Account,
     address_index: usize,
     gap_limit: Option<usize>,
-) -> crate::Result<(Vec<Address>, Vec<Hash>)> {
+) -> crate::Result<(Vec<Address>, Vec<IotaMessage>)> {
     let mut address_index = address_index;
     let account_addresses = account.addresses();
-    let account_transactions = account.transactions();
     let account_latest_address = account.latest_address();
 
     let client = get_client(account.client_options());
@@ -56,35 +55,31 @@ async fn sync_addresses(
         }
 
         let curr_found_transactions = client
-            .find_transactions()
+            .get_transactions()
             .addresses(&generated_iota_addresses[..])
-            .send()
-            .await?
-            .hashes;
+            .get()?;
         found_transactions.extend(curr_found_transactions.iter().cloned());
 
-        let balances = client
-            .get_balances()
-            .addresses(&generated_iota_addresses[..])
-            .send()
-            .await?
-            .balances;
-        let mut balances_iter = balances.iter();
+        let generated_addresses_outputs =
+            client.get_addresses_balance(&generated_iota_addresses[..])?;
 
         for iota_address in generated_iota_addresses {
-            let balance = balances_iter
-                .next()
-                .ok_or_else(|| anyhow::anyhow!("Address balance not found"))?;
+            let balance = generated_addresses_outputs
+                .iter()
+                .filter(|output| output.address == iota_address)
+                .fold(0, |acc, output| acc + output.amount);
             let address = AddressBuilder::new()
                 .address(iota_address)
                 .key_index(address_index)
-                .balance(*balance)
+                .balance(balance)
                 .build()?;
             generated_addresses.push(address);
             address_index += 1;
         }
 
-        if found_transactions.len() == 0 && balances.iter().all(|b| *b == 0) {
+        if found_transactions.len() == 0
+            && generated_addresses_outputs.iter().all(|o| o.amount == 0)
+        {
             break;
         }
     }
@@ -196,11 +191,11 @@ impl<'a> AccountSynchronizer<'a> {
         }
 
         sync_addresses(self.account, self.address_index, self.gap_limit).await?;
-        sync_transactions(self.account, new_transaction_hashes).await?;
+        sync_transactions(self.account, new_message_hashes).await?;
 
         let synced_account = SyncedAccount {
             account_id: *self.account.id(),
-            deposit_address: self.account.latest_address().clone(),
+            deposit_address: self.account.latest_address().unwrap().clone(),
         };
         Ok(synced_account)
     }
@@ -242,7 +237,7 @@ impl SyncedAccount {
         }
         let addresses = input_selection::select_input(threshold, &mut available_addresses)?;
         let remainder = if addresses.iter().fold(0, |acc, a| acc + a.balance()) > threshold {
-            Some(account.latest_address())
+            account.latest_address()
         } else {
             None
         };
