@@ -273,7 +273,7 @@ impl Account {
 
     /// Gets a new unused address and links it to this account.
     pub async fn generate_address(&mut self) -> crate::Result<Address> {
-        let address = crate::address::get_new_address(&self).await?;
+        let address = crate::address::get_new_address(&self, false).await?;
         self.addresses.push(address.clone());
         crate::storage::get_adapter()?.set(self.id.into(), serde_json::to_string(self)?)?;
         Ok(address)

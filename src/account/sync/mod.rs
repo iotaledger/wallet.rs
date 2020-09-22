@@ -42,16 +42,10 @@ async fn sync_addresses(
     let mut found_transactions = vec![];
     loop {
         let mut generated_iota_addresses = vec![];
-        for i in address_index..gap_limit {
-            let existing_address = account_addresses.iter().find(|a| *a.key_index() == i);
-            let (_, iota_address) = match existing_address {
-                Some(address) => (
-                    account_addresses.iter().position(|a| a == address).unwrap(),
-                    address.address().clone(),
-                ),
-                None => crate::address::get_new_iota_address(&account)?,
-            };
-            generated_iota_addresses.push(iota_address);
+        for i in address_index..(address_index + gap_limit) {
+            // generate both `public` and `internal (change)` addresses
+            generated_iota_addresses.push(crate::address::get_iota_address(&account, i, false)?);
+            generated_iota_addresses.push(crate::address::get_iota_address(&account, i, true)?);
         }
 
         let curr_found_transactions = client
@@ -77,7 +71,7 @@ async fn sync_addresses(
             address_index += 1;
         }
 
-        if found_transactions.len() == 0
+        if found_transactions.is_empty()
             && generated_addresses_outputs.iter().all(|o| o.amount == 0)
         {
             break;
@@ -336,5 +330,26 @@ impl SyncedAccount {
             .get_message(message_hash)
             .ok_or_else(|| anyhow::anyhow!("transaction with the given hash not found"));
         unimplemented!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::account_manager::AccountManager;
+    use crate::client::ClientOptionsBuilder;
+
+    #[tokio::test]
+    async fn account_sync() -> crate::Result<()> {
+        let manager = AccountManager::new();
+        let client_options =
+            ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")?.build();
+        let account = manager
+            .create_account(client_options)
+            .alias("alias")
+            .initialise()?;
+
+        let synced_accounts = account.sync().execute().await?;
+
+        Ok(())
     }
 }

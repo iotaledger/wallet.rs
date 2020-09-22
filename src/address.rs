@@ -9,6 +9,7 @@ pub struct AddressBuilder {
     address: Option<IotaAddress>,
     balance: Option<u64>,
     key_index: Option<usize>,
+    internal: bool,
 }
 
 impl AddressBuilder {
@@ -50,6 +51,7 @@ impl AddressBuilder {
                 .key_index
                 .ok_or_else(|| anyhow::anyhow!("the `key_index` field is required"))?,
             checksum,
+            internal: self.internal,
         };
         Ok(address)
     }
@@ -67,6 +69,8 @@ pub struct Address {
     key_index: usize,
     /// The address checksum.
     checksum: String,
+    /// Determines if an address is a public or an internal (change) address.
+    internal: bool,
 }
 
 impl PartialEq for Address {
@@ -75,18 +79,22 @@ impl PartialEq for Address {
     }
 }
 
-pub(crate) fn get_new_iota_address(account: &Account) -> crate::Result<(usize, IotaAddress)> {
+pub(crate) fn get_iota_address(
+    account: &Account,
+    index: usize,
+    internal: bool,
+) -> crate::Result<IotaAddress> {
     crate::with_stronghold(|stronghold| {
-        let address_index = account.addresses().len();
-        let address_str = stronghold.address_get(account.id(), address_index, false);
+        let address_str = stronghold.address_get(account.id(), index, internal);
         let iota_address = IotaAddress::from_ed25519_bytes(address_str.as_bytes().try_into()?);
-        Ok((address_index, iota_address))
+        Ok(iota_address)
     })
 }
 
 /// Gets an unused address for the given account.
-pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address> {
-    let (key_index, iota_address) = get_new_iota_address(&account)?;
+pub(crate) async fn get_new_address(account: &Account, internal: bool) -> crate::Result<Address> {
+    let key_index = account.addresses().len();
+    let iota_address = get_iota_address(&account, key_index, internal)?;
     let balance = get_balance(&account, &iota_address).await?;
     let checksum = generate_checksum(&iota_address)?;
     let address = Address {
@@ -94,28 +102,20 @@ pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address>
         balance,
         key_index,
         checksum,
+        internal,
     };
     Ok(address)
 }
 
 /// Batch address generation.
-pub(crate) async fn get_addresses(account: &Account, count: usize) -> crate::Result<Vec<Address>> {
+pub(crate) async fn get_addresses(
+    account: &Account,
+    count: usize,
+    internal: bool,
+) -> crate::Result<Vec<Address>> {
     let mut addresses = vec![];
     for i in 0..count {
-        let address_res: crate::Result<IotaAddress> = crate::with_stronghold(|stronghold| {
-            let address_str = stronghold.address_get(account.id(), i, false);
-            let iota_address = IotaAddress::from_ed25519_bytes(address_str.as_bytes().try_into()?);
-            Ok(iota_address)
-        });
-        let address = address_res?;
-        let balance = get_balance(&account, &address).await?;
-        let checksum = generate_checksum(&address)?;
-        addresses.push(Address {
-            address,
-            balance,
-            key_index: i,
-            checksum,
-        })
+        addresses.push(get_new_address(&account, internal).await?);
     }
     Ok(addresses)
 }

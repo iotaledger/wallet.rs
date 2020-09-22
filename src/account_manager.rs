@@ -203,6 +203,7 @@ impl AccountManager {
                     Some("password"),
                 )
             });
+
             storage.set(
                 account.id().clone().into(),
                 serde_json::to_string(&account)?,
