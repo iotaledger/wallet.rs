@@ -185,6 +185,7 @@ impl AccountManager {
                 .join(crate::storage::stronghold_snapshot_filename()),
             false,
             "password".to_string(),
+            None,
         );
         for (index, account) in accounts.iter().enumerate() {
             let stronghold_account = backup_stronghold.account_get_by_id(account.id());
