@@ -188,7 +188,7 @@ impl Account {
     /// It's read directly from the storage. To read the latest account balance, you should `sync` first.
     ///
     /// The available balance is the balance users are allowed to spend.
-    /// For example, if a user with 50i total account balance has made a transaction spending 20i,
+    /// For example, if a user with 50i total account balance has made a message spending 20i,
     /// the available balance should be (50i-30i) = 20i.
     pub fn available_balance(&self) -> u64 {
         let total_balance = self.total_balance();
@@ -210,11 +210,11 @@ impl Account {
         Ok(())
     }
 
-    /// Gets a list of transactions on this account.
-    /// It's fetched from the storage. To ensure the database is updated with the latest transactions,
+    /// Gets a list of messages on this account.
+    /// It's fetched from the storage. To ensure the database is updated with the latest messages,
     /// `sync` should be called first.
     ///
-    /// * `count` - Number of (most recent) transactions to fetch.
+    /// * `count` - Number of (most recent) messages to fetch.
     /// * `from` - Starting point of the subset to fetch.
     /// * `message_type` - Optional message type filter.
     ///
@@ -297,8 +297,8 @@ pub struct InitialisedAccount<'a> {
     alias: &'a str,
     /// Seed address history.
     addresses: Vec<Address>,
-    /// Seed transaction history.
-    transactions: Vec<Message>,
+    /// Seed message history.
+    messages: Vec<Message>,
     /// Account creation time.
     created_at: DateTime<Utc>,
     /// Time when the account was last synced with the tangle.
@@ -309,18 +309,15 @@ pub struct InitialisedAccount<'a> {
 mod tests {
     use super::Account;
     use crate::account_manager::AccountManager;
-    use crate::address::{Address, AddressBuilder};
+    use crate::address::{Address, AddressBuilder, IotaAddress};
     use crate::client::ClientOptionsBuilder;
-    use crate::transaction::{Tag, Transaction, TransactionType, Value, ValueUnit};
+    use crate::message::{Message, MessageType};
 
-    use iota::crypto::ternary::{sponge::Kerl, Hash};
-    use iota::signing::ternary::{
-        seed::Seed,
-        wots::{WotsSecurityLevel, WotsSpongePrivateKeyGeneratorBuilder},
-        PrivateKey, PrivateKeyGenerator, PublicKey,
+    use chrono::Utc;
+    use iota::transaction::prelude::{
+        Hash, Input, Output, Payload, Seed, SignedTransactionBuilder,
     };
-    use iota::ternary::{T1B1Buf, TryteBuf};
-    use iota::transaction::bundled::{Address as IotaAddress, BundledTransactionField};
+    use std::convert::TryInto;
 
     #[test]
     // asserts that the `set_alias` function updates the account alias in storage
@@ -349,39 +346,17 @@ mod tests {
         );
     }
 
-    fn _generate_iota_address(seed: &str) -> IotaAddress {
-        let seed = Seed::from_trits(
-            TryteBuf::try_from_str(seed)
-                .unwrap()
-                .as_trits()
-                .encode::<T1B1Buf>(),
-        )
-        .unwrap();
-
-        IotaAddress::try_from_inner(
-            WotsSpongePrivateKeyGeneratorBuilder::<Kerl>::default()
-                .with_security_level(WotsSecurityLevel::Medium)
-                .build()
-                .unwrap()
-                .generate_from_seed(&seed, 3)
-                .unwrap()
-                .generate_public_key()
-                .unwrap()
-                .as_trits()
-                .to_owned(),
-        )
-        .unwrap()
+    fn _generate_iota_address() -> IotaAddress {
+        IotaAddress::from_ed25519_bytes(&rand::random::<[u8; 32]>())
     }
 
-    fn _generate_account(transactions: Vec<Transaction>) -> (Account, Address, u64) {
+    fn _generate_account(messages: Vec<Message>) -> (Account, Address, u64) {
         let manager = AccountManager::new();
         let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
             .expect("invalid node URL")
             .build();
 
-        let address = _generate_iota_address(
-            "RVORZ9SIIP9RCYMREUIXXVPQIPHVCNPQ9HZWYKFWYWZRE9JQKG9REPKIASHUUECPSQO9JT9XNMVKWYGVA",
-        );
+        let address = _generate_iota_address();
         let balance = 30;
         let first_address = AddressBuilder::new()
             .address(address.clone())
@@ -401,30 +376,35 @@ mod tests {
             .create_account(client_options)
             .alias("alias")
             .addresses(addresses)
-            .transactions(transactions)
+            .messages(messages)
             .initialise()
             .expect("failed to add account");
         (account, second_address, balance)
     }
 
-    fn _generate_transaction(
+    fn _generate_message(
         value: i64,
         address: Address,
         confirmed: bool,
         broadcasted: bool,
-    ) -> Transaction {
-        Transaction {
-            hash: Hash::zeros(),
-            address,
-            value: Value::new(value, ValueUnit::I),
-            tag: Tag::default(),
-            timestamp: chrono::Utc::now(),
-            current_index: 0,
-            last_index: 0,
-            bundle_hash: Hash::zeros(),
-            trunk_transaction: Hash::zeros(),
-            branch_transaction: Hash::zeros(),
-            nonce: String::default(),
+    ) -> Message {
+        Message {
+            version: 1,
+            trunk: Hash([0; 32]),
+            branch: Hash([0; 32]),
+            payload_length: 0,
+            payload: Payload::SignedTransaction(Box::new(
+                SignedTransactionBuilder::new(Seed::from_ed25519_bytes("".as_bytes()).unwrap())
+                    .set_outputs(vec![Output::new(
+                        address.address().clone(),
+                        value.try_into().unwrap(),
+                    )])
+                    .set_inputs(vec![(Input::new(Hash([0; 32]), 0), "")])
+                    .build()
+                    .unwrap(),
+            )),
+            timestamp: Utc::now(),
+            nonce: 0,
             confirmed,
             broadcasted,
         }
@@ -433,7 +413,7 @@ mod tests {
     #[test]
     fn latest_address() {
         let (account, latest_address, _) = _generate_account(vec![]);
-        assert_eq!(account.latest_address(), &latest_address);
+        assert_eq!(account.latest_address(), Some(&latest_address));
     }
 
     #[test]
@@ -447,115 +427,103 @@ mod tests {
         let (account, _, balance) = _generate_account(vec![]);
         assert_eq!(account.available_balance(), balance);
 
-        let unconfirmed_transaction = _generate_transaction(
+        let unconfirmed_message = _generate_message(
             15,
             account.addresses().first().unwrap().clone(),
             false,
             false,
         );
-        let confirmed_transaction =
-            _generate_transaction(10, account.addresses().first().unwrap().clone(), true, true);
+        let confirmed_message =
+            _generate_message(10, account.addresses().first().unwrap().clone(), true, true);
         let (account, _, balance) =
-            _generate_account(vec![unconfirmed_transaction.clone(), confirmed_transaction]);
+            _generate_account(vec![unconfirmed_message.clone(), confirmed_message]);
         assert_eq!(
             account.available_balance(),
-            balance - unconfirmed_transaction.value().without_denomination() as u64
+            balance - unconfirmed_message.value().without_denomination() as u64
         );
     }
 
     #[test]
-    fn list_all_transactions() {
+    fn list_all_messages() {
         let (mut account, _, _) = _generate_account(vec![]);
-        let received_transaction =
-            _generate_transaction(0, account.latest_address().clone(), true, true);
-        let failed_transaction =
-            _generate_transaction(0, account.latest_address().clone(), true, false);
-        let unconfirmed_transaction =
-            _generate_transaction(0, account.latest_address().clone(), false, true);
-        let value_transaction =
-            _generate_transaction(4, account.latest_address().clone(), true, true);
-        account.append_transactions(vec![
-            received_transaction,
-            failed_transaction,
-            unconfirmed_transaction,
-            value_transaction,
+        let received_message =
+            _generate_message(0, account.latest_address().unwrap().clone(), true, true);
+        let failed_message =
+            _generate_message(0, account.latest_address().unwrap().clone(), true, false);
+        let unconfirmed_message =
+            _generate_message(0, account.latest_address().unwrap().clone(), false, true);
+        let value_message =
+            _generate_message(4, account.latest_address().unwrap().clone(), true, true);
+        account.append_messages(vec![
+            received_message,
+            failed_message,
+            unconfirmed_message,
+            value_message,
         ]);
 
-        let txs = account.list_transactions(4, 0, None);
+        let txs = account.list_messages(4, 0, None);
         assert_eq!(txs.len(), 4);
     }
 
     #[test]
-    fn list_transactions_by_type() {
+    fn list_messages_by_type() {
         let (mut account, _, _) = _generate_account(vec![]);
 
         let external_address = AddressBuilder::new()
-            .address(_generate_iota_address(
-                "AVXX9XWUSUVKUTWXKTBG9BJVBTZSAISBILKJNVWUHOQNYDMQWXNUCLTTOZGTTLLIYDXXJJGJSEOKVOSSZ",
-            ))
+            .address(_generate_iota_address())
             .key_index(0)
             .balance(0)
             .build()
             .unwrap();
 
-        let received_transaction =
-            _generate_transaction(0, account.latest_address().clone(), true, true);
-        let sent_transaction = _generate_transaction(0, external_address.clone(), true, true);
-        let failed_transaction =
-            _generate_transaction(0, account.latest_address().clone(), true, false);
-        let unconfirmed_transaction =
-            _generate_transaction(0, account.latest_address().clone(), false, true);
-        let value_transaction =
-            _generate_transaction(5, account.latest_address().clone(), true, true);
-        account.append_transactions(vec![
-            received_transaction.clone(),
-            sent_transaction.clone(),
-            failed_transaction.clone(),
-            unconfirmed_transaction.clone(),
-            value_transaction.clone(),
+        let received_message =
+            _generate_message(0, account.latest_address().unwrap().clone(), true, true);
+        let sent_message = _generate_message(0, external_address.clone(), true, true);
+        let failed_message =
+            _generate_message(0, account.latest_address().unwrap().clone(), true, false);
+        let unconfirmed_message =
+            _generate_message(0, account.latest_address().unwrap().clone(), false, true);
+        let value_message =
+            _generate_message(5, account.latest_address().unwrap().clone(), true, true);
+        account.append_messages(vec![
+            received_message.clone(),
+            sent_message.clone(),
+            failed_message.clone(),
+            unconfirmed_message.clone(),
+            value_message.clone(),
         ]);
 
         let cases = vec![
-            (TransactionType::Failed, &failed_transaction),
-            (TransactionType::Received, &received_transaction),
-            (TransactionType::Sent, &sent_transaction),
-            (TransactionType::Unconfirmed, &unconfirmed_transaction),
-            (TransactionType::Value, &value_transaction),
+            (MessageType::Failed, &failed_message),
+            (MessageType::Received, &received_message),
+            (MessageType::Sent, &sent_message),
+            (MessageType::Unconfirmed, &unconfirmed_message),
+            (MessageType::Value, &value_message),
         ];
         for (tx_type, expected) in cases {
-            let failed_txs = account.list_transactions(1, 0, Some(tx_type.clone()));
+            let failed_messages = account.list_messages(1, 0, Some(tx_type.clone()));
             assert_eq!(
-                failed_txs.len(),
-                if tx_type == TransactionType::Received {
+                failed_messages.len(),
+                if tx_type == MessageType::Received {
                     4
                 } else {
                     1
                 }
             );
-            assert_eq!(failed_txs.first().unwrap(), &expected);
+            assert_eq!(failed_messages.first().unwrap(), &expected);
         }
     }
 
     #[test]
-    fn get_transaction_by_hash() {
+    fn get_message_by_hash() {
         let (mut account, _, _) = _generate_account(vec![]);
-        let hash = Hash::from_inner_unchecked(
-            TryteBuf::try_from_str(
-                "IITL9EALLVZEGFIFBCCAHUOKHFBIIKQACBCEVVNZUEQLUJTOPXRICFRZKJDQGSVHARJANFDDAHMERS999",
-            )
-            .unwrap()
-            .as_trits()
-            .encode(),
-        );
 
-        let mut transaction =
-            _generate_transaction(0, account.latest_address().clone(), true, true);
-        transaction.set_hash(hash);
-        account.append_transactions(vec![
-            _generate_transaction(10, account.latest_address().clone(), true, true),
-            transaction.clone(),
+        let message = _generate_message(0, account.latest_address().unwrap().clone(), true, true);
+        account.append_messages(vec![
+            _generate_message(10, account.latest_address().unwrap().clone(), true, true),
+            message.clone(),
         ]);
-        assert_eq!(account.get_transaction(&hash).unwrap(), &transaction);
+        assert_eq!(account.get_message(message.hash()).unwrap(), &message);
     }
 
     // TODO this test needs some work on the client initialization

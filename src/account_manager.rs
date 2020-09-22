@@ -325,41 +325,13 @@ fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std::i
 mod tests {
     use super::AccountManager;
     use crate::account::Account;
-    use crate::address::{Address, AddressBuilder};
+    use crate::address::{Address, AddressBuilder, IotaAddress};
     use crate::client::ClientOptionsBuilder;
 
-    use iota::crypto::ternary::sponge::Kerl;
-    use iota::signing::ternary::{
-        seed::Seed,
-        wots::{WotsSecurityLevel, WotsSpongePrivateKeyGeneratorBuilder},
-        PrivateKey, PrivateKeyGenerator, PublicKey,
-    };
-    use iota::ternary::{T1B1Buf, TryteBuf};
-    use iota::transaction::bundled::{Address as IotaAddress, BundledTransactionField};
     use rusty_fork::rusty_fork_test;
 
-    fn _generate_iota_address(seed: &str) -> IotaAddress {
-        let seed = Seed::from_trits(
-            TryteBuf::try_from_str(seed)
-                .unwrap()
-                .as_trits()
-                .encode::<T1B1Buf>(),
-        )
-        .unwrap();
-
-        IotaAddress::try_from_inner(
-            WotsSpongePrivateKeyGeneratorBuilder::<Kerl>::default()
-                .with_security_level(WotsSecurityLevel::Medium)
-                .build()
-                .unwrap()
-                .generate_from_seed(&seed, 3)
-                .unwrap()
-                .generate_public_key()
-                .unwrap()
-                .as_trits()
-                .to_owned(),
-        )
-        .unwrap()
+    fn _generate_iota_address() -> IotaAddress {
+        IotaAddress::from_ed25519_bytes(&rand::random::<[u8; 32]>())
     }
 
     fn _create_account(manager: &AccountManager, addresses: Vec<Address>) -> Account {
@@ -406,11 +378,11 @@ mod tests {
             let backup_path = manager.backup("./backup").unwrap();
 
             // delete the account on the current storage
-            manager.remove_account(account.id().to_string().into()).unwrap();
+            manager.remove_account(account.id().into()).unwrap();
 
             // import the accounts from the backup and assert that it's the same
             manager.import_accounts(backup_path).unwrap();
-            let imported_account = manager.get_account(account.id().to_string().into()).unwrap();
+            let imported_account = manager.get_account(account.id().into()).unwrap();
             assert_eq!(account, imported_account);
         }
 
@@ -420,9 +392,7 @@ mod tests {
             let manager = AccountManager::new();
 
             // first we'll create an example account
-            let address = _generate_iota_address(
-                "RVORZ9SIIP9RCYMREUIXXVPQIPHVCNPQ9HZWYKFWYWZRE9JQKG9REPKIASHUUECPSQO9JT9XNMVKWYGVA",
-            );
+            let address = _generate_iota_address();
             let address = AddressBuilder::new()
                 .address(address.clone())
                 .key_index(0)

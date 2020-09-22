@@ -212,7 +212,7 @@ impl PartialEq for Message {
 }
 
 /// Message type.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Eq, PartialEq)]
 pub enum MessageType {
     /// Message received.
     Received,

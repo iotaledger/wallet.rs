@@ -201,8 +201,7 @@ mod tests {
         on_balance_change, on_broadcast, on_confirmation_state_change, on_new_transaction,
         on_reattachment, TransactionEventType,
     };
-    use crate::address::AddressBuilder;
-    use iota::transaction::bundled::Address;
+    use crate::address::{AddressBuilder, IotaAddress};
 
     #[test]
     fn balance_events() {
@@ -227,7 +226,8 @@ mod tests {
     #[test]
     fn on_new_transaction_event() {
         let account_id = "the account id";
-        let transaction_hash = iota::crypto::ternary::Hash::zeros();
+        let transaction_hash = iota::transaction::prelude::Hash([0; 32]);
+        let transaction_hash_clone = transaction_hash.clone();
         on_new_transaction(move |event| {
             assert!(event.account_id == account_id);
             assert!(event.transaction_hash == transaction_hash);
@@ -236,14 +236,15 @@ mod tests {
         emit_transaction_event(
             TransactionEventType::NewTransaction,
             account_id,
-            transaction_hash,
+            transaction_hash_clone,
         );
     }
 
     #[test]
     fn on_reattachment_event() {
         let account_id = "the account id";
-        let transaction_hash = iota::crypto::ternary::Hash::zeros();
+        let transaction_hash = iota::transaction::prelude::Hash([0; 32]);
+        let transaction_hash_clone = transaction_hash.clone();
         on_reattachment(move |event| {
             assert!(event.account_id == account_id);
             assert!(event.transaction_hash == transaction_hash);
@@ -252,14 +253,15 @@ mod tests {
         emit_transaction_event(
             TransactionEventType::Reattachment,
             account_id,
-            transaction_hash,
+            transaction_hash_clone,
         );
     }
 
     #[test]
     fn on_broadcast_event() {
         let account_id = "the account id";
-        let transaction_hash = iota::crypto::ternary::Hash::zeros();
+        let transaction_hash = iota::transaction::prelude::Hash([0; 32]);
+        let transaction_hash_clone = transaction_hash.clone();
         on_broadcast(move |event| {
             assert!(event.account_id == account_id);
             assert!(event.transaction_hash == transaction_hash);
@@ -268,14 +270,15 @@ mod tests {
         emit_transaction_event(
             TransactionEventType::Broadcast,
             account_id,
-            transaction_hash,
+            transaction_hash_clone,
         );
     }
 
     #[test]
     fn on_confirmation_state_change_event() {
         let account_id = "the account id";
-        let transaction_hash = iota::crypto::ternary::Hash::zeros();
+        let transaction_hash = iota::transaction::prelude::Hash([0; 32]);
+        let transaction_hash_clone = transaction_hash.clone();
         let confirmed = true;
         on_confirmation_state_change(move |event| {
             assert!(event.account_id == account_id);
@@ -283,6 +286,6 @@ mod tests {
             assert!(event.confirmed == confirmed);
         });
 
-        emit_confirmation_state_change(account_id, transaction_hash, confirmed);
+        emit_confirmation_state_change(account_id, transaction_hash_clone, confirmed);
     }
 }

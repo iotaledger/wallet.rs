@@ -1,6 +1,7 @@
 use crate::account::Account;
 use getset::Getters;
 pub use iota::transaction::prelude::Address as IotaAddress;
+use serde::{Deserialize, Serialize};
 use std::convert::TryInto;
 
 /// The address builder.
@@ -58,11 +59,10 @@ impl AddressBuilder {
 }
 
 /// An address.
-#[derive(Debug, Getters, Clone, Eq)]
+#[derive(Debug, Getters, Clone, Eq, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct Address {
     /// The address.
-    #[serde(skip, default = "IotaAddress::zeros")]
     address: IotaAddress,
     /// The address balance.
     balance: u64,
@@ -148,11 +148,13 @@ mod tests {
     use crate::account::Account;
     use crate::account_manager::AccountManager;
     use crate::client::ClientOptionsBuilder;
-    use crate::transaction::{Tag, Transaction, Value, ValueUnit};
+    use crate::message::Message;
 
-    use iota::crypto::ternary::Hash;
-    use iota::ternary::TryteBuf;
-    use iota::transaction::bundled::BundledTransactionField;
+    use chrono::Utc;
+    use iota::transaction::prelude::{
+        Hash, Input, Output, Payload, Seed, SignedTransactionBuilder,
+    };
+    use std::convert::TryInto;
 
     fn _create_account() -> Account {
         let manager = AccountManager::new();
@@ -170,29 +172,27 @@ mod tests {
     }
 
     fn _create_address() -> IotaAddress {
-        IotaAddress::from_inner_unchecked(
-            TryteBuf::try_from_str(
-                "XUERGHWTYRTFUYKFKXURKHMFEVLOIFTTCNTXOGLDPCZ9CJLKHROOPGNAQYFJEPGK9OKUQROUECBAVNXRY",
-            )
-            .unwrap()
-            .as_trits()
-            .encode(),
-        )
+        IotaAddress::from_ed25519_bytes(&[0; 32])
     }
 
-    fn _generate_transaction(value: i64, address: Address) -> Transaction {
-        Transaction {
-            hash: Hash::zeros(),
-            address,
-            value: Value::new(value, ValueUnit::I),
-            tag: Tag::default(),
-            timestamp: chrono::Utc::now(),
-            current_index: 0,
-            last_index: 0,
-            bundle_hash: Hash::zeros(),
-            trunk_transaction: Hash::zeros(),
-            branch_transaction: Hash::zeros(),
-            nonce: String::default(),
+    fn _generate_message(value: i64, address: Address) -> Message {
+        Message {
+            version: 1,
+            trunk: Hash([0; 32]),
+            branch: Hash([0; 32]),
+            payload_length: 0,
+            payload: Payload::SignedTransaction(Box::new(
+                SignedTransactionBuilder::new(Seed::from_ed25519_bytes("".as_bytes()).unwrap())
+                    .set_outputs(vec![Output::new(
+                        address.address().clone(),
+                        value.try_into().unwrap(),
+                    )])
+                    .set_inputs(vec![(Input::new(Hash([0; 32]), 0), "")])
+                    .build()
+                    .unwrap(),
+            )),
+            timestamp: Utc::now(),
+            nonce: 0,
             confirmed: true,
             broadcasted: true,
         }
@@ -219,9 +219,9 @@ mod tests {
     #[tokio::test]
     async fn is_unspent_true() {
         let mut account = _create_account();
-        let address = super::get_new_address(&account).await.unwrap();
-        let spent_tx = _generate_transaction(-50, address.clone());
-        account.append_transactions(vec![spent_tx]);
+        let address = super::get_new_address(&account, false).await.unwrap();
+        let spent_tx = _generate_message(-50, address.clone());
+        account.append_messages(vec![spent_tx]);
 
         let response = super::is_unspent(&account, address.address());
         assert_eq!(response, true);
