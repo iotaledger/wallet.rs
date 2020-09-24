@@ -160,6 +160,7 @@ pub struct Account {
     messages: Vec<Message>,
     /// Address history associated with the seed.
     /// The account can be initialised with locally stored address history.
+    #[getset(set = "pub(crate)")]
     addresses: Vec<Address>,
     /// The client options.
     client_options: ClientOptions,
@@ -172,7 +173,7 @@ impl Account {
     }
 
     /// Returns the builder to setup the process to synchronize this account with the Tangle.
-    pub fn sync(&self) -> AccountSynchronizer<'_> {
+    pub fn sync(&mut self) -> AccountSynchronizer<'_> {
         AccountSynchronizer::new(self)
     }
 

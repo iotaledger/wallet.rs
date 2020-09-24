@@ -124,7 +124,7 @@ impl AccountManager {
         to_account_id: AccountIdentifier,
         amount: u64,
     ) -> crate::Result<Message> {
-        let from_account = self.get_account(from_account_id)?;
+        let mut from_account = self.get_account(from_account_id)?;
         let to_account = self.get_account(to_account_id)?;
         let to_address = to_account
             .latest_address()
@@ -230,7 +230,7 @@ async fn sync_accounts() -> crate::Result<Vec<SyncedAccount>> {
     let accounts = crate::storage::get_adapter()?.get_all()?;
     let mut synced_accounts = vec![];
     for account_str in accounts {
-        let account: Account = serde_json::from_str(&account_str)?;
+        let mut account: Account = serde_json::from_str(&account_str)?;
         let synced_account = account.sync().execute().await?;
         synced_accounts.push(synced_account);
     }

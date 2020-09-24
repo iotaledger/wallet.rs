@@ -32,8 +32,6 @@ async fn sync_addresses(
     gap_limit: Option<usize>,
 ) -> crate::Result<(Vec<Address>, Vec<IotaMessage>)> {
     let mut address_index = address_index;
-    let account_addresses = account.addresses();
-    let account_latest_address = account.latest_address();
 
     let client = get_client(account.client_options());
     let gap_limit = gap_limit.unwrap_or(20);
@@ -134,7 +132,7 @@ async fn sync_transactions<'a>(
 
 /// Account sync helper.
 pub struct AccountSynchronizer<'a> {
-    account: &'a Account,
+    account: &'a mut Account,
     address_index: usize,
     gap_limit: Option<usize>,
     skip_persistance: bool,
@@ -142,10 +140,11 @@ pub struct AccountSynchronizer<'a> {
 
 impl<'a> AccountSynchronizer<'a> {
     /// Initialises a new instance of the sync helper.
-    pub(super) fn new(account: &'a Account) -> Self {
+    pub(super) fn new(account: &'a mut Account) -> Self {
+        let address_index = account.addresses().len();
         Self {
             account,
-            address_index: account.addresses().len(),
+            address_index,
             gap_limit: None,
             skip_persistance: false,
         }
@@ -173,9 +172,10 @@ impl<'a> AccountSynchronizer<'a> {
             addresses.push(address.address().clone());
         }
 
-        let mut new_message_hashes = vec![];
-        let found_messages = client.get_transactions().addresses(&addresses[..]).get()?;
+        let (found_addresses, found_messages) =
+            sync_addresses(self.account, self.address_index, self.gap_limit).await?;
 
+        let mut new_message_hashes = vec![];
         for found_message in found_messages {
             if !self.account.messages().iter().any(
                 |message| message.hash() == found_message.trunk(), /* TODO hash instead of trunk */
@@ -184,8 +184,15 @@ impl<'a> AccountSynchronizer<'a> {
             }
         }
 
-        sync_addresses(self.account, self.address_index, self.gap_limit).await?;
-        sync_transactions(self.account, new_message_hashes).await?;
+        let messages = sync_transactions(self.account, new_message_hashes).await?;
+
+        self.account.set_messages(messages);
+        self.account.set_addresses(found_addresses);
+        let storage_adapter = crate::storage::get_adapter()?;
+        storage_adapter.set(
+            self.account.id().into(),
+            serde_json::to_string(&self.account)?,
+        )?;
 
         let synced_account = SyncedAccount {
             account_id: *self.account.id(),
@@ -338,7 +345,7 @@ mod tests {
         let manager = AccountManager::new();
         let client_options =
             ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")?.build();
-        let account = manager
+        let mut account = manager
             .create_account(client_options)
             .alias("alias")
             .initialise()?;

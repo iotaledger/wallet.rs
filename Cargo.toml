@@ -16,6 +16,7 @@ url = { version = "2.1", features = [ "serde" ] }
 tokio = "0.2"
 rand = "0.3"
 rusqlite = { version = "0.23", optional = true }
+bech32 = "0.7"
 
 # stronghold
 iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", branch = "feat/refactoring", optional = true }

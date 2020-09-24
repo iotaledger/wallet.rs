@@ -1,4 +1,5 @@
 use crate::account::Account;
+use bech32::FromBase32;
 use getset::Getters;
 pub use iota::transaction::prelude::Address as IotaAddress;
 use serde::{Deserialize, Serialize};
@@ -77,7 +78,8 @@ pub(crate) fn get_iota_address(
 ) -> crate::Result<IotaAddress> {
     crate::with_stronghold(|stronghold| {
         let address_str = stronghold.address_get(account.id(), index, internal)?;
-        let iota_address = IotaAddress::from_ed25519_bytes(address_str.as_bytes().try_into()?);
+        let address_ed25519 = Vec::from_base32(&bech32::decode(&address_str)?.1)?;
+        let iota_address = IotaAddress::from_ed25519_bytes(&address_ed25519[1..].try_into()?);
         Ok(iota_address)
     })
 }
