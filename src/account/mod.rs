@@ -121,8 +121,8 @@ impl AccountInitialiser {
                         created_at_timestamp,
                         mnemonic,
                         Some("password"),
-                    ),
-                    None => stronghold.account_create(Some("password".to_string())),
+                    )?,
+                    None => stronghold.account_create(Some("password".to_string()))?,
                 };
                 Ok(account)
             });

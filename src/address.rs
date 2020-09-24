@@ -70,7 +70,7 @@ pub struct Address {
 pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address> {
     let address_res: crate::Result<(usize, IotaAddress)> = crate::with_stronghold(|stronghold| {
         let address_index = account.addresses().len();
-        let address_str = stronghold.address_get(account.id(), address_index, false);
+        let address_str = stronghold.address_get(account.id(), address_index, false)?;
         let iota_address = IotaAddress::from_ed25519_bytes(address_str.as_bytes().try_into()?);
         Ok((address_index, iota_address))
     });
@@ -89,7 +89,7 @@ pub(crate) async fn get_addresses(account: &Account, count: usize) -> crate::Res
     let mut addresses = vec![];
     for i in 0..count {
         let address_res: crate::Result<IotaAddress> = crate::with_stronghold(|stronghold| {
-            let address_str = stronghold.address_get(account.id(), i, false);
+            let address_str = stronghold.address_get(account.id(), i, false)?;
             let iota_address = IotaAddress::from_ed25519_bytes(address_str.as_bytes().try_into()?);
             Ok(iota_address)
         });

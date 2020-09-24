@@ -250,7 +250,7 @@ impl SyncedAccount {
         let (trunk, branch) = client.get_tips()?;
 
         let stronghold_account =
-            crate::with_stronghold(|stronghold| stronghold.account_get_by_id(account.id()));
+            crate::with_stronghold(|stronghold| stronghold.account_get_by_id(account.id()))?;
         let signed_transaction = stronghold_account
             .get_signed_transaction_builder()
             .set_outputs(utxo_outputs)

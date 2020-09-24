@@ -29,7 +29,7 @@ impl StorageAdapter for StrongholdStorageAdapter {
     fn get(&self, account_id: AccountIdentifier) -> crate::Result<String> {
         let stronghold_id_string = self.id_storage.get(account_id)?;
         let stronghold_id = create_stronghold_id(stronghold_id_string)?;
-        let account = crate::with_stronghold(|stronghold| stronghold.record_read(&stronghold_id));
+        let account = crate::with_stronghold(|stronghold| stronghold.record_read(&stronghold_id))?;
         Ok(account)
     }
 
@@ -38,7 +38,7 @@ impl StorageAdapter for StrongholdStorageAdapter {
         let ids = self.id_storage.get_all()?;
         for id in ids {
             let id = create_stronghold_id(id)?;
-            let account = crate::with_stronghold(|stronghold| stronghold.record_read(&id));
+            let account = crate::with_stronghold(|stronghold| stronghold.record_read(&id))?;
             accounts.push(account);
         }
         Ok(accounts)
@@ -60,7 +60,7 @@ impl StorageAdapter for StrongholdStorageAdapter {
     fn remove(&self, account_id: AccountIdentifier) -> std::result::Result<(), anyhow::Error> {
         let stronghold_id_string = self.id_storage.get(account_id.clone())?;
         let stronghold_id = create_stronghold_id(stronghold_id_string)?;
-        crate::with_stronghold(|stronghold| stronghold.record_remove(stronghold_id));
+        crate::with_stronghold(|stronghold| stronghold.record_remove(stronghold_id))?;
         self.id_storage.remove(account_id)?;
         Ok(())
     }
