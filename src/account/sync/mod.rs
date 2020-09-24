@@ -205,11 +205,6 @@ impl SyncedAccount {
         if *transfer_obj.amount() == 0 {
             return Err(anyhow::anyhow!("amount can't be zero"));
         }
-        if transfer_obj.address().checksum()
-            != &crate::address::generate_checksum(transfer_obj.address().address())?
-        {
-            return Err(anyhow::anyhow!("invalid address checksum"));
-        }
 
         // prepare the transfer getting some needed objects and values
         let value: u64 = *transfer_obj.amount();

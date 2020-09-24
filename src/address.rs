@@ -41,7 +41,6 @@ impl AddressBuilder {
         let iota_address = self
             .address
             .ok_or_else(|| anyhow::anyhow!("the `address` field is required"))?;
-        let checksum = generate_checksum(&iota_address)?;
         let address = Address {
             address: iota_address,
             balance: self
@@ -50,7 +49,6 @@ impl AddressBuilder {
             key_index: self
                 .key_index
                 .ok_or_else(|| anyhow::anyhow!("the `key_index` field is required"))?,
-            checksum,
         };
         Ok(address)
     }
@@ -66,8 +64,6 @@ pub struct Address {
     balance: u64,
     /// The address key index.
     key_index: usize,
-    /// The address checksum.
-    checksum: String,
 }
 
 /// Gets an unused address for the given account.
@@ -80,12 +76,10 @@ pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address>
     });
     let (key_index, iota_address) = address_res?;
     let balance = get_balance(&account, &iota_address).await?;
-    let checksum = generate_checksum(&iota_address)?;
     let address = Address {
         address: iota_address,
         balance,
         key_index,
-        checksum,
     };
     Ok(address)
 }
@@ -101,21 +95,13 @@ pub(crate) async fn get_addresses(account: &Account, count: usize) -> crate::Res
         });
         let address = address_res?;
         let balance = get_balance(&account, &address).await?;
-        let checksum = generate_checksum(&address)?;
         addresses.push(Address {
             address,
             balance,
             key_index: i,
-            checksum,
         })
     }
     Ok(addresses)
-}
-
-/// Generates a checksum for the given address
-// TODO: maybe this should be part of the crypto lib
-pub(crate) fn generate_checksum(address: &IotaAddress) -> crate::Result<String> {
-    Ok("".to_string())
 }
 
 async fn get_balance(account: &Account, address: &IotaAddress) -> crate::Result<u64> {
