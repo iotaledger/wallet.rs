@@ -50,7 +50,7 @@ impl StorageAdapter for StrongholdStorageAdapter {
         account: String,
     ) -> std::result::Result<(), anyhow::Error> {
         let stronghold_id =
-            crate::with_stronghold(|stronghold| stronghold.record_create(account.as_str()));
+            crate::with_stronghold(|stronghold| stronghold.record_create(account.as_str()))?;
 
         self.id_storage
             .set(account_id, format!("{:?}", stronghold_id))?;
