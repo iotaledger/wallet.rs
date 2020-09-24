@@ -1,6 +1,7 @@
 use crate::account::Account;
 use getset::Getters;
 pub use iota::transaction::prelude::Address as IotaAddress;
+use serde::{Deserialize, Serialize};
 use std::convert::TryInto;
 
 /// The address builder.
@@ -56,7 +57,7 @@ impl AddressBuilder {
 }
 
 /// An address.
-#[derive(Debug, Getters, Clone, Eq)]
+#[derive(Debug, Getters, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct Address {
     /// The address.
@@ -67,12 +68,6 @@ pub struct Address {
     key_index: usize,
     /// The address checksum.
     checksum: String,
-}
-
-impl PartialEq for Address {
-    fn eq(&self, other: &Address) -> bool {
-        self.key_index() == other.key_index()
-    }
 }
 
 /// Gets an unused address for the given account.

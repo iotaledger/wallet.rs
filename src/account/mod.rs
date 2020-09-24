@@ -156,12 +156,10 @@ pub struct Account {
     created_at: DateTime<Utc>,
     /// Messages associated with the seed.
     /// The account can be initialised with locally stored messages.
-    #[serde(skip)]
     #[getset(set = "pub(crate)")]
     messages: Vec<Message>,
     /// Address history associated with the seed.
     /// The account can be initialised with locally stored address history.
-    #[serde(skip)]
     addresses: Vec<Address>,
     /// The client options.
     client_options: ClientOptions,
