@@ -13,12 +13,12 @@ pub mod address;
 pub mod client;
 /// The event module.
 pub mod event;
+/// The message module.
+pub mod message;
 /// The monitor module.
 pub mod monitor;
 /// The storage module.
 pub mod storage;
-/// The transaction module.
-pub mod transaction;
 
 pub use anyhow::Result;
 pub use chrono::prelude::{DateTime, Utc};
@@ -32,7 +32,8 @@ static STRONGHOLD_INSTANCE: OnceCell<GlobalStronghold> = OnceCell::new();
 pub(crate) fn with_stronghold<T, F: FnOnce(MutexGuard<'static, Stronghold>) -> T>(cb: F) -> T {
     let stronghold = STRONGHOLD_INSTANCE.get_or_init(|| {
         let path = storage::get_stronghold_snapshot_path();
-        let stronghold = Stronghold::new(&path, !path.exists(), "password");
+        let stronghold = Stronghold::new(&path, !path.exists(), "password".to_string(), None)
+            .expect("failed to initialize stronghold");
         Arc::new(Mutex::new(stronghold))
     });
     cb(stronghold.lock().expect("failed to get stronghold lock"))

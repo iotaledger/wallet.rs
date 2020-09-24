@@ -1,5 +1,5 @@
 use iota_wallet::{
-    account_manager::AccountManager, client::ClientOptionsBuilder, transaction::Transfer,
+    account_manager::AccountManager, client::ClientOptionsBuilder, message::Transfer,
 };
 
 #[tokio::main]

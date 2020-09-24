@@ -1,44 +1,38 @@
-use crate::address::{Address, AddressBuilder};
-use chrono::prelude::{DateTime, NaiveDateTime, Utc};
+use crate::address::Address;
+use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-use iota::crypto::ternary::Hash;
-use iota::ternary::T3B1Buf;
-use iota::transaction::{
-    bundled::{BundledTransaction, BundledTransactionField, Tag as IotaTag},
-    Vertex,
-};
+use iota::transaction::prelude::{Hash, Message as IotaMessage, Payload};
 use serde::{Deserialize, Serialize};
+use std::convert::TryInto;
 use std::fmt;
 
 /// A transaction tag.
 #[derive(Debug, Clone)]
 pub struct Tag {
-    tag: IotaTag,
+    tag: [u8; 16],
 }
 
 impl Default for Tag {
     /// Initialises an empty tag.
     fn default() -> Self {
-        Self {
-            tag: IotaTag::zeros(),
-        }
+        Self { tag: [0; 16] }
     }
 }
 
 impl Tag {
     /// Initialises a new tag.
-    pub fn new(tag: IotaTag) -> Self {
+    pub fn new(tag: [u8; 16]) -> Self {
         Self { tag }
     }
 
     /// Returns the tag formatted as ASCII.
     pub fn as_ascii(&self) -> String {
-        let buf = self.tag.to_inner().encode::<T3B1Buf>();
-        let trytes = buf.as_slice().as_trytes();
-        trytes
-            .iter()
-            .map(|tryte| char::from(*tryte))
-            .collect::<String>()
+        String::from_utf8_lossy(&self.tag).to_string()
+    }
+
+    /// Returns the tag bytes.
+    pub fn as_bytes(&self) -> &[u8; 16] {
+        &self.tag
     }
 }
 
@@ -50,12 +44,9 @@ pub struct Transfer {
     amount: u64,
     /// The transfer address.
     address: Address,
-    /// The transfer transaction tag.
+    /// (Optional) transfer data.
     #[getset(set = "pub")]
-    tag: Option<IotaTag>,
-    /// The transfer transaction message.
-    #[getset(set = "pub")]
-    message: Option<String>,
+    data: Option<String>,
 }
 
 impl Transfer {
@@ -64,8 +55,7 @@ impl Transfer {
         Self {
             address,
             amount,
-            tag: None,
-            message: None,
+            data: None,
         }
     }
 }
@@ -135,69 +125,51 @@ impl Value {
     }
 }
 
-/// A transaction definition.
-#[derive(Debug, Getters, Setters, Clone)]
+/// A message definition.
+#[derive(
+    Debug, Getters, Setters, Clone, Hash, Eq, Ord, PartialEq, PartialOrd, Serialize, Deserialize,
+)]
 #[getset(get = "pub", set = "pub(crate)")]
-pub struct Transaction {
-    /// The transaction hash.
-    pub(crate) hash: Hash,
-    /// The transaction address.
-    pub(crate) address: Address,
-    /// The transaction amount.
-    pub(crate) value: Value,
-    /// The transaction tag.
-    pub(crate) tag: Tag,
+pub struct Message {
+    /// The message version.
+    pub(crate) version: u64,
+    /// Message id of the first message this message refers to.
+    pub(crate) trunk: Hash,
+    /// Message id of the second message this message refers to.
+    pub(crate) branch: Hash,
+    /// Length of the payload.
+    pub(crate) payload_length: u64,
+    /// Transaction amount.
+    pub(crate) payload: Payload,
     /// The transaction timestamp.
     pub(crate) timestamp: DateTime<Utc>,
-    /// The transaction current index in the bundle.
-    pub(crate) current_index: u64,
-    /// The transaction last index in the bundle.
-    pub(crate) last_index: u64,
-    /// The transaction bundle hash.
-    pub(crate) bundle_hash: Hash,
-    /// The trunk transaction hash.
-    pub(crate) trunk_transaction: Hash,
-    /// The branch transaction hash.
-    pub(crate) branch_transaction: Hash,
-    /// The transaction nonce.
-    pub(crate) nonce: String,
+    /// Transaction nonce.
+    pub(crate) nonce: u64,
     /// Whether the transaction is confirmed or not.
     pub(crate) confirmed: bool,
     /// Whether the transaction is broadcasted or not.
     pub(crate) broadcasted: bool,
 }
 
-impl Transaction {
-    pub(crate) fn from_bundled(hash: Hash, tx: BundledTransaction) -> crate::Result<Self> {
-        let transaction = Self {
-            hash,
-            address: AddressBuilder::new()
-                .address(tx.address().clone())
-                .key_index(0)
-                .balance(0)
-                .build()?,
-            value: Value {
-                value: *tx.value().to_inner(),
-                unit: ValueUnit::I,
-            },
-            tag: Tag {
-                tag: tx.tag().clone(),
-            },
-            timestamp: DateTime::<Utc>::from_utc(
-                NaiveDateTime::from_timestamp(*tx.attachment_ts().to_inner() as i64, 0),
-                Utc,
-            ),
-            current_index: *tx.index().to_inner() as u64,
-            last_index: *tx.last_index().to_inner() as u64,
-            trunk_transaction: *tx.trunk(),
-            branch_transaction: *tx.branch(),
-            bundle_hash: *tx.bundle(),
-            nonce: "TX NONCE".to_string(), // TODO
+impl Message {
+    pub(crate) fn from_iota_message(message: IotaMessage) -> crate::Result<Self> {
+        let message = Self {
+            version: 1,
+            trunk: message.trunk,
+            branch: message.branch,
+            payload_length: 5, // TODO
+            payload: message.payload,
+            timestamp: Utc::now(),
+            // TODO timestamp: DateTime::<Utc>::from_utc(
+            //    NaiveDateTime::from_timestamp(*message.attachment_ts().to_inner() as i64, 0),
+            //    Utc,
+            // ),
+            nonce: message.nonce,
             confirmed: false,
             broadcasted: true,
         };
 
-        Ok(transaction)
+        Ok(message)
     }
 
     /// Check if attachment timestamp on transaction is above max depth (~11 minutes)
@@ -207,25 +179,42 @@ impl Transaction {
         attachment_timestamp < current_timestamp
             && current_timestamp - attachment_timestamp < 11 * 60 * 1000
     }
-}
 
-impl PartialEq for Transaction {
-    fn eq(&self, other: &Self) -> bool {
-        self.hash() == other.hash()
+    /// The message's address.
+    pub fn address(&self) -> &Address {
+        unimplemented!()
+    }
+
+    /// The message's hash.
+    pub fn hash(&self) -> &Hash {
+        unimplemented!()
+    }
+
+    /// Gets the absolute value of the transaction.
+    pub fn value(&self) -> Value {
+        let amount = match &self.payload {
+            Payload::SignedTransaction(tx) => tx
+                .unsigned_transaction
+                .outputs
+                .iter()
+                .fold(0, |acc, output| acc + output.amount()),
+            _ => 0,
+        };
+        Value::new(amount.try_into().unwrap(), ValueUnit::I)
     }
 }
 
-/// Transaction type.
+/// Message type.
 #[derive(Debug, Clone, Deserialize)]
-pub enum TransactionType {
-    /// Transaction received.
+pub enum MessageType {
+    /// Message received.
     Received,
-    /// Transaction sent.
+    /// Message sent.
     Sent,
-    /// Transaction not broadcasted.
+    /// Message not broadcasted.
     Failed,
-    /// Transaction not confirmed.
+    /// Message not confirmed.
     Unconfirmed,
-    /// A value transaction.
+    /// A value message.
     Value,
 }

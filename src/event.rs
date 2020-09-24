@@ -1,5 +1,5 @@
 use crate::address::Address;
-use iota::crypto::ternary::Hash;
+use iota::transaction::prelude::Hash;
 
 use getset::Getters;
 use once_cell::sync::Lazy;
@@ -125,7 +125,7 @@ pub(crate) fn emit_transaction_event(
         if listener.event_type == event_type {
             (listener.on_event)(TransactionEvent {
                 account_id: account_id.clone(),
-                transaction_hash,
+                transaction_hash: transaction_hash.clone(),
             })
         }
     }
@@ -145,7 +145,7 @@ fn add_transaction_listener<F: Fn(TransactionEvent) + Send + 'static>(
     })
 }
 
-/// Listen to new transactions.
+/// Listen to new messages.
 pub fn on_new_transaction<F: Fn(TransactionEvent) + Send + 'static>(cb: F) {
     add_transaction_listener(TransactionEventType::NewTransaction, cb);
 }
@@ -178,8 +178,7 @@ pub fn on_error<F: Fn(anyhow::Error)>(cb: F) {}
 #[cfg(test)]
 mod tests {
     use super::{emit_balance_change, on_balance_change};
-    use crate::address::AddressBuilder;
-    use iota::transaction::bundled::Address;
+    use crate::address::{AddressBuilder, IotaAddress};
 
     #[test]
     fn balance_events() {
@@ -191,7 +190,7 @@ mod tests {
         emit_balance_change(
             "the account id",
             AddressBuilder::new()
-                .address(Address::zeros())
+                .address(IotaAddress::from_ed25519_bytes(&[0; 32]))
                 .balance(0)
                 .key_index(0)
                 .build()

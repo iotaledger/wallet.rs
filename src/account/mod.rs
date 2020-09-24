@@ -1,10 +1,10 @@
 use crate::address::Address;
 use crate::client::ClientOptions;
-use crate::transaction::{Transaction, TransactionType};
+use crate::message::{Message, MessageType};
 
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-use iota::crypto::ternary::Hash;
+use iota::transaction::prelude::Hash;
 use serde::{Deserialize, Serialize};
 
 use std::convert::TryInto;
@@ -52,7 +52,7 @@ pub struct AccountInitialiser {
     mnemonic: Option<String>,
     alias: Option<String>,
     created_at: Option<DateTime<Utc>>,
-    transactions: Vec<Transaction>,
+    messages: Vec<Message>,
     addresses: Vec<Address>,
     client_options: ClientOptions,
 }
@@ -64,7 +64,7 @@ impl AccountInitialiser {
             mnemonic: None,
             alias: None,
             created_at: None,
-            transactions: vec![],
+            messages: vec![],
             addresses: vec![],
             client_options,
         }
@@ -89,10 +89,10 @@ impl AccountInitialiser {
         self
     }
 
-    /// Transactions associated with the seed.
-    /// The account can be initialised with locally stored transactions.
-    pub fn transactions(mut self, transactions: Vec<Transaction>) -> Self {
-        self.transactions = transactions;
+    /// Messages associated with the seed.
+    /// The account can be initialised with locally stored messages.
+    pub fn messages(mut self, messages: Vec<Message>) -> Self {
+        self.messages = messages;
         self
     }
 
@@ -121,9 +121,8 @@ impl AccountInitialiser {
                         created_at_timestamp,
                         mnemonic,
                         Some("password"),
-                        "password",
-                    ),
-                    None => stronghold.account_create(Some("password".to_string()), "password"),
+                    )?,
+                    None => stronghold.account_create(Some("password".to_string()))?,
                 };
                 Ok(account)
             });
@@ -136,7 +135,7 @@ impl AccountInitialiser {
             id: *id,
             alias,
             created_at,
-            transactions: self.transactions,
+            messages: self.messages,
             addresses: self.addresses,
             client_options: self.client_options,
         };
@@ -155,14 +154,12 @@ pub struct Account {
     alias: String,
     /// Time of account creation.
     created_at: DateTime<Utc>,
-    /// Transactions associated with the seed.
-    /// The account can be initialised with locally stored transactions.
-    #[serde(skip)]
+    /// Messages associated with the seed.
+    /// The account can be initialised with locally stored messages.
     #[getset(set = "pub(crate)")]
-    transactions: Vec<Transaction>,
+    messages: Vec<Message>,
     /// Address history associated with the seed.
     /// The account can be initialised with locally stored address history.
-    #[serde(skip)]
     addresses: Vec<Address>,
     /// The client options.
     client_options: ClientOptions,
@@ -195,11 +192,11 @@ impl Account {
     /// the available balance should be (50i-30i) = 20i.
     pub fn available_balance(&self) -> u64 {
         let total_balance = self.total_balance();
-        let spent = self.transactions.iter().fold(0, |acc, tx| {
-            let val = if *tx.confirmed() {
+        let spent = self.messages.iter().fold(0, |acc, message| {
+            let val = if *message.confirmed() {
                 0
             } else {
-                tx.value().without_denomination()
+                message.value().without_denomination()
             };
             acc + val
         });
@@ -219,16 +216,16 @@ impl Account {
     ///
     /// * `count` - Number of (most recent) transactions to fetch.
     /// * `from` - Starting point of the subset to fetch.
-    /// * `transaction_type` - Optional transaction type filter.
+    /// * `message_type` - Optional message type filter.
     ///
     /// # Example
     ///
     /// ```
-    /// use iota_wallet::transaction::TransactionType;
+    /// use iota_wallet::message::MessageType;
     /// use iota_wallet::account_manager::AccountManager;
     /// use iota_wallet::client::ClientOptionsBuilder;
     ///
-    /// // gets 10 received transactions, skipping the first 5 most recent transactions.
+    /// // gets 10 received messages, skipping the first 5 most recent messages.
     /// let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
     ///  .expect("invalid node URL")
     ///  .build();
@@ -236,24 +233,24 @@ impl Account {
     /// let mut account = manager.create_account(client_options)
     ///   .initialise()
     ///   .expect("failed to add account");
-    /// account.list_transactions(10, 5, Some(TransactionType::Received));
+    /// account.list_messages(10, 5, Some(MessageType::Received));
     /// ```
-    pub fn list_transactions(
+    pub fn list_messages(
         &self,
         count: u64,
         from: u64,
-        transaction_type: Option<TransactionType>,
-    ) -> Vec<&Transaction> {
-        self.transactions
+        message_type: Option<MessageType>,
+    ) -> Vec<&Message> {
+        self.messages
             .iter()
-            .filter(|tx| {
-                if let Some(tx_type) = transaction_type.clone() {
-                    match tx_type {
-                        TransactionType::Received => self.addresses.contains(tx.address()),
-                        TransactionType::Sent => !self.addresses.contains(tx.address()),
-                        TransactionType::Failed => !tx.broadcasted(),
-                        TransactionType::Unconfirmed => !tx.confirmed(),
-                        TransactionType::Value => tx.value().without_denomination() > 0,
+            .filter(|message| {
+                if let Some(message_type) = message_type.clone() {
+                    match message_type {
+                        MessageType::Received => self.addresses.contains(&message.address()),
+                        MessageType::Sent => !self.addresses.contains(&message.address()),
+                        MessageType::Failed => !message.broadcasted(),
+                        MessageType::Unconfirmed => !message.confirmed(),
+                        MessageType::Value => message.value().without_denomination() > 0,
                     }
                 } else {
                     true
@@ -280,13 +277,13 @@ impl Account {
         Ok(address)
     }
 
-    pub(crate) fn append_transactions(&mut self, transactions: Vec<Transaction>) {
-        self.transactions.extend(transactions.iter().cloned());
+    pub(crate) fn append_messages(&mut self, messages: Vec<Message>) {
+        self.messages.extend(messages.iter().cloned());
     }
 
-    /// Gets a transaction with the given hash associated with this account.
-    pub fn get_transaction(&self, hash: &Hash) -> Option<&Transaction> {
-        self.transactions.iter().find(|tx| tx.hash() == hash)
+    /// Gets a message with the given hash associated with this account.
+    pub fn get_message(&self, hash: &Hash) -> Option<&Message> {
+        self.messages.iter().find(|tx| tx.hash() == hash)
     }
 }
 
@@ -301,7 +298,7 @@ pub struct InitialisedAccount<'a> {
     /// Seed address history.
     addresses: Vec<Address>,
     /// Seed transaction history.
-    transactions: Vec<Transaction>,
+    transactions: Vec<Message>,
     /// Account creation time.
     created_at: DateTime<Utc>,
     /// Time when the account was last synced with the tangle.
