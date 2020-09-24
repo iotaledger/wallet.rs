@@ -244,11 +244,6 @@ impl SyncedAccount {
         if *transfer_obj.amount() == 0 {
             return Err(anyhow::anyhow!("amount can't be zero"));
         }
-        if transfer_obj.address().checksum()
-            != &crate::address::generate_checksum(transfer_obj.address().address())?
-        {
-            return Err(anyhow::anyhow!("invalid address checksum"));
-        }
 
         // prepare the transfer getting some needed objects and values
         let value: u64 = *transfer_obj.amount();
@@ -294,7 +289,7 @@ impl SyncedAccount {
         let (trunk, branch) = client.get_tips()?;
 
         let stronghold_account =
-            crate::with_stronghold(|stronghold| stronghold.account_get_by_id(account.id()));
+            crate::with_stronghold(|stronghold| stronghold.account_get_by_id(account.id()))?;
         let signed_transaction = stronghold_account
             .get_signed_transaction_builder()
             .set_outputs(utxo_outputs)

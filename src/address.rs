@@ -1,6 +1,7 @@
 use crate::account::Account;
 use getset::Getters;
 pub use iota::transaction::prelude::Address as IotaAddress;
+use serde::{Deserialize, Serialize};
 use std::convert::TryInto;
 
 /// The address builder.
@@ -41,7 +42,6 @@ impl AddressBuilder {
         let iota_address = self
             .address
             .ok_or_else(|| anyhow::anyhow!("the `address` field is required"))?;
-        let checksum = generate_checksum(&iota_address)?;
         let address = Address {
             address: iota_address,
             balance: self
@@ -50,7 +50,6 @@ impl AddressBuilder {
             key_index: self
                 .key_index
                 .ok_or_else(|| anyhow::anyhow!("the `key_index` field is required"))?,
-            checksum,
             internal: self.internal,
         };
         Ok(address)
@@ -58,7 +57,7 @@ impl AddressBuilder {
 }
 
 /// An address.
-#[derive(Debug, Getters, Clone, Eq)]
+#[derive(Debug, Getters, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct Address {
     /// The address.
@@ -67,16 +66,8 @@ pub struct Address {
     balance: u64,
     /// The address key index.
     key_index: usize,
-    /// The address checksum.
-    checksum: String,
     /// Determines if an address is a public or an internal (change) address.
     internal: bool,
-}
-
-impl PartialEq for Address {
-    fn eq(&self, other: &Address) -> bool {
-        self.key_index() == other.key_index()
-    }
 }
 
 pub(crate) fn get_iota_address(
@@ -85,7 +76,7 @@ pub(crate) fn get_iota_address(
     internal: bool,
 ) -> crate::Result<IotaAddress> {
     crate::with_stronghold(|stronghold| {
-        let address_str = stronghold.address_get(account.id(), index, internal);
+        let address_str = stronghold.address_get(account.id(), index, internal)?;
         let iota_address = IotaAddress::from_ed25519_bytes(address_str.as_bytes().try_into()?);
         Ok(iota_address)
     })
@@ -96,12 +87,10 @@ pub(crate) async fn get_new_address(account: &Account, internal: bool) -> crate:
     let key_index = account.addresses().len();
     let iota_address = get_iota_address(&account, key_index, internal)?;
     let balance = get_balance(&account, &iota_address).await?;
-    let checksum = generate_checksum(&iota_address)?;
     let address = Address {
         address: iota_address,
         balance,
         key_index,
-        checksum,
         internal,
     };
     Ok(address)
@@ -119,13 +108,6 @@ pub(crate) async fn get_addresses(
     }
     Ok(addresses)
 }
-
-/// Generates a checksum for the given address
-// TODO: maybe this should be part of the crypto lib
-pub(crate) fn generate_checksum(address: &IotaAddress) -> crate::Result<String> {
-    Ok("".to_string())
-}
-
 async fn get_balance(account: &Account, address: &IotaAddress) -> crate::Result<u64> {
     let client = crate::client::get_client(account.client_options());
     let amount = client

@@ -1,10 +1,7 @@
 use crate::address::Address;
 use rand::{thread_rng, Rng};
 
-pub fn select_input(
-    target: u64,
-    available_utxos: &mut Vec<Address>,
-) -> crate::Result<Vec<Address>> {
+pub fn select_input(target: u64, available_utxos: &mut [Address]) -> crate::Result<Vec<Address>> {
     if target
         > available_utxos
             .iter()
@@ -25,10 +22,7 @@ pub fn select_input(
     }
 }
 
-fn single_random_draw(
-    target: u64,
-    available_utxos: &mut Vec<Address>,
-) -> crate::Result<Vec<Address>> {
+fn single_random_draw(target: u64, available_utxos: &mut [Address]) -> crate::Result<Vec<Address>> {
     thread_rng().shuffle(available_utxos);
     let mut sum = 0;
 
@@ -48,7 +42,7 @@ fn single_random_draw(
 
 fn branch_and_bound(
     target: u64,
-    available_utxos: &mut Vec<Address>,
+    available_utxos: &mut [Address],
     depth: usize,
     current_selection: &mut Vec<Address>,
     effective_value: u64,

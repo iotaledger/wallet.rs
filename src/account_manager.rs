@@ -107,9 +107,7 @@ impl AccountManager {
     pub fn remove_account(&self, account_id: AccountIdentifier) -> crate::Result<()> {
         let adapter = crate::storage::get_adapter()?;
         let account: Account = serde_json::from_str(&adapter.get(account_id.clone())?)?;
-        crate::with_stronghold(|stronghold| {
-            stronghold.account_remove(account.id());
-        });
+        crate::with_stronghold(|stronghold| stronghold.account_remove(account.id()))?;
         adapter.remove(account_id)?;
         Ok(())
     }
@@ -190,9 +188,9 @@ impl AccountManager {
             false,
             "password".to_string(),
             None,
-        );
+        )?;
         for (index, account) in accounts.iter().enumerate() {
-            let stronghold_account = backup_stronghold.account_get_by_id(account.id());
+            let stronghold_account = backup_stronghold.account_get_by_id(account.id())?;
             let created_at_timestamp: u128 = account.created_at().timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
             let stronghold_account = crate::with_stronghold(|stronghold| {
                 stronghold.account_import(

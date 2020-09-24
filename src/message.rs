@@ -1,10 +1,7 @@
 use crate::address::Address;
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-use iota::transaction::{
-    prelude::{Hash, Message as IotaMessage, Payload},
-    Vertex,
-};
+use iota::transaction::prelude::{Hash, Message as IotaMessage, Payload};
 use serde::{Deserialize, Serialize};
 use std::convert::TryInto;
 use std::fmt;
@@ -129,7 +126,9 @@ impl Value {
 }
 
 /// A message definition.
-#[derive(Debug, Getters, Setters, Clone)]
+#[derive(
+    Debug, Getters, Setters, Clone, Hash, Eq, Ord, PartialEq, PartialOrd, Serialize, Deserialize,
+)]
 #[getset(get = "pub", set = "pub(crate)")]
 pub struct Message {
     /// The message version.
@@ -156,8 +155,8 @@ impl Message {
     pub(crate) fn from_iota_message(message: IotaMessage) -> crate::Result<Self> {
         let message = Self {
             version: 1,
-            trunk: message.trunk().clone(),
-            branch: message.branch().clone(),
+            trunk: message.trunk,
+            branch: message.branch,
             payload_length: 5, // TODO
             payload: message.payload,
             timestamp: Utc::now(),
@@ -202,12 +201,6 @@ impl Message {
             _ => 0,
         };
         Value::new(amount.try_into().unwrap(), ValueUnit::I)
-    }
-}
-
-impl PartialEq for Message {
-    fn eq(&self, other: &Self) -> bool {
-        self.trunk() == other.trunk() && self.branch() == other.branch()
     }
 }
 
