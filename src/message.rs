@@ -1,7 +1,10 @@
 use crate::address::Address;
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-use iota::transaction::prelude::{Hash, Message as IotaMessage, Payload};
+use iota::transaction::{
+    prelude::{Hash, Message as IotaMessage, Payload},
+    Vertex,
+};
 use serde::{Deserialize, Serialize};
 use std::convert::TryInto;
 use std::fmt;
@@ -155,16 +158,16 @@ impl Message {
     pub(crate) fn from_iota_message(message: IotaMessage) -> crate::Result<Self> {
         let message = Self {
             version: 1,
-            trunk: message.trunk,
-            branch: message.branch,
+            trunk: message.trunk().clone(),
+            branch: message.branch().clone(),
             payload_length: 5, // TODO
-            payload: message.payload,
+            payload: message.payload().clone(),
             timestamp: Utc::now(),
             // TODO timestamp: DateTime::<Utc>::from_utc(
             //    NaiveDateTime::from_timestamp(*message.attachment_ts().to_inner() as i64, 0),
             //    Utc,
             // ),
-            nonce: message.nonce,
+            nonce: *message.nonce(),
             confirmed: false,
             broadcasted: true,
         };
@@ -197,7 +200,7 @@ impl Message {
                 .unsigned_transaction
                 .outputs
                 .iter()
-                .fold(0, |acc, output| acc + output.amount()),
+                .fold(0, |acc, output| acc + output.amount().get()),
             _ => 0,
         };
         Value::new(amount.try_into().unwrap(), ValueUnit::I)

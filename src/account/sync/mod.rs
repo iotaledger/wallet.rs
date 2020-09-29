@@ -4,9 +4,15 @@ use crate::client::get_client;
 use crate::message::{Message, Transfer};
 
 use iota::transaction::{
-    prelude::{Hash, Input, Message as IotaMessage, Output, Payload},
+    prelude::{
+        Error as TransactionError, Hash, Input, Message as IotaMessage, Output, Payload,
+        SignedTransaction,
+    },
     Vertex,
 };
+use slip10::path::BIP32Path;
+
+use std::num::NonZeroU64;
 
 mod input_selection;
 
@@ -230,7 +236,10 @@ impl SyncedAccount {
         let mut utxo_outputs = vec![];
         let mut current_output_sum = 0;
         for utxo in utxos {
-            indexed_utxo_inputs.push((Input::new(utxo.producer, utxo.output_index), ""));
+            indexed_utxo_inputs.push((
+                Input::new(utxo.producer, utxo.output_index),
+                BIP32Path::from_str("").map_err(|e| anyhow::anyhow!(e.to_string()))?,
+            ));
             let utxo_amount = if current_output_sum + utxo.amount > value {
                 value - utxo.amount
             } else {
@@ -244,24 +253,29 @@ impl SyncedAccount {
                 utxo.address
             };
             current_output_sum += utxo.amount;
-            utxo_outputs.push(Output::new(utxo_address, utxo_amount));
+            utxo_outputs.push(Output::new(
+                utxo_address,
+                NonZeroU64::new(utxo_amount).ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
+            ));
         }
 
-        let (trunk, branch) = client.get_tips()?;
+        let tips = client.get_tips()?;
 
         let stronghold_account =
             crate::with_stronghold(|stronghold| stronghold.account_get_by_id(account.id()))?;
-        let signed_transaction = stronghold_account
-            .get_signed_transaction_builder()
-            .set_outputs(utxo_outputs)
-            .set_inputs(indexed_utxo_inputs)
+        let signed_transaction_res: Result<SignedTransaction, TransactionError> =
+            stronghold_account.with_signed_transaction_builder(|builder| {
+                builder
+                    .set_outputs(utxo_outputs)
+                    .set_inputs(indexed_utxo_inputs)
+                    .build()
+            });
+        let signed_transaction =
+            signed_transaction_res.map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
+        let message = IotaMessage::new()
+            .tips(tips)
+            .payload(Payload::SignedTransaction(Box::new(signed_transaction)))
             .build()?;
-        let message = IotaMessage {
-            trunk,
-            branch,
-            payload: Payload::SignedTransaction(Box::new(signed_transaction)),
-            nonce: 0,
-        };
 
         let attached = client.post_messages(vec![message])?;
         let messages: Vec<Message> = client
