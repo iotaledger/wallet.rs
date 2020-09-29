@@ -238,7 +238,7 @@ impl SyncedAccount {
         for utxo in utxos {
             indexed_utxo_inputs.push((
                 Input::new(utxo.producer, utxo.output_index),
-                BIP32Path::from_str("")?,
+                BIP32Path::from_str("").map_err(|e| anyhow::anyhow!(e.to_string()))?,
             ));
             let utxo_amount = if current_output_sum + utxo.amount > value {
                 value - utxo.amount
@@ -275,7 +275,7 @@ impl SyncedAccount {
         let message = IotaMessage::new()
             .tips(tips)
             .payload(Payload::SignedTransaction(Box::new(signed_transaction)))
-            .buid()?;
+            .build()?;
 
         let attached = client.post_messages(vec![message])?;
         let messages: Vec<Message> = client

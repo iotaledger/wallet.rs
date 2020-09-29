@@ -161,13 +161,13 @@ impl Message {
             trunk: message.trunk().clone(),
             branch: message.branch().clone(),
             payload_length: 5, // TODO
-            payload: todo!(),  // TODO message.payload,
+            payload: message.payload().clone(),
             timestamp: Utc::now(),
             // TODO timestamp: DateTime::<Utc>::from_utc(
             //    NaiveDateTime::from_timestamp(*message.attachment_ts().to_inner() as i64, 0),
             //    Utc,
             // ),
-            nonce: 5, // TODO message.nonce,
+            nonce: *message.nonce(),
             confirmed: false,
             broadcasted: true,
         };
