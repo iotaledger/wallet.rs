@@ -23,7 +23,7 @@ impl MyStorage {
 
 fn account_id_value(account_id: AccountIdentifier) -> anyhow::Result<String> {
     match account_id {
-        AccountIdentifier::Id(val) => Ok(val),
+        AccountIdentifier::Id(val) => Ok(String::from_utf8_lossy(&val).to_string()),
         _ => Err(anyhow::anyhow!("Unexpected AccountIdentifier type")),
     }
 }
