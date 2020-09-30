@@ -272,10 +272,11 @@ impl SyncedAccount {
             });
         let signed_transaction =
             signed_transaction_res.map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
-        let message = IotaMessage::new()
+        let message = IotaMessage::builder()
             .tips(tips)
             .payload(Payload::SignedTransaction(Box::new(signed_transaction)))
-            .build()?;
+            .build()
+            .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
         let attached = client.post_messages(vec![message])?;
         let messages: Vec<Message> = client
