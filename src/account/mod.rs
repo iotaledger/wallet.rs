@@ -13,7 +13,7 @@ mod sync;
 pub use sync::{AccountSynchronizer, SyncedAccount};
 
 /// The account identifier.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
 #[serde(untagged)]
 pub enum AccountIdentifier {
     /// A stronghold record id identifier.
