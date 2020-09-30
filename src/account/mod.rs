@@ -30,7 +30,7 @@ impl From<[u8; 32]> for AccountIdentifier {
 }
 impl From<&[u8; 32]> for AccountIdentifier {
     fn from(value: &[u8; 32]) -> Self {
-        Self::Id(value.clone())
+        Self::Id(*value)
     }
 }
 

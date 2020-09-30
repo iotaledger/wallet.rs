@@ -103,7 +103,7 @@ pub(crate) fn emit_balance_change(account_id: [u8; 32], address: Address, balanc
         .expect("Failed to lock balance_listeners: emit_balance_change()");
     for listener in listeners.deref() {
         (listener.on_event)(BalanceEvent {
-            account_id: account_id.clone(),
+            account_id,
             address: address.clone(),
             balance,
         })
@@ -122,7 +122,7 @@ pub(crate) fn emit_transaction_event(
     for listener in listeners.deref() {
         if listener.event_type == event_type {
             (listener.on_event)(TransactionEvent {
-                account_id: account_id.clone(),
+                account_id,
                 transaction_hash: transaction_hash.clone(),
             })
         }
