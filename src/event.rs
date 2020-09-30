@@ -11,7 +11,7 @@ use std::sync::{Arc, Mutex};
 #[getset(get = "pub")]
 pub struct BalanceEvent {
     /// The associated account identifier.
-    account_id: String,
+    account_id: [u8; 32],
     /// The associated address.
     address: Address,
     /// The new balance.
@@ -23,7 +23,7 @@ pub struct BalanceEvent {
 #[getset(get = "pub")]
 pub struct TransactionEvent {
     /// The associated account identifier.
-    account_id: String,
+    account_id: [u8; 32],
     /// The event transaction hash.
     transaction_hash: Hash,
 }
@@ -33,7 +33,7 @@ pub struct TransactionEvent {
 #[getset(get = "pub")]
 pub struct TransactionConfirmationChangeEvent {
     /// The associated account identifier.
-    account_id: String,
+    account_id: [u8; 32],
     /// The event transaction hash.
     transaction_hash: Hash,
     /// The confirmed state of the transaction.
@@ -97,8 +97,7 @@ pub fn on_balance_change<F: Fn(BalanceEvent) + Send + 'static>(cb: F) {
 }
 
 /// Emits a balance change event.
-pub(crate) fn emit_balance_change(account_id: impl Into<String>, address: Address, balance: u64) {
-    let account_id = account_id.into();
+pub(crate) fn emit_balance_change(account_id: [u8; 32], address: Address, balance: u64) {
     let listeners = balance_listeners()
         .lock()
         .expect("Failed to lock balance_listeners: emit_balance_change()");
@@ -114,10 +113,9 @@ pub(crate) fn emit_balance_change(account_id: impl Into<String>, address: Addres
 /// Emits a transaction-related event.
 pub(crate) fn emit_transaction_event(
     event_type: TransactionEventType,
-    account_id: impl Into<String>,
+    account_id: [u8; 32],
     transaction_hash: Hash,
 ) {
-    let account_id = account_id.into();
     let listeners = transaction_listeners()
         .lock()
         .expect("Failed to lock balance_listeners: emit_balance_change()");
@@ -183,12 +181,12 @@ mod tests {
     #[test]
     fn balance_events() {
         on_balance_change(|event| {
-            assert!(event.account_id == "the account id");
+            assert!(event.account_id == [1; 32]);
             assert!(event.balance == 0);
         });
 
         emit_balance_change(
-            "the account id",
+            [1; 32],
             AddressBuilder::new()
                 .address(IotaAddress::from_ed25519_bytes(&[0; 32]))
                 .balance(0)

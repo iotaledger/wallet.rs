@@ -14,29 +14,23 @@ pub use sync::{AccountSynchronizer, SyncedAccount};
 
 /// The account identifier.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
 pub enum AccountIdentifier {
-    /// An Id (string) identifier.
-    Id(String),
+    /// A stronghold record id identifier.
+    Id([u8; 32]),
     /// An index identifier.
     Index(u64),
-}
-
-// When the identifier is a String (id).
-impl From<String> for AccountIdentifier {
-    fn from(value: String) -> Self {
-        Self::Id(value)
-    }
 }
 
 // When the identifier is a stronghold id.
 impl From<[u8; 32]> for AccountIdentifier {
     fn from(value: [u8; 32]) -> Self {
-        Self::Id(String::from_utf8_lossy(&value).to_string())
+        Self::Id(value)
     }
 }
 impl From<&[u8; 32]> for AccountIdentifier {
     fn from(value: &[u8; 32]) -> Self {
-        Self::Id(String::from_utf8_lossy(value).to_string())
+        Self::Id(value.clone())
     }
 }
 
@@ -140,6 +134,7 @@ impl AccountInitialiser {
             client_options: self.client_options,
         };
         adapter.set(account_id, serde_json::to_string(&account)?)?;
+        println!("created");
         Ok(account)
     }
 }
