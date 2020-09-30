@@ -134,7 +134,6 @@ impl AccountInitialiser {
             client_options: self.client_options,
         };
         adapter.set(account_id, serde_json::to_string(&account)?)?;
-        println!("created");
         Ok(account)
     }
 }
