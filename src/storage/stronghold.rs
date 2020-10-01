@@ -1,44 +1,79 @@
-use super::sqlite::SqliteStorageAdapter;
 use super::StorageAdapter;
 use crate::account::AccountIdentifier;
+
 use std::path::Path;
 
-use stronghold::{Base64Decodable, RecordId};
+use stronghold::{RecordHint, RecordId, Stronghold};
+
+static ACCOUNT_ID_INDEX_HINT: &str = "wallet.rs-account-ids";
+
+type AccountIdIndex = Vec<(AccountIdentifier, RecordId)>;
 
 /// Stronghold storage adapter.
-pub struct StrongholdStorageAdapter {
-    id_storage: SqliteStorageAdapter,
-}
+pub struct StrongholdStorageAdapter;
 
 impl StrongholdStorageAdapter {
     /// Initialises the storage adapter.
     pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
-        let id_storage = SqliteStorageAdapter::new(path.as_ref().join("id.db"), "account_ids")?;
-        let adapter = Self { id_storage };
-        Ok(adapter)
+        Ok(Self {})
     }
 }
 
-fn create_stronghold_id(id: String) -> crate::Result<RecordId> {
-    let bytes = Vec::from_base64(id.as_bytes())?;
-    let id = RecordId::load(&bytes)?;
-    Ok(id)
+fn get_account_index(stronghold: &Stronghold) -> crate::Result<(RecordId, AccountIdIndex)> {
+    let storage_index = stronghold.record_list()?;
+    let index_hint = RecordHint::new(ACCOUNT_ID_INDEX_HINT)?;
+    let (record_id, index): (RecordId, AccountIdIndex) = storage_index
+        .iter()
+        .find(|(record_id, record_hint)| record_hint == &index_hint)
+        .map(|(record_id, record_hint)| {
+            let index_json = stronghold
+                .record_read(record_id)
+                .expect("failed to read account id index");
+            let index: AccountIdIndex =
+                serde_json::from_str(&index_json).expect("cannot decode account id index");
+            (*record_id, index)
+        })
+        .unwrap_or_else(|| {
+            let index = AccountIdIndex::default();
+            let record_id = stronghold
+                .record_create(
+                    &serde_json::to_string(&index).expect("failed to encode account id index"),
+                )
+                .expect("failed to save account id index");
+            (record_id, index)
+        });
+    Ok((record_id, index))
+}
+
+fn get_from_index(
+    #[allow(clippy::ptr_arg)] index: &AccountIdIndex,
+    account_id: &AccountIdentifier,
+) -> crate::Result<RecordId> {
+    let (_, stronghold_id) = match account_id {
+        AccountIdentifier::Id(id) => index
+            .iter()
+            .find(|(acc_id, _)| acc_id == account_id)
+            .ok_or_else(|| anyhow::anyhow!("account not found"))?,
+        AccountIdentifier::Index(pos) => &index[*pos as usize],
+    };
+    Ok(*stronghold_id)
 }
 
 impl StorageAdapter for StrongholdStorageAdapter {
     fn get(&self, account_id: AccountIdentifier) -> crate::Result<String> {
-        let stronghold_id_string = self.id_storage.get(account_id)?;
-        let stronghold_id = create_stronghold_id(stronghold_id_string)?;
-        let account = crate::with_stronghold(|stronghold| stronghold.record_read(&stronghold_id))?;
+        let account = crate::with_stronghold(|stronghold| {
+            let (_, index) = get_account_index(&stronghold)?;
+            let stronghold_id = get_from_index(&index, &account_id)?;
+            stronghold.record_read(&stronghold_id)
+        })?;
         Ok(account)
     }
 
     fn get_all(&self) -> crate::Result<std::vec::Vec<String>> {
         let mut accounts = vec![];
-        let ids = self.id_storage.get_all()?;
-        for id in ids {
-            let id = create_stronghold_id(id)?;
-            let account = crate::with_stronghold(|stronghold| stronghold.record_read(&id))?;
+        let (_, index) = crate::with_stronghold(|stronghold| get_account_index(&stronghold))?;
+        for (_, record_id) in index {
+            let account = crate::with_stronghold(|stronghold| stronghold.record_read(&record_id))?;
             accounts.push(account);
         }
         Ok(accounts)
@@ -49,19 +84,63 @@ impl StorageAdapter for StrongholdStorageAdapter {
         account_id: AccountIdentifier,
         account: String,
     ) -> std::result::Result<(), anyhow::Error> {
-        let stronghold_id =
-            crate::with_stronghold(|stronghold| stronghold.record_create(account.as_str()))?;
+        let res: crate::Result<()> = crate::with_stronghold(|stronghold| {
+            let (index_record_id, mut index) = get_account_index(&stronghold)?;
+            let account_in_index = get_from_index(&index, &account_id);
 
-        self.id_storage
-            .set(account_id, format!("{:?}", stronghold_id))?;
+            if let Ok(stronghold_id) = account_in_index {
+                stronghold.record_remove(stronghold_id)?;
+            }
+
+            let stronghold_id = stronghold.record_create(account.as_str())?;
+
+            if account_in_index.is_ok() {
+                // account already existed; update the RecordId
+                let pos = index
+                    .iter()
+                    .position(|(acc_id, _)| acc_id == &account_id)
+                    .unwrap();
+                index[pos] = (account_id, stronghold_id);
+            } else {
+                // new account; push to the index
+                index.push((account_id, stronghold_id))
+            }
+
+            stronghold.record_remove(index_record_id)?;
+            stronghold.record_create_with_hint(
+                &serde_json::to_string(&index)?,
+                ACCOUNT_ID_INDEX_HINT.as_bytes(),
+            )?;
+            Ok(())
+        });
+        res?;
+
         Ok(())
     }
 
     fn remove(&self, account_id: AccountIdentifier) -> std::result::Result<(), anyhow::Error> {
-        let stronghold_id_string = self.id_storage.get(account_id.clone())?;
-        let stronghold_id = create_stronghold_id(stronghold_id_string)?;
-        crate::with_stronghold(|stronghold| stronghold.record_remove(stronghold_id))?;
-        self.id_storage.remove(account_id)?;
+        let res: crate::Result<()> = crate::with_stronghold(|stronghold| {
+            let (index_record_id, index) = get_account_index(&stronghold)?;
+            let stronghold_id = get_from_index(&index, &account_id)?;
+
+            stronghold.record_remove(stronghold_id)?;
+
+            let mut new_index = vec![];
+            for (acc_id, record_id) in index {
+                if acc_id != account_id {
+                    new_index.push((acc_id, record_id));
+                }
+            }
+
+            stronghold.record_remove(index_record_id)?;
+            stronghold.record_create_with_hint(
+                &serde_json::to_string(&new_index)?,
+                ACCOUNT_ID_INDEX_HINT.as_bytes(),
+            )?;
+            Ok(())
+        });
+        res?;
+
         Ok(())
     }
 }
