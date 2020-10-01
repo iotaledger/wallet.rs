@@ -3,7 +3,7 @@ use crate::account::AccountIdentifier;
 
 use std::path::Path;
 
-use stronghold::{Base64Decodable, RecordHint, RecordId, Stronghold};
+use stronghold::{RecordHint, RecordId, Stronghold};
 
 static ACCOUNT_ID_INDEX_HINT: &str = "wallet.rs-account-ids";
 
@@ -17,12 +17,6 @@ impl StrongholdStorageAdapter {
     pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
         Ok(Self {})
     }
-}
-
-fn create_stronghold_id(id: String) -> crate::Result<RecordId> {
-    let bytes = Vec::from_base64(id.as_bytes())?;
-    let id = RecordId::load(&bytes)?;
-    Ok(id)
 }
 
 fn get_account_index(stronghold: &Stronghold) -> crate::Result<(RecordId, AccountIdIndex)> {
@@ -52,7 +46,7 @@ fn get_account_index(stronghold: &Stronghold) -> crate::Result<(RecordId, Accoun
 }
 
 fn get_from_index(
-    index: &AccountIdIndex,
+    #[allow(clippy::ptr_arg)] index: &AccountIdIndex,
     account_id: &AccountIdentifier,
 ) -> crate::Result<RecordId> {
     let (_, stronghold_id) = match account_id {
