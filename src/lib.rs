@@ -64,3 +64,18 @@ pub(crate) fn with_stronghold_from_path<T, F: FnOnce(&Stronghold) -> T>(
         panic!("should initialize stronghold instance before using it")
     }
 }
+
+#[cfg(test)]
+mod test_utils {
+    use super::account_manager::AccountManager;
+    use once_cell::sync::OnceCell;
+
+    static MANAGER_INSTANCE: OnceCell<AccountManager> = OnceCell::new();
+    pub fn get_account_manager() -> &'static AccountManager {
+        MANAGER_INSTANCE.get_or_init(|| {
+            let manager = AccountManager::new();
+            manager.set_stronghold_password("password").unwrap();
+            manager
+        })
+    }
+}

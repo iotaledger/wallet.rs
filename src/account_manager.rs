@@ -340,12 +340,12 @@ fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std::i
 
 #[cfg(test)]
 mod tests {
-    use super::AccountManager;
     use crate::client::ClientOptionsBuilder;
 
     #[test]
     fn store_accounts() {
-        let manager = AccountManager::new();
+        let manager = crate::test_utils::get_account_manager();
+
         let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
             .expect("invalid node URL")
             .build();
