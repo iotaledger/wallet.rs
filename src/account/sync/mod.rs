@@ -6,7 +6,7 @@ use crate::message::{Message, Transfer};
 use iota::transaction::{
     prelude::{
         Error as TransactionError, Hash, Input, Message as IotaMessage, Output, Payload,
-        SignedTransaction,
+        SigLockedSingleDeposit, SignedTransaction, UTXOInput,
     },
     Vertex,
 };
@@ -232,12 +232,12 @@ impl SyncedAccount {
             .addresses(&utxo_outputs_addresses[..])
             .get()?;
 
-        let mut indexed_utxo_inputs = vec![];
-        let mut utxo_outputs = vec![];
+        let mut indexed_utxo_inputs: Vec<(Input, BIP32Path)> = vec![];
+        let mut utxo_outputs: Vec<Output> = vec![];
         let mut current_output_sum = 0;
         for utxo in utxos {
             indexed_utxo_inputs.push((
-                Input::new(utxo.producer, utxo.output_index),
+                UTXOInput::new(utxo.producer, utxo.output_index).into(),
                 BIP32Path::from_str("").map_err(|e| anyhow::anyhow!(e.to_string()))?,
             ));
             let utxo_amount = if current_output_sum + utxo.amount > value {
@@ -253,10 +253,14 @@ impl SyncedAccount {
                 utxo.address
             };
             current_output_sum += utxo.amount;
-            utxo_outputs.push(Output::new(
-                utxo_address,
-                NonZeroU64::new(utxo_amount).ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
-            ));
+            utxo_outputs.push(
+                SigLockedSingleDeposit::new(
+                    utxo_address,
+                    NonZeroU64::new(utxo_amount)
+                        .ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
+                )
+                .into(),
+            );
         }
 
         let tips = client.get_tips()?;
