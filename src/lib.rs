@@ -32,7 +32,7 @@ static STRONGHOLD_INSTANCE: OnceCell<Arc<Mutex<HashMap<PathBuf, Stronghold>>>> =
 
 pub(crate) fn init_stronghold(stronghold_path: PathBuf, stronghold: Stronghold) {
     let mut stronghold_map = STRONGHOLD_INSTANCE
-        .get_or_init(|| Default::default())
+        .get_or_init(Default::default)
         .lock()
         .unwrap();
     stronghold_map.insert(stronghold_path, stronghold);
@@ -40,7 +40,7 @@ pub(crate) fn init_stronghold(stronghold_path: PathBuf, stronghold: Stronghold) 
 
 pub(crate) fn remove_stronghold(stronghold_path: PathBuf) {
     let mut stronghold_map = STRONGHOLD_INSTANCE
-        .get_or_init(|| Default::default())
+        .get_or_init(Default::default)
         .lock()
         .unwrap();
     stronghold_map.remove(&stronghold_path);
@@ -55,7 +55,7 @@ pub(crate) fn with_stronghold_from_path<T, F: FnOnce(&Stronghold) -> T>(
     cb: F,
 ) -> T {
     let stronghold_map = STRONGHOLD_INSTANCE
-        .get_or_init(|| Default::default())
+        .get_or_init(Default::default)
         .lock()
         .unwrap();
     if let Some(stronghold) = stronghold_map.get(path) {

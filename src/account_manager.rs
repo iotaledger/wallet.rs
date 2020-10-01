@@ -46,7 +46,7 @@ impl AccountManager {
             password.as_ref().to_string(),
             None,
         )?;
-        crate::init_stronghold(stronghold_path.to_path_buf(), stronghold);
+        crate::init_stronghold(stronghold_path, stronghold);
         Ok(())
     }
 
