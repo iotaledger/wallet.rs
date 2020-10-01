@@ -1,7 +1,7 @@
 use super::StorageAdapter;
 use crate::account::AccountIdentifier;
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use stronghold::{RecordHint, RecordId, Stronghold};
 
@@ -10,12 +10,18 @@ static ACCOUNT_ID_INDEX_HINT: &str = "wallet.rs-account-ids";
 type AccountIdIndex = Vec<(AccountIdentifier, RecordId)>;
 
 /// Stronghold storage adapter.
-pub struct StrongholdStorageAdapter;
+pub struct StrongholdStorageAdapter {
+    path: PathBuf,
+}
 
 impl StrongholdStorageAdapter {
     /// Initialises the storage adapter.
     pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
-        Ok(Self {})
+        Ok(Self {
+            path: path
+                .as_ref()
+                .join(crate::storage::stronghold_snapshot_filename()),
+        })
     }
 }
 
@@ -61,7 +67,7 @@ fn get_from_index(
 
 impl StorageAdapter for StrongholdStorageAdapter {
     fn get(&self, account_id: AccountIdentifier) -> crate::Result<String> {
-        let account = crate::with_stronghold(|stronghold| {
+        let account = crate::with_stronghold_from_path(&self.path, |stronghold| {
             let (_, index) = get_account_index(&stronghold)?;
             let stronghold_id = get_from_index(&index, &account_id)?;
             stronghold.record_read(&stronghold_id)
@@ -71,9 +77,13 @@ impl StorageAdapter for StrongholdStorageAdapter {
 
     fn get_all(&self) -> crate::Result<std::vec::Vec<String>> {
         let mut accounts = vec![];
-        let (_, index) = crate::with_stronghold(|stronghold| get_account_index(&stronghold))?;
+        let (_, index) = crate::with_stronghold_from_path(&self.path, |stronghold| {
+            get_account_index(&stronghold)
+        })?;
         for (_, record_id) in index {
-            let account = crate::with_stronghold(|stronghold| stronghold.record_read(&record_id))?;
+            let account = crate::with_stronghold_from_path(&self.path, |stronghold| {
+                stronghold.record_read(&record_id)
+            })?;
             accounts.push(account);
         }
         Ok(accounts)
@@ -84,7 +94,7 @@ impl StorageAdapter for StrongholdStorageAdapter {
         account_id: AccountIdentifier,
         account: String,
     ) -> std::result::Result<(), anyhow::Error> {
-        let res: crate::Result<()> = crate::with_stronghold(|stronghold| {
+        let res: crate::Result<()> = crate::with_stronghold_from_path(&self.path, |stronghold| {
             let (index_record_id, mut index) = get_account_index(&stronghold)?;
             let account_in_index = get_from_index(&index, &account_id);
 
@@ -119,7 +129,7 @@ impl StorageAdapter for StrongholdStorageAdapter {
     }
 
     fn remove(&self, account_id: AccountIdentifier) -> std::result::Result<(), anyhow::Error> {
-        let res: crate::Result<()> = crate::with_stronghold(|stronghold| {
+        let res: crate::Result<()> = crate::with_stronghold_from_path(&self.path, |stronghold| {
             let (index_record_id, index) = get_account_index(&stronghold)?;
             let stronghold_id = get_from_index(&index, &account_id)?;
 

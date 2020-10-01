@@ -23,18 +23,44 @@ pub mod storage;
 pub use anyhow::Result;
 pub use chrono::prelude::{DateTime, Utc};
 use once_cell::sync::OnceCell;
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::collections::HashMap;
+use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
 use stronghold::Stronghold;
 
-type GlobalStronghold = Arc<Mutex<Stronghold>>;
-static STRONGHOLD_INSTANCE: OnceCell<GlobalStronghold> = OnceCell::new();
+static STRONGHOLD_INSTANCE: OnceCell<Arc<Mutex<HashMap<PathBuf, Stronghold>>>> = OnceCell::new();
 
-pub(crate) fn with_stronghold<T, F: FnOnce(MutexGuard<'static, Stronghold>) -> T>(cb: F) -> T {
-    let stronghold = STRONGHOLD_INSTANCE.get_or_init(|| {
-        let path = storage::get_stronghold_snapshot_path();
-        let stronghold = Stronghold::new(&path, !path.exists(), "password".to_string(), None)
-            .expect("failed to initialize stronghold");
-        Arc::new(Mutex::new(stronghold))
-    });
-    cb(stronghold.lock().expect("failed to get stronghold lock"))
+pub(crate) fn init_stronghold(stronghold_path: PathBuf, stronghold: Stronghold) {
+    let mut stronghold_map = STRONGHOLD_INSTANCE
+        .get_or_init(|| Default::default())
+        .lock()
+        .unwrap();
+    stronghold_map.insert(stronghold_path, stronghold);
+}
+
+pub(crate) fn remove_stronghold(stronghold_path: PathBuf) {
+    let mut stronghold_map = STRONGHOLD_INSTANCE
+        .get_or_init(|| Default::default())
+        .lock()
+        .unwrap();
+    stronghold_map.remove(&stronghold_path);
+}
+
+pub(crate) fn with_stronghold<T, F: FnOnce(&Stronghold) -> T>(cb: F) -> T {
+    with_stronghold_from_path(&crate::storage::get_stronghold_snapshot_path(), cb)
+}
+
+pub(crate) fn with_stronghold_from_path<T, F: FnOnce(&Stronghold) -> T>(
+    path: &PathBuf,
+    cb: F,
+) -> T {
+    let stronghold_map = STRONGHOLD_INSTANCE
+        .get_or_init(|| Default::default())
+        .lock()
+        .unwrap();
+    if let Some(stronghold) = stronghold_map.get(path) {
+        cb(stronghold)
+    } else {
+        panic!("should initialize stronghold instance before using it")
+    }
 }
