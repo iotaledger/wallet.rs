@@ -10,6 +10,7 @@ use std::thread;
 use std::time::Duration;
 
 use iota::transaction::prelude::Hash;
+use stronghold::Stronghold;
 
 /// The account manager.
 ///
@@ -34,6 +35,19 @@ impl AccountManager {
     /// Initialises a new instance of the account manager with the default storage adapter.
     pub fn new() -> Self {
         Default::default()
+    }
+
+    /// Sets the stronghold password.
+    pub fn set_stronghold_password<P: AsRef<str>>(&self, password: P) -> crate::Result<()> {
+        let stronghold_path = crate::storage::get_stronghold_snapshot_path();
+        let stronghold = Stronghold::new(
+            &stronghold_path,
+            !stronghold_path.exists(),
+            password.as_ref().to_string(),
+            None,
+        )?;
+        crate::init_stronghold(stronghold_path, stronghold);
+        Ok(())
     }
 
     /// Enables syncing through node events.
@@ -137,11 +151,11 @@ impl AccountManager {
         let storage_path = crate::storage::get_storage_path();
         if storage_path.exists() {
             let metadata = fs::metadata(&storage_path)?;
-            let backup_path = destination.as_ref().join("backup");
+            let backup_path = destination.as_ref().to_path_buf();
             if metadata.is_dir() {
                 copy_dir(storage_path, &backup_path)?;
             } else {
-                fs::create_dir_all(destination)?;
+                fs::create_dir_all(&destination)?;
                 fs::copy(storage_path, &backup_path)?;
             }
             Ok(backup_path)
@@ -152,14 +166,25 @@ impl AccountManager {
 
     /// Import backed up accounts.
     pub fn import_accounts<P: AsRef<Path>>(&self, source: P) -> crate::Result<()> {
-        let storage = crate::storage::get_adapter()?;
-        let backup_storage = crate::storage::get_adapter_from_path(&source)?;
+        let backup_stronghold_path = source
+            .as_ref()
+            .join(crate::storage::stronghold_snapshot_filename());
+        let backup_stronghold = stronghold::Stronghold::new(
+            &backup_stronghold_path,
+            false,
+            "password".to_string(),
+            None,
+        )?;
+        crate::init_stronghold(backup_stronghold_path.clone(), backup_stronghold);
 
+        let backup_storage = crate::storage::get_adapter_from_path(&source)?;
         let accounts = backup_storage.get_all()?;
         let accounts = crate::storage::parse_accounts(&accounts)?;
 
+        let storage = crate::storage::get_adapter()?;
         let stored_accounts = storage.get_all()?;
         let stored_accounts = crate::storage::parse_accounts(&stored_accounts)?;
+
         let already_imported_account = stored_accounts.iter().find(|stored_account| {
             stored_account.addresses().iter().any(|stored_address| {
                 accounts.iter().any(|account| {
@@ -178,9 +203,7 @@ impl AccountManager {
         }
 
         let backup_stronghold = stronghold::Stronghold::new(
-            source
-                .as_ref()
-                .join(crate::storage::stronghold_snapshot_filename()),
+            &backup_stronghold_path,
             false,
             "password".to_string(),
             None,
@@ -202,6 +225,7 @@ impl AccountManager {
                 serde_json::to_string(&account)?,
             )?;
         }
+        crate::remove_stronghold(backup_stronghold_path);
         Ok(())
     }
 
@@ -316,12 +340,12 @@ fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std::i
 
 #[cfg(test)]
 mod tests {
-    use super::AccountManager;
     use crate::client::ClientOptionsBuilder;
 
     #[test]
     fn store_accounts() {
-        let manager = AccountManager::new();
+        let manager = crate::test_utils::get_account_manager();
+
         let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
             .expect("invalid node URL")
             .build();

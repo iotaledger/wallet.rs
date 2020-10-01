@@ -224,6 +224,7 @@ impl Account {
     ///  .expect("invalid node URL")
     ///  .build();
     /// let mut manager = AccountManager::new();
+    /// manager.set_stronghold_password("password").unwrap();
     /// let mut account = manager.create_account(client_options)
     ///   .initialise()
     ///   .expect("failed to add account");
@@ -301,12 +302,12 @@ pub struct InitialisedAccount<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::account_manager::AccountManager;
     use crate::client::ClientOptionsBuilder;
 
     #[test]
     fn set_alias() {
-        let manager = AccountManager::new();
+        let manager = crate::test_utils::get_account_manager();
+
         let updated_alias = "updated alias";
         let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
             .expect("invalid node URL")
