@@ -97,10 +97,26 @@ impl PartialEq for Address {
     }
 }
 
+pub(crate) fn get_iota_address(
+    account_id: &[u8; 32],
+    account_index: usize,
+    address_index: usize,
+    internal: bool,
+) -> crate::Result<IotaAddress> {
+    crate::with_stronghold(|stronghold| {
+        let address_str =
+            stronghold.address_get(account_id, Some(account_index), address_index, internal)?;
+        let address_ed25519 = Vec::from_base32(&bech32::decode(&address_str)?.1)?;
+        let iota_address =
+            IotaAddress::Ed25519(Ed25519Address::new(address_ed25519[1..].try_into()?));
+        Ok(iota_address)
+    })
+}
+
 /// Gets an unused address for the given account.
 pub(crate) async fn get_new_address(account: &Account, internal: bool) -> crate::Result<Address> {
     let key_index = account.addresses().len();
-    let iota_address = get_iota_address(&account, key_index, internal)?;
+    let iota_address = get_iota_address(account.id(), account.index()?, key_index, internal)?;
     let balance = get_balance(&account, &iota_address).await?;
     let address = Address {
         address: iota_address,

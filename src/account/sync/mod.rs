@@ -38,6 +38,7 @@ async fn sync_addresses(
     gap_limit: Option<usize>,
 ) -> crate::Result<(Vec<Address>, Vec<IotaMessage>)> {
     let mut address_index = address_index;
+    let account_index = account.index()?;
 
     let client = get_client(account.client_options());
     let gap_limit = gap_limit.unwrap_or(20);
@@ -48,15 +49,25 @@ async fn sync_addresses(
         let mut generated_iota_addresses = vec![];
         for i in address_index..(address_index + gap_limit) {
             // generate both `public` and `internal (change)` addresses
-            generated_iota_addresses.push(crate::address::get_iota_address(&account, i, false)?);
-            generated_iota_addresses.push(crate::address::get_iota_address(&account, i, true)?);
+            generated_iota_addresses.push(crate::address::get_iota_address(
+                account.id(),
+                account_index,
+                i,
+                false,
+            )?);
+            generated_iota_addresses.push(crate::address::get_iota_address(
+                account.id(),
+                account_index,
+                i,
+                true,
+            )?);
         }
 
         let curr_found_transactions = client
             .get_transactions()
             .addresses(&generated_iota_addresses[..])
             .get()?;
-        found_transactions.extend(curr_found_transactions.iter().cloned());
+        found_transactions.extend(curr_found_transactions.into_iter());
 
         let generated_addresses_outputs =
             client.get_addresses_balance(&generated_iota_addresses[..])?;
@@ -190,7 +201,7 @@ impl<'a> AccountSynchronizer<'a> {
             }
         }
 
-        let messages = sync_transactions(self.account, new_message_hashes).await?;
+        let messages = sync_transactions(self.account, new_message_ids).await?;
 
         self.account.set_messages(messages);
         self.account.set_addresses(found_addresses);
@@ -358,21 +369,27 @@ impl SyncedAccount {
 
 #[cfg(test)]
 mod tests {
-    use crate::account_manager::AccountManager;
     use crate::client::ClientOptionsBuilder;
+    use rusty_fork::rusty_fork_test;
 
-    #[tokio::test]
-    async fn account_sync() -> crate::Result<()> {
-        let manager = AccountManager::new();
-        let client_options =
-            ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")?.build();
-        let mut account = manager
-            .create_account(client_options)
-            .alias("alias")
-            .initialise()?;
+    rusty_fork_test! {
+        #[test]
+        fn account_sync() {
+            let mut runtime = tokio::runtime::Runtime::new().unwrap();
+            runtime.block_on(async move {
+                let manager = crate::test_utils::get_account_manager();
+                let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+                    .unwrap()
+                    .build();
+                let mut account = manager
+                    .create_account(client_options)
+                    .alias("alias")
+                    .initialise()
+                    .unwrap();
 
-        let synced_accounts = account.sync().execute().await?;
-
-        Ok(())
+                let synced_accounts = account.sync().execute().await.unwrap();
+                // TODO improve test when the node API is ready to use
+            });
+        }
     }
 }

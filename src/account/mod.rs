@@ -294,6 +294,18 @@ impl Account {
             .iter()
             .find(|tx| tx.message_id() == message_id)
     }
+
+    /// Gets the account index.
+    pub fn index(&self) -> crate::Result<usize> {
+        let adapter = crate::storage::get_adapter()?;
+        let accounts = adapter.get_all()?;
+        let account_json = serde_json::to_string(&self)?;
+        let index = accounts
+            .iter()
+            .position(|acc| acc == &account_json)
+            .unwrap();
+        Ok(index)
+    }
 }
 
 /// Data returned from the account initialisation.
