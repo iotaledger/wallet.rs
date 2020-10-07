@@ -341,23 +341,26 @@ fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std::i
 #[cfg(test)]
 mod tests {
     use crate::client::ClientOptionsBuilder;
+    use rusty_fork::rusty_fork_test;
 
-    #[test]
-    fn store_accounts() {
-        let manager = crate::test_utils::get_account_manager();
+    rusty_fork_test! {
+        #[test]
+        fn store_accounts() {
+            let manager = crate::test_utils::get_account_manager();
 
-        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-            .expect("invalid node URL")
-            .build();
+            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+                .expect("invalid node URL")
+                .build();
 
-        let account = manager
-            .create_account(client_options)
-            .alias("alias")
-            .initialise()
-            .expect("failed to add account");
+            let account = manager
+                .create_account(client_options)
+                .alias("alias")
+                .initialise()
+                .expect("failed to add account");
 
-        manager
-            .remove_account(account.id().into())
-            .expect("failed to remove account");
+            manager
+                .remove_account(account.id().into())
+                .expect("failed to remove account");
+        }
     }
 }
