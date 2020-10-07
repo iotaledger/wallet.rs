@@ -1,8 +1,13 @@
 use crate::account::Account;
+use bech32::FromBase32;
 use getset::Getters;
-pub use iota::transaction::prelude::Address as IotaAddress;
+pub use iota::transaction::prelude::{
+    Address as IotaAddress, Ed25519Address, SignatureLockedSingleOutput, UTXOInput,
+};
 use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
 use std::convert::TryInto;
+use std::hash::{Hash, Hasher};
 
 /// The address builder.
 #[derive(Default)]
@@ -42,7 +47,6 @@ impl AddressBuilder {
         let iota_address = self
             .address
             .ok_or_else(|| anyhow::anyhow!("the `address` field is required"))?;
-        let checksum = generate_checksum(&iota_address)?;
         let address = Address {
             address: iota_address,
             balance: self
@@ -51,7 +55,6 @@ impl AddressBuilder {
             key_index: self
                 .key_index
                 .ok_or_else(|| anyhow::anyhow!("the `key_index` field is required"))?,
-            checksum,
             internal: self.internal,
         };
         Ok(address)
@@ -68,26 +71,46 @@ pub struct Address {
     balance: u64,
     /// The address key index.
     key_index: usize,
-    /// The address checksum.
-    checksum: String,
     /// Determines if an address is a public or an internal (change) address.
     internal: bool,
 }
 
+impl PartialOrd for Address {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Address {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.address.to_bech32().cmp(&other.address.to_bech32())
+    }
+}
+
+impl Hash for Address {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.address.to_bech32().hash(state);
+    }
+}
+
 impl PartialEq for Address {
-    fn eq(&self, other: &Address) -> bool {
-        self.address() == other.address()
+    fn eq(&self, other: &Self) -> bool {
+        self.address.to_bech32() == other.address.to_bech32()
     }
 }
 
 pub(crate) fn get_iota_address(
-    account: &Account,
-    index: usize,
+    account_id: &[u8; 32],
+    account_index: usize,
+    address_index: usize,
     internal: bool,
 ) -> crate::Result<IotaAddress> {
     crate::with_stronghold(|stronghold| {
-        let address_str = stronghold.address_get(account.id(), index, internal);
-        let iota_address = IotaAddress::from_ed25519_bytes(address_str.as_bytes().try_into()?);
+        let address_str =
+            stronghold.address_get(account_id, Some(account_index), address_index, internal)?;
+        let address_ed25519 = Vec::from_base32(&bech32::decode(&address_str)?.1)?;
+        let iota_address =
+            IotaAddress::Ed25519(Ed25519Address::new(address_ed25519[1..].try_into()?));
         Ok(iota_address)
     })
 }
@@ -95,14 +118,12 @@ pub(crate) fn get_iota_address(
 /// Gets an unused address for the given account.
 pub(crate) async fn get_new_address(account: &Account, internal: bool) -> crate::Result<Address> {
     let key_index = account.addresses().len();
-    let iota_address = get_iota_address(&account, key_index, internal)?;
+    let iota_address = get_iota_address(account.id(), account.index()?, key_index, internal)?;
     let balance = get_balance(&account, &iota_address).await?;
-    let checksum = generate_checksum(&iota_address)?;
     let address = Address {
         address: iota_address,
         balance,
         key_index,
-        checksum,
         internal,
     };
     Ok(address)
@@ -120,13 +141,6 @@ pub(crate) async fn get_addresses(
     }
     Ok(addresses)
 }
-
-/// Generates a checksum for the given address
-// TODO: maybe this should be part of the crypto lib
-pub(crate) fn generate_checksum(address: &IotaAddress) -> crate::Result<String> {
-    Ok("".to_string())
-}
-
 async fn get_balance(account: &Account, address: &IotaAddress) -> crate::Result<u64> {
     let client = crate::client::get_client(account.client_options());
     let amount = client
@@ -152,9 +166,12 @@ mod tests {
 
     use chrono::Utc;
     use iota::transaction::prelude::{
-        Hash, Input, Output, Payload, Seed, SignedTransactionBuilder,
+        Ed25519Address, MessageId, Payload, Seed, SignatureLockedSingleOutput, TransactionBuilder,
+        UTXOInput,
     };
+    use slip10::path::BIP32Path;
     use std::convert::TryInto;
+    use std::num::NonZeroU64;
 
     fn _create_account() -> Account {
         let manager = AccountManager::new();
@@ -172,22 +189,26 @@ mod tests {
     }
 
     fn _create_address() -> IotaAddress {
-        IotaAddress::from_ed25519_bytes(&[0; 32])
+        IotaAddress::Ed25519(Ed25519Address::new([0; 32]))
     }
 
     fn _generate_message(value: i64, address: Address) -> Message {
         Message {
             version: 1,
-            trunk: Hash([0; 32]),
-            branch: Hash([0; 32]),
+            trunk: MessageId::new([0; 32]),
+            branch: MessageId::new([0; 32]),
             payload_length: 0,
-            payload: Payload::SignedTransaction(Box::new(
-                SignedTransactionBuilder::new(Seed::from_ed25519_bytes("".as_bytes()).unwrap())
-                    .set_outputs(vec![Output::new(
+            payload: Payload::Transaction(Box::new(
+                TransactionBuilder::new(&Seed::from_ed25519_bytes("".as_bytes()).unwrap())
+                    .set_outputs(vec![SignatureLockedSingleOutput::new(
                         address.address().clone(),
-                        value.try_into().unwrap(),
+                        NonZeroU64::new(value.try_into().unwrap()).unwrap(),
+                    )
+                    .into()])
+                    .set_inputs(vec![(
+                        UTXOInput::new(MessageId::new([0; 32]), 0).unwrap().into(),
+                        BIP32Path::from_str("").unwrap(),
                     )])
-                    .set_inputs(vec![(Input::new(Hash([0; 32]), 0), "")])
                     .build()
                     .unwrap(),
             )),

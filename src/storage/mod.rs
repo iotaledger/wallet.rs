@@ -153,7 +153,7 @@ mod tests {
             super::set_adapter(MyAdapter {}).unwrap();
             let adapter = super::get_adapter().unwrap();
             assert_eq!(
-                adapter.get("".to_string().into()).unwrap(),
+                adapter.get([0; 32].into()).unwrap(),
                 "MY_ADAPTER_GET_RESPONSE".to_string()
             );
         }

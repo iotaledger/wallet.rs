@@ -1,10 +1,7 @@
 use crate::address::Address;
 use rand::{prelude::SliceRandom, thread_rng};
 
-pub fn select_input(
-    target: u64,
-    available_utxos: &mut Vec<Address>,
-) -> crate::Result<Vec<Address>> {
+pub fn select_input(target: u64, available_utxos: &mut [Address]) -> crate::Result<Vec<Address>> {
     if target
         > available_utxos
             .iter()
@@ -32,10 +29,7 @@ pub fn select_input(
     }
 }
 
-fn single_random_draw(
-    target: u64,
-    available_utxos: &mut Vec<Address>,
-) -> crate::Result<Vec<Address>> {
+fn single_random_draw(target: u64, available_utxos: &mut [Address]) -> crate::Result<Vec<Address>> {
     available_utxos.shuffle(&mut thread_rng());
     let mut sum = 0;
 
@@ -55,7 +49,7 @@ fn single_random_draw(
 
 fn branch_and_bound(
     target: u64,
-    available_utxos: &mut Vec<Address>,
+    available_utxos: &mut [Address],
     depth: usize,
     current_selection: &mut Vec<Address>,
     effective_value: u64,
@@ -107,6 +101,7 @@ fn branch_and_bound(
 mod tests {
     use super::*;
     use crate::address::{Address, AddressBuilder, IotaAddress};
+    use iota::transaction::prelude::Ed25519Address;
     use rand::prelude::{Rng, SeedableRng, StdRng};
 
     fn generate_random_utxos(rng: &mut StdRng, utxos_number: usize) -> Vec<Address> {
@@ -114,7 +109,7 @@ mod tests {
         for i in 0..utxos_number {
             available_utxos.push(
                 AddressBuilder::new()
-                    .address(IotaAddress::from_ed25519_bytes(&[0; 32]))
+                    .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
                     .balance(rng.gen_range(0, 2000))
                     .key_index(i)
                     .build()

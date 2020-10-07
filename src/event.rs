@@ -1,5 +1,5 @@
 use crate::address::Address;
-use iota::transaction::prelude::Hash;
+use iota::transaction::prelude::MessageId;
 
 use getset::Getters;
 use once_cell::sync::Lazy;
@@ -11,7 +11,7 @@ use std::sync::{Arc, Mutex};
 #[getset(get = "pub")]
 pub struct BalanceEvent {
     /// The associated account identifier.
-    account_id: String,
+    account_id: [u8; 32],
     /// The associated address.
     address: Address,
     /// The new balance.
@@ -23,9 +23,9 @@ pub struct BalanceEvent {
 #[getset(get = "pub")]
 pub struct TransactionEvent {
     /// The associated account identifier.
-    account_id: String,
+    account_id: [u8; 32],
     /// The event transaction hash.
-    transaction_hash: Hash,
+    message_id: MessageId,
 }
 
 /// A transaction-related event data.
@@ -33,9 +33,9 @@ pub struct TransactionEvent {
 #[getset(get = "pub")]
 pub struct TransactionConfirmationChangeEvent {
     /// The associated account identifier.
-    account_id: String,
+    account_id: [u8; 32],
     /// The event transaction hash.
-    transaction_hash: Hash,
+    message_id: MessageId,
     /// The confirmed state of the transaction.
     confirmed: bool,
 }
@@ -97,14 +97,13 @@ pub fn on_balance_change<F: Fn(BalanceEvent) + Send + 'static>(cb: F) {
 }
 
 /// Emits a balance change event.
-pub(crate) fn emit_balance_change(account_id: impl Into<String>, address: Address, balance: u64) {
-    let account_id = account_id.into();
+pub(crate) fn emit_balance_change(account_id: [u8; 32], address: Address, balance: u64) {
     let listeners = balance_listeners()
         .lock()
         .expect("Failed to lock balance_listeners: emit_balance_change()");
     for listener in listeners.deref() {
         (listener.on_event)(BalanceEvent {
-            account_id: account_id.clone(),
+            account_id,
             address: address.clone(),
             balance,
         })
@@ -114,18 +113,17 @@ pub(crate) fn emit_balance_change(account_id: impl Into<String>, address: Addres
 /// Emits a transaction-related event.
 pub(crate) fn emit_transaction_event(
     event_type: TransactionEventType,
-    account_id: impl Into<String>,
-    transaction_hash: Hash,
+    account_id: [u8; 32],
+    message_id: MessageId,
 ) {
-    let account_id = account_id.into();
     let listeners = transaction_listeners()
         .lock()
         .expect("Failed to lock balance_listeners: emit_balance_change()");
     for listener in listeners.deref() {
         if listener.event_type == event_type {
             (listener.on_event)(TransactionEvent {
-                account_id: account_id.clone(),
-                transaction_hash: transaction_hash.clone(),
+                account_id,
+                message_id,
             })
         }
     }
@@ -133,18 +131,17 @@ pub(crate) fn emit_transaction_event(
 
 /// Emits a confirmation state change event.
 pub(crate) fn emit_confirmation_state_change(
-    account_id: impl Into<String>,
-    transaction_hash: Hash,
+    account_id: &[u8; 32],
+    message_id: MessageId,
     confirmed: bool,
 ) {
-    let account_id = account_id.into();
     let listeners = transaction_confirmation_change_listeners()
         .lock()
         .expect("Failed to lock transaction_confirmation_change_listeners: emit_confirmation_state_change()");
     for listener in listeners.deref() {
         (listener.on_event)(TransactionConfirmationChangeEvent {
             account_id: account_id.clone(),
-            transaction_hash: transaction_hash.clone(),
+            message_id: message_id.clone(),
             confirmed,
         })
     }
@@ -202,19 +199,19 @@ mod tests {
         on_reattachment, TransactionEventType,
     };
     use crate::address::{AddressBuilder, IotaAddress};
+    use iota::transaction::prelude::{Ed25519Address, MessageId};
 
     #[test]
     fn balance_events() {
-        let account_id = "the account id";
-        on_balance_change(move |event| {
-            assert!(event.account_id == account_id);
+        on_balance_change(|event| {
+            assert!(event.account_id == [1; 32]);
             assert!(event.balance == 0);
         });
 
         emit_balance_change(
-            account_id,
+            [1; 32],
             AddressBuilder::new()
-                .address(IotaAddress::from_ed25519_bytes(&[0; 32]))
+                .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
                 .balance(0)
                 .key_index(0)
                 .build()
@@ -225,67 +222,67 @@ mod tests {
 
     #[test]
     fn on_new_transaction_event() {
-        let account_id = "the account id";
-        let transaction_hash = iota::transaction::prelude::Hash([0; 32]);
-        let transaction_hash_clone = transaction_hash.clone();
+        let account_id = [0; 32];
+        let message_id = MessageId::new([0; 32]);
+        let message_id_clone = message_id.clone();
         on_new_transaction(move |event| {
             assert!(event.account_id == account_id);
-            assert!(event.transaction_hash == transaction_hash);
+            assert!(event.message_id == message_id);
         });
 
         emit_transaction_event(
             TransactionEventType::NewTransaction,
             account_id,
-            transaction_hash_clone,
+            message_id_clone,
         );
     }
 
     #[test]
     fn on_reattachment_event() {
-        let account_id = "the account id";
-        let transaction_hash = iota::transaction::prelude::Hash([0; 32]);
-        let transaction_hash_clone = transaction_hash.clone();
+        let account_id = [0; 32];
+        let message_id = MessageId::new([0; 32]);
+        let message_id_clone = message_id.clone();
         on_reattachment(move |event| {
             assert!(event.account_id == account_id);
-            assert!(event.transaction_hash == transaction_hash);
+            assert!(event.message_id == message_id);
         });
 
         emit_transaction_event(
             TransactionEventType::Reattachment,
             account_id,
-            transaction_hash_clone,
+            message_id_clone,
         );
     }
 
     #[test]
     fn on_broadcast_event() {
-        let account_id = "the account id";
-        let transaction_hash = iota::transaction::prelude::Hash([0; 32]);
-        let transaction_hash_clone = transaction_hash.clone();
+        let account_id = [5; 32];
+        let message_id = MessageId::new([0; 32]);
+        let message_id_clone = message_id.clone();
         on_broadcast(move |event| {
             assert!(event.account_id == account_id);
-            assert!(event.transaction_hash == transaction_hash);
+            assert!(event.message_id == message_id);
         });
 
         emit_transaction_event(
             TransactionEventType::Broadcast,
             account_id,
-            transaction_hash_clone,
+            message_id_clone,
         );
     }
 
     #[test]
     fn on_confirmation_state_change_event() {
-        let account_id = "the account id";
-        let transaction_hash = iota::transaction::prelude::Hash([0; 32]);
-        let transaction_hash_clone = transaction_hash.clone();
+        let account_id = [6; 32];
+        let message_id = MessageId::new([0; 32]);
+        let message_id_clone = message_id.clone();
         let confirmed = true;
         on_confirmation_state_change(move |event| {
             assert!(event.account_id == account_id);
-            assert!(event.transaction_hash == transaction_hash);
+            assert!(event.message_id == message_id);
             assert!(event.confirmed == confirmed);
         });
 
-        emit_confirmation_state_change(account_id, transaction_hash_clone, confirmed);
+        emit_confirmation_state_change(&account_id, message_id_clone, confirmed);
     }
 }
