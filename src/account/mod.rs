@@ -110,7 +110,6 @@ impl AccountInitialiser {
             crate::with_stronghold(|stronghold| {
                 let account = match mnemonic {
                     Some(mnemonic) => stronghold.account_import(
-                        adapter.get_all()?.len(),
                         Some(created_at_timestamp),
                         Some(created_at_timestamp),
                         mnemonic,
