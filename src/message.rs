@@ -184,8 +184,8 @@ impl Message {
     pub(crate) fn from_iota_message(message: &IotaMessage) -> crate::Result<Self> {
         let message = Self {
             version: 1,
-            trunk: message.trunk().clone(),
-            branch: message.branch().clone(),
+            trunk: *message.trunk(),
+            branch: *message.branch(),
             payload_length: 5, // TODO
             payload: message.payload().clone(),
             timestamp: Utc::now(),
@@ -224,7 +224,7 @@ impl Message {
         let amount = match &self.payload {
             Payload::Transaction(tx) => tx.essence.outputs().iter().fold(0, |acc, output| {
                 let Output::SignatureLockedSingle(x) = output;
-                acc + &x.amount().get()
+                acc + x.amount().get()
             }),
             _ => 0,
         };

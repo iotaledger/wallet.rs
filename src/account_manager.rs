@@ -82,7 +82,7 @@ impl AccountManager {
         });
 
         crate::event::on_new_transaction(|event| {
-            let transaction_hash = event.transaction_hash().clone();
+            let transaction_hash = *event.transaction_hash();
             let _ = mutate_account_transaction(
                 event.account_id().clone().into(),
                 |account, messages| {
@@ -95,7 +95,7 @@ impl AccountManager {
                             .hashes(&[transaction_hash])
                             .get()
                             .unwrap();
-                        let message = response.first().unwrap().clone();
+                        let message = response.first().unwrap();
                         messages.push(Message::from_iota_message(message).unwrap());
                     });
                 },
@@ -283,7 +283,7 @@ async fn reattach(account: &mut Account, message_hash: &Hash) -> crate::Result<(
     } else {
         let client = crate::client::get_client(account.client_options());
         if *client
-            .is_confirmed(&[message_hash.clone()])?
+            .is_confirmed(&[*message_hash])?
             .get(message.hash())
             .ok_or_else(|| anyhow::anyhow!("invalid `is_confirmed` response"))?
         {
@@ -291,9 +291,9 @@ async fn reattach(account: &mut Account, message_hash: &Hash) -> crate::Result<(
             message.set_confirmed(true);
         } else {
             // reattach the message
-            let reattachment_messages = client.reattach(&[message_hash.clone()])?;
+            let reattachment_messages = client.reattach(&[*message_hash])?;
             messages.push(Message::from_iota_message(
-                reattachment_messages.first().unwrap().clone(),
+                reattachment_messages.first().unwrap(),
             )?);
         }
         // update the messages in storage

@@ -57,7 +57,7 @@ impl AddressBuilder {
 }
 
 /// An address.
-#[derive(Debug, Getters, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Getters, Clone, Eq, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct Address {
     /// The address.
@@ -83,6 +83,12 @@ impl Ord for Address {
 impl Hash for Address {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.address.to_bech32().hash(state);
+    }
+}
+
+impl PartialEq for Address {
+    fn eq(&self, other: &Self) -> bool {
+        self.address.to_bech32() == other.address.to_bech32()
     }
 }
 

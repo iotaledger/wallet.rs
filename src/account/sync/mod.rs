@@ -70,13 +70,10 @@ async fn sync_transactions<'a>(
         .filter(|message| !message.confirmed())
         .collect();
     let client = get_client(account.client_options());
-    let unconfirmed_transaction_hashes_iter = unconfirmed_messages
+    let unconfirmed_transaction_hashes: Vec<Hash> = unconfirmed_messages
         .iter()
-        .map(|message| message.hash().clone());
-    let mut unconfirmed_transaction_hashes: Vec<Hash> = vec![];
-    for hash in unconfirmed_transaction_hashes_iter {
-        unconfirmed_transaction_hashes.push(hash.clone());
-    }
+        .map(|message| *message.hash())
+        .collect();
     let confirmed_states = client.is_confirmed(&unconfirmed_transaction_hashes[..])?;
     for (message, confirmed) in unconfirmed_messages
         .iter_mut()
@@ -150,7 +147,7 @@ impl<'a> AccountSynchronizer<'a> {
             if !self.account.messages().iter().any(
                 |message| message.hash() == found_message.trunk(), /* TODO hash instead of trunk */
             ) {
-                new_message_hashes.push(found_message.trunk().clone()); // TODO hash instead of trunk
+                new_message_hashes.push(*found_message.trunk()); // TODO hash instead of trunk
             }
         }
 
