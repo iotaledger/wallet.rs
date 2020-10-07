@@ -1,8 +1,10 @@
 use crate::account::Account;
 use getset::Getters;
-pub use iota::transaction::prelude::Address as IotaAddress;
+pub use iota::transaction::prelude::{Address as IotaAddress, Ed25519Address};
 use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
 use std::convert::TryInto;
+use std::hash::{Hash, Hasher};
 
 /// The address builder.
 #[derive(Default)]
@@ -55,7 +57,7 @@ impl AddressBuilder {
 }
 
 /// An address.
-#[derive(Debug, Getters, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Debug, Getters, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct Address {
     /// The address.
@@ -66,12 +68,32 @@ pub struct Address {
     key_index: usize,
 }
 
+impl PartialOrd for Address {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Address {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.address.to_bech32().cmp(&other.address.to_bech32())
+    }
+}
+
+impl Hash for Address {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.address.to_bech32().hash(state);
+    }
+}
+
 /// Gets an unused address for the given account.
 pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address> {
     let address_res: crate::Result<(usize, IotaAddress)> = crate::with_stronghold(|stronghold| {
         let address_index = account.addresses().len();
-        let address_str = stronghold.address_get(account.id(), address_index, false)?;
-        let iota_address = IotaAddress::from_ed25519_bytes(address_str.as_bytes().try_into()?);
+        // TODO account index
+        let address_str = stronghold.address_get(account.id(), Some(0), address_index, false)?;
+        let iota_address =
+            IotaAddress::Ed25519(Ed25519Address::new(address_str.as_bytes().try_into()?));
         Ok((address_index, iota_address))
     });
     let (key_index, iota_address) = address_res?;
@@ -89,8 +111,10 @@ pub(crate) async fn get_addresses(account: &Account, count: usize) -> crate::Res
     let mut addresses = vec![];
     for i in 0..count {
         let address_res: crate::Result<IotaAddress> = crate::with_stronghold(|stronghold| {
-            let address_str = stronghold.address_get(account.id(), i, false)?;
-            let iota_address = IotaAddress::from_ed25519_bytes(address_str.as_bytes().try_into()?);
+            // TODO account index
+            let address_str = stronghold.address_get(account.id(), Some(0), i, false)?;
+            let iota_address =
+                IotaAddress::Ed25519(Ed25519Address::new(address_str.as_bytes().try_into()?));
             Ok(iota_address)
         });
         let address = address_res?;

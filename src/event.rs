@@ -177,6 +177,7 @@ pub fn on_error<F: Fn(anyhow::Error)>(cb: F) {}
 mod tests {
     use super::{emit_balance_change, on_balance_change};
     use crate::address::{AddressBuilder, IotaAddress};
+    use iota::transaction::prelude::Ed25519Address;
 
     #[test]
     fn balance_events() {
@@ -188,7 +189,7 @@ mod tests {
         emit_balance_change(
             [1; 32],
             AddressBuilder::new()
-                .address(IotaAddress::from_ed25519_bytes(&[0; 32]))
+                .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
                 .balance(0)
                 .key_index(0)
                 .build()

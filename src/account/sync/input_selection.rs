@@ -94,6 +94,7 @@ fn branch_and_bound(
 mod tests {
     use super::*;
     use crate::address::{Address, AddressBuilder, IotaAddress};
+    use iota::transaction::prelude::Ed25519Address;
     use rand::{Rng, SeedableRng, StdRng};
 
     fn generate_random_utxos(rng: &mut StdRng, utxos_number: usize) -> Vec<Address> {
@@ -101,7 +102,7 @@ mod tests {
         for i in 0..utxos_number {
             available_utxos.push(
                 AddressBuilder::new()
-                    .address(IotaAddress::from_ed25519_bytes(&[0; 32]))
+                    .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
                     .balance(rng.gen_range(0, 2000))
                     .key_index(i)
                     .build()

@@ -111,8 +111,8 @@ impl AccountInitialiser {
                 let account = match mnemonic {
                     Some(mnemonic) => stronghold.account_import(
                         adapter.get_all()?.len(),
-                        created_at_timestamp,
-                        created_at_timestamp,
+                        Some(created_at_timestamp),
+                        Some(created_at_timestamp),
                         mnemonic,
                         Some("password"),
                     )?,

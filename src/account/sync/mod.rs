@@ -6,7 +6,7 @@ use crate::message::{Message, Transfer};
 use iota::transaction::{
     prelude::{
         Error as TransactionError, Hash, Input, Message as IotaMessage, Output, Payload,
-        SigLockedSingleDeposit, SignedTransaction, UTXOInput,
+        SignatureLockedSingleOutput, Transaction, UTXOInput,
     },
     Vertex,
 };
@@ -70,10 +70,13 @@ async fn sync_transactions<'a>(
         .filter(|message| !message.confirmed())
         .collect();
     let client = get_client(account.client_options());
-    let unconfirmed_transaction_hashes: Vec<Hash> = unconfirmed_messages
+    let unconfirmed_transaction_hashes_iter = unconfirmed_messages
         .iter()
-        .map(|message| message.hash().clone())
-        .collect();
+        .map(|message| message.hash().clone());
+    let mut unconfirmed_transaction_hashes: Vec<Hash> = vec![];
+    for hash in unconfirmed_transaction_hashes_iter {
+        unconfirmed_transaction_hashes.push(hash.clone());
+    }
     let confirmed_states = client.is_confirmed(&unconfirmed_transaction_hashes[..])?;
     for (message, confirmed) in unconfirmed_messages
         .iter_mut()
@@ -93,7 +96,7 @@ async fn sync_transactions<'a>(
 
     for message in found_messages {
         let hash = hashes_iter.next().unwrap();
-        messages.push(Message::from_iota_message(message).unwrap());
+        messages.push(Message::from_iota_message(&message).unwrap());
     }
 
     Ok(messages)
@@ -237,7 +240,9 @@ impl SyncedAccount {
         let mut current_output_sum = 0;
         for utxo in utxos {
             indexed_utxo_inputs.push((
-                UTXOInput::new(utxo.producer, utxo.output_index).into(),
+                UTXOInput::new(utxo.producer, utxo.output_index)
+                    .map_err(|e| anyhow::anyhow!(e.to_string()))?
+                    .into(),
                 BIP32Path::from_str("").map_err(|e| anyhow::anyhow!(e.to_string()))?,
             ));
             let utxo_amount = if current_output_sum + utxo.amount > value {
@@ -254,7 +259,7 @@ impl SyncedAccount {
             };
             current_output_sum += utxo.amount;
             utxo_outputs.push(
-                SigLockedSingleDeposit::new(
+                SignatureLockedSingleOutput::new(
                     utxo_address,
                     NonZeroU64::new(utxo_amount)
                         .ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
@@ -263,32 +268,32 @@ impl SyncedAccount {
             );
         }
 
-        let tips = client.get_tips()?;
+        let (parent1, parent2) = client.get_tips()?;
 
         let stronghold_account =
             crate::with_stronghold(|stronghold| stronghold.account_get_by_id(account.id()))?;
-        let signed_transaction_res: Result<SignedTransaction, TransactionError> =
-            stronghold_account.with_signed_transaction_builder(|builder| {
+        let transaction_res: Result<Transaction, TransactionError> = stronghold_account
+            .with_transaction_builder(|builder| {
                 builder
                     .set_outputs(utxo_outputs)
                     .set_inputs(indexed_utxo_inputs)
                     .build()
             });
-        let signed_transaction =
-            signed_transaction_res.map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
+        let transaction = transaction_res.map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
         let message = IotaMessage::builder()
-            .tips(tips)
-            .payload(Payload::SignedTransaction(Box::new(signed_transaction)))
+            .parent1(parent1)
+            .parent2(parent2)
+            .payload(Payload::Transaction(Box::new(transaction)))
             .build()
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
-        let attached = client.post_messages(vec![message])?;
+        let attached = client.post_messages(&[message])?;
         let messages: Vec<Message> = client
             .get_messages()
             .hashes(&attached[..])
             .get()?
             .iter()
-            .map(|message| Message::from_iota_message(message.clone()).unwrap())
+            .map(|message| Message::from_iota_message(&message).unwrap())
             .collect();
 
         let message = messages.first().unwrap().clone();

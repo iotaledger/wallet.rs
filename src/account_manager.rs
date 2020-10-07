@@ -214,8 +214,8 @@ impl AccountManager {
             let stronghold_account = crate::with_stronghold(|stronghold| {
                 stronghold.account_import(
                     index,
-                    created_at_timestamp,
-                    created_at_timestamp,
+                    Some(created_at_timestamp),
+                    Some(created_at_timestamp),
                     stronghold_account.mnemonic().to_string(),
                     Some("password"),
                 )
