@@ -1,5 +1,5 @@
 use crate::address::Address;
-use iota::transaction::prelude::Hash;
+use iota::transaction::prelude::MessageId;
 
 use getset::Getters;
 use once_cell::sync::Lazy;
@@ -25,7 +25,7 @@ pub struct TransactionEvent {
     /// The associated account identifier.
     account_id: [u8; 32],
     /// The event transaction hash.
-    transaction_hash: Hash,
+    message_id: MessageId,
 }
 
 /// A transaction-related event data.
@@ -35,7 +35,7 @@ pub struct TransactionConfirmationChangeEvent {
     /// The associated account identifier.
     account_id: [u8; 32],
     /// The event transaction hash.
-    transaction_hash: Hash,
+    message_id: MessageId,
     /// The confirmed state of the transaction.
     confirmed: bool,
 }
@@ -114,7 +114,7 @@ pub(crate) fn emit_balance_change(account_id: [u8; 32], address: Address, balanc
 pub(crate) fn emit_transaction_event(
     event_type: TransactionEventType,
     account_id: [u8; 32],
-    transaction_hash: Hash,
+    message_id: MessageId,
 ) {
     let listeners = transaction_listeners()
         .lock()
@@ -123,7 +123,7 @@ pub(crate) fn emit_transaction_event(
         if listener.event_type == event_type {
             (listener.on_event)(TransactionEvent {
                 account_id,
-                transaction_hash,
+                message_id,
             })
         }
     }

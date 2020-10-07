@@ -4,7 +4,7 @@ use crate::message::{Message, MessageType};
 
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-use iota::transaction::prelude::Hash;
+use iota::transaction::prelude::MessageId;
 use serde::{Deserialize, Serialize};
 
 use std::convert::TryInto;
@@ -276,9 +276,11 @@ impl Account {
         self.messages.extend(messages.iter().cloned());
     }
 
-    /// Gets a message with the given hash associated with this account.
-    pub fn get_message(&self, hash: &Hash) -> Option<&Message> {
-        self.messages.iter().find(|tx| tx.hash() == hash)
+    /// Gets a message with the given id associated with this account.
+    pub fn get_message(&self, message_id: &MessageId) -> Option<&Message> {
+        self.messages
+            .iter()
+            .find(|tx| tx.message_id() == message_id)
     }
 }
 

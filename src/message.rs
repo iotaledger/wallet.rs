@@ -2,7 +2,7 @@ use crate::address::Address;
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
 use iota::transaction::{
-    prelude::{Hash as IotaHash, Message as IotaMessage, Output, Payload},
+    prelude::{Message as IotaMessage, MessageId, Output, Payload},
     Vertex,
 };
 use serde::{Deserialize, Serialize};
@@ -137,9 +137,9 @@ pub struct Message {
     /// The message version.
     pub(crate) version: u64,
     /// Message id of the first message this message refers to.
-    pub(crate) trunk: IotaHash,
+    pub(crate) trunk: MessageId,
     /// Message id of the second message this message refers to.
-    pub(crate) branch: IotaHash,
+    pub(crate) branch: MessageId,
     /// Length of the payload.
     pub(crate) payload_length: u64,
     /// Transaction amount.
@@ -156,7 +156,7 @@ pub struct Message {
 
 impl Hash for Message {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.hash().hash(state);
+        self.message_id().hash(state);
     }
 }
 
@@ -214,8 +214,8 @@ impl Message {
         unimplemented!()
     }
 
-    /// The message's hash.
-    pub fn hash(&self) -> &IotaHash {
+    /// The message's id.
+    pub fn message_id(&self) -> &MessageId {
         unimplemented!()
     }
 
