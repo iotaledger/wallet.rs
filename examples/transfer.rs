@@ -5,6 +5,7 @@ use iota_wallet::{
 #[tokio::main]
 async fn main() -> iota_wallet::Result<()> {
     let manager = AccountManager::new();
+    manager.set_stronghold_password("password").unwrap();
 
     // first we'll create an example account and store it
     let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")?.build();

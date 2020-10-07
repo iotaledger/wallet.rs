@@ -1,9 +1,11 @@
 use crate::account::Account;
 use bech32::FromBase32;
 use getset::Getters;
-pub use iota::transaction::prelude::Address as IotaAddress;
+pub use iota::transaction::prelude::{Address as IotaAddress, Ed25519Address};
 use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
 use std::convert::TryInto;
+use std::hash::{Hash, Hasher};
 
 /// The address builder.
 #[derive(Default)]
@@ -58,7 +60,7 @@ impl AddressBuilder {
 }
 
 /// An address.
-#[derive(Debug, Getters, Clone, Eq, PartialEq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Debug, Getters, Clone, Eq, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct Address {
     /// The address.
@@ -71,17 +73,28 @@ pub struct Address {
     internal: bool,
 }
 
-pub(crate) fn get_iota_address(
-    account: &Account,
-    index: usize,
-    internal: bool,
-) -> crate::Result<IotaAddress> {
-    crate::with_stronghold(|stronghold| {
-        let address_str = stronghold.address_get(account.id(), index, internal)?;
-        let address_ed25519 = Vec::from_base32(&bech32::decode(&address_str)?.1)?;
-        let iota_address = IotaAddress::from_ed25519_bytes(&address_ed25519[1..].try_into()?);
-        Ok(iota_address)
-    })
+impl PartialOrd for Address {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Address {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.address.to_bech32().cmp(&other.address.to_bech32())
+    }
+}
+
+impl Hash for Address {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.address.to_bech32().hash(state);
+    }
+}
+
+impl PartialEq for Address {
+    fn eq(&self, other: &Self) -> bool {
+        self.address.to_bech32() == other.address.to_bech32()
+    }
 }
 
 /// Gets an unused address for the given account.

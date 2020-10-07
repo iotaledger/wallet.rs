@@ -15,7 +15,8 @@ iota-core = { git = "https://github.com/iotaledger/iota.rs", branch = "chrysalis
 url = { version = "2.1", features = [ "serde" ] }
 tokio = "0.2"
 rand = "0.3"
-rusqlite = { version = "0.23", optional = true }
+rusqlite = { version = "0.23", features = ["bundled"], optional = true }
+slip10 = "0.4"
 bech32 = "0.7"
 
 # stronghold
@@ -24,6 +25,7 @@ iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", branch 
 [dev-dependencies]
 tokio = { version = "0.2", features = ["full"] }
 rocksdb = "0.15"
+rusty-fork = "0.3.0"
 
 [features]
 default = ["stronghold"]

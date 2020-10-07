@@ -23,7 +23,7 @@ impl MyStorage {
 
 fn account_id_value(account_id: AccountIdentifier) -> anyhow::Result<String> {
     match account_id {
-        AccountIdentifier::Id(val) => Ok(val),
+        AccountIdentifier::Id(val) => Ok(String::from_utf8_lossy(&val).to_string()),
         _ => Err(anyhow::anyhow!("Unexpected AccountIdentifier type")),
     }
 }
@@ -61,6 +61,7 @@ fn main() -> iota_wallet::Result<()> {
     // set the custom adapter
     set_adapter(MyStorage::new("./example-database/rocksdb")?)?;
     let manager = AccountManager::new();
+    manager.set_stronghold_password("password").unwrap();
 
     // first we'll create an example account
     let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")?.build();

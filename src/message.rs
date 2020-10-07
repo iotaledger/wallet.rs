@@ -1,10 +1,15 @@
 use crate::address::Address;
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-use iota::transaction::prelude::{Hash, Message as IotaMessage, Payload};
+use iota::transaction::{
+    prelude::{Message as IotaMessage, MessageId, Output, Payload},
+    Vertex,
+};
 use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
 use std::convert::TryInto;
 use std::fmt;
+use std::hash::{Hash, Hasher};
 
 /// A transaction tag.
 #[derive(Debug, Clone)]
@@ -126,17 +131,15 @@ impl Value {
 }
 
 /// A message definition.
-#[derive(
-    Debug, Getters, Setters, Clone, Hash, Eq, Ord, PartialEq, PartialOrd, Serialize, Deserialize,
-)]
+#[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize)]
 #[getset(get = "pub", set = "pub(crate)")]
 pub struct Message {
     /// The message version.
     pub(crate) version: u64,
     /// Message id of the first message this message refers to.
-    pub(crate) trunk: Hash,
+    pub(crate) trunk: MessageId,
     /// Message id of the second message this message refers to.
-    pub(crate) branch: Hash,
+    pub(crate) branch: MessageId,
     /// Length of the payload.
     pub(crate) payload_length: u64,
     /// Transaction amount.
@@ -151,20 +154,46 @@ pub struct Message {
     pub(crate) broadcasted: bool,
 }
 
+impl Hash for Message {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.message_id().hash(state);
+    }
+}
+
+// TODO
+impl PartialEq for Message {
+    fn eq(&self, other: &Self) -> bool {
+        self.nonce == other.nonce
+    }
+}
+impl Eq for Message {}
+
+impl Ord for Message {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.nonce.cmp(&other.nonce)
+    }
+}
+
+impl PartialOrd for Message {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
 impl Message {
-    pub(crate) fn from_iota_message(message: IotaMessage) -> crate::Result<Self> {
+    pub(crate) fn from_iota_message(message: &IotaMessage) -> crate::Result<Self> {
         let message = Self {
             version: 1,
-            trunk: message.trunk,
-            branch: message.branch,
+            trunk: *message.trunk(),
+            branch: *message.branch(),
             payload_length: 5, // TODO
-            payload: message.payload,
+            payload: message.payload().clone(),
             timestamp: Utc::now(),
             // TODO timestamp: DateTime::<Utc>::from_utc(
             //    NaiveDateTime::from_timestamp(*message.attachment_ts().to_inner() as i64, 0),
             //    Utc,
             // ),
-            nonce: message.nonce,
+            nonce: message.nonce(),
             confirmed: false,
             broadcasted: true,
         };
@@ -185,19 +214,18 @@ impl Message {
         unimplemented!()
     }
 
-    /// The message's hash.
-    pub fn hash(&self) -> &Hash {
+    /// The message's id.
+    pub fn message_id(&self) -> &MessageId {
         unimplemented!()
     }
 
     /// Gets the absolute value of the transaction.
     pub fn value(&self) -> Value {
         let amount = match &self.payload {
-            Payload::SignedTransaction(tx) => tx
-                .unsigned_transaction
-                .outputs
-                .iter()
-                .fold(0, |acc, output| acc + output.amount()),
+            Payload::Transaction(tx) => tx.essence.outputs().iter().fold(0, |acc, output| {
+                let Output::SignatureLockedSingle(x) = output;
+                acc + x.amount().get()
+            }),
             _ => 0,
         };
         Value::new(amount.try_into().unwrap(), ValueUnit::I)

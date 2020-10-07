@@ -49,7 +49,9 @@ impl StorageAdapter for SqliteStorageAdapter {
                     "SELECT value FROM {} WHERE key = ?1 LIMIT 1",
                     self.table_name
                 ),
-                vec![ToSqlOutput::Owned(Value::Text(id))],
+                vec![ToSqlOutput::Owned(Value::Text(
+                    String::from_utf8_lossy(&id).to_string(),
+                ))],
             ),
             AccountIdentifier::Index(index) => (
                 format!(
@@ -110,7 +112,11 @@ impl StorageAdapter for SqliteStorageAdapter {
                     "INSERT OR REPLACE INTO {} VALUES (?1, ?2, ?3)",
                     self.table_name
                 ),
-                params![id, account, Utc::now().timestamp()],
+                params![
+                    String::from_utf8_lossy(&id).to_string(),
+                    account,
+                    Utc::now().timestamp()
+                ],
             )
             .map_err(|_| anyhow::anyhow!("failed to insert data"))?;
         Ok(())
@@ -120,7 +126,7 @@ impl StorageAdapter for SqliteStorageAdapter {
         let (sql, params) = match account_id {
             AccountIdentifier::Id(id) => (
                 format!("DELETE FROM {} WHERE key = ?1", self.table_name),
-                vec![ToSqlOutput::Owned(Value::Text(id))],
+                vec![ToSqlOutput::Owned(Value::Text(String::from_utf8_lossy(&id).to_string()))],
             ),
             AccountIdentifier::Index(index) => (
                 format!(

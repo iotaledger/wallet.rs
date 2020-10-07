@@ -1,5 +1,5 @@
 use crate::address::Address;
-use iota::transaction::prelude::Hash;
+use iota::transaction::prelude::MessageId;
 
 use getset::Getters;
 use once_cell::sync::Lazy;
@@ -11,7 +11,7 @@ use std::sync::{Arc, Mutex};
 #[getset(get = "pub")]
 pub struct BalanceEvent {
     /// The associated account identifier.
-    account_id: String,
+    account_id: [u8; 32],
     /// The associated address.
     address: Address,
     /// The new balance.
@@ -23,9 +23,9 @@ pub struct BalanceEvent {
 #[getset(get = "pub")]
 pub struct TransactionEvent {
     /// The associated account identifier.
-    account_id: String,
+    account_id: [u8; 32],
     /// The event transaction hash.
-    transaction_hash: Hash,
+    message_id: MessageId,
 }
 
 /// A transaction-related event data.
@@ -33,9 +33,9 @@ pub struct TransactionEvent {
 #[getset(get = "pub")]
 pub struct TransactionConfirmationChangeEvent {
     /// The associated account identifier.
-    account_id: String,
+    account_id: [u8; 32],
     /// The event transaction hash.
-    transaction_hash: Hash,
+    message_id: MessageId,
     /// The confirmed state of the transaction.
     confirmed: bool,
 }
@@ -97,14 +97,13 @@ pub fn on_balance_change<F: Fn(BalanceEvent) + Send + 'static>(cb: F) {
 }
 
 /// Emits a balance change event.
-pub(crate) fn emit_balance_change(account_id: impl Into<String>, address: Address, balance: u64) {
-    let account_id = account_id.into();
+pub(crate) fn emit_balance_change(account_id: [u8; 32], address: Address, balance: u64) {
     let listeners = balance_listeners()
         .lock()
         .expect("Failed to lock balance_listeners: emit_balance_change()");
     for listener in listeners.deref() {
         (listener.on_event)(BalanceEvent {
-            account_id: account_id.clone(),
+            account_id,
             address: address.clone(),
             balance,
         })
@@ -114,18 +113,17 @@ pub(crate) fn emit_balance_change(account_id: impl Into<String>, address: Addres
 /// Emits a transaction-related event.
 pub(crate) fn emit_transaction_event(
     event_type: TransactionEventType,
-    account_id: impl Into<String>,
-    transaction_hash: Hash,
+    account_id: [u8; 32],
+    message_id: MessageId,
 ) {
-    let account_id = account_id.into();
     let listeners = transaction_listeners()
         .lock()
         .expect("Failed to lock balance_listeners: emit_balance_change()");
     for listener in listeners.deref() {
         if listener.event_type == event_type {
             (listener.on_event)(TransactionEvent {
-                account_id: account_id.clone(),
-                transaction_hash: transaction_hash.clone(),
+                account_id,
+                message_id,
             })
         }
     }
@@ -179,18 +177,19 @@ pub fn on_error<F: Fn(anyhow::Error)>(cb: F) {}
 mod tests {
     use super::{emit_balance_change, on_balance_change};
     use crate::address::{AddressBuilder, IotaAddress};
+    use iota::transaction::prelude::Ed25519Address;
 
     #[test]
     fn balance_events() {
         on_balance_change(|event| {
-            assert!(event.account_id == "the account id");
+            assert!(event.account_id == [1; 32]);
             assert!(event.balance == 0);
         });
 
         emit_balance_change(
-            "the account id",
+            [1; 32],
             AddressBuilder::new()
-                .address(IotaAddress::from_ed25519_bytes(&[0; 32]))
+                .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
                 .balance(0)
                 .key_index(0)
                 .build()

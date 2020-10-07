@@ -4,7 +4,7 @@ use crate::message::{Message, MessageType};
 
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-use iota::transaction::prelude::Hash;
+use iota::transaction::prelude::MessageId;
 use serde::{Deserialize, Serialize};
 
 use std::convert::TryInto;
@@ -13,30 +13,24 @@ mod sync;
 pub use sync::{AccountSynchronizer, SyncedAccount};
 
 /// The account identifier.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
+#[serde(untagged)]
 pub enum AccountIdentifier {
-    /// An Id (string) identifier.
-    Id(String),
+    /// A stronghold record id identifier.
+    Id([u8; 32]),
     /// An index identifier.
     Index(u64),
-}
-
-// When the identifier is a String (id).
-impl From<String> for AccountIdentifier {
-    fn from(value: String) -> Self {
-        Self::Id(value)
-    }
 }
 
 // When the identifier is a stronghold id.
 impl From<[u8; 32]> for AccountIdentifier {
     fn from(value: [u8; 32]) -> Self {
-        Self::Id(String::from_utf8_lossy(&value).to_string())
+        Self::Id(value)
     }
 }
 impl From<&[u8; 32]> for AccountIdentifier {
     fn from(value: &[u8; 32]) -> Self {
-        Self::Id(String::from_utf8_lossy(value).to_string())
+        Self::Id(*value)
     }
 }
 
@@ -111,14 +105,21 @@ impl AccountInitialiser {
         let mnemonic = self.mnemonic;
 
         let adapter = crate::storage::get_adapter()?;
+        let accounts = adapter.get_all()?;
+
+        if let Some(latest_account) = accounts.last() {
+            let latest_account: Account = serde_json::from_str(&latest_account)?;
+            if latest_account.messages().is_empty() && latest_account.total_balance() == 0 {
+                return Err(anyhow::anyhow!("can't create accounts when the latest account doesn't have message history and balance"));
+            }
+        }
 
         let stronghold_account_res: crate::Result<stronghold::Account> =
             crate::with_stronghold(|stronghold| {
                 let account = match mnemonic {
                     Some(mnemonic) => stronghold.account_import(
-                        adapter.get_all()?.len(),
-                        created_at_timestamp,
-                        created_at_timestamp,
+                        Some(created_at_timestamp),
+                        Some(created_at_timestamp),
                         mnemonic,
                         Some("password"),
                     )?,
@@ -225,12 +226,17 @@ impl Account {
     /// use iota_wallet::message::MessageType;
     /// use iota_wallet::account_manager::AccountManager;
     /// use iota_wallet::client::ClientOptionsBuilder;
+    /// # use rand::{thread_rng, Rng};
     ///
+    /// # let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
+    /// # let storage_path = std::path::PathBuf::from(format!("./example-database/{}", storage_path));
+    /// # iota_wallet::storage::set_storage_path(&storage_path).unwrap();
     /// // gets 10 received messages, skipping the first 5 most recent messages.
     /// let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
     ///  .expect("invalid node URL")
     ///  .build();
     /// let mut manager = AccountManager::new();
+    /// manager.set_stronghold_password("password").unwrap();
     /// let mut account = manager.create_account(client_options)
     ///   .initialise()
     ///   .expect("failed to add account");
@@ -282,9 +288,11 @@ impl Account {
         self.messages.extend(messages.iter().cloned());
     }
 
-    /// Gets a message with the given hash associated with this account.
-    pub fn get_message(&self, hash: &Hash) -> Option<&Message> {
-        self.messages.iter().find(|tx| tx.hash() == hash)
+    /// Gets a message with the given id associated with this account.
+    pub fn get_message(&self, message_id: &MessageId) -> Option<&Message> {
+        self.messages
+            .iter()
+            .find(|tx| tx.message_id() == message_id)
     }
 }
 
@@ -308,32 +316,35 @@ pub struct InitialisedAccount<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::account_manager::AccountManager;
     use crate::client::ClientOptionsBuilder;
+    use rusty_fork::rusty_fork_test;
 
-    #[test]
-    fn set_alias() {
-        let manager = AccountManager::new();
-        let updated_alias = "updated alias";
-        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-            .expect("invalid node URL")
-            .build();
+    rusty_fork_test! {
+        #[test]
+        fn set_alias() {
+            let manager = crate::test_utils::get_account_manager();
 
-        let mut account = manager
-            .create_account(client_options)
-            .alias("alias")
-            .initialise()
-            .expect("failed to add account");
+            let updated_alias = "updated alias";
+            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+                .expect("invalid node URL")
+                .build();
 
-        account
-            .set_alias(updated_alias)
-            .expect("failed to update alias");
-        let account_in_storage = manager
-            .get_account(account.id().into())
-            .expect("failed to get account from storage");
-        assert_eq!(
-            account_in_storage.alias().to_string(),
-            updated_alias.to_string()
-        );
+            let mut account = manager
+                .create_account(client_options)
+                .alias("alias")
+                .initialise()
+                .expect("failed to add account");
+
+            account
+                .set_alias(updated_alias)
+                .expect("failed to update alias");
+            let account_in_storage = manager
+                .get_account(account.id().into())
+                .expect("failed to get account from storage");
+            assert_eq!(
+                account_in_storage.alias().to_string(),
+                updated_alias.to_string()
+            );
+        }
     }
 }
