@@ -105,12 +105,19 @@ impl AccountInitialiser {
         let mnemonic = self.mnemonic;
 
         let adapter = crate::storage::get_adapter()?;
+        let accounts = adapter.get_all()?;
+
+        if let Some(latest_account) = accounts.last() {
+            let latest_account: Account = serde_json::from_str(&latest_account)?;
+            if latest_account.messages().is_empty() && latest_account.total_balance() == 0 {
+                return Err(anyhow::anyhow!("can't create accounts when the latest account doesn't have message history and balance"));
+            }
+        }
 
         let stronghold_account_res: crate::Result<stronghold::Account> =
             crate::with_stronghold(|stronghold| {
                 let account = match mnemonic {
                     Some(mnemonic) => stronghold.account_import(
-                        adapter.get_all()?.len(),
                         Some(created_at_timestamp),
                         Some(created_at_timestamp),
                         mnemonic,

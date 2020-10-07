@@ -117,6 +117,11 @@ impl AccountManager {
     pub fn remove_account(&self, account_id: AccountIdentifier) -> crate::Result<()> {
         let adapter = crate::storage::get_adapter()?;
         let account: Account = serde_json::from_str(&adapter.get(account_id.clone())?)?;
+        if !(account.messages().is_empty() && account.total_balance() == 0) {
+            return Err(anyhow::anyhow!(
+                "can't delete an account with message history or balance"
+            ));
+        }
         crate::with_stronghold(|stronghold| stronghold.account_remove(account.id()))?;
         adapter.remove(account_id)?;
         Ok(())
