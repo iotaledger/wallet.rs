@@ -204,12 +204,11 @@ impl AccountManager {
             "password".to_string(),
             None,
         )?;
-        for (index, account) in accounts.iter().enumerate() {
+        for account in accounts.iter() {
             let stronghold_account = backup_stronghold.account_get_by_id(account.id())?;
             let created_at_timestamp: u128 = account.created_at().timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
             let stronghold_account = crate::with_stronghold(|stronghold| {
                 stronghold.account_import(
-                    index,
                     Some(created_at_timestamp),
                     Some(created_at_timestamp),
                     stronghold_account.mnemonic().to_string(),
