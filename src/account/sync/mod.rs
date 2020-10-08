@@ -200,11 +200,14 @@ impl<'a> AccountSynchronizer<'a> {
                 .collect(),
         );
         self.account.set_addresses(found_addresses);
-        let storage_adapter = crate::storage::get_adapter()?;
-        storage_adapter.set(
-            self.account.id().into(),
-            serde_json::to_string(&self.account)?,
-        )?;
+
+        if !self.skip_persistance {
+            let storage_adapter = crate::storage::get_adapter()?;
+            storage_adapter.set(
+                self.account.id().into(),
+                serde_json::to_string(&self.account)?,
+            )?;
+        }
 
         let synced_account = SyncedAccount {
             account_id: *self.account.id(),
