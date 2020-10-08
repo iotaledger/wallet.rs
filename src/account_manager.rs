@@ -346,8 +346,7 @@ fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std::i
 #[cfg(test)]
 mod tests {
     use super::AccountManager;
-    use crate::account::Account;
-    use crate::address::{Address, AddressBuilder, IotaAddress};
+    use crate::address::{AddressBuilder, IotaAddress};
     use crate::client::ClientOptionsBuilder;
     use crate::message::Message;
     use iota::transaction::prelude::{
@@ -355,27 +354,11 @@ mod tests {
     };
     use rusty_fork::rusty_fork_test;
 
-    fn _generate_iota_address() -> IotaAddress {
-        IotaAddress::Ed25519(Ed25519Address::new(rand::random::<[u8; 32]>()))
-    }
-
-    fn _create_account(manager: &AccountManager, addresses: Vec<Address>) -> Account {
-        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-            .expect("invalid node URL")
-            .build();
-
-        manager
-            .create_account(client_options)
-            .alias("alias")
-            .initialise()
-            .expect("failed to add account")
-    }
-
     rusty_fork_test! {
         #[test]
         fn store_accounts() {
             let manager = crate::test_utils::get_account_manager();
-            let account = _create_account(&manager, vec![]);
+            let account = crate::test_utils::create_account(&manager, vec![]);
 
             manager
                 .remove_account(account.id().into())
@@ -471,7 +454,7 @@ mod tests {
             _clear_db_and_backup("./example-database/backup-test").unwrap();
             let manager = AccountManager::new();
 
-            let account = _create_account(&manager, vec![]);
+            let account = crate::test_utils::create_account(&manager, vec![]);
 
             // backup the stored accounts to ./backup/${backup_name}
             let backup_path = manager.backup("./backup").unwrap();
@@ -491,14 +474,14 @@ mod tests {
             let manager = AccountManager::new();
 
             // first we'll create an example account
-            let address = _generate_iota_address();
+            let address = crate::test_utils::generate_random_iota_address();
             let address = AddressBuilder::new()
                 .address(address.clone())
                 .key_index(0)
                 .balance(0)
                 .build()
                 .unwrap();
-            let account = _create_account(&manager, vec![address]);
+            let account = crate::test_utils::create_account(&manager, vec![address]);
 
             let backup_path = manager.backup("./backup").unwrap();
 

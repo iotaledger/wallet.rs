@@ -67,9 +67,23 @@ pub(crate) fn with_stronghold_from_path<T, F: FnOnce(&Stronghold) -> T>(
 
 #[cfg(test)]
 mod test_utils {
+    use super::account::Account;
     use super::account_manager::AccountManager;
+    use super::address::{Address, IotaAddress};
+    use super::client::ClientOptionsBuilder;
+    use super::message::Message;
+
+    use chrono::prelude::Utc;
+    use iota::transaction::prelude::{
+        Ed25519Address, MessageId, Payload, Seed, SignatureLockedSingleOutput, TransactionBuilder,
+        UTXOInput,
+    };
     use once_cell::sync::OnceCell;
     use rand::{distributions::Alphanumeric, thread_rng, Rng};
+    use slip10::BIP32Path;
+
+    use std::convert::TryInto;
+    use std::num::NonZeroU64;
     use std::path::PathBuf;
 
     static MANAGER_INSTANCE: OnceCell<AccountManager> = OnceCell::new();
@@ -83,5 +97,53 @@ mod test_utils {
             manager.set_stronghold_password("password").unwrap();
             manager
         })
+    }
+
+    pub fn create_account(manager: &AccountManager, addresses: Vec<Address>) -> Account {
+        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+            .expect("invalid node URL")
+            .build();
+
+        manager
+            .create_account(client_options)
+            .alias("alias")
+            .initialise()
+            .expect("failed to add account")
+    }
+
+    pub fn generate_random_iota_address() -> IotaAddress {
+        IotaAddress::Ed25519(Ed25519Address::new(rand::random::<[u8; 32]>()))
+    }
+
+    pub fn generate_message(
+        value: i64,
+        address: Address,
+        confirmed: bool,
+        broadcasted: bool,
+    ) -> Message {
+        Message {
+            version: 1,
+            trunk: MessageId::new([0; 32]),
+            branch: MessageId::new([0; 32]),
+            payload_length: 0,
+            payload: Payload::Transaction(Box::new(
+                TransactionBuilder::new(&Seed::from_ed25519_bytes("".as_bytes()).unwrap())
+                    .set_outputs(vec![SignatureLockedSingleOutput::new(
+                        address.address().clone(),
+                        NonZeroU64::new(value.try_into().unwrap()).unwrap(),
+                    )
+                    .into()])
+                    .set_inputs(vec![(
+                        UTXOInput::new(MessageId::new([0; 32]), 0).unwrap().into(),
+                        BIP32Path::from_str("").unwrap(),
+                    )])
+                    .build()
+                    .unwrap(),
+            )),
+            timestamp: Utc::now(),
+            nonce: 0,
+            confirmed,
+            broadcasted,
+        }
     }
 }

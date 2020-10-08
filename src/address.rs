@@ -158,71 +158,11 @@ pub(crate) fn is_unspent(account: &Account, address: &IotaAddress) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{Address, IotaAddress};
-    use crate::account::Account;
-    use crate::account_manager::AccountManager;
-    use crate::client::ClientOptionsBuilder;
-    use crate::message::Message;
-
-    use chrono::Utc;
-    use iota::transaction::prelude::{
-        Ed25519Address, MessageId, Payload, Seed, SignatureLockedSingleOutput, TransactionBuilder,
-        UTXOInput,
-    };
-    use slip10::path::BIP32Path;
-    use std::convert::TryInto;
-    use std::num::NonZeroU64;
-
-    fn _create_account() -> Account {
-        let manager = AccountManager::new();
-
-        let client_options = ClientOptionsBuilder::node("https://nodes.comnet.thetangle.org")
-            .unwrap()
-            .build();
-        let account = manager
-            .create_account(client_options)
-            .alias("alias")
-            .initialise()
-            .unwrap();
-
-        account
-    }
-
-    fn _create_address() -> IotaAddress {
-        IotaAddress::Ed25519(Ed25519Address::new([0; 32]))
-    }
-
-    fn _generate_message(value: i64, address: Address) -> Message {
-        Message {
-            version: 1,
-            trunk: MessageId::new([0; 32]),
-            branch: MessageId::new([0; 32]),
-            payload_length: 0,
-            payload: Payload::Transaction(Box::new(
-                TransactionBuilder::new(&Seed::from_ed25519_bytes("".as_bytes()).unwrap())
-                    .set_outputs(vec![SignatureLockedSingleOutput::new(
-                        address.address().clone(),
-                        NonZeroU64::new(value.try_into().unwrap()).unwrap(),
-                    )
-                    .into()])
-                    .set_inputs(vec![(
-                        UTXOInput::new(MessageId::new([0; 32]), 0).unwrap().into(),
-                        BIP32Path::from_str("").unwrap(),
-                    )])
-                    .build()
-                    .unwrap(),
-            )),
-            timestamp: Utc::now(),
-            nonce: 0,
-            confirmed: true,
-            broadcasted: true,
-        }
-    }
-
     #[tokio::test]
     async fn get_balance() {
-        let account = _create_account();
-        let address = _create_address();
+        let manager = crate::test_utils::get_account_manager();
+        let account = crate::test_utils::create_account(&manager, vec![]);
+        let address = crate::test_utils::generate_random_iota_address();
 
         let response = super::get_balance(&account, &address).await;
         assert!(response.is_ok());
@@ -230,8 +170,9 @@ mod tests {
 
     #[test]
     fn is_unspent_false() {
-        let account = _create_account();
-        let address = _create_address();
+        let manager = crate::test_utils::get_account_manager();
+        let account = crate::test_utils::create_account(&manager, vec![]);
+        let address = crate::test_utils::generate_random_iota_address();
 
         let response = super::is_unspent(&account, &address);
         assert_eq!(response, false);
@@ -239,9 +180,10 @@ mod tests {
 
     #[tokio::test]
     async fn is_unspent_true() {
-        let mut account = _create_account();
+        let manager = crate::test_utils::get_account_manager();
+        let mut account = crate::test_utils::create_account(&manager, vec![]);
         let address = super::get_new_address(&account, false).await.unwrap();
-        let spent_tx = _generate_message(-50, address.clone());
+        let spent_tx = crate::test_utils::generate_message(-50, address.clone(), true, true);
         account.append_messages(vec![spent_tx]);
 
         let response = super::is_unspent(&account, address.address());
