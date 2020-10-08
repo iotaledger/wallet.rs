@@ -119,7 +119,7 @@ impl StorageAdapter for StrongholdStorageAdapter {
             stronghold.record_remove(index_record_id)?;
             stronghold.record_create_with_hint(
                 &serde_json::to_string(&index)?,
-                ACCOUNT_ID_INDEX_HINT.as_bytes(),
+                RecordHint::new(ACCOUNT_ID_INDEX_HINT).unwrap(),
             )?;
             Ok(())
         });
@@ -145,7 +145,7 @@ impl StorageAdapter for StrongholdStorageAdapter {
             stronghold.record_remove(index_record_id)?;
             stronghold.record_create_with_hint(
                 &serde_json::to_string(&new_index)?,
-                ACCOUNT_ID_INDEX_HINT.as_bytes(),
+                RecordHint::new(ACCOUNT_ID_INDEX_HINT).unwrap(),
             )?;
             Ok(())
         });
