@@ -49,6 +49,7 @@ pub struct AccountInitialiser {
     messages: Vec<Message>,
     addresses: Vec<Address>,
     client_options: ClientOptions,
+    skip_persistance: bool,
 }
 
 impl AccountInitialiser {
@@ -61,6 +62,7 @@ impl AccountInitialiser {
             messages: vec![],
             addresses: vec![],
             client_options,
+            skip_persistance: false,
         }
     }
 
@@ -94,6 +96,11 @@ impl AccountInitialiser {
     /// The account can be initialised with locally stored address history.
     pub fn addresses(mut self, addresses: Vec<Address>) -> Self {
         self.addresses = addresses;
+        self
+    }
+
+    pub(crate) fn skip_persistance(mut self) -> Self {
+        self.skip_persistance = true;
         self
     }
 
@@ -140,7 +147,9 @@ impl AccountInitialiser {
             addresses: self.addresses,
             client_options: self.client_options,
         };
-        adapter.set(account_id, serde_json::to_string(&account)?)?;
+        if !self.skip_persistance {
+            adapter.set(account_id, serde_json::to_string(&account)?)?;
+        }
         Ok(account)
     }
 }

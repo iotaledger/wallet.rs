@@ -249,14 +249,51 @@ impl AccountManager {
     }
 }
 
+fn is_account_sync_empty(account: &Account) -> bool {
+    account.messages().is_empty() || account.addresses().iter().all(|addr| *addr.balance() == 0)
+}
+
+async fn discover_accounts(client_options: &ClientOptions) -> crate::Result<Vec<SyncedAccount>> {
+    let mut synced_accounts = vec![];
+    let adapter = crate::storage::get_adapter()?;
+    loop {
+        let mut account = AccountInitialiser::new(client_options.clone())
+            .skip_persistance()
+            .initialise()?;
+        let synced_account = account.sync().skip_persistance().execute().await?;
+        synced_accounts.push(synced_account);
+        if is_account_sync_empty(&account) {
+            break;
+        } else {
+            adapter.set(account.id().into(), serde_json::to_string(&account)?)?;
+        }
+    }
+    Ok(synced_accounts)
+}
+
 async fn sync_accounts() -> crate::Result<Vec<SyncedAccount>> {
     let accounts = crate::storage::get_adapter()?.get_all()?;
     let mut synced_accounts = vec![];
+    let mut last_account = None;
     for account_str in accounts {
         let mut account: Account = serde_json::from_str(&account_str)?;
         let synced_account = account.sync().execute().await?;
+        last_account = Some(account);
         synced_accounts.push(synced_account);
     }
+
+    let discovered_accounts = match last_account {
+        Some(account) => {
+            if is_account_sync_empty(&account) {
+                discover_accounts(account.client_options()).await?
+            } else {
+                vec![]
+            }
+        }
+        None => discover_accounts(&ClientOptions::default()).await?,
+    };
+    synced_accounts.extend(discovered_accounts.into_iter());
+
     Ok(synced_accounts)
 }
 
