@@ -1,4 +1,5 @@
 use crate::account::Account;
+use bech32::FromBase32;
 use getset::Getters;
 pub use iota::transaction::prelude::{Address as IotaAddress, Ed25519Address};
 use serde::{Deserialize, Serialize};
@@ -12,6 +13,7 @@ pub struct AddressBuilder {
     address: Option<IotaAddress>,
     balance: Option<u64>,
     key_index: Option<usize>,
+    internal: bool,
 }
 
 impl AddressBuilder {
@@ -51,6 +53,7 @@ impl AddressBuilder {
             key_index: self
                 .key_index
                 .ok_or_else(|| anyhow::anyhow!("the `key_index` field is required"))?,
+            internal: self.internal,
         };
         Ok(address)
     }
@@ -66,6 +69,8 @@ pub struct Address {
     balance: u64,
     /// The address key index.
     key_index: usize,
+    /// Determines if an address is a public or an internal (change) address.
+    internal: bool,
 }
 
 impl PartialOrd for Address {
@@ -92,62 +97,48 @@ impl PartialEq for Address {
     }
 }
 
-/// Gets an unused address for the given account.
-pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address> {
-    let address_res: crate::Result<(usize, IotaAddress)> = crate::with_stronghold(|stronghold| {
-        let adapter = crate::storage::get_adapter()?;
-        let accounts = adapter.get_all()?;
-        let account_json = serde_json::to_string(&account)?;
-        let account_index = accounts
-            .iter()
-            .position(|acc| acc == &account_json)
-            .unwrap();
-        let address_index = account.addresses().len();
+pub(crate) fn get_iota_address(
+    account_id: &[u8; 32],
+    account_index: usize,
+    address_index: usize,
+    internal: bool,
+) -> crate::Result<IotaAddress> {
+    crate::with_stronghold(|stronghold| {
         let address_str =
-            stronghold.address_get(account.id(), Some(account_index), address_index, false)?;
+            stronghold.address_get(account_id, Some(account_index), address_index, internal)?;
+        let address_ed25519 = Vec::from_base32(&bech32::decode(&address_str)?.1)?;
         let iota_address =
-            IotaAddress::Ed25519(Ed25519Address::new(address_str.as_bytes().try_into()?));
-        Ok((address_index, iota_address))
-    });
-    let (key_index, iota_address) = address_res?;
+            IotaAddress::Ed25519(Ed25519Address::new(address_ed25519[1..].try_into()?));
+        Ok(iota_address)
+    })
+}
+
+/// Gets an unused address for the given account.
+pub(crate) async fn get_new_address(account: &Account, internal: bool) -> crate::Result<Address> {
+    let key_index = account.addresses().len();
+    let iota_address = get_iota_address(account.id(), account.index()?, key_index, internal)?;
     let balance = get_balance(&account, &iota_address).await?;
     let address = Address {
         address: iota_address,
         balance,
         key_index,
+        internal,
     };
     Ok(address)
 }
 
 /// Batch address generation.
-pub(crate) async fn get_addresses(account: &Account, count: usize) -> crate::Result<Vec<Address>> {
+pub(crate) async fn get_addresses(
+    account: &Account,
+    count: usize,
+    internal: bool,
+) -> crate::Result<Vec<Address>> {
     let mut addresses = vec![];
     for i in 0..count {
-        let address_res: crate::Result<IotaAddress> = crate::with_stronghold(|stronghold| {
-            let adapter = crate::storage::get_adapter()?;
-            let accounts = adapter.get_all()?;
-            let account_json = serde_json::to_string(&account)?;
-            let account_index = accounts
-                .iter()
-                .position(|acc| acc == &account_json)
-                .unwrap();
-            let address_str =
-                stronghold.address_get(account.id(), Some(account_index), i, false)?;
-            let iota_address =
-                IotaAddress::Ed25519(Ed25519Address::new(address_str.as_bytes().try_into()?));
-            Ok(iota_address)
-        });
-        let address = address_res?;
-        let balance = get_balance(&account, &address).await?;
-        addresses.push(Address {
-            address,
-            balance,
-            key_index: i,
-        })
+        addresses.push(get_new_address(&account, internal).await?);
     }
     Ok(addresses)
 }
-
 async fn get_balance(account: &Account, address: &IotaAddress) -> crate::Result<u64> {
     let client = crate::client::get_client(account.client_options());
     let amount = client.get_address(&address.clone()).balance()?;

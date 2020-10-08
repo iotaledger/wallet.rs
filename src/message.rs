@@ -216,7 +216,6 @@ impl Message {
     pub fn address(&self) -> &Address {
         unimplemented!()
     }
-
     /// Gets the absolute value of the transaction.
     pub fn value(&self) -> Value {
         let amount = match &self.payload {

@@ -49,6 +49,7 @@ pub struct AccountInitialiser {
     messages: Vec<Message>,
     addresses: Vec<Address>,
     client_options: ClientOptions,
+    skip_persistance: bool,
 }
 
 impl AccountInitialiser {
@@ -61,6 +62,7 @@ impl AccountInitialiser {
             messages: vec![],
             addresses: vec![],
             client_options,
+            skip_persistance: false,
         }
     }
 
@@ -94,6 +96,11 @@ impl AccountInitialiser {
     /// The account can be initialised with locally stored address history.
     pub fn addresses(mut self, addresses: Vec<Address>) -> Self {
         self.addresses = addresses;
+        self
+    }
+
+    pub(crate) fn skip_persistance(mut self) -> Self {
+        self.skip_persistance = true;
         self
     }
 
@@ -140,7 +147,9 @@ impl AccountInitialiser {
             addresses: self.addresses,
             client_options: self.client_options,
         };
-        adapter.set(account_id, serde_json::to_string(&account)?)?;
+        if !self.skip_persistance {
+            adapter.set(account_id, serde_json::to_string(&account)?)?;
+        }
         Ok(account)
     }
 }
@@ -161,6 +170,7 @@ pub struct Account {
     messages: Vec<Message>,
     /// Address history associated with the seed.
     /// The account can be initialised with locally stored address history.
+    #[getset(set = "pub(crate)")]
     addresses: Vec<Address>,
     /// The client options.
     client_options: ClientOptions,
@@ -168,12 +178,12 @@ pub struct Account {
 
 impl Account {
     /// Returns the most recent address of the account.
-    pub fn latest_address(&self) -> &Address {
-        &self.addresses.iter().max_by_key(|a| a.key_index()).unwrap()
+    pub fn latest_address(&self) -> Option<&Address> {
+        self.addresses.iter().max_by_key(|a| a.key_index())
     }
 
     /// Returns the builder to setup the process to synchronize this account with the Tangle.
-    pub fn sync(&self) -> AccountSynchronizer<'_> {
+    pub fn sync(&mut self) -> AccountSynchronizer<'_> {
         AccountSynchronizer::new(self)
     }
 
@@ -277,7 +287,7 @@ impl Account {
 
     /// Gets a new unused address and links it to this account.
     pub async fn generate_address(&mut self) -> crate::Result<Address> {
-        let address = crate::address::get_new_address(&self).await?;
+        let address = crate::address::get_new_address(&self, false).await?;
         self.addresses.push(address.clone());
         crate::storage::get_adapter()?.set(self.id.into(), serde_json::to_string(self)?)?;
         Ok(address)
@@ -290,6 +300,18 @@ impl Account {
     /// Gets a message with the given id associated with this account.
     pub fn get_message(&self, message_id: &MessageId) -> Option<&Message> {
         self.messages.iter().find(|tx| tx.id() == message_id)
+    }
+
+    /// Gets the account index.
+    pub fn index(&self) -> crate::Result<usize> {
+        let adapter = crate::storage::get_adapter()?;
+        let accounts = adapter.get_all()?;
+        let account_json = serde_json::to_string(&self)?;
+        let index = accounts
+            .iter()
+            .position(|acc| acc == &account_json)
+            .unwrap();
+        Ok(index)
     }
 }
 
