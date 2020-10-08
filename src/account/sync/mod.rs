@@ -3,12 +3,9 @@ use crate::address::Address;
 use crate::client::get_client;
 use crate::message::{Message, Transfer};
 
-use iota::transaction::{
-    prelude::{
-        Error as TransactionError, Input, Message as IotaMessage, MessageId, Output, Payload,
-        SignatureLockedSingleOutput, Transaction, UTXOInput,
-    },
-    Vertex,
+use iota::transaction::prelude::{
+    Error as TransactionError, Input, Message as IotaMessage, MessageId, Output, Payload,
+    SignatureLockedSingleOutput, Transaction, UTXOInput,
 };
 use slip10::path::BIP32Path;
 
@@ -59,7 +56,7 @@ async fn sync_transactions<'a>(
     // sync `broadcasted` state
     messages
         .iter_mut()
-        .filter(|message| !message.broadcasted() && new_message_ids.contains(message.message_id()))
+        .filter(|message| !message.broadcasted() && new_message_ids.contains(message.id()))
         .for_each(|message| {
             message.set_broadcasted(true);
         });
@@ -72,7 +69,7 @@ async fn sync_transactions<'a>(
     let client = get_client(account.client_options());
     let unconfirmed_transaction_ids: Vec<MessageId> = unconfirmed_messages
         .iter()
-        .map(|message| *message.message_id())
+        .map(|message| *message.id())
         .collect();
     let confirmed_states = client.is_confirmed(&unconfirmed_transaction_ids[..])?;
     for (message, confirmed) in unconfirmed_messages
@@ -84,16 +81,10 @@ async fn sync_transactions<'a>(
         }
     }
 
-    // get new transactions
-    let found_messages = client
-        .get_transactions()
-        .hashes(&new_message_ids[..])
-        .get()?;
-    let mut ids_iter = new_message_ids.iter();
-
-    for message in found_messages {
-        let message_id = ids_iter.next().unwrap();
-        messages.push(Message::from_iota_message(&message).unwrap());
+    // get new messages
+    for message_id in &new_message_ids {
+        let message = client.get_message(&message_id).data()?;
+        messages.push(Message::from_iota_message(*message_id, &message).unwrap());
     }
 
     Ok(messages)
@@ -141,13 +132,26 @@ impl<'a> AccountSynchronizer<'a> {
         }
 
         let mut new_message_ids = vec![];
-        let found_messages = client.get_transactions().addresses(&addresses[..]).get()?;
+        let mut found_messages = vec![];
+        for address in addresses {
+            let address_outputs = client.get_address(&address).outputs()?;
+            for (transaction_id, output_index) in address_outputs.output_ids {
+                let outputs = client.get_output(transaction_id, output_index)?;
+                for output in outputs {
+                    let message = client.get_message(&output.producer).data()?;
+                    found_messages.push((output.producer, message));
+                }
+            }
+        }
 
-        for found_message in found_messages {
-            if !self.account.messages().iter().any(
-                |message| message.message_id() == found_message.trunk(), /* TODO hash instead of trunk */
-            ) {
-                new_message_ids.push(*found_message.trunk()); // TODO hash instead of trunk
+        for (found_message_id, found_message) in found_messages {
+            if !self
+                .account
+                .messages()
+                .iter()
+                .any(|message| message.id() == &found_message_id)
+            {
+                new_message_ids.push(found_message_id);
             }
         }
 
@@ -223,14 +227,17 @@ impl SyncedAccount {
         let (input_addresses, remainder_address) =
             self.select_inputs(*transfer_obj.amount(), &account, transfer_obj.address())?;
 
-        let mut utxo_outputs_addresses = vec![];
+        let mut utxos = vec![];
         for utxo_output in &input_addresses {
-            utxo_outputs_addresses.push(utxo_output.address().clone());
+            let address = utxo_output.address();
+            let address_outputs = client.get_address(&address).outputs()?;
+            let mut outputs = vec![];
+            for (transaction_id, output_index) in address_outputs.output_ids {
+                let curr_outputs = client.get_output(transaction_id, output_index)?;
+                outputs.extend(curr_outputs.into_iter());
+            }
+            utxos.extend(outputs.into_iter());
         }
-        let utxos = client
-            .get_outputs()
-            .addresses(&utxo_outputs_addresses[..])
-            .get()?;
 
         let mut indexed_utxo_inputs: Vec<(Input, BIP32Path)> = vec![];
         let mut utxo_outputs: Vec<Output> = vec![];
@@ -284,20 +291,13 @@ impl SyncedAccount {
             .build()
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
-        let attached = client.post_messages(&[message])?;
-        let messages: Vec<Message> = client
-            .get_messages()
-            .hashes(&attached[..])
-            .get()?
-            .iter()
-            .map(|message| Message::from_iota_message(&message).unwrap())
-            .collect();
+        let message_id = client.post_messages(&message)?;
+        let message = client.get_message(&message_id).data()?;
 
-        let message = messages.first().unwrap().clone();
-        account.append_messages(messages);
+        account.append_messages(vec![Message::from_iota_message(message_id, &message)?]);
         adapter.set(account_id, serde_json::to_string(&account)?)?;
 
-        Ok(message)
+        Ok(Message::from_iota_message(message_id, &message)?)
     }
 
     /// Retry messages.
