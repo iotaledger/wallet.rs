@@ -3,12 +3,9 @@ use crate::address::{Address, AddressBuilder};
 use crate::client::get_client;
 use crate::message::{Message, Transfer};
 
-use iota::transaction::{
-    prelude::{
-        Error as TransactionError, Input, Message as IotaMessage, MessageId, Output, Payload,
-        SignatureLockedSingleOutput, Transaction, UTXOInput,
-    },
-    Vertex,
+use iota::transaction::prelude::{
+    Error as TransactionError, Input, Message as IotaMessage, MessageId, Output, Payload,
+    SignatureLockedSingleOutput, Transaction, UTXOInput,
 };
 use slip10::path::BIP32Path;
 
@@ -36,7 +33,7 @@ async fn sync_addresses(
     account: &'_ Account,
     address_index: usize,
     gap_limit: Option<usize>,
-) -> crate::Result<(Vec<Address>, Vec<IotaMessage>)> {
+) -> crate::Result<(Vec<Address>, Vec<(MessageId, IotaMessage)>)> {
     let mut address_index = address_index;
     let account_index = account.index()?;
 
@@ -44,7 +41,7 @@ async fn sync_addresses(
     let gap_limit = gap_limit.unwrap_or(20);
 
     let mut generated_addresses = vec![];
-    let mut found_transactions = vec![];
+    let mut found_messages = vec![];
     loop {
         let mut generated_iota_addresses = vec![];
         for i in address_index..(address_index + gap_limit) {
@@ -63,22 +60,24 @@ async fn sync_addresses(
             )?);
         }
 
-        let curr_found_transactions = client
-            .get_transactions()
-            .addresses(&generated_iota_addresses[..])
-            .get()?;
-        found_transactions.extend(curr_found_transactions.into_iter());
+        let mut curr_found_messages = vec![];
+        for address in &generated_iota_addresses {
+            let address_outputs = client.get_address(&address).outputs()?;
+            for (transaction_id, output_index) in address_outputs.output_ids {
+                let outputs = client.get_output(transaction_id, output_index)?;
+                for output in outputs {
+                    let message = client.get_message(&output.producer).data()?;
+                    curr_found_messages.push((output.producer, message));
+                }
+            }
+        }
 
-        let generated_addresses_outputs =
-            client.get_addresses_balance(&generated_iota_addresses[..])?;
+        found_messages.extend(curr_found_messages.into_iter());
 
         for iota_address in generated_iota_addresses {
-            let balance = generated_addresses_outputs
-                .iter()
-                .filter(|output| output.address == iota_address)
-                .fold(0, |acc, output| acc + output.amount);
+            let balance = client.get_address(&iota_address).balance()?;
             let address = AddressBuilder::new()
-                .address(iota_address)
+                .address(iota_address.clone())
                 .key_index(address_index)
                 .balance(balance)
                 .build()?;
@@ -86,28 +85,28 @@ async fn sync_addresses(
             address_index += 1;
         }
 
-        if found_transactions.is_empty()
-            && generated_addresses_outputs.iter().all(|o| o.amount == 0)
-        {
+        if found_messages.is_empty() && generated_addresses.iter().all(|o| *o.balance() == 0) {
             break;
         }
     }
 
-    Ok((generated_addresses, found_transactions))
+    Ok((generated_addresses, found_messages))
 }
 
 /// Syncs transactions with the tangle.
 /// The method should ensures that the wallet local state has transactions associated with the address history.
 async fn sync_transactions<'a>(
     account: &'a Account,
-    new_message_ids: Vec<MessageId>,
-) -> crate::Result<Vec<Message>> {
+    new_messages: &'a [(MessageId, IotaMessage)],
+) -> crate::Result<()> {
     let mut messages: Vec<Message> = account.messages().to_vec();
 
     // sync `broadcasted` state
     messages
         .iter_mut()
-        .filter(|message| !message.broadcasted() && new_message_ids.contains(message.message_id()))
+        .filter(|message| {
+            !message.broadcasted() && new_messages.iter().any(|(id, _)| id == message.id())
+        })
         .for_each(|message| {
             message.set_broadcasted(true);
         });
@@ -120,7 +119,7 @@ async fn sync_transactions<'a>(
     let client = get_client(account.client_options());
     let unconfirmed_transaction_ids: Vec<MessageId> = unconfirmed_messages
         .iter()
-        .map(|message| *message.message_id())
+        .map(|message| *message.id())
         .collect();
     let confirmed_states = client.is_confirmed(&unconfirmed_transaction_ids[..])?;
     for (message, confirmed) in unconfirmed_messages
@@ -132,19 +131,7 @@ async fn sync_transactions<'a>(
         }
     }
 
-    // get new transactions
-    let found_messages = client
-        .get_transactions()
-        .hashes(&new_message_ids[..])
-        .get()?;
-    let mut ids_iter = new_message_ids.iter();
-
-    for message in found_messages {
-        let message_id = ids_iter.next().unwrap();
-        messages.push(Message::from_iota_message(&message).unwrap());
-    }
-
-    Ok(messages)
+    Ok(())
 }
 
 /// Account sync helper.
@@ -192,18 +179,26 @@ impl<'a> AccountSynchronizer<'a> {
         let (found_addresses, found_messages) =
             sync_addresses(self.account, self.address_index, self.gap_limit).await?;
 
-        let mut new_message_ids = vec![];
-        for found_message in found_messages {
-            if !self.account.messages().iter().any(
-                |message| message.message_id() == found_message.trunk(), /* TODO hash instead of trunk */
-            ) {
-                new_message_ids.push(*found_message.trunk()); // TODO hash instead of trunk
+        let mut new_messages = vec![];
+        for (found_message_id, found_message) in found_messages {
+            if !self
+                .account
+                .messages()
+                .iter()
+                .any(|message| message.id() == &found_message_id)
+            {
+                new_messages.push((found_message_id, found_message));
             }
         }
 
-        let messages = sync_transactions(self.account, new_message_ids).await?;
+        sync_transactions(self.account, &new_messages).await?;
 
-        self.account.set_messages(messages);
+        self.account.set_messages(
+            new_messages
+                .iter()
+                .map(|(id, message)| Message::from_iota_message(*id, &message).unwrap())
+                .collect(),
+        );
         self.account.set_addresses(found_addresses);
         let storage_adapter = crate::storage::get_adapter()?;
         storage_adapter.set(
@@ -280,14 +275,17 @@ impl SyncedAccount {
         let (input_addresses, remainder_address) =
             self.select_inputs(*transfer_obj.amount(), &account, transfer_obj.address())?;
 
-        let mut utxo_outputs_addresses = vec![];
+        let mut utxos = vec![];
         for utxo_output in &input_addresses {
-            utxo_outputs_addresses.push(utxo_output.address().clone());
+            let address = utxo_output.address();
+            let address_outputs = client.get_address(&address).outputs()?;
+            let mut outputs = vec![];
+            for (transaction_id, output_index) in address_outputs.output_ids {
+                let curr_outputs = client.get_output(transaction_id, output_index)?;
+                outputs.extend(curr_outputs.into_iter());
+            }
+            utxos.extend(outputs.into_iter());
         }
-        let utxos = client
-            .get_outputs()
-            .addresses(&utxo_outputs_addresses[..])
-            .get()?;
 
         let mut indexed_utxo_inputs: Vec<(Input, BIP32Path)> = vec![];
         let mut utxo_outputs: Vec<Output> = vec![];
@@ -341,20 +339,13 @@ impl SyncedAccount {
             .build()
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
-        let attached = client.post_messages(&[message])?;
-        let messages: Vec<Message> = client
-            .get_messages()
-            .hashes(&attached[..])
-            .get()?
-            .iter()
-            .map(|message| Message::from_iota_message(&message).unwrap())
-            .collect();
+        let message_id = client.post_messages(&message)?;
+        let message = client.get_message(&message_id).data()?;
 
-        let message = messages.first().unwrap().clone();
-        account.append_messages(messages);
+        account.append_messages(vec![Message::from_iota_message(message_id, &message)?]);
         adapter.set(account_id, serde_json::to_string(&account)?)?;
 
-        Ok(message)
+        Ok(Message::from_iota_message(message_id, &message)?)
     }
 
     /// Retry messages.
@@ -381,13 +372,13 @@ mod tests {
                 let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
                     .unwrap()
                     .build();
-                let mut account = manager
+                let account = manager
                     .create_account(client_options)
                     .alias("alias")
                     .initialise()
                     .unwrap();
 
-                let synced_accounts = account.sync().execute().await.unwrap();
+                // let synced_accounts = account.sync().execute().await.unwrap();
                 // TODO improve test when the node API is ready to use
             });
         }

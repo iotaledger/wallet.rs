@@ -60,7 +60,7 @@ impl AccountManager {
                     |_, transactions| {
                         if let Some(message) = transactions
                             .iter_mut()
-                            .find(|message| message.message_id() == event.message_id())
+                            .find(|message| message.id() == event.message_id())
                         {
                             message.set_confirmed(true);
                         }
@@ -74,7 +74,7 @@ impl AccountManager {
                 mutate_account_transaction(event.account_id().clone().into(), |_, transactions| {
                     if let Some(message) = transactions
                         .iter_mut()
-                        .find(|message| message.message_id() == event.message_id())
+                        .find(|message| message.id() == event.message_id())
                     {
                         message.set_broadcasted(true);
                     }
@@ -90,9 +90,8 @@ impl AccountManager {
                         tokio::runtime::Runtime::new().expect("failed to create tokio runtime");
                     rt.block_on(async move {
                         let client = crate::client::get_client(account.client_options());
-                        let response = client.get_messages().hashes(&[message_id]).get().unwrap();
-                        let message = response.first().unwrap();
-                        messages.push(Message::from_iota_message(message).unwrap());
+                        let message = client.get_message(&message_id).data().unwrap();
+                        messages.push(Message::from_iota_message(message_id, &message).unwrap());
                     });
                 },
             );
@@ -268,7 +267,7 @@ async fn reattach_unconfirmed_transactions() -> crate::Result<()> {
         let unconfirmed_messages = account.list_messages(1000, 0, Some(MessageType::Unconfirmed));
         let mut account: Account = serde_json::from_str(&account_str)?;
         for message in unconfirmed_messages {
-            reattach(&mut account, &message.message_id()).await?;
+            reattach(&mut account, &message.id()).await?;
         }
     }
     Ok(())
@@ -278,7 +277,7 @@ async fn reattach(account: &mut Account, message_id: &MessageId) -> crate::Resul
     let mut messages: Vec<Message> = account.messages().to_vec();
     let message = messages
         .iter_mut()
-        .find(|message| message.message_id() == message_id)
+        .find(|message| message.id() == message_id)
         .ok_or_else(|| anyhow::anyhow!("message not found"))?;
 
     if message.confirmed {
@@ -289,16 +288,17 @@ async fn reattach(account: &mut Account, message_id: &MessageId) -> crate::Resul
         let client = crate::client::get_client(account.client_options());
         if *client
             .is_confirmed(&[*message_id])?
-            .get(message.message_id())
+            .get(message.id())
             .ok_or_else(|| anyhow::anyhow!("invalid `is_confirmed` response"))?
         {
             // message is already confirmed; do nothing
             message.set_confirmed(true);
         } else {
             // reattach the message
-            let reattachment_messages = client.reattach(&[*message_id])?;
+            let reattachment_message = client.reattach(&message_id)?;
             messages.push(Message::from_iota_message(
-                reattachment_messages.first().unwrap(),
+                *message_id,
+                &reattachment_message,
             )?);
         }
         // update the messages in storage
@@ -385,7 +385,7 @@ mod tests {
 
             let account = manager
                 .create_account(client_options)
-                .messages(vec![Message::from_iota_message(&MessageBuilder::new()
+                .messages(vec![Message::from_iota_message(MessageId::new([0; 32]), &MessageBuilder::new()
                     .parent1(MessageId::new([0; 32]))
                     .parent2(MessageId::new([0; 32]))
                     .payload(Payload::Indexation(Box::new(Indexation::new(

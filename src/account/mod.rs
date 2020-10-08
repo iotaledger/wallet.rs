@@ -290,9 +290,7 @@ impl Account {
 
     /// Gets a message with the given id associated with this account.
     pub fn get_message(&self, message_id: &MessageId) -> Option<&Message> {
-        self.messages
-            .iter()
-            .find(|tx| tx.message_id() == message_id)
+        self.messages.iter().find(|tx| tx.id() == message_id)
     }
 
     /// Gets the account index.
