@@ -69,9 +69,15 @@ pub(crate) fn with_stronghold_from_path<T, F: FnOnce(&Stronghold) -> T>(
 mod test_utils {
     use super::account_manager::AccountManager;
     use once_cell::sync::OnceCell;
+    use rand::{thread_rng, Rng};
+    use std::path::PathBuf;
 
     static MANAGER_INSTANCE: OnceCell<AccountManager> = OnceCell::new();
     pub fn get_account_manager() -> &'static AccountManager {
+        let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
+        let storage_path = PathBuf::from(format!("./example-database/{}", storage_path));
+        crate::storage::set_storage_path(&storage_path).unwrap();
+
         MANAGER_INSTANCE.get_or_init(|| {
             let manager = AccountManager::new();
             manager.set_stronghold_password("password").unwrap();

@@ -105,6 +105,14 @@ impl AccountInitialiser {
         let mnemonic = self.mnemonic;
 
         let adapter = crate::storage::get_adapter()?;
+        let accounts = adapter.get_all()?;
+
+        if let Some(latest_account) = accounts.last() {
+            let latest_account: Account = serde_json::from_str(&latest_account)?;
+            if latest_account.messages().is_empty() && latest_account.total_balance() == 0 {
+                return Err(anyhow::anyhow!("can't create accounts when the latest account doesn't have message history and balance"));
+            }
+        }
 
         let stronghold_account_res: crate::Result<stronghold::Account> =
             crate::with_stronghold(|stronghold| {
@@ -217,7 +225,11 @@ impl Account {
     /// use iota_wallet::message::MessageType;
     /// use iota_wallet::account_manager::AccountManager;
     /// use iota_wallet::client::ClientOptionsBuilder;
+    /// # use rand::{thread_rng, Rng};
     ///
+    /// # let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
+    /// # let storage_path = std::path::PathBuf::from(format!("./example-database/{}", storage_path));
+    /// # iota_wallet::storage::set_storage_path(&storage_path).unwrap();
     /// // gets 10 received messages, skipping the first 5 most recent messages.
     /// let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
     ///  .expect("invalid node URL")
@@ -302,31 +314,34 @@ pub struct InitialisedAccount<'a> {
 #[cfg(test)]
 mod tests {
     use crate::client::ClientOptionsBuilder;
+    use rusty_fork::rusty_fork_test;
 
-    #[test]
-    fn set_alias() {
-        let manager = crate::test_utils::get_account_manager();
+    rusty_fork_test! {
+        #[test]
+        fn set_alias() {
+            let manager = crate::test_utils::get_account_manager();
 
-        let updated_alias = "updated alias";
-        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-            .expect("invalid node URL")
-            .build();
+            let updated_alias = "updated alias";
+            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+                .expect("invalid node URL")
+                .build();
 
-        let mut account = manager
-            .create_account(client_options)
-            .alias("alias")
-            .initialise()
-            .expect("failed to add account");
+            let mut account = manager
+                .create_account(client_options)
+                .alias("alias")
+                .initialise()
+                .expect("failed to add account");
 
-        account
-            .set_alias(updated_alias)
-            .expect("failed to update alias");
-        let account_in_storage = manager
-            .get_account(account.id().into())
-            .expect("failed to get account from storage");
-        assert_eq!(
-            account_in_storage.alias().to_string(),
-            updated_alias.to_string()
-        );
+            account
+                .set_alias(updated_alias)
+                .expect("failed to update alias");
+            let account_in_storage = manager
+                .get_account(account.id().into())
+                .expect("failed to get account from storage");
+            assert_eq!(
+                account_in_storage.alias().to_string(),
+                updated_alias.to_string()
+            );
+        }
     }
 }

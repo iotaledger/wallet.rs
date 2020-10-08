@@ -95,9 +95,16 @@ impl PartialEq for Address {
 /// Gets an unused address for the given account.
 pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address> {
     let address_res: crate::Result<(usize, IotaAddress)> = crate::with_stronghold(|stronghold| {
+        let adapter = crate::storage::get_adapter()?;
+        let accounts = adapter.get_all()?;
+        let account_json = serde_json::to_string(&account)?;
+        let account_index = accounts
+            .iter()
+            .position(|acc| acc == &account_json)
+            .unwrap();
         let address_index = account.addresses().len();
-        // TODO account index
-        let address_str = stronghold.address_get(account.id(), Some(0), address_index, false)?;
+        let address_str =
+            stronghold.address_get(account.id(), Some(account_index), address_index, false)?;
         let iota_address =
             IotaAddress::Ed25519(Ed25519Address::new(address_str.as_bytes().try_into()?));
         Ok((address_index, iota_address))
@@ -117,8 +124,15 @@ pub(crate) async fn get_addresses(account: &Account, count: usize) -> crate::Res
     let mut addresses = vec![];
     for i in 0..count {
         let address_res: crate::Result<IotaAddress> = crate::with_stronghold(|stronghold| {
-            // TODO account index
-            let address_str = stronghold.address_get(account.id(), Some(0), i, false)?;
+            let adapter = crate::storage::get_adapter()?;
+            let accounts = adapter.get_all()?;
+            let account_json = serde_json::to_string(&account)?;
+            let account_index = accounts
+                .iter()
+                .position(|acc| acc == &account_json)
+                .unwrap();
+            let address_str =
+                stronghold.address_get(account.id(), Some(account_index), i, false)?;
             let iota_address =
                 IotaAddress::Ed25519(Ed25519Address::new(address_str.as_bytes().try_into()?));
             Ok(iota_address)
