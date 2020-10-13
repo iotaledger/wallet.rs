@@ -141,7 +141,7 @@ pub(crate) async fn get_addresses(
 }
 async fn get_balance(account: &Account, address: &IotaAddress) -> crate::Result<u64> {
     let client = crate::client::get_client(account.client_options());
-    let amount = client.get_address(&address.clone()).balance()?;
+    let amount = client.get_address().balance(&address).await?;
     Ok(amount)
 }
 

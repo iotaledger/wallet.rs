@@ -90,7 +90,7 @@ impl AccountManager {
                         tokio::runtime::Runtime::new().expect("failed to create tokio runtime");
                     rt.block_on(async move {
                         let client = crate::client::get_client(account.client_options());
-                        let message = client.get_message(&message_id).data().unwrap();
+                        let message = client.get_message().data(&message_id).await.unwrap();
                         messages.push(Message::from_iota_message(message_id, &message).unwrap());
                     });
                 },
@@ -249,10 +249,6 @@ impl AccountManager {
     }
 }
 
-fn is_account_sync_empty(account: &Account) -> bool {
-    account.messages().is_empty() || account.addresses().iter().all(|addr| *addr.balance() == 0)
-}
-
 async fn discover_accounts(client_options: &ClientOptions) -> crate::Result<Vec<SyncedAccount>> {
     let mut synced_accounts = vec![];
     let adapter = crate::storage::get_adapter()?;
@@ -261,8 +257,9 @@ async fn discover_accounts(client_options: &ClientOptions) -> crate::Result<Vec<
             .skip_persistance()
             .initialise()?;
         let synced_account = account.sync().skip_persistance().execute().await?;
+        let is_empty = synced_account.is_empty();
         synced_accounts.push(synced_account);
-        if is_account_sync_empty(&account) {
+        if is_empty {
             break;
         } else {
             adapter.set(account.id().into(), serde_json::to_string(&account)?)?;
@@ -284,7 +281,9 @@ async fn sync_accounts() -> crate::Result<Vec<SyncedAccount>> {
 
     let discovered_accounts = match last_account {
         Some(account) => {
-            if is_account_sync_empty(&account) {
+            if account.messages().is_empty()
+                || account.addresses().iter().all(|addr| *addr.balance() == 0)
+            {
                 discover_accounts(account.client_options()).await?
             } else {
                 vec![]
@@ -332,7 +331,7 @@ async fn reattach(account: &mut Account, message_id: &MessageId) -> crate::Resul
             message.set_confirmed(true);
         } else {
             // reattach the message
-            let reattachment_message = client.reattach(&message_id)?;
+            let reattachment_message = client.reattach(&message_id).await?;
             messages.push(Message::from_iota_message(
                 *message_id,
                 &reattachment_message,
