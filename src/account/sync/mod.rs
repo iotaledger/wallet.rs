@@ -3,12 +3,16 @@ use crate::address::{Address, AddressBuilder};
 use crate::client::get_client;
 use crate::message::{Message, Transfer};
 
-use iota::transaction::prelude::{
-    Error as TransactionError, Input, Message as IotaMessage, MessageId, Output, Payload,
-    SignatureLockedSingleOutput, Transaction, UTXOInput,
+use iota::{
+    client::OutputContext,
+    message::prelude::{
+        Error as TransactionError, Input, Message as IotaMessage, MessageId, Output, Payload,
+        SignatureLockedSingleOutput, Transaction, TransactionId, UTXOInput,
+    },
 };
 use slip10::path::BIP32Path;
 
+use std::convert::TryInto;
 use std::num::NonZeroU64;
 
 mod input_selection;
@@ -33,7 +37,11 @@ async fn sync_addresses(
     account: &'_ Account,
     address_index: usize,
     gap_limit: Option<usize>,
-) -> crate::Result<(Vec<Address>, Vec<(MessageId, IotaMessage)>)> {
+) -> crate::Result<(
+    Vec<Address>,
+    Vec<OutputContext>,
+    Vec<(MessageId, IotaMessage)>,
+)> {
     let mut address_index = address_index;
     let account_index = account.index()?;
 
@@ -42,6 +50,7 @@ async fn sync_addresses(
 
     let mut generated_addresses = vec![];
     let mut found_messages = vec![];
+    let mut found_outputs = vec![];
     loop {
         let mut generated_iota_addresses = vec![];
         for i in address_index..(address_index + gap_limit) {
@@ -61,21 +70,30 @@ async fn sync_addresses(
         }
 
         let mut curr_found_messages = vec![];
+        let mut curr_found_outputs = vec![];
         for address in &generated_iota_addresses {
-            let address_outputs = client.get_address(&address).outputs()?;
-            for (transaction_id, output_index) in address_outputs.output_ids {
-                let outputs = client.get_output(transaction_id, output_index)?;
-                for output in outputs {
-                    let message = client.get_message(&output.producer).data()?;
-                    curr_found_messages.push((output.producer, message));
-                }
+            let address_outputs = client.get_address().outputs(&address).await?;
+            for (transaction_id, output_index) in address_outputs.iter() {
+                let output = client.get_output(transaction_id, *output_index).await?;
+                let message = client
+                    .get_message()
+                    .data(&MessageId::new(output.message_id.as_bytes().try_into()?))
+                    .await?;
+                curr_found_messages.push((
+                    MessageId::new(output.message_id.as_bytes().try_into()?),
+                    message,
+                ));
+                curr_found_outputs.push(output);
             }
         }
 
+        let is_spent = curr_found_outputs.iter().any(|output| output.is_spent);
+
         found_messages.extend(curr_found_messages.into_iter());
+        found_outputs.extend(curr_found_outputs.into_iter());
 
         for iota_address in generated_iota_addresses {
-            let balance = client.get_address(&iota_address).balance()?;
+            let balance = client.get_address().balance(&iota_address).await?;
             let address = AddressBuilder::new()
                 .address(iota_address.clone())
                 .key_index(address_index)
@@ -85,12 +103,15 @@ async fn sync_addresses(
             address_index += 1;
         }
 
-        if found_messages.is_empty() && generated_addresses.iter().all(|o| *o.balance() == 0) {
+        if found_messages.is_empty()
+            && !is_spent
+            && generated_addresses.iter().all(|o| *o.balance() == 0)
+        {
             break;
         }
     }
 
-    Ok((generated_addresses, found_messages))
+    Ok((generated_addresses, found_outputs, found_messages))
 }
 
 /// Syncs transactions with the tangle.
@@ -176,8 +197,11 @@ impl<'a> AccountSynchronizer<'a> {
             addresses.push(address.address().clone());
         }
 
-        let (found_addresses, found_messages) =
+        let (found_addresses, found_outputs, found_messages) =
             sync_addresses(self.account, self.address_index, self.gap_limit).await?;
+        let is_empty = found_messages.is_empty()
+            && !found_outputs.iter().any(|output| output.is_spent)
+            && found_addresses.iter().all(|o| *o.balance() == 0);
 
         let mut new_messages = vec![];
         for (found_message_id, found_message) in found_messages {
@@ -212,6 +236,7 @@ impl<'a> AccountSynchronizer<'a> {
         let synced_account = SyncedAccount {
             account_id: *self.account.id(),
             deposit_address: self.account.latest_address().unwrap().clone(),
+            is_empty,
         };
         Ok(synced_account)
     }
@@ -221,12 +246,18 @@ impl<'a> AccountSynchronizer<'a> {
 pub struct SyncedAccount {
     account_id: [u8; 32],
     deposit_address: Address,
+    is_empty: bool,
 }
 
 impl SyncedAccount {
     /// The account's deposit address.
     pub fn deposit_address(&self) -> &Address {
         &self.deposit_address
+    }
+
+    /// Whether the synced account is empty or not.
+    pub(crate) fn is_empty(&self) -> bool {
+        self.is_empty
     }
 
     /// Selects input addresses for a value transaction.
@@ -281,11 +312,11 @@ impl SyncedAccount {
         let mut utxos = vec![];
         for utxo_output in &input_addresses {
             let address = utxo_output.address();
-            let address_outputs = client.get_address(&address).outputs()?;
+            let address_outputs = client.get_address().outputs(&address).await?;
             let mut outputs = vec![];
-            for (transaction_id, output_index) in address_outputs.output_ids {
-                let curr_outputs = client.get_output(transaction_id, output_index)?;
-                outputs.extend(curr_outputs.into_iter());
+            for (transaction_id, output_index) in address_outputs.iter() {
+                let output = client.get_output(transaction_id, *output_index).await?;
+                outputs.push(output);
             }
             utxos.extend(outputs.into_iter());
         }
@@ -295,9 +326,12 @@ impl SyncedAccount {
         let mut current_output_sum = 0;
         for utxo in utxos {
             indexed_utxo_inputs.push((
-                UTXOInput::new(utxo.producer, utxo.output_index)
-                    .map_err(|e| anyhow::anyhow!(e.to_string()))?
-                    .into(),
+                UTXOInput::new(
+                    TransactionId::new(utxo.transaction_id.as_bytes().try_into()?),
+                    utxo.output_index,
+                )
+                .map_err(|e| anyhow::anyhow!(e.to_string()))?
+                .into(),
                 BIP32Path::from_str("").map_err(|e| anyhow::anyhow!(e.to_string()))?,
             ));
             let utxo_amount = if current_output_sum + utxo.amount > value {
@@ -323,7 +357,7 @@ impl SyncedAccount {
             );
         }
 
-        let (parent1, parent2) = client.get_tips()?;
+        let (parent1, parent2) = client.get_tips().await?;
 
         let stronghold_account =
             crate::with_stronghold(|stronghold| stronghold.account_get_by_id(account.id()))?;
@@ -342,8 +376,8 @@ impl SyncedAccount {
             .build()
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
-        let message_id = client.post_messages(&message)?;
-        let message = client.get_message(&message_id).data()?;
+        let message_id = client.post_messages(&message).await?;
+        let message = client.get_message().data(&message_id).await?;
 
         account.append_messages(vec![Message::from_iota_message(message_id, &message)?]);
         adapter.set(account_id, serde_json::to_string(&account)?)?;

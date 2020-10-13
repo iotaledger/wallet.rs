@@ -4,7 +4,7 @@ use crate::message::{Message, MessageType};
 
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-use iota::transaction::prelude::MessageId;
+use iota::message::prelude::MessageId;
 use serde::{Deserialize, Serialize};
 
 use std::convert::TryInto;
