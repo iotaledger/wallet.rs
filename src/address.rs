@@ -1,7 +1,7 @@
 use crate::account::Account;
 use bech32::FromBase32;
 use getset::Getters;
-pub use iota::transaction::prelude::{Address as IotaAddress, Ed25519Address};
+pub use iota::message::prelude::{Address as IotaAddress, Ed25519Address};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::convert::TryInto;

@@ -1,7 +1,7 @@
 use crate::address::Address;
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-use iota::transaction::{
+use iota::message::{
     prelude::{Message as IotaMessage, MessageId, Output, Payload},
     Vertex,
 };

@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::Duration;
 
-use iota::transaction::prelude::MessageId;
+use iota::message::prelude::MessageId;
 use stronghold::Stronghold;
 
 /// The account manager.
@@ -385,9 +385,7 @@ mod tests {
     use crate::address::{AddressBuilder, IotaAddress};
     use crate::client::ClientOptionsBuilder;
     use crate::message::Message;
-    use iota::transaction::prelude::{
-        Ed25519Address, Indexation, MessageBuilder, MessageId, Payload,
-    };
+    use iota::message::prelude::{Ed25519Address, Indexation, MessageBuilder, MessageId, Payload};
     use rusty_fork::rusty_fork_test;
 
     rusty_fork_test! {

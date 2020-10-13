@@ -3,7 +3,7 @@ use crate::address::{Address, AddressBuilder};
 use crate::client::get_client;
 use crate::message::{Message, Transfer};
 
-use iota::transaction::prelude::{
+use iota::message::prelude::{
     Error as TransactionError, Input, Message as IotaMessage, MessageId, Output, Payload,
     SignatureLockedSingleOutput, Transaction, UTXOInput,
 };
