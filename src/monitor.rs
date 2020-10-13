@@ -1,6 +1,6 @@
 use crate::address::Address;
 use crate::message::Message;
-use iota::transaction::prelude::MessageId;
+use iota::message::prelude::MessageId;
 
 /// Monitor address for balance changes.
 pub fn on_address_balance_change<F: Fn((Address, u64))>(cb: F) {}

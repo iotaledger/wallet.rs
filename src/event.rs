@@ -1,5 +1,5 @@
 use crate::address::Address;
-use iota::transaction::prelude::MessageId;
+use iota::message::prelude::MessageId;
 
 use getset::Getters;
 use once_cell::sync::Lazy;
@@ -177,7 +177,7 @@ pub fn on_error<F: Fn(anyhow::Error)>(cb: F) {}
 mod tests {
     use super::{emit_balance_change, on_balance_change};
     use crate::address::{AddressBuilder, IotaAddress};
-    use iota::transaction::prelude::Ed25519Address;
+    use iota::message::prelude::Ed25519Address;
 
     #[test]
     fn balance_events() {
