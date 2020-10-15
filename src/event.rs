@@ -214,11 +214,7 @@ mod tests {
     #[test]
     fn error_events() {
         on_error(|error| {
-            let r = match error {
-                crate::WalletError::GenericError(_) => true,
-                _ => false,
-            };
-            assert!(r);
+            assert!(matches!(error, crate::WalletError::GenericError(_)));
         });
         _create_and_drop_error();
     }
