@@ -7,7 +7,7 @@ pub fn select_input(target: u64, available_utxos: &mut [Address]) -> crate::Resu
             .iter()
             .fold(0, |acc, address| acc + address.balance())
     {
-        return Err(anyhow::anyhow!("insufficient funds"));
+        return Err(crate::WalletError::InsufficientFunds);
     }
 
     available_utxos.sort_by(|a, b| b.balance().cmp(a.balance()));

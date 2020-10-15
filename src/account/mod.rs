@@ -117,7 +117,7 @@ impl AccountInitialiser {
         if let Some(latest_account) = accounts.last() {
             let latest_account: Account = serde_json::from_str(&latest_account)?;
             if latest_account.messages().is_empty() && latest_account.total_balance() == 0 {
-                return Err(anyhow::anyhow!("can't create accounts when the latest account doesn't have message history and balance"));
+                return Err(crate::WalletError::LatestAccountIsEmpty);
             }
         }
 

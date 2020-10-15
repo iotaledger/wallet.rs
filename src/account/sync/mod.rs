@@ -4,7 +4,7 @@ use crate::client::get_client;
 use crate::message::{Message, Transfer};
 
 use iota::{
-    client::OutputContext,
+    client::OutputMetadata,
     message::prelude::{
         Error as TransactionError, Input, Message as IotaMessage, MessageId, Output, Payload,
         SignatureLockedSingleOutput, Transaction, TransactionId, UTXOInput,
@@ -39,7 +39,7 @@ async fn sync_addresses(
     gap_limit: Option<usize>,
 ) -> crate::Result<(
     Vec<Address>,
-    Vec<OutputContext>,
+    Vec<OutputMetadata>,
     Vec<(MessageId, IotaMessage)>,
 )> {
     let mut address_index = address_index;
@@ -77,10 +77,22 @@ async fn sync_addresses(
                 let output = client.get_output(transaction_id, *output_index).await?;
                 let message = client
                     .get_message()
-                    .data(&MessageId::new(output.message_id.as_bytes().try_into()?))
+                    .data(&MessageId::new(
+                        output
+                            .message_id
+                            .as_bytes()
+                            .try_into()
+                            .map_err(|_| crate::WalletError::InvalidMessageIdLength)?,
+                    ))
                     .await?;
                 curr_found_messages.push((
-                    MessageId::new(output.message_id.as_bytes().try_into()?),
+                    MessageId::new(
+                        output
+                            .message_id
+                            .as_bytes()
+                            .try_into()
+                            .map_err(|_| crate::WalletError::InvalidMessageIdLength)?,
+                    ),
                     message,
                 ));
                 curr_found_outputs.push(output);
@@ -295,7 +307,7 @@ impl SyncedAccount {
     pub async fn transfer(&self, transfer_obj: Transfer) -> crate::Result<Message> {
         // validate the transfer
         if *transfer_obj.amount() == 0 {
-            return Err(anyhow::anyhow!("amount can't be zero"));
+            return Err(crate::WalletError::ZeroAmount);
         }
 
         // prepare the transfer getting some needed objects and values
@@ -327,7 +339,12 @@ impl SyncedAccount {
         for utxo in utxos {
             indexed_utxo_inputs.push((
                 UTXOInput::new(
-                    TransactionId::new(utxo.transaction_id.as_bytes().try_into()?),
+                    TransactionId::new(
+                        utxo.transaction_id
+                            .as_bytes()
+                            .try_into()
+                            .map_err(|_| crate::WalletError::InvalidTransactionIdLength)?,
+                    ),
                     utxo.output_index,
                 )
                 .map_err(|e| anyhow::anyhow!(e.to_string()))?
