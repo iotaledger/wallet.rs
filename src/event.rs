@@ -153,7 +153,7 @@ pub(crate) fn emit_confirmation_state_change(
     for listener in listeners.deref() {
         (listener.on_event)(TransactionConfirmationChangeEvent {
             account_id: *account_id,
-            message_id: message_id.clone(),
+            message_id: *message_id,
             confirmed,
         })
     }
@@ -245,8 +245,8 @@ mod tests {
         });
 
         emit_balance_change(
-            [1; 32],
-            AddressBuilder::new()
+            &[1; 32],
+            &AddressBuilder::new()
                 .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
                 .balance(0)
                 .key_index(0)
