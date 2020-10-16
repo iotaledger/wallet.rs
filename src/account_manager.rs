@@ -1,5 +1,9 @@
 use crate::account::{Account, AccountIdentifier, AccountInitialiser, SyncedAccount};
 use crate::client::ClientOptions;
+use crate::event::{
+    emit_balance_change, emit_confirmation_state_change, emit_transaction_event,
+    TransactionEventType,
+};
 use crate::message::{Message, MessageType, Transfer};
 use crate::storage::StorageAdapter;
 
@@ -101,8 +105,7 @@ impl AccountManager {
     /// Starts the polling mechanism.
     pub fn start_polling(&self) {
         thread::spawn(move || async move {
-            let _ = sync_accounts();
-            let _ = reattach_unconfirmed_transactions();
+            let _ = poll();
             thread::sleep(Duration::from_secs(5));
         });
     }
@@ -246,6 +249,71 @@ impl AccountManager {
     }
 }
 
+fn poll() -> crate::Result<()> {
+    let storage = crate::storage::get_adapter()?;
+    let accounts_before_sync = crate::storage::parse_accounts(&storage.get_all()?)?;
+    let mut runtime = tokio::runtime::Runtime::new()?;
+    runtime.block_on(sync_accounts())?;
+    let accounts_after_sync = crate::storage::parse_accounts(&storage.get_all()?)?;
+
+    // compare accounts to check for balance changes and new messages
+    for account_before_sync in &accounts_after_sync {
+        let account_after_sync = accounts_after_sync
+            .iter()
+            .find(|account| account.id() == account_before_sync.id())
+            .unwrap();
+
+        // balance event
+        for address_before_sync in account_before_sync.addresses() {
+            let address_after_sync = account_after_sync
+                .addresses()
+                .iter()
+                .find(|addr| addr == &address_before_sync)
+                .unwrap();
+            if address_after_sync.balance() != address_before_sync.balance() {
+                emit_balance_change(
+                    account_after_sync.id(),
+                    address_after_sync,
+                    *address_after_sync.balance(),
+                );
+            }
+        }
+
+        // new messages event
+        account_after_sync
+            .messages()
+            .iter()
+            .filter(|message| !account_before_sync.messages().contains(message))
+            .for_each(|message| {
+                emit_transaction_event(
+                    TransactionEventType::NewTransaction,
+                    account_after_sync.id(),
+                    message.id(),
+                )
+            });
+
+        // confirmation state change event
+        account_after_sync.messages().iter().for_each(|message| {
+            let changed = match account_before_sync
+                .messages()
+                .iter()
+                .find(|m| m.id() == message.id())
+            {
+                Some(old_message) => message.confirmed() != old_message.confirmed(),
+                None => false,
+            };
+            if changed {
+                emit_confirmation_state_change(account_after_sync.id(), message.id(), true);
+            }
+        });
+    }
+    let reattached = runtime.block_on(reattach_unconfirmed_transactions())?;
+    reattached.iter().for_each(|(message, account_id)| {
+        emit_transaction_event(TransactionEventType::Reattachment, account_id, message.id());
+    });
+    Ok(())
+}
+
 async fn discover_accounts(client_options: &ClientOptions) -> crate::Result<Vec<SyncedAccount>> {
     let mut synced_accounts = vec![];
     let adapter = crate::storage::get_adapter()?;
@@ -293,17 +361,20 @@ async fn sync_accounts() -> crate::Result<Vec<SyncedAccount>> {
     Ok(synced_accounts)
 }
 
-async fn reattach_unconfirmed_transactions() -> crate::Result<()> {
+async fn reattach_unconfirmed_transactions() -> crate::Result<Vec<(Message, [u8; 32])>> {
     let accounts = crate::storage::get_adapter()?.get_all()?;
+    let mut reattached = vec![];
     for account_str in accounts {
         let account: Account = serde_json::from_str(&account_str)?;
-        let unconfirmed_messages = account.list_messages(1000, 0, Some(MessageType::Unconfirmed));
+        let unconfirmed_messages =
+            account.list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed));
         let mut account: Account = serde_json::from_str(&account_str)?;
         for message in unconfirmed_messages {
             reattach(&mut account, &message.id()).await?;
+            reattached.push((message.clone(), *account.id()));
         }
     }
-    Ok(())
+    Ok(reattached)
 }
 
 async fn reattach(account: &mut Account, message_id: &MessageId) -> crate::Result<()> {

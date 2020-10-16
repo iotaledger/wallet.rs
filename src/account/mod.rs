@@ -253,8 +253,8 @@ impl Account {
     /// ```
     pub fn list_messages(
         &self,
-        count: u64,
-        from: u64,
+        count: usize,
+        from: usize,
         message_type: Option<MessageType>,
     ) -> Vec<&Message> {
         self.messages

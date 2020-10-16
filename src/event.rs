@@ -109,13 +109,13 @@ pub fn on_balance_change<F: Fn(BalanceEvent) + Send + 'static>(cb: F) {
 }
 
 /// Emits a balance change event.
-pub(crate) fn emit_balance_change(account_id: [u8; 32], address: Address, balance: u64) {
+pub(crate) fn emit_balance_change(account_id: &[u8; 32], address: &Address, balance: u64) {
     let listeners = balance_listeners()
         .lock()
         .expect("Failed to lock balance_listeners: emit_balance_change()");
     for listener in listeners.deref() {
         (listener.on_event)(BalanceEvent {
-            account_id,
+            account_id: *account_id,
             address: address.clone(),
             balance,
         })
@@ -125,8 +125,8 @@ pub(crate) fn emit_balance_change(account_id: [u8; 32], address: Address, balanc
 /// Emits a transaction-related event.
 pub(crate) fn emit_transaction_event(
     event_type: TransactionEventType,
-    account_id: [u8; 32],
-    message_id: MessageId,
+    account_id: &[u8; 32],
+    message_id: &MessageId,
 ) {
     let listeners = transaction_listeners()
         .lock()
@@ -134,10 +134,28 @@ pub(crate) fn emit_transaction_event(
     for listener in listeners.deref() {
         if listener.event_type == event_type {
             (listener.on_event)(TransactionEvent {
-                account_id,
-                message_id,
+                account_id: *account_id,
+                message_id: *message_id,
             })
         }
+    }
+}
+
+/// Emits a transaction confirmation state change event.
+pub(crate) fn emit_confirmation_state_change(
+    account_id: &[u8; 32],
+    message_id: &MessageId,
+    confirmed: bool,
+) {
+    let listeners = transaction_confirmation_change_listeners()
+        .lock()
+        .expect("Failed to lock transaction_confirmation_change_listeners: emit_confirmation_state_change()");
+    for listener in listeners.deref() {
+        (listener.on_event)(TransactionConfirmationChangeEvent {
+            account_id: *account_id,
+            message_id: message_id.clone(),
+            confirmed,
+        })
     }
 }
 
