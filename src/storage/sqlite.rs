@@ -93,14 +93,10 @@ impl StorageAdapter for SqliteStorageAdapter {
         Ok(accounts)
     }
 
-    fn set(
-        &self,
-        account_id: AccountIdentifier,
-        account: String,
-    ) -> std::result::Result<(), anyhow::Error> {
+    fn set(&self, account_id: AccountIdentifier, account: String) -> crate::Result<()> {
         let id = match account_id {
             AccountIdentifier::Id(id) => id,
-            _ => return Err(anyhow::anyhow!("only Id is supported")),
+            _ => return Err(anyhow::anyhow!("only Id is supported").into()),
         };
         let connection = self
             .connection
@@ -122,7 +118,7 @@ impl StorageAdapter for SqliteStorageAdapter {
         Ok(())
     }
 
-    fn remove(&self, account_id: AccountIdentifier) -> std::result::Result<(), anyhow::Error> {
+    fn remove(&self, account_id: AccountIdentifier) -> crate::Result<()> {
         let (sql, params) = match account_id {
             AccountIdentifier::Id(id) => (
                 format!("DELETE FROM {} WHERE key = ?1", self.table_name),

@@ -107,8 +107,11 @@ pub(crate) fn get_iota_address(
         let address_str =
             stronghold.address_get(account_id, Some(account_index), address_index, internal)?;
         let address_ed25519 = Vec::from_base32(&bech32::decode(&address_str)?.1)?;
-        let iota_address =
-            IotaAddress::Ed25519(Ed25519Address::new(address_ed25519[1..].try_into()?));
+        let iota_address = IotaAddress::Ed25519(Ed25519Address::new(
+            address_ed25519[1..]
+                .try_into()
+                .map_err(|_| crate::WalletError::InvalidAddressLength)?,
+        ));
         Ok(iota_address)
     })
 }

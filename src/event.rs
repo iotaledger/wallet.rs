@@ -45,6 +45,11 @@ struct BalanceEventHandler {
     on_event: Box<dyn Fn(BalanceEvent) + Send>,
 }
 
+struct ErrorHandler {
+    /// The on error callback.
+    on_error: Box<dyn Fn(&crate::WalletError) + Send>,
+}
+
 #[derive(PartialEq)]
 pub(crate) enum TransactionEventType {
     NewTransaction,
@@ -67,6 +72,7 @@ type BalanceListeners = Arc<Mutex<Vec<BalanceEventHandler>>>;
 type TransactionListeners = Arc<Mutex<Vec<TransactionEventHandler>>>;
 type TransactionConfirmationChangeListeners =
     Arc<Mutex<Vec<TransactionConfirmationChangeEventHandler>>>;
+type ErrorListeners = Arc<Mutex<Vec<ErrorHandler>>>;
 
 /// Gets the balance change listeners array.
 fn balance_listeners() -> &'static BalanceListeners {
@@ -83,6 +89,12 @@ fn transaction_listeners() -> &'static TransactionListeners {
 /// Gets the transaction confirmation change listeners array.
 fn transaction_confirmation_change_listeners() -> &'static TransactionConfirmationChangeListeners {
     static LISTENERS: Lazy<TransactionConfirmationChangeListeners> = Lazy::new(Default::default);
+    &LISTENERS
+}
+
+/// Gets the balance change listeners array.
+fn error_listeners() -> &'static ErrorListeners {
+    static LISTENERS: Lazy<ErrorListeners> = Lazy::new(Default::default);
     &LISTENERS
 }
 
@@ -170,14 +182,42 @@ pub fn on_broadcast<F: Fn(TransactionEvent) + Send + 'static>(cb: F) {
     add_transaction_listener(TransactionEventType::Broadcast, cb);
 }
 
+pub(crate) fn emit_error(error: &crate::WalletError) {
+    let listeners = error_listeners()
+        .lock()
+        .expect("Failed to lock error_listeners: emit_error()");
+    for listener in listeners.deref() {
+        (listener.on_error)(&error)
+    }
+}
+
 /// Listen to errors.
-pub fn on_error<F: Fn(anyhow::Error)>(cb: F) {}
+pub fn on_error<F: Fn(&crate::WalletError) + Send + 'static>(cb: F) {
+    let mut l = error_listeners()
+        .lock()
+        .expect("Failed to lock error_listeners: on_error()");
+    l.push(ErrorHandler {
+        on_error: Box::new(cb),
+    })
+}
 
 #[cfg(test)]
 mod tests {
-    use super::{emit_balance_change, on_balance_change};
+    use super::{emit_balance_change, on_balance_change, on_error};
     use crate::address::{AddressBuilder, IotaAddress};
     use iota::message::prelude::Ed25519Address;
+
+    fn _create_and_drop_error() {
+        let _ = crate::WalletError::GenericError(anyhow::anyhow!("generic error"));
+    }
+
+    #[test]
+    fn error_events() {
+        on_error(|error| {
+            assert!(matches!(error, crate::WalletError::GenericError(_)));
+        });
+        _create_and_drop_error();
+    }
 
     #[test]
     fn balance_events() {

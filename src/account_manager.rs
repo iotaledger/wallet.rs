@@ -117,9 +117,7 @@ impl AccountManager {
         let adapter = crate::storage::get_adapter()?;
         let account: Account = serde_json::from_str(&adapter.get(account_id.clone())?)?;
         if !(account.messages().is_empty() && account.total_balance() == 0) {
-            return Err(anyhow::anyhow!(
-                "can't delete an account with message history or balance"
-            ));
+            return Err(crate::WalletError::MessageNotEmpty);
         }
         crate::with_stronghold(|stronghold| stronghold.account_remove(account.id()))?;
         adapter.remove(account_id)?;
@@ -164,7 +162,7 @@ impl AccountManager {
             }
             Ok(backup_path)
         } else {
-            Err(anyhow::anyhow!("storage file doesn't exist"))
+            Err(crate::WalletError::StorageDoesntExist)
         }
     }
 
@@ -200,10 +198,9 @@ impl AccountManager {
             })
         });
         if let Some(imported_account) = already_imported_account {
-            return Err(anyhow::anyhow!(
-                "Account {} already imported",
-                imported_account.alias()
-            ));
+            return Err(crate::WalletError::AccountAlreadyImported {
+                alias: imported_account.alias().to_string(),
+            });
         }
 
         let backup_stronghold = stronghold::Stronghold::new(
@@ -314,28 +311,33 @@ async fn reattach(account: &mut Account, message_id: &MessageId) -> crate::Resul
     let message = messages
         .iter_mut()
         .find(|message| message.id() == message_id)
-        .ok_or_else(|| anyhow::anyhow!("message not found"))?;
+        .ok_or_else(|| crate::WalletError::MessageNotFound)?;
 
     if message.confirmed {
-        Err(anyhow::anyhow!("message is already confirmed"))
+        Err(crate::WalletError::MessageAlreadyConfirmed)
     } else if message.is_above_max_depth() {
-        Err(anyhow::anyhow!("message is above max depth"))
+        Err(crate::WalletError::MessageAboveMaxDepth)
     } else {
         let client = crate::client::get_client(account.client_options());
-        if *client
+        let is_confirmed = *client
             .is_confirmed(&[*message_id])?
             .get(message.id())
-            .ok_or_else(|| anyhow::anyhow!("invalid `is_confirmed` response"))?
-        {
+            .ok_or_else(|| {
+                crate::WalletError::UnexpectedResponse(
+                    "invalid `is_confirmed` response".to_string(),
+                )
+            })?;
+        if is_confirmed {
             // message is already confirmed; do nothing
             message.set_confirmed(true);
         } else {
             // reattach the message
-            let reattachment_message = client.reattach(&message_id).await?;
+            // TODO reintroduce when added back to iota.rs
+            /*let reattachment_message = client.reattach(&message_id).await?;
             messages.push(Message::from_iota_message(
                 *message_id,
                 &reattachment_message,
-            )?);
+            )?);*/
         }
         // update the messages in storage
         account.set_messages(messages);
