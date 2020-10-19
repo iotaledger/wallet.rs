@@ -260,12 +260,15 @@ impl<'a> AccountSynchronizer<'a> {
 #[derive(Debug, Clone, PartialEq, Getters, Serialize)]
 pub struct SyncedAccount {
     /// The associated account identifier.
+    #[serde(rename = "accountId")]
     #[getset(get = "pub")]
     account_id: [u8; 32],
     /// The account's deposit address.
+    #[serde(rename = "depositAddress")]
     #[getset(get = "pub")]
     deposit_address: Address,
     /// Whether the synced account is empty or not.
+    #[serde(rename = "isEmpty")]
     #[getset(get = "pub(crate)")]
     is_empty: bool,
 }
