@@ -3,6 +3,7 @@ use crate::address::{Address, AddressBuilder};
 use crate::client::get_client;
 use crate::message::{Message, Transfer};
 
+use getset::Getters;
 use iota::{
     client::OutputMetadata,
     message::prelude::{
@@ -10,6 +11,7 @@ use iota::{
         SignatureLockedSingleOutput, Transaction, TransactionId, UTXOInput,
     },
 };
+use serde::Serialize;
 use slip10::path::BIP32Path;
 
 use std::convert::TryInto;
@@ -255,23 +257,20 @@ impl<'a> AccountSynchronizer<'a> {
 }
 
 /// Data returned from account synchronization.
+#[derive(Debug, Clone, PartialEq, Getters, Serialize)]
 pub struct SyncedAccount {
+    /// The associated account identifier.
+    #[getset(get = "pub")]
     account_id: [u8; 32],
+    /// The account's deposit address.
+    #[getset(get = "pub")]
     deposit_address: Address,
+    /// Whether the synced account is empty or not.
+    #[getset(get = "pub(crate)")]
     is_empty: bool,
 }
 
 impl SyncedAccount {
-    /// The account's deposit address.
-    pub fn deposit_address(&self) -> &Address {
-        &self.deposit_address
-    }
-
-    /// Whether the synced account is empty or not.
-    pub(crate) fn is_empty(&self) -> bool {
-        self.is_empty
-    }
-
     /// Selects input addresses for a value transaction.
     /// The method ensures that the recipient address doesn’t match any of the selected inputs or the remainder address.
     ///
@@ -314,7 +313,7 @@ impl SyncedAccount {
         let value: u64 = *transfer_obj.amount();
         let account_id: AccountIdentifier = self.account_id.clone().into();
         let adapter = crate::storage::get_adapter()?;
-        let mut account = crate::storage::get_account(account_id.clone())?;
+        let mut account = crate::storage::get_account(account_id)?;
         let client = get_client(account.client_options());
 
         // select the input addresses and check if a remainder address is needed
