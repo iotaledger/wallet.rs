@@ -393,7 +393,7 @@ impl SyncedAccount {
             .build()
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
-        let message_id = client.post_messages(&message).await?;
+        let message_id = client.post_message(&message).await?;
         let message = client.get_message().data(&message_id).await?;
 
         account.append_messages(vec![Message::from_iota_message(message_id, &message)?]);
