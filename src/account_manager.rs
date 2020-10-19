@@ -22,7 +22,7 @@ fn mutate_account_transaction<F: FnOnce(&Account, &mut Vec<Message>)>(
     account_id: AccountIdentifier,
     handler: F,
 ) -> crate::Result<()> {
-    let mut account = crate::storage::get_account(account_id.clone())?;
+    let mut account = crate::storage::get_account(account_id)?;
     let mut transactions: Vec<Message> = account.messages().to_vec();
     handler(&account, &mut transactions);
     account.set_messages(transactions);
@@ -115,7 +115,7 @@ impl AccountManager {
     /// Deletes an account.
     pub fn remove_account(&self, account_id: AccountIdentifier) -> crate::Result<()> {
         let adapter = crate::storage::get_adapter()?;
-        let account: Account = serde_json::from_str(&adapter.get(account_id.clone())?)?;
+        let account: Account = serde_json::from_str(&adapter.get(account_id)?)?;
         if !(account.messages().is_empty() && account.total_balance() == 0) {
             return Err(crate::WalletError::MessageNotEmpty);
         }
@@ -254,7 +254,7 @@ async fn discover_accounts(client_options: &ClientOptions) -> crate::Result<Vec<
             .skip_persistance()
             .initialise()?;
         let synced_account = account.sync().skip_persistance().execute().await?;
-        let is_empty = synced_account.is_empty();
+        let is_empty = *synced_account.is_empty();
         synced_accounts.push(synced_account);
         if is_empty {
             break;

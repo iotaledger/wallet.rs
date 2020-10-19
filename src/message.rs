@@ -42,7 +42,7 @@ impl Tag {
 }
 
 /// A transfer to make a transaction.
-#[derive(Debug, Getters, Setters)]
+#[derive(Debug, Clone, Getters, Setters, Deserialize)]
 #[getset(get = "pub")]
 pub struct Transfer {
     /// The transfer value.
