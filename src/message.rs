@@ -219,7 +219,7 @@ impl Message {
     /// Gets the absolute value of the transaction.
     pub fn value(&self) -> Value {
         let amount = match &self.payload {
-            Payload::Transaction(tx) => tx.essence.outputs().iter().fold(0, |acc, output| {
+            Payload::Transaction(tx) => tx.essence().outputs().iter().fold(0, |acc, output| {
                 let Output::SignatureLockedSingle(x) = output;
                 acc + x.amount().get()
             }),
