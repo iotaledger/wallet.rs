@@ -493,13 +493,13 @@ mod tests {
             let account = manager
                 .create_account(client_options)
                 .messages(vec![Message::from_iota_message(MessageId::new([0; 32]), &MessageBuilder::new()
-                    .parent1(MessageId::new([0; 32]))
-                    .parent2(MessageId::new([0; 32]))
-                    .payload(Payload::Indexation(Box::new(Indexation::new(
+                    .with_parent1(MessageId::new([0; 32]))
+                    .with_parent2(MessageId::new([0; 32]))
+                    .with_payload(Payload::Indexation(Box::new(Indexation::new(
                         "".to_string(),
                         Box::new([0; 16]),
                     ))))
-                    .build()
+                    .finish()
                     .unwrap()).unwrap()])
                 .initialise().unwrap();
 

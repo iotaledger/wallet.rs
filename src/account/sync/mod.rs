@@ -7,12 +7,11 @@ use getset::Getters;
 use iota::{
     client::OutputMetadata,
     message::prelude::{
-        Error as TransactionError, Input, Message as IotaMessage, MessageId, Output, Payload,
-        SignatureLockedSingleOutput, Transaction, TransactionId, UTXOInput,
+        Input, Message as IotaMessage, MessageId, Output, Payload, SignatureLockedSingleOutput,
+        Transaction, TransactionEssence, TransactionId, UTXOInput,
     },
 };
 use serde::Serialize;
-use slip10::path::BIP32Path;
 
 use std::convert::TryInto;
 use std::num::NonZeroU64;
@@ -75,8 +74,8 @@ async fn sync_addresses(
         let mut curr_found_outputs = vec![];
         for address in &generated_iota_addresses {
             let address_outputs = client.get_address().outputs(&address).await?;
-            for (transaction_id, output_index) in address_outputs.iter() {
-                let output = client.get_output(transaction_id, *output_index).await?;
+            for output in address_outputs.iter() {
+                let output = client.get_output(output).await?;
                 let message = client
                     .get_message()
                     .data(&MessageId::new(
@@ -328,18 +327,18 @@ impl SyncedAccount {
             let address = utxo_output.address();
             let address_outputs = client.get_address().outputs(&address).await?;
             let mut outputs = vec![];
-            for (transaction_id, output_index) in address_outputs.iter() {
-                let output = client.get_output(transaction_id, *output_index).await?;
+            for output in address_outputs.iter() {
+                let output = client.get_output(output).await?;
                 outputs.push(output);
             }
             utxos.extend(outputs.into_iter());
         }
 
-        let mut indexed_utxo_inputs: Vec<(Input, BIP32Path)> = vec![];
+        let mut utxo_inputs: Vec<Input> = vec![];
         let mut utxo_outputs: Vec<Output> = vec![];
         let mut current_output_sum = 0;
         for utxo in utxos {
-            indexed_utxo_inputs.push((
+            utxo_inputs.push(
                 UTXOInput::new(
                     TransactionId::new(
                         utxo.transaction_id
@@ -351,8 +350,7 @@ impl SyncedAccount {
                 )
                 .map_err(|e| anyhow::anyhow!(e.to_string()))?
                 .into(),
-                BIP32Path::from_str("").map_err(|e| anyhow::anyhow!(e.to_string()))?,
-            ));
+            );
             let utxo_amount = if current_output_sum + utxo.amount > value {
                 value - utxo.amount
             } else {
@@ -380,19 +378,27 @@ impl SyncedAccount {
 
         let stronghold_account =
             crate::with_stronghold(|stronghold| stronghold.account_get_by_id(account.id()))?;
-        let transaction_res: Result<Transaction, TransactionError> = stronghold_account
-            .with_transaction_builder(|builder| {
-                builder
-                    .set_outputs(utxo_outputs)
-                    .set_inputs(indexed_utxo_inputs)
-                    .build()
-            });
-        let transaction = transaction_res.map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
+
+        let mut essence_builder = TransactionEssence::builder();
+        for output in utxo_outputs.into_iter() {
+            essence_builder = essence_builder.add_output(output);
+        }
+        for input in utxo_inputs.into_iter() {
+            essence_builder = essence_builder.add_input(input);
+        }
+        let essence = essence_builder
+            .finish()
+            .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
+        let transaction = Transaction::builder()
+            .with_essence(essence)
+            .finish()
+            .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
+
         let message = IotaMessage::builder()
-            .parent1(parent1)
-            .parent2(parent2)
-            .payload(Payload::Transaction(Box::new(transaction)))
-            .build()
+            .with_parent1(parent1)
+            .with_parent2(parent2)
+            .with_payload(Payload::Transaction(Box::new(transaction)))
+            .finish()
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
         let message_id = client.post_message(&message).await?;
