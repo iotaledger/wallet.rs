@@ -3,14 +3,16 @@ use iota::message::prelude::MessageId;
 
 use getset::Getters;
 use once_cell::sync::Lazy;
+use serde::Serialize;
 use std::ops::Deref;
 use std::sync::{Arc, Mutex};
 
 /// The balance change event data.
-#[derive(Getters)]
+#[derive(Getters, Serialize)]
 #[getset(get = "pub")]
 pub struct BalanceEvent {
     /// The associated account identifier.
+    #[serde(rename = "accountId")]
     account_id: [u8; 32],
     /// The associated address.
     address: Address,
@@ -19,21 +21,25 @@ pub struct BalanceEvent {
 }
 
 /// A transaction-related event data.
-#[derive(Getters)]
+#[derive(Getters, Serialize)]
 #[getset(get = "pub")]
 pub struct TransactionEvent {
+    #[serde(rename = "accountId")]
     /// The associated account identifier.
     account_id: [u8; 32],
+    #[serde(rename = "messageId")]
     /// The event transaction hash.
     message_id: MessageId,
 }
 
 /// A transaction-related event data.
-#[derive(Getters)]
+#[derive(Getters, Serialize)]
 #[getset(get = "pub")]
 pub struct TransactionConfirmationChangeEvent {
+    #[serde(rename = "accountId")]
     /// The associated account identifier.
     account_id: [u8; 32],
+    #[serde(rename = "messageId")]
     /// The event transaction hash.
     message_id: MessageId,
     /// The confirmed state of the transaction.
