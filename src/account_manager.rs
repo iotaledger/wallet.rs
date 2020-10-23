@@ -83,12 +83,13 @@ impl AccountManager {
     }
 
     /// Enables syncing through node events.
-    pub fn sync_through_events(&'static self) {
+    pub fn sync_through_events(&self) {
+        let storage_path = self.storage_path.clone();
         // sync confirmation state changes
         crate::event::on_confirmation_state_change(move |event| {
             if *event.confirmed() {
                 let _ = mutate_account_transaction(
-                    &self.storage_path,
+                    &storage_path,
                     event.account_id().clone().into(),
                     |_, transactions| {
                         if let Some(message) = transactions
@@ -102,9 +103,10 @@ impl AccountManager {
             }
         });
 
+        let storage_path = self.storage_path.clone();
         crate::event::on_broadcast(move |event| {
             let _ = mutate_account_transaction(
-                &self.storage_path,
+                &storage_path,
                 event.account_id().clone().into(),
                 |_, transactions| {
                     if let Some(message) = transactions
@@ -117,10 +119,11 @@ impl AccountManager {
             );
         });
 
+        let storage_path = self.storage_path.clone();
         crate::event::on_new_transaction(move |event| {
             let message_id = *event.message_id();
             let _ = mutate_account_transaction(
-                &self.storage_path,
+                &storage_path,
                 event.account_id().clone().into(),
                 |account, messages| {
                     let mut rt =
@@ -136,10 +139,11 @@ impl AccountManager {
     }
 
     /// Starts the polling mechanism.
-    pub fn start_polling(&'static self) {
+    pub fn start_polling(&self) {
+        let storage_path = self.storage_path.clone();
         thread::spawn(move || async move {
             loop {
-                let _ = poll(self.storage_path.clone());
+                let _ = poll(storage_path.clone());
                 thread::sleep(Duration::from_secs(5));
             }
         });
