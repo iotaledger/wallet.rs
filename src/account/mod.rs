@@ -192,7 +192,7 @@ impl Account {
     }
 
     /// Returns the builder to setup the process to synchronize this account with the Tangle.
-    pub(crate) fn sync<'a>(&'a mut self) -> AccountSynchronizer<'a> {
+    pub(crate) fn sync(&'_ mut self) -> AccountSynchronizer<'_> {
         AccountSynchronizer::new(self, self.storage_path.clone())
     }
 
