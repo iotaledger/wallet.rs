@@ -483,14 +483,14 @@ mod tests {
 
             let account = manager
                 .create_account(client_options)
-                .messages(vec![Message::from_iota_message(&MessageBuilder::new()
-                    .parent1(MessageId::new([0; 32]))
-                    .parent2(MessageId::new([0; 32]))
-                    .payload(Payload::Indexation(Box::new(Indexation::new(
+                .messages(vec![Message::from_iota_message(MessageId::new([0; 32]), &MessageBuilder::new()
+                    .with_parent1(MessageId::new([0; 32]))
+                    .with_parent2(MessageId::new([0; 32]))
+                    .with_payload(Payload::Indexation(Box::new(Indexation::new(
                         "".to_string(),
                         Box::new([0; 16]),
                     ))))
-                    .build()
+                    .finish()
                     .unwrap()).unwrap()])
                 .initialise().unwrap();
 
@@ -558,7 +558,7 @@ mod tests {
         #[test]
         fn backup_and_restore_happy_path() {
             _clear_db_and_backup("./example-database/backup-test").unwrap();
-            let manager = AccountManager::new();
+            let manager = super::AccountManager::new();
 
             let account = crate::test_utils::create_account(&manager, vec![]);
 
@@ -577,7 +577,7 @@ mod tests {
         #[test]
         fn backup_and_restore_account_already_exists() {
             _clear_db_and_backup("./example-database/backup-test2").unwrap();
-            let manager = AccountManager::new();
+            let manager = super::AccountManager::new();
 
             // first we'll create an example account
             let address = crate::test_utils::generate_random_iota_address();

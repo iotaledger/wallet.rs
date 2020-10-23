@@ -447,19 +447,19 @@ mod tests {
         let manager = crate::test_utils::get_account_manager();
         let (mut account, _, _) = _generate_account(&manager, vec![]);
         let received_message = crate::test_utils::generate_message(
-            0,
+            1,
             account.latest_address().unwrap().clone(),
             true,
             true,
         );
         let failed_message = crate::test_utils::generate_message(
-            0,
+            1,
             account.latest_address().unwrap().clone(),
             true,
             false,
         );
         let unconfirmed_message = crate::test_utils::generate_message(
-            0,
+            1,
             account.latest_address().unwrap().clone(),
             false,
             true,
@@ -494,7 +494,7 @@ mod tests {
             .unwrap();
 
         let received_message = crate::test_utils::generate_message(
-            0,
+            1,
             account.latest_address().unwrap().clone(),
             true,
             true,
@@ -502,13 +502,13 @@ mod tests {
         let sent_message =
             crate::test_utils::generate_message(0, external_address.clone(), true, true);
         let failed_message = crate::test_utils::generate_message(
-            0,
+            1,
             account.latest_address().unwrap().clone(),
             true,
             false,
         );
         let unconfirmed_message = crate::test_utils::generate_message(
-            0,
+            1,
             account.latest_address().unwrap().clone(),
             false,
             true,
@@ -554,7 +554,7 @@ mod tests {
         let (mut account, _, _) = _generate_account(&manager, vec![]);
 
         let message = crate::test_utils::generate_message(
-            0,
+            1,
             account.latest_address().unwrap().clone(),
             true,
             true,
@@ -568,7 +568,7 @@ mod tests {
             ),
             message.clone(),
         ]);
-        assert_eq!(account.get_message(message.message_id()).unwrap(), &message);
+        assert_eq!(account.get_message(message.id()).unwrap(), &message);
     }
 
     // TODO list_addresses, generate_addresses tests

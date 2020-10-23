@@ -242,18 +242,17 @@ mod test_utils {
     use super::message::Message;
 
     use chrono::prelude::Utc;
-    use iota::transaction::prelude::{
-        Ed25519Address, MessageId, Payload, Seed, SignatureLockedSingleOutput, TransactionBuilder,
-        UTXOInput,
+    use iota::message::prelude::{
+        Ed25519Address, Ed25519Signature, MessageId, Payload, SignatureLockedSingleOutput,
+        SignatureUnlock, TransactionBuilder, TransactionEssence, TransactionId, UTXOInput,
+        UnlockBlock,
     };
     use once_cell::sync::OnceCell;
     use rand::{distributions::Alphanumeric, thread_rng, Rng};
-    use slip10::BIP32Path;
     use std::path::PathBuf;
 
     use std::convert::TryInto;
     use std::num::NonZeroU64;
-    use std::path::PathBuf;
 
     static MANAGER_INSTANCE: OnceCell<AccountManager> = OnceCell::new();
     pub fn get_account_manager() -> &'static AccountManager {
@@ -276,6 +275,7 @@ mod test_utils {
         manager
             .create_account(client_options)
             .alias("alias")
+            .addresses(addresses)
             .initialise()
             .expect("failed to add account")
     }
@@ -285,28 +285,40 @@ mod test_utils {
     }
 
     pub fn generate_message(
-        value: i64,
+        value: u64,
         address: Address,
         confirmed: bool,
         broadcasted: bool,
     ) -> Message {
         Message {
+            id: MessageId::new([0; 32]),
             version: 1,
             trunk: MessageId::new([0; 32]),
             branch: MessageId::new([0; 32]),
             payload_length: 0,
             payload: Payload::Transaction(Box::new(
-                TransactionBuilder::new(&Seed::from_ed25519_bytes("".as_bytes()).unwrap())
-                    .set_outputs(vec![SignatureLockedSingleOutput::new(
-                        address.address().clone(),
-                        NonZeroU64::new(value.try_into().unwrap()).unwrap(),
+                TransactionBuilder::new()
+                    .with_essence(
+                        TransactionEssence::builder()
+                            .add_output(
+                                SignatureLockedSingleOutput::new(
+                                    address.address().clone(),
+                                    NonZeroU64::new(value.try_into().unwrap()).unwrap(),
+                                )
+                                .into(),
+                            )
+                            .add_input(
+                                UTXOInput::new(TransactionId::new([0; 32]), 0)
+                                    .unwrap()
+                                    .into(),
+                            )
+                            .finish()
+                            .unwrap(),
                     )
-                    .into()])
-                    .set_inputs(vec![(
-                        UTXOInput::new(MessageId::new([0; 32]), 0).unwrap().into(),
-                        BIP32Path::from_str("").unwrap(),
-                    )])
-                    .build()
+                    .add_unlock_block(UnlockBlock::Signature(SignatureUnlock::Ed25519(
+                        Ed25519Signature::new([0; 32], Box::new([0])),
+                    )))
+                    .finish()
                     .unwrap(),
             )),
             timestamp: Utc::now(),

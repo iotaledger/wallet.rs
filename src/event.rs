@@ -227,9 +227,9 @@ pub fn on_error<F: Fn(&crate::WalletError) + Send + 'static>(cb: F) {
 
 #[cfg(test)]
 mod tests {
-    use super::{emit_balance_change, on_balance_change, on_error};
+    use super::*;
     use crate::address::{AddressBuilder, IotaAddress};
-    use iota::message::prelude::Ed25519Address;
+    use iota::message::prelude::{Ed25519Address, MessageId};
 
     fn _create_and_drop_error() {
         let _ = crate::WalletError::GenericError(anyhow::anyhow!("generic error"));
@@ -266,7 +266,6 @@ mod tests {
     fn on_new_transaction_event() {
         let account_id = [0; 32];
         let message_id = MessageId::new([0; 32]);
-        let message_id_clone = message_id.clone();
         on_new_transaction(move |event| {
             assert!(event.account_id == account_id);
             assert!(event.message_id == message_id);
@@ -274,8 +273,8 @@ mod tests {
 
         emit_transaction_event(
             TransactionEventType::NewTransaction,
-            account_id,
-            message_id_clone,
+            &account_id,
+            &message_id,
         );
     }
 
@@ -283,41 +282,30 @@ mod tests {
     fn on_reattachment_event() {
         let account_id = [0; 32];
         let message_id = MessageId::new([0; 32]);
-        let message_id_clone = message_id.clone();
         on_reattachment(move |event| {
             assert!(event.account_id == account_id);
             assert!(event.message_id == message_id);
         });
 
-        emit_transaction_event(
-            TransactionEventType::Reattachment,
-            account_id,
-            message_id_clone,
-        );
+        emit_transaction_event(TransactionEventType::Reattachment, &account_id, &message_id);
     }
 
     #[test]
     fn on_broadcast_event() {
         let account_id = [5; 32];
         let message_id = MessageId::new([0; 32]);
-        let message_id_clone = message_id.clone();
         on_broadcast(move |event| {
             assert!(event.account_id == account_id);
             assert!(event.message_id == message_id);
         });
 
-        emit_transaction_event(
-            TransactionEventType::Broadcast,
-            account_id,
-            message_id_clone,
-        );
+        emit_transaction_event(TransactionEventType::Broadcast, &account_id, &message_id);
     }
 
     #[test]
     fn on_confirmation_state_change_event() {
         let account_id = [6; 32];
         let message_id = MessageId::new([0; 32]);
-        let message_id_clone = message_id.clone();
         let confirmed = true;
         on_confirmation_state_change(move |event| {
             assert!(event.account_id == account_id);
@@ -325,6 +313,6 @@ mod tests {
             assert!(event.confirmed == confirmed);
         });
 
-        emit_confirmation_state_change(&account_id, message_id_clone, confirmed);
+        emit_confirmation_state_change(&account_id, &message_id, confirmed);
     }
 }
