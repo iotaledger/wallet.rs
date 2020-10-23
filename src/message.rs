@@ -1,7 +1,7 @@
 use crate::address::Address;
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-use iota::transaction::{
+use iota::message::{
     prelude::{Message as IotaMessage, MessageId, Output, Payload},
     Vertex,
 };
@@ -42,7 +42,7 @@ impl Tag {
 }
 
 /// A transfer to make a transaction.
-#[derive(Debug, Getters, Setters)]
+#[derive(Debug, Clone, Getters, Setters, Deserialize)]
 #[getset(get = "pub")]
 pub struct Transfer {
     /// The transfer value.
@@ -134,6 +134,8 @@ impl Value {
 #[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize)]
 #[getset(get = "pub", set = "pub(crate)")]
 pub struct Message {
+    /// The message identifier.
+    pub(crate) id: MessageId,
     /// The message version.
     pub(crate) version: u64,
     /// Message id of the first message this message refers to.
@@ -156,7 +158,7 @@ pub struct Message {
 
 impl Hash for Message {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.message_id().hash(state);
+        self.id().hash(state);
     }
 }
 
@@ -181,8 +183,9 @@ impl PartialOrd for Message {
 }
 
 impl Message {
-    pub(crate) fn from_iota_message(message: &IotaMessage) -> crate::Result<Self> {
+    pub(crate) fn from_iota_message(id: MessageId, message: &IotaMessage) -> crate::Result<Self> {
         let message = Self {
+            id,
             version: 1,
             trunk: *message.trunk(),
             branch: *message.branch(),
@@ -213,16 +216,10 @@ impl Message {
     pub fn address(&self) -> &Address {
         unimplemented!()
     }
-
-    /// The message's id.
-    pub fn message_id(&self) -> &MessageId {
-        unimplemented!()
-    }
-
     /// Gets the absolute value of the transaction.
     pub fn value(&self) -> Value {
         let amount = match &self.payload {
-            Payload::Transaction(tx) => tx.essence.outputs().iter().fold(0, |acc, output| {
+            Payload::Transaction(tx) => tx.essence().outputs().iter().fold(0, |acc, output| {
                 let Output::SignatureLockedSingle(x) = output;
                 acc + x.amount().get()
             }),

@@ -7,7 +7,7 @@ pub fn select_input(target: u64, available_utxos: &mut [Address]) -> crate::Resu
             .iter()
             .fold(0, |acc, address| acc + address.balance())
     {
-        return Err(anyhow::anyhow!("insufficient funds"));
+        return Err(crate::WalletError::InsufficientFunds);
     }
 
     available_utxos.sort_by(|a, b| b.balance().cmp(a.balance()));
@@ -101,7 +101,7 @@ fn branch_and_bound(
 mod tests {
     use super::*;
     use crate::address::{Address, AddressBuilder, IotaAddress};
-    use iota::transaction::prelude::Ed25519Address;
+    use iota::message::prelude::Ed25519Address;
     use rand::prelude::{Rng, SeedableRng, StdRng};
 
     fn generate_random_utxos(rng: &mut StdRng, utxos_number: usize) -> Vec<Address> {

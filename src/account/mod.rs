@@ -4,7 +4,7 @@ use crate::message::{Message, MessageType};
 
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-use iota::transaction::prelude::MessageId;
+use iota::message::prelude::MessageId;
 use serde::{Deserialize, Serialize};
 
 use std::convert::TryInto;
@@ -13,7 +13,7 @@ mod sync;
 pub use sync::{AccountSynchronizer, SyncedAccount};
 
 /// The account identifier.
-#[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
 #[serde(untagged)]
 pub enum AccountIdentifier {
     /// A stronghold record id identifier.
@@ -49,6 +49,7 @@ pub struct AccountInitialiser {
     messages: Vec<Message>,
     addresses: Vec<Address>,
     client_options: ClientOptions,
+    skip_persistance: bool,
 }
 
 impl AccountInitialiser {
@@ -61,6 +62,7 @@ impl AccountInitialiser {
             messages: vec![],
             addresses: vec![],
             client_options,
+            skip_persistance: false,
         }
     }
 
@@ -97,6 +99,11 @@ impl AccountInitialiser {
         self
     }
 
+    pub(crate) fn skip_persistance(mut self) -> Self {
+        self.skip_persistance = true;
+        self
+    }
+
     /// Initialises the account.
     pub fn initialise(self) -> crate::Result<Account> {
         let alias = self.alias.unwrap_or_else(|| "".to_string());
@@ -110,7 +117,7 @@ impl AccountInitialiser {
         if let Some(latest_account) = accounts.last() {
             let latest_account: Account = serde_json::from_str(&latest_account)?;
             if latest_account.messages().is_empty() && latest_account.total_balance() == 0 {
-                return Err(anyhow::anyhow!("can't create accounts when the latest account doesn't have message history and balance"));
+                return Err(crate::WalletError::LatestAccountIsEmpty);
             }
         }
 
@@ -140,7 +147,9 @@ impl AccountInitialiser {
             addresses: self.addresses,
             client_options: self.client_options,
         };
-        adapter.set(account_id, serde_json::to_string(&account)?)?;
+        if !self.skip_persistance {
+            adapter.set(account_id, serde_json::to_string(&account)?)?;
+        }
         Ok(account)
     }
 }
@@ -243,8 +252,8 @@ impl Account {
     /// ```
     pub fn list_messages(
         &self,
-        count: u64,
-        from: u64,
+        count: usize,
+        from: usize,
         message_type: Option<MessageType>,
     ) -> Vec<&Message> {
         self.messages
@@ -289,9 +298,7 @@ impl Account {
 
     /// Gets a message with the given id associated with this account.
     pub fn get_message(&self, message_id: &MessageId) -> Option<&Message> {
-        self.messages
-            .iter()
-            .find(|tx| tx.message_id() == message_id)
+        self.messages.iter().find(|tx| tx.id() == message_id)
     }
 
     /// Gets the account index.

@@ -1,5 +1,9 @@
 use crate::account::{Account, AccountIdentifier, AccountInitialiser, SyncedAccount};
 use crate::client::ClientOptions;
+use crate::event::{
+    emit_balance_change, emit_confirmation_state_change, emit_transaction_event,
+    TransactionEventType,
+};
 use crate::message::{Message, MessageType, Transfer};
 use crate::storage::StorageAdapter;
 
@@ -9,7 +13,7 @@ use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::Duration;
 
-use iota::transaction::prelude::MessageId;
+use iota::message::prelude::MessageId;
 use stronghold::Stronghold;
 
 /// The account manager.
@@ -22,7 +26,7 @@ fn mutate_account_transaction<F: FnOnce(&Account, &mut Vec<Message>)>(
     account_id: AccountIdentifier,
     handler: F,
 ) -> crate::Result<()> {
-    let mut account = crate::storage::get_account(account_id.clone())?;
+    let mut account = crate::storage::get_account(account_id)?;
     let mut transactions: Vec<Message> = account.messages().to_vec();
     handler(&account, &mut transactions);
     account.set_messages(transactions);
@@ -60,7 +64,7 @@ impl AccountManager {
                     |_, transactions| {
                         if let Some(message) = transactions
                             .iter_mut()
-                            .find(|message| message.message_id() == event.message_id())
+                            .find(|message| message.id() == event.message_id())
                         {
                             message.set_confirmed(true);
                         }
@@ -74,7 +78,7 @@ impl AccountManager {
                 mutate_account_transaction(event.account_id().clone().into(), |_, transactions| {
                     if let Some(message) = transactions
                         .iter_mut()
-                        .find(|message| message.message_id() == event.message_id())
+                        .find(|message| message.id() == event.message_id())
                     {
                         message.set_broadcasted(true);
                     }
@@ -90,9 +94,8 @@ impl AccountManager {
                         tokio::runtime::Runtime::new().expect("failed to create tokio runtime");
                     rt.block_on(async move {
                         let client = crate::client::get_client(account.client_options());
-                        let response = client.get_messages().hashes(&[message_id]).get().unwrap();
-                        let message = response.first().unwrap();
-                        messages.push(Message::from_iota_message(message).unwrap());
+                        let message = client.get_message().data(&message_id).await.unwrap();
+                        messages.push(Message::from_iota_message(message_id, &message).unwrap());
                     });
                 },
             );
@@ -102,8 +105,7 @@ impl AccountManager {
     /// Starts the polling mechanism.
     pub fn start_polling(&self) {
         thread::spawn(move || async move {
-            let _ = sync_accounts();
-            let _ = reattach_unconfirmed_transactions();
+            let _ = poll();
             thread::sleep(Duration::from_secs(5));
         });
     }
@@ -116,11 +118,9 @@ impl AccountManager {
     /// Deletes an account.
     pub fn remove_account(&self, account_id: AccountIdentifier) -> crate::Result<()> {
         let adapter = crate::storage::get_adapter()?;
-        let account: Account = serde_json::from_str(&adapter.get(account_id.clone())?)?;
+        let account: Account = serde_json::from_str(&adapter.get(account_id)?)?;
         if !(account.messages().is_empty() && account.total_balance() == 0) {
-            return Err(anyhow::anyhow!(
-                "can't delete an account with message history or balance"
-            ));
+            return Err(crate::WalletError::MessageNotEmpty);
         }
         crate::with_stronghold(|stronghold| stronghold.account_remove(account.id()))?;
         adapter.remove(account_id)?;
@@ -165,7 +165,7 @@ impl AccountManager {
             }
             Ok(backup_path)
         } else {
-            Err(anyhow::anyhow!("storage file doesn't exist"))
+            Err(crate::WalletError::StorageDoesntExist)
         }
     }
 
@@ -201,10 +201,9 @@ impl AccountManager {
             })
         });
         if let Some(imported_account) = already_imported_account {
-            return Err(anyhow::anyhow!(
-                "Account {} already imported",
-                imported_account.alias()
-            ));
+            return Err(crate::WalletError::AccountAlreadyImported {
+                alias: imported_account.alias().to_string(),
+            });
         }
 
         let backup_stronghold = stronghold::Stronghold::new(
@@ -250,56 +249,166 @@ impl AccountManager {
     }
 }
 
-async fn sync_accounts() -> crate::Result<Vec<SyncedAccount>> {
-    let accounts = crate::storage::get_adapter()?.get_all()?;
+fn poll() -> crate::Result<()> {
+    let storage = crate::storage::get_adapter()?;
+    let accounts_before_sync = crate::storage::parse_accounts(&storage.get_all()?)?;
+    let mut runtime = tokio::runtime::Runtime::new()?;
+    runtime.block_on(sync_accounts())?;
+    let accounts_after_sync = crate::storage::parse_accounts(&storage.get_all()?)?;
+
+    // compare accounts to check for balance changes and new messages
+    for account_before_sync in &accounts_after_sync {
+        let account_after_sync = accounts_after_sync
+            .iter()
+            .find(|account| account.id() == account_before_sync.id())
+            .unwrap();
+
+        // balance event
+        for address_before_sync in account_before_sync.addresses() {
+            let address_after_sync = account_after_sync
+                .addresses()
+                .iter()
+                .find(|addr| addr == &address_before_sync)
+                .unwrap();
+            if address_after_sync.balance() != address_before_sync.balance() {
+                emit_balance_change(
+                    account_after_sync.id(),
+                    address_after_sync,
+                    *address_after_sync.balance(),
+                );
+            }
+        }
+
+        // new messages event
+        account_after_sync
+            .messages()
+            .iter()
+            .filter(|message| !account_before_sync.messages().contains(message))
+            .for_each(|message| {
+                emit_transaction_event(
+                    TransactionEventType::NewTransaction,
+                    account_after_sync.id(),
+                    message.id(),
+                )
+            });
+
+        // confirmation state change event
+        account_after_sync.messages().iter().for_each(|message| {
+            let changed = match account_before_sync
+                .messages()
+                .iter()
+                .find(|m| m.id() == message.id())
+            {
+                Some(old_message) => message.confirmed() != old_message.confirmed(),
+                None => false,
+            };
+            if changed {
+                emit_confirmation_state_change(account_after_sync.id(), message.id(), true);
+            }
+        });
+    }
+    let reattached = runtime.block_on(reattach_unconfirmed_transactions())?;
+    reattached.iter().for_each(|(message, account_id)| {
+        emit_transaction_event(TransactionEventType::Reattachment, account_id, message.id());
+    });
+    Ok(())
+}
+
+async fn discover_accounts(client_options: &ClientOptions) -> crate::Result<Vec<SyncedAccount>> {
     let mut synced_accounts = vec![];
-    for account_str in accounts {
-        let mut account: Account = serde_json::from_str(&account_str)?;
-        let synced_account = account.sync().execute().await?;
+    let adapter = crate::storage::get_adapter()?;
+    loop {
+        let mut account = AccountInitialiser::new(client_options.clone())
+            .skip_persistance()
+            .initialise()?;
+        let synced_account = account.sync().skip_persistance().execute().await?;
+        let is_empty = *synced_account.is_empty();
         synced_accounts.push(synced_account);
+        if is_empty {
+            break;
+        } else {
+            adapter.set(account.id().into(), serde_json::to_string(&account)?)?;
+        }
     }
     Ok(synced_accounts)
 }
 
-async fn reattach_unconfirmed_transactions() -> crate::Result<()> {
+async fn sync_accounts() -> crate::Result<Vec<SyncedAccount>> {
     let accounts = crate::storage::get_adapter()?.get_all()?;
+    let mut synced_accounts = vec![];
+    let mut last_account = None;
+    for account_str in accounts {
+        let mut account: Account = serde_json::from_str(&account_str)?;
+        let synced_account = account.sync().execute().await?;
+        last_account = Some(account);
+        synced_accounts.push(synced_account);
+    }
+
+    let discovered_accounts = match last_account {
+        Some(account) => {
+            if account.messages().is_empty()
+                || account.addresses().iter().all(|addr| *addr.balance() == 0)
+            {
+                discover_accounts(account.client_options()).await?
+            } else {
+                vec![]
+            }
+        }
+        None => discover_accounts(&ClientOptions::default()).await?,
+    };
+    synced_accounts.extend(discovered_accounts.into_iter());
+
+    Ok(synced_accounts)
+}
+
+async fn reattach_unconfirmed_transactions() -> crate::Result<Vec<(Message, [u8; 32])>> {
+    let accounts = crate::storage::get_adapter()?.get_all()?;
+    let mut reattached = vec![];
     for account_str in accounts {
         let account: Account = serde_json::from_str(&account_str)?;
-        let unconfirmed_messages = account.list_messages(1000, 0, Some(MessageType::Unconfirmed));
+        let unconfirmed_messages =
+            account.list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed));
         let mut account: Account = serde_json::from_str(&account_str)?;
         for message in unconfirmed_messages {
-            reattach(&mut account, &message.message_id()).await?;
+            reattach(&mut account, &message.id()).await?;
+            reattached.push((message.clone(), *account.id()));
         }
     }
-    Ok(())
+    Ok(reattached)
 }
 
 async fn reattach(account: &mut Account, message_id: &MessageId) -> crate::Result<()> {
     let mut messages: Vec<Message> = account.messages().to_vec();
     let message = messages
         .iter_mut()
-        .find(|message| message.message_id() == message_id)
-        .ok_or_else(|| anyhow::anyhow!("message not found"))?;
+        .find(|message| message.id() == message_id)
+        .ok_or_else(|| crate::WalletError::MessageNotFound)?;
 
     if message.confirmed {
-        Err(anyhow::anyhow!("message is already confirmed"))
+        Err(crate::WalletError::MessageAlreadyConfirmed)
     } else if message.is_above_max_depth() {
-        Err(anyhow::anyhow!("message is above max depth"))
+        Err(crate::WalletError::MessageAboveMaxDepth)
     } else {
         let client = crate::client::get_client(account.client_options());
-        if *client
+        let is_confirmed = *client
             .is_confirmed(&[*message_id])?
-            .get(message.message_id())
-            .ok_or_else(|| anyhow::anyhow!("invalid `is_confirmed` response"))?
-        {
+            .get(message.id())
+            .ok_or_else(|| {
+                crate::WalletError::UnexpectedResponse(
+                    "invalid `is_confirmed` response".to_string(),
+                )
+            })?;
+        if is_confirmed {
             // message is already confirmed; do nothing
             message.set_confirmed(true);
         } else {
             // reattach the message
-            let reattachment_messages = client.reattach(&[*message_id])?;
+            // TODO reintroduce when added back to iota.rs
+            /*let reattachment_message = client.reattach(&message_id).await?;
             messages.push(Message::from_iota_message(
-                reattachment_messages.first().unwrap(),
-            )?);
+                *message_id,
+                &reattachment_message,
+            )?);*/
         }
         // update the messages in storage
         account.set_messages(messages);
@@ -345,13 +454,10 @@ fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std::i
 
 #[cfg(test)]
 mod tests {
-    use super::AccountManager;
     use crate::address::{AddressBuilder, IotaAddress};
     use crate::client::ClientOptionsBuilder;
     use crate::message::Message;
-    use iota::transaction::prelude::{
-        Ed25519Address, Indexation, MessageBuilder, MessageId, Payload,
-    };
+    use iota::message::prelude::{Ed25519Address, Indexation, MessageBuilder, MessageId, Payload};
     use rusty_fork::rusty_fork_test;
 
     rusty_fork_test! {

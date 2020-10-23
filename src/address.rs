@@ -1,9 +1,7 @@
 use crate::account::Account;
 use bech32::FromBase32;
 use getset::Getters;
-pub use iota::transaction::prelude::{
-    Address as IotaAddress, Ed25519Address, SignatureLockedSingleOutput, UTXOInput,
-};
+pub use iota::message::prelude::{Address as IotaAddress, Ed25519Address};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::convert::TryInto;
@@ -109,8 +107,11 @@ pub(crate) fn get_iota_address(
         let address_str =
             stronghold.address_get(account_id, Some(account_index), address_index, internal)?;
         let address_ed25519 = Vec::from_base32(&bech32::decode(&address_str)?.1)?;
-        let iota_address =
-            IotaAddress::Ed25519(Ed25519Address::new(address_ed25519[1..].try_into()?));
+        let iota_address = IotaAddress::Ed25519(Ed25519Address::new(
+            address_ed25519[1..]
+                .try_into()
+                .map_err(|_| crate::WalletError::InvalidAddressLength)?,
+        ));
         Ok(iota_address)
     })
 }
@@ -143,10 +144,7 @@ pub(crate) async fn get_addresses(
 }
 async fn get_balance(account: &Account, address: &IotaAddress) -> crate::Result<u64> {
     let client = crate::client::get_client(account.client_options());
-    let amount = client
-        .get_addresses_balance(&[address.clone()])?
-        .iter()
-        .fold(0, |acc, output| output.amount);
+    let amount = client.get_address().balance(&address).await?;
     Ok(amount)
 }
 

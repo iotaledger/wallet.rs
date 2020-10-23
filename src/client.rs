@@ -165,7 +165,7 @@ impl MultiNodeClientOptionsBuilder {
             None => 0,
         };
         if node_len == 0 {
-            return Err(anyhow::anyhow!("Empty node list"));
+            return Err(crate::WalletError::EmptyNodeList);
         }
         let options = ClientOptions {
             node: None,
