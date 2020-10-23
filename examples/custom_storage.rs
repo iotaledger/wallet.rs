@@ -1,9 +1,7 @@
 ///! An example of using a custom storage adapter (in this case, using rocksdb).
 use iota_wallet::{
-    account::AccountIdentifier,
-    account_manager::AccountManager,
-    client::ClientOptionsBuilder,
-    storage::{set_adapter, StorageAdapter},
+    account::AccountIdentifier, account_manager::AccountManager, client::ClientOptionsBuilder,
+    storage::StorageAdapter,
 };
 use rocksdb::{IteratorMode, DB};
 use std::path::Path;
@@ -62,9 +60,11 @@ impl StorageAdapter for MyStorage {
 }
 
 fn main() -> iota_wallet::Result<()> {
-    // set the custom adapter
-    set_adapter(MyStorage::new("./example-database/rocksdb")?)?;
-    let manager = AccountManager::new();
+    let manager = AccountManager::with_storage_adapter(
+        "./example-database/rocksdb",
+        MyStorage::new("./example-database/rocksdb")?,
+    )
+    .unwrap();
     manager.set_stronghold_password("password").unwrap();
 
     // first we'll create an example account

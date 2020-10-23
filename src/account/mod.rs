@@ -8,6 +8,7 @@ use iota::message::prelude::MessageId;
 use serde::{Deserialize, Serialize};
 
 use std::convert::TryInto;
+use std::path::PathBuf;
 
 mod sync;
 pub use sync::{AccountSynchronizer, SyncedAccount};
@@ -42,7 +43,7 @@ impl From<u64> for AccountIdentifier {
 }
 
 /// Account initialiser.
-pub struct AccountInitialiser {
+pub struct AccountInitialiser<'a> {
     mnemonic: Option<String>,
     alias: Option<String>,
     created_at: Option<DateTime<Utc>>,
@@ -50,11 +51,12 @@ pub struct AccountInitialiser {
     addresses: Vec<Address>,
     client_options: ClientOptions,
     skip_persistance: bool,
+    storage_path: &'a PathBuf,
 }
 
-impl AccountInitialiser {
+impl<'a> AccountInitialiser<'a> {
     /// Initialises the account builder.
-    pub(crate) fn new(client_options: ClientOptions) -> Self {
+    pub(crate) fn new(client_options: ClientOptions, storage_path: &'a PathBuf) -> Self {
         Self {
             mnemonic: None,
             alias: None,
@@ -63,6 +65,7 @@ impl AccountInitialiser {
             addresses: vec![],
             client_options,
             skip_persistance: false,
+            storage_path,
         }
     }
 
@@ -111,8 +114,8 @@ impl AccountInitialiser {
         let created_at_timestamp: u128 = created_at.timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
         let mnemonic = self.mnemonic;
 
-        let adapter = crate::storage::get_adapter()?;
-        let accounts = adapter.get_all()?;
+        let accounts =
+            crate::storage::with_adapter(self.storage_path, |storage| storage.get_all())?;
 
         if let Some(latest_account) = accounts.last() {
             let latest_account: Account = serde_json::from_str(&latest_account)?;
@@ -122,7 +125,7 @@ impl AccountInitialiser {
         }
 
         let stronghold_account_res: crate::Result<stronghold::Account> =
-            crate::with_stronghold(|stronghold| {
+            crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
                 let account = match mnemonic {
                     Some(mnemonic) => stronghold.account_import(
                         Some(created_at_timestamp),
@@ -146,9 +149,12 @@ impl AccountInitialiser {
             messages: self.messages,
             addresses: self.addresses,
             client_options: self.client_options,
+            storage_path: self.storage_path.clone(),
         };
         if !self.skip_persistance {
-            adapter.set(account_id, serde_json::to_string(&account)?)?;
+            crate::storage::with_adapter(&self.storage_path, |storage| {
+                storage.set(account_id, serde_json::to_string(&account)?)
+            })?;
         }
         Ok(account)
     }
@@ -174,6 +180,9 @@ pub struct Account {
     addresses: Vec<Address>,
     /// The client options.
     client_options: ClientOptions,
+    #[serde(skip)]
+    #[getset(set = "pub(crate)", get = "pub(crate)")]
+    storage_path: PathBuf,
 }
 
 impl Account {
@@ -183,8 +192,8 @@ impl Account {
     }
 
     /// Returns the builder to setup the process to synchronize this account with the Tangle.
-    pub fn sync(&mut self) -> AccountSynchronizer<'_> {
-        AccountSynchronizer::new(self)
+    pub(crate) fn sync<'a>(&'a mut self) -> AccountSynchronizer<'a> {
+        AccountSynchronizer::new(self, self.storage_path.clone())
     }
 
     /// Gets the account's total balance.
@@ -215,10 +224,8 @@ impl Account {
     }
 
     /// Updates the account alias.
-    pub fn set_alias(&mut self, alias: impl AsRef<str>) -> crate::Result<()> {
+    pub(crate) fn set_alias(&mut self, alias: impl AsRef<str>) {
         self.alias = alias.as_ref().to_string();
-        crate::storage::get_adapter()?.set(self.id.into(), serde_json::to_string(self)?)?;
-        Ok(())
     }
 
     /// Gets a list of transactions on this account.
@@ -239,12 +246,12 @@ impl Account {
     ///
     /// # let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
     /// # let storage_path = std::path::PathBuf::from(format!("./example-database/{}", storage_path));
-    /// # iota_wallet::storage::set_storage_path(&storage_path).unwrap();
     /// // gets 10 received messages, skipping the first 5 most recent messages.
     /// let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
     ///  .expect("invalid node URL")
     ///  .build();
-    /// let mut manager = AccountManager::new();
+    /// let mut manager = AccountManager::new().unwrap();
+    /// # let mut manager = AccountManager::with_storage_path(storage_path).unwrap();
     /// manager.set_stronghold_password("password").unwrap();
     /// let mut account = manager.create_account(client_options)
     ///   .initialise()
@@ -289,7 +296,9 @@ impl Account {
     pub async fn generate_address(&mut self) -> crate::Result<Address> {
         let address = crate::address::get_new_address(&self, false).await?;
         self.addresses.push(address.clone());
-        crate::storage::get_adapter()?.set(self.id.into(), serde_json::to_string(self)?)?;
+        crate::storage::with_adapter(&self.storage_path, |storage| {
+            storage.set(self.id.into(), serde_json::to_string(self)?)
+        })?;
         Ok(address)
     }
 
@@ -303,9 +312,9 @@ impl Account {
     }
 
     /// Gets the account index.
-    pub fn index(&self) -> crate::Result<usize> {
-        let adapter = crate::storage::get_adapter()?;
-        let accounts = adapter.get_all()?;
+    pub(crate) fn index(&self) -> crate::Result<usize> {
+        let accounts =
+            crate::storage::with_adapter(&self.storage_path, |storage| storage.get_all())?;
         let account_json = serde_json::to_string(&self)?;
         let index = accounts
             .iter()
@@ -348,14 +357,14 @@ mod tests {
                 .expect("invalid node URL")
                 .build();
 
-            let mut account = manager
+            let account = manager
                 .create_account(client_options)
                 .alias("alias")
                 .initialise()
                 .expect("failed to add account");
 
-            account
-                .set_alias(updated_alias)
+            manager
+                .set_alias(account.id().into(), updated_alias)
                 .expect("failed to update alias");
             let account_in_storage = manager
                 .get_account(account.id().into())

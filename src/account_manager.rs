@@ -20,46 +20,73 @@ use stronghold::Stronghold;
 ///
 /// Used to manage multiple accounts.
 #[derive(Default)]
-pub struct AccountManager {}
+pub struct AccountManager {
+    storage_path: PathBuf,
+}
 
 fn mutate_account_transaction<F: FnOnce(&Account, &mut Vec<Message>)>(
+    storage_path: &PathBuf,
     account_id: AccountIdentifier,
     handler: F,
 ) -> crate::Result<()> {
-    let mut account = crate::storage::get_account(account_id)?;
+    let mut account = crate::storage::get_account(&storage_path, account_id)?;
     let mut transactions: Vec<Message> = account.messages().to_vec();
     handler(&account, &mut transactions);
     account.set_messages(transactions);
-    let adapter = crate::storage::get_adapter()?;
-    adapter.set(account_id, serde_json::to_string(&account)?)?;
+    crate::storage::with_adapter(&storage_path, |storage| {
+        storage.set(account_id, serde_json::to_string(&account)?)
+    })?;
     Ok(())
 }
 
 impl AccountManager {
     /// Initialises a new instance of the account manager with the default storage adapter.
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new() -> crate::Result<Self> {
+        Self::with_storage_path("./example-database")
+    }
+
+    /// Initialises a new instance of the account manager with the default storage adapter using the specified storage path.
+    pub fn with_storage_path(storage_path: impl AsRef<Path>) -> crate::Result<Self> {
+        Self::with_storage_adapter(
+            &storage_path,
+            crate::storage::get_adapter_from_path(&storage_path)?,
+        )
+    }
+
+    /// Initialises a new instance of the account manager with the specified adapter.
+    pub fn with_storage_adapter<S: StorageAdapter + Sync + Send + 'static>(
+        storage_path: impl AsRef<Path>,
+        adapter: S,
+    ) -> crate::Result<Self> {
+        crate::storage::set_adapter(&storage_path, adapter);
+        let instance = Self {
+            storage_path: storage_path.as_ref().to_path_buf(),
+        };
+        Ok(instance)
     }
 
     /// Sets the stronghold password.
     pub fn set_stronghold_password<P: AsRef<str>>(&self, password: P) -> crate::Result<()> {
-        let stronghold_path = crate::storage::get_stronghold_snapshot_path();
+        let stronghold_path = self
+            .storage_path
+            .join(crate::storage::stronghold_snapshot_filename());
         let stronghold = Stronghold::new(
             &stronghold_path,
             !stronghold_path.exists(),
             password.as_ref().to_string(),
             None,
         )?;
-        crate::init_stronghold(stronghold_path, stronghold);
+        crate::init_stronghold(self.storage_path.clone(), stronghold);
         Ok(())
     }
 
     /// Enables syncing through node events.
-    pub fn sync_through_events(&self) {
+    pub fn sync_through_events(&'static self) {
         // sync confirmation state changes
-        crate::event::on_confirmation_state_change(|event| {
+        crate::event::on_confirmation_state_change(move |event| {
             if *event.confirmed() {
                 let _ = mutate_account_transaction(
+                    &self.storage_path,
                     event.account_id().clone().into(),
                     |_, transactions| {
                         if let Some(message) = transactions
@@ -73,21 +100,25 @@ impl AccountManager {
             }
         });
 
-        crate::event::on_broadcast(|event| {
-            let _ =
-                mutate_account_transaction(event.account_id().clone().into(), |_, transactions| {
+        crate::event::on_broadcast(move |event| {
+            let _ = mutate_account_transaction(
+                &self.storage_path,
+                event.account_id().clone().into(),
+                |_, transactions| {
                     if let Some(message) = transactions
                         .iter_mut()
                         .find(|message| message.id() == event.message_id())
                     {
                         message.set_broadcasted(true);
                     }
-                });
+                },
+            );
         });
 
-        crate::event::on_new_transaction(|event| {
+        crate::event::on_new_transaction(move |event| {
             let message_id = *event.message_id();
             let _ = mutate_account_transaction(
+                &self.storage_path,
                 event.account_id().clone().into(),
                 |account, messages| {
                     let mut rt =
@@ -103,33 +134,52 @@ impl AccountManager {
     }
 
     /// Starts the polling mechanism.
-    pub fn start_polling(&self) {
+    pub fn start_polling(&'static self) {
         thread::spawn(move || async move {
-            let _ = poll();
-            thread::sleep(Duration::from_secs(5));
+            loop {
+                let _ = poll(self.storage_path.clone());
+                thread::sleep(Duration::from_secs(5));
+            }
         });
     }
 
     /// Adds a new account.
-    pub fn create_account(&self, client_options: ClientOptions) -> AccountInitialiser {
-        AccountInitialiser::new(client_options)
+    pub fn create_account(&self, client_options: ClientOptions) -> AccountInitialiser<'_> {
+        AccountInitialiser::new(client_options, &self.storage_path)
     }
 
     /// Deletes an account.
     pub fn remove_account(&self, account_id: AccountIdentifier) -> crate::Result<()> {
-        let adapter = crate::storage::get_adapter()?;
-        let account: Account = serde_json::from_str(&adapter.get(account_id)?)?;
+        let account_str =
+            crate::storage::with_adapter(&self.storage_path, |storage| storage.get(account_id))?;
+        let account: Account = serde_json::from_str(&account_str)?;
         if !(account.messages().is_empty() && account.total_balance() == 0) {
             return Err(crate::WalletError::MessageNotEmpty);
         }
-        crate::with_stronghold(|stronghold| stronghold.account_remove(account.id()))?;
-        adapter.remove(account_id)?;
+        crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
+            stronghold.account_remove(account.id())
+        })?;
+        crate::storage::with_adapter(&self.storage_path, |storage| storage.remove(account_id))?;
         Ok(())
     }
 
     /// Syncs all accounts.
     pub async fn sync_accounts(&self) -> crate::Result<Vec<SyncedAccount>> {
-        sync_accounts().await
+        sync_accounts(&self.storage_path).await
+    }
+
+    /// Updates the account alias.
+    pub fn set_alias(
+        &self,
+        account_id: AccountIdentifier,
+        alias: impl AsRef<str>,
+    ) -> crate::Result<()> {
+        let mut account = self.get_account(account_id)?;
+        account.set_alias(alias);
+        crate::storage::with_adapter(&self.storage_path, |storage| {
+            storage.set(account_id, serde_json::to_string(&account)?)
+        })?;
+        Ok(())
     }
 
     /// Transfers an amount from an account to another.
@@ -153,7 +203,7 @@ impl AccountManager {
 
     /// Backups the accounts to the given destination
     pub fn backup<P: AsRef<Path>>(&self, destination: P) -> crate::Result<PathBuf> {
-        let storage_path = crate::storage::get_storage_path();
+        let storage_path = &self.storage_path;
         if storage_path.exists() {
             let metadata = fs::metadata(&storage_path)?;
             let backup_path = destination.as_ref().to_path_buf();
@@ -186,8 +236,8 @@ impl AccountManager {
         let accounts = backup_storage.get_all()?;
         let accounts = crate::storage::parse_accounts(&accounts)?;
 
-        let storage = crate::storage::get_adapter()?;
-        let stored_accounts = storage.get_all()?;
+        let stored_accounts =
+            crate::storage::with_adapter(&self.storage_path, |storage| storage.get_all())?;
         let stored_accounts = crate::storage::parse_accounts(&stored_accounts)?;
 
         let already_imported_account = stored_accounts.iter().find(|stored_account| {
@@ -215,19 +265,22 @@ impl AccountManager {
         for account in accounts.iter() {
             let stronghold_account = backup_stronghold.account_get_by_id(account.id())?;
             let created_at_timestamp: u128 = account.created_at().timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
-            let stronghold_account = crate::with_stronghold(|stronghold| {
-                stronghold.account_import(
-                    Some(created_at_timestamp),
-                    Some(created_at_timestamp),
-                    stronghold_account.mnemonic().to_string(),
-                    Some("password"),
-                )
-            });
+            let stronghold_account =
+                crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
+                    stronghold.account_import(
+                        Some(created_at_timestamp),
+                        Some(created_at_timestamp),
+                        stronghold_account.mnemonic().to_string(),
+                        Some("password"),
+                    )
+                });
 
-            storage.set(
-                account.id().clone().into(),
-                serde_json::to_string(&account)?,
-            )?;
+            crate::storage::with_adapter(&self.storage_path, |storage| {
+                storage.set(
+                    account.id().clone().into(),
+                    serde_json::to_string(&account)?,
+                )
+            })?;
         }
         crate::remove_stronghold(backup_stronghold_path);
         Ok(())
@@ -235,7 +288,9 @@ impl AccountManager {
 
     /// Gets the account associated with the given identifier.
     pub fn get_account(&self, account_id: AccountIdentifier) -> crate::Result<Account> {
-        crate::storage::get_account(account_id)
+        let mut account = crate::storage::get_account(&self.storage_path, account_id)?;
+        account.set_storage_path(self.storage_path.clone());
+        Ok(account)
     }
 
     /// Reattaches an unconfirmed transaction.
@@ -245,16 +300,19 @@ impl AccountManager {
         message_id: &MessageId,
     ) -> crate::Result<()> {
         let mut account = self.get_account(account_id)?;
-        reattach(&mut account, message_id).await
+        reattach(&self.storage_path, &mut account, message_id).await
     }
 }
 
-fn poll() -> crate::Result<()> {
-    let storage = crate::storage::get_adapter()?;
-    let accounts_before_sync = crate::storage::parse_accounts(&storage.get_all()?)?;
+fn poll(storage_path: PathBuf) -> crate::Result<()> {
+    let accounts_before_sync =
+        crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
+    let accounts_before_sync = crate::storage::parse_accounts(&accounts_before_sync)?;
     let mut runtime = tokio::runtime::Runtime::new()?;
-    runtime.block_on(sync_accounts())?;
-    let accounts_after_sync = crate::storage::parse_accounts(&storage.get_all()?)?;
+    runtime.block_on(sync_accounts(&storage_path))?;
+    let accounts_after_sync =
+        crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
+    let accounts_after_sync = crate::storage::parse_accounts(&accounts_after_sync)?;
 
     // compare accounts to check for balance changes and new messages
     for account_before_sync in &accounts_after_sync {
@@ -307,18 +365,20 @@ fn poll() -> crate::Result<()> {
             }
         });
     }
-    let reattached = runtime.block_on(reattach_unconfirmed_transactions())?;
+    let reattached = runtime.block_on(reattach_unconfirmed_transactions(&storage_path))?;
     reattached.iter().for_each(|(message, account_id)| {
         emit_transaction_event(TransactionEventType::Reattachment, account_id, message.id());
     });
     Ok(())
 }
 
-async fn discover_accounts(client_options: &ClientOptions) -> crate::Result<Vec<SyncedAccount>> {
+async fn discover_accounts(
+    storage_path: &PathBuf,
+    client_options: &ClientOptions,
+) -> crate::Result<Vec<SyncedAccount>> {
     let mut synced_accounts = vec![];
-    let adapter = crate::storage::get_adapter()?;
     loop {
-        let mut account = AccountInitialiser::new(client_options.clone())
+        let mut account = AccountInitialiser::new(client_options.clone(), &storage_path)
             .skip_persistance()
             .initialise()?;
         let synced_account = account.sync().skip_persistance().execute().await?;
@@ -327,18 +387,21 @@ async fn discover_accounts(client_options: &ClientOptions) -> crate::Result<Vec<
         if is_empty {
             break;
         } else {
-            adapter.set(account.id().into(), serde_json::to_string(&account)?)?;
+            crate::storage::with_adapter(&storage_path, |storage| {
+                storage.set(account.id().into(), serde_json::to_string(&account)?)
+            })?;
         }
     }
     Ok(synced_accounts)
 }
 
-async fn sync_accounts() -> crate::Result<Vec<SyncedAccount>> {
-    let accounts = crate::storage::get_adapter()?.get_all()?;
+async fn sync_accounts<'a>(storage_path: &PathBuf) -> crate::Result<Vec<SyncedAccount>> {
+    let accounts = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
     let mut synced_accounts = vec![];
     let mut last_account = None;
     for account_str in accounts {
         let mut account: Account = serde_json::from_str(&account_str)?;
+        account.set_storage_path(storage_path.clone());
         let synced_account = account.sync().execute().await?;
         last_account = Some(account);
         synced_accounts.push(synced_account);
@@ -349,20 +412,22 @@ async fn sync_accounts() -> crate::Result<Vec<SyncedAccount>> {
             if account.messages().is_empty()
                 || account.addresses().iter().all(|addr| *addr.balance() == 0)
             {
-                discover_accounts(account.client_options()).await?
+                discover_accounts(&storage_path, account.client_options()).await?
             } else {
                 vec![]
             }
         }
-        None => discover_accounts(&ClientOptions::default()).await?,
+        None => discover_accounts(&storage_path, &ClientOptions::default()).await?,
     };
     synced_accounts.extend(discovered_accounts.into_iter());
 
     Ok(synced_accounts)
 }
 
-async fn reattach_unconfirmed_transactions() -> crate::Result<Vec<(Message, [u8; 32])>> {
-    let accounts = crate::storage::get_adapter()?.get_all()?;
+async fn reattach_unconfirmed_transactions(
+    storage_path: &PathBuf,
+) -> crate::Result<Vec<(Message, [u8; 32])>> {
+    let accounts = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
     let mut reattached = vec![];
     for account_str in accounts {
         let account: Account = serde_json::from_str(&account_str)?;
@@ -370,14 +435,18 @@ async fn reattach_unconfirmed_transactions() -> crate::Result<Vec<(Message, [u8;
             account.list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed));
         let mut account: Account = serde_json::from_str(&account_str)?;
         for message in unconfirmed_messages {
-            reattach(&mut account, &message.id()).await?;
+            reattach(&storage_path, &mut account, &message.id()).await?;
             reattached.push((message.clone(), *account.id()));
         }
     }
     Ok(reattached)
 }
 
-async fn reattach(account: &mut Account, message_id: &MessageId) -> crate::Result<()> {
+async fn reattach(
+    storage_path: &PathBuf,
+    account: &mut Account,
+    message_id: &MessageId,
+) -> crate::Result<()> {
     let mut messages: Vec<Message> = account.messages().to_vec();
     let message = messages
         .iter_mut()
@@ -412,8 +481,9 @@ async fn reattach(account: &mut Account, message_id: &MessageId) -> crate::Resul
         }
         // update the messages in storage
         account.set_messages(messages);
-        crate::storage::get_adapter()?
-            .set(account.id().into(), serde_json::to_string(&account)?)?;
+        crate::storage::with_adapter(&storage_path, |storage| {
+            storage.set(account.id().into(), serde_json::to_string(&account)?)
+        })?;
         Ok(())
     }
 }

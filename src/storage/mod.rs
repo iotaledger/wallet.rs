@@ -6,53 +6,39 @@ mod stronghold;
 use crate::account::{Account, AccountIdentifier};
 use once_cell::sync::OnceCell;
 
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::{Arc, Mutex};
 
-type Storage = Arc<Mutex<Box<dyn StorageAdapter + Sync + Send>>>;
-static INSTANCE: OnceCell<Storage> = OnceCell::new();
-static STORAGE_PATH: OnceCell<PathBuf> = OnceCell::new();
+type Storage = Box<dyn StorageAdapter + Sync + Send>;
+type Storages = Arc<Mutex<HashMap<PathBuf, Storage>>>;
+static INSTANCES: OnceCell<Storages> = OnceCell::new();
 
 /// Sets the storage adapter.
-pub fn set_adapter(storage: impl StorageAdapter + Sync + Send + 'static) -> crate::Result<()> {
-    INSTANCE
-        .set(Arc::new(Mutex::new(Box::new(storage))))
-        .map_err(|_| anyhow::anyhow!("failed to globally set the storage instance"))?;
-    Ok(())
-}
-
-/// Sets the storage path for the default storage adapter.
-pub fn set_storage_path(path: impl AsRef<Path>) -> crate::Result<()> {
-    STORAGE_PATH
-        .set(path.as_ref().to_path_buf())
-        .map_err(|_| anyhow::anyhow!("failed to globally set the storage path"))?;
-    Ok(())
-}
-
-pub(crate) fn get_stronghold_snapshot_path() -> PathBuf {
-    get_storage_path().join(stronghold_snapshot_filename())
+pub fn set_adapter<P: AsRef<Path>, S: StorageAdapter + Sync + Send + 'static>(
+    storage_path: P,
+    storage: S,
+) {
+    let mut instances = INSTANCES.get_or_init(Default::default).lock().unwrap();
+    instances.insert(storage_path.as_ref().to_path_buf(), Box::new(storage));
 }
 
 pub(crate) fn stronghold_snapshot_filename() -> &'static str {
     "snapshot"
 }
 
-pub(crate) fn get_storage_path() -> &'static PathBuf {
-    STORAGE_PATH.get_or_init(|| "./example-database".into())
-}
-
 /// gets the storage adapter
 #[allow(clippy::borrowed_box)]
-pub(crate) fn get_adapter(
-) -> crate::Result<MutexGuard<'static, Box<dyn StorageAdapter + Sync + Send>>> {
-    let instance: crate::Result<&Storage> = INSTANCE.get_or_try_init(|| {
-        let storage_path = get_storage_path();
-        let instance =
-            Arc::new(Mutex::new(Box::new(get_adapter_from_path(storage_path)?)
-                as Box<dyn StorageAdapter + Sync + Send>));
-        Ok(instance)
-    });
-    Ok(instance?.lock().unwrap())
+pub(crate) fn with_adapter<T, F: FnOnce(&Storage) -> T>(storage_path: &PathBuf, cb: F) -> T {
+    let instances = INSTANCES.get_or_init(Default::default).lock().unwrap();
+    if let Some(instance) = instances.get(storage_path) {
+        cb(instance)
+    } else {
+        panic!(format!(
+            "adapter not initialized with path {:?}",
+            storage_path
+        ))
+    }
 }
 
 #[cfg(not(feature = "sqlite"))]
@@ -108,9 +94,11 @@ pub(crate) fn parse_accounts(accounts: &[String]) -> crate::Result<Vec<Account>>
     }
 }
 
-pub(crate) fn get_account(account_id: AccountIdentifier) -> crate::Result<Account> {
-    let adapter = crate::storage::get_adapter()?;
-    let account_str = adapter.get(account_id)?;
+pub(crate) fn get_account(
+    storage_path: &PathBuf,
+    account_id: AccountIdentifier,
+) -> crate::Result<Account> {
+    let account_str = with_adapter(&storage_path, |storage| storage.get(account_id))?;
     let account: Account = serde_json::from_str(&account_str)?;
     Ok(account)
 }

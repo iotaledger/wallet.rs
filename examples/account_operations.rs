@@ -4,7 +4,7 @@ use iota_wallet::{
 
 #[tokio::main]
 async fn main() -> iota_wallet::Result<()> {
-    let manager = AccountManager::new();
+    let manager = AccountManager::new().unwrap();
     manager.set_stronghold_password("password").unwrap();
 
     // first we'll create an example account and store it
@@ -15,7 +15,7 @@ async fn main() -> iota_wallet::Result<()> {
         .initialise()?;
 
     // update alias
-    account.set_alias("the new alias")?;
+    manager.set_alias(account.id().into(), "the new alias")?;
     // list unspent addresses
     let _ = account.list_addresses(false);
     // list spent addresses
