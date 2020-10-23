@@ -396,7 +396,7 @@ mod tests {
             .unwrap();
 
         let addresses = vec![second_address.clone(), first_address];
-        let account = crate::test_utils::create_account(&manager, addresses);
+        let account = crate::test_utils::create_account(&manager, addresses, messages);
         (account, second_address, balance)
     }
 

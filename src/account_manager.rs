@@ -464,7 +464,7 @@ mod tests {
         #[test]
         fn store_accounts() {
             let manager = crate::test_utils::get_account_manager();
-            let account = crate::test_utils::create_account(&manager, vec![]);
+            let account = crate::test_utils::create_account(&manager, vec![], vec![]);
 
             manager
                 .remove_account(account.id().into())
@@ -560,7 +560,7 @@ mod tests {
             _clear_db_and_backup("./example-database/backup-test").unwrap();
             let manager = super::AccountManager::new();
 
-            let account = crate::test_utils::create_account(&manager, vec![]);
+            let account = crate::test_utils::create_account(&manager, vec![], vec![]);
 
             // backup the stored accounts to ./backup/${backup_name}
             let backup_path = manager.backup("./backup").unwrap();
@@ -587,7 +587,7 @@ mod tests {
                 .balance(0)
                 .build()
                 .unwrap();
-            let account = crate::test_utils::create_account(&manager, vec![address]);
+            let account = crate::test_utils::create_account(&manager, vec![address], vec![]);
 
             let backup_path = manager.backup("./backup").unwrap();
 

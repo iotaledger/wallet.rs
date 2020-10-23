@@ -267,7 +267,11 @@ mod test_utils {
         })
     }
 
-    pub fn create_account(manager: &AccountManager, addresses: Vec<Address>) -> Account {
+    pub fn create_account(
+        manager: &AccountManager,
+        addresses: Vec<Address>,
+        messages: Vec<Message>,
+    ) -> Account {
         let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
             .expect("invalid node URL")
             .build();
@@ -275,6 +279,7 @@ mod test_utils {
         manager
             .create_account(client_options)
             .alias("alias")
+            .messages(messages)
             .addresses(addresses)
             .initialise()
             .expect("failed to add account")
