@@ -16,6 +16,8 @@ use std::time::Duration;
 use iota::message::prelude::MessageId;
 use stronghold::Stronghold;
 
+const DEFAULT_STORAGE_PATH: &str = "./example-database";
+
 /// The account manager.
 ///
 /// Used to manage multiple accounts.
@@ -42,7 +44,7 @@ fn mutate_account_transaction<F: FnOnce(&Account, &mut Vec<Message>)>(
 impl AccountManager {
     /// Initialises a new instance of the account manager with the default storage adapter.
     pub fn new() -> crate::Result<Self> {
-        Self::with_storage_path("./example-database")
+        Self::with_storage_path(DEFAULT_STORAGE_PATH)
     }
 
     /// Initialises a new instance of the account manager with the default storage adapter using the specified storage path.
@@ -76,7 +78,7 @@ impl AccountManager {
             password.as_ref().to_string(),
             None,
         )?;
-        crate::init_stronghold(self.storage_path.clone(), stronghold);
+        crate::init_stronghold(&self.storage_path, stronghold);
         Ok(())
     }
 
@@ -230,7 +232,7 @@ impl AccountManager {
             "password".to_string(),
             None,
         )?;
-        crate::init_stronghold(backup_stronghold_path.clone(), backup_stronghold);
+        crate::init_stronghold(&backup_stronghold_path, backup_stronghold);
 
         let backup_storage = crate::storage::get_adapter_from_path(&source)?;
         let accounts = backup_storage.get_all()?;

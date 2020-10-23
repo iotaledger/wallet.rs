@@ -28,7 +28,6 @@ pub(crate) fn stronghold_snapshot_filename() -> &'static str {
 }
 
 /// gets the storage adapter
-#[allow(clippy::borrowed_box)]
 pub(crate) fn with_adapter<T, F: FnOnce(&Storage) -> T>(storage_path: &PathBuf, cb: F) -> T {
     let instances = INSTANCES.get_or_init(Default::default).lock().unwrap();
     if let Some(instance) = instances.get(storage_path) {

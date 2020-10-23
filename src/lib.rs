@@ -198,12 +198,12 @@ impl Drop for WalletError {
     }
 }
 
-pub(crate) fn init_stronghold(stronghold_path: PathBuf, stronghold: Stronghold) {
+pub(crate) fn init_stronghold(stronghold_path: &PathBuf, stronghold: Stronghold) {
     let mut stronghold_map = STRONGHOLD_INSTANCE
         .get_or_init(Default::default)
         .lock()
         .unwrap();
-    stronghold_map.insert(stronghold_path, stronghold);
+    stronghold_map.insert(stronghold_path.to_path_buf(), stronghold);
 }
 
 pub(crate) fn remove_stronghold(stronghold_path: PathBuf) {
