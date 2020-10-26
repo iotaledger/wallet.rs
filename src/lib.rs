@@ -198,12 +198,12 @@ impl Drop for WalletError {
     }
 }
 
-pub(crate) fn init_stronghold(stronghold_path: PathBuf, stronghold: Stronghold) {
+pub(crate) fn init_stronghold(stronghold_path: &PathBuf, stronghold: Stronghold) {
     let mut stronghold_map = STRONGHOLD_INSTANCE
         .get_or_init(Default::default)
         .lock()
         .unwrap();
-    stronghold_map.insert(stronghold_path, stronghold);
+    stronghold_map.insert(stronghold_path.to_path_buf(), stronghold);
 }
 
 pub(crate) fn remove_stronghold(stronghold_path: PathBuf) {
@@ -212,10 +212,6 @@ pub(crate) fn remove_stronghold(stronghold_path: PathBuf) {
         .lock()
         .unwrap();
     stronghold_map.remove(&stronghold_path);
-}
-
-pub(crate) fn with_stronghold<T, F: FnOnce(&Stronghold) -> T>(cb: F) -> T {
-    with_stronghold_from_path(&crate::storage::get_stronghold_snapshot_path(), cb)
 }
 
 pub(crate) fn with_stronghold_from_path<T, F: FnOnce(&Stronghold) -> T>(
@@ -242,12 +238,11 @@ mod test_utils {
 
     static MANAGER_INSTANCE: OnceCell<AccountManager> = OnceCell::new();
     pub fn get_account_manager() -> &'static AccountManager {
-        let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
-        let storage_path = PathBuf::from(format!("./example-database/{}", storage_path));
-        crate::storage::set_storage_path(&storage_path).unwrap();
-
         MANAGER_INSTANCE.get_or_init(|| {
-            let manager = AccountManager::new();
+            let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
+            let storage_path = PathBuf::from(format!("./example-database/{}", storage_path));
+
+            let manager = AccountManager::with_storage_path(storage_path).unwrap();
             manager.set_stronghold_password("password").unwrap();
             manager
         })

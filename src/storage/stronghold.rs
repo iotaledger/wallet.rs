@@ -18,9 +18,7 @@ impl StrongholdStorageAdapter {
     /// Initialises the storage adapter.
     pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
         Ok(Self {
-            path: path
-                .as_ref()
-                .join(crate::storage::stronghold_snapshot_filename()),
+            path: path.as_ref().to_path_buf(),
         })
     }
 }
