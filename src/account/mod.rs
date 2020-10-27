@@ -169,6 +169,7 @@ pub struct Account {
     /// The account alias.
     alias: String,
     /// Time of account creation.
+    #[serde(rename = "createdAt")]
     created_at: DateTime<Utc>,
     /// Messages associated with the seed.
     /// The account can be initialised with locally stored messages.
@@ -179,6 +180,7 @@ pub struct Account {
     #[getset(set = "pub(crate)")]
     addresses: Vec<Address>,
     /// The client options.
+    #[serde(rename = "clientOptions")]
     client_options: ClientOptions,
     #[serde(skip)]
     #[getset(set = "pub(crate)", get = "pub(crate)")]

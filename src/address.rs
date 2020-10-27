@@ -69,6 +69,7 @@ pub struct Address {
     /// The address balance.
     balance: u64,
     /// The address key index.
+    #[serde(rename = "keyIndex")]
     key_index: usize,
     /// Determines if an address is a public or an internal (change) address.
     internal: bool,
