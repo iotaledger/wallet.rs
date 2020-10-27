@@ -299,6 +299,13 @@ impl AccountManager {
         Ok(account)
     }
 
+    /// Gets all accounts from storage.
+    pub fn get_accounts(&self) -> crate::Result<Vec<Account>> {
+        crate::storage::with_adapter(&self.storage_path, |storage| {
+            crate::storage::parse_accounts(&storage.get_all()?)
+        })
+    }
+
     /// Reattaches an unconfirmed transaction.
     pub async fn reattach(
         &self,
