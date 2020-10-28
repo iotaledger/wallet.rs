@@ -396,10 +396,10 @@ async fn discover_accounts(
             .initialise()?;
         let synced_account = account.sync().skip_persistance().execute().await?;
         let is_empty = *synced_account.is_empty();
-        synced_accounts.push(synced_account);
         if is_empty {
             break;
         } else {
+            synced_accounts.push(synced_account);
             crate::storage::with_adapter(&storage_path, |storage| {
                 storage.set(account.id().into(), serde_json::to_string(&account)?)
             })?;
