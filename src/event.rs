@@ -230,17 +230,21 @@ mod tests {
     use super::*;
     use crate::address::{AddressBuilder, IotaAddress};
     use iota::message::prelude::{Ed25519Address, MessageId};
+    use rusty_fork::rusty_fork_test;
 
     fn _create_and_drop_error() {
         let _ = crate::WalletError::GenericError(anyhow::anyhow!("generic error"));
     }
 
-    #[test]
-    fn error_events() {
-        on_error(|error| {
-            assert!(matches!(error, crate::WalletError::GenericError(_)));
-        });
-        _create_and_drop_error();
+    // have to fork this test so other errors dropped doesn't affect it
+    rusty_fork_test! {
+        #[test]
+        fn error_events() {
+            on_error(|error| {
+                assert!(matches!(error, crate::WalletError::GenericError(_)));
+            });
+            _create_and_drop_error();
+        }
     }
 
     #[test]

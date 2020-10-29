@@ -15,6 +15,7 @@ use serde::Serialize;
 
 use std::convert::TryInto;
 use std::num::NonZeroU64;
+use std::path::PathBuf;
 
 mod input_selection;
 
@@ -35,6 +36,7 @@ mod input_selection;
 /// and the messages associated with the addresses.
 ///
 async fn sync_addresses(
+    storage_path: &PathBuf,
     account: &'_ Account,
     address_index: usize,
     gap_limit: Option<usize>,
@@ -57,12 +59,14 @@ async fn sync_addresses(
         for i in address_index..(address_index + gap_limit) {
             // generate both `public` and `internal (change)` addresses
             generated_iota_addresses.push(crate::address::get_iota_address(
+                &storage_path,
                 account.id(),
                 account_index,
                 i,
                 false,
             )?);
             generated_iota_addresses.push(crate::address::get_iota_address(
+                &storage_path,
                 account.id(),
                 account_index,
                 i,
@@ -174,17 +178,19 @@ pub struct AccountSynchronizer<'a> {
     address_index: usize,
     gap_limit: Option<usize>,
     skip_persistance: bool,
+    storage_path: PathBuf,
 }
 
 impl<'a> AccountSynchronizer<'a> {
     /// Initialises a new instance of the sync helper.
-    pub(super) fn new(account: &'a mut Account) -> Self {
+    pub(super) fn new(account: &'a mut Account, storage_path: PathBuf) -> Self {
         let address_index = account.addresses().len();
         Self {
             account,
             address_index,
             gap_limit: None,
             skip_persistance: false,
+            storage_path,
         }
     }
 
@@ -210,8 +216,13 @@ impl<'a> AccountSynchronizer<'a> {
             addresses.push(address.address().clone());
         }
 
-        let (found_addresses, found_outputs, found_messages) =
-            sync_addresses(self.account, self.address_index, self.gap_limit).await?;
+        let (found_addresses, found_outputs, found_messages) = sync_addresses(
+            &self.storage_path,
+            self.account,
+            self.address_index,
+            self.gap_limit,
+        )
+        .await?;
         let is_empty = found_messages.is_empty()
             && !found_outputs.iter().any(|output| output.is_spent)
             && found_addresses.iter().all(|o| *o.balance() == 0);
@@ -239,17 +250,19 @@ impl<'a> AccountSynchronizer<'a> {
         self.account.set_addresses(found_addresses);
 
         if !self.skip_persistance {
-            let storage_adapter = crate::storage::get_adapter()?;
-            storage_adapter.set(
-                self.account.id().into(),
-                serde_json::to_string(&self.account)?,
-            )?;
+            crate::storage::with_adapter(&self.storage_path, |storage| {
+                storage.set(
+                    self.account.id().into(),
+                    serde_json::to_string(&self.account)?,
+                )
+            })?;
         }
 
         let synced_account = SyncedAccount {
             account_id: *self.account.id(),
             deposit_address: self.account.latest_address().unwrap().clone(),
             is_empty,
+            storage_path: self.storage_path,
         };
         Ok(synced_account)
     }
@@ -270,6 +283,8 @@ pub struct SyncedAccount {
     #[serde(rename = "isEmpty")]
     #[getset(get = "pub(crate)")]
     is_empty: bool,
+    #[serde(skip)]
+    storage_path: PathBuf,
 }
 
 impl SyncedAccount {
@@ -314,8 +329,7 @@ impl SyncedAccount {
         // prepare the transfer getting some needed objects and values
         let value: u64 = *transfer_obj.amount();
         let account_id: AccountIdentifier = self.account_id.clone().into();
-        let adapter = crate::storage::get_adapter()?;
-        let mut account = crate::storage::get_account(account_id)?;
+        let mut account = crate::storage::get_account(&self.storage_path, account_id)?;
         let client = get_client(account.client_options());
 
         // select the input addresses and check if a remainder address is needed
@@ -377,7 +391,9 @@ impl SyncedAccount {
         let (parent1, parent2) = client.get_tips().await?;
 
         let stronghold_account =
-            crate::with_stronghold(|stronghold| stronghold.account_get_by_id(account.id()))?;
+            crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
+                stronghold.account_get_by_id(account.id())
+            })?;
 
         let mut essence_builder = TransactionEssence::builder();
         for output in utxo_outputs.into_iter() {
@@ -405,14 +421,17 @@ impl SyncedAccount {
         let message = client.get_message().data(&message_id).await?;
 
         account.append_messages(vec![Message::from_iota_message(message_id, &message)?]);
-        adapter.set(account_id, serde_json::to_string(&account)?)?;
+        crate::storage::with_adapter(&self.storage_path, |storage| {
+            storage.set(account_id, serde_json::to_string(&account)?)
+        })?;
 
         Ok(Message::from_iota_message(message_id, &message)?)
     }
 
     /// Retry messages.
     pub fn retry(&self, message_id: &MessageId) -> crate::Result<Message> {
-        let account: Account = crate::storage::get_account(self.account_id.clone().into())?;
+        let account: Account =
+            crate::storage::get_account(&self.storage_path, self.account_id.clone().into())?;
         let message = account
             .get_message(message_id)
             .ok_or_else(|| anyhow::anyhow!("transaction with the given id not found"));

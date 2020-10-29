@@ -143,6 +143,7 @@ pub struct Message {
     /// Message id of the second message this message refers to.
     pub(crate) branch: MessageId,
     /// Length of the payload.
+    #[serde(rename = "payloadLength")]
     pub(crate) payload_length: u64,
     /// Transaction amount.
     pub(crate) payload: Payload,
