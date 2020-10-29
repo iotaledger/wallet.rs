@@ -66,6 +66,10 @@ impl AccountManager {
         Ok(instance)
     }
 
+    pub(crate) fn storage_path(&self) -> &PathBuf {
+        &self.storage_path
+    }
+
     /// Sets the stronghold password.
     pub fn set_stronghold_password<P: AsRef<str>>(&self, password: P) -> crate::Result<()> {
         let stronghold_path = self
@@ -235,7 +239,7 @@ impl AccountManager {
             "password".to_string(),
             None,
         )?;
-        crate::init_stronghold(&backup_stronghold_path, backup_stronghold);
+        crate::init_stronghold(&source.as_ref().to_path_buf(), backup_stronghold);
 
         let backup_storage = crate::storage::get_adapter_from_path(&source)?;
         let accounts = backup_storage.get_all()?;
@@ -540,32 +544,30 @@ mod tests {
     use crate::client::ClientOptionsBuilder;
     use crate::message::Message;
     use iota::message::prelude::{Ed25519Address, Indexation, MessageBuilder, MessageId, Payload};
-    use rusty_fork::rusty_fork_test;
 
-    rusty_fork_test! {
-        #[test]
-        fn store_accounts() {
-            let manager = crate::test_utils::get_account_manager();
-            let account = crate::test_utils::create_account(&manager, vec![], vec![]);
+    #[test]
+    fn store_accounts() {
+        let manager = crate::test_utils::get_account_manager();
+        let account = crate::test_utils::create_account(&manager, vec![], vec![]);
 
-            manager
-                .remove_account(account.id().into())
-                .expect("failed to remove account");
-        }
+        manager
+            .remove_account(account.id().into())
+            .expect("failed to remove account");
     }
 
-    rusty_fork_test! {
-        #[test]
-        fn remove_account_with_message_history() {
-            let manager = crate::test_utils::get_account_manager();
+    #[test]
+    fn remove_account_with_message_history() {
+        let manager = crate::test_utils::get_account_manager();
 
-            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-                .expect("invalid node URL")
-                .build();
+        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+            .expect("invalid node URL")
+            .build();
 
-            let account = manager
-                .create_account(client_options)
-                .messages(vec![Message::from_iota_message(MessageId::new([0; 32]), &MessageBuilder::new()
+        let account = manager
+            .create_account(client_options)
+            .messages(vec![Message::from_iota_message(
+                MessageId::new([0; 32]),
+                &MessageBuilder::new()
                     .with_parent1(MessageId::new([0; 32]))
                     .with_parent2(MessageId::new([0; 32]))
                     .with_payload(Payload::Indexation(Box::new(Indexation::new(
@@ -573,113 +575,101 @@ mod tests {
                         Box::new([0; 16]),
                     ))))
                     .finish()
-                    .unwrap()).unwrap()])
-                .initialise().unwrap();
+                    .unwrap(),
+            )
+            .unwrap()])
+            .initialise()
+            .unwrap();
 
-            let remove_response = manager.remove_account(account.id().into());
-            assert!(remove_response.is_err());
-        }
+        let remove_response = manager.remove_account(account.id().into());
+        assert!(remove_response.is_err());
     }
 
-    rusty_fork_test! {
-        #[test]
-        fn remove_account_with_balance() {
-            let manager = crate::test_utils::get_account_manager();
+    #[test]
+    fn remove_account_with_balance() {
+        let manager = crate::test_utils::get_account_manager();
 
-            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-                .expect("invalid node URL")
-                .build();
+        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+            .expect("invalid node URL")
+            .build();
 
-            let account = manager
-                .create_account(client_options)
-                .addresses(vec![AddressBuilder::new()
-                    .balance(5)
-                    .key_index(0)
-                    .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
-                    .build()
-                    .unwrap()])
-                .initialise()
-                .unwrap();
-
-            let remove_response = manager.remove_account(account.id().into());
-            assert!(remove_response.is_err());
-        }
-    }
-
-    rusty_fork_test! {
-        #[test]
-        fn create_account_with_latest_without_history() {
-            let manager = crate::test_utils::get_account_manager();
-
-            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-                .expect("invalid node URL")
-                .build();
-
-            let account = manager
-                .create_account(client_options.clone())
-                .alias("alias")
-                .initialise()
-                .expect("failed to add account");
-
-            let create_response = manager.create_account(client_options).initialise();
-            assert!(create_response.is_err());
-        }
-    }
-
-    fn _clear_db_and_backup(storage_path: &str) -> crate::Result<()> {
-        let _ = std::fs::remove_dir_all(storage_path);
-        #[cfg(feature = "sqlite")]
-        crate::storage::set_storage_path(std::path::PathBuf::from(storage_path).join("wallet.db"))?;
-        #[cfg(not(feature = "sqlite"))]
-        crate::storage::set_storage_path(storage_path)?;
-        let _ = std::fs::remove_dir_all("./backup");
-        Ok(())
-    }
-
-    rusty_fork_test! {
-        #[test]
-        fn backup_and_restore_happy_path() {
-            _clear_db_and_backup("./example-database/backup-test").unwrap();
-            let manager = super::AccountManager::new();
-
-            let account = crate::test_utils::create_account(&manager, vec![], vec![]);
-
-            // backup the stored accounts to ./backup/${backup_name}
-            let backup_path = manager.backup("./backup").unwrap();
-
-            // delete the account on the current storage
-            manager.remove_account(account.id().into()).unwrap();
-
-            // import the accounts from the backup and assert that it's the same
-            manager.import_accounts(backup_path).unwrap();
-            let imported_account = manager.get_account(account.id().into()).unwrap();
-            assert_eq!(account, imported_account);
-        }
-
-        #[test]
-        fn backup_and_restore_account_already_exists() {
-            _clear_db_and_backup("./example-database/backup-test2").unwrap();
-            let manager = super::AccountManager::new();
-
-            // first we'll create an example account
-            let address = crate::test_utils::generate_random_iota_address();
-            let address = AddressBuilder::new()
-                .address(address.clone())
+        let account = manager
+            .create_account(client_options)
+            .addresses(vec![AddressBuilder::new()
+                .balance(5)
                 .key_index(0)
-                .balance(0)
+                .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
                 .build()
-                .unwrap();
-            let account = crate::test_utils::create_account(&manager, vec![address], vec![]);
+                .unwrap()])
+            .initialise()
+            .unwrap();
 
-            let backup_path = manager.backup("./backup").unwrap();
+        let remove_response = manager.remove_account(account.id().into());
+        assert!(remove_response.is_err());
+    }
 
-            let response = manager.import_accounts(backup_path);
-            assert!(response.is_err());
-            let err = response.unwrap_err();
-            assert_eq!(
-                err.to_string(),
-                format!("Account {} already imported", account.alias())
-            );
-        }
+    #[test]
+    fn create_account_with_latest_without_history() {
+        let manager = crate::test_utils::get_account_manager();
+
+        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+            .expect("invalid node URL")
+            .build();
+
+        let account = manager
+            .create_account(client_options.clone())
+            .alias("alias")
+            .initialise()
+            .expect("failed to add account");
+
+        let create_response = manager.create_account(client_options).initialise();
+        assert!(create_response.is_err());
+    }
+
+    #[test]
+    fn backup_and_restore_happy_path() {
+        let backup_path = "./backup/happy-path";
+        let _ = std::fs::remove_dir_all(backup_path);
+        let manager = crate::test_utils::get_account_manager();
+
+        let account = crate::test_utils::create_account(&manager, vec![], vec![]);
+
+        // backup the stored accounts to ./backup/happy-path/${backup_name}
+        let backup_path = manager.backup(backup_path).unwrap();
+
+        // delete the account on the current storage
+        manager.remove_account(account.id().into()).unwrap();
+
+        // import the accounts from the backup and assert that it's the same
+        manager.import_accounts(backup_path).unwrap();
+        let imported_account = manager.get_account(account.id().into()).unwrap();
+        assert_eq!(account, imported_account);
+    }
+
+    #[test]
+    fn backup_and_restore_account_already_exists() {
+        let backup_path = "./backup/account-exists";
+        let _ = std::fs::remove_dir_all(backup_path);
+        let manager = crate::test_utils::get_account_manager();
+
+        // first we'll create an example account
+        let address = crate::test_utils::generate_random_iota_address();
+        let address = AddressBuilder::new()
+            .address(address.clone())
+            .key_index(0)
+            .balance(0)
+            .build()
+            .unwrap();
+        let account = crate::test_utils::create_account(&manager, vec![address], vec![]);
+
+        let backup_path = manager.backup(backup_path).unwrap();
+
+        let response = manager.import_accounts(backup_path);
+        assert!(response.is_err());
+        let err = response.unwrap_err();
+        assert_eq!(
+            err.to_string(),
+            format!("Account {} already imported", account.alias())
+        );
     }
 }

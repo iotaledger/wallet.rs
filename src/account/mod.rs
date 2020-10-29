@@ -351,40 +351,36 @@ mod tests {
     use crate::client::ClientOptionsBuilder;
     use crate::message::{Message, MessageType};
 
-    use rusty_fork::rusty_fork_test;
+    #[test]
+    // asserts that the `set_alias` function updates the account alias in storage
+    fn set_alias() {
+        let manager = crate::test_utils::get_account_manager();
+        let updated_alias = "updated alias";
+        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+            .expect("invalid node URL")
+            .build();
 
-    rusty_fork_test! {
-        #[test]
-        // asserts that the `set_alias` function updates the account alias in storage
-        fn set_alias() {
-            let manager = crate::test_utils::get_account_manager();
-            let updated_alias = "updated alias";
-            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-                .expect("invalid node URL")
-                .build();
+        let updated_alias = "updated alias";
+        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+            .expect("invalid node URL")
+            .build();
 
-            let updated_alias = "updated alias";
-            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-                .expect("invalid node URL")
-                .build();
+        let account = manager
+            .create_account(client_options)
+            .alias("alias")
+            .initialise()
+            .expect("failed to add account");
 
-            let account = manager
-                .create_account(client_options)
-                .alias("alias")
-                .initialise()
-                .expect("failed to add account");
-
-            manager
-                .set_alias(account.id().into(), updated_alias)
-                .expect("failed to update alias");
-            let account_in_storage = manager
-                .get_account(account.id().into())
-                .expect("failed to get account from storage");
-            assert_eq!(
-                account_in_storage.alias().to_string(),
-                updated_alias.to_string()
-            );
-        }
+        manager
+            .set_alias(account.id().into(), updated_alias)
+            .expect("failed to update alias");
+        let account_in_storage = manager
+            .get_account(account.id().into())
+            .expect("failed to get account from storage");
+        assert_eq!(
+            account_in_storage.alias().to_string(),
+            updated_alias.to_string()
+        );
     }
 
     fn _generate_account(

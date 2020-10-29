@@ -107,43 +107,33 @@ mod tests {
     use super::StorageAdapter;
     use crate::account::AccountIdentifier;
 
-    use rusty_fork::rusty_fork_test;
-
-    rusty_fork_test! {
-        #[test]
-        // asserts that the path defined by `set_storage_path` is globally available with `get_storage_path`
-        fn set_storage_path() {
-            let path: std::path::PathBuf = "/path/to/storage/system/".into();
-            super::set_storage_path(&path).unwrap();
-            assert_eq!(super::get_storage_path(), &path);
+    #[test]
+    // asserts that the adapter defined by `set_adapter` is globally available with `get_adapter`
+    fn set_adapter() {
+        struct MyAdapter;
+        impl StorageAdapter for MyAdapter {
+            fn get(&self, key: AccountIdentifier) -> crate::Result<String> {
+                Ok("MY_ADAPTER_GET_RESPONSE".to_string())
+            }
+            fn get_all(&self) -> crate::Result<Vec<String>> {
+                Ok(vec![])
+            }
+            fn set(&self, key: AccountIdentifier, account: String) -> crate::Result<()> {
+                Ok(())
+            }
+            fn remove(&self, key: AccountIdentifier) -> crate::Result<()> {
+                Ok(())
+            }
         }
 
-        #[test]
-        // asserts that the adapter defined by `set_adapter` is globally available with `get_adapter`
-        fn set_adapter() {
-            struct MyAdapter;
-            impl StorageAdapter for MyAdapter {
-                fn get(&self, key: AccountIdentifier) -> crate::Result<String> {
-                    Ok("MY_ADAPTER_GET_RESPONSE".to_string())
-                }
-                fn get_all(&self) -> crate::Result<Vec<String>> {
-                    Ok(vec![])
-                }
-                fn set(&self, key: AccountIdentifier, account: String) -> crate::Result<()> {
-                    Ok(())
-                }
-                fn remove(&self, key: AccountIdentifier) -> crate::Result<()> {
-                    Ok(())
-                }
-            }
-
-            super::set_adapter(MyAdapter {}).unwrap();
-            let adapter = super::get_adapter().unwrap();
+        let path = "./the-storage-path";
+        super::set_adapter(path, MyAdapter {});
+        super::with_adapter(&std::path::PathBuf::from(path), |adapter| {
             assert_eq!(
                 adapter.get([0; 32].into()).unwrap(),
                 "MY_ADAPTER_GET_RESPONSE".to_string()
             );
-        }
+        });
     }
 
     #[test]
@@ -152,8 +142,8 @@ mod tests {
         assert!(response.is_err());
     }
 
-    fn _create_account() -> crate::account::Account {
-        let manager = crate::account_manager::AccountManager::new();
+    fn _create_account() -> (std::path::PathBuf, crate::account::Account) {
+        let manager = crate::test_utils::get_account_manager();
 
         let client_options =
             crate::client::ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
@@ -164,12 +154,12 @@ mod tests {
             .alias("alias")
             .initialise()
             .unwrap();
-        account
+        (manager.storage_path().clone(), account)
     }
 
     #[test]
     fn parse_accounts_valid() {
-        let account = _create_account();
+        let (_, account) = _create_account();
         let response = super::parse_accounts(&vec![serde_json::to_string(&account).unwrap()]);
         assert!(response.is_ok());
         assert_eq!(response.unwrap().first().unwrap(), &account);
@@ -177,9 +167,9 @@ mod tests {
 
     #[test]
     fn get_account() {
-        let account = _create_account();
+        let (storage_path, account) = _create_account();
         assert_eq!(
-            super::get_account(account.id().clone().into()).unwrap(),
+            super::get_account(&storage_path, account.id().clone().into()).unwrap(),
             account
         );
     }

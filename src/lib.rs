@@ -222,6 +222,8 @@ pub(crate) fn with_stronghold_from_path<T, F: FnOnce(&Stronghold) -> T>(
         .get_or_init(Default::default)
         .lock()
         .unwrap();
+    println!("{:?}", stronghold_map.keys());
+    println!("{:?}", path);
     if let Some(stronghold) = stronghold_map.get(path) {
         cb(stronghold)
     } else {
@@ -243,23 +245,19 @@ mod test_utils {
         SignatureUnlock, TransactionBuilder, TransactionEssence, TransactionId, UTXOInput,
         UnlockBlock,
     };
-    use once_cell::sync::OnceCell;
     use rand::{distributions::Alphanumeric, thread_rng, Rng};
     use std::path::PathBuf;
 
     use std::convert::TryInto;
     use std::num::NonZeroU64;
 
-    static MANAGER_INSTANCE: OnceCell<AccountManager> = OnceCell::new();
-    pub fn get_account_manager() -> &'static AccountManager {
-        MANAGER_INSTANCE.get_or_init(|| {
-            let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
-            let storage_path = PathBuf::from(format!("./example-database/{}", storage_path));
+    pub fn get_account_manager() -> AccountManager {
+        let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
+        let storage_path = PathBuf::from(format!("./example-database/{}", storage_path));
 
-            let manager = AccountManager::with_storage_path(storage_path).unwrap();
-            manager.set_stronghold_password("password").unwrap();
-            manager
-        })
+        let manager = AccountManager::with_storage_path(storage_path).unwrap();
+        manager.set_stronghold_password("password").unwrap();
+        manager
     }
 
     pub fn create_account(
