@@ -109,13 +109,14 @@ impl<'a> AccountInitialiser<'a> {
 
     /// Initialises the account.
     pub fn initialise(self) -> crate::Result<Account> {
-        let alias = self.alias.unwrap_or_else(|| "".to_string());
+        let accounts =
+            crate::storage::with_adapter(self.storage_path, |storage| storage.get_all())?;
+        let alias = self
+            .alias
+            .unwrap_or_else(|| format!("Account {}", accounts.len()));
         let created_at = self.created_at.unwrap_or_else(chrono::Utc::now);
         let created_at_timestamp: u128 = created_at.timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
         let mnemonic = self.mnemonic;
-
-        let accounts =
-            crate::storage::with_adapter(self.storage_path, |storage| storage.get_all())?;
 
         if let Some(latest_account) = accounts.last() {
             let latest_account: Account = serde_json::from_str(&latest_account)?;
