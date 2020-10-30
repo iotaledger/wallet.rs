@@ -250,7 +250,7 @@ impl<'a> AccountSynchronizer<'a> {
                     let address_is_unused = !outputs.iter().any(|o| o.is_spent);
                     let old_found_unused_status = found_unused;
                     found_unused = address_is_unused;
-                    return !old_found_unused_status;
+                    !old_found_unused_status
                 })
                 .map(|(a, _)| a)
                 .collect(),
