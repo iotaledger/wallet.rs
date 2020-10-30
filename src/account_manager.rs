@@ -21,7 +21,6 @@ const DEFAULT_STORAGE_PATH: &str = "./example-database";
 /// The account manager.
 ///
 /// Used to manage multiple accounts.
-#[derive(Default)]
 pub struct AccountManager {
     storage_path: PathBuf,
 }
@@ -236,7 +235,7 @@ impl AccountManager {
             "password".to_string(),
             None,
         )?;
-        crate::init_stronghold(&backup_stronghold_path, backup_stronghold);
+        crate::init_stronghold(&source.as_ref().to_path_buf(), backup_stronghold);
 
         let backup_storage = crate::storage::get_adapter_from_path(&source)?;
         let accounts = backup_storage.get_all()?;

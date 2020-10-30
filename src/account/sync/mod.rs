@@ -45,7 +45,7 @@ async fn sync_addresses(
     Vec<(MessageId, IotaMessage)>,
 )> {
     let mut address_index = address_index;
-    let account_index = account.index()?;
+    let account_index = *account.index();
 
     let client = get_client(account.client_options());
     let gap_limit = gap_limit.unwrap_or(20);
