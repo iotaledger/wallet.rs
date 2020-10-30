@@ -270,7 +270,8 @@ impl Account {
         from: usize,
         message_type: Option<MessageType>,
     ) -> Vec<&Message> {
-        self.messages
+        let messages_iter = self
+            .messages
             .iter()
             .filter(|message| {
                 if let Some(message_type) = message_type.clone() {
@@ -285,7 +286,12 @@ impl Account {
                     true
                 }
             })
-            .collect()
+            .skip(from);
+        if count == 0 {
+            messages_iter.collect()
+        } else {
+            messages_iter.take(count).collect()
+        }
     }
 
     /// Gets the addresses linked to this account.
