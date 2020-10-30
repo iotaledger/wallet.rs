@@ -125,7 +125,7 @@ pub(crate) async fn get_new_address(account: &Account, internal: bool) -> crate:
     let iota_address = get_iota_address(
         account.storage_path(),
         account.id(),
-        account.index()?,
+        *account.index(),
         key_index,
         internal,
     )?;

@@ -145,6 +145,7 @@ impl<'a> AccountInitialiser<'a> {
 
         let account = Account {
             id: *id,
+            index: accounts.len(),
             alias,
             created_at,
             messages: self.messages,
@@ -167,6 +168,8 @@ impl<'a> AccountInitialiser<'a> {
 pub struct Account {
     /// The account identifier.
     id: [u8; 32],
+    /// The account index
+    index: usize,
     /// The account alias.
     alias: String,
     /// Time of account creation.
@@ -312,18 +315,6 @@ impl Account {
     /// Gets a message with the given id associated with this account.
     pub fn get_message(&self, message_id: &MessageId) -> Option<&Message> {
         self.messages.iter().find(|tx| tx.id() == message_id)
-    }
-
-    /// Gets the account index.
-    pub(crate) fn index(&self) -> crate::Result<usize> {
-        let accounts =
-            crate::storage::with_adapter(&self.storage_path, |storage| storage.get_all())?;
-        let account_json = serde_json::to_string(&self)?;
-        let index = accounts
-            .iter()
-            .position(|acc| acc == &account_json)
-            .unwrap();
-        Ok(index)
     }
 }
 
