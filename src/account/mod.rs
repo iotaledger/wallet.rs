@@ -318,6 +318,19 @@ impl Account {
         self.messages.extend(messages.iter().cloned());
     }
 
+    pub(crate) fn append_addresses(&mut self, addresses: Vec<Address>) {
+        addresses.into_iter().for_each(|address| {
+            match self.addresses.iter().position(|a| a == &address) {
+                Some(index) => {
+                    self.addresses[index] = address;
+                }
+                None => {
+                    self.addresses.push(address);
+                }
+            }
+        });
+    }
+
     /// Gets a message with the given id associated with this account.
     pub fn get_message(&self, message_id: &MessageId) -> Option<&Message> {
         self.messages.iter().find(|tx| tx.id() == message_id)

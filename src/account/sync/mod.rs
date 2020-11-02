@@ -41,8 +41,7 @@ async fn sync_addresses(
     address_index: usize,
     gap_limit: Option<usize>,
 ) -> crate::Result<(
-    Vec<Address>,
-    Vec<OutputMetadata>,
+    Vec<(Address, Vec<OutputMetadata>)>,
     Vec<(MessageId, IotaMessage)>,
 )> {
     let mut address_index = address_index;
@@ -53,7 +52,6 @@ async fn sync_addresses(
 
     let mut generated_addresses = vec![];
     let mut found_messages = vec![];
-    let mut found_outputs = vec![];
     loop {
         let mut generated_iota_addresses = vec![];
         for i in address_index..(address_index + gap_limit) {
@@ -74,10 +72,20 @@ async fn sync_addresses(
             )?);
         }
 
+        let mut curr_generated_addresses = vec![];
         let mut curr_found_messages = vec![];
-        let mut curr_found_outputs = vec![];
-        for address in &generated_iota_addresses {
-            let address_outputs = client.get_address().outputs(&address).await?;
+
+        for iota_address in &generated_iota_addresses {
+            let balance = client.get_address().balance(&iota_address).await?;
+            let address = AddressBuilder::new()
+                .address(iota_address.clone())
+                .key_index(address_index)
+                .balance(balance)
+                .build()?;
+            address_index += 1;
+
+            let mut curr_found_outputs = vec![];
+            let address_outputs = client.get_address().outputs(&iota_address).await?;
             for output in address_outputs.iter() {
                 let output = client.get_output(output).await?;
                 let message = client
@@ -102,33 +110,24 @@ async fn sync_addresses(
                 ));
                 curr_found_outputs.push(output);
             }
+
+            curr_generated_addresses.push((address, curr_found_outputs));
         }
 
-        let is_spent = curr_found_outputs.iter().any(|output| output.is_spent);
+        let is_empty = curr_found_messages.is_empty()
+            && curr_generated_addresses
+                .iter()
+                .all(|(_, outputs)| !outputs.iter().any(|output| output.is_spent));
 
         found_messages.extend(curr_found_messages.into_iter());
-        found_outputs.extend(curr_found_outputs.into_iter());
+        generated_addresses.extend(curr_generated_addresses.into_iter());
 
-        for iota_address in generated_iota_addresses {
-            let balance = client.get_address().balance(&iota_address).await?;
-            let address = AddressBuilder::new()
-                .address(iota_address.clone())
-                .key_index(address_index)
-                .balance(balance)
-                .build()?;
-            generated_addresses.push(address);
-            address_index += 1;
-        }
-
-        if found_messages.is_empty()
-            && !is_spent
-            && generated_addresses.iter().all(|o| *o.balance() == 0)
-        {
+        if is_empty {
             break;
         }
     }
 
-    Ok((generated_addresses, found_outputs, found_messages))
+    Ok((generated_addresses, found_messages))
 }
 
 /// Syncs transactions with the tangle.
@@ -211,12 +210,8 @@ impl<'a> AccountSynchronizer<'a> {
     /// associated with an account is fetched from the tangle and is stored locally.
     pub async fn execute(self) -> crate::Result<SyncedAccount> {
         let client = get_client(self.account.client_options());
-        let mut addresses = vec![];
-        for address in self.account.addresses() {
-            addresses.push(address.address().clone());
-        }
 
-        let (found_addresses, found_outputs, found_messages) = sync_addresses(
+        let (found_addresses, found_messages) = sync_addresses(
             &self.storage_path,
             self.account,
             self.address_index,
@@ -224,8 +219,9 @@ impl<'a> AccountSynchronizer<'a> {
         )
         .await?;
         let is_empty = found_messages.is_empty()
-            && !found_outputs.iter().any(|output| output.is_spent)
-            && found_addresses.iter().all(|o| *o.balance() == 0);
+            && found_addresses
+                .iter()
+                .all(|(_, outputs)| outputs.is_empty());
 
         let mut new_messages = vec![];
         for (found_message_id, found_message) in found_messages {
@@ -240,14 +236,25 @@ impl<'a> AccountSynchronizer<'a> {
         }
 
         sync_transactions(self.account, &new_messages).await?;
-
-        self.account.set_messages(
+        self.account.append_messages(
             new_messages
                 .iter()
                 .map(|(id, message)| Message::from_iota_message(*id, &message).unwrap())
                 .collect(),
         );
-        self.account.set_addresses(found_addresses);
+        let mut found_unused = false;
+        self.account.append_addresses(
+            found_addresses
+                .into_iter()
+                .take_while(|(address, outputs)| {
+                    let address_is_unused = !outputs.iter().any(|o| o.is_spent);
+                    let old_found_unused_status = found_unused;
+                    found_unused = address_is_unused;
+                    !old_found_unused_status
+                })
+                .map(|(a, _)| a)
+                .collect(),
+        );
 
         if !self.skip_persistance {
             crate::storage::with_adapter(&self.storage_path, |storage| {
@@ -305,11 +312,12 @@ impl SyncedAccount {
         account: &'a Account,
         address: &'a Address,
     ) -> crate::Result<(Vec<Address>, Option<&'a Address>)> {
-        let mut available_addresses = vec![];
-        let available_addresses_iter = account.addresses().iter().filter(|a| a != &address);
-        for available_address in available_addresses_iter {
-            available_addresses.push(available_address.clone());
-        }
+        let mut available_addresses: Vec<Address> = account
+            .addresses()
+            .iter()
+            .cloned()
+            .filter(|a| a != address && *a.balance() > 0)
+            .collect();
         let addresses = input_selection::select_input(threshold, &mut available_addresses)?;
         let remainder = if addresses.iter().fold(0, |acc, a| acc + a.balance()) > threshold {
             account.latest_address()
@@ -366,7 +374,7 @@ impl SyncedAccount {
                 .into(),
             );
             let utxo_amount = if current_output_sum + utxo.amount > value {
-                value - utxo.amount
+                value - current_output_sum
             } else {
                 utxo.amount
             };

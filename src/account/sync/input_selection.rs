@@ -1,5 +1,6 @@
 use crate::address::Address;
 use rand::{thread_rng, Rng};
+use std::convert::TryInto;
 
 pub fn select_input(target: u64, available_utxos: &mut [Address]) -> crate::Result<Vec<Address>> {
     if target
@@ -12,7 +13,14 @@ pub fn select_input(target: u64, available_utxos: &mut [Address]) -> crate::Resu
 
     available_utxos.sort_by(|a, b| b.balance().cmp(a.balance()));
     let mut selected_coins = Vec::new();
-    let result = branch_and_bound(target, available_utxos, 0, &mut selected_coins, 0, 100000);
+    let result = branch_and_bound(
+        target,
+        available_utxos,
+        0,
+        &mut selected_coins,
+        0,
+        2i64.pow(available_utxos.len().try_into().unwrap()),
+    );
 
     if result {
         Ok(selected_coins)
