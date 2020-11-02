@@ -42,7 +42,7 @@ impl Tag {
 }
 
 /// A transfer to make a transaction.
-#[derive(Debug, Clone, Getters, Setters, Deserialize)]
+#[derive(Debug, Clone, Getters, Setters, Deserialize, Serialize)]
 #[getset(get = "pub")]
 pub struct Transfer {
     /// The transfer value.
@@ -231,7 +231,7 @@ impl Message {
 }
 
 /// Message type.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum MessageType {
     /// Message received.
     Received,
