@@ -205,6 +205,12 @@ impl<'a> AccountSynchronizer<'a> {
         self
     }
 
+    /// Initial address index to start syncing.
+    pub fn address_index(mut self, address_index: usize) -> Self {
+        self.address_index = address_index;
+        self
+    }
+
     /// Syncs account with the tangle.
     /// The account syncing process ensures that the latest metadata (balance, transactions)
     /// associated with an account is fetched from the tangle and is stored locally.
