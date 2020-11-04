@@ -186,7 +186,12 @@ impl<'a> AccountSynchronizer<'a> {
         let address_index = account.addresses().len();
         Self {
             account,
-            address_index,
+            // by default we synchronize from the latest address (supposedly unspent)
+            address_index: if address_index == 0 {
+                0
+            } else {
+                address_index - 1
+            },
             gap_limit: None,
             skip_persistance: false,
             storage_path,
@@ -248,15 +253,21 @@ impl<'a> AccountSynchronizer<'a> {
                 .map(|(id, message)| Message::from_iota_message(*id, &message).unwrap())
                 .collect(),
         );
-        let mut found_unused = false;
+        let mut found_unspent = None;
         self.account.append_addresses(
             found_addresses
                 .into_iter()
                 .take_while(|(address, outputs)| {
-                    let address_is_unused = !outputs.iter().any(|o| o.is_spent);
-                    let old_found_unused_status = found_unused;
-                    found_unused = address_is_unused;
-                    !old_found_unused_status
+                    let address_is_unspent = !outputs.iter().any(|o| o.is_spent);
+                    let old_found_unspent_status = found_unspent;
+                    found_unspent = Some(address_is_unspent);
+                    match old_found_unspent_status {
+                        // keep collecting if the previous address was spent
+                        // (because we want to collect all spent addresses + one unspent)
+                        Some(unspent) => !unspent,
+                        // if this is the first found address, we keep collecting anyway
+                        None => true,
+                    }
                 })
                 .map(|(a, _)| a)
                 .collect(),
