@@ -118,10 +118,13 @@ impl<'a> AccountInitialiser<'a> {
         let created_at_timestamp: u128 = created_at.timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
         let mnemonic = self.mnemonic;
 
-        if let Some(latest_account) = accounts.last() {
-            let latest_account: Account = serde_json::from_str(&latest_account)?;
-            if latest_account.messages().is_empty() && latest_account.total_balance() == 0 {
-                return Err(crate::WalletError::LatestAccountIsEmpty);
+        // check for empty latest account only when not skipping persistance (account discovery process)
+        if !self.skip_persistance {
+            if let Some(latest_account) = accounts.last() {
+                let latest_account: Account = serde_json::from_str(&latest_account)?;
+                if latest_account.messages().is_empty() && latest_account.total_balance() == 0 {
+                    return Err(crate::WalletError::LatestAccountIsEmpty);
+                }
             }
         }
 
