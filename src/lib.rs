@@ -17,6 +17,7 @@ pub mod event;
 pub mod message;
 /// The monitor module.
 pub mod monitor;
+pub(crate) mod serde;
 /// The storage module.
 pub mod storage;
 
@@ -24,7 +25,6 @@ pub mod storage;
 pub type Result<T> = std::result::Result<T, WalletError>;
 pub use chrono::prelude::{DateTime, Utc};
 use once_cell::sync::OnceCell;
-use serde::ser::{SerializeStruct, Serializer};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
@@ -110,86 +110,6 @@ pub enum WalletError {
     /// Transfer amount can't be zero.
     #[error("transfer amount can't be zero")]
     ZeroAmount,
-}
-
-impl serde::Serialize for WalletError {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        fn serialize_variant<S: Serializer>(
-            serializer: S,
-            variant_name: &str,
-            message: Option<&str>,
-        ) -> std::result::Result<S::Ok, S::Error> {
-            let mut state = serializer.serialize_struct("WalletError", 2)?;
-            state.serialize_field("type", variant_name)?;
-            state.serialize_field("error", &message)?;
-            state.end()
-        }
-        match self {
-            Self::UnknownError(error) => serialize_variant(serializer, "UnknownError", Some(error)),
-            Self::GenericError(error) => {
-                serialize_variant(serializer, "GenericError", Some(&error.to_string()))
-            }
-            Self::IoError(error) => {
-                serialize_variant(serializer, "IoError", Some(&error.to_string()))
-            }
-            Self::JsonError(error) => {
-                serialize_variant(serializer, "JsonError", Some(&error.to_string()))
-            }
-            Self::StrongholdError(error) => {
-                serialize_variant(serializer, "StrongholdError", Some(&error.to_string()))
-            }
-            Self::ClientError(error) => {
-                serialize_variant(serializer, "ClientError", Some(&error.to_string()))
-            }
-            Self::SqliteError(error) => {
-                serialize_variant(serializer, "SqliteError", Some(&error.to_string()))
-            }
-            Self::UrlError(error) => {
-                serialize_variant(serializer, "UrlError", Some(&error.to_string()))
-            }
-            Self::UnexpectedResponse(error) => {
-                serialize_variant(serializer, "UnexpectedResponse", Some(&error))
-            }
-            Self::MessageAboveMaxDepth => {
-                serialize_variant(serializer, "MessageAboveMaxDepth", None)
-            }
-            Self::MessageAlreadyConfirmed => {
-                serialize_variant(serializer, "MessageAlreadyConfirmed", None)
-            }
-            Self::MessageNotFound => serialize_variant(serializer, "MessageNotFound", None),
-            Self::EmptyNodeList => serialize_variant(serializer, "EmptyNodeList", None),
-            Self::InvalidAddressLength => {
-                serialize_variant(serializer, "InvalidAddressLength", None)
-            }
-            Self::InvalidTransactionIdLength => serializer.serialize_newtype_variant(
-                "WalletError",
-                14,
-                "InvalidTransactionIdLength",
-                "",
-            ),
-            Self::InvalidMessageIdLength => {
-                serialize_variant(serializer, "InvalidMessageIdLength", None)
-            }
-            Self::Bech32Error(error) => {
-                serialize_variant(serializer, "Bech32Error", Some(&error.to_string()))
-            }
-            Self::AccountAlreadyImported { alias } => serialize_variant(
-                serializer,
-                "AccountAlreadyImported",
-                Some(&format!("account {} already imported", alias)),
-            ),
-            Self::StorageDoesntExist => serialize_variant(serializer, "StorageDoesntExist", None),
-            Self::InsufficientFunds => serialize_variant(serializer, "InsufficientFunds", None),
-            Self::MessageNotEmpty => serialize_variant(serializer, "MessageNotEmpty", None),
-            Self::LatestAccountIsEmpty => {
-                serialize_variant(serializer, "LatestAccountIsEmpty", None)
-            }
-            Self::ZeroAmount => serialize_variant(serializer, "ZeroAmount", None),
-        }
-    }
 }
 
 impl Drop for WalletError {

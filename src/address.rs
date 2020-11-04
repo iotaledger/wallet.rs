@@ -65,6 +65,7 @@ impl AddressBuilder {
 #[getset(get = "pub")]
 pub struct Address {
     /// The address.
+    #[serde(with = "crate::serde::iota_address_serde")]
     address: IotaAddress,
     /// The address balance.
     balance: u64,
