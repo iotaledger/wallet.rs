@@ -202,7 +202,7 @@ impl AccountManager {
             .clone();
         let from_synchronized = from_account.sync().execute().await?;
         from_synchronized
-            .transfer(Transfer::new(to_address, amount))
+            .transfer(Transfer::new(to_address.address().clone(), amount))
             .await
     }
 
