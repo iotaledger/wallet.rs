@@ -91,18 +91,14 @@ async fn sync_addresses(
                 let message = client
                     .get_message()
                     .data(&MessageId::new(
-                        output
-                            .message_id
-                            .as_bytes()
+                        output.message_id[..]
                             .try_into()
                             .map_err(|_| crate::WalletError::InvalidMessageIdLength)?,
                     ))
                     .await?;
                 curr_found_messages.push((
                     MessageId::new(
-                        output
-                            .message_id
-                            .as_bytes()
+                        output.message_id[..]
                             .try_into()
                             .map_err(|_| crate::WalletError::InvalidMessageIdLength)?,
                     ),
@@ -380,8 +376,7 @@ impl SyncedAccount {
             utxo_inputs.push(
                 UTXOInput::new(
                     TransactionId::new(
-                        utxo.transaction_id
-                            .as_bytes()
+                        utxo.transaction_id[..]
                             .try_into()
                             .map_err(|_| crate::WalletError::InvalidTransactionIdLength)?,
                     ),
