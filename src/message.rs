@@ -1,4 +1,4 @@
-use crate::address::Address;
+use crate::address::{Address, IotaAddress};
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
 use iota::message::{
@@ -48,7 +48,8 @@ pub struct Transfer {
     /// The transfer value.
     amount: u64,
     /// The transfer address.
-    address: Address,
+    #[serde(with = "crate::serde::iota_address_serde")]
+    address: IotaAddress,
     /// (Optional) transfer data.
     #[getset(set = "pub")]
     data: Option<String>,
@@ -56,7 +57,7 @@ pub struct Transfer {
 
 impl Transfer {
     /// Initialises a new transfer to the given address.
-    pub fn new(address: Address, amount: u64) -> Self {
+    pub fn new(address: IotaAddress, amount: u64) -> Self {
         Self {
             address,
             amount,

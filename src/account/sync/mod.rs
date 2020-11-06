@@ -1,5 +1,5 @@
 use crate::account::{Account, AccountIdentifier};
-use crate::address::{Address, AddressBuilder};
+use crate::address::{Address, AddressBuilder, IotaAddress};
 use crate::client::get_client;
 use crate::message::{Message, Transfer};
 
@@ -327,13 +327,13 @@ impl SyncedAccount {
         &self,
         threshold: u64,
         account: &'a Account,
-        address: &'a Address,
+        address: &'a IotaAddress,
     ) -> crate::Result<(Vec<Address>, Option<&'a Address>)> {
         let mut available_addresses: Vec<Address> = account
             .addresses()
             .iter()
             .cloned()
-            .filter(|a| a != address && *a.balance() > 0)
+            .filter(|a| a.address() != address && *a.balance() > 0)
             .collect();
         let addresses = input_selection::select_input(threshold, &mut available_addresses)?;
         let remainder = if addresses.iter().fold(0, |acc, a| acc + a.balance()) > threshold {
