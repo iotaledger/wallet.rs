@@ -136,12 +136,15 @@ impl Value {
 #[getset(get = "pub", set = "pub(crate)")]
 pub struct Message {
     /// The message identifier.
+    #[serde(with = "crate::serde::message_id_serde")]
     pub(crate) id: MessageId,
     /// The message version.
     pub(crate) version: u64,
     /// Message id of the first message this message refers to.
+    #[serde(with = "crate::serde::message_id_serde")]
     pub(crate) trunk: MessageId,
     /// Message id of the second message this message refers to.
+    #[serde(with = "crate::serde::message_id_serde")]
     pub(crate) branch: MessageId,
     /// Length of the payload.
     #[serde(rename = "payloadLength")]
