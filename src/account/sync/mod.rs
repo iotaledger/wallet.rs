@@ -12,6 +12,7 @@ use iota::{
     },
 };
 use serde::Serialize;
+use slip10::BIP32Path;
 
 use std::convert::TryInto;
 use std::num::NonZeroU64;
@@ -358,13 +359,22 @@ impl SyncedAccount {
             self.select_inputs(*transfer_obj.amount(), &account, transfer_obj.address())?;
 
         let mut utxos = vec![];
-        for utxo_output in &input_addresses {
-            let address = utxo_output.address();
+        let mut address_paths = vec![];
+        for input_address in &input_addresses {
+            let address = input_address.address();
+            let address_path = BIP32Path::from_str(&format!(
+                "m/44H/4218H/{}H/{}H/{}H",
+                account.index(),
+                !input_address.internal() as u32,
+                input_address.key_index()
+            ))
+            .unwrap();
             let address_outputs = client.get_address().outputs(&address).await?;
             let mut outputs = vec![];
             for output in address_outputs.iter() {
                 let output = client.get_output(output).await?;
                 outputs.push(output);
+                address_paths.push(address_path.clone());
             }
             utxos.extend(outputs.into_iter());
         }
@@ -425,8 +435,14 @@ impl SyncedAccount {
         let essence = essence_builder
             .finish()
             .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
-        let transaction = Transaction::builder()
-            .with_essence(essence)
+        let unlock_blocks = crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
+            stronghold.get_transaction_unlock_blocks(account.id(), &essence, &address_paths)
+        })?;
+        let mut tx_builder = Transaction::builder().with_essence(essence);
+        for unlock_block in unlock_blocks.into_iter() {
+            tx_builder = tx_builder.add_unlock_block(unlock_block);
+        }
+        let transaction = tx_builder
             .finish()
             .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
 
