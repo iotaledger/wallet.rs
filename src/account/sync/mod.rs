@@ -40,7 +40,7 @@ async fn sync_addresses(
     storage_path: &PathBuf,
     account: &'_ Account,
     address_index: usize,
-    gap_limit: Option<usize>,
+    gap_limit: usize,
 ) -> crate::Result<(
     Vec<(Address, Vec<OutputMetadata>)>,
     Vec<(MessageId, IotaMessage)>,
@@ -49,11 +49,7 @@ async fn sync_addresses(
     let account_index = *account.index();
 
     let client = get_client(account.client_options());
-    let gap_limit = gap_limit.unwrap_or(if account.addresses().is_empty() {
-        20
-    } else {
-        1
-    });
+    let gap_limit = gap_limit;
 
     let mut generated_addresses = vec![];
     let mut found_messages = vec![];
@@ -176,7 +172,7 @@ async fn sync_transactions<'a>(
 pub struct AccountSynchronizer<'a> {
     account: &'a mut Account,
     address_index: usize,
-    gap_limit: Option<usize>,
+    gap_limit: usize,
     skip_persistance: bool,
     storage_path: PathBuf,
 }
@@ -193,7 +189,7 @@ impl<'a> AccountSynchronizer<'a> {
             } else {
                 address_index - 1
             },
-            gap_limit: None,
+            gap_limit: if address_index == 0 { 20 } else { 1 },
             skip_persistance: false,
             storage_path,
         }
@@ -201,7 +197,7 @@ impl<'a> AccountSynchronizer<'a> {
 
     /// Number of address indexes that are generated.
     pub fn gap_limit(mut self, limit: usize) -> Self {
-        self.gap_limit = Some(limit);
+        self.gap_limit = limit;
         self
     }
 
