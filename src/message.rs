@@ -255,12 +255,10 @@ impl Message {
                         } else {
                             acc + x.amount().get()
                         }
+                    } else if address_belongs_to_account {
+                        acc + x.amount().get()
                     } else {
-                        if address_belongs_to_account {
-                            acc + x.amount().get()
-                        } else {
-                            acc
-                        }
+                        acc
                     }
                 })
             }
