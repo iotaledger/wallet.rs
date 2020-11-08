@@ -368,22 +368,22 @@ impl SyncedAccount {
             self.select_inputs(*transfer_obj.amount(), &account, transfer_obj.address())?;
 
         let mut utxos = vec![];
-        let mut address_paths = vec![];
+        let mut output_paths = vec![];
         for input_address in &input_addresses {
             let address = input_address.address();
-            let address_path = BIP32Path::from_str(&format!(
-                "m/44H/4218H/{}H/{}H/{}H",
-                account.index(),
-                !input_address.internal() as u32,
-                input_address.key_index()
-            ))
-            .unwrap();
             let address_outputs = client.get_address().outputs(&address).await?;
             let mut outputs = vec![];
-            for output in address_outputs.iter() {
+            for (offset, output) in address_outputs.iter().enumerate() {
                 let output = client.get_output(output).await?;
                 outputs.push(output);
-                address_paths.push(address_path.clone());
+                let output_path = BIP32Path::from_str(&format!(
+                    "m/44H/4218H/{}H/{}H/{}H",
+                    account.index(),
+                    !input_address.internal() as u32,
+                    offset as u32
+                ))
+                .unwrap();
+                output_paths.push(output_path);
             }
             utxos.extend(outputs.into_iter());
         }
@@ -391,6 +391,7 @@ impl SyncedAccount {
         let mut utxo_inputs: Vec<Input> = vec![];
         let mut utxo_outputs: Vec<Output> = vec![];
         let mut current_output_sum = 0;
+        let mut remainder_value = 0;
         for utxo in utxos {
             utxo_inputs.push(
                 UTXOInput::new(
@@ -404,23 +405,43 @@ impl SyncedAccount {
                 .map_err(|e| anyhow::anyhow!(e.to_string()))?
                 .into(),
             );
-            let utxo_amount = if current_output_sum + utxo.amount > value {
-                value - current_output_sum
+            if current_output_sum == value {
+                // already filled the transfer value; just collect the output value as remainder
+                remainder_value += utxo.amount;
+            } else if current_output_sum + utxo.amount > value {
+                // if the used UTXO amount is greater than the transfer value, this is the last iteration and we'll have remainder value.
+                // we add an Output for the missing value and collect the remainder
+                let missing_value = value - current_output_sum;
+                remainder_value += utxo.amount - missing_value;
+                utxo_outputs.push(
+                    SignatureLockedSingleOutput::new(
+                        transfer_obj.address().clone(),
+                        NonZeroU64::new(missing_value)
+                            .ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
+                    )
+                    .into(),
+                );
+                current_output_sum += missing_value;
             } else {
-                utxo.amount
-            };
-            let utxo_address = if current_output_sum == value {
-                remainder_address
-                    .map(|a| a.address().clone())
-                    .expect("remainder address not defined")
-            } else {
-                utxo.address
-            };
-            current_output_sum += utxo.amount;
+                utxo_outputs.push(
+                    SignatureLockedSingleOutput::new(
+                        transfer_obj.address().clone(),
+                        NonZeroU64::new(utxo.amount)
+                            .ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
+                    )
+                    .into(),
+                );
+                current_output_sum += utxo.amount;
+            }
+        }
+
+        if remainder_value > 0 {
+            let remainder_address = remainder_address
+                .ok_or_else(|| anyhow::anyhow!("remainder address not defined"))?;
             utxo_outputs.push(
                 SignatureLockedSingleOutput::new(
-                    utxo_address,
-                    NonZeroU64::new(utxo_amount)
+                    remainder_address.address().clone(),
+                    NonZeroU64::new(remainder_value)
                         .ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
                 )
                 .into(),
@@ -445,7 +466,7 @@ impl SyncedAccount {
             .finish()
             .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
         let unlock_blocks = crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
-            stronghold.get_transaction_unlock_blocks(account.id(), &essence, &address_paths)
+            stronghold.get_transaction_unlock_blocks(account.id(), &essence, &output_paths)
         })?;
         let mut tx_builder = Transaction::builder().with_essence(essence);
         for unlock_block in unlock_blocks.into_iter() {
