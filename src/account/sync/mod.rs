@@ -49,7 +49,11 @@ async fn sync_addresses(
     let account_index = *account.index();
 
     let client = get_client(account.client_options());
-    let gap_limit = gap_limit.unwrap_or(20);
+    let gap_limit = gap_limit.unwrap_or(if account.addresses().is_empty() {
+        20
+    } else {
+        1
+    });
 
     let mut generated_addresses = vec![];
     let mut found_messages = vec![];
