@@ -605,6 +605,7 @@ mod tests {
                     .balance(5)
                     .key_index(0)
                     .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
+                    .outputs(vec![])
                     .build()
                     .unwrap()])
                 .initialise()

@@ -260,6 +260,7 @@ mod tests {
                 .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
                 .balance(0)
                 .key_index(0)
+                .outputs(vec![])
                 .build()
                 .expect("failed to build address"),
             0,
