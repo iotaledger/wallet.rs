@@ -37,13 +37,12 @@ async fn sync_addresses(
     storage_path: &PathBuf,
     account: &'_ Account,
     address_index: usize,
-    gap_limit: Option<usize>,
+    gap_limit: usize,
 ) -> crate::Result<(Vec<Address>, Vec<(MessageId, IotaMessage)>)> {
     let mut address_index = address_index;
     let account_index = *account.index();
 
     let client = get_client(account.client_options());
-    let gap_limit = gap_limit;
 
     let mut generated_addresses = vec![];
     let mut found_messages = vec![];
@@ -376,7 +375,7 @@ impl SyncedAccount {
             .unwrap();
             let address_outputs = input_address.outputs();
             let mut outputs = vec![];
-            for output in address_outputs.iter() {
+            for (offset, output) in address_outputs.iter().enumerate() {
                 let output = client
                     .get_output(
                         &UTXOInput::new(*output.transaction_id(), *output.index())
