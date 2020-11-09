@@ -138,14 +138,18 @@ impl AccountManager {
     }
 
     /// Starts the polling mechanism.
-    pub fn start_polling(&self) {
+    pub fn start_polling(&self) -> thread::JoinHandle<()> {
         let storage_path = self.storage_path.clone();
-        thread::spawn(move || async move {
+        thread::spawn(move || {
+            let mut runtime = tokio::runtime::Runtime::new().unwrap();
             loop {
-                let _ = poll(storage_path.clone());
-                thread::sleep(Duration::from_secs(5));
+                let storage_path_ = storage_path.clone();
+                runtime.block_on(async move {
+                    let _ = poll(storage_path_).await;
+                });
+                thread::sleep(Duration::from_secs(30));
             }
-        });
+        })
     }
 
     /// Adds a new account.
@@ -170,7 +174,7 @@ impl AccountManager {
 
     /// Syncs all accounts.
     pub async fn sync_accounts(&self) -> crate::Result<Vec<SyncedAccount>> {
-        sync_accounts(&self.storage_path).await
+        sync_accounts(&self.storage_path, None).await
     }
 
     /// Updates the account alias.
@@ -316,18 +320,17 @@ impl AccountManager {
     }
 }
 
-fn poll(storage_path: PathBuf) -> crate::Result<()> {
+async fn poll(storage_path: PathBuf) -> crate::Result<()> {
     let accounts_before_sync =
         crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
     let accounts_before_sync = crate::storage::parse_accounts(&accounts_before_sync)?;
-    let mut runtime = tokio::runtime::Runtime::new()?;
-    runtime.block_on(sync_accounts(&storage_path))?;
+    sync_accounts(&storage_path, Some(0)).await?;
     let accounts_after_sync =
         crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
     let accounts_after_sync = crate::storage::parse_accounts(&accounts_after_sync)?;
 
     // compare accounts to check for balance changes and new messages
-    for account_before_sync in &accounts_after_sync {
+    for account_before_sync in &accounts_before_sync {
         let account_after_sync = accounts_after_sync
             .iter()
             .find(|account| account.id() == account_before_sync.id())
@@ -377,7 +380,7 @@ fn poll(storage_path: PathBuf) -> crate::Result<()> {
             }
         });
     }
-    let reattached = runtime.block_on(reattach_unconfirmed_transactions(&storage_path))?;
+    let reattached = reattach_unconfirmed_transactions(&storage_path).await?;
     reattached.iter().for_each(|(message, account_id)| {
         emit_transaction_event(TransactionEventType::Reattachment, account_id, message.id());
     });
@@ -407,14 +410,21 @@ async fn discover_accounts(
     Ok(synced_accounts)
 }
 
-async fn sync_accounts<'a>(storage_path: &PathBuf) -> crate::Result<Vec<SyncedAccount>> {
+async fn sync_accounts<'a>(
+    storage_path: &PathBuf,
+    address_index: Option<usize>,
+) -> crate::Result<Vec<SyncedAccount>> {
     let accounts = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
     let mut synced_accounts = vec![];
     let mut last_account = None;
     for account_str in accounts {
         let mut account: Account = serde_json::from_str(&account_str)?;
         account.set_storage_path(storage_path.clone());
-        let synced_account = account.sync().execute().await?;
+        let mut sync = account.sync();
+        if let Some(index) = address_index {
+            sync = sync.address_index(index);
+        }
+        let synced_account = sync.execute().await?;
         last_account = Some(account);
         synced_accounts.push(synced_account);
     }
