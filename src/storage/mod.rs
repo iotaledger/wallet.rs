@@ -98,6 +98,7 @@ pub(crate) fn get_account(
     account_id: AccountIdentifier,
 ) -> crate::Result<Account> {
     let account_str = with_adapter(&storage_path, |storage| storage.get(account_id))?;
-    let account: Account = serde_json::from_str(&account_str)?;
+    let mut account: Account = serde_json::from_str(&account_str)?;
+    account.set_storage_path(storage_path.clone());
     Ok(account)
 }
