@@ -221,14 +221,18 @@ impl Account {
     /// the available balance should be (50i-30i) = 20i.
     pub fn available_balance(&self) -> u64 {
         let total_balance = self.total_balance();
-        let spent = self.messages.iter().fold(0, |acc, message| {
-            let val = if *message.confirmed() {
-                0
-            } else {
-                message.value().without_denomination()
-            };
-            acc + val
-        });
+        let spent = self
+            .list_messages(0, 0, Some(MessageType::Sent))
+            .iter()
+            .fold(0, |acc, message| {
+                let val = if *message.confirmed() {
+                    0
+                } else {
+                    message.value(&self).without_denomination()
+                };
+                acc + val
+            });
+        println!("total: {}, spent: {}", total_balance, spent);
         total_balance - (spent as u64)
     }
 
@@ -279,11 +283,23 @@ impl Account {
             .filter(|message| {
                 if let Some(message_type) = message_type.clone() {
                     match message_type {
-                        MessageType::Received => self.addresses.contains(&message.address()),
-                        MessageType::Sent => !self.addresses.contains(&message.address()),
+                        // message of type "Received" if its id is part of any of the account addresses outputs
+                        MessageType::Received => self.addresses().iter().any(|address| {
+                            address
+                                .outputs()
+                                .iter()
+                                .any(|o| o.message_id() == message.id())
+                        }),
+                        // message of type "Sent" if its id isn't part of any of the account addresses outputs
+                        MessageType::Sent => !self.addresses().iter().any(|address| {
+                            address
+                                .outputs()
+                                .iter()
+                                .any(|o| o.message_id() == message.id())
+                        }),
                         MessageType::Failed => !message.broadcasted(),
                         MessageType::Unconfirmed => !message.confirmed(),
-                        MessageType::Value => message.value().without_denomination() > 0,
+                        MessageType::Value => message.value(&self).without_denomination() > 0,
                     }
                 } else {
                     true

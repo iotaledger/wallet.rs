@@ -1,15 +1,12 @@
 use crate::account::{Account, AccountIdentifier};
-use crate::address::{Address, AddressBuilder, IotaAddress};
+use crate::address::{Address, AddressBuilder, AddressOutput, IotaAddress};
 use crate::client::get_client;
 use crate::message::{Message, Transfer};
 
 use getset::Getters;
-use iota::{
-    client::OutputMetadata,
-    message::prelude::{
-        Input, Message as IotaMessage, MessageId, Output, Payload, SignatureLockedSingleOutput,
-        Transaction, TransactionEssence, TransactionId, UTXOInput,
-    },
+use iota::message::prelude::{
+    Input, Message as IotaMessage, MessageId, Output, Payload, SignatureLockedSingleOutput,
+    Transaction, TransactionEssence, TransactionId, UTXOInput,
 };
 use serde::Serialize;
 use slip10::BIP32Path;
@@ -41,15 +38,11 @@ async fn sync_addresses(
     account: &'_ Account,
     address_index: usize,
     gap_limit: usize,
-) -> crate::Result<(
-    Vec<(Address, Vec<OutputMetadata>)>,
-    Vec<(MessageId, IotaMessage)>,
-)> {
+) -> crate::Result<(Vec<Address>, Vec<(MessageId, IotaMessage)>)> {
     let mut address_index = address_index;
     let account_index = *account.index();
 
     let client = get_client(account.client_options());
-    let gap_limit = gap_limit;
 
     let mut generated_addresses = vec![];
     let mut found_messages = vec![];
@@ -77,16 +70,10 @@ async fn sync_addresses(
         let mut curr_found_messages = vec![];
 
         for iota_address in &generated_iota_addresses {
-            let balance = client.get_address().balance(&iota_address).await?;
-            let address = AddressBuilder::new()
-                .address(iota_address.clone())
-                .key_index(address_index)
-                .balance(balance)
-                .build()?;
-            address_index += 1;
-
-            let mut curr_found_outputs = vec![];
             let address_outputs = client.get_address().outputs(&iota_address).await?;
+            let balance = client.get_address().balance(&iota_address).await?;
+
+            let mut curr_found_outputs: Vec<AddressOutput> = vec![];
             for output in address_outputs.iter() {
                 let output = client.get_output(output).await?;
                 let message = client
@@ -105,16 +92,24 @@ async fn sync_addresses(
                     ),
                     message,
                 ));
-                curr_found_outputs.push(output);
+                curr_found_outputs.push(output.try_into()?);
             }
 
-            curr_generated_addresses.push((address, curr_found_outputs));
+            let address = AddressBuilder::new()
+                .address(iota_address.clone())
+                .key_index(address_index)
+                .balance(balance)
+                .outputs(curr_found_outputs)
+                .build()?;
+            address_index += 1;
+
+            curr_generated_addresses.push(address);
         }
 
         let is_empty = curr_found_messages.is_empty()
             && curr_generated_addresses
                 .iter()
-                .all(|(_, outputs)| !outputs.iter().any(|output| output.is_spent));
+                .all(|address| !address.outputs().iter().any(|output| *output.is_spent()));
 
         found_messages.extend(curr_found_messages.into_iter());
         generated_addresses.extend(curr_generated_addresses.into_iter());
@@ -229,7 +224,7 @@ impl<'a> AccountSynchronizer<'a> {
         let is_empty = found_messages.is_empty()
             && found_addresses
                 .iter()
-                .all(|(_, outputs)| outputs.is_empty());
+                .all(|address| address.outputs().is_empty());
 
         let mut new_messages = vec![];
         for (found_message_id, found_message) in found_messages {
@@ -254,8 +249,8 @@ impl<'a> AccountSynchronizer<'a> {
         let mut addresses_to_save = vec![];
         let mut ignored_addresses = vec![];
         let mut previous_address_is_unused = false;
-        for (found_address, address_outputs) in found_addresses.into_iter() {
-            let address_is_unused = address_outputs.is_empty();
+        for found_address in found_addresses.into_iter() {
+            let address_is_unused = found_address.outputs().is_empty();
 
             // if the previous address is unused, we'll keep checking to see if an used address was found on the gap limit
             if previous_address_is_unused {
@@ -371,10 +366,22 @@ impl SyncedAccount {
         let mut output_paths = vec![];
         for input_address in &input_addresses {
             let address = input_address.address();
-            let address_outputs = client.get_address().outputs(&address).await?;
+            let address_path = BIP32Path::from_str(&format!(
+                "m/44H/4218H/{}H/{}H/{}H",
+                account.index(),
+                !input_address.internal() as u32,
+                input_address.key_index()
+            ))
+            .unwrap();
+            let address_outputs = input_address.outputs();
             let mut outputs = vec![];
             for (offset, output) in address_outputs.iter().enumerate() {
-                let output = client.get_output(output).await?;
+                let output = client
+                    .get_output(
+                        &UTXOInput::new(*output.transaction_id(), *output.index())
+                            .map_err(|e| anyhow::anyhow!(e.to_string()))?,
+                    )
+                    .await?;
                 outputs.push(output);
                 let output_path = BIP32Path::from_str(&format!(
                     "m/44H/4218H/{}H/{}H/{}H",

@@ -1,12 +1,54 @@
 use crate::account::Account;
+use crate::message::MessageType;
 use bech32::FromBase32;
 use getset::Getters;
 pub use iota::message::prelude::{Address as IotaAddress, Ed25519Address};
+use iota::message::prelude::{MessageId, TransactionId};
+use iota::OutputMetadata;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
 use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
+
+/// An Address output.
+#[derive(Debug, Getters, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[getset(get = "pub")]
+pub struct AddressOutput {
+    /// Transaction ID of the output
+    transaction_id: TransactionId,
+    /// Message ID of the output
+    message_id: MessageId,
+    /// Output index.
+    index: u16,
+    /// Output amount.
+    amount: u64,
+    /// Spend status of the output.
+    is_spent: bool,
+}
+
+impl TryFrom<OutputMetadata> for AddressOutput {
+    type Error = crate::WalletError;
+
+    fn try_from(output: OutputMetadata) -> crate::Result<Self> {
+        let output = Self {
+            transaction_id: TransactionId::new(
+                output.transaction_id[..]
+                    .try_into()
+                    .map_err(|_| anyhow::anyhow!("invalid transaction id length"))?,
+            ),
+            message_id: MessageId::new(
+                output.message_id[..]
+                    .try_into()
+                    .map_err(|_| anyhow::anyhow!("invalid message id length"))?,
+            ),
+            index: output.output_index,
+            amount: output.amount,
+            is_spent: output.is_spent,
+        };
+        Ok(output)
+    }
+}
 
 /// The address builder.
 #[derive(Default)]
@@ -15,6 +57,7 @@ pub struct AddressBuilder {
     balance: Option<u64>,
     key_index: Option<usize>,
     internal: bool,
+    outputs: Option<Vec<AddressOutput>>,
 }
 
 impl AddressBuilder {
@@ -41,6 +84,12 @@ impl AddressBuilder {
         self
     }
 
+    /// Sets the address outputs.
+    pub fn outputs(mut self, outputs: Vec<AddressOutput>) -> Self {
+        self.outputs = Some(outputs);
+        self
+    }
+
     /// Builds the address.
     pub fn build(self) -> crate::Result<Address> {
         let iota_address = self
@@ -55,6 +104,9 @@ impl AddressBuilder {
                 .key_index
                 .ok_or_else(|| anyhow::anyhow!("the `key_index` field is required"))?,
             internal: self.internal,
+            outputs: self
+                .outputs
+                .ok_or_else(|| anyhow::anyhow!("the `outputs` field is required"))?,
         };
         Ok(address)
     }
@@ -74,6 +126,8 @@ pub struct Address {
     key_index: usize,
     /// Determines if an address is a public or an internal (change) address.
     internal: bool,
+    /// The address outputs.
+    outputs: Vec<AddressOutput>,
 }
 
 impl PartialOrd for Address {
@@ -136,6 +190,7 @@ pub(crate) async fn get_new_address(account: &Account, internal: bool) -> crate:
         balance,
         key_index,
         internal,
+        outputs: vec![],
     };
     Ok(address)
 }
@@ -159,7 +214,8 @@ async fn get_balance(account: &Account, address: &IotaAddress) -> crate::Result<
 }
 
 pub(crate) fn is_unspent(account: &Account, address: &IotaAddress) -> bool {
-    account.messages().iter().any(|message| {
-        message.value().without_denomination() < 0 && message.address().address() == address
-    })
+    !account
+        .list_messages(0, 0, Some(MessageType::Sent))
+        .iter()
+        .any(|message| message.addresses().contains(&address))
 }

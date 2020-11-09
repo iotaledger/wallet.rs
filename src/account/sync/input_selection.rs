@@ -113,6 +113,7 @@ mod tests {
                     .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
                     .balance(rng.gen_range(0, 2000))
                     .key_index(i)
+                    .outputs(vec![])
                     .build()
                     .unwrap(),
             );

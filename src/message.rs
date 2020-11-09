@@ -1,4 +1,4 @@
-use crate::address::{Address, IotaAddress};
+use crate::{account::Account, address::IotaAddress};
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
 use iota::message::{
@@ -217,17 +217,51 @@ impl Message {
             && current_timestamp - attachment_timestamp < 11 * 60 * 1000
     }
 
-    /// The message's address.
-    pub fn address(&self) -> &Address {
-        unimplemented!()
+    /// The message's addresses.
+    pub fn addresses(&self) -> Vec<&IotaAddress> {
+        match &self.payload {
+            Payload::Transaction(tx) => tx
+                .essence()
+                .outputs()
+                .iter()
+                .map(|output| {
+                    let Output::SignatureLockedSingle(x) = output;
+                    x.address()
+                })
+                .collect(),
+            _ => vec![],
+        }
     }
+
     /// Gets the absolute value of the transaction.
-    pub fn value(&self) -> Value {
+    pub fn value(&self, account: &Account) -> Value {
         let amount = match &self.payload {
-            Payload::Transaction(tx) => tx.essence().outputs().iter().fold(0, |acc, output| {
-                let Output::SignatureLockedSingle(x) = output;
-                acc + x.amount().get()
-            }),
+            Payload::Transaction(tx) => {
+                let sent = !account.addresses().iter().any(|address| {
+                    address
+                        .outputs()
+                        .iter()
+                        .any(|o| o.message_id() == self.id())
+                });
+                tx.essence().outputs().iter().fold(0, |acc, output| {
+                    let Output::SignatureLockedSingle(x) = output;
+                    let address_belongs_to_account = account
+                        .addresses()
+                        .iter()
+                        .any(|a| a.address() == x.address());
+                    if sent {
+                        if address_belongs_to_account {
+                            acc
+                        } else {
+                            acc + x.amount().get()
+                        }
+                    } else if address_belongs_to_account {
+                        acc + x.amount().get()
+                    } else {
+                        acc
+                    }
+                })
+            }
             _ => 0,
         };
         Value::new(amount.try_into().unwrap(), ValueUnit::I)
