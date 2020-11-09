@@ -242,7 +242,9 @@ impl<'a> AccountSynchronizer<'a> {
         self.account.append_messages(
             new_messages
                 .iter()
-                .map(|(id, message)| Message::from_iota_message(*id, &message).unwrap())
+                .map(|(id, message)| {
+                    Message::from_iota_message(*id, self.account.addresses(), &message).unwrap()
+                })
                 .collect(),
         );
 
@@ -493,12 +495,13 @@ impl SyncedAccount {
         let message_id = client.post_message(&message).await?;
         let message = client.get_message().data(&message_id).await?;
 
-        account.append_messages(vec![Message::from_iota_message(message_id, &message)?]);
+        let message = Message::from_iota_message(message_id, account.addresses(), &message)?;
+        account.append_messages(vec![message.clone()]);
         crate::storage::with_adapter(&self.storage_path, |storage| {
             storage.set(account_id, serde_json::to_string(&account)?)
         })?;
 
-        Ok(Message::from_iota_message(message_id, &message)?)
+        Ok(message)
     }
 
     /// Retry messages.
