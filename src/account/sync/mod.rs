@@ -375,7 +375,7 @@ impl SyncedAccount {
 
         // select the input addresses and check if a remainder address is needed
         let (input_addresses, remainder_address) =
-            self.select_inputs(*transfer_obj.amount(), &mut account, transfer_obj.address())?;
+            self.select_inputs(*transfer_obj.amount(), &account, transfer_obj.address())?;
 
         let mut utxos = vec![];
         let mut output_paths = vec![];
