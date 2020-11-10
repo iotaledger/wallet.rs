@@ -288,6 +288,8 @@ impl<'a> AccountSynchronizer<'a> {
             deposit_address: self.account.latest_address().unwrap().clone(),
             is_empty,
             storage_path: self.storage_path,
+            addresses: self.account.addresses().clone(),
+            messages: self.account.messages().clone(),
         };
         Ok(synced_account)
     }
@@ -308,6 +310,12 @@ pub struct SyncedAccount {
     #[serde(rename = "isEmpty")]
     #[getset(get = "pub(crate)")]
     is_empty: bool,
+    /// The account messages.
+    #[getset(get = "pub")]
+    messages: Vec<Message>,
+    /// The account addresses.
+    #[getset(get = "pub")]
+    addresses: Vec<Address>,
     #[serde(skip)]
     storage_path: PathBuf,
 }
