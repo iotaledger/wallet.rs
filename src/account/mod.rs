@@ -283,20 +283,8 @@ impl Account {
             .filter(|message| {
                 if let Some(message_type) = message_type.clone() {
                     match message_type {
-                        // message of type "Received" if its id is part of any of the account addresses outputs
-                        MessageType::Received => self.addresses().iter().any(|address| {
-                            address
-                                .outputs()
-                                .iter()
-                                .any(|o| o.message_id() == message.id())
-                        }),
-                        // message of type "Sent" if its id isn't part of any of the account addresses outputs
-                        MessageType::Sent => !self.addresses().iter().any(|address| {
-                            address
-                                .outputs()
-                                .iter()
-                                .any(|o| o.message_id() == message.id())
-                        }),
+                        MessageType::Received => *message.incoming(),
+                        MessageType::Sent => !message.incoming(),
                         MessageType::Failed => !message.broadcasted(),
                         MessageType::Unconfirmed => !message.confirmed(),
                         MessageType::Value => message.value(&self).without_denomination() > 0,

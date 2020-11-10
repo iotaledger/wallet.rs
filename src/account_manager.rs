@@ -130,7 +130,10 @@ impl AccountManager {
                     rt.block_on(async move {
                         let client = crate::client::get_client(account.client_options());
                         let message = client.get_message().data(&message_id).await.unwrap();
-                        messages.push(Message::from_iota_message(message_id, &message).unwrap());
+                        messages.push(
+                            Message::from_iota_message(message_id, account.addresses(), &message)
+                                .unwrap(),
+                        );
                     });
                 },
             );
@@ -584,7 +587,7 @@ mod tests {
 
             let account = manager
                 .create_account(client_options)
-                .messages(vec![Message::from_iota_message(MessageId::new([0; 32]), &MessageBuilder::new()
+                .messages(vec![Message::from_iota_message(MessageId::new([0; 32]), &[], &MessageBuilder::new()
                     .with_parent1(MessageId::new([0; 32]))
                     .with_parent2(MessageId::new([0; 32]))
                     .with_payload(Payload::Indexation(Box::new(Indexation::new(

@@ -1,4 +1,7 @@
-use crate::{account::Account, address::IotaAddress};
+use crate::{
+    account::Account,
+    address::{Address, IotaAddress},
+};
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
 use iota::message::{
@@ -159,6 +162,8 @@ pub struct Message {
     pub(crate) confirmed: bool,
     /// Whether the transaction is broadcasted or not.
     pub(crate) broadcasted: bool,
+    /// Whether the message represents an incoming transaction or not.
+    pub(crate) incoming: bool,
 }
 
 impl Hash for Message {
@@ -188,7 +193,11 @@ impl PartialOrd for Message {
 }
 
 impl Message {
-    pub(crate) fn from_iota_message(id: MessageId, message: &IotaMessage) -> crate::Result<Self> {
+    pub(crate) fn from_iota_message(
+        id: MessageId,
+        account_addresses: &[Address],
+        message: &IotaMessage,
+    ) -> crate::Result<Self> {
         let message = Self {
             id,
             version: 1,
@@ -204,6 +213,9 @@ impl Message {
             nonce: message.nonce(),
             confirmed: false,
             broadcasted: true,
+            incoming: account_addresses
+                .iter()
+                .any(|address| address.outputs().iter().any(|o| o.message_id() == &id)),
         };
 
         Ok(message)
