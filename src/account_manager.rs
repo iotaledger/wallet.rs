@@ -151,20 +151,19 @@ impl AccountManager {
                 let storage_path_ = storage_path.clone();
                 if crate::is_stronghold_initialised(&storage_path_) {
                     runtime.block_on(async move {
-                        match AssertUnwindSafe(poll(storage_path_)).catch_unwind().await {
-                            Err(panic) => {
-                                let msg = if let Some(message) = panic.downcast_ref::<String>() {
-                                    format!("Internal error: {}", message)
-                                } else if let Some(message) = panic.downcast_ref::<&str>() {
-                                    format!("Internal error: {}", message)
-                                } else {
-                                    "Internal error".to_string()
-                                };
-                                let _error = crate::WalletError::UnknownError(msg);
-                                // when the error is dropped, the on_error event will be triggered
-                            }
-                            Ok(_) => {}
-                        };
+                        if let Err(panic) =
+                            AssertUnwindSafe(poll(storage_path_)).catch_unwind().await
+                        {
+                            let msg = if let Some(message) = panic.downcast_ref::<String>() {
+                                format!("Internal error: {}", message)
+                            } else if let Some(message) = panic.downcast_ref::<&str>() {
+                                format!("Internal error: {}", message)
+                            } else {
+                                "Internal error".to_string()
+                            };
+                            let _error = crate::WalletError::UnknownError(msg);
+                            // when the error is dropped, the on_error event will be triggered
+                        }
                     });
                 }
                 thread::sleep(interval);
