@@ -110,6 +110,9 @@ pub enum WalletError {
     /// Transfer amount can't be zero.
     #[error("transfer amount can't be zero")]
     ZeroAmount,
+    /// Account not found
+    #[error("account not found")]
+    AccountNotFound,
 }
 
 impl Drop for WalletError {

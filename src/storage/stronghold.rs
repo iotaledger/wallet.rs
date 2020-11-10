@@ -57,8 +57,15 @@ fn get_from_index(
         AccountIdentifier::Id(id) => index
             .iter()
             .find(|(acc_id, _)| acc_id == account_id)
-            .ok_or_else(|| anyhow::anyhow!("account not found"))?,
-        AccountIdentifier::Index(pos) => &index[*pos as usize],
+            .ok_or_else(|| crate::WalletError::AccountNotFound)?,
+        AccountIdentifier::Index(pos) => {
+            let pos = *pos as usize;
+            if index.len() > pos {
+                &index[pos]
+            } else {
+                return Err(crate::WalletError::AccountNotFound);
+            }
+        }
     };
     Ok(*stronghold_id)
 }
@@ -68,7 +75,9 @@ impl StorageAdapter for StrongholdStorageAdapter {
         let account = crate::with_stronghold_from_path(&self.path, |stronghold| {
             let (_, index) = get_account_index(&stronghold)?;
             let stronghold_id = get_from_index(&index, &account_id)?;
-            stronghold.record_read(&stronghold_id)
+            stronghold
+                .record_read(&stronghold_id)
+                .map_err(|e| crate::WalletError::GenericError(e))
         })?;
         Ok(account)
     }
