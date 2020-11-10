@@ -141,7 +141,7 @@ impl AccountManager {
     }
 
     /// Starts the polling mechanism.
-    pub fn start_polling(&self) -> thread::JoinHandle<()> {
+    pub fn start_polling(&self, interval_ms: u64) -> thread::JoinHandle<()> {
         let storage_path = self.storage_path.clone();
         thread::spawn(move || {
             let mut runtime = tokio::runtime::Runtime::new().unwrap();
@@ -150,7 +150,7 @@ impl AccountManager {
                 runtime.block_on(async move {
                     let _ = poll(storage_path_).await;
                 });
-                thread::sleep(Duration::from_secs(30));
+                thread::sleep(Duration::from_millis(interval_ms));
             }
         })
     }
