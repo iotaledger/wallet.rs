@@ -197,7 +197,10 @@ pub struct Account {
 impl Account {
     /// Returns the most recent address of the account.
     pub fn latest_address(&self) -> Option<&Address> {
-        self.addresses.iter().max_by_key(|a| a.key_index())
+        self.addresses
+            .iter()
+            .filter(|a| !a.internal())
+            .max_by_key(|a| a.key_index())
     }
 
     /// Returns the builder to setup the process to synchronize this account with the Tangle.
@@ -232,7 +235,6 @@ impl Account {
                 };
                 acc + val
             });
-        println!("total: {}, spent: {}", total_balance, spent);
         total_balance - (spent as u64)
     }
 
@@ -313,7 +315,7 @@ impl Account {
 
     /// Gets a new unused address and links it to this account.
     pub async fn generate_address(&mut self) -> crate::Result<Address> {
-        let address = crate::address::get_new_address(&self, false).await?;
+        let address = crate::address::get_new_address(&self)?;
         self.addresses.push(address.clone());
         crate::storage::with_adapter(&self.storage_path, |storage| {
             storage.set(self.id.into(), serde_json::to_string(self)?)

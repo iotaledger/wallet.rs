@@ -90,6 +90,12 @@ impl AddressBuilder {
         self
     }
 
+    /// Sets the `internal` flag.
+    pub fn internal(mut self, internal: bool) -> Self {
+        self.internal = internal;
+        self
+    }
+
     /// Builds the address.
     pub fn build(self) -> crate::Result<Address> {
         let iota_address = self
@@ -174,43 +180,56 @@ pub(crate) fn get_iota_address(
     })
 }
 
-/// Gets an unused address for the given account.
-pub(crate) async fn get_new_address(account: &Account, internal: bool) -> crate::Result<Address> {
-    let key_index = account.addresses().len();
+/// Gets an unused public address for the given account.
+pub(crate) fn get_new_address(account: &Account) -> crate::Result<Address> {
+    let key_index = account.addresses().iter().filter(|a| !a.internal()).count();
     let iota_address = get_iota_address(
         account.storage_path(),
         account.id(),
         *account.index(),
         key_index,
-        internal,
+        false,
     )?;
-    let balance = get_balance(&account, &iota_address).await?;
     let address = Address {
         address: iota_address,
-        balance,
+        balance: 0,
         key_index,
-        internal,
+        internal: false,
+        outputs: vec![],
+    };
+    Ok(address)
+}
+
+/// Gets an unused change address for the given account and address.
+pub(crate) fn get_new_change_address(
+    account: &Account,
+    address: &Address,
+) -> crate::Result<Address> {
+    let key_index = *address.key_index();
+    let iota_address = get_iota_address(
+        account.storage_path(),
+        account.id(),
+        *account.index(),
+        key_index,
+        true,
+    )?;
+    let address = Address {
+        address: iota_address,
+        balance: 0,
+        key_index,
+        internal: true,
         outputs: vec![],
     };
     Ok(address)
 }
 
 /// Batch address generation.
-pub(crate) async fn get_addresses(
-    account: &Account,
-    count: usize,
-    internal: bool,
-) -> crate::Result<Vec<Address>> {
+pub(crate) fn get_addresses(account: &Account, count: usize) -> crate::Result<Vec<Address>> {
     let mut addresses = vec![];
     for i in 0..count {
-        addresses.push(get_new_address(&account, internal).await?);
+        addresses.push(get_new_address(&account)?);
     }
     Ok(addresses)
-}
-async fn get_balance(account: &Account, address: &IotaAddress) -> crate::Result<u64> {
-    let client = crate::client::get_client(account.client_options());
-    let amount = client.get_address().balance(&address).await?;
-    Ok(amount)
 }
 
 pub(crate) fn is_unspent(account: &Account, address: &IotaAddress) -> bool {
