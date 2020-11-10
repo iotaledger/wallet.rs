@@ -20,6 +20,7 @@ rusqlite = { version = "0.23", features = ["bundled"], optional = true }
 slip10 = "0.4"
 bech32 = "0.7"
 hex = "0.4"
+futures = "0.3"
 
 # stronghold
 iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", branch = "feat/refactoring", optional = true }

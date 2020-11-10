@@ -134,6 +134,14 @@ pub(crate) fn remove_stronghold(stronghold_path: PathBuf) {
     stronghold_map.remove(&stronghold_path);
 }
 
+pub(crate) fn is_stronghold_initialised(path: &PathBuf) -> bool {
+    let stronghold_map = STRONGHOLD_INSTANCE
+        .get_or_init(Default::default)
+        .lock()
+        .unwrap();
+    stronghold_map.contains_key(path)
+}
+
 pub(crate) fn with_stronghold_from_path<T, F: FnOnce(&Stronghold) -> T>(
     path: &PathBuf,
     cb: F,

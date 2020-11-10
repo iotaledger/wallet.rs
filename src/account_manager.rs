@@ -9,10 +9,12 @@ use crate::storage::StorageAdapter;
 
 use std::convert::TryInto;
 use std::fs;
+use std::panic::AssertUnwindSafe;
 use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::Duration;
 
+use futures::FutureExt;
 use iota::message::prelude::MessageId;
 use stronghold::Stronghold;
 
@@ -147,9 +149,24 @@ impl AccountManager {
             let mut runtime = tokio::runtime::Runtime::new().unwrap();
             loop {
                 let storage_path_ = storage_path.clone();
-                runtime.block_on(async move {
-                    let _ = poll(storage_path_).await;
-                });
+                if crate::is_stronghold_initialised(&storage_path_) {
+                    runtime.block_on(async move {
+                        match AssertUnwindSafe(poll(storage_path_)).catch_unwind().await {
+                            Err(panic) => {
+                                let msg = if let Some(message) = panic.downcast_ref::<String>() {
+                                    format!("Internal error: {}", message)
+                                } else if let Some(message) = panic.downcast_ref::<&str>() {
+                                    format!("Internal error: {}", message)
+                                } else {
+                                    "Internal error".to_string()
+                                };
+                                let _error = crate::WalletError::UnknownError(msg);
+                                // when the error is dropped, the on_error event will be triggered
+                            }
+                            Ok(_) => {}
+                        };
+                    });
+                }
                 thread::sleep(Duration::from_millis(interval_ms));
             }
         })
