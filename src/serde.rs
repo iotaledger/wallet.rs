@@ -167,6 +167,7 @@ impl serde::Serialize for crate::WalletError {
                 serialize_variant(serializer, "LatestAccountIsEmpty", None)
             }
             Self::ZeroAmount => serialize_variant(serializer, "ZeroAmount", None),
+            Self::AccountNotFound => serialize_variant(serializer, "AccountNotFound", None),
         }
     }
 }
