@@ -77,7 +77,7 @@ impl StorageAdapter for StrongholdStorageAdapter {
             let stronghold_id = get_from_index(&index, &account_id)?;
             stronghold
                 .record_read(&stronghold_id)
-                .map_err(|e| crate::WalletError::GenericError(e))
+                .map_err(crate::WalletError::GenericError)
         })?;
         Ok(account)
     }
