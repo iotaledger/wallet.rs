@@ -135,7 +135,7 @@ async fn subscribe_to_topic(
 
 /// Monitor account addresses for balance changes.
 pub async fn monitor_account_addresses_balance(account: &Account) -> crate::Result<()> {
-  for address in account.addresses() {
+  for address in account.addresses().iter().filter(|a| !a.internal()) {
     monitor_address_balance(&account, &address).await?;
   }
   Ok(())

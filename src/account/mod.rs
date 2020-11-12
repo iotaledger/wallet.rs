@@ -320,6 +320,7 @@ impl Account {
         crate::storage::with_adapter(&self.storage_path, |storage| {
             storage.set(self.id.into(), serde_json::to_string(self)?)
         })?;
+        crate::monitor::monitor_address_balance(&self, &address).await?;
         Ok(address)
     }
 

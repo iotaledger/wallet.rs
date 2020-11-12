@@ -249,14 +249,19 @@ impl<'a> AccountSynchronizer<'a> {
         }
 
         sync_transactions(self.account, &new_messages).await?;
-        self.account.append_messages(
-            new_messages
-                .iter()
-                .map(|(id, message)| {
-                    Message::from_iota_message(*id, self.account.addresses(), &message).unwrap()
-                })
-                .collect(),
-        );
+        let new_messages: Vec<Message> = new_messages
+            .iter()
+            .map(|(id, message)| {
+                Message::from_iota_message(*id, self.account.addresses(), &message).unwrap()
+            })
+            .collect();
+        for message in new_messages.iter() {
+            if !message.confirmed() {
+                crate::monitor::monitor_confirmation_state_change(&self.account, message.id())
+                    .await?;
+            }
+        }
+        self.account.append_messages(new_messages);
 
         let mut addresses_to_save = vec![];
         let mut ignored_addresses = vec![];
@@ -283,6 +288,9 @@ impl<'a> AccountSynchronizer<'a> {
                 addresses_to_save.push(found_address);
             }
             previous_address_is_unused = address_is_unused;
+        }
+        for address in addresses_to_save.iter().filter(|a| !a.internal()) {
+            crate::monitor::monitor_address_balance(&self.account, &address).await?;
         }
         self.account.append_addresses(addresses_to_save);
 
@@ -529,6 +537,8 @@ impl SyncedAccount {
         crate::storage::with_adapter(&self.storage_path, |storage| {
             storage.set(account_id, serde_json::to_string(&account)?)
         })?;
+
+        crate::monitor::monitor_confirmation_state_change(&account, &message_id).await?;
 
         Ok(message)
     }

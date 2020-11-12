@@ -68,6 +68,20 @@ impl AccountManager {
         Ok(instance)
     }
 
+    /// Starts monitoring the accounts with the node's mqtt topics.
+    pub async fn start_monitoring(&self) -> crate::Result<()> {
+        let accounts =
+            crate::storage::with_adapter(&self.storage_path, |storage| storage.get_all())?;
+        let accounts = crate::storage::parse_accounts(&accounts)?;
+        for account in accounts {
+            crate::monitor::monitor_account_addresses_balance(&account).await?;
+            for message in account.list_messages(0, 0, Some(MessageType::Unconfirmed)) {
+                crate::monitor::monitor_confirmation_state_change(&account, message.id()).await?;
+            }
+        }
+        Ok(())
+    }
+
     /// Sets the stronghold password.
     pub fn set_stronghold_password<P: AsRef<str>>(&self, password: P) -> crate::Result<()> {
         let stronghold_path = self
