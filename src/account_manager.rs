@@ -500,14 +500,9 @@ async fn reattach(
         Err(crate::WalletError::MessageAboveMaxDepth)
     } else {
         let client = crate::client::get_client(account.client_options());
-        let is_confirmed = *client
-            .is_confirmed(&[*message_id])?
-            .get(message.id())
-            .ok_or_else(|| {
-                crate::WalletError::UnexpectedResponse(
-                    "invalid `is_confirmed` response".to_string(),
-                )
-            })?;
+        let metadata = client.get_message().metadata(&message_id).await?;
+        let is_confirmed =
+            !(metadata.should_promote.unwrap_or(true) || metadata.should_reattach.unwrap_or(true));
         if is_confirmed {
             // message is already confirmed; do nothing
             message.set_confirmed(true);

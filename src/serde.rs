@@ -168,6 +168,7 @@ impl serde::Serialize for crate::WalletError {
             }
             Self::ZeroAmount => serialize_variant(serializer, "ZeroAmount", None),
             Self::AccountNotFound => serialize_variant(serializer, "AccountNotFound", None),
+            Self::MqttError(e) => serialize_variant(serializer, "MqttError", Some(&e.to_string())),
         }
     }
 }

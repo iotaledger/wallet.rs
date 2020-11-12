@@ -113,6 +113,9 @@ pub enum WalletError {
     /// Account not found
     #[error("account not found")]
     AccountNotFound,
+    /// mqtt client error
+    #[error("mqtt client error: `{0}`")]
+    MqttError(#[from] rumqttc::ClientError),
 }
 
 impl Drop for WalletError {

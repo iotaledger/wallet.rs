@@ -10,10 +10,10 @@ use std::sync::{Arc, Mutex};
 
 type ClientInstanceMap = Arc<Mutex<HashMap<ClientOptions, Arc<Client>>>>;
 
-/// Gets the balance change listeners array.
+/// Gets the client instances map.
 fn instances() -> &'static ClientInstanceMap {
-    static LISTENERS: Lazy<ClientInstanceMap> = Lazy::new(Default::default);
-    &LISTENERS
+    static INSTANCES: Lazy<ClientInstanceMap> = Lazy::new(Default::default);
+    &INSTANCES
 }
 
 pub(crate) fn get_client(options: &ClientOptions) -> Arc<Client> {

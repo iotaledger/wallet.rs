@@ -161,16 +161,11 @@ async fn sync_transactions<'a>(
         .filter(|message| !message.confirmed())
         .collect();
     let client = get_client(account.client_options());
-    let unconfirmed_transaction_ids: Vec<MessageId> = unconfirmed_messages
-        .iter()
-        .map(|message| *message.id())
-        .collect();
-    let confirmed_states = client.is_confirmed(&unconfirmed_transaction_ids[..])?;
-    for (message, confirmed) in unconfirmed_messages
-        .iter_mut()
-        .zip(confirmed_states.values())
-    {
-        if *confirmed {
+    for message in unconfirmed_messages.iter_mut() {
+        let metadata = client.get_message().metadata(message.id()).await?;
+        let confirmed =
+            !(metadata.should_promote.unwrap_or(true) || metadata.should_reattach.unwrap_or(true));
+        if confirmed {
             message.set_confirmed(true);
         }
     }
