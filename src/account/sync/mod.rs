@@ -42,7 +42,8 @@ async fn sync_addresses(
     let mut address_index = address_index;
     let account_index = *account.index();
 
-    let client = get_client(account.client_options());
+    let client = crate::client::get_client(account.client_options());
+    let client = client.read().unwrap();
 
     let mut generated_addresses = vec![];
     let mut found_messages = vec![];
@@ -161,6 +162,7 @@ async fn sync_transactions<'a>(
         .filter(|message| !message.confirmed())
         .collect();
     let client = get_client(account.client_options());
+    let client = client.read().unwrap();
     for message in unconfirmed_messages.iter_mut() {
         let metadata = client.get_message().metadata(message.id()).await?;
         let confirmed =
@@ -222,7 +224,8 @@ impl<'a> AccountSynchronizer<'a> {
     /// The account syncing process ensures that the latest metadata (balance, transactions)
     /// associated with an account is fetched from the tangle and is stored locally.
     pub async fn execute(self) -> crate::Result<SyncedAccount> {
-        let client = get_client(self.account.client_options());
+        let options = self.account.client_options().clone();
+        let client = get_client(&options);
 
         let (found_addresses, found_messages) = sync_addresses(
             &self.storage_path,
@@ -257,8 +260,9 @@ impl<'a> AccountSynchronizer<'a> {
             .collect();
         for message in new_messages.iter() {
             if !message.confirmed() {
-                crate::monitor::monitor_confirmation_state_change(&self.account, message.id())
-                    .await?;
+                // ignore errors because we fallback to the polling system
+                let _ =
+                    crate::monitor::monitor_confirmation_state_change(&self.account, message.id());
             }
         }
         self.account.append_messages(new_messages);
@@ -290,7 +294,8 @@ impl<'a> AccountSynchronizer<'a> {
             previous_address_is_unused = address_is_unused;
         }
         for address in addresses_to_save.iter().filter(|a| !a.internal()) {
-            crate::monitor::monitor_address_balance(&self.account, &address).await?;
+            // ignore errors because we fallback to the polling system
+            let _ = crate::monitor::monitor_address_balance(&self.account, &address);
         }
         self.account.append_addresses(addresses_to_save);
 
@@ -384,7 +389,8 @@ impl SyncedAccount {
         let value: u64 = *transfer_obj.amount();
         let account_id: AccountIdentifier = self.account_id.clone().into();
         let mut account = crate::storage::get_account(&self.storage_path, account_id)?;
-        let client = get_client(account.client_options());
+        let client = crate::client::get_client(account.client_options());
+        let client = client.read().unwrap();
 
         // select the input addresses and check if a remainder address is needed
         let (input_addresses, remainder_address) =
@@ -538,7 +544,8 @@ impl SyncedAccount {
             storage.set(account_id, serde_json::to_string(&account)?)
         })?;
 
-        crate::monitor::monitor_confirmation_state_change(&account, &message_id).await?;
+        // ignore errors because we fallback to the polling system
+        let _ = crate::monitor::monitor_confirmation_state_change(&account, &message_id);
 
         Ok(message)
     }
@@ -562,8 +569,7 @@ mod tests {
     rusty_fork_test! {
         #[test]
         fn account_sync() {
-            let mut runtime = tokio::runtime::Runtime::new().unwrap();
-            runtime.block_on(async move {
+            crate::block_on(async move {
                 let manager = crate::test_utils::get_account_manager();
                 let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
                     .unwrap()
