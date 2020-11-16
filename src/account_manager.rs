@@ -15,6 +15,7 @@ use std::thread;
 use std::time::Duration;
 
 use futures::FutureExt;
+use getset::Getters;
 use iota::message::prelude::MessageId;
 use stronghold::Stronghold;
 
@@ -23,8 +24,13 @@ const DEFAULT_STORAGE_PATH: &str = "./example-database";
 /// The account manager.
 ///
 /// Used to manage multiple accounts.
+#[derive(Getters)]
 pub struct AccountManager {
+    /// the path to the storage.
+    #[getset(get = "pub")]
     storage_path: PathBuf,
+    /// the polling interval.
+    #[getset(get = "pub", set = "pub")]
     polling_interval: Duration,
     started_monitoring: bool,
 }
@@ -70,12 +76,6 @@ impl AccountManager {
             started_monitoring: false,
         };
         Ok(instance)
-    }
-
-    /// Sets the polling interval. Defaults to 30 seconds.
-    pub fn polling_interval(mut self, interval: Duration) -> Self {
-        self.polling_interval = interval;
-        self
     }
 
     /// Starts monitoring the accounts with the node's mqtt topics.
