@@ -15,7 +15,7 @@ use std::thread;
 use std::time::Duration;
 
 use futures::FutureExt;
-use getset::Getters;
+use getset::{Getters, Setters};
 use iota::message::prelude::MessageId;
 use stronghold::Stronghold;
 
@@ -24,7 +24,7 @@ const DEFAULT_STORAGE_PATH: &str = "./example-database";
 /// The account manager.
 ///
 /// Used to manage multiple accounts.
-#[derive(Getters)]
+#[derive(Getters, Setters)]
 pub struct AccountManager {
     /// the path to the storage.
     #[getset(get = "pub")]
@@ -576,8 +576,8 @@ mod tests {
                     .with_parent2(MessageId::new([0; 32]))
                     .with_payload(Payload::Indexation(Box::new(Indexation::new(
                         "".to_string(),
-                        Box::new([0; 16]),
-                    ))))
+                        &[0; 16],
+                    ).unwrap())))
                     .finish()
                     .unwrap()).unwrap()])
                 .initialise().unwrap();
