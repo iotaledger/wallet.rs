@@ -109,18 +109,22 @@ impl<'a> AccountInitialiser<'a> {
 
     /// Initialises the account.
     pub fn initialise(self) -> crate::Result<Account> {
-        let alias = self.alias.unwrap_or_else(|| "".to_string());
+        let accounts =
+            crate::storage::with_adapter(self.storage_path, |storage| storage.get_all())?;
+        let alias = self
+            .alias
+            .unwrap_or_else(|| format!("Account {}", accounts.len()));
         let created_at = self.created_at.unwrap_or_else(chrono::Utc::now);
         let created_at_timestamp: u128 = created_at.timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
         let mnemonic = self.mnemonic;
 
-        let accounts =
-            crate::storage::with_adapter(self.storage_path, |storage| storage.get_all())?;
-
-        if let Some(latest_account) = accounts.last() {
-            let latest_account: Account = serde_json::from_str(&latest_account)?;
-            if latest_account.messages().is_empty() && latest_account.total_balance() == 0 {
-                return Err(crate::WalletError::LatestAccountIsEmpty);
+        // check for empty latest account only when not skipping persistance (account discovery process)
+        if !self.skip_persistance {
+            if let Some(latest_account) = accounts.last() {
+                let latest_account: Account = serde_json::from_str(&latest_account)?;
+                if latest_account.messages().is_empty() && latest_account.total_balance() == 0 {
+                    return Err(crate::WalletError::LatestAccountIsEmpty);
+                }
             }
         }
 
@@ -144,6 +148,7 @@ impl<'a> AccountInitialiser<'a> {
 
         let account = Account {
             id: *id,
+            index: accounts.len(),
             alias,
             created_at,
             messages: self.messages,
@@ -166,6 +171,8 @@ impl<'a> AccountInitialiser<'a> {
 pub struct Account {
     /// The account identifier.
     id: [u8; 32],
+    /// The account index
+    index: usize,
     /// The account alias.
     alias: String,
     /// Time of account creation.
@@ -190,7 +197,10 @@ pub struct Account {
 impl Account {
     /// Returns the most recent address of the account.
     pub fn latest_address(&self) -> Option<&Address> {
-        self.addresses.iter().max_by_key(|a| a.key_index())
+        self.addresses
+            .iter()
+            .filter(|a| !a.internal())
+            .max_by_key(|a| a.key_index())
     }
     /// Returns the builder to setup the process to synchronize this account with the Tangle.
     pub fn sync(&'_ mut self) -> AccountSynchronizer<'_> {
@@ -213,14 +223,17 @@ impl Account {
     /// the available balance should be (50i-30i) = 20i.
     pub fn available_balance(&self) -> u64 {
         let total_balance = self.total_balance();
-        let spent = self.messages.iter().fold(0, |acc, message| {
-            let val = if *message.confirmed() {
-                0
-            } else {
-                message.value().without_denomination()
-            };
-            acc + val
-        });
+        let spent = self
+            .list_messages(0, 0, Some(MessageType::Sent))
+            .iter()
+            .fold(0, |acc, message| {
+                let val = if *message.confirmed() {
+                    0
+                } else {
+                    message.value(&self).without_denomination()
+                };
+                acc + val
+            });
         total_balance - (spent as u64)
     }
 
@@ -265,22 +278,28 @@ impl Account {
         from: usize,
         message_type: Option<MessageType>,
     ) -> Vec<&Message> {
-        self.messages
+        let messages_iter = self
+            .messages
             .iter()
             .filter(|message| {
                 if let Some(message_type) = message_type.clone() {
                     match message_type {
-                        MessageType::Received => self.addresses.contains(&message.address()),
-                        MessageType::Sent => !self.addresses.contains(&message.address()),
+                        MessageType::Received => *message.incoming(),
+                        MessageType::Sent => !message.incoming(),
                         MessageType::Failed => !message.broadcasted(),
                         MessageType::Unconfirmed => !message.confirmed(),
-                        MessageType::Value => message.value().without_denomination() > 0,
+                        MessageType::Value => message.value(&self).without_denomination() > 0,
                     }
                 } else {
                     true
                 }
             })
-            .collect()
+            .skip(from);
+        if count == 0 {
+            messages_iter.collect()
+        } else {
+            messages_iter.take(count).collect()
+        }
     }
 
     /// Gets the addresses linked to this account.
@@ -295,7 +314,7 @@ impl Account {
 
     /// Gets a new unused address and links it to this account.
     pub async fn generate_address(&mut self) -> crate::Result<Address> {
-        let address = crate::address::get_new_address(&self, false).await?;
+        let address = crate::address::get_new_address(&self)?;
         self.addresses.push(address.clone());
         crate::storage::with_adapter(&self.storage_path, |storage| {
             storage.set(self.id.into(), serde_json::to_string(self)?)
@@ -307,21 +326,22 @@ impl Account {
         self.messages.extend(messages.iter().cloned());
     }
 
+    pub(crate) fn append_addresses(&mut self, addresses: Vec<Address>) {
+        addresses.into_iter().for_each(|address| {
+            match self.addresses.iter().position(|a| a == &address) {
+                Some(index) => {
+                    self.addresses[index] = address;
+                }
+                None => {
+                    self.addresses.push(address);
+                }
+            }
+        });
+    }
+
     /// Gets a message with the given id associated with this account.
     pub fn get_message(&self, message_id: &MessageId) -> Option<&Message> {
         self.messages.iter().find(|tx| tx.id() == message_id)
-    }
-
-    /// Gets the account index.
-    pub(crate) fn index(&self) -> crate::Result<usize> {
-        let accounts =
-            crate::storage::with_adapter(&self.storage_path, |storage| storage.get_all())?;
-        let account_json = serde_json::to_string(&self)?;
-        let index = accounts
-            .iter()
-            .position(|acc| acc == &account_json)
-            .unwrap();
-        Ok(index)
     }
 }
 

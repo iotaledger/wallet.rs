@@ -9,10 +9,12 @@ use crate::storage::StorageAdapter;
 
 use std::convert::TryInto;
 use std::fs;
+use std::panic::AssertUnwindSafe;
 use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::Duration;
 
+use futures::FutureExt;
 use iota::message::prelude::MessageId;
 use stronghold::Stronghold;
 
@@ -134,7 +136,10 @@ impl AccountManager {
                     rt.block_on(async move {
                         let client = crate::client::get_client(account.client_options());
                         let message = client.get_message().data(&message_id).await.unwrap();
-                        messages.push(Message::from_iota_message(message_id, &message).unwrap());
+                        messages.push(
+                            Message::from_iota_message(message_id, account.addresses(), &message)
+                                .unwrap(),
+                        );
                     });
                 },
             );
@@ -142,14 +147,32 @@ impl AccountManager {
     }
 
     /// Starts the polling mechanism.
-    pub fn start_polling(&self) {
+    pub fn start_polling(&self, interval: Duration) -> thread::JoinHandle<()> {
         let storage_path = self.storage_path.clone();
-        thread::spawn(move || async move {
+        thread::spawn(move || {
+            let mut runtime = tokio::runtime::Runtime::new().unwrap();
             loop {
-                let _ = poll(storage_path.clone());
-                thread::sleep(Duration::from_secs(5));
+                let storage_path_ = storage_path.clone();
+                if crate::is_stronghold_initialised(&storage_path_) {
+                    runtime.block_on(async move {
+                        if let Err(panic) =
+                            AssertUnwindSafe(poll(storage_path_)).catch_unwind().await
+                        {
+                            let msg = if let Some(message) = panic.downcast_ref::<String>() {
+                                format!("Internal error: {}", message)
+                            } else if let Some(message) = panic.downcast_ref::<&str>() {
+                                format!("Internal error: {}", message)
+                            } else {
+                                "Internal error".to_string()
+                            };
+                            let _error = crate::WalletError::UnknownError(msg);
+                            // when the error is dropped, the on_error event will be triggered
+                        }
+                    });
+                }
+                thread::sleep(interval);
             }
-        });
+        })
     }
 
     /// Adds a new account.
@@ -174,7 +197,7 @@ impl AccountManager {
 
     /// Syncs all accounts.
     pub async fn sync_accounts(&self) -> crate::Result<Vec<SyncedAccount>> {
-        sync_accounts(&self.storage_path).await
+        sync_accounts(&self.storage_path, None).await
     }
 
     /// Updates the account alias.
@@ -206,7 +229,7 @@ impl AccountManager {
             .clone();
         let from_synchronized = from_account.sync().execute().await?;
         from_synchronized
-            .transfer(Transfer::new(to_address, amount))
+            .transfer(Transfer::new(to_address.address().clone(), amount))
             .await
     }
 
@@ -320,18 +343,17 @@ impl AccountManager {
     }
 }
 
-fn poll(storage_path: PathBuf) -> crate::Result<()> {
+async fn poll(storage_path: PathBuf) -> crate::Result<()> {
     let accounts_before_sync =
         crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
     let accounts_before_sync = crate::storage::parse_accounts(&accounts_before_sync)?;
-    let mut runtime = tokio::runtime::Runtime::new()?;
-    runtime.block_on(sync_accounts(&storage_path))?;
+    sync_accounts(&storage_path, Some(0)).await?;
     let accounts_after_sync =
         crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
     let accounts_after_sync = crate::storage::parse_accounts(&accounts_after_sync)?;
 
     // compare accounts to check for balance changes and new messages
-    for account_before_sync in &accounts_after_sync {
+    for account_before_sync in &accounts_before_sync {
         let account_after_sync = accounts_after_sync
             .iter()
             .find(|account| account.id() == account_before_sync.id())
@@ -381,7 +403,7 @@ fn poll(storage_path: PathBuf) -> crate::Result<()> {
             }
         });
     }
-    let reattached = runtime.block_on(reattach_unconfirmed_transactions(&storage_path))?;
+    let reattached = reattach_unconfirmed_transactions(&storage_path).await?;
     reattached.iter().for_each(|(message, account_id)| {
         emit_transaction_event(TransactionEventType::Reattachment, account_id, message.id());
     });
@@ -399,10 +421,10 @@ async fn discover_accounts(
             .initialise()?;
         let synced_account = account.sync().skip_persistance().execute().await?;
         let is_empty = *synced_account.is_empty();
-        synced_accounts.push(synced_account);
         if is_empty {
             break;
         } else {
+            synced_accounts.push(synced_account);
             crate::storage::with_adapter(&storage_path, |storage| {
                 storage.set(account.id().into(), serde_json::to_string(&account)?)
             })?;
@@ -411,14 +433,21 @@ async fn discover_accounts(
     Ok(synced_accounts)
 }
 
-async fn sync_accounts<'a>(storage_path: &PathBuf) -> crate::Result<Vec<SyncedAccount>> {
+async fn sync_accounts<'a>(
+    storage_path: &PathBuf,
+    address_index: Option<usize>,
+) -> crate::Result<Vec<SyncedAccount>> {
     let accounts = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
     let mut synced_accounts = vec![];
     let mut last_account = None;
     for account_str in accounts {
         let mut account: Account = serde_json::from_str(&account_str)?;
         account.set_storage_path(storage_path.clone());
-        let synced_account = account.sync().execute().await?;
+        let mut sync = account.sync();
+        if let Some(index) = address_index {
+            sync = sync.address_index(index);
+        }
+        let synced_account = sync.execute().await?;
         last_account = Some(account);
         synced_accounts.push(synced_account);
     }
@@ -563,11 +592,9 @@ mod tests {
             .expect("invalid node URL")
             .build();
 
-        let account = manager
-            .create_account(client_options)
-            .messages(vec![Message::from_iota_message(
-                MessageId::new([0; 32]),
-                &MessageBuilder::new()
+            let account = manager
+                .create_account(client_options)
+                .messages(vec![Message::from_iota_message(MessageId::new([0; 32]), &[], &MessageBuilder::new()
                     .with_parent1(MessageId::new([0; 32]))
                     .with_parent2(MessageId::new([0; 32]))
                     .with_payload(Payload::Indexation(Box::new(Indexation::new(
@@ -593,16 +620,17 @@ mod tests {
             .expect("invalid node URL")
             .build();
 
-        let account = manager
-            .create_account(client_options)
-            .addresses(vec![AddressBuilder::new()
-                .balance(5)
-                .key_index(0)
-                .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
-                .build()
-                .unwrap()])
-            .initialise()
-            .unwrap();
+            let account = manager
+                .create_account(client_options)
+                .addresses(vec![AddressBuilder::new()
+                    .balance(5)
+                    .key_index(0)
+                    .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
+                    .outputs(vec![])
+                    .build()
+                    .unwrap()])
+                .initialise()
+                .unwrap();
 
         let remove_response = manager.remove_account(account.id().into());
         assert!(remove_response.is_err());

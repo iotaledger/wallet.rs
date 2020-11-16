@@ -1,4 +1,7 @@
-use crate::address::Address;
+use crate::{
+    account::Account,
+    address::{Address, IotaAddress},
+};
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
 use iota::message::{
@@ -48,7 +51,8 @@ pub struct Transfer {
     /// The transfer value.
     amount: u64,
     /// The transfer address.
-    address: Address,
+    #[serde(with = "crate::serde::iota_address_serde")]
+    address: IotaAddress,
     /// (Optional) transfer data.
     #[getset(set = "pub")]
     data: Option<String>,
@@ -56,7 +60,7 @@ pub struct Transfer {
 
 impl Transfer {
     /// Initialises a new transfer to the given address.
-    pub fn new(address: Address, amount: u64) -> Self {
+    pub fn new(address: IotaAddress, amount: u64) -> Self {
         Self {
             address,
             amount,
@@ -135,12 +139,15 @@ impl Value {
 #[getset(get = "pub", set = "pub(crate)")]
 pub struct Message {
     /// The message identifier.
+    #[serde(with = "crate::serde::message_id_serde")]
     pub(crate) id: MessageId,
     /// The message version.
     pub(crate) version: u64,
     /// Message id of the first message this message refers to.
+    #[serde(with = "crate::serde::message_id_serde")]
     pub(crate) trunk: MessageId,
     /// Message id of the second message this message refers to.
+    #[serde(with = "crate::serde::message_id_serde")]
     pub(crate) branch: MessageId,
     /// Length of the payload.
     #[serde(rename = "payloadLength")]
@@ -155,6 +162,8 @@ pub struct Message {
     pub(crate) confirmed: bool,
     /// Whether the transaction is broadcasted or not.
     pub(crate) broadcasted: bool,
+    /// Whether the message represents an incoming transaction or not.
+    pub(crate) incoming: bool,
 }
 
 impl Hash for Message {
@@ -184,7 +193,11 @@ impl PartialOrd for Message {
 }
 
 impl Message {
-    pub(crate) fn from_iota_message(id: MessageId, message: &IotaMessage) -> crate::Result<Self> {
+    pub(crate) fn from_iota_message(
+        id: MessageId,
+        account_addresses: &[Address],
+        message: &IotaMessage,
+    ) -> crate::Result<Self> {
         let message = Self {
             id,
             version: 1,
@@ -200,6 +213,9 @@ impl Message {
             nonce: message.nonce(),
             confirmed: false,
             broadcasted: true,
+            incoming: account_addresses
+                .iter()
+                .any(|address| address.outputs().iter().any(|o| o.message_id() == &id)),
         };
 
         Ok(message)
@@ -213,17 +229,51 @@ impl Message {
             && current_timestamp - attachment_timestamp < 11 * 60 * 1000
     }
 
-    /// The message's address.
-    pub fn address(&self) -> &Address {
-        unimplemented!()
+    /// The message's addresses.
+    pub fn addresses(&self) -> Vec<&IotaAddress> {
+        match &self.payload {
+            Payload::Transaction(tx) => tx
+                .essence()
+                .outputs()
+                .iter()
+                .map(|output| {
+                    let Output::SignatureLockedSingle(x) = output;
+                    x.address()
+                })
+                .collect(),
+            _ => vec![],
+        }
     }
+
     /// Gets the absolute value of the transaction.
-    pub fn value(&self) -> Value {
+    pub fn value(&self, account: &Account) -> Value {
         let amount = match &self.payload {
-            Payload::Transaction(tx) => tx.essence().outputs().iter().fold(0, |acc, output| {
-                let Output::SignatureLockedSingle(x) = output;
-                acc + x.amount().get()
-            }),
+            Payload::Transaction(tx) => {
+                let sent = !account.addresses().iter().any(|address| {
+                    address
+                        .outputs()
+                        .iter()
+                        .any(|o| o.message_id() == self.id())
+                });
+                tx.essence().outputs().iter().fold(0, |acc, output| {
+                    let Output::SignatureLockedSingle(x) = output;
+                    let address_belongs_to_account = account
+                        .addresses()
+                        .iter()
+                        .any(|a| a.address() == x.address());
+                    if sent {
+                        if address_belongs_to_account {
+                            acc
+                        } else {
+                            acc + x.amount().get()
+                        }
+                    } else if address_belongs_to_account {
+                        acc + x.amount().get()
+                    } else {
+                        acc
+                    }
+                })
+            }
             _ => 0,
         };
         Value::new(amount.try_into().unwrap(), ValueUnit::I)

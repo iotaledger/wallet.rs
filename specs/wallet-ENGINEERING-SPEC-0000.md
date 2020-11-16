@@ -12,7 +12,6 @@
       - [AccountManagerObject](#accountmanagerobject)
       - [Address](#address)
       - [Node](#node)
-      - [Tag](#tag)
       - [Timestamp](#timestamp)
       - [Transfer](#transfer)
       - [Value](#value)
@@ -100,7 +99,6 @@ To summarize, the main motivation behind this package is to offer a simplified (
 ## Naming Conventions
 
 The primary language is [Rust](https://github.com/rust-lang/rust). Therefore, standard Rust naming [conventions](https://doc.rust-lang.org/1.0.0/style/style/naming/README.html) are followed. All interfaces (types) use _CamelCase_ while all function and variable names use _snake\_case_.
-
 
 ## Interfaces
 
@@ -514,29 +512,6 @@ Note: The library only supports Ed25519 addresses. Therefore a `type` property f
   </tr>
 </table>
 
-#### Tag
-
-<table>
-  <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
-  </tr>
-  <tr>
-    <td>as_bytes():array</td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Transaction tag as byte array.</td>
-  </tr>
-  <tr>
-    <td>as_ascii():string</td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Transaction tag as ascii.</td>
-  </tr>
-</table>
-
 #### Timestamp
 
 <table>
@@ -580,10 +555,10 @@ Note: Currently, it is not possible to send multiple payloads as part of the mes
     <td>Transfer address.</td>
   </tr>
   <tr>
-    <td>data</td>
+    <td>indexation_key</td>
     <td>&#10008;</td>
-    <td>string</td>
-    <td>(Optional) transfer data.</td>
+    <td><a href="#indexationpayload">Indexation Payload</a></td>
+    <td>(Optional) Indexation payload.</td>
   </tr>
 </table>
 
@@ -609,14 +584,6 @@ Note: Currently, it is not possible to send multiple payloads as part of the mes
     <td>Transaction amount without unit.</td>
   </tr>
 </table>
-
-
-
-
-
-
-
-
 
 #### Input
 
@@ -767,16 +734,16 @@ Note: Currently, it is not possible to send multiple payloads as part of the mes
     <td><strong>Description</strong></td>
   </tr>
   <tr>
-    <td>type</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Set to <code>4</code> to denote an indexation payload.</td>
-  </tr>
-  <tr>
-    <td>tag</td>
+    <td>index</td>
     <td>&#10004;</td>
     <td>string</td>
-    <td>Tag which is used to index the signed transaction hash.</td>
+    <td>Indexation key.</td>
+  </tr>
+  <tr>
+    <td>data</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Indexation data.</td>
   </tr>
 </table>
 
@@ -1245,8 +1212,9 @@ The following should be considered when implementing this method:
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#getbalanceofaddresses">get_balance()</a></li>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#FindTransactions">find_transactions()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#get_address_balances">get_address_balances()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#find_messages">find_messages()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#find_outputs">find_outputs()</a></li>
       </ul>
     </td>
   </tr>
@@ -1310,7 +1278,7 @@ The following should be considered when implementing this method:
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#FindTransactions">find_transactions()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#find_messages">find_messages()</a></li>
       </ul>
     </td>
   </tr>
@@ -1453,8 +1421,8 @@ The process for sending a value transaction:
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#FindTransactions">find_transactions()</a></li>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#Send">send()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#find_messages">find_messages()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#send">send()</a></li>
       </ul>
     </td>
   </tr>
@@ -1520,7 +1488,7 @@ The process for retrying a failed message:
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#BroadcastTransactions">broadcast_transactions()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#post_message">post_message()</a></li>
       </ul>
     </td>
   </tr>
@@ -1600,8 +1568,8 @@ The process for account syncing:_
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#FindTransactions">find_transactions()</a></li>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#GetBalanceOfAddresses">get_balance()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#find_messages">find_messages()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#get_address_balances">get_address_balances()</a></li>
       </ul>
     </td>
   </tr>
@@ -1665,7 +1633,7 @@ The following should be considered when implementing this method:
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#Reattach">reattach()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#reattach">reattach()</a></li>
       </ul>
     </td>
   </tr>
@@ -2479,7 +2447,11 @@ See [Accounts Syncing Process](#accounts-syncing-process).
   </tr>
   <tr>
     <td>Required client library methods</td>
-    <td colspan="3">None</td>
+    <td colspan="3">
+    <ul>
+      <li><a href="sync">sync()</a></li>
+    </ul>
+    </td>
   </tr>
 </table>
 

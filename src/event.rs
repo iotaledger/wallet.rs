@@ -27,7 +27,7 @@ pub struct TransactionEvent {
     #[serde(rename = "accountId")]
     /// The associated account identifier.
     account_id: [u8; 32],
-    #[serde(rename = "messageId")]
+    #[serde(rename = "messageId", with = "crate::serde::message_id_serde")]
     /// The event transaction hash.
     message_id: MessageId,
 }
@@ -39,7 +39,7 @@ pub struct TransactionConfirmationChangeEvent {
     #[serde(rename = "accountId")]
     /// The associated account identifier.
     account_id: [u8; 32],
-    #[serde(rename = "messageId")]
+    #[serde(rename = "messageId", with = "crate::serde::message_id_serde")]
     /// The event transaction hash.
     message_id: MessageId,
     /// The confirmed state of the transaction.
@@ -260,6 +260,7 @@ mod tests {
                 .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
                 .balance(0)
                 .key_index(0)
+                .outputs(vec![])
                 .build()
                 .expect("failed to build address"),
             0,

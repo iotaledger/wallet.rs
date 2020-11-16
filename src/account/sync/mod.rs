@@ -1,17 +1,15 @@
 use crate::account::{Account, AccountIdentifier};
-use crate::address::{Address, AddressBuilder};
+use crate::address::{Address, AddressBuilder, AddressOutput, IotaAddress};
 use crate::client::get_client;
 use crate::message::{Message, Transfer};
 
 use getset::Getters;
-use iota::{
-    client::OutputMetadata,
-    message::prelude::{
-        Input, Message as IotaMessage, MessageId, Output, Payload, SignatureLockedSingleOutput,
-        Transaction, TransactionEssence, TransactionId, UTXOInput,
-    },
+use iota::message::prelude::{
+    Input, Message as IotaMessage, MessageId, Output, Payload, SignatureLockedSingleOutput,
+    Transaction, TransactionEssence, TransactionId, UTXOInput,
 };
 use serde::Serialize;
+use slip10::BIP32Path;
 
 use std::convert::TryInto;
 use std::num::NonZeroU64;
@@ -39,96 +37,104 @@ async fn sync_addresses(
     storage_path: &PathBuf,
     account: &'_ Account,
     address_index: usize,
-    gap_limit: Option<usize>,
-) -> crate::Result<(
-    Vec<Address>,
-    Vec<OutputMetadata>,
-    Vec<(MessageId, IotaMessage)>,
-)> {
+    gap_limit: usize,
+) -> crate::Result<(Vec<Address>, Vec<(MessageId, IotaMessage)>)> {
     let mut address_index = address_index;
-    let account_index = account.index()?;
+    let account_index = *account.index();
 
     let client = get_client(account.client_options());
-    let gap_limit = gap_limit.unwrap_or(20);
 
     let mut generated_addresses = vec![];
     let mut found_messages = vec![];
-    let mut found_outputs = vec![];
     loop {
-        let mut generated_iota_addresses = vec![];
+        let mut generated_iota_addresses = vec![]; // collection of (address_index, internal, address) pairs
         for i in address_index..(address_index + gap_limit) {
             // generate both `public` and `internal (change)` addresses
-            generated_iota_addresses.push(crate::address::get_iota_address(
-                &storage_path,
-                account.id(),
-                account_index,
+            generated_iota_addresses.push((
                 i,
                 false,
-            )?);
-            generated_iota_addresses.push(crate::address::get_iota_address(
-                &storage_path,
-                account.id(),
-                account_index,
+                crate::address::get_iota_address(
+                    &storage_path,
+                    account.id(),
+                    account_index,
+                    i,
+                    false,
+                )?,
+            ));
+            generated_iota_addresses.push((
                 i,
                 true,
-            )?);
+                crate::address::get_iota_address(
+                    &storage_path,
+                    account.id(),
+                    account_index,
+                    i,
+                    true,
+                )?,
+            ));
         }
 
+        let mut curr_generated_addresses = vec![];
         let mut curr_found_messages = vec![];
-        let mut curr_found_outputs = vec![];
-        for address in &generated_iota_addresses {
-            let address_outputs = client.get_address().outputs(&address).await?;
+
+        for (iota_address_index, iota_address_internal, iota_address) in &generated_iota_addresses {
+            let address_outputs = client.get_address().outputs(&iota_address).await?;
+            let balance = client.get_address().balance(&iota_address).await?;
+
+            let mut curr_found_outputs: Vec<AddressOutput> = vec![];
             for output in address_outputs.iter() {
                 let output = client.get_output(output).await?;
                 let message = client
                     .get_message()
                     .data(&MessageId::new(
-                        output
-                            .message_id
-                            .as_bytes()
+                        output.message_id[..]
                             .try_into()
                             .map_err(|_| crate::WalletError::InvalidMessageIdLength)?,
                     ))
                     .await?;
                 curr_found_messages.push((
                     MessageId::new(
-                        output
-                            .message_id
-                            .as_bytes()
+                        output.message_id[..]
                             .try_into()
                             .map_err(|_| crate::WalletError::InvalidMessageIdLength)?,
                     ),
                     message,
                 ));
-                curr_found_outputs.push(output);
+                curr_found_outputs.push(output.try_into()?);
             }
-        }
 
-        let is_spent = curr_found_outputs.iter().any(|output| output.is_spent);
+            // ignore unused change addresses
+            if *iota_address_internal && curr_found_outputs.is_empty() {
+                continue;
+            }
 
-        found_messages.extend(curr_found_messages.into_iter());
-        found_outputs.extend(curr_found_outputs.into_iter());
-
-        for iota_address in generated_iota_addresses {
-            let balance = client.get_address().balance(&iota_address).await?;
             let address = AddressBuilder::new()
                 .address(iota_address.clone())
-                .key_index(address_index)
+                .key_index(*iota_address_index)
                 .balance(balance)
+                .outputs(curr_found_outputs)
+                .internal(*iota_address_internal)
                 .build()?;
-            generated_addresses.push(address);
-            address_index += 1;
+
+            curr_generated_addresses.push(address);
         }
 
-        if found_messages.is_empty()
-            && !is_spent
-            && generated_addresses.iter().all(|o| *o.balance() == 0)
-        {
+        address_index += gap_limit;
+
+        let is_empty = curr_found_messages.is_empty()
+            && curr_generated_addresses
+                .iter()
+                .all(|address| !address.outputs().iter().any(|output| *output.is_spent()));
+
+        found_messages.extend(curr_found_messages.into_iter());
+        generated_addresses.extend(curr_generated_addresses.into_iter());
+
+        if is_empty {
             break;
         }
     }
 
-    Ok((generated_addresses, found_outputs, found_messages))
+    Ok((generated_addresses, found_messages))
 }
 
 /// Syncs transactions with the tangle.
@@ -176,7 +182,7 @@ async fn sync_transactions<'a>(
 pub struct AccountSynchronizer<'a> {
     account: &'a mut Account,
     address_index: usize,
-    gap_limit: Option<usize>,
+    gap_limit: usize,
     skip_persistance: bool,
     storage_path: PathBuf,
 }
@@ -187,8 +193,13 @@ impl<'a> AccountSynchronizer<'a> {
         let address_index = account.addresses().len();
         Self {
             account,
-            address_index,
-            gap_limit: None,
+            // by default we synchronize from the latest address (supposedly unspent)
+            address_index: if address_index == 0 {
+                0
+            } else {
+                address_index - 1
+            },
+            gap_limit: if address_index == 0 { 20 } else { 1 },
             skip_persistance: false,
             storage_path,
         }
@@ -196,7 +207,7 @@ impl<'a> AccountSynchronizer<'a> {
 
     /// Number of address indexes that are generated.
     pub fn gap_limit(mut self, limit: usize) -> Self {
-        self.gap_limit = Some(limit);
+        self.gap_limit = limit;
         self
     }
 
@@ -206,17 +217,19 @@ impl<'a> AccountSynchronizer<'a> {
         self
     }
 
+    /// Initial address index to start syncing.
+    pub fn address_index(mut self, address_index: usize) -> Self {
+        self.address_index = address_index;
+        self
+    }
+
     /// Syncs account with the tangle.
     /// The account syncing process ensures that the latest metadata (balance, transactions)
     /// associated with an account is fetched from the tangle and is stored locally.
     pub async fn execute(self) -> crate::Result<SyncedAccount> {
         let client = get_client(self.account.client_options());
-        let mut addresses = vec![];
-        for address in self.account.addresses() {
-            addresses.push(address.address().clone());
-        }
 
-        let (found_addresses, found_outputs, found_messages) = sync_addresses(
+        let (found_addresses, found_messages) = sync_addresses(
             &self.storage_path,
             self.account,
             self.address_index,
@@ -224,8 +237,9 @@ impl<'a> AccountSynchronizer<'a> {
         )
         .await?;
         let is_empty = found_messages.is_empty()
-            && !found_outputs.iter().any(|output| output.is_spent)
-            && found_addresses.iter().all(|o| *o.balance() == 0);
+            && found_addresses
+                .iter()
+                .all(|address| address.outputs().is_empty());
 
         let mut new_messages = vec![];
         for (found_message_id, found_message) in found_messages {
@@ -240,14 +254,42 @@ impl<'a> AccountSynchronizer<'a> {
         }
 
         sync_transactions(self.account, &new_messages).await?;
-
-        self.account.set_messages(
+        self.account.append_messages(
             new_messages
                 .iter()
-                .map(|(id, message)| Message::from_iota_message(*id, &message).unwrap())
+                .map(|(id, message)| {
+                    Message::from_iota_message(*id, self.account.addresses(), &message).unwrap()
+                })
                 .collect(),
         );
-        self.account.set_addresses(found_addresses);
+
+        let mut addresses_to_save = vec![];
+        let mut ignored_addresses = vec![];
+        let mut previous_address_is_unused = false;
+        for found_address in found_addresses.into_iter() {
+            let address_is_unused = found_address.outputs().is_empty();
+
+            // if the previous address is unused, we'll keep checking to see if an used address was found on the gap limit
+            if previous_address_is_unused {
+                // subsequent unused address found; add it to the ignored addresses list
+                if address_is_unused {
+                    ignored_addresses.push(found_address);
+                }
+                // used address found after finding unused addresses; we'll save all the previous ignored address and this one aswell
+                else {
+                    addresses_to_save.extend(ignored_addresses.into_iter());
+                    ignored_addresses = vec![];
+                    addresses_to_save.push(found_address);
+                }
+            }
+            // if the previous address is used or this is the first address,
+            // we'll save it because we want at least one unused address
+            else {
+                addresses_to_save.push(found_address);
+            }
+            previous_address_is_unused = address_is_unused;
+        }
+        self.account.append_addresses(addresses_to_save);
 
         if !self.skip_persistance {
             crate::storage::with_adapter(&self.storage_path, |storage| {
@@ -263,6 +305,8 @@ impl<'a> AccountSynchronizer<'a> {
             deposit_address: self.account.latest_address().unwrap().clone(),
             is_empty,
             storage_path: self.storage_path,
+            addresses: self.account.addresses().clone(),
+            messages: self.account.messages().clone(),
         };
         Ok(synced_account)
     }
@@ -283,6 +327,12 @@ pub struct SyncedAccount {
     #[serde(rename = "isEmpty")]
     #[getset(get = "pub(crate)")]
     is_empty: bool,
+    /// The account messages.
+    #[getset(get = "pub")]
+    messages: Vec<Message>,
+    /// The account addresses.
+    #[getset(get = "pub")]
+    addresses: Vec<Address>,
     #[serde(skip)]
     storage_path: PathBuf,
 }
@@ -303,16 +353,17 @@ impl SyncedAccount {
         &self,
         threshold: u64,
         account: &'a Account,
-        address: &'a Address,
-    ) -> crate::Result<(Vec<Address>, Option<&'a Address>)> {
-        let mut available_addresses = vec![];
-        let available_addresses_iter = account.addresses().iter().filter(|a| a != &address);
-        for available_address in available_addresses_iter {
-            available_addresses.push(available_address.clone());
-        }
+        address: &'a IotaAddress,
+    ) -> crate::Result<(Vec<Address>, Option<Address>)> {
+        let mut available_addresses: Vec<Address> = account
+            .addresses()
+            .iter()
+            .cloned()
+            .filter(|a| a.address() != address && *a.balance() > 0)
+            .collect();
         let addresses = input_selection::select_input(threshold, &mut available_addresses)?;
         let remainder = if addresses.iter().fold(0, |acc, a| acc + a.balance()) > threshold {
-            account.latest_address()
+            addresses.last().cloned()
         } else {
             None
         };
@@ -337,13 +388,34 @@ impl SyncedAccount {
             self.select_inputs(*transfer_obj.amount(), &account, transfer_obj.address())?;
 
         let mut utxos = vec![];
-        for utxo_output in &input_addresses {
-            let address = utxo_output.address();
-            let address_outputs = client.get_address().outputs(&address).await?;
+        let mut output_paths = vec![];
+        for input_address in &input_addresses {
+            let address = input_address.address();
+            let address_path = BIP32Path::from_str(&format!(
+                "m/44H/4218H/{}H/{}H/{}H",
+                account.index(),
+                *input_address.internal() as u32,
+                input_address.key_index()
+            ))
+            .unwrap();
+            let address_outputs = input_address.outputs();
             let mut outputs = vec![];
-            for output in address_outputs.iter() {
-                let output = client.get_output(output).await?;
+            for (offset, output) in address_outputs.iter().enumerate() {
+                let output = client
+                    .get_output(
+                        &UTXOInput::new(*output.transaction_id(), *output.index())
+                            .map_err(|e| anyhow::anyhow!(e.to_string()))?,
+                    )
+                    .await?;
                 outputs.push(output);
+                let output_path = BIP32Path::from_str(&format!(
+                    "m/44H/4218H/{}H/{}H/{}H",
+                    account.index(),
+                    *input_address.internal() as u32,
+                    offset as u32
+                ))
+                .unwrap();
+                output_paths.push(output_path);
             }
             utxos.extend(outputs.into_iter());
         }
@@ -351,12 +423,12 @@ impl SyncedAccount {
         let mut utxo_inputs: Vec<Input> = vec![];
         let mut utxo_outputs: Vec<Output> = vec![];
         let mut current_output_sum = 0;
+        let mut remainder_value = 0;
         for utxo in utxos {
             utxo_inputs.push(
                 UTXOInput::new(
                     TransactionId::new(
-                        utxo.transaction_id
-                            .as_bytes()
+                        utxo.transaction_id[..]
                             .try_into()
                             .map_err(|_| crate::WalletError::InvalidTransactionIdLength)?,
                     ),
@@ -365,27 +437,51 @@ impl SyncedAccount {
                 .map_err(|e| anyhow::anyhow!(e.to_string()))?
                 .into(),
             );
-            let utxo_amount = if current_output_sum + utxo.amount > value {
-                value - utxo.amount
+            if current_output_sum == value {
+                // already filled the transfer value; just collect the output value as remainder
+                remainder_value += utxo.amount;
+            } else if current_output_sum + utxo.amount > value {
+                // if the used UTXO amount is greater than the transfer value, this is the last iteration and we'll have remainder value.
+                // we add an Output for the missing value and collect the remainder
+                let missing_value = value - current_output_sum;
+                remainder_value += utxo.amount - missing_value;
+                utxo_outputs.push(
+                    SignatureLockedSingleOutput::new(
+                        transfer_obj.address().clone(),
+                        NonZeroU64::new(missing_value)
+                            .ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
+                    )
+                    .into(),
+                );
+                current_output_sum += missing_value;
             } else {
-                utxo.amount
-            };
-            let utxo_address = if current_output_sum == value {
-                remainder_address
-                    .map(|a| a.address().clone())
-                    .expect("remainder address not defined")
-            } else {
-                utxo.address
-            };
-            current_output_sum += utxo.amount;
+                utxo_outputs.push(
+                    SignatureLockedSingleOutput::new(
+                        transfer_obj.address().clone(),
+                        NonZeroU64::new(utxo.amount)
+                            .ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
+                    )
+                    .into(),
+                );
+                current_output_sum += utxo.amount;
+            }
+        }
+
+        // if there's remainder value, we generate a change address for the remainder address and add an output for it
+        if remainder_value > 0 {
+            let remainder_address = remainder_address
+                .ok_or_else(|| anyhow::anyhow!("remainder address not defined"))?;
+            let change_address =
+                crate::address::get_new_change_address(&account, &remainder_address)?;
             utxo_outputs.push(
                 SignatureLockedSingleOutput::new(
-                    utxo_address,
-                    NonZeroU64::new(utxo_amount)
+                    change_address.address().clone(),
+                    NonZeroU64::new(remainder_value)
                         .ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
                 )
                 .into(),
             );
+            account.append_addresses(vec![change_address]);
         }
 
         let (parent1, parent2) = client.get_tips().await?;
@@ -405,8 +501,14 @@ impl SyncedAccount {
         let essence = essence_builder
             .finish()
             .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
-        let transaction = Transaction::builder()
-            .with_essence(essence)
+        let unlock_blocks = crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
+            stronghold.get_transaction_unlock_blocks(account.id(), &essence, &output_paths)
+        })?;
+        let mut tx_builder = Transaction::builder().with_essence(essence);
+        for unlock_block in unlock_blocks.into_iter() {
+            tx_builder = tx_builder.add_unlock_block(unlock_block);
+        }
+        let transaction = tx_builder
             .finish()
             .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
 
@@ -418,14 +520,22 @@ impl SyncedAccount {
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
         let message_id = client.post_message(&message).await?;
+
+        // if this is a transfer to the account's latest address, we generate a new one to keep the latest address unused
+        if account.latest_address().unwrap().address() == transfer_obj.address() {
+            let addr = crate::address::get_new_address(&account)?;
+            account.append_addresses(vec![addr]);
+        }
+
         let message = client.get_message().data(&message_id).await?;
 
-        account.append_messages(vec![Message::from_iota_message(message_id, &message)?]);
+        let message = Message::from_iota_message(message_id, account.addresses(), &message)?;
+        account.append_messages(vec![message.clone()]);
         crate::storage::with_adapter(&self.storage_path, |storage| {
             storage.set(account_id, serde_json::to_string(&account)?)
         })?;
 
-        Ok(Message::from_iota_message(message_id, &message)?)
+        Ok(message)
     }
 
     /// Retry messages.
