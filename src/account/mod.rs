@@ -319,6 +319,8 @@ impl Account {
         crate::storage::with_adapter(&self.storage_path, |storage| {
             storage.set(self.id.into(), serde_json::to_string(self)?)
         })?;
+        // ignore errors because we fallback to the polling system
+        let _ = crate::monitor::monitor_address_balance(&self, &address);
         Ok(address)
     }
 

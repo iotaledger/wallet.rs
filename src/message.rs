@@ -4,10 +4,7 @@ use crate::{
 };
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-use iota::message::{
-    prelude::{Message as IotaMessage, MessageId, Output, Payload},
-    Vertex,
-};
+use iota::message::prelude::{Message as IotaMessage, MessageId, Output, Payload};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::convert::TryInto;
@@ -201,10 +198,10 @@ impl Message {
         let message = Self {
             id,
             version: 1,
-            trunk: *message.trunk(),
-            branch: *message.branch(),
+            trunk: *message.parent1(),
+            branch: *message.parent2(),
             payload_length: 5, // TODO
-            payload: message.payload().clone(),
+            payload: message.payload().as_ref().unwrap().clone(),
             timestamp: Utc::now(),
             // TODO timestamp: DateTime::<Utc>::from_utc(
             //    NaiveDateTime::from_timestamp(*message.attachment_ts().to_inner() as i64, 0),
@@ -237,8 +234,11 @@ impl Message {
                 .outputs()
                 .iter()
                 .map(|output| {
-                    let Output::SignatureLockedSingle(x) = output;
-                    x.address()
+                    if let Output::SignatureLockedSingle(x) = output {
+                        x.address()
+                    } else {
+                        unimplemented!()
+                    }
                 })
                 .collect(),
             _ => vec![],
@@ -256,19 +256,22 @@ impl Message {
                         .any(|o| o.message_id() == self.id())
                 });
                 tx.essence().outputs().iter().fold(0, |acc, output| {
-                    let Output::SignatureLockedSingle(x) = output;
-                    let address_belongs_to_account = account
-                        .addresses()
-                        .iter()
-                        .any(|a| a.address() == x.address());
-                    if sent {
-                        if address_belongs_to_account {
-                            acc
-                        } else {
+                    if let Output::SignatureLockedSingle(x) = output {
+                        let address_belongs_to_account = account
+                            .addresses()
+                            .iter()
+                            .any(|a| a.address() == x.address());
+                        if sent {
+                            if address_belongs_to_account {
+                                acc
+                            } else {
+                                acc + x.amount().get()
+                            }
+                        } else if address_belongs_to_account {
                             acc + x.amount().get()
+                        } else {
+                            acc
                         }
-                    } else if address_belongs_to_account {
-                        acc + x.amount().get()
                     } else {
                         acc
                     }

@@ -6,17 +6,17 @@ use serde::{Deserialize, Serialize};
 use url::Url;
 
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 
-type ClientInstanceMap = Arc<Mutex<HashMap<ClientOptions, Arc<Client>>>>;
+type ClientInstanceMap = Arc<Mutex<HashMap<ClientOptions, Arc<RwLock<Client>>>>>;
 
-/// Gets the balance change listeners array.
+/// Gets the client instances map.
 fn instances() -> &'static ClientInstanceMap {
-    static LISTENERS: Lazy<ClientInstanceMap> = Lazy::new(Default::default);
-    &LISTENERS
+    static INSTANCES: Lazy<ClientInstanceMap> = Lazy::new(Default::default);
+    &INSTANCES
 }
 
-pub(crate) fn get_client(options: &ClientOptions) -> Arc<Client> {
+pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
     let mut map = instances()
         .lock()
         .expect("failed to lock client instances: get_client()");
@@ -45,7 +45,7 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<Client> {
             .build()
             .expect("failed to initialise ClientBuilder");
 
-        map.insert(options.clone(), Arc::new(client));
+        map.insert(options.clone(), Arc::new(RwLock::new(client)));
     }
 
     let client = map.get(&options).expect("client not initialised");
