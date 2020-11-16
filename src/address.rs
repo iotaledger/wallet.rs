@@ -250,36 +250,25 @@ pub(crate) fn is_unspent(account: &Account, address: &IotaAddress) -> bool {
 
 #[cfg(test)]
 mod tests {
-    #[tokio::test]
-    async fn get_balance() {
-        let manager = crate::test_utils::get_account_manager();
-        let account = crate::test_utils::create_account(&manager, vec![], vec![]);
-        let address = crate::test_utils::generate_random_iota_address();
-
-        let response = super::get_balance(&account, &address).await;
-        assert!(response.is_ok());
-    }
-
     #[test]
     fn is_unspent_false() {
+        let manager = crate::test_utils::get_account_manager();
+        let mut account = crate::test_utils::create_account(&manager, vec![], vec![]);
+        let address = super::get_new_address(&account).unwrap();
+        let spent_tx = crate::test_utils::generate_message(50, address.clone(), true, true, false);
+        account.append_messages(vec![spent_tx]);
+
+        let response = super::is_unspent(&account, address.address());
+        assert_eq!(response, true);
+    }
+
+    #[tokio::test]
+    async fn is_unspent_true() {
         let manager = crate::test_utils::get_account_manager();
         let account = crate::test_utils::create_account(&manager, vec![], vec![]);
         let address = crate::test_utils::generate_random_iota_address();
 
         let response = super::is_unspent(&account, &address);
         assert_eq!(response, false);
-    }
-
-    #[tokio::test]
-    async fn is_unspent_true() {
-        let manager = crate::test_utils::get_account_manager();
-        let mut account = crate::test_utils::create_account(&manager, vec![], vec![]);
-        let address = super::get_new_address(&account, false).await.unwrap();
-        let spent_tx =
-            crate::test_utils::generate_message(/* TODO */ 50, address.clone(), true, true);
-        account.append_messages(vec![spent_tx]);
-
-        let response = super::is_unspent(&account, address.address());
-        assert_eq!(response, true);
     }
 }

@@ -82,7 +82,7 @@ impl AccountManager {
     fn start_monitoring(&self) -> crate::Result<()> {
         let accounts =
             crate::storage::with_adapter(&self.storage_path, |storage| storage.get_all())?;
-        let accounts = crate::storage::parse_accounts(&accounts)?;
+        let accounts = crate::storage::parse_accounts(&accounts, &self.storage_path)?;
         for account in accounts {
             crate::monitor::monitor_account_addresses_balance(&account)?;
             for message in account.list_messages(0, 0, Some(MessageType::Unconfirmed)) {
@@ -232,11 +232,11 @@ impl AccountManager {
 
         let backup_storage = crate::storage::get_adapter_from_path(&source)?;
         let accounts = backup_storage.get_all()?;
-        let accounts = crate::storage::parse_accounts(&accounts)?;
+        let accounts = crate::storage::parse_accounts(&accounts, &self.storage_path)?;
 
         let stored_accounts =
             crate::storage::with_adapter(&self.storage_path, |storage| storage.get_all())?;
-        let stored_accounts = crate::storage::parse_accounts(&stored_accounts)?;
+        let stored_accounts = crate::storage::parse_accounts(&stored_accounts, &self.storage_path)?;
 
         let already_imported_account = stored_accounts.iter().find(|stored_account| {
             stored_account.addresses().iter().any(|stored_address| {
@@ -294,7 +294,7 @@ impl AccountManager {
     /// Gets all accounts from storage.
     pub fn get_accounts(&self) -> crate::Result<Vec<Account>> {
         crate::storage::with_adapter(&self.storage_path, |storage| {
-            crate::storage::parse_accounts(&storage.get_all()?)
+            crate::storage::parse_accounts(&storage.get_all()?, &self.storage_path)
         })
     }
 
@@ -313,11 +313,13 @@ async fn poll(storage_path: PathBuf, is_monitoring_disabled: bool) -> crate::Res
     if is_monitoring_disabled {
         let accounts_before_sync =
             crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
-        let accounts_before_sync = crate::storage::parse_accounts(&accounts_before_sync)?;
+        let accounts_before_sync =
+            crate::storage::parse_accounts(&accounts_before_sync, &storage_path)?;
         sync_accounts(&storage_path, Some(0)).await?;
         let accounts_after_sync =
             crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
-        let accounts_after_sync = crate::storage::parse_accounts(&accounts_after_sync)?;
+        let accounts_after_sync =
+            crate::storage::parse_accounts(&accounts_after_sync, &storage_path)?;
 
         // compare accounts to check for balance changes and new messages
         for account_before_sync in &accounts_before_sync {
@@ -556,15 +558,18 @@ mod tests {
             .expect("invalid node URL")
             .build();
 
-            let account = manager
-                .create_account(client_options)
-                .messages(vec![Message::from_iota_message(MessageId::new([0; 32]), &[], &MessageBuilder::new()
+        let account = manager
+            .create_account(client_options)
+            .messages(vec![Message::from_iota_message(
+                MessageId::new([0; 32]),
+                &[],
+                &MessageBuilder::new()
                     .with_parent1(MessageId::new([0; 32]))
                     .with_parent2(MessageId::new([0; 32]))
-                    .with_payload(Payload::Indexation(Box::new(Indexation::new(
-                        "".to_string(),
-                        &[0; 16],
-                    ).unwrap())))
+                    .with_payload(Payload::Indexation(Box::new(
+                        Indexation::new("index".to_string(), &[0; 16]).unwrap(),
+                    )))
+                    .with_network_id(0)
                     .finish()
                     .unwrap(),
             )
@@ -584,17 +589,17 @@ mod tests {
             .expect("invalid node URL")
             .build();
 
-            let account = manager
-                .create_account(client_options)
-                .addresses(vec![AddressBuilder::new()
-                    .balance(5)
-                    .key_index(0)
-                    .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
-                    .outputs(vec![])
-                    .build()
-                    .unwrap()])
-                .initialise()
-                .unwrap();
+        let account = manager
+            .create_account(client_options)
+            .addresses(vec![AddressBuilder::new()
+                .balance(5)
+                .key_index(0)
+                .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
+                .outputs(vec![])
+                .build()
+                .unwrap()])
+            .initialise()
+            .unwrap();
 
         let remove_response = manager.remove_account(account.id().into());
         assert!(remove_response.is_err());
@@ -650,6 +655,7 @@ mod tests {
             .address(address.clone())
             .key_index(0)
             .balance(0)
+            .outputs(vec![])
             .build()
             .unwrap();
         let account = crate::test_utils::create_account(&manager, vec![address], vec![]);
@@ -661,7 +667,7 @@ mod tests {
         let err = response.unwrap_err();
         assert_eq!(
             err.to_string(),
-            format!("Account {} already imported", account.alias())
+            format!("account `{}` already imported", account.alias())
         );
     }
 }

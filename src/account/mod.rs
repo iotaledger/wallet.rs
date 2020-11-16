@@ -415,12 +415,14 @@ mod tests {
             .address(address.clone())
             .key_index(0)
             .balance(balance / 2 as u64)
+            .outputs(vec![])
             .build()
             .unwrap();
         let second_address = AddressBuilder::new()
             .address(address)
             .key_index(1)
             .balance(balance / 2 as u64)
+            .outputs(vec![])
             .build()
             .unwrap();
 
@@ -454,12 +456,14 @@ mod tests {
             account.addresses().first().unwrap().clone(),
             false,
             false,
+            false,
         );
         let confirmed_message = crate::test_utils::generate_message(
             10,
             account.addresses().first().unwrap().clone(),
             true,
             true,
+            false,
         );
         let (account, _, balance) = _generate_account(
             &manager,
@@ -467,7 +471,7 @@ mod tests {
         );
         assert_eq!(
             account.available_balance(),
-            balance - unconfirmed_message.value().without_denomination() as u64
+            balance - unconfirmed_message.value(&account).without_denomination() as u64
         );
     }
 
@@ -480,22 +484,26 @@ mod tests {
             account.latest_address().unwrap().clone(),
             true,
             true,
+            true,
         );
         let failed_message = crate::test_utils::generate_message(
             1,
             account.latest_address().unwrap().clone(),
             true,
             false,
+            true,
         );
         let unconfirmed_message = crate::test_utils::generate_message(
             1,
             account.latest_address().unwrap().clone(),
             false,
             true,
+            true,
         );
         let value_message = crate::test_utils::generate_message(
             4,
             account.latest_address().unwrap().clone(),
+            true,
             true,
             true,
         );
@@ -519,6 +527,7 @@ mod tests {
             .address(crate::test_utils::generate_random_iota_address())
             .key_index(0)
             .balance(0)
+            .outputs(vec![])
             .build()
             .unwrap();
 
@@ -527,24 +536,28 @@ mod tests {
             account.latest_address().unwrap().clone(),
             true,
             true,
+            true,
         );
         let sent_message =
-            crate::test_utils::generate_message(0, external_address.clone(), true, true);
+            crate::test_utils::generate_message(1, external_address.clone(), true, true, false);
         let failed_message = crate::test_utils::generate_message(
             1,
             account.latest_address().unwrap().clone(),
             true,
             false,
+            true,
         );
         let unconfirmed_message = crate::test_utils::generate_message(
             1,
             account.latest_address().unwrap().clone(),
             false,
             true,
+            true,
         );
         let value_message = crate::test_utils::generate_message(
             5,
             account.latest_address().unwrap().clone(),
+            true,
             true,
             true,
         );
@@ -564,7 +577,7 @@ mod tests {
             (MessageType::Value, &value_message),
         ];
         for (tx_type, expected) in cases {
-            let failed_messages = account.list_messages(1, 0, Some(tx_type.clone()));
+            let failed_messages = account.list_messages(0, 0, Some(tx_type.clone()));
             assert_eq!(
                 failed_messages.len(),
                 if tx_type == MessageType::Received {
@@ -587,11 +600,13 @@ mod tests {
             account.latest_address().unwrap().clone(),
             true,
             true,
+            true,
         );
         account.append_messages(vec![
             crate::test_utils::generate_message(
                 10,
                 account.latest_address().unwrap().clone(),
+                true,
                 true,
                 true,
             ),

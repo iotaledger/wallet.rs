@@ -89,7 +89,7 @@ pub enum WalletError {
     #[error("`{0}`")]
     Bech32Error(#[from] bech32::Error),
     /// An account is already imported.
-    #[error("acount `{alias}` already imported")]
+    #[error("account `{alias}` already imported")]
     AccountAlreadyImported {
         /// the account alias.
         alias: String,
@@ -146,8 +146,6 @@ pub(crate) fn with_stronghold_from_path<T, F: FnOnce(&Stronghold) -> T>(
         .get_or_init(Default::default)
         .lock()
         .unwrap();
-    println!("{:?}", stronghold_map.keys());
-    println!("{:?}", path);
     if let Some(stronghold) = stronghold_map.get(path) {
         cb(stronghold)
     } else {
@@ -217,6 +215,7 @@ mod test_utils {
         address: Address,
         confirmed: bool,
         broadcasted: bool,
+        incoming: bool,
     ) -> Message {
         Message {
             id: MessageId::new([0; 32]),
@@ -253,6 +252,7 @@ mod test_utils {
             nonce: 0,
             confirmed,
             broadcasted,
+            incoming,
         }
     }
 }

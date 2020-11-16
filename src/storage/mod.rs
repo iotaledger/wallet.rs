@@ -66,18 +66,23 @@ pub trait StorageAdapter {
     fn remove(&self, account_id: AccountIdentifier) -> crate::Result<()>;
 }
 
-pub(crate) fn parse_accounts(accounts: &[String]) -> crate::Result<Vec<Account>> {
+pub(crate) fn parse_accounts(
+    accounts: &[String],
+    storage_path: &PathBuf,
+) -> crate::Result<Vec<Account>> {
     let mut err = None;
     let accounts: Vec<Option<Account>> = accounts
         .iter()
         .map(|account| {
-            let res: Option<Account> =
-                serde_json::from_str(&account)
-                    .map(Some)
-                    .unwrap_or_else(|e| {
-                        err = Some(e);
-                        None
-                    });
+            let res = serde_json::from_str::<Account>(&account)
+                .map(|mut acc| {
+                    acc.set_storage_path(storage_path.clone());
+                    Some(acc)
+                })
+                .unwrap_or_else(|e| {
+                    err = Some(e);
+                    None
+                });
             res
         })
         .collect();
@@ -86,8 +91,8 @@ pub(crate) fn parse_accounts(accounts: &[String]) -> crate::Result<Vec<Account>>
         Err(err.into())
     } else {
         let accounts = accounts
-            .iter()
-            .map(|account| account.clone().unwrap())
+            .into_iter()
+            .map(|account| account.unwrap())
             .collect();
         Ok(accounts)
     }
@@ -107,6 +112,7 @@ pub(crate) fn get_account(
 mod tests {
     use super::StorageAdapter;
     use crate::account::AccountIdentifier;
+    use std::path::PathBuf;
 
     #[test]
     // asserts that the adapter defined by `set_adapter` is globally available with `get_adapter`
@@ -139,7 +145,7 @@ mod tests {
 
     #[test]
     fn parse_accounts_invalid() {
-        let response = super::parse_accounts(&vec!["{}".to_string()]);
+        let response = super::parse_accounts(&vec!["{}".to_string()], &PathBuf::new());
         assert!(response.is_err());
     }
 
@@ -160,8 +166,11 @@ mod tests {
 
     #[test]
     fn parse_accounts_valid() {
-        let (_, account) = _create_account();
-        let response = super::parse_accounts(&vec![serde_json::to_string(&account).unwrap()]);
+        let (storage_path, account) = _create_account();
+        let response = super::parse_accounts(
+            &vec![serde_json::to_string(&account).unwrap()],
+            &storage_path,
+        );
         assert!(response.is_ok());
         assert_eq!(response.unwrap().first().unwrap(), &account);
     }

@@ -393,7 +393,6 @@ mod tests {
 
         // assert that each different client_options create a new client instance
         for case in &test_cases {
-            println!("{:?}", case);
             let len = super::instances().lock().unwrap().len();
             super::get_client(&case);
             assert_eq!(super::instances().lock().unwrap().len() - len, 1);
