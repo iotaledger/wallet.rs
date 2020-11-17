@@ -607,9 +607,10 @@ mod tests {
                     .with_parent1(MessageId::new([0; 32]))
                     .with_parent2(MessageId::new([0; 32]))
                     .with_payload(Payload::Indexation(Box::new(Indexation::new(
-                        "".to_string(),
-                        Box::new([0; 16]),
-                    ))))
+                        "index".to_string(),
+                        &[0; 16],
+                    ).unwrap())))
+                    .with_network_id(0)
                     .finish()
                     .unwrap()).unwrap()])
                 .initialise().unwrap();
