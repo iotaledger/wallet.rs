@@ -1,7 +1,7 @@
 use crate::account::{Account, AccountIdentifier};
 use crate::address::{Address, AddressOutput, IotaAddress};
 use crate::client::ClientOptions;
-use crate::message::Message;
+use crate::message::{Message, MessageType};
 
 use iota::{message::prelude::MessageId, MessageMetadata, OutputMetadata, Topic, TopicEvent};
 use serde::Deserialize;
@@ -35,6 +35,14 @@ struct AddressOutputPayloadAddress {
     #[serde(rename = "type")]
     type_: u8,
     address: String,
+}
+
+/// Unsubscribe from all topics associated with the account.
+pub fn unsubscribe(account: &Account) -> crate::Result<()> {
+    let client = crate::client::get_client(account.client_options());
+    let mut client = client.write().unwrap();
+    client.subscriber().unsubscribe()?;
+    Ok(())
 }
 
 fn mutate_account<F: FnOnce(&Account, &mut Vec<Address>, &mut Vec<Message>)>(
@@ -168,6 +176,14 @@ async fn process_output(
             );
         }
     })?;
+    Ok(())
+}
+
+/// Monitor the account's unconfirmed messages for confirmation state change.
+pub fn monitor_unconfirmed_messages(account: &Account) -> crate::Result<()> {
+    for message in account.list_messages(0, 0, Some(MessageType::Unconfirmed)) {
+        monitor_confirmation_state_change(&account, message.id())?;
+    }
     Ok(())
 }
 

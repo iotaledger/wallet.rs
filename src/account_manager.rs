@@ -85,9 +85,7 @@ impl AccountManager {
         let accounts = crate::storage::parse_accounts(&accounts)?;
         for account in accounts {
             crate::monitor::monitor_account_addresses_balance(&account)?;
-            for message in account.list_messages(0, 0, Some(MessageType::Unconfirmed)) {
-                crate::monitor::monitor_confirmation_state_change(&account, message.id())?;
-            }
+            crate::monitor::monitor_unconfirmed_messages(&account)?;
         }
         Ok(())
     }

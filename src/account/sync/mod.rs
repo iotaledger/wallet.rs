@@ -175,6 +175,65 @@ async fn sync_transactions<'a>(
     Ok(())
 }
 
+async fn perform_sync(
+    account: &Account,
+    storage_path: &PathBuf,
+    address_index: usize,
+    gap_limit: usize,
+) -> crate::Result<(Vec<Message>, Vec<Address>)> {
+    let (found_addresses, found_messages) =
+        sync_addresses(&storage_path, account, address_index, gap_limit).await?;
+
+    let mut new_messages = vec![];
+    for (found_message_id, found_message) in found_messages {
+        if !account
+            .messages()
+            .iter()
+            .any(|message| message.id() == &found_message_id)
+        {
+            new_messages.push((found_message_id, found_message));
+        }
+    }
+
+    sync_transactions(account, &new_messages).await?;
+
+    let new_messages = new_messages
+        .iter()
+        .map(|(id, message)| {
+            Message::from_iota_message(*id, account.addresses(), &message).unwrap()
+        })
+        .collect();
+
+    let mut addresses_to_save = vec![];
+    let mut ignored_addresses = vec![];
+    let mut previous_address_is_unused = false;
+    for found_address in found_addresses.into_iter() {
+        let address_is_unused = found_address.outputs().is_empty();
+
+        // if the previous address is unused, we'll keep checking to see if an used address was found on the gap limit
+        if previous_address_is_unused {
+            // subsequent unused address found; add it to the ignored addresses list
+            if address_is_unused {
+                ignored_addresses.push(found_address);
+            }
+            // used address found after finding unused addresses; we'll save all the previous ignored address and this one aswell
+            else {
+                addresses_to_save.extend(ignored_addresses.into_iter());
+                ignored_addresses = vec![];
+                addresses_to_save.push(found_address);
+            }
+        }
+        // if the previous address is used or this is the first address,
+        // we'll save it because we want at least one unused address
+        else {
+            addresses_to_save.push(found_address);
+        }
+        previous_address_is_unused = address_is_unused;
+    }
+
+    Ok((new_messages, addresses_to_save))
+}
+
 /// Account sync helper.
 pub struct AccountSynchronizer<'a> {
     account: &'a mut Account,
@@ -227,96 +286,51 @@ impl<'a> AccountSynchronizer<'a> {
         let options = self.account.client_options().clone();
         let client = get_client(&options);
 
-        let (found_addresses, found_messages) = sync_addresses(
+        let _ = crate::monitor::unsubscribe(&self.account);
+
+        let return_value = match perform_sync(
+            &self.account,
             &self.storage_path,
-            self.account,
             self.address_index,
             self.gap_limit,
         )
-        .await?;
-        let is_empty = found_messages.is_empty()
-            && found_addresses
-                .iter()
-                .all(|address| address.outputs().is_empty());
+        .await
+        {
+            Ok((new_messages, addresses_to_save)) => {
+                let is_empty = new_messages.is_empty()
+                    && addresses_to_save
+                        .iter()
+                        .all(|address| address.outputs().is_empty());
 
-        let mut new_messages = vec![];
-        for (found_message_id, found_message) in found_messages {
-            if !self
-                .account
-                .messages()
-                .iter()
-                .any(|message| message.id() == &found_message_id)
-            {
-                new_messages.push((found_message_id, found_message));
-            }
-        }
+                self.account.append_messages(new_messages);
+                self.account.append_addresses(addresses_to_save);
 
-        sync_transactions(self.account, &new_messages).await?;
-        let new_messages: Vec<Message> = new_messages
-            .iter()
-            .map(|(id, message)| {
-                Message::from_iota_message(*id, self.account.addresses(), &message).unwrap()
-            })
-            .collect();
-        for message in new_messages.iter() {
-            if !message.confirmed() {
-                // ignore errors because we fallback to the polling system
-                let _ =
-                    crate::monitor::monitor_confirmation_state_change(&self.account, message.id());
-            }
-        }
-        self.account.append_messages(new_messages);
-
-        let mut addresses_to_save = vec![];
-        let mut ignored_addresses = vec![];
-        let mut previous_address_is_unused = false;
-        for found_address in found_addresses.into_iter() {
-            let address_is_unused = found_address.outputs().is_empty();
-
-            // if the previous address is unused, we'll keep checking to see if an used address was found on the gap limit
-            if previous_address_is_unused {
-                // subsequent unused address found; add it to the ignored addresses list
-                if address_is_unused {
-                    ignored_addresses.push(found_address);
+                if !self.skip_persistance {
+                    crate::storage::with_adapter(&self.storage_path, |storage| {
+                        storage.set(
+                            self.account.id().into(),
+                            serde_json::to_string(&self.account)?,
+                        )
+                    })?;
                 }
-                // used address found after finding unused addresses; we'll save all the previous ignored address and this one aswell
-                else {
-                    addresses_to_save.extend(ignored_addresses.into_iter());
-                    ignored_addresses = vec![];
-                    addresses_to_save.push(found_address);
-                }
-            }
-            // if the previous address is used or this is the first address,
-            // we'll save it because we want at least one unused address
-            else {
-                addresses_to_save.push(found_address);
-            }
-            previous_address_is_unused = address_is_unused;
-        }
-        for address in addresses_to_save.iter().filter(|a| !a.internal()) {
-            // ignore errors because we fallback to the polling system
-            let _ = crate::monitor::monitor_address_balance(&self.account, &address);
-        }
-        self.account.append_addresses(addresses_to_save);
 
-        if !self.skip_persistance {
-            crate::storage::with_adapter(&self.storage_path, |storage| {
-                storage.set(
-                    self.account.id().into(),
-                    serde_json::to_string(&self.account)?,
-                )
-            })?;
-        }
-
-        let synced_account = SyncedAccount {
-            account_id: *self.account.id(),
-            deposit_address: self.account.latest_address().unwrap().clone(),
-            is_empty,
-            storage_path: self.storage_path,
-            addresses: self.account.addresses().clone(),
-            messages: self.account.messages().clone(),
+                let synced_account = SyncedAccount {
+                    account_id: *self.account.id(),
+                    deposit_address: self.account.latest_address().unwrap().clone(),
+                    is_empty,
+                    storage_path: self.storage_path,
+                    addresses: self.account.addresses().clone(),
+                    messages: self.account.messages().clone(),
+                };
+                Ok(synced_account)
+            }
+            Err(e) => Err(e),
         };
-        Ok(synced_account)
+
+        let _ = crate::monitor::monitor_account_addresses_balance(&self.account);
+        let _ = crate::monitor::monitor_unconfirmed_messages(&self.account);
+
+        return_value
     }
 }
 
