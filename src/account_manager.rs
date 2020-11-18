@@ -333,9 +333,29 @@ impl AccountManager {
         &self,
         account_id: AccountIdentifier,
         message_id: &MessageId,
-    ) -> crate::Result<()> {
+    ) -> crate::Result<Message> {
         let mut account = self.get_account(account_id)?;
-        reattach(&self.storage_path, &mut account, message_id).await
+        account.sync().execute().await?.reattach(message_id).await
+    }
+
+    /// Promotes an unconfirmed transaction.
+    pub async fn promote(
+        &self,
+        account_id: AccountIdentifier,
+        message_id: &MessageId,
+    ) -> crate::Result<Message> {
+        let mut account = self.get_account(account_id)?;
+        account.sync().execute().await?.promote(message_id).await
+    }
+
+    /// Retries an unconfirmed transaction.
+    pub async fn retry(
+        &self,
+        account_id: AccountIdentifier,
+        message_id: &MessageId,
+    ) -> crate::Result<Message> {
+        let mut account = self.get_account(account_id)?;
+        account.sync().execute().await?.retry(message_id).await
     }
 }
 
@@ -343,7 +363,7 @@ async fn poll(storage_path: PathBuf) -> crate::Result<()> {
     let accounts_before_sync =
         crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
     let accounts_before_sync = crate::storage::parse_accounts(&accounts_before_sync)?;
-    sync_accounts(&storage_path, Some(0)).await?;
+    let synced_accounts = sync_accounts(&storage_path, Some(0)).await?;
     let accounts_after_sync =
         crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
     let accounts_after_sync = crate::storage::parse_accounts(&accounts_after_sync)?;
@@ -399,7 +419,13 @@ async fn poll(storage_path: PathBuf) -> crate::Result<()> {
             }
         });
     }
-    let reattached = reattach_unconfirmed_transactions(&storage_path).await?;
+    let reattached = reattach_unconfirmed_transactions(
+        synced_accounts
+            .iter()
+            .zip(accounts_after_sync.iter())
+            .collect(),
+    )
+    .await?;
     reattached.iter().for_each(|(message, account_id)| {
         emit_transaction_event(TransactionEventType::Reattachment, account_id, message.id());
     });
@@ -466,67 +492,18 @@ async fn sync_accounts<'a>(
 }
 
 async fn reattach_unconfirmed_transactions(
-    storage_path: &PathBuf,
+    accounts: Vec<(&SyncedAccount, &Account)>,
 ) -> crate::Result<Vec<(Message, [u8; 32])>> {
-    let accounts = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
     let mut reattached = vec![];
-    for account_str in accounts {
-        let account: Account = serde_json::from_str(&account_str)?;
+    for (synced, account) in accounts {
         let unconfirmed_messages =
             account.list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed));
-        let mut account: Account = serde_json::from_str(&account_str)?;
         for message in unconfirmed_messages {
-            reattach(&storage_path, &mut account, &message.id()).await?;
-            reattached.push((message.clone(), *account.id()));
+            let message = synced.retry(message.id()).await?;
+            reattached.push((message, *account.id()));
         }
     }
     Ok(reattached)
-}
-
-async fn reattach(
-    storage_path: &PathBuf,
-    account: &mut Account,
-    message_id: &MessageId,
-) -> crate::Result<()> {
-    let mut messages: Vec<Message> = account.messages().to_vec();
-    let message = messages
-        .iter_mut()
-        .find(|message| message.id() == message_id)
-        .ok_or_else(|| crate::WalletError::MessageNotFound)?;
-
-    if message.confirmed {
-        Err(crate::WalletError::MessageAlreadyConfirmed)
-    } else if message.is_above_max_depth() {
-        Err(crate::WalletError::MessageAboveMaxDepth)
-    } else {
-        let client = crate::client::get_client(account.client_options());
-        let is_confirmed = *client
-            .is_confirmed(&[*message_id])?
-            .get(message.id())
-            .ok_or_else(|| {
-                crate::WalletError::UnexpectedResponse(
-                    "invalid `is_confirmed` response".to_string(),
-                )
-            })?;
-        if is_confirmed {
-            // message is already confirmed; do nothing
-            message.set_confirmed(true);
-        } else {
-            // reattach the message
-            // TODO reintroduce when added back to iota.rs
-            /*let reattachment_message = client.reattach(&message_id).await?;
-            messages.push(Message::from_iota_message(
-                *message_id,
-                &reattachment_message,
-            )?);*/
-        }
-        // update the messages in storage
-        account.set_messages(messages);
-        crate::storage::with_adapter(&storage_path, |storage| {
-            storage.set(account.id().into(), serde_json::to_string(&account)?)
-        })?;
-        Ok(())
-    }
 }
 
 fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std::io::Error> {

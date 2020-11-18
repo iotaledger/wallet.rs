@@ -279,10 +279,21 @@ impl Account {
         from: usize,
         message_type: Option<MessageType>,
     ) -> Vec<&Message> {
+        let mut found_message_payloads = vec![];
         let messages_iter = self
             .messages
             .iter()
+            // iterate in reverse order to find reattachments first
+            .rev()
             .filter(|message| {
+                // ignore if the message if one with the same payload was already found (i.e. this message was reattached)
+                if found_message_payloads
+                    .iter()
+                    .any(|payload| payload == &message.payload())
+                {
+                    return false;
+                }
+                found_message_payloads.push(message.payload());
                 if let Some(message_type) = message_type.clone() {
                     match message_type {
                         MessageType::Received => *message.incoming(),
@@ -295,6 +306,8 @@ impl Account {
                     true
                 }
             })
+            // reverse the iterator again to list in the ascending order
+            .rev()
             .skip(from);
         if count == 0 {
             messages_iter.collect()

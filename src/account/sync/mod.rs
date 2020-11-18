@@ -539,14 +539,102 @@ impl SyncedAccount {
         Ok(message)
     }
 
-    /// Retry messages.
-    pub fn retry(&self, message_id: &MessageId) -> crate::Result<Message> {
-        let account: Account =
-            crate::storage::get_account(&self.storage_path, self.account_id.clone().into())?;
-        let message = account
-            .get_message(message_id)
-            .ok_or_else(|| anyhow::anyhow!("transaction with the given id not found"));
-        unimplemented!()
+    /// Retry message.
+    pub async fn retry(&self, message_id: &MessageId) -> crate::Result<Message> {
+        repost_message(
+            self.account_id.clone().into(),
+            &self.storage_path,
+            message_id,
+            RepostAction::Retry,
+        )
+        .await
+    }
+
+    /// Promote message.
+    pub async fn promote(&self, message_id: &MessageId) -> crate::Result<Message> {
+        repost_message(
+            self.account_id.clone().into(),
+            &self.storage_path,
+            message_id,
+            RepostAction::Promote,
+        )
+        .await
+    }
+
+    /// Reattach message.
+    pub async fn reattach(&self, message_id: &MessageId) -> crate::Result<Message> {
+        repost_message(
+            self.account_id.clone().into(),
+            &self.storage_path,
+            message_id,
+            RepostAction::Reattach,
+        )
+        .await
+    }
+}
+
+enum RepostAction {
+    Retry,
+    Reattach,
+    Promote,
+}
+
+async fn repost_message(
+    account_id: AccountIdentifier,
+    storage_path: &PathBuf,
+    message_id: &MessageId,
+    action: RepostAction,
+) -> crate::Result<Message> {
+    let mut account: Account = crate::storage::get_account(&storage_path, account_id)?;
+    match account.get_message(message_id) {
+        Some(message_to_repost) => {
+            // get the latest reattachment of the message we want to promote/rettry/reattach
+            let messages = account.list_messages(0, 0, None);
+            let message_to_repost = messages
+                .iter()
+                .find(|m| m.payload() == message_to_repost.payload())
+                .unwrap();
+            if *message_to_repost.confirmed() {
+                return Err(crate::WalletError::ClientError(
+                    iota::client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
+                ));
+            }
+
+            let client = crate::client::get_client(account.client_options());
+
+            let (id, message) = match action {
+                RepostAction::Promote => {
+                    let metadata = client.get_message().metadata(message_id).await?;
+                    if metadata.should_promote {
+                        client.promote(message_id).await?
+                    } else {
+                        return Err(crate::WalletError::ClientError(
+                            iota::client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
+                        ));
+                    }
+                }
+                RepostAction::Reattach => {
+                    let metadata = client.get_message().metadata(message_id).await?;
+                    if metadata.should_reattach {
+                        client.reattach(message_id).await?
+                    } else {
+                        return Err(crate::WalletError::ClientError(
+                            iota::client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
+                        ));
+                    }
+                }
+                RepostAction::Retry => client.retry(message_id).await?,
+            };
+            let message = Message::from_iota_message(id, account.addresses(), &message)?;
+
+            account.append_messages(vec![message.clone()]);
+            crate::storage::with_adapter(&storage_path, |storage| {
+                storage.set(account.id().into(), serde_json::to_string(&account)?)
+            })?;
+
+            Ok(message)
+        }
+        None => Err(crate::WalletError::MessageNotFound),
     }
 }
 
