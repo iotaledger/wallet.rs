@@ -1,7 +1,4 @@
-use crate::{
-    account::Account,
-    address::{Address, IotaAddress},
-};
+use crate::address::{Address, IotaAddress};
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
 use iota::message::prelude::{Message as IotaMessage, MessageId, Output, Payload};
@@ -101,14 +98,14 @@ impl fmt::Display for ValueUnit {
 #[getset(get = "pub")]
 pub struct Value {
     /// The value.
-    value: i64,
+    value: u64,
     /// The value's unit.
     unit: ValueUnit,
 }
 
 impl Value {
     /// Ititialises a new Value.
-    pub fn new(value: i64, unit: ValueUnit) -> Self {
+    pub fn new(value: u64, unit: ValueUnit) -> Self {
         Self { value, unit }
     }
 
@@ -118,7 +115,7 @@ impl Value {
     }
 
     /// The transaction value without its unit.
-    pub fn without_denomination(&self) -> i64 {
+    pub fn without_denomination(&self) -> u64 {
         let multiplier = match self.unit {
             ValueUnit::I => 1,
             ValueUnit::Ki => 1000,
@@ -161,6 +158,8 @@ pub struct Message {
     pub(crate) broadcasted: bool,
     /// Whether the message represents an incoming transaction or not.
     pub(crate) incoming: bool,
+    /// The message's value.
+    pub(crate) value: u64,
 }
 
 impl Hash for Message {
@@ -213,6 +212,7 @@ impl Message {
             incoming: account_addresses
                 .iter()
                 .any(|address| address.outputs().iter().any(|o| o.message_id() == &id)),
+            value: Self::compute_value(&message, &id, &account_addresses).without_denomination(),
         };
 
         Ok(message)
@@ -246,21 +246,20 @@ impl Message {
     }
 
     /// Gets the absolute value of the transaction.
-    pub fn value(&self, account: &Account) -> Value {
-        let amount = match &self.payload {
+    pub fn compute_value(
+        iota_message: &IotaMessage,
+        id: &MessageId,
+        account_addresses: &[Address],
+    ) -> Value {
+        let amount = match iota_message.payload().as_ref().unwrap() {
             Payload::Transaction(tx) => {
-                let sent = !account.addresses().iter().any(|address| {
-                    address
-                        .outputs()
-                        .iter()
-                        .any(|o| o.message_id() == self.id())
-                });
+                let sent = !account_addresses
+                    .iter()
+                    .any(|address| address.outputs().iter().any(|o| o.message_id() == id));
                 tx.essence().outputs().iter().fold(0, |acc, output| {
                     if let Output::SignatureLockedSingle(x) = output {
-                        let address_belongs_to_account = account
-                            .addresses()
-                            .iter()
-                            .any(|a| a.address() == x.address());
+                        let address_belongs_to_account =
+                            account_addresses.iter().any(|a| a.address() == x.address());
                         if sent {
                             if address_belongs_to_account {
                                 acc
