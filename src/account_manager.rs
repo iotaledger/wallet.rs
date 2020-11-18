@@ -91,11 +91,11 @@ impl AccountManager {
             if *event.confirmed() {
                 let _ = mutate_account_transaction(
                     &storage_path,
-                    event.account_id().clone().into(),
+                    (**event.account_id()).into(),
                     |_, transactions| {
                         if let Some(message) = transactions
                             .iter_mut()
-                            .find(|message| message.id() == event.message_id())
+                            .find(|message| message.id() == event.message().id())
                         {
                             message.set_confirmed(true);
                         }
@@ -112,7 +112,7 @@ impl AccountManager {
                 |_, transactions| {
                     if let Some(message) = transactions
                         .iter_mut()
-                        .find(|message| message.id() == event.message_id())
+                        .find(|message| message.id() == event.message().id())
                     {
                         message.set_broadcasted(true);
                     }
@@ -122,21 +122,11 @@ impl AccountManager {
 
         let storage_path = self.storage_path.clone();
         crate::event::on_new_transaction(move |event| {
-            let message_id = *event.message_id();
             let _ = mutate_account_transaction(
                 &storage_path,
                 event.account_id().clone().into(),
                 |account, messages| {
-                    let mut rt =
-                        tokio::runtime::Runtime::new().expect("failed to create tokio runtime");
-                    rt.block_on(async move {
-                        let client = crate::client::get_client(account.client_options());
-                        let message = client.get_message().data(&message_id).await.unwrap();
-                        messages.push(
-                            Message::from_iota_message(message_id, account.addresses(), &message)
-                                .unwrap(),
-                        );
-                    });
+                    messages.push((*event.message()).clone());
                 },
             );
         });
@@ -380,7 +370,7 @@ async fn poll(storage_path: PathBuf) -> crate::Result<()> {
                 emit_transaction_event(
                     TransactionEventType::NewTransaction,
                     account_after_sync.id(),
-                    message.id(),
+                    &message,
                 )
             });
 
@@ -395,13 +385,13 @@ async fn poll(storage_path: PathBuf) -> crate::Result<()> {
                 None => false,
             };
             if changed {
-                emit_confirmation_state_change(account_after_sync.id(), message.id(), true);
+                emit_confirmation_state_change(account_after_sync.id(), &message, true);
             }
         });
     }
     let reattached = reattach_unconfirmed_transactions(&storage_path).await?;
     reattached.iter().for_each(|(message, account_id)| {
-        emit_transaction_event(TransactionEventType::Reattachment, account_id, message.id());
+        emit_transaction_event(TransactionEventType::Reattachment, account_id, &message);
     });
     Ok(())
 }
