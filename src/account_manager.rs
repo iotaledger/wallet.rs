@@ -573,9 +573,10 @@ mod tests {
                     .with_parent1(MessageId::new([0; 32]))
                     .with_parent2(MessageId::new([0; 32]))
                     .with_payload(Payload::Indexation(Box::new(Indexation::new(
-                        "".to_string(),
+                        "index".to_string(),
                         &[0; 16],
                     ).unwrap())))
+                    // TODO temp removed .with_network_id(0)
                     .finish()
                     .unwrap()).unwrap()])
                 .initialise().unwrap();
