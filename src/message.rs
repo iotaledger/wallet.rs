@@ -4,7 +4,6 @@ use getset::{Getters, Setters};
 use iota::message::prelude::{Message as IotaMessage, MessageId, Output, Payload};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use std::convert::TryInto;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 
@@ -278,7 +277,7 @@ impl Message {
             }
             _ => 0,
         };
-        Value::new(amount.try_into().unwrap(), ValueUnit::I)
+        Value::new(amount, ValueUnit::I)
     }
 }
 
