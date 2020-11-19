@@ -57,7 +57,7 @@ fn get_from_index(
         AccountIdentifier::Id(id) => index
             .iter()
             .find(|(acc_id, _)| acc_id == account_id)
-            .ok_or_else(|| crate::WalletError::AccountNotFound)?,
+            .ok_or(crate::WalletError::AccountNotFound)?,
         AccountIdentifier::Index(pos) => {
             let pos = *pos as usize;
             if index.len() > pos {

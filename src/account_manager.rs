@@ -482,7 +482,7 @@ async fn reattach(
     let message = messages
         .iter_mut()
         .find(|message| message.id() == message_id)
-        .ok_or_else(|| crate::WalletError::MessageNotFound)?;
+        .ok_or(crate::WalletError::MessageNotFound)?;
 
     if message.confirmed {
         Err(crate::WalletError::MessageAlreadyConfirmed)
