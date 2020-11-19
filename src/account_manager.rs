@@ -419,15 +419,21 @@ async fn poll(storage_path: PathBuf) -> crate::Result<()> {
             }
         });
     }
-    let reattached = reattach_unconfirmed_transactions(
+    let retried = retry_unconfirmed_transactions(
         synced_accounts
             .iter()
             .zip(accounts_after_sync.iter())
             .collect(),
     )
     .await?;
-    reattached.iter().for_each(|(message, account_id)| {
-        emit_transaction_event(TransactionEventType::Reattachment, account_id, message.id());
+    retried.iter().for_each(|retried_data| {
+        retried_data.reattached.iter().for_each(|message| {
+            emit_transaction_event(
+                TransactionEventType::Reattachment,
+                &retried_data.account_id,
+                message.id(),
+            );
+        });
     });
     Ok(())
 }
@@ -491,19 +497,37 @@ async fn sync_accounts<'a>(
     Ok(synced_accounts)
 }
 
-async fn reattach_unconfirmed_transactions(
+struct RetriedData {
+    promoted: Vec<Message>,
+    reattached: Vec<Message>,
+    account_id: [u8; 32],
+}
+
+async fn retry_unconfirmed_transactions(
     accounts: Vec<(&SyncedAccount, &Account)>,
-) -> crate::Result<Vec<(Message, [u8; 32])>> {
-    let mut reattached = vec![];
+) -> crate::Result<Vec<RetriedData>> {
+    let mut retried_messages = vec![];
     for (synced, account) in accounts {
         let unconfirmed_messages =
             account.list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed));
+        let mut reattachments = vec![];
+        let mut promotions = vec![];
         for message in unconfirmed_messages {
-            let message = synced.retry(message.id()).await?;
-            reattached.push((message, *account.id()));
+            let new_message = synced.retry(message.id()).await?;
+            // if the payload is the same, it was reattached; otherwise it was promoted
+            if new_message.payload() == message.payload() {
+                reattachments.push(new_message);
+            } else {
+                promotions.push(new_message);
+            }
         }
+        retried_messages.push(RetriedData {
+            promoted: promotions,
+            reattached: reattachments,
+            account_id: *account.id(),
+        });
     }
-    Ok(reattached)
+    Ok(retried_messages)
 }
 
 fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std::io::Error> {
