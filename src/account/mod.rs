@@ -279,36 +279,39 @@ impl Account {
         from: usize,
         message_type: Option<MessageType>,
     ) -> Vec<&Message> {
-        let mut found_message_payloads = vec![];
-        let messages_iter = self
-            .messages
-            .iter()
-            // iterate in reverse order to find reattachments first
-            .rev()
-            .filter(|message| {
-                // ignore if the message if one with the same payload was already found (i.e. this message was reattached)
-                if found_message_payloads
-                    .iter()
-                    .any(|payload| payload == &message.payload())
-                {
-                    return false;
-                }
-                found_message_payloads.push(message.payload());
-                if let Some(message_type) = message_type.clone() {
-                    match message_type {
-                        MessageType::Received => *message.incoming(),
-                        MessageType::Sent => !message.incoming(),
-                        MessageType::Failed => !message.broadcasted(),
-                        MessageType::Unconfirmed => !message.confirmed(),
-                        MessageType::Value => *message.value() > 0,
-                    }
+        let mut messages: Vec<&Message> = vec![];
+        for message in self.messages.iter() {
+            // if we already found a message with the same payload,
+            // this is a reattachment message
+            if let Some(original_message_index) = messages
+                .iter()
+                .position(|m| m.payload() == message.payload())
+            {
+                let original_message = messages[original_message_index];
+                // if the original message was confirmed, we ignore this reattachment
+                if *original_message.confirmed() {
+                    continue;
                 } else {
-                    true
+                    // remove the original message otherwise
+                    messages.remove(original_message_index);
                 }
-            })
-            // reverse the iterator again to list in the ascending order
-            .rev()
-            .skip(from);
+            }
+            let should_push = if let Some(message_type) = message_type.clone() {
+                match message_type {
+                    MessageType::Received => *message.incoming(),
+                    MessageType::Sent => !message.incoming(),
+                    MessageType::Failed => !message.broadcasted(),
+                    MessageType::Unconfirmed => !message.confirmed(),
+                    MessageType::Value => *message.value() > 0,
+                }
+            } else {
+                true
+            };
+            if should_push {
+                messages.push(message);
+            }
+        }
+        let messages_iter = messages.into_iter().skip(from);
         if count == 0 {
             messages_iter.collect()
         } else {
