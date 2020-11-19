@@ -1,4 +1,4 @@
-///! An example of using a custom storage adapter (in this case, using rocksdb).
+///! An example of using a custom storage adapter (in this case, using sled).
 use iota_wallet::{
     account::AccountIdentifier, account_manager::AccountManager, client::ClientOptionsBuilder,
     storage::StorageAdapter,
