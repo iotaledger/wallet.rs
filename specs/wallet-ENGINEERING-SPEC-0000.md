@@ -976,7 +976,7 @@ Note: Currently, it is not possible to send multiple payloads as part of the mes
     <td>number</td>
     <td>Length of the payload.</td>
   </tr>
-    <tr>
+  <tr>
     <td>payload</td>
     <td>&#10004;</td>
     <td>
@@ -1016,6 +1016,18 @@ Note: Currently, it is not possible to send multiple payloads as part of the mes
       </ul>
       Note: This property may only be required for clients with persistent storage.
     </td>
+  </tr>
+  <tr>
+    <td>incoming</td>
+    <td>&#10004;</td>
+    <td>boolean</td>
+    <td>Determines if the message is an incoming transaction or not.</td>
+  </tr>
+  <tr>
+    <td>value</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Message transfer value.</td>
   </tr>
 </table>
 

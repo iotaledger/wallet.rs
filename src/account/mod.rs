@@ -231,7 +231,7 @@ impl Account {
                 let val = if *message.confirmed() {
                     0
                 } else {
-                    message.value(&self).without_denomination()
+                    *message.value()
                 };
                 acc + val
             });
@@ -289,7 +289,7 @@ impl Account {
                         MessageType::Sent => !message.incoming(),
                         MessageType::Failed => !message.broadcasted(),
                         MessageType::Unconfirmed => !message.confirmed(),
-                        MessageType::Value => message.value(&self).without_denomination() > 0,
+                        MessageType::Value => *message.value() > 0,
                     }
                 } else {
                     true
