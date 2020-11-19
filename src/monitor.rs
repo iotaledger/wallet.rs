@@ -206,9 +206,9 @@ pub fn monitor_confirmation_state_change(
     subscribe_to_topic(
         account.client_options(),
         format!("messages/{}/metadata", message_id.to_string()),
-        move |value| {
+        move |topic_event| {
             let _ = process_metadata(
-                value.payload.clone(),
+                topic_event.payload.clone(),
                 account_id_bytes,
                 message_id,
                 &message,
