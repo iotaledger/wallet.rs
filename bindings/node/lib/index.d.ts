@@ -103,9 +103,19 @@ export declare interface AccountToCreate {
 }
 
 export declare class AccountManager {
+  constructor(storagePath?: string)
   setStrongholdPassword(password: string): void
   createAccount(account: AccountToCreate): Account
   getAccount(accountId: number[] | number): Account | undefined
   removeAccount(accountId: number[] | number): void
   syncAccounts(): Promise<SyncedAccount[]>
 }
+
+export declare type Event = 'ErrorThrown' |
+  'BalanceChange' |
+  'NewTransaction' |
+  'ConfirmationStateChange' |
+  'Reattachment' |
+  'Broadcast'
+
+export declare function addEventListener(event: Event, cb: (err?: any, data?: { [k: string]: any }) => void): void

@@ -43,5 +43,6 @@ register_module!(mut m, {
     m.export_class::<JsAccountManager>("AccountManager")?;
     m.export_class::<JsAccount>("Account")?;
     m.export_class::<JsSyncedAccount>("SyncedAccount")?;
+    m.export_class::<JsEventListener>("EventListener")?;
     Ok(())
 });
