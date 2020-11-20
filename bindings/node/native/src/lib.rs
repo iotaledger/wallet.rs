@@ -13,8 +13,9 @@ use once_cell::sync::OnceCell;
 use serde::Deserialize;
 use tokio::runtime::Runtime;
 
-mod send;
-mod sync;
+mod tasks;
+use tasks::send;
+use tasks::sync;
 
 pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
     static INSTANCE: OnceCell<Mutex<Runtime>> = OnceCell::new();
