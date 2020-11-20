@@ -8,6 +8,8 @@ use iota_wallet::{
 use neon::prelude::*;
 use serde::Deserialize;
 
+mod sync;
+
 #[derive(Deserialize)]
 pub struct AccountToCreate {
     #[serde(rename = "clientOptions")]
@@ -126,6 +128,17 @@ declare_types! {
                 let manager = this.borrow(&guard);
                 manager.remove_account(id).expect("error removing account")
             };
+            Ok(cx.undefined().upcast())
+        }
+
+        method syncAccounts(mut cx) {
+            let cb = cx.argument::<JsFunction>(0)?;
+            let this = cx.this();
+            let manager = cx.borrow(&this, |r| r.clone());
+            let task = sync::SyncTask {
+                manager,
+            };
+            task.schedule(cb);
             Ok(cx.undefined().upcast())
         }
     }

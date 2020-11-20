@@ -1,0 +1,38 @@
+use iota_wallet::{account::SyncedAccount, account_manager::AccountManager, WalletError};
+use neon::prelude::*;
+
+pub struct SyncTask {
+  pub manager: AccountManager,
+}
+
+impl Task for SyncTask {
+  type Output = Vec<SyncedAccount>;
+  type Error = WalletError;
+  type JsEvent = JsArray;
+
+  fn perform(&self) -> Result<Self::Output, Self::Error> {
+    crate::block_on(crate::convert_async_panics(|| async {
+      self.manager.sync_accounts().await
+    }))
+  }
+
+  fn complete(
+    self,
+    mut cx: TaskContext,
+    value: Result<Self::Output, Self::Error>,
+  ) -> JsResult<Self::JsEvent> {
+    match value {
+      Ok(synced_accounts) => {
+        let js_array = JsArray::new(&mut cx, synced_accounts.len() as u32);
+        for (index, synced_account) in synced_accounts.iter().enumerate() {
+          let synced = neon_serde::to_value(&mut cx, &synced_account)?;
+          let synced_instance = crate::JsSyncedAccount::new(&mut cx, vec![synced])?;
+          js_array.set(&mut cx, index as u32, synced_instance)?;
+        }
+
+        Ok(js_array)
+      }
+      Err(e) => cx.throw_error(e.to_string()),
+    }
+  }
+}

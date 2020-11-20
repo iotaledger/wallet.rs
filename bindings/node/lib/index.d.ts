@@ -107,4 +107,5 @@ export declare class AccountManager {
   createAccount(account: AccountToCreate): Account
   getAccount(accountId: number[] | number): Account | undefined
   removeAccount(accountId: number[] | number): void
+  syncAccounts(): Promise<SyncedAccount[]>
 }

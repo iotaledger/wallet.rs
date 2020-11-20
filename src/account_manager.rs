@@ -23,6 +23,7 @@ const DEFAULT_STORAGE_PATH: &str = "./example-database";
 /// The account manager.
 ///
 /// Used to manage multiple accounts.
+#[derive(Clone)]
 pub struct AccountManager {
     storage_path: PathBuf,
 }
