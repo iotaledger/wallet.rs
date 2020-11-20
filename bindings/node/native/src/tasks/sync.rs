@@ -7,7 +7,7 @@ use iota_wallet::{
 use neon::prelude::*;
 use serde::Deserialize;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 pub struct SyncOptions {
   #[serde(rename = "addressIndex")]
   address_index: Option<usize>,
@@ -41,7 +41,9 @@ impl Task for SyncTask {
         synchronizer = synchronizer.skip_persistance();
       }
     }
-    crate::block_on(synchronizer.execute())
+    crate::block_on(super::convert_async_panics(|| async {
+      synchronizer.execute().await
+    }))
   }
 
   fn complete(

@@ -19,7 +19,9 @@ impl Task for SendTask {
 
   fn perform(&self) -> Result<Self::Output, Self::Error> {
     let synced = self.synced.lock().unwrap();
-    crate::block_on(synced.transfer(self.transfer.clone()))
+    crate::block_on(super::convert_async_panics(|| async {
+      synced.transfer(self.transfer.clone()).await
+    }))
   }
 
   fn complete(
