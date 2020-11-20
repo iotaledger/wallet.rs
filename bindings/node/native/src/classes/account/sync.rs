@@ -41,7 +41,7 @@ impl Task for SyncTask {
         synchronizer = synchronizer.skip_persistance();
       }
     }
-    crate::block_on(super::convert_async_panics(|| async {
+    crate::block_on(crate::convert_async_panics(|| async {
       synchronizer.execute().await
     }))
   }
