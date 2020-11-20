@@ -73,7 +73,7 @@ impl StorageAdapter for SqliteStorageAdapter {
         let account = results
             .first()
             .map(|val| val.as_ref().unwrap().to_string())
-            .ok_or_else(|| crate::WalletError::AccountNotFound)?;
+            .ok_or(crate::WalletError::AccountNotFound)?;
         Ok(account)
     }
 
