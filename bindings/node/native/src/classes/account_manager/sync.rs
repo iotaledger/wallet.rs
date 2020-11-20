@@ -1,8 +1,10 @@
+use std::sync::Arc;
+
 use iota_wallet::{account::SyncedAccount, account_manager::AccountManager, WalletError};
 use neon::prelude::*;
 
 pub struct SyncTask {
-  pub manager: AccountManager,
+  pub manager: Arc<AccountManager>,
 }
 
 impl Task for SyncTask {

@@ -37,5 +37,6 @@ SyncedAccount.prototype.retry = promisify(SyncedAccount.prototype.retry)
 SyncedAccount.prototype.reattach = promisify(SyncedAccount.prototype.reattach)
 SyncedAccount.prototype.promote = promisify(SyncedAccount.prototype.promote)
 AccountManager.prototype.syncAccounts = promisify(AccountManager.prototype.syncAccounts)
+AccountManager.prototype.internalTransfer = promisify(AccountManager.prototype.internalTransfer)
 
 module.exports = { AccountManager, addEventListener }

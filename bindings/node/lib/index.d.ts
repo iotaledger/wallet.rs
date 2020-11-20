@@ -109,6 +109,9 @@ export declare class AccountManager {
   getAccount(accountId: number[] | number): Account | undefined
   removeAccount(accountId: number[] | number): void
   syncAccounts(): Promise<SyncedAccount[]>
+  internalTransfer(fromAccountId: number[] | number, toAccountId: number[] | number, amount: number): Promise<Message>
+  backup(destination: string): string
+  importAccounts(source: string): void
 }
 
 export declare type Event = 'ErrorThrown' |
