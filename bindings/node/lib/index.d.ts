@@ -76,4 +76,7 @@ export declare class Account {
 
 export declare class SyncedAccount {
   send(address: string, amount: number): Promise<Message>
+  retry(messageId: string): Promise<Message>
+  reattach(messageId: string): Promise<Message>
+  promote(messageId: string): Promise<Message>
 }

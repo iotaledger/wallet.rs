@@ -15,5 +15,8 @@ function promisify (fn) {
 
 Account.prototype.sync = promisify(Account.prototype.sync)
 SyncedAccount.prototype.send = promisify(SyncedAccount.prototype.send)
+SyncedAccount.prototype.retry = promisify(SyncedAccount.prototype.retry)
+SyncedAccount.prototype.reattach = promisify(SyncedAccount.prototype.reattach)
+SyncedAccount.prototype.promote = promisify(SyncedAccount.prototype.promote)
 
 module.exports = { AccountManager }

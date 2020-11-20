@@ -540,7 +540,7 @@ impl SyncedAccount {
     }
 
     /// Retry messages.
-    pub fn retry(&self, message_id: &MessageId) -> crate::Result<Message> {
+    pub async fn retry(&self, message_id: &MessageId) -> crate::Result<Message> {
         let account: Account =
             crate::storage::get_account(&self.storage_path, self.account_id.clone().into())?;
         let message = account
