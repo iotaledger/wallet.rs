@@ -133,5 +133,6 @@ declare_types! {
 // Export the class
 register_module!(mut m, {
     m.export_class::<JsAccountManager>("AccountManager")?;
+    m.export_class::<JsAccount>("Account")?;
     Ok(())
 });

@@ -8,9 +8,8 @@ try {
     mnemonic,
     clientOptions: { node: 'http://localhost:14265' }
   })
-
   console.log('balance', account.availableBalance())
-  account.sync({}, (err, synced) => console.log('SYNCED', err, synced))
+  account.sync({}).then(synced => console.log('synced', synced)).catch(console.error)
 } finally {
   const fs = require('fs')
   try {
