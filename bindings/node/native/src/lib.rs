@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use iota_wallet::{
     account::{Account, SyncedAccount},
     account_manager::AccountManager,
-    address::parse as parse_address,
+    address::{parse as parse_address, Address},
     client::ClientOptions,
     message::Message,
     message::Transfer,
@@ -120,6 +120,29 @@ declare_types! {
             let js_array = JsArray::new(&mut cx, messages.len() as u32);
             for (index, message) in messages.iter().enumerate() {
                 let value = neon_serde::to_value(&mut cx, &message)?;
+                js_array.set(&mut cx, index as u32, value)?;
+            }
+
+            Ok(js_array.upcast())
+        }
+
+        method listAddresses(mut cx) {
+            let unspent = match cx.argument_opt(0) {
+                Some(arg) => arg.downcast::<JsBoolean>().or_throw(&mut cx)?.value(),
+                None => false,
+            };
+
+            let addresses: Vec<Address> = {
+                let this = cx.this();
+                let guard = cx.lock();
+                let ref_ = &this.borrow(&guard).0;
+                let account = ref_.lock().unwrap();
+                account.list_addresses(unspent).into_iter().cloned().collect()
+            };
+
+            let js_array = JsArray::new(&mut cx, addresses.len() as u32);
+            for (index, address) in addresses.iter().enumerate() {
+                let value = neon_serde::to_value(&mut cx, &address)?;
                 js_array.set(&mut cx, index as u32, value)?;
             }
 
