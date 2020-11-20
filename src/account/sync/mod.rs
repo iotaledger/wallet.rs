@@ -8,7 +8,7 @@ use iota::message::prelude::{
     Input, Message as IotaMessage, MessageId, Output, Payload, SignatureLockedSingleOutput,
     Transaction, TransactionEssence, TransactionId, UTXOInput,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use slip10::BIP32Path;
 
 use std::convert::TryInto;
@@ -313,7 +313,7 @@ impl<'a> AccountSynchronizer<'a> {
 }
 
 /// Data returned from account synchronization.
-#[derive(Debug, Clone, PartialEq, Getters, Serialize)]
+#[derive(Debug, Clone, PartialEq, Getters, Serialize, Deserialize)]
 pub struct SyncedAccount {
     /// The associated account identifier.
     #[serde(rename = "accountId")]

@@ -50,7 +50,10 @@ impl Task for SyncTask {
     value: Result<Self::Output, Self::Error>,
   ) -> JsResult<Self::JsEvent> {
     match value {
-      Ok(val) => Ok(neon_serde::to_value(&mut cx, &val)?),
+      Ok(val) => {
+        let synced = neon_serde::to_value(&mut cx, &val)?;
+        Ok(crate::JsSyncedAccount::new(&mut cx, vec![synced])?.upcast())
+      }
       Err(e) => cx.throw_error(e.to_string()),
     }
   }

@@ -1,13 +1,19 @@
 use std::sync::{Arc, Mutex};
 
 use iota_wallet::{
-    account::Account, account_manager::AccountManager, client::ClientOptions, DateTime, Utc,
+    account::{Account, SyncedAccount},
+    account_manager::AccountManager,
+    address::parse as parse_address,
+    client::ClientOptions,
+    message::Transfer,
+    DateTime, Utc,
 };
 use neon::prelude::*;
 use once_cell::sync::OnceCell;
 use serde::Deserialize;
 use tokio::runtime::Runtime;
 
+mod send;
 mod sync;
 
 pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
@@ -27,8 +33,34 @@ pub struct AccountToCreate {
 }
 
 pub struct AccountWrapper(Arc<Mutex<Account>>);
+pub struct SyncedAccountWrapper(Arc<Mutex<SyncedAccount>>);
 
 declare_types! {
+    pub class JsSyncedAccount for SyncedAccountWrapper {
+        init(mut cx) {
+            let synced = cx.argument::<JsValue>(0)?;
+            let synced: SyncedAccount = neon_serde::from_value(&mut cx, synced)?;
+            Ok(SyncedAccountWrapper(Arc::new(Mutex::new(synced))))
+        }
+
+        method send(mut cx) {
+            let address = cx.argument::<JsString>(0)?.value();
+            let amount = cx.argument::<JsNumber>(1)?.value() as u64;
+            let cb = cx.argument::<JsFunction>(2)?;
+
+            let transfer = Transfer::new(parse_address(address).expect("invalid address format"), amount);
+
+            let this = cx.this();
+            let synced = cx.borrow(&this, |r| r.0.clone());
+            let task = send::SendTask {
+                synced,
+                transfer,
+            };
+            task.schedule(cb);
+            Ok(cx.undefined().upcast())
+        }
+    }
+
     pub class JsAccount for AccountWrapper {
         init(mut cx) {
             let account = cx.argument::<JsValue>(0)?;
