@@ -167,13 +167,12 @@ async fn process_output(
 
         let message = Message::from_iota_message(message_id_, &addresses, &message).unwrap();
         if !messages.iter().any(|m| m == &message) {
-            let message_id = *message.id();
-            messages.push(message);
             crate::event::emit_transaction_event(
                 crate::event::TransactionEventType::NewTransaction,
                 &account_id_bytes,
-                &message_id,
+                &message,
             );
+            messages.push(message);
         }
     })?;
     Ok(())
@@ -234,7 +233,7 @@ fn process_metadata(
         mutate_account(&account_id, &storage_path, |account, _, messages| {
             let message = messages.iter_mut().find(|m| m.id() == &message_id).unwrap();
             message.set_confirmed(true);
-            crate::event::emit_confirmation_state_change(&account_id_bytes, message.id(), true);
+            crate::event::emit_confirmation_state_change(&account_id_bytes, &message, true);
         })?;
     }
     Ok(())

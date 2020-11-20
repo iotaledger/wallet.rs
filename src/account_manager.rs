@@ -349,7 +349,7 @@ async fn poll(storage_path: PathBuf, is_monitoring_disabled: bool) -> crate::Res
                     emit_transaction_event(
                         TransactionEventType::NewTransaction,
                         account_after_sync.id(),
-                        message.id(),
+                        &message,
                     )
                 });
 
@@ -364,14 +364,14 @@ async fn poll(storage_path: PathBuf, is_monitoring_disabled: bool) -> crate::Res
                     None => false,
                 };
                 if changed {
-                    emit_confirmation_state_change(account_after_sync.id(), message.id(), true);
+                    emit_confirmation_state_change(account_after_sync.id(), &message, true);
                 }
             });
         }
     }
     let reattached = reattach_unconfirmed_transactions(&storage_path).await?;
     reattached.iter().for_each(|(message, account_id)| {
-        emit_transaction_event(TransactionEventType::Reattachment, account_id, message.id());
+        emit_transaction_event(TransactionEventType::Reattachment, account_id, &message);
     });
     Ok(())
 }
@@ -462,7 +462,7 @@ async fn reattach(
     let message = messages
         .iter_mut()
         .find(|message| message.id() == message_id)
-        .ok_or_else(|| crate::WalletError::MessageNotFound)?;
+        .ok_or(crate::WalletError::MessageNotFound)?;
 
     if message.confirmed {
         Err(crate::WalletError::MessageAlreadyConfirmed)

@@ -1,27 +1,27 @@
-///! An example of using a custom storage adapter (in this case, using rocksdb).
+///! An example of using a custom storage adapter (in this case, using sled).
 use iota_wallet::{
     account::AccountIdentifier, account_manager::AccountManager, client::ClientOptionsBuilder,
     storage::StorageAdapter,
 };
-use rocksdb::{IteratorMode, DB};
+use sled::Db;
 use std::path::Path;
 
 struct MyStorage {
-    db: DB,
+    db: Db,
 }
 
 impl MyStorage {
     pub fn new<P: AsRef<Path>>(path: P) -> anyhow::Result<Self> {
         let instance = Self {
-            db: DB::open_default(path)?,
+            db: sled::open(path)?,
         };
         Ok(instance)
     }
 }
 
-fn account_id_value(account_id: AccountIdentifier) -> anyhow::Result<String> {
+fn account_id_value(account_id: AccountIdentifier) -> anyhow::Result<[u8; 32]> {
     match account_id {
-        AccountIdentifier::Id(val) => Ok(String::from_utf8_lossy(&val).to_string()),
+        AccountIdentifier::Id(val) => Ok(val),
         _ => Err(anyhow::anyhow!("Unexpected AccountIdentifier type")),
     }
 }
@@ -29,7 +29,7 @@ fn account_id_value(account_id: AccountIdentifier) -> anyhow::Result<String> {
 impl StorageAdapter for MyStorage {
     fn get(&self, account_id: AccountIdentifier) -> iota_wallet::Result<String> {
         match self.db.get(account_id_value(account_id)?) {
-            Ok(Some(value)) => Ok(String::from_utf8(value).unwrap()),
+            Ok(Some(value)) => Ok(String::from_utf8(value.to_vec()).unwrap()),
             Ok(None) => Err(anyhow::anyhow!("Value not found").into()),
             Err(e) => Err(anyhow::anyhow!("operational problem encountered: {}", e).into()),
         }
@@ -37,8 +37,8 @@ impl StorageAdapter for MyStorage {
 
     fn get_all(&self) -> iota_wallet::Result<std::vec::Vec<String>> {
         let mut accounts = vec![];
-        let iter = self.db.iterator(IteratorMode::Start);
-        for (_, value) in iter {
+        for tuple in self.db.iter() {
+            let (_, value) = tuple.unwrap();
             accounts.push(String::from_utf8(value.to_vec()).unwrap());
         }
         Ok(accounts)
@@ -46,23 +46,23 @@ impl StorageAdapter for MyStorage {
 
     fn set(&self, account_id: AccountIdentifier, account: String) -> iota_wallet::Result<()> {
         self.db
-            .put(account_id_value(account_id)?, account)
+            .insert(account_id_value(account_id)?, account.as_bytes())
             .map_err(|e| iota_wallet::WalletError::UnknownError(e.to_string()))?;
         Ok(())
     }
 
     fn remove(&self, account_id: AccountIdentifier) -> iota_wallet::Result<()> {
         self.db
-            .delete(account_id_value(account_id)?)
+            .remove(account_id_value(account_id)?)
             .map_err(|e| iota_wallet::WalletError::UnknownError(e.to_string()))?;
         Ok(())
     }
 }
 
 fn main() -> iota_wallet::Result<()> {
-    let mut manager = AccountManager::with_storage_adapter(
-        "./example-database/rocksdb",
-        MyStorage::new("./example-database/rocksdb")?,
+    let manager = AccountManager::with_storage_adapter(
+        "./example-database/sled",
+        MyStorage::new("./example-database/sled")?,
     )
     .unwrap();
     manager.set_stronghold_password("password").unwrap();
