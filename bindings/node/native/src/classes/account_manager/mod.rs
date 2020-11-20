@@ -1,17 +1,45 @@
 use super::JsAccount;
+use std::convert::TryInto;
 
-use iota_wallet::{account_manager::AccountManager, client::ClientOptions, DateTime, Utc};
+use iota_wallet::{
+    account::AccountIdentifier, account_manager::AccountManager, client::ClientOptions, DateTime,
+    Utc,
+};
 use neon::prelude::*;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub struct AccountToCreate {
-  #[serde(rename = "clientOptions")]
-  pub client_options: ClientOptions,
-  pub mnemonic: Option<String>,
-  pub alias: Option<String>,
-  #[serde(rename = "createdAt")]
-  pub created_at: Option<String>,
+    #[serde(rename = "clientOptions")]
+    pub client_options: ClientOptions,
+    pub mnemonic: Option<String>,
+    pub alias: Option<String>,
+    #[serde(rename = "createdAt")]
+    pub created_at: Option<String>,
+}
+
+fn js_array_to_acount_id(
+    cx: &mut CallContext<'_, JsAccountManager>,
+    value: Handle<JsValue>,
+) -> NeonResult<AccountIdentifier> {
+    match value.downcast::<JsArray>() {
+        Ok(js_array) => {
+            let vec: Vec<Handle<JsValue>> = js_array.to_vec(cx)?;
+            let mut id = vec![];
+            for value in vec {
+                let byte: JsNumber = *value.downcast_or_throw(cx)?;
+                id.push(byte.value() as u8);
+            }
+            let id: [u8; 32] = id
+                .try_into()
+                .expect("account id must have exactly 32 bytes");
+            Ok(id.into())
+        }
+        Err(_) => {
+            let index: JsNumber = *value.downcast_or_throw(cx)?;
+            Ok((index.value() as u64).into())
+        }
+    }
 }
 
 declare_types! {
@@ -24,10 +52,10 @@ declare_types! {
                 None => None,
             };
             let manager = match storage_path {
-                Some(p) => AccountManager::with_storage_path(p).unwrap(),
-                None => AccountManager::new().unwrap(),
+                Some(p) => AccountManager::with_storage_path(p),
+                None => AccountManager::new(),
             };
-            Ok(manager)
+            Ok(manager.expect("error initializing account manager"))
         }
 
         method setStrongholdPassword(mut cx) {
@@ -36,7 +64,7 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let manager = this.borrow(&guard);
-                manager.set_stronghold_password(password).unwrap();
+                manager.set_stronghold_password(password).expect("error setting stronghold password");
             }
             Ok(cx.undefined().upcast())
         }
@@ -61,14 +89,44 @@ declare_types! {
                     builder = builder.created_at(
                         created_at
                         .parse::<DateTime<Utc>>()
-                        .unwrap(),
+                        .expect("invalid account created at format"),
                     );
                 }
-                builder.initialise().unwrap()
+                builder.initialise().expect("error creating account")
             };
             let account = neon_serde::to_value(&mut cx, &account)?;
 
             Ok(JsAccount::new(&mut cx, vec![account])?.upcast())
+        }
+
+        method getAccount(mut cx) {
+            let id = cx.argument::<JsValue>(0)?;
+            let id = js_array_to_acount_id(&mut cx, id)?;
+            let account = {
+                let this = cx.this();
+                let guard = cx.lock();
+                let manager = this.borrow(&guard);
+                manager.get_account(id)
+            };
+            match account {
+                Ok(acc) => {
+                    let account = neon_serde::to_value(&mut cx, &acc)?;
+                    Ok(JsAccount::new(&mut cx, vec![account])?.upcast())
+                },
+                Err(_) => Ok(cx.undefined().upcast())
+            }
+        }
+
+        method removeAccount(mut cx) {
+            let id = cx.argument::<JsValue>(0)?;
+            let id = js_array_to_acount_id(&mut cx, id)?;
+            {
+                let this = cx.this();
+                let guard = cx.lock();
+                let manager = this.borrow(&guard);
+                manager.remove_account(id).expect("error removing account")
+            };
+            Ok(cx.undefined().upcast())
         }
     }
 }

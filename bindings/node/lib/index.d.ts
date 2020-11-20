@@ -80,3 +80,31 @@ export declare class SyncedAccount {
   reattach(messageId: string): Promise<Message>
   promote(messageId: string): Promise<Message>
 }
+
+export declare enum Network {
+  Mainnet,
+  Devnet,
+  Comnet
+}
+
+export declare interface ClientOptions {
+  node?: string;
+  nodes?: string[];
+  network?: Network;
+  quorumSize?: number;
+  quorumThreshold?: number;
+}
+
+export declare interface AccountToCreate {
+  clientOptions: ClientOptions;
+  mnemonic?: string;
+  alias?: string;
+  createdAt?: string;
+}
+
+export declare class AccountManager {
+  setStrongholdPassword(password: string): void
+  createAccount(account: AccountToCreate): Account
+  getAccount(accountId: number[] | number): Account | undefined
+  removeAccount(accountId: number[] | number): void
+}

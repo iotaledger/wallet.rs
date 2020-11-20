@@ -148,7 +148,7 @@ declare_types! {
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
                 let mut account = ref_.lock().unwrap();
-                account.set_alias(alias).unwrap();
+                account.set_alias(alias).expect("error updating account alias");
             }
             Ok(cx.undefined().upcast())
         }
@@ -174,7 +174,7 @@ declare_types! {
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
                 let mut account = ref_.lock().unwrap();
-                account.generate_address().unwrap()
+                account.generate_address().expect("error generating address")
             };
             Ok(neon_serde::to_value(&mut cx, &address)?)
         }
