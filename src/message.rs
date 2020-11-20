@@ -283,6 +283,7 @@ impl Message {
 
 /// Message type.
 #[derive(Debug, Clone, Deserialize)]
+#[serde(tag = "type", content = "payload")]
 pub enum MessageType {
     /// Message received.
     Received,

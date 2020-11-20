@@ -11,6 +11,7 @@ try {
   console.log('balance', account.availableBalance())
   account.sync({}).then(synced => {
     console.log('synced', synced)
+    console.log('acc messages', account.listMessages())
   }).catch(console.error)
 } finally {
   const fs = require('fs')
