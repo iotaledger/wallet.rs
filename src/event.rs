@@ -1,5 +1,5 @@
 use crate::address::Address;
-use iota::message::prelude::MessageId;
+use crate::message::Message;
 
 use getset::Getters;
 use once_cell::sync::Lazy;
@@ -10,12 +10,12 @@ use std::sync::{Arc, Mutex};
 /// The balance change event data.
 #[derive(Getters, Serialize)]
 #[getset(get = "pub")]
-pub struct BalanceEvent {
+pub struct BalanceEvent<'a> {
     /// The associated account identifier.
     #[serde(rename = "accountId")]
-    account_id: [u8; 32],
+    account_id: &'a [u8; 32],
     /// The associated address.
-    address: Address,
+    address: &'a Address,
     /// The new balance.
     balance: u64,
 }
@@ -23,32 +23,30 @@ pub struct BalanceEvent {
 /// A transaction-related event data.
 #[derive(Getters, Serialize)]
 #[getset(get = "pub")]
-pub struct TransactionEvent {
+pub struct TransactionEvent<'a> {
     #[serde(rename = "accountId")]
     /// The associated account identifier.
     account_id: [u8; 32],
-    #[serde(rename = "messageId", with = "crate::serde::message_id_serde")]
-    /// The event transaction hash.
-    message_id: MessageId,
+    /// The event message.
+    message: &'a Message,
 }
 
 /// A transaction-related event data.
 #[derive(Getters, Serialize)]
 #[getset(get = "pub")]
-pub struct TransactionConfirmationChangeEvent {
+pub struct TransactionConfirmationChangeEvent<'a> {
     #[serde(rename = "accountId")]
     /// The associated account identifier.
-    account_id: [u8; 32],
-    #[serde(rename = "messageId", with = "crate::serde::message_id_serde")]
-    /// The event transaction hash.
-    message_id: MessageId,
+    account_id: &'a [u8; 32],
+    /// The event message.
+    message: &'a Message,
     /// The confirmed state of the transaction.
     confirmed: bool,
 }
 
 struct BalanceEventHandler {
     /// The on event callback.
-    on_event: Box<dyn Fn(BalanceEvent) + Send>,
+    on_event: Box<dyn Fn(&BalanceEvent<'_>) + Send>,
 }
 
 struct ErrorHandler {
@@ -66,12 +64,12 @@ pub(crate) enum TransactionEventType {
 struct TransactionEventHandler {
     event_type: TransactionEventType,
     /// The on event callback.
-    on_event: Box<dyn Fn(TransactionEvent) + Send>,
+    on_event: Box<dyn Fn(&TransactionEvent<'_>) + Send>,
 }
 
 struct TransactionConfirmationChangeEventHandler {
     /// The on event callback.
-    on_event: Box<dyn Fn(TransactionConfirmationChangeEvent) + Send>,
+    on_event: Box<dyn Fn(&TransactionConfirmationChangeEvent<'_>) + Send>,
 }
 
 type BalanceListeners = Arc<Mutex<Vec<BalanceEventHandler>>>;
@@ -105,7 +103,7 @@ fn error_listeners() -> &'static ErrorListeners {
 }
 
 /// Listen to balance changes.
-pub fn on_balance_change<F: Fn(BalanceEvent) + Send + 'static>(cb: F) {
+pub fn on_balance_change<F: Fn(&BalanceEvent<'_>) + Send + 'static>(cb: F) {
     let mut l = balance_listeners()
         .lock()
         .expect("Failed to lock balance_listeners: on_balance_change()");
@@ -119,12 +117,13 @@ pub(crate) fn emit_balance_change(account_id: &[u8; 32], address: &Address, bala
     let listeners = balance_listeners()
         .lock()
         .expect("Failed to lock balance_listeners: emit_balance_change()");
+    let event = BalanceEvent {
+        account_id,
+        address: &address,
+        balance,
+    };
     for listener in listeners.deref() {
-        (listener.on_event)(BalanceEvent {
-            account_id: *account_id,
-            address: address.clone(),
-            balance,
-        })
+        (listener.on_event)(&event)
     }
 }
 
@@ -132,17 +131,18 @@ pub(crate) fn emit_balance_change(account_id: &[u8; 32], address: &Address, bala
 pub(crate) fn emit_transaction_event(
     event_type: TransactionEventType,
     account_id: &[u8; 32],
-    message_id: &MessageId,
+    message: &Message,
 ) {
     let listeners = transaction_listeners()
         .lock()
         .expect("Failed to lock balance_listeners: emit_balance_change()");
+    let event = TransactionEvent {
+        account_id: *account_id,
+        message: &message,
+    };
     for listener in listeners.deref() {
         if listener.event_type == event_type {
-            (listener.on_event)(TransactionEvent {
-                account_id: *account_id,
-                message_id: *message_id,
-            })
+            (listener.on_event)(&event)
         }
     }
 }
@@ -150,23 +150,24 @@ pub(crate) fn emit_transaction_event(
 /// Emits a transaction confirmation state change event.
 pub(crate) fn emit_confirmation_state_change(
     account_id: &[u8; 32],
-    message_id: &MessageId,
+    message: &Message,
     confirmed: bool,
 ) {
     let listeners = transaction_confirmation_change_listeners()
         .lock()
         .expect("Failed to lock transaction_confirmation_change_listeners: emit_confirmation_state_change()");
+    let event = TransactionConfirmationChangeEvent {
+        account_id,
+        message: &message,
+        confirmed,
+    };
     for listener in listeners.deref() {
-        (listener.on_event)(TransactionConfirmationChangeEvent {
-            account_id: *account_id,
-            message_id: *message_id,
-            confirmed,
-        })
+        (listener.on_event)(&event)
     }
 }
 
 /// Adds a transaction-related event listener.
-fn add_transaction_listener<F: Fn(TransactionEvent) + Send + 'static>(
+fn add_transaction_listener<F: Fn(&TransactionEvent<'_>) + Send + 'static>(
     event_type: TransactionEventType,
     cb: F,
 ) {
@@ -180,12 +181,14 @@ fn add_transaction_listener<F: Fn(TransactionEvent) + Send + 'static>(
 }
 
 /// Listen to new messages.
-pub fn on_new_transaction<F: Fn(TransactionEvent) + Send + 'static>(cb: F) {
+pub fn on_new_transaction<F: Fn(&TransactionEvent<'_>) + Send + 'static>(cb: F) {
     add_transaction_listener(TransactionEventType::NewTransaction, cb);
 }
 
 /// Listen to transaction confirmation state change.
-pub fn on_confirmation_state_change<F: Fn(TransactionConfirmationChangeEvent) + Send + 'static>(
+pub fn on_confirmation_state_change<
+    F: Fn(&TransactionConfirmationChangeEvent<'_>) + Send + 'static,
+>(
     cb: F,
 ) {
     let mut l = transaction_confirmation_change_listeners().lock().expect(
@@ -197,12 +200,12 @@ pub fn on_confirmation_state_change<F: Fn(TransactionConfirmationChangeEvent) + 
 }
 
 /// Listen to transaction reattachment.
-pub fn on_reattachment<F: Fn(TransactionEvent) + Send + 'static>(cb: F) {
+pub fn on_reattachment<F: Fn(&TransactionEvent<'_>) + Send + 'static>(cb: F) {
     add_transaction_listener(TransactionEventType::Reattachment, cb);
 }
 
 /// Listen to transaction broadcast.
-pub fn on_broadcast<F: Fn(TransactionEvent) + Send + 'static>(cb: F) {
+pub fn on_broadcast<F: Fn(&TransactionEvent<'_>) + Send + 'static>(cb: F) {
     add_transaction_listener(TransactionEventType::Broadcast, cb);
 }
 
@@ -250,7 +253,7 @@ mod tests {
     #[test]
     fn balance_events() {
         on_balance_change(|event| {
-            assert!(event.account_id == [1; 32]);
+            assert!(event.account_id == &[1; 32]);
             assert!(event.balance == 0);
         });
 
