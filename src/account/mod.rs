@@ -238,8 +238,12 @@ impl Account {
     }
 
     /// Updates the account alias.
-    pub(crate) fn set_alias(&mut self, alias: impl AsRef<str>) {
+    pub fn set_alias(&mut self, alias: impl AsRef<str>) -> crate::Result<()> {
         self.alias = alias.as_ref().to_string();
+        crate::storage::with_adapter(&self.storage_path, |storage| {
+            storage.set(self.id.clone().into(), serde_json::to_string(&self)?)
+        })?;
+        Ok(())
     }
 
     /// Gets a list of transactions on this account.
@@ -313,7 +317,7 @@ impl Account {
     }
 
     /// Gets a new unused address and links it to this account.
-    pub async fn generate_address(&mut self) -> crate::Result<Address> {
+    pub fn generate_address(&mut self) -> crate::Result<Address> {
         let address = crate::address::get_new_address(&self)?;
         self.addresses.push(address.clone());
         crate::storage::with_adapter(&self.storage_path, |storage| {

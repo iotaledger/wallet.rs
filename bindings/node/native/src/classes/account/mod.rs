@@ -1,6 +1,11 @@
+use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 
-use iota_wallet::{account::Account, address::Address, message::Message};
+use iota_wallet::{
+    account::Account,
+    address::Address,
+    message::{Message, MessageId},
+};
 use neon::prelude::*;
 
 mod sync;
@@ -13,6 +18,48 @@ declare_types! {
             let account = cx.argument::<JsValue>(0)?;
             let account: Account = neon_serde::from_value(&mut cx, account)?;
             Ok(AccountWrapper(Arc::new(Mutex::new(account))))
+        }
+
+        method id(mut cx) {
+            let id = {
+                let this = cx.this();
+                let guard = cx.lock();
+                let ref_ = &this.borrow(&guard).0;
+                let account = ref_.lock().unwrap();
+                *account.id()
+            };
+
+            let js_array = JsArray::new(&mut cx, id.len() as u32);
+            for (index, b) in id.iter().enumerate() {
+                let value = cx.number(*b);
+                js_array.set(&mut cx, index as u32, value)?;
+            }
+
+            Ok(js_array.upcast())
+        }
+
+        method index(mut cx) {
+            let index = {
+                let this = cx.this();
+                let guard = cx.lock();
+                let ref_ = &this.borrow(&guard).0;
+                let account = ref_.lock().unwrap();
+                *account.index()
+            };
+
+            Ok(cx.number(index as f64).upcast())
+        }
+
+        method alias(mut cx) {
+            let alias = {
+                let this = cx.this();
+                let guard = cx.lock();
+                let ref_ = &this.borrow(&guard).0;
+                let account = ref_.lock().unwrap();
+                account.alias().clone()
+            };
+
+            Ok(cx.string(alias).upcast())
         }
 
         method availableBalance(mut cx) {
@@ -92,6 +139,58 @@ declare_types! {
             }
 
             Ok(js_array.upcast())
+        }
+
+        method setAlias(mut cx) {
+            let alias = cx.argument::<JsString>(0)?.value();
+            {
+                let this = cx.this();
+                let guard = cx.lock();
+                let ref_ = &this.borrow(&guard).0;
+                let mut account = ref_.lock().unwrap();
+                account.set_alias(alias).unwrap();
+            }
+            Ok(cx.undefined().upcast())
+        }
+
+        method getMessage(mut cx) {
+            let message_id = MessageId::from_str(cx.argument::<JsString>(0)?.value().as_str()).expect("invalid message id length");
+            let message = {
+                let this = cx.this();
+                let guard = cx.lock();
+                let ref_ = &this.borrow(&guard).0;
+                let account = ref_.lock().unwrap();
+                account.get_message(&message_id).cloned()
+            };
+            match message {
+                Some(m) => Ok(neon_serde::to_value(&mut cx, &m)?),
+                None => Ok(cx.undefined().upcast())
+            }
+        }
+
+        method generateAddress(mut cx) {
+            let address = {
+                let this = cx.this();
+                let guard = cx.lock();
+                let ref_ = &this.borrow(&guard).0;
+                let mut account = ref_.lock().unwrap();
+                account.generate_address().unwrap()
+            };
+            Ok(neon_serde::to_value(&mut cx, &address)?)
+        }
+
+        method latestAddress(mut cx) {
+            let address = {
+                let this = cx.this();
+                let guard = cx.lock();
+                let ref_ = &this.borrow(&guard).0;
+                let account = ref_.lock().unwrap();
+                account.latest_address().cloned()
+            };
+            match address {
+                Some(a) => Ok(neon_serde::to_value(&mut cx, &a)?),
+                None => Ok(cx.undefined().upcast())
+            }
         }
 
         method sync(mut cx) {

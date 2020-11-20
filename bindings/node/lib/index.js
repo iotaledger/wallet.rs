@@ -1,5 +1,5 @@
 var addon = require('../native')
-const { AccountManager, Account } = addon
+const { AccountManager, Account, SyncedAccount } = addon
 
 function promisify (fn) {
   return function () {
@@ -14,5 +14,6 @@ function promisify (fn) {
 }
 
 Account.prototype.sync = promisify(Account.prototype.sync)
+SyncedAccount.prototype.send = promisify(SyncedAccount.prototype.send)
 
 module.exports = { AccountManager }

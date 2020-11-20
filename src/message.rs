@@ -1,7 +1,7 @@
 use crate::address::{Address, IotaAddress};
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-use iota::message::prelude::{Message as IotaMessage, MessageId, Output, Payload};
+pub use iota::message::prelude::{Message as IotaMessage, MessageId, Output, Payload};
 use serde::{Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
 use std::cmp::Ordering;

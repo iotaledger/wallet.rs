@@ -196,20 +196,6 @@ impl AccountManager {
         sync_accounts(&self.storage_path, None).await
     }
 
-    /// Updates the account alias.
-    pub fn set_alias(
-        &self,
-        account_id: AccountIdentifier,
-        alias: impl AsRef<str>,
-    ) -> crate::Result<()> {
-        let mut account = self.get_account(account_id)?;
-        account.set_alias(alias);
-        crate::storage::with_adapter(&self.storage_path, |storage| {
-            storage.set(account_id, serde_json::to_string(&account)?)
-        })?;
-        Ok(())
-    }
-
     /// Transfers an amount from an account to another.
     pub async fn internal_transfer(
         &self,
