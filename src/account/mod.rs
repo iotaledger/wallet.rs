@@ -189,7 +189,6 @@ pub struct Account {
     /// The client options.
     #[serde(rename = "clientOptions")]
     client_options: ClientOptions,
-    #[serde(skip)]
     #[getset(set = "pub(crate)", get = "pub(crate)")]
     storage_path: PathBuf,
 }
