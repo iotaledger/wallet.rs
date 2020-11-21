@@ -1,0 +1,27 @@
+name: account
+version: '1.0'
+author: Lucas Nogueira <lucas.nogueira@iota.org>
+about: Interface with an IOTA account.
+subcommands:
+  - exit:
+      about: exits from the account prompt.
+      alias: e
+  - h:
+      about: help.
+  - sync:
+      about: synchronizes the account with the Tangle.
+      alias: s
+  - addresses:
+      about: List the account addresses
+      alias: a
+  - messages:
+      about: List the account messages
+      alias: m
+      args:
+        - type:
+            short: t
+            long: type
+            about: the message type filter.
+            takes_value: true
+            multiple: true
+            possible_values: [received, sent, failed, unconfirmed, value]
