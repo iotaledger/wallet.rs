@@ -252,11 +252,11 @@ impl AccountManager {
 
         let backup_storage = crate::storage::get_adapter_from_path(&source)?;
         let accounts = backup_storage.get_all()?;
-        let accounts = crate::storage::parse_accounts(&accounts)?;
+        let accounts = crate::storage::parse_accounts(&source.as_ref().to_path_buf(), &accounts)?;
 
         let stored_accounts =
             crate::storage::with_adapter(&self.storage_path, |storage| storage.get_all())?;
-        let stored_accounts = crate::storage::parse_accounts(&stored_accounts)?;
+        let stored_accounts = crate::storage::parse_accounts(&self.storage_path, &stored_accounts)?;
 
         let already_imported_account = stored_accounts.iter().find(|stored_account| {
             stored_account.addresses().iter().any(|stored_address| {
@@ -314,7 +314,7 @@ impl AccountManager {
     /// Gets all accounts from storage.
     pub fn get_accounts(&self) -> crate::Result<Vec<Account>> {
         crate::storage::with_adapter(&self.storage_path, |storage| {
-            crate::storage::parse_accounts(&storage.get_all()?)
+            crate::storage::parse_accounts(&self.storage_path, &storage.get_all()?)
         })
     }
 
@@ -332,11 +332,12 @@ impl AccountManager {
 async fn poll(storage_path: PathBuf) -> crate::Result<()> {
     let accounts_before_sync =
         crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
-    let accounts_before_sync = crate::storage::parse_accounts(&accounts_before_sync)?;
+    let accounts_before_sync =
+        crate::storage::parse_accounts(&storage_path, &accounts_before_sync)?;
     sync_accounts(&storage_path, Some(0)).await?;
     let accounts_after_sync =
         crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
-    let accounts_after_sync = crate::storage::parse_accounts(&accounts_after_sync)?;
+    let accounts_after_sync = crate::storage::parse_accounts(&storage_path, &accounts_after_sync)?;
 
     // compare accounts to check for balance changes and new messages
     for account_before_sync in &accounts_before_sync {
