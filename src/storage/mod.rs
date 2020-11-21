@@ -73,17 +73,15 @@ pub(crate) fn parse_accounts(
     let mut err = None;
     let accounts: Vec<Option<Account>> = accounts
         .iter()
-        .map(|account| {
-            let res = serde_json::from_str::<Account>(&account)
-                .map(|mut acc| {
-                    acc.set_storage_path(storage_path.clone());
-                    Some(acc)
-                })
-                .unwrap_or_else(|e| {
-                    err = Some(e);
-                    None
-                });
-            res
+        .map(|account| match serde_json::from_str::<Account>(&account) {
+            Ok(mut acc) => {
+                acc.set_storage_path(storage_path.clone());
+                Some(acc)
+            }
+            Err(e) => {
+                err = Some(e);
+                None
+            }
         })
         .collect();
 
