@@ -16,8 +16,8 @@ pub struct SyncedAccountWrapper(Arc<Mutex<SyncedAccount>>);
 declare_types! {
     pub class JsSyncedAccount for SyncedAccountWrapper {
         init(mut cx) {
-            let synced = cx.argument::<JsValue>(0)?;
-            let synced: SyncedAccount = neon_serde::from_value(&mut cx, synced)?;
+            let synced = cx.argument::<JsString>(0)?.value();
+            let synced: SyncedAccount = serde_json::from_str(&synced).expect("invalid synced account JSON");
             Ok(SyncedAccountWrapper(Arc::new(Mutex::new(synced))))
         }
 

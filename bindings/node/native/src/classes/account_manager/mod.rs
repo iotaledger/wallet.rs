@@ -100,7 +100,8 @@ declare_types! {
                 }
                 builder.initialise().expect("error creating account")
             };
-            let account = neon_serde::to_value(&mut cx, &account)?;
+            let account = serde_json::to_string(&account).unwrap();
+            let account = cx.string(account);
 
             Ok(JsAccount::new(&mut cx, vec![account])?.upcast())
         }
@@ -116,7 +117,8 @@ declare_types! {
             };
             match account {
                 Ok(acc) => {
-                    let account = neon_serde::to_value(&mut cx, &acc)?;
+                    let account = serde_json::to_string(&acc).unwrap();
+                    let account = cx.string(account);
                     Ok(JsAccount::new(&mut cx, vec![account])?.upcast())
                 },
                 Err(_) => Ok(cx.undefined().upcast())

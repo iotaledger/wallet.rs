@@ -27,7 +27,8 @@ impl Task for SyncTask {
       Ok(synced_accounts) => {
         let js_array = JsArray::new(&mut cx, synced_accounts.len() as u32);
         for (index, synced_account) in synced_accounts.iter().enumerate() {
-          let synced = neon_serde::to_value(&mut cx, &synced_account)?;
+          let synced = serde_json::to_string(&synced_account).unwrap();
+          let synced = cx.string(synced);
           let synced_instance = crate::JsSyncedAccount::new(&mut cx, vec![synced])?;
           js_array.set(&mut cx, index as u32, synced_instance)?;
         }

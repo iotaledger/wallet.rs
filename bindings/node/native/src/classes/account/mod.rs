@@ -15,8 +15,8 @@ pub struct AccountWrapper(Arc<Mutex<Account>>);
 declare_types! {
     pub class JsAccount for AccountWrapper {
         init(mut cx) {
-            let account = cx.argument::<JsValue>(0)?;
-            let account: Account = neon_serde::from_value(&mut cx, account)?;
+            let account = cx.argument::<JsString>(0)?.value();
+            let account: Account = serde_json::from_str(&account).expect("invalid account JSON");
             Ok(AccountWrapper(Arc::new(Mutex::new(account))))
         }
 
