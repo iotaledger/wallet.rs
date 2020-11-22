@@ -254,14 +254,6 @@ impl<'a> AccountSynchronizer<'a> {
         }
 
         sync_transactions(self.account, &new_messages).await?;
-        self.account.append_messages(
-            new_messages
-                .iter()
-                .map(|(id, message)| {
-                    Message::from_iota_message(*id, self.account.addresses(), &message).unwrap()
-                })
-                .collect(),
-        );
 
         let mut addresses_to_save = vec![];
         let mut ignored_addresses = vec![];
@@ -290,6 +282,15 @@ impl<'a> AccountSynchronizer<'a> {
             previous_address_is_unused = address_is_unused;
         }
         self.account.append_addresses(addresses_to_save);
+
+        self.account.append_messages(
+            new_messages
+                .iter()
+                .map(|(id, message)| {
+                    Message::from_iota_message(*id, self.account.addresses(), &message).unwrap()
+                })
+                .collect(),
+        );
 
         if !self.skip_persistance {
             crate::storage::with_adapter(&self.storage_path, |storage| {

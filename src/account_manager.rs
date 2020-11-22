@@ -91,11 +91,11 @@ impl AccountManager {
             if *event.confirmed() {
                 let _ = mutate_account_transaction(
                     &storage_path,
-                    event.account_id().clone().into(),
+                    (**event.account_id()).into(),
                     |_, transactions| {
                         if let Some(message) = transactions
                             .iter_mut()
-                            .find(|message| message.id() == event.message_id())
+                            .find(|message| message.id() == event.message().id())
                         {
                             message.set_confirmed(true);
                         }
@@ -112,7 +112,7 @@ impl AccountManager {
                 |_, transactions| {
                     if let Some(message) = transactions
                         .iter_mut()
-                        .find(|message| message.id() == event.message_id())
+                        .find(|message| message.id() == event.message().id())
                     {
                         message.set_broadcasted(true);
                     }
@@ -122,21 +122,11 @@ impl AccountManager {
 
         let storage_path = self.storage_path.clone();
         crate::event::on_new_transaction(move |event| {
-            let message_id = *event.message_id();
             let _ = mutate_account_transaction(
                 &storage_path,
                 event.account_id().clone().into(),
                 |account, messages| {
-                    let mut rt =
-                        tokio::runtime::Runtime::new().expect("failed to create tokio runtime");
-                    rt.block_on(async move {
-                        let client = crate::client::get_client(account.client_options());
-                        let message = client.get_message().data(&message_id).await.unwrap();
-                        messages.push(
-                            Message::from_iota_message(message_id, account.addresses(), &message)
-                                .unwrap(),
-                        );
-                    });
+                    messages.push((*event.message()).clone());
                 },
             );
         });
@@ -248,11 +238,11 @@ impl AccountManager {
 
         let backup_storage = crate::storage::get_adapter_from_path(&source)?;
         let accounts = backup_storage.get_all()?;
-        let accounts = crate::storage::parse_accounts(&accounts)?;
+        let accounts = crate::storage::parse_accounts(&source.as_ref().to_path_buf(), &accounts)?;
 
         let stored_accounts =
             crate::storage::with_adapter(&self.storage_path, |storage| storage.get_all())?;
-        let stored_accounts = crate::storage::parse_accounts(&stored_accounts)?;
+        let stored_accounts = crate::storage::parse_accounts(&self.storage_path, &stored_accounts)?;
 
         let already_imported_account = stored_accounts.iter().find(|stored_account| {
             stored_account.addresses().iter().any(|stored_address| {
@@ -310,7 +300,7 @@ impl AccountManager {
     /// Gets all accounts from storage.
     pub fn get_accounts(&self) -> crate::Result<Vec<Account>> {
         crate::storage::with_adapter(&self.storage_path, |storage| {
-            crate::storage::parse_accounts(&storage.get_all()?)
+            crate::storage::parse_accounts(&self.storage_path, &storage.get_all()?)
         })
     }
 
@@ -328,11 +318,12 @@ impl AccountManager {
 async fn poll(storage_path: PathBuf) -> crate::Result<()> {
     let accounts_before_sync =
         crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
-    let accounts_before_sync = crate::storage::parse_accounts(&accounts_before_sync)?;
+    let accounts_before_sync =
+        crate::storage::parse_accounts(&storage_path, &accounts_before_sync)?;
     sync_accounts(&storage_path, Some(0)).await?;
     let accounts_after_sync =
         crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
-    let accounts_after_sync = crate::storage::parse_accounts(&accounts_after_sync)?;
+    let accounts_after_sync = crate::storage::parse_accounts(&storage_path, &accounts_after_sync)?;
 
     // compare accounts to check for balance changes and new messages
     for account_before_sync in &accounts_before_sync {
@@ -366,7 +357,7 @@ async fn poll(storage_path: PathBuf) -> crate::Result<()> {
                 emit_transaction_event(
                     TransactionEventType::NewTransaction,
                     account_after_sync.id(),
-                    message.id(),
+                    &message,
                 )
             });
 
@@ -381,13 +372,13 @@ async fn poll(storage_path: PathBuf) -> crate::Result<()> {
                 None => false,
             };
             if changed {
-                emit_confirmation_state_change(account_after_sync.id(), message.id(), true);
+                emit_confirmation_state_change(account_after_sync.id(), &message, true);
             }
         });
     }
     let reattached = reattach_unconfirmed_transactions(&storage_path).await?;
     reattached.iter().for_each(|(message, account_id)| {
-        emit_transaction_event(TransactionEventType::Reattachment, account_id, message.id());
+        emit_transaction_event(TransactionEventType::Reattachment, account_id, &message);
     });
     Ok(())
 }
@@ -478,7 +469,7 @@ async fn reattach(
     let message = messages
         .iter_mut()
         .find(|message| message.id() == message_id)
-        .ok_or_else(|| crate::WalletError::MessageNotFound)?;
+        .ok_or(crate::WalletError::MessageNotFound)?;
 
     if message.confirmed {
         Err(crate::WalletError::MessageAlreadyConfirmed)
