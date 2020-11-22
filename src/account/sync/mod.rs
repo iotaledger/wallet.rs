@@ -334,6 +334,7 @@ pub struct SyncedAccount {
     /// The account addresses.
     #[getset(get = "pub")]
     addresses: Vec<Address>,
+    #[serde(rename = "storagePath")]
     storage_path: PathBuf,
 }
 
