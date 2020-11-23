@@ -29,7 +29,8 @@ impl Task for RepostTask {
     crate::block_on(crate::convert_async_panics(|| async {
       match self.action {
         RepostAction::Retry => synced.retry(&self.message_id).await,
-        _ => todo!(),
+        RepostAction::Reattach => synced.reattach(&self.message_id).await,
+        RepostAction::Promote => synced.promote(&self.message_id).await,
       }
     }))
   }
