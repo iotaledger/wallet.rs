@@ -354,7 +354,7 @@ async fn poll(storage_path: PathBuf) -> crate::Result<()> {
         crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
     let accounts_before_sync =
         crate::storage::parse_accounts(&storage_path, &accounts_before_sync)?;
-    sync_accounts(&storage_path, Some(0)).await?;
+    let synced_accounts = sync_accounts(&storage_path, Some(0)).await?;
     let accounts_after_sync =
         crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
     let accounts_after_sync = crate::storage::parse_accounts(&storage_path, &accounts_after_sync)?;
