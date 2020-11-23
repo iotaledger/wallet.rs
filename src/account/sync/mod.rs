@@ -1,7 +1,7 @@
 use crate::account::{Account, AccountIdentifier};
 use crate::address::{Address, AddressBuilder, AddressOutput, IotaAddress};
 use crate::client::get_client;
-use crate::message::{Message, Transfer};
+use crate::message::{Message, RemainderValueStrategy, Transfer};
 
 use getset::Getters;
 use iota::message::prelude::{
@@ -374,19 +374,31 @@ impl SyncedAccount {
     /// Send messages.
     pub async fn transfer(&self, transfer_obj: Transfer) -> crate::Result<Message> {
         // validate the transfer
-        if *transfer_obj.amount() == 0 {
+        if transfer_obj.amount == 0 {
             return Err(crate::WalletError::ZeroAmount);
         }
 
         // prepare the transfer getting some needed objects and values
-        let value: u64 = *transfer_obj.amount();
+        let value: u64 = transfer_obj.amount;
         let account_id: AccountIdentifier = self.account_id.clone().into();
         let mut account = crate::storage::get_account(&self.storage_path, account_id)?;
         let client = get_client(account.client_options());
 
+        if let RemainderValueStrategy::AccountAddress(ref remainder_strategy) =
+            transfer_obj.remainder_value_strategy
+        {
+            if !account
+                .addresses()
+                .iter()
+                .any(|addr| addr.address() == remainder_strategy)
+            {
+                return Err(crate::WalletError::InvalidRemainderValueAddress);
+            }
+        }
+
         // select the input addresses and check if a remainder address is needed
         let (input_addresses, remainder_address) =
-            self.select_inputs(*transfer_obj.amount(), &account, transfer_obj.address())?;
+            self.select_inputs(transfer_obj.amount, &account, &transfer_obj.address)?;
 
         let mut utxos = vec![];
         let mut output_paths = vec![];
@@ -448,7 +460,7 @@ impl SyncedAccount {
                 remainder_value += utxo.amount - missing_value;
                 utxo_outputs.push(
                     SignatureLockedSingleOutput::new(
-                        transfer_obj.address().clone(),
+                        transfer_obj.address.clone(),
                         NonZeroU64::new(missing_value)
                             .ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
                     )
@@ -458,7 +470,7 @@ impl SyncedAccount {
             } else {
                 utxo_outputs.push(
                     SignatureLockedSingleOutput::new(
-                        transfer_obj.address().clone(),
+                        transfer_obj.address.clone(),
                         NonZeroU64::new(utxo.amount)
                             .ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
                     )
@@ -468,21 +480,36 @@ impl SyncedAccount {
             }
         }
 
-        // if there's remainder value, we generate a change address for the remainder address and add an output for it
+        // if there's remainder value, we check the strategy defined in the transfer
         if remainder_value > 0 {
             let remainder_address = remainder_address
                 .ok_or_else(|| anyhow::anyhow!("remainder address not defined"))?;
-            let change_address =
-                crate::address::get_new_change_address(&account, &remainder_address)?;
-            utxo_outputs.push(
-                SignatureLockedSingleOutput::new(
-                    change_address.address().clone(),
-                    NonZeroU64::new(remainder_value)
-                        .ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
-                )
-                .into(),
-            );
-            account.append_addresses(vec![change_address]);
+
+            let target_address = match transfer_obj.remainder_value_strategy {
+                // use one of the account's addresses to send the remainder value
+                RemainderValueStrategy::AccountAddress(target_address) => Some(target_address),
+                // generate a new change address to send the remainder value
+                RemainderValueStrategy::ChangeAddress => {
+                    let change_address =
+                        crate::address::get_new_change_address(&account, &remainder_address)?;
+                    let addr = change_address.address().clone();
+                    account.append_addresses(vec![change_address]);
+                    Some(addr)
+                }
+                // ignore the remainder value (keep on its original address)
+                RemainderValueStrategy::ReuseAddress => None,
+            };
+
+            if let Some(remainder_target_address) = target_address {
+                utxo_outputs.push(
+                    SignatureLockedSingleOutput::new(
+                        remainder_target_address,
+                        NonZeroU64::new(remainder_value)
+                            .ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
+                    )
+                    .into(),
+                );
+            }
         }
 
         let (parent1, parent2) = client.get_tips().await?;
@@ -524,7 +551,7 @@ impl SyncedAccount {
         let message_id = client.post_message(&message).await?;
 
         // if this is a transfer to the account's latest address, we generate a new one to keep the latest address unused
-        if account.latest_address().unwrap().address() == transfer_obj.address() {
+        if account.latest_address().unwrap().address() == &transfer_obj.address {
             let addr = crate::address::get_new_address(&account)?;
             account.append_addresses(vec![addr]);
         }
