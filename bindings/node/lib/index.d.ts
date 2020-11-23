@@ -69,6 +69,7 @@ export declare class Account {
   listAddresses(unspent?: boolean): Address[]
   sync(options?: SyncOptions): Promise<SyncedAccount>
   setAlias(alias: string): void
+  setClientOptions(options: ClientOptions): void
   getMessage(id: string): Message | undefined
   generateAddress(): Address
   latestAddress(): Address | undefined

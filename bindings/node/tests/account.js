@@ -9,12 +9,7 @@ async function run() {
       mnemonic,
       clientOptions: { node: 'http://localhost:14265' }
     })
-    console.log('balance', account.availableBalance())
-    const synced = await account.sync({})
-    console.log('synced', synced)
-    console.log('acc messages', account.listMessages())
-    console.log('acc spent addresses', account.listAddresses(false))
-    console.log('acc unspent addresses', account.listAddresses(true))
+    account.setAlias('banana')
   } finally {
     const fs = require('fs')
     try {

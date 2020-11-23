@@ -62,18 +62,13 @@ Sets the stronghold password and initialises it.
 
 Creates a new account.
 
-| Param                                   | Type                  | Default                           | Description                                                                                              |
-| --------------------------------------- | --------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| account                                 | <code>object</code>   | <code>{}</code>                   | The account to be created                                                                                |
-| account.clientOptions                   | <code>object</code>   | <code>undefined</code>            | The node configuration                                                                                   |
-| [account.clientOptions.network]         | <code>number</code>   | <code>undefined</code>            | The tangle network to connect to (Mainnet = 1, Devnet = 1, Comnet = 3)                                   |
-| [account.clientOptions.node]            | <code>string</code>   | <code>undefined</code>            | A node URL to connect to                                                                                 |
-| [account.clientOptions.nodes]           | <code>string[]</code> | <code>undefined</code>            | A list node URL to connect to                                                                            |
-| [account.clientOptions.quorumSize]      | <code>number</code>   | <code>undefined</code>            | If multiple nodes are provided, quorum size determines the number of nodes to query to check for quorum. |
-| [account.clientOptions.quorumThreshold] | <code>number</code>   | <code>undefined</code>            | Minimum number of nodes from the quorum pool that need to agree to consider a result true.               |
-| [account.mnemonic]                      | <code>string</code>   | <code>undefined</code>            | The account BIP39 mnemonic                                                                               |
-| [account.alias]                         | <code>string</code>   | <code>Account ${index + 1}</code> | The account alias                                                                                        |
-| [account.createdAt]                     | <code>string</code>   | the current date and time         | The ISO 8601 date string of the account creation                                                         |
+| Param                 | Type                                         | Default                           | Description                                      |
+| --------------------- | -------------------------------------------- | --------------------------------- | ------------------------------------------------ |
+| account               | <code>object</code>                          | <code>{}</code>                   | The account to be created                        |
+| account.clientOptions | <code>[ClientOptions](#clientoptions)</code> | <code>undefined</code>            | The node configuration                           |
+| [account.mnemonic]    | <code>string</code>                          | <code>undefined</code>            | The account BIP39 mnemonic                       |
+| [account.alias]       | <code>string</code>                          | <code>Account ${index + 1}</code> | The account alias                                |
+| [account.createdAt]   | <code>string</code>                          | the current date and time         | The ISO 8601 date string of the account creation |
 
 #### getAccount(accountId)
 
@@ -229,6 +224,14 @@ Updates the account alias.
 | ----- | ------------------- | ----------------- | --------------------- |
 | alias | <code>string</code> | <code>null</code> | The new account alias |
 
+#### setClientOptions(options)
+
+Updates the account client options.
+
+| Param   | Type                                         | Default           | Description                    |
+| ------- | -------------------------------------------- | ----------------- | ------------------------------ |
+| options | <code>[ClientOptions](#clientoptions)</code> | <code>null</code> | The new account client options |
+
 #### getMessage(messageId)
 
 Gets the message associated with the given identifier.
@@ -244,3 +247,13 @@ Generates a new unused address and returns it.
 #### latestAddress()
 
 Returns the latest address (the one with the biggest keyIndex) or undefined if the account address list is empty.
+
+### ClientOptions
+
+| Field             | Type                  | Default                | Description                                                                                              |
+| ----------------- | --------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------- |
+| [network]         | <code>number</code>   | <code>undefined</code> | The tangle network to connect to (Mainnet = 1, Devnet = 1, Comnet = 3)                                   |
+| [node]            | <code>string</code>   | <code>undefined</code> | A node URL to connect to                                                                                 |
+| [nodes]           | <code>string[]</code> | <code>undefined</code> | A list node URL to connect to                                                                            |
+| [quorumSize]      | <code>number</code>   | <code>undefined</code> | If multiple nodes are provided, quorum size determines the number of nodes to query to check for quorum. |
+| [quorumThreshold] | <code>number</code>   | <code>undefined</code> | Minimum number of nodes from the quorum pool that need to agree to consider a result true.               |

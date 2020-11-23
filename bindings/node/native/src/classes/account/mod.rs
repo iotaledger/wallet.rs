@@ -148,7 +148,22 @@ declare_types! {
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
                 let mut account = ref_.lock().unwrap();
-                account.set_alias(alias).expect("error updating account alias");
+                account.set_alias(alias);
+                account.save_pending_changes().expect("failed to save account");
+            }
+            Ok(cx.undefined().upcast())
+        }
+
+        method setClientOptions(mut cx) {
+            let client_options = cx.argument::<JsValue>(0)?;
+            let client_options = neon_serde::from_value(&mut cx, client_options)?;
+            {
+                let this = cx.this();
+                let guard = cx.lock();
+                let ref_ = &this.borrow(&guard).0;
+                let mut account = ref_.lock().unwrap();
+                account.set_client_options(client_options);
+                account.save_pending_changes().expect("failed to save account");
             }
             Ok(cx.undefined().upcast())
         }

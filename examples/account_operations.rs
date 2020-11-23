@@ -15,14 +15,14 @@ async fn main() -> iota_wallet::Result<()> {
         .initialise()?;
 
     // update alias
-    manager.set_alias(account.id().into(), "the new alias")?;
+    account.set_alias("the new alias");
     // list unspent addresses
     let _ = account.list_addresses(false);
     // list spent addresses
     let _ = account.list_addresses(true);
 
     // generate a new unused address
-    let _ = account.generate_address().await?;
+    let _ = account.generate_address()?;
 
     // list messages
     let _ = account.list_messages(5, 0, Some(MessageType::Failed));
