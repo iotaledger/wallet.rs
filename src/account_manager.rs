@@ -602,7 +602,7 @@ mod tests {
                         "index".to_string(),
                         &[0; 16],
                     ).unwrap())))
-                    // TODO temp removed .with_network_id(0)
+                    .with_network_id(0)
                     .finish()
                     .unwrap()).unwrap()])
                 .initialise().unwrap();
