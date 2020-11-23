@@ -66,19 +66,22 @@ pub trait StorageAdapter {
     fn remove(&self, account_id: AccountIdentifier) -> crate::Result<()>;
 }
 
-pub(crate) fn parse_accounts(accounts: &[String]) -> crate::Result<Vec<Account>> {
+pub(crate) fn parse_accounts(
+    storage_path: &PathBuf,
+    accounts: &[String],
+) -> crate::Result<Vec<Account>> {
     let mut err = None;
     let accounts: Vec<Option<Account>> = accounts
         .iter()
-        .map(|account| {
-            let res: Option<Account> =
-                serde_json::from_str(&account)
-                    .map(Some)
-                    .unwrap_or_else(|e| {
-                        err = Some(e);
-                        None
-                    });
-            res
+        .map(|account| match serde_json::from_str::<Account>(&account) {
+            Ok(mut acc) => {
+                acc.set_storage_path(storage_path.clone());
+                Some(acc)
+            }
+            Err(e) => {
+                err = Some(e);
+                None
+            }
         })
         .collect();
 
