@@ -1162,7 +1162,7 @@ Syncs addresses with the Tangle. The method should ensure that the wallet's loca
 The following should be considered when implementing this method:
 
 *   The updated address history should not be written down in the database/persistent storage. Instead the method should only return the updated address history (with transaction hashes).  This will ensure that there are no partial writes to the database;
-*   To sync addresses for an account from scratch, index = 0 and gap_limit = 20 should be provided;
+*   To sync addresses for an account from scratch, index = 0 and gap_limit = 10 should be provided;
 *   To sync addresses from the latest address, index = latest address index and gap_limit = 1 should be provided. 
 
 <table>
