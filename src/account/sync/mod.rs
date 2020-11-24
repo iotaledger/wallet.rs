@@ -20,7 +20,7 @@ mod input_selection;
 /// Syncs addresses with the tangle.
 /// The method ensures that the wallet local state has all used addresses plus an unused address.
 ///
-/// To sync addresses for an account from scratch, `address_index` = 0 and `gap_limit` = 20 should be provided.
+/// To sync addresses for an account from scratch, `address_index` = 0 and `gap_limit` = 10 should be provided.
 /// To sync addresses from the latest address, `address_index` = latest address index and `gap_limit` = 1 should be provided.
 ///
 /// # Arguments
@@ -199,7 +199,7 @@ impl<'a> AccountSynchronizer<'a> {
             } else {
                 address_index - 1
             },
-            gap_limit: if address_index == 0 { 20 } else { 1 },
+            gap_limit: if address_index == 0 { 10 } else { 1 },
             skip_persistance: false,
             storage_path,
         }
