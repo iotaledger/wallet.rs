@@ -113,6 +113,10 @@ pub enum WalletError {
     /// Account not found
     #[error("account not found")]
     AccountNotFound,
+    /// invalid remainder value target address defined on `RemainderValueStrategy`.
+    /// the address must belong to the account.
+    #[error("the remainder value address doesn't belong to the account")]
+    InvalidRemainderValueAddress,
 }
 
 impl Drop for WalletError {
