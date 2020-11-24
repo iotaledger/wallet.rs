@@ -391,9 +391,6 @@ impl SyncedAccount {
         let mut utxos = vec![];
         let mut address_index_recorders = vec![];
 
-        let account_path =
-            BIP32Path::from_str(&format!("m/44H/4218H/{}H", account.index())).unwrap();
-
         for input_address in &input_addresses {
             let address_outputs = input_address.outputs();
             let mut outputs = vec![];
