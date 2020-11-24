@@ -384,13 +384,13 @@ impl SyncedAccount {
         let mut account = crate::storage::get_account(&self.storage_path, account_id)?;
         let client = get_client(account.client_options());
 
-        if let RemainderValueStrategy::AccountAddress(ref remainder_strategy) =
+        if let RemainderValueStrategy::AccountAddress(ref remainder_target_address) =
             transfer_obj.remainder_value_strategy
         {
             if !account
                 .addresses()
                 .iter()
-                .any(|addr| addr.address() == remainder_strategy)
+                .any(|addr| addr.address() == remainder_target_address)
             {
                 return Err(crate::WalletError::InvalidRemainderValueAddress);
             }
@@ -480,31 +480,29 @@ impl SyncedAccount {
             let remainder_address = remainder_address
                 .ok_or_else(|| anyhow::anyhow!("remainder address not defined"))?;
 
-            let target_address = match transfer_obj.remainder_value_strategy {
+            let remainder_target_address = match transfer_obj.remainder_value_strategy {
                 // use one of the account's addresses to send the remainder value
-                RemainderValueStrategy::AccountAddress(target_address) => Some(target_address),
+                RemainderValueStrategy::AccountAddress(target_address) => target_address,
                 // generate a new change address to send the remainder value
                 RemainderValueStrategy::ChangeAddress => {
                     let change_address =
                         crate::address::get_new_change_address(&account, &remainder_address)?;
                     let addr = change_address.address().clone();
                     account.append_addresses(vec![change_address]);
-                    Some(addr)
+                    addr
                 }
-                // ignore the remainder value (keep on its original address)
-                RemainderValueStrategy::ReuseAddress => None,
+                // keep the remainder value on the address
+                RemainderValueStrategy::ReuseAddress => remainder_address.address().clone(),
             };
 
-            if let Some(remainder_target_address) = target_address {
-                essence_builder = essence_builder.add_output(
-                    SignatureLockedSingleOutput::new(
-                        remainder_target_address,
-                        NonZeroU64::new(remainder_value)
-                            .ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
-                    )
-                    .into(),
-                );
-            }
+            essence_builder = essence_builder.add_output(
+                SignatureLockedSingleOutput::new(
+                    remainder_target_address,
+                    NonZeroU64::new(remainder_value)
+                        .ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
+                )
+                .into(),
+            );
         }
 
         let (parent1, parent2) = client.get_tips().await?;
