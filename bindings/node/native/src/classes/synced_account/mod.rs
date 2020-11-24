@@ -4,7 +4,7 @@ use std::sync::{Arc, Mutex};
 use iota_wallet::{
     account::SyncedAccount,
     address::parse as parse_address,
-    message::{MessageId, Transfer},
+    message::{MessageId, RemainderValueStrategy, Transfer},
 };
 use neon::prelude::*;
 
@@ -24,9 +24,18 @@ declare_types! {
         method send(mut cx) {
             let address = cx.argument::<JsString>(0)?.value();
             let amount = cx.argument::<JsNumber>(1)?.value() as u64;
-            let cb = cx.argument::<JsFunction>(2)?;
+            let (remainder_value_strategy, cb) = match cx.argument_opt(3) {
+                Some(arg) => {
+                    let cb = arg.downcast::<JsFunction>().or_throw(&mut cx)?;
+                    let remainder_value_strategy = cx.argument::<JsValue>(2)?;
+                    let remainder_value_strategy = neon_serde::from_value(&mut cx, remainder_value_strategy)?;
+                    (remainder_value_strategy, cb)
+                }
+                None => (RemainderValueStrategy::ChangeAddress, cx.argument::<JsFunction>(2)?),
+            };
 
-            let transfer = Transfer::new(parse_address(address).expect("invalid address format"), amount);
+            let transfer = Transfer::new(parse_address(address).expect("invalid address format"), amount)
+                .remainder_value_strategy(remainder_value_strategy);
 
             let this = cx.this();
             let synced = cx.borrow(&this, |r| r.0.clone());

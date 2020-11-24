@@ -209,14 +209,15 @@ declare_types! {
         }
 
         method sync(mut cx) {
-            let options = match cx.argument_opt(0) {
+            let (options, cb) = match cx.argument_opt(1) {
                 Some(arg) => {
-                    let options = arg.downcast::<JsValue>().or_throw(&mut cx)?;
-                    neon_serde::from_value(&mut cx, options)?
+                    let cb = arg.downcast::<JsFunction>().or_throw(&mut cx)?;
+                    let options = cx.argument::<JsValue>(0)?;
+                    let options = neon_serde::from_value(&mut cx, options)?;
+                    (options, cb)
                 }
-                None => Default::default(),
+                None => (Default::default(), cx.argument::<JsFunction>(0)?),
             };
-            let cb = cx.argument::<JsFunction>(1)?;
 
             let this = cx.this();
             let account = cx.borrow(&this, |r| r.0.clone());

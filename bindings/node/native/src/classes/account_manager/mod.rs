@@ -1,6 +1,7 @@
 use super::JsAccount;
 use std::convert::TryInto;
 use std::sync::Arc;
+use std::time::Duration;
 
 use iota_wallet::{
     account::AccountIdentifier, account_manager::AccountManager, client::ClientOptions, DateTime,
@@ -61,7 +62,9 @@ declare_types! {
                 Some(p) => AccountManager::with_storage_path(p),
                 None => AccountManager::new(),
             };
-            Ok(AccountManagerWrapper(Arc::new(manager.expect("error initializing account manager"))))
+            let manager = manager.expect("error initializing account manager");
+            manager.start_polling(Duration::from_secs(15));
+            Ok(AccountManagerWrapper(Arc::new(manager)))
         }
 
         method setStrongholdPassword(mut cx) {

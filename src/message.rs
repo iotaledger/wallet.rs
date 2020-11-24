@@ -47,6 +47,7 @@ pub enum RemainderValueStrategy {
     /// Move the remainder value to a change address.
     ChangeAddress,
     /// Move the remainder value to an address that must belong to the source account.
+    #[serde(with = "crate::serde::iota_address_serde")]
     AccountAddress(IotaAddress),
 }
 

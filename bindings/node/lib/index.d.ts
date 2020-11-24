@@ -75,8 +75,14 @@ export declare class Account {
   latestAddress(): Address | undefined
 }
 
+export declare class RemainderValueStrategy {
+  static changeAddress(): RemainderValueStrategy
+  static reuseAddress(): RemainderValueStrategy
+  static accountAddress(address: string): RemainderValueStrategy
+}
+
 export declare class SyncedAccount {
-  send(address: string, amount: number): Promise<Message>
+  send(address: string, amount: number, remainderValueStrategy?: RemainderValueStrategy): Promise<Message>
   retry(messageId: string): Promise<Message>
   reattach(messageId: string): Promise<Message>
   promote(messageId: string): Promise<Message>

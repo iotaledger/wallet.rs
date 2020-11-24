@@ -31,6 +31,25 @@ function addEventListener (event, cb) {
   new EventListenerWrapper(event, cb)
 }
 
+class RemainderValueStrategy {
+  constructor(strategyName, payload) {
+    this.strategy = strategyName
+    this.value = payload || null
+  }
+
+  static changeAddress() {
+    return new RemainderValueStrategy('ChangeAddress')
+  }
+
+  static reuseAddress() {
+    return new RemainderValueStrategy('ReuseAddress')
+  }
+
+  static accountAddress(address) {
+    return new RemainderValueStrategy('AccountAddress', address)
+  }
+}
+
 Account.prototype.sync = promisify(Account.prototype.sync)
 SyncedAccount.prototype.send = promisify(SyncedAccount.prototype.send)
 SyncedAccount.prototype.retry = promisify(SyncedAccount.prototype.retry)
@@ -39,4 +58,4 @@ SyncedAccount.prototype.promote = promisify(SyncedAccount.prototype.promote)
 AccountManager.prototype.syncAccounts = promisify(AccountManager.prototype.syncAccounts)
 AccountManager.prototype.internalTransfer = promisify(AccountManager.prototype.internalTransfer)
 
-module.exports = { AccountManager, addEventListener }
+module.exports = { AccountManager, addEventListener, RemainderValueStrategy }
