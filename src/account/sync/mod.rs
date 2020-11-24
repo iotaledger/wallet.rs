@@ -5,8 +5,8 @@ use crate::message::{Message, Transfer};
 
 use getset::Getters;
 use iota::message::prelude::{
-    Input, Message as IotaMessage, MessageId, Output, Payload, SignatureLockedSingleOutput,
-    Transaction, TransactionEssence, TransactionId, UTXOInput,
+    Input, Message as IotaMessage, MessageId, Payload, SignatureLockedSingleOutput, Transaction,
+    TransactionEssence, TransactionId, UTXOInput,
 };
 use serde::Serialize;
 use slip10::BIP32Path;
@@ -389,18 +389,18 @@ impl SyncedAccount {
             self.select_inputs(*transfer_obj.amount(), &account, transfer_obj.address())?;
 
         let mut utxos = vec![];
-        let mut output_paths = vec![];
+        let mut address_index_recorders = vec![];
+
         for input_address in &input_addresses {
-            let address = input_address.address();
+            let address_outputs = input_address.outputs();
+            let mut outputs = vec![];
             let address_path = BIP32Path::from_str(&format!(
                 "m/44H/4218H/{}H/{}H/{}H",
                 account.index(),
                 *input_address.internal() as u32,
-                input_address.key_index()
+                *input_address.key_index()
             ))
             .unwrap();
-            let address_outputs = input_address.outputs();
-            let mut outputs = vec![];
             for (offset, output) in address_outputs.iter().enumerate() {
                 let output = client
                     .get_output(
@@ -408,36 +408,31 @@ impl SyncedAccount {
                             .map_err(|e| anyhow::anyhow!(e.to_string()))?,
                     )
                     .await?;
-                outputs.push(output);
-                let output_path = BIP32Path::from_str(&format!(
-                    "m/44H/4218H/{}H/{}H/{}H",
-                    account.index(),
-                    *input_address.internal() as u32,
-                    offset as u32
-                ))
-                .unwrap();
-                output_paths.push(output_path);
+                outputs.push((output, *input_address.key_index(), address_path.clone()));
             }
             utxos.extend(outputs.into_iter());
         }
 
-        let mut utxo_inputs: Vec<Input> = vec![];
-        let mut utxo_outputs: Vec<Output> = vec![];
+        let mut essence_builder = TransactionEssence::builder();
         let mut current_output_sum = 0;
         let mut remainder_value = 0;
-        for utxo in utxos {
-            utxo_inputs.push(
-                UTXOInput::new(
-                    TransactionId::new(
-                        utxo.transaction_id[..]
-                            .try_into()
-                            .map_err(|_| crate::WalletError::InvalidTransactionIdLength)?,
-                    ),
-                    utxo.output_index,
-                )
-                .map_err(|e| anyhow::anyhow!(e.to_string()))?
-                .into(),
-            );
+        for (utxo, address_index, address_path) in utxos {
+            let input: Input = UTXOInput::new(
+                TransactionId::new(
+                    utxo.transaction_id[..]
+                        .try_into()
+                        .map_err(|_| crate::WalletError::InvalidTransactionIdLength)?,
+                ),
+                utxo.output_index,
+            )
+            .map_err(|e| anyhow::anyhow!(e.to_string()))?
+            .into();
+            essence_builder = essence_builder.add_input(input.clone());
+            address_index_recorders.push(stronghold::AddressIndexRecorder {
+                input,
+                address_index,
+                address_path,
+            });
             if current_output_sum == value {
                 // already filled the transfer value; just collect the output value as remainder
                 remainder_value += utxo.amount;
@@ -446,7 +441,7 @@ impl SyncedAccount {
                 // we add an Output for the missing value and collect the remainder
                 let missing_value = value - current_output_sum;
                 remainder_value += utxo.amount - missing_value;
-                utxo_outputs.push(
+                essence_builder = essence_builder.add_output(
                     SignatureLockedSingleOutput::new(
                         transfer_obj.address().clone(),
                         NonZeroU64::new(missing_value)
@@ -456,7 +451,7 @@ impl SyncedAccount {
                 );
                 current_output_sum += missing_value;
             } else {
-                utxo_outputs.push(
+                essence_builder = essence_builder.add_output(
                     SignatureLockedSingleOutput::new(
                         transfer_obj.address().clone(),
                         NonZeroU64::new(utxo.amount)
@@ -474,7 +469,7 @@ impl SyncedAccount {
                 .ok_or_else(|| anyhow::anyhow!("remainder address not defined"))?;
             let change_address =
                 crate::address::get_new_change_address(&account, &remainder_address)?;
-            utxo_outputs.push(
+            essence_builder = essence_builder.add_output(
                 SignatureLockedSingleOutput::new(
                     change_address.address().clone(),
                     NonZeroU64::new(remainder_value)
@@ -492,21 +487,18 @@ impl SyncedAccount {
                 stronghold.account_get_by_id(account.id())
             })?;
 
-        let mut essence_builder = TransactionEssence::builder();
-        for output in utxo_outputs.into_iter() {
-            essence_builder = essence_builder.add_output(output);
-        }
-        for input in utxo_inputs.into_iter() {
-            essence_builder = essence_builder.add_input(input);
-        }
         let essence = essence_builder
             .finish()
             .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
         let unlock_blocks = crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
-            stronghold.get_transaction_unlock_blocks(account.id(), &essence, &output_paths)
+            stronghold.get_transaction_unlock_blocks(
+                account.id(),
+                &essence,
+                &mut address_index_recorders,
+            )
         })?;
         let mut tx_builder = Transaction::builder().with_essence(essence);
-        for unlock_block in unlock_blocks.into_iter() {
+        for unlock_block in unlock_blocks {
             tx_builder = tx_builder.add_unlock_block(unlock_block);
         }
         let transaction = tx_builder
@@ -606,7 +598,7 @@ async fn repost_message(
             let (id, message) = match action {
                 RepostAction::Promote => {
                     let metadata = client.get_message().metadata(message_id).await?;
-                    if metadata.should_promote {
+                    if metadata.should_promote.unwrap_or(false) {
                         client.promote(message_id).await?
                     } else {
                         return Err(crate::WalletError::ClientError(
@@ -616,7 +608,7 @@ async fn repost_message(
                 }
                 RepostAction::Reattach => {
                     let metadata = client.get_message().metadata(message_id).await?;
-                    if metadata.should_reattach {
+                    if metadata.should_reattach.unwrap_or(false) {
                         client.reattach(message_id).await?
                     } else {
                         return Err(crate::WalletError::ClientError(
