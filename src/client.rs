@@ -1,6 +1,6 @@
 use getset::Getters;
 pub use iota::client::builder::Network;
-use iota::client::{Client, ClientBuilder};
+use iota::client::{BrokerOptions, Client, ClientBuilder};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use url::Url;
@@ -22,7 +22,9 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
         .expect("failed to lock client instances: get_client()");
 
     if !map.contains_key(&options) {
-        let mut client_builder = ClientBuilder::new().quorum_threshold(*options.quorum_threshold());
+        let mut client_builder = ClientBuilder::new()
+            .quorum_threshold(*options.quorum_threshold())
+            .broker_options(BrokerOptions::new().automatic_disconnect(false));
 
         // we validate the URL beforehand so it's safe to unwrap here
         if let Some(node) = options.node() {
