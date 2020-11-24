@@ -601,7 +601,7 @@ async fn repost_message(
             let (id, message) = match action {
                 RepostAction::Promote => {
                     let metadata = client.get_message().metadata(message_id).await?;
-                    if metadata.should_promote {
+                    if metadata.should_promote.unwrap_or(false) {
                         client.promote(message_id).await?
                     } else {
                         return Err(crate::WalletError::ClientError(
@@ -611,7 +611,7 @@ async fn repost_message(
                 }
                 RepostAction::Reattach => {
                     let metadata = client.get_message().metadata(message_id).await?;
-                    if metadata.should_reattach {
+                    if metadata.should_reattach.unwrap_or(false) {
                         client.reattach(message_id).await?
                     } else {
                         return Err(crate::WalletError::ClientError(
