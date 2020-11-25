@@ -128,6 +128,24 @@ declare_types! {
             }
         }
 
+        method getAccountByAlias(mut cx) {
+            let alias = cx.argument::<JsString>(0)?.value();
+            let account = {
+                let this = cx.this();
+                let guard = cx.lock();
+                let manager = &this.borrow(&guard).0;
+                manager.get_account_by_alias(alias)
+            };
+            match account {
+                Some(acc) => {
+                    let account = serde_json::to_string(&acc).unwrap();
+                    let account = cx.string(account);
+                    Ok(JsAccount::new(&mut cx, vec![account])?.upcast())
+                },
+                None => Ok(cx.undefined().upcast())
+            }
+        }
+
         method getAccounts(mut cx) {
             let accounts = {
                 let this = cx.this();

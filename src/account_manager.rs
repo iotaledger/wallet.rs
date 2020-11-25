@@ -297,6 +297,18 @@ impl AccountManager {
         Ok(account)
     }
 
+    /// Gets the account associated with the given alias (case insensitive).
+    pub fn get_account_by_alias<S: Into<String>>(&self, alias: S) -> Option<Account> {
+        let alias = alias.into().to_lowercase();
+        if let Ok(accounts) = self.get_accounts() {
+            accounts
+                .into_iter()
+                .find(|acc| acc.alias().to_lowercase() == alias)
+        } else {
+            None
+        }
+    }
+
     /// Gets all accounts from storage.
     pub fn get_accounts(&self) -> crate::Result<Vec<Account>> {
         crate::storage::with_adapter(&self.storage_path, |storage| {

@@ -80,6 +80,16 @@ Gets the account with the given identifier or index.
 
 **Returns** the associated Account instance or undefined if the account wasn't found.
 
+#### getAccountByAlias(alias)
+
+Gets the account with the given alias (case insensitive).
+
+| Param | Type                | Default           | Description       |
+| ----- | ------------------- | ----------------- | ----------------- |
+| alias | <code>string</code> | <code>null</code> | The account alias |
+
+**Returns** the associated Account instance or undefined if the account wasn't found.
+
 #### getAccounts()
 
 Gets all stored accounts.
