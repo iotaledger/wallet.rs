@@ -1,10 +1,10 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use iota_wallet::{account::SyncedAccount, account_manager::AccountManager, WalletError};
 use neon::prelude::*;
 
 pub struct SyncTask {
-  pub manager: Arc<AccountManager>,
+  pub manager: Arc<Mutex<AccountManager>>,
 }
 
 impl Task for SyncTask {
@@ -13,8 +13,9 @@ impl Task for SyncTask {
   type JsEvent = JsArray;
 
   fn perform(&self) -> Result<Self::Output, Self::Error> {
+    let manager = self.manager.lock().unwrap();
     crate::block_on(crate::convert_async_panics(|| async {
-      self.manager.sync_accounts().await
+      manager.sync_accounts().await
     }))
   }
 

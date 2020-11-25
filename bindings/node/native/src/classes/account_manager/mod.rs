@@ -1,6 +1,6 @@
 use super::JsAccount;
 use std::convert::TryInto;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use iota_wallet::{
     account::AccountIdentifier, account_manager::AccountManager, client::ClientOptions, DateTime,
@@ -46,7 +46,7 @@ fn js_array_to_acount_id(
     }
 }
 
-pub struct AccountManagerWrapper(Arc<AccountManager>);
+pub struct AccountManagerWrapper(Arc<Mutex<AccountManager>>);
 
 declare_types! {
     pub class JsAccountManager for AccountManagerWrapper {
@@ -62,7 +62,7 @@ declare_types! {
                 None => AccountManager::new(),
             };
             let manager = manager.expect("error initializing account manager");
-            Ok(AccountManagerWrapper(Arc::new(manager)))
+            Ok(AccountManagerWrapper(Arc::new(Mutex::new(manager))))
         }
 
         method setStrongholdPassword(mut cx) {
@@ -70,7 +70,8 @@ declare_types! {
             {
                 let this = cx.this();
                 let guard = cx.lock();
-                let manager = &this.borrow(&guard).0;
+                let ref_ = &this.borrow(&guard).0;
+                let mut manager = ref_.lock().unwrap();
                 manager.set_stronghold_password(password).expect("error setting stronghold password");
             }
             Ok(cx.undefined().upcast())
@@ -82,7 +83,8 @@ declare_types! {
                 let account_to_create: AccountToCreate = neon_serde::from_value(&mut cx, account_to_create)?;
                 let this = cx.this();
                 let guard = cx.lock();
-                let manager = &this.borrow(&guard).0;
+                let ref_ = &this.borrow(&guard).0;
+                let manager = ref_.lock().unwrap();
 
                 let mut builder = manager
                     .create_account(account_to_create.client_options.clone());
@@ -113,7 +115,8 @@ declare_types! {
             let account = {
                 let this = cx.this();
                 let guard = cx.lock();
-                let manager = &this.borrow(&guard).0;
+                let ref_ = &this.borrow(&guard).0;
+                let manager = ref_.lock().unwrap();
                 manager.get_account(id)
             };
             match account {
@@ -131,7 +134,8 @@ declare_types! {
             let account = {
                 let this = cx.this();
                 let guard = cx.lock();
-                let manager = &this.borrow(&guard).0;
+                let ref_ = &this.borrow(&guard).0;
+                let manager = ref_.lock().unwrap();
                 manager.get_account_by_alias(alias)
             };
             match account {
@@ -148,7 +152,8 @@ declare_types! {
             let accounts = {
                 let this = cx.this();
                 let guard = cx.lock();
-                let manager = &this.borrow(&guard).0;
+                let ref_ = &this.borrow(&guard).0;
+                let manager = ref_.lock().unwrap();
                 manager.get_accounts().expect("failed to get accounts")
             };
 
@@ -169,7 +174,8 @@ declare_types! {
             {
                 let this = cx.this();
                 let guard = cx.lock();
-                let manager = &this.borrow(&guard).0;
+                let ref_ = &this.borrow(&guard).0;
+                let manager = ref_.lock().unwrap();
                 manager.remove_account(id).expect("error removing account")
             };
             Ok(cx.undefined().upcast())
@@ -211,7 +217,8 @@ declare_types! {
             let destination = {
                 let this = cx.this();
                 let guard = cx.lock();
-                let manager = &this.borrow(&guard).0;
+                let ref_ = &this.borrow(&guard).0;
+                let manager = ref_.lock().unwrap();
                 manager.backup(backup_path).expect("error performing backup").display().to_string()
             };
             Ok(cx.string(destination).upcast())
@@ -222,7 +229,8 @@ declare_types! {
             {
                 let this = cx.this();
                 let guard = cx.lock();
-                let manager = &this.borrow(&guard).0;
+                let ref_ = &this.borrow(&guard).0;
+                let manager = ref_.lock().unwrap();
                 manager.import_accounts(source).expect("error importing accounts");
             };
             Ok(cx.undefined().upcast())

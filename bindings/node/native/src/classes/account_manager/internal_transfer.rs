@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use iota_wallet::{
   account::AccountIdentifier, account_manager::AccountManager, message::Message, WalletError,
@@ -6,7 +6,7 @@ use iota_wallet::{
 use neon::prelude::*;
 
 pub struct InternalTransferTask {
-  pub manager: Arc<AccountManager>,
+  pub manager: Arc<Mutex<AccountManager>>,
   pub from_account_id: AccountIdentifier,
   pub to_account_id: AccountIdentifier,
   pub amount: u64,
@@ -18,9 +18,9 @@ impl Task for InternalTransferTask {
   type JsEvent = JsValue;
 
   fn perform(&self) -> Result<Self::Output, Self::Error> {
+    let manager = self.manager.lock().unwrap();
     crate::block_on(crate::convert_async_panics(|| async {
-      self
-        .manager
+      manager
         .internal_transfer(self.from_account_id, self.to_account_id, self.amount)
         .await
     }))
