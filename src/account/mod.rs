@@ -156,6 +156,7 @@ impl<'a> AccountInitialiser<'a> {
             addresses: self.addresses,
             client_options: self.client_options,
             storage_path: self.storage_path.clone(),
+            has_pending_changes: false,
         };
         if !self.skip_persistance {
             crate::storage::with_adapter(&self.storage_path, |storage| {
@@ -190,9 +191,11 @@ pub struct Account {
     /// The client options.
     #[serde(rename = "clientOptions")]
     client_options: ClientOptions,
-    #[serde(skip)]
     #[getset(set = "pub(crate)", get = "pub(crate)")]
     storage_path: PathBuf,
+    #[doc(hidden)]
+    #[serde(skip)]
+    has_pending_changes: bool,
 }
 
 impl Account {
@@ -240,8 +243,33 @@ impl Account {
     }
 
     /// Updates the account alias.
-    pub(crate) fn set_alias(&mut self, alias: impl AsRef<str>) {
-        self.alias = alias.as_ref().to_string();
+    pub fn set_alias(&mut self, alias: impl AsRef<str>) {
+        let alias = alias.as_ref().to_string();
+        if !self.has_pending_changes {
+            self.has_pending_changes = alias != self.alias;
+        }
+
+        self.alias = alias;
+    }
+
+    /// Updates the account's client options.
+    pub fn set_client_options(&mut self, options: ClientOptions) {
+        if !self.has_pending_changes {
+            self.has_pending_changes = options != self.client_options;
+        }
+        self.client_options = options;
+    }
+
+    /// Saves the pending changes on the account.
+    /// This is automatically performed when the account goes out of scope.
+    pub fn save_pending_changes(&mut self) -> crate::Result<()> {
+        if self.has_pending_changes {
+            crate::storage::with_adapter(&self.storage_path, |storage| {
+                storage.set(self.id.clone().into(), serde_json::to_string(&self)?)
+            })?;
+            self.has_pending_changes = false;
+        }
+        Ok(())
     }
 
     /// Gets a list of transactions on this account.
@@ -331,7 +359,7 @@ impl Account {
     }
 
     /// Gets a new unused address and links it to this account.
-    pub async fn generate_address(&mut self) -> crate::Result<Address> {
+    pub fn generate_address(&mut self) -> crate::Result<Address> {
         let address = crate::address::get_new_address(&self)?;
         self.addresses.push(address.clone());
         crate::storage::with_adapter(&self.storage_path, |storage| {
@@ -362,6 +390,12 @@ impl Account {
     /// Gets a message with the given id associated with this account.
     pub fn get_message(&self, message_id: &MessageId) -> Option<&Message> {
         self.messages.iter().find(|tx| tx.id() == message_id)
+    }
+}
+
+impl Drop for Account {
+    fn drop(&mut self) {
+        let _ = self.save_pending_changes();
     }
 }
 
@@ -398,17 +432,19 @@ mod tests {
                 .expect("invalid node URL")
                 .build();
 
-            let account = manager
+            let account_id = {
+                let mut account = manager
                 .create_account(client_options)
                 .alias("alias")
                 .initialise()
                 .expect("failed to add account");
 
-            manager
-                .set_alias(account.id().into(), updated_alias)
-                .expect("failed to update alias");
+                account.set_alias(updated_alias);
+                account.id().into()
+            };
+
             let account_in_storage = manager
-                .get_account(account.id().into())
+                .get_account(account_id)
                 .expect("failed to get account from storage");
             assert_eq!(
                 account_in_storage.alias().to_string(),

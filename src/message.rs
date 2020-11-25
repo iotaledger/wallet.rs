@@ -1,8 +1,9 @@
 use crate::address::{Address, IotaAddress};
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-use iota::message::prelude::{Message as IotaMessage, MessageId, Output, Payload};
+pub use iota::message::prelude::{Message as IotaMessage, MessageId, Output, Payload};
 use serde::{Deserialize, Serialize};
+use serde_repr::Deserialize_repr;
 use std::cmp::Ordering;
 use std::fmt;
 use std::hash::{Hash, Hasher};
@@ -46,6 +47,7 @@ pub enum RemainderValueStrategy {
     /// Move the remainder value to a change address.
     ChangeAddress,
     /// Move the remainder value to an address that must belong to the source account.
+    #[serde(with = "crate::serde::iota_address_serde")]
     AccountAddress(IotaAddress),
 }
 
@@ -307,16 +309,17 @@ impl Message {
 }
 
 /// Message type.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize_repr)]
+#[repr(u8)]
 pub enum MessageType {
     /// Message received.
-    Received,
+    Received = 1,
     /// Message sent.
-    Sent,
+    Sent = 2,
     /// Message not broadcasted.
-    Failed,
+    Failed = 3,
     /// Message not confirmed.
-    Unconfirmed,
+    Unconfirmed = 4,
     /// A value message.
-    Value,
+    Value = 5,
 }
