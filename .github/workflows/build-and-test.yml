@@ -64,10 +64,10 @@ jobs:
       with:
         path: bindings/node/native/target
         # Add date to the cache to keep it up to date
-        key: cargo-build-target-${{ hashFiles('**/Cargo.toml') }}-${{ env.CURRENT_DATE }}
+        key: cargo-build-node-target-${{ hashFiles('**/Cargo.toml') }}-${{ env.CURRENT_DATE }}
         # Restore from outdated cache for speed
         restore-keys: |
-          cargo-build-target-${{ hashFiles('**/Cargo.toml') }}
+          cargo-build-node-target-${{ hashFiles('**/Cargo.toml') }}
 
     - name: Build
       uses: actions-rs/cargo@v1
@@ -82,6 +82,5 @@ jobs:
         args: --all --release -- --test-threads=1
 
     - name: Build nodejs binding
-      run: |
-          cd ./bindings/node
-          yarn
+      run: yarn
+      working-directory: bindings/node
