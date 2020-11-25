@@ -1,8 +1,9 @@
 use crate::address::{Address, IotaAddress};
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-use iota::message::prelude::{Message as IotaMessage, MessageId, Output, Payload};
+pub use iota::message::prelude::{Message as IotaMessage, MessageId, Output, Payload};
 use serde::{Deserialize, Serialize};
+use serde_repr::Deserialize_repr;
 use std::cmp::Ordering;
 use std::fmt;
 use std::hash::{Hash, Hasher};
@@ -37,18 +38,31 @@ impl Tag {
     }
 }
 
+/// The strategy to use for the remainder value management when sending funds.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(tag = "strategy", content = "value")]
+pub enum RemainderValueStrategy {
+    /// Keep the remainder value on the source address.
+    ReuseAddress,
+    /// Move the remainder value to a change address.
+    ChangeAddress,
+    /// Move the remainder value to an address that must belong to the source account.
+    #[serde(with = "crate::serde::iota_address_serde")]
+    AccountAddress(IotaAddress),
+}
+
 /// A transfer to make a transaction.
-#[derive(Debug, Clone, Getters, Setters, Deserialize)]
-#[getset(get = "pub")]
+#[derive(Debug, Clone, Deserialize)]
 pub struct Transfer {
     /// The transfer value.
-    amount: u64,
+    pub(crate) amount: u64,
     /// The transfer address.
     #[serde(with = "crate::serde::iota_address_serde")]
-    address: IotaAddress,
+    pub(crate) address: IotaAddress,
     /// (Optional) transfer data.
-    #[getset(set = "pub")]
-    data: Option<String>,
+    pub(crate) data: Option<String>,
+    /// The strategy to use for the remainder value.
+    pub(crate) remainder_value_strategy: RemainderValueStrategy,
 }
 
 impl Transfer {
@@ -58,7 +72,20 @@ impl Transfer {
             address,
             amount,
             data: None,
+            remainder_value_strategy: RemainderValueStrategy::ChangeAddress,
         }
+    }
+
+    /// Sets the remainder value strategy for the transfer.
+    pub fn remainder_value_strategy(mut self, strategy: RemainderValueStrategy) -> Self {
+        self.remainder_value_strategy = strategy;
+        self
+    }
+
+    /// (Optional) transfer data.
+    pub fn data(mut self, data: String) -> Self {
+        self.data = Some(data);
+        self
     }
 }
 
@@ -282,16 +309,17 @@ impl Message {
 }
 
 /// Message type.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize_repr)]
+#[repr(u8)]
 pub enum MessageType {
     /// Message received.
-    Received,
+    Received = 1,
     /// Message sent.
-    Sent,
+    Sent = 2,
     /// Message not broadcasted.
-    Failed,
+    Failed = 3,
     /// Message not confirmed.
-    Unconfirmed,
+    Unconfirmed = 4,
     /// A value message.
-    Value,
+    Value = 5,
 }

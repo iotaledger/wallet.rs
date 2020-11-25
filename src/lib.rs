@@ -29,6 +29,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use stronghold::Stronghold;
+use tokio::runtime::Runtime;
 
 static STRONGHOLD_INSTANCE: OnceCell<Arc<Mutex<HashMap<PathBuf, Stronghold>>>> = OnceCell::new();
 
@@ -113,6 +114,10 @@ pub enum WalletError {
     /// Account not found
     #[error("account not found")]
     AccountNotFound,
+    /// invalid remainder value target address defined on `RemainderValueStrategy`.
+    /// the address must belong to the account.
+    #[error("the remainder value address doesn't belong to the account")]
+    InvalidRemainderValueAddress,
 }
 
 impl Drop for WalletError {
@@ -137,14 +142,6 @@ pub(crate) fn remove_stronghold(stronghold_path: PathBuf) {
     stronghold_map.remove(&stronghold_path);
 }
 
-pub(crate) fn is_stronghold_initialised(path: &PathBuf) -> bool {
-    let stronghold_map = STRONGHOLD_INSTANCE
-        .get_or_init(Default::default)
-        .lock()
-        .unwrap();
-    stronghold_map.contains_key(path)
-}
-
 pub(crate) fn with_stronghold_from_path<T, F: FnOnce(&Stronghold) -> T>(
     path: &PathBuf,
     cb: F,
@@ -160,6 +157,12 @@ pub(crate) fn with_stronghold_from_path<T, F: FnOnce(&Stronghold) -> T>(
     }
 }
 
+pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
+    static INSTANCE: OnceCell<Mutex<Runtime>> = OnceCell::new();
+    let runtime = INSTANCE.get_or_init(|| Mutex::new(Runtime::new().unwrap()));
+    runtime.lock().unwrap().block_on(cb)
+}
+
 #[cfg(test)]
 mod test_utils {
     use super::account_manager::AccountManager;
@@ -173,7 +176,7 @@ mod test_utils {
             let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
             let storage_path = PathBuf::from(format!("./example-database/{}", storage_path));
 
-            let manager = AccountManager::with_storage_path(storage_path).unwrap();
+            let mut manager = AccountManager::with_storage_path(storage_path).unwrap();
             manager.set_stronghold_password("password").unwrap();
             manager
         })

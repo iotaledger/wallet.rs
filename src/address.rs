@@ -160,6 +160,26 @@ impl PartialEq for Address {
     }
 }
 
+impl Address {
+    pub(crate) fn append_output(&mut self, output: AddressOutput) {
+        if !self.outputs.iter().any(|o| o == &output) {
+            self.balance += output.amount;
+            self.outputs.push(output);
+        }
+    }
+}
+
+/// Parses a bech32 address string.
+pub fn parse(address: String) -> crate::Result<IotaAddress> {
+    let address_ed25519 = Vec::from_base32(&bech32::decode(&address)?.1)?;
+    let iota_address = IotaAddress::Ed25519(Ed25519Address::new(
+        address_ed25519[1..]
+            .try_into()
+            .map_err(|_| crate::WalletError::InvalidAddressLength)?,
+    ));
+    Ok(iota_address)
+}
+
 pub(crate) fn get_iota_address(
     storage_path: &PathBuf,
     account_id: &[u8; 32],
@@ -170,13 +190,7 @@ pub(crate) fn get_iota_address(
     crate::with_stronghold_from_path(&storage_path, |stronghold| {
         let address_str =
             stronghold.address_get(account_id, Some(account_index), address_index, internal)?;
-        let address_ed25519 = Vec::from_base32(&bech32::decode(&address_str)?.1)?;
-        let iota_address = IotaAddress::Ed25519(Ed25519Address::new(
-            address_ed25519[1..]
-                .try_into()
-                .map_err(|_| crate::WalletError::InvalidAddressLength)?,
-        ));
-        Ok(iota_address)
+        parse(address_str)
     })
 }
 

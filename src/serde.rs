@@ -168,6 +168,9 @@ impl serde::Serialize for crate::WalletError {
             }
             Self::ZeroAmount => serialize_variant(serializer, "ZeroAmount", None),
             Self::AccountNotFound => serialize_variant(serializer, "AccountNotFound", None),
+            Self::InvalidRemainderValueAddress => {
+                serialize_variant(serializer, "InvalidRemainderValueAddress", None)
+            }
         }
     }
 }
