@@ -160,6 +160,15 @@ impl PartialEq for Address {
     }
 }
 
+impl Address {
+    pub(crate) fn append_output(&mut self, output: AddressOutput) {
+        if !self.outputs.iter().any(|o| o == &output) {
+            self.balance += output.amount;
+            self.outputs.push(output);
+        }
+    }
+}
+
 pub(crate) fn get_iota_address(
     storage_path: &PathBuf,
     account_id: &[u8; 32],

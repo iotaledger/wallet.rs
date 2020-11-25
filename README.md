@@ -33,7 +33,7 @@ In order to use the library you first need to create an `AccountManager`:
 ```rust
 use iota_wallet::account_manager::AccountManager;
 fn main() {
-  let manager = AccountManager::new();
+  let mut manager = AccountManager::new().unwrap();
   manager.set_stronghold_password("my-password").unwrap();
   // now you can create accounts with `manager.create_account`, synchronize, send transfers, backup...
 }
