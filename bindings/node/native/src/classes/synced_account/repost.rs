@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 
 use iota_wallet::{
   account::SyncedAccount,
@@ -14,7 +14,7 @@ pub enum RepostAction {
 }
 
 pub struct RepostTask {
-  pub synced: Arc<Mutex<SyncedAccount>>,
+  pub synced: Arc<RwLock<SyncedAccount>>,
   pub message_id: MessageId,
   pub action: RepostAction,
 }
@@ -25,7 +25,7 @@ impl Task for RepostTask {
   type JsEvent = JsValue;
 
   fn perform(&self) -> Result<Self::Output, Self::Error> {
-    let synced = self.synced.lock().unwrap();
+    let synced = self.synced.read().unwrap();
     crate::block_on(crate::convert_async_panics(|| async {
       match self.action {
         RepostAction::Retry => synced.retry(&self.message_id).await,

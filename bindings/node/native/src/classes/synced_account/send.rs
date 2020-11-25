@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 
 use iota_wallet::{
     account::SyncedAccount,
@@ -8,7 +8,7 @@ use iota_wallet::{
 use neon::prelude::*;
 
 pub struct SendTask {
-    pub synced: Arc<Mutex<SyncedAccount>>,
+    pub synced: Arc<RwLock<SyncedAccount>>,
     pub transfer: Transfer,
 }
 
@@ -18,7 +18,7 @@ impl Task for SendTask {
     type JsEvent = JsValue;
 
     fn perform(&self) -> Result<Self::Output, Self::Error> {
-        let synced = self.synced.lock().unwrap();
+        let synced = self.synced.read().unwrap();
         crate::block_on(crate::convert_async_panics(|| async {
             synced.transfer(self.transfer.clone()).await
         }))

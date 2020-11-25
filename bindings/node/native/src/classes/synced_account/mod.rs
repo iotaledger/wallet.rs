@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 
 use iota_wallet::{
     account::SyncedAccount,
@@ -11,14 +11,14 @@ use neon::prelude::*;
 mod repost;
 mod send;
 
-pub struct SyncedAccountWrapper(Arc<Mutex<SyncedAccount>>);
+pub struct SyncedAccountWrapper(Arc<RwLock<SyncedAccount>>);
 
 declare_types! {
     pub class JsSyncedAccount for SyncedAccountWrapper {
         init(mut cx) {
             let synced = cx.argument::<JsString>(0)?.value();
             let synced: SyncedAccount = serde_json::from_str(&synced).expect("invalid synced account JSON");
-            Ok(SyncedAccountWrapper(Arc::new(Mutex::new(synced))))
+            Ok(SyncedAccountWrapper(Arc::new(RwLock::new(synced))))
         }
 
         method send(mut cx) {

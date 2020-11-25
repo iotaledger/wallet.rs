@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 
 use iota_wallet::{
   account::{Account, SyncedAccount},
@@ -18,7 +18,7 @@ pub struct SyncOptions {
 }
 
 pub struct SyncTask {
-  pub account: Arc<Mutex<Account>>,
+  pub account: Arc<RwLock<Account>>,
   pub options: SyncOptions,
 }
 
@@ -28,7 +28,7 @@ impl Task for SyncTask {
   type JsEvent = JsValue;
 
   fn perform(&self) -> Result<Self::Output, Self::Error> {
-    let mut acc = self.account.lock().unwrap();
+    let mut acc = self.account.write().unwrap();
     let mut synchronizer = acc.sync();
     if let Some(address_index) = self.options.address_index {
       synchronizer = synchronizer.address_index(address_index);

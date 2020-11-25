@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 
 use iota_wallet::{
     account::Account,
@@ -10,14 +10,14 @@ use neon::prelude::*;
 
 mod sync;
 
-pub struct AccountWrapper(Arc<Mutex<Account>>);
+pub struct AccountWrapper(Arc<RwLock<Account>>);
 
 declare_types! {
     pub class JsAccount for AccountWrapper {
         init(mut cx) {
             let account = cx.argument::<JsString>(0)?.value();
             let account: Account = serde_json::from_str(&account).expect("invalid account JSON");
-            Ok(AccountWrapper(Arc::new(Mutex::new(account))))
+            Ok(AccountWrapper(Arc::new(RwLock::new(account))))
         }
 
         method id(mut cx) {
@@ -25,7 +25,7 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let account = ref_.lock().unwrap();
+                let account = ref_.read().unwrap();
                 *account.id()
             };
 
@@ -43,7 +43,7 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let account = ref_.lock().unwrap();
+                let account = ref_.read().unwrap();
                 *account.index()
             };
 
@@ -55,7 +55,7 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let account = ref_.lock().unwrap();
+                let account = ref_.read().unwrap();
                 account.alias().clone()
             };
 
@@ -67,7 +67,7 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let account = ref_.lock().unwrap();
+                let account = ref_.read().unwrap();
                 account.available_balance()
             };
             Ok(cx.number(balance as f64).upcast())
@@ -78,7 +78,7 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let account = ref_.lock().unwrap();
+                let account = ref_.read().unwrap();
                 account.total_balance()
             };
             Ok(cx.number(balance as f64).upcast())
@@ -105,7 +105,7 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let account = ref_.lock().unwrap();
+                let account = ref_.read().unwrap();
                 account.list_messages(count, from, filter).into_iter().cloned().collect()
             };
 
@@ -128,7 +128,7 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let account = ref_.lock().unwrap();
+                let account = ref_.read().unwrap();
                 account.list_addresses(unspent).into_iter().cloned().collect()
             };
 
@@ -147,7 +147,7 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let mut account = ref_.lock().unwrap();
+                let mut account = ref_.write().unwrap();
                 account.set_alias(alias);
                 account.save_pending_changes().expect("failed to save account");
             }
@@ -161,7 +161,7 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let mut account = ref_.lock().unwrap();
+                let mut account = ref_.write().unwrap();
                 account.set_client_options(client_options);
                 account.save_pending_changes().expect("failed to save account");
             }
@@ -174,7 +174,7 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let account = ref_.lock().unwrap();
+                let account = ref_.read().unwrap();
                 account.get_message(&message_id).cloned()
             };
             match message {
@@ -188,7 +188,7 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let mut account = ref_.lock().unwrap();
+                let mut account = ref_.write().unwrap();
                 account.generate_address().expect("error generating address")
             };
             Ok(neon_serde::to_value(&mut cx, &address)?)
@@ -199,7 +199,7 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let account = ref_.lock().unwrap();
+                let account = ref_.read().unwrap();
                 account.latest_address().cloned()
             };
             match address {
