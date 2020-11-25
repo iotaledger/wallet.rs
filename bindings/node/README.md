@@ -80,6 +80,12 @@ Gets the account with the given identifier or index.
 
 **Returns** the associated Account instance or undefined if the account wasn't found.
 
+#### getAccounts()
+
+Gets all stored accounts.
+
+**Returns** an array of [Account objects](#account).
+
 #### removeAccount(accountId)
 
 Removes the account with the given identifier or index.

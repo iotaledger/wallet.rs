@@ -114,6 +114,7 @@ export declare class AccountManager {
   setStrongholdPassword(password: string): void
   createAccount(account: AccountToCreate): Account
   getAccount(accountId: number[] | number): Account | undefined
+  getAccounts(): Account[]
   removeAccount(accountId: number[] | number): void
   syncAccounts(): Promise<SyncedAccount[]>
   internalTransfer(fromAccountId: number[] | number, toAccountId: number[] | number, amount: number): Promise<Message>

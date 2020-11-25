@@ -128,6 +128,25 @@ declare_types! {
             }
         }
 
+        method getAccounts(mut cx) {
+            let accounts = {
+                let this = cx.this();
+                let guard = cx.lock();
+                let manager = &this.borrow(&guard).0;
+                manager.get_accounts().expect("failed to get accounts")
+            };
+
+            let js_array = JsArray::new(&mut cx, accounts.len() as u32);
+            for (index, account) in accounts.iter().enumerate() {
+                let account = serde_json::to_string(&account).unwrap();
+                let account = cx.string(account);
+                let js_account = JsAccount::new(&mut cx, vec![account])?;
+                js_array.set(&mut cx, index as u32, js_account)?;
+            }
+
+            Ok(js_array.upcast())
+        }
+
         method removeAccount(mut cx) {
             let id = cx.argument::<JsValue>(0)?;
             let id = js_array_to_acount_id(&mut cx, id)?;
