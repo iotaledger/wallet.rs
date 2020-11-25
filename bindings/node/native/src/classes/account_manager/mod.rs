@@ -1,7 +1,6 @@
 use super::JsAccount;
 use std::convert::TryInto;
 use std::sync::Arc;
-use std::time::Duration;
 
 use iota_wallet::{
     account::AccountIdentifier, account_manager::AccountManager, client::ClientOptions, DateTime,
@@ -63,7 +62,6 @@ declare_types! {
                 None => AccountManager::new(),
             };
             let manager = manager.expect("error initializing account manager");
-            manager.start_polling(Duration::from_secs(15));
             Ok(AccountManagerWrapper(Arc::new(manager)))
         }
 
