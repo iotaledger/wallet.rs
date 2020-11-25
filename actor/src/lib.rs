@@ -2,7 +2,6 @@
 
 #![warn(rust_2018_idioms)]
 
-use chronicle_common::actor;
 use futures::{Future, FutureExt};
 use iota::message::prelude::MessageId;
 use iota_wallet::{
@@ -23,12 +22,30 @@ pub use message::*;
 
 pub use iota_wallet as wallet;
 
-actor!(WalletBuilder {
-  rx: UnboundedReceiver<Message>,
-  message_handler: WalletMessageHandler
-});
+#[derive(Default)]
+pub struct WalletBuilder {
+  rx: Option<UnboundedReceiver<Message>>,
+  message_handler: Option<WalletMessageHandler>,
+}
 
 impl WalletBuilder {
+  /// Creates a new wallet actor builder.
+  pub fn new() -> Self {
+    Self::default()
+  }
+
+  /// Sets the receiver for messages.
+  pub fn rx(mut self, rx: UnboundedReceiver<Message>) -> Self {
+    self.rx.replace(rx);
+    self
+  }
+
+  /// Sets the wallet message handler
+  pub fn message_handler(mut self, message_handler: WalletMessageHandler) -> Self {
+    self.message_handler.replace(message_handler);
+    self
+  }
+
   /// Builds the Wallet actor.
   pub fn build(self) -> Wallet {
     Wallet {
