@@ -160,6 +160,15 @@ impl PartialEq for Address {
     }
 }
 
+impl Address {
+    pub(crate) fn append_output(&mut self, output: AddressOutput) {
+        if !self.outputs.iter().any(|o| o == &output) {
+            self.balance += output.amount;
+            self.outputs.push(output);
+        }
+    }
+}
+
 /// Parses a bech32 address string.
 pub fn parse(address: String) -> crate::Result<IotaAddress> {
     let address_ed25519 = Vec::from_base32(&bech32::decode(&address)?.1)?;

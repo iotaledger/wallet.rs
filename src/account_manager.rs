@@ -1,4 +1,6 @@
-use crate::account::{Account, AccountIdentifier, AccountInitialiser, SyncedAccount};
+use crate::account::{
+    repost_message, Account, AccountIdentifier, AccountInitialiser, RepostAction, SyncedAccount,
+};
 use crate::client::ClientOptions;
 use crate::event::{
     emit_balance_change, emit_confirmation_state_change, emit_transaction_event,
@@ -15,6 +17,7 @@ use std::thread;
 use std::time::Duration;
 
 use futures::FutureExt;
+use getset::{Getters, Setters};
 use iota::message::prelude::MessageId;
 use stronghold::Stronghold;
 
@@ -23,8 +26,15 @@ const DEFAULT_STORAGE_PATH: &str = "./example-database";
 /// The account manager.
 ///
 /// Used to manage multiple accounts.
+#[derive(Getters, Setters)]
 pub struct AccountManager {
+    /// the path to the storage.
+    #[getset(get = "pub")]
     storage_path: PathBuf,
+    /// the polling interval.
+    #[getset(get = "pub", set = "pub")]
+    polling_interval: Duration,
+    started_monitoring: bool,
 }
 
 fn mutate_account_transaction<F: FnOnce(&Account, &mut Vec<Message>)>(
@@ -64,12 +74,26 @@ impl AccountManager {
         crate::storage::set_adapter(&storage_path, adapter);
         let instance = Self {
             storage_path: storage_path.as_ref().to_path_buf(),
+            polling_interval: Duration::from_millis(30_000),
+            started_monitoring: false,
         };
         Ok(instance)
     }
 
+    /// Starts monitoring the accounts with the node's mqtt topics.
+    fn start_monitoring(&self) -> crate::Result<()> {
+        let accounts =
+            crate::storage::with_adapter(&self.storage_path, |storage| storage.get_all())?;
+        let accounts = crate::storage::parse_accounts(&self.storage_path, &accounts)?;
+        for account in accounts {
+            crate::monitor::monitor_account_addresses_balance(&account)?;
+            crate::monitor::monitor_unconfirmed_messages(&account)?;
+        }
+        Ok(())
+    }
+
     /// Sets the stronghold password.
-    pub fn set_stronghold_password<P: AsRef<str>>(&self, password: P) -> crate::Result<()> {
+    pub fn set_stronghold_password<P: AsRef<str>>(&mut self, password: P) -> crate::Result<()> {
         let stronghold_path = self
             .storage_path
             .join(crate::storage::stronghold_snapshot_filename());
@@ -80,82 +104,38 @@ impl AccountManager {
             None,
         )?;
         crate::init_stronghold(&self.storage_path, stronghold);
+        if !self.started_monitoring {
+            let monitoring_disabled = self.start_monitoring().is_err();
+            self.start_polling(monitoring_disabled);
+            self.started_monitoring = true;
+        }
         Ok(())
     }
 
-    /// Enables syncing through node events.
-    pub fn sync_through_events(&self) {
-        let storage_path = self.storage_path.clone();
-        // sync confirmation state changes
-        crate::event::on_confirmation_state_change(move |event| {
-            if *event.confirmed() {
-                let _ = mutate_account_transaction(
-                    &storage_path,
-                    (**event.account_id()).into(),
-                    |_, transactions| {
-                        if let Some(message) = transactions
-                            .iter_mut()
-                            .find(|message| message.id() == event.message().id())
-                        {
-                            message.set_confirmed(true);
-                        }
-                    },
-                );
-            }
-        });
-
-        let storage_path = self.storage_path.clone();
-        crate::event::on_broadcast(move |event| {
-            let _ = mutate_account_transaction(
-                &storage_path,
-                event.account_id().clone().into(),
-                |_, transactions| {
-                    if let Some(message) = transactions
-                        .iter_mut()
-                        .find(|message| message.id() == event.message().id())
-                    {
-                        message.set_broadcasted(true);
-                    }
-                },
-            );
-        });
-
-        let storage_path = self.storage_path.clone();
-        crate::event::on_new_transaction(move |event| {
-            let _ = mutate_account_transaction(
-                &storage_path,
-                event.account_id().clone().into(),
-                |account, messages| {
-                    messages.push((*event.message()).clone());
-                },
-            );
-        });
-    }
-
     /// Starts the polling mechanism.
-    pub fn start_polling(&self, interval: Duration) -> thread::JoinHandle<()> {
+    fn start_polling(&self, is_monitoring_disabled: bool) -> thread::JoinHandle<()> {
         let storage_path = self.storage_path.clone();
+        let interval = self.polling_interval;
         thread::spawn(move || {
-            let mut runtime = tokio::runtime::Runtime::new().unwrap();
             loop {
                 let storage_path_ = storage_path.clone();
-                if crate::is_stronghold_initialised(&storage_path_) {
-                    runtime.block_on(async move {
-                        if let Err(panic) =
-                            AssertUnwindSafe(poll(storage_path_)).catch_unwind().await
-                        {
-                            let msg = if let Some(message) = panic.downcast_ref::<String>() {
-                                format!("Internal error: {}", message)
-                            } else if let Some(message) = panic.downcast_ref::<&str>() {
-                                format!("Internal error: {}", message)
-                            } else {
-                                "Internal error".to_string()
-                            };
-                            let _error = crate::WalletError::UnknownError(msg);
-                            // when the error is dropped, the on_error event will be triggered
-                        }
-                    });
-                }
+                crate::block_on(async move {
+                    if let Err(panic) =
+                        AssertUnwindSafe(poll(storage_path_, is_monitoring_disabled))
+                            .catch_unwind()
+                            .await
+                    {
+                        let msg = if let Some(message) = panic.downcast_ref::<String>() {
+                            format!("Internal error: {}", message)
+                        } else if let Some(message) = panic.downcast_ref::<&str>() {
+                            format!("Internal error: {}", message)
+                        } else {
+                            "Internal error".to_string()
+                        };
+                        let _error = crate::WalletError::UnknownError(msg);
+                        // when the error is dropped, the on_error event will be triggered
+                    }
+                });
                 thread::sleep(interval);
             }
         })
@@ -347,74 +327,109 @@ impl AccountManager {
     }
 }
 
-async fn poll(storage_path: PathBuf) -> crate::Result<()> {
-    let accounts_before_sync =
-        crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
-    let accounts_before_sync =
-        crate::storage::parse_accounts(&storage_path, &accounts_before_sync)?;
-    let synced_accounts = sync_accounts(&storage_path, Some(0)).await?;
-    let accounts_after_sync =
-        crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
-    let accounts_after_sync = crate::storage::parse_accounts(&storage_path, &accounts_after_sync)?;
+async fn poll(storage_path: PathBuf, is_monitoring_disabled: bool) -> crate::Result<()> {
+    let retried = if is_monitoring_disabled {
+        let accounts_before_sync =
+            crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
+        let accounts_before_sync =
+            crate::storage::parse_accounts(&storage_path, &accounts_before_sync)?;
+        let synced_accounts = sync_accounts(&storage_path, Some(0)).await?;
+        let accounts_after_sync =
+            crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
+        let accounts_after_sync =
+            crate::storage::parse_accounts(&storage_path, &accounts_after_sync)?;
 
-    // compare accounts to check for balance changes and new messages
-    for account_before_sync in &accounts_before_sync {
-        let account_after_sync = accounts_after_sync
-            .iter()
-            .find(|account| account.id() == account_before_sync.id())
-            .unwrap();
-
-        // balance event
-        for address_before_sync in account_before_sync.addresses() {
-            let address_after_sync = account_after_sync
-                .addresses()
+        // compare accounts to check for balance changes and new messages
+        for account_before_sync in &accounts_before_sync {
+            let account_after_sync = accounts_after_sync
                 .iter()
-                .find(|addr| addr == &address_before_sync)
+                .find(|account| account.id() == account_before_sync.id())
                 .unwrap();
-            if address_after_sync.balance() != address_before_sync.balance() {
-                emit_balance_change(
-                    account_after_sync.id(),
-                    address_after_sync,
-                    *address_after_sync.balance(),
-                );
+
+            // balance event
+            for address_before_sync in account_before_sync.addresses() {
+                let address_after_sync = account_after_sync
+                    .addresses()
+                    .iter()
+                    .find(|addr| addr == &address_before_sync)
+                    .unwrap();
+                if address_after_sync.balance() != address_before_sync.balance() {
+                    emit_balance_change(
+                        account_after_sync.id(),
+                        address_after_sync,
+                        *address_after_sync.balance(),
+                    );
+                }
             }
-        }
 
-        // new messages event
-        account_after_sync
-            .messages()
-            .iter()
-            .filter(|message| !account_before_sync.messages().contains(message))
-            .for_each(|message| {
-                emit_transaction_event(
-                    TransactionEventType::NewTransaction,
-                    account_after_sync.id(),
-                    &message,
-                )
-            });
-
-        // confirmation state change event
-        account_after_sync.messages().iter().for_each(|message| {
-            let changed = match account_before_sync
+            // new messages event
+            account_after_sync
                 .messages()
                 .iter()
-                .find(|m| m.id() == message.id())
-            {
-                Some(old_message) => message.confirmed() != old_message.confirmed(),
-                None => false,
-            };
-            if changed {
-                emit_confirmation_state_change(account_after_sync.id(), &message, true);
+                .filter(|message| !account_before_sync.messages().contains(message))
+                .for_each(|message| {
+                    emit_transaction_event(
+                        TransactionEventType::NewTransaction,
+                        account_after_sync.id(),
+                        &message,
+                    )
+                });
+
+            // confirmation state change event
+            account_after_sync.messages().iter().for_each(|message| {
+                let changed = match account_before_sync
+                    .messages()
+                    .iter()
+                    .find(|m| m.id() == message.id())
+                {
+                    Some(old_message) => message.confirmed() != old_message.confirmed(),
+                    None => false,
+                };
+                if changed {
+                    emit_confirmation_state_change(account_after_sync.id(), &message, true);
+                }
+            });
+        }
+        retry_unconfirmed_transactions(
+            synced_accounts
+                .iter()
+                .zip(accounts_after_sync.iter())
+                .collect(),
+        )
+        .await?
+    } else {
+        let accounts = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
+        let mut retried_messages = vec![];
+        for account in crate::storage::parse_accounts(&storage_path, &accounts)? {
+            let unconfirmed_messages =
+                account.list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed));
+
+            let mut promotions = vec![];
+            let mut reattachments = vec![];
+            for message in unconfirmed_messages {
+                let new_message = repost_message(
+                    account.id().into(),
+                    &storage_path,
+                    message.id(),
+                    RepostAction::Retry,
+                )
+                .await?;
+                if new_message.payload() == message.payload() {
+                    reattachments.push(new_message);
+                } else {
+                    promotions.push(new_message);
+                }
             }
-        });
-    }
-    let retried = retry_unconfirmed_transactions(
-        synced_accounts
-            .iter()
-            .zip(accounts_after_sync.iter())
-            .collect(),
-    )
-    .await?;
+            retried_messages.push(RetriedData {
+                promoted: promotions,
+                reattached: reattachments,
+                account_id: *account.id(),
+            });
+        }
+
+        retried_messages
+    };
+
     retried.iter().for_each(|retried_data| {
         retried_data.reattached.iter().for_each(|message| {
             emit_transaction_event(

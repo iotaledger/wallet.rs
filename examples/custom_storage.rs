@@ -60,7 +60,7 @@ impl StorageAdapter for MyStorage {
 }
 
 fn main() -> iota_wallet::Result<()> {
-    let manager = AccountManager::with_storage_adapter(
+    let mut manager = AccountManager::with_storage_adapter(
         "./example-database/sled",
         MyStorage::new("./example-database/sled")?,
     )
