@@ -59,27 +59,11 @@ jobs:
         restore-keys: |
           cargo-build-target-${{ hashFiles('**/Cargo.toml') }}
 
-    - name: Cache actor cargo target
-      uses: actions/cache@v2
-      with:
-        path: actor/target
-        # Add date to the cache to keep it up to date
-        key: cargo-build-target-${{ hashFiles('**/Cargo.toml') }}-${{ env.CURRENT_DATE }}
-        # Restore from outdated cache for speed
-        restore-keys: |
-          cargo-build-target-${{ hashFiles('**/Cargo.toml') }}
-
     - name: Build
       uses: actions-rs/cargo@v1
       with:
         command: build
         args: --all --release
-
-    - name: Build actor
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
-        args: --manifest-path ./actor/Cargo.toml --all --release
 
     - name: Run tests
       uses: actions-rs/cargo@v1

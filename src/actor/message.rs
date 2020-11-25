@@ -1,4 +1,4 @@
-use iota_wallet::{
+use crate::{
   account::{Account, AccountIdentifier, SyncedAccount},
   address::Address,
   client::ClientOptions,
@@ -11,10 +11,14 @@ use tokio::sync::mpsc::UnboundedSender;
 /// An account to create.
 #[derive(Clone, Debug, Deserialize, Default)]
 pub struct AccountToCreate {
+  /// The node options.
   #[serde(rename = "clientOptions")]
   pub client_options: ClientOptions,
+  /// The account mnemonic.
   pub mnemonic: Option<String>,
+  /// The account alias.
   pub alias: Option<String>,
+  /// The account createdAt date string.
   #[serde(rename = "createdAt")]
   pub created_at: Option<String>,
 }
@@ -23,27 +27,41 @@ pub struct AccountToCreate {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(tag = "name", content = "data")]
 pub enum AccountMethod {
+  /// Generate a new unused address.
   GenerateAddress,
+  /// List messages.
   ListMessages {
+    /// Message type filter.
     #[serde(rename = "messageType")]
     message_type: Option<WalletMessageType>,
+    /// Number of messages to get.
     #[serde(default)]
     count: usize,
+    /// Number of messages to skip.
     #[serde(default)]
     from: usize,
   },
+  /// List addresses.
   ListAddresses {
+    /// Address unspent filter.
     #[serde(default)]
     unspent: bool,
   },
+  /// Get available balance.
   GetAvailableBalance,
+  /// Get total balance.
   GetTotalBalance,
+  /// Get latest address.
   GetLatestAddress,
+  /// Sync the account.
   SyncAccount {
+    /// The first address index to sync.
     #[serde(rename = "addressIndex")]
     address_index: Option<usize>,
+    /// The gap limit.
     #[serde(rename = "gapLimit")]
     gap_limit: Option<usize>,
+    /// Whether to skip writing the account in storage or not (defaults to false).
     #[serde(rename = "skipPersistance")]
     skip_persistance: Option<bool>,
   },
@@ -61,33 +79,48 @@ pub enum MessageType {
   GetAccount(AccountIdentifier),
   /// Read accounts.
   GetAccounts,
+  /// Consume an account method.
   CallAccountMethod {
+    /// The account identifier.
     #[serde(rename = "accountId")]
     account_id: AccountIdentifier,
+    /// The account method to call.
     method: AccountMethod,
   },
   /// Sync accounts.
   SyncAccounts,
   /// Reattach message.
   Reattach {
+    /// The account identifier.
     #[serde(rename = "accountId")]
     account_id: AccountIdentifier,
+    /// The message to reattach.
     #[serde(rename = "message_id")]
     message_id: String,
   },
+  /// Backup storage.
   Backup(String),
+  /// Import accounts from storage.
   RestoreBackup(String),
+  /// Set stronghold snapshot password.
   SetStrongholdPassword(String),
+  /// Send funds.
   SendTransfer {
+    /// The account identifier.
     #[serde(rename = "accountId")]
     account_id: AccountIdentifier,
+    /// The transfer details.
     transfer: Transfer,
   },
+  /// Move funds on stored accounts.
   InternalTransfer {
+    /// The source account identifier.
     #[serde(rename = "fromAccountId")]
     from_account_id: AccountIdentifier,
+    /// The destination account identifier.
     #[serde(rename = "toAccountId")]
     to_account_id: AccountIdentifier,
+    /// The transfer amount.
     amount: u64,
   },
 }
@@ -141,6 +174,7 @@ impl Serialize for MessageType {
   }
 }
 
+/// The actor response type.
 #[derive(Serialize, Debug)]
 pub struct Response {
   id: String,
@@ -150,6 +184,7 @@ pub struct Response {
 }
 
 impl Response {
+  /// Creates a new response.
   pub fn new<S: Into<String>>(id: S, action: MessageType, response: ResponseType) -> Self {
     Self {
       id: id.into(),
@@ -158,6 +193,7 @@ impl Response {
     }
   }
 
+  /// The response's type.
   pub fn response(&self) -> &ResponseType {
     &self.response
   }
@@ -171,7 +207,9 @@ pub enum ResponseType {
   RemovedAccount(AccountIdentifier),
   /// Account succesfully created.
   CreatedAccount(Account),
+  /// GetAccount response.
   ReadAccount(Account),
+  /// GetAccounts response.
   ReadAccounts(Vec<Account>),
   /// ListMessages response.
   Messages(Vec<WalletMessage>),
@@ -185,15 +223,23 @@ pub enum ResponseType {
   AvailableBalance(u64),
   /// GetTotalBalance response.
   TotalBalance(u64),
+  /// SyncAccounts response.
   SyncedAccounts(Vec<SyncedAccount>),
+  /// SyncAccount response.
   SyncedAccount(SyncedAccount),
+  /// Reattach response.
   Reattached(String),
+  /// Backup response.
   BackupSuccessful,
+  /// ImportAccounts response.
   BackupRestored,
+  /// SetStrongholdPassword response.
   StrongholdPasswordSet,
+  /// SendTransfer and InternalTransfer response.
   SentTransfer(WalletMessage),
   /// An error occurred.
   Error(WalletError),
+  /// A panic occurred.
   Panic(String),
 }
 
@@ -219,14 +265,17 @@ impl Message {
     }
   }
 
+  /// The message type.
   pub fn message_type(&self) -> &MessageType {
     &self.message_type
   }
 
+  /// The response sender.
   pub fn response_tx(&self) -> &UnboundedSender<Response> {
     &self.response_tx
   }
 
+  /// The message identifier.
   pub fn id(&self) -> &String {
     &self.id
   }

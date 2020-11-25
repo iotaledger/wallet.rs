@@ -1,60 +1,24 @@
-//! The IOTA Wallet Actor
-
-#![warn(rust_2018_idioms)]
-
-use futures::{Future, FutureExt};
-use iota::message::prelude::MessageId;
-use iota_wallet::{
+use crate::{
   account::AccountIdentifier,
   account_manager::AccountManager,
   message::{Message as WalletMessage, Transfer},
   DateTime, Result, Utc,
 };
-use std::any::Any;
-use std::convert::TryInto;
-use std::panic::{catch_unwind, AssertUnwindSafe};
-use std::path::PathBuf;
-use std::time::Duration;
+use futures::{Future, FutureExt};
+use iota::message::prelude::MessageId;
+use std::{
+  any::Any,
+  convert::TryInto,
+  panic::{catch_unwind, AssertUnwindSafe},
+  path::PathBuf,
+  time::Duration,
+};
 use tokio::sync::mpsc::UnboundedReceiver;
 
 mod message;
 pub use message::*;
 
-pub use iota_wallet as wallet;
-
-#[derive(Default)]
-pub struct WalletBuilder {
-  rx: Option<UnboundedReceiver<Message>>,
-  message_handler: Option<WalletMessageHandler>,
-}
-
-impl WalletBuilder {
-  /// Creates a new wallet actor builder.
-  pub fn new() -> Self {
-    Self::default()
-  }
-
-  /// Sets the receiver for messages.
-  pub fn rx(mut self, rx: UnboundedReceiver<Message>) -> Self {
-    self.rx.replace(rx);
-    self
-  }
-
-  /// Sets the wallet message handler
-  pub fn message_handler(mut self, message_handler: WalletMessageHandler) -> Self {
-    self.message_handler.replace(message_handler);
-    self
-  }
-
-  /// Builds the Wallet actor.
-  pub fn build(self) -> Wallet {
-    Wallet {
-      rx: self.rx.expect("rx is required"),
-      message_handler: WalletMessageHandler::new().expect("failed to initialise account manager"),
-    }
-  }
-}
-
+/// The Wallet message handler.
 pub struct WalletMessageHandler {
   account_manager: AccountManager,
 }
@@ -89,7 +53,7 @@ fn convert_panics<F: FnOnce() -> Result<ResponseType>>(f: F) -> Result<ResponseT
   }
 }
 
-pub async fn convert_async_panics<F>(f: impl FnOnce() -> F) -> Result<ResponseType>
+async fn convert_async_panics<F>(f: impl FnOnce() -> F) -> Result<ResponseType>
 where
   F: Future<Output = Result<ResponseType>>,
 {
@@ -100,6 +64,7 @@ where
 }
 
 impl WalletMessageHandler {
+  /// Creates a new instance of the message handler with the default account manager.
   pub fn new() -> Result<Self> {
     let instance = Self {
       account_manager: AccountManager::new()?,
@@ -107,6 +72,7 @@ impl WalletMessageHandler {
     Ok(instance)
   }
 
+  /// Creates a new instance of the message handler with the account manager using the given storage path.
   pub fn with_storage_path(storage_path: PathBuf) -> Result<Self> {
     let instance = Self {
       account_manager: AccountManager::with_storage_path(storage_path)?,
@@ -119,6 +85,7 @@ impl WalletMessageHandler {
     self.account_manager.set_polling_interval(interval);
   }
 
+  /// Handles a message.
   pub async fn handle(&mut self, message: Message) {
     let response: Result<ResponseType> = match message.message_type() {
       MessageType::RemoveAccount(account_id) => convert_panics(|| self.remove_account(account_id)),
@@ -332,6 +299,40 @@ impl WalletMessageHandler {
       .internal_transfer(*from_account_id, *to_account_id, amount)
       .await?;
     Ok(ResponseType::SentTransfer(message))
+  }
+}
+
+/// The wallet actor builder.
+#[derive(Default)]
+pub struct WalletBuilder {
+  rx: Option<UnboundedReceiver<Message>>,
+  message_handler: Option<WalletMessageHandler>,
+}
+
+impl WalletBuilder {
+  /// Creates a new wallet actor builder.
+  pub fn new() -> Self {
+    Self::default()
+  }
+
+  /// Sets the receiver for messages.
+  pub fn rx(mut self, rx: UnboundedReceiver<Message>) -> Self {
+    self.rx.replace(rx);
+    self
+  }
+
+  /// Sets the wallet message handler
+  pub fn message_handler(mut self, message_handler: WalletMessageHandler) -> Self {
+    self.message_handler.replace(message_handler);
+    self
+  }
+
+  /// Builds the Wallet actor.
+  pub fn build(self) -> Wallet {
+    Wallet {
+      rx: self.rx.expect("rx is required"),
+      message_handler: WalletMessageHandler::new().expect("failed to initialise account manager"),
+    }
   }
 }
 
