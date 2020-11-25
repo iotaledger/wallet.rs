@@ -6,8 +6,6 @@ subcommands:
   - exit:
       about: exits from the account prompt.
       alias: e
-  - h:
-      about: help.
   - sync:
       about: synchronizes the account with the Tangle.
       alias: s

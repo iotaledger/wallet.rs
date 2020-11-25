@@ -11,6 +11,18 @@ use iota_wallet::{
   message::MessageType,
 };
 
+const CLI_TEMPLATE: &'static str = "\
+  {before-help}{bin} {version}\n\
+  {about-with-newline}\n\
+  {usage-heading}\n    {usage}\n\
+  \n\
+  {all-args}{after-help}\
+";
+
+const ACCOUNT_CLI_TEMPLATE: &'static str = "\
+  {all-args}{after-help}\
+";
+
 fn list_messages_command(account: &Account, matches: &ArgMatches) {
   if let Some(matches) = matches.subcommand_matches("messages") {
     let message_type = if let Some(message_type) = matches.value_of("type") {
@@ -47,57 +59,65 @@ fn list_addresses_command(account: &Account, matches: &ArgMatches) {
   }
 }
 
-async fn synchronize_command(account: &mut Account, matches: &ArgMatches) {
+fn synchronize_command(account: &mut Account, matches: &ArgMatches) {
   if matches.subcommand_matches("sync").is_some() {
-    account
-      .sync()
-      .execute()
-      .await
-      .expect("failed to synchronize account with the Tangle");
+    let mut runtime = tokio::runtime::Runtime::new().unwrap();
+    runtime.block_on(async move {
+      account
+        .sync()
+        .execute()
+        .await
+        .expect("failed to synchronize account with the Tangle");
+    });
   }
 }
 
-fn enter_account(account_cli: App<'_>, mut account: Account) -> BoxFuture<'_, ()> {
-  async move {
-    let command: String = Input::new()
-      .with_prompt(format!(
-        "Account `{}` command (h for help)",
-        account.alias()
-      ))
-      .interact_text()
-      .unwrap();
-    match account_cli
-      .clone()
-      .try_get_matches_from(command.split(' ').collect::<Vec<&str>>())
-    {
-      Ok(matches) => {
-        if matches.subcommand_matches("exit").is_some() {
-          return;
-        }
-        if matches.subcommand_matches("h").is_some() {
-          let mut cli = account_cli.clone();
-          cli.print_help().unwrap();
-        }
+fn enter_account(account_cli: App<'_>, mut account: Account) {
+  let command: String = Input::new()
+    .with_prompt(format!(
+      "Account `{}` command (h for help)",
+      account.alias()
+    ))
+    .interact_text()
+    .unwrap();
 
-        list_messages_command(&account, &matches);
-        list_addresses_command(&account, &matches);
-        synchronize_command(&mut account, &matches).await;
-      }
-      Err(e) => {
-        let mut cli = account_cli.clone();
-        match e.kind {
-          ClapErrorKind::DisplayHelp => cli.print_help().unwrap(),
-          ClapErrorKind::DisplayVersion => println!("{}", cli.render_version()),
-          _ => {
-            println!("{}", e.to_string());
+  match command.as_str() {
+    "h" => {
+      let mut cli = account_cli.clone();
+      cli.print_help().unwrap();
+    }
+    "clear" => {
+      let _ = std::process::Command::new("clear").status();
+    }
+    _ => {
+      match account_cli
+        .clone()
+        .try_get_matches_from(command.split(' ').collect::<Vec<&str>>())
+      {
+        Ok(matches) => {
+          if matches.subcommand_matches("exit").is_some() {
+            return;
           }
-        };
+
+          list_messages_command(&account, &matches);
+          list_addresses_command(&account, &matches);
+          synchronize_command(&mut account, &matches);
+        }
+        Err(e) => {
+          let mut cli = account_cli.clone();
+          match e.kind {
+            ClapErrorKind::DisplayHelp => cli.print_help().unwrap(),
+            ClapErrorKind::DisplayVersion => println!("{}", cli.render_version()),
+            _ => {
+              println!("{}", e.to_string());
+            }
+          };
+        }
       }
     }
-
-    enter_account(account_cli, account).await;
   }
-  .boxed()
+
+  enter_account(account_cli, account);
 }
 
 fn pick_account(account_cli: App<'_>, accounts: Vec<Account>) -> BoxFuture<'_, Result<()>> {
@@ -109,7 +129,7 @@ fn pick_account(account_cli: App<'_>, accounts: Vec<Account>) -> BoxFuture<'_, R
       .default(0)
       .interact_on_opt(&Term::stderr())?;
     if let Some(selected) = selection {
-      enter_account(account_cli.clone(), accounts[selected].clone()).await;
+      enter_account(account_cli.clone(), accounts[selected].clone());
       pick_account(account_cli, accounts).await?;
     }
     Ok(())
@@ -137,29 +157,31 @@ async fn new_account_command(account_cli: App<'_>, manager: &AccountManager, mat
     }
     let account = builder.initialise().expect("failed to create account");
     println!("created account `{}`", account.alias());
-    enter_account(account_cli, account).await;
+    enter_account(account_cli, account);
   }
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
-  let manager = AccountManager::new().unwrap();
+  let mut manager = AccountManager::new().unwrap();
   manager.set_stronghold_password("password")?;
 
   let yaml = load_yaml!("account-cli.yml");
-  let account_cli = App::from(yaml).setting(AppSettings::NoBinaryName);
+  let account_cli = App::from(yaml)
+    .help_template(ACCOUNT_CLI_TEMPLATE)
+    .setting(AppSettings::NoBinaryName);
 
   if std::env::args().len() == 1 {
     let accounts = manager.get_accounts()?;
     match accounts.len() {
       0 => {}
-      1 => enter_account(account_cli.clone(), accounts.first().unwrap().clone()).await,
+      1 => enter_account(account_cli.clone(), accounts.first().unwrap().clone()),
       _ => pick_account(account_cli.clone(), accounts).await?,
     }
   }
 
   let yaml = load_yaml!("cli.yml");
-  let matches = App::from(yaml).get_matches();
+  let matches = App::from(yaml).help_template(CLI_TEMPLATE).get_matches();
 
   new_account_command(account_cli, &manager, &matches).await;
 
