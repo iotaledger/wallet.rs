@@ -4,22 +4,22 @@ author: Lucas Nogueira <lucas.nogueira@iota.org>
 about: Interface with the IOTA Wallet Library.
 subcommands:
   - new:
-      about: Creates a new account
+      about: Creates a new account.
       args:
         - node:
             short: n
             long: node
-            about: a node to connect to.
+            about: A node to connect to.
             required: true
             takes_value: true
             multiple: true
         - alias:
             short: a
             long: alias
-            about: the account alias.
+            about: The account alias.
             takes_value: true
         - mnemonic:
             short: m
             long: mnemonic
-            about: the 24-word mnemonic.
+            about: The 24-word mnemonic.
             takes_value: true

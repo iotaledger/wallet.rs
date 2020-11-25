@@ -4,22 +4,67 @@ author: Lucas Nogueira <lucas.nogueira@iota.org>
 about: Interface with an IOTA account.
 subcommands:
   - exit:
-      about: exits from the account prompt.
+      about: Exits from the account prompt.
       alias: e
   - sync:
-      about: synchronizes the account with the Tangle.
+      about: Synchronizes the account with the Tangle.
       alias: s
-  - addresses:
-      about: List the account addresses
+  - address:
+      about: Generates an address.
       alias: a
-  - messages:
-      about: List the account messages
-      alias: m
+  - balance:
+      about: Gets the account balance.
+      alias: b
+  - list-addresses:
+      about: List the account addresses.
+      alias: la
+  - list-messages:
+      about: List the account messages.
+      alias: lm
       args:
+        - id:
+            about: The message id filter.
+            index: 1
         - type:
             short: t
             long: type
-            about: the message type filter.
+            about: Tessage type filter.
             takes_value: true
             multiple: true
             possible_values: [received, sent, failed, unconfirmed, value]
+  - transfer:
+      about: Sends iotas to an address.
+      alias: t
+      args:
+        - address:
+            about: The deposit address.
+            index: 1
+            required: true
+        - amount:
+            about: The transfer amount.
+            index: 2
+            required: true
+  - promote:
+      about: Promotes a pending message.
+      alias: p
+      args:
+        - id:
+            about: The id of the message to promote.
+            index: 1
+            required: true
+  - retry:
+      about: Retry a pending message.
+      alias: r
+      args:
+        - id:
+            about: The id of the message to retry.
+            index: 1
+            required: true
+  - reattach:
+      about: Reattaches a pending message.
+      about: ra
+      args:
+        - id:
+            about: The id of the message to reattach.
+            index: 1
+            required: true
