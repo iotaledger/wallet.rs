@@ -10,7 +10,7 @@ use iota_wallet::{
   account_manager::AccountManager,
   client::ClientOptionsBuilder,
   message::{Message, MessageType, Transfer},
-  Result,
+  Result, WalletError,
 };
 use once_cell::sync::OnceCell;
 use tokio::runtime::Runtime;
@@ -30,7 +30,11 @@ const ACCOUNT_CLI_TEMPLATE: &'static str = "\
 ";
 
 fn print_message(message: &Message) {
-  println!("{:?}", message);
+  println!("{}", serde_json::to_string_pretty(message).unwrap());
+}
+
+fn print_error(e: WalletError) {
+  println!("ERROR: {}", e.to_string());
 }
 
 static RUNTIME: OnceCell<Mutex<Runtime>> = OnceCell::new();
@@ -70,7 +74,7 @@ fn list_messages_command(account: &Account, matches: &ArgMatches) {
       if messages.is_empty() {
         println!("No messages found");
       } else {
-        messages.iter().for_each(|m| println!("{:?}\n\n", m));
+        messages.iter().for_each(|m| print_message(m));
       }
     }
   }
@@ -83,7 +87,9 @@ fn list_addresses_command(account: &Account, matches: &ArgMatches) {
     if addresses.is_empty() {
       println!("No addresses found");
     } else {
-      addresses.iter().for_each(|m| println!("{:?}\n\n", m));
+      addresses
+        .iter()
+        .for_each(|a| println!("{}", serde_json::to_string_pretty(a).unwrap()));
     }
   }
 }
@@ -227,7 +233,7 @@ fn enter_account(account_cli: &App<'_>, mut account: Account) {
           }
 
           if let Err(e) = account_commands(&mut account, &matches) {
-            println!("{:?}", e);
+            print_error(e);
           }
         }
         Err(e) => {
@@ -328,7 +334,7 @@ fn import_command(manager: &AccountManager, matches: &ArgMatches) -> Result<()> 
   Ok(())
 }
 
-fn main() -> Result<()> {
+fn run() -> Result<()> {
   let runtime = Runtime::new().expect("Failed to create async runtime");
   RUNTIME
     .set(Mutex::new(runtime))
@@ -366,4 +372,10 @@ fn main() -> Result<()> {
   import_command(&manager, &matches)?;
 
   Ok(())
+}
+
+fn main() {
+  if let Err(e) = run() {
+    print_error(e);
+  }
 }
