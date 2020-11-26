@@ -1,7 +1,7 @@
 //! Wallet CLI example
 //! Create a new account: `$ cargo run --example cli -- new --node http://localhost:14265`
 
-use clap::{load_yaml, App, AppSettings, ArgMatches, ErrorKind as ClapErrorKind};
+use clap::{load_yaml, App, AppSettings, ArgMatches};
 use console::Term;
 use dialoguer::{theme::ColorfulTheme, Input, Select};
 use iota::message::prelude::MessageId;
@@ -231,13 +231,7 @@ fn enter_account(account_cli: &App<'_>, mut account: Account) {
           }
         }
         Err(e) => {
-          let mut cli = account_cli.clone();
-          match e.kind {
-            ClapErrorKind::DisplayHelp => cli.print_help().unwrap(),
-            _ => {
-              println!("{}", e.to_string());
-            }
-          };
+          println!("{}", e.to_string());
         }
       }
     }

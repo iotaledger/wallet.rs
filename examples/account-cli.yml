@@ -64,7 +64,6 @@ subcommands:
             required: true
   - reattach:
       about: Reattaches a pending message.
-      about: ra
       args:
         - id:
             about: The id of the message to reattach.
