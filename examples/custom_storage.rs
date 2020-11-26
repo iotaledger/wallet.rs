@@ -19,7 +19,7 @@ impl MyStorage {
     }
 }
 
-fn account_id_value(account_id: AccountIdentifier) -> anyhow::Result<[u8; 32]> {
+fn account_id_value(account_id: AccountIdentifier) -> anyhow::Result<String> {
     match account_id {
         AccountIdentifier::Id(val) => Ok(val),
         _ => Err(anyhow::anyhow!("Unexpected AccountIdentifier type")),

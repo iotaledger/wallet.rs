@@ -1,4 +1,4 @@
-use crate::account::Account;
+use crate::account::{account_id_to_stronghold_record_id, Account};
 use crate::message::MessageType;
 use bech32::FromBase32;
 use getset::Getters;
@@ -182,14 +182,18 @@ pub fn parse(address: String) -> crate::Result<IotaAddress> {
 
 pub(crate) fn get_iota_address(
     storage_path: &PathBuf,
-    account_id: &[u8; 32],
+    account_id: &str,
     account_index: usize,
     address_index: usize,
     internal: bool,
 ) -> crate::Result<IotaAddress> {
     crate::with_stronghold_from_path(&storage_path, |stronghold| {
-        let address_str =
-            stronghold.address_get(account_id, Some(account_index), address_index, internal)?;
+        let address_str = stronghold.address_get(
+            &account_id_to_stronghold_record_id(account_id)?,
+            Some(account_index),
+            address_index,
+            internal,
+        )?;
         parse(address_str)
     })
 }

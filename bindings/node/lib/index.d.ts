@@ -60,7 +60,7 @@ export declare interface SyncOptions {
 }
 
 export declare class Account {
-  id(): number[];
+  id(): string;
   index(): number;
   alias(): string;
   availableBalance(): number;
@@ -113,12 +113,12 @@ export declare class AccountManager {
   constructor(storagePath?: string)
   setStrongholdPassword(password: string): void
   createAccount(account: AccountToCreate): Account
-  getAccount(accountId: number[] | number): Account | undefined
+  getAccount(accountId: string | number): Account | undefined
   getAccountByAlias(alias: string): Account | undefined
   getAccounts(): Account[]
-  removeAccount(accountId: number[] | number): void
+  removeAccount(accountId: string | number): void
   syncAccounts(): Promise<SyncedAccount[]>
-  internalTransfer(fromAccountId: number[] | number, toAccountId: number[] | number, amount: number): Promise<Message>
+  internalTransfer(fromAccountId: string | number, toAccountId: string | number, amount: number): Promise<Message>
   backup(destination: string): string
   importAccounts(source: string): void
 }
