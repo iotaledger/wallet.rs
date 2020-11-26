@@ -13,7 +13,6 @@ use std::{
     path::PathBuf,
     time::Duration,
 };
-use tokio::sync::mpsc::UnboundedReceiver;
 
 mod message;
 pub use message::*;
@@ -313,65 +312,64 @@ impl WalletMessageHandler {
     }
 }
 
-/// The wallet actor builder.
-#[derive(Default)]
-pub struct WalletBuilder {
-    rx: Option<UnboundedReceiver<Message>>,
-    message_handler: Option<WalletMessageHandler>,
-}
-
-impl WalletBuilder {
-    /// Creates a new wallet actor builder.
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Sets the receiver for messages.
-    pub fn rx(mut self, rx: UnboundedReceiver<Message>) -> Self {
-        self.rx.replace(rx);
-        self
-    }
-
-    /// Sets the wallet message handler
-    pub fn message_handler(mut self, message_handler: WalletMessageHandler) -> Self {
-        self.message_handler.replace(message_handler);
-        self
-    }
-
-    /// Builds the Wallet actor.
-    pub fn build(self) -> Wallet {
-        Wallet {
-            rx: self.rx.expect("rx is required"),
-            message_handler: WalletMessageHandler::new()
-                .expect("failed to initialise account manager"),
-        }
-    }
-}
-
-/// The Account actor.
-pub struct Wallet {
-    rx: UnboundedReceiver<Message>,
-    message_handler: WalletMessageHandler,
-}
-
-impl Wallet {
-    /// Runs the actor.
-    pub async fn run(mut self) {
-        println!("running wallet actor");
-
-        while let Some(message) = self.rx.recv().await {
-            self.message_handler.handle(message).await;
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::{
-        message::{AccountToCreate, Message, MessageType, Response, ResponseType},
-        WalletBuilder,
+        AccountToCreate, Message, MessageType, Response, ResponseType, WalletMessageHandler,
     };
-    use tokio::sync::mpsc::{unbounded_channel, UnboundedSender};
+    use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
+
+    /// The wallet actor builder.
+    #[derive(Default)]
+    pub struct WalletBuilder {
+        rx: Option<UnboundedReceiver<Message>>,
+        message_handler: Option<WalletMessageHandler>,
+    }
+
+    impl WalletBuilder {
+        /// Creates a new wallet actor builder.
+        pub fn new() -> Self {
+            Self::default()
+        }
+
+        /// Sets the receiver for messages.
+        pub fn rx(mut self, rx: UnboundedReceiver<Message>) -> Self {
+            self.rx.replace(rx);
+            self
+        }
+
+        /// Sets the wallet message handler
+        pub fn message_handler(mut self, message_handler: WalletMessageHandler) -> Self {
+            self.message_handler.replace(message_handler);
+            self
+        }
+
+        /// Builds the Wallet actor.
+        pub fn build(self) -> Wallet {
+            Wallet {
+                rx: self.rx.expect("rx is required"),
+                message_handler: WalletMessageHandler::new()
+                    .expect("failed to initialise account manager"),
+            }
+        }
+    }
+
+    /// The Account actor.
+    pub struct Wallet {
+        rx: UnboundedReceiver<Message>,
+        message_handler: WalletMessageHandler,
+    }
+
+    impl Wallet {
+        /// Runs the actor.
+        pub async fn run(mut self) {
+            println!("running wallet actor");
+
+            while let Some(message) = self.rx.recv().await {
+                self.message_handler.handle(message).await;
+            }
+        }
+    }
 
     fn spawn_actor() -> UnboundedSender<Message> {
         let (tx, rx) = unbounded_channel();
