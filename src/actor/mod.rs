@@ -169,7 +169,7 @@ impl WalletMessageHandler {
                 .map_err(|_| anyhow::anyhow!("invalid message id length"))?,
         );
         self.account_manager
-            .reattach(*account_id, &parsed_message_id)
+            .reattach(account_id.clone(), &parsed_message_id)
             .await?;
         Ok(ResponseType::Reattached(message_id.to_string()))
     }
@@ -184,10 +184,10 @@ impl WalletMessageHandler {
         account_id: &AccountIdentifier,
         method: &AccountMethod,
     ) -> Result<ResponseType> {
-        let mut account = self.account_manager.get_account(*account_id)?;
+        let mut account = self.account_manager.get_account(account_id.clone())?;
         match method {
             AccountMethod::GenerateAddress => {
-                let address = account.generate_address().await?;
+                let address = account.generate_address()?;
                 Ok(ResponseType::GeneratedAddress(address))
             }
             AccountMethod::ListMessages {
@@ -245,8 +245,8 @@ impl WalletMessageHandler {
     /// The remove account message handler.
     fn remove_account(&self, account_id: &AccountIdentifier) -> Result<ResponseType> {
         self.account_manager
-            .remove_account(*account_id)
-            .map(|_| ResponseType::RemovedAccount(*account_id))
+            .remove_account(account_id.clone())
+            .map(|_| ResponseType::RemovedAccount(account_id.clone()))
     }
 
     /// The create account message handler.
@@ -273,7 +273,7 @@ impl WalletMessageHandler {
     }
 
     fn get_account(&self, account_id: &AccountIdentifier) -> Result<ResponseType> {
-        let account = self.account_manager.get_account(*account_id)?;
+        let account = self.account_manager.get_account(account_id.clone())?;
         Ok(ResponseType::ReadAccount(account))
     }
 
@@ -292,7 +292,7 @@ impl WalletMessageHandler {
         account_id: &AccountIdentifier,
         transfer: &Transfer,
     ) -> Result<ResponseType> {
-        let mut account = self.account_manager.get_account(*account_id)?;
+        let mut account = self.account_manager.get_account(account_id.clone())?;
         let synced = account.sync().execute().await?;
         let message = synced.transfer(transfer.clone()).await?;
         Ok(ResponseType::SentTransfer(message))
@@ -306,7 +306,7 @@ impl WalletMessageHandler {
     ) -> Result<ResponseType> {
         let message = self
             .account_manager
-            .internal_transfer(*from_account_id, *to_account_id, amount)
+            .internal_transfer(from_account_id.clone(), to_account_id.clone(), amount)
             .await?;
         Ok(ResponseType::SentTransfer(message))
     }
