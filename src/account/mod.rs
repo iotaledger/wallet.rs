@@ -172,6 +172,7 @@ impl<'a> AccountInitialiser<'a> {
 #[getset(get = "pub")]
 pub struct Account {
     /// The account identifier.
+    #[serde(with = "crate::serde::account_id_serde")]
     id: [u8; 32],
     /// The account index
     index: usize,

@@ -51,6 +51,42 @@ pub(crate) mod iota_address_serde {
     }
 }
 
+pub(crate) mod account_id_serde {
+    use serde::{de::Visitor, Deserializer, Serializer};
+    use std::convert::TryInto;
+
+    pub fn serialize<S: Serializer>(id: &[u8; 32], s: S) -> std::result::Result<S::Ok, S::Error> {
+        s.serialize_str(&hex::encode(id))
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<[u8; 32], D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct AddressVisitor;
+        impl<'de> Visitor<'de> for AddressVisitor {
+            type Value = [u8; 32];
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("a hex string of length 64")
+            }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                let decoded = hex::decode(v)
+                    .map_err(|_| serde::de::Error::custom("account id must be a hex string"))?;
+                let id: [u8; 32] = decoded
+                    .try_into()
+                    .map_err(|_| serde::de::Error::custom("invalid account id length"))?;
+                Ok(id)
+            }
+        }
+
+        deserializer.deserialize_str(AddressVisitor)
+    }
+}
+
 pub(crate) mod message_id_serde {
     use iota::message::prelude::MessageId;
     use serde::{
