@@ -1,5 +1,4 @@
 use super::JsAccount;
-use std::convert::TryInto;
 use std::sync::{Arc, RwLock};
 
 use iota_wallet::{
@@ -22,21 +21,13 @@ pub struct AccountToCreate {
     pub created_at: Option<String>,
 }
 
-fn js_array_to_acount_id(
+fn js_value_to_account_id(
     cx: &mut CallContext<'_, JsAccountManager>,
     value: Handle<JsValue>,
 ) -> NeonResult<AccountIdentifier> {
-    match value.downcast::<JsArray>() {
-        Ok(js_array) => {
-            let vec: Vec<Handle<JsValue>> = js_array.to_vec(cx)?;
-            let mut id = vec![];
-            for value in vec {
-                let byte: JsNumber = *value.downcast_or_throw(cx)?;
-                id.push(byte.value() as u8);
-            }
-            let id: [u8; 32] = id
-                .try_into()
-                .expect("account id must have exactly 32 bytes");
+    match value.downcast::<JsString>() {
+        Ok(js_string) => {
+            let id = js_string.value();
             Ok(id.into())
         }
         Err(_) => {
@@ -111,7 +102,7 @@ declare_types! {
 
         method getAccount(mut cx) {
             let id = cx.argument::<JsValue>(0)?;
-            let id = js_array_to_acount_id(&mut cx, id)?;
+            let id = js_value_to_account_id(&mut cx, id)?;
             let account = {
                 let this = cx.this();
                 let guard = cx.lock();
@@ -170,7 +161,7 @@ declare_types! {
 
         method removeAccount(mut cx) {
             let id = cx.argument::<JsValue>(0)?;
-            let id = js_array_to_acount_id(&mut cx, id)?;
+            let id = js_value_to_account_id(&mut cx, id)?;
             {
                 let this = cx.this();
                 let guard = cx.lock();
@@ -194,9 +185,9 @@ declare_types! {
 
         method internalTransfer(mut cx) {
             let from_account_id = cx.argument::<JsValue>(0)?;
-            let from_account_id = js_array_to_acount_id(&mut cx, from_account_id)?;
+            let from_account_id = js_value_to_account_id(&mut cx, from_account_id)?;
             let to_account_id = cx.argument::<JsValue>(1)?;
-            let to_account_id = js_array_to_acount_id(&mut cx, to_account_id)?;
+            let to_account_id = js_value_to_account_id(&mut cx, to_account_id)?;
             let amount = cx.argument::<JsNumber>(2)?.value() as u64;
             let cb = cx.argument::<JsFunction>(3)?;
 

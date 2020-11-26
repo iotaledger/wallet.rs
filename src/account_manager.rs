@@ -1,5 +1,6 @@
 use crate::account::{
-    repost_message, Account, AccountIdentifier, AccountInitialiser, RepostAction, SyncedAccount,
+    account_id_to_stronghold_record_id, repost_message, Account, AccountIdentifier,
+    AccountInitialiser, RepostAction, SyncedAccount,
 };
 use crate::client::ClientOptions;
 use crate::event::{
@@ -42,7 +43,7 @@ fn mutate_account_transaction<F: FnOnce(&Account, &mut Vec<Message>)>(
     account_id: AccountIdentifier,
     handler: F,
 ) -> crate::Result<()> {
-    let mut account = crate::storage::get_account(&storage_path, account_id)?;
+    let mut account = crate::storage::get_account(&storage_path, account_id.clone())?;
     let mut transactions: Vec<Message> = account.messages().to_vec();
     handler(&account, &mut transactions);
     account.set_messages(transactions);
@@ -148,14 +149,15 @@ impl AccountManager {
 
     /// Deletes an account.
     pub fn remove_account(&self, account_id: AccountIdentifier) -> crate::Result<()> {
-        let account_str =
-            crate::storage::with_adapter(&self.storage_path, |storage| storage.get(account_id))?;
+        let account_str = crate::storage::with_adapter(&self.storage_path, |storage| {
+            storage.get(account_id.clone())
+        })?;
         let account: Account = serde_json::from_str(&account_str)?;
         if !(account.messages().is_empty() && account.total_balance() == 0) {
             return Err(crate::WalletError::MessageNotEmpty);
         }
         crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
-            stronghold.account_remove(account.id())
+            stronghold.account_remove(&account_id_to_stronghold_record_id(account.id())?)
         })?;
         crate::storage::with_adapter(&self.storage_path, |storage| storage.remove(account_id))?;
         Ok(())
@@ -247,7 +249,8 @@ impl AccountManager {
             None,
         )?;
         for account in accounts.iter() {
-            let stronghold_account = backup_stronghold.account_get_by_id(account.id())?;
+            let stronghold_account = backup_stronghold
+                .account_get_by_id(&account_id_to_stronghold_record_id(account.id())?)?;
             let created_at_timestamp: u128 = account.created_at().timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
             let stronghold_account =
                 crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
@@ -355,7 +358,7 @@ async fn poll(storage_path: PathBuf, is_monitoring_disabled: bool) -> crate::Res
                     .unwrap();
                 if address_after_sync.balance() != address_before_sync.balance() {
                     emit_balance_change(
-                        account_after_sync.id(),
+                        account_after_sync.id().clone(),
                         address_after_sync,
                         *address_after_sync.balance(),
                     );
@@ -370,7 +373,7 @@ async fn poll(storage_path: PathBuf, is_monitoring_disabled: bool) -> crate::Res
                 .for_each(|message| {
                     emit_transaction_event(
                         TransactionEventType::NewTransaction,
-                        account_after_sync.id(),
+                        account_after_sync.id().clone(),
                         &message,
                     )
                 });
@@ -386,7 +389,7 @@ async fn poll(storage_path: PathBuf, is_monitoring_disabled: bool) -> crate::Res
                     None => false,
                 };
                 if changed {
-                    emit_confirmation_state_change(account_after_sync.id(), &message, true);
+                    emit_confirmation_state_change(account_after_sync.id().clone(), &message, true);
                 }
             });
         }
@@ -423,7 +426,7 @@ async fn poll(storage_path: PathBuf, is_monitoring_disabled: bool) -> crate::Res
             retried_messages.push(RetriedData {
                 promoted: promotions,
                 reattached: reattachments,
-                account_id: *account.id(),
+                account_id: account.id().clone(),
             });
         }
 
@@ -434,7 +437,7 @@ async fn poll(storage_path: PathBuf, is_monitoring_disabled: bool) -> crate::Res
         retried_data.reattached.iter().for_each(|message| {
             emit_transaction_event(
                 TransactionEventType::Reattachment,
-                &retried_data.account_id,
+                retried_data.account_id.clone(),
                 &message,
             );
         });
@@ -504,7 +507,7 @@ async fn sync_accounts<'a>(
 struct RetriedData {
     promoted: Vec<Message>,
     reattached: Vec<Message>,
-    account_id: [u8; 32],
+    account_id: String,
 }
 
 async fn retry_unconfirmed_transactions(
@@ -528,7 +531,7 @@ async fn retry_unconfirmed_transactions(
         retried_messages.push(RetriedData {
             promoted: promotions,
             reattached: reattachments,
-            account_id: *account.id(),
+            account_id: account.id().clone(),
         });
     }
     Ok(retried_messages)

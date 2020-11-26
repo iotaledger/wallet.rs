@@ -15,24 +15,25 @@ pub(crate) use sync::{repost_message, RepostAction};
 pub use sync::{AccountSynchronizer, SyncedAccount};
 
 /// The account identifier.
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
 #[serde(untagged)]
 pub enum AccountIdentifier {
-    /// A stronghold record id identifier.
-    Id([u8; 32]),
+    /// A hex string of the stronghold record id identifier.
+    Id(String),
     /// An index identifier.
     Index(u64),
 }
 
 // When the identifier is a stronghold id.
-impl From<[u8; 32]> for AccountIdentifier {
-    fn from(value: [u8; 32]) -> Self {
-        Self::Id(value)
+impl From<&String> for AccountIdentifier {
+    fn from(value: &String) -> Self {
+        Self::Id(value.clone())
     }
 }
-impl From<&[u8; 32]> for AccountIdentifier {
-    fn from(value: &[u8; 32]) -> Self {
-        Self::Id(*value)
+
+impl From<String> for AccountIdentifier {
+    fn from(value: String) -> Self {
+        Self::Id(value)
     }
 }
 
@@ -145,10 +146,11 @@ impl<'a> AccountInitialiser<'a> {
         let stronghold_account = stronghold_account_res?;
 
         let id = stronghold_account.id();
+        let id = hex::encode(id);
         let account_id: AccountIdentifier = id.clone().into();
 
         let account = Account {
-            id: *id,
+            id,
             index: accounts.len(),
             alias,
             created_at,
@@ -167,13 +169,21 @@ impl<'a> AccountInitialiser<'a> {
     }
 }
 
+pub(crate) fn account_id_to_stronghold_record_id(account_id: &str) -> crate::Result<[u8; 32]> {
+    let decoded =
+        hex::decode(account_id).map_err(|_| anyhow::anyhow!("account id must be a hex string"))?;
+    let id: [u8; 32] = decoded
+        .try_into()
+        .map_err(|_| anyhow::anyhow!("invalid account id length"))?;
+    Ok(id)
+}
+
 /// Account definition.
 #[derive(Debug, Getters, Setters, Serialize, Deserialize, Clone, PartialEq)]
 #[getset(get = "pub")]
 pub struct Account {
     /// The account identifier.
-    #[serde(with = "crate::serde::account_id_serde")]
-    id: [u8; 32],
+    id: String,
     /// The account index
     index: usize,
     /// The account alias.
@@ -363,9 +373,12 @@ impl Account {
     pub fn generate_address(&mut self) -> crate::Result<Address> {
         let address = crate::address::get_new_address(&self)?;
         self.addresses.push(address.clone());
+
+        let id: AccountIdentifier = self.id.clone().into();
         crate::storage::with_adapter(&self.storage_path, |storage| {
-            storage.set(self.id.into(), serde_json::to_string(self)?)
+            storage.set(id, serde_json::to_string(self)?)
         })?;
+
         // ignore errors because we fallback to the polling system
         let _ = crate::monitor::monitor_address_balance(&self, &address);
         Ok(address)

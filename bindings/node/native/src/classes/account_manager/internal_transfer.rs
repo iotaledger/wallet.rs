@@ -21,7 +21,11 @@ impl Task for InternalTransferTask {
     let manager = self.manager.read().unwrap();
     crate::block_on(crate::convert_async_panics(|| async {
       manager
-        .internal_transfer(self.from_account_id, self.to_account_id, self.amount)
+        .internal_transfer(
+          self.from_account_id.clone(),
+          self.to_account_id.clone(),
+          self.amount,
+        )
         .await
     }))
   }
