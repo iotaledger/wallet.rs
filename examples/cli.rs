@@ -88,23 +88,19 @@ fn list_addresses_command(account: &Account, matches: &ArgMatches) {
   }
 }
 
-fn synchronize_command(account: &mut Account, matches: &ArgMatches) {
+fn synchronize_command(account: &mut Account, matches: &ArgMatches) -> Result<()> {
   if matches.subcommand_matches("sync").is_some() {
-    block_on(async move {
-      account
-        .sync()
-        .execute()
-        .await
-        .expect("failed to synchronize account with the Tangle");
-    });
+    block_on(async move { account.sync().execute().await })?;
   }
+  Ok(())
 }
 
-fn generate_address_command(account: &mut Account, matches: &ArgMatches) {
+fn generate_address_command(account: &mut Account, matches: &ArgMatches) -> Result<()> {
   if let Some(_) = matches.subcommand_matches("address") {
-    let address = account.generate_address().unwrap();
+    let address = account.generate_address()?;
     println!("{}", address.address().to_bech32());
   }
+  Ok(())
 }
 
 fn balance_command(account: &Account, matches: &ArgMatches) {
@@ -123,34 +119,39 @@ enum ReplayAction {
   Reattach,
 }
 
-fn replay_message(account: &mut Account, action: ReplayAction, message_id: &str) {
+fn replay_message(account: &mut Account, action: ReplayAction, message_id: &str) -> Result<()> {
   if let Ok(message_id) = MessageId::from_str(message_id) {
-    block_on(async move {
-      let synced = account.sync().execute().await.unwrap();
+    let res: Result<()> = block_on(async move {
+      let synced = account.sync().execute().await?;
       let message = match action {
-        ReplayAction::Promote => synced.promote(&message_id).await.unwrap(),
-        ReplayAction::Retry => synced.retry(&message_id).await.unwrap(),
-        ReplayAction::Reattach => synced.reattach(&message_id).await.unwrap(),
+        ReplayAction::Promote => synced.promote(&message_id).await?,
+        ReplayAction::Retry => synced.retry(&message_id).await?,
+        ReplayAction::Reattach => synced.reattach(&message_id).await?,
       };
       print_message(&message);
+      Ok(())
     });
+    res?;
   } else {
     println!("message id must be a hex string of length 64");
   }
+  Ok(())
 }
 
-fn transfer_command(account: &mut Account, matches: &ArgMatches) {
+fn transfer_command(account: &mut Account, matches: &ArgMatches) -> Result<()> {
   if let Some(matches) = matches.subcommand_matches("transfer") {
     let address = matches.value_of("address").unwrap().to_string();
     let amount = matches.value_of("amount").unwrap();
     if let Ok(address) = iota_wallet::address::parse(address) {
       if let Ok(amount) = amount.parse::<u64>() {
         let transfer = Transfer::new(address, amount);
-        block_on(async move {
-          let synced = account.sync().execute().await.unwrap();
-          let message = synced.transfer(transfer).await.unwrap();
+        let res: Result<()> = block_on(async move {
+          let synced = account.sync().execute().await?;
+          let message = synced.transfer(transfer).await?;
           print_message(&message);
+          Ok(())
         });
+        res?;
       } else {
         println!("amount must be a number");
       }
@@ -158,27 +159,44 @@ fn transfer_command(account: &mut Account, matches: &ArgMatches) {
       println!("address must be a bech32 string");
     }
   }
+  Ok(())
 }
 
-fn promote_message_command(account: &mut Account, matches: &ArgMatches) {
+fn promote_message_command(account: &mut Account, matches: &ArgMatches) -> Result<()> {
   if let Some(matches) = matches.subcommand_matches("promote") {
     let message_id = matches.value_of("id").unwrap();
-    replay_message(account, ReplayAction::Promote, message_id);
+    replay_message(account, ReplayAction::Promote, message_id)?;
   }
+  Ok(())
 }
 
-fn retry_message_command(account: &mut Account, matches: &ArgMatches) {
+fn retry_message_command(account: &mut Account, matches: &ArgMatches) -> Result<()> {
   if let Some(matches) = matches.subcommand_matches("retry") {
     let message_id = matches.value_of("id").unwrap();
-    replay_message(account, ReplayAction::Retry, message_id);
+    replay_message(account, ReplayAction::Retry, message_id)?;
   }
+  Ok(())
 }
 
-fn reattach_message_command(account: &mut Account, matches: &ArgMatches) {
+fn reattach_message_command(account: &mut Account, matches: &ArgMatches) -> Result<()> {
   if let Some(matches) = matches.subcommand_matches("reattach") {
     let message_id = matches.value_of("id").unwrap();
-    replay_message(account, ReplayAction::Reattach, message_id);
+    replay_message(account, ReplayAction::Reattach, message_id)?;
   }
+  Ok(())
+}
+
+fn account_commands(account: &mut Account, matches: &ArgMatches) -> Result<()> {
+  list_messages_command(account, &matches);
+  list_addresses_command(account, &matches);
+  synchronize_command(account, &matches)?;
+  generate_address_command(account, &matches)?;
+  balance_command(account, &matches);
+  transfer_command(account, &matches)?;
+  promote_message_command(account, &matches)?;
+  retry_message_command(account, &matches)?;
+  reattach_message_command(account, &matches)?;
+  Ok(())
 }
 
 fn enter_account(account_cli: App<'_>, mut account: Account) {
@@ -208,15 +226,9 @@ fn enter_account(account_cli: App<'_>, mut account: Account) {
             return;
           }
 
-          list_messages_command(&account, &matches);
-          list_addresses_command(&account, &matches);
-          synchronize_command(&mut account, &matches);
-          generate_address_command(&mut account, &matches);
-          balance_command(&mut account, &matches);
-          transfer_command(&mut account, &matches);
-          promote_message_command(&mut account, &matches);
-          retry_message_command(&mut account, &matches);
-          reattach_message_command(&mut account, &matches);
+          if let Err(e) = account_commands(&mut account, &matches) {
+            println!("{:?}", e);
+          }
         }
         Err(e) => {
           let mut cli = account_cli.clone();
@@ -231,7 +243,7 @@ fn enter_account(account_cli: App<'_>, mut account: Account) {
     }
   }
 
-  enter_account(account_cli, account);
+  enter_account(account_cli, account)
 }
 
 fn pick_account(account_cli: App<'_>, accounts: Vec<Account>) -> Result<()> {
@@ -248,28 +260,28 @@ fn pick_account(account_cli: App<'_>, accounts: Vec<Account>) -> Result<()> {
   Ok(())
 }
 
-fn new_account_command(account_cli: App<'_>, manager: &AccountManager, matches: &ArgMatches) {
+fn new_account_command(
+  account_cli: App<'_>,
+  manager: &AccountManager,
+  matches: &ArgMatches,
+) -> Result<()> {
   if let Some(matches) = matches.subcommand_matches("new") {
     let nodes: Vec<&str> = matches
       .values_of("node")
       .expect("at least a node must be provided")
       .collect();
-    let mut builder = manager.create_account(
-      ClientOptionsBuilder::nodes(&nodes)
-        .expect("invalid node url")
-        .build()
-        .unwrap(),
-    );
+    let mut builder = manager.create_account(ClientOptionsBuilder::nodes(&nodes)?.build().unwrap());
     if let Some(alias) = matches.value_of("alias") {
       builder = builder.alias(alias);
     }
     if let Some(mnemonic) = matches.value_of("mnemonic") {
       builder = builder.mnemonic(mnemonic);
     }
-    let account = builder.initialise().expect("failed to create account");
+    let account = builder.initialise()?;
     println!("created account `{}`", account.alias());
     enter_account(account_cli, account);
   }
+  Ok(())
 }
 
 fn main() -> Result<()> {
@@ -299,6 +311,6 @@ fn main() -> Result<()> {
   let yaml = load_yaml!("cli.yml");
   let matches = App::from(yaml).help_template(CLI_TEMPLATE).get_matches();
 
-  new_account_command(account_cli, &manager, &matches);
+  new_account_command(account_cli, &manager, &matches)?;
   Ok(())
 }
