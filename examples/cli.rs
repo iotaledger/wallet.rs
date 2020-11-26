@@ -291,9 +291,13 @@ fn new_account_command(
 
 fn delete_account_command(manager: &AccountManager, matches: &ArgMatches) -> Result<()> {
   if let Some(matches) = matches.subcommand_matches("delete") {
-    let account_id = matches.value_of("id").unwrap().to_string();
-    manager.remove_account(account_id.into())?;
-    println!("Account removed");
+    let account_alias = matches.value_of("alias").unwrap();
+    if let Some(account) = manager.get_account_by_alias(account_alias) {
+      manager.remove_account(account.id().into())?;
+      println!("Account removed");
+    } else {
+      println!("Account not found");
+    }
   }
   Ok(())
 }
