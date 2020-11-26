@@ -88,7 +88,7 @@ fn list_addresses_command(account: &Account, matches: &ArgMatches) {
   }
 }
 
-fn synchronize_command(account: &mut Account, matches: &ArgMatches) -> Result<()> {
+fn sync_account_command(account: &mut Account, matches: &ArgMatches) -> Result<()> {
   if matches.subcommand_matches("sync").is_some() {
     block_on(async move { account.sync().execute().await })?;
   }
@@ -189,7 +189,7 @@ fn reattach_message_command(account: &mut Account, matches: &ArgMatches) -> Resu
 fn account_commands(account: &mut Account, matches: &ArgMatches) -> Result<()> {
   list_messages_command(account, &matches);
   list_addresses_command(account, &matches);
-  synchronize_command(account, &matches)?;
+  sync_account_command(account, &matches)?;
   generate_address_command(account, &matches)?;
   balance_command(account, &matches);
   transfer_command(account, &matches)?;
@@ -199,7 +199,7 @@ fn account_commands(account: &mut Account, matches: &ArgMatches) -> Result<()> {
   Ok(())
 }
 
-fn enter_account(account_cli: App<'_>, mut account: Account) {
+fn enter_account(account_cli: &App<'_>, mut account: Account) {
   let command: String = Input::new()
     .with_prompt(format!(
       "Account `{}` command (h for help)",
@@ -246,7 +246,7 @@ fn enter_account(account_cli: App<'_>, mut account: Account) {
   enter_account(account_cli, account)
 }
 
-fn pick_account(account_cli: App<'_>, accounts: Vec<Account>) -> Result<()> {
+fn pick_account(account_cli: &App<'_>, accounts: Vec<Account>) -> Result<()> {
   let items: Vec<&String> = accounts.iter().map(|acc| acc.alias()).collect();
   let selection = Select::with_theme(&ColorfulTheme::default())
     .with_prompt("Select an account to manipulate")
@@ -254,14 +254,25 @@ fn pick_account(account_cli: App<'_>, accounts: Vec<Account>) -> Result<()> {
     .default(0)
     .interact_on_opt(&Term::stderr())?;
   if let Some(selected) = selection {
-    enter_account(account_cli.clone(), accounts[selected].clone());
+    enter_account(account_cli, accounts[selected].clone());
     pick_account(account_cli, accounts)?;
   }
   Ok(())
 }
 
+fn select_account_command(account_cli: &App<'_>, manager: &AccountManager, matches: &ArgMatches) {
+  if let Some(matches) = matches.subcommand_matches("account") {
+    let alias = matches.value_of("alias").unwrap();
+    if let Some(account) = manager.get_account_by_alias(alias) {
+      enter_account(account_cli, account);
+    } else {
+      println!("Account not found");
+    }
+  }
+}
+
 fn new_account_command(
-  account_cli: App<'_>,
+  account_cli: &App<'_>,
   manager: &AccountManager,
   matches: &ArgMatches,
 ) -> Result<()> {
@@ -338,15 +349,19 @@ fn main() -> Result<()> {
     let accounts = manager.get_accounts()?;
     match accounts.len() {
       0 => {}
-      1 => enter_account(account_cli.clone(), accounts.first().unwrap().clone()),
-      _ => pick_account(account_cli.clone(), accounts)?,
+      1 => enter_account(&account_cli, accounts.first().unwrap().clone()),
+      _ => pick_account(&account_cli, accounts)?,
     }
   }
 
   let yaml = load_yaml!("cli.yml");
-  let matches = App::from(yaml).help_template(CLI_TEMPLATE).get_matches();
+  let matches = App::from(yaml)
+    .help_template(CLI_TEMPLATE)
+    .setting(AppSettings::ColoredHelp)
+    .get_matches();
 
-  new_account_command(account_cli, &manager, &matches)?;
+  select_account_command(&account_cli, &manager, &matches);
+  new_account_command(&account_cli, &manager, &matches)?;
   delete_account_command(&manager, &matches)?;
   sync_accounts_command(&manager, &matches)?;
   backup_command(&manager, &matches)?;

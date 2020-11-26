@@ -3,6 +3,13 @@ version: '1.0'
 author: Lucas Nogueira <lucas.nogueira@iota.org>
 about: Interface with the IOTA Wallet Library.
 subcommands:
+  - account:
+      about: Selects an account to use.
+      args:
+        - alias:
+            about: The alias of the account to select.
+            required: true
+            index: 1
   - new:
       about: Creates a new account.
       args:
