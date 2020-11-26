@@ -1,4 +1,4 @@
-use crate::account::{Account, AccountIdentifier};
+use crate::account::{account_id_to_stronghold_record_id, Account, AccountIdentifier};
 use crate::address::{Address, AddressBuilder, AddressOutput, IotaAddress};
 use crate::client::get_client;
 use crate::message::{Message, RemainderValueStrategy, Transfer};
@@ -315,7 +315,7 @@ impl<'a> AccountSynchronizer<'a> {
                 }
 
                 let synced_account = SyncedAccount {
-                    account_id: *self.account.id(),
+                    account_id: self.account.id().clone(),
                     deposit_address: self.account.latest_address().unwrap().clone(),
                     is_empty,
                     storage_path: self.storage_path,
@@ -340,7 +340,7 @@ pub struct SyncedAccount {
     /// The associated account identifier.
     #[serde(rename = "accountId")]
     #[getset(get = "pub")]
-    account_id: [u8; 32],
+    account_id: String,
     /// The account's deposit address.
     #[serde(rename = "depositAddress")]
     #[getset(get = "pub")]
@@ -402,7 +402,7 @@ impl SyncedAccount {
         // prepare the transfer getting some needed objects and values
         let value: u64 = transfer_obj.amount;
         let account_id: AccountIdentifier = self.account_id.clone().into();
-        let mut account = crate::storage::get_account(&self.storage_path, account_id)?;
+        let mut account = crate::storage::get_account(&self.storage_path, account_id.clone())?;
         let client = crate::client::get_client(account.client_options());
         let client = client.read().unwrap();
 
@@ -531,7 +531,7 @@ impl SyncedAccount {
 
         let stronghold_account =
             crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
-                stronghold.account_get_by_id(account.id())
+                stronghold.account_get_by_id(&account_id_to_stronghold_record_id(account.id())?)
             })?;
 
         let essence = essence_builder
@@ -539,7 +539,7 @@ impl SyncedAccount {
             .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
         let unlock_blocks = crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
             stronghold.get_transaction_unlock_blocks(
-                account.id(),
+                &account_id_to_stronghold_record_id(account.id())?,
                 &essence,
                 &mut address_index_recorders,
             )

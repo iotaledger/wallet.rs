@@ -13,7 +13,7 @@ use std::sync::{Arc, Mutex};
 pub struct BalanceEvent<'a> {
     /// The associated account identifier.
     #[serde(rename = "accountId")]
-    account_id: &'a [u8; 32],
+    account_id: String,
     /// The associated address.
     address: &'a Address,
     /// The new balance.
@@ -26,7 +26,7 @@ pub struct BalanceEvent<'a> {
 pub struct TransactionEvent<'a> {
     #[serde(rename = "accountId")]
     /// The associated account identifier.
-    account_id: [u8; 32],
+    account_id: String,
     /// The event message.
     message: &'a Message,
 }
@@ -37,7 +37,7 @@ pub struct TransactionEvent<'a> {
 pub struct TransactionConfirmationChangeEvent<'a> {
     #[serde(rename = "accountId")]
     /// The associated account identifier.
-    account_id: &'a [u8; 32],
+    account_id: String,
     /// The event message.
     message: &'a Message,
     /// The confirmed state of the transaction.
@@ -113,7 +113,7 @@ pub fn on_balance_change<F: Fn(&BalanceEvent<'_>) + Send + 'static>(cb: F) {
 }
 
 /// Emits a balance change event.
-pub(crate) fn emit_balance_change(account_id: &[u8; 32], address: &Address, balance: u64) {
+pub(crate) fn emit_balance_change(account_id: String, address: &Address, balance: u64) {
     let listeners = balance_listeners()
         .lock()
         .expect("Failed to lock balance_listeners: emit_balance_change()");
@@ -130,14 +130,14 @@ pub(crate) fn emit_balance_change(account_id: &[u8; 32], address: &Address, bala
 /// Emits a transaction-related event.
 pub(crate) fn emit_transaction_event(
     event_type: TransactionEventType,
-    account_id: &[u8; 32],
+    account_id: String,
     message: &Message,
 ) {
     let listeners = transaction_listeners()
         .lock()
         .expect("Failed to lock balance_listeners: emit_balance_change()");
     let event = TransactionEvent {
-        account_id: *account_id,
+        account_id,
         message: &message,
     };
     for listener in listeners.deref() {
@@ -149,7 +149,7 @@ pub(crate) fn emit_transaction_event(
 
 /// Emits a transaction confirmation state change event.
 pub(crate) fn emit_confirmation_state_change(
-    account_id: &[u8; 32],
+    account_id: String,
     message: &Message,
     confirmed: bool,
 ) {
@@ -253,12 +253,12 @@ mod tests {
     #[test]
     fn balance_events() {
         on_balance_change(|event| {
-            assert!(event.account_id == &[1; 32]);
+            assert!(event.account_id == hex::encode([1; 32]));
             assert!(event.balance == 0);
         });
 
         emit_balance_change(
-            &[1; 32],
+            hex::encode([1; 32]),
             &AddressBuilder::new()
                 .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
                 .balance(0)

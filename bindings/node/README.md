@@ -74,9 +74,9 @@ Creates a new account.
 
 Gets the account with the given identifier or index.
 
-| Param     | Type                            | Default           | Description                             |
-| --------- | ------------------------------- | ----------------- | --------------------------------------- |
-| accountId | <code>number[] \| number</code> | <code>null</code> | The account identifier or account index |
+| Param     | Type                          | Default           | Description                             |
+| --------- | ----------------------------- | ----------------- | --------------------------------------- |
+| accountId | <code>string \| number</code> | <code>null</code> | The account identifier or account index |
 
 **Returns** the associated Account instance or undefined if the account wasn't found.
 
@@ -100,9 +100,9 @@ Gets all stored accounts.
 
 Removes the account with the given identifier or index.
 
-| Param     | Type                            | Default           | Description                             |
-| --------- | ------------------------------- | ----------------- | --------------------------------------- |
-| accountId | <code>number[] \| number</code> | <code>null</code> | The account identifier or account index |
+| Param     | Type                          | Default           | Description                             |
+| --------- | ----------------------------- | ----------------- | --------------------------------------- |
+| accountId | <code>string \| number</code> | <code>null</code> | The account identifier or account index |
 
 #### syncAccounts()
 
@@ -114,11 +114,11 @@ Synchronize all stored accounts with the Tangle.
 
 Transfers an amount from one subaccount to another.
 
-| Param         | Type                            | Default                | Description                                         |
-| ------------- | ------------------------------- | ---------------------- | --------------------------------------------------- |
-| fromAccountId | <code>number[] \| number</code> | <code>null</code>      | The source account identifier or account index      |
-| toAccountId   | <code>number[] \| number</code> | <code>null</code>      | The destination account identifier or account index |
-| amount        | <code>number</code>             | <code>undefined</code> | The transfer amount                                 |
+| Param         | Type                          | Default                | Description                                         |
+| ------------- | ----------------------------- | ---------------------- | --------------------------------------------------- |
+| fromAccountId | <code>string \| number</code> | <code>null</code>      | The source account identifier or account index      |
+| toAccountId   | <code>string \| number</code> | <code>null</code>      | The destination account identifier or account index |
+| amount        | <code>number</code>           | <code>undefined</code> | The transfer amount                                 |
 
 **Returns** A promise resolving to the transfer's Message.
 

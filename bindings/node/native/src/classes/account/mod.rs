@@ -26,16 +26,10 @@ declare_types! {
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
                 let account = ref_.read().unwrap();
-                *account.id()
+                account.id().clone()
             };
 
-            let js_array = JsArray::new(&mut cx, id.len() as u32);
-            for (index, b) in id.iter().enumerate() {
-                let value = cx.number(*b);
-                js_array.set(&mut cx, index as u32, value)?;
-            }
-
-            Ok(js_array.upcast())
+            Ok(cx.string(id).upcast())
         }
 
         method index(mut cx) {
