@@ -47,10 +47,10 @@ fn list_messages_command(account: &Account, matches: &ArgMatches) {
         if let Some(message) = account.get_message(&message_id) {
           print_message(message);
         } else {
-          println!("message not found");
+          println!("Message not found");
         }
       } else {
-        println!("message id must be a hex string of length 64");
+        println!("Message id must be a hex string of length 64");
       }
     } else {
       let message_type = if let Some(message_type) = matches.value_of("type") {
@@ -68,7 +68,7 @@ fn list_messages_command(account: &Account, matches: &ArgMatches) {
 
       let messages = account.list_messages(0, 0, message_type);
       if messages.is_empty() {
-        println!("no messages found");
+        println!("No messages found");
       } else {
         messages.iter().for_each(|m| println!("{:?}\n\n", m));
       }
@@ -81,7 +81,7 @@ fn list_addresses_command(account: &Account, matches: &ArgMatches) {
     let mut addresses = account.list_addresses(false);
     addresses.extend(account.list_addresses(true));
     if addresses.is_empty() {
-      println!("no addresses found");
+      println!("No addresses found");
     } else {
       addresses.iter().for_each(|m| println!("{:?}\n\n", m));
     }
@@ -133,7 +133,7 @@ fn replay_message(account: &mut Account, action: ReplayAction, message_id: &str)
     });
     res?;
   } else {
-    println!("message id must be a hex string of length 64");
+    println!("Message id must be a hex string of length 64");
   }
   Ok(())
 }
@@ -153,10 +153,10 @@ fn transfer_command(account: &mut Account, matches: &ArgMatches) -> Result<()> {
         });
         res?;
       } else {
-        println!("amount must be a number");
+        println!("Amount must be a number");
       }
     } else {
-      println!("address must be a bech32 string");
+      println!("Address must be a bech32 string");
     }
   }
   Ok(())
@@ -278,17 +278,52 @@ fn new_account_command(
       builder = builder.mnemonic(mnemonic);
     }
     let account = builder.initialise()?;
-    println!("created account `{}`", account.alias());
+    println!("Created account `{}`", account.alias());
     enter_account(account_cli, account);
   }
   Ok(())
 }
 
+fn delete_account_command(manager: &AccountManager, matches: &ArgMatches) -> Result<()> {
+  if let Some(matches) = matches.subcommand_matches("delete") {
+    let account_id = matches.value_of("id").unwrap().to_string();
+    manager.remove_account(account_id.into())?;
+    println!("Account removed");
+  }
+  Ok(())
+}
+
+fn sync_accounts_command(manager: &AccountManager, matches: &ArgMatches) -> Result<()> {
+  if let Some(_) = matches.subcommand_matches("sync") {
+    let synced = block_on(async move { manager.sync_accounts().await })?;
+    println!("Synchronized {} accounts", synced.len());
+  }
+  Ok(())
+}
+
+fn backup_command(manager: &AccountManager, matches: &ArgMatches) -> Result<()> {
+  if let Some(matches) = matches.subcommand_matches("backup") {
+    let destination = matches.value_of("path").unwrap();
+    let full_path = manager.backup(destination)?;
+    println!("Backup stored at {:?}", full_path);
+  }
+  Ok(())
+}
+
+fn import_command(manager: &AccountManager, matches: &ArgMatches) -> Result<()> {
+  if let Some(matches) = matches.subcommand_matches("backup") {
+    let source = matches.value_of("path").unwrap();
+    manager.import_accounts(source)?;
+    println!("Backup successfully imported");
+  }
+  Ok(())
+}
+
 fn main() -> Result<()> {
-  let runtime = Runtime::new().expect("failed to create async runtime");
+  let runtime = Runtime::new().expect("Failed to create async runtime");
   RUNTIME
     .set(Mutex::new(runtime))
-    .expect("failed to store async runtime");
+    .expect("Failed to store async runtime");
 
   let mut manager = AccountManager::new()?;
   manager.set_stronghold_password("password")?;
@@ -312,5 +347,10 @@ fn main() -> Result<()> {
   let matches = App::from(yaml).help_template(CLI_TEMPLATE).get_matches();
 
   new_account_command(account_cli, &manager, &matches)?;
+  delete_account_command(&manager, &matches)?;
+  sync_accounts_command(&manager, &matches)?;
+  backup_command(&manager, &matches)?;
+  import_command(&manager, &matches)?;
+
   Ok(())
 }

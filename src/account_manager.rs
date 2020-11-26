@@ -207,9 +207,7 @@ impl AccountManager {
 
     /// Import backed up accounts.
     pub fn import_accounts<P: AsRef<Path>>(&self, source: P) -> crate::Result<()> {
-        let backup_stronghold_path = source
-            .as_ref()
-            .join(crate::storage::stronghold_snapshot_filename());
+        let backup_stronghold_path = source.as_ref();
         let backup_stronghold = stronghold::Stronghold::new(
             &backup_stronghold_path,
             false,
@@ -269,7 +267,7 @@ impl AccountManager {
                 )
             })?;
         }
-        crate::remove_stronghold(backup_stronghold_path);
+        crate::remove_stronghold(backup_stronghold_path.to_path_buf());
         Ok(())
     }
 

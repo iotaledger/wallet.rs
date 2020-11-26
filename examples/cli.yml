@@ -23,3 +23,24 @@ subcommands:
             long: mnemonic
             about: The 24-word mnemonic.
             takes_value: true
+  - delete:
+      about: Deletes an account.
+      args:
+        - id:
+            about: The account identifier.
+            required: true
+            index: 1
+  - sync:
+      about: Syncs all accounts with the Tangle.
+  - backup:
+      about: Backups the storage.
+      args:
+        - path:
+            about: The path to store the backup.
+            required: true
+            index: 1
+  - import:
+      about: Import accounts from a backup.
+      args:
+        - path:
+            about: Path to the backup folder.

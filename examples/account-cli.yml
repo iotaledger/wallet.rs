@@ -40,10 +40,12 @@ subcommands:
             about: The deposit address.
             index: 1
             required: true
+            takes_value: true
         - amount:
             about: The transfer amount.
             index: 2
             required: true
+            takes_value: true
   - promote:
       about: Promotes a pending message.
       alias: p
