@@ -412,6 +412,10 @@ impl Account {
         });
     }
 
+    pub(crate) fn addresses_mut(&mut self) -> &mut Vec<Address> {
+        &mut self.addresses
+    }
+
     /// Gets a message with the given id associated with this account.
     pub fn get_message(&self, message_id: &MessageId) -> Option<&Message> {
         self.messages.iter().find(|tx| tx.id() == message_id)

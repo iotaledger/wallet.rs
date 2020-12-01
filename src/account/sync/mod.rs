@@ -96,22 +96,24 @@ async fn sync_addresses(
             let mut curr_found_outputs: Vec<AddressOutput> = vec![];
             for output in address_outputs.iter() {
                 let output = client.get_output(output).await?;
-                let message = client
+                if let Ok(message) = client
                     .get_message()
                     .data(&MessageId::new(
                         output.message_id[..]
                             .try_into()
                             .map_err(|_| crate::WalletError::InvalidMessageIdLength)?,
                     ))
-                    .await?;
-                curr_found_messages.push((
-                    MessageId::new(
-                        output.message_id[..]
-                            .try_into()
-                            .map_err(|_| crate::WalletError::InvalidMessageIdLength)?,
-                    ),
-                    message,
-                ));
+                    .await
+                {
+                    curr_found_messages.push((
+                        MessageId::new(
+                            output.message_id[..]
+                                .try_into()
+                                .map_err(|_| crate::WalletError::InvalidMessageIdLength)?,
+                        ),
+                        message,
+                    ));
+                }
                 curr_found_outputs.push(output.try_into()?);
             }
 
@@ -149,9 +151,43 @@ async fn sync_addresses(
     Ok((generated_addresses, found_messages))
 }
 
-/// Syncs transactions with the tangle.
-/// The method should ensures that the wallet local state has transactions associated with the address history.
-async fn sync_transactions<'a>(
+/// Syncs messages with the tangle.
+/// The method should ensures that the wallet local state has messages associated with the address history.
+async fn sync_messages<'a>(
+    account: &'a mut Account,
+    stop_at_address_index: usize,
+) -> crate::Result<Vec<(MessageId, IotaMessage)>> {
+    let mut messages = vec![];
+    let client = crate::client::get_client(account.client_options());
+    let client = client.read().unwrap();
+
+    for address in account
+        .addresses_mut()
+        .iter_mut()
+        .take(stop_at_address_index)
+    {
+        let address_outputs = client.get_address().outputs(address.address()).await?;
+        let balance = client.get_address().balance(address.address()).await?;
+        let mut outputs = vec![];
+        for output in address_outputs.iter() {
+            let output = client.get_output(output).await?;
+            let output: AddressOutput = output.try_into()?;
+
+            if let Ok(message) = client.get_message().data(output.message_id()).await {
+                messages.push((output.message_id().clone(), message));
+            }
+
+            outputs.push(output);
+        }
+
+        address.set_outputs(outputs);
+        address.set_balance(balance);
+    }
+
+    Ok(messages)
+}
+
+async fn update_account_messages<'a>(
     account: &'a Account,
     new_messages: &'a [(MessageId, IotaMessage)],
 ) -> crate::Result<()> {
@@ -187,13 +223,13 @@ async fn sync_transactions<'a>(
 }
 
 async fn perform_sync(
-    account: &Account,
+    mut account: &mut Account,
     storage_path: &PathBuf,
     address_index: usize,
     gap_limit: usize,
-) -> crate::Result<(Vec<(MessageId, IotaMessage)>, Vec<Address>)> {
+) -> crate::Result<bool> {
     let (found_addresses, found_messages) =
-        sync_addresses(&storage_path, account, address_index, gap_limit).await?;
+        sync_addresses(&storage_path, &account, address_index, gap_limit).await?;
 
     let mut new_messages = vec![];
     for (found_message_id, found_message) in found_messages {
@@ -206,7 +242,10 @@ async fn perform_sync(
         }
     }
 
-    sync_transactions(account, &new_messages).await?;
+    let synced_messages = sync_messages(&mut account, address_index).await?;
+    new_messages.extend(synced_messages.into_iter());
+
+    update_account_messages(&account, &new_messages).await?;
 
     let mut addresses_to_save = vec![];
     let mut ignored_addresses = vec![];
@@ -235,7 +274,22 @@ async fn perform_sync(
         previous_address_is_unused = address_is_unused;
     }
 
-    Ok((new_messages, addresses_to_save))
+    let is_empty = new_messages.is_empty()
+        && addresses_to_save
+            .iter()
+            .all(|address| address.outputs().is_empty());
+
+    account.append_addresses(addresses_to_save);
+
+    let parsed_messages = new_messages
+        .iter()
+        .map(|(id, message)| {
+            Message::from_iota_message(*id, account.addresses(), &message).unwrap()
+        })
+        .collect();
+    account.append_messages(parsed_messages);
+
+    Ok(is_empty)
 }
 
 /// Account sync helper.
@@ -292,30 +346,20 @@ impl<'a> AccountSynchronizer<'a> {
 
         let _ = crate::monitor::unsubscribe(&self.account);
 
+        let mut account_ = self.account.clone();
         let return_value = match perform_sync(
-            &self.account,
+            &mut account_,
             &self.storage_path,
             self.address_index,
             self.gap_limit,
         )
         .await
         {
-            Ok((new_messages, addresses_to_save)) => {
-                let is_empty = new_messages.is_empty()
-                    && addresses_to_save
-                        .iter()
-                        .all(|address| address.outputs().is_empty());
-
-                self.account.append_addresses(addresses_to_save);
-
-                let new_messages = new_messages
-                    .iter()
-                    .map(|(id, message)| {
-                        Message::from_iota_message(*id, self.account.addresses(), &message).unwrap()
-                    })
-                    .collect();
-                self.account.append_messages(new_messages);
-
+            Ok(is_empty) => {
+                self.account
+                    .set_addresses(account_.addresses().into_iter().cloned().collect());
+                self.account
+                    .set_messages(account_.messages().into_iter().cloned().collect());
                 if !self.skip_persistance {
                     crate::storage::with_adapter(&self.storage_path, |storage| {
                         storage.set(
