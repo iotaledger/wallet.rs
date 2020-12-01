@@ -169,7 +169,7 @@ async fn process_output(
             .iter_mut()
             .find(|a| a.address() == &address)
             .unwrap();
-        address_to_update.append_output(address_output);
+        address_to_update.handle_new_output(address_output);
         crate::event::emit_balance_change(
             account_id_raw.clone(),
             &address_to_update,
