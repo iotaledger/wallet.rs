@@ -12,7 +12,7 @@
 use crate::account::{account_id_to_stronghold_record_id, Account};
 use crate::message::MessageType;
 use bech32::FromBase32;
-use getset::Getters;
+use getset::{Getters, Setters};
 pub use iota::message::prelude::{Address as IotaAddress, Ed25519Address};
 use iota::message::prelude::{MessageId, TransactionId};
 use iota::OutputMetadata;
@@ -130,13 +130,14 @@ impl AddressBuilder {
 }
 
 /// An address.
-#[derive(Debug, Getters, Clone, Eq, Serialize, Deserialize)]
+#[derive(Debug, Getters, Setters, Clone, Eq, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct Address {
     /// The address.
     #[serde(with = "crate::serde::iota_address_serde")]
     address: IotaAddress,
     /// The address balance.
+    #[getset(set = "pub(crate)")]
     balance: u64,
     /// The address key index.
     #[serde(rename = "keyIndex")]
@@ -144,6 +145,7 @@ pub struct Address {
     /// Determines if an address is a public or an internal (change) address.
     internal: bool,
     /// The address outputs.
+    #[getset(set = "pub(crate)")]
     outputs: Vec<AddressOutput>,
 }
 
