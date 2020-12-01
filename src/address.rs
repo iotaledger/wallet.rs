@@ -174,10 +174,21 @@ impl PartialEq for Address {
 }
 
 impl Address {
-    pub(crate) fn append_output(&mut self, output: AddressOutput) {
+    pub(crate) fn handle_new_output(&mut self, output: AddressOutput) {
         if !self.outputs.iter().any(|o| o == &output) {
-            self.balance += output.amount;
-            self.outputs.push(output);
+            let spent_existing_output = self.outputs.iter().position(|o| {
+                o.message_id == output.message_id
+                    && o.transaction_id == output.transaction_id
+                    && o.index == output.index
+                    && o.amount == output.amount
+                    && (o.is_spent && !output.is_spent)
+            });
+            if let Some(spent_output) = spent_existing_output {
+                self.outputs.remove(spent_output);
+            } else {
+                self.balance += output.amount;
+                self.outputs.push(output);
+            }
         }
     }
 }
