@@ -128,12 +128,14 @@ impl serde::Serialize for crate::WalletError {
             Self::JsonError(error) => {
                 serialize_variant(serializer, "JsonError", Some(&error.to_string()))
             }
+            #[cfg(feature = "stronghold")]
             Self::StrongholdError(error) => {
                 serialize_variant(serializer, "StrongholdError", Some(&error.to_string()))
             }
             Self::ClientError(error) => {
                 serialize_variant(serializer, "ClientError", Some(&error.to_string()))
             }
+            #[cfg(feature = "sqlite")]
             Self::SqliteError(error) => {
                 serialize_variant(serializer, "SqliteError", Some(&error.to_string()))
             }
@@ -181,6 +183,9 @@ impl serde::Serialize for crate::WalletError {
             Self::AccountNotFound => serialize_variant(serializer, "AccountNotFound", None),
             Self::InvalidRemainderValueAddress => {
                 serialize_variant(serializer, "InvalidRemainderValueAddress", None)
+            }
+            Self::StrongholdNotInitialised => {
+                serialize_variant(serializer, "StrongholdNotInitialised", None)
             }
         }
     }

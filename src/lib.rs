@@ -33,18 +33,15 @@ pub mod monitor;
 pub(crate) mod serde;
 /// The storage module.
 pub mod storage;
+#[cfg(feature = "stronghold")]
+pub(crate) mod stronghold;
 
 /// The wallet Result type.
 pub type Result<T> = std::result::Result<T, WalletError>;
 pub use chrono::prelude::{DateTime, Utc};
 use once_cell::sync::OnceCell;
-use std::collections::HashMap;
-use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
-use stronghold::Stronghold;
+use std::sync::Mutex;
 use tokio::runtime::Runtime;
-
-static STRONGHOLD_INSTANCE: OnceCell<Arc<Mutex<HashMap<PathBuf, Stronghold>>>> = OnceCell::new();
 
 /// The wallet error type.
 #[derive(Debug, thiserror::Error)]
@@ -61,14 +58,15 @@ pub enum WalletError {
     /// serde_json error.
     #[error("`{0}`")]
     JsonError(#[from] serde_json::error::Error),
-    /// stronghold error.
+    /// stronghold client error.
+    #[cfg(feature = "stronghold")]
     #[error("`{0}`")]
-    StrongholdError(#[from] stronghold::VaultError),
+    StrongholdError(#[from] iota_stronghold::Error),
     /// iota.rs error.
     #[error("`{0}`")]
     ClientError(#[from] iota::client::Error),
     /// rusqlite error.
-    #[cfg(any(feature = "sqlite", feature = "stronghold"))]
+    #[cfg(feature = "sqlite")]
     #[error("`{0}`")]
     SqliteError(#[from] rusqlite::Error),
     /// url parse error.
@@ -131,42 +129,13 @@ pub enum WalletError {
     /// the address must belong to the account.
     #[error("the remainder value address doesn't belong to the account")]
     InvalidRemainderValueAddress,
+    #[error("stronghold not initialised")]
+    StrongholdNotInitialised,
 }
 
 impl Drop for WalletError {
     fn drop(&mut self) {
         event::emit_error(self);
-    }
-}
-
-pub(crate) fn init_stronghold(stronghold_path: &PathBuf, stronghold: Stronghold) {
-    let mut stronghold_map = STRONGHOLD_INSTANCE
-        .get_or_init(Default::default)
-        .lock()
-        .unwrap();
-    stronghold_map.insert(stronghold_path.to_path_buf(), stronghold);
-}
-
-pub(crate) fn remove_stronghold(stronghold_path: PathBuf) {
-    let mut stronghold_map = STRONGHOLD_INSTANCE
-        .get_or_init(Default::default)
-        .lock()
-        .unwrap();
-    stronghold_map.remove(&stronghold_path);
-}
-
-pub(crate) fn with_stronghold_from_path<T, F: FnOnce(&Stronghold) -> T>(
-    path: &PathBuf,
-    cb: F,
-) -> T {
-    let stronghold_map = STRONGHOLD_INSTANCE
-        .get_or_init(Default::default)
-        .lock()
-        .unwrap();
-    if let Some(stronghold) = stronghold_map.get(path) {
-        cb(stronghold)
-    } else {
-        panic!("should initialize stronghold instance before using it")
     }
 }
 
