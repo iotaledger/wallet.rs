@@ -153,8 +153,8 @@ async fn sync_addresses(
 
 /// Syncs messages with the tangle.
 /// The method should ensures that the wallet local state has messages associated with the address history.
-async fn sync_messages<'a>(
-    account: &'a mut Account,
+async fn sync_messages(
+    account: &mut Account,
     stop_at_address_index: usize,
 ) -> crate::Result<Vec<(MessageId, IotaMessage)>> {
     let mut messages = vec![];
@@ -174,7 +174,7 @@ async fn sync_messages<'a>(
             let output: AddressOutput = output.try_into()?;
 
             if let Ok(message) = client.get_message().data(output.message_id()).await {
-                messages.push((output.message_id().clone(), message));
+                messages.push((*output.message_id(), message));
             }
 
             outputs.push(output);
@@ -356,10 +356,8 @@ impl<'a> AccountSynchronizer<'a> {
         .await
         {
             Ok(is_empty) => {
-                self.account
-                    .set_addresses(account_.addresses().into_iter().cloned().collect());
-                self.account
-                    .set_messages(account_.messages().into_iter().cloned().collect());
+                self.account.set_addresses(account_.addresses().to_vec());
+                self.account.set_messages(account_.messages().to_vec());
                 if !self.skip_persistance {
                     crate::storage::with_adapter(&self.storage_path, |storage| {
                         storage.set(
