@@ -110,15 +110,15 @@ Synchronize all stored accounts with the Tangle.
 
 **Returns** A promise resolving to an array of [SyncedAccount](#syncedaccount).
 
-#### internalTransfer(fromAccountId, toAccountId, amount)
+#### internalTransfer(fromAccount, toAccount, amount)
 
 Transfers an amount from one subaccount to another.
 
-| Param         | Type                          | Default                | Description                                         |
-| ------------- | ----------------------------- | ---------------------- | --------------------------------------------------- |
-| fromAccountId | <code>string \| number</code> | <code>null</code>      | The source account identifier or account index      |
-| toAccountId   | <code>string \| number</code> | <code>null</code>      | The destination account identifier or account index |
-| amount        | <code>number</code>           | <code>undefined</code> | The transfer amount                                 |
+| Param       | Type                             | Default                | Description             |
+| ----------- | -------------------------------- | ---------------------- | ----------------------- |
+| fromAccount | <code>[Account](#account)</code> | <code>null</code>      | The source account      |
+| toAccount   | <code>[Account](#account)</code> | <code>null</code>      | The destination account |
+| amount      | <code>number</code>              | <code>undefined</code> | The transfer amount     |
 
 **Returns** A promise resolving to the transfer's Message.
 

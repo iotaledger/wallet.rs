@@ -137,7 +137,7 @@ pub struct Address {
     #[serde(with = "crate::serde::iota_address_serde")]
     address: IotaAddress,
     /// The address balance.
-    #[getset(set = "pub(crate)")]
+    #[getset(set = "pub")]
     balance: u64,
     /// The address key index.
     #[serde(rename = "keyIndex")]
