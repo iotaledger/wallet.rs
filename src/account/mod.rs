@@ -391,7 +391,7 @@ impl Account {
         })?;
 
         // ignore errors because we fallback to the polling system
-        let _ = crate::monitor::monitor_address_balance(&self, &address);
+        let _ = crate::monitor::monitor_address_balance(&self, address.address());
         Ok(address)
     }
 
