@@ -195,12 +195,21 @@ declare_types! {
         }
 
         method internalTransfer(mut cx) {
-            let from_account_id = cx.argument::<JsValue>(0)?;
-            let from_account_id = js_value_to_account_id(&mut cx, from_account_id)?;
-            let to_account_id = cx.argument::<JsValue>(1)?;
-            let to_account_id = js_value_to_account_id(&mut cx, to_account_id)?;
+            let from_account = cx.argument::<JsAccount>(0)?;
+            let to_account = cx.argument::<JsAccount>(1)?;
             let amount = cx.argument::<JsNumber>(2)?.value() as u64;
             let cb = cx.argument::<JsFunction>(3)?;
+
+            let from_account_id = {
+                let guard = cx.lock();
+                let id = from_account.borrow(&guard).0.clone();
+                id
+            };
+            let to_account_id = {
+                let guard = cx.lock();
+                let id = to_account.borrow(&guard).0.clone();
+                id
+            };
 
             let this = cx.this();
             let manager = cx.borrow(&this, |r| r.0.clone());

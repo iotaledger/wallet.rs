@@ -305,7 +305,7 @@ impl WalletMessageHandler {
     ) -> Result<ResponseType> {
         let mut account = self.account_manager.get_account(account_id.clone())?;
         let synced = account.sync().execute().await?;
-        let message = synced.transfer(transfer.clone()).await?;
+        let message = synced.transfer(transfer.clone()).await?.message;
         Ok(ResponseType::SentTransfer(message))
     }
 
@@ -318,7 +318,8 @@ impl WalletMessageHandler {
         let message = self
             .account_manager
             .internal_transfer(from_account_id.clone(), to_account_id.clone(), amount)
-            .await?;
+            .await?
+            .message;
         Ok(ResponseType::SentTransfer(message))
     }
 }

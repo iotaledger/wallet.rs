@@ -9,12 +9,7 @@
 // an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and limitations under the License.
 
-use std::sync::{Arc, RwLock};
-
-use iota_wallet::{
-  account::{Account, SyncedAccount},
-  WalletError,
-};
+use iota_wallet::{account::SyncedAccount, WalletError};
 use neon::prelude::*;
 use serde::Deserialize;
 
@@ -29,7 +24,7 @@ pub struct SyncOptions {
 }
 
 pub struct SyncTask {
-  pub account: Arc<RwLock<Account>>,
+  pub account_id: String,
   pub options: SyncOptions,
 }
 
@@ -39,7 +34,8 @@ impl Task for SyncTask {
   type JsEvent = JsValue;
 
   fn perform(&self) -> Result<Self::Output, Self::Error> {
-    let mut acc = self.account.write().unwrap();
+    let account = crate::get_account(&self.account_id);
+    let mut acc = account.write().unwrap();
     let mut synchronizer = acc.sync();
     if let Some(address_index) = self.options.address_index {
       synchronizer = synchronizer.address_index(address_index);
@@ -66,7 +62,8 @@ impl Task for SyncTask {
       Ok(val) => {
         let synced = serde_json::to_string(&val).unwrap();
         let synced = cx.string(synced);
-        Ok(crate::JsSyncedAccount::new(&mut cx, vec![synced])?.upcast())
+        let account_id = cx.string(&self.account_id);
+        Ok(crate::JsSyncedAccount::new(&mut cx, vec![synced, account_id])?.upcast())
       }
       Err(e) => cx.throw_error(e.to_string()),
     }

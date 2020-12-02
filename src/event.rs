@@ -42,6 +42,13 @@ pub struct TransactionEvent<'a> {
     message: &'a Message,
 }
 
+impl<'a> TransactionEvent<'a> {
+    #[doc(hidden)]
+    pub fn cloned_message(&self) -> Message {
+        self.message.clone()
+    }
+}
+
 /// A transaction-related event data.
 #[derive(Getters, Serialize)]
 #[getset(get = "pub")]

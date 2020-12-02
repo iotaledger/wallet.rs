@@ -26,6 +26,7 @@ pub enum RepostAction {
 
 pub struct RepostTask {
   pub synced: Arc<RwLock<SyncedAccount>>,
+  pub account_id: String,
   pub message_id: MessageId,
   pub action: RepostAction,
 }
@@ -38,11 +39,18 @@ impl Task for RepostTask {
   fn perform(&self) -> Result<Self::Output, Self::Error> {
     let synced = self.synced.read().unwrap();
     crate::block_on(crate::convert_async_panics(|| async {
-      match self.action {
-        RepostAction::Retry => synced.retry(&self.message_id).await,
-        RepostAction::Reattach => synced.reattach(&self.message_id).await,
-        RepostAction::Promote => synced.promote(&self.message_id).await,
-      }
+      let message = match self.action {
+        RepostAction::Retry => synced.retry(&self.message_id).await?,
+        RepostAction::Reattach => synced.reattach(&self.message_id).await?,
+        RepostAction::Promote => synced.promote(&self.message_id).await?,
+      };
+
+      let account = crate::get_account(&self.account_id);
+      let mut account = account.write().unwrap();
+      account.append_messages(vec![message.clone()]);
+      crate::update_account(&self.account_id, (*account).clone());
+
+      Ok(message)
     }))
   }
 

@@ -137,7 +137,7 @@ pub struct Address {
     #[serde(with = "crate::serde::iota_address_serde")]
     address: IotaAddress,
     /// The address balance.
-    #[getset(set = "pub(crate)")]
+    #[getset(set = "pub")]
     balance: u64,
     /// The address key index.
     #[serde(rename = "keyIndex")]
@@ -181,9 +181,10 @@ impl Address {
                     && o.transaction_id == output.transaction_id
                     && o.index == output.index
                     && o.amount == output.amount
-                    && (o.is_spent && !output.is_spent)
+                    && (!o.is_spent && output.is_spent)
             });
             if let Some(spent_output) = spent_existing_output {
+                self.balance -= output.amount;
                 self.outputs.remove(spent_output);
             } else {
                 self.balance += output.amount;

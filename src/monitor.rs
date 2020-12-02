@@ -90,19 +90,19 @@ fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
 
 /// Monitor account addresses for balance changes.
 pub fn monitor_account_addresses_balance(account: &Account) -> crate::Result<()> {
-    for address in account.addresses().iter().filter(|a| !a.internal()) {
-        monitor_address_balance(&account, &address)?;
+    for address in account.addresses() {
+        monitor_address_balance(&account, address.address())?;
     }
     Ok(())
 }
 
 /// Monitor address for balance changes.
-pub fn monitor_address_balance(account: &Account, address: &Address) -> crate::Result<()> {
+pub fn monitor_address_balance(account: &Account, address: &IotaAddress) -> crate::Result<()> {
     let account_id_raw = account.id().clone();
     let account_id: AccountIdentifier = account.id().into();
     let storage_path = account.storage_path().clone();
     let client_options = account.client_options().clone();
-    let address = address.address().clone();
+    let address = address.clone();
     let address_hex = match address {
         IotaAddress::Ed25519(ref a) => a.to_string(),
         _ => {
@@ -116,18 +116,22 @@ pub fn monitor_address_balance(account: &Account, address: &Address) -> crate::R
         account.client_options(),
         format!("addresses/{}/outputs", address_hex),
         move |topic_event| {
+            let topic_event = topic_event.clone();
+            let account_id_raw = account_id_raw.clone();
             let address = address.clone();
             let client_options = client_options.clone();
             let storage_path = storage_path.clone();
-            crate::block_on(async {
-                let _ = process_output(
-                    topic_event.payload.clone(),
-                    account_id_raw.clone(),
-                    address,
-                    client_options,
-                    storage_path,
-                )
-                .await;
+            std::thread::spawn(move || {
+                crate::block_on(async {
+                    let _ = process_output(
+                        topic_event.payload.clone(),
+                        account_id_raw.clone(),
+                        address,
+                        client_options,
+                        storage_path,
+                    )
+                    .await;
+                });
             });
         },
     )?;
@@ -176,14 +180,21 @@ async fn process_output(
             *address_to_update.balance(),
         );
 
-        let message = Message::from_iota_message(message_id_, &addresses, &message).unwrap();
-        if !messages.iter().any(|m| m == &message) {
-            crate::event::emit_transaction_event(
-                crate::event::TransactionEventType::NewTransaction,
-                account_id_raw,
-                &message,
-            );
-            messages.push(message);
+        match messages.iter().position(|m| m.id() == &message_id_) {
+            Some(message_index) => {
+                let message = &mut messages[message_index];
+                message.set_confirmed(true);
+            }
+            None => {
+                let message =
+                    Message::from_iota_message(message_id_, &addresses, &message).unwrap();
+                crate::event::emit_transaction_event(
+                    crate::event::TransactionEventType::NewTransaction,
+                    account_id_raw,
+                    &message,
+                );
+                messages.push(message);
+            }
         }
     })?;
     Ok(())

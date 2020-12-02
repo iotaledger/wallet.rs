@@ -190,8 +190,10 @@ pub struct Message {
     /// Transaction nonce.
     pub(crate) nonce: u64,
     /// Whether the transaction is confirmed or not.
+    #[getset(set = "pub")]
     pub(crate) confirmed: bool,
     /// Whether the transaction is broadcasted or not.
+    #[getset(set = "pub")]
     pub(crate) broadcasted: bool,
     /// Whether the message represents an incoming transaction or not.
     pub(crate) incoming: bool,

@@ -23,7 +23,7 @@ use std::path::PathBuf;
 
 mod sync;
 pub(crate) use sync::{repost_message, RepostAction};
-pub use sync::{AccountSynchronizer, SyncedAccount};
+pub use sync::{AccountSynchronizer, SyncedAccount, TransferMetadata};
 
 /// The account identifier.
 #[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
@@ -204,11 +204,11 @@ pub struct Account {
     created_at: DateTime<Utc>,
     /// Messages associated with the seed.
     /// The account can be initialised with locally stored messages.
-    #[getset(set = "pub(crate)")]
+    #[getset(set = "pub")]
     messages: Vec<Message>,
     /// Address history associated with the seed.
     /// The account can be initialised with locally stored address history.
-    #[getset(set = "pub(crate)")]
+    #[getset(set = "pub")]
     addresses: Vec<Address>,
     /// The client options.
     #[serde(rename = "clientOptions")]
@@ -391,11 +391,12 @@ impl Account {
         })?;
 
         // ignore errors because we fallback to the polling system
-        let _ = crate::monitor::monitor_address_balance(&self, &address);
+        let _ = crate::monitor::monitor_address_balance(&self, address.address());
         Ok(address)
     }
 
-    pub(crate) fn append_messages(&mut self, messages: Vec<Message>) {
+    #[doc(hidden)]
+    pub fn append_messages(&mut self, messages: Vec<Message>) {
         self.messages.extend(messages.iter().cloned());
     }
 

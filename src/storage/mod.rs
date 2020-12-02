@@ -19,10 +19,10 @@ use once_cell::sync::OnceCell;
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 
 type Storage = Box<dyn StorageAdapter + Sync + Send>;
-type Storages = Arc<Mutex<HashMap<PathBuf, Storage>>>;
+type Storages = Arc<RwLock<HashMap<PathBuf, Storage>>>;
 static INSTANCES: OnceCell<Storages> = OnceCell::new();
 
 /// Sets the storage adapter.
@@ -30,7 +30,7 @@ pub fn set_adapter<P: AsRef<Path>, S: StorageAdapter + Sync + Send + 'static>(
     storage_path: P,
     storage: S,
 ) {
-    let mut instances = INSTANCES.get_or_init(Default::default).lock().unwrap();
+    let mut instances = INSTANCES.get_or_init(Default::default).write().unwrap();
     instances.insert(storage_path.as_ref().to_path_buf(), Box::new(storage));
 }
 
@@ -40,7 +40,7 @@ pub(crate) fn stronghold_snapshot_filename() -> &'static str {
 
 /// gets the storage adapter
 pub(crate) fn with_adapter<T, F: FnOnce(&Storage) -> T>(storage_path: &PathBuf, cb: F) -> T {
-    let instances = INSTANCES.get_or_init(Default::default).lock().unwrap();
+    let instances = INSTANCES.get_or_init(Default::default).read().unwrap();
     if let Some(instance) = instances.get(storage_path) {
         cb(instance)
     } else {
