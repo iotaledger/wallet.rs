@@ -153,8 +153,8 @@ async fn sync_addresses(
 
 /// Syncs messages with the tangle.
 /// The method should ensures that the wallet local state has messages associated with the address history.
-async fn sync_messages<'a>(
-    account: &'a mut Account,
+async fn sync_messages(
+    account: &mut Account,
     stop_at_address_index: usize,
 ) -> crate::Result<Vec<(MessageId, IotaMessage)>> {
     let mut messages = vec![];
@@ -174,7 +174,7 @@ async fn sync_messages<'a>(
             let output: AddressOutput = output.try_into()?;
 
             if let Ok(message) = client.get_message().data(output.message_id()).await {
-                messages.push((output.message_id().clone(), message));
+                messages.push((*output.message_id(), message));
             }
 
             outputs.push(output);
@@ -356,10 +356,8 @@ impl<'a> AccountSynchronizer<'a> {
         .await
         {
             Ok(is_empty) => {
-                self.account
-                    .set_addresses(account_.addresses().into_iter().cloned().collect());
-                self.account
-                    .set_messages(account_.messages().into_iter().cloned().collect());
+                self.account.set_addresses(account_.addresses().to_vec());
+                self.account.set_messages(account_.messages().to_vec());
                 if !self.skip_persistance {
                     crate::storage::with_adapter(&self.storage_path, |storage| {
                         storage.set(
@@ -458,180 +456,200 @@ impl SyncedAccount {
         let value: u64 = transfer_obj.amount;
         let account_id: AccountIdentifier = self.account_id.clone().into();
         let mut account = crate::storage::get_account(&self.storage_path, account_id.clone())?;
+        let mut addresses_to_watch = vec![];
 
-        let (message, message_id) = {
-            let client = crate::client::get_client(account.client_options());
-            let client = client.read().unwrap();
+        let client = crate::client::get_client(account.client_options());
+        let client = client.read().unwrap();
 
-            if let RemainderValueStrategy::AccountAddress(ref remainder_target_address) =
-                transfer_obj.remainder_value_strategy
+        if let RemainderValueStrategy::AccountAddress(ref remainder_target_address) =
+            transfer_obj.remainder_value_strategy
+        {
+            if !account
+                .addresses()
+                .iter()
+                .any(|addr| addr.address() == remainder_target_address)
             {
-                if !account
-                    .addresses()
-                    .iter()
-                    .any(|addr| addr.address() == remainder_target_address)
-                {
-                    return Err(crate::WalletError::InvalidRemainderValueAddress);
-                }
+                return Err(crate::WalletError::InvalidRemainderValueAddress);
             }
+        }
 
-            // select the input addresses and check if a remainder address is needed
-            let (input_addresses, remainder_address) =
-                self.select_inputs(transfer_obj.amount, &account, &transfer_obj.address)?;
+        // select the input addresses and check if a remainder address is needed
+        let (input_addresses, remainder_address) =
+            self.select_inputs(transfer_obj.amount, &account, &transfer_obj.address)?;
 
-            let mut utxos = vec![];
-            let mut address_index_recorders = vec![];
+        let mut utxos = vec![];
+        let mut address_index_recorders = vec![];
 
-            for input_address in &input_addresses {
-                let address_outputs = input_address.outputs();
-                let mut outputs = vec![];
-                let address_path = BIP32Path::from_str(&format!(
-                    "m/44H/4218H/{}H/{}H/{}H",
-                    account.index(),
-                    *input_address.internal() as u32,
-                    *input_address.key_index()
-                ))
-                .unwrap();
-                for (offset, output) in address_outputs.iter().enumerate() {
-                    let output = client
-                        .get_output(
-                            &UTXOInput::new(*output.transaction_id(), *output.index())
-                                .map_err(|e| anyhow::anyhow!(e.to_string()))?,
-                        )
-                        .await?;
-                    outputs.push((output, *input_address.key_index(), address_path.clone()));
-                }
-                utxos.extend(outputs.into_iter());
+        for input_address in &input_addresses {
+            let address_outputs = input_address.outputs();
+            let mut outputs = vec![];
+            let address_path = BIP32Path::from_str(&format!(
+                "m/44H/4218H/{}H/{}H/{}H",
+                account.index(),
+                *input_address.internal() as u32,
+                *input_address.key_index()
+            ))
+            .unwrap();
+            for (offset, output) in address_outputs.iter().enumerate() {
+                let output = client
+                    .get_output(
+                        &UTXOInput::new(*output.transaction_id(), *output.index())
+                            .map_err(|e| anyhow::anyhow!(e.to_string()))?,
+                    )
+                    .await?;
+                outputs.push((output, *input_address.key_index(), address_path.clone()));
             }
+            utxos.extend(outputs.into_iter());
+        }
 
-            let mut essence_builder = TransactionEssence::builder();
-            let mut current_output_sum = 0;
-            let mut remainder_value = 0;
-            for (utxo, address_index, address_path) in utxos {
-                let input: Input = UTXOInput::new(
-                    TransactionId::new(
-                        utxo.transaction_id[..]
-                            .try_into()
-                            .map_err(|_| crate::WalletError::InvalidTransactionIdLength)?,
-                    ),
-                    utxo.output_index,
-                )
-                .map_err(|e| anyhow::anyhow!(e.to_string()))?
-                .into();
-                essence_builder = essence_builder.add_input(input.clone());
-                address_index_recorders.push(stronghold::AddressIndexRecorder {
-                    input,
-                    address_index,
-                    address_path,
-                });
-                if current_output_sum == value {
-                    // already filled the transfer value; just collect the output value as remainder
-                    remainder_value += utxo.amount;
-                } else if current_output_sum + utxo.amount > value {
-                    // if the used UTXO amount is greater than the transfer value, this is the last iteration and we'll have remainder value.
-                    // we add an Output for the missing value and collect the remainder
-                    let missing_value = value - current_output_sum;
-                    remainder_value += utxo.amount - missing_value;
-                    essence_builder = essence_builder.add_output(
-                        SignatureLockedSingleOutput::new(
-                            transfer_obj.address.clone(),
-                            NonZeroU64::new(missing_value)
-                                .ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
-                        )
-                        .into(),
-                    );
-                    current_output_sum += missing_value;
-                } else {
-                    essence_builder = essence_builder.add_output(
-                        SignatureLockedSingleOutput::new(
-                            transfer_obj.address.clone(),
-                            NonZeroU64::new(utxo.amount)
-                                .ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
-                        )
-                        .into(),
-                    );
-                    current_output_sum += utxo.amount;
-                }
-            }
-
-            // if there's remainder value, we check the strategy defined in the transfer
-            if remainder_value > 0 {
-                let remainder_address = remainder_address
-                    .ok_or_else(|| anyhow::anyhow!("remainder address not defined"))?;
-
-                let remainder_target_address = match transfer_obj.remainder_value_strategy {
-                    // use one of the account's addresses to send the remainder value
-                    RemainderValueStrategy::AccountAddress(target_address) => target_address,
-                    // generate a new change address to send the remainder value
-                    RemainderValueStrategy::ChangeAddress => {
-                        let change_address =
-                            crate::address::get_new_change_address(&account, &remainder_address)?;
-                        let addr = change_address.address().clone();
-                        account.append_addresses(vec![change_address]);
-                        addr
-                    }
-                    // keep the remainder value on the address
-                    RemainderValueStrategy::ReuseAddress => remainder_address.address().clone(),
-                };
+        let mut essence_builder = TransactionEssence::builder();
+        let mut current_output_sum = 0;
+        let mut remainder_value = 0;
+        for (utxo, address_index, address_path) in utxos {
+            let input: Input = UTXOInput::new(
+                TransactionId::new(
+                    utxo.transaction_id[..]
+                        .try_into()
+                        .map_err(|_| crate::WalletError::InvalidTransactionIdLength)?,
+                ),
+                utxo.output_index,
+            )
+            .map_err(|e| anyhow::anyhow!(e.to_string()))?
+            .into();
+            essence_builder = essence_builder.add_input(input.clone());
+            address_index_recorders.push(stronghold::AddressIndexRecorder {
+                input,
+                address_index,
+                address_path,
+            });
+            if current_output_sum == value {
+                // already filled the transfer value; just collect the output value as remainder
+                remainder_value += utxo.amount;
+            } else if current_output_sum + utxo.amount > value {
+                // if the used UTXO amount is greater than the transfer value, this is the last iteration and we'll have remainder value.
+                // we add an Output for the missing value and collect the remainder
+                let missing_value = value - current_output_sum;
+                remainder_value += utxo.amount - missing_value;
                 essence_builder = essence_builder.add_output(
                     SignatureLockedSingleOutput::new(
-                        remainder_target_address,
-                        NonZeroU64::new(remainder_value)
+                        transfer_obj.address.clone(),
+                        NonZeroU64::new(missing_value)
                             .ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
                     )
                     .into(),
                 );
-            }
-
-            let (parent1, parent2) = client.get_tips().await?;
-
-            let stronghold_account =
-                crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
-                    stronghold.account_get_by_id(&account_id_to_stronghold_record_id(account.id())?)
-                })?;
-
-            let essence = essence_builder
-                .finish()
-                .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
-            let unlock_blocks =
-                crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
-                    stronghold.get_transaction_unlock_blocks(
-                        &account_id_to_stronghold_record_id(account.id())?,
-                        &essence,
-                        &mut address_index_recorders,
+                current_output_sum += missing_value;
+            } else {
+                essence_builder = essence_builder.add_output(
+                    SignatureLockedSingleOutput::new(
+                        transfer_obj.address.clone(),
+                        NonZeroU64::new(utxo.amount)
+                            .ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
                     )
-                })?;
-            let mut tx_builder = Transaction::builder().with_essence(essence);
-            for unlock_block in unlock_blocks {
-                tx_builder = tx_builder.add_unlock_block(unlock_block);
+                    .into(),
+                );
+                current_output_sum += utxo.amount;
             }
-            let transaction = tx_builder
-                .finish()
-                .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
+        }
 
-            let message = IotaMessage::builder()
-                .with_parent1(parent1)
-                .with_parent2(parent2)
-                .with_payload(Payload::Transaction(Box::new(transaction)))
-                .with_network_id(0)
-                .finish()
-                .map_err(|e| anyhow::anyhow!(e.to_string()))?;
+        // if there's remainder value, we check the strategy defined in the transfer
+        let mut remainder_value_deposit_address = None;
+        if remainder_value > 0 {
+            let remainder_address = remainder_address
+                .ok_or_else(|| anyhow::anyhow!("remainder address not defined"))?;
 
-            let message_id = client.post_message(&message).await?;
-            // if this is a transfer to the account's latest address, we generate a new one to keep the latest address unused
-            if account.latest_address().unwrap().address() == &transfer_obj.address {
-                let addr = crate::address::get_new_address(&account)?;
-                account.append_addresses(vec![addr]);
-            }
+            let remainder_target_address = match transfer_obj.remainder_value_strategy {
+                // use one of the account's addresses to send the remainder value
+                RemainderValueStrategy::AccountAddress(target_address) => target_address,
+                // generate a new change address to send the remainder value
+                RemainderValueStrategy::ChangeAddress => {
+                    if *remainder_address.internal() {
+                        let deposit_address = account.latest_address().unwrap().address().clone();
+                        deposit_address
+                    } else {
+                        let change_address =
+                            crate::address::get_new_change_address(&account, &remainder_address)?;
+                        let addr = change_address.address().clone();
+                        account.append_addresses(vec![change_address]);
+                        addresses_to_watch.push(addr.clone());
+                        addr
+                    }
+                }
+                // keep the remainder value on the address
+                RemainderValueStrategy::ReuseAddress => remainder_address.address().clone(),
+            };
+            remainder_value_deposit_address = Some(remainder_target_address.clone());
+            essence_builder = essence_builder.add_output(
+                SignatureLockedSingleOutput::new(
+                    remainder_target_address,
+                    NonZeroU64::new(remainder_value)
+                        .ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
+                )
+                .into(),
+            );
+        }
 
-            let message = client.get_message().data(&message_id).await?;
-            let message = Message::from_iota_message(message_id, account.addresses(), &message)?;
-            account.append_messages(vec![message.clone()]);
-            crate::storage::with_adapter(&self.storage_path, |storage| {
-                storage.set(account_id, serde_json::to_string(&account)?)
+        let (parent1, parent2) = client.get_tips().await?;
+
+        let stronghold_account =
+            crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
+                stronghold.account_get_by_id(&account_id_to_stronghold_record_id(account.id())?)
             })?;
-            (message, message_id)
-        };
+
+        let essence = essence_builder
+            .finish()
+            .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
+        let unlock_blocks = crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
+            stronghold.get_transaction_unlock_blocks(
+                &account_id_to_stronghold_record_id(account.id())?,
+                &essence,
+                &mut address_index_recorders,
+            )
+        })?;
+        let mut tx_builder = Transaction::builder().with_essence(essence);
+        for unlock_block in unlock_blocks {
+            tx_builder = tx_builder.add_unlock_block(unlock_block);
+        }
+        let transaction = tx_builder
+            .finish()
+            .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
+
+        let message = IotaMessage::builder()
+            .with_parent1(parent1)
+            .with_parent2(parent2)
+            .with_payload(Payload::Transaction(Box::new(transaction)))
+            .with_network_id(0)
+            .finish()
+            .map_err(|e| anyhow::anyhow!(e.to_string()))?;
+
+        let message_id = client.post_message(&message).await?;
+        // if this is a transfer to the account's latest address or we used the latest as deposit of the remainder value,
+        // we generate a new one to keep the latest address unused
+        let latest_address = account.latest_address().unwrap().address();
+        if latest_address == &transfer_obj.address
+            || (remainder_value_deposit_address.is_some()
+                && &remainder_value_deposit_address.unwrap() == latest_address)
+        {
+            let addr = crate::address::get_new_address(&account)?;
+            addresses_to_watch.push(addr.address().clone());
+            account.append_addresses(vec![addr]);
+        }
+
+        let message = client.get_message().data(&message_id).await?;
+
+        // drop the client ref so it doesn't lock the monitor system
+        std::mem::drop(client);
+
+        for address in addresses_to_watch {
+            // ignore errors because we fallback to the polling system
+            let _ = crate::monitor::monitor_address_balance(&account, &address);
+        }
+
+        let message = Message::from_iota_message(message_id, account.addresses(), &message)?;
+        account.append_messages(vec![message.clone()]);
+        crate::storage::with_adapter(&self.storage_path, |storage| {
+            storage.set(account_id, serde_json::to_string(&account)?)
+        })?;
 
         // ignore errors because we fallback to the polling system
         let _ = crate::monitor::monitor_confirmation_state_change(&account, &message_id);
