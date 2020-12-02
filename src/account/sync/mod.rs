@@ -412,6 +412,14 @@ pub struct SyncedAccount {
     storage_path: PathBuf,
 }
 
+/// Transfer response metadata.
+pub struct TransferMetadata {
+    /// The transfer message.
+    pub message: Message,
+    /// The transfer source account with new message and addresses attached.
+    pub account: Account,
+}
+
 impl SyncedAccount {
     /// Selects input addresses for a value transaction.
     /// The method ensures that the recipient address doesn’t match any of the selected inputs or the remainder address.
@@ -446,7 +454,7 @@ impl SyncedAccount {
     }
 
     /// Send messages.
-    pub async fn transfer(&self, transfer_obj: Transfer) -> crate::Result<Message> {
+    pub async fn transfer(&self, transfer_obj: Transfer) -> crate::Result<TransferMetadata> {
         // validate the transfer
         if transfer_obj.amount == 0 {
             return Err(crate::WalletError::ZeroAmount);
@@ -654,7 +662,7 @@ impl SyncedAccount {
         // ignore errors because we fallback to the polling system
         let _ = crate::monitor::monitor_confirmation_state_change(&account, &message_id);
 
-        Ok(message)
+        Ok(TransferMetadata { message, account })
     }
 
     /// Retry message.
