@@ -49,19 +49,14 @@ pub struct AccountManager {
     started_monitoring: bool,
 }
 
-fn mutate_account_transaction<F: FnOnce(&Account, &mut Vec<Message>)>(
-    storage_path: &PathBuf,
-    account_id: AccountIdentifier,
-    handler: F,
-) -> crate::Result<()> {
-    let mut account = crate::storage::get_account(&storage_path, account_id.clone())?;
-    let mut transactions: Vec<Message> = account.messages().to_vec();
-    handler(&account, &mut transactions);
-    account.set_messages(transactions);
-    crate::storage::with_adapter(&storage_path, |storage| {
-        storage.set(account_id, serde_json::to_string(&account)?)
-    })?;
-    Ok(())
+/// Internal transfer response metadata.
+pub struct InternalTransferMetadata {
+    /// Transfer message.
+    pub message: Message,
+    /// Source account with new message and addresses attached.
+    pub from_account: Account,
+    /// Destination account with new message attached.
+    pub to_account: Account,
 }
 
 impl AccountManager {
@@ -185,7 +180,7 @@ impl AccountManager {
         from_account_id: AccountIdentifier,
         to_account_id: AccountIdentifier,
         amount: u64,
-    ) -> crate::Result<Message> {
+    ) -> crate::Result<InternalTransferMetadata> {
         let mut from_account = self.get_account(from_account_id)?;
         let to_account = self.get_account(to_account_id)?;
         let to_address = to_account
@@ -193,9 +188,14 @@ impl AccountManager {
             .ok_or_else(|| anyhow::anyhow!("destination account address list empty"))?
             .clone();
         let from_synchronized = from_account.sync().execute().await?;
-        from_synchronized
+        let metadata = from_synchronized
             .transfer(Transfer::new(to_address.address().clone(), amount))
-            .await
+            .await?;
+        Ok(InternalTransferMetadata {
+            to_account,
+            from_account: metadata.account,
+            message: metadata.message,
+        })
     }
 
     /// Backups the accounts to the given destination
@@ -341,8 +341,8 @@ impl AccountManager {
     }
 }
 
-async fn poll(storage_path: PathBuf, is_monitoring_disabled: bool) -> crate::Result<()> {
-    let retried = if is_monitoring_disabled {
+async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
+    let retried = if syncing {
         let accounts_before_sync =
             crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
         let accounts_before_sync =

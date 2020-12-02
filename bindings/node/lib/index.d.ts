@@ -118,7 +118,7 @@ export declare class AccountManager {
   getAccounts(): Account[]
   removeAccount(accountId: string | number): void
   syncAccounts(): Promise<SyncedAccount[]>
-  internalTransfer(fromAccountId: string | number, toAccountId: string | number, amount: number): Promise<Message>
+  internalTransfer(fromAccount: Account, toAccount: Account, amount: number): Promise<Message>
   backup(destination: string): string
   importAccounts(source: string): void
 }

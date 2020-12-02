@@ -20,6 +20,7 @@ use neon::prelude::*;
 
 pub struct SendTask {
     pub synced: Arc<RwLock<SyncedAccount>>,
+    pub account_id: String,
     pub transfer: Transfer,
 }
 
@@ -31,7 +32,9 @@ impl Task for SendTask {
     fn perform(&self) -> Result<Self::Output, Self::Error> {
         let synced = self.synced.read().unwrap();
         crate::block_on(crate::convert_async_panics(|| async {
-            synced.transfer(self.transfer.clone()).await
+            let res = synced.transfer(self.transfer.clone()).await?;
+            crate::update_account(&self.account_id, res.account);
+            Ok(res.message)
         }))
     }
 

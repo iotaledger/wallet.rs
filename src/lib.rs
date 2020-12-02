@@ -40,11 +40,11 @@ pub use chrono::prelude::{DateTime, Utc};
 use once_cell::sync::OnceCell;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 use stronghold::Stronghold;
 use tokio::runtime::Runtime;
 
-static STRONGHOLD_INSTANCE: OnceCell<Arc<Mutex<HashMap<PathBuf, Stronghold>>>> = OnceCell::new();
+static STRONGHOLD_INSTANCE: OnceCell<Arc<RwLock<HashMap<PathBuf, Stronghold>>>> = OnceCell::new();
 
 /// The wallet error type.
 #[derive(Debug, thiserror::Error)]
@@ -142,7 +142,7 @@ impl Drop for WalletError {
 pub(crate) fn init_stronghold(stronghold_path: &PathBuf, stronghold: Stronghold) {
     let mut stronghold_map = STRONGHOLD_INSTANCE
         .get_or_init(Default::default)
-        .lock()
+        .write()
         .unwrap();
     stronghold_map.insert(stronghold_path.to_path_buf(), stronghold);
 }
@@ -150,7 +150,7 @@ pub(crate) fn init_stronghold(stronghold_path: &PathBuf, stronghold: Stronghold)
 pub(crate) fn remove_stronghold(stronghold_path: PathBuf) {
     let mut stronghold_map = STRONGHOLD_INSTANCE
         .get_or_init(Default::default)
-        .lock()
+        .write()
         .unwrap();
     stronghold_map.remove(&stronghold_path);
 }
@@ -161,7 +161,7 @@ pub(crate) fn with_stronghold_from_path<T, F: FnOnce(&Stronghold) -> T>(
 ) -> T {
     let stronghold_map = STRONGHOLD_INSTANCE
         .get_or_init(Default::default)
-        .lock()
+        .read()
         .unwrap();
     if let Some(stronghold) = stronghold_map.get(path) {
         cb(stronghold)
