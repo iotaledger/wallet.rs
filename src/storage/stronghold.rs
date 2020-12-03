@@ -63,29 +63,29 @@ fn get_account_index(stronghold: &Stronghold) -> crate::Result<(RecordId, Accoun
 fn get_from_index(
     #[allow(clippy::ptr_arg)] index: &AccountIdIndex,
     account_id: &AccountIdentifier,
-) -> crate::Result<RecordId> {
-    let (_, stronghold_id) = match account_id {
+) -> Option<RecordId> {
+    match account_id {
         AccountIdentifier::Id(id) => index
             .iter()
             .find(|(acc_id, _)| acc_id == account_id)
-            .ok_or(crate::WalletError::AccountNotFound)?,
+            .map(|(_, record_id)| *record_id),
         AccountIdentifier::Index(pos) => {
             let pos = *pos as usize;
             if index.len() > pos {
-                &index[pos]
+                Some(index[pos].1)
             } else {
-                return Err(crate::WalletError::AccountNotFound);
+                return None;
             }
         }
-    };
-    Ok(*stronghold_id)
+    }
 }
 
 impl StorageAdapter for StrongholdStorageAdapter {
     fn get(&self, account_id: AccountIdentifier) -> crate::Result<String> {
         let account = crate::with_stronghold_from_path(&self.path, |stronghold| {
             let (_, index) = get_account_index(&stronghold)?;
-            let stronghold_id = get_from_index(&index, &account_id)?;
+            let stronghold_id =
+                get_from_index(&index, &account_id).ok_or(crate::WalletError::AccountNotFound)?;
             stronghold
                 .record_read(&stronghold_id)
                 .map_err(crate::WalletError::GenericError)
@@ -112,13 +112,13 @@ impl StorageAdapter for StrongholdStorageAdapter {
             let (index_record_id, mut index) = get_account_index(&stronghold)?;
             let account_in_index = get_from_index(&index, &account_id);
 
-            if let Ok(stronghold_id) = account_in_index {
+            if let Some(stronghold_id) = account_in_index {
                 stronghold.record_remove(stronghold_id)?;
             }
 
             let stronghold_id = stronghold.record_create(account.as_str())?;
 
-            if account_in_index.is_ok() {
+            if account_in_index.is_some() {
                 // account already existed; update the RecordId
                 let pos = index
                     .iter()
@@ -145,7 +145,8 @@ impl StorageAdapter for StrongholdStorageAdapter {
     fn remove(&self, account_id: AccountIdentifier) -> crate::Result<()> {
         let res: crate::Result<()> = crate::with_stronghold_from_path(&self.path, |stronghold| {
             let (index_record_id, index) = get_account_index(&stronghold)?;
-            let stronghold_id = get_from_index(&index, &account_id)?;
+            let stronghold_id =
+                get_from_index(&index, &account_id).ok_or(crate::WalletError::AccountNotFound)?;
 
             stronghold.record_remove(stronghold_id)?;
 
