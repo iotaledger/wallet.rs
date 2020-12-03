@@ -91,10 +91,11 @@ type StrongholdRemoteHandle = RemoteHandle<std::result::Result<StrongholdRespons
 pub enum Request {
     LoadSnapshot(PathBuf, String),
     CreateSnapshot(PathBuf, String),
-    GetAccount(AccountIdentifier),
+    GetAccountRecordId,
+    GetRecord(RecordId),
     GetAccounts,
-    StoreAccount(AccountIdentifier, String),
-    RemoveAccount(AccountIdentifier),
+    StoreRecord(Option<RecordId>, Vec<u8>, RecordHint),
+    RemoveRecord(RecordId),
 }
 
 enum Crypto {
@@ -103,6 +104,7 @@ enum Crypto {
 
 #[derive(Debug)]
 pub enum StrongholdResult {
+    InitialisedRecord(RecordId),
     ReadRecord(Vec<u8>),
     ListIds(Vec<(RecordId, RecordHint)>),
     CreatedVault(VaultId),
@@ -118,10 +120,11 @@ impl Display for StrongholdResult {
 
 #[derive(Debug, Clone)]
 enum StrongholdResponse {
+    InitialisedRecord(RecordId),
     Accounts(Vec<Vec<u8>>),
-    Account(Vec<u8>),
-    StoredAccount,
-    RemovedAccount,
+    Record(Vec<u8>),
+    StoredRecord(RecordId),
+    RemovedRecord,
     LoadedSnapshot,
     CreatedSnapshot,
 }
@@ -169,9 +172,12 @@ impl StrongholdResultReceiver {
                 result_tx
                     .send(StrongholdResult::CreatedVault(vault_id))
                     .unwrap();
-                println!("sent vault");
             }
-            SHResults::ReturnInit(vault_id, record_id) => {}
+            SHResults::ReturnInit(vault_id, record_id) => {
+                result_tx
+                    .send(StrongholdResult::InitialisedRecord(record_id))
+                    .unwrap();
+            }
             SHResults::ReturnRead(record) => {
                 result_tx
                     .send(StrongholdResult::ReadRecord(record))
@@ -308,6 +314,8 @@ impl WalletStronghold {
                 self.clear_state();
                 set_password(snapshot_path, password);
 
+                // TODO clear cache
+
                 stronghold_client.try_tell(ClientMsg::SHRequest(SHRequest::CreateNewVault), None);
                 wait_for_result!(self, StrongholdResult::CreatedVault(vault_id), {
                     self.seed_vault = Some(vault_id);
@@ -315,18 +323,27 @@ impl WalletStronghold {
                     Ok(StrongholdResponse::CreatedSnapshot)
                 })
             }
-            Request::GetAccount(account_id) => {
+            Request::GetAccountRecordId => {
+                stronghold_client.try_tell(
+                    ClientMsg::SHRequest(SHRequest::InitRecord(self.accounts_vault.unwrap())),
+                    None,
+                );
+                wait_for_result!(self, StrongholdResult::InitialisedRecord(record_id), {
+                    Ok(StrongholdResponse::InitialisedRecord(record_id))
+                })
+            }
+            Request::GetRecord(record_id) => {
                 stronghold_client.try_tell(
                     ClientMsg::SHRequest(SHRequest::ReadData(
                         self.accounts_vault.unwrap(),
-                        Some(account_id_to_record_id(account_id)?),
+                        Some(record_id),
                     )),
                     None,
                 );
                 wait_for_result!(
                     self,
                     StrongholdResult::ReadRecord(record),
-                    { Ok(StrongholdResponse::Account(record)) },
+                    { Ok(StrongholdResponse::Record(record)) },
                     Error::AccountNotFound
                 )
             }
@@ -359,28 +376,28 @@ impl WalletStronghold {
                     Ok(StrongholdResponse::Accounts(accounts))
                 })
             }
-            Request::StoreAccount(account_id, account) => {
+            Request::StoreRecord(record_id, record, record_hint) => {
                 stronghold_client.try_tell(
                     ClientMsg::SHRequest(SHRequest::WriteData(
                         self.accounts_vault.unwrap(),
-                        Some(account_id_to_record_id(account_id)?),
-                        account.as_bytes().to_vec(),
-                        RecordHint::new(ACCOUNT_HINT).unwrap(),
+                        record_id,
+                        record,
+                        record_hint,
                     )),
                     None,
                 );
-                Ok(StrongholdResponse::StoredAccount)
+                // TODO wait for record id response
+                Ok(StrongholdResponse::StoredRecord(record_id.unwrap()))
             }
-            Request::RemoveAccount(account_id) => {
-                let account_record_id = account_id_to_record_id(account_id)?;
+            Request::RemoveRecord(record_id) => {
                 stronghold_client.try_tell(
                     ClientMsg::SHRequest(SHRequest::RevokeData(
                         self.accounts_vault.unwrap(),
-                        account_record_id,
+                        record_id,
                     )),
                     None,
                 );
-                Ok(StrongholdResponse::RemovedAccount)
+                Ok(StrongholdResponse::RemovedRecord)
             }
         }
     }
@@ -481,14 +498,50 @@ pub async fn get_accounts(storage_path: &PathBuf) -> Result<Vec<String>> {
     }
 }
 
-pub async fn get_account(storage_path: &PathBuf, account_id: AccountIdentifier) -> Result<String> {
+pub async fn read_record(storage_path: &PathBuf, record_id: RecordId) -> Result<Vec<u8>> {
     let runtime = actor_runtime();
 
-    let message = Request::GetAccount(account_id);
+    let message = Request::GetRecord(record_id);
     let handle: StrongholdRemoteHandle = ask(&runtime.system, &runtime.stronghold_actor, message);
     let res = handle.await.map_err(|e| Error::FailedToPerformAction(e))?;
-    if let StrongholdResponse::Account(account) = res {
-        Ok(String::from_utf8_lossy(&account).to_string())
+    if let StrongholdResponse::Record(record) = res {
+        Ok(record)
+    } else {
+        Err(Error::FailedToPerformAction(format!("{:?}", res)))
+    }
+}
+
+pub async fn get_account(storage_path: &PathBuf, account_id: AccountIdentifier) -> Result<String> {
+    let raw = read_record(storage_path, account_id_to_record_id(account_id)?).await?;
+    Ok(String::from_utf8_lossy(&raw).to_string())
+}
+
+pub async fn new_account_record() -> Result<RecordId> {
+    let runtime = actor_runtime();
+
+    let message = Request::GetAccountRecordId;
+    let handle: StrongholdRemoteHandle = ask(&runtime.system, &runtime.stronghold_actor, message);
+    let res = handle.await.map_err(|e| Error::FailedToPerformAction(e))?;
+    if let StrongholdResponse::InitialisedRecord(record_id) = res {
+        Ok(record_id)
+    } else {
+        Err(Error::FailedToPerformAction(format!("{:?}", res)))
+    }
+}
+
+pub async fn store_record(
+    storage_path: &PathBuf,
+    record_id: Option<RecordId>,
+    record: Vec<u8>,
+    hint: RecordHint,
+) -> Result<RecordId> {
+    let runtime = actor_runtime();
+
+    let message = Request::StoreRecord(record_id, record, hint);
+    let handle: StrongholdRemoteHandle = ask(&runtime.system, &runtime.stronghold_actor, message);
+    let res = handle.await.map_err(|e| Error::FailedToPerformAction(e))?;
+    if let StrongholdResponse::StoredRecord(id) = res {
+        Ok(id)
     } else {
         Err(Error::FailedToPerformAction(format!("{:?}", res)))
     }
@@ -499,12 +552,23 @@ pub async fn store_account(
     account_id: AccountIdentifier,
     account: String,
 ) -> Result<()> {
+    store_record(
+        storage_path,
+        Some(account_id_to_record_id(account_id)?),
+        account.as_bytes().to_vec(),
+        RecordHint::new(ACCOUNT_HINT).unwrap(),
+    )
+    .await?;
+    Ok(())
+}
+
+pub async fn remove_record(storage_path: &PathBuf, record_id: RecordId) -> Result<()> {
     let runtime = actor_runtime();
 
-    let message = Request::StoreAccount(account_id, account);
+    let message = Request::RemoveRecord(record_id);
     let handle: StrongholdRemoteHandle = ask(&runtime.system, &runtime.stronghold_actor, message);
     let res = handle.await.map_err(|e| Error::FailedToPerformAction(e))?;
-    if let StrongholdResponse::StoredAccount = res {
+    if let StrongholdResponse::StoredRecord(id) = res {
         Ok(())
     } else {
         Err(Error::FailedToPerformAction(format!("{:?}", res)))
@@ -512,24 +576,30 @@ pub async fn store_account(
 }
 
 pub async fn remove_account(storage_path: &PathBuf, account_id: AccountIdentifier) -> Result<()> {
-    unimplemented!()
+    remove_record(storage_path, account_id_to_record_id(account_id)?).await
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::account::AccountIdentifier;
+    use iota_stronghold::RecordHint;
     use std::path::PathBuf;
+
     #[tokio::test]
     async fn write_and_read() -> super::Result<()> {
         let snapshot_path: PathBuf = "./snapshot-test".into();
         super::load_or_create(&snapshot_path, "password").await?;
 
-        let id = AccountIdentifier::Id(String::from_utf8_lossy(&[0; 32]).to_string());
-        let account = "account data".to_string();
-        println!("initialized");
-        super::store_account(&snapshot_path, id.clone(), account.clone()).await?;
-        let stored_account = super::get_account(&snapshot_path, id).await?;
-        assert_eq!(stored_account, account);
+        let data = "account data";
+        let record_id = super::new_account_record().await?;
+        super::store_record(
+            &snapshot_path,
+            Some(record_id),
+            data.clone().as_bytes().to_vec(),
+            RecordHint::new([0; 24]).unwrap(),
+        )
+        .await?;
+        let stored_data = super::read_record(&snapshot_path, record_id).await?;
+        assert_eq!(stored_data, data.as_bytes().to_vec());
 
         Ok(())
     }

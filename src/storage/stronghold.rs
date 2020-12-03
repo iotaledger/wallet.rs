@@ -40,7 +40,7 @@ impl StorageAdapter for StrongholdStorageAdapter {
     }
 
     fn set(&self, account_id: AccountIdentifier, account: String) -> crate::Result<()> {
-        crate::stronghold::store_account(&self.path, account_id, account);
+        // crate::stronghold::store_(&self.path, account_id, account);
 
         Ok(())
     }

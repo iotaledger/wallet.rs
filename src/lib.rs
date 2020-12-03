@@ -129,6 +129,7 @@ pub enum WalletError {
     /// the address must belong to the account.
     #[error("the remainder value address doesn't belong to the account")]
     InvalidRemainderValueAddress,
+    /// Stronghold instance not initialised with its password.
     #[error("stronghold not initialised")]
     StrongholdNotInitialised,
 }
