@@ -14,12 +14,6 @@ use crate::account::AccountIdentifier;
 
 use std::path::{Path, PathBuf};
 
-use stronghold::{RecordHint, RecordId, Stronghold};
-
-static ACCOUNT_ID_INDEX_HINT: &str = "wallet.rs-account-ids";
-
-type AccountIdIndex = Vec<(AccountIdentifier, RecordId)>;
-
 /// Stronghold storage adapter.
 pub struct StrongholdStorageAdapter {
     path: PathBuf,
@@ -34,138 +28,25 @@ impl StrongholdStorageAdapter {
     }
 }
 
-fn get_account_index(stronghold: &Stronghold) -> crate::Result<(RecordId, AccountIdIndex)> {
-    let storage_index = stronghold.record_list()?;
-    let index_hint = RecordHint::new(ACCOUNT_ID_INDEX_HINT)?;
-    let (record_id, index): (RecordId, AccountIdIndex) = storage_index
-        .iter()
-        .find(|(record_id, record_hint)| record_hint == &index_hint)
-        .map(|(record_id, record_hint)| {
-            let index_json = stronghold
-                .record_read(record_id)
-                .expect("failed to read account id index");
-            let index: AccountIdIndex =
-                serde_json::from_str(&index_json).expect("cannot decode account id index");
-            (*record_id, index)
-        })
-        .unwrap_or_else(|| {
-            let index = AccountIdIndex::default();
-            let record_id = stronghold
-                .record_create(
-                    &serde_json::to_string(&index).expect("failed to encode account id index"),
-                )
-                .expect("failed to save account id index");
-            (record_id, index)
-        });
-    Ok((record_id, index))
-}
-
-fn get_from_index(
-    #[allow(clippy::ptr_arg)] index: &AccountIdIndex,
-    account_id: &AccountIdentifier,
-) -> crate::Result<RecordId> {
-    let (_, stronghold_id) = match account_id {
-        AccountIdentifier::Id(id) => index
-            .iter()
-            .find(|(acc_id, _)| acc_id == account_id)
-            .ok_or(crate::WalletError::AccountNotFound)?,
-        AccountIdentifier::Index(pos) => {
-            let pos = *pos as usize;
-            if index.len() > pos {
-                &index[pos]
-            } else {
-                return Err(crate::WalletError::AccountNotFound);
-            }
-        }
-    };
-    Ok(*stronghold_id)
-}
-
 impl StorageAdapter for StrongholdStorageAdapter {
     fn get(&self, account_id: AccountIdentifier) -> crate::Result<String> {
-        let account = crate::with_stronghold_from_path(&self.path, |stronghold| {
-            let (_, index) = get_account_index(&stronghold)?;
-            let stronghold_id = get_from_index(&index, &account_id)?;
-            stronghold
-                .record_read(&stronghold_id)
-                .map_err(crate::WalletError::GenericError)
-        })?;
-        Ok(account)
+        crate::stronghold::get_account(&self.path, account_id);
+        unimplemented!()
     }
 
     fn get_all(&self) -> crate::Result<std::vec::Vec<String>> {
-        let mut accounts = vec![];
-        let (_, index) = crate::with_stronghold_from_path(&self.path, |stronghold| {
-            get_account_index(&stronghold)
-        })?;
-        for (_, record_id) in index {
-            let account = crate::with_stronghold_from_path(&self.path, |stronghold| {
-                stronghold.record_read(&record_id)
-            })?;
-            accounts.push(account);
-        }
-        Ok(accounts)
+        crate::stronghold::get_accounts(&self.path);
+        unimplemented!()
     }
 
     fn set(&self, account_id: AccountIdentifier, account: String) -> crate::Result<()> {
-        let res: crate::Result<()> = crate::with_stronghold_from_path(&self.path, |stronghold| {
-            let (index_record_id, mut index) = get_account_index(&stronghold)?;
-            let account_in_index = get_from_index(&index, &account_id);
-
-            if let Ok(stronghold_id) = account_in_index {
-                stronghold.record_remove(stronghold_id)?;
-            }
-
-            let stronghold_id = stronghold.record_create(account.as_str())?;
-
-            if account_in_index.is_ok() {
-                // account already existed; update the RecordId
-                let pos = index
-                    .iter()
-                    .position(|(acc_id, _)| acc_id == &account_id)
-                    .unwrap();
-                index[pos] = (account_id, stronghold_id);
-            } else {
-                // new account; push to the index
-                index.push((account_id, stronghold_id))
-            }
-
-            stronghold.record_remove(index_record_id)?;
-            stronghold.record_create_with_hint(
-                &serde_json::to_string(&index)?,
-                RecordHint::new(ACCOUNT_ID_INDEX_HINT).unwrap(),
-            )?;
-            Ok(())
-        });
-        res?;
+        crate::stronghold::store_account(&self.path, account_id, account);
 
         Ok(())
     }
 
     fn remove(&self, account_id: AccountIdentifier) -> crate::Result<()> {
-        let res: crate::Result<()> = crate::with_stronghold_from_path(&self.path, |stronghold| {
-            let (index_record_id, index) = get_account_index(&stronghold)?;
-            let stronghold_id = get_from_index(&index, &account_id)?;
-
-            stronghold.record_remove(stronghold_id)?;
-
-            let mut new_index = vec![];
-            for (acc_id, record_id) in index {
-                if acc_id != account_id {
-                    new_index.push((acc_id, record_id));
-                }
-            }
-
-            stronghold.record_remove(index_record_id)?;
-            stronghold
-                .record_create_with_hint(
-                    &serde_json::to_string(&new_index)?,
-                    RecordHint::new(ACCOUNT_ID_INDEX_HINT).unwrap(),
-                )
-                .map_err(crate::WalletError::GenericError)?;
-            Ok(())
-        });
-        res?;
+        crate::stronghold::remove_account(&self.path, account_id);
 
         Ok(())
     }

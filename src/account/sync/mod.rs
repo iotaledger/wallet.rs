@@ -9,7 +9,7 @@
 // an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and limitations under the License.
 
-use crate::account::{account_id_to_stronghold_record_id, Account, AccountIdentifier};
+use crate::account::{Account, AccountIdentifier};
 use crate::address::{Address, AddressBuilder, AddressOutput, IotaAddress};
 use crate::client::get_client;
 use crate::message::{Message, RemainderValueStrategy, Transfer};
@@ -486,7 +486,7 @@ impl SyncedAccount {
             self.select_inputs(transfer_obj.amount, &account, &transfer_obj.address)?;
 
         let mut utxos = vec![];
-        let mut address_index_recorders = vec![];
+        // TODO stronghold let mut address_index_recorders = vec![];
 
         for input_address in &input_addresses {
             let address_outputs = input_address.outputs();
@@ -525,11 +525,12 @@ impl SyncedAccount {
             .map_err(|e| anyhow::anyhow!(e.to_string()))?
             .into();
             essence_builder = essence_builder.add_input(input.clone());
-            address_index_recorders.push(stronghold::AddressIndexRecorder {
+            // TODO stronghold
+            /* address_index_recorders.push(stronghold::AddressIndexRecorder {
                 input,
                 address_index,
                 address_path,
-            });
+            });*/
             if current_output_sum == value {
                 // already filled the transfer value; just collect the output value as remainder
                 remainder_value += utxo.amount;
@@ -599,25 +600,27 @@ impl SyncedAccount {
 
         let (parent1, parent2) = client.get_tips().await?;
 
-        let stronghold_account =
-            crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
-                stronghold.account_get_by_id(&account_id_to_stronghold_record_id(account.id())?)
-            })?;
+        // TODO stronghold
+        /*let stronghold_account =
+        crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
+            stronghold.account_get_by_id(&account_id_to_stronghold_record_id(account.id())?)
+        })?;*/
 
         let essence = essence_builder
             .finish()
             .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
-        let unlock_blocks = crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
+        let tx_builder = Transaction::builder().with_essence(essence);
+        // TODO stronghold
+        /*let unlock_blocks = crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
             stronghold.get_transaction_unlock_blocks(
                 &account_id_to_stronghold_record_id(account.id())?,
                 &essence,
                 &mut address_index_recorders,
             )
         })?;
-        let mut tx_builder = Transaction::builder().with_essence(essence);
         for unlock_block in unlock_blocks {
             tx_builder = tx_builder.add_unlock_block(unlock_block);
-        }
+        }*/
         let transaction = tx_builder
             .finish()
             .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;

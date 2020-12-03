@@ -141,7 +141,8 @@ impl<'a> AccountInitialiser<'a> {
             }
         }
 
-        let stronghold_account_res: crate::Result<stronghold::Account> =
+        // TODO stronghold
+        /*let stronghold_account_res: crate::Result<stronghold::Account> =
             crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
                 let account = match mnemonic {
                     Some(mnemonic) => stronghold.account_import(
@@ -156,7 +157,8 @@ impl<'a> AccountInitialiser<'a> {
             });
         let stronghold_account = stronghold_account_res?;
 
-        let id = stronghold_account.id();
+        let id = stronghold_account.id();*/
+        let id = [0; 32];
         let id = hex::encode(id);
         let account_id: AccountIdentifier = id.clone().into();
 
@@ -178,15 +180,6 @@ impl<'a> AccountInitialiser<'a> {
         }
         Ok(account)
     }
-}
-
-pub(crate) fn account_id_to_stronghold_record_id(account_id: &str) -> crate::Result<[u8; 32]> {
-    let decoded =
-        hex::decode(account_id).map_err(|_| anyhow::anyhow!("account id must be a hex string"))?;
-    let id: [u8; 32] = decoded
-        .try_into()
-        .map_err(|_| anyhow::anyhow!("invalid account id length"))?;
-    Ok(id)
 }
 
 /// Account definition.

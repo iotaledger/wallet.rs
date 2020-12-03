@@ -61,7 +61,7 @@ pub enum WalletError {
     /// stronghold client error.
     #[cfg(feature = "stronghold")]
     #[error("`{0}`")]
-    StrongholdError(#[from] iota_stronghold::Error),
+    StrongholdError(#[from] stronghold::Error),
     /// iota.rs error.
     #[error("`{0}`")]
     ClientError(#[from] iota::client::Error),
@@ -138,7 +138,6 @@ impl Drop for WalletError {
         event::emit_error(self);
     }
 }
-
 pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
     static INSTANCE: OnceCell<Mutex<Runtime>> = OnceCell::new();
     let runtime = INSTANCE.get_or_init(|| Mutex::new(Runtime::new().unwrap()));

@@ -27,6 +27,7 @@ backtrace = "0.3"
 # stronghold
 iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", branch = "dev", optional = true }
 riker = { version = "0.4", optional = true }
+riker-patterns = { version = "0.4", optional = true }
 
 [dev-dependencies]
 tokio = { version = "0.2", features = ["full"] }
@@ -35,5 +36,5 @@ rusty-fork = "0.3.0"
 
 [features]
 default = ["stronghold"]
-stronghold = ["iota-stronghold", "riker"]
+stronghold = ["iota-stronghold", "riker", "riker-patterns"]
 sqlite = ["rusqlite"]

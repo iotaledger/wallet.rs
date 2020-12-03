@@ -9,7 +9,7 @@
 // an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and limitations under the License.
 
-use crate::account::{account_id_to_stronghold_record_id, Account};
+use crate::account::Account;
 use crate::message::MessageType;
 use bech32::FromBase32;
 use getset::{Getters, Setters};
@@ -212,7 +212,9 @@ pub(crate) fn get_iota_address(
     address_index: usize,
     internal: bool,
 ) -> crate::Result<IotaAddress> {
-    crate::with_stronghold_from_path(&storage_path, |stronghold| {
+    unimplemented!()
+    // TODO stronghold
+    /*crate::with_stronghold_from_path(&storage_path, |stronghold| {
         let address_str = stronghold.address_get(
             &account_id_to_stronghold_record_id(account_id)?,
             Some(account_index),
@@ -220,7 +222,7 @@ pub(crate) fn get_iota_address(
             internal,
         )?;
         parse(address_str)
-    })
+    })*/
 }
 
 /// Gets an unused public address for the given account.

@@ -10,8 +10,7 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 use crate::account::{
-    account_id_to_stronghold_record_id, repost_message, Account, AccountIdentifier,
-    AccountInitialiser, RepostAction, SyncedAccount,
+    repost_message, Account, AccountIdentifier, AccountInitialiser, RepostAction, SyncedAccount,
 };
 use crate::client::ClientOptions;
 use crate::event::{
@@ -21,7 +20,6 @@ use crate::event::{
 use crate::message::{Message, MessageType, Transfer};
 use crate::storage::StorageAdapter;
 
-use std::convert::TryInto;
 use std::fs;
 use std::panic::AssertUnwindSafe;
 use std::path::{Path, PathBuf};
@@ -31,7 +29,6 @@ use std::time::Duration;
 use futures::FutureExt;
 use getset::{Getters, Setters};
 use iota::message::prelude::MessageId;
-use stronghold::Stronghold;
 
 const DEFAULT_STORAGE_PATH: &str = "./example-database";
 
@@ -104,13 +101,14 @@ impl AccountManager {
         let stronghold_path = self
             .storage_path
             .join(crate::storage::stronghold_snapshot_filename());
-        let stronghold = Stronghold::new(
+        // TODO stronghold
+        /*let stronghold = Stronghold::new(
             &stronghold_path,
             !stronghold_path.exists(),
             password.as_ref().to_string(),
             None,
         )?;
-        crate::init_stronghold(&self.storage_path, stronghold);
+        crate::init_stronghold(&self.storage_path, stronghold);*/
         if !self.started_monitoring {
             let monitoring_disabled = self.start_monitoring().is_err();
             self.start_polling(monitoring_disabled);
@@ -162,9 +160,10 @@ impl AccountManager {
         if !(account.messages().is_empty() && account.total_balance() == 0) {
             return Err(crate::WalletError::MessageNotEmpty);
         }
-        crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
+        // TODO stronghold
+        /* crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
             stronghold.account_remove(&account_id_to_stronghold_record_id(account.id())?)
-        })?;
+        })?; */
         crate::storage::with_adapter(&self.storage_path, |storage| storage.remove(account_id))?;
         Ok(())
     }
@@ -221,13 +220,14 @@ impl AccountManager {
         let backup_stronghold_path = source
             .as_ref()
             .join(crate::storage::stronghold_snapshot_filename());
-        let backup_stronghold = stronghold::Stronghold::new(
+        // TODO stronghold
+        /*let backup_stronghold = stronghold::Stronghold::new(
             &backup_stronghold_path,
             false,
             "password".to_string(),
             None,
-        )?;
-        crate::init_stronghold(&source.as_ref().to_path_buf(), backup_stronghold);
+        )?;*/
+        // TODO stronghold crate::init_stronghold(&source.as_ref().to_path_buf(), backup_stronghold);
 
         let backup_storage = crate::storage::get_adapter_from_path(&source)?;
         let accounts = backup_storage.get_all()?;
@@ -253,14 +253,16 @@ impl AccountManager {
             });
         }
 
-        let backup_stronghold = stronghold::Stronghold::new(
+        // TODO stronghold
+        /* let backup_stronghold = stronghold::Stronghold::new(
             &backup_stronghold_path,
             false,
             "password".to_string(),
             None,
-        )?;
+        )?; */
         for account in accounts.iter() {
-            let stronghold_account = backup_stronghold
+            // TODO stronghold
+            /*let stronghold_account = backup_stronghold
                 .account_get_by_id(&account_id_to_stronghold_record_id(account.id())?)?;
             let created_at_timestamp: u128 = account.created_at().timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
             let stronghold_account =
@@ -271,7 +273,7 @@ impl AccountManager {
                         stronghold_account.mnemonic().to_string(),
                         Some("password"),
                     )
-                });
+                });*/
 
             crate::storage::with_adapter(&self.storage_path, |storage| {
                 storage.set(
@@ -280,7 +282,6 @@ impl AccountManager {
                 )
             })?;
         }
-        crate::remove_stronghold(backup_stronghold_path);
         Ok(())
     }
 
