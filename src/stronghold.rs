@@ -28,8 +28,6 @@ const SEED_HINT: &str = "IOTA_WALLET_SEED";
 const ACCOUNT_HINT: &str = "IOTA_WALLET_ACCOUNT";
 const TIMEOUT: Duration = Duration::from_millis(500);
 
-/// wait for a stronghold result through the mpsc channel
-#[macro_export]
 macro_rules! wait_for_result {
     ($self:ident, $a:pat, $b:block) => {{
         let result_rx = $self.result_rx.lock().unwrap();
@@ -47,6 +45,21 @@ macro_rules! wait_for_result {
             $b
         } else {
             return Err($r);
+        }
+    }};
+}
+
+macro_rules! send_message {
+    ($message:expr, $expected_response:pat, $b:block) => {{
+        let runtime = actor_runtime();
+
+        let handle: StrongholdRemoteHandle =
+            ask(&runtime.system, &runtime.stronghold_actor, $message);
+        let result = handle.await.map_err(|e| Error::FailedToPerformAction(e))?;
+        if let $expected_response = result {
+            $b
+        } else {
+            return Err(Error::FailedToPerformAction(format!("{:?}", result)));
         }
     }};
 }
@@ -452,29 +465,18 @@ pub async fn load_or_create<S: AsRef<Path>, P: Into<String>>(
     snapshot_path: S,
     password: P,
 ) -> Result<()> {
-    let runtime = actor_runtime();
-
     if snapshot_path.as_ref().exists() {
-        let message = Request::LoadSnapshot(snapshot_path.as_ref().to_path_buf(), password.into());
-        let handle: StrongholdRemoteHandle =
-            ask(&runtime.system, &runtime.stronghold_actor, message);
-        let res = handle.await.map_err(|e| Error::FailedToPerformAction(e))?;
-        if let StrongholdResponse::LoadedSnapshot = res {
-            Ok(())
-        } else {
-            Err(Error::FailedToPerformAction(format!("{:?}", res)))
-        }
+        send_message!(
+            Request::LoadSnapshot(snapshot_path.as_ref().to_path_buf(), password.into()),
+            StrongholdResponse::LoadedSnapshot,
+            { Ok(()) }
+        )
     } else {
-        let message =
-            Request::CreateSnapshot(snapshot_path.as_ref().to_path_buf(), password.into());
-        let handle: StrongholdRemoteHandle =
-            ask(&runtime.system, &runtime.stronghold_actor, message);
-        let res = handle.await.map_err(|e| Error::FailedToPerformAction(e))?;
-        if let StrongholdResponse::CreatedSnapshot = res {
-            Ok(())
-        } else {
-            Err(Error::FailedToPerformAction(format!("{:?}", res)))
-        }
+        send_message!(
+            Request::CreateSnapshot(snapshot_path.as_ref().to_path_buf(), password.into()),
+            StrongholdResponse::CreatedSnapshot,
+            { Ok(()) }
+        )
     }
 }
 
@@ -483,32 +485,24 @@ pub async fn do_crypto(account: &Account) -> Result<()> {
 }
 
 pub async fn get_accounts(storage_path: &PathBuf) -> Result<Vec<String>> {
-    let runtime = actor_runtime();
-
-    let message = Request::GetAccounts;
-    let handle: StrongholdRemoteHandle = ask(&runtime.system, &runtime.stronghold_actor, message);
-    let res = handle.await.map_err(|e| Error::FailedToPerformAction(e))?;
-    if let StrongholdResponse::Accounts(accounts) = res {
-        Ok(accounts
-            .into_iter()
-            .map(|acc| String::from_utf8_lossy(&acc).to_string())
-            .collect())
-    } else {
-        Err(Error::FailedToPerformAction(format!("{:?}", res)))
-    }
+    send_message!(
+        Request::GetAccounts,
+        StrongholdResponse::Accounts(accounts),
+        {
+            Ok(accounts
+                .into_iter()
+                .map(|acc| String::from_utf8_lossy(&acc).to_string())
+                .collect())
+        }
+    )
 }
 
 pub async fn read_record(storage_path: &PathBuf, record_id: RecordId) -> Result<Vec<u8>> {
-    let runtime = actor_runtime();
-
-    let message = Request::GetRecord(record_id);
-    let handle: StrongholdRemoteHandle = ask(&runtime.system, &runtime.stronghold_actor, message);
-    let res = handle.await.map_err(|e| Error::FailedToPerformAction(e))?;
-    if let StrongholdResponse::Record(record) = res {
-        Ok(record)
-    } else {
-        Err(Error::FailedToPerformAction(format!("{:?}", res)))
-    }
+    send_message!(
+        Request::GetRecord(record_id),
+        StrongholdResponse::Record(record),
+        { Ok(record) }
+    )
 }
 
 pub async fn get_account(storage_path: &PathBuf, account_id: AccountIdentifier) -> Result<String> {
@@ -517,16 +511,11 @@ pub async fn get_account(storage_path: &PathBuf, account_id: AccountIdentifier) 
 }
 
 pub async fn new_account_record() -> Result<RecordId> {
-    let runtime = actor_runtime();
-
-    let message = Request::GetAccountRecordId;
-    let handle: StrongholdRemoteHandle = ask(&runtime.system, &runtime.stronghold_actor, message);
-    let res = handle.await.map_err(|e| Error::FailedToPerformAction(e))?;
-    if let StrongholdResponse::InitialisedRecord(record_id) = res {
-        Ok(record_id)
-    } else {
-        Err(Error::FailedToPerformAction(format!("{:?}", res)))
-    }
+    send_message!(
+        Request::GetAccountRecordId,
+        StrongholdResponse::InitialisedRecord(record_id),
+        { Ok(record_id) }
+    )
 }
 
 pub async fn store_record(
@@ -535,16 +524,11 @@ pub async fn store_record(
     record: Vec<u8>,
     hint: RecordHint,
 ) -> Result<RecordId> {
-    let runtime = actor_runtime();
-
-    let message = Request::StoreRecord(record_id, record, hint);
-    let handle: StrongholdRemoteHandle = ask(&runtime.system, &runtime.stronghold_actor, message);
-    let res = handle.await.map_err(|e| Error::FailedToPerformAction(e))?;
-    if let StrongholdResponse::StoredRecord(id) = res {
-        Ok(id)
-    } else {
-        Err(Error::FailedToPerformAction(format!("{:?}", res)))
-    }
+    send_message!(
+        Request::StoreRecord(record_id, record, hint),
+        StrongholdResponse::StoredRecord(id),
+        { Ok(id) }
+    )
 }
 
 pub async fn store_account(
@@ -563,16 +547,11 @@ pub async fn store_account(
 }
 
 pub async fn remove_record(storage_path: &PathBuf, record_id: RecordId) -> Result<()> {
-    let runtime = actor_runtime();
-
-    let message = Request::RemoveRecord(record_id);
-    let handle: StrongholdRemoteHandle = ask(&runtime.system, &runtime.stronghold_actor, message);
-    let res = handle.await.map_err(|e| Error::FailedToPerformAction(e))?;
-    if let StrongholdResponse::StoredRecord(id) = res {
-        Ok(())
-    } else {
-        Err(Error::FailedToPerformAction(format!("{:?}", res)))
-    }
+    send_message!(
+        Request::RemoveRecord(record_id),
+        StrongholdResponse::RemovedRecord,
+        { Ok(()) }
+    )
 }
 
 pub async fn remove_account(storage_path: &PathBuf, account_id: AccountIdentifier) -> Result<()> {
