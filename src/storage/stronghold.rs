@@ -74,7 +74,7 @@ fn get_from_index(
             if index.len() > pos {
                 Some(index[pos].1)
             } else {
-                return None;
+                None
             }
         }
     }
