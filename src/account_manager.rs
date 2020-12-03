@@ -58,11 +58,13 @@ pub struct InternalTransferMetadata {
 
 impl AccountManager {
     /// Initialises a new instance of the account manager with the default storage adapter.
+    #[cfg(any(feature = "stronghold", feature = "sqlite"))]
     pub fn new() -> crate::Result<Self> {
         Self::with_storage_path(DEFAULT_STORAGE_PATH)
     }
 
     /// Initialises a new instance of the account manager with the default storage adapter using the specified storage path.
+    #[cfg(any(feature = "stronghold", feature = "sqlite"))]
     pub fn with_storage_path(storage_path: impl AsRef<Path>) -> crate::Result<Self> {
         Self::with_storage_adapter(
             &storage_path,
@@ -97,18 +99,15 @@ impl AccountManager {
     }
 
     /// Sets the stronghold password.
-    pub fn set_stronghold_password<P: AsRef<str>>(&mut self, password: P) -> crate::Result<()> {
+    #[cfg(feature = "stronghold")]
+    pub async fn set_stronghold_password<P: AsRef<str>>(
+        &mut self,
+        password: P,
+    ) -> crate::Result<()> {
         let stronghold_path = self
             .storage_path
             .join(crate::storage::stronghold_snapshot_filename());
-        // TODO stronghold
-        /*let stronghold = Stronghold::new(
-            &stronghold_path,
-            !stronghold_path.exists(),
-            password.as_ref().to_string(),
-            None,
-        )?;
-        crate::init_stronghold(&self.storage_path, stronghold);*/
+        crate::stronghold::load_or_create(&self.storage_path, password.as_ref()).await?;
         if !self.started_monitoring {
             let monitoring_disabled = self.start_monitoring().is_err();
             self.start_polling(monitoring_disabled);
@@ -160,10 +159,6 @@ impl AccountManager {
         if !(account.messages().is_empty() && account.total_balance() == 0) {
             return Err(crate::WalletError::MessageNotEmpty);
         }
-        // TODO stronghold
-        /* crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
-            stronghold.account_remove(&account_id_to_stronghold_record_id(account.id())?)
-        })?; */
         crate::storage::with_adapter(&self.storage_path, |storage| storage.remove(account_id))?;
         Ok(())
     }
@@ -216,6 +211,7 @@ impl AccountManager {
     }
 
     /// Import backed up accounts.
+    #[cfg(any(feature = "stronghold", feature = "sqlite"))]
     pub fn import_accounts<P: AsRef<Path>>(&self, source: P) -> crate::Result<()> {
         let backup_stronghold_path = source
             .as_ref()

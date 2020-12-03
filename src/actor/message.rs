@@ -112,8 +112,10 @@ pub enum MessageType {
     /// Backup storage.
     Backup(String),
     /// Import accounts from storage.
+    #[cfg(any(feature = "stronghold", feature = "sqlite"))]
     RestoreBackup(String),
     /// Set stronghold snapshot password.
+    #[cfg(feature = "stronghold")]
     SetStrongholdPassword(String),
     /// Send funds.
     SendTransfer {
@@ -166,9 +168,11 @@ impl Serialize for MessageType {
                 message_id: _,
             } => serializer.serialize_unit_variant("MessageType", 6, "Reattach"),
             MessageType::Backup(_) => serializer.serialize_unit_variant("MessageType", 7, "Backup"),
+            #[cfg(any(feature = "stronghold", feature = "sqlite"))]
             MessageType::RestoreBackup(_) => {
                 serializer.serialize_unit_variant("MessageType", 8, "RestoreBackup")
             }
+            #[cfg(feature = "stronghold")]
             MessageType::SetStrongholdPassword(_) => {
                 serializer.serialize_unit_variant("MessageType", 9, "SetStrongholdPassword")
             }

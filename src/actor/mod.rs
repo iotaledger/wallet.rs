@@ -17,11 +17,12 @@ use crate::{
 };
 use futures::{Future, FutureExt};
 use iota::message::prelude::MessageId;
+#[cfg(any(feature = "stronghold", feature = "sqlite"))]
+use std::path::PathBuf;
 use std::{
     any::Any,
     convert::TryInto,
     panic::{catch_unwind, AssertUnwindSafe},
-    path::PathBuf,
     time::Duration,
 };
 
@@ -33,6 +34,7 @@ pub struct WalletMessageHandler {
     account_manager: AccountManager,
 }
 
+#[cfg(any(feature = "stronghold", feature = "sqlite"))]
 impl Default for WalletMessageHandler {
     fn default() -> Self {
         Self {
@@ -75,6 +77,7 @@ where
 
 impl WalletMessageHandler {
     /// Creates a new instance of the message handler with the default account manager.
+    #[cfg(any(feature = "stronghold", feature = "sqlite"))]
     pub fn new() -> Result<Self> {
         let instance = Self {
             account_manager: AccountManager::new()?,
@@ -83,6 +86,7 @@ impl WalletMessageHandler {
     }
 
     /// Creates a new instance of the message handler with the account manager using the given storage path.
+    #[cfg(any(feature = "stronghold", feature = "sqlite"))]
     pub fn with_storage_path(storage_path: PathBuf) -> Result<Self> {
         let instance = Self {
             account_manager: AccountManager::with_storage_path(storage_path)?,
@@ -122,11 +126,14 @@ impl WalletMessageHandler {
             MessageType::Backup(destination_path) => {
                 convert_panics(|| self.backup(destination_path))
             }
+            #[cfg(any(feature = "stronghold", feature = "sqlite"))]
             MessageType::RestoreBackup(backup_path) => {
                 convert_panics(|| self.restore_backup(backup_path))
             }
+            #[cfg(feature = "stronghold")]
             MessageType::SetStrongholdPassword(password) => {
-                convert_panics(|| self.set_stronghold_password(password))
+                convert_async_panics(|| async { self.set_stronghold_password(password).await })
+                    .await
             }
             MessageType::SendTransfer {
                 account_id,
@@ -164,6 +171,7 @@ impl WalletMessageHandler {
         Ok(ResponseType::BackupSuccessful)
     }
 
+    #[cfg(any(feature = "stronghold", feature = "sqlite"))]
     fn restore_backup(&self, backup_path: &str) -> Result<ResponseType> {
         self.account_manager.import_accounts(backup_path)?;
         Ok(ResponseType::BackupRestored)
@@ -293,8 +301,11 @@ impl WalletMessageHandler {
         Ok(ResponseType::ReadAccounts(accounts))
     }
 
-    fn set_stronghold_password(&mut self, password: &str) -> Result<ResponseType> {
-        self.account_manager.set_stronghold_password(password)?;
+    #[cfg(feature = "stronghold")]
+    async fn set_stronghold_password(&mut self, password: &str) -> Result<ResponseType> {
+        self.account_manager
+            .set_stronghold_password(password)
+            .await?;
         Ok(ResponseType::StrongholdPasswordSet)
     }
 

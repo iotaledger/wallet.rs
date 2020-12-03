@@ -51,7 +51,6 @@ async fn sync_addresses(
     gap_limit: usize,
 ) -> crate::Result<(Vec<Address>, Vec<(MessageId, IotaMessage)>)> {
     let mut address_index = address_index;
-    let account_index = *account.index();
 
     let client = crate::client::get_client(account.client_options());
     let client = client.read().unwrap();
@@ -65,24 +64,12 @@ async fn sync_addresses(
             generated_iota_addresses.push((
                 i,
                 false,
-                crate::address::get_iota_address(
-                    &storage_path,
-                    account.id(),
-                    account_index,
-                    i,
-                    false,
-                )?,
+                crate::address::get_iota_address(&account, i, false)?,
             ));
             generated_iota_addresses.push((
                 i,
                 true,
-                crate::address::get_iota_address(
-                    &storage_path,
-                    account.id(),
-                    account_index,
-                    i,
-                    true,
-                )?,
+                crate::address::get_iota_address(&account, i, true)?,
             ));
         }
 
@@ -486,7 +473,7 @@ impl SyncedAccount {
             self.select_inputs(transfer_obj.amount, &account, &transfer_obj.address)?;
 
         let mut utxos = vec![];
-        // TODO stronghold let mut address_index_recorders = vec![];
+        let mut transaction_inputs = vec![];
 
         for input_address in &input_addresses {
             let address_outputs = input_address.outputs();
@@ -525,12 +512,11 @@ impl SyncedAccount {
             .map_err(|e| anyhow::anyhow!(e.to_string()))?
             .into();
             essence_builder = essence_builder.add_input(input.clone());
-            // TODO stronghold
-            /* address_index_recorders.push(stronghold::AddressIndexRecorder {
+            transaction_inputs.push(crate::signing::TransactionInput {
                 input,
                 address_index,
                 address_path,
-            });*/
+            });
             if current_output_sum == value {
                 // already filled the transfer value; just collect the output value as remainder
                 remainder_value += utxo.amount;
@@ -600,27 +586,19 @@ impl SyncedAccount {
 
         let (parent1, parent2) = client.get_tips().await?;
 
-        // TODO stronghold
-        /*let stronghold_account =
-        crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
-            stronghold.account_get_by_id(&account_id_to_stronghold_record_id(account.id())?)
-        })?;*/
-
         let essence = essence_builder
             .finish()
             .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
-        let tx_builder = Transaction::builder().with_essence(essence);
-        // TODO stronghold
-        /*let unlock_blocks = crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
-            stronghold.get_transaction_unlock_blocks(
-                &account_id_to_stronghold_record_id(account.id())?,
-                &essence,
-                &mut address_index_recorders,
-            )
+
+        let unlock_blocks = crate::signing::with_signer(account.account_type(), |signer| {
+            signer.sign_message(&account, &essence, &mut transaction_inputs)
         })?;
+
+        let mut tx_builder = Transaction::builder().with_essence(essence);
         for unlock_block in unlock_blocks {
             tx_builder = tx_builder.add_unlock_block(unlock_block);
-        }*/
+        }
+
         let transaction = tx_builder
             .finish()
             .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;

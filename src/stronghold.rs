@@ -64,6 +64,36 @@ macro_rules! send_message {
     }};
 }
 
+#[derive(Default)]
+pub struct StrongholdSigner;
+
+impl crate::signing::Signer for StrongholdSigner {
+    /// Initialises an account.
+    fn init_account(&self, account: &Account, mnemonic: Option<String>) -> crate::Result<String> {
+        unimplemented!()
+    }
+
+    /// Generates an address.
+    fn generate_address(
+        &self,
+        account: &Account,
+        index: usize,
+        internal: bool,
+    ) -> crate::Result<iota::Ed25519Address> {
+        unimplemented!()
+    }
+
+    /// Sign message.
+    fn sign_message(
+        &self,
+        account: &Account,
+        essence: &iota::TransactionEssence,
+        inputs: &mut Vec<crate::signing::TransactionInput>,
+    ) -> crate::Result<Vec<iota::UnlockBlock>> {
+        unimplemented!()
+    }
+}
+
 fn set_password<S: AsRef<Path>, P: Into<String>>(snapshot_path: S, password: P) {
     let mut passwords = PASSWORD_STORE.get_or_init(Default::default).lock().unwrap();
     passwords.insert(snapshot_path.as_ref().to_path_buf(), password.into());

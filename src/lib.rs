@@ -31,6 +31,8 @@ pub mod message;
 /// The monitor module.
 pub mod monitor;
 pub(crate) mod serde;
+/// Signing module.
+pub mod signing;
 /// The storage module.
 pub mod storage;
 #[cfg(feature = "stronghold")]
