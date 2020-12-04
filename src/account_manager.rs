@@ -213,72 +213,13 @@ impl AccountManager {
     /// Import backed up accounts.
     #[cfg(any(feature = "stronghold", feature = "sqlite"))]
     pub fn import_accounts<P: AsRef<Path>>(&self, source: P) -> crate::Result<()> {
-        let backup_stronghold_path = source
-            .as_ref()
-            .join(crate::storage::stronghold_snapshot_filename());
-        // TODO stronghold
-        /*let backup_stronghold = stronghold::Stronghold::new(
-            &backup_stronghold_path,
-            false,
-            "password".to_string(),
-            None,
-        )?;*/
-        // TODO stronghold crate::init_stronghold(&source.as_ref().to_path_buf(), backup_stronghold);
+        let backup_account_manager = Self::with_storage_path(source)?;
+        restore_backup(&self, &backup_account_manager)
+    }
 
-        let backup_storage = crate::storage::get_adapter_from_path(&source)?;
-        let accounts = backup_storage.get_all()?;
-        let accounts = crate::storage::parse_accounts(&source.as_ref().to_path_buf(), &accounts)?;
-
-        let stored_accounts =
-            crate::storage::with_adapter(&self.storage_path, |storage| storage.get_all())?;
-        let stored_accounts = crate::storage::parse_accounts(&self.storage_path, &stored_accounts)?;
-
-        let already_imported_account = stored_accounts.iter().find(|stored_account| {
-            stored_account.addresses().iter().any(|stored_address| {
-                accounts.iter().any(|account| {
-                    account
-                        .addresses()
-                        .iter()
-                        .any(|address| address.address() == stored_address.address())
-                })
-            })
-        });
-        if let Some(imported_account) = already_imported_account {
-            return Err(crate::WalletError::AccountAlreadyImported {
-                alias: imported_account.alias().to_string(),
-            });
-        }
-
-        // TODO stronghold
-        /* let backup_stronghold = stronghold::Stronghold::new(
-            &backup_stronghold_path,
-            false,
-            "password".to_string(),
-            None,
-        )?; */
-        for account in accounts.iter() {
-            // TODO stronghold
-            /*let stronghold_account = backup_stronghold
-                .account_get_by_id(&account_id_to_stronghold_record_id(account.id())?)?;
-            let created_at_timestamp: u128 = account.created_at().timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
-            let stronghold_account =
-                crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
-                    stronghold.account_import(
-                        Some(created_at_timestamp),
-                        Some(created_at_timestamp),
-                        stronghold_account.mnemonic().to_string(),
-                        Some("password"),
-                    )
-                });*/
-
-            crate::storage::with_adapter(&self.storage_path, |storage| {
-                storage.set(
-                    account.id().clone().into(),
-                    serde_json::to_string(&account)?,
-                )
-            })?;
-        }
-        Ok(())
+    #[cfg(not(any(feature = "stronghold", feature = "sqlite")))]
+    pub fn import_accounts(&self, backup_manager: &Self) -> crate::Result<()> {
+        restore_backup(&self, &backup_manager)
     }
 
     /// Gets the account associated with the given identifier.
@@ -450,6 +391,41 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
             );
         });
     });
+    Ok(())
+}
+
+fn restore_backup(
+    manager: &AccountManager,
+    backup_account_manager: &AccountManager,
+) -> crate::Result<()> {
+    let backup_accounts = backup_account_manager.get_accounts()?;
+    let stored_accounts = manager.get_accounts()?;
+
+    let already_imported_account = stored_accounts.iter().find(|stored_account| {
+        stored_account.addresses().iter().any(|stored_address| {
+            backup_accounts.iter().any(|account| {
+                account
+                    .addresses()
+                    .iter()
+                    .any(|address| address.address() == stored_address.address())
+            })
+        })
+    });
+    if let Some(imported_account) = already_imported_account {
+        return Err(crate::WalletError::AccountAlreadyImported {
+            alias: imported_account.alias().to_string(),
+        });
+    }
+
+    // TODO: import seed
+    for backup_account in backup_accounts.iter() {
+        crate::storage::with_adapter(manager.storage_path(), |storage| {
+            storage.set(
+                backup_account.id().clone().into(),
+                serde_json::to_string(&backup_account)?,
+            )
+        })?;
+    }
     Ok(())
 }
 
