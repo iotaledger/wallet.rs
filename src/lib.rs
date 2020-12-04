@@ -161,7 +161,7 @@ mod test_utils {
             let storage_path = PathBuf::from(format!("./example-database/{}", storage_path));
 
             let mut manager = AccountManager::with_storage_path(storage_path).unwrap();
-            manager.set_stronghold_password("password").unwrap();
+            crate::block_on(manager.set_stronghold_password("password")).unwrap();
             manager
         })
     }
