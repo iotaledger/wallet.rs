@@ -29,7 +29,7 @@ type AccountInstanceMap = Arc<RwLock<HashMap<String, Arc<RwLock<Account>>>>>;
 fn mutate_account_if_exists<
     F: FnOnce(&Account, &mut Vec<Address>, &mut Vec<Message>) + Send + Sync,
 >(
-    account_id: &String,
+    account_id: &str,
     cb: F,
 ) {
     let map = instances()
