@@ -9,7 +9,7 @@
 // an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and limitations under the License.
 
-use crate::account::{account_id_to_stronghold_record_id, Account};
+use crate::account::Account;
 use crate::message::MessageType;
 use bech32::FromBase32;
 use getset::{Getters, Setters};
@@ -20,7 +20,6 @@ use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::convert::{TryFrom, TryInto};
 use std::hash::{Hash, Hasher};
-use std::path::PathBuf;
 
 /// An Address output.
 #[derive(Debug, Getters, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -206,33 +205,19 @@ pub fn parse(address: String) -> crate::Result<IotaAddress> {
 }
 
 pub(crate) fn get_iota_address(
-    storage_path: &PathBuf,
-    account_id: &str,
-    account_index: usize,
+    account: &Account,
     address_index: usize,
     internal: bool,
 ) -> crate::Result<IotaAddress> {
-    crate::with_stronghold_from_path(&storage_path, |stronghold| {
-        let address_str = stronghold.address_get(
-            &account_id_to_stronghold_record_id(account_id)?,
-            Some(account_index),
-            address_index,
-            internal,
-        )?;
-        parse(address_str)
+    crate::signing::with_signer(account.account_type(), |signer| {
+        signer.generate_address(&account, address_index, internal)
     })
 }
 
 /// Gets an unused public address for the given account.
 pub(crate) fn get_new_address(account: &Account) -> crate::Result<Address> {
     let key_index = account.addresses().iter().filter(|a| !a.internal()).count();
-    let iota_address = get_iota_address(
-        account.storage_path(),
-        account.id(),
-        *account.index(),
-        key_index,
-        false,
-    )?;
+    let iota_address = get_iota_address(&account, key_index, false)?;
     let address = Address {
         address: iota_address,
         balance: 0,
@@ -249,13 +234,7 @@ pub(crate) fn get_new_change_address(
     address: &Address,
 ) -> crate::Result<Address> {
     let key_index = *address.key_index();
-    let iota_address = get_iota_address(
-        account.storage_path(),
-        account.id(),
-        *account.index(),
-        key_index,
-        true,
-    )?;
+    let iota_address = get_iota_address(&account, key_index, true)?;
     let address = Address {
         address: iota_address,
         balance: 0,
