@@ -103,18 +103,11 @@ pub fn monitor_address_balance(account: &Account, address: &IotaAddress) -> crat
     let storage_path = account.storage_path().clone();
     let client_options = account.client_options().clone();
     let address = address.clone();
-    let address_hex = match address {
-        IotaAddress::Ed25519(ref a) => a.to_string(),
-        _ => {
-            return Err(crate::WalletError::GenericError(anyhow::anyhow!(
-                "invalid address type"
-            )))
-        }
-    };
+    let address_bech32 = address.to_bech32();
 
     subscribe_to_topic(
         account.client_options(),
-        format!("addresses/{}/outputs", address_hex),
+        format!("addresses/{}/outputs", address_bech32),
         move |topic_event| {
             let topic_event = topic_event.clone();
             let account_id_raw = account_id_raw.clone();
