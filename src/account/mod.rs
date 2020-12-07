@@ -155,12 +155,6 @@ impl<'a> AccountInitialiser<'a> {
             }
         }
 
-        if mnemonic.is_some() && !accounts.is_empty() {
-            return Err(
-                anyhow::anyhow!("can't set mnemonic because an account already exists").into(),
-            );
-        }
-
         let mut account = Account {
             id: "".to_string(),
             account_type: account_type.clone(),
