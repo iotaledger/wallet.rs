@@ -22,6 +22,8 @@ use slip10::BIP32Path;
 
 mod stronghold;
 use self::stronghold::StrongholdSigner;
+mod env_mnemonic;
+use env_mnemonic::EnvMnemonicSigner;
 
 type BoxedSigner = Box<dyn Signer + Sync + Send>;
 type Signers = Arc<RwLock<HashMap<SignerType, BoxedSigner>>>;
@@ -33,6 +35,8 @@ pub enum SignerType {
     /// Stronghold signer.
     #[cfg(feature = "stronghold")]
     Stronghold,
+    /// Mnemonic through environment variable.
+    EnvMnemonic,
     /// Custom signer with its identifier.
     Custom(String),
 }
@@ -67,7 +71,6 @@ pub trait Signer {
     ) -> crate::Result<Vec<iota::UnlockBlock>>;
 }
 
-#[allow(unused_mut)]
 fn default_signers() -> Signers {
     let mut signers = HashMap::new();
 
@@ -78,6 +81,11 @@ fn default_signers() -> Signers {
             Box::new(StrongholdSigner::default()) as Box<dyn Signer + Sync + Send>,
         );
     }
+
+    signers.insert(
+        SignerType::EnvMnemonic,
+        Box::new(EnvMnemonicSigner::default()) as Box<dyn Signer + Sync + Send>,
+    );
 
     Arc::new(RwLock::new(signers))
 }
