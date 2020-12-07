@@ -12,6 +12,7 @@
 use crate::address::Address;
 use crate::client::ClientOptions;
 use crate::message::{Message, MessageType};
+use crate::signing::{with_signer, SignerType};
 
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
@@ -65,6 +66,7 @@ pub struct AccountInitialiser<'a> {
     client_options: ClientOptions,
     skip_persistance: bool,
     storage_path: &'a PathBuf,
+    signer_type: Option<SignerType>,
 }
 
 impl<'a> AccountInitialiser<'a> {
@@ -79,7 +81,17 @@ impl<'a> AccountInitialiser<'a> {
             client_options,
             skip_persistance: false,
             storage_path,
+            #[cfg(feature = "stronghold")]
+            signer_type: Some(SignerType::Stronghold),
+            #[cfg(not(feature = "stronghold"))]
+            signer_type: None,
         }
+    }
+
+    /// Sets the account's signer type.
+    pub fn signer_type(mut self, signer_type: SignerType) -> Self {
+        self.signer_type.replace(signer_type);
+        self
     }
 
     /// Defines the account BIP-39 mnemonic.
@@ -127,8 +139,10 @@ impl<'a> AccountInitialiser<'a> {
         let alias = self
             .alias
             .unwrap_or_else(|| format!("Account {}", accounts.len()));
+        let signer_type = self
+            .signer_type
+            .ok_or_else(|| anyhow::anyhow!("account signer type is required"))?;
         let created_at = self.created_at.unwrap_or_else(chrono::Utc::now);
-        let created_at_timestamp: u128 = created_at.timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
         let mnemonic = self.mnemonic;
 
         // check for empty latest account only when not skipping persistance (account discovery process)
@@ -141,27 +155,9 @@ impl<'a> AccountInitialiser<'a> {
             }
         }
 
-        let stronghold_account_res: crate::Result<stronghold::Account> =
-            crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
-                let account = match mnemonic {
-                    Some(mnemonic) => stronghold.account_import(
-                        Some(created_at_timestamp),
-                        Some(created_at_timestamp),
-                        mnemonic,
-                        Some("password"),
-                    )?,
-                    None => stronghold.account_create(Some("password".to_string()))?,
-                };
-                Ok(account)
-            });
-        let stronghold_account = stronghold_account_res?;
-
-        let id = stronghold_account.id();
-        let id = hex::encode(id);
-        let account_id: AccountIdentifier = id.clone().into();
-
-        let account = Account {
-            id,
+        let mut account = Account {
+            id: "".to_string(),
+            signer_type: signer_type.clone(),
             index: accounts.len(),
             alias,
             created_at,
@@ -171,6 +167,14 @@ impl<'a> AccountInitialiser<'a> {
             storage_path: self.storage_path.clone(),
             has_pending_changes: false,
         };
+
+        let id = with_signer(&signer_type, |signer| {
+            signer.init_account(&account, mnemonic)
+        })?;
+        account.set_id(id.clone());
+
+        let account_id: AccountIdentifier = id.into();
+
         if !self.skip_persistance {
             crate::storage::with_adapter(&self.storage_path, |storage| {
                 storage.set(account_id, serde_json::to_string(&account)?)
@@ -194,7 +198,10 @@ pub(crate) fn account_id_to_stronghold_record_id(account_id: &str) -> crate::Res
 #[getset(get = "pub")]
 pub struct Account {
     /// The account identifier.
+    #[getset(set = "pub(crate)")]
     id: String,
+    /// The account's signer type.
+    signer_type: SignerType,
     /// The account index
     index: usize,
     /// The account alias.

@@ -162,9 +162,6 @@ impl AccountManager {
         if !(account.messages().is_empty() && account.total_balance() == 0) {
             return Err(crate::WalletError::MessageNotEmpty);
         }
-        crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
-            stronghold.account_remove(&account_id_to_stronghold_record_id(account.id())?)
-        })?;
         crate::storage::with_adapter(&self.storage_path, |storage| storage.remove(account_id))?;
         Ok(())
     }
