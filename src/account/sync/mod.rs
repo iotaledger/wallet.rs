@@ -590,7 +590,7 @@ impl SyncedAccount {
             .finish()
             .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
 
-        let unlock_blocks = crate::signing::with_signer(account.account_type(), |signer| {
+        let unlock_blocks = crate::signing::with_signer(account.signer_type(), |signer| {
             signer.sign_message(&account, &essence, &mut address_index_recorders)
         })?;
         let mut tx_builder = Transaction::builder().with_essence(essence);

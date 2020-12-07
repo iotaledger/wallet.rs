@@ -66,7 +66,7 @@ pub struct AccountInitialiser<'a> {
     client_options: ClientOptions,
     skip_persistance: bool,
     storage_path: &'a PathBuf,
-    account_type: Option<SignerType>,
+    signer_type: Option<SignerType>,
 }
 
 impl<'a> AccountInitialiser<'a> {
@@ -82,15 +82,15 @@ impl<'a> AccountInitialiser<'a> {
             skip_persistance: false,
             storage_path,
             #[cfg(feature = "stronghold")]
-            account_type: Some(SignerType::Stronghold),
+            signer_type: Some(SignerType::Stronghold),
             #[cfg(not(feature = "stronghold"))]
-            account_type: None,
+            signer_type: None,
         }
     }
 
-    /// Sets the account type.
-    pub fn account_type(mut self, account_type: SignerType) -> Self {
-        self.account_type.replace(account_type);
+    /// Sets the account's signer type.
+    pub fn signer_type(mut self, signer_type: SignerType) -> Self {
+        self.signer_type.replace(signer_type);
         self
     }
 
@@ -139,9 +139,9 @@ impl<'a> AccountInitialiser<'a> {
         let alias = self
             .alias
             .unwrap_or_else(|| format!("Account {}", accounts.len()));
-        let account_type = self
-            .account_type
-            .ok_or_else(|| anyhow::anyhow!("account type is required"))?;
+        let signer_type = self
+            .signer_type
+            .ok_or_else(|| anyhow::anyhow!("account signer type is required"))?;
         let created_at = self.created_at.unwrap_or_else(chrono::Utc::now);
         let mnemonic = self.mnemonic;
 
@@ -157,7 +157,7 @@ impl<'a> AccountInitialiser<'a> {
 
         let mut account = Account {
             id: "".to_string(),
-            account_type: account_type.clone(),
+            signer_type: signer_type.clone(),
             index: accounts.len(),
             alias,
             created_at,
@@ -168,7 +168,7 @@ impl<'a> AccountInitialiser<'a> {
             has_pending_changes: false,
         };
 
-        let id = with_signer(&account_type, |signer| {
+        let id = with_signer(&signer_type, |signer| {
             signer.init_account(&account, mnemonic)
         })?;
         account.set_id(id.clone());
@@ -200,8 +200,8 @@ pub struct Account {
     /// The account identifier.
     #[getset(set = "pub(crate)")]
     id: String,
-    /// The account type.
-    account_type: SignerType,
+    /// The account's signer type.
+    signer_type: SignerType,
     /// The account index
     index: usize,
     /// The account alias.

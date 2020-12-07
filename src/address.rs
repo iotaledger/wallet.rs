@@ -209,7 +209,7 @@ pub(crate) fn get_iota_address(
     address_index: usize,
     internal: bool,
 ) -> crate::Result<IotaAddress> {
-    crate::signing::with_signer(account.account_type(), |signer| {
+    crate::signing::with_signer(account.signer_type(), |signer| {
         signer.generate_address(&account, address_index, internal)
     })
 }
