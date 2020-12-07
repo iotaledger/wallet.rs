@@ -47,7 +47,7 @@ pub trait Signer {
         index: usize,
         internal: bool,
     ) -> crate::Result<iota::Address>;
-    /// Sign message.
+    /// Signs message.
     fn sign_message(
         &self,
         account: &Account,
@@ -80,7 +80,7 @@ pub fn set_signer<S: Signer + Sync + Send + 'static>(signer_type: SignerType, si
     instances.insert(signer_type, Box::new(signer));
 }
 
-/// gets the signer interface.
+/// Gets the signer interface.
 pub(crate) fn with_signer<T, F: FnOnce(&BoxedSigner) -> T>(signer_type: &SignerType, cb: F) -> T {
     let instances = SIGNER_INSTANCES
         .get_or_init(default_signers)
