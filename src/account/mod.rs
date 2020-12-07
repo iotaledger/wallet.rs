@@ -173,7 +173,7 @@ impl<'a> AccountInitialiser<'a> {
         })?;
         account.set_id(id.clone());
 
-        let account_id: AccountIdentifier = id.clone().into();
+        let account_id: AccountIdentifier = id.into();
 
         if !self.skip_persistance {
             crate::storage::with_adapter(&self.storage_path, |storage| {
