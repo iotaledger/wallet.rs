@@ -10,8 +10,8 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 use std::{
-  collections::HashMap,
-  sync::{Arc, RwLock},
+    collections::HashMap,
+    sync::{Arc, RwLock},
 };
 
 use crate::account::Account;
@@ -30,21 +30,21 @@ static SIGNERS_INSTANCE: OnceCell<Signers> = OnceCell::new();
 /// The signer types.
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum SignerType {
-  /// Stronghold signer.
-  #[cfg(feature = "stronghold")]
-  Stronghold,
-  /// Custom signer with its identifier.
-  Custom(String),
+    /// Stronghold signer.
+    #[cfg(feature = "stronghold")]
+    Stronghold,
+    /// Custom signer with its identifier.
+    Custom(String),
 }
 
 /// One of the transaction inputs and its address information needed for signing it.
 pub struct TransactionInput {
-  /// The input.
-  pub input: Input,
-  /// Input's address index.
-  pub address_index: usize,
-  /// Input's address BIP32 derivation path.
-  pub address_path: BIP32Path,
+    /// The input.
+    pub input: Input,
+    /// Input's address index.
+    pub address_index: usize,
+    /// Input's address BIP32 derivation path.
+    pub address_path: BIP32Path,
 }
 
 /// Signer interface.
@@ -69,37 +69,37 @@ pub trait Signer {
 
 #[allow(unused_mut)]
 fn default_signers() -> Signers {
-  let mut signers = HashMap::new();
+    let mut signers = HashMap::new();
 
-  #[cfg(feature = "stronghold")]
-  {
-    signers.insert(
-      SignerType::Stronghold,
-      Box::new(StrongholdSigner::default()) as Box<dyn Signer + Sync + Send>,
-    );
-  }
+    #[cfg(feature = "stronghold")]
+    {
+        signers.insert(
+            SignerType::Stronghold,
+            Box::new(StrongholdSigner::default()) as Box<dyn Signer + Sync + Send>,
+        );
+    }
 
-  Arc::new(RwLock::new(signers))
+    Arc::new(RwLock::new(signers))
 }
 
 /// Sets the signer interface for the given type.
 pub fn set_signer<S: Signer + Sync + Send + 'static>(signer_type: SignerType, signer: S) {
-  let mut instances = SIGNERS_INSTANCE
-    .get_or_init(default_signers)
-    .write()
-    .unwrap();
-  instances.insert(signer_type, Box::new(signer));
+    let mut instances = SIGNERS_INSTANCE
+        .get_or_init(default_signers)
+        .write()
+        .unwrap();
+    instances.insert(signer_type, Box::new(signer));
 }
 
 /// Gets the signer interface.
 pub(crate) fn with_signer<T, F: FnOnce(&BoxedSigner) -> T>(signer_type: &SignerType, cb: F) -> T {
-  let instances = SIGNERS_INSTANCE
-    .get_or_init(default_signers)
-    .read()
-    .unwrap();
-  if let Some(instance) = instances.get(signer_type) {
-    cb(instance)
-  } else {
-    panic!(format!("signer not initialized for type {:?}", signer_type))
-  }
+    let instances = SIGNERS_INSTANCE
+        .get_or_init(default_signers)
+        .read()
+        .unwrap();
+    if let Some(instance) = instances.get(signer_type) {
+        cb(instance)
+    } else {
+        panic!(format!("signer not initialized for type {:?}", signer_type))
+    }
 }
