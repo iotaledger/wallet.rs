@@ -1,13 +1,5 @@
 // Copyright 2020 IOTA Stiftung
-//
-// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
-// the License. You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-// an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 use getset::Getters;
 pub use iota::client::builder::Network;
@@ -16,8 +8,10 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex, RwLock};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex, RwLock},
+};
 
 type ClientInstanceMap = Arc<Mutex<HashMap<ClientOptions, Arc<RwLock<Client>>>>>;
 
@@ -54,9 +48,7 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
             client_builder = client_builder.quorum_size(*quorum_size);
         }
 
-        let client = client_builder
-            .build()
-            .expect("failed to initialise ClientBuilder");
+        let client = client_builder.build().expect("failed to initialise ClientBuilder");
 
         map.insert(options.clone(), Arc::new(RwLock::new(client)));
     }
@@ -201,8 +193,8 @@ impl ClientOptionsBuilder {
     /// ```
     /// use iota_wallet::client::ClientOptionsBuilder;
     /// let client_options = ClientOptionsBuilder::node("https://tangle.iotaqubic.us:14267")
-    ///   .expect("invalid node URL")
-    ///   .build();
+    ///     .expect("invalid node URL")
+    ///     .build();
     /// ```
     pub fn node(node: &str) -> crate::Result<SingleNodeClientOptionsBuilder> {
         SingleNodeClientOptionsBuilder::new(node)
@@ -213,9 +205,10 @@ impl ClientOptionsBuilder {
     /// # Examples
     /// ```
     /// use iota_wallet::client::ClientOptionsBuilder;
-    /// let client_options = ClientOptionsBuilder::nodes(&["https://tangle.iotaqubic.us:14267", "https://gewirr.com:14267/"])
-    ///   .expect("invalid nodes URLs")
-    ///   .build();
+    /// let client_options =
+    ///     ClientOptionsBuilder::nodes(&["https://tangle.iotaqubic.us:14267", "https://gewirr.com:14267/"])
+    ///         .expect("invalid nodes URLs")
+    ///         .build();
     /// ```
     pub fn nodes(nodes: &[&str]) -> crate::Result<MultiNodeClientOptionsBuilder> {
         MultiNodeClientOptionsBuilder::with_nodes(nodes)
@@ -226,8 +219,7 @@ impl ClientOptionsBuilder {
     /// # Examples
     /// ```
     /// use iota_wallet::client::{ClientOptionsBuilder, Network};
-    /// let client_options = ClientOptionsBuilder::network(Network::Devnet)
-    ///   .build();
+    /// let client_options = ClientOptionsBuilder::network(Network::Devnet).build();
     /// ```
     pub fn network(network: Network) -> MultiNodeClientOptionsBuilder {
         MultiNodeClientOptionsBuilder::with_network(network)

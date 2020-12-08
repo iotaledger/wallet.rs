@@ -1,24 +1,12 @@
 // Copyright 2020 IOTA Stiftung
-//
-// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
-// the License. You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-// an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 use crate::address::Address;
 use rand::{thread_rng, Rng};
 use std::convert::TryInto;
 
 pub fn select_input(target: u64, available_utxos: &mut [Address]) -> crate::Result<Vec<Address>> {
-    if target
-        > available_utxos
-            .iter()
-            .fold(0, |acc, address| acc + address.balance())
-    {
+    if target > available_utxos.iter().fold(0, |acc, address| acc + address.balance()) {
         return Err(crate::WalletError::InsufficientFunds);
     }
 
@@ -149,9 +137,7 @@ mod tests {
             let sum_utxos_picked = sum_random_utxos(&mut rng, &mut available_utxos);
             let selected = select_input(sum_utxos_picked, &mut available_utxos).unwrap();
             assert_eq!(
-                selected
-                    .iter()
-                    .fold(0, |acc, address| { acc + address.balance() }),
+                selected.iter().fold(0, |acc, address| { acc + address.balance() }),
                 sum_utxos_picked
             );
         }
@@ -162,10 +148,7 @@ mod tests {
         let seed: &[_] = &[1, 2, 3, 4];
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         let mut available_utxos = generate_random_utxos(&mut rng, 30);
-        let target = available_utxos
-            .iter()
-            .fold(0, |acc, address| acc + address.balance())
-            + 1;
+        let target = available_utxos.iter().fold(0, |acc, address| acc + address.balance()) + 1;
         let response = select_input(target, &mut available_utxos);
         assert!(response.is_err());
     }
@@ -176,9 +159,7 @@ mod tests {
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         for _ in 0..20 {
             let mut available_utxos = generate_random_utxos(&mut rng, 30);
-            let sum_utxos = available_utxos
-                .iter()
-                .fold(0, |acc, address| acc + address.balance());
+            let sum_utxos = available_utxos.iter().fold(0, |acc, address| acc + address.balance());
             let target = rng.gen_range(sum_utxos / 2, sum_utxos * 2);
             let response = select_input(target, &mut available_utxos);
             if target > sum_utxos {
@@ -186,12 +167,7 @@ mod tests {
             } else {
                 assert!(response.is_ok());
                 let selected = response.unwrap();
-                assert!(
-                    selected
-                        .into_iter()
-                        .fold(0, |acc, address| acc + address.balance())
-                        >= target
-                );
+                assert!(selected.into_iter().fold(0, |acc, address| acc + address.balance()) >= target);
             }
         }
     }

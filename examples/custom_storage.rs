@@ -1,18 +1,9 @@
 // Copyright 2020 IOTA Stiftung
-//
-// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
-// the License. You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-// an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
-///! An example of using a custom storage adapter (in this case, using sled).
+/// ! An example of using a custom storage adapter (in this case, using sled).
 use iota_wallet::{
-    account::AccountIdentifier, account_manager::AccountManager, client::ClientOptionsBuilder,
-    storage::StorageAdapter,
+    account::AccountIdentifier, account_manager::AccountManager, client::ClientOptionsBuilder, storage::StorageAdapter,
 };
 use sled::Db;
 use std::path::Path;
@@ -23,9 +14,7 @@ struct MyStorage {
 
 impl MyStorage {
     pub fn new<P: AsRef<Path>>(path: P) -> anyhow::Result<Self> {
-        let instance = Self {
-            db: sled::open(path)?,
-        };
+        let instance = Self { db: sled::open(path)? };
         Ok(instance)
     }
 }
@@ -70,20 +59,16 @@ impl StorageAdapter for MyStorage {
     }
 }
 
-fn main() -> iota_wallet::Result<()> {
-    let mut manager = AccountManager::with_storage_adapter(
-        "./example-database/sled",
-        MyStorage::new("./example-database/sled")?,
-    )
-    .unwrap();
-    manager.set_stronghold_password("password").unwrap();
+#[tokio::main]
+async fn main() -> iota_wallet::Result<()> {
+    let mut manager =
+        AccountManager::with_storage_adapter("./example-database/sled", MyStorage::new("./example-database/sled")?)
+            .unwrap();
+    manager.set_stronghold_password("password").await.unwrap();
 
     // first we'll create an example account
     let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")?.build();
-    manager
-        .create_account(client_options)
-        .alias("alias")
-        .initialise()?;
+    manager.create_account(client_options).alias("alias").initialise()?;
 
     Ok(())
 }

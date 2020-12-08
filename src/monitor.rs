@@ -1,24 +1,17 @@
 // Copyright 2020 IOTA Stiftung
-//
-// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
-// the License. You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-// an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
-use crate::account::{Account, AccountIdentifier};
-use crate::address::{Address, AddressOutput, IotaAddress};
-use crate::client::ClientOptions;
-use crate::message::{Message, MessageType};
+use crate::{
+    account::{Account, AccountIdentifier},
+    address::{Address, AddressOutput, IotaAddress},
+    client::ClientOptions,
+    message::{Message, MessageType},
+};
 
 use iota::{message::prelude::MessageId, MessageMetadata, OutputMetadata, Topic, TopicEvent};
 use serde::Deserialize;
 
-use std::convert::TryInto;
-use std::path::PathBuf;
+use std::{convert::TryInto, path::PathBuf};
 
 #[derive(Deserialize)]
 struct AddressOutputPayload {
@@ -68,9 +61,7 @@ fn mutate_account<F: FnOnce(&Account, &mut Vec<Address>, &mut Vec<Message>)>(
     account.set_addresses(addresses);
     account.set_messages(messages);
     let account_str = serde_json::to_string(&account)?;
-    crate::storage::with_adapter(&storage_path, |storage| {
-        storage.set(account_id.clone(), account_str)
-    })?;
+    crate::storage::with_adapter(&storage_path, |storage| storage.set(account_id.clone(), account_str))?;
     Ok(())
 }
 
@@ -81,10 +72,7 @@ fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
 ) -> crate::Result<()> {
     let client = crate::client::get_client(&client_options);
     let mut client = client.write().unwrap();
-    client
-        .subscriber()
-        .topic(Topic::new(topic)?)
-        .subscribe(handler)?;
+    client.subscriber().topic(Topic::new(topic)?).subscribe(handler)?;
     Ok(())
 }
 
@@ -103,18 +91,11 @@ pub fn monitor_address_balance(account: &Account, address: &IotaAddress) -> crat
     let storage_path = account.storage_path().clone();
     let client_options = account.client_options().clone();
     let address = address.clone();
-    let address_hex = match address {
-        IotaAddress::Ed25519(ref a) => a.to_string(),
-        _ => {
-            return Err(crate::WalletError::GenericError(anyhow::anyhow!(
-                "invalid address type"
-            )))
-        }
-    };
+    let address_bech32 = address.to_bech32();
 
     subscribe_to_topic(
         account.client_options(),
-        format!("addresses/{}/outputs", address_hex),
+        format!("addresses/{}/outputs", address_bech32),
         move |topic_event| {
             let topic_event = topic_event.clone();
             let account_id_raw = account_id_raw.clone();
@@ -150,8 +131,7 @@ async fn process_output(
     let account_id = account_id_raw.clone().into();
     let metadata = OutputMetadata {
         message_id: hex::decode(output.message_id).map_err(|e| anyhow::anyhow!(e.to_string()))?,
-        transaction_id: hex::decode(output.transaction_id)
-            .map_err(|e| anyhow::anyhow!(e.to_string()))?,
+        transaction_id: hex::decode(output.transaction_id).map_err(|e| anyhow::anyhow!(e.to_string()))?,
         output_index: output.output_index,
         is_spent: output.is_spent,
         amount: output.output.amount,
@@ -169,16 +149,9 @@ async fn process_output(
 
     let message_id_ = *message_id;
     mutate_account(&account_id, &storage_path, |acc, addresses, messages| {
-        let address_to_update = addresses
-            .iter_mut()
-            .find(|a| a.address() == &address)
-            .unwrap();
+        let address_to_update = addresses.iter_mut().find(|a| a.address() == &address).unwrap();
         address_to_update.handle_new_output(address_output);
-        crate::event::emit_balance_change(
-            account_id_raw.clone(),
-            &address_to_update,
-            *address_to_update.balance(),
-        );
+        crate::event::emit_balance_change(account_id_raw.clone(), &address_to_update, *address_to_update.balance());
 
         match messages.iter().position(|m| m.id() == &message_id_) {
             Some(message_index) => {
@@ -186,8 +159,7 @@ async fn process_output(
                 message.set_confirmed(true);
             }
             None => {
-                let message =
-                    Message::from_iota_message(message_id_, &addresses, &message).unwrap();
+                let message = Message::from_iota_message(message_id_, &addresses, &message).unwrap();
                 crate::event::emit_transaction_event(
                     crate::event::TransactionEventType::NewTransaction,
                     account_id_raw,
@@ -209,10 +181,7 @@ pub fn monitor_unconfirmed_messages(account: &Account) -> crate::Result<()> {
 }
 
 /// Monitor message for confirmation state.
-pub fn monitor_confirmation_state_change(
-    account: &Account,
-    message_id: &MessageId,
-) -> crate::Result<()> {
+pub fn monitor_confirmation_state_change(account: &Account, message_id: &MessageId) -> crate::Result<()> {
     let account_id_raw = account.id().clone();
     let account_id: AccountIdentifier = account.id().into();
     let storage_path = account.storage_path().clone();
@@ -249,8 +218,7 @@ fn process_metadata(
 ) -> crate::Result<()> {
     let account_id: AccountIdentifier = account_id_raw.clone().into();
     let metadata: MessageMetadata = serde_json::from_str(&payload)?;
-    let confirmed =
-        !(metadata.should_promote.unwrap_or(true) || metadata.should_reattach.unwrap_or(true));
+    let confirmed = !(metadata.should_promote.unwrap_or(true) || metadata.should_reattach.unwrap_or(true));
     if confirmed && !message.confirmed() {
         mutate_account(&account_id, &storage_path, |account, _, messages| {
             let message = messages.iter_mut().find(|m| m.id() == &message_id).unwrap();

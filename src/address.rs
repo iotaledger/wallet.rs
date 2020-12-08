@@ -1,25 +1,20 @@
 // Copyright 2020 IOTA Stiftung
-//
-// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
-// the License. You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-// an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
-use crate::account::Account;
-use crate::message::MessageType;
+use crate::{account::Account, message::MessageType};
 use bech32::FromBase32;
 use getset::{Getters, Setters};
 pub use iota::message::prelude::{Address as IotaAddress, Ed25519Address};
-use iota::message::prelude::{MessageId, TransactionId};
-use iota::OutputMetadata;
+use iota::{
+    message::prelude::{MessageId, TransactionId},
+    OutputMetadata,
+};
 use serde::{Deserialize, Serialize};
-use std::cmp::Ordering;
-use std::convert::{TryFrom, TryInto};
-use std::hash::{Hash, Hasher};
+use std::{
+    cmp::Ordering,
+    convert::{TryFrom, TryInto},
+    hash::{Hash, Hasher},
+};
 
 /// An Address output.
 #[derive(Debug, Getters, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -204,21 +199,16 @@ pub fn parse(address: String) -> crate::Result<IotaAddress> {
     Ok(iota_address)
 }
 
-pub(crate) fn get_iota_address(
-    account: &Account,
-    address_index: usize,
-    internal: bool,
-) -> crate::Result<IotaAddress> {
-    crate::signing::with_signer(account.account_type(), |signer| {
-        let address = signer.generate_address(account, address_index, internal)?;
-        Ok(IotaAddress::Ed25519(address))
+pub(crate) fn get_iota_address(account: &Account, address_index: usize, internal: bool) -> crate::Result<IotaAddress> {
+    crate::signing::with_signer(account.signer_type(), |signer| {
+        signer.generate_address(&account, address_index, internal)
     })
 }
 
 /// Gets an unused public address for the given account.
 pub(crate) fn get_new_address(account: &Account) -> crate::Result<Address> {
     let key_index = account.addresses().iter().filter(|a| !a.internal()).count();
-    let iota_address = get_iota_address(account, key_index, false)?;
+    let iota_address = get_iota_address(&account, key_index, false)?;
     let address = Address {
         address: iota_address,
         balance: 0,
@@ -230,12 +220,9 @@ pub(crate) fn get_new_address(account: &Account) -> crate::Result<Address> {
 }
 
 /// Gets an unused change address for the given account and address.
-pub(crate) fn get_new_change_address(
-    account: &Account,
-    address: &Address,
-) -> crate::Result<Address> {
+pub(crate) fn get_new_change_address(account: &Account, address: &Address) -> crate::Result<Address> {
     let key_index = *address.key_index();
-    let iota_address = get_iota_address(account, key_index, true)?;
+    let iota_address = get_iota_address(&account, key_index, true)?;
     let address = Address {
         address: iota_address,
         balance: 0,

@@ -1,13 +1,5 @@
 // Copyright 2020 IOTA Stiftung
-//
-// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
-// the License. You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-// an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 use crate::{
     account::AccountIdentifier,
@@ -52,10 +44,7 @@ fn panic_to_response_message(panic: Box<dyn Any>) -> Result<ResponseType> {
         "Internal error".to_string()
     };
     let current_backtrace = backtrace::Backtrace::new();
-    Ok(ResponseType::Panic(format!(
-        "{}\n\n{:?}",
-        msg, current_backtrace
-    )))
+    Ok(ResponseType::Panic(format!("{}\n\n{:?}", msg, current_backtrace)))
 }
 
 fn convert_panics<F: FnOnce() -> Result<ResponseType>>(f: F) -> Result<ResponseType> {
@@ -102,56 +91,34 @@ impl WalletMessageHandler {
     /// Handles a message.
     pub async fn handle(&mut self, message: Message) {
         let response: Result<ResponseType> = match message.message_type() {
-            MessageType::RemoveAccount(account_id) => {
-                convert_panics(|| self.remove_account(account_id))
-            }
+            MessageType::RemoveAccount(account_id) => convert_panics(|| self.remove_account(account_id)),
             MessageType::CreateAccount(account) => convert_panics(|| self.create_account(account)),
             MessageType::GetAccount(account_id) => convert_panics(|| self.get_account(account_id)),
             MessageType::GetAccounts => convert_panics(|| self.get_accounts()),
             MessageType::CallAccountMethod { account_id, method } => {
-                convert_async_panics(|| async {
-                    self.call_account_method(account_id, method).await
-                })
-                .await
+                convert_async_panics(|| async { self.call_account_method(account_id, method).await }).await
             }
-            MessageType::SyncAccounts => {
-                convert_async_panics(|| async { self.sync_accounts().await }).await
-            }
-            MessageType::Reattach {
-                account_id,
-                message_id,
-            } => {
+            MessageType::SyncAccounts => convert_async_panics(|| async { self.sync_accounts().await }).await,
+            MessageType::Reattach { account_id, message_id } => {
                 convert_async_panics(|| async { self.reattach(account_id, message_id).await }).await
             }
-            MessageType::Backup(destination_path) => {
-                convert_panics(|| self.backup(destination_path))
-            }
+            MessageType::Backup(destination_path) => convert_panics(|| self.backup(destination_path)),
             #[cfg(any(feature = "stronghold", feature = "sqlite"))]
-            MessageType::RestoreBackup(backup_path) => {
-                convert_panics(|| self.restore_backup(backup_path))
-            }
+            MessageType::RestoreBackup(backup_path) => convert_panics(|| self.restore_backup(backup_path)),
             #[cfg(feature = "stronghold")]
             MessageType::SetStrongholdPassword(password) => {
-                convert_async_panics(|| async { self.set_stronghold_password(password).await })
-                    .await
+                convert_async_panics(|| async { self.set_stronghold_password(password).await }).await
             }
-            MessageType::SendTransfer {
-                account_id,
-                transfer,
-            } => {
-                convert_async_panics(|| async { self.send_transfer(account_id, transfer).await })
-                    .await
+            MessageType::SendTransfer { account_id, transfer } => {
+                convert_async_panics(|| async { self.send_transfer(account_id, transfer).await }).await
             }
             MessageType::InternalTransfer {
                 from_account_id,
                 to_account_id,
                 amount,
             } => {
-                convert_async_panics(|| async {
-                    self.internal_transfer(from_account_id, to_account_id, *amount)
-                        .await
-                })
-                .await
+                convert_async_panics(|| async { self.internal_transfer(from_account_id, to_account_id, *amount).await })
+                    .await
             }
         };
 
@@ -159,11 +126,9 @@ impl WalletMessageHandler {
             Ok(r) => r,
             Err(e) => ResponseType::Error(e),
         };
-        let _ = message.response_tx.send(Response::new(
-            message.id().to_string(),
-            message.message_type,
-            response,
-        ));
+        let _ = message
+            .response_tx
+            .send(Response::new(message.id().to_string(), message.message_type, response));
     }
 
     fn backup(&self, destination_path: &str) -> Result<ResponseType> {
@@ -177,11 +142,7 @@ impl WalletMessageHandler {
         Ok(ResponseType::BackupRestored)
     }
 
-    async fn reattach(
-        &self,
-        account_id: &AccountIdentifier,
-        message_id: &str,
-    ) -> Result<ResponseType> {
+    async fn reattach(&self, account_id: &AccountIdentifier, message_id: &str) -> Result<ResponseType> {
         let parsed_message_id = MessageId::new(
             message_id.as_bytes()[..]
                 .try_into()
@@ -222,22 +183,12 @@ impl WalletMessageHandler {
                 Ok(ResponseType::Messages(messages))
             }
             AccountMethod::ListAddresses { unspent } => {
-                let addresses = account
-                    .list_addresses(*unspent)
-                    .into_iter()
-                    .cloned()
-                    .collect();
+                let addresses = account.list_addresses(*unspent).into_iter().cloned().collect();
                 Ok(ResponseType::Addresses(addresses))
             }
-            AccountMethod::GetAvailableBalance => {
-                Ok(ResponseType::AvailableBalance(account.available_balance()))
-            }
-            AccountMethod::GetTotalBalance => {
-                Ok(ResponseType::TotalBalance(account.total_balance()))
-            }
-            AccountMethod::GetLatestAddress => Ok(ResponseType::LatestAddress(
-                account.latest_address().cloned(),
-            )),
+            AccountMethod::GetAvailableBalance => Ok(ResponseType::AvailableBalance(account.available_balance())),
+            AccountMethod::GetTotalBalance => Ok(ResponseType::TotalBalance(account.total_balance())),
+            AccountMethod::GetLatestAddress => Ok(ResponseType::LatestAddress(account.latest_address().cloned())),
             AccountMethod::SyncAccount {
                 address_index,
                 gap_limit,
@@ -270,9 +221,7 @@ impl WalletMessageHandler {
 
     /// The create account message handler.
     fn create_account(&self, account: &AccountToCreate) -> Result<ResponseType> {
-        let mut builder = self
-            .account_manager
-            .create_account(account.client_options.clone());
+        let mut builder = self.account_manager.create_account(account.client_options.clone());
 
         if let Some(mnemonic) = &account.mnemonic {
             builder = builder.mnemonic(mnemonic);
@@ -303,17 +252,11 @@ impl WalletMessageHandler {
 
     #[cfg(feature = "stronghold")]
     async fn set_stronghold_password(&mut self, password: &str) -> Result<ResponseType> {
-        self.account_manager
-            .set_stronghold_password(password)
-            .await?;
+        self.account_manager.set_stronghold_password(password).await?;
         Ok(ResponseType::StrongholdPasswordSet)
     }
 
-    async fn send_transfer(
-        &self,
-        account_id: &AccountIdentifier,
-        transfer: &Transfer,
-    ) -> Result<ResponseType> {
+    async fn send_transfer(&self, account_id: &AccountIdentifier, transfer: &Transfer) -> Result<ResponseType> {
         let mut account = self.account_manager.get_account(account_id.clone())?;
         let synced = account.sync().execute().await?;
         let message = synced.transfer(transfer.clone()).await?.message;
@@ -337,9 +280,7 @@ impl WalletMessageHandler {
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        AccountToCreate, Message, MessageType, Response, ResponseType, WalletMessageHandler,
-    };
+    use super::{AccountToCreate, Message, MessageType, Response, ResponseType, WalletMessageHandler};
     use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
     /// The wallet actor builder.
@@ -371,8 +312,7 @@ mod tests {
         pub fn build(self) -> Wallet {
             Wallet {
                 rx: self.rx.expect("rx is required"),
-                message_handler: WalletMessageHandler::new()
-                    .expect("failed to initialise account manager"),
+                message_handler: WalletMessageHandler::new().expect("failed to initialise account manager"),
             }
         }
     }
@@ -417,22 +357,13 @@ mod tests {
 
         // create an account
         let account = AccountToCreate::default();
-        send_message(
-            &tx,
-            MessageType::SetStrongholdPassword("password".to_string()),
-        )
-        .await;
+        send_message(&tx, MessageType::SetStrongholdPassword("password".to_string())).await;
         let response = send_message(&tx, MessageType::CreateAccount(account)).await;
         match response.response() {
             ResponseType::CreatedAccount(created_account) => {
                 // remove the created account
-                let response =
-                    send_message(&tx, MessageType::RemoveAccount(created_account.id().into()))
-                        .await;
-                assert!(matches!(
-                    response.response(),
-                    ResponseType::RemovedAccount(_)
-                ));
+                let response = send_message(&tx, MessageType::RemoveAccount(created_account.id().into())).await;
+                assert!(matches!(response.response(), ResponseType::RemovedAccount(_)));
             }
             _ => panic!("unexpected response"),
         }
