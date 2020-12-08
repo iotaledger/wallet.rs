@@ -1,13 +1,5 @@
 // Copyright 2020 IOTA Stiftung
-//
-// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
-// the License. You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-// an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 use crate::address::{Address, IotaAddress};
 use chrono::prelude::{DateTime, Utc};
@@ -15,9 +7,11 @@ use getset::{Getters, Setters};
 pub use iota::message::prelude::{Message as IotaMessage, MessageId, Output, Payload};
 use serde::{Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
-use std::cmp::Ordering;
-use std::fmt;
-use std::hash::{Hash, Hasher};
+use std::{
+    cmp::Ordering,
+    fmt,
+    hash::{Hash, Hasher},
+};
 
 /// A transaction tag.
 #[derive(Debug, Clone)]
@@ -261,8 +255,7 @@ impl Message {
     pub(crate) fn is_above_max_depth(&self) -> bool {
         let current_timestamp = Utc::now().timestamp();
         let attachment_timestamp = self.timestamp.timestamp();
-        attachment_timestamp < current_timestamp
-            && current_timestamp - attachment_timestamp < 11 * 60 * 1000
+        attachment_timestamp < current_timestamp && current_timestamp - attachment_timestamp < 11 * 60 * 1000
     }
 
     /// The message's addresses.
@@ -285,11 +278,7 @@ impl Message {
     }
 
     /// Gets the absolute value of the transaction.
-    pub fn compute_value(
-        iota_message: &IotaMessage,
-        id: &MessageId,
-        account_addresses: &[Address],
-    ) -> Value {
+    pub fn compute_value(iota_message: &IotaMessage, id: &MessageId, account_addresses: &[Address]) -> Value {
         let amount = match iota_message.payload().as_ref().unwrap() {
             Payload::Transaction(tx) => {
                 let sent = !account_addresses
@@ -297,8 +286,7 @@ impl Message {
                     .any(|address| address.outputs().iter().any(|o| o.message_id() == id));
                 tx.essence().outputs().iter().fold(0, |acc, output| {
                     if let Output::SignatureLockedSingle(x) = output {
-                        let address_belongs_to_account =
-                            account_addresses.iter().any(|a| a.address() == x.address());
+                        let address_belongs_to_account = account_addresses.iter().any(|a| a.address() == x.address());
                         if sent {
                             if address_belongs_to_account {
                                 acc

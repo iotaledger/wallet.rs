@@ -1,13 +1,5 @@
 // Copyright 2020 IOTA Stiftung
-//
-// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
-// the License. You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-// an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 //! The IOTA Wallet Library
 
@@ -40,9 +32,11 @@ pub mod storage;
 pub type Result<T> = std::result::Result<T, WalletError>;
 pub use chrono::prelude::{DateTime, Utc};
 use once_cell::sync::OnceCell;
-use std::collections::HashMap;
-use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::HashMap,
+    path::PathBuf,
+    sync::{Arc, Mutex},
+};
 use stronghold::Stronghold;
 use tokio::runtime::Runtime;
 
@@ -119,9 +113,7 @@ pub enum WalletError {
     #[error("message has history or balance")]
     MessageNotEmpty,
     /// Latest account is empty (doesn't have history and balance) - can't create account.
-    #[error(
-        "can't create accounts when the latest account doesn't have message history and balance"
-    )]
+    #[error("can't create accounts when the latest account doesn't have message history and balance")]
     LatestAccountIsEmpty,
     /// Transfer amount can't be zero.
     #[error("transfer amount can't be zero")]
@@ -142,29 +134,17 @@ impl Drop for WalletError {
 }
 
 pub(crate) fn init_stronghold(stronghold_path: &PathBuf, stronghold: Stronghold) {
-    let mut stronghold_map = STRONGHOLD_INSTANCE
-        .get_or_init(Default::default)
-        .lock()
-        .unwrap();
+    let mut stronghold_map = STRONGHOLD_INSTANCE.get_or_init(Default::default).lock().unwrap();
     stronghold_map.insert(stronghold_path.to_path_buf(), stronghold);
 }
 
 pub(crate) fn remove_stronghold(stronghold_path: PathBuf) {
-    let mut stronghold_map = STRONGHOLD_INSTANCE
-        .get_or_init(Default::default)
-        .lock()
-        .unwrap();
+    let mut stronghold_map = STRONGHOLD_INSTANCE.get_or_init(Default::default).lock().unwrap();
     stronghold_map.remove(&stronghold_path);
 }
 
-pub(crate) fn with_stronghold_from_path<T, F: FnOnce(&Stronghold) -> T>(
-    path: &PathBuf,
-    cb: F,
-) -> T {
-    let stronghold_map = STRONGHOLD_INSTANCE
-        .get_or_init(Default::default)
-        .lock()
-        .unwrap();
+pub(crate) fn with_stronghold_from_path<T, F: FnOnce(&Stronghold) -> T>(path: &PathBuf, cb: F) -> T {
+    let stronghold_map = STRONGHOLD_INSTANCE.get_or_init(Default::default).lock().unwrap();
     if let Some(stronghold) = stronghold_map.get(path) {
         cb(stronghold)
     } else {

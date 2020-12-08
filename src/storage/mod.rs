@@ -1,13 +1,5 @@
 // Copyright 2020 IOTA Stiftung
-//
-// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
-// the License. You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-// an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 #[cfg(feature = "sqlite")]
 /// Sqlite storage.
@@ -19,19 +11,18 @@ pub mod stronghold;
 use crate::account::{Account, AccountIdentifier};
 use once_cell::sync::OnceCell;
 
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
-use std::sync::{Arc, RwLock};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+    sync::{Arc, RwLock},
+};
 
 type Storage = Box<dyn StorageAdapter + Sync + Send>;
 type Storages = Arc<RwLock<HashMap<PathBuf, Storage>>>;
 static INSTANCES: OnceCell<Storages> = OnceCell::new();
 
 /// Sets the storage adapter.
-pub fn set_adapter<P: AsRef<Path>, S: StorageAdapter + Sync + Send + 'static>(
-    storage_path: P,
-    storage: S,
-) {
+pub fn set_adapter<P: AsRef<Path>, S: StorageAdapter + Sync + Send + 'static>(storage_path: P, storage: S) {
     let mut instances = INSTANCES.get_or_init(Default::default).write().unwrap();
     instances.insert(storage_path.as_ref().to_path_buf(), Box::new(storage));
 }
@@ -46,10 +37,7 @@ pub(crate) fn with_adapter<T, F: FnOnce(&Storage) -> T>(storage_path: &PathBuf, 
     if let Some(instance) = instances.get(storage_path) {
         cb(instance)
     } else {
-        panic!(format!(
-            "adapter not initialized with path {:?}",
-            storage_path
-        ))
+        panic!(format!("adapter not initialized with path {:?}", storage_path))
     }
 }
 
@@ -61,9 +49,7 @@ pub(crate) fn get_adapter_from_path<P: AsRef<Path>>(
 }
 
 #[cfg(feature = "sqlite")]
-pub(crate) fn get_adapter_from_path<P: AsRef<Path>>(
-    storage_path: P,
-) -> crate::Result<sqlite::SqliteStorageAdapter> {
+pub(crate) fn get_adapter_from_path<P: AsRef<Path>>(storage_path: P) -> crate::Result<sqlite::SqliteStorageAdapter> {
     sqlite::SqliteStorageAdapter::new(storage_path, "accounts")
 }
 
@@ -79,10 +65,7 @@ pub trait StorageAdapter {
     fn remove(&self, account_id: AccountIdentifier) -> crate::Result<()>;
 }
 
-pub(crate) fn parse_accounts(
-    storage_path: &PathBuf,
-    accounts: &[String],
-) -> crate::Result<Vec<Account>> {
+pub(crate) fn parse_accounts(storage_path: &PathBuf, accounts: &[String]) -> crate::Result<Vec<Account>> {
     let mut err = None;
     let accounts: Vec<Option<Account>> = accounts
         .iter()
@@ -101,18 +84,12 @@ pub(crate) fn parse_accounts(
     if let Some(err) = err {
         Err(err.into())
     } else {
-        let accounts = accounts
-            .iter()
-            .map(|account| account.clone().unwrap())
-            .collect();
+        let accounts = accounts.iter().map(|account| account.clone().unwrap()).collect();
         Ok(accounts)
     }
 }
 
-pub(crate) fn get_account(
-    storage_path: &PathBuf,
-    account_id: AccountIdentifier,
-) -> crate::Result<Account> {
+pub(crate) fn get_account(storage_path: &PathBuf, account_id: AccountIdentifier) -> crate::Result<Account> {
     let account_str = with_adapter(&storage_path, |storage| storage.get(account_id))?;
     let mut account: Account = serde_json::from_str(&account_str)?;
     account.set_storage_path(storage_path.clone());

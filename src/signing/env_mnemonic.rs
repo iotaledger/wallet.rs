@@ -1,13 +1,5 @@
 // Copyright 2020 IOTA Stiftung
-//
-// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
-// the License. You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-// an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 use crate::account::Account;
 
@@ -68,16 +60,12 @@ pub struct EnvMnemonicSigner;
 impl EnvMnemonicSigner {
     fn get_seed(&self) -> ed25519::Ed25519Seed {
         mnemonic_to_ed25_seed(
-            env::var("IOTA_WALLET_MNEMONIC")
-                .expect("must set the IOTA_WALLET_MNEMONIC environment variable"),
+            env::var("IOTA_WALLET_MNEMONIC").expect("must set the IOTA_WALLET_MNEMONIC environment variable"),
             env::var("IOTA_WALLET_MNEMONIC_PASSWORD").unwrap_or_else(|_| "password".to_string()),
         )
     }
 
-    fn get_private_key(
-        &self,
-        derivation_path: String,
-    ) -> crate::Result<ed25519::Ed25519PrivateKey> {
+    fn get_private_key(&self, derivation_path: String) -> crate::Result<ed25519::Ed25519PrivateKey> {
         let seed = self.get_seed();
         Ok(ed25519::Ed25519PrivateKey::generate_from_seed(
             &seed,
@@ -135,15 +123,14 @@ impl super::Signer for EnvMnemonicSigner {
                 ));
             } else {
                 // If not, we should create a signature unlock block
-                let private_key =
-                    ed25519::Ed25519PrivateKey::generate_from_seed(&seed, &recorder.address_path)
-                        .map_err(|_| anyhow::anyhow!("invalid parameter: seed inputs"))?;
+                let private_key = ed25519::Ed25519PrivateKey::generate_from_seed(&seed, &recorder.address_path)
+                    .map_err(|_| anyhow::anyhow!("invalid parameter: seed inputs"))?;
                 let public_key = private_key.generate_public_key().to_bytes();
                 // The block should sign the entire transaction essence part of the transaction payload
                 let signature = Box::new(private_key.sign(&serialized_essence).to_bytes());
-                unlock_blocks.push(UnlockBlock::Signature(SignatureUnlock::Ed25519(
-                    Ed25519Signature::new(public_key, signature),
-                )));
+                unlock_blocks.push(UnlockBlock::Signature(SignatureUnlock::Ed25519(Ed25519Signature::new(
+                    public_key, signature,
+                ))));
                 signature_indexes.insert(recorder.address_index, current_block_index);
 
                 // Update current block index
