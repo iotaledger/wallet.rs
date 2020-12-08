@@ -11,8 +11,11 @@
 
 async function run() {
   try {
-    const { AccountManager } = require('../lib')
-    const manager = new AccountManager('./test-database')
+    const { AccountManager, StorageType } = require('../lib')
+    const manager = new AccountManager({
+      storagePath: './test-database',
+      storageType: StorageType.Stronghold
+    })
     manager.setStrongholdPassword('password')
 
     const mnemonic = 'error morning duty ring fiscal uniform erupt woman push march draw flower pair hello cousin real invest region message chief property vital dismiss moment'
