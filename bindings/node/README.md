@@ -64,13 +64,14 @@ Sets the stronghold password and initialises it.
 
 Creates a new account.
 
-| Param                 | Type                                         | Default                           | Description                                      |
-| --------------------- | -------------------------------------------- | --------------------------------- | ------------------------------------------------ |
-| account               | <code>object</code>                          | <code>{}</code>                   | The account to be created                        |
-| account.clientOptions | <code>[ClientOptions](#clientoptions)</code> | <code>undefined</code>            | The node configuration                           |
-| [account.mnemonic]    | <code>string</code>                          | <code>undefined</code>            | The account BIP39 mnemonic                       |
-| [account.alias]       | <code>string</code>                          | <code>Account ${index + 1}</code> | The account alias                                |
-| [account.createdAt]   | <code>string</code>                          | the current date and time         | The ISO 8601 date string of the account creation |
+| Param                 | Type                                         | Default                           | Description                                              |
+| --------------------- | -------------------------------------------- | --------------------------------- | -------------------------------------------------------- |
+| account               | <code>object</code>                          | <code>{}</code>                   | The account to be created                                |
+| account.clientOptions | <code>[ClientOptions](#clientoptions)</code> | <code>undefined</code>            | The node configuration                                   |
+| [account.mnemonic]    | <code>string</code>                          | <code>undefined</code>            | The account BIP39 mnemonic                               |
+| [account.alias]       | <code>string</code>                          | <code>Account ${index + 1}</code> | The account alias                                        |
+| [account.createdAt]   | <code>string</code>                          | the current date and time         | The ISO 8601 date string of the account creation         |
+| [account.signerType]  | <code>number</code>                          | 1 = Stronghold                    | The account signer type. 1 = Stronghold, 2 = EnvMnemonic |
 
 #### getAccount(accountId)
 
