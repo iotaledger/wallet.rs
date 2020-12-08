@@ -19,6 +19,7 @@ use crate::event::{
     TransactionEventType,
 };
 use crate::message::{Message, MessageType, Transfer};
+use crate::signing::SignerType;
 use crate::storage::StorageAdapter;
 
 use std::convert::TryInto;
@@ -457,12 +458,16 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
 async fn discover_accounts(
     storage_path: &PathBuf,
     client_options: &ClientOptions,
+    signer_type: Option<SignerType>,
 ) -> crate::Result<Vec<SyncedAccount>> {
     let mut synced_accounts = vec![];
     loop {
-        let mut account = AccountInitialiser::new(client_options.clone(), &storage_path)
-            .skip_persistance()
-            .initialise()?;
+        let mut account_initialiser =
+            AccountInitialiser::new(client_options.clone(), &storage_path).skip_persistance();
+        if let Some(signer_type) = &signer_type {
+            account_initialiser = account_initialiser.signer_type(signer_type.clone());
+        }
+        let mut account = account_initialiser.initialise()?;
         let synced_account = account.sync().skip_persistance().execute().await?;
         let is_empty = *synced_account.is_empty();
         if is_empty {
@@ -496,19 +501,26 @@ async fn sync_accounts<'a>(
         synced_accounts.push(synced_account);
     }
 
-    let discovered_accounts = match last_account {
+    let discovered_accounts_res = match last_account {
         Some(account) => {
             if account.messages().is_empty()
                 || account.addresses().iter().all(|addr| *addr.balance() == 0)
             {
-                discover_accounts(&storage_path, account.client_options()).await?
+                discover_accounts(
+                    &storage_path,
+                    account.client_options(),
+                    Some(account.signer_type().clone()),
+                )
+                .await
             } else {
-                vec![]
+                Ok(vec![])
             }
         }
-        None => discover_accounts(&storage_path, &ClientOptions::default()).await?,
+        None => discover_accounts(&storage_path, &ClientOptions::default(), None).await,
     };
-    synced_accounts.extend(discovered_accounts.into_iter());
+    if let Ok(discovered_accounts) = discovered_accounts_res {
+        synced_accounts.extend(discovered_accounts.into_iter());
+    }
 
     Ok(synced_accounts)
 }
