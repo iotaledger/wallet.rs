@@ -1,13 +1,5 @@
 // Copyright 2020 IOTA Stiftung
-//
-// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
-// the License. You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-// an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 use crate::account::{account_id_to_stronghold_record_id, Account};
 
@@ -20,8 +12,7 @@ impl super::Signer for StrongholdSigner {
     fn init_account(&self, account: &Account, mnemonic: Option<String>) -> crate::Result<String> {
         let stronghold_account_res: crate::Result<stronghold::Account> =
             crate::with_stronghold_from_path(account.storage_path(), |stronghold| {
-                let created_at_timestamp: u128 =
-                    account.created_at().timestamp().try_into().unwrap(); // safe to unwrap since it's > 0;
+                let created_at_timestamp: u128 = account.created_at().timestamp().try_into().unwrap(); // safe to unwrap since it's > 0;
                 let account = match mnemonic {
                     Some(mnemonic) => stronghold.account_import(
                         Some(created_at_timestamp),

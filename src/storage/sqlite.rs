@@ -1,13 +1,5 @@
 // Copyright 2020 IOTA Stiftung
-//
-// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
-// the License. You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-// an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 use super::StorageAdapter;
 use crate::account::AccountIdentifier;
@@ -17,8 +9,10 @@ use rusqlite::{
     types::{ToSqlOutput, Value},
     Connection, NO_PARAMS,
 };
-use std::path::Path;
-use std::sync::{Arc, Mutex};
+use std::{
+    path::Path,
+    sync::{Arc, Mutex},
+};
 
 /// Key value storage adapter.
 pub struct SqliteStorageAdapter {
@@ -56,25 +50,16 @@ impl StorageAdapter for SqliteStorageAdapter {
     fn get(&self, account_id: AccountIdentifier) -> crate::Result<String> {
         let (sql, params) = match account_id {
             AccountIdentifier::Id(id) => (
-                format!(
-                    "SELECT value FROM {} WHERE key = ?1 LIMIT 1",
-                    self.table_name
-                ),
+                format!("SELECT value FROM {} WHERE key = ?1 LIMIT 1", self.table_name),
                 vec![ToSqlOutput::Owned(Value::Text(id))],
             ),
             AccountIdentifier::Index(index) => (
-                format!(
-                    "SELECT value FROM {} LIMIT 1 OFFSET {}",
-                    self.table_name, index
-                ),
+                format!("SELECT value FROM {} LIMIT 1 OFFSET {}", self.table_name, index),
                 vec![],
             ),
         };
 
-        let connection = self
-            .connection
-            .lock()
-            .expect("failed to get connection lock");
+        let connection = self.connection.lock().expect("failed to get connection lock");
         let mut query = connection.prepare(&sql)?;
         let results = query
             .query_and_then(params, |row| row.get(0))?
@@ -87,14 +72,8 @@ impl StorageAdapter for SqliteStorageAdapter {
     }
 
     fn get_all(&self) -> crate::Result<std::vec::Vec<String>> {
-        let connection = self
-            .connection
-            .lock()
-            .expect("failed to get connection lock");
-        let mut query = connection.prepare(&format!(
-            "SELECT value FROM {} ORDER BY created_at",
-            self.table_name
-        ))?;
+        let connection = self.connection.lock().expect("failed to get connection lock");
+        let mut query = connection.prepare(&format!("SELECT value FROM {} ORDER BY created_at", self.table_name))?;
         let accounts = query
             .query_and_then(NO_PARAMS, |row| row.get(0))?
             .map(|val| val.unwrap())
@@ -107,16 +86,10 @@ impl StorageAdapter for SqliteStorageAdapter {
             AccountIdentifier::Id(id) => id,
             _ => return Err(anyhow::anyhow!("only Id is supported").into()),
         };
-        let connection = self
-            .connection
-            .lock()
-            .expect("failed to get connection lock");
+        let connection = self.connection.lock().expect("failed to get connection lock");
         let result = connection
             .execute(
-                &format!(
-                    "INSERT OR REPLACE INTO {} VALUES (?1, ?2, ?3)",
-                    self.table_name
-                ),
+                &format!("INSERT OR REPLACE INTO {} VALUES (?1, ?2, ?3)", self.table_name),
                 params![id, account, Utc::now().timestamp()],
             )
             .map_err(|_| anyhow::anyhow!("failed to insert data"))?;
@@ -139,10 +112,7 @@ impl StorageAdapter for SqliteStorageAdapter {
             ),
         };
 
-        let connection = self
-            .connection
-            .lock()
-            .expect("failed to get connection lock");
+        let connection = self.connection.lock().expect("failed to get connection lock");
         let result = connection
             .execute(&sql, params)
             .map_err(|_| anyhow::anyhow!("failed to delete data"))?;

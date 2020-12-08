@@ -1,13 +1,5 @@
 // Copyright 2020 IOTA Stiftung
-//
-// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
-// the License. You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-// an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 use crate::{
     account::{Account, AccountIdentifier, SyncedAccount},
@@ -142,33 +134,21 @@ impl Serialize for MessageType {
         S: Serializer,
     {
         match self {
-            MessageType::RemoveAccount(_) => {
-                serializer.serialize_unit_variant("MessageType", 0, "RemoveAccount")
-            }
-            MessageType::CreateAccount(_) => {
-                serializer.serialize_unit_variant("MessageType", 1, "CreateAccount")
-            }
-            MessageType::GetAccount(_) => {
-                serializer.serialize_unit_variant("MessageType", 2, "GetAccount")
-            }
-            MessageType::GetAccounts => {
-                serializer.serialize_unit_variant("MessageType", 3, "GetAccounts")
-            }
+            MessageType::RemoveAccount(_) => serializer.serialize_unit_variant("MessageType", 0, "RemoveAccount"),
+            MessageType::CreateAccount(_) => serializer.serialize_unit_variant("MessageType", 1, "CreateAccount"),
+            MessageType::GetAccount(_) => serializer.serialize_unit_variant("MessageType", 2, "GetAccount"),
+            MessageType::GetAccounts => serializer.serialize_unit_variant("MessageType", 3, "GetAccounts"),
             MessageType::CallAccountMethod {
                 account_id: _,
                 method: _,
             } => serializer.serialize_unit_variant("MessageType", 4, "CallAccountMethod"),
-            MessageType::SyncAccounts => {
-                serializer.serialize_unit_variant("MessageType", 5, "SyncAccounts")
-            }
+            MessageType::SyncAccounts => serializer.serialize_unit_variant("MessageType", 5, "SyncAccounts"),
             MessageType::Reattach {
                 account_id: _,
                 message_id: _,
             } => serializer.serialize_unit_variant("MessageType", 6, "Reattach"),
             MessageType::Backup(_) => serializer.serialize_unit_variant("MessageType", 7, "Backup"),
-            MessageType::RestoreBackup(_) => {
-                serializer.serialize_unit_variant("MessageType", 8, "RestoreBackup")
-            }
+            MessageType::RestoreBackup(_) => serializer.serialize_unit_variant("MessageType", 8, "RestoreBackup"),
             MessageType::SetStrongholdPassword(_) => {
                 serializer.serialize_unit_variant("MessageType", 9, "SetStrongholdPassword")
             }
@@ -264,11 +244,7 @@ pub struct Message {
 
 impl Message {
     /// Creates a new instance of a Message.
-    pub fn new<S: Into<String>>(
-        id: S,
-        message_type: MessageType,
-        response_tx: UnboundedSender<Response>,
-    ) -> Self {
+    pub fn new<S: Into<String>>(id: S, message_type: MessageType, response_tx: UnboundedSender<Response>) -> Self {
         Self {
             id: id.into(),
             message_type,
