@@ -19,15 +19,19 @@ use std::{
         mpsc::{channel as mpsc_channel, Receiver as MpscReceiver, RecvTimeoutError, Sender as MpscSender},
         Arc, Mutex, RwLock,
     },
+    thread,
     time::Duration,
 };
 
 static PASSWORD_STORE: OnceCell<Arc<Mutex<HashMap<PathBuf, String>>>> = OnceCell::new();
+static STRONGHOLD_ACCESS_STORE: OnceCell<Arc<Mutex<HashMap<PathBuf, bool>>>> = OnceCell::new();
 static CURRENT_SNAPSHOT_PATH: OnceCell<Arc<RwLock<Option<PathBuf>>>> = OnceCell::new();
+static PASSWORD_CLEAR_INTERVAL: OnceCell<Arc<RwLock<Duration>>> = OnceCell::new();
 
 const SEED_HINT: &str = "IOTA_WALLET_SEED";
 const ACCOUNT_HINT: &str = "IOTA_WALLET_ACCOUNT";
 const TIMEOUT: Duration = Duration::from_millis(5000);
+const DEFAULT_PASSWORD_CLEAR_INTERVAL: Duration = Duration::from_secs(8 * 60);
 
 macro_rules! wait_for_result {
     ($self:ident, $a:pat, $b:block) => {{
@@ -53,7 +57,8 @@ macro_rules! wait_for_result {
 }
 
 macro_rules! send_message {
-    ($snapshot_path:ident, $message:expr, $expected_response:pat, $b:block) => {{
+    ($snapshot_path:ident, $message:ident, $expected_response:pat, $b:block) => {{
+        on_stronghold_access(&$message, $snapshot_path)?;
         let runtime = actor_runtime().lock().unwrap();
         check_snapshot(&runtime, $snapshot_path).await?;
 
@@ -67,15 +72,92 @@ macro_rules! send_message {
     }};
 }
 
-fn set_password<S: AsRef<Path>, P: Into<String>>(snapshot_path: S, password: P) {
-    let mut passwords = PASSWORD_STORE.get_or_init(Default::default).lock().unwrap();
+#[derive(Debug, Clone)]
+pub enum Request {
+    LoadSnapshot(PathBuf, String),
+    SaveSnapshot(PathBuf, String),
+    CreateSnapshot(PathBuf, String),
+    GetAccountRecordId,
+    GetRecord(RecordType, RecordId),
+    GetAccounts,
+    StoreRecord(Option<RecordId>, Vec<u8>, RecordType),
+    RemoveRecord(RecordId),
+    ClearCache,
+}
+
+fn on_stronghold_access<S: AsRef<Path>>(message: &Request, snapshot_path: S) -> Result<()> {
+    match message {
+        Request::ClearCache => Ok(()),
+        _ => {
+            let mut store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().unwrap();
+            store.insert(snapshot_path.as_ref().to_path_buf(), true);
+
+            let passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().unwrap();
+            if !passwords.contains_key(&snapshot_path.as_ref().to_path_buf()) {
+                Err(Error::PasswordNotSet)
+            } else {
+                Ok(())
+            }
+        }
+    }
+}
+
+pub fn set_password_clear_interval(interval: Duration) {
+    let mut clear_interval = PASSWORD_CLEAR_INTERVAL
+        .get_or_init(|| Arc::new(RwLock::new(DEFAULT_PASSWORD_CLEAR_INTERVAL)))
+        .write()
+        .unwrap();
+    *clear_interval = interval;
+}
+
+fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, String>>> {
+    thread::spawn(|| {
+        loop {
+            thread::sleep(
+                *PASSWORD_CLEAR_INTERVAL
+                    .get_or_init(|| Arc::new(RwLock::new(DEFAULT_PASSWORD_CLEAR_INTERVAL)))
+                    .read()
+                    .unwrap(),
+            );
+            let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().unwrap();
+            let mut access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().unwrap();
+            let mut remove_keys = Vec::new();
+            for (snapshot_path, _) in passwords.iter() {
+                // if the stronghold access flag is false,
+                if !*access_store.get(snapshot_path).unwrap_or(&true) {
+                    remove_keys.push(snapshot_path.clone());
+                }
+                access_store.insert(snapshot_path.clone(), false);
+            }
+
+            let current_snapshot_path = CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).read().unwrap();
+            for remove_key in remove_keys {
+                passwords.remove(&remove_key);
+                if let Some(curr_snapshot_path) = &*current_snapshot_path {
+                    if &remove_key == curr_snapshot_path {
+                        let _: Result<()> = crate::block_on(async move {
+                            let message = Request::ClearCache;
+                            send_message!(curr_snapshot_path, message, StrongholdResponse::ClearCache, { Ok(()) })
+                        });
+                    }
+                }
+            }
+        }
+    });
+    Default::default()
+}
+
+pub fn set_password<S: AsRef<Path>, P: Into<String>>(snapshot_path: S, password: P) {
+    let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().unwrap();
     passwords.insert(snapshot_path.as_ref().to_path_buf(), password.into());
 }
 
-// TODO: add error handling to this fn and consumers
-fn get_password<P: AsRef<Path>>(snapshot_path: P) -> Option<String> {
-    let passwords = PASSWORD_STORE.get_or_init(Default::default).lock().unwrap();
-    passwords.get(&snapshot_path.as_ref().to_path_buf()).cloned()
+fn get_password<P: AsRef<Path>>(snapshot_path: P) -> Result<String> {
+    let passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().unwrap();
+    passwords
+        .get(&snapshot_path.as_ref().to_path_buf())
+        .cloned()
+        .ok_or(Error::PasswordNotSet)
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -96,23 +178,13 @@ pub enum Error {
     UnexpectedResult(StrongholdResult),
     #[error("failed to perform action: `{0}`")]
     FailedToPerformAction(String),
+    #[error("snapshot password not set")]
+    PasswordNotSet,
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
 
 type StrongholdRemoteHandle = RemoteHandle<std::result::Result<StrongholdResponse, String>>;
-
-#[derive(Debug, Clone)]
-pub enum Request {
-    LoadSnapshot(PathBuf, String),
-    SaveSnapshot(PathBuf, String),
-    CreateSnapshot(PathBuf, String),
-    GetAccountRecordId,
-    GetRecord(RecordType, RecordId),
-    GetAccounts,
-    StoreRecord(Option<RecordId>, Vec<u8>, RecordType),
-    RemoveRecord(RecordId),
-}
 
 enum Crypto {
     GenAddress,
@@ -144,6 +216,7 @@ enum StrongholdResponse {
     StoredRecord(RecordId),
     RemovedRecord,
     CreatedSnapshot,
+    ClearCache,
 }
 
 #[actor(SHResults)]
@@ -334,7 +407,7 @@ impl WalletStronghold {
             Request::CreateSnapshot(snapshot_path, password) => {
                 self.clear_state();
 
-                stronghold_client.try_tell(ClientMsg::SHRequest(SHRequest::ClearCache), None);
+                // TODO stronghold_client.try_tell(ClientMsg::SHRequest(SHRequest::ClearCache), None);
 
                 stronghold_client.try_tell(ClientMsg::SHRequest(SHRequest::CreateNewVault), None);
                 wait_for_result!(self, StrongholdResult::CreatedVault(vault_id), {
@@ -413,6 +486,10 @@ impl WalletStronghold {
                     None,
                 );
                 Ok(StrongholdResponse::RemovedRecord)
+            }
+            Request::ClearCache => {
+                // TODO stronghold_client.try_tell(ClientMsg::SHRequest(SHRequest::ClearCache), None);
+                Ok(StrongholdResponse::ClearCache)
             }
         }
     }
@@ -526,19 +603,11 @@ pub async fn load_or_create<P: Into<String>>(snapshot_path: &PathBuf, password: 
     let password = password.into();
     set_password(snapshot_path, password.clone());
     let res: Result<()> = if snapshot_path.exists() {
-        send_message!(
-            snapshot_path,
-            Request::LoadSnapshot(snapshot_path.clone(), password),
-            StrongholdResponse::LoadedSnapshot,
-            { Ok(()) }
-        )
+        let message = Request::LoadSnapshot(snapshot_path.clone(), password);
+        send_message!(snapshot_path, message, StrongholdResponse::LoadedSnapshot, { Ok(()) })
     } else {
-        send_message!(
-            snapshot_path,
-            Request::CreateSnapshot(snapshot_path.clone(), password),
-            StrongholdResponse::CreatedSnapshot,
-            { Ok(()) }
-        )
+        let message = Request::CreateSnapshot(snapshot_path.clone(), password);
+        send_message!(snapshot_path, message, StrongholdResponse::CreatedSnapshot, { Ok(()) })
     };
     res?;
 
@@ -553,26 +622,20 @@ pub async fn do_crypto(account: &Account) -> Result<()> {
 }
 
 pub async fn get_accounts(snapshot_path: &PathBuf) -> Result<Vec<String>> {
-    send_message!(
-        snapshot_path,
-        Request::GetAccounts,
-        StrongholdResponse::Accounts(accounts),
-        {
-            Ok(accounts
-                .into_iter()
-                .map(|acc| String::from_utf8_lossy(&acc).to_string())
-                .collect())
-        }
-    )
+    let message = Request::GetAccounts;
+    send_message!(snapshot_path, message, StrongholdResponse::Accounts(accounts), {
+        Ok(accounts
+            .into_iter()
+            .map(|acc| String::from_utf8_lossy(&acc).to_string())
+            .collect())
+    })
 }
 
 pub async fn read_record(snapshot_path: &PathBuf, record_type: RecordType, record_id: RecordId) -> Result<Vec<u8>> {
-    send_message!(
-        snapshot_path,
-        Request::GetRecord(record_type, record_id),
-        StrongholdResponse::Record(record),
-        { Ok(record) }
-    )
+    let message = Request::GetRecord(record_type, record_id);
+    send_message!(snapshot_path, message, StrongholdResponse::Record(record), {
+        Ok(record)
+    })
 }
 
 pub async fn get_account(snapshot_path: &PathBuf, account_id: AccountIdentifier) -> Result<String> {
@@ -581,9 +644,10 @@ pub async fn get_account(snapshot_path: &PathBuf, account_id: AccountIdentifier)
 }
 
 pub async fn new_account_record(snapshot_path: &PathBuf) -> Result<RecordId> {
+    let message = Request::GetAccountRecordId;
     send_message!(
         snapshot_path,
-        Request::GetAccountRecordId,
+        message,
         StrongholdResponse::InitialisedRecord(record_id),
         { Ok(record_id) }
     )
@@ -595,12 +659,8 @@ pub async fn store_record(
     record: Vec<u8>,
     record_type: RecordType,
 ) -> Result<RecordId> {
-    send_message!(
-        snapshot_path,
-        Request::StoreRecord(record_id, record, record_type),
-        StrongholdResponse::StoredRecord(id),
-        { Ok(id) }
-    )
+    let message = Request::StoreRecord(record_id, record, record_type);
+    send_message!(snapshot_path, message, StrongholdResponse::StoredRecord(id), { Ok(id) })
 }
 
 pub async fn store_account(snapshot_path: &PathBuf, account_id: AccountIdentifier, account: String) -> Result<()> {
@@ -615,12 +675,8 @@ pub async fn store_account(snapshot_path: &PathBuf, account_id: AccountIdentifie
 }
 
 pub async fn remove_record(snapshot_path: &PathBuf, record_id: RecordId) -> Result<()> {
-    send_message!(
-        snapshot_path,
-        Request::RemoveRecord(record_id),
-        StrongholdResponse::RemovedRecord,
-        { Ok(()) }
-    )
+    let message = Request::RemoveRecord(record_id);
+    send_message!(snapshot_path, message, StrongholdResponse::RemovedRecord, { Ok(()) })
 }
 
 pub async fn remove_account(snapshot_path: &PathBuf, account_id: AccountIdentifier) -> Result<()> {
@@ -631,7 +687,53 @@ pub async fn remove_account(snapshot_path: &PathBuf, account_id: AccountIdentifi
 mod tests {
     use super::RecordType;
     use rand::{thread_rng, Rng};
-    use std::path::PathBuf;
+    use std::{path::PathBuf, time::Duration};
+
+    #[tokio::test]
+    async fn password_expires() -> super::Result<()> {
+        let interval = 500;
+        super::set_password_clear_interval(Duration::from_millis(interval));
+        let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
+        let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
+        super::load_or_create(&snapshot_path, "password").await?;
+
+        std::thread::sleep(Duration::from_millis(interval * 2));
+        let res = super::new_account_record(&snapshot_path).await;
+        assert_eq!(res.is_err(), true);
+        if let super::Error::PasswordNotSet = res.unwrap_err() {
+        } else {
+            panic!("unexpected error");
+        }
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn action_keeps_password() -> super::Result<()> {
+        let interval = 500;
+        super::set_password_clear_interval(Duration::from_millis(interval));
+        let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
+        let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
+        super::load_or_create(&snapshot_path, "password").await?;
+
+        for _ in 1..5 {
+            super::new_account_record(&snapshot_path).await?;
+            std::thread::sleep(Duration::from_millis(interval / 2));
+        }
+
+        let res = super::new_account_record(&snapshot_path).await;
+        assert_eq!(res.is_ok(), true);
+
+        std::thread::sleep(Duration::from_millis(interval * 2));
+        let res = super::new_account_record(&snapshot_path).await;
+        assert_eq!(res.is_err(), true);
+        if let super::Error::PasswordNotSet = res.unwrap_err() {
+        } else {
+            panic!("unexpected error");
+        }
+
+        Ok(())
+    }
 
     #[tokio::test]
     async fn write_and_read() -> super::Result<()> {
