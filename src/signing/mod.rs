@@ -12,9 +12,9 @@ use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 use slip10::BIP32Path;
 
-mod stronghold;
-use self::stronghold::StrongholdSigner;
 mod env_mnemonic;
+#[cfg(feature = "stronghold")]
+mod stronghold;
 use env_mnemonic::EnvMnemonicSigner;
 
 type BoxedSigner = Box<dyn Signer + Sync + Send>;
@@ -66,7 +66,7 @@ fn default_signers() -> Signers {
     {
         signers.insert(
             SignerType::Stronghold,
-            Box::new(StrongholdSigner::default()) as Box<dyn Signer + Sync + Send>,
+            Box::new(self::stronghold::StrongholdSigner::default()) as Box<dyn Signer + Sync + Send>,
         );
     }
 

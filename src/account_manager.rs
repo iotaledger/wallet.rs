@@ -203,6 +203,7 @@ impl AccountManager {
         restore_backup(&self, &backup_account_manager)
     }
 
+    /// Import backed up accounts.
     #[cfg(not(any(feature = "stronghold", feature = "sqlite")))]
     pub fn import_accounts(&self, backup_manager: &Self) -> crate::Result<()> {
         restore_backup(&self, &backup_manager)
