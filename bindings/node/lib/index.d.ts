@@ -102,11 +102,17 @@ export declare interface ClientOptions {
   quorumThreshold?: number;
 }
 
+export declare enum SignerType {
+  Stronghold = 1,
+  EnvMnemonic = 2
+}
+
 export declare interface AccountToCreate {
   clientOptions: ClientOptions;
   mnemonic?: string;
   alias?: string;
   createdAt?: string;
+  signerType?: SignerType;
 }
 
 export declare enum StorageType {

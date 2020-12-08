@@ -19,6 +19,7 @@ use iota_wallet::{
     account::AccountIdentifier,
     account_manager::{AccountManager, DEFAULT_STORAGE_PATH},
     client::ClientOptions,
+    signing::SignerType,
     storage::{sqlite::SqliteStorageAdapter, stronghold::StrongholdStorageAdapter},
     DateTime, Utc,
 };
@@ -29,6 +30,19 @@ use serde_repr::Deserialize_repr;
 mod internal_transfer;
 mod sync;
 
+#[derive(Deserialize_repr)]
+#[repr(u8)]
+pub enum AccountSignerType {
+    Stronghold = 1,
+    EnvMnemonic = 2,
+}
+
+impl Default for AccountSignerType {
+    fn default() -> Self {
+        Self::Stronghold
+    }
+}
+
 #[derive(Deserialize)]
 pub struct AccountToCreate {
     #[serde(rename = "clientOptions")]
@@ -37,6 +51,8 @@ pub struct AccountToCreate {
     pub alias: Option<String>,
     #[serde(rename = "createdAt")]
     pub created_at: Option<String>,
+    #[serde(rename = "signerType", default)]
+    pub signer_type: AccountSignerType,
 }
 
 fn js_value_to_account_id(
@@ -122,7 +138,11 @@ declare_types! {
                 let manager = ref_.read().unwrap();
 
                 let mut builder = manager
-                    .create_account(account_to_create.client_options.clone());
+                    .create_account(account_to_create.client_options.clone())
+                    .signer_type(match account_to_create.signer_type {
+                        AccountSignerType::Stronghold => SignerType::Stronghold,
+                        AccountSignerType::EnvMnemonic => SignerType::EnvMnemonic,
+                    });
                 if let Some(mnemonic) = &account_to_create.mnemonic {
                     builder = builder.mnemonic(mnemonic);
                 }
