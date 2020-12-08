@@ -109,6 +109,16 @@ export declare interface AccountToCreate {
   createdAt?: string;
 }
 
+export declare enum StorageType {
+  Stronghold = 1,
+  Sqlite = 2
+}
+
+export declare interface ManagerOptions {
+  storagePath?: string
+  storageType?: StorageType
+}
+
 export declare class AccountManager {
   constructor(storagePath?: string)
   setStrongholdPassword(password: string): void
