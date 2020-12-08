@@ -54,15 +54,12 @@ fn derive_into_address(private_key: ed25519::Ed25519PrivateKey) -> String {
     // Hash the public key to get the address
     let mut hasher = VarBlake2b::new(32).unwrap();
     hasher.update(public_key);
-    let mut result = vec![];
+    let mut result = vec![1];
     hasher.finalize_variable(|res| {
-        result = res.to_vec();
+        result.extend(res.to_vec());
     });
 
-    let prefix: Vec<u8> = vec![1]; // prefix for ed25 addresses
-    let mut data = prefix;
-    data.append(&mut result);
-    bech32::encode("iota", data.to_base32()).unwrap()
+    bech32::encode("iota", result.to_base32()).unwrap()
 }
 
 #[derive(Default)]
@@ -120,10 +117,7 @@ impl super::Signer for EnvMnemonicSigner {
         essence: &iota::TransactionEssence,
         inputs: &mut Vec<super::TransactionInput>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
-        let mut serialized_essence = Vec::new();
-        essence
-            .pack(&mut serialized_essence)
-            .map_err(|_| anyhow::anyhow!("invalid parameter: inputs"))?;
+        let serialized_essence = essence.pack_new();
 
         let seed = self.get_seed();
         let mut unlock_blocks = vec![];

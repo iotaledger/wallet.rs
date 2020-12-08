@@ -31,6 +31,7 @@ static SIGNERS_INSTANCE: OnceCell<Signers> = OnceCell::new();
 
 /// The signer types.
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", content = "data")]
 pub enum SignerType {
     /// Stronghold signer.
     #[cfg(feature = "stronghold")]
