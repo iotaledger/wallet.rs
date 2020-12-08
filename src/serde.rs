@@ -1,13 +1,5 @@
 // Copyright 2020 IOTA Stiftung
-//
-// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
-// the License. You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-// an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 use serde::{ser::SerializeStruct, Serializer};
 
@@ -18,10 +10,7 @@ pub(crate) mod iota_address_serde {
     use serde::{de::Visitor, Deserializer, Serializer};
     use std::convert::TryInto;
 
-    pub fn serialize<S: Serializer>(
-        address: &IotaAddress,
-        s: S,
-    ) -> std::result::Result<S::Ok, S::Error> {
+    pub fn serialize<S: Serializer>(address: &IotaAddress, s: S) -> std::result::Result<S::Ok, S::Error> {
         s.serialize_str(&address.to_bech32())
     }
 
@@ -119,53 +108,24 @@ impl serde::Serialize for crate::WalletError {
         }
         match self {
             Self::UnknownError(error) => serialize_variant(serializer, "UnknownError", Some(error)),
-            Self::GenericError(error) => {
-                serialize_variant(serializer, "GenericError", Some(&error.to_string()))
-            }
-            Self::IoError(error) => {
-                serialize_variant(serializer, "IoError", Some(&error.to_string()))
-            }
-            Self::JsonError(error) => {
-                serialize_variant(serializer, "JsonError", Some(&error.to_string()))
-            }
-            Self::StrongholdError(error) => {
-                serialize_variant(serializer, "StrongholdError", Some(&error.to_string()))
-            }
-            Self::ClientError(error) => {
-                serialize_variant(serializer, "ClientError", Some(&error.to_string()))
-            }
-            Self::SqliteError(error) => {
-                serialize_variant(serializer, "SqliteError", Some(&error.to_string()))
-            }
-            Self::UrlError(error) => {
-                serialize_variant(serializer, "UrlError", Some(&error.to_string()))
-            }
-            Self::UnexpectedResponse(error) => {
-                serialize_variant(serializer, "UnexpectedResponse", Some(&error))
-            }
-            Self::MessageAboveMaxDepth => {
-                serialize_variant(serializer, "MessageAboveMaxDepth", None)
-            }
-            Self::MessageAlreadyConfirmed => {
-                serialize_variant(serializer, "MessageAlreadyConfirmed", None)
-            }
+            Self::GenericError(error) => serialize_variant(serializer, "GenericError", Some(&error.to_string())),
+            Self::IoError(error) => serialize_variant(serializer, "IoError", Some(&error.to_string())),
+            Self::JsonError(error) => serialize_variant(serializer, "JsonError", Some(&error.to_string())),
+            Self::StrongholdError(error) => serialize_variant(serializer, "StrongholdError", Some(&error.to_string())),
+            Self::ClientError(error) => serialize_variant(serializer, "ClientError", Some(&error.to_string())),
+            Self::SqliteError(error) => serialize_variant(serializer, "SqliteError", Some(&error.to_string())),
+            Self::UrlError(error) => serialize_variant(serializer, "UrlError", Some(&error.to_string())),
+            Self::UnexpectedResponse(error) => serialize_variant(serializer, "UnexpectedResponse", Some(&error)),
+            Self::MessageAboveMaxDepth => serialize_variant(serializer, "MessageAboveMaxDepth", None),
+            Self::MessageAlreadyConfirmed => serialize_variant(serializer, "MessageAlreadyConfirmed", None),
             Self::MessageNotFound => serialize_variant(serializer, "MessageNotFound", None),
             Self::EmptyNodeList => serialize_variant(serializer, "EmptyNodeList", None),
-            Self::InvalidAddressLength => {
-                serialize_variant(serializer, "InvalidAddressLength", None)
+            Self::InvalidAddressLength => serialize_variant(serializer, "InvalidAddressLength", None),
+            Self::InvalidTransactionIdLength => {
+                serializer.serialize_newtype_variant("WalletError", 14, "InvalidTransactionIdLength", "")
             }
-            Self::InvalidTransactionIdLength => serializer.serialize_newtype_variant(
-                "WalletError",
-                14,
-                "InvalidTransactionIdLength",
-                "",
-            ),
-            Self::InvalidMessageIdLength => {
-                serialize_variant(serializer, "InvalidMessageIdLength", None)
-            }
-            Self::Bech32Error(error) => {
-                serialize_variant(serializer, "Bech32Error", Some(&error.to_string()))
-            }
+            Self::InvalidMessageIdLength => serialize_variant(serializer, "InvalidMessageIdLength", None),
+            Self::Bech32Error(error) => serialize_variant(serializer, "Bech32Error", Some(&error.to_string())),
             Self::AccountAlreadyImported { alias } => serialize_variant(
                 serializer,
                 "AccountAlreadyImported",
@@ -174,14 +134,10 @@ impl serde::Serialize for crate::WalletError {
             Self::StorageDoesntExist => serialize_variant(serializer, "StorageDoesntExist", None),
             Self::InsufficientFunds => serialize_variant(serializer, "InsufficientFunds", None),
             Self::MessageNotEmpty => serialize_variant(serializer, "MessageNotEmpty", None),
-            Self::LatestAccountIsEmpty => {
-                serialize_variant(serializer, "LatestAccountIsEmpty", None)
-            }
+            Self::LatestAccountIsEmpty => serialize_variant(serializer, "LatestAccountIsEmpty", None),
             Self::ZeroAmount => serialize_variant(serializer, "ZeroAmount", None),
             Self::AccountNotFound => serialize_variant(serializer, "AccountNotFound", None),
-            Self::InvalidRemainderValueAddress => {
-                serialize_variant(serializer, "InvalidRemainderValueAddress", None)
-            }
+            Self::InvalidRemainderValueAddress => serialize_variant(serializer, "InvalidRemainderValueAddress", None),
         }
     }
 }

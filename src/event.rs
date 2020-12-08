@@ -1,22 +1,15 @@
 // Copyright 2020 IOTA Stiftung
-//
-// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
-// the License. You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-// an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
-use crate::address::Address;
-use crate::message::Message;
+use crate::{address::Address, message::Message};
 
 use getset::Getters;
 use once_cell::sync::Lazy;
 use serde::Serialize;
-use std::ops::Deref;
-use std::sync::{Arc, Mutex};
+use std::{
+    ops::Deref,
+    sync::{Arc, Mutex},
+};
 
 /// The balance change event data.
 #[derive(Getters, Serialize)]
@@ -92,8 +85,7 @@ struct TransactionConfirmationChangeEventHandler {
 
 type BalanceListeners = Arc<Mutex<Vec<BalanceEventHandler>>>;
 type TransactionListeners = Arc<Mutex<Vec<TransactionEventHandler>>>;
-type TransactionConfirmationChangeListeners =
-    Arc<Mutex<Vec<TransactionConfirmationChangeEventHandler>>>;
+type TransactionConfirmationChangeListeners = Arc<Mutex<Vec<TransactionConfirmationChangeEventHandler>>>;
 type ErrorListeners = Arc<Mutex<Vec<ErrorHandler>>>;
 
 /// Gets the balance change listeners array.
@@ -125,9 +117,7 @@ pub fn on_balance_change<F: Fn(&BalanceEvent<'_>) + Send + 'static>(cb: F) {
     let mut l = balance_listeners()
         .lock()
         .expect("Failed to lock balance_listeners: on_balance_change()");
-    l.push(BalanceEventHandler {
-        on_event: Box::new(cb),
-    })
+    l.push(BalanceEventHandler { on_event: Box::new(cb) })
 }
 
 /// Emits a balance change event.
@@ -146,11 +136,7 @@ pub(crate) fn emit_balance_change(account_id: String, address: &Address, balance
 }
 
 /// Emits a transaction-related event.
-pub(crate) fn emit_transaction_event(
-    event_type: TransactionEventType,
-    account_id: String,
-    message: &Message,
-) {
+pub(crate) fn emit_transaction_event(event_type: TransactionEventType, account_id: String, message: &Message) {
     let listeners = transaction_listeners()
         .lock()
         .expect("Failed to lock balance_listeners: emit_balance_change()");
@@ -166,11 +152,7 @@ pub(crate) fn emit_transaction_event(
 }
 
 /// Emits a transaction confirmation state change event.
-pub(crate) fn emit_confirmation_state_change(
-    account_id: String,
-    message: &Message,
-    confirmed: bool,
-) {
+pub(crate) fn emit_confirmation_state_change(account_id: String, message: &Message, confirmed: bool) {
     let listeners = transaction_confirmation_change_listeners()
         .lock()
         .expect("Failed to lock transaction_confirmation_change_listeners: emit_confirmation_state_change()");
@@ -185,10 +167,7 @@ pub(crate) fn emit_confirmation_state_change(
 }
 
 /// Adds a transaction-related event listener.
-fn add_transaction_listener<F: Fn(&TransactionEvent<'_>) + Send + 'static>(
-    event_type: TransactionEventType,
-    cb: F,
-) {
+fn add_transaction_listener<F: Fn(&TransactionEvent<'_>) + Send + 'static>(event_type: TransactionEventType, cb: F) {
     let mut l = transaction_listeners()
         .lock()
         .expect("Failed to lock transaction_listeners: add_transaction_listener()");
@@ -204,17 +183,11 @@ pub fn on_new_transaction<F: Fn(&TransactionEvent<'_>) + Send + 'static>(cb: F) 
 }
 
 /// Listen to transaction confirmation state change.
-pub fn on_confirmation_state_change<
-    F: Fn(&TransactionConfirmationChangeEvent<'_>) + Send + 'static,
->(
-    cb: F,
-) {
-    let mut l = transaction_confirmation_change_listeners().lock().expect(
-        "Failed to lock transaction_confirmation_change_listeners: on_confirmation_state_change()",
-    );
-    l.push(TransactionConfirmationChangeEventHandler {
-        on_event: Box::new(cb),
-    })
+pub fn on_confirmation_state_change<F: Fn(&TransactionConfirmationChangeEvent<'_>) + Send + 'static>(cb: F) {
+    let mut l = transaction_confirmation_change_listeners()
+        .lock()
+        .expect("Failed to lock transaction_confirmation_change_listeners: on_confirmation_state_change()");
+    l.push(TransactionConfirmationChangeEventHandler { on_event: Box::new(cb) })
 }
 
 /// Listen to transaction reattachment.
@@ -241,9 +214,7 @@ pub fn on_error<F: Fn(&crate::WalletError) + Send + 'static>(cb: F) {
     let mut l = error_listeners()
         .lock()
         .expect("Failed to lock error_listeners: on_error()");
-    l.push(ErrorHandler {
-        on_error: Box::new(cb),
-    })
+    l.push(ErrorHandler { on_error: Box::new(cb) })
 }
 
 #[cfg(test)]

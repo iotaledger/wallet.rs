@@ -1,33 +1,26 @@
 // Copyright 2020 IOTA Stiftung
-//
-// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
-// the License. You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-// an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
-use crate::account::{
-    account_id_to_stronghold_record_id, repost_message, Account, AccountIdentifier,
-    AccountInitialiser, RepostAction, SyncedAccount,
+use crate::{
+    account::{
+        account_id_to_stronghold_record_id, repost_message, Account, AccountIdentifier, AccountInitialiser,
+        RepostAction, SyncedAccount,
+    },
+    client::ClientOptions,
+    event::{emit_balance_change, emit_confirmation_state_change, emit_transaction_event, TransactionEventType},
+    message::{Message, MessageType, Transfer},
+    signing::SignerType,
+    storage::StorageAdapter,
 };
-use crate::client::ClientOptions;
-use crate::event::{
-    emit_balance_change, emit_confirmation_state_change, emit_transaction_event,
-    TransactionEventType,
-};
-use crate::message::{Message, MessageType, Transfer};
-use crate::signing::SignerType;
-use crate::storage::StorageAdapter;
 
-use std::convert::TryInto;
-use std::fs;
-use std::panic::AssertUnwindSafe;
-use std::path::{Path, PathBuf};
-use std::thread;
-use std::time::Duration;
+use std::{
+    convert::TryInto,
+    fs,
+    panic::AssertUnwindSafe,
+    path::{Path, PathBuf},
+    thread,
+    time::Duration,
+};
 
 use futures::FutureExt;
 use getset::{Getters, Setters};
@@ -67,12 +60,10 @@ impl AccountManager {
         Self::with_storage_path(DEFAULT_STORAGE_PATH)
     }
 
-    /// Initialises a new instance of the account manager with the default storage adapter using the specified storage path.
+    /// Initialises a new instance of the account manager with the default storage adapter using the specified storage
+    /// path.
     pub fn with_storage_path(storage_path: impl AsRef<Path>) -> crate::Result<Self> {
-        Self::with_storage_adapter(
-            &storage_path,
-            crate::storage::get_adapter_from_path(&storage_path)?,
-        )
+        Self::with_storage_adapter(&storage_path, crate::storage::get_adapter_from_path(&storage_path)?)
     }
 
     /// Initialises a new instance of the account manager with the specified adapter.
@@ -91,8 +82,7 @@ impl AccountManager {
 
     /// Starts monitoring the accounts with the node's mqtt topics.
     fn start_monitoring(&self) -> crate::Result<()> {
-        let accounts =
-            crate::storage::with_adapter(&self.storage_path, |storage| storage.get_all())?;
+        let accounts = crate::storage::with_adapter(&self.storage_path, |storage| storage.get_all())?;
         let accounts = crate::storage::parse_accounts(&self.storage_path, &accounts)?;
         for account in accounts {
             crate::monitor::monitor_account_addresses_balance(&account)?;
@@ -103,9 +93,7 @@ impl AccountManager {
 
     /// Sets the stronghold password.
     pub fn set_stronghold_password<P: AsRef<str>>(&mut self, password: P) -> crate::Result<()> {
-        let stronghold_path = self
-            .storage_path
-            .join(crate::storage::stronghold_snapshot_filename());
+        let stronghold_path = self.storage_path.join(crate::storage::stronghold_snapshot_filename());
         let stronghold = Stronghold::new(
             &stronghold_path,
             !stronghold_path.exists(),
@@ -129,10 +117,9 @@ impl AccountManager {
             loop {
                 let storage_path_ = storage_path.clone();
                 crate::block_on(async move {
-                    if let Err(panic) =
-                        AssertUnwindSafe(poll(storage_path_, is_monitoring_disabled))
-                            .catch_unwind()
-                            .await
+                    if let Err(panic) = AssertUnwindSafe(poll(storage_path_, is_monitoring_disabled))
+                        .catch_unwind()
+                        .await
                     {
                         let msg = if let Some(message) = panic.downcast_ref::<String>() {
                             format!("Internal error: {}", message)
@@ -157,9 +144,7 @@ impl AccountManager {
 
     /// Deletes an account.
     pub fn remove_account(&self, account_id: AccountIdentifier) -> crate::Result<()> {
-        let account_str = crate::storage::with_adapter(&self.storage_path, |storage| {
-            storage.get(account_id.clone())
-        })?;
+        let account_str = crate::storage::with_adapter(&self.storage_path, |storage| storage.get(account_id.clone()))?;
         let account: Account = serde_json::from_str(&account_str)?;
         if !(account.messages().is_empty() && account.total_balance() == 0) {
             return Err(crate::WalletError::MessageNotEmpty);
@@ -217,23 +202,16 @@ impl AccountManager {
 
     /// Import backed up accounts.
     pub fn import_accounts<P: AsRef<Path>>(&self, source: P) -> crate::Result<()> {
-        let backup_stronghold_path = source
-            .as_ref()
-            .join(crate::storage::stronghold_snapshot_filename());
-        let backup_stronghold = stronghold::Stronghold::new(
-            &backup_stronghold_path,
-            false,
-            "password".to_string(),
-            None,
-        )?;
+        let backup_stronghold_path = source.as_ref().join(crate::storage::stronghold_snapshot_filename());
+        let backup_stronghold =
+            stronghold::Stronghold::new(&backup_stronghold_path, false, "password".to_string(), None)?;
         crate::init_stronghold(&source.as_ref().to_path_buf(), backup_stronghold);
 
         let backup_storage = crate::storage::get_adapter_from_path(&source)?;
         let accounts = backup_storage.get_all()?;
         let accounts = crate::storage::parse_accounts(&source.as_ref().to_path_buf(), &accounts)?;
 
-        let stored_accounts =
-            crate::storage::with_adapter(&self.storage_path, |storage| storage.get_all())?;
+        let stored_accounts = crate::storage::with_adapter(&self.storage_path, |storage| storage.get_all())?;
         let stored_accounts = crate::storage::parse_accounts(&self.storage_path, &stored_accounts)?;
 
         let already_imported_account = stored_accounts.iter().find(|stored_account| {
@@ -252,31 +230,23 @@ impl AccountManager {
             });
         }
 
-        let backup_stronghold = stronghold::Stronghold::new(
-            &backup_stronghold_path,
-            false,
-            "password".to_string(),
-            None,
-        )?;
+        let backup_stronghold =
+            stronghold::Stronghold::new(&backup_stronghold_path, false, "password".to_string(), None)?;
         for account in accounts.iter() {
-            let stronghold_account = backup_stronghold
-                .account_get_by_id(&account_id_to_stronghold_record_id(account.id())?)?;
-            let created_at_timestamp: u128 = account.created_at().timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
             let stronghold_account =
-                crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
-                    stronghold.account_import(
-                        Some(created_at_timestamp),
-                        Some(created_at_timestamp),
-                        stronghold_account.mnemonic().to_string(),
-                        Some("password"),
-                    )
-                });
+                backup_stronghold.account_get_by_id(&account_id_to_stronghold_record_id(account.id())?)?;
+            let created_at_timestamp: u128 = account.created_at().timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
+            let stronghold_account = crate::with_stronghold_from_path(&self.storage_path, |stronghold| {
+                stronghold.account_import(
+                    Some(created_at_timestamp),
+                    Some(created_at_timestamp),
+                    stronghold_account.mnemonic().to_string(),
+                    Some("password"),
+                )
+            });
 
             crate::storage::with_adapter(&self.storage_path, |storage| {
-                storage.set(
-                    account.id().clone().into(),
-                    serde_json::to_string(&account)?,
-                )
+                storage.set(account.id().clone().into(), serde_json::to_string(&account)?)
             })?;
         }
         crate::remove_stronghold(backup_stronghold_path);
@@ -294,9 +264,7 @@ impl AccountManager {
     pub fn get_account_by_alias<S: Into<String>>(&self, alias: S) -> Option<Account> {
         let alias = alias.into().to_lowercase();
         if let Ok(accounts) = self.get_accounts() {
-            accounts
-                .into_iter()
-                .find(|acc| acc.alias().to_lowercase() == alias)
+            accounts.into_iter().find(|acc| acc.alias().to_lowercase() == alias)
         } else {
             None
         }
@@ -310,31 +278,19 @@ impl AccountManager {
     }
 
     /// Reattaches an unconfirmed transaction.
-    pub async fn reattach(
-        &self,
-        account_id: AccountIdentifier,
-        message_id: &MessageId,
-    ) -> crate::Result<Message> {
+    pub async fn reattach(&self, account_id: AccountIdentifier, message_id: &MessageId) -> crate::Result<Message> {
         let mut account = self.get_account(account_id)?;
         account.sync().execute().await?.reattach(message_id).await
     }
 
     /// Promotes an unconfirmed transaction.
-    pub async fn promote(
-        &self,
-        account_id: AccountIdentifier,
-        message_id: &MessageId,
-    ) -> crate::Result<Message> {
+    pub async fn promote(&self, account_id: AccountIdentifier, message_id: &MessageId) -> crate::Result<Message> {
         let mut account = self.get_account(account_id)?;
         account.sync().execute().await?.promote(message_id).await
     }
 
     /// Retries an unconfirmed transaction.
-    pub async fn retry(
-        &self,
-        account_id: AccountIdentifier,
-        message_id: &MessageId,
-    ) -> crate::Result<Message> {
+    pub async fn retry(&self, account_id: AccountIdentifier, message_id: &MessageId) -> crate::Result<Message> {
         let mut account = self.get_account(account_id)?;
         account.sync().execute().await?.retry(message_id).await
     }
@@ -342,15 +298,11 @@ impl AccountManager {
 
 async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
     let retried = if syncing {
-        let accounts_before_sync =
-            crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
-        let accounts_before_sync =
-            crate::storage::parse_accounts(&storage_path, &accounts_before_sync)?;
+        let accounts_before_sync = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
+        let accounts_before_sync = crate::storage::parse_accounts(&storage_path, &accounts_before_sync)?;
         let synced_accounts = sync_accounts(&storage_path, Some(0)).await?;
-        let accounts_after_sync =
-            crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
-        let accounts_after_sync =
-            crate::storage::parse_accounts(&storage_path, &accounts_after_sync)?;
+        let accounts_after_sync = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
+        let accounts_after_sync = crate::storage::parse_accounts(&storage_path, &accounts_after_sync)?;
 
         // compare accounts to check for balance changes and new messages
         for account_before_sync in &accounts_before_sync {
@@ -390,11 +342,7 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
 
             // confirmation state change event
             account_after_sync.messages().iter().for_each(|message| {
-                let changed = match account_before_sync
-                    .messages()
-                    .iter()
-                    .find(|m| m.id() == message.id())
-                {
+                let changed = match account_before_sync.messages().iter().find(|m| m.id() == message.id()) {
                     Some(old_message) => message.confirmed() != old_message.confirmed(),
                     None => false,
                 };
@@ -403,13 +351,7 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
                 }
             });
         }
-        retry_unconfirmed_transactions(
-            synced_accounts
-                .iter()
-                .zip(accounts_after_sync.iter())
-                .collect(),
-        )
-        .await?
+        retry_unconfirmed_transactions(synced_accounts.iter().zip(accounts_after_sync.iter()).collect()).await?
     } else {
         let accounts = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
         let mut retried_messages = vec![];
@@ -420,13 +362,8 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
             let mut promotions = vec![];
             let mut reattachments = vec![];
             for message in unconfirmed_messages {
-                let new_message = repost_message(
-                    account.id().into(),
-                    &storage_path,
-                    message.id(),
-                    RepostAction::Retry,
-                )
-                .await?;
+                let new_message =
+                    repost_message(account.id().into(), &storage_path, message.id(), RepostAction::Retry).await?;
                 if new_message.payload() == message.payload() {
                     reattachments.push(new_message);
                 } else {
@@ -462,8 +399,7 @@ async fn discover_accounts(
 ) -> crate::Result<Vec<SyncedAccount>> {
     let mut synced_accounts = vec![];
     loop {
-        let mut account_initialiser =
-            AccountInitialiser::new(client_options.clone(), &storage_path).skip_persistance();
+        let mut account_initialiser = AccountInitialiser::new(client_options.clone(), &storage_path).skip_persistance();
         if let Some(signer_type) = &signer_type {
             account_initialiser = account_initialiser.signer_type(signer_type.clone());
         }
@@ -482,10 +418,7 @@ async fn discover_accounts(
     Ok(synced_accounts)
 }
 
-async fn sync_accounts<'a>(
-    storage_path: &PathBuf,
-    address_index: Option<usize>,
-) -> crate::Result<Vec<SyncedAccount>> {
+async fn sync_accounts<'a>(storage_path: &PathBuf, address_index: Option<usize>) -> crate::Result<Vec<SyncedAccount>> {
     let accounts = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
     let mut synced_accounts = vec![];
     let mut last_account = None;
@@ -503,9 +436,7 @@ async fn sync_accounts<'a>(
 
     let discovered_accounts_res = match last_account {
         Some(account) => {
-            if account.messages().is_empty()
-                || account.addresses().iter().all(|addr| *addr.balance() == 0)
-            {
+            if account.messages().is_empty() || account.addresses().iter().all(|addr| *addr.balance() == 0) {
                 discover_accounts(
                     &storage_path,
                     account.client_options(),
@@ -531,13 +462,10 @@ struct RetriedData {
     account_id: String,
 }
 
-async fn retry_unconfirmed_transactions(
-    accounts: Vec<(&SyncedAccount, &Account)>,
-) -> crate::Result<Vec<RetriedData>> {
+async fn retry_unconfirmed_transactions(accounts: Vec<(&SyncedAccount, &Account)>) -> crate::Result<Vec<RetriedData>> {
     let mut retried_messages = vec![];
     for (synced, account) in accounts {
-        let unconfirmed_messages =
-            account.list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed));
+        let unconfirmed_messages = account.list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed));
         let mut reattachments = vec![];
         let mut promotions = vec![];
         for message in unconfirmed_messages {
@@ -594,9 +522,11 @@ fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std::i
 
 #[cfg(test)]
 mod tests {
-    use crate::address::{AddressBuilder, IotaAddress};
-    use crate::client::ClientOptionsBuilder;
-    use crate::message::Message;
+    use crate::{
+        address::{AddressBuilder, IotaAddress},
+        client::ClientOptionsBuilder,
+        message::Message,
+    };
     use iota::message::prelude::{Ed25519Address, Indexation, MessageBuilder, MessageId, Payload};
     use rusty_fork::rusty_fork_test;
 

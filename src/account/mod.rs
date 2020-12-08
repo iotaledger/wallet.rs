@@ -1,26 +1,19 @@
 // Copyright 2020 IOTA Stiftung
-//
-// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
-// the License. You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
-// an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
-use crate::address::Address;
-use crate::client::ClientOptions;
-use crate::message::{Message, MessageType};
-use crate::signing::{with_signer, SignerType};
+use crate::{
+    address::Address,
+    client::ClientOptions,
+    message::{Message, MessageType},
+    signing::{with_signer, SignerType},
+};
 
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
 use iota::message::prelude::MessageId;
 use serde::{Deserialize, Serialize};
 
-use std::convert::TryInto;
-use std::path::PathBuf;
+use std::{convert::TryInto, path::PathBuf};
 
 mod sync;
 pub(crate) use sync::{repost_message, RepostAction};
@@ -134,11 +127,8 @@ impl<'a> AccountInitialiser<'a> {
 
     /// Initialises the account.
     pub fn initialise(self) -> crate::Result<Account> {
-        let accounts =
-            crate::storage::with_adapter(self.storage_path, |storage| storage.get_all())?;
-        let alias = self
-            .alias
-            .unwrap_or_else(|| format!("Account {}", accounts.len()));
+        let accounts = crate::storage::with_adapter(self.storage_path, |storage| storage.get_all())?;
+        let alias = self.alias.unwrap_or_else(|| format!("Account {}", accounts.len()));
         let signer_type = self
             .signer_type
             .ok_or_else(|| anyhow::anyhow!("account signer type is required"))?;
@@ -168,9 +158,7 @@ impl<'a> AccountInitialiser<'a> {
             has_pending_changes: false,
         };
 
-        let id = with_signer(&signer_type, |signer| {
-            signer.init_account(&account, mnemonic)
-        })?;
+        let id = with_signer(&signer_type, |signer| signer.init_account(&account, mnemonic))?;
         account.set_id(id.clone());
 
         let account_id: AccountIdentifier = id.into();
@@ -185,8 +173,7 @@ impl<'a> AccountInitialiser<'a> {
 }
 
 pub(crate) fn account_id_to_stronghold_record_id(account_id: &str) -> crate::Result<[u8; 32]> {
-    let decoded =
-        hex::decode(account_id).map_err(|_| anyhow::anyhow!("account id must be a hex string"))?;
+    let decoded = hex::decode(account_id).map_err(|_| anyhow::anyhow!("account id must be a hex string"))?;
     let id: [u8; 32] = decoded
         .try_into()
         .map_err(|_| anyhow::anyhow!("invalid account id length"))?;
@@ -244,9 +231,7 @@ impl Account {
     /// Gets the account's total balance.
     /// It's read directly from the storage. To read the latest account balance, you should `sync` first.
     pub fn total_balance(&self) -> u64 {
-        self.addresses
-            .iter()
-            .fold(0, |acc, address| acc + address.balance())
+        self.addresses.iter().fold(0, |acc, address| acc + address.balance())
     }
 
     /// Gets the account's available balance.
@@ -261,11 +246,7 @@ impl Account {
             .list_messages(0, 0, Some(MessageType::Sent))
             .iter()
             .fold(0, |acc, message| {
-                let val = if *message.confirmed() {
-                    0
-                } else {
-                    *message.value()
-                };
+                let val = if *message.confirmed() { 0 } else { *message.value() };
                 acc + val
             });
         total_balance - (spent as u64)
@@ -312,39 +293,30 @@ impl Account {
     /// # Example
     ///
     /// ```
-    /// use iota_wallet::message::MessageType;
-    /// use iota_wallet::account_manager::AccountManager;
-    /// use iota_wallet::client::ClientOptionsBuilder;
+    /// use iota_wallet::{account_manager::AccountManager, client::ClientOptionsBuilder, message::MessageType};
     /// # use rand::{thread_rng, Rng};
     ///
     /// # let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
     /// # let storage_path = std::path::PathBuf::from(format!("./example-database/{}", storage_path));
     /// // gets 10 received messages, skipping the first 5 most recent messages.
     /// let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-    ///  .expect("invalid node URL")
-    ///  .build();
+    ///     .expect("invalid node URL")
+    ///     .build();
     /// let mut manager = AccountManager::new().unwrap();
     /// # let mut manager = AccountManager::with_storage_path(storage_path).unwrap();
     /// manager.set_stronghold_password("password").unwrap();
-    /// let mut account = manager.create_account(client_options)
-    ///   .initialise()
-    ///   .expect("failed to add account");
+    /// let mut account = manager
+    ///     .create_account(client_options)
+    ///     .initialise()
+    ///     .expect("failed to add account");
     /// account.list_messages(10, 5, Some(MessageType::Received));
     /// ```
-    pub fn list_messages(
-        &self,
-        count: usize,
-        from: usize,
-        message_type: Option<MessageType>,
-    ) -> Vec<&Message> {
+    pub fn list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<&Message> {
         let mut messages: Vec<&Message> = vec![];
         for message in self.messages.iter() {
             // if we already found a message with the same payload,
             // this is a reattachment message
-            if let Some(original_message_index) = messages
-                .iter()
-                .position(|m| m.payload() == message.payload())
-            {
+            if let Some(original_message_index) = messages.iter().position(|m| m.payload() == message.payload()) {
                 let original_message = messages[original_message_index];
                 // if the original message was confirmed, we ignore this reattachment
                 if *original_message.confirmed() {
@@ -408,16 +380,16 @@ impl Account {
     }
 
     pub(crate) fn append_addresses(&mut self, addresses: Vec<Address>) {
-        addresses.into_iter().for_each(|address| {
-            match self.addresses.iter().position(|a| a == &address) {
+        addresses
+            .into_iter()
+            .for_each(|address| match self.addresses.iter().position(|a| a == &address) {
                 Some(index) => {
                     self.addresses[index] = address;
                 }
                 None => {
                     self.addresses.push(address);
                 }
-            }
-        });
+            });
     }
 
     pub(crate) fn addresses_mut(&mut self) -> &mut Vec<Address> {
