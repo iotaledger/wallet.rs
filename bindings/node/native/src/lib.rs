@@ -1,10 +1,12 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::any::Any;
-use std::collections::HashMap;
-use std::panic::AssertUnwindSafe;
-use std::sync::{Arc, Mutex, RwLock};
+use std::{
+    any::Any,
+    collections::HashMap,
+    panic::AssertUnwindSafe,
+    sync::{Arc, Mutex, RwLock},
+};
 
 use futures::{Future, FutureExt};
 use iota_wallet::{account::Account, address::Address, message::Message, WalletError};
@@ -18,9 +20,7 @@ use classes::*;
 
 type AccountInstanceMap = Arc<RwLock<HashMap<String, Arc<RwLock<Account>>>>>;
 
-fn mutate_account_if_exists<
-    F: FnOnce(&Account, &mut Vec<Address>, &mut Vec<Message>) + Send + Sync,
->(
+fn mutate_account_if_exists<F: FnOnce(&Account, &mut Vec<Address>, &mut Vec<Message>) + Send + Sync>(
     account_id: &str,
     cb: F,
 ) {
@@ -92,9 +92,7 @@ pub(crate) fn get_account(id: &str) -> Arc<RwLock<Account>> {
     let map = instances()
         .read()
         .expect("failed to lock account instances: get_account()");
-    map.get(id)
-        .expect("account dropped or not initialised")
-        .clone()
+    map.get(id).expect("account dropped or not initialised").clone()
 }
 
 pub(crate) fn store_account(account: Account) -> String {

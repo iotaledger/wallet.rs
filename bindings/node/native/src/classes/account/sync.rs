@@ -40,16 +40,10 @@ impl Task for SyncTask {
                 synchronizer = synchronizer.skip_persistance();
             }
         }
-        crate::block_on(crate::convert_async_panics(|| async {
-            synchronizer.execute().await
-        }))
+        crate::block_on(crate::convert_async_panics(|| async { synchronizer.execute().await }))
     }
 
-    fn complete(
-        self,
-        mut cx: TaskContext,
-        value: Result<Self::Output, Self::Error>,
-    ) -> JsResult<Self::JsEvent> {
+    fn complete(self, mut cx: TaskContext, value: Result<Self::Output, Self::Error>) -> JsResult<Self::JsEvent> {
         match value {
             Ok(val) => {
                 let synced = serde_json::to_string(&val).unwrap();

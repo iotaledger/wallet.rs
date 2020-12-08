@@ -17,16 +17,10 @@ impl Task for SyncTask {
 
     fn perform(&self) -> Result<Self::Output, Self::Error> {
         let manager = self.manager.read().unwrap();
-        crate::block_on(crate::convert_async_panics(|| async {
-            manager.sync_accounts().await
-        }))
+        crate::block_on(crate::convert_async_panics(|| async { manager.sync_accounts().await }))
     }
 
-    fn complete(
-        self,
-        mut cx: TaskContext,
-        value: Result<Self::Output, Self::Error>,
-    ) -> JsResult<Self::JsEvent> {
+    fn complete(self, mut cx: TaskContext, value: Result<Self::Output, Self::Error>) -> JsResult<Self::JsEvent> {
         match value {
             Ok(synced_accounts) => {
                 let js_array = JsArray::new(&mut cx, synced_accounts.len() as u32);

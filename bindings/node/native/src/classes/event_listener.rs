@@ -1,15 +1,16 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::convert::TryFrom;
-use std::sync::{
-    mpsc::{channel, Receiver, Sender},
-    Arc, Mutex,
+use std::{
+    convert::TryFrom,
+    sync::{
+        mpsc::{channel, Receiver, Sender},
+        Arc, Mutex,
+    },
 };
 
 use iota_wallet::event::{
-    on_balance_change, on_broadcast, on_confirmation_state_change, on_error, on_new_transaction,
-    on_reattachment,
+    on_balance_change, on_broadcast, on_confirmation_state_change, on_error, on_new_transaction, on_reattachment,
 };
 use neon::prelude::*;
 
@@ -77,11 +78,7 @@ impl Task for WaitForEventTask {
         rx.recv().map_err(|e| e.to_string())
     }
 
-    fn complete(
-        self,
-        mut cx: TaskContext,
-        result: Result<Self::Output, Self::Error>,
-    ) -> JsResult<Self::JsEvent> {
+    fn complete(self, mut cx: TaskContext, result: Result<Self::Output, Self::Error>) -> JsResult<Self::JsEvent> {
         match result {
             Ok(s) => Ok(cx.string(s)),
             Err(e) => cx.throw_error(format!("ReceiveTask error: {}", e)),

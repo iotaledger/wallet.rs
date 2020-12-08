@@ -46,11 +46,7 @@ impl Task for RepostTask {
         }))
     }
 
-    fn complete(
-        self,
-        mut cx: TaskContext,
-        value: Result<Self::Output, Self::Error>,
-    ) -> JsResult<Self::JsEvent> {
+    fn complete(self, mut cx: TaskContext, value: Result<Self::Output, Self::Error>) -> JsResult<Self::JsEvent> {
         match value {
             Ok(val) => Ok(neon_serde::to_value(&mut cx, &val)?),
             Err(e) => cx.throw_error(e.to_string()),

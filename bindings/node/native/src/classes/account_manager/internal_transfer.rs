@@ -26,11 +26,7 @@ impl Task for InternalTransferTask {
             let to_account = crate::get_account(&self.to_account_id);
             let to_account = to_account.read().unwrap();
             let res = manager
-                .internal_transfer(
-                    from_account.id().into(),
-                    to_account.id().into(),
-                    self.amount,
-                )
+                .internal_transfer(from_account.id().into(), to_account.id().into(), self.amount)
                 .await?;
 
             crate::update_account(&self.from_account_id, res.from_account);
@@ -40,11 +36,7 @@ impl Task for InternalTransferTask {
         }))
     }
 
-    fn complete(
-        self,
-        mut cx: TaskContext,
-        value: Result<Self::Output, Self::Error>,
-    ) -> JsResult<Self::JsEvent> {
+    fn complete(self, mut cx: TaskContext, value: Result<Self::Output, Self::Error>) -> JsResult<Self::JsEvent> {
         match value {
             Ok(val) => Ok(neon_serde::to_value(&mut cx, &val)?),
             Err(e) => cx.throw_error(e.to_string()),

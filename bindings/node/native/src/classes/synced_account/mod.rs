@@ -1,8 +1,10 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::str::FromStr;
-use std::sync::{Arc, RwLock};
+use std::{
+    str::FromStr,
+    sync::{Arc, RwLock},
+};
 
 use iota_wallet::{
     account::SyncedAccount,
