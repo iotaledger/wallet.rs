@@ -42,13 +42,15 @@ const account = await manager.createAccount({
 
 ### AccountManager
 
-#### constructor([storagePath])
+#### constructor([options])
 
 Creates a new instance of the AccountManager.
 
-| Param         | Type                | Default                | Description                                    |
-| ------------- | ------------------- | ---------------------- | ---------------------------------------------- |
-| [storagePath] | <code>string</code> | <code>undefined</code> | The path where the database file will be saved |
+| Param         | Type                | Default                | Description                                           |
+| ------------- | ------------------- | ---------------------- | ----------------------------------------------------- |
+| [options]     | <code>object</code> | <code>undefined</code> | The options to configure the account manager          |
+| [storagePath] | <code>string</code> | <code>undefined</code> | The path where the database file will be saved        |
+| [storageType] | <code>number</code> | <code>undefined</code> | The type of the database.  Stronghold = 1, Sqlite = 2 |
 
 #### setStrongholdPassword(password): void
 

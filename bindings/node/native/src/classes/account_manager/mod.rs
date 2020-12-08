@@ -10,14 +10,21 @@
 // See the License for the specific language governing permissions and limitations under the License.
 
 use super::JsAccount;
-use std::sync::{Arc, RwLock};
+use std::{
+    path::PathBuf,
+    sync::{Arc, RwLock},
+};
 
 use iota_wallet::{
-    account::AccountIdentifier, account_manager::AccountManager, client::ClientOptions, DateTime,
-    Utc,
+    account::AccountIdentifier,
+    account_manager::{AccountManager, DEFAULT_STORAGE_PATH},
+    client::ClientOptions,
+    storage::{sqlite::SqliteStorageAdapter, stronghold::StrongholdStorageAdapter},
+    DateTime, Utc,
 };
 use neon::prelude::*;
 use serde::Deserialize;
+use serde_repr::Deserialize_repr;
 
 mod internal_transfer;
 mod sync;
@@ -50,18 +57,44 @@ fn js_value_to_account_id(
 
 pub struct AccountManagerWrapper(Arc<RwLock<AccountManager>>);
 
+#[repr(u8)]
+#[derive(Deserialize_repr)]
+enum StorageType {
+    Stronghold = 1,
+    Sqlite = 2,
+}
+
+impl Default for StorageType {
+    fn default() -> Self {
+        Self::Stronghold
+    }
+}
+
+fn default_storage_path() -> PathBuf {
+    DEFAULT_STORAGE_PATH.into()
+}
+
+#[derive(Default, Deserialize)]
+struct ManagerOptions {
+    #[serde(rename = "storagePath", default = "default_storage_path")]
+    storage_path: PathBuf,
+    #[serde(default, rename = "storageType")]
+    storage_type: StorageType,
+}
+
 declare_types! {
     pub class JsAccountManager for AccountManagerWrapper {
         init(mut cx) {
-            let storage_path = match cx.argument_opt(0) {
+            let options: ManagerOptions = match cx.argument_opt(0) {
                 Some(arg) => {
-                    Some(arg.downcast::<JsString>().or_throw(&mut cx)?.value())
+                    let options = arg.downcast::<JsValue>().or_throw(&mut cx)?;
+                    neon_serde::from_value(&mut cx, options)?
                 }
-                None => None,
+                None => Default::default(),
             };
-            let manager = match storage_path {
-                Some(p) => AccountManager::with_storage_path(p),
-                None => AccountManager::new(),
+            let manager = match options.storage_type {
+                StorageType::Sqlite => AccountManager::with_storage_adapter(&options.storage_path, SqliteStorageAdapter::new(&options.storage_path, "accounts").unwrap()),
+                StorageType::Stronghold => AccountManager::with_storage_adapter(&options.storage_path, StrongholdStorageAdapter::new(&options.storage_path).unwrap()),
             };
             let manager = manager.expect("error initializing account manager");
             Ok(AccountManagerWrapper(Arc::new(RwLock::new(manager))))

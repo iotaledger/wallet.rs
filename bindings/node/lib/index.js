@@ -69,4 +69,12 @@ SyncedAccount.prototype.promote = promisify(SyncedAccount.prototype.promote)
 AccountManager.prototype.syncAccounts = promisify(AccountManager.prototype.syncAccounts)
 AccountManager.prototype.internalTransfer = promisify(AccountManager.prototype.internalTransfer)
 
-module.exports = { AccountManager, addEventListener, RemainderValueStrategy }
+module.exports = {
+  AccountManager,
+  addEventListener,
+  RemainderValueStrategy,
+  StorageType: {
+    Stronghold: 1,
+    Sqlite: 2
+  }
+}

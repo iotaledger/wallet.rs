@@ -33,7 +33,8 @@ use getset::{Getters, Setters};
 use iota::message::prelude::MessageId;
 use stronghold::Stronghold;
 
-const DEFAULT_STORAGE_PATH: &str = "./example-database";
+/// The default storage path.
+pub const DEFAULT_STORAGE_PATH: &str = "./example-database";
 
 /// The account manager.
 ///
