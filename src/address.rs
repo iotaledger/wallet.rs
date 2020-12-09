@@ -191,7 +191,7 @@ impl Address {
     }
 
     pub(crate) fn append_outputs(&mut self, outputs: Vec<AddressOutput>) {
-        outputs.into_iter().for_each(|output| {
+        for output in outputs {
             let is_new_output = self
                 .outputs
                 .iter()
@@ -205,7 +205,7 @@ impl Address {
             if is_new_output {
                 self.outputs.push(output);
             }
-        });
+        }
     }
 
     pub(crate) fn outputs_mut(&mut self) -> &mut Vec<AddressOutput> {
