@@ -49,7 +49,7 @@ pub fn unsubscribe(account: &Account) -> crate::Result<()> {
     Ok(())
 }
 
-fn mutate_account<F: FnOnce(&Account, &mut Vec<Address>, &mut Vec<Message>)>(
+fn mutate_account<F: FnOnce(&mut Account, &mut Vec<Address>, &mut Vec<Message>)>(
     account_id: &AccountIdentifier,
     storage_path: &PathBuf,
     cb: F,
@@ -57,7 +57,7 @@ fn mutate_account<F: FnOnce(&Account, &mut Vec<Address>, &mut Vec<Message>)>(
     let mut account = crate::storage::get_account(&storage_path, account_id.clone())?;
     let mut addresses: Vec<Address> = account.addresses().to_vec();
     let mut messages: Vec<Message> = account.messages().to_vec();
-    cb(&account, &mut addresses, &mut messages);
+    cb(&mut account, &mut addresses, &mut messages);
     account.set_addresses(addresses);
     account.set_messages(messages);
     let account_str = serde_json::to_string(&account)?;
@@ -218,12 +218,16 @@ fn process_metadata(
 ) -> crate::Result<()> {
     let account_id: AccountIdentifier = account_id_raw.clone().into();
     let metadata: MessageMetadata = serde_json::from_str(&payload)?;
-    let confirmed = !(metadata.should_promote.unwrap_or(true) || metadata.should_reattach.unwrap_or(true));
-    if confirmed && !message.confirmed() {
-        mutate_account(&account_id, &storage_path, |account, _, messages| {
+    let confirmed = metadata.ledger_inclusion_state == Some("included".to_string());
+
+    if confirmed != *message.confirmed() {
+        mutate_account(&account_id, &storage_path, |account, addresses, messages| {
             let message = messages.iter_mut().find(|m| m.id() == &message_id).unwrap();
-            message.set_confirmed(true);
-            crate::event::emit_confirmation_state_change(account_id_raw, &message, true);
+            message.set_confirmed(confirmed);
+            account.on_message_confirmation_change(message.id());
+            *addresses = account.addresses().to_vec();
+
+            crate::event::emit_confirmation_state_change(account_id_raw, &message, confirmed);
         })?;
     }
     Ok(())

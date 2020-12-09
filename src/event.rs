@@ -24,6 +24,13 @@ pub struct BalanceEvent<'a> {
     balance: u64,
 }
 
+impl<'a> BalanceEvent<'a> {
+    #[doc(hidden)]
+    pub fn cloned_address(&self) -> Address {
+        self.address.clone()
+    }
+}
+
 /// A transaction-related event data.
 #[derive(Getters, Serialize)]
 #[getset(get = "pub")]

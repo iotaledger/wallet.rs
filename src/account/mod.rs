@@ -242,13 +242,15 @@ impl Account {
     /// the available balance should be (50i-30i) = 20i.
     pub fn available_balance(&self) -> u64 {
         let total_balance = self.total_balance();
-        let spent = self
-            .list_messages(0, 0, Some(MessageType::Sent))
-            .iter()
-            .fold(0, |acc, message| {
-                let val = if *message.confirmed() { 0 } else { *message.value() };
-                acc + val
-            });
+        let spent = self.addresses().iter().fold(0, |acc, addr| {
+            acc + addr.outputs().iter().fold(0, |acc, o| {
+                acc + if o.pending_on_message_id().is_some() {
+                    *o.amount()
+                } else {
+                    0
+                }
+            })
+        });
         total_balance - (spent as u64)
     }
 
@@ -274,12 +276,16 @@ impl Account {
     /// This is automatically performed when the account goes out of scope.
     pub fn save_pending_changes(&mut self) -> crate::Result<()> {
         if self.has_pending_changes {
-            crate::storage::with_adapter(&self.storage_path, |storage| {
-                storage.set(self.id.clone().into(), serde_json::to_string(&self)?)
-            })?;
+            self.save()?;
             self.has_pending_changes = false;
         }
         Ok(())
+    }
+
+    pub(crate) fn save(&self) -> crate::Result<()> {
+        crate::storage::with_adapter(&self.storage_path, |storage| {
+            storage.set(self.id.clone().into(), serde_json::to_string(&self)?)
+        })
     }
 
     /// Gets a list of transactions on this account.
@@ -394,6 +400,42 @@ impl Account {
 
     pub(crate) fn addresses_mut(&mut self) -> &mut Vec<Address> {
         &mut self.addresses
+    }
+
+    pub(crate) fn messages_mut(&mut self) -> &mut Vec<Message> {
+        &mut self.messages
+    }
+
+    pub(crate) fn on_message_confirmation_change(&mut self, message_id: &MessageId) -> bool {
+        let mut updated = false;
+        for address in self.addresses.iter_mut() {
+            for output in address.outputs_mut().iter_mut() {
+                match output.pending_on_message_id() {
+                    Some(id) if id == message_id => {
+                        output.set_pending_on_message_id(None);
+                        updated = true;
+                    }
+                    _ => {}
+                }
+            }
+        }
+        updated
+    }
+
+    pub(crate) fn on_reattachment(&mut self, old_message_id: &MessageId, new_message_id: &MessageId) -> bool {
+        let mut updated = false;
+        for address in self.addresses.iter_mut() {
+            for output in address.outputs_mut().iter_mut() {
+                match output.pending_on_message_id() {
+                    Some(id) if id == old_message_id => {
+                        output.set_pending_on_message_id(Some(*new_message_id));
+                        updated = true;
+                    }
+                    _ => {}
+                }
+            }
+        }
+        updated
     }
 
     /// Gets a message with the given id associated with this account.

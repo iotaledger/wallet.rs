@@ -302,12 +302,12 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
         let accounts_before_sync = crate::storage::parse_accounts(&storage_path, &accounts_before_sync)?;
         let synced_accounts = sync_accounts(&storage_path, Some(0)).await?;
         let accounts_after_sync = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
-        let accounts_after_sync = crate::storage::parse_accounts(&storage_path, &accounts_after_sync)?;
+        let mut accounts_after_sync = crate::storage::parse_accounts(&storage_path, &accounts_after_sync)?;
 
         // compare accounts to check for balance changes and new messages
         for account_before_sync in &accounts_before_sync {
             let account_after_sync = accounts_after_sync
-                .iter()
+                .iter_mut()
                 .find(|account| account.id() == account_before_sync.id())
                 .unwrap();
 
@@ -341,35 +341,50 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
                 });
 
             // confirmation state change event
-            account_after_sync.messages().iter().for_each(|message| {
+            for message in account_after_sync.messages().to_vec() {
                 let changed = match account_before_sync.messages().iter().find(|m| m.id() == message.id()) {
                     Some(old_message) => message.confirmed() != old_message.confirmed(),
                     None => false,
                 };
                 if changed {
+                    if account_after_sync.on_message_confirmation_change(message.id()) {
+                        account_after_sync.save()?;
+                    }
                     emit_confirmation_state_change(account_after_sync.id().clone(), &message, true);
                 }
-            });
+            }
         }
         retry_unconfirmed_transactions(synced_accounts.iter().zip(accounts_after_sync.iter()).collect()).await?
     } else {
         let accounts = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
         let mut retried_messages = vec![];
-        for account in crate::storage::parse_accounts(&storage_path, &accounts)? {
-            let unconfirmed_messages =
-                account.list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed));
+        for mut account in crate::storage::parse_accounts(&storage_path, &accounts)? {
+            let unconfirmed_messages: Vec<Message> = account
+                .list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed))
+                .into_iter()
+                .cloned()
+                .collect();
 
             let mut promotions = vec![];
             let mut reattachments = vec![];
+            let mut updated = false;
             for message in unconfirmed_messages {
                 let new_message =
                     repost_message(account.id().into(), &storage_path, message.id(), RepostAction::Retry).await?;
                 if new_message.payload() == message.payload() {
+                    if account.on_reattachment(message.id(), new_message.id()) {
+                        updated = true;
+                    }
                     reattachments.push(new_message);
                 } else {
                     promotions.push(new_message);
                 }
             }
+
+            if updated {
+                account.save()?;
+            }
+
             retried_messages.push(RetriedData {
                 promoted: promotions,
                 reattached: reattachments,
