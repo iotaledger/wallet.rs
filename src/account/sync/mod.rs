@@ -64,6 +64,13 @@ async fn sync_addresses(
             let address_outputs = client.get_address().outputs(&iota_address).await?;
             let balance = client.get_address().balance(&iota_address).await?;
 
+            log::debug!(
+                "[SYNC] syncing address {}, got {} outputs and balance {}",
+                iota_address.to_bech32(),
+                address_outputs.len(),
+                balance
+            );
+
             let mut curr_found_outputs: Vec<AddressOutput> = vec![];
             for output in address_outputs.iter() {
                 let output = client.get_output(output).await?;
@@ -85,11 +92,14 @@ async fn sync_addresses(
                         message,
                     ));
                 }
-                curr_found_outputs.push(output.try_into()?);
+                let output = output.try_into()?;
+                log::debug!("[SYNC] found output {:?}", output);
+                curr_found_outputs.push(output);
             }
 
             // ignore unused change addresses
             if *iota_address_internal && curr_found_outputs.is_empty() {
+                log::debug!("[SYNC] ignoring address because it's internal and the output list is empty");
                 continue;
             }
 
@@ -115,6 +125,7 @@ async fn sync_addresses(
         generated_addresses.extend(curr_generated_addresses.into_iter());
 
         if is_empty {
+            log::debug!("[SYNC] finishing address syncing because the current messages list and address list is empty");
             break;
         }
     }
@@ -133,8 +144,15 @@ async fn sync_messages(
     let client = client.read().unwrap();
 
     for address in account.addresses_mut().iter_mut().take(stop_at_address_index) {
+        log::debug!(
+            "[SYNC] syncing messages and outputs for address {}",
+            address.address().to_bech32()
+        );
         let address_outputs = client.get_address().outputs(address.address()).await?;
         let balance = client.get_address().balance(address.address()).await?;
+
+        log::debug!("[SYNC] got {} outputs and balance {}", address_outputs.len(), balance);
+
         let mut outputs = vec![];
         for output in address_outputs.iter() {
             let output = client.get_output(output).await?;
@@ -143,6 +161,8 @@ async fn sync_messages(
             if let Ok(message) = client.get_message().data(output.message_id()).await {
                 messages.push((*output.message_id(), message));
             }
+
+            log::debug!("[SYNC] found output {:?}", output);
 
             outputs.push(output);
         }
@@ -165,6 +185,7 @@ async fn update_account_messages<'a>(
         .iter_mut()
         .filter(|message| !message.broadcasted() && new_messages.iter().any(|(id, _)| id == message.id()))
         .for_each(|message| {
+            log::debug!("[SYNC] marking message {:?} as broadcasted", message.id());
             message.set_broadcasted(true);
         });
 
@@ -177,6 +198,7 @@ async fn update_account_messages<'a>(
         let metadata = client.get_message().metadata(message.id()).await?;
         let confirmed = !(metadata.should_promote.unwrap_or(true) || metadata.should_reattach.unwrap_or(true));
         if confirmed {
+            log::debug!("[SYNC] marking message {:?} as confirmed", message.id());
             message.set_confirmed(true);
         }
     }
@@ -190,6 +212,11 @@ async fn perform_sync(
     address_index: usize,
     gap_limit: usize,
 ) -> crate::Result<bool> {
+    log::debug!(
+        "[SYNC] syncing with address_index = {}, gap_limit = {}",
+        address_index,
+        gap_limit
+    );
     let (found_addresses, found_messages) = sync_addresses(&storage_path, &account, address_index, gap_limit).await?;
 
     let mut new_messages = vec![];
@@ -235,6 +262,7 @@ async fn perform_sync(
         }
         previous_address_is_unused = address_is_unused;
     }
+    log::debug!("[SYNC] new addresses: {:#?}", addresses_to_save);
 
     let is_empty = new_messages.is_empty() && addresses_to_save.iter().all(|address| address.outputs().is_empty());
 
@@ -244,7 +272,10 @@ async fn perform_sync(
         .iter()
         .map(|(id, message)| Message::from_iota_message(*id, account.addresses(), &message).unwrap())
         .collect();
+    log::debug!("[SYNC] new messages: {:#?}", parsed_messages);
     account.append_messages(parsed_messages);
+
+    log::debug!("[SYNC] is empty: {}", is_empty);
 
     Ok(is_empty)
 }
@@ -298,7 +329,7 @@ impl<'a> AccountSynchronizer<'a> {
         let client = get_client(&options);
 
         if let Err(e) = crate::monitor::unsubscribe(&self.account) {
-            log::error!("error unsubscribing from MQTT topics before syncing: {:?}", e);
+            log::error!("[MQTT] error unsubscribing from MQTT topics before syncing: {:?}", e);
         }
 
         let mut account_ = self.account.clone();
@@ -327,10 +358,13 @@ impl<'a> AccountSynchronizer<'a> {
             };
 
         if let Err(e) = crate::monitor::monitor_account_addresses_balance(&self.account) {
-            log::error!("error reinitialising account addresses monitoring: {:?}", e);
+            log::error!("[MQTT] error reinitialising account addresses monitoring: {:?}", e);
         }
         if let Err(e) = crate::monitor::monitor_unconfirmed_messages(&self.account) {
-            log::error!("error reinitialising account unconfirmed messages monitoring: {:?}", e);
+            log::error!(
+                "[MQTT] error reinitialising account unconfirmed messages monitoring: {:?}",
+                e
+            );
         }
 
         return_value
@@ -588,7 +622,7 @@ impl SyncedAccount {
         for address in addresses_to_watch {
             // ignore errors because we fallback to the polling system
             if let Err(e) = crate::monitor::monitor_address_balance(&account, &address) {
-                log::error!("error monitoring new account address: {:?}", e);
+                log::error!("[MQTT] error monitoring new account address: {:?}", e);
             }
         }
 
@@ -600,7 +634,7 @@ impl SyncedAccount {
 
         // ignore errors because we fallback to the polling system
         if let Err(e) = crate::monitor::monitor_confirmation_state_change(&account, &message_id) {
-            log::error!("error monitoring for confirmation change: {:?}", e);
+            log::error!("[MQTT] error monitoring for confirmation change: {:?}", e);
         }
 
         Ok(TransferMetadata { message, account })

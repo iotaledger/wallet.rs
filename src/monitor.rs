@@ -113,7 +113,7 @@ pub fn monitor_address_balance(account: &Account, address: &IotaAddress) -> crat
                     )
                     .await
                     {
-                        log::error!("error processing output: {:?}", e);
+                        log::error!("[MQTT] error processing output: {:?}", e);
                     }
                 });
             });
@@ -207,7 +207,7 @@ pub fn monitor_confirmation_state_change(account: &Account, message_id: &Message
                 &message,
                 &storage_path,
             ) {
-                log::error!("error processing metadata: {:?}", e);
+                log::error!("[MQTT] error processing metadata: {:?}", e);
             }
         },
     )?;

@@ -371,7 +371,7 @@ impl Account {
 
         // ignore errors because we fallback to the polling system
         if let Err(e) = crate::monitor::monitor_address_balance(&self, address.address()) {
-            log::error!("error monitoring newly generated address: {:?}", e);
+            log::error!("[MQTT] error monitoring newly generated address: {:?}", e);
         }
 
         Ok(address)
@@ -408,7 +408,7 @@ impl Account {
 impl Drop for Account {
     fn drop(&mut self) {
         if let Err(e) = self.save_pending_changes() {
-            log::error!("error saving account pending changes: {:?}", e);
+            log::error!("[MQTT] error saving account pending changes: {:?}", e);
         }
     }
 }

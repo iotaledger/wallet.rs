@@ -404,8 +404,14 @@ async fn discover_accounts(
             account_initialiser = account_initialiser.signer_type(signer_type.clone());
         }
         let mut account = account_initialiser.initialise()?;
+        log::debug!(
+            "[SYNC] discovering account {}, signer type {:?}",
+            account.alias(),
+            account.signer_type()
+        );
         let synced_account = account.sync().skip_persistance().execute().await?;
         let is_empty = *synced_account.is_empty();
+        log::debug!("[SYNC] account is empty? {}", is_empty);
         if is_empty {
             break;
         } else {
@@ -437,6 +443,7 @@ async fn sync_accounts<'a>(storage_path: &PathBuf, address_index: Option<usize>)
     let discovered_accounts_res = match last_account {
         Some(account) => {
             if account.messages().is_empty() || account.addresses().iter().all(|addr| *addr.balance() == 0) {
+                log::debug!("[SYNC] running account discovery because the latest account is empty");
                 discover_accounts(
                     &storage_path,
                     account.client_options(),
@@ -444,10 +451,14 @@ async fn sync_accounts<'a>(storage_path: &PathBuf, address_index: Option<usize>)
                 )
                 .await
             } else {
+                log::debug!("[SYNC] skipping account discovery because the latest account isn't empty");
                 Ok(vec![])
             }
         }
-        None => discover_accounts(&storage_path, &ClientOptions::default(), None).await,
+        None => {
+            log::debug!("[SYNC] running account discovery because the account list is empty");
+            discover_accounts(&storage_path, &ClientOptions::default(), None).await
+        }
     };
     if let Ok(discovered_accounts) = discovered_accounts_res {
         synced_accounts.extend(discovered_accounts.into_iter());
