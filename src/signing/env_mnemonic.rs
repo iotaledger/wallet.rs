@@ -51,7 +51,7 @@ fn derive_into_address(private_key: ed25519::Ed25519PrivateKey) -> String {
         result.extend(res.to_vec());
     });
 
-    bech32::encode("iota", result.to_base32()).unwrap()
+    bech32::encode("iot", result.to_base32()).unwrap()
 }
 
 #[derive(Default)]
