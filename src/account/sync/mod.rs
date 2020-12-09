@@ -440,6 +440,8 @@ impl SyncedAccount {
 
     /// Send messages.
     pub async fn transfer(&self, transfer_obj: Transfer) -> crate::Result<TransferMetadata> {
+        log::debug!("[TRANFER] got transfer {:?}", transfer_obj);
+
         // validate the transfer
         if transfer_obj.amount == 0 {
             return Err(crate::WalletError::ZeroAmount);
@@ -469,6 +471,12 @@ impl SyncedAccount {
         // select the input addresses and check if a remainder address is needed
         let (input_addresses, remainder_address) =
             self.select_inputs(transfer_obj.amount, &account, &transfer_obj.address)?;
+
+        log::debug!(
+            "[TRANSFER] inputs: {:#?} - remainder address: {:?}",
+            input_addresses,
+            remainder_address
+        );
 
         let mut utxos = vec![];
         let mut address_index_recorders = vec![];
@@ -516,9 +524,19 @@ impl SyncedAccount {
                 address_path,
             });
             if current_output_sum == value {
+                log::debug!(
+                    "[TRANFER] current output sum matches the transfer value, adding {} to the remainder value (currently at {})",
+                    utxo.amount,
+                    remainder_value
+                );
                 // already filled the transfer value; just collect the output value as remainder
                 remainder_value += utxo.amount;
             } else if current_output_sum + utxo.amount > value {
+                log::debug!(
+                    "[TRANFER] current output sum ({}) would exceed the transfer value if added the output amount ({})",
+                    current_output_sum,
+                    utxo.amount
+                );
                 // if the used UTXO amount is greater than the transfer value, this is the last iteration and we'll have
                 // remainder value. we add an Output for the missing value and collect the remainder
                 let missing_value = value - current_output_sum;
@@ -531,7 +549,17 @@ impl SyncedAccount {
                     .into(),
                 );
                 current_output_sum += missing_value;
+                log::debug!(
+                    "[TRANSFER] added output with the missing value {}, and the remainder is {}",
+                    missing_value,
+                    remainder_value
+                );
             } else {
+                log::debug!(
+                    "[TRANSFER] adding output amount {}, current sum {}",
+                    utxo.amount,
+                    current_output_sum
+                );
                 essence_builder = essence_builder.add_output(
                     SignatureLockedSingleOutput::new(
                         transfer_obj.address.clone(),
@@ -549,24 +577,41 @@ impl SyncedAccount {
             let remainder_address =
                 remainder_address.ok_or_else(|| anyhow::anyhow!("remainder address not defined"))?;
 
+            println!("[TRANFER] remainder value is {}", remainder_value);
+
             let remainder_target_address = match transfer_obj.remainder_value_strategy {
                 // use one of the account's addresses to send the remainder value
-                RemainderValueStrategy::AccountAddress(target_address) => target_address,
+                RemainderValueStrategy::AccountAddress(target_address) => {
+                    log::debug!(
+                        "[TARGET] using user defined account address as remainder target: {}",
+                        target_address.to_bech32()
+                    );
+                    target_address
+                }
                 // generate a new change address to send the remainder value
                 RemainderValueStrategy::ChangeAddress => {
                     if *remainder_address.internal() {
                         let deposit_address = account.latest_address().unwrap().address().clone();
+                        log::debug!("[TRANFER] the remainder address is internal, so using latest address as remainder target: {}", deposit_address.to_bech32());
                         deposit_address
                     } else {
                         let change_address = crate::address::get_new_change_address(&account, &remainder_address)?;
                         let addr = change_address.address().clone();
+                        log::debug!(
+                            "[TRANSFER] generated new change address as remainder target: {}",
+                            addr.to_bech32()
+                        );
                         account.append_addresses(vec![change_address]);
                         addresses_to_watch.push(addr.clone());
                         addr
                     }
                 }
                 // keep the remainder value on the address
-                RemainderValueStrategy::ReuseAddress => remainder_address.address().clone(),
+                RemainderValueStrategy::ReuseAddress => {
+                    let address = remainder_address.address().clone();
+                    log::debug!("[TRANSFER] reusing address as remainder target {}", address.to_bech32());
+                    address
+                }
             };
             remainder_value_deposit_address = Some(remainder_target_address.clone());
             essence_builder = essence_builder.add_output(
@@ -601,6 +646,8 @@ impl SyncedAccount {
             .finish()
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
+        log::debug!("[TRANSFER] submitting message {:#?}", message);
+
         let message_id = client.post_message(&message).await?;
         // if this is a transfer to the account's latest address or we used the latest as deposit of the remainder
         // value, we generate a new one to keep the latest address unused
@@ -609,6 +656,14 @@ impl SyncedAccount {
             || (remainder_value_deposit_address.is_some()
                 && &remainder_value_deposit_address.unwrap() == latest_address)
         {
+            log::debug!(
+                "[TRANSFER] generating new address since {}",
+                if latest_address == &transfer_obj.address {
+                    "latest address equals the transfer address"
+                } else {
+                    "latest address equals the remainder value deposit address"
+                }
+            );
             let addr = crate::address::get_new_address(&account)?;
             addresses_to_watch.push(addr.address().clone());
             account.append_addresses(vec![addr]);
