@@ -220,7 +220,7 @@ fn process_metadata(
 ) -> crate::Result<()> {
     let account_id: AccountIdentifier = account_id_raw.clone().into();
     let metadata: MessageMetadata = serde_json::from_str(&payload)?;
-    let confirmed = metadata.ledger_inclusion_state == Some("included".to_string());
+    let confirmed = metadata.ledger_inclusion_state.as_deref() == Some("included");
 
     if confirmed != *message.confirmed() {
         mutate_account(&account_id, &storage_path, |account, addresses, messages| {

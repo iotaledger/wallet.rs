@@ -184,7 +184,7 @@ async fn update_account_messages<'a>(
     let client = client.read().unwrap();
     for message in unconfirmed_messages.iter_mut() {
         let metadata = client.get_message().metadata(message.id()).await?;
-        let confirmed = metadata.ledger_inclusion_state == Some("included".to_string());
+        let confirmed = metadata.ledger_inclusion_state.as_deref() == Some("included");
         if confirmed {
             message.set_confirmed(true);
         } else {
