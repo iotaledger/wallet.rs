@@ -388,9 +388,25 @@ impl Account {
     pub(crate) fn append_addresses(&mut self, addresses: Vec<Address>) {
         addresses
             .into_iter()
-            .for_each(|address| match self.addresses.iter().position(|a| a == &address) {
+            .for_each(|mut address| match self.addresses.iter().position(|a| a == &address) {
                 Some(index) => {
-                    self.addresses[index] = address;
+                    let old_address = &mut self.addresses[index];
+                    old_address.set_balance(*address.balance());
+                    old_address.outputs = address
+                        .outputs
+                        .iter_mut()
+                        .map(|output| {
+                            if let Some(old_output) = old_address.outputs().iter().find(|o| {
+                                o.message_id() == output.message_id()
+                                    && o.transaction_id() == output.transaction_id()
+                                    && o.index() == output.index()
+                                    && o.amount() == output.amount()
+                            }) {
+                                output.set_pending_on_message_id(*old_output.pending_on_message_id());
+                            }
+                            output.clone()
+                        })
+                        .collect();
                 }
                 None => {
                     self.addresses.push(address);
@@ -398,15 +414,17 @@ impl Account {
             });
     }
 
-    pub(crate) fn addresses_mut(&mut self) -> &mut Vec<Address> {
+    #[doc(hidden)]
+    pub fn addresses_mut(&mut self) -> &mut Vec<Address> {
         &mut self.addresses
     }
 
-    pub(crate) fn messages_mut(&mut self) -> &mut Vec<Message> {
+    #[doc(hidden)]
+    pub fn messages_mut(&mut self) -> &mut Vec<Message> {
         &mut self.messages
     }
 
-    pub(crate) fn on_message_confirmation_change(&mut self, message_id: &MessageId) -> bool {
+    pub(crate) fn on_message_unconfirmed(&mut self, message_id: &MessageId) -> bool {
         let mut updated = false;
         for address in self.addresses.iter_mut() {
             for output in address.outputs_mut().iter_mut() {

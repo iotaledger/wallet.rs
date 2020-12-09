@@ -62,6 +62,13 @@ pub struct TransactionConfirmationChangeEvent<'a> {
     confirmed: bool,
 }
 
+impl<'a> TransactionConfirmationChangeEvent<'a> {
+    #[doc(hidden)]
+    pub fn cloned_message(&self) -> Message {
+        self.message.clone()
+    }
+}
+
 struct BalanceEventHandler {
     /// The on event callback.
     on_event: Box<dyn Fn(&BalanceEvent<'_>) + Send>,
@@ -138,7 +145,7 @@ pub(crate) fn emit_balance_change(account_id: String, address: &Address, balance
         balance,
     };
     for listener in listeners.deref() {
-        (listener.on_event)(&event)
+        (listener.on_event)(&event);
     }
 }
 
@@ -153,7 +160,7 @@ pub(crate) fn emit_transaction_event(event_type: TransactionEventType, account_i
     };
     for listener in listeners.deref() {
         if listener.event_type == event_type {
-            (listener.on_event)(&event)
+            (listener.on_event)(&event);
         }
     }
 }
@@ -169,7 +176,7 @@ pub(crate) fn emit_confirmation_state_change(account_id: String, message: &Messa
         confirmed,
     };
     for listener in listeners.deref() {
-        (listener.on_event)(&event)
+        (listener.on_event)(&event);
     }
 }
 

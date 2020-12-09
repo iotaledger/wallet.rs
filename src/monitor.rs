@@ -143,9 +143,11 @@ async fn process_output(
     let message_id = address_output.message_id();
     let message_id_ = *message_id;
 
-    let client = crate::client::get_client(&client_options_);
-    let client = client.read().unwrap();
-    let message = client.get_message().data(&message_id_).await?;
+    let message = {
+        let client = crate::client::get_client(&client_options_);
+        let client = client.read().unwrap();
+        client.get_message().data(&message_id_).await?
+    };
 
     let message_id_ = *message_id;
     mutate_account(&account_id, &storage_path, |acc, addresses, messages| {
@@ -224,7 +226,9 @@ fn process_metadata(
         mutate_account(&account_id, &storage_path, |account, addresses, messages| {
             let message = messages.iter_mut().find(|m| m.id() == &message_id).unwrap();
             message.set_confirmed(confirmed);
-            account.on_message_confirmation_change(message.id());
+            if !confirmed {
+                account.on_message_unconfirmed(message.id());
+            }
             *addresses = account.addresses().to_vec();
 
             crate::event::emit_confirmation_state_change(account_id_raw, &message, confirmed);

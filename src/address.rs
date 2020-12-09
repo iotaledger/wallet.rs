@@ -143,8 +143,7 @@ pub struct Address {
     /// Determines if an address is a public or an internal (change) address.
     internal: bool,
     /// The address outputs.
-    #[getset(set = "pub(crate)")]
-    outputs: Vec<AddressOutput>,
+    pub(crate) outputs: Vec<AddressOutput>,
 }
 
 impl PartialOrd for Address {
@@ -191,6 +190,24 @@ impl Address {
         }
     }
 
+    pub(crate) fn append_outputs(&mut self, outputs: Vec<AddressOutput>) {
+        outputs.into_iter().for_each(|output| {
+            let is_new_output = self
+                .outputs
+                .iter()
+                .position(|o| {
+                    o.transaction_id == output.transaction_id
+                        && o.message_id == output.message_id
+                        && o.amount == output.amount
+                        && o.index == output.index
+                })
+                .is_none();
+            if is_new_output {
+                self.outputs.push(output);
+            }
+        });
+    }
+
     pub(crate) fn outputs_mut(&mut self) -> &mut Vec<AddressOutput> {
         &mut self.outputs
     }
@@ -199,14 +216,14 @@ impl Address {
     pub fn available_outputs(&self) -> Vec<&AddressOutput> {
         self.outputs
             .iter()
-            .filter(|o| !(*o.is_spent() || o.pending_on_message_id().is_some()))
+            .filter(|o| !o.is_spent() && o.pending_on_message_id().is_none())
             .collect()
     }
 
     pub(crate) fn available_outputs_mut(&mut self) -> Vec<&mut AddressOutput> {
         self.outputs
             .iter_mut()
-            .filter(|o| !(*o.is_spent() || o.pending_on_message_id().is_some()))
+            .filter(|o| !o.is_spent() && o.pending_on_message_id().is_none())
             .collect()
     }
 

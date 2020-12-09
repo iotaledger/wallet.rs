@@ -347,7 +347,7 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
                     None => false,
                 };
                 if changed {
-                    if account_after_sync.on_message_confirmation_change(message.id()) {
+                    if !message.confirmed() && account_after_sync.on_message_unconfirmed(message.id()) {
                         account_after_sync.save()?;
                     }
                     emit_confirmation_state_change(account_after_sync.id().clone(), &message, true);

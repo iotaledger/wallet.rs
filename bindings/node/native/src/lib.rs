@@ -6,6 +6,7 @@ use std::{
     collections::HashMap,
     panic::AssertUnwindSafe,
     sync::{Arc, Mutex, RwLock},
+    thread,
 };
 
 use futures::{Future, FutureExt};
@@ -20,65 +21,75 @@ use classes::*;
 
 type AccountInstanceMap = Arc<RwLock<HashMap<String, Arc<RwLock<Account>>>>>;
 
-fn mutate_account_if_exists<F: FnOnce(&Account, &mut Vec<Address>, &mut Vec<Message>) + Send + Sync>(
+fn mutate_account_if_exists<F: FnOnce(&Account, &mut Vec<Address>, &mut Vec<Message>) + Send + Sync + 'static>(
     account_id: &str,
     cb: F,
 ) {
-    let map = instances()
-        .read()
-        .expect("failed to lock read on account instances: mutate_account_if_exists()");
-    let mut found_account = None;
-    for (instance_id, account) in map.iter() {
-        let account_ = account.read().unwrap();
-        if account_.id() == account_id {
-            std::mem::drop(account_);
-            let mut account = account.write().unwrap();
-            let mut addresses: Vec<Address> = account.addresses().to_vec();
-            let mut messages: Vec<Message> = account.messages().to_vec();
-            cb(&account, &mut addresses, &mut messages);
-            account.set_addresses(addresses);
-            account.set_messages(messages);
-            found_account = Some((instance_id.clone(), (*account).clone()));
-            break;
+    let account_id = account_id.to_string();
+    thread::spawn(move || {
+        let map = instances()
+            .read()
+            .expect("failed to lock read on account instances: mutate_account_if_exists()");
+        let mut found_account = None;
+        for (instance_id, account) in map.iter() {
+            let account_ = account.read().unwrap();
+            if account_.id() == &account_id {
+                std::mem::drop(account_);
+                let mut account = account.write().unwrap();
+                let mut addresses: Vec<Address> = account.addresses().to_vec();
+                let mut messages: Vec<Message> = account.messages().to_vec();
+                cb(&account, &mut addresses, &mut messages);
+                account.set_addresses(addresses);
+                account.set_messages(messages);
+                found_account = Some((instance_id.clone(), (*account).clone()));
+                break;
+            }
         }
-    }
 
-    if let Some((id, account)) = found_account {
-        std::mem::drop(map);
-        update_account(&id, account);
-    }
+        if let Some((id, account)) = found_account {
+            std::mem::drop(map);
+            update_account(&id, account);
+        }
+    });
 }
 
 /// Gets the account instances map.
 fn instances() -> &'static AccountInstanceMap {
     static INSTANCES: Lazy<AccountInstanceMap> = Lazy::new(|| {
         iota_wallet::event::on_balance_change(|event| {
-            mutate_account_if_exists(event.account_id(), |_, addresses, _| {
-                if let Some(address) = addresses.iter_mut().find(|a| a == event.address()) {
-                    address.set_balance(*event.balance());
+            let address = event.cloned_address();
+            let balance = *event.balance();
+            mutate_account_if_exists(event.account_id(), move |_, addresses, _| {
+                if let Some(address) = addresses.iter_mut().find(|a| a == &&address) {
+                    address.set_balance(balance);
                 }
             });
         });
         iota_wallet::event::on_new_transaction(|event| {
-            mutate_account_if_exists(event.account_id(), |_, _, messages| {
-                messages.push(event.cloned_message());
+            let message = event.cloned_message();
+            mutate_account_if_exists(event.account_id(), move |_, _, messages| {
+                messages.push(message);
             });
         });
         iota_wallet::event::on_confirmation_state_change(|event| {
-            mutate_account_if_exists(event.account_id(), |_, _, messages| {
-                if let Some(message) = messages.iter_mut().find(|m| m == event.message()) {
-                    message.set_confirmed(*event.confirmed());
+            let message = event.cloned_message();
+            let confirmed = *event.confirmed();
+            mutate_account_if_exists(event.account_id(), move |_, _, messages| {
+                if let Some(message) = messages.iter_mut().find(|m| m == &&message) {
+                    message.set_confirmed(confirmed);
                 }
             });
         });
         iota_wallet::event::on_reattachment(|event| {
-            mutate_account_if_exists(event.account_id(), |_, _, messages| {
-                messages.push(event.cloned_message());
+            let message = event.cloned_message();
+            mutate_account_if_exists(event.account_id(), move |_, _, messages| {
+                messages.push(message);
             });
         });
         iota_wallet::event::on_broadcast(|event| {
-            mutate_account_if_exists(event.account_id(), |_, _, messages| {
-                if let Some(message) = messages.iter_mut().find(|m| m == event.message()) {
+            let message = event.cloned_message();
+            mutate_account_if_exists(event.account_id(), move |_, _, messages| {
+                if let Some(message) = messages.iter_mut().find(|m| m == &&message) {
                     message.set_broadcasted(true);
                 }
             });

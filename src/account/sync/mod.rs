@@ -27,6 +27,8 @@ use std::{
 
 mod input_selection;
 
+const OUTPUT_LOCK_TIMEOUT: Duration = Duration::from_secs(30);
+
 /// Syncs addresses with the tangle.
 /// The method ensures that the wallet local state has all used addresses plus an unused address.
 ///
@@ -154,7 +156,7 @@ async fn sync_messages(
             outputs.push(output);
         }
 
-        address.set_outputs(outputs);
+        address.append_outputs(outputs);
         address.set_balance(balance);
     }
 
@@ -185,7 +187,8 @@ async fn update_account_messages<'a>(
         let confirmed = metadata.ledger_inclusion_state == Some("included".to_string());
         if confirmed {
             message.set_confirmed(true);
-            account.on_message_confirmation_change(message.id());
+        } else {
+            account.on_message_unconfirmed(message.id());
         }
     }
 
@@ -367,6 +370,7 @@ pub struct SyncedAccount {
 }
 
 /// Transfer response metadata.
+#[derive(Debug)]
 pub struct TransferMetadata {
     /// The transfer message.
     pub message: Message,
@@ -434,21 +438,21 @@ impl SyncedAccount {
 
             let storage_path = self.storage_path.clone();
             let account_id = account_id.clone();
-            let timeout = 5000;
             thread::spawn(move || {
                 let tx = tx.lock().unwrap();
-                for _ in 1..5 {
-                    thread::sleep(Duration::from_millis(timeout / 5));
+                for _ in 1..30 {
+                    thread::sleep(OUTPUT_LOCK_TIMEOUT / 30);
                     if let Ok(account) = crate::storage::get_account(&storage_path, account_id.clone()) {
                         // the account received an update and now the balance is sufficient
                         if value <= account.available_balance() {
                             let _ = tx.send(account);
+                            break;
                         }
                     }
                 }
             });
 
-            match rx.recv_timeout(Duration::from_millis(timeout)) {
+            match rx.recv_timeout(OUTPUT_LOCK_TIMEOUT) {
                 Ok(acc) => {
                     account = acc;
                 }
