@@ -104,14 +104,17 @@ pub fn monitor_address_balance(account: &Account, address: &IotaAddress) -> crat
             let storage_path = storage_path.clone();
             std::thread::spawn(move || {
                 crate::block_on(async {
-                    let _ = process_output(
+                    if let Err(e) = process_output(
                         topic_event.payload.clone(),
                         account_id_raw.clone(),
                         address,
                         client_options,
                         storage_path,
                     )
-                    .await;
+                    .await
+                    {
+                        log::error!("error processing output: {:?}", e);
+                    }
                 });
             });
         },
@@ -197,13 +200,15 @@ pub fn monitor_confirmation_state_change(account: &Account, message_id: &Message
         account.client_options(),
         format!("messages/{}/metadata", message_id.to_string()),
         move |topic_event| {
-            let _ = process_metadata(
+            if let Err(e) = process_metadata(
                 topic_event.payload.clone(),
                 account_id_raw.clone(),
                 message_id,
                 &message,
                 &storage_path,
-            );
+            ) {
+                log::error!("error processing metadata: {:?}", e);
+            }
         },
     )?;
     Ok(())

@@ -370,7 +370,10 @@ impl Account {
         })?;
 
         // ignore errors because we fallback to the polling system
-        let _ = crate::monitor::monitor_address_balance(&self, address.address());
+        if let Err(e) = crate::monitor::monitor_address_balance(&self, address.address()) {
+            log::error!("error monitoring newly generated address: {:?}", e);
+        }
+
         Ok(address)
     }
 
@@ -404,7 +407,9 @@ impl Account {
 
 impl Drop for Account {
     fn drop(&mut self) {
-        let _ = self.save_pending_changes();
+        if let Err(e) = self.save_pending_changes() {
+            log::error!("error saving account pending changes: {:?}", e);
+        }
     }
 }
 

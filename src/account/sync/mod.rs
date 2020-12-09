@@ -297,7 +297,9 @@ impl<'a> AccountSynchronizer<'a> {
         let options = self.account.client_options().clone();
         let client = get_client(&options);
 
-        let _ = crate::monitor::unsubscribe(&self.account);
+        if let Err(e) = crate::monitor::unsubscribe(&self.account) {
+            log::error!("error unsubscribing from MQTT topics before syncing: {:?}", e);
+        }
 
         let mut account_ = self.account.clone();
         let return_value =
@@ -324,8 +326,12 @@ impl<'a> AccountSynchronizer<'a> {
                 Err(e) => Err(e),
             };
 
-        let _ = crate::monitor::monitor_account_addresses_balance(&self.account);
-        let _ = crate::monitor::monitor_unconfirmed_messages(&self.account);
+        if let Err(e) = crate::monitor::monitor_account_addresses_balance(&self.account) {
+            log::error!("error reinitialising account addresses monitoring: {:?}", e);
+        }
+        if let Err(e) = crate::monitor::monitor_unconfirmed_messages(&self.account) {
+            log::error!("error reinitialising account unconfirmed messages monitoring: {:?}", e);
+        }
 
         return_value
     }
@@ -581,7 +587,9 @@ impl SyncedAccount {
 
         for address in addresses_to_watch {
             // ignore errors because we fallback to the polling system
-            let _ = crate::monitor::monitor_address_balance(&account, &address);
+            if let Err(e) = crate::monitor::monitor_address_balance(&account, &address) {
+                log::error!("error monitoring new account address: {:?}", e);
+            }
         }
 
         let message = Message::from_iota_message(message_id, account.addresses(), &message)?;
@@ -591,7 +599,9 @@ impl SyncedAccount {
         })?;
 
         // ignore errors because we fallback to the polling system
-        let _ = crate::monitor::monitor_confirmation_state_change(&account, &message_id);
+        if let Err(e) = crate::monitor::monitor_confirmation_state_change(&account, &message_id) {
+            log::error!("error monitoring for confirmation change: {:?}", e);
+        }
 
         Ok(TransferMetadata { message, account })
     }
