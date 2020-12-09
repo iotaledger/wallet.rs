@@ -97,6 +97,7 @@ pub fn monitor_address_balance(account: &Account, address: &IotaAddress) -> crat
         account.client_options(),
         format!("addresses/{}/outputs", address_bech32),
         move |topic_event| {
+            log::debug!("[MQTT] got {:?}", topic_event);
             let topic_event = topic_event.clone();
             let account_id_raw = account_id_raw.clone();
             let address = address.clone();
@@ -200,6 +201,7 @@ pub fn monitor_confirmation_state_change(account: &Account, message_id: &Message
         account.client_options(),
         format!("messages/{}/metadata", message_id.to_string()),
         move |topic_event| {
+            log::debug!("[MQTT] got {:?}", topic_event);
             if let Err(e) = process_metadata(
                 topic_event.payload.clone(),
                 account_id_raw.clone(),

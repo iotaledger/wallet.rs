@@ -128,6 +128,7 @@ impl AccountManager {
                         } else {
                             "Internal error".to_string()
                         };
+                        log::error!("[POLLING] polling error: {}", msg);
                         let _error = crate::WalletError::UnknownError(msg);
                         // when the error is dropped, the on_error event will be triggered
                     }
@@ -304,6 +305,8 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
         let accounts_after_sync = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
         let accounts_after_sync = crate::storage::parse_accounts(&storage_path, &accounts_after_sync)?;
 
+        log::debug!("[POLLING] synced accounts");
+
         // compare accounts to check for balance changes and new messages
         for account_before_sync in &accounts_before_sync {
             let account_after_sync = accounts_after_sync
@@ -319,6 +322,12 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
                     .find(|addr| addr == &address_before_sync)
                     .unwrap();
                 if address_after_sync.balance() != address_before_sync.balance() {
+                    log::debug!(
+                        "[POLLING] address {} balance changed from {} to {}",
+                        address_after_sync.address().to_bech32(),
+                        address_before_sync.balance(),
+                        address_after_sync.balance()
+                    );
                     emit_balance_change(
                         account_after_sync.id().clone(),
                         address_after_sync,
@@ -333,6 +342,7 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
                 .iter()
                 .filter(|message| !account_before_sync.messages().contains(message))
                 .for_each(|message| {
+                    log::debug!("[POLLING] new message: {:?}", message);
                     emit_transaction_event(
                         TransactionEventType::NewTransaction,
                         account_after_sync.id().clone(),
@@ -347,12 +357,14 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
                     None => false,
                 };
                 if changed {
+                    log::debug!("[POLLING] message confirmed: {:?}", message);
                     emit_confirmation_state_change(account_after_sync.id().clone(), &message, true);
                 }
             });
         }
         retry_unconfirmed_transactions(synced_accounts.iter().zip(accounts_after_sync.iter()).collect()).await?
     } else {
+        log::debug!("[POLLING] skipping syncing process because MQTT is running");
         let accounts = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
         let mut retried_messages = vec![];
         for account in crate::storage::parse_accounts(&storage_path, &accounts)? {
@@ -362,11 +374,14 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
             let mut promotions = vec![];
             let mut reattachments = vec![];
             for message in unconfirmed_messages {
+                log::debug!("[POLLING] retrying {:?}", message);
                 let new_message =
                     repost_message(account.id().into(), &storage_path, message.id(), RepostAction::Retry).await?;
                 if new_message.payload() == message.payload() {
+                    log::debug!("[POLLING] reattached and new message is {:?}", new_message);
                     reattachments.push(new_message);
                 } else {
+                    log::debug!("[POLLING] promoted and new message is {:?}", new_message);
                     promotions.push(new_message);
                 }
             }
@@ -480,11 +495,14 @@ async fn retry_unconfirmed_transactions(accounts: Vec<(&SyncedAccount, &Account)
         let mut reattachments = vec![];
         let mut promotions = vec![];
         for message in unconfirmed_messages {
+            log::debug!("[POLLING] retrying {:?}", message);
             let new_message = synced.retry(message.id()).await?;
             // if the payload is the same, it was reattached; otherwise it was promoted
             if new_message.payload() == message.payload() {
+                log::debug!("[POLLING] rettached and new message is {:?}", new_message);
                 reattachments.push(new_message);
             } else {
+                log::debug!("[POLLING] promoted and new message is {:?}", new_message);
                 promotions.push(new_message);
             }
         }
