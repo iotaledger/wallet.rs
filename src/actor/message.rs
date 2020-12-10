@@ -167,16 +167,16 @@ impl Serialize for MessageType {
 
 /// The actor response type.
 #[derive(Serialize, Debug)]
-pub struct Response<'a> {
+pub struct Response {
     id: String,
     #[serde(flatten)]
-    response: ResponseType<'a>,
+    response: ResponseType,
     action: MessageType,
 }
 
-impl<'a> Response<'a> {
+impl Response {
     /// Creates a new response.
-    pub fn new<S: Into<String>>(id: S, action: MessageType, response: ResponseType<'a>) -> Self {
+    pub fn new<S: Into<String>>(id: S, action: MessageType, response: ResponseType) -> Self {
         Self {
             id: id.into(),
             response,
@@ -185,7 +185,7 @@ impl<'a> Response<'a> {
     }
 
     /// The response's type.
-    pub fn response(&self) -> &ResponseType<'a> {
+    pub fn response(&self) -> &ResponseType {
         &self.response
     }
 }
@@ -193,7 +193,7 @@ impl<'a> Response<'a> {
 /// The response message.
 #[derive(Serialize, Debug)]
 #[serde(tag = "type", content = "payload")]
-pub enum ResponseType<'a> {
+pub enum ResponseType {
     /// Account succesfully removed.
     RemovedAccount(AccountIdentifier),
     /// Account succesfully created.
@@ -201,15 +201,15 @@ pub enum ResponseType<'a> {
     /// GetAccount response.
     ReadAccount(Account),
     /// GetAccounts response.
-    ReadAccounts(Vec<&'a Account>),
+    ReadAccounts(Vec<Account>),
     /// ListMessages response.
-    Messages(Vec<&'a WalletMessage>),
+    Messages(Vec<WalletMessage>),
     /// ListAddresses response.
-    Addresses(Vec<&'a Address>),
+    Addresses(Vec<Address>),
     /// GenerateAddress response.
     GeneratedAddress(Address),
     /// GetLatestAddress response.
-    LatestAddress(Option<&'a Address>),
+    LatestAddress(Option<Address>),
     /// GetAvailableBalance response.
     AvailableBalance(u64),
     /// GetTotalBalance response.
@@ -236,15 +236,15 @@ pub enum ResponseType<'a> {
 
 /// The message type.
 #[derive(Debug, Clone)]
-pub struct Message<'a> {
+pub struct Message {
     id: String,
     pub(crate) message_type: MessageType,
-    pub(crate) response_tx: UnboundedSender<Response<'a>>,
+    pub(crate) response_tx: UnboundedSender<Response>,
 }
 
-impl<'a> Message<'a> {
+impl Message {
     /// Creates a new instance of a Message.
-    pub fn new<S: Into<String>>(id: S, message_type: MessageType, response_tx: UnboundedSender<Response<'a>>) -> Self {
+    pub fn new<S: Into<String>>(id: S, message_type: MessageType, response_tx: UnboundedSender<Response>) -> Self {
         Self {
             id: id.into(),
             message_type,
@@ -258,7 +258,7 @@ impl<'a> Message<'a> {
     }
 
     /// The response sender.
-    pub fn response_tx(&self) -> &UnboundedSender<Response<'a>> {
+    pub fn response_tx(&self) -> &UnboundedSender<Response> {
         &self.response_tx
     }
 
