@@ -401,7 +401,7 @@ impl Account {
 
     #[doc(hidden)]
     pub fn append_messages(&mut self, messages: Vec<Message>) {
-        self.messages.extend(messages.iter().cloned());
+        self.messages.extend(messages);
     }
 
     pub(crate) fn append_addresses(&mut self, addresses: Vec<Address>) {

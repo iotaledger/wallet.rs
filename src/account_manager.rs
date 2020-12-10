@@ -366,25 +366,27 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
         let accounts = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
         let mut retried_messages = vec![];
         for mut account in crate::storage::parse_accounts(&storage_path, &accounts)? {
-            let unconfirmed_messages: Vec<Message> = account
-                .list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed))
-                .into_iter()
-                .cloned()
-                .collect();
+            let unconfirmed_messages =
+                account.list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed));
 
             let mut promotions = vec![];
             let mut reattachments = vec![];
+            let mut reattached_messages = Vec::new();
             let mut updated = false;
             for message in unconfirmed_messages {
                 let new_message =
                     repost_message(account.id(), &storage_path, message.id(), RepostAction::Retry).await?;
                 if new_message.payload() == message.payload() {
-                    if account.on_reattachment(message.id(), new_message.id()) {
-                        updated = true;
-                    }
+                    reattached_messages.push((*message.id(), *new_message.id()));
                     reattachments.push(new_message);
                 } else {
                     promotions.push(new_message);
+                }
+            }
+
+            for (old_message_id, new_message_id) in reattached_messages {
+                if account.on_reattachment(&old_message_id, &new_message_id) {
+                    updated = true;
                 }
             }
 

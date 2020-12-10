@@ -406,7 +406,6 @@ impl SyncedAccount {
         let mut available_addresses: Vec<input_selection::Input> = account
             .addresses()
             .iter()
-            .cloned()
             .filter(|a| a.address() != address && a.available_balance() > 0 && !locked_addresses.contains(a.address()))
             .map(|a| a.into())
             .collect();
@@ -732,7 +731,7 @@ pub(crate) async fn repost_message(
     let message = match account.get_message(message_id) {
         Some(message_to_repost) => {
             // get the latest reattachment of the message we want to promote/rettry/reattach
-            let messages: Vec<Message> = account.list_messages(0, 0, None).into_iter().cloned().collect();
+            let messages = account.list_messages(0, 0, None);
             let message_to_repost = messages
                 .iter()
                 .find(|m| m.payload() == message_to_repost.payload())
@@ -772,7 +771,8 @@ pub(crate) async fn repost_message(
             let message = Message::from_iota_message(id, account.addresses(), &message)?;
 
             if message.payload() == message_to_repost.payload() {
-                account.on_reattachment(message_to_repost.id(), message.id());
+                let message_to_repost_id = *message_to_repost.id();
+                account.on_reattachment(&message_to_repost_id, message.id());
             }
 
             account.append_messages(vec![message.clone()]);

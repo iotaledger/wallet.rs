@@ -11,8 +11,8 @@ pub struct Input {
     pub balance: u64,
 }
 
-impl From<Address> for Input {
-    fn from(address: Address) -> Self {
+impl From<&Address> for Input {
+    fn from(address: &Address) -> Self {
         Self {
             address: address.address().clone(),
             balance: address.available_balance(),
