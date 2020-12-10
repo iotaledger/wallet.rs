@@ -192,22 +192,23 @@ impl Address {
         }
     }
 
-    pub(crate) fn append_outputs(&mut self, outputs: Vec<AddressOutput>) {
-        for output in outputs {
-            let is_new_output = self
-                .outputs
-                .iter()
-                .position(|o| {
-                    o.transaction_id == output.transaction_id
-                        && o.message_id == output.message_id
-                        && o.amount == output.amount
-                        && o.index == output.index
-                })
-                .is_none();
-            if is_new_output {
-                self.outputs.push(output);
+    pub(crate) fn fill_outputs_lock(&self, outputs: &mut Vec<AddressOutput>) {
+        for output in outputs.iter_mut() {
+            let original_output_opt = self.outputs.iter().find(|o| {
+                o.transaction_id == output.transaction_id
+                    && o.message_id == output.message_id
+                    && o.amount == output.amount
+                    && o.index == output.index
+            });
+            if let Some(original_output) = original_output_opt {
+                output.set_pending_on_message_id(*original_output.pending_on_message_id());
             }
         }
+    }
+
+    pub(crate) fn filter_outputs(&mut self, mut outputs: Vec<AddressOutput>) {
+        self.fill_outputs_lock(&mut outputs);
+        self.outputs = outputs;
     }
 
     pub(crate) fn outputs_mut(&mut self) -> &mut Vec<AddressOutput> {

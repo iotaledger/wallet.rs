@@ -70,7 +70,7 @@ fn get_from_index(
 }
 
 impl StorageAdapter for StrongholdStorageAdapter {
-    fn get(&self, account_id: AccountIdentifier) -> crate::Result<String> {
+    fn get(&self, account_id: &AccountIdentifier) -> crate::Result<String> {
         let account = crate::with_stronghold_from_path(&self.path, |stronghold| {
             let (_, index) = get_account_index(&stronghold)?;
             let stronghold_id = get_from_index(&index, &account_id).ok_or(crate::WalletError::AccountNotFound)?;
@@ -92,7 +92,7 @@ impl StorageAdapter for StrongholdStorageAdapter {
         Ok(accounts)
     }
 
-    fn set(&self, account_id: AccountIdentifier, account: String) -> crate::Result<()> {
+    fn set(&self, account_id: &AccountIdentifier, account: String) -> crate::Result<()> {
         let res: crate::Result<()> = crate::with_stronghold_from_path(&self.path, |stronghold| {
             let (index_record_id, mut index) = get_account_index(&stronghold)?;
             let account_in_index = get_from_index(&index, &account_id);
@@ -105,11 +105,11 @@ impl StorageAdapter for StrongholdStorageAdapter {
 
             if account_in_index.is_some() {
                 // account already existed; update the RecordId
-                let pos = index.iter().position(|(acc_id, _)| acc_id == &account_id).unwrap();
-                index[pos] = (account_id, stronghold_id);
+                let pos = index.iter().position(|(acc_id, _)| acc_id == account_id).unwrap();
+                index[pos] = (account_id.clone(), stronghold_id);
             } else {
                 // new account; push to the index
-                index.push((account_id, stronghold_id))
+                index.push((account_id.clone(), stronghold_id))
             }
 
             stronghold.record_remove(index_record_id)?;
@@ -124,7 +124,7 @@ impl StorageAdapter for StrongholdStorageAdapter {
         Ok(())
     }
 
-    fn remove(&self, account_id: AccountIdentifier) -> crate::Result<()> {
+    fn remove(&self, account_id: &AccountIdentifier) -> crate::Result<()> {
         let res: crate::Result<()> = crate::with_stronghold_from_path(&self.path, |stronghold| {
             let (index_record_id, index) = get_account_index(&stronghold)?;
             let stronghold_id = get_from_index(&index, &account_id).ok_or(crate::WalletError::AccountNotFound)?;
@@ -133,7 +133,7 @@ impl StorageAdapter for StrongholdStorageAdapter {
 
             let mut new_index = vec![];
             for (acc_id, record_id) in index {
-                if acc_id != account_id {
+                if &acc_id != account_id {
                     new_index.push((acc_id, record_id));
                 }
             }

@@ -40,7 +40,6 @@ impl Task for RepostTask {
             let account = crate::get_account(&self.account_id);
             let mut account = account.write().unwrap();
             account.append_messages(vec![message.clone()]);
-            crate::update_account(&self.account_id, (*account).clone());
 
             Ok(message)
         }))

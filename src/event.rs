@@ -1,7 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{address::Address, message::Message};
+use crate::{account::AccountIdentifier, address::Address, message::Message};
 
 use getset::Getters;
 use once_cell::sync::Lazy;
@@ -17,7 +17,7 @@ use std::{
 pub struct BalanceEvent<'a> {
     /// The associated account identifier.
     #[serde(rename = "accountId")]
-    account_id: String,
+    account_id: &'a AccountIdentifier,
     /// The associated address.
     address: &'a Address,
     /// The new balance.
@@ -37,7 +37,7 @@ impl<'a> BalanceEvent<'a> {
 pub struct TransactionEvent<'a> {
     #[serde(rename = "accountId")]
     /// The associated account identifier.
-    account_id: String,
+    account_id: &'a AccountIdentifier,
     /// The event message.
     message: &'a Message,
 }
@@ -55,7 +55,7 @@ impl<'a> TransactionEvent<'a> {
 pub struct TransactionConfirmationChangeEvent<'a> {
     #[serde(rename = "accountId")]
     /// The associated account identifier.
-    account_id: String,
+    account_id: &'a AccountIdentifier,
     /// The event message.
     message: &'a Message,
     /// The confirmed state of the transaction.
@@ -135,7 +135,7 @@ pub fn on_balance_change<F: Fn(&BalanceEvent<'_>) + Send + 'static>(cb: F) {
 }
 
 /// Emits a balance change event.
-pub(crate) fn emit_balance_change(account_id: String, address: &Address, balance: u64) {
+pub(crate) fn emit_balance_change(account_id: &AccountIdentifier, address: &Address, balance: u64) {
     let listeners = balance_listeners()
         .lock()
         .expect("Failed to lock balance_listeners: emit_balance_change()");
@@ -150,7 +150,11 @@ pub(crate) fn emit_balance_change(account_id: String, address: &Address, balance
 }
 
 /// Emits a transaction-related event.
-pub(crate) fn emit_transaction_event(event_type: TransactionEventType, account_id: String, message: &Message) {
+pub(crate) fn emit_transaction_event(
+    event_type: TransactionEventType,
+    account_id: &AccountIdentifier,
+    message: &Message,
+) {
     let listeners = transaction_listeners()
         .lock()
         .expect("Failed to lock balance_listeners: emit_balance_change()");
@@ -166,7 +170,7 @@ pub(crate) fn emit_transaction_event(event_type: TransactionEventType, account_i
 }
 
 /// Emits a transaction confirmation state change event.
-pub(crate) fn emit_confirmation_state_change(account_id: String, message: &Message, confirmed: bool) {
+pub(crate) fn emit_confirmation_state_change(account_id: &AccountIdentifier, message: &Message, confirmed: bool) {
     let listeners = transaction_confirmation_change_listeners()
         .lock()
         .expect("Failed to lock transaction_confirmation_change_listeners: emit_confirmation_state_change()");
@@ -234,7 +238,10 @@ pub fn on_error<F: Fn(&crate::WalletError) + Send + 'static>(cb: F) {
 #[cfg(test)]
 mod tests {
     use super::{emit_balance_change, on_balance_change, on_error};
-    use crate::address::{AddressBuilder, IotaAddress};
+    use crate::{
+        account::AccountIdentifier,
+        address::{AddressBuilder, IotaAddress},
+    };
     use iota::message::prelude::Ed25519Address;
     use rusty_fork::rusty_fork_test;
 
@@ -256,12 +263,12 @@ mod tests {
     #[test]
     fn balance_events() {
         on_balance_change(|event| {
-            assert!(event.account_id == hex::encode([1; 32]));
+            assert!(event.account_id == &AccountIdentifier::Id(hex::encode([1; 32])));
             assert!(event.balance == 0);
         });
 
         emit_balance_change(
-            hex::encode([1; 32]),
+            &AccountIdentifier::Id(hex::encode([1; 32])),
             &AddressBuilder::new()
                 .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
                 .balance(0)
