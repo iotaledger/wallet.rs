@@ -199,7 +199,7 @@ impl Address {
                     && o.index == output.index
             });
             if let Some(original_output) = original_output_opt {
-                output.set_pending_on_message_id(original_output.pending_on_message_id().clone());
+                output.set_pending_on_message_id(*original_output.pending_on_message_id());
             }
         }
     }
