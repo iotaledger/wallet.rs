@@ -406,25 +406,9 @@ impl Account {
     pub(crate) fn append_addresses(&mut self, addresses: Vec<Address>) {
         addresses
             .into_iter()
-            .for_each(|mut address| match self.addresses.iter().position(|a| a == &address) {
+            .for_each(|address| match self.addresses.iter().position(|a| a == &address) {
                 Some(index) => {
-                    let old_address = &mut self.addresses[index];
-                    old_address.set_balance(*address.balance());
-                    old_address.outputs = address
-                        .outputs
-                        .iter_mut()
-                        .map(|output| {
-                            if let Some(old_output) = old_address.outputs().iter().find(|o| {
-                                o.message_id() == output.message_id()
-                                    && o.transaction_id() == output.transaction_id()
-                                    && o.index() == output.index()
-                                    && o.amount() == output.amount()
-                            }) {
-                                output.set_pending_on_message_id(*old_output.pending_on_message_id());
-                            }
-                            output.clone()
-                        })
-                        .collect();
+                    self.addresses[index] = address;
                 }
                 None => {
                     self.addresses.push(address);
