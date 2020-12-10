@@ -592,7 +592,7 @@ impl SyncedAccount {
             if current_output_sum == value {
                 log::debug!(
                     "[TRANFER] current output sum matches the transfer value, adding {} to the remainder value (currently at {})",
-                    utxo.amount,
+                    utxo.amount(),
                     remainder_value
                 );
                 // already filled the transfer value; just collect the output value as remainder
@@ -623,7 +623,7 @@ impl SyncedAccount {
             } else {
                 log::debug!(
                     "[TRANSFER] adding output amount {}, current sum {}",
-                    utxo.amount,
+                    utxo.amount(),
                     current_output_sum
                 );
                 essence_builder = essence_builder.add_output(
