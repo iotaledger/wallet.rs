@@ -29,7 +29,7 @@ type AddressesLock = Arc<Mutex<Vec<IotaAddress>>>;
 type AccountAddressesLock = Arc<Mutex<HashMap<AccountIdentifier, AddressesLock>>>;
 static ACCOUNT_ADDRESSES_LOCK: OnceCell<AccountAddressesLock> = OnceCell::new();
 
-pub(crate) fn get_account_addresses_lock(account_id: AccountIdentifier) -> AddressesLock {
+pub(crate) fn get_account_addresses_lock(account_id: &AccountIdentifier) -> AddressesLock {
     let mut locks = ACCOUNT_ADDRESSES_LOCK.get_or_init(Default::default).lock().unwrap();
     if !locks.contains_key(&account_id) {
         locks.insert(account_id.clone(), Default::default());
@@ -41,13 +41,13 @@ pub(crate) fn get_account_addresses_lock(account_id: AccountIdentifier) -> Addre
 #[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
 #[serde(untagged)]
 pub enum AccountIdentifier {
-    /// A hex string of the stronghold record id identifier.
+    /// A string identifier.
     Id(String),
     /// An index identifier.
-    Index(u64),
+    Index(usize),
 }
 
-// When the identifier is a stronghold id.
+// When the identifier is a string id.
 impl From<&String> for AccountIdentifier {
     fn from(value: &String) -> Self {
         Self::Id(value.clone())
@@ -60,9 +60,9 @@ impl From<String> for AccountIdentifier {
     }
 }
 
-// When the identifier is an id.
-impl From<u64> for AccountIdentifier {
-    fn from(value: u64) -> Self {
+// When the identifier is an index.
+impl From<usize> for AccountIdentifier {
+    fn from(value: usize) -> Self {
         Self::Index(value)
     }
 }
@@ -164,7 +164,7 @@ impl<'a> AccountInitialiser<'a> {
         }
 
         let mut account = Account {
-            id: "".to_string(),
+            id: AccountIdentifier::Index(accounts.len()),
             signer_type: signer_type.clone(),
             index: accounts.len(),
             alias,
@@ -177,25 +177,27 @@ impl<'a> AccountInitialiser<'a> {
         };
 
         let id = with_signer(&signer_type, |signer| signer.init_account(&account, mnemonic))?;
-        account.set_id(id.clone());
-
-        let account_id: AccountIdentifier = id.into();
+        account.set_id(id.into());
 
         if !self.skip_persistance {
             crate::storage::with_adapter(&self.storage_path, |storage| {
-                storage.set(account_id, serde_json::to_string(&account)?)
+                storage.set(account.id(), serde_json::to_string(&account)?)
             })?;
         }
         Ok(account)
     }
 }
 
-pub(crate) fn account_id_to_stronghold_record_id(account_id: &str) -> crate::Result<[u8; 32]> {
-    let decoded = hex::decode(account_id).map_err(|_| anyhow::anyhow!("account id must be a hex string"))?;
-    let id: [u8; 32] = decoded
-        .try_into()
-        .map_err(|_| anyhow::anyhow!("invalid account id length"))?;
-    Ok(id)
+pub(crate) fn account_id_to_stronghold_record_id(account_id: &AccountIdentifier) -> crate::Result<[u8; 32]> {
+    if let AccountIdentifier::Id(id) = account_id {
+        let decoded = hex::decode(id).map_err(|_| anyhow::anyhow!("account id must be a hex string"))?;
+        let id: [u8; 32] = decoded
+            .try_into()
+            .map_err(|_| anyhow::anyhow!("invalid account id length"))?;
+        Ok(id)
+    } else {
+        Err(anyhow::anyhow!("id can't be index").into())
+    }
 }
 
 /// Account definition.
@@ -204,7 +206,7 @@ pub(crate) fn account_id_to_stronghold_record_id(account_id: &str) -> crate::Res
 pub struct Account {
     /// The account identifier.
     #[getset(set = "pub(crate)")]
-    id: String,
+    id: AccountIdentifier,
     /// The account's signer type.
     signer_type: SignerType,
     /// The account index
@@ -302,7 +304,7 @@ impl Account {
 
     pub(crate) fn save(&self) -> crate::Result<()> {
         crate::storage::with_adapter(&self.storage_path, |storage| {
-            storage.set(self.id.clone().into(), serde_json::to_string(&self)?)
+            storage.set(&self.id, serde_json::to_string(&self)?)
         })
     }
 
@@ -388,9 +390,8 @@ impl Account {
         let address = crate::address::get_new_address(&self)?;
         self.addresses.push(address.clone());
 
-        let id: AccountIdentifier = self.id.clone().into();
         crate::storage::with_adapter(&self.storage_path, |storage| {
-            storage.set(id, serde_json::to_string(self)?)
+            storage.set(&self.id, serde_json::to_string(self)?)
         })?;
 
         // ignore errors because we fallback to the polling system
@@ -527,11 +528,11 @@ mod tests {
                 .expect("failed to add account");
 
                 account.set_alias(updated_alias);
-                account.id().into()
+                account.id().clone()
             };
 
             let account_in_storage = manager
-                .get_account(account_id)
+                .get_account(&account_id)
                 .expect("failed to get account from storage");
             assert_eq!(
                 account_in_storage.alias().to_string(),

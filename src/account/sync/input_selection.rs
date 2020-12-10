@@ -115,7 +115,7 @@ fn branch_and_bound(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::address::{Address, AddressBuilder, IotaAddress};
+    use crate::address::{AddressBuilder, IotaAddress};
     use iota::message::prelude::Ed25519Address;
     use rand::{Rng, SeedableRng, StdRng};
 

@@ -58,7 +58,7 @@ fn js_value_to_account_id(
         }
         Err(_) => {
             let index: JsNumber = *value.downcast_or_throw(cx)?;
-            Ok((index.value() as u64).into())
+            Ok((index.value() as usize).into())
         }
     }
 }
@@ -164,7 +164,7 @@ declare_types! {
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
                 let manager = ref_.read().unwrap();
-                manager.get_account(id)
+                manager.get_account(&id)
             };
             match account {
                 Ok(acc) => {
@@ -223,7 +223,7 @@ declare_types! {
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
                 let manager = ref_.read().unwrap();
-                manager.remove_account(id).expect("error removing account")
+                manager.remove_account(&id).expect("error removing account")
             };
             Ok(cx.undefined().upcast())
         }

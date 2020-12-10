@@ -54,10 +54,10 @@ fn mutate_account<F: FnOnce(&mut Account)>(
     storage_path: &PathBuf,
     cb: F,
 ) -> crate::Result<()> {
-    let mut account = crate::storage::get_account(&storage_path, account_id.clone())?;
+    let mut account = crate::storage::get_account(&storage_path, &account_id)?;
     cb(&mut account);
     let account_str = serde_json::to_string(&account)?;
-    crate::storage::with_adapter(&storage_path, |storage| storage.set(account_id.clone(), account_str))?;
+    crate::storage::with_adapter(&storage_path, |storage| storage.set(&account_id, account_str))?;
     Ok(())
 }
 
@@ -82,8 +82,7 @@ pub fn monitor_account_addresses_balance(account: &Account) -> crate::Result<()>
 
 /// Monitor address for balance changes.
 pub fn monitor_address_balance(account: &Account, address: &IotaAddress) -> crate::Result<()> {
-    let account_id_raw = account.id().clone();
-    let account_id: AccountIdentifier = account.id().into();
+    let account_id = account.id().clone();
     let storage_path = account.storage_path().clone();
     let client_options = account.client_options().clone();
     let address = address.clone();
@@ -94,15 +93,16 @@ pub fn monitor_address_balance(account: &Account, address: &IotaAddress) -> crat
         format!("addresses/{}/outputs", address_bech32),
         move |topic_event| {
             let topic_event = topic_event.clone();
-            let account_id_raw = account_id_raw.clone();
             let address = address.clone();
             let client_options = client_options.clone();
             let storage_path = storage_path.clone();
+            let account_id = account_id.clone();
+
             std::thread::spawn(move || {
                 crate::block_on(async {
                     let _ = process_output(
                         topic_event.payload.clone(),
-                        account_id_raw.clone(),
+                        account_id,
                         address,
                         client_options,
                         storage_path,
@@ -118,13 +118,12 @@ pub fn monitor_address_balance(account: &Account, address: &IotaAddress) -> crat
 
 async fn process_output(
     payload: String,
-    account_id_raw: String,
+    account_id: AccountIdentifier,
     address: IotaAddress,
     client_options: ClientOptions,
     storage_path: PathBuf,
 ) -> crate::Result<()> {
     let output: AddressOutputPayload = serde_json::from_str(&payload)?;
-    let account_id = account_id_raw.clone().into();
     let metadata = OutputMetadata {
         message_id: hex::decode(output.message_id).map_err(|e| anyhow::anyhow!(e.to_string()))?,
         transaction_id: hex::decode(output.transaction_id).map_err(|e| anyhow::anyhow!(e.to_string()))?,
@@ -151,7 +150,7 @@ async fn process_output(
             let addresses = account.addresses_mut();
             let address_to_update = addresses.iter_mut().find(|a| a.address() == &address).unwrap();
             address_to_update.handle_new_output(address_output);
-            crate::event::emit_balance_change(account_id_raw.clone(), &address_to_update, *address_to_update.balance());
+            crate::event::emit_balance_change(&account_id, &address_to_update, *address_to_update.balance());
         }
 
         match account.messages_mut().iter().position(|m| m.id() == &message_id_) {
@@ -163,7 +162,7 @@ async fn process_output(
                 let message = Message::from_iota_message(message_id_, account.addresses(), &message).unwrap();
                 crate::event::emit_transaction_event(
                     crate::event::TransactionEventType::NewTransaction,
-                    account_id_raw,
+                    &account_id,
                     &message,
                 );
                 account.messages_mut().push(message);
@@ -183,8 +182,7 @@ pub fn monitor_unconfirmed_messages(account: &Account) -> crate::Result<()> {
 
 /// Monitor message for confirmation state.
 pub fn monitor_confirmation_state_change(account: &Account, message_id: &MessageId) -> crate::Result<()> {
-    let account_id_raw = account.id().clone();
-    let account_id: AccountIdentifier = account.id().into();
+    let account_id = account.id().clone();
     let storage_path = account.storage_path().clone();
     let message = account
         .messages()
@@ -198,9 +196,10 @@ pub fn monitor_confirmation_state_change(account: &Account, message_id: &Message
         account.client_options(),
         format!("messages/{}/metadata", message_id.to_string()),
         move |topic_event| {
+            let account_id = account_id.clone();
             let _ = process_metadata(
                 topic_event.payload.clone(),
-                account_id_raw.clone(),
+                account_id,
                 message_id,
                 &message,
                 &storage_path,
@@ -212,12 +211,11 @@ pub fn monitor_confirmation_state_change(account: &Account, message_id: &Message
 
 fn process_metadata(
     payload: String,
-    account_id_raw: String,
+    account_id: AccountIdentifier,
     message_id: MessageId,
     message: &Message,
     storage_path: &PathBuf,
 ) -> crate::Result<()> {
-    let account_id: AccountIdentifier = account_id_raw.clone().into();
     let metadata: MessageMetadata = serde_json::from_str(&payload)?;
     let confirmed = metadata.ledger_inclusion_state.as_deref() == Some("included");
 
@@ -234,7 +232,7 @@ fn process_metadata(
                 account.on_message_unconfirmed(&message_id);
             }
 
-            crate::event::emit_confirmation_state_change(account_id_raw, &message, confirmed);
+            crate::event::emit_confirmation_state_change(&account_id, &message, confirmed);
         })?;
     }
     Ok(())

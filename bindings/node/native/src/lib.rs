@@ -10,7 +10,10 @@ use std::{
 };
 
 use futures::{Future, FutureExt};
-use iota_wallet::{account::Account, WalletError};
+use iota_wallet::{
+    account::{Account, AccountIdentifier},
+    WalletError,
+};
 use neon::prelude::*;
 use once_cell::sync::{Lazy, OnceCell};
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
@@ -22,8 +25,8 @@ use classes::*;
 type AccountInstanceMap = Arc<RwLock<HashMap<String, Arc<RwLock<Account>>>>>;
 
 /// check if the account instance is loaded on the JS side (AccountInstanceMap) and update it by running a callback
-fn mutate_account_if_exists<F: FnOnce(&mut Account) + Send + Sync + 'static>(account_id: &str, cb: F) {
-    let account_id = account_id.to_string();
+fn mutate_account_if_exists<F: FnOnce(&mut Account) + Send + Sync + 'static>(account_id: &AccountIdentifier, cb: F) {
+    let account_id = account_id.clone();
     thread::spawn(move || {
         let map = instances()
             .read()

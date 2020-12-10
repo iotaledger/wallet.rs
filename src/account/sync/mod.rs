@@ -325,7 +325,7 @@ impl<'a> AccountSynchronizer<'a> {
                     self.account.set_messages(account_.messages().to_vec());
                     if !self.skip_persistance {
                         crate::storage::with_adapter(&self.storage_path, |storage| {
-                            storage.set(self.account.id().into(), serde_json::to_string(&self.account)?)
+                            storage.set(self.account.id(), serde_json::to_string(&self.account)?)
                         })?;
                     }
 
@@ -355,7 +355,7 @@ pub struct SyncedAccount {
     /// The associated account identifier.
     #[serde(rename = "accountId")]
     #[getset(get = "pub")]
-    account_id: String,
+    account_id: AccountIdentifier,
     /// The account's deposit address.
     #[serde(rename = "depositAddress")]
     #[getset(get = "pub")]
@@ -435,17 +435,15 @@ impl SyncedAccount {
             return Err(crate::WalletError::ZeroAmount);
         }
 
-        let account_id: AccountIdentifier = self.account_id.clone().into();
-
         // lock the transfer process until we select the input addresses
         // we do this to prevent multiple threads trying to transfer at the same time
         // so it doesn't consume the same addresses multiple times, which leads to a conflict state
-        let account_addresses_locker = get_account_addresses_lock(account_id.clone());
+        let account_addresses_locker = get_account_addresses_lock(&self.account_id);
         let mut locked_addresses = account_addresses_locker.lock().unwrap();
 
         // prepare the transfer getting some needed objects and values
         let value: u64 = transfer_obj.amount;
-        let mut account = crate::storage::get_account(&self.storage_path, account_id.clone())?;
+        let mut account = crate::storage::get_account(&self.storage_path, &self.account_id)?;
         let mut addresses_to_watch = vec![];
 
         if value > account.total_balance() {
@@ -459,12 +457,12 @@ impl SyncedAccount {
             let tx = Arc::new(Mutex::new(tx));
 
             let storage_path = self.storage_path.clone();
-            let account_id = account_id.clone();
+            let account_id = self.account_id.clone();
             thread::spawn(move || {
                 let tx = tx.lock().unwrap();
                 for _ in 1..30 {
                     thread::sleep(OUTPUT_LOCK_TIMEOUT / 30);
-                    if let Ok(account) = crate::storage::get_account(&storage_path, account_id.clone()) {
+                    if let Ok(account) = crate::storage::get_account(&storage_path, &account_id) {
                         // the account received an update and now the balance is sufficient
                         if value <= account.available_balance() {
                             let _ = tx.send(account);
@@ -683,10 +681,10 @@ impl SyncedAccount {
         let message = Message::from_iota_message(message_id, account.addresses(), &message)?;
         account.append_messages(vec![message.clone()]);
         crate::storage::with_adapter(&self.storage_path, |storage| {
-            storage.set(account_id.clone(), serde_json::to_string(&account)?)
+            storage.set(&self.account_id, serde_json::to_string(&account)?)
         })?;
 
-        let account_addresses_locker = get_account_addresses_lock(account_id.clone());
+        let account_addresses_locker = get_account_addresses_lock(&self.account_id);
         let mut locked_addresses = account_addresses_locker.lock().unwrap();
         for input_address in &input_addresses {
             let index = locked_addresses
@@ -704,35 +702,17 @@ impl SyncedAccount {
 
     /// Retry message.
     pub async fn retry(&self, message_id: &MessageId) -> crate::Result<Message> {
-        repost_message(
-            self.account_id.clone().into(),
-            &self.storage_path,
-            message_id,
-            RepostAction::Retry,
-        )
-        .await
+        repost_message(&self.account_id, &self.storage_path, message_id, RepostAction::Retry).await
     }
 
     /// Promote message.
     pub async fn promote(&self, message_id: &MessageId) -> crate::Result<Message> {
-        repost_message(
-            self.account_id.clone().into(),
-            &self.storage_path,
-            message_id,
-            RepostAction::Promote,
-        )
-        .await
+        repost_message(&self.account_id, &self.storage_path, message_id, RepostAction::Promote).await
     }
 
     /// Reattach message.
     pub async fn reattach(&self, message_id: &MessageId) -> crate::Result<Message> {
-        repost_message(
-            self.account_id.clone().into(),
-            &self.storage_path,
-            message_id,
-            RepostAction::Reattach,
-        )
-        .await
+        repost_message(&self.account_id, &self.storage_path, message_id, RepostAction::Reattach).await
     }
 }
 
@@ -743,7 +723,7 @@ pub(crate) enum RepostAction {
 }
 
 pub(crate) async fn repost_message(
-    account_id: AccountIdentifier,
+    account_id: &AccountIdentifier,
     storage_path: &PathBuf,
     message_id: &MessageId,
     action: RepostAction,
@@ -797,7 +777,7 @@ pub(crate) async fn repost_message(
 
             account.append_messages(vec![message.clone()]);
             crate::storage::with_adapter(&storage_path, |storage| {
-                storage.set(account.id().into(), serde_json::to_string(&account)?)
+                storage.set(account.id(), serde_json::to_string(&account)?)
             })?;
 
             Ok(message)

@@ -4,7 +4,7 @@
 use std::str::FromStr;
 
 use iota_wallet::{
-    account::Account,
+    account::{Account, AccountIdentifier},
     address::Address,
     message::{Message, MessageId},
 };
@@ -39,7 +39,10 @@ declare_types! {
                 account.id().clone()
             };
 
-            Ok(cx.string(id).upcast())
+            match id {
+                AccountIdentifier::Id(id) => Ok(cx.string(id).upcast()),
+                AccountIdentifier::Index(index) => Ok(cx.number(index as f64).upcast())
+            }
         }
 
         method index(mut cx) {
