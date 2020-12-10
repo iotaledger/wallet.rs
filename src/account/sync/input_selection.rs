@@ -122,16 +122,14 @@ mod tests {
     fn generate_random_utxos(rng: &mut StdRng, utxos_number: usize) -> Vec<Input> {
         let mut available_utxos = Vec::new();
         for i in 0..utxos_number {
-            available_utxos.push(
-                AddressBuilder::new()
-                    .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
-                    .balance(rng.gen_range(0, 2000))
-                    .key_index(i)
-                    .outputs(vec![])
-                    .build()
-                    .unwrap()
-                    .into(),
-            );
+            let address = AddressBuilder::new()
+                .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
+                .balance(rng.gen_range(0, 2000))
+                .key_index(i)
+                .outputs(vec![])
+                .build()
+                .unwrap();
+            available_utxos.push((&address).into());
         }
         available_utxos
     }
