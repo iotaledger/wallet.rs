@@ -29,7 +29,7 @@ type AddressesLock = Arc<Mutex<Vec<IotaAddress>>>;
 type AccountAddressesLock = Arc<Mutex<HashMap<AccountIdentifier, AddressesLock>>>;
 static ACCOUNT_ADDRESSES_LOCK: OnceCell<AccountAddressesLock> = OnceCell::new();
 
-pub(crate) fn get_account_addresses_lock(account_id: &AccountIdentifier) -> AddressesLock {
+pub(crate) fn get_account_addresses_lock(account_id: AccountIdentifier) -> AddressesLock {
     let mut locks = ACCOUNT_ADDRESSES_LOCK.get_or_init(Default::default).lock().unwrap();
     if !locks.contains_key(&account_id) {
         locks.insert(account_id.clone(), Default::default());
