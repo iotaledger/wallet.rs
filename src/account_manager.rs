@@ -91,6 +91,15 @@ impl AccountManager {
         Ok(())
     }
 
+    /// Initialises the background polling and MQTT monitoring.
+    pub fn start_background_sync(&mut self) {
+        if !self.started_monitoring {
+            let monitoring_disabled = self.start_monitoring().is_err();
+            self.start_polling(monitoring_disabled);
+            self.started_monitoring = true;
+        }
+    }
+
     /// Sets the stronghold password.
     pub fn set_stronghold_password<P: AsRef<str>>(&mut self, password: P) -> crate::Result<()> {
         let stronghold_path = self.storage_path.join(crate::storage::stronghold_snapshot_filename());
@@ -101,11 +110,7 @@ impl AccountManager {
             None,
         )?;
         crate::init_stronghold(&self.storage_path, stronghold);
-        if !self.started_monitoring {
-            let monitoring_disabled = self.start_monitoring().is_err();
-            self.start_polling(monitoring_disabled);
-            self.started_monitoring = true;
-        }
+        self.start_background_sync();
         Ok(())
     }
 
@@ -337,28 +342,14 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
                 });
 
             // confirmation state change event
-            let mut unconfirmed_messages = Vec::new();
             for message in account_after_sync.messages() {
                 let changed = match account_before_sync.messages().iter().find(|m| m.id() == message.id()) {
                     Some(old_message) => message.confirmed() != old_message.confirmed(),
                     None => false,
                 };
                 if changed {
-                    if !message.confirmed() {
-                        unconfirmed_messages.push(*message.id());
-                    }
                     emit_confirmation_state_change(account_after_sync.id(), &message, true);
                 }
-            }
-
-            let mut account_updated = false;
-            for message_id in unconfirmed_messages {
-                if account_after_sync.on_message_unconfirmed(&message_id) {
-                    account_updated = true;
-                }
-            }
-            if account_updated {
-                account_after_sync.save()?;
             }
         }
         retry_unconfirmed_transactions(synced_accounts.iter().zip(accounts_after_sync.iter()).collect()).await?

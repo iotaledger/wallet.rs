@@ -217,23 +217,25 @@ fn process_metadata(
     storage_path: &PathBuf,
 ) -> crate::Result<()> {
     let metadata: MessageMetadata = serde_json::from_str(&payload)?;
-    let confirmed = metadata.ledger_inclusion_state.as_deref() == Some("included");
 
-    if confirmed != *message.confirmed() {
-        mutate_account(&account_id, &storage_path, |account| {
-            let message_id = {
-                let messages = account.messages_mut();
-                let message = messages.iter_mut().find(|m| m.id() == &message_id).unwrap();
-                message.set_confirmed(confirmed);
-                *message.id()
-            };
+    if let Some(inclusion_state) = metadata.ledger_inclusion_state {
+        let confirmed = inclusion_state == "included";
+        if confirmed != *message.confirmed() {
+            mutate_account(&account_id, &storage_path, |account| {
+                let message_id = {
+                    let messages = account.messages_mut();
+                    let message = messages.iter_mut().find(|m| m.id() == &message_id).unwrap();
+                    message.set_confirmed(confirmed);
+                    *message.id()
+                };
 
-            if !confirmed {
-                account.on_message_unconfirmed(&message_id);
-            }
+                if !confirmed {
+                    account.on_message_unconfirmed(&message_id);
+                }
 
-            crate::event::emit_confirmation_state_change(&account_id, &message, confirmed);
-        })?;
+                crate::event::emit_confirmation_state_change(&account_id, &message, confirmed);
+            })?;
+        }
     }
     Ok(())
 }

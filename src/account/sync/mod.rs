@@ -102,6 +102,10 @@ async fn sync_addresses(
                 continue;
             }
 
+            if let Some(account_address) = account.addresses().iter().find(|a| a.address() == iota_address) {
+                account_address.fill_outputs_lock(&mut curr_found_outputs);
+            }
+
             let address = AddressBuilder::new()
                 .address(iota_address.clone())
                 .key_index(*iota_address_index)
@@ -156,7 +160,7 @@ async fn sync_messages(
             outputs.push(output);
         }
 
-        address.append_outputs(outputs);
+        address.filter_outputs(outputs);
         address.set_balance(balance);
     }
 
@@ -187,11 +191,13 @@ async fn update_account_messages<'a>(
     let mut unconfirmed_message_ids = Vec::new();
     for message in unconfirmed_messages.iter_mut() {
         let metadata = client.get_message().metadata(message.id()).await?;
-        let confirmed = metadata.ledger_inclusion_state.as_deref() == Some("included");
-        if confirmed {
-            message.set_confirmed(true);
-        } else {
-            unconfirmed_message_ids.push(*message.id());
+        if let Some(inclusion_state) = metadata.ledger_inclusion_state {
+            let confirmed = inclusion_state == "included";
+            if confirmed {
+                message.set_confirmed(true);
+            } else {
+                unconfirmed_message_ids.push(*message.id());
+            }
         }
     }
 
