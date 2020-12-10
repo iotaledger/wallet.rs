@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    address::Address,
+    address::{Address, IotaAddress},
     client::ClientOptions,
     message::{Message, MessageType},
     signing::{with_signer, SignerType},
@@ -11,13 +11,31 @@ use crate::{
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
 use iota::message::prelude::MessageId;
+use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 
-use std::{convert::TryInto, path::PathBuf};
+use std::{
+    collections::HashMap,
+    convert::TryInto,
+    path::PathBuf,
+    sync::{Arc, Mutex},
+};
 
 mod sync;
 pub(crate) use sync::{repost_message, RepostAction};
 pub use sync::{AccountSynchronizer, SyncedAccount, TransferMetadata};
+
+type AddressesLock = Arc<Mutex<Vec<IotaAddress>>>;
+type AccountAddressesLock = Arc<Mutex<HashMap<AccountIdentifier, AddressesLock>>>;
+static ACCOUNT_ADDRESSES_LOCK: OnceCell<AccountAddressesLock> = OnceCell::new();
+
+pub(crate) fn get_account_addresses_lock(account_id: AccountIdentifier) -> AddressesLock {
+    let mut locks = ACCOUNT_ADDRESSES_LOCK.get_or_init(Default::default).lock().unwrap();
+    if !locks.contains_key(&account_id) {
+        locks.insert(account_id.clone(), Default::default());
+    }
+    locks.get(&account_id).unwrap().clone()
+}
 
 /// The account identifier.
 #[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]

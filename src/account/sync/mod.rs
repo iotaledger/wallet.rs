@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    account::{Account, AccountIdentifier},
+    account::{get_account_addresses_lock, Account, AccountIdentifier},
     address::{Address, AddressBuilder, AddressOutput, IotaAddress},
     client::get_client,
     message::{Message, RemainderValueStrategy, Transfer},
@@ -20,7 +20,7 @@ use std::{
     convert::TryInto,
     num::NonZeroU64,
     path::PathBuf,
-    sync::{mpsc::channel, Arc, Mutex},
+    sync::{mpsc::channel, Arc, Mutex, MutexGuard},
     thread,
     time::Duration,
 };
@@ -393,6 +393,7 @@ impl SyncedAccount {
     /// needed.
     fn select_inputs<'a>(
         &self,
+        locked_addresses: &'a mut MutexGuard<'_, Vec<IotaAddress>>,
         threshold: u64,
         account: &'a mut Account,
         address: &'a IotaAddress,
@@ -401,9 +402,17 @@ impl SyncedAccount {
             .addresses()
             .iter()
             .cloned()
-            .filter(|a| a.address() != address && a.available_balance() > 0)
+            .filter(|a| a.address() != address && a.available_balance() > 0 && !locked_addresses.contains(a.address()))
             .collect();
         let addresses = input_selection::select_input(threshold, &mut available_addresses)?;
+
+        locked_addresses.extend(
+            addresses
+                .iter()
+                .map(|a| a.address().clone())
+                .collect::<Vec<IotaAddress>>(),
+        );
+
         let remainder = if addresses.iter().fold(0, |acc, a| acc + a.available_balance()) > threshold {
             addresses.last().cloned()
         } else {
@@ -420,9 +429,16 @@ impl SyncedAccount {
             return Err(crate::WalletError::ZeroAmount);
         }
 
+        let account_id: AccountIdentifier = self.account_id.clone().into();
+
+        // lock the transfer process until we select the input addresses
+        // we do this to prevent multiple threads trying to transfer at the same time
+        // so it doesn't consume the same addresses multiple times, which leads to a conflict state
+        let account_addresses_locker = get_account_addresses_lock(account_id.clone());
+        let mut locked_addresses = account_addresses_locker.lock().unwrap();
+
         // prepare the transfer getting some needed objects and values
         let value: u64 = transfer_obj.amount;
-        let account_id: AccountIdentifier = self.account_id.clone().into();
         let mut account = crate::storage::get_account(&self.storage_path, account_id.clone())?;
         let mut addresses_to_watch = vec![];
 
@@ -479,8 +495,15 @@ impl SyncedAccount {
         }
 
         // select the input addresses and check if a remainder address is needed
-        let (input_addresses, remainder_address) =
-            self.select_inputs(transfer_obj.amount, &mut account, &transfer_obj.address)?;
+        let (input_addresses, remainder_address) = self.select_inputs(
+            &mut locked_addresses,
+            transfer_obj.amount,
+            &mut account,
+            &transfer_obj.address,
+        )?;
+
+        // unlock the transfer process since we already selected the input addresses and locked them
+        drop(locked_addresses);
 
         let mut utxos = vec![];
         let mut address_index_recorders = vec![];
@@ -643,8 +666,18 @@ impl SyncedAccount {
         let message = Message::from_iota_message(message_id, account.addresses(), &message)?;
         account.append_messages(vec![message.clone()]);
         crate::storage::with_adapter(&self.storage_path, |storage| {
-            storage.set(account_id, serde_json::to_string(&account)?)
+            storage.set(account_id.clone(), serde_json::to_string(&account)?)
         })?;
+
+        let account_addresses_locker = get_account_addresses_lock(account_id.clone());
+        let mut locked_addresses = account_addresses_locker.lock().unwrap();
+        for input_address in &input_addresses {
+            let index = locked_addresses
+                .iter()
+                .position(|a| a == input_address.address())
+                .unwrap();
+            locked_addresses.remove(index);
+        }
 
         // ignore errors because we fallback to the polling system
         let _ = crate::monitor::monitor_confirmation_state_change(&account, &message_id);
