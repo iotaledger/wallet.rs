@@ -130,7 +130,7 @@ declare_types! {
                 let manager = ref_.read().unwrap();
 
                 let mut builder = manager
-                    .create_account(account_to_create.client_options.clone())
+                    .create_account(account_to_create.client_options)
                     .signer_type(match account_to_create.signer_type {
                         AccountSignerType::Stronghold => SignerType::Stronghold,
                         AccountSignerType::EnvMnemonic => SignerType::EnvMnemonic,
