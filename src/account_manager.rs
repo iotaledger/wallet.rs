@@ -341,17 +341,28 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
                 });
 
             // confirmation state change event
-            for message in account_after_sync.messages().to_vec() {
+            let mut unconfirmed_messages = Vec::new();
+            for message in account_after_sync.messages() {
                 let changed = match account_before_sync.messages().iter().find(|m| m.id() == message.id()) {
                     Some(old_message) => message.confirmed() != old_message.confirmed(),
                     None => false,
                 };
                 if changed {
-                    if !message.confirmed() && account_after_sync.on_message_unconfirmed(message.id()) {
-                        account_after_sync.save()?;
+                    if !message.confirmed() {
+                        unconfirmed_messages.push(*message.id());
                     }
                     emit_confirmation_state_change(account_after_sync.id().clone(), &message, true);
                 }
+            }
+
+            let mut account_updated = false;
+            for message_id in unconfirmed_messages {
+                if account_after_sync.on_message_unconfirmed(&message_id) {
+                    account_updated = true;
+                }
+            }
+            if account_updated {
+                account_after_sync.save()?;
             }
         }
         retry_unconfirmed_transactions(synced_accounts.iter().zip(accounts_after_sync.iter()).collect()).await?

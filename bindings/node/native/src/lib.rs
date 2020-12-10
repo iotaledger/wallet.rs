@@ -10,7 +10,7 @@ use std::{
 };
 
 use futures::{Future, FutureExt};
-use iota_wallet::{account::Account, address::Address, message::Message, WalletError};
+use iota_wallet::{account::Account, WalletError};
 use neon::prelude::*;
 use once_cell::sync::{Lazy, OnceCell};
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
@@ -21,34 +21,22 @@ use classes::*;
 
 type AccountInstanceMap = Arc<RwLock<HashMap<String, Arc<RwLock<Account>>>>>;
 
-fn mutate_account_if_exists<F: FnOnce(&Account, &mut Vec<Address>, &mut Vec<Message>) + Send + Sync + 'static>(
-    account_id: &str,
-    cb: F,
-) {
+/// check if the account instance is loaded on the JS side (AccountInstanceMap) and update it by running a callback
+fn mutate_account_if_exists<F: FnOnce(&mut Account) + Send + Sync + 'static>(account_id: &str, cb: F) {
     let account_id = account_id.to_string();
     thread::spawn(move || {
         let map = instances()
             .read()
             .expect("failed to lock read on account instances: mutate_account_if_exists()");
-        let mut found_account = None;
-        for (instance_id, account) in map.iter() {
+
+        for account in map.values() {
             let account_ = account.read().unwrap();
             if account_.id() == &account_id {
                 std::mem::drop(account_);
                 let mut account = account.write().unwrap();
-                let mut addresses: Vec<Address> = account.addresses().to_vec();
-                let mut messages: Vec<Message> = account.messages().to_vec();
-                cb(&account, &mut addresses, &mut messages);
-                account.set_addresses(addresses);
-                account.set_messages(messages);
-                found_account = Some((instance_id.clone(), (*account).clone()));
+                cb(&mut account);
                 break;
             }
-        }
-
-        if let Some((id, account)) = found_account {
-            std::mem::drop(map);
-            update_account(&id, account);
         }
     });
 }
@@ -59,7 +47,8 @@ fn instances() -> &'static AccountInstanceMap {
         iota_wallet::event::on_balance_change(|event| {
             let address = event.cloned_address();
             let balance = *event.balance();
-            mutate_account_if_exists(event.account_id(), move |_, addresses, _| {
+            mutate_account_if_exists(event.account_id(), move |account| {
+                let addresses = account.addresses_mut();
                 if let Some(address) = addresses.iter_mut().find(|a| a == &&address) {
                     address.set_balance(balance);
                 }
@@ -67,29 +56,29 @@ fn instances() -> &'static AccountInstanceMap {
         });
         iota_wallet::event::on_new_transaction(|event| {
             let message = event.cloned_message();
-            mutate_account_if_exists(event.account_id(), move |_, _, messages| {
-                messages.push(message);
+            mutate_account_if_exists(event.account_id(), move |account| {
+                account.append_messages(vec![message]);
             });
         });
         iota_wallet::event::on_confirmation_state_change(|event| {
             let message = event.cloned_message();
             let confirmed = *event.confirmed();
-            mutate_account_if_exists(event.account_id(), move |_, _, messages| {
-                if let Some(message) = messages.iter_mut().find(|m| m == &&message) {
+            mutate_account_if_exists(event.account_id(), move |account| {
+                if let Some(message) = account.messages_mut().iter_mut().find(|m| m == &&message) {
                     message.set_confirmed(confirmed);
                 }
             });
         });
         iota_wallet::event::on_reattachment(|event| {
             let message = event.cloned_message();
-            mutate_account_if_exists(event.account_id(), move |_, _, messages| {
-                messages.push(message);
+            mutate_account_if_exists(event.account_id(), move |account| {
+                account.append_messages(vec![message]);
             });
         });
         iota_wallet::event::on_broadcast(|event| {
             let message = event.cloned_message();
-            mutate_account_if_exists(event.account_id(), move |_, _, messages| {
-                if let Some(message) = messages.iter_mut().find(|m| m == &&message) {
+            mutate_account_if_exists(event.account_id(), move |account| {
+                if let Some(message) = account.messages_mut().iter_mut().find(|m| m == &&message) {
                     message.set_broadcasted(true);
                 }
             });

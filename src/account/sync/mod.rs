@@ -167,7 +167,8 @@ async fn update_account_messages<'a>(
     account: &'a mut Account,
     new_messages: &'a [(MessageId, IotaMessage)],
 ) -> crate::Result<()> {
-    let mut messages = account.messages().to_vec();
+    let client = get_client(account.client_options());
+    let messages = account.messages_mut();
 
     // sync `broadcasted` state
     messages
@@ -180,19 +181,23 @@ async fn update_account_messages<'a>(
     // sync `confirmed` state
     let mut unconfirmed_messages: Vec<&mut Message> =
         messages.iter_mut().filter(|message| !message.confirmed()).collect();
-    let client = get_client(account.client_options());
+
     let client = client.read().unwrap();
+
+    let mut unconfirmed_message_ids = Vec::new();
     for message in unconfirmed_messages.iter_mut() {
         let metadata = client.get_message().metadata(message.id()).await?;
         let confirmed = metadata.ledger_inclusion_state.as_deref() == Some("included");
         if confirmed {
             message.set_confirmed(true);
         } else {
-            account.on_message_unconfirmed(message.id());
+            unconfirmed_message_ids.push(*message.id());
         }
     }
 
-    account.set_messages(messages);
+    for unconfirmed_message_id in unconfirmed_message_ids {
+        account.on_message_unconfirmed(&unconfirmed_message_id);
+    }
 
     Ok(())
 }
@@ -397,23 +402,24 @@ impl SyncedAccount {
         threshold: u64,
         account: &'a mut Account,
         address: &'a IotaAddress,
-    ) -> crate::Result<(Vec<Address>, Option<Address>)> {
-        let mut available_addresses: Vec<Address> = account
+    ) -> crate::Result<(Vec<input_selection::Input>, Option<input_selection::Input>)> {
+        let mut available_addresses: Vec<input_selection::Input> = account
             .addresses()
             .iter()
             .cloned()
             .filter(|a| a.address() != address && a.available_balance() > 0 && !locked_addresses.contains(a.address()))
+            .map(|a| a.into())
             .collect();
         let addresses = input_selection::select_input(threshold, &mut available_addresses)?;
 
         locked_addresses.extend(
             addresses
                 .iter()
-                .map(|a| a.address().clone())
+                .map(|a| a.address.clone())
                 .collect::<Vec<IotaAddress>>(),
         );
 
-        let remainder = if addresses.iter().fold(0, |acc, a| acc + a.available_balance()) > threshold {
+        let remainder = if addresses.iter().fold(0, |acc, a| acc + a.balance) > threshold {
             addresses.last().cloned()
         } else {
             None
@@ -509,19 +515,25 @@ impl SyncedAccount {
         let mut address_index_recorders = vec![];
 
         for input_address in &input_addresses {
+            let account_address = account
+                .addresses()
+                .iter()
+                .find(|a| a.address() == &input_address.address)
+                .unwrap();
+
             let mut outputs = vec![];
             let address_path = BIP32Path::from_str(&format!(
                 "m/44H/4218H/{}H/{}H/{}H",
                 *account.index(),
-                *input_address.internal() as u32,
-                *input_address.key_index()
+                *account_address.internal() as u32,
+                *account_address.key_index()
             ))
             .unwrap();
 
-            for (offset, address_output) in input_address.available_outputs().iter().enumerate() {
+            for (offset, address_output) in account_address.available_outputs().iter().enumerate() {
                 outputs.push((
                     (*address_output).clone(),
-                    *input_address.key_index(),
+                    *account_address.key_index(),
                     address_path.clone(),
                 ));
             }
@@ -574,6 +586,11 @@ impl SyncedAccount {
         if remainder_value > 0 {
             let remainder_address =
                 remainder_address.ok_or_else(|| anyhow::anyhow!("remainder address not defined"))?;
+            let remainder_address = account
+                .addresses()
+                .iter()
+                .find(|a| a.address() == &remainder_address.address)
+                .unwrap();
 
             let remainder_target_address = match transfer_obj.remainder_value_strategy {
                 // use one of the account's addresses to send the remainder value
@@ -634,7 +651,7 @@ impl SyncedAccount {
             let account_address = account
                 .addresses_mut()
                 .iter_mut()
-                .find(|a| a == &input_address)
+                .find(|a| a.address() == &input_address.address)
                 .unwrap();
             for output in account_address.available_outputs_mut().iter_mut() {
                 output.set_pending_on_message_id(Some(message_id));
@@ -674,7 +691,7 @@ impl SyncedAccount {
         for input_address in &input_addresses {
             let index = locked_addresses
                 .iter()
-                .position(|a| a == input_address.address())
+                .position(|a| a == &input_address.address)
                 .unwrap();
             locked_addresses.remove(index);
         }
