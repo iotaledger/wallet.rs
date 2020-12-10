@@ -52,6 +52,10 @@ Creates a new instance of the AccountManager.
 | [storagePath] | <code>string</code> | <code>undefined</code> | The path where the database file will be saved        |
 | [storageType] | <code>number</code> | <code>undefined</code> | The type of the database.  Stronghold = 1, Sqlite = 2 |
 
+#### startBackgroundSync(): void
+
+Initialises the background polling mechanism and MQTT monitoring. Automatically called on `setStrongholdPassword`.
+
 #### setStrongholdPassword(password): void
 
 Sets the stronghold password and initialises it.

@@ -220,19 +220,22 @@ fn process_metadata(
 ) -> crate::Result<()> {
     let account_id: AccountIdentifier = account_id_raw.clone().into();
     let metadata: MessageMetadata = serde_json::from_str(&payload)?;
-    let confirmed = metadata.ledger_inclusion_state.as_deref() == Some("included");
 
-    if confirmed != *message.confirmed() {
-        mutate_account(&account_id, &storage_path, |account, addresses, messages| {
-            let message = messages.iter_mut().find(|m| m.id() == &message_id).unwrap();
-            message.set_confirmed(confirmed);
-            if !confirmed {
-                account.on_message_unconfirmed(message.id());
-            }
-            *addresses = account.addresses().to_vec();
+    if let Some(inclusion_state) = metadata.ledger_inclusion_state {
+        let confirmed = inclusion_state == "included";
 
-            crate::event::emit_confirmation_state_change(account_id_raw, &message, confirmed);
-        })?;
+        if confirmed != *message.confirmed() {
+            mutate_account(&account_id, &storage_path, |account, addresses, messages| {
+                let message = messages.iter_mut().find(|m| m.id() == &message_id).unwrap();
+                message.set_confirmed(confirmed);
+                if !confirmed {
+                    account.on_message_unconfirmed(message.id());
+                }
+                *addresses = account.addresses().to_vec();
+
+                crate::event::emit_confirmation_state_change(account_id_raw, &message, confirmed);
+            })?;
+        }
     }
     Ok(())
 }
