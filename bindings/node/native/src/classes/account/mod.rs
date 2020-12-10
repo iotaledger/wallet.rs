@@ -4,9 +4,8 @@
 use std::str::FromStr;
 
 use iota_wallet::{
-    account::Account,
-    address::Address,
-    message::{Message, MessageId},
+    account::{Account, AccountIdentifier},
+    message::MessageId,
 };
 use neon::prelude::*;
 
@@ -39,7 +38,10 @@ declare_types! {
                 account.id().clone()
             };
 
-            Ok(cx.string(id).upcast())
+            match id {
+                AccountIdentifier::Id(id) => Ok(cx.string(id).upcast()),
+                AccountIdentifier::Index(index) => Ok(cx.number(index as f64).upcast())
+            }
         }
 
         method index(mut cx) {
@@ -109,14 +111,11 @@ declare_types! {
                 None => None,
             };
 
-            let messages: Vec<Message> = {
-                let this = cx.this();
-                let guard = cx.lock();
-                let id = &this.borrow(&guard).0;
-                let account = crate::get_account(id);
-                let account = account.read().unwrap();
-                account.list_messages(count, from, filter).into_iter().cloned().collect()
-            };
+            let this = cx.this();
+            let id = cx.borrow(&this, |r| r.0.clone());
+            let account = crate::get_account(&id);
+            let account = account.read().unwrap();
+            let messages = account.list_messages(count, from, filter);
 
             let js_array = JsArray::new(&mut cx, messages.len() as u32);
             for (index, message) in messages.iter().enumerate() {
@@ -133,14 +132,11 @@ declare_types! {
                 None => false,
             };
 
-            let addresses: Vec<Address> = {
-                let this = cx.this();
-                let guard = cx.lock();
-                let id = &this.borrow(&guard).0;
-                let account = crate::get_account(id);
-                let account = account.read().unwrap();
-                account.list_addresses(unspent).into_iter().cloned().collect()
-            };
+            let this = cx.this();
+            let id = cx.borrow(&this, |r| r.0.clone());
+            let account = crate::get_account(&id);
+            let account = account.read().unwrap();
+            let addresses = account.list_addresses(unspent);
 
             let js_array = JsArray::new(&mut cx, addresses.len() as u32);
             for (index, address) in addresses.iter().enumerate() {
@@ -182,14 +178,11 @@ declare_types! {
 
         method getMessage(mut cx) {
             let message_id = MessageId::from_str(cx.argument::<JsString>(0)?.value().as_str()).expect("invalid message id length");
-            let message = {
-                let this = cx.this();
-                let guard = cx.lock();
-                let id = &this.borrow(&guard).0;
-                let account = crate::get_account(id);
-                let account = account.read().unwrap();
-                account.get_message(&message_id).cloned()
-            };
+            let this = cx.this();
+            let id = cx.borrow(&this, |r| r.0.clone());
+            let account = crate::get_account(&id);
+            let account = account.read().unwrap();
+            let message = account.get_message(&message_id);
             match message {
                 Some(m) => Ok(neon_serde::to_value(&mut cx, &m)?),
                 None => Ok(cx.undefined().upcast())
@@ -209,14 +202,11 @@ declare_types! {
         }
 
         method latestAddress(mut cx) {
-            let address = {
-                let this = cx.this();
-                let guard = cx.lock();
-                let id = &this.borrow(&guard).0;
-                let account = crate::get_account(id);
-                let account = account.read().unwrap();
-                account.latest_address().cloned()
-            };
+            let this = cx.this();
+            let id = cx.borrow(&this, |r| r.0.clone());
+            let account = crate::get_account(&id);
+            let account = account.read().unwrap();
+            let address = account.latest_address();
             match address {
                 Some(a) => Ok(neon_serde::to_value(&mut cx, &a)?),
                 None => Ok(cx.undefined().upcast())

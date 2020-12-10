@@ -26,7 +26,7 @@ impl Task for InternalTransferTask {
             let to_account = crate::get_account(&self.to_account_id);
             let to_account = to_account.read().unwrap();
             let res = manager
-                .internal_transfer(from_account.id().into(), to_account.id().into(), self.amount)
+                .internal_transfer(from_account.id(), to_account.id(), self.amount)
                 .await?;
 
             crate::update_account(&self.from_account_id, res.from_account);

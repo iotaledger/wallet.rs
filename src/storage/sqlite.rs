@@ -47,11 +47,11 @@ impl SqliteStorageAdapter {
 }
 
 impl StorageAdapter for SqliteStorageAdapter {
-    fn get(&self, account_id: AccountIdentifier) -> crate::Result<String> {
+    fn get(&self, account_id: &AccountIdentifier) -> crate::Result<String> {
         let (sql, params) = match account_id {
             AccountIdentifier::Id(id) => (
                 format!("SELECT value FROM {} WHERE key = ?1 LIMIT 1", self.table_name),
-                vec![ToSqlOutput::Owned(Value::Text(id))],
+                vec![ToSqlOutput::Owned(Value::Text(id.clone()))],
             ),
             AccountIdentifier::Index(index) => (
                 format!("SELECT value FROM {} LIMIT 1 OFFSET {}", self.table_name, index),
@@ -81,7 +81,7 @@ impl StorageAdapter for SqliteStorageAdapter {
         Ok(accounts)
     }
 
-    fn set(&self, account_id: AccountIdentifier, account: String) -> crate::Result<()> {
+    fn set(&self, account_id: &AccountIdentifier, account: String) -> crate::Result<()> {
         let id = match account_id {
             AccountIdentifier::Id(id) => id,
             _ => return Err(anyhow::anyhow!("only Id is supported").into()),
@@ -96,11 +96,11 @@ impl StorageAdapter for SqliteStorageAdapter {
         Ok(())
     }
 
-    fn remove(&self, account_id: AccountIdentifier) -> crate::Result<()> {
+    fn remove(&self, account_id: &AccountIdentifier) -> crate::Result<()> {
         let (sql, params) = match account_id {
             AccountIdentifier::Id(id) => (
                 format!("DELETE FROM {} WHERE key = ?1", self.table_name),
-                vec![ToSqlOutput::Owned(Value::Text(id))],
+                vec![ToSqlOutput::Owned(Value::Text(id.clone()))],
             ),
             AccountIdentifier::Index(index) => (
                 format!(
