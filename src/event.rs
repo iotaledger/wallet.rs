@@ -24,6 +24,13 @@ pub struct BalanceEvent<'a> {
     balance: u64,
 }
 
+impl<'a> BalanceEvent<'a> {
+    #[doc(hidden)]
+    pub fn cloned_address(&self) -> Address {
+        self.address.clone()
+    }
+}
+
 /// A transaction-related event data.
 #[derive(Getters, Serialize)]
 #[getset(get = "pub")]
@@ -53,6 +60,13 @@ pub struct TransactionConfirmationChangeEvent<'a> {
     message: &'a Message,
     /// The confirmed state of the transaction.
     confirmed: bool,
+}
+
+impl<'a> TransactionConfirmationChangeEvent<'a> {
+    #[doc(hidden)]
+    pub fn cloned_message(&self) -> Message {
+        self.message.clone()
+    }
 }
 
 struct BalanceEventHandler {
@@ -131,7 +145,7 @@ pub(crate) fn emit_balance_change(account_id: String, address: &Address, balance
         balance,
     };
     for listener in listeners.deref() {
-        (listener.on_event)(&event)
+        (listener.on_event)(&event);
     }
 }
 
@@ -146,7 +160,7 @@ pub(crate) fn emit_transaction_event(event_type: TransactionEventType, account_i
     };
     for listener in listeners.deref() {
         if listener.event_type == event_type {
-            (listener.on_event)(&event)
+            (listener.on_event)(&event);
         }
     }
 }
@@ -162,7 +176,7 @@ pub(crate) fn emit_confirmation_state_change(account_id: String, message: &Messa
         confirmed,
     };
     for listener in listeners.deref() {
-        (listener.on_event)(&event)
+        (listener.on_event)(&event);
     }
 }
 

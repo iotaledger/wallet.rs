@@ -17,7 +17,7 @@ use std::{
 };
 
 /// An Address output.
-#[derive(Debug, Getters, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Getters, Setters, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct AddressOutput {
     /// Transaction ID of the output
@@ -28,8 +28,11 @@ pub struct AddressOutput {
     index: u16,
     /// Output amount.
     amount: u64,
-    /// Spend status of the output.
+    /// Spend status of the output,
     is_spent: bool,
+    /// The message id this output is pending spent.
+    #[getset(set = "pub(crate)")]
+    pending_on_message_id: Option<MessageId>,
 }
 
 impl TryFrom<OutputMetadata> for AddressOutput {
@@ -50,6 +53,7 @@ impl TryFrom<OutputMetadata> for AddressOutput {
             index: output.output_index,
             amount: output.amount,
             is_spent: output.is_spent,
+            pending_on_message_id: None,
         };
         Ok(output)
     }
@@ -139,8 +143,7 @@ pub struct Address {
     /// Determines if an address is a public or an internal (change) address.
     internal: bool,
     /// The address outputs.
-    #[getset(set = "pub(crate)")]
-    outputs: Vec<AddressOutput>,
+    pub(crate) outputs: Vec<AddressOutput>,
 }
 
 impl PartialOrd for Address {
@@ -187,6 +190,54 @@ impl Address {
                 self.outputs.push(output);
             }
         }
+    }
+
+    pub(crate) fn append_outputs(&mut self, outputs: Vec<AddressOutput>) {
+        for output in outputs {
+            let is_new_output = self
+                .outputs
+                .iter()
+                .position(|o| {
+                    o.transaction_id == output.transaction_id
+                        && o.message_id == output.message_id
+                        && o.amount == output.amount
+                        && o.index == output.index
+                })
+                .is_none();
+            if is_new_output {
+                self.outputs.push(output);
+            }
+        }
+    }
+
+    pub(crate) fn outputs_mut(&mut self) -> &mut Vec<AddressOutput> {
+        &mut self.outputs
+    }
+
+    /// Gets the list of outputs that aren't spent or pending.
+    pub fn available_outputs(&self) -> Vec<&AddressOutput> {
+        self.outputs
+            .iter()
+            .filter(|o| !o.is_spent() && o.pending_on_message_id().is_none())
+            .collect()
+    }
+
+    pub(crate) fn available_outputs_mut(&mut self) -> Vec<&mut AddressOutput> {
+        self.outputs
+            .iter_mut()
+            .filter(|o| !o.is_spent() && o.pending_on_message_id().is_none())
+            .collect()
+    }
+
+    pub(crate) fn available_balance(&self) -> u64 {
+        let spent = self.outputs().iter().fold(0, |acc, o| {
+            acc + if o.pending_on_message_id().is_some() {
+                *o.amount()
+            } else {
+                0
+            }
+        });
+        self.balance - spent
     }
 }
 

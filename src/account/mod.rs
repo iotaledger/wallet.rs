@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    address::Address,
+    address::{Address, IotaAddress},
     client::ClientOptions,
     message::{Message, MessageType},
     signing::{with_signer, SignerType},
@@ -11,13 +11,31 @@ use crate::{
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
 use iota::message::prelude::MessageId;
+use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 
-use std::{convert::TryInto, path::PathBuf};
+use std::{
+    collections::HashMap,
+    convert::TryInto,
+    path::PathBuf,
+    sync::{Arc, Mutex},
+};
 
 mod sync;
 pub(crate) use sync::{repost_message, RepostAction};
 pub use sync::{AccountSynchronizer, SyncedAccount, TransferMetadata};
+
+type AddressesLock = Arc<Mutex<Vec<IotaAddress>>>;
+type AccountAddressesLock = Arc<Mutex<HashMap<AccountIdentifier, AddressesLock>>>;
+static ACCOUNT_ADDRESSES_LOCK: OnceCell<AccountAddressesLock> = OnceCell::new();
+
+pub(crate) fn get_account_addresses_lock(account_id: AccountIdentifier) -> AddressesLock {
+    let mut locks = ACCOUNT_ADDRESSES_LOCK.get_or_init(Default::default).lock().unwrap();
+    if !locks.contains_key(&account_id) {
+        locks.insert(account_id.clone(), Default::default());
+    }
+    locks.get(&account_id).unwrap().clone()
+}
 
 /// The account identifier.
 #[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
@@ -242,13 +260,15 @@ impl Account {
     /// the available balance should be (50i-30i) = 20i.
     pub fn available_balance(&self) -> u64 {
         let total_balance = self.total_balance();
-        let spent = self
-            .list_messages(0, 0, Some(MessageType::Sent))
-            .iter()
-            .fold(0, |acc, message| {
-                let val = if *message.confirmed() { 0 } else { *message.value() };
-                acc + val
-            });
+        let spent = self.addresses().iter().fold(0, |acc, addr| {
+            acc + addr.outputs().iter().fold(0, |acc, o| {
+                acc + if o.pending_on_message_id().is_some() {
+                    *o.amount()
+                } else {
+                    0
+                }
+            })
+        });
         total_balance - (spent as u64)
     }
 
@@ -274,12 +294,16 @@ impl Account {
     /// This is automatically performed when the account goes out of scope.
     pub fn save_pending_changes(&mut self) -> crate::Result<()> {
         if self.has_pending_changes {
-            crate::storage::with_adapter(&self.storage_path, |storage| {
-                storage.set(self.id.clone().into(), serde_json::to_string(&self)?)
-            })?;
+            self.save()?;
             self.has_pending_changes = false;
         }
         Ok(())
+    }
+
+    pub(crate) fn save(&self) -> crate::Result<()> {
+        crate::storage::with_adapter(&self.storage_path, |storage| {
+            storage.set(self.id.clone().into(), serde_json::to_string(&self)?)
+        })
     }
 
     /// Gets a list of transactions on this account.
@@ -385,9 +409,25 @@ impl Account {
     pub(crate) fn append_addresses(&mut self, addresses: Vec<Address>) {
         addresses
             .into_iter()
-            .for_each(|address| match self.addresses.iter().position(|a| a == &address) {
+            .for_each(|mut address| match self.addresses.iter().position(|a| a == &address) {
                 Some(index) => {
-                    self.addresses[index] = address;
+                    let old_address = &mut self.addresses[index];
+                    old_address.set_balance(*address.balance());
+                    old_address.outputs = address
+                        .outputs
+                        .iter_mut()
+                        .map(|output| {
+                            if let Some(old_output) = old_address.outputs().iter().find(|o| {
+                                o.message_id() == output.message_id()
+                                    && o.transaction_id() == output.transaction_id()
+                                    && o.index() == output.index()
+                                    && o.amount() == output.amount()
+                            }) {
+                                output.set_pending_on_message_id(*old_output.pending_on_message_id());
+                            }
+                            output.clone()
+                        })
+                        .collect();
                 }
                 None => {
                     self.addresses.push(address);
@@ -395,8 +435,46 @@ impl Account {
             });
     }
 
-    pub(crate) fn addresses_mut(&mut self) -> &mut Vec<Address> {
+    #[doc(hidden)]
+    pub fn addresses_mut(&mut self) -> &mut Vec<Address> {
         &mut self.addresses
+    }
+
+    #[doc(hidden)]
+    pub fn messages_mut(&mut self) -> &mut Vec<Message> {
+        &mut self.messages
+    }
+
+    pub(crate) fn on_message_unconfirmed(&mut self, message_id: &MessageId) -> bool {
+        let mut updated = false;
+        for address in self.addresses.iter_mut() {
+            for output in address.outputs_mut().iter_mut() {
+                match output.pending_on_message_id() {
+                    Some(id) if id == message_id => {
+                        output.set_pending_on_message_id(None);
+                        updated = true;
+                    }
+                    _ => {}
+                }
+            }
+        }
+        updated
+    }
+
+    pub(crate) fn on_reattachment(&mut self, old_message_id: &MessageId, new_message_id: &MessageId) -> bool {
+        let mut updated = false;
+        for address in self.addresses.iter_mut() {
+            for output in address.outputs_mut().iter_mut() {
+                match output.pending_on_message_id() {
+                    Some(id) if id == old_message_id => {
+                        output.set_pending_on_message_id(Some(*new_message_id));
+                        updated = true;
+                    }
+                    _ => {}
+                }
+            }
+        }
+        updated
     }
 
     /// Gets a message with the given id associated with this account.
