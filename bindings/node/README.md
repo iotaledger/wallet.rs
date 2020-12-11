@@ -280,3 +280,4 @@ Returns the latest address (the one with the biggest keyIndex) or undefined if t
 | [nodes]           | <code>string[]</code> | <code>undefined</code> | A list node URL to connect to                                                                            |
 | [quorumSize]      | <code>number</code>   | <code>undefined</code> | If multiple nodes are provided, quorum size determines the number of nodes to query to check for quorum. |
 | [quorumThreshold] | <code>number</code>   | <code>undefined</code> | Minimum number of nodes from the quorum pool that need to agree to consider a result true.               |
+| [localPow]        | <code>boolean</code>  | <code>true</code>      | Whether to use local or remote PoW.                                                                      |

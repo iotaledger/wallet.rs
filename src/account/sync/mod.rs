@@ -9,9 +9,12 @@ use crate::{
 };
 
 use getset::Getters;
-use iota::message::prelude::{
-    Input, Message as IotaMessage, MessageId, Payload, SignatureLockedSingleOutput, Transaction, TransactionEssence,
-    UTXOInput,
+use iota::{
+    message::prelude::{
+        Input, Message as IotaMessage, MessageBuilder, MessageId, Payload, SignatureLockedSingleOutput, Transaction,
+        TransactionEssence, UTXOInput,
+    },
+    ClientMiner,
 };
 use serde::{Deserialize, Serialize};
 use slip10::BIP32Path;
@@ -669,11 +672,12 @@ impl SyncedAccount {
         }
         let transaction = tx_builder.finish().map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
 
-        let message = IotaMessage::builder()
+        let message = MessageBuilder::<ClientMiner>::new()
             .with_parent1(parent1)
             .with_parent2(parent2)
             .with_payload(Payload::Transaction(Box::new(transaction)))
             .with_network_id(client.get_network_id().await?)
+            .with_nonce_provider(client.get_pow_provider(), 4000f64)
             .finish()
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 

@@ -100,6 +100,7 @@ export declare interface ClientOptions {
   network?: Network;
   quorumSize?: number;
   quorumThreshold?: number;
+  localPow?: boolean;
 }
 
 export declare enum SignerType {
