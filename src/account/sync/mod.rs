@@ -643,7 +643,7 @@ impl SyncedAccount {
             .with_parent1(parent1)
             .with_parent2(parent2)
             .with_payload(Payload::Transaction(Box::new(transaction)))
-            .with_network_id(0)
+            .with_network_id(client.get_network_id().await?)
             .finish()
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
