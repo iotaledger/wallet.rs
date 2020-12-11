@@ -40,6 +40,35 @@ const account = await manager.createAccount({
 
 ## API Reference
 
+### initLogger(config: LogOptions)
+
+Initializes the logging system.
+
+#### LogOptions
+
+| Param         | Type                     | Default                | Description                             |
+| ------------- | ------------------------ | ---------------------- | --------------------------------------- |
+| color_enabled | <code>boolean</code>     | <code>undefined</code> | Whether to enable colored output or not |
+| outputs       | <code>LogOutput[]</code> | <code>undefined</code> | The log outputs                         |
+
+#### LogOutput
+
+| Param | Type                | Default                | Description                                    |
+| ----- | ------------------- | ---------------------- | ---------------------------------------------- |
+| name  | <code>string</code> | <code>undefined</code> | 'stdout' or a path to a file                   |
+| level | <code>string</code> | <code>undefined</code> | The maximum log level that this output accepts |
+
+### addEventListener(event, cb)
+
+Adds a new event listener with a callback in the form of `(err, data) => {}`.
+Supported event names:
+- ErrorThrown
+- BalanceChange
+- NewTransaction
+- ConfirmationStateChange
+- Reattachment
+- Broadcast
+
 ### AccountManager
 
 #### constructor([options])

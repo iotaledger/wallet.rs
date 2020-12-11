@@ -347,7 +347,7 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
                 .iter()
                 .filter(|message| !account_before_sync.messages().contains(message))
                 .for_each(|message| {
-                    log::debug!("[POLLING] new message: {:?}", message.id());
+                    log::info!("[POLLING] new message: {:?}", message.id());
                     emit_transaction_event(TransactionEventType::NewTransaction, account_after_sync.id(), &message)
                 });
 
@@ -358,14 +358,14 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
                     None => false,
                 };
                 if changed {
-                    log::debug!("[POLLING] message confirmed: {:?}", message.id());
+                    log::info!("[POLLING] message confirmed: {:?}", message.id());
                     emit_confirmation_state_change(account_after_sync.id(), &message, true);
                 }
             }
         }
         retry_unconfirmed_transactions(synced_accounts.iter().zip(accounts_after_sync.iter()).collect()).await?
     } else {
-        log::debug!("[POLLING] skipping syncing process because MQTT is running");
+        log::info!("[POLLING] skipping syncing process because MQTT is running");
         let accounts = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
         let mut retried_messages = vec![];
         for mut account in crate::storage::parse_accounts(&storage_path, &accounts)? {
@@ -377,15 +377,15 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
             let mut reattached_messages = Vec::new();
             let mut updated = false;
             for message in unconfirmed_messages {
-                log::debug!("[POLLING] retrying {:?}", message);
+                log::info!("[POLLING] retrying {:?}", message);
                 let new_message =
                     repost_message(account.id(), &storage_path, message.id(), RepostAction::Retry).await?;
                 if new_message.payload() == message.payload() {
-                    log::debug!("[POLLING] reattached and new message is {:?}", new_message.id());
+                    log::info!("[POLLING] reattached and new message is {:?}", new_message.id());
                     reattached_messages.push((*message.id(), *new_message.id()));
                     reattachments.push(new_message);
                 } else {
-                    log::debug!("[POLLING] promoted and new message is {:?}", new_message.id());
+                    log::info!("[POLLING] promoted and new message is {:?}", new_message.id());
                     promotions.push(new_message);
                 }
             }

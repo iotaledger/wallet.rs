@@ -10,6 +10,7 @@ use std::{
 };
 
 use futures::{Future, FutureExt};
+use iota::common::logger::{logger_init, LoggerConfigBuilder};
 use iota_wallet::{
     account::{Account, AccountIdentifier},
     WalletError,
@@ -148,8 +149,16 @@ pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
     runtime.lock().unwrap().block_on(cb)
 }
 
+pub fn init_logger(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let config = cx.argument::<JsString>(0)?.value();
+    let config: LoggerConfigBuilder = serde_json::from_str(&config).expect("invalid logger config");
+    logger_init(config.finish()).expect("failed to init logger");
+    Ok(cx.undefined())
+}
+
 // Export the class
 register_module!(mut m, {
+    m.export_function("initLogger", init_logger)?;
     m.export_class::<JsAccountManager>("AccountManager")?;
     m.export_class::<JsAccount>("Account")?;
     m.export_class::<JsSyncedAccount>("SyncedAccount")?;

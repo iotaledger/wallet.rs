@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 var addon = require('../native')
-const { AccountManager, Account, SyncedAccount, EventListener } = addon
+const { AccountManager, Account, SyncedAccount, EventListener, initLogger } = addon
 
 function promisify (fn) {
   return function () {
@@ -64,6 +64,7 @@ AccountManager.prototype.internalTransfer = promisify(AccountManager.prototype.i
 module.exports = {
   AccountManager,
   addEventListener,
+  initLogger: config => initLogger(JSON.stringify(config)),
   RemainderValueStrategy,
   StorageType: {
     Stronghold: 1,
