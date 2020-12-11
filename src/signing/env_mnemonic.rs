@@ -13,7 +13,7 @@ use blake2::{
 };
 use hmac::Hmac;
 use iota::{Ed25519Signature, ReferenceUnlock, SignatureUnlock, UnlockBlock};
-use rand::{thread_rng, Rng};
+use rand::{distributions::Alphanumeric, thread_rng, Rng};
 use unicode_normalization::UnicodeNormalization;
 
 use bee_signing_ext::{
@@ -21,7 +21,7 @@ use bee_signing_ext::{
     Signer,
 };
 
-const PBKDF2_ROUNDS: usize = 2048;
+const PBKDF2_ROUNDS: u32 = 2048;
 const PBKDF2_BYTES: usize = 32; // 64 for secp256k1 , 32 for ed25
 
 /// PBKDF2 helper, used to generate [`Seed`][Seed] from [`Mnemonic`][Mnemonic]
@@ -80,7 +80,7 @@ impl super::Signer for EnvMnemonicSigner {
         if let Some(mnemonic) = mnemonic {
             env::set_var("IOTA_WALLET_MNEMONIC", mnemonic);
         }
-        Ok(thread_rng().gen_ascii_chars().take(10).collect())
+        Ok(thread_rng().sample_iter(&Alphanumeric).take(10).collect())
     }
 
     fn generate_address(

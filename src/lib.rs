@@ -162,13 +162,13 @@ pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
 mod test_utils {
     use super::account_manager::AccountManager;
     use once_cell::sync::OnceCell;
-    use rand::{thread_rng, Rng};
+    use rand::{distributions::Alphanumeric, thread_rng, Rng};
     use std::path::PathBuf;
 
     static MANAGER_INSTANCE: OnceCell<AccountManager> = OnceCell::new();
     pub fn get_account_manager() -> &'static AccountManager {
         MANAGER_INSTANCE.get_or_init(|| {
-            let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
+            let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
             let storage_path = PathBuf::from(format!("./example-database/{}", storage_path));
 
             let mut manager = AccountManager::with_storage_path(storage_path).unwrap();
