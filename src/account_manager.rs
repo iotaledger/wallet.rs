@@ -538,7 +538,7 @@ mod tests {
         client::ClientOptionsBuilder,
         message::Message,
     };
-    use iota::message::prelude::{Ed25519Address, Indexation, MessageBuilder, MessageId, Payload};
+    use iota::message::prelude::{Ed25519Address, Indexation, Message as IotaMessage, MessageId, Payload};
     use rusty_fork::rusty_fork_test;
 
     rusty_fork_test! {
@@ -573,7 +573,7 @@ mod tests {
 
             let account = manager
                 .create_account(client_options)
-                .messages(vec![Message::from_iota_message(MessageId::new([0; 32]), &[], &MessageBuilder::new()
+                .messages(vec![Message::from_iota_message(MessageId::new([0; 32]), &[], &IotaMessage::builder()
                     .with_parent1(MessageId::new([0; 32]))
                     .with_parent2(MessageId::new([0; 32]))
                     .with_payload(Payload::Indexation(Box::new(Indexation::new(
