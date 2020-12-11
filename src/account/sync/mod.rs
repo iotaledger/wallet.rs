@@ -53,9 +53,6 @@ async fn sync_addresses(
 ) -> crate::Result<(Vec<Address>, Vec<(MessageId, IotaMessage)>)> {
     let mut address_index = address_index;
 
-    let client = crate::client::get_client(account.client_options());
-    let client = client.read().unwrap();
-
     let mut generated_addresses = vec![];
     let mut found_messages = vec![];
     loop {
@@ -69,52 +66,68 @@ async fn sync_addresses(
         let mut curr_generated_addresses = vec![];
         let mut curr_found_messages = vec![];
 
+        let mut futures_ = vec![];
         for (iota_address_index, iota_address_internal, iota_address) in &generated_iota_addresses {
-            let address_outputs = client.get_address().outputs(&iota_address).await?;
-            let balance = client.get_address().balance(&iota_address).await?;
+            futures_.push(async move {
+                let client = crate::client::get_client(account.client_options());
+                let client = client.read().unwrap();
 
-            let mut curr_found_outputs: Vec<AddressOutput> = vec![];
-            for output in address_outputs.iter() {
-                let output = client.get_output(output).await?;
-                if let Ok(message) = client
-                    .get_message()
-                    .data(&MessageId::new(
-                        output.message_id[..]
-                            .try_into()
-                            .map_err(|_| crate::WalletError::InvalidMessageIdLength)?,
-                    ))
-                    .await
-                {
-                    curr_found_messages.push((
-                        MessageId::new(
+                let address_outputs = client.get_address().outputs(&iota_address).await?;
+                let balance = client.get_address().balance(&iota_address).await?;
+                let mut curr_found_messages = vec![];
+
+                let mut curr_found_outputs: Vec<AddressOutput> = vec![];
+                for output in address_outputs.iter() {
+                    let output = client.get_output(output).await?;
+                    if let Ok(message) = client
+                        .get_message()
+                        .data(&MessageId::new(
                             output.message_id[..]
                                 .try_into()
                                 .map_err(|_| crate::WalletError::InvalidMessageIdLength)?,
-                        ),
-                        message,
-                    ));
+                        ))
+                        .await
+                    {
+                        curr_found_messages.push((
+                            MessageId::new(
+                                output.message_id[..]
+                                    .try_into()
+                                    .map_err(|_| crate::WalletError::InvalidMessageIdLength)?,
+                            ),
+                            message,
+                        ));
+                    }
+                    curr_found_outputs.push(output.try_into()?);
                 }
-                curr_found_outputs.push(output.try_into()?);
+
+                // ignore unused change addresses
+                if *iota_address_internal && curr_found_outputs.is_empty() {
+                    return crate::Result::Ok((curr_found_messages, None));
+                }
+
+                if let Some(account_address) = account.addresses().iter().find(|a| a.address() == iota_address) {
+                    account_address.fill_outputs_lock(&mut curr_found_outputs);
+                }
+
+                let address = AddressBuilder::new()
+                    .address(iota_address.clone())
+                    .key_index(*iota_address_index)
+                    .balance(balance)
+                    .outputs(curr_found_outputs)
+                    .internal(*iota_address_internal)
+                    .build()?;
+
+                crate::Result::Ok((curr_found_messages, Some(address)))
+            });
+        }
+
+        let results = futures::future::join_all(futures_).await;
+        for result in results {
+            let (found_messages, address_opt) = result?;
+            if let Some(address) = address_opt {
+                curr_generated_addresses.push(address);
             }
-
-            // ignore unused change addresses
-            if *iota_address_internal && curr_found_outputs.is_empty() {
-                continue;
-            }
-
-            if let Some(account_address) = account.addresses().iter().find(|a| a.address() == iota_address) {
-                account_address.fill_outputs_lock(&mut curr_found_outputs);
-            }
-
-            let address = AddressBuilder::new()
-                .address(iota_address.clone())
-                .key_index(*iota_address_index)
-                .balance(balance)
-                .outputs(curr_found_outputs)
-                .internal(*iota_address_internal)
-                .build()?;
-
-            curr_generated_addresses.push(address);
+            curr_found_messages.extend(found_messages);
         }
 
         address_index += gap_limit;
@@ -142,26 +155,43 @@ async fn sync_messages(
     stop_at_address_index: usize,
 ) -> crate::Result<Vec<(MessageId, IotaMessage)>> {
     let mut messages = vec![];
-    let client = crate::client::get_client(account.client_options());
-    let client = client.read().unwrap();
+    let client_options = account.client_options().clone();
 
-    for address in account.addresses_mut().iter_mut().take(stop_at_address_index) {
-        let address_outputs = client.get_address().outputs(address.address()).await?;
-        let balance = client.get_address().balance(address.address()).await?;
-        let mut outputs = vec![];
-        for output in address_outputs.iter() {
-            let output = client.get_output(output).await?;
-            let output: AddressOutput = output.try_into()?;
+    let futures_ = account
+        .addresses_mut()
+        .iter_mut()
+        .take(stop_at_address_index)
+        .map(|address| {
+            let client_options = client_options.clone();
+            async move {
+                let client = crate::client::get_client(&client_options);
+                let client = client.read().unwrap();
 
-            if let Ok(message) = client.get_message().data(output.message_id()).await {
-                messages.push((*output.message_id(), message));
+                let address_outputs = client.get_address().outputs(address.address()).await?;
+                let balance = client.get_address().balance(address.address()).await?;
+
+                let mut outputs = vec![];
+                let mut messages = vec![];
+                for output in address_outputs.iter() {
+                    let output = client.get_output(output).await?;
+                    let output: AddressOutput = output.try_into()?;
+
+                    if let Ok(message) = client.get_message().data(output.message_id()).await {
+                        messages.push((*output.message_id(), message));
+                    }
+
+                    outputs.push(output);
+                }
+
+                address.filter_outputs(outputs);
+                address.set_balance(balance);
+
+                crate::Result::Ok(messages)
             }
+        });
 
-            outputs.push(output);
-        }
-
-        address.filter_outputs(outputs);
-        address.set_balance(balance);
+    for res in futures::future::join_all(futures_).await {
+        messages.extend(res?);
     }
 
     Ok(messages)
