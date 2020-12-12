@@ -1,7 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-var addon = require('../native')
+var addon = require('../build/Release')
 const { AccountManager, Account, SyncedAccount, EventListener } = addon
 
 function promisify (fn) {

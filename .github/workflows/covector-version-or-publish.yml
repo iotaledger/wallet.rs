@@ -1,0 +1,108 @@
+name: version or publish
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  version-or-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      change: ${{ steps.covector.outputs.change }}
+      commandRan: ${{ steps.covector.outputs.commandRan }}
+      successfulPublish: ${{ steps.covector.outputs.successfulPublish }}
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14
+          registry-url: 'https://registry.npmjs.org'
+      # - name: cargo login
+      #  run: cargo login ${{ secrets.crate_token }}
+      - name: git config
+        run: |
+          git config --global user.name "${{ github.event.pusher.name }}"
+          git config --global user.email "${{ github.event.pusher.email }}"
+      - name: covector version or publish (publish when no change files present)
+        uses: jbolda/covector/packages/action@covector-v0
+        id: covector
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          command: 'version-or-publish'
+          createRelease: true
+      - name: Create Pull Request With Versions Bumped
+        if: steps.covector.outputs.commandRan == 'version'
+        uses: tauri-apps/create-pull-request@v3.4.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: release/version-updates
+          title: Apply Version Updates From Current Changes
+          commit-message: "apply version updates"
+          labels: "version updates"
+          body: ${{ steps.covector.outputs.change }}
+
+  prebuild:
+    runs-on: ${{ matrix.platform }}
+    needs: version-or-publish
+    if: needs.version-or-publish.outputs.successfulPublish == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      
+      # Install nodejs/rust
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14
+          registry-url: 'https://registry.npmjs.org'
+      - name: Install Rust stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      # Install binding dependencies and run prebuild script
+      - name: Install nodejs binding dependencies
+        working-directory: bindings/node
+        run: yarn
+      - name: Prebuild
+        run: yarn prebuild:node && yarn prebuild:electron
+
+      # Upload /prebuilds folder to the release created by covector
+      - name: Upload prebuild assets
+        uses: actions/github-script@v2
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const fs = require('fs').promises
+            const path = require('path')
+            const { repo: { owner, repo }, sha } = context
+
+            const release = await github.repos.getLatestRelease()
+        
+            for (let file of await fs.readdir('./bindings/node/prebuilds')) {
+              const filePath = path.join('./bindings/node/prebuilds', file)
+              await github.repos.uploadReleaseAsset({
+                headers: {
+                  'content-type': 'application/zip',
+                  'content-length': fs.statSync(filePath).size
+                },
+                owner,
+                repo,
+                release_id: release.data.id,
+                name: file,
+                data: await fs.readFile(filePath)
+              })
+            }
