@@ -202,7 +202,17 @@ async fn sync_messages(
                     outputs.push(output);
                 }
 
+                log::debug!(
+                    "[SYNC] synced address `{}` outputs; old array: {:?}",
+                    address.address().to_bech32(),
+                    address.outputs()
+                );
                 address.filter_outputs(outputs);
+                log::debug!(
+                    "[SYNC] address `{}` new outputs: {:?}",
+                    address.address().to_bech32(),
+                    address.outputs()
+                );
                 address.set_balance(balance);
 
                 crate::Result::Ok(messages)
@@ -393,8 +403,20 @@ impl<'a> AccountSynchronizer<'a> {
         let return_value =
             match perform_sync(&mut account_, &self.storage_path, self.address_index, self.gap_limit).await {
                 Ok(is_empty) => {
+                    log::debug!(
+                        "[SYNC] updating account `{}` addresses; old array: {:?}",
+                        self.account.alias(),
+                        self.account.addresses()
+                    );
                     self.account.set_addresses(account_.addresses().to_vec());
                     self.account.set_messages(account_.messages().to_vec());
+
+                    log::debug!(
+                        "[SYNC] updated account `{}` addresses; new array: {:?}",
+                        self.account.alias(),
+                        self.account.addresses()
+                    );
+
                     if !self.skip_persistance {
                         crate::storage::with_adapter(&self.storage_path, |storage| {
                             storage.set(self.account.id(), serde_json::to_string(&self.account)?)

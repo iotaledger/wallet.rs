@@ -201,6 +201,11 @@ impl Address {
                     && o.index == output.index
             });
             if let Some(original_output) = original_output_opt {
+                log::debug!(
+                    "[SYNC] filling output lock on; output: {:?}, lock: {:?}",
+                    output,
+                    original_output.pending_on_message_id()
+                );
                 output.set_pending_on_message_id(*original_output.pending_on_message_id());
             }
         }
