@@ -4,7 +4,7 @@
 use crate::{account::Account, message::MessageType};
 use bech32::FromBase32;
 use getset::{Getters, Setters};
-pub use iota::message::prelude::{Address as IotaAddress, Ed25519Address};
+pub use iota::message::prelude::{Address as IotaAddress, Ed25519Address, Input, Payload, UTXOInput};
 use iota::{
     message::prelude::{MessageId, TransactionId},
     OutputMetadata,
@@ -30,9 +30,30 @@ pub struct AddressOutput {
     amount: u64,
     /// Spend status of the output,
     is_spent: bool,
-    /// The message id this output is pending spent.
-    #[getset(set = "pub(crate)")]
-    pending_on_message_id: Option<MessageId>,
+}
+
+impl AddressOutput {
+    /// Checks if the output is referenced on a pending message or a confirmed message
+    pub(crate) fn is_used(&self, account: &Account) -> bool {
+        let output_id = UTXOInput::new(self.transaction_id, self.index).unwrap();
+        account.list_messages(0, 0, None).iter().any(|m| {
+            // message is pending or confirmed
+            if m.confirmed().unwrap_or(true) {
+                match m.payload() {
+                    Payload::Transaction(tx) => tx.essence().inputs().iter().any(|input| {
+                        if let Input::UTXO(x) = input {
+                            x == &output_id
+                        } else {
+                            false
+                        }
+                    }),
+                    _ => false,
+                }
+            } else {
+                false
+            }
+        })
+    }
 }
 
 impl TryFrom<OutputMetadata> for AddressOutput {
@@ -53,7 +74,6 @@ impl TryFrom<OutputMetadata> for AddressOutput {
             index: output.output_index,
             amount: output.amount,
             is_spent: output.is_spent,
-            pending_on_message_id: None,
         };
         Ok(output)
     }
@@ -143,6 +163,7 @@ pub struct Address {
     /// Determines if an address is a public or an internal (change) address.
     internal: bool,
     /// The address outputs.
+    #[getset(set = "pub(crate)")]
     pub(crate) outputs: Vec<AddressOutput>,
 }
 
@@ -190,53 +211,19 @@ impl Address {
         }
     }
 
-    pub(crate) fn fill_outputs_lock(&self, outputs: &mut Vec<AddressOutput>) {
-        for output in outputs.iter_mut() {
-            let original_output_opt = self.outputs.iter().find(|o| {
-                o.transaction_id == output.transaction_id
-                    && o.message_id == output.message_id
-                    && o.amount == output.amount
-                    && o.index == output.index
-            });
-            if let Some(original_output) = original_output_opt {
-                output.set_pending_on_message_id(*original_output.pending_on_message_id());
-            }
-        }
-    }
-
-    pub(crate) fn filter_outputs(&mut self, mut outputs: Vec<AddressOutput>) {
-        self.fill_outputs_lock(&mut outputs);
-        self.outputs = outputs;
-    }
-
     pub(crate) fn outputs_mut(&mut self) -> &mut Vec<AddressOutput> {
         &mut self.outputs
     }
 
     /// Gets the list of outputs that aren't spent or pending.
-    pub fn available_outputs(&self) -> Vec<&AddressOutput> {
-        self.outputs
+    pub fn available_outputs(&self, account: &Account) -> Vec<&AddressOutput> {
+        self.outputs.iter().filter(|o| !o.is_used(account)).collect()
+    }
+
+    pub(crate) fn available_balance(&self, account: &Account) -> u64 {
+        self.available_outputs(account)
             .iter()
-            .filter(|o| !o.is_spent() && o.pending_on_message_id().is_none())
-            .collect()
-    }
-
-    pub(crate) fn available_outputs_mut(&mut self) -> Vec<&mut AddressOutput> {
-        self.outputs
-            .iter_mut()
-            .filter(|o| !o.is_spent() && o.pending_on_message_id().is_none())
-            .collect()
-    }
-
-    pub(crate) fn available_balance(&self) -> u64 {
-        let spent = self.outputs().iter().fold(0, |acc, o| {
-            acc + if o.pending_on_message_id().is_some() {
-                *o.amount()
-            } else {
-                0
-            }
-        });
-        self.balance - spent
+            .fold(0, |acc, o| acc + *o.amount())
     }
 }
 

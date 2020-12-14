@@ -180,9 +180,7 @@ impl<'a> AccountInitialiser<'a> {
         account.set_id(id.into());
 
         if !self.skip_persistance {
-            crate::storage::with_adapter(&self.storage_path, |storage| {
-                storage.set(account.id(), serde_json::to_string(&account)?)
-            })?;
+            account.save()?;
         }
         Ok(account)
     }
@@ -261,17 +259,9 @@ impl Account {
     /// For example, if a user with 50i total account balance has made a transaction spending 20i,
     /// the available balance should be (50i-30i) = 20i.
     pub fn available_balance(&self) -> u64 {
-        let total_balance = self.total_balance();
-        let spent = self.addresses().iter().fold(0, |acc, addr| {
-            acc + addr.outputs().iter().fold(0, |acc, o| {
-                acc + if o.pending_on_message_id().is_some() {
-                    *o.amount()
-                } else {
-                    0
-                }
-            })
-        });
-        total_balance - (spent as u64)
+        self.addresses()
+            .iter()
+            .fold(0, |acc, addr| acc + addr.available_balance(&self))
     }
 
     /// Updates the account alias.
@@ -302,10 +292,9 @@ impl Account {
         Ok(())
     }
 
-    pub(crate) fn save(&self) -> crate::Result<()> {
-        crate::storage::with_adapter(&self.storage_path, |storage| {
-            storage.set(&self.id, serde_json::to_string(&self)?)
-        })
+    pub(crate) fn save(&mut self) -> crate::Result<()> {
+        let storage_path = self.storage_path.clone();
+        crate::storage::save_account(&storage_path, self)
     }
 
     /// Gets a list of transactions on this account.
@@ -345,7 +334,7 @@ impl Account {
             if let Some(original_message_index) = messages.iter().position(|m| m.payload() == message.payload()) {
                 let original_message = messages[original_message_index];
                 // if the original message was confirmed, we ignore this reattachment
-                if *original_message.confirmed() {
+                if original_message.confirmed().unwrap_or(false) {
                     continue;
                 } else {
                     // remove the original message otherwise
@@ -357,7 +346,7 @@ impl Account {
                     MessageType::Received => *message.incoming(),
                     MessageType::Sent => !message.incoming(),
                     MessageType::Failed => !message.broadcasted(),
-                    MessageType::Unconfirmed => !message.confirmed(),
+                    MessageType::Unconfirmed => !message.confirmed().unwrap_or(false),
                     MessageType::Value => *message.value() > 0,
                 }
             } else {
@@ -390,9 +379,7 @@ impl Account {
         let address = crate::address::get_new_address(&self)?;
         self.addresses.push(address.clone());
 
-        crate::storage::with_adapter(&self.storage_path, |storage| {
-            storage.set(&self.id, serde_json::to_string(self)?)
-        })?;
+        self.save()?;
 
         // ignore errors because we fallback to the polling system
         let _ = crate::monitor::monitor_address_balance(&self, address.address());
@@ -425,38 +412,6 @@ impl Account {
     #[doc(hidden)]
     pub fn messages_mut(&mut self) -> &mut Vec<Message> {
         &mut self.messages
-    }
-
-    pub(crate) fn on_message_unconfirmed(&mut self, message_id: &MessageId) -> bool {
-        let mut updated = false;
-        for address in self.addresses.iter_mut() {
-            for output in address.outputs_mut().iter_mut() {
-                match output.pending_on_message_id() {
-                    Some(id) if id == message_id => {
-                        output.set_pending_on_message_id(None);
-                        updated = true;
-                    }
-                    _ => {}
-                }
-            }
-        }
-        updated
-    }
-
-    pub(crate) fn on_reattachment(&mut self, old_message_id: &MessageId, new_message_id: &MessageId) -> bool {
-        let mut updated = false;
-        for address in self.addresses.iter_mut() {
-            for output in address.outputs_mut().iter_mut() {
-                match output.pending_on_message_id() {
-                    Some(id) if id == old_message_id => {
-                        output.set_pending_on_message_id(Some(*new_message_id));
-                        updated = true;
-                    }
-                    _ => {}
-                }
-            }
-        }
-        updated
     }
 
     /// Gets a message with the given id associated with this account.

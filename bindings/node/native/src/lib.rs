@@ -68,7 +68,7 @@ fn instances() -> &'static AccountInstanceMap {
             let confirmed = *event.confirmed();
             mutate_account_if_exists(event.account_id(), move |account| {
                 if let Some(message) = account.messages_mut().iter_mut().find(|m| m == &&message) {
-                    message.set_confirmed(confirmed);
+                    message.set_confirmed(Some(confirmed));
                 }
             });
         });
