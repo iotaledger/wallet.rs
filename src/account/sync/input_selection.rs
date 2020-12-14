@@ -122,7 +122,10 @@ mod tests {
                 .outputs(vec![])
                 .build()
                 .unwrap();
-            available_utxos.push((&address).into());
+            available_utxos.push(super::Input {
+                address: address.address().clone(),
+                balance: *address.balance(),
+            });
         }
         available_utxos
     }

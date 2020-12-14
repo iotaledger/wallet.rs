@@ -568,7 +568,7 @@ mod tests {
                     ).unwrap())))
                     .with_network_id(0)
                     .finish()
-                    .unwrap()).unwrap()])
+                    .unwrap(), None).unwrap()])
                 .initialise().unwrap();
 
             let remove_response = manager.remove_account(account.id());
