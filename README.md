@@ -13,9 +13,51 @@ This library is in active development. The library targets the Chrysalis testnet
 
 ## Prerequisites
 
-To use the library, we recommend you update Rust to the latest stable version [`rustup update stable`](https://github.com/rust-lang/rustup.rs#keeping-rust-up-to-date). Nightly should be fine but there's a chance some changes are not compatible.
+`Rust` and `Cargo` are required. Install them [here](https://doc.rust-lang.org/cargo/getting-started/installation.html).
+
+We recommend you update Rust to the latest stable version [`rustup update stable`](https://github.com/rust-lang/rustup.rs#keeping-rust-up-to-date). Nightly should be fine but there's a chance some changes are not compatible.
 
 `no_std` is not supported currently, but we are working on it, and will provide it as a feature once the new implementation is ready.
+
+### Dependencies
+
+`cmake` and `openssl` are required. In order to run the build process succesfully using Cargo you might need install additional build tools on your system. 
+
+### Windows
+
+`cmake` can be downloaded on the [official website](https://cmake.org/download/) and `openssl` can be installed with [vcpkg](https://github.com/microsoft/vcpkg) or [chocolatey](https://chocolatey.org/).
+
+- Installing `openssl` with `vcpkg`:
+
+```
+$ ./vcpkg.exe install openssl:x64-windows
+$ ./vcpkg.exe integrate install
+# you may want to add this to the system environment variables since you'll need it to compile the crate
+$ set VCPKGRS_DYNAMIC=1
+```
+
+- Installing `openssl` with `chocolatey`:
+
+```
+$ choco install openssl
+# you may need to set the OPENSSL_ROOT_DIR environment variable
+$ set OPENSSL_ROOT_DIR="C:\Program Files\OpenSSL-Win64"
+```
+
+### macOS
+
+`cmake` and `openssl` can be installed with `Homebrew`:
+
+```
+$ brew install cmake
+$ brew install openssl@1.1
+# you may want to add this to your .zshrc or .bashrc since you'll need it to compile the crate
+$ OPENSSL_ROOT_DIR=$(brew --prefix openssl@1.1)
+```
+
+### Linux
+
+Install `cmake` and `openssl` with your distro's package manager or download from their websites. On Debian and Ubuntu you will also need `build-essential`.
 
 ## Usage
 
