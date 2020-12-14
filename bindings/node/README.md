@@ -4,7 +4,7 @@ Node.js binding to the IOTA wallet library.
 
 ## Requirements
 
-`Rust` and `Cargo` are required. Install them [here](https://doc.rust-lang.org/cargo/getting-started/installation.html).
+Ensure you have first installed the required dependencies for the library [here](https://github.com/iotaledger/wallet.rs/blob/develop/README.md).
 
 ## Installation
 
