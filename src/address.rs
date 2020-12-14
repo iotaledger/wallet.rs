@@ -35,9 +35,9 @@ pub struct AddressOutput {
 impl AddressOutput {
     /// Checks if the output is referenced on a pending message or a confirmed message
     pub(crate) fn is_used(&self, account: &Account) -> bool {
-        let output_id = UTXOInput::new(self.transaction_id.clone(), self.index).unwrap();
+        let output_id = UTXOInput::new(self.transaction_id, self.index).unwrap();
         account.list_messages(0, 0, None).iter().any(|m| {
-            /* message is pending or confirmed */
+            // message is pending or confirmed
             if m.confirmed().unwrap_or(true) {
                 match m.payload() {
                     Payload::Transaction(tx) => tx.essence().inputs().iter().any(|input| {
