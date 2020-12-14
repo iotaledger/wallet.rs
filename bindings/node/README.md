@@ -27,15 +27,22 @@ $ yarn link iota-wallet
 
 After you linked the library, you can create an `AccountManager` instance and interface with it.
 
+While Stronghold is not ready, we recommend using the Sqlite StorageType and `EnvMnemonic` SignerType (this simply means you store your mnemonic as an environment variable).
+
+### Example 
+
 ```javascript
-const { AccountManager } = require('iota-wallet')
-const manager = new AccountManager()
-const account = await manager.createAccount({
-  alias: 'my first account',
-  clientOptions: {
-    node: 'http://localhost:14265'
-  }
+const { AccountManager, StorageType, SignerType } = require('iota-wallet')
+const manager = new AccountManager({
+    storagePath: './storage',
+    storageType: StorageType.Sqlite
 })
+const account = await manager.createAccount({
+  alias: 'Account1',
+  clientOptions: { node: 'http://api.lb-0.testnet.chrysalis2.com', localPow: false },
+  signerType: SignerType.EnvMnemonic
+})
+account.sync()
 ```
 
 ## API Reference
