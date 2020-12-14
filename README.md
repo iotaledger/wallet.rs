@@ -5,11 +5,13 @@
 ## Introduction
 
 The wallet library is a stateful package with a standardised interface for developers to build applications involving IOTA value transactions.
-It offers abstractions to handle IOTA payments and can optionally interact with [IOTA Stronghold](https://github.com/iotaledger/stronghold.rs/) for seed handling, seed storage and state backup. See the full specification [here](https://github.com/iotaledger/wallet.rs/blob/master/specs/wallet-ENGINEERING-SPEC-0000.md).
+It offers abstractions to handle IOTA payments and can optionally interact with [IOTA Stronghold](https://github.com/iotaledger/stronghold.rs/) for seed handling, seed storage and state backup. Alternatively you can use the EnvMnemonic SignerType and a SQLite database. See the full specification [here](https://github.com/iotaledger/wallet.rs/blob/master/specs/wallet-ENGINEERING-SPEC-0000.md).
 
 ## Warning
 
 This library is in active development. The library targets the Chrysalis testnet and does not work with current IOTA mainnet.
+
+The Stronghold integration is not complete. We recommend you use SQLite and the EnvMnemonic SignerType (allowing you to store your mnemonic as an environment variable).
 
 ## Prerequisites
 
@@ -73,25 +75,34 @@ iota-wallet = { git = "https://github.com/iotaledger/wallet.rs" }
 In order to use the library you first need to create an `AccountManager`:
 
 ```rust
-use iota_wallet::account_manager::AccountManager;
-fn main() {
-  let mut manager = AccountManager::new().unwrap();
-  manager.set_stronghold_password("my-password").unwrap();
-  // now you can create accounts with `manager.create_account`, synchronize, send transfers, backup...
+use iota_wallet::{
+    account_manager::AccountManager, client::ClientOptionsBuilder, signing::SignerType,
+    storage::sqlite::SqliteStorageAdapter,
+};
+use std::path::PathBuf;
+#[tokio::main]
+async fn main() -> iota_wallet::Result<()> {
+    let storage_folder: PathBuf = "./my-db".into();
+    let manager =
+        AccountManager::with_storage_adapter(&storage_folder, SqliteStorageAdapter::new(&storage_folder, "accounts")?)?;
+    let client_options = ClientOptionsBuilder::node("http://api.lb-0.testnet.chrysalis2.com")?.build();
+    let account = manager
+        .create_account(client_options)
+        .signer_type(SignerType::EnvMnemonic)
+        .initialise()?;
+    Ok(())
 }
 ```
 
 ## API reference
 
-You can read the [API reference](https://docs.rs/iota-wallet) here, or generate it yourself.
-
-If you'd like to explore the implementation in more depth, the following command generates docs for the whole crate, including private modules:
+If you'd like to explore the implementation in more depth, the following command generates docs for the whole crate:
 
 ```
 cargo doc --document-private-items --no-deps --open
 ```
 
-## Examples
+## Other Examples
 
 You can see the examples in the [examples](examples/) directory and try them with:
 
