@@ -151,7 +151,17 @@ impl<'a> AccountInitialiser<'a> {
             .signer_type
             .ok_or_else(|| anyhow::anyhow!("account signer type is required"))?;
         let created_at = self.created_at.unwrap_or_else(chrono::Utc::now);
-        let mnemonic = self.mnemonic;
+        let mut mnemonic = self.mnemonic;
+        if signer_type == SignerType::EnvMnemonic && accounts.is_empty() {
+            let _ = dotenv::dotenv();
+            if std::env::var("IOTA_WALLET_MNEMONIC").is_err() {
+                mnemonic = Some(
+                    bip39::Mnemonic::new(bip39::MnemonicType::Words24, bip39::Language::English)
+                        .phrase()
+                        .to_string(),
+                );
+            }
+        }
 
         // check for empty latest account only when not skipping persistance (account discovery process)
         if !self.skip_persistance {
