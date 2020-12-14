@@ -2,6 +2,10 @@
 
 Node.js binding to the IOTA wallet library.
 
+## Requirements
+
+Ensure you have first installed the required dependencies for the library [here](https://github.com/iotaledger/wallet.rs/blob/develop/README.md).
+
 ## Installation
 
 Currently the package isn't published so you'd need to link it to your project using `npm` or `yarn`.
