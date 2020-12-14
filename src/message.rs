@@ -185,7 +185,8 @@ pub struct Message {
     pub(crate) nonce: u64,
     /// Whether the transaction is confirmed or not.
     #[getset(set = "pub")]
-    pub(crate) confirmed: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) confirmed: Option<bool>,
     /// Whether the transaction is broadcasted or not.
     #[getset(set = "pub")]
     pub(crate) broadcasted: bool,
@@ -226,6 +227,7 @@ impl Message {
         id: MessageId,
         account_addresses: &[Address],
         message: &IotaMessage,
+        confirmed: Option<bool>,
     ) -> crate::Result<Self> {
         let message = Self {
             id,
@@ -240,7 +242,7 @@ impl Message {
             //    Utc,
             // ),
             nonce: message.nonce(),
-            confirmed: false,
+            confirmed,
             broadcasted: true,
             incoming: account_addresses
                 .iter()

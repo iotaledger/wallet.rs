@@ -1,7 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::address::{Address, IotaAddress};
+use crate::address::IotaAddress;
 use rand::{thread_rng, Rng};
 use std::convert::TryInto;
 
@@ -9,15 +9,6 @@ use std::convert::TryInto;
 pub struct Input {
     pub address: IotaAddress,
     pub balance: u64,
-}
-
-impl From<&Address> for Input {
-    fn from(address: &Address) -> Self {
-        Self {
-            address: address.address().clone(),
-            balance: address.available_balance(),
-        }
-    }
 }
 
 pub fn select_input(target: u64, available_utxos: &mut [Input]) -> crate::Result<Vec<Input>> {
@@ -131,7 +122,10 @@ mod tests {
                 .outputs(vec![])
                 .build()
                 .unwrap();
-            available_utxos.push((&address).into());
+            available_utxos.push(super::Input {
+                address: address.address().clone(),
+                balance: *address.balance(),
+            });
         }
         available_utxos
     }
