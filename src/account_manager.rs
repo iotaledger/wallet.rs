@@ -160,7 +160,9 @@ impl AccountManager {
 
     /// Syncs all accounts.
     pub async fn sync_accounts(&self) -> crate::Result<Vec<SyncedAccount>> {
-        sync_accounts(&self.storage_path, None).await
+        let accounts = crate::storage::with_adapter(&self.storage_path, |storage| storage.get_all())?;
+        let mut accounts = crate::storage::parse_accounts(&self.storage_path, &accounts)?;
+        sync_accounts(&self.storage_path, None, &mut accounts).await
     }
 
     /// Transfers an amount from an account to another.
@@ -214,7 +216,7 @@ impl AccountManager {
 
         let backup_storage = crate::storage::get_adapter_from_path(&source)?;
         let accounts = backup_storage.get_all()?;
-        let accounts = crate::storage::parse_accounts(&source.as_ref().to_path_buf(), &accounts)?;
+        let mut accounts = crate::storage::parse_accounts(&source.as_ref().to_path_buf(), &accounts)?;
 
         let stored_accounts = crate::storage::with_adapter(&self.storage_path, |storage| storage.get_all())?;
         let stored_accounts = crate::storage::parse_accounts(&self.storage_path, &stored_accounts)?;
@@ -237,7 +239,7 @@ impl AccountManager {
 
         let backup_stronghold =
             stronghold::Stronghold::new(&backup_stronghold_path, false, "password".to_string(), None)?;
-        for account in accounts.iter() {
+        for account in accounts.iter_mut() {
             let stronghold_account =
                 backup_stronghold.account_get_by_id(&account_id_to_stronghold_record_id(account.id())?)?;
             let created_at_timestamp: u128 = account.created_at().timestamp().try_into().unwrap(); // safe to unwrap since it's > 0
@@ -250,9 +252,7 @@ impl AccountManager {
                 )
             });
 
-            crate::storage::with_adapter(&self.storage_path, |storage| {
-                storage.set(account.id(), serde_json::to_string(&account)?)
-            })?;
+            account.save()?;
         }
         crate::remove_stronghold(backup_stronghold_path);
         Ok(())
@@ -304,8 +304,8 @@ impl AccountManager {
 async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
     let retried = if syncing {
         let accounts_before_sync = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
-        let accounts_before_sync = crate::storage::parse_accounts(&storage_path, &accounts_before_sync)?;
-        let synced_accounts = sync_accounts(&storage_path, Some(0)).await?;
+        let mut accounts_before_sync = crate::storage::parse_accounts(&storage_path, &accounts_before_sync)?;
+        let synced_accounts = sync_accounts(&storage_path, Some(0), &mut accounts_before_sync).await?;
         let accounts_after_sync = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
         let mut accounts_after_sync = crate::storage::parse_accounts(&storage_path, &accounts_after_sync)?;
 
@@ -356,33 +356,20 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
     } else {
         let accounts = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
         let mut retried_messages = vec![];
-        for mut account in crate::storage::parse_accounts(&storage_path, &accounts)? {
+        for account in crate::storage::parse_accounts(&storage_path, &accounts)? {
             let unconfirmed_messages =
                 account.list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed));
 
             let mut promotions = vec![];
             let mut reattachments = vec![];
-            let mut reattached_messages = Vec::new();
-            let mut updated = false;
             for message in unconfirmed_messages {
                 let new_message =
                     repost_message(account.id(), &storage_path, message.id(), RepostAction::Retry).await?;
                 if new_message.payload() == message.payload() {
-                    reattached_messages.push((*message.id(), *new_message.id()));
                     reattachments.push(new_message);
                 } else {
                     promotions.push(new_message);
                 }
-            }
-
-            for (old_message_id, new_message_id) in reattached_messages {
-                if account.on_reattachment(&old_message_id, &new_message_id) {
-                    updated = true;
-                }
-            }
-
-            if updated {
-                account.save()?;
             }
 
             retried_messages.push(RetriedData {
@@ -421,21 +408,20 @@ async fn discover_accounts(
             break;
         } else {
             synced_accounts.push(synced_account);
-            crate::storage::with_adapter(&storage_path, |storage| {
-                storage.set(account.id(), serde_json::to_string(&account)?)
-            })?;
+            account.save()?;
         }
     }
     Ok(synced_accounts)
 }
 
-async fn sync_accounts<'a>(storage_path: &PathBuf, address_index: Option<usize>) -> crate::Result<Vec<SyncedAccount>> {
-    let accounts = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
+async fn sync_accounts<'a>(
+    storage_path: &PathBuf,
+    address_index: Option<usize>,
+    accounts: &mut Vec<Account>,
+) -> crate::Result<Vec<SyncedAccount>> {
     let mut synced_accounts = vec![];
     let mut last_account = None;
-    for account_str in accounts {
-        let mut account: Account = serde_json::from_str(&account_str)?;
-        account.set_storage_path(storage_path.clone());
+    for account in accounts {
         let mut sync = account.sync();
         if let Some(index) = address_index {
             sync = sync.address_index(index);
