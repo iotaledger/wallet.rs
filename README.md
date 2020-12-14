@@ -5,17 +5,17 @@
 ## Introduction
 
 The wallet library is a stateful package with a standardised interface for developers to build applications involving IOTA value transactions.
-It offers abstractions to handle IOTA payments and is designed to interact with [IOTA Stronghold](https://github.com/iotaledger/stronghold.rs/) for seed handling, seed storage and state backup. See the full specification [here](https://github.com/iotaledger/wallet.rs/blob/master/specs/wallet-ENGINEERING-SPEC-0000.md).
+It offers abstractions to handle IOTA payments and can optionally interact with [IOTA Stronghold](https://github.com/iotaledger/stronghold.rs/) for seed handling, seed storage and state backup. See the full specification [here](https://github.com/iotaledger/wallet.rs/blob/master/specs/wallet-ENGINEERING-SPEC-0000.md).
 
 ## Warning
 
-This library is in active development. It does not work with the current IOTA mainnet and is being developed for Chrysalis Part 2 in Q4 2020. It should be considered experimental and only used as a reference for now.
+This library is in active development. The library targets the Chrysalis testnet and does not work with current IOTA mainnet.
 
 ## Prerequisites
 
 To use the library, we recommend you update Rust to the latest stable version [`rustup update stable`](https://github.com/rust-lang/rustup.rs#keeping-rust-up-to-date). Nightly should be fine but there's a chance some changes are not compatible.
 
-`no_std` is not supported currently, but we are working on it, and will provide it as a feature once the new library implementation is ready.
+`no_std` is not supported currently, but we are working on it, and will provide it as a feature once the new implementation is ready.
 
 ## Usage
 
@@ -41,7 +41,7 @@ fn main() {
 
 ## API reference
 
-You can read the [API reference](https://docs.rs/iota-wallet) here, or generate them yourself.
+You can read the [API reference](https://docs.rs/iota-wallet) here, or generate it yourself.
 
 If you'd like to explore the implementation in more depth, the following command generates docs for the whole crate, including private modules:
 
@@ -60,4 +60,4 @@ cargo run --example transfer # execute the `transfer` example
 
 ## Joining the discussion
 
-If you want to get involved in discussions about this library, or you're looking for support, go to the #new-wallet-discussion channel on [Discord](https://discord.iota.org).
+If you want to get involved in discussions about this library, or you're looking for support, go to the #clients-discussion channel on [Discord](https://discord.iota.org).
