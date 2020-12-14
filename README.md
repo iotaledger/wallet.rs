@@ -83,9 +83,7 @@ fn main() {
 
 ## API reference
 
-You can read the [API reference](https://docs.rs/iota-wallet) here, or generate it yourself.
-
-If you'd like to explore the implementation in more depth, the following command generates docs for the whole crate, including private modules:
+If you'd like to explore the implementation in more depth, the following command generates docs for the whole crate:
 
 ```
 cargo doc --document-private-items --no-deps --open
