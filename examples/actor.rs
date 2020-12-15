@@ -1,7 +1,10 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_wallet::actor::{AccountToCreate, Message, MessageType, Response, ResponseType, WalletMessageHandler};
+use iota_wallet::{
+    actor::{AccountToCreate, Message, MessageType, Response, ResponseType, WalletMessageHandler},
+    client::ClientOptionsBuilder,
+};
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
 /// The Wallet actor.
@@ -45,7 +48,13 @@ async fn send_message(tx: &UnboundedSender<Message>, message_type: MessageType) 
 async fn main() {
     let tx = spawn_actor();
 
-    let account = AccountToCreate::default();
+    let account = AccountToCreate {
+        client_options: ClientOptionsBuilder::node("http://node.iota").unwrap().build(),
+        mnemonic: None,
+        alias: None,
+        created_at: None,
+    };
+
     send_message(&tx, MessageType::SetStrongholdPassword("password".to_string())).await;
     let response = send_message(&tx, MessageType::CreateAccount(account)).await;
     match response.response() {

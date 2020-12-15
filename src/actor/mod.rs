@@ -291,6 +291,7 @@ impl WalletMessageHandler {
 #[cfg(test)]
 mod tests {
     use super::{AccountToCreate, Message, MessageType, Response, ResponseType, WalletMessageHandler};
+    use crate::client::ClientOptionsBuilder;
     use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
     /// The wallet actor builder.
@@ -322,7 +323,9 @@ mod tests {
         pub fn build(self) -> Wallet {
             Wallet {
                 rx: self.rx.expect("rx is required"),
-                message_handler: WalletMessageHandler::new().expect("failed to initialise account manager"),
+                message_handler: self
+                    .message_handler
+                    .unwrap_or_else(|| WalletMessageHandler::new().expect("failed to initialise account manager")),
             }
         }
     }
@@ -366,14 +369,24 @@ mod tests {
         let tx = spawn_actor();
 
         // create an account
-        let account = AccountToCreate::default();
+        let account = AccountToCreate {
+            client_options: ClientOptionsBuilder::node("http://node.iota").unwrap().build(),
+            mnemonic: None,
+            alias: None,
+            created_at: None,
+        };
         send_message(&tx, MessageType::SetStrongholdPassword("password".to_string())).await;
         let response = send_message(&tx, MessageType::CreateAccount(account)).await;
         match response.response() {
             ResponseType::CreatedAccount(created_account) => {
-                // remove the created account
-                let response = send_message(&tx, MessageType::RemoveAccount(created_account.id().clone())).await;
-                assert!(matches!(response.response(), ResponseType::RemovedAccount(_)));
+                let id = created_account.id().clone();
+                std::thread::spawn(move || {
+                    std::thread::sleep(std::time::Duration::from_secs(6));
+                    // remove the created account
+                    let response =
+                        crate::block_on(async move { send_message(&tx, MessageType::RemoveAccount(id)).await });
+                    assert!(matches!(response.response(), ResponseType::RemovedAccount(_)));
+                });
             }
             _ => panic!("unexpected response"),
         }

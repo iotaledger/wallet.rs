@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
+    account_manager::AccountStore,
     address::{Address, IotaAddress},
     client::ClientOptions,
     message::{Message, MessageType},
@@ -69,32 +70,36 @@ impl From<usize> for AccountIdentifier {
 }
 
 /// Account initialiser.
-pub struct AccountInitialiser<'a> {
+pub struct AccountInitialiser {
+    accounts: AccountStore,
+    storage_path: PathBuf,
     mnemonic: Option<String>,
     alias: Option<String>,
     created_at: Option<DateTime<Utc>>,
     messages: Vec<Message>,
     addresses: Vec<Address>,
     client_options: ClientOptions,
-    storage_path: &'a PathBuf,
     signer_type: Option<SignerType>,
+    skip_persistance: bool,
 }
 
-impl<'a> AccountInitialiser<'a> {
+impl AccountInitialiser {
     /// Initialises the account builder.
-    pub(crate) fn new(client_options: ClientOptions, storage_path: &'a PathBuf) -> Self {
+    pub(crate) fn new(client_options: ClientOptions, accounts: AccountStore, storage_path: PathBuf) -> Self {
         Self {
+            accounts,
+            storage_path,
             mnemonic: None,
             alias: None,
             created_at: None,
             messages: vec![],
             addresses: vec![],
             client_options,
-            storage_path,
             #[cfg(feature = "stronghold")]
             signer_type: Some(SignerType::Stronghold),
             #[cfg(not(feature = "stronghold"))]
             signer_type: None,
+            skip_persistance: false,
         }
     }
 
@@ -137,9 +142,15 @@ impl<'a> AccountInitialiser<'a> {
         self
     }
 
+    pub(crate) fn skip_persistance(mut self) -> Self {
+        self.skip_persistance = true;
+        self
+    }
+
     /// Initialises the account.
     pub fn initialise(self) -> crate::Result<AccountGuard> {
-        let accounts = crate::storage::with_adapter(self.storage_path, |storage| storage.get_all())?;
+        let mut accounts = self.accounts.write().unwrap();
+
         let alias = self.alias.unwrap_or_else(|| format!("Account {}", accounts.len()));
         let signer_type = self
             .signer_type
@@ -157,8 +168,8 @@ impl<'a> AccountInitialiser<'a> {
             }
         }
 
-        if let Some(latest_account) = accounts.last() {
-            let latest_account: Account = serde_json::from_str(&latest_account)?;
+        if let Some(latest_account) = accounts.values().last() {
+            let latest_account = latest_account.read().unwrap();
             if latest_account.messages().is_empty() && latest_account.total_balance() == 0 {
                 return Err(crate::WalletError::LatestAccountIsEmpty);
             }
@@ -173,14 +184,23 @@ impl<'a> AccountInitialiser<'a> {
             messages: self.messages,
             addresses: self.addresses,
             client_options: self.client_options,
-            storage_path: self.storage_path.clone(),
-            has_pending_changes: false,
+            storage_path: self.storage_path,
+            has_pending_changes: true,
         };
 
         let id = with_signer(&signer_type, |signer| signer.init_account(&account, mnemonic))?;
         account.set_id(id.into());
 
-        Ok(account.into())
+        let guard = if self.skip_persistance {
+            account.into()
+        } else {
+            let account_id = account.id().clone();
+            let guard: AccountGuard = account.into();
+            accounts.insert(account_id, guard.clone());
+            guard
+        };
+
+        Ok(guard)
     }
 }
 
@@ -299,19 +319,12 @@ impl Account {
         self.client_options = options;
     }
 
-    /// Saves the pending changes on the account.
-    /// This is automatically performed when the account goes out of scope.
-    pub fn save_pending_changes(&mut self) -> crate::Result<()> {
+    pub(crate) fn save(&mut self) -> crate::Result<()> {
         if self.has_pending_changes {
-            self.save()?;
-            self.has_pending_changes = false;
+            let storage_path = self.storage_path.clone();
+            crate::storage::save_account(&storage_path, self)?;
         }
         Ok(())
-    }
-
-    pub(crate) fn save(&mut self) -> crate::Result<()> {
-        let storage_path = self.storage_path.clone();
-        crate::storage::save_account(&storage_path, self)
     }
 
     /// Gets a list of transactions on this account.
@@ -337,10 +350,11 @@ impl Account {
     /// let mut manager = AccountManager::new().unwrap();
     /// # let mut manager = AccountManager::with_storage_path(storage_path).unwrap();
     /// manager.set_stronghold_password("password").unwrap();
-    /// let mut account = manager
+    /// let account = manager
     ///     .create_account(client_options)
     ///     .initialise()
     ///     .expect("failed to add account");
+    /// let account = account.read().unwrap();
     /// account.list_messages(10, 5, Some(MessageType::Received));
     /// ```
     pub fn list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<&Message> {
@@ -396,6 +410,8 @@ impl Account {
         let address = crate::address::get_new_address(&self)?;
         self.addresses.push(address.clone());
 
+        self.has_pending_changes = true;
+
         // ignore errors because we fallback to the polling system
         // TODO let _ = crate::monitor::monitor_address_balance(&self, address.address());
 
@@ -405,6 +421,7 @@ impl Account {
     #[doc(hidden)]
     pub fn append_messages(&mut self, messages: Vec<Message>) {
         self.messages.extend(messages);
+        self.has_pending_changes = true;
     }
 
     pub(crate) fn append_addresses(&mut self, addresses: Vec<Address>) {
@@ -418,15 +435,18 @@ impl Account {
                     self.addresses.push(address);
                 }
             });
+        self.has_pending_changes = true;
     }
 
     #[doc(hidden)]
     pub fn addresses_mut(&mut self) -> &mut Vec<Address> {
+        self.has_pending_changes = true;
         &mut self.addresses
     }
 
     #[doc(hidden)]
     pub fn messages_mut(&mut self) -> &mut Vec<Message> {
+        self.has_pending_changes = true;
         &mut self.messages
     }
 
@@ -438,7 +458,7 @@ impl Account {
 
 impl Drop for Account {
     fn drop(&mut self) {
-        let _ = self.save_pending_changes();
+        let _ = self.save();
     }
 }
 
@@ -469,6 +489,7 @@ mod tests {
         #[test]
         fn set_alias() {
             let manager = crate::test_utils::get_account_manager();
+            let mut manager = manager.lock().unwrap();
 
             let updated_alias = "updated alias";
             let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
@@ -485,21 +506,19 @@ mod tests {
 
                 account.set_alias(updated_alias);
                 let id = account.id().clone();
-                account.save().unwrap();
                 id
             };
 
-            std::thread::spawn(move || {
-                std::thread::sleep(std::time::Duration::from_secs(3));
-                let account_in_storage = manager
-                    .get_account(&account_id)
-                    .expect("failed to get account from storage");
-                let account_in_storage = account_in_storage.read().unwrap();
-                assert_eq!(
-                    account_in_storage.alias().to_string(),
-                    updated_alias.to_string()
-                );
-            });
+            manager.stop_background_sync().unwrap();
+
+            let account_in_storage = manager
+                .get_account(&account_id)
+                .expect("failed to get account from storage");
+            let account_in_storage = account_in_storage.read().unwrap();
+            assert_eq!(
+                account_in_storage.alias().to_string(),
+                updated_alias.to_string()
+            );
         }
     }
 }

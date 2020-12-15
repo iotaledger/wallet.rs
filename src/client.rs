@@ -243,7 +243,7 @@ impl ClientOptionsBuilder {
 }
 
 /// The client options type.
-#[derive(Default, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Getters)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Getters)]
 #[getset(get = "pub(crate)")]
 pub struct ClientOptions {
     node: Option<Url>,

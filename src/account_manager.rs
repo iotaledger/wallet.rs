@@ -3,8 +3,8 @@
 
 use crate::{
     account::{
-        account_id_to_stronghold_record_id, repost_message, Account, AccountGuard, AccountIdentifier,
-        AccountInitialiser, RepostAction, SyncedAccount,
+        account_id_to_stronghold_record_id, repost_message, AccountGuard, AccountIdentifier, AccountInitialiser,
+        RepostAction, SyncedAccount,
     },
     client::ClientOptions,
     event::{emit_balance_change, emit_confirmation_state_change, emit_transaction_event, TransactionEventType},
@@ -19,8 +19,11 @@ use std::{
     fs,
     panic::AssertUnwindSafe,
     path::{Path, PathBuf},
-    sync::{Arc, RwLock},
-    thread,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc, RwLock,
+    },
+    thread::{self, JoinHandle},
     time::Duration,
 };
 
@@ -32,7 +35,7 @@ use stronghold::Stronghold;
 /// The default storage path.
 pub const DEFAULT_STORAGE_PATH: &str = "./example-database";
 
-type AccountStore = Arc<RwLock<HashMap<AccountIdentifier, AccountGuard>>>;
+pub(crate) type AccountStore = Arc<RwLock<HashMap<AccountIdentifier, AccountGuard>>>;
 
 /// The account manager.
 ///
@@ -47,6 +50,8 @@ pub struct AccountManager {
     polling_interval: Duration,
     started_monitoring: bool,
     accounts: AccountStore,
+    stop_polling: Arc<AtomicBool>,
+    polling_handle: Option<JoinHandle<()>>,
 }
 
 /// Internal transfer response metadata.
@@ -57,6 +62,12 @@ pub struct InternalTransferMetadata {
     pub from_account: AccountGuard,
     /// Destination account with new message attached.
     pub to_account: AccountGuard,
+}
+
+impl Drop for AccountManager {
+    fn drop(&mut self) {
+        let _ = self.stop_background_sync();
+    }
 }
 
 impl AccountManager {
@@ -82,6 +93,8 @@ impl AccountManager {
             polling_interval: Duration::from_millis(30_000),
             started_monitoring: false,
             accounts: Default::default(),
+            stop_polling: Arc::new(AtomicBool::new(false)),
+            polling_handle: None,
         };
         Ok(instance)
     }
@@ -116,9 +129,26 @@ impl AccountManager {
     pub fn start_background_sync(&mut self) {
         if !self.started_monitoring {
             let monitoring_disabled = self.start_monitoring().is_err();
-            self.start_polling(monitoring_disabled);
+            self.polling_handle = Some(self.start_polling(monitoring_disabled));
             self.started_monitoring = true;
         }
+    }
+
+    /// Stops the background polling and MQTT monitoring.
+    pub fn stop_background_sync(&mut self) -> crate::Result<()> {
+        {
+            let accounts = self.accounts.read().unwrap();
+            for account in accounts.values() {
+                let _ = crate::monitor::unsubscribe(account.clone());
+            }
+        }
+
+        if let Some(handle) = self.polling_handle.take() {
+            self.stop_polling.store(true, Ordering::Relaxed);
+            handle.join().expect("failed to stop polling thread");
+        }
+
+        Ok(())
     }
 
     /// Sets the stronghold password.
@@ -138,16 +168,18 @@ impl AccountManager {
     }
 
     /// Starts the polling mechanism.
-    fn start_polling(&self, is_monitoring_disabled: bool) -> thread::JoinHandle<()> {
+    fn start_polling(&self, is_monitoring_disabled: bool) -> JoinHandle<()> {
         let storage_path = self.storage_path.clone();
         let interval = self.polling_interval;
         let accounts = self.accounts.clone();
+        let stop = self.stop_polling.clone();
         thread::spawn(move || {
-            loop {
+            let sleep_duration = interval / 2;
+            while !stop.load(Ordering::Relaxed) {
                 let storage_path_ = storage_path.clone();
-                let accounts = accounts.clone();
+                let accounts_ = accounts.clone();
                 crate::block_on(async move {
-                    if let Err(panic) = AssertUnwindSafe(poll(accounts, storage_path_, is_monitoring_disabled))
+                    if let Err(panic) = AssertUnwindSafe(poll(accounts_, storage_path_, is_monitoring_disabled))
                         .catch_unwind()
                         .await
                     {
@@ -162,24 +194,48 @@ impl AccountManager {
                         // when the error is dropped, the on_error event will be triggered
                     }
                 });
-                thread::sleep(interval);
+
+                thread::sleep(sleep_duration);
+
+                let accounts_ = accounts.read().unwrap();
+                for account in accounts_.values() {
+                    let mut account = account.write().unwrap();
+                    let _ = account.save();
+                }
+
+                thread::sleep(sleep_duration);
             }
         })
     }
 
     /// Adds a new account.
-    pub fn create_account(&self, client_options: ClientOptions) -> AccountInitialiser<'_> {
-        AccountInitialiser::new(client_options, &self.storage_path)
+    pub fn create_account(&self, client_options: ClientOptions) -> AccountInitialiser {
+        AccountInitialiser::new(client_options, self.accounts.clone(), self.storage_path.clone())
     }
 
     /// Deletes an account.
     pub fn remove_account(&self, account_id: &AccountIdentifier) -> crate::Result<()> {
-        let account_str = crate::storage::with_adapter(&self.storage_path, |storage| storage.get(&account_id))?;
-        let account: Account = serde_json::from_str(&account_str)?;
-        if !(account.messages().is_empty() && account.total_balance() == 0) {
-            return Err(crate::WalletError::MessageNotEmpty);
+        let mut accounts = self.accounts.write().unwrap();
+
+        {
+            let account = accounts.get(&account_id).ok_or(crate::WalletError::AccountNotFound)?;
+            let account = account.read().unwrap();
+
+            if !(account.messages().is_empty() && account.total_balance() == 0) {
+                return Err(crate::WalletError::MessageNotEmpty);
+            }
         }
-        crate::storage::with_adapter(&self.storage_path, |storage| storage.remove(&account_id))?;
+
+        accounts.remove(account_id);
+
+        if let Err(e) = crate::storage::with_adapter(&self.storage_path, |storage| storage.remove(&account_id)) {
+            match e {
+                // if we got an "AccountNotFound" error, that means we didn't save the cached account yet
+                crate::WalletError::AccountNotFound => {}
+                _ => return Err(e),
+            }
+        }
+
         Ok(())
     }
 
@@ -336,16 +392,17 @@ async fn poll(accounts: AccountStore, storage_path: PathBuf, syncing: bool) -> c
         for account in accounts.read().unwrap().values() {
             accounts_before_sync.push(account.read().unwrap().clone());
         }
-        let synced_accounts = sync_accounts(accounts, &storage_path, Some(0)).await?;
-        let accounts_after_sync = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
-        let mut accounts_after_sync = crate::storage::parse_accounts(&storage_path, &accounts_after_sync)?;
+        let synced_accounts = sync_accounts(accounts.clone(), &storage_path, Some(0)).await?;
+        let accounts_after_sync = accounts.read().unwrap();
 
         // compare accounts to check for balance changes and new messages
         for account_before_sync in &accounts_before_sync {
             let account_after_sync = accounts_after_sync
-                .iter_mut()
-                .find(|account| account.id() == account_before_sync.id())
-                .unwrap();
+                .iter()
+                .find(|(id, _)| id == &account_before_sync.id())
+                .unwrap()
+                .1;
+            let account_after_sync = account_after_sync.read().unwrap();
 
             // balance event
             for address_before_sync in account_before_sync.addresses() {
@@ -383,7 +440,7 @@ async fn poll(accounts: AccountStore, storage_path: PathBuf, syncing: bool) -> c
                 }
             }
         }
-        retry_unconfirmed_transactions(synced_accounts.iter().zip(accounts_after_sync.iter()).collect()).await?
+        retry_unconfirmed_transactions(synced_accounts).await?
     } else {
         let mut retried_messages = vec![];
         for account in accounts.read().unwrap().values() {
@@ -428,13 +485,15 @@ async fn poll(accounts: AccountStore, storage_path: PathBuf, syncing: bool) -> c
 }
 
 async fn discover_accounts(
+    accounts: AccountStore,
     storage_path: &PathBuf,
     client_options: &ClientOptions,
     signer_type: Option<SignerType>,
 ) -> crate::Result<Vec<(AccountGuard, SyncedAccount)>> {
     let mut synced_accounts = vec![];
     loop {
-        let mut account_initialiser = AccountInitialiser::new(client_options.clone(), &storage_path);
+        let mut account_initialiser =
+            AccountInitialiser::new(client_options.clone(), accounts.clone(), storage_path.clone()).skip_persistance();
         if let Some(signer_type) = &signer_type {
             account_initialiser = account_initialiser.signer_type(signer_type.clone());
         }
@@ -480,12 +539,12 @@ async fn sync_accounts<'a>(
     let discovered_accounts_res = match last_account {
         Some((is_empty, client_options, signer_type)) => {
             if is_empty {
-                discover_accounts(&storage_path, &client_options, Some(signer_type)).await
+                discover_accounts(accounts.clone(), &storage_path, &client_options, Some(signer_type)).await
             } else {
                 Ok(vec![])
             }
         }
-        None => discover_accounts(&storage_path, &ClientOptions::default(), None).await,
+        None => Ok(vec![]), // None => discover_accounts(accounts.clone(), &storage_path, &ClientOptions::default(), None).await,
     };
 
     if let Ok(discovered_accounts) = discovered_accounts_res {
@@ -509,9 +568,11 @@ struct RetriedData {
     account_id: AccountIdentifier,
 }
 
-async fn retry_unconfirmed_transactions(accounts: Vec<(&SyncedAccount, &Account)>) -> crate::Result<Vec<RetriedData>> {
+async fn retry_unconfirmed_transactions(synced_accounts: Vec<SyncedAccount>) -> crate::Result<Vec<RetriedData>> {
     let mut retried_messages = vec![];
-    for (synced, account) in accounts {
+    for synced in synced_accounts {
+        let account = synced.account().read().unwrap();
+
         let unconfirmed_messages = account.list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed));
         let mut reattachments = vec![];
         let mut promotions = vec![];
@@ -574,13 +635,14 @@ mod tests {
         client::ClientOptionsBuilder,
         message::Message,
     };
-    use iota::message::prelude::{Ed25519Address, Indexation, Message as IotaMessage, MessageId, Payload};
+    use iota::{Ed25519Address, Indexation, MessageBuilder, MessageId, Payload};
     use rusty_fork::rusty_fork_test;
 
     rusty_fork_test! {
         #[test]
         fn store_accounts() {
             let manager = crate::test_utils::get_account_manager();
+            let mut manager = manager.lock().unwrap();
 
             let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
                 .expect("invalid node URL")
@@ -593,6 +655,8 @@ mod tests {
                 .expect("failed to add account");
             let account_ = account.read().unwrap();
 
+            manager.stop_background_sync().unwrap();
+
             manager
                 .remove_account(account_.id())
                 .expect("failed to remove account");
@@ -603,26 +667,36 @@ mod tests {
         #[test]
         fn remove_account_with_message_history() {
             let manager = crate::test_utils::get_account_manager();
+            let manager = manager.lock().unwrap();
 
             let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
                 .expect("invalid node URL")
                 .build();
 
-            let account = manager
-                .create_account(client_options)
-                .messages(vec![Message::from_iota_message(MessageId::new([0; 32]), &[], &IotaMessage::builder()
+            let messages = vec![Message::from_iota_message(
+                MessageId::new([0; 32]),
+                &[],
+                &MessageBuilder::<crate::test_utils::NoopNonceProvider>::new()
                     .with_parent1(MessageId::new([0; 32]))
                     .with_parent2(MessageId::new([0; 32]))
-                    .with_payload(Payload::Indexation(Box::new(Indexation::new(
-                        "index".to_string(),
-                        &[0; 16],
-                    ).unwrap())))
+                    .with_payload(Payload::Indexation(Box::new(
+                        Indexation::new("index".to_string(), &[0; 16]).unwrap(),
+                    )))
                     .with_network_id(0)
+                    .with_nonce_provider(crate::test_utils::NoopNonceProvider {}, 0f64)
                     .finish()
-                    .unwrap(), None).unwrap()])
-                .initialise().unwrap();
-            let account_ = account.read().unwrap();
+                    .unwrap(),
+                None,
+            )
+            .unwrap()];
 
+            let account = manager
+                .create_account(client_options)
+                .messages(messages)
+                .initialise()
+                .unwrap();
+
+            let account_ = account.read().unwrap();
             let remove_response = manager.remove_account(account_.id());
             assert!(remove_response.is_err());
         }
@@ -632,6 +706,7 @@ mod tests {
         #[test]
         fn remove_account_with_balance() {
             let manager = crate::test_utils::get_account_manager();
+            let manager = manager.lock().unwrap();
 
             let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
                 .expect("invalid node URL")
@@ -659,6 +734,7 @@ mod tests {
         #[test]
         fn create_account_with_latest_without_history() {
             let manager = crate::test_utils::get_account_manager();
+            let manager = manager.lock().unwrap();
 
             let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
                 .expect("invalid node URL")

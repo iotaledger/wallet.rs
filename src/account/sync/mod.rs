@@ -816,6 +816,8 @@ mod tests {
         fn account_sync() {
             crate::block_on(async move {
                 let manager = crate::test_utils::get_account_manager();
+                let manager = manager.lock().unwrap();
+
                 let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
                     .unwrap()
                     .build();
