@@ -57,7 +57,7 @@ pub struct InternalTransferMetadata {
     /// Source account with new message and addresses attached.
     pub from_account: Account,
     /// Destination account with new message attached.
-    pub to_account: Account,
+    pub to_account: AccountGuard,
 }
 
 impl AccountManager {
@@ -184,8 +184,12 @@ impl AccountManager {
         to_account_id: &AccountIdentifier,
         amount: u64,
     ) -> crate::Result<InternalTransferMetadata> {
-        let mut from_account = self.get_account(from_account_id)?;
-        let to_account = self.get_account(to_account_id)?;
+        let from_account_guard = self.get_account(from_account_id)?;
+        let to_account_guard = self.get_account(to_account_id)?;
+
+        let mut from_account = from_account_guard.write().unwrap();
+        let to_account = to_account_guard.read().unwrap();
+
         let to_address = to_account
             .latest_address()
             .ok_or_else(|| anyhow::anyhow!("destination account address list empty"))?
@@ -194,8 +198,9 @@ impl AccountManager {
         let metadata = from_synchronized
             .transfer(Transfer::new(to_address.address().clone(), amount))
             .await?;
+
         Ok(InternalTransferMetadata {
-            to_account,
+            to_account: to_account_guard.clone(),
             from_account: metadata.account,
             message: metadata.message,
         })
@@ -271,10 +276,12 @@ impl AccountManager {
     }
 
     /// Gets the account associated with the given identifier.
-    pub fn get_account(&self, account_id: &AccountIdentifier) -> crate::Result<Account> {
-        let mut account = crate::storage::get_account(&self.storage_path, &account_id)?;
-        account.set_storage_path(self.storage_path.clone());
-        Ok(account)
+    pub fn get_account(&self, account_id: &AccountIdentifier) -> crate::Result<AccountGuard> {
+        let accounts = self.accounts.read().unwrap();
+        accounts
+            .get(account_id)
+            .cloned()
+            .ok_or(crate::WalletError::AccountNotFound)
     }
 
     /// Gets the account associated with the given alias (case insensitive).
@@ -296,19 +303,22 @@ impl AccountManager {
 
     /// Reattaches an unconfirmed transaction.
     pub async fn reattach(&self, account_id: &AccountIdentifier, message_id: &MessageId) -> crate::Result<Message> {
-        let mut account = self.get_account(account_id)?;
+        let account = self.get_account(account_id)?;
+        let mut account = account.write().unwrap();
         account.sync().execute().await?.reattach(message_id).await
     }
 
     /// Promotes an unconfirmed transaction.
     pub async fn promote(&self, account_id: &AccountIdentifier, message_id: &MessageId) -> crate::Result<Message> {
-        let mut account = self.get_account(account_id)?;
+        let account = self.get_account(account_id)?;
+        let mut account = account.write().unwrap();
         account.sync().execute().await?.promote(message_id).await
     }
 
     /// Retries an unconfirmed transaction.
     pub async fn retry(&self, account_id: &AccountIdentifier, message_id: &MessageId) -> crate::Result<Message> {
-        let mut account = self.get_account(account_id)?;
+        let account = self.get_account(account_id)?;
+        let mut account = account.write().unwrap();
         account.sync().execute().await?.retry(message_id).await
     }
 }

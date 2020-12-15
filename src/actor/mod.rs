@@ -153,7 +153,9 @@ impl WalletMessageHandler {
         account_id: &AccountIdentifier,
         method: &AccountMethod,
     ) -> Result<ResponseType> {
-        let mut account = self.account_manager.get_account(account_id)?;
+        let account = self.account_manager.get_account(account_id)?;
+        let mut account = account.write().unwrap();
+
         match method {
             AccountMethod::GenerateAddress => {
                 let address = account.generate_address()?;
@@ -231,7 +233,8 @@ impl WalletMessageHandler {
 
     fn get_account(&self, account_id: &AccountIdentifier) -> Result<ResponseType> {
         let account = self.account_manager.get_account(&account_id)?;
-        Ok(ResponseType::ReadAccount(account))
+        let account = account.read().unwrap();
+        Ok(ResponseType::ReadAccount(account.clone()))
     }
 
     fn get_accounts(&self) -> Result<ResponseType> {
@@ -245,7 +248,9 @@ impl WalletMessageHandler {
     }
 
     async fn send_transfer(&self, account_id: &AccountIdentifier, transfer: &Transfer) -> Result<ResponseType> {
-        let mut account = self.account_manager.get_account(account_id)?;
+        let account = self.account_manager.get_account(account_id)?;
+        let mut account = account.write().unwrap();
+
         let synced = account.sync().execute().await?;
         let message = synced.transfer(transfer.clone()).await?.message;
         Ok(ResponseType::SentTransfer(message))
