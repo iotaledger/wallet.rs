@@ -35,10 +35,13 @@ use once_cell::sync::OnceCell;
 use std::{
     collections::HashMap,
     path::PathBuf,
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex, RwLock},
 };
 use stronghold::Stronghold;
 use tokio::runtime::Runtime;
+
+/// A thread guard over an account.
+pub type AccountGuard = Arc<RwLock<account::Account>>;
 
 static STRONGHOLD_INSTANCE: OnceCell<Arc<Mutex<HashMap<PathBuf, Stronghold>>>> = OnceCell::new();
 

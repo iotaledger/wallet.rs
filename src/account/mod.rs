@@ -75,7 +75,6 @@ pub struct AccountInitialiser<'a> {
     messages: Vec<Message>,
     addresses: Vec<Address>,
     client_options: ClientOptions,
-    skip_persistance: bool,
     storage_path: &'a PathBuf,
     signer_type: Option<SignerType>,
 }
@@ -90,7 +89,6 @@ impl<'a> AccountInitialiser<'a> {
             messages: vec![],
             addresses: vec![],
             client_options,
-            skip_persistance: false,
             storage_path,
             #[cfg(feature = "stronghold")]
             signer_type: Some(SignerType::Stronghold),
@@ -138,11 +136,6 @@ impl<'a> AccountInitialiser<'a> {
         self
     }
 
-    pub(crate) fn skip_persistance(mut self) -> Self {
-        self.skip_persistance = true;
-        self
-    }
-
     /// Initialises the account.
     pub fn initialise(self) -> crate::Result<Account> {
         let accounts = crate::storage::with_adapter(self.storage_path, |storage| storage.get_all())?;
@@ -163,13 +156,10 @@ impl<'a> AccountInitialiser<'a> {
             }
         }
 
-        // check for empty latest account only when not skipping persistance (account discovery process)
-        if !self.skip_persistance {
-            if let Some(latest_account) = accounts.last() {
-                let latest_account: Account = serde_json::from_str(&latest_account)?;
-                if latest_account.messages().is_empty() && latest_account.total_balance() == 0 {
-                    return Err(crate::WalletError::LatestAccountIsEmpty);
-                }
+        if let Some(latest_account) = accounts.last() {
+            let latest_account: Account = serde_json::from_str(&latest_account)?;
+            if latest_account.messages().is_empty() && latest_account.total_balance() == 0 {
+                return Err(crate::WalletError::LatestAccountIsEmpty);
             }
         }
 
@@ -189,9 +179,6 @@ impl<'a> AccountInitialiser<'a> {
         let id = with_signer(&signer_type, |signer| signer.init_account(&account, mnemonic))?;
         account.set_id(id.into());
 
-        if !self.skip_persistance {
-            account.save()?;
-        }
         Ok(account)
     }
 }
