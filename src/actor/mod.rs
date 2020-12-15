@@ -154,11 +154,11 @@ impl WalletMessageHandler {
         method: &AccountMethod,
     ) -> Result<ResponseType> {
         let account = self.account_manager.get_account(account_id)?;
-        let mut account = account.write().unwrap();
 
         match method {
             AccountMethod::GenerateAddress => {
-                let address = account.generate_address()?;
+                let mut account_ = account.write().unwrap();
+                let address = account_.generate_address()?;
                 Ok(ResponseType::GeneratedAddress(address))
             }
             AccountMethod::ListMessages {
@@ -166,7 +166,8 @@ impl WalletMessageHandler {
                 from,
                 message_type,
             } => {
-                let messages: Vec<WalletMessage> = account
+                let account_ = account.read().unwrap();
+                let messages: Vec<WalletMessage> = account_
                     .list_messages(*count, *from, message_type.clone())
                     .into_iter()
                     .cloned()
@@ -174,12 +175,22 @@ impl WalletMessageHandler {
                 Ok(ResponseType::Messages(messages))
             }
             AccountMethod::ListAddresses { unspent } => {
-                let addresses = account.list_addresses(*unspent).into_iter().cloned().collect();
+                let account_ = account.read().unwrap();
+                let addresses = account_.list_addresses(*unspent).into_iter().cloned().collect();
                 Ok(ResponseType::Addresses(addresses))
             }
-            AccountMethod::GetAvailableBalance => Ok(ResponseType::AvailableBalance(account.available_balance())),
-            AccountMethod::GetTotalBalance => Ok(ResponseType::TotalBalance(account.total_balance())),
-            AccountMethod::GetLatestAddress => Ok(ResponseType::LatestAddress(account.latest_address().cloned())),
+            AccountMethod::GetAvailableBalance => {
+                let account_ = account.read().unwrap();
+                Ok(ResponseType::AvailableBalance(account_.available_balance()))
+            }
+            AccountMethod::GetTotalBalance => {
+                let account_ = account.read().unwrap();
+                Ok(ResponseType::TotalBalance(account_.total_balance()))
+            }
+            AccountMethod::GetLatestAddress => {
+                let account_ = account.read().unwrap();
+                Ok(ResponseType::LatestAddress(account_.latest_address().cloned()))
+            }
             AccountMethod::SyncAccount {
                 address_index,
                 gap_limit,
@@ -228,7 +239,10 @@ impl WalletMessageHandler {
             );
         }
 
-        builder.initialise().map(ResponseType::CreatedAccount)
+        builder.initialise().map(|account| {
+            let account = account.read().unwrap();
+            ResponseType::CreatedAccount(account.clone())
+        })
     }
 
     fn get_account(&self, account_id: &AccountIdentifier) -> Result<ResponseType> {
@@ -238,8 +252,13 @@ impl WalletMessageHandler {
     }
 
     fn get_accounts(&self) -> Result<ResponseType> {
-        let accounts = self.account_manager.get_accounts()?;
-        Ok(ResponseType::ReadAccounts(accounts))
+        let accounts = self.account_manager.get_accounts();
+        let mut accounts_ = Vec::new();
+        for account in accounts {
+            let account_ = account.read().unwrap();
+            accounts_.push(account_.clone());
+        }
+        Ok(ResponseType::ReadAccounts(accounts_))
     }
 
     fn set_stronghold_password(&mut self, password: &str) -> Result<ResponseType> {
@@ -249,8 +268,6 @@ impl WalletMessageHandler {
 
     async fn send_transfer(&self, account_id: &AccountIdentifier, transfer: &Transfer) -> Result<ResponseType> {
         let account = self.account_manager.get_account(account_id)?;
-        let mut account = account.write().unwrap();
-
         let synced = account.sync().execute().await?;
         let message = synced.transfer(transfer.clone()).await?.message;
         Ok(ResponseType::SentTransfer(message))

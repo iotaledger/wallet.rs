@@ -3,15 +3,14 @@
 
 use crate::{
     account::{
-        account_id_to_stronghold_record_id, repost_message, Account, AccountIdentifier, AccountInitialiser,
-        RepostAction, SyncedAccount,
+        account_id_to_stronghold_record_id, repost_message, Account, AccountGuard, AccountIdentifier,
+        AccountInitialiser, RepostAction, SyncedAccount,
     },
     client::ClientOptions,
     event::{emit_balance_change, emit_confirmation_state_change, emit_transaction_event, TransactionEventType},
     message::{Message, MessageType, Transfer},
     signing::SignerType,
     storage::StorageAdapter,
-    AccountGuard,
 };
 
 use std::{
@@ -27,7 +26,7 @@ use std::{
 
 use futures::FutureExt;
 use getset::{Getters, Setters};
-use iota::message::prelude::MessageId;
+use iota::{MessageId, Payload};
 use stronghold::Stronghold;
 
 /// The default storage path.
@@ -55,7 +54,7 @@ pub struct InternalTransferMetadata {
     /// Transfer message.
     pub message: Message,
     /// Source account with new message and addresses attached.
-    pub from_account: Account,
+    pub from_account: AccountGuard,
     /// Destination account with new message attached.
     pub to_account: AccountGuard,
 }
@@ -80,7 +79,7 @@ impl AccountManager {
         let accounts = adapter.get_all()?;
         let accounts = crate::storage::parse_accounts(&storage_path.as_ref().to_path_buf(), &accounts)?
             .into_iter()
-            .map(|account| (account.id().clone(), Arc::new(RwLock::new(account))))
+            .map(|account| (account.id().clone(), account.into()))
             .collect();
 
         crate::storage::set_adapter(&storage_path, adapter);
@@ -96,9 +95,8 @@ impl AccountManager {
     /// Starts monitoring the accounts with the node's mqtt topics.
     fn start_monitoring(&self) -> crate::Result<()> {
         for account in self.accounts.read().unwrap().values() {
-            let account = account.read().unwrap();
-            crate::monitor::monitor_account_addresses_balance(&account)?;
-            crate::monitor::monitor_unconfirmed_messages(&account)?;
+            crate::monitor::monitor_account_addresses_balance(account.clone())?;
+            crate::monitor::monitor_unconfirmed_messages(account.clone())?;
         }
         Ok(())
     }
@@ -187,14 +185,15 @@ impl AccountManager {
         let from_account_guard = self.get_account(from_account_id)?;
         let to_account_guard = self.get_account(to_account_id)?;
 
-        let mut from_account = from_account_guard.write().unwrap();
-        let to_account = to_account_guard.read().unwrap();
+        let to_address = {
+            let to_account = to_account_guard.read().unwrap();
+            to_account
+                .latest_address()
+                .ok_or_else(|| anyhow::anyhow!("destination account address list empty"))?
+                .clone()
+        };
 
-        let to_address = to_account
-            .latest_address()
-            .ok_or_else(|| anyhow::anyhow!("destination account address list empty"))?
-            .clone();
-        let from_synchronized = from_account.sync().execute().await?;
+        let from_synchronized = from_account_guard.sync().execute().await?;
         let metadata = from_synchronized
             .transfer(Transfer::new(to_address.address().clone(), amount))
             .await?;
@@ -285,40 +284,35 @@ impl AccountManager {
     }
 
     /// Gets the account associated with the given alias (case insensitive).
-    pub fn get_account_by_alias<S: Into<String>>(&self, alias: S) -> Option<Account> {
+    pub fn get_account_by_alias<S: Into<String>>(&self, alias: S) -> Option<AccountGuard> {
         let alias = alias.into().to_lowercase();
-        if let Ok(accounts) = self.get_accounts() {
-            accounts.into_iter().find(|acc| acc.alias().to_lowercase() == alias)
-        } else {
-            None
-        }
+        self.get_accounts().into_iter().find(|acc| {
+            let acc = acc.read().unwrap();
+            acc.alias().to_lowercase() == alias
+        })
     }
 
     /// Gets all accounts from storage.
-    pub fn get_accounts(&self) -> crate::Result<Vec<Account>> {
-        crate::storage::with_adapter(&self.storage_path, |storage| {
-            crate::storage::parse_accounts(&self.storage_path, &storage.get_all()?)
-        })
+    pub fn get_accounts(&self) -> Vec<AccountGuard> {
+        let accounts = self.accounts.read().unwrap();
+        accounts.values().cloned().collect()
     }
 
     /// Reattaches an unconfirmed transaction.
     pub async fn reattach(&self, account_id: &AccountIdentifier, message_id: &MessageId) -> crate::Result<Message> {
         let account = self.get_account(account_id)?;
-        let mut account = account.write().unwrap();
         account.sync().execute().await?.reattach(message_id).await
     }
 
     /// Promotes an unconfirmed transaction.
     pub async fn promote(&self, account_id: &AccountIdentifier, message_id: &MessageId) -> crate::Result<Message> {
         let account = self.get_account(account_id)?;
-        let mut account = account.write().unwrap();
         account.sync().execute().await?.promote(message_id).await
     }
 
     /// Retries an unconfirmed transaction.
     pub async fn retry(&self, account_id: &AccountIdentifier, message_id: &MessageId) -> crate::Result<Message> {
         let account = self.get_account(account_id)?;
-        let mut account = account.write().unwrap();
         account.sync().execute().await?.retry(message_id).await
     }
 }
@@ -378,18 +372,24 @@ async fn poll(accounts: AccountStore, storage_path: PathBuf, syncing: bool) -> c
         }
         retry_unconfirmed_transactions(synced_accounts.iter().zip(accounts_after_sync.iter()).collect()).await?
     } else {
-        let accounts = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
         let mut retried_messages = vec![];
-        for account in crate::storage::parse_accounts(&storage_path, &accounts)? {
-            let unconfirmed_messages =
-                account.list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed));
+        for account in accounts.read().unwrap().values() {
+            let (account_id, unconfirmed_messages): (AccountIdentifier, Vec<(MessageId, Payload)>) = {
+                let account = account.read().unwrap();
+                let account_id = account.id().clone();
+                let unconfirmed_messages = account
+                    .list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed))
+                    .iter()
+                    .map(|m| (*m.id(), m.payload().clone()))
+                    .collect();
+                (account_id, unconfirmed_messages)
+            };
 
             let mut promotions = vec![];
             let mut reattachments = vec![];
-            for message in unconfirmed_messages {
-                let new_message =
-                    repost_message(account.id(), &storage_path, message.id(), RepostAction::Retry).await?;
-                if new_message.payload() == message.payload() {
+            for (message_id, payload) in unconfirmed_messages {
+                let new_message = repost_message(account.clone(), &message_id, RepostAction::Retry).await?;
+                if new_message.payload() == &payload {
                     reattachments.push(new_message);
                 } else {
                     promotions.push(new_message);
@@ -399,7 +399,7 @@ async fn poll(accounts: AccountStore, storage_path: PathBuf, syncing: bool) -> c
             retried_messages.push(RetriedData {
                 promoted: promotions,
                 reattached: reattachments,
-                account_id: account.id().clone(),
+                account_id,
             });
         }
 
@@ -418,14 +418,14 @@ async fn discover_accounts(
     storage_path: &PathBuf,
     client_options: &ClientOptions,
     signer_type: Option<SignerType>,
-) -> crate::Result<Vec<(Account, SyncedAccount)>> {
+) -> crate::Result<Vec<(AccountGuard, SyncedAccount)>> {
     let mut synced_accounts = vec![];
     loop {
         let mut account_initialiser = AccountInitialiser::new(client_options.clone(), &storage_path);
         if let Some(signer_type) = &signer_type {
             account_initialiser = account_initialiser.signer_type(signer_type.clone());
         }
-        let mut account = account_initialiser.initialise()?;
+        let account = account_initialiser.initialise()?;
         let synced_account = account.sync().execute().await?;
         let is_empty = *synced_account.is_empty();
         if is_empty {
@@ -446,18 +446,19 @@ async fn sync_accounts<'a>(
     let mut last_account = None;
 
     {
-        let accounts = accounts.read().unwrap();
-        for account in accounts.values() {
-            let mut account = account.write().unwrap();
+        let mut accounts = accounts.write().unwrap();
+        for account in accounts.values_mut() {
             let mut sync = account.sync();
             if let Some(index) = address_index {
                 sync = sync.address_index(index);
             }
             let synced_account = sync.execute().await?;
+
+            let account_ = account.read().unwrap();
             last_account = Some((
-                account.messages().is_empty() || account.addresses().iter().all(|addr| *addr.balance() == 0),
-                account.client_options().clone(),
-                account.signer_type().clone(),
+                account_.messages().is_empty() || account_.addresses().iter().all(|addr| *addr.balance() == 0),
+                account_.client_options().clone(),
+                account_.signer_type().clone(),
             ));
             synced_accounts.push(synced_account);
         }
@@ -477,7 +478,11 @@ async fn sync_accounts<'a>(
     if let Ok(discovered_accounts) = discovered_accounts_res {
         let mut accounts = accounts.write().unwrap();
         for (account, synced_account) in discovered_accounts {
-            accounts.insert(account.id().clone(), Arc::new(RwLock::new(account)));
+            let account_id = {
+                let account_ = account.read().unwrap();
+                account_.id().clone()
+            };
+            accounts.insert(account_id, account);
             synced_accounts.push(synced_account);
         }
     }

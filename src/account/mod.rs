@@ -17,8 +17,9 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     convert::TryInto,
+    ops::Deref,
     path::PathBuf,
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex, RwLock},
 };
 
 mod sync;
@@ -137,7 +138,7 @@ impl<'a> AccountInitialiser<'a> {
     }
 
     /// Initialises the account.
-    pub fn initialise(self) -> crate::Result<Account> {
+    pub fn initialise(self) -> crate::Result<AccountGuard> {
         let accounts = crate::storage::with_adapter(self.storage_path, |storage| storage.get_all())?;
         let alias = self.alias.unwrap_or_else(|| format!("Account {}", accounts.len()));
         let signer_type = self
@@ -179,7 +180,7 @@ impl<'a> AccountInitialiser<'a> {
         let id = with_signer(&signer_type, |signer| signer.init_account(&account, mnemonic))?;
         account.set_id(id.into());
 
-        Ok(account)
+        Ok(account.into())
     }
 }
 
@@ -229,6 +230,30 @@ pub struct Account {
     has_pending_changes: bool,
 }
 
+/// A thread guard over an account.
+#[derive(Debug, Clone)]
+pub struct AccountGuard(Arc<RwLock<Account>>);
+
+impl From<Account> for AccountGuard {
+    fn from(account: Account) -> Self {
+        Self(Arc::new(RwLock::new(account)))
+    }
+}
+
+impl Deref for AccountGuard {
+    type Target = RwLock<Account>;
+    fn deref(&self) -> &Self::Target {
+        &self.0.deref()
+    }
+}
+
+impl AccountGuard {
+    /// Returns the builder to setup the process to synchronize this account with the Tangle.
+    pub fn sync(&self) -> AccountSynchronizer {
+        AccountSynchronizer::new(self.clone())
+    }
+}
+
 impl Account {
     /// Returns the most recent address of the account.
     pub fn latest_address(&self) -> Option<&Address> {
@@ -236,11 +261,6 @@ impl Account {
             .iter()
             .filter(|a| !a.internal())
             .max_by_key(|a| a.key_index())
-    }
-
-    /// Returns the builder to setup the process to synchronize this account with the Tangle.
-    pub fn sync(&'_ mut self) -> AccountSynchronizer<'_> {
-        AccountSynchronizer::new(self, self.storage_path.clone())
     }
 
     /// Gets the account's total balance.
@@ -376,10 +396,9 @@ impl Account {
         let address = crate::address::get_new_address(&self)?;
         self.addresses.push(address.clone());
 
-        self.save()?;
-
         // ignore errors because we fallback to the polling system
-        let _ = crate::monitor::monitor_address_balance(&self, address.address());
+        // TODO let _ = crate::monitor::monitor_address_balance(&self, address.address());
+
         Ok(address)
     }
 
