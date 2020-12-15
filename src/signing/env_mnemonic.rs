@@ -6,14 +6,13 @@ use crate::account::Account;
 use std::{collections::HashMap, env, fs::OpenOptions, io::Write};
 
 use bech32::ToBase32;
-use bee_common::packable::Packable;
 use blake2::{
     digest::{Update, VariableOutput},
     VarBlake2b,
 };
 use dialoguer::Confirm;
 use hmac::Hmac;
-use iota::{Ed25519Signature, ReferenceUnlock, SignatureUnlock, UnlockBlock};
+use iota::{common::packable::Packable, Ed25519Signature, ReferenceUnlock, SignatureUnlock, UnlockBlock};
 use rand::{thread_rng, Rng};
 use unicode_normalization::UnicodeNormalization;
 
