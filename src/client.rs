@@ -28,7 +28,6 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
 
     if !map.contains_key(&options) {
         let mut client_builder = ClientBuilder::new()
-            .quorum_threshold(*options.quorum_threshold())
             .broker_options(BrokerOptions::new().automatic_disconnect(false))
             .local_pow(*options.local_pow());
 
@@ -43,10 +42,6 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
 
         if let Some(network) = options.network() {
             client_builder = client_builder.network(network.clone());
-        }
-
-        if let Some(quorum_size) = options.quorum_size() {
-            client_builder = client_builder.quorum_size(*quorum_size);
         }
 
         let client = client_builder.build().expect("failed to initialise ClientBuilder");
