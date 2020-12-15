@@ -476,23 +476,30 @@ mod tests {
                 .build();
 
             let account_id = {
-                let mut account = manager
-                .create_account(client_options)
-                .alias("alias")
-                .initialise()
-                .expect("failed to add account");
+                let account = manager
+                    .create_account(client_options)
+                    .alias("alias")
+                    .initialise()
+                    .expect("failed to add account");
+                let mut account = account.write().unwrap();
 
                 account.set_alias(updated_alias);
-                account.id().clone()
+                let id = account.id().clone();
+                account.save().unwrap();
+                id
             };
 
-            let account_in_storage = manager
-                .get_account(&account_id)
-                .expect("failed to get account from storage");
-            assert_eq!(
-                account_in_storage.alias().to_string(),
-                updated_alias.to_string()
-            );
+            std::thread::spawn(move || {
+                std::thread::sleep(std::time::Duration::from_secs(3));
+                let account_in_storage = manager
+                    .get_account(&account_id)
+                    .expect("failed to get account from storage");
+                let account_in_storage = account_in_storage.read().unwrap();
+                assert_eq!(
+                    account_in_storage.alias().to_string(),
+                    updated_alias.to_string()
+                );
+            });
         }
     }
 }

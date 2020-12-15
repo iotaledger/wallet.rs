@@ -76,20 +76,31 @@ impl AccountManager {
         storage_path: impl AsRef<Path>,
         adapter: S,
     ) -> crate::Result<Self> {
-        let accounts = adapter.get_all()?;
-        let accounts = crate::storage::parse_accounts(&storage_path.as_ref().to_path_buf(), &accounts)?
-            .into_iter()
-            .map(|account| (account.id().clone(), account.into()))
-            .collect();
-
         crate::storage::set_adapter(&storage_path, adapter);
         let instance = Self {
             storage_path: storage_path.as_ref().to_path_buf(),
             polling_interval: Duration::from_millis(30_000),
             started_monitoring: false,
-            accounts: Arc::new(RwLock::new(accounts)),
+            accounts: Default::default(),
         };
         Ok(instance)
+    }
+
+    /// Loads the account from the storage into the manager instance.
+    pub fn load_accounts(&mut self) -> crate::Result<()> {
+        let empty_accounts = {
+            let accounts = self.accounts.read().unwrap();
+            accounts.is_empty()
+        };
+        if empty_accounts {
+            let accounts = crate::storage::with_adapter(&self.storage_path, |storage| storage.get_all())?;
+            let accounts = crate::storage::parse_accounts(&self.storage_path, &accounts)?
+                .into_iter()
+                .map(|account| (account.id().clone(), account.into()))
+                .collect();
+            self.accounts = Arc::new(RwLock::new(accounts));
+        }
+        Ok(())
     }
 
     /// Starts monitoring the accounts with the node's mqtt topics.
@@ -121,6 +132,8 @@ impl AccountManager {
         )?;
         crate::init_stronghold(&self.storage_path, stronghold);
         self.start_background_sync();
+        self.load_accounts()?;
+
         Ok(())
     }
 
@@ -578,9 +591,10 @@ mod tests {
                 .alias("alias")
                 .initialise()
                 .expect("failed to add account");
+            let account_ = account.read().unwrap();
 
             manager
-                .remove_account(account.id())
+                .remove_account(account_.id())
                 .expect("failed to remove account");
         }
     }
@@ -607,8 +621,9 @@ mod tests {
                     .finish()
                     .unwrap(), None).unwrap()])
                 .initialise().unwrap();
+            let account_ = account.read().unwrap();
 
-            let remove_response = manager.remove_account(account.id());
+            let remove_response = manager.remove_account(account_.id());
             assert!(remove_response.is_err());
         }
     }
@@ -633,8 +648,9 @@ mod tests {
                     .unwrap()])
                 .initialise()
                 .unwrap();
+            let account_ = account.read().unwrap();
 
-            let remove_response = manager.remove_account(account.id());
+            let remove_response = manager.remove_account(account_.id());
             assert!(remove_response.is_err());
         }
     }
