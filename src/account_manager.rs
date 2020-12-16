@@ -337,8 +337,8 @@ impl AccountManager {
     }
 
     /// Gets the account associated with the given alias (case insensitive).
-    pub async fn get_account_by_alias<S: Into<String>>(&self, alias: S) -> Option<AccountHandle> {
-        let alias = alias.into().to_lowercase();
+    pub async fn get_account_by_alias<S: AsRef<str>>(&self, alias: S) -> Option<AccountHandle> {
+        let alias = alias.as_ref().to_lowercase();
         for account_handle in self.accounts.read().await.values() {
             let account = account_handle.read().await;
             if account
