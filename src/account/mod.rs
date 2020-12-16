@@ -25,7 +25,7 @@ use std::{
 
 mod sync;
 pub(crate) use sync::{repost_message, RepostAction};
-pub use sync::{AccountSynchronizer, SyncedAccount, TransferMetadata};
+pub use sync::{AccountSynchronizer, SyncedAccount};
 
 type AddressesLock = Arc<Mutex<Vec<IotaAddress>>>;
 type AccountAddressesLock = Arc<Mutex<HashMap<AccountIdentifier, AddressesLock>>>;

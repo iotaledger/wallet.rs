@@ -54,16 +54,6 @@ pub struct AccountManager {
     polling_handle: Option<JoinHandle<()>>,
 }
 
-/// Internal transfer response metadata.
-pub struct InternalTransferMetadata {
-    /// Transfer message.
-    pub message: Message,
-    /// Source account with new message and addresses attached.
-    pub from_account: AccountGuard,
-    /// Destination account with new message attached.
-    pub to_account: AccountGuard,
-}
-
 impl Drop for AccountManager {
     fn drop(&mut self) {
         let _ = self.stop_background_sync();
@@ -250,7 +240,7 @@ impl AccountManager {
         from_account_id: &AccountIdentifier,
         to_account_id: &AccountIdentifier,
         amount: u64,
-    ) -> crate::Result<InternalTransferMetadata> {
+    ) -> crate::Result<Message> {
         let from_account_guard = self.get_account(from_account_id)?;
         let to_account_guard = self.get_account(to_account_id)?;
 
@@ -263,15 +253,11 @@ impl AccountManager {
         };
 
         let from_synchronized = from_account_guard.sync().execute().await?;
-        let metadata = from_synchronized
+        let message = from_synchronized
             .transfer(Transfer::new(to_address.address().clone(), amount))
             .await?;
 
-        Ok(InternalTransferMetadata {
-            to_account: to_account_guard.clone(),
-            from_account: metadata.account,
-            message: metadata.message,
-        })
+        Ok(message)
     }
 
     /// Backups the accounts to the given destination

@@ -269,7 +269,7 @@ impl WalletMessageHandler {
     async fn send_transfer(&self, account_id: &AccountIdentifier, transfer: &Transfer) -> Result<ResponseType> {
         let account = self.account_manager.get_account(account_id)?;
         let synced = account.sync().execute().await?;
-        let message = synced.transfer(transfer.clone()).await?.message;
+        let message = synced.transfer(transfer.clone()).await?;
         Ok(ResponseType::SentTransfer(message))
     }
 
@@ -282,8 +282,7 @@ impl WalletMessageHandler {
         let message = self
             .account_manager
             .internal_transfer(from_account_id, to_account_id, amount)
-            .await?
-            .message;
+            .await?;
         Ok(ResponseType::SentTransfer(message))
     }
 }
