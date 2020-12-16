@@ -336,27 +336,48 @@ impl AccountSynchronizer {
     /// The account syncing process ensures that the latest metadata (balance, transactions)
     /// associated with an account is fetched from the tangle and is stored locally.
     pub async fn execute(self) -> crate::Result<SyncedAccount> {
-        let mut account_ref = self.account.write().unwrap();
-
-        let options = account_ref.client_options().clone();
+        let options = self.account.client_options();
         let client = get_client(&options);
 
         let _ = crate::monitor::unsubscribe(self.account.clone());
 
-        let mut account_ = account_ref.clone();
+        let mut account_ = {
+            let account_ref = self.account.read().unwrap();
+            account_ref.clone()
+        };
+        let message_ids_before_sync: Vec<MessageId> = account_.messages().iter().map(|m| *m.id()).collect();
+        let addresses_before_sync: Vec<String> = account_.addresses().iter().map(|a| a.address().to_bech32()).collect();
+
         let return_value = match perform_sync(&mut account_, self.address_index, self.gap_limit).await {
             Ok(is_empty) => {
                 if !self.skip_persistance {
+                    let mut account_ref = self.account.write().unwrap();
                     account_ref.set_addresses(account_.addresses().to_vec());
                     account_ref.set_messages(account_.messages().to_vec());
                 }
+
+                let account_ref = self.account.read().unwrap();
 
                 let synced_account = SyncedAccount {
                     account: self.account.clone(),
                     deposit_address: account_ref.latest_address().unwrap().clone(),
                     is_empty,
-                    addresses: account_ref.addresses().clone(),
-                    messages: account_ref.messages().clone(),
+                    addresses: account_ref
+                        .addresses()
+                        .iter()
+                        .filter(|a| {
+                            !addresses_before_sync
+                                .iter()
+                                .any(|addr| addr == &a.address().to_bech32())
+                        })
+                        .cloned()
+                        .collect(),
+                    messages: account_ref
+                        .messages()
+                        .iter()
+                        .filter(|m| !message_ids_before_sync.iter().any(|id| id == m.id()))
+                        .cloned()
+                        .collect(),
                 };
                 Ok(synced_account)
             }
