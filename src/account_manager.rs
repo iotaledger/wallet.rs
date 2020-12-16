@@ -530,7 +530,8 @@ async fn sync_accounts<'a>(
                 Ok(vec![])
             }
         }
-        None => Ok(vec![]), // None => discover_accounts(accounts.clone(), &storage_path, &ClientOptions::default(), None).await,
+        None => Ok(vec![]), /* None => discover_accounts(accounts.clone(), &storage_path, &ClientOptions::default(),
+                             * None).await, */
     };
 
     if let Ok(discovered_accounts) = discovered_accounts_res {

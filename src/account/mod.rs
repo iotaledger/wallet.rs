@@ -267,10 +267,100 @@ impl Deref for AccountGuard {
     }
 }
 
+macro_rules! guard_field_getters {
+    ($ty:ident, $(#[$attr:meta] => $x:ident => $ret:ty),*) => {
+        impl $ty {
+            $(
+                #[$attr]
+                pub fn $x(&self) -> $ret {
+                    let account = self.read().unwrap();
+                    account.$x().clone()
+                }
+            )*
+        }
+    }
+}
+
+guard_field_getters!(
+    AccountGuard,
+    #[doc = "Bridge to [Account#id](struct.Account.html#method.id)."] => id => AccountIdentifier,
+    #[doc = "Bridge to [Account#signer_type](struct.Account.html#method.signer_type)."] => signer_type => SignerType,
+    #[doc = "Bridge to [Account#index](struct.Account.html#method.index)."] => index => usize,
+    #[doc = "Bridge to [Account#alias](struct.Account.html#method.alias)."] => alias => String,
+    #[doc = "Bridge to [Account#created_at](struct.Account.html#method.created_at)."] => created_at => DateTime<Utc>,
+    #[doc = "Bridge to [Account#messages](struct.Account.html#method.messages).
+    This method clones the addresses so prefer the using the `read` method to access the account instance."] => messages => Vec<Message>,
+    #[doc = "Bridge to [Account#addresses](struct.Account.html#method.addresses).
+    This method clones the addresses so prefer the using the `read` method to access the account instance."] => addresses => Vec<Address>,
+    #[doc = "Bridge to [Account#client_options](struct.Account.html#method.client_options)."] => client_options => ClientOptions
+);
+
 impl AccountGuard {
     /// Returns the builder to setup the process to synchronize this account with the Tangle.
     pub fn sync(&self) -> AccountSynchronizer {
         AccountSynchronizer::new(self.clone())
+    }
+
+    /// Bridge to [Account#latest_address](struct.Account.html#method.latest_address).
+    pub fn latest_address(&self) -> Option<Address> {
+        let account = self.0.read().unwrap();
+        account.latest_address().cloned()
+    }
+
+    /// Bridge to [Account#total_balance](struct.Account.html#method.total_balance).
+    pub fn total_balance(&self) -> u64 {
+        let account = self.0.read().unwrap();
+        account.total_balance()
+    }
+
+    /// Bridge to [Account#available_balance](struct.Account.html#method.available_balance).
+    pub fn available_balance(&self) -> u64 {
+        let account = self.0.read().unwrap();
+        account.available_balance()
+    }
+
+    /// Bridge to [Account#set_alias](struct.Account.html#method.set_alias).
+    pub fn set_alias(&mut self, alias: impl AsRef<str>) {
+        let mut account = self.0.write().unwrap();
+        account.set_alias(alias);
+    }
+
+    /// Bridge to [Account#set_client_options](struct.Account.html#method.set_client_options).
+    pub fn set_client_options(&mut self, options: ClientOptions) {
+        let mut account = self.0.write().unwrap();
+        account.set_client_options(options);
+    }
+
+    /// Bridge to [Account#list_messages](struct.Account.html#method.list_messages).
+    /// This method clones the account's messages so when querying a large list of messages
+    /// prefer using the `read` method to access the account instance.
+    pub fn list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<Message> {
+        let account = self.0.read().unwrap();
+        account
+            .list_messages(count, from, message_type)
+            .into_iter()
+            .cloned()
+            .collect()
+    }
+
+    /// Bridge to [Account#list_addresses](struct.Account.html#method.list_addresses).
+    /// This method clones the account's addresses so when querying a large list of addresses
+    /// prefer using the `read` method to access the account instance.
+    pub fn list_addresses(&self, unspent: bool) -> Vec<Address> {
+        let account = self.0.read().unwrap();
+        account.list_addresses(unspent).into_iter().cloned().collect()
+    }
+
+    /// Bridge to [Account#generate_address](struct.Account.html#method.generate_address).
+    pub fn generate_address(&mut self) -> crate::Result<Address> {
+        let mut account = self.0.write().unwrap();
+        account.generate_address()
+    }
+
+    /// Bridge to [Account#get_message](struct.Account.html#method.get_message).
+    pub fn get_message(&self, message_id: &MessageId) -> Option<Message> {
+        let account = self.0.read().unwrap();
+        account.get_message(message_id).cloned()
     }
 }
 
