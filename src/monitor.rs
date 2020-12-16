@@ -45,18 +45,18 @@ struct AddressOutputPayloadAddress {
 pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
     let account = account_handle.read().await;
     let client = crate::client::get_client(account.client_options());
-    let mut client = client.write().unwrap();
+    let mut client = client.write().await;
     client.subscriber().unsubscribe()?;
     Ok(())
 }
 
-fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
+async fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
     client_options: &ClientOptions,
     topic: String,
     handler: C,
 ) -> crate::Result<()> {
     let client = crate::client::get_client(&client_options);
-    let mut client = client.write().unwrap();
+    let mut client = client.write().await;
     client.subscriber().topic(Topic::new(topic)?).subscribe(handler)?;
     Ok(())
 }
@@ -89,9 +89,8 @@ pub async fn monitor_address_balance(account_handle: AccountHandle, address: &Io
                 let _ = process_output(topic_event.payload.clone(), account_handle, address, client_options).await;
             });
         },
-    )?;
-
-    Ok(())
+    )
+    .await
 }
 
 async fn process_output(
@@ -117,7 +116,7 @@ async fn process_output(
 
     let message = {
         let client = crate::client::get_client(&client_options_);
-        let client = client.read().unwrap();
+        let client = client.read().await;
         client.get_message().data(&message_id_).await?
     };
 
@@ -183,8 +182,8 @@ pub async fn monitor_confirmation_state_change(
                 let _ = process_metadata(topic_event.payload.clone(), account_handle, message_id, &message).await;
             });
         },
-    )?;
-    Ok(())
+    )
+    .await
 }
 
 async fn process_metadata(

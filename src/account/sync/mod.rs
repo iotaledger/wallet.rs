@@ -71,7 +71,7 @@ async fn sync_addresses(
         for (iota_address_index, iota_address_internal, iota_address) in &generated_iota_addresses {
             futures_.push(async move {
                 let client = crate::client::get_client(account.client_options());
-                let client = client.read().unwrap();
+                let client = client.read().await;
 
                 let address_outputs = client.get_address().outputs(&iota_address).await?;
                 let balance = client.get_address().balance(&iota_address).await?;
@@ -157,7 +157,7 @@ async fn sync_messages(
             let client_options = client_options.clone();
             async move {
                 let client = crate::client::get_client(&client_options);
-                let client = client.read().unwrap();
+                let client = client.read().await;
 
                 let address_outputs = client.get_address().outputs(address.address()).await?;
                 let balance = client.get_address().balance(address.address()).await?;
@@ -215,7 +215,7 @@ async fn update_account_messages<'a>(
         .filter(|message| message.confirmed().is_none())
         .collect();
 
-    let client = client.read().unwrap();
+    let client = client.read().await;
 
     for message in unconfirmed_messages.iter_mut() {
         let metadata = client.get_message().metadata(message.id()).await?;
@@ -528,7 +528,7 @@ impl SyncedAccount {
         let account_ = self.account_handle.read().await;
 
         let client = crate::client::get_client(account_.client_options());
-        let client = client.read().unwrap();
+        let client = client.read().await;
 
         if let RemainderValueStrategy::AccountAddress(ref remainder_target_address) =
             transfer_obj.remainder_value_strategy
@@ -778,7 +778,7 @@ pub(crate) async fn repost_message(
             }
 
             let client = crate::client::get_client(account.client_options());
-            let client = client.read().unwrap();
+            let client = client.read().await;
 
             let (id, message) = match action {
                 RepostAction::Promote => {
