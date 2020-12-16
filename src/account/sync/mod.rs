@@ -199,29 +199,41 @@ async fn update_account_messages<'a>(
     new_messages: &'a [(MessageId, Option<bool>, IotaMessage)],
 ) -> crate::Result<()> {
     let client = get_client(account.client_options());
-    let messages = account.messages_mut();
 
-    // sync `broadcasted` state
-    messages
-        .iter_mut()
-        .filter(|message| !message.broadcasted() && new_messages.iter().any(|(id, _, _)| id == message.id()))
-        .for_each(|message| {
-            message.set_broadcasted(true);
-        });
+    account.do_mut(|account| {
+        let messages = account.messages_mut();
+
+        // sync `broadcasted` state
+        messages
+            .iter_mut()
+            .filter(|message| !message.broadcasted() && new_messages.iter().any(|(id, _, _)| id == message.id()))
+            .for_each(|message| {
+                message.set_broadcasted(true);
+            });
+    });
 
     // sync `confirmed` state
-    let mut unconfirmed_messages: Vec<&mut Message> = messages
-        .iter_mut()
+    let unconfirmed_message_ids: Vec<MessageId> = account
+        .messages()
+        .iter()
         .filter(|message| message.confirmed().is_none())
+        .map(|m| *m.id())
         .collect();
 
     let client = client.read().await;
 
-    for message in unconfirmed_messages.iter_mut() {
-        let metadata = client.get_message().metadata(message.id()).await?;
+    for message_id in unconfirmed_message_ids {
+        let metadata = client.get_message().metadata(&message_id).await?;
         if let Some(inclusion_state) = metadata.ledger_inclusion_state {
             let confirmed = inclusion_state == "included";
-            message.set_confirmed(Some(confirmed));
+            account.do_mut(|account| {
+                let message = account
+                    .messages_mut()
+                    .iter_mut()
+                    .find(|m| m.id() == &message_id)
+                    .unwrap();
+                message.set_confirmed(Some(confirmed));
+            });
         }
     }
 

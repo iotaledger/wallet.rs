@@ -305,9 +305,10 @@ impl AccountHandle {
     pub async fn generate_address(&self) -> crate::Result<Address> {
         let mut account = self.0.write().await;
         let address = crate::address::get_new_address(&account)?;
-        account.addresses.push(address.clone());
 
-        account.has_pending_changes = true;
+        account.do_mut(|account| {
+            account.addresses.push(address.clone());
+        });
 
         let _ = crate::monitor::monitor_address_balance(self.clone(), address.address());
 
@@ -372,6 +373,12 @@ impl AccountHandle {
 }
 
 impl Account {
+    pub(crate) fn do_mut<R>(&mut self, f: impl FnOnce(&mut Self) -> R) -> R {
+        let res = f(self);
+        self.has_pending_changes = true;
+        res
+    }
+
     /// Returns the most recent address of the account.
     pub fn latest_address(&self) -> Option<&Address> {
         self.addresses
@@ -522,15 +529,11 @@ impl Account {
         self.has_pending_changes = true;
     }
 
-    #[doc(hidden)]
-    pub fn addresses_mut(&mut self) -> &mut Vec<Address> {
-        self.has_pending_changes = true;
+    pub(crate) fn addresses_mut(&mut self) -> &mut Vec<Address> {
         &mut self.addresses
     }
 
-    #[doc(hidden)]
-    pub fn messages_mut(&mut self) -> &mut Vec<Message> {
-        self.has_pending_changes = true;
+    pub(crate) fn messages_mut(&mut self) -> &mut Vec<Message> {
         &mut self.messages
     }
 
