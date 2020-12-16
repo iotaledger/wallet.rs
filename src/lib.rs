@@ -144,12 +144,15 @@ pub(crate) fn remove_stronghold(stronghold_path: PathBuf) {
     stronghold_map.remove(&stronghold_path);
 }
 
-pub(crate) fn with_stronghold_from_path<T, F: FnOnce(&Stronghold) -> T>(path: &PathBuf, cb: F) -> T {
+pub(crate) fn with_stronghold_from_path<T, F: FnOnce(&Stronghold) -> crate::Result<T>>(
+    path: &PathBuf,
+    cb: F,
+) -> crate::Result<T> {
     let stronghold_map = STRONGHOLD_INSTANCE.get_or_init(Default::default).lock().unwrap();
     if let Some(stronghold) = stronghold_map.get(path) {
         cb(stronghold)
     } else {
-        panic!("should initialize stronghold instance before using it")
+        Err(anyhow::anyhow!("should initialize stronghold instance before using it").into())
     }
 }
 
@@ -178,7 +181,7 @@ mod test_utils {
                 let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
                 let storage_path = PathBuf::from(format!("./example-database/{}", storage_path));
 
-                let mut manager = AccountManager::with_storage_path(storage_path).unwrap();
+                let mut manager = AccountManager::with_storage_path(storage_path).await.unwrap();
                 manager.set_polling_interval(Duration::from_secs(4));
                 manager.set_stronghold_password("password").await.unwrap();
                 Mutex::new(manager)

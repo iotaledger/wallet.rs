@@ -85,8 +85,9 @@ impl StorageAdapter for StrongholdStorageAdapter {
         let mut accounts = vec![];
         let (_, index) = crate::with_stronghold_from_path(&self.path, |stronghold| get_account_index(&stronghold))?;
         for (_, record_id) in index {
-            let account =
-                crate::with_stronghold_from_path(&self.path, |stronghold| stronghold.record_read(&record_id))?;
+            let account = crate::with_stronghold_from_path(&self.path, |stronghold| {
+                stronghold.record_read(&record_id).map_err(|e| e.into())
+            })?;
             accounts.push(account);
         }
         Ok(accounts)

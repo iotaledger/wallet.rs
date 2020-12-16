@@ -101,8 +101,8 @@ declare_types! {
                 None => Default::default(),
             };
             let manager = match options.storage_type {
-                StorageType::Sqlite => AccountManager::with_storage_adapter(&options.storage_path, SqliteStorageAdapter::new(&options.storage_path, "accounts").unwrap()),
-                StorageType::Stronghold => AccountManager::with_storage_adapter(&options.storage_path, StrongholdStorageAdapter::new(&options.storage_path).unwrap()),
+                StorageType::Sqlite => crate::block_on(AccountManager::with_storage_adapter(&options.storage_path, SqliteStorageAdapter::new(&options.storage_path, "accounts").unwrap())),
+                StorageType::Stronghold => crate::block_on(AccountManager::with_storage_adapter(&options.storage_path, StrongholdStorageAdapter::new(&options.storage_path).unwrap())),
             };
             let manager = manager.expect("error initializing account manager");
             Ok(AccountManagerWrapper(Arc::new(RwLock::new(manager))))
@@ -116,28 +116,6 @@ declare_types! {
                 let ref_ = &this.borrow(&guard).0;
                 let mut manager = ref_.write().unwrap();
                 crate::block_on(async move { manager.set_stronghold_password(password).await }).expect("error setting stronghold password");
-            }
-            Ok(cx.undefined().upcast())
-        }
-
-        method startBackgroundSync(mut cx) {
-            {
-                let this = cx.this();
-                let guard = cx.lock();
-                let ref_ = &this.borrow(&guard).0;
-                let mut manager = ref_.write().unwrap();
-                crate::block_on(async move { manager.start_background_sync().await });
-            }
-            Ok(cx.undefined().upcast())
-        }
-
-        method loadAccounts(mut cx) {
-            {
-                let this = cx.this();
-                let guard = cx.lock();
-                let ref_ = &this.borrow(&guard).0;
-                let mut manager = ref_.write().unwrap();
-                crate::block_on(async move { manager.load_accounts().await }).expect("failed to load accounts");
             }
             Ok(cx.undefined().upcast())
         }

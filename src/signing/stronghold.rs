@@ -61,12 +61,13 @@ impl super::Signer for StrongholdSigner {
             })
             .collect::<Vec<stronghold::AddressIndexRecorder>>();
         crate::with_stronghold_from_path(account.storage_path(), |stronghold| {
-            stronghold.get_transaction_unlock_blocks(
-                &account_id_to_stronghold_record_id(account.id())?,
-                &essence,
-                &mut inputs,
-            )
+            stronghold
+                .get_transaction_unlock_blocks(
+                    &account_id_to_stronghold_record_id(account.id())?,
+                    &essence,
+                    &mut inputs,
+                )
+                .map_err(|e| e.into())
         })
-        .map_err(|e| e.into())
     }
 }

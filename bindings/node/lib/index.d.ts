@@ -128,7 +128,6 @@ export declare interface ManagerOptions {
 
 export declare class AccountManager {
   constructor(storagePath?: string)
-  startBackgroundSync(): void
   setStrongholdPassword(password: string): void
   createAccount(account: AccountToCreate): Account
   getAccount(accountId: string | number): Account | undefined

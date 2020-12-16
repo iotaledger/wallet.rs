@@ -26,13 +26,15 @@ impl WalletActor {
 
 fn spawn_actor() -> UnboundedSender<Message> {
     let (tx, rx) = unbounded_channel();
-    let actor = WalletActor {
-        rx,
-        message_handler: Default::default(),
-    };
     std::thread::spawn(|| {
         let mut runtime = tokio::runtime::Runtime::new().unwrap();
-        runtime.block_on(actor.run());
+        runtime.block_on(async move {
+            let actor = WalletActor {
+                rx,
+                message_handler: WalletMessageHandler::new().await.unwrap(),
+            };
+            actor.run().await
+        });
     });
     tx
 }

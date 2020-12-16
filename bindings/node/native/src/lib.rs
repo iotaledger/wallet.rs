@@ -50,13 +50,6 @@ pub(crate) fn store_account(account_handle: AccountHandle) -> AccountIdentifier 
     id
 }
 
-pub(crate) fn remove_account(id: &AccountIdentifier) {
-    let mut map = account_instances()
-        .write()
-        .expect("failed to lock account instances: remove_account()");
-    map.remove(id);
-}
-
 /// Gets the synced account instances map.
 fn synced_account_instances() -> &'static SyncedAccountInstanceMap {
     static INSTANCES: Lazy<SyncedAccountInstanceMap> = Lazy::new(Default::default);

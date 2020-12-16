@@ -10,12 +10,6 @@ mod sync;
 
 pub struct AccountWrapper(pub AccountIdentifier);
 
-impl Drop for AccountWrapper {
-    fn drop(&mut self) {
-        crate::remove_account(&self.0);
-    }
-}
-
 declare_types! {
     pub class JsAccount for AccountWrapper {
         init(mut cx) {

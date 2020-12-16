@@ -63,6 +63,7 @@ impl StorageAdapter for MyStorage {
 async fn main() -> iota_wallet::Result<()> {
     let mut manager =
         AccountManager::with_storage_adapter("./example-database/sled", MyStorage::new("./example-database/sled")?)
+            .await
             .unwrap();
     manager.set_stronghold_password("password").await.unwrap();
 

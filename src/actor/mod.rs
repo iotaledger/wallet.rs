@@ -25,14 +25,6 @@ pub struct WalletMessageHandler {
     account_manager: AccountManager,
 }
 
-impl Default for WalletMessageHandler {
-    fn default() -> Self {
-        Self {
-            account_manager: AccountManager::new().unwrap(),
-        }
-    }
-}
-
 fn panic_to_response_message(panic: Box<dyn Any>) -> Result<ResponseType> {
     let msg = if let Some(message) = panic.downcast_ref::<String>() {
         format!("Internal error: {}", message)
@@ -64,17 +56,17 @@ where
 
 impl WalletMessageHandler {
     /// Creates a new instance of the message handler with the default account manager.
-    pub fn new() -> Result<Self> {
+    pub async fn new() -> Result<Self> {
         let instance = Self {
-            account_manager: AccountManager::new()?,
+            account_manager: AccountManager::new().await?,
         };
         Ok(instance)
     }
 
     /// Creates a new instance of the message handler with the account manager using the given storage path.
-    pub fn with_storage_path(storage_path: PathBuf) -> Result<Self> {
+    pub async fn with_storage_path(storage_path: PathBuf) -> Result<Self> {
         let instance = Self {
-            account_manager: AccountManager::with_storage_path(storage_path)?,
+            account_manager: AccountManager::with_storage_path(storage_path).await?,
         };
         Ok(instance)
     }
@@ -329,12 +321,10 @@ mod tests {
         }
 
         /// Builds the Wallet actor.
-        pub fn build(self) -> Wallet {
+        pub async fn build(self) -> Wallet {
             Wallet {
                 rx: self.rx.expect("rx is required"),
-                message_handler: self
-                    .message_handler
-                    .unwrap_or_else(|| WalletMessageHandler::new().expect("failed to initialise account manager")),
+                message_handler: self.message_handler.expect("message handler is required"),
             }
         }
     }
@@ -361,7 +351,7 @@ mod tests {
         let actor = WalletBuilder::new().rx(rx).build();
         std::thread::spawn(|| {
             let mut runtime = tokio::runtime::Runtime::new().unwrap();
-            runtime.block_on(actor.run());
+            runtime.block_on(async move { actor.await.run().await });
         });
         tx
     }
