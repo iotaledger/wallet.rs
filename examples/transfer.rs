@@ -16,7 +16,6 @@ async fn main() -> iota_wallet::Result<()> {
     let sync_accounts = manager.sync_accounts().await?;
     let sync_account = sync_accounts.first().unwrap();
 
-    let account = account.read().unwrap();
     sync_account
         .transfer(Transfer::new(account.latest_address().unwrap().address().clone(), 150))
         .await?;

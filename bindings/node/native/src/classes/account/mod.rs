@@ -188,7 +188,6 @@ declare_types! {
                 let guard = cx.lock();
                 let id = &this.borrow(&guard).0;
                 let account = crate::get_account(id);
-                let mut account = account.write().unwrap();
                 account.generate_address().expect("error generating address")
             };
             Ok(neon_serde::to_value(&mut cx, &address)?)

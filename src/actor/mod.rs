@@ -157,8 +157,7 @@ impl WalletMessageHandler {
 
         match method {
             AccountMethod::GenerateAddress => {
-                let mut account_ = account.write().unwrap();
-                let address = account_.generate_address()?;
+                let address = account.generate_address()?;
                 Ok(ResponseType::GeneratedAddress(address))
             }
             AccountMethod::ListMessages {

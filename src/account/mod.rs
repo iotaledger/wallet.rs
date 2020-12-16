@@ -301,6 +301,19 @@ impl AccountGuard {
         AccountSynchronizer::new(self.clone())
     }
 
+    /// Gets a new unused address and links it to this account.
+    pub fn generate_address(&self) -> crate::Result<Address> {
+        let mut account = self.0.write().unwrap();
+        let address = crate::address::get_new_address(&account)?;
+        account.addresses.push(address.clone());
+
+        account.has_pending_changes = true;
+
+        let _ = crate::monitor::monitor_address_balance(self.clone(), address.address());
+
+        Ok(address)
+    }
+
     /// Bridge to [Account#latest_address](struct.Account.html#method.latest_address).
     pub fn latest_address(&self) -> Option<Address> {
         let account = self.0.read().unwrap();
@@ -320,13 +333,13 @@ impl AccountGuard {
     }
 
     /// Bridge to [Account#set_alias](struct.Account.html#method.set_alias).
-    pub fn set_alias(&mut self, alias: impl AsRef<str>) {
+    pub fn set_alias(&self, alias: impl AsRef<str>) {
         let mut account = self.0.write().unwrap();
         account.set_alias(alias);
     }
 
     /// Bridge to [Account#set_client_options](struct.Account.html#method.set_client_options).
-    pub fn set_client_options(&mut self, options: ClientOptions) {
+    pub fn set_client_options(&self, options: ClientOptions) {
         let mut account = self.0.write().unwrap();
         account.set_client_options(options);
     }
@@ -349,12 +362,6 @@ impl AccountGuard {
     pub fn list_addresses(&self, unspent: bool) -> Vec<Address> {
         let account = self.0.read().unwrap();
         account.list_addresses(unspent).into_iter().cloned().collect()
-    }
-
-    /// Bridge to [Account#generate_address](struct.Account.html#method.generate_address).
-    pub fn generate_address(&mut self) -> crate::Result<Address> {
-        let mut account = self.0.write().unwrap();
-        account.generate_address()
     }
 
     /// Bridge to [Account#get_message](struct.Account.html#method.get_message).
@@ -493,19 +500,6 @@ impl Account {
             .iter()
             .filter(|address| crate::address::is_unspent(&self, address.address()) == unspent)
             .collect()
-    }
-
-    /// Gets a new unused address and links it to this account.
-    pub fn generate_address(&mut self) -> crate::Result<Address> {
-        let address = crate::address::get_new_address(&self)?;
-        self.addresses.push(address.clone());
-
-        self.has_pending_changes = true;
-
-        // ignore errors because we fallback to the polling system
-        // TODO let _ = crate::monitor::monitor_address_balance(&self, address.address());
-
-        Ok(address)
     }
 
     #[doc(hidden)]
