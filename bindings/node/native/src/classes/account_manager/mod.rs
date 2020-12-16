@@ -161,10 +161,11 @@ declare_types! {
                 }
                 builder.initialise().expect("error creating account")
             };
-            let account = serde_json::to_string(&account).unwrap();
-            let account = cx.string(account);
 
-            Ok(JsAccount::new(&mut cx, vec![account])?.upcast())
+            let id = crate::store_account(account);
+            let id = cx.string(serde_json::to_string(&id).unwrap());
+
+            Ok(JsAccount::new(&mut cx, vec![id])?.upcast())
         }
 
         method getAccount(mut cx) {
@@ -179,9 +180,9 @@ declare_types! {
             };
             match account {
                 Ok(acc) => {
-                    let account = serde_json::to_string(&acc).unwrap();
-                    let account = cx.string(account);
-                    Ok(JsAccount::new(&mut cx, vec![account])?.upcast())
+                    let id = crate::store_account(acc);
+                    let id = cx.string(serde_json::to_string(&id).unwrap());
+                    Ok(JsAccount::new(&mut cx, vec![id])?.upcast())
                 },
                 Err(_) => Ok(cx.undefined().upcast())
             }
@@ -198,9 +199,9 @@ declare_types! {
             };
             match account {
                 Some(acc) => {
-                    let account = serde_json::to_string(&acc).unwrap();
-                    let account = cx.string(account);
-                    Ok(JsAccount::new(&mut cx, vec![account])?.upcast())
+                    let id = crate::store_account(acc);
+                    let id = cx.string(serde_json::to_string(&id).unwrap());
+                    Ok(JsAccount::new(&mut cx, vec![id])?.upcast())
                 },
                 None => Ok(cx.undefined().upcast())
             }
@@ -212,14 +213,14 @@ declare_types! {
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
                 let manager = ref_.read().unwrap();
-                manager.get_accounts().expect("failed to get accounts")
+                manager.get_accounts()
             };
 
             let js_array = JsArray::new(&mut cx, accounts.len() as u32);
-            for (index, account) in accounts.iter().enumerate() {
-                let account = serde_json::to_string(&account).unwrap();
-                let account = cx.string(account);
-                let js_account = JsAccount::new(&mut cx, vec![account])?;
+            for (index, account) in accounts.into_iter().enumerate() {
+                let id = crate::store_account(account);
+                let id = cx.string(serde_json::to_string(&id).unwrap());
+                let js_account = JsAccount::new(&mut cx, vec![id])?;
                 js_array.set(&mut cx, index as u32, js_account)?;
             }
 

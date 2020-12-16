@@ -1,7 +1,10 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_wallet::{account::SyncedAccount, WalletError};
+use iota_wallet::{
+    account::{AccountIdentifier, SyncedAccount},
+    WalletError,
+};
 use neon::prelude::*;
 use serde::Deserialize;
 
@@ -16,7 +19,7 @@ pub struct SyncOptions {
 }
 
 pub struct SyncTask {
-    pub account_id: String,
+    pub account_id: AccountIdentifier,
     pub options: SyncOptions,
 }
 
@@ -27,8 +30,7 @@ impl Task for SyncTask {
 
     fn perform(&self) -> Result<Self::Output, Self::Error> {
         let account = crate::get_account(&self.account_id);
-        let mut acc = account.write().unwrap();
-        let mut synchronizer = acc.sync();
+        let mut synchronizer = account.sync();
         if let Some(address_index) = self.options.address_index {
             synchronizer = synchronizer.address_index(address_index);
         }
@@ -46,10 +48,9 @@ impl Task for SyncTask {
     fn complete(self, mut cx: TaskContext, value: Result<Self::Output, Self::Error>) -> JsResult<Self::JsEvent> {
         match value {
             Ok(val) => {
-                let synced = serde_json::to_string(&val).unwrap();
-                let synced = cx.string(synced);
-                let account_id = cx.string(&self.account_id);
-                Ok(crate::JsSyncedAccount::new(&mut cx, vec![synced, account_id])?.upcast())
+                let id = crate::store_synced_account(val);
+                let id = cx.string(id);
+                Ok(crate::JsSyncedAccount::new(&mut cx, vec![id])?.upcast())
             }
             Err(e) => cx.throw_error(e.to_string()),
         }

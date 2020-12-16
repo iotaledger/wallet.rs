@@ -76,10 +76,11 @@ pub fn monitor_address_balance(account: AccountGuard, address: &IotaAddress) -> 
         let account_ = account.read().unwrap();
         account_.client_options().clone()
     };
+    let client_options_ = client_options.clone();
     let address = address.clone();
 
     subscribe_to_topic(
-        &client_options.clone(),
+        &client_options_,
         format!("addresses/{}/outputs", address.to_bech32()),
         move |topic_event| {
             let topic_event = topic_event.clone();

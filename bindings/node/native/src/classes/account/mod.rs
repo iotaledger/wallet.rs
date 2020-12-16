@@ -3,15 +3,12 @@
 
 use std::str::FromStr;
 
-use iota_wallet::{
-    account::{Account, AccountIdentifier},
-    message::MessageId,
-};
+use iota_wallet::{account::AccountIdentifier, message::MessageId};
 use neon::prelude::*;
 
 mod sync;
 
-pub struct AccountWrapper(pub String);
+pub struct AccountWrapper(pub AccountIdentifier);
 
 impl Drop for AccountWrapper {
     fn drop(&mut self) {
@@ -22,10 +19,8 @@ impl Drop for AccountWrapper {
 declare_types! {
     pub class JsAccount for AccountWrapper {
         init(mut cx) {
-            let account = cx.argument::<JsString>(0)?.value();
-            let account: Account = serde_json::from_str(&account).expect("invalid account JSON");
-            let id = crate::store_account(account);
-            Ok(AccountWrapper(id))
+            let account_id = cx.argument::<JsString>(0)?.value();
+            Ok(AccountWrapper(serde_json::from_str(&account_id).expect("invalid account identifier")))
         }
 
         method id(mut cx) {
@@ -156,7 +151,6 @@ declare_types! {
                 let account = crate::get_account(id);
                 let mut account = account.write().unwrap();
                 account.set_alias(alias);
-                account.save_pending_changes().expect("failed to save account");
             }
             Ok(cx.undefined().upcast())
         }
@@ -171,7 +165,6 @@ declare_types! {
                 let account = crate::get_account(id);
                 let mut account = account.write().unwrap();
                 account.set_client_options(client_options);
-                account.save_pending_changes().expect("failed to save account");
             }
             Ok(cx.undefined().upcast())
         }
