@@ -137,7 +137,7 @@ declare_types! {
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
                 let mut manager = ref_.write().unwrap();
-                manager.load_accounts().expect("failed to load accounts");
+                crate::block_on(async move { manager.load_accounts().await }).expect("failed to load accounts");
             }
             Ok(cx.undefined().upcast())
         }
@@ -187,7 +187,7 @@ declare_types! {
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
                 let manager = ref_.read().unwrap();
-                manager.get_account(&id)
+                crate::block_on(async move { manager.get_account(&id).await })
             };
             match account {
                 Ok(acc) => {
@@ -224,7 +224,7 @@ declare_types! {
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
                 let manager = ref_.read().unwrap();
-                manager.get_accounts()
+                crate::block_on(async move { manager.get_accounts().await })
             };
 
             let js_array = JsArray::new(&mut cx, accounts.len() as u32);

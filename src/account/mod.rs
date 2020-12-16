@@ -150,7 +150,7 @@ impl AccountInitialiser {
 
     /// Initialises the account.
     pub async fn initialise(self) -> crate::Result<AccountHandle> {
-        let mut accounts = self.accounts.write().unwrap();
+        let mut accounts = self.accounts.write().await;
 
         let alias = self.alias.unwrap_or_else(|| format!("Account {}", accounts.len()));
         let signer_type = self
@@ -593,10 +593,11 @@ mod tests {
                     account_handle.id().await
                 };
 
-                manager.stop_background_sync().unwrap();
+                manager.stop_background_sync().await.unwrap();
 
                 let account_in_storage = manager
                     .get_account(&account_id)
+                    .await
                     .expect("failed to get account from storage");
                 let account_in_storage = account_in_storage.read().await;
                 assert_eq!(

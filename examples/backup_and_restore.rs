@@ -25,7 +25,7 @@ async fn main() -> iota_wallet::Result<()> {
 
     // import the accounts from the backup and assert that it's the same
     manager.import_accounts(backup_path)?;
-    let imported_account_handle = manager.get_account(&id)?;
+    let imported_account_handle = manager.get_account(&id).await?;
 
     let account = account_handle.read().await;
     let imported_account = imported_account_handle.read().await;

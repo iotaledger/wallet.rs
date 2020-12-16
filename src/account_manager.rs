@@ -21,7 +21,7 @@ use std::{
     path::{Path, PathBuf},
     sync::{
         atomic::{AtomicBool, Ordering},
-        Arc, RwLock,
+        Arc,
     },
     thread::{self, JoinHandle},
     time::Duration,
@@ -31,6 +31,7 @@ use futures::FutureExt;
 use getset::{Getters, Setters};
 use iota::{MessageId, Payload};
 use stronghold::Stronghold;
+use tokio::sync::RwLock;
 
 /// The default storage path.
 pub const DEFAULT_STORAGE_PATH: &str = "./example-database";
@@ -56,7 +57,7 @@ pub struct AccountManager {
 
 impl Drop for AccountManager {
     fn drop(&mut self) {
-        let _ = self.stop_background_sync();
+        let _ = crate::block_on(async { self.stop_background_sync().await });
     }
 }
 
@@ -90,8 +91,8 @@ impl AccountManager {
     }
 
     /// Loads the account from the storage into the manager instance.
-    pub fn load_accounts(&mut self) -> crate::Result<()> {
-        if self.accounts.read().unwrap().is_empty() {
+    pub async fn load_accounts(&mut self) -> crate::Result<()> {
+        if self.accounts.read().await.is_empty() {
             let accounts = crate::storage::with_adapter(&self.storage_path, |storage| storage.get_all())?;
             let accounts = crate::storage::parse_accounts(&self.storage_path, &accounts)?
                 .into_iter()
@@ -104,7 +105,7 @@ impl AccountManager {
 
     /// Starts monitoring the accounts with the node's mqtt topics.
     async fn start_monitoring(&self) -> crate::Result<()> {
-        for account in self.accounts.read().unwrap().values() {
+        for account in self.accounts.read().await.values() {
             crate::monitor::monitor_account_addresses_balance(account.clone()).await?;
             crate::monitor::monitor_unconfirmed_messages(account.clone()).await?;
         }
@@ -121,8 +122,8 @@ impl AccountManager {
     }
 
     /// Stops the background polling and MQTT monitoring.
-    pub fn stop_background_sync(&mut self) -> crate::Result<()> {
-        for account in self.accounts.read().unwrap().values() {
+    pub async fn stop_background_sync(&mut self) -> crate::Result<()> {
+        for account in self.accounts.read().await.values() {
             let _ = crate::monitor::unsubscribe(account.clone());
         }
 
@@ -145,7 +146,7 @@ impl AccountManager {
         )?;
         crate::init_stronghold(&self.storage_path, stronghold);
         self.start_background_sync().await;
-        self.load_accounts()?;
+        self.load_accounts().await?;
 
         Ok(())
     }
@@ -176,7 +177,7 @@ impl AccountManager {
                         // when the error is dropped, the on_error event will be triggered
                     }
 
-                    let accounts_ = accounts.read().unwrap();
+                    let accounts_ = accounts.read().await;
                     for account_handle in accounts_.values() {
                         let mut account = account_handle.write().await;
                         let _ = account.save();
@@ -195,7 +196,7 @@ impl AccountManager {
 
     /// Deletes an account.
     pub async fn remove_account(&self, account_id: &AccountIdentifier) -> crate::Result<()> {
-        let mut accounts = self.accounts.write().unwrap();
+        let mut accounts = self.accounts.write().await;
 
         {
             let account_handle = accounts.get(&account_id).ok_or(crate::WalletError::AccountNotFound)?;
@@ -232,14 +233,15 @@ impl AccountManager {
         amount: u64,
     ) -> crate::Result<Message> {
         let to_address = self
-            .get_account(to_account_id)?
+            .get_account(to_account_id)
+            .await?
             .read()
             .await
             .latest_address()
             .ok_or_else(|| anyhow::anyhow!("destination account address list empty"))?
             .clone();
 
-        let from_synchronized = self.get_account(from_account_id)?.sync().await.execute().await?;
+        let from_synchronized = self.get_account(from_account_id).await?.sync().await.execute().await?;
         from_synchronized
             .transfer(Transfer::new(to_address.address().clone(), amount))
             .await
@@ -315,8 +317,8 @@ impl AccountManager {
     }
 
     /// Gets the account associated with the given identifier.
-    pub fn get_account(&self, account_id: &AccountIdentifier) -> crate::Result<AccountHandle> {
-        let accounts = self.accounts.read().unwrap();
+    pub async fn get_account(&self, account_id: &AccountIdentifier) -> crate::Result<AccountHandle> {
+        let accounts = self.accounts.read().await;
         accounts
             .get(account_id)
             .cloned()
@@ -326,7 +328,7 @@ impl AccountManager {
     /// Gets the account associated with the given alias (case insensitive).
     pub async fn get_account_by_alias<S: Into<String>>(&self, alias: S) -> Option<AccountHandle> {
         let alias = alias.into().to_lowercase();
-        for account_handle in self.accounts.read().unwrap().values() {
+        for account_handle in self.accounts.read().await.values() {
             let account = account_handle.read().await;
             if account
                 .alias()
@@ -342,26 +344,26 @@ impl AccountManager {
     }
 
     /// Gets all accounts from storage.
-    pub fn get_accounts(&self) -> Vec<AccountHandle> {
-        let accounts = self.accounts.read().unwrap();
+    pub async fn get_accounts(&self) -> Vec<AccountHandle> {
+        let accounts = self.accounts.read().await;
         accounts.values().cloned().collect()
     }
 
     /// Reattaches an unconfirmed transaction.
     pub async fn reattach(&self, account_id: &AccountIdentifier, message_id: &MessageId) -> crate::Result<Message> {
-        let account = self.get_account(account_id)?;
+        let account = self.get_account(account_id).await?;
         account.sync().await.execute().await?.reattach(message_id).await
     }
 
     /// Promotes an unconfirmed transaction.
     pub async fn promote(&self, account_id: &AccountIdentifier, message_id: &MessageId) -> crate::Result<Message> {
-        let account = self.get_account(account_id)?;
+        let account = self.get_account(account_id).await?;
         account.sync().await.execute().await?.promote(message_id).await
     }
 
     /// Retries an unconfirmed transaction.
     pub async fn retry(&self, account_id: &AccountIdentifier, message_id: &MessageId) -> crate::Result<Message> {
-        let account = self.get_account(account_id)?;
+        let account = self.get_account(account_id).await?;
         account.sync().await.execute().await?.retry(message_id).await
     }
 }
@@ -369,11 +371,11 @@ impl AccountManager {
 async fn poll(accounts: AccountStore, storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
     let retried = if syncing {
         let mut accounts_before_sync = Vec::new();
-        for account_handle in accounts.read().unwrap().values() {
+        for account_handle in accounts.read().await.values() {
             accounts_before_sync.push(account_handle.read().await.clone());
         }
         let synced_accounts = sync_accounts(accounts.clone(), &storage_path, Some(0)).await?;
-        let accounts_after_sync = accounts.read().unwrap();
+        let accounts_after_sync = accounts.read().await;
 
         // compare accounts to check for balance changes and new messages
         for account_before_sync in &accounts_before_sync {
@@ -423,7 +425,7 @@ async fn poll(accounts: AccountStore, storage_path: PathBuf, syncing: bool) -> c
         retry_unconfirmed_transactions(synced_accounts).await?
     } else {
         let mut retried_messages = vec![];
-        for account_handle in accounts.read().unwrap().values() {
+        for account_handle in accounts.read().await.values() {
             let (account_id, unconfirmed_messages): (AccountIdentifier, Vec<(MessageId, Payload)>) = {
                 let account = account_handle.read().await;
                 let account_id = account.id().clone();
@@ -498,7 +500,7 @@ async fn sync_accounts<'a>(
     let mut last_account = None;
 
     {
-        let mut accounts = accounts.write().unwrap();
+        let mut accounts = accounts.write().await;
         for account_handle in accounts.values_mut() {
             let mut sync = account_handle.sync().await;
             if let Some(index) = address_index {
@@ -529,7 +531,7 @@ async fn sync_accounts<'a>(
     };
 
     if let Ok(discovered_accounts) = discovered_accounts_res {
-        let mut accounts = accounts.write().unwrap();
+        let mut accounts = accounts.write().await;
         for (account_handle, synced_account) in discovered_accounts {
             accounts.insert(account_handle.id().await, account_handle);
             synced_accounts.push(synced_account);
@@ -634,7 +636,7 @@ mod tests {
                     .expect("failed to add account");
                 let account = account_handle.read().await;
 
-                manager.stop_background_sync().unwrap();
+                manager.stop_background_sync().await.unwrap();
 
                 manager
                     .remove_account(account.id())
