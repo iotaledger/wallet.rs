@@ -13,6 +13,6 @@
     "neon-cli": "^0.4.0"
   },
   "scripts": {
-    "install": "neon build"
+    "install": "neon build --release"
   }
 }
