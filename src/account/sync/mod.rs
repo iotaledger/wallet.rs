@@ -439,7 +439,7 @@ impl SyncedAccount {
         &self,
         locked_addresses: &'a mut MutexGuard<'_, Vec<IotaAddress>>,
         threshold: u64,
-        account: &'a mut Account,
+        account: &'a Account,
         address: &'a IotaAddress,
     ) -> crate::Result<(Vec<input_selection::Input>, Option<input_selection::Input>)> {
         let mut available_addresses: Vec<input_selection::Input> = account
@@ -526,7 +526,7 @@ impl SyncedAccount {
             }
         }
 
-        let mut account_ = self.account.write().unwrap();
+        let account_ = self.account.read().unwrap();
 
         let client = crate::client::get_client(account_.client_options());
         let client = client.read().unwrap();
@@ -547,7 +547,7 @@ impl SyncedAccount {
         let (input_addresses, remainder_address) = self.select_inputs(
             &mut locked_addresses,
             transfer_obj.amount,
-            &mut account_,
+            &account_,
             &transfer_obj.address,
         )?;
 
@@ -623,6 +623,9 @@ impl SyncedAccount {
                 current_output_sum += *utxo.amount();
             }
         }
+
+        drop(account_);
+        let mut account_ = self.account.write().unwrap();
 
         // if there's remainder value, we check the strategy defined in the transfer
         let mut remainder_value_deposit_address = None;
