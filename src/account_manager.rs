@@ -91,11 +91,7 @@ impl AccountManager {
 
     /// Loads the account from the storage into the manager instance.
     pub fn load_accounts(&mut self) -> crate::Result<()> {
-        let empty_accounts = {
-            let accounts = self.accounts.read().unwrap();
-            accounts.is_empty()
-        };
-        if empty_accounts {
+        if self.accounts.read().unwrap().is_empty() {
             let accounts = crate::storage::with_adapter(&self.storage_path, |storage| storage.get_all())?;
             let accounts = crate::storage::parse_accounts(&self.storage_path, &accounts)?
                 .into_iter()
@@ -126,11 +122,8 @@ impl AccountManager {
 
     /// Stops the background polling and MQTT monitoring.
     pub fn stop_background_sync(&mut self) -> crate::Result<()> {
-        {
-            let accounts = self.accounts.read().unwrap();
-            for account in accounts.values() {
-                let _ = crate::monitor::unsubscribe(account.clone());
-            }
+        for account in self.accounts.read().unwrap().values() {
+            let _ = crate::monitor::unsubscribe(account.clone());
         }
 
         if let Some(handle) = self.polling_handle.take() {
@@ -241,23 +234,18 @@ impl AccountManager {
         to_account_id: &AccountIdentifier,
         amount: u64,
     ) -> crate::Result<Message> {
-        let from_account_guard = self.get_account(from_account_id)?;
-        let to_account_guard = self.get_account(to_account_id)?;
+        let to_address = self
+            .get_account(to_account_id)?
+            .read()
+            .unwrap()
+            .latest_address()
+            .ok_or_else(|| anyhow::anyhow!("destination account address list empty"))?
+            .clone();
 
-        let to_address = {
-            let to_account = to_account_guard.read().unwrap();
-            to_account
-                .latest_address()
-                .ok_or_else(|| anyhow::anyhow!("destination account address list empty"))?
-                .clone()
-        };
-
-        let from_synchronized = from_account_guard.sync().execute().await?;
-        let message = from_synchronized
+        let from_synchronized = self.get_account(from_account_id)?.sync().execute().await?;
+        from_synchronized
             .transfer(Transfer::new(to_address.address().clone(), amount))
-            .await?;
-
-        Ok(message)
+            .await
     }
 
     /// Backups the accounts to the given destination

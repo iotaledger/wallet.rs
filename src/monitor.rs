@@ -128,14 +128,12 @@ async fn process_output(
 
     let mut account = account.write().unwrap();
     let account_id = account.id().clone();
-
     let message_id_ = *message_id;
-    {
-        let addresses = account.addresses_mut();
-        let address_to_update = addresses.iter_mut().find(|a| a.address() == &address).unwrap();
-        address_to_update.handle_new_output(address_output);
-        crate::event::emit_balance_change(&account_id, &address_to_update, *address_to_update.balance());
-    }
+
+    let addresses = account.addresses_mut();
+    let address_to_update = addresses.iter_mut().find(|a| a.address() == &address).unwrap();
+    address_to_update.handle_new_output(address_output);
+    crate::event::emit_balance_change(&account_id, &address_to_update, *address_to_update.balance());
 
     match account.messages_mut().iter().position(|m| m.id() == &message_id_) {
         Some(message_index) => {
@@ -201,11 +199,10 @@ fn process_metadata(
         let confirmed = inclusion_state == "included";
         if message.confirmed().is_none() || confirmed != message.confirmed().unwrap() {
             let mut account = account.write().unwrap();
-            {
-                let messages = account.messages_mut();
-                let message = messages.iter_mut().find(|m| m.id() == &message_id).unwrap();
-                message.set_confirmed(Some(confirmed));
-            }
+
+            let messages = account.messages_mut();
+            let account_message = messages.iter_mut().find(|m| m.id() == &message_id).unwrap();
+            account_message.set_confirmed(Some(confirmed));
 
             crate::event::emit_confirmation_state_change(account.id(), &message, confirmed);
         }

@@ -273,8 +273,7 @@ macro_rules! guard_field_getters {
             $(
                 #[$attr]
                 pub fn $x(&self) -> $ret {
-                    let account = self.read().unwrap();
-                    account.$x().clone()
+                    self.0.read().unwrap().$x().clone()
                 }
             )*
         }
@@ -316,40 +315,36 @@ impl AccountHandle {
 
     /// Bridge to [Account#latest_address](struct.Account.html#method.latest_address).
     pub fn latest_address(&self) -> Option<Address> {
-        let account = self.0.read().unwrap();
-        account.latest_address().cloned()
+        self.0.read().unwrap().latest_address().cloned()
     }
 
     /// Bridge to [Account#total_balance](struct.Account.html#method.total_balance).
     pub fn total_balance(&self) -> u64 {
-        let account = self.0.read().unwrap();
-        account.total_balance()
+        self.0.read().unwrap().total_balance()
     }
 
     /// Bridge to [Account#available_balance](struct.Account.html#method.available_balance).
     pub fn available_balance(&self) -> u64 {
-        let account = self.0.read().unwrap();
-        account.available_balance()
+        self.0.read().unwrap().available_balance()
     }
 
     /// Bridge to [Account#set_alias](struct.Account.html#method.set_alias).
     pub fn set_alias(&self, alias: impl AsRef<str>) {
-        let mut account = self.0.write().unwrap();
-        account.set_alias(alias);
+        self.0.write().unwrap().set_alias(alias);
     }
 
     /// Bridge to [Account#set_client_options](struct.Account.html#method.set_client_options).
     pub fn set_client_options(&self, options: ClientOptions) {
-        let mut account = self.0.write().unwrap();
-        account.set_client_options(options);
+        self.0.write().unwrap().set_client_options(options);
     }
 
     /// Bridge to [Account#list_messages](struct.Account.html#method.list_messages).
     /// This method clones the account's messages so when querying a large list of messages
     /// prefer using the `read` method to access the account instance.
     pub fn list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<Message> {
-        let account = self.0.read().unwrap();
-        account
+        self.0
+            .read()
+            .unwrap()
             .list_messages(count, from, message_type)
             .into_iter()
             .cloned()
@@ -360,14 +355,18 @@ impl AccountHandle {
     /// This method clones the account's addresses so when querying a large list of addresses
     /// prefer using the `read` method to access the account instance.
     pub fn list_addresses(&self, unspent: bool) -> Vec<Address> {
-        let account = self.0.read().unwrap();
-        account.list_addresses(unspent).into_iter().cloned().collect()
+        self.0
+            .read()
+            .unwrap()
+            .list_addresses(unspent)
+            .into_iter()
+            .cloned()
+            .collect()
     }
 
     /// Bridge to [Account#get_message](struct.Account.html#method.get_message).
     pub fn get_message(&self, message_id: &MessageId) -> Option<Message> {
-        let account = self.0.read().unwrap();
-        account.get_message(message_id).cloned()
+        self.0.read().unwrap().get_message(message_id).cloned()
     }
 }
 
