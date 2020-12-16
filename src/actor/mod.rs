@@ -87,10 +87,16 @@ impl WalletMessageHandler {
     /// Handles a message.
     pub async fn handle(&mut self, message: Message) {
         let response: Result<ResponseType> = match message.message_type() {
-            MessageType::RemoveAccount(account_id) => convert_panics(|| self.remove_account(account_id)),
-            MessageType::CreateAccount(account) => convert_panics(|| self.create_account(account)),
-            MessageType::GetAccount(account_id) => convert_panics(|| self.get_account(account_id)),
-            MessageType::GetAccounts => convert_panics(|| self.get_accounts()),
+            MessageType::RemoveAccount(account_id) => {
+                convert_async_panics(|| async { self.remove_account(account_id).await }).await
+            }
+            MessageType::CreateAccount(account) => {
+                convert_async_panics(|| async { self.create_account(account).await }).await
+            }
+            MessageType::GetAccount(account_id) => {
+                convert_async_panics(|| async { self.get_account(account_id).await }).await
+            }
+            MessageType::GetAccounts => convert_async_panics(|| async { self.get_accounts().await }).await,
             MessageType::CallAccountMethod { account_id, method } => {
                 convert_async_panics(|| async { self.call_account_method(account_id, method).await }).await
             }
@@ -100,7 +106,9 @@ impl WalletMessageHandler {
             }
             MessageType::Backup(destination_path) => convert_panics(|| self.backup(destination_path)),
             MessageType::RestoreBackup(backup_path) => convert_panics(|| self.restore_backup(backup_path)),
-            MessageType::SetStrongholdPassword(password) => convert_panics(|| self.set_stronghold_password(password)),
+            MessageType::SetStrongholdPassword(password) => {
+                convert_async_panics(|| async { self.set_stronghold_password(password).await }).await
+            }
             MessageType::SendTransfer { account_id, transfer } => {
                 convert_async_panics(|| async { self.send_transfer(account_id, transfer).await }).await
             }
@@ -157,7 +165,7 @@ impl WalletMessageHandler {
 
         match method {
             AccountMethod::GenerateAddress => {
-                let address = account_handle.generate_address()?;
+                let address = account_handle.generate_address().await?;
                 Ok(ResponseType::GeneratedAddress(address))
             }
             AccountMethod::ListMessages {
@@ -165,7 +173,7 @@ impl WalletMessageHandler {
                 from,
                 message_type,
             } => {
-                let account = account_handle.read().unwrap();
+                let account = account_handle.read().await;
                 let messages: Vec<WalletMessage> = account
                     .list_messages(*count, *from, message_type.clone())
                     .into_iter()
@@ -174,20 +182,20 @@ impl WalletMessageHandler {
                 Ok(ResponseType::Messages(messages))
             }
             AccountMethod::ListAddresses { unspent } => {
-                let account = account_handle.read().unwrap();
+                let account = account_handle.read().await;
                 let addresses = account.list_addresses(*unspent).into_iter().cloned().collect();
                 Ok(ResponseType::Addresses(addresses))
             }
             AccountMethod::GetAvailableBalance => {
-                let account = account_handle.read().unwrap();
+                let account = account_handle.read().await;
                 Ok(ResponseType::AvailableBalance(account.available_balance()))
             }
             AccountMethod::GetTotalBalance => {
-                let account = account_handle.read().unwrap();
+                let account = account_handle.read().await;
                 Ok(ResponseType::TotalBalance(account.total_balance()))
             }
             AccountMethod::GetLatestAddress => {
-                let account = account_handle.read().unwrap();
+                let account = account_handle.read().await;
                 Ok(ResponseType::LatestAddress(account.latest_address().cloned()))
             }
             AccountMethod::SyncAccount {
@@ -195,7 +203,7 @@ impl WalletMessageHandler {
                 gap_limit,
                 skip_persistance,
             } => {
-                let mut synchronizer = account_handle.sync();
+                let mut synchronizer = account_handle.sync().await;
                 if let Some(address_index) = address_index {
                     synchronizer = synchronizer.address_index(*address_index);
                 }
@@ -214,14 +222,15 @@ impl WalletMessageHandler {
     }
 
     /// The remove account message handler.
-    fn remove_account(&self, account_id: &AccountIdentifier) -> Result<ResponseType> {
+    async fn remove_account(&self, account_id: &AccountIdentifier) -> Result<ResponseType> {
         self.account_manager
             .remove_account(&account_id)
+            .await
             .map(|_| ResponseType::RemovedAccount(account_id.clone()))
     }
 
     /// The create account message handler.
-    fn create_account(&self, account: &AccountToCreate) -> Result<ResponseType> {
+    async fn create_account(&self, account: &AccountToCreate) -> Result<ResponseType> {
         let mut builder = self.account_manager.create_account(account.client_options.clone());
 
         if let Some(mnemonic) = &account.mnemonic {
@@ -238,35 +247,38 @@ impl WalletMessageHandler {
             );
         }
 
-        builder.initialise().map(|account_handle| {
-            let account = account_handle.read().unwrap();
-            ResponseType::CreatedAccount(account.clone())
-        })
+        match builder.initialise().await {
+            Ok(account_handle) => {
+                let account = account_handle.read().await;
+                Ok(ResponseType::CreatedAccount(account.clone()))
+            }
+            Err(e) => Err(e),
+        }
     }
 
-    fn get_account(&self, account_id: &AccountIdentifier) -> Result<ResponseType> {
+    async fn get_account(&self, account_id: &AccountIdentifier) -> Result<ResponseType> {
         let account_handle = self.account_manager.get_account(&account_id)?;
-        let account = account_handle.read().unwrap();
+        let account = account_handle.read().await;
         Ok(ResponseType::ReadAccount(account.clone()))
     }
 
-    fn get_accounts(&self) -> Result<ResponseType> {
+    async fn get_accounts(&self) -> Result<ResponseType> {
         let accounts = self.account_manager.get_accounts();
         let mut accounts_ = Vec::new();
         for account_handle in accounts {
-            accounts_.push(account_handle.read().unwrap().clone());
+            accounts_.push(account_handle.read().await.clone());
         }
         Ok(ResponseType::ReadAccounts(accounts_))
     }
 
-    fn set_stronghold_password(&mut self, password: &str) -> Result<ResponseType> {
-        self.account_manager.set_stronghold_password(password)?;
+    async fn set_stronghold_password(&mut self, password: &str) -> Result<ResponseType> {
+        self.account_manager.set_stronghold_password(password).await?;
         Ok(ResponseType::StrongholdPasswordSet)
     }
 
     async fn send_transfer(&self, account_id: &AccountIdentifier, transfer: &Transfer) -> Result<ResponseType> {
         let account = self.account_manager.get_account(account_id)?;
-        let synced = account.sync().execute().await?;
+        let synced = account.sync().await.execute().await?;
         let message = synced.transfer(transfer.clone()).await?;
         Ok(ResponseType::SentTransfer(message))
     }

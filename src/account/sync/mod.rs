@@ -300,8 +300,8 @@ pub struct AccountSynchronizer {
 
 impl AccountSynchronizer {
     /// Initialises a new instance of the sync helper.
-    pub(super) fn new(account_handle: AccountHandle) -> Self {
-        let address_index = account_handle.read().unwrap().addresses().len();
+    pub(super) async fn new(account_handle: AccountHandle) -> Self {
+        let address_index = account_handle.read().await.addresses().len();
         Self {
             account_handle,
             // by default we synchronize from the latest address (supposedly unspent)
@@ -333,13 +333,13 @@ impl AccountSynchronizer {
     /// The account syncing process ensures that the latest metadata (balance, transactions)
     /// associated with an account is fetched from the tangle and is stored locally.
     pub async fn execute(self) -> crate::Result<SyncedAccount> {
-        let options = self.account_handle.client_options();
+        let options = self.account_handle.client_options().await;
         let client = get_client(&options);
 
         let _ = crate::monitor::unsubscribe(self.account_handle.clone());
 
         let mut account_ = {
-            let account_ref = self.account_handle.read().unwrap();
+            let account_ref = self.account_handle.read().await;
             account_ref.clone()
         };
         let message_ids_before_sync: Vec<MessageId> = account_.messages().iter().map(|m| *m.id()).collect();
@@ -348,12 +348,12 @@ impl AccountSynchronizer {
         let return_value = match perform_sync(&mut account_, self.address_index, self.gap_limit).await {
             Ok(is_empty) => {
                 if !self.skip_persistance {
-                    let mut account_ref = self.account_handle.write().unwrap();
+                    let mut account_ref = self.account_handle.write().await;
                     account_ref.set_addresses(account_.addresses().to_vec());
                     account_ref.set_messages(account_.messages().to_vec());
                 }
 
-                let account_ref = self.account_handle.read().unwrap();
+                let account_ref = self.account_handle.read().await;
 
                 let synced_account = SyncedAccount {
                     account_handle: self.account_handle.clone(),
@@ -392,8 +392,10 @@ fn serialize_as_id<S>(x: &AccountHandle, s: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
-    let account = x.read().unwrap();
-    account.id().serialize(s)
+    crate::block_on(async move {
+        let account = x.read().await;
+        account.id().serialize(s)
+    })
 }
 
 /// Data returned from account synchronization.
@@ -475,7 +477,7 @@ impl SyncedAccount {
             return Err(crate::WalletError::ZeroAmount);
         }
 
-        let account_ = self.account_handle.read().unwrap();
+        let account_ = self.account_handle.read().await;
 
         // lock the transfer process until we select the input addresses
         // we do this to prevent multiple threads trying to transfer at the same time
@@ -505,7 +507,7 @@ impl SyncedAccount {
                 let tx = tx.lock().unwrap();
                 for _ in 1..30 {
                     thread::sleep(OUTPUT_LOCK_TIMEOUT / 30);
-                    let account = account_handle.read().unwrap();
+                    let account = crate::block_on(async { account_handle.read().await });
                     // the account received an update and now the balance is sufficient
                     if value <= account.available_balance() {
                         let _ = tx.send(());
@@ -518,12 +520,12 @@ impl SyncedAccount {
                 Ok(_) => {}
                 Err(_) => {
                     // if we got a timeout waiting for the account update, we try to sync it
-                    self.account_handle.sync().execute().await?;
+                    self.account_handle.sync().await.execute().await?;
                 }
             }
         }
 
-        let account_ = self.account_handle.read().unwrap();
+        let account_ = self.account_handle.read().await;
 
         let client = crate::client::get_client(account_.client_options());
         let client = client.read().unwrap();
@@ -622,7 +624,7 @@ impl SyncedAccount {
         }
 
         drop(account_);
-        let mut account_ = self.account_handle.write().unwrap();
+        let mut account_ = self.account_handle.write().await;
 
         // if there's remainder value, we check the strategy defined in the transfer
         let mut remainder_value_deposit_address = None;
@@ -759,7 +761,7 @@ pub(crate) async fn repost_message(
     message_id: &MessageId,
     action: RepostAction,
 ) -> crate::Result<Message> {
-    let mut account = account_handle.write().unwrap();
+    let mut account = account_handle.write().await;
 
     let message = match account.get_message(message_id) {
         Some(message_to_repost) => {
@@ -830,11 +832,14 @@ mod tests {
                 let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
                     .unwrap()
                     .build();
-                let account = manager
+                crate::block_on(async move {
+                    let account = manager
                     .create_account(client_options)
                     .alias("alias")
                     .initialise()
+                    .await
                     .unwrap();
+                });
 
                 // let synced_accounts = account.sync().execute().await.unwrap();
                 // TODO improve test when the node API is ready to use

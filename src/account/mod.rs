@@ -14,13 +14,14 @@ use getset::{Getters, Setters};
 use iota::message::prelude::MessageId;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
+use tokio::sync::RwLock;
 
 use std::{
     collections::HashMap,
     convert::TryInto,
     ops::Deref,
     path::PathBuf,
-    sync::{Arc, Mutex, RwLock},
+    sync::{Arc, Mutex},
 };
 
 mod sync;
@@ -148,7 +149,7 @@ impl AccountInitialiser {
     }
 
     /// Initialises the account.
-    pub fn initialise(self) -> crate::Result<AccountHandle> {
+    pub async fn initialise(self) -> crate::Result<AccountHandle> {
         let mut accounts = self.accounts.write().unwrap();
 
         let alias = self.alias.unwrap_or_else(|| format!("Account {}", accounts.len()));
@@ -169,7 +170,7 @@ impl AccountInitialiser {
         }
 
         if let Some(latest_account_handle) = accounts.values().last() {
-            let latest_account = latest_account_handle.read().unwrap();
+            let latest_account = latest_account_handle.read().await;
             if latest_account.messages().is_empty() && latest_account.total_balance() == 0 {
                 return Err(crate::WalletError::LatestAccountIsEmpty);
             }
@@ -272,8 +273,8 @@ macro_rules! guard_field_getters {
         impl $ty {
             $(
                 #[$attr]
-                pub fn $x(&self) -> $ret {
-                    self.0.read().unwrap().$x().clone()
+                pub async fn $x(&self) -> $ret {
+                    self.0.read().await.$x().clone()
                 }
             )*
         }
@@ -296,13 +297,13 @@ guard_field_getters!(
 
 impl AccountHandle {
     /// Returns the builder to setup the process to synchronize this account with the Tangle.
-    pub fn sync(&self) -> AccountSynchronizer {
-        AccountSynchronizer::new(self.clone())
+    pub async fn sync(&self) -> AccountSynchronizer {
+        AccountSynchronizer::new(self.clone()).await
     }
 
     /// Gets a new unused address and links it to this account.
-    pub fn generate_address(&self) -> crate::Result<Address> {
-        let mut account = self.0.write().unwrap();
+    pub async fn generate_address(&self) -> crate::Result<Address> {
+        let mut account = self.0.write().await;
         let address = crate::address::get_new_address(&account)?;
         account.addresses.push(address.clone());
 
@@ -314,37 +315,37 @@ impl AccountHandle {
     }
 
     /// Bridge to [Account#latest_address](struct.Account.html#method.latest_address).
-    pub fn latest_address(&self) -> Option<Address> {
-        self.0.read().unwrap().latest_address().cloned()
+    pub async fn latest_address(&self) -> Option<Address> {
+        self.0.read().await.latest_address().cloned()
     }
 
     /// Bridge to [Account#total_balance](struct.Account.html#method.total_balance).
-    pub fn total_balance(&self) -> u64 {
-        self.0.read().unwrap().total_balance()
+    pub async fn total_balance(&self) -> u64 {
+        self.0.read().await.total_balance()
     }
 
     /// Bridge to [Account#available_balance](struct.Account.html#method.available_balance).
-    pub fn available_balance(&self) -> u64 {
-        self.0.read().unwrap().available_balance()
+    pub async fn available_balance(&self) -> u64 {
+        self.0.read().await.available_balance()
     }
 
     /// Bridge to [Account#set_alias](struct.Account.html#method.set_alias).
-    pub fn set_alias(&self, alias: impl AsRef<str>) {
-        self.0.write().unwrap().set_alias(alias);
+    pub async fn set_alias(&self, alias: impl AsRef<str>) {
+        self.0.write().await.set_alias(alias);
     }
 
     /// Bridge to [Account#set_client_options](struct.Account.html#method.set_client_options).
-    pub fn set_client_options(&self, options: ClientOptions) {
-        self.0.write().unwrap().set_client_options(options);
+    pub async fn set_client_options(&self, options: ClientOptions) {
+        self.0.write().await.set_client_options(options);
     }
 
     /// Bridge to [Account#list_messages](struct.Account.html#method.list_messages).
     /// This method clones the account's messages so when querying a large list of messages
     /// prefer using the `read` method to access the account instance.
-    pub fn list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<Message> {
+    pub async fn list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<Message> {
         self.0
             .read()
-            .unwrap()
+            .await
             .list_messages(count, from, message_type)
             .into_iter()
             .cloned()
@@ -354,10 +355,10 @@ impl AccountHandle {
     /// Bridge to [Account#list_addresses](struct.Account.html#method.list_addresses).
     /// This method clones the account's addresses so when querying a large list of addresses
     /// prefer using the `read` method to access the account instance.
-    pub fn list_addresses(&self, unspent: bool) -> Vec<Address> {
+    pub async fn list_addresses(&self, unspent: bool) -> Vec<Address> {
         self.0
             .read()
-            .unwrap()
+            .await
             .list_addresses(unspent)
             .into_iter()
             .cloned()
@@ -365,8 +366,8 @@ impl AccountHandle {
     }
 
     /// Bridge to [Account#get_message](struct.Account.html#method.get_message).
-    pub fn get_message(&self, message_id: &MessageId) -> Option<Message> {
-        self.0.read().unwrap().get_message(message_id).cloned()
+    pub async fn get_message(&self, message_id: &MessageId) -> Option<Message> {
+        self.0.read().await.get_message(message_id).cloned()
     }
 }
 
@@ -450,7 +451,7 @@ impl Account {
     ///     .create_account(client_options)
     ///     .initialise()
     ///     .expect("failed to add account");
-    /// let account = account_handle.read().unwrap();
+    /// let account = account_handle.read().await;
     /// account.list_messages(10, 5, Some(MessageType::Received));
     /// ```
     pub fn list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<&Message> {
@@ -579,27 +580,30 @@ mod tests {
                 .expect("invalid node URL")
                 .build();
 
-            let account_id = {
-                let account_handle = manager
-                    .create_account(client_options)
-                    .alias("alias")
-                    .initialise()
-                    .expect("failed to add account");
+            crate::block_on(async move {
+                let account_id = {
+                    let account_handle = manager
+                        .create_account(client_options)
+                        .alias("alias")
+                        .initialise()
+                        .await
+                        .expect("failed to add account");
 
-                account_handle.set_alias(updated_alias);
-                account_handle.id()
-            };
+                    account_handle.set_alias(updated_alias).await;
+                    account_handle.id().await
+                };
 
-            manager.stop_background_sync().unwrap();
+                manager.stop_background_sync().unwrap();
 
-            let account_in_storage = manager
-                .get_account(&account_id)
-                .expect("failed to get account from storage");
-            let account_in_storage = account_in_storage.read().unwrap();
-            assert_eq!(
-                account_in_storage.alias().to_string(),
-                updated_alias.to_string()
-            );
+                let account_in_storage = manager
+                    .get_account(&account_id)
+                    .expect("failed to get account from storage");
+                let account_in_storage = account_in_storage.read().await;
+                assert_eq!(
+                    account_in_storage.alias().to_string(),
+                    updated_alias.to_string()
+                );
+            });
         }
     }
 }

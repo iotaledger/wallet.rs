@@ -42,8 +42,8 @@ struct AddressOutputPayloadAddress {
 }
 
 /// Unsubscribe from all topics associated with the account.
-pub fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
-    let account = account_handle.read().unwrap();
+pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
+    let account = account_handle.read().await;
     let client = crate::client::get_client(account.client_options());
     let mut client = client.write().unwrap();
     client.subscriber().unsubscribe()?;
@@ -62,17 +62,17 @@ fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
 }
 
 /// Monitor account addresses for balance changes.
-pub fn monitor_account_addresses_balance(account_handle: AccountHandle) -> crate::Result<()> {
-    let account = account_handle.read().unwrap();
+pub async fn monitor_account_addresses_balance(account_handle: AccountHandle) -> crate::Result<()> {
+    let account = account_handle.read().await;
     for address in account.addresses() {
-        monitor_address_balance(account_handle.clone(), address.address())?;
+        monitor_address_balance(account_handle.clone(), address.address()).await?;
     }
     Ok(())
 }
 
 /// Monitor address for balance changes.
-pub fn monitor_address_balance(account_handle: AccountHandle, address: &IotaAddress) -> crate::Result<()> {
-    let client_options = account_handle.client_options();
+pub async fn monitor_address_balance(account_handle: AccountHandle, address: &IotaAddress) -> crate::Result<()> {
+    let client_options = account_handle.client_options().await;
     let client_options_ = client_options.clone();
     let address = address.clone();
 
@@ -85,10 +85,8 @@ pub fn monitor_address_balance(account_handle: AccountHandle, address: &IotaAddr
             let client_options = client_options.clone();
             let account_handle = account_handle.clone();
 
-            std::thread::spawn(move || {
-                crate::block_on(async {
-                    let _ = process_output(topic_event.payload.clone(), account_handle, address, client_options).await;
-                });
+            crate::block_on(async {
+                let _ = process_output(topic_event.payload.clone(), account_handle, address, client_options).await;
             });
         },
     )?;
@@ -123,7 +121,7 @@ async fn process_output(
         client.get_message().data(&message_id_).await?
     };
 
-    let mut account = account_handle.write().unwrap();
+    let mut account = account_handle.write().await;
     let account_id = account.id().clone();
     let message_id_ = *message_id;
 
@@ -151,18 +149,21 @@ async fn process_output(
 }
 
 /// Monitor the account's unconfirmed messages for confirmation state change.
-pub fn monitor_unconfirmed_messages(account_handle: AccountHandle) -> crate::Result<()> {
-    let account = account_handle.read().unwrap();
+pub async fn monitor_unconfirmed_messages(account_handle: AccountHandle) -> crate::Result<()> {
+    let account = account_handle.read().await;
     for message in account.list_messages(0, 0, Some(MessageType::Unconfirmed)) {
-        monitor_confirmation_state_change(account_handle.clone(), message.id())?;
+        monitor_confirmation_state_change(account_handle.clone(), message.id()).await?;
     }
     Ok(())
 }
 
 /// Monitor message for confirmation state.
-pub fn monitor_confirmation_state_change(account_handle: AccountHandle, message_id: &MessageId) -> crate::Result<()> {
+pub async fn monitor_confirmation_state_change(
+    account_handle: AccountHandle,
+    message_id: &MessageId,
+) -> crate::Result<()> {
     let (message, client_options) = {
-        let account = account_handle.read().unwrap();
+        let account = account_handle.read().await;
         let message = account
             .messages()
             .iter()
@@ -178,13 +179,15 @@ pub fn monitor_confirmation_state_change(account_handle: AccountHandle, message_
         format!("messages/{}/metadata", message_id.to_string()),
         move |topic_event| {
             let account_handle = account_handle.clone();
-            let _ = process_metadata(topic_event.payload.clone(), account_handle, message_id, &message);
+            crate::block_on(async {
+                let _ = process_metadata(topic_event.payload.clone(), account_handle, message_id, &message).await;
+            });
         },
     )?;
     Ok(())
 }
 
-fn process_metadata(
+async fn process_metadata(
     payload: String,
     account_handle: AccountHandle,
     message_id: MessageId,
@@ -195,7 +198,7 @@ fn process_metadata(
     if let Some(inclusion_state) = metadata.ledger_inclusion_state {
         let confirmed = inclusion_state == "included";
         if message.confirmed().is_none() || confirmed != message.confirmed().unwrap() {
-            let mut account = account_handle.write().unwrap();
+            let mut account = account_handle.write().await;
 
             let messages = account.messages_mut();
             let account_message = messages.iter_mut().find(|m| m.id() == &message_id).unwrap();

@@ -42,7 +42,10 @@ pub(crate) fn store_account(account_handle: AccountHandle) -> AccountIdentifier 
     let mut map = account_instances()
         .write()
         .expect("failed to lock account instances: store_account()");
-    let id = account_handle.id();
+
+    let handle = account_handle.clone();
+    let id = block_on(async move { handle.id().await });
+
     map.insert(id.clone(), account_handle);
     id
 }

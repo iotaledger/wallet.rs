@@ -115,7 +115,7 @@ declare_types! {
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
                 let mut manager = ref_.write().unwrap();
-                manager.set_stronghold_password(password).expect("error setting stronghold password");
+                crate::block_on(async move { manager.set_stronghold_password(password).await }).expect("error setting stronghold password");
             }
             Ok(cx.undefined().upcast())
         }
@@ -126,7 +126,7 @@ declare_types! {
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
                 let mut manager = ref_.write().unwrap();
-                manager.start_background_sync();
+                crate::block_on(async move { manager.start_background_sync().await });
             }
             Ok(cx.undefined().upcast())
         }
@@ -170,7 +170,7 @@ declare_types! {
                         .expect("invalid account created at format"),
                     );
                 }
-                builder.initialise().expect("error creating account")
+                crate::block_on(async move { builder.initialise().await }).expect("error creating account")
             };
 
             let id = crate::store_account(account);
@@ -206,11 +206,11 @@ declare_types! {
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
                 let manager = ref_.read().unwrap();
-                manager.get_account_by_alias(alias)
+                crate::block_on(async move { manager.get_account_by_alias(alias).await })
             };
             match account {
-                Some(acc) => {
-                    let id = crate::store_account(acc);
+                Some(account) => {
+                    let id = crate::store_account(account);
                     let id = cx.string(serde_json::to_string(&id).unwrap());
                     Ok(JsAccount::new(&mut cx, vec![id])?.upcast())
                 },
@@ -246,7 +246,7 @@ declare_types! {
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
                 let manager = ref_.read().unwrap();
-                manager.remove_account(&id).expect("error removing account")
+                crate::block_on(async move { manager.remove_account(&id).await }).expect("error removing account")
             };
             Ok(cx.undefined().upcast())
         }

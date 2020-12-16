@@ -80,6 +80,7 @@ use iota_wallet::{
     storage::sqlite::SqliteStorageAdapter,
 };
 use std::path::PathBuf;
+
 #[tokio::main]
 async fn main() -> iota_wallet::Result<()> {
     let storage_folder: PathBuf = "./my-db".into();
@@ -89,7 +90,8 @@ async fn main() -> iota_wallet::Result<()> {
     let account = manager
         .create_account(client_options)
         .signer_type(SignerType::EnvMnemonic)
-        .initialise()?;
+        .initialise()
+        .await?;
     Ok(())
 }
 ```

@@ -169,13 +169,15 @@ mod test_utils {
     static MANAGER_INSTANCE: OnceCell<Mutex<AccountManager>> = OnceCell::new();
     pub fn get_account_manager() -> &'static Mutex<AccountManager> {
         MANAGER_INSTANCE.get_or_init(|| {
-            let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
-            let storage_path = PathBuf::from(format!("./example-database/{}", storage_path));
+            crate::block_on(async move {
+                let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
+                let storage_path = PathBuf::from(format!("./example-database/{}", storage_path));
 
-            let mut manager = AccountManager::with_storage_path(storage_path).unwrap();
-            manager.set_polling_interval(Duration::from_secs(4));
-            manager.set_stronghold_password("password").unwrap();
-            Mutex::new(manager)
+                let mut manager = AccountManager::with_storage_path(storage_path).unwrap();
+                manager.set_polling_interval(Duration::from_secs(4));
+                manager.set_stronghold_password("password").await.unwrap();
+                Mutex::new(manager)
+            })
         })
     }
 
