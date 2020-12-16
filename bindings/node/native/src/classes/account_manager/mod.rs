@@ -190,8 +190,8 @@ declare_types! {
                 crate::block_on(async move { manager.get_account(&id).await })
             };
             match account {
-                Ok(acc) => {
-                    let id = crate::store_account(acc);
+                Ok(account) => {
+                    let id = crate::store_account(account);
                     let id = cx.string(serde_json::to_string(&id).unwrap());
                     Ok(JsAccount::new(&mut cx, vec![id])?.upcast())
                 },
