@@ -38,12 +38,12 @@ pub(crate) fn get_account(id: &AccountIdentifier) -> AccountHandle {
     map.get(id).expect("account dropped or not initialised").clone()
 }
 
-pub(crate) fn store_account(account: AccountHandle) -> AccountIdentifier {
+pub(crate) fn store_account(account_handle: AccountHandle) -> AccountIdentifier {
     let mut map = account_instances()
         .write()
         .expect("failed to lock account instances: store_account()");
-    let id = account.id();
-    map.insert(id.clone(), account);
+    let id = account_handle.id();
+    map.insert(id.clone(), account_handle);
     id
 }
 

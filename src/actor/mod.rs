@@ -153,11 +153,11 @@ impl WalletMessageHandler {
         account_id: &AccountIdentifier,
         method: &AccountMethod,
     ) -> Result<ResponseType> {
-        let account = self.account_manager.get_account(account_id)?;
+        let account_handle = self.account_manager.get_account(account_id)?;
 
         match method {
             AccountMethod::GenerateAddress => {
-                let address = account.generate_address()?;
+                let address = account_handle.generate_address()?;
                 Ok(ResponseType::GeneratedAddress(address))
             }
             AccountMethod::ListMessages {
@@ -165,8 +165,8 @@ impl WalletMessageHandler {
                 from,
                 message_type,
             } => {
-                let account_ = account.read().unwrap();
-                let messages: Vec<WalletMessage> = account_
+                let account = account_handle.read().unwrap();
+                let messages: Vec<WalletMessage> = account
                     .list_messages(*count, *from, message_type.clone())
                     .into_iter()
                     .cloned()
@@ -174,28 +174,28 @@ impl WalletMessageHandler {
                 Ok(ResponseType::Messages(messages))
             }
             AccountMethod::ListAddresses { unspent } => {
-                let account_ = account.read().unwrap();
-                let addresses = account_.list_addresses(*unspent).into_iter().cloned().collect();
+                let account = account_handle.read().unwrap();
+                let addresses = account.list_addresses(*unspent).into_iter().cloned().collect();
                 Ok(ResponseType::Addresses(addresses))
             }
             AccountMethod::GetAvailableBalance => {
-                let account_ = account.read().unwrap();
-                Ok(ResponseType::AvailableBalance(account_.available_balance()))
+                let account = account_handle.read().unwrap();
+                Ok(ResponseType::AvailableBalance(account.available_balance()))
             }
             AccountMethod::GetTotalBalance => {
-                let account_ = account.read().unwrap();
-                Ok(ResponseType::TotalBalance(account_.total_balance()))
+                let account = account_handle.read().unwrap();
+                Ok(ResponseType::TotalBalance(account.total_balance()))
             }
             AccountMethod::GetLatestAddress => {
-                let account_ = account.read().unwrap();
-                Ok(ResponseType::LatestAddress(account_.latest_address().cloned()))
+                let account = account_handle.read().unwrap();
+                Ok(ResponseType::LatestAddress(account.latest_address().cloned()))
             }
             AccountMethod::SyncAccount {
                 address_index,
                 gap_limit,
                 skip_persistance,
             } => {
-                let mut synchronizer = account.sync();
+                let mut synchronizer = account_handle.sync();
                 if let Some(address_index) = address_index {
                     synchronizer = synchronizer.address_index(*address_index);
                 }
@@ -238,24 +238,23 @@ impl WalletMessageHandler {
             );
         }
 
-        builder.initialise().map(|account| {
-            let account = account.read().unwrap();
+        builder.initialise().map(|account_handle| {
+            let account = account_handle.read().unwrap();
             ResponseType::CreatedAccount(account.clone())
         })
     }
 
     fn get_account(&self, account_id: &AccountIdentifier) -> Result<ResponseType> {
-        let account = self.account_manager.get_account(&account_id)?;
-        let account = account.read().unwrap();
+        let account_handle = self.account_manager.get_account(&account_id)?;
+        let account = account_handle.read().unwrap();
         Ok(ResponseType::ReadAccount(account.clone()))
     }
 
     fn get_accounts(&self) -> Result<ResponseType> {
         let accounts = self.account_manager.get_accounts();
         let mut accounts_ = Vec::new();
-        for account in accounts {
-            let account_ = account.read().unwrap();
-            accounts_.push(account_.clone());
+        for account_handle in accounts {
+            accounts_.push(account_handle.read().unwrap().clone());
         }
         Ok(ResponseType::ReadAccounts(accounts_))
     }

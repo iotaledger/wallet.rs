@@ -168,8 +168,8 @@ impl AccountInitialiser {
             }
         }
 
-        if let Some(latest_account) = accounts.values().last() {
-            let latest_account = latest_account.read().unwrap();
+        if let Some(latest_account_handle) = accounts.values().last() {
+            let latest_account = latest_account_handle.read().unwrap();
             if latest_account.messages().is_empty() && latest_account.total_balance() == 0 {
                 return Err(crate::WalletError::LatestAccountIsEmpty);
             }
@@ -450,7 +450,7 @@ impl Account {
     ///     .create_account(client_options)
     ///     .initialise()
     ///     .expect("failed to add account");
-    /// let account = account.read().unwrap();
+    /// let account = account_handle.read().unwrap();
     /// account.list_messages(10, 5, Some(MessageType::Received));
     /// ```
     pub fn list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<&Message> {
@@ -580,16 +580,14 @@ mod tests {
                 .build();
 
             let account_id = {
-                let account = manager
+                let account_handle = manager
                     .create_account(client_options)
                     .alias("alias")
                     .initialise()
                     .expect("failed to add account");
-                let mut account = account.write().unwrap();
 
-                account.set_alias(updated_alias);
-                let id = account.id().clone();
-                id
+                account_handle.set_alias(updated_alias);
+                account_handle.id()
             };
 
             manager.stop_background_sync().unwrap();

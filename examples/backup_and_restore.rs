@@ -9,8 +9,8 @@ fn main() -> iota_wallet::Result<()> {
 
     // first we'll create an example account
     let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")?.build();
-    let account = manager.create_account(client_options).alias("alias").initialise()?;
-    let id = account.id();
+    let account_handle = manager.create_account(client_options).alias("alias").initialise()?;
+    let id = account_handle.id();
 
     // backup the stored accounts to ./backup/${backup_name}
     let backup_path = manager.backup("./backup")?;
@@ -20,11 +20,11 @@ fn main() -> iota_wallet::Result<()> {
 
     // import the accounts from the backup and assert that it's the same
     manager.import_accounts(backup_path)?;
-    let imported_account = manager.get_account(&id)?;
+    let imported_account_handle = manager.get_account(&id)?;
 
-    let account_ = account.read().unwrap();
-    let imported_account_ = imported_account.read().unwrap();
-    assert_eq!(*account_, *imported_account_);
+    let account = account_handle.read().unwrap();
+    let imported_account = imported_account_handle.read().unwrap();
+    assert_eq!(*account, *imported_account);
 
     Ok(())
 }
