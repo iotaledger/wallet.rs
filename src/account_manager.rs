@@ -19,11 +19,8 @@ use std::{
     fs,
     panic::AssertUnwindSafe,
     path::{Path, PathBuf},
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc,
-    },
-    thread::{self, JoinHandle},
+    sync::Arc,
+    thread,
     time::Duration,
 };
 
@@ -31,7 +28,13 @@ use futures::FutureExt;
 use getset::{Getters, Setters};
 use iota::{MessageId, Payload};
 use stronghold::Stronghold;
-use tokio::sync::RwLock;
+use tokio::{
+    sync::{
+        broadcast::{channel as broadcast_channel, Receiver as BroadcastReceiver, Sender as BroadcastSender},
+        RwLock,
+    },
+    time::{delay_for, Duration as AsyncDuration},
+};
 
 /// The default storage path.
 pub const DEFAULT_STORAGE_PATH: &str = "./example-database";
@@ -49,15 +52,26 @@ pub struct AccountManager {
     /// the polling interval.
     #[getset(get = "pub", set = "pub")]
     polling_interval: Duration,
-    started_monitoring: bool,
+    background_sync_running: bool,
     accounts: AccountStore,
-    stop_polling: Arc<AtomicBool>,
-    polling_handle: Option<JoinHandle<()>>,
+    stop_polling_sender: Option<BroadcastSender<()>>,
 }
 
 impl Drop for AccountManager {
     fn drop(&mut self) {
-        let _ = crate::block_on(async { self.stop_background_sync().await });
+        let accounts = self.accounts.clone();
+        let stop_polling_sender = self.stop_polling_sender.clone();
+        thread::spawn(move || {
+            let _ = crate::block_on(async {
+                for account in accounts.read().await.values() {
+                    let _ = crate::monitor::unsubscribe(account.clone());
+                }
+
+                if let Some(sender) = stop_polling_sender {
+                    sender.send(()).expect("failed to stop polling process");
+                }
+            });
+        });
     }
 }
 
@@ -82,10 +96,9 @@ impl AccountManager {
         let instance = Self {
             storage_path: storage_path.as_ref().to_path_buf(),
             polling_interval: Duration::from_millis(30_000),
-            started_monitoring: false,
+            background_sync_running: false,
             accounts: Default::default(),
-            stop_polling: Arc::new(AtomicBool::new(false)),
-            polling_handle: None,
+            stop_polling_sender: None,
         };
         Ok(instance)
     }
@@ -114,25 +127,13 @@ impl AccountManager {
 
     /// Initialises the background polling and MQTT monitoring.
     pub async fn start_background_sync(&mut self) {
-        if !self.started_monitoring {
+        if !self.background_sync_running {
             let monitoring_disabled = self.start_monitoring().await.is_err();
-            self.polling_handle = Some(self.start_polling(monitoring_disabled));
-            self.started_monitoring = true;
+            let (stop_polling_sender, stop_polling_receiver) = broadcast_channel(1);
+            self.start_polling(monitoring_disabled, stop_polling_receiver);
+            self.stop_polling_sender = Some(stop_polling_sender);
+            self.background_sync_running = true;
         }
-    }
-
-    /// Stops the background polling and MQTT monitoring.
-    pub async fn stop_background_sync(&mut self) -> crate::Result<()> {
-        for account in self.accounts.read().await.values() {
-            let _ = crate::monitor::unsubscribe(account.clone());
-        }
-
-        if let Some(handle) = self.polling_handle.take() {
-            self.stop_polling.store(true, Ordering::Relaxed);
-            handle.join().expect("failed to stop polling thread");
-        }
-
-        Ok(())
     }
 
     /// Sets the stronghold password.
@@ -152,41 +153,49 @@ impl AccountManager {
     }
 
     /// Starts the polling mechanism.
-    fn start_polling(&self, is_monitoring_disabled: bool) -> JoinHandle<()> {
+    fn start_polling(&self, is_monitoring_disabled: bool, mut stop: BroadcastReceiver<()>) {
         let storage_path = self.storage_path.clone();
-        let interval = self.polling_interval;
         let accounts = self.accounts.clone();
-        let stop = self.stop_polling.clone();
-        thread::spawn(move || {
-            while !stop.load(Ordering::Relaxed) {
-                let storage_path_ = storage_path.clone();
-                let accounts = accounts.clone();
-                crate::block_on(async move {
-                    if let Err(panic) = AssertUnwindSafe(poll(accounts.clone(), storage_path_, is_monitoring_disabled))
-                        .catch_unwind()
-                        .await
-                    {
-                        let msg = if let Some(message) = panic.downcast_ref::<String>() {
-                            format!("Internal error: {}", message)
-                        } else if let Some(message) = panic.downcast_ref::<&str>() {
-                            format!("Internal error: {}", message)
-                        } else {
-                            "Internal error".to_string()
-                        };
-                        let _error = crate::WalletError::UnknownError(msg);
-                        // when the error is dropped, the on_error event will be triggered
-                    }
 
-                    let accounts_ = accounts.read().await;
-                    for account_handle in accounts_.values() {
-                        let mut account = account_handle.write().await;
-                        let _ = account.save();
+        let interval = AsyncDuration::from_millis(self.polling_interval.as_millis().try_into().unwrap());
+
+        thread::spawn(move || {
+            crate::enter(|| {
+                tokio::spawn(async move {
+                    loop {
+                        tokio::select! {
+                            _ = async {
+                                let storage_path_ = storage_path.clone();
+                                let accounts_ = accounts.clone();
+
+                                if let Err(panic) = AssertUnwindSafe(poll(accounts_.clone(), storage_path_, is_monitoring_disabled))
+                                    .catch_unwind()
+                                    .await {
+                                    let msg = if let Some(message) = panic.downcast_ref::<String>() {
+                                        format!("Internal error: {}", message)
+                                    } else if let Some(message) = panic.downcast_ref::<&str>() {
+                                        format!("Internal error: {}", message)
+                                    } else {
+                                        "Internal error".to_string()
+                                    };
+                                    let _error = crate::WalletError::UnknownError(msg);
+                                    // when the error is dropped, the on_error event will be triggered
+                                }
+
+                                let accounts_ = accounts_.read().await;
+                                for account_handle in accounts_.values() {
+                                    let mut account = account_handle.write().await;
+                                    let _ = account.save();
+                                }
+
+                                delay_for(interval).await;
+                            } => {}
+                            _ = stop.recv() => {}
+                        }
                     }
                 });
-
-                thread::sleep(interval);
-            }
-        })
+            });
+        });
     }
 
     /// Adds a new account.
@@ -621,7 +630,7 @@ mod tests {
         #[test]
         fn store_accounts() {
             let manager = crate::test_utils::get_account_manager();
-            let mut manager = manager.lock().unwrap();
+            let manager = manager.lock().unwrap();
 
             let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
                 .expect("invalid node URL")
@@ -635,8 +644,6 @@ mod tests {
                     .await
                     .expect("failed to add account");
                 let account = account_handle.read().await;
-
-                manager.stop_background_sync().await.unwrap();
 
                 manager
                     .remove_account(account.id())

@@ -41,6 +41,7 @@ use stronghold::Stronghold;
 use tokio::runtime::Runtime;
 
 static STRONGHOLD_INSTANCE: OnceCell<Arc<Mutex<HashMap<PathBuf, Stronghold>>>> = OnceCell::new();
+static RUNTIME: OnceCell<Mutex<Runtime>> = OnceCell::new();
 
 /// The wallet error type.
 #[derive(Debug, thiserror::Error)]
@@ -153,9 +154,13 @@ pub(crate) fn with_stronghold_from_path<T, F: FnOnce(&Stronghold) -> T>(path: &P
 }
 
 pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
-    static INSTANCE: OnceCell<Mutex<Runtime>> = OnceCell::new();
-    let runtime = INSTANCE.get_or_init(|| Mutex::new(Runtime::new().unwrap()));
+    let runtime = RUNTIME.get_or_init(|| Mutex::new(Runtime::new().unwrap()));
     runtime.lock().unwrap().block_on(cb)
+}
+
+pub(crate) fn enter<R, C: FnOnce() -> R>(cb: C) -> R {
+    let runtime = RUNTIME.get_or_init(|| Mutex::new(Runtime::new().unwrap()));
+    runtime.lock().unwrap().enter(cb)
 }
 
 #[cfg(test)]

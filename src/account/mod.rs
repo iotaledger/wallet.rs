@@ -573,7 +573,7 @@ mod tests {
         #[test]
         fn set_alias() {
             let manager = crate::test_utils::get_account_manager();
-            let mut manager = manager.lock().unwrap();
+            let manager = manager.lock().unwrap();
 
             let updated_alias = "updated alias";
             let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
@@ -592,8 +592,6 @@ mod tests {
                     account_handle.set_alias(updated_alias).await;
                     account_handle.id().await
                 };
-
-                manager.stop_background_sync().await.unwrap();
 
                 let account_in_storage = manager
                     .get_account(&account_id)
