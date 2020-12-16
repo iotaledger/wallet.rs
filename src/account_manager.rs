@@ -329,10 +329,12 @@ impl AccountManager {
     /// Gets the account associated with the given alias (case insensitive).
     pub fn get_account_by_alias<S: Into<String>>(&self, alias: S) -> Option<AccountHandle> {
         let alias = alias.into().to_lowercase();
-        self.get_accounts().into_iter().find(|acc| {
-            let acc = acc.read().unwrap();
-            acc.alias().to_lowercase() == alias
-        })
+        self.accounts
+            .read()
+            .unwrap()
+            .values()
+            .find(|a| a.alias().to_lowercase().chars().zip(alias.chars()).all(|(x, y)| x == y))
+            .cloned()
     }
 
     /// Gets all accounts from storage.
