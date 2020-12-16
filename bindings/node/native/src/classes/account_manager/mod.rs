@@ -131,6 +131,17 @@ declare_types! {
             Ok(cx.undefined().upcast())
         }
 
+        method loadAccounts(mut cx) {
+            {
+                let this = cx.this();
+                let guard = cx.lock();
+                let ref_ = &this.borrow(&guard).0;
+                let mut manager = ref_.write().unwrap();
+                manager.load_accounts().expect("failed to load accounts");
+            }
+            Ok(cx.undefined().upcast())
+        }
+
         method createAccount(mut cx) {
             let account = {
                 let account_to_create = cx.argument::<JsValue>(0)?;
