@@ -3,7 +3,7 @@
 
 use crate::{
     account::{
-        account_id_to_stronghold_record_id, repost_message, AccountGuard, AccountIdentifier, AccountInitialiser,
+        account_id_to_stronghold_record_id, repost_message, AccountHandle, AccountIdentifier, AccountInitialiser,
         RepostAction, SyncedAccount,
     },
     client::ClientOptions,
@@ -35,7 +35,7 @@ use stronghold::Stronghold;
 /// The default storage path.
 pub const DEFAULT_STORAGE_PATH: &str = "./example-database";
 
-pub(crate) type AccountStore = Arc<RwLock<HashMap<AccountIdentifier, AccountGuard>>>;
+pub(crate) type AccountStore = Arc<RwLock<HashMap<AccountIdentifier, AccountHandle>>>;
 
 /// The account manager.
 ///
@@ -330,7 +330,7 @@ impl AccountManager {
     }
 
     /// Gets the account associated with the given identifier.
-    pub fn get_account(&self, account_id: &AccountIdentifier) -> crate::Result<AccountGuard> {
+    pub fn get_account(&self, account_id: &AccountIdentifier) -> crate::Result<AccountHandle> {
         let accounts = self.accounts.read().unwrap();
         accounts
             .get(account_id)
@@ -339,7 +339,7 @@ impl AccountManager {
     }
 
     /// Gets the account associated with the given alias (case insensitive).
-    pub fn get_account_by_alias<S: Into<String>>(&self, alias: S) -> Option<AccountGuard> {
+    pub fn get_account_by_alias<S: Into<String>>(&self, alias: S) -> Option<AccountHandle> {
         let alias = alias.into().to_lowercase();
         self.get_accounts().into_iter().find(|acc| {
             let acc = acc.read().unwrap();
@@ -348,7 +348,7 @@ impl AccountManager {
     }
 
     /// Gets all accounts from storage.
-    pub fn get_accounts(&self) -> Vec<AccountGuard> {
+    pub fn get_accounts(&self) -> Vec<AccountHandle> {
         let accounts = self.accounts.read().unwrap();
         accounts.values().cloned().collect()
     }
@@ -475,7 +475,7 @@ async fn discover_accounts(
     storage_path: &PathBuf,
     client_options: &ClientOptions,
     signer_type: Option<SignerType>,
-) -> crate::Result<Vec<(AccountGuard, SyncedAccount)>> {
+) -> crate::Result<Vec<(AccountHandle, SyncedAccount)>> {
     let mut synced_accounts = vec![];
     loop {
         let mut account_initialiser =

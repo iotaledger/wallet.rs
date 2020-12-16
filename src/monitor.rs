@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    account::AccountGuard,
+    account::AccountHandle,
     address::{AddressOutput, IotaAddress},
     client::ClientOptions,
     message::{Message, MessageType},
@@ -42,7 +42,7 @@ struct AddressOutputPayloadAddress {
 }
 
 /// Unsubscribe from all topics associated with the account.
-pub fn unsubscribe(account: AccountGuard) -> crate::Result<()> {
+pub fn unsubscribe(account: AccountHandle) -> crate::Result<()> {
     let account_ = account.read().unwrap();
     let client = crate::client::get_client(account_.client_options());
     let mut client = client.write().unwrap();
@@ -62,7 +62,7 @@ fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
 }
 
 /// Monitor account addresses for balance changes.
-pub fn monitor_account_addresses_balance(account: AccountGuard) -> crate::Result<()> {
+pub fn monitor_account_addresses_balance(account: AccountHandle) -> crate::Result<()> {
     let account_ = account.read().unwrap();
     for address in account_.addresses() {
         monitor_address_balance(account.clone(), address.address())?;
@@ -71,7 +71,7 @@ pub fn monitor_account_addresses_balance(account: AccountGuard) -> crate::Result
 }
 
 /// Monitor address for balance changes.
-pub fn monitor_address_balance(account: AccountGuard, address: &IotaAddress) -> crate::Result<()> {
+pub fn monitor_address_balance(account: AccountHandle, address: &IotaAddress) -> crate::Result<()> {
     let client_options = {
         let account_ = account.read().unwrap();
         account_.client_options().clone()
@@ -101,7 +101,7 @@ pub fn monitor_address_balance(account: AccountGuard, address: &IotaAddress) -> 
 
 async fn process_output(
     payload: String,
-    account: AccountGuard,
+    account: AccountHandle,
     address: IotaAddress,
     client_options: ClientOptions,
 ) -> crate::Result<()> {
@@ -156,7 +156,7 @@ async fn process_output(
 }
 
 /// Monitor the account's unconfirmed messages for confirmation state change.
-pub fn monitor_unconfirmed_messages(account: AccountGuard) -> crate::Result<()> {
+pub fn monitor_unconfirmed_messages(account: AccountHandle) -> crate::Result<()> {
     let account_ = account.read().unwrap();
     for message in account_.list_messages(0, 0, Some(MessageType::Unconfirmed)) {
         monitor_confirmation_state_change(account.clone(), message.id())?;
@@ -165,7 +165,7 @@ pub fn monitor_unconfirmed_messages(account: AccountGuard) -> crate::Result<()> 
 }
 
 /// Monitor message for confirmation state.
-pub fn monitor_confirmation_state_change(account: AccountGuard, message_id: &MessageId) -> crate::Result<()> {
+pub fn monitor_confirmation_state_change(account: AccountHandle, message_id: &MessageId) -> crate::Result<()> {
     let (message, client_options) = {
         let account_ = account.read().unwrap();
         let message = account_
@@ -191,7 +191,7 @@ pub fn monitor_confirmation_state_change(account: AccountGuard, message_id: &Mes
 
 fn process_metadata(
     payload: String,
-    account: AccountGuard,
+    account: AccountHandle,
     message_id: MessageId,
     message: &Message,
 ) -> crate::Result<()> {

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    account::{get_account_addresses_lock, Account, AccountGuard},
+    account::{get_account_addresses_lock, Account, AccountHandle},
     address::{Address, AddressBuilder, AddressOutput, IotaAddress},
     client::get_client,
     message::{Message, RemainderValueStrategy, Transfer},
@@ -292,7 +292,7 @@ async fn perform_sync(mut account: &mut Account, address_index: usize, gap_limit
 
 /// Account sync helper.
 pub struct AccountSynchronizer {
-    account: AccountGuard,
+    account: AccountHandle,
     address_index: usize,
     gap_limit: usize,
     skip_persistance: bool,
@@ -300,7 +300,7 @@ pub struct AccountSynchronizer {
 
 impl AccountSynchronizer {
     /// Initialises a new instance of the sync helper.
-    pub(super) fn new(account: AccountGuard) -> Self {
+    pub(super) fn new(account: AccountHandle) -> Self {
         let address_index = {
             let account_ = account.read().unwrap();
             account_.addresses().len()
@@ -391,7 +391,7 @@ impl AccountSynchronizer {
     }
 }
 
-fn serialize_as_id<S>(x: &AccountGuard, s: S) -> Result<S::Ok, S::Error>
+fn serialize_as_id<S>(x: &AccountHandle, s: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
@@ -405,7 +405,7 @@ pub struct SyncedAccount {
     /// The associated account identifier.
     #[serde(rename = "accountId", serialize_with = "serialize_as_id")]
     #[getset(get = "pub")]
-    account: AccountGuard,
+    account: AccountHandle,
     /// The account's deposit address.
     #[serde(rename = "depositAddress")]
     #[getset(get = "pub")]
@@ -758,7 +758,7 @@ pub(crate) enum RepostAction {
 }
 
 pub(crate) async fn repost_message(
-    account: AccountGuard,
+    account: AccountHandle,
     message_id: &MessageId,
     action: RepostAction,
 ) -> crate::Result<Message> {

@@ -148,7 +148,7 @@ impl AccountInitialiser {
     }
 
     /// Initialises the account.
-    pub fn initialise(self) -> crate::Result<AccountGuard> {
+    pub fn initialise(self) -> crate::Result<AccountHandle> {
         let mut accounts = self.accounts.write().unwrap();
 
         let alias = self.alias.unwrap_or_else(|| format!("Account {}", accounts.len()));
@@ -195,7 +195,7 @@ impl AccountInitialiser {
             account.into()
         } else {
             let account_id = account.id().clone();
-            let guard: AccountGuard = account.into();
+            let guard: AccountHandle = account.into();
             accounts.insert(account_id, guard.clone());
             guard
         };
@@ -252,15 +252,15 @@ pub struct Account {
 
 /// A thread guard over an account.
 #[derive(Debug, Clone)]
-pub struct AccountGuard(Arc<RwLock<Account>>);
+pub struct AccountHandle(Arc<RwLock<Account>>);
 
-impl From<Account> for AccountGuard {
+impl From<Account> for AccountHandle {
     fn from(account: Account) -> Self {
         Self(Arc::new(RwLock::new(account)))
     }
 }
 
-impl Deref for AccountGuard {
+impl Deref for AccountHandle {
     type Target = RwLock<Account>;
     fn deref(&self) -> &Self::Target {
         &self.0.deref()
@@ -282,7 +282,7 @@ macro_rules! guard_field_getters {
 }
 
 guard_field_getters!(
-    AccountGuard,
+    AccountHandle,
     #[doc = "Bridge to [Account#id](struct.Account.html#method.id)."] => id => AccountIdentifier,
     #[doc = "Bridge to [Account#signer_type](struct.Account.html#method.signer_type)."] => signer_type => SignerType,
     #[doc = "Bridge to [Account#index](struct.Account.html#method.index)."] => index => usize,
@@ -295,7 +295,7 @@ guard_field_getters!(
     #[doc = "Bridge to [Account#client_options](struct.Account.html#method.client_options)."] => client_options => ClientOptions
 );
 
-impl AccountGuard {
+impl AccountHandle {
     /// Returns the builder to setup the process to synchronize this account with the Tangle.
     pub fn sync(&self) -> AccountSynchronizer {
         AccountSynchronizer::new(self.clone())

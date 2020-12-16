@@ -10,7 +10,7 @@ use std::{
 
 use futures::{Future, FutureExt};
 use iota_wallet::{
-    account::{AccountGuard, AccountIdentifier, SyncedAccount},
+    account::{AccountHandle, AccountIdentifier, SyncedAccount},
     WalletError,
 };
 use neon::prelude::*;
@@ -21,9 +21,9 @@ use tokio::runtime::Runtime;
 mod classes;
 use classes::*;
 
-type AccountInstanceMap = Arc<RwLock<HashMap<AccountIdentifier, AccountGuard>>>;
-type SyncedAccountGuard = Arc<RwLock<SyncedAccount>>;
-type SyncedAccountInstanceMap = Arc<RwLock<HashMap<String, SyncedAccountGuard>>>;
+type AccountInstanceMap = Arc<RwLock<HashMap<AccountIdentifier, AccountHandle>>>;
+type SyncedAccountHandle = Arc<RwLock<SyncedAccount>>;
+type SyncedAccountInstanceMap = Arc<RwLock<HashMap<String, SyncedAccountHandle>>>;
 
 /// Gets the account instances map.
 fn account_instances() -> &'static AccountInstanceMap {
@@ -31,14 +31,14 @@ fn account_instances() -> &'static AccountInstanceMap {
     &INSTANCES
 }
 
-pub(crate) fn get_account(id: &AccountIdentifier) -> AccountGuard {
+pub(crate) fn get_account(id: &AccountIdentifier) -> AccountHandle {
     let map = account_instances()
         .read()
         .expect("failed to lock account instances: get_account()");
     map.get(id).expect("account dropped or not initialised").clone()
 }
 
-pub(crate) fn store_account(account: AccountGuard) -> AccountIdentifier {
+pub(crate) fn store_account(account: AccountHandle) -> AccountIdentifier {
     let mut map = account_instances()
         .write()
         .expect("failed to lock account instances: store_account()");
@@ -63,7 +63,7 @@ fn synced_account_instances() -> &'static SyncedAccountInstanceMap {
     &INSTANCES
 }
 
-pub(crate) fn get_synced_account(id: &str) -> SyncedAccountGuard {
+pub(crate) fn get_synced_account(id: &str) -> SyncedAccountHandle {
     let map = synced_account_instances()
         .read()
         .expect("failed to lock synced account instances: get_synced_account()");
