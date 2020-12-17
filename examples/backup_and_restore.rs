@@ -17,11 +17,11 @@ async fn main() -> iota_wallet::Result<()> {
     let backup_path = manager.backup("./backup")?;
 
     // delete the account on the current storage
-    manager.remove_account(id.into())?;
+    manager.remove_account(&id)?;
 
     // import the accounts from the backup and assert that it's the same
     manager.import_accounts(backup_path)?;
-    let imported_account = manager.get_account(id.into())?;
+    let imported_account = manager.get_account(id)?;
     assert_eq!(account, imported_account);
 
     Ok(())

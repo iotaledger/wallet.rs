@@ -14,11 +14,12 @@ use once_cell::sync::OnceCell;
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
-    sync::{Arc, RwLock},
+    sync::{Arc, Mutex, RwLock},
 };
 
 type Storage = Box<dyn StorageAdapter + Sync + Send>;
 type Storages = Arc<RwLock<HashMap<PathBuf, Storage>>>;
+type AccountReadLockMap = HashMap<AccountIdentifier, Arc<Mutex<()>>>;
 static INSTANCES: OnceCell<Storages> = OnceCell::new();
 
 /// Sets the storage adapter.
@@ -44,13 +45,13 @@ pub(crate) fn with_adapter<T, F: FnOnce(&Storage) -> T>(storage_path: &PathBuf, 
 /// The storage adapter.
 pub trait StorageAdapter {
     /// Gets the account with the given id/alias from the storage.
-    fn get(&self, account_id: AccountIdentifier) -> crate::Result<String>;
+    fn get(&self, account_id: &AccountIdentifier) -> crate::Result<String>;
     /// Gets all the accounts from the storage.
     fn get_all(&self) -> crate::Result<Vec<String>>;
     /// Saves or updates an account on the storage.
-    fn set(&self, account_id: AccountIdentifier, account: String) -> crate::Result<()>;
+    fn set(&self, account_id: &AccountIdentifier, account: String) -> crate::Result<()>;
     /// Removes an account from the storage.
-    fn remove(&self, account_id: AccountIdentifier) -> crate::Result<()>;
+    fn remove(&self, account_id: &AccountIdentifier) -> crate::Result<()>;
 }
 
 pub(crate) fn parse_accounts(storage_path: &PathBuf, accounts: &[String]) -> crate::Result<Vec<Account>> {
@@ -77,9 +78,35 @@ pub(crate) fn parse_accounts(storage_path: &PathBuf, accounts: &[String]) -> cra
     }
 }
 
-pub(crate) fn get_account(storage_path: &PathBuf, account_id: AccountIdentifier) -> crate::Result<Account> {
+pub(crate) fn get_account(storage_path: &PathBuf, account_id: &AccountIdentifier) -> crate::Result<Account> {
     let account_str = with_adapter(&storage_path, |storage| storage.get(account_id))?;
     let mut account: Account = serde_json::from_str(&account_str)?;
     account.set_storage_path(storage_path.clone());
     Ok(account)
+}
+
+pub(crate) fn save_account(storage_path: &PathBuf, account: &mut Account) -> crate::Result<()> {
+    with_adapter(&storage_path, |storage| {
+        if let Ok(current) = storage.get(account.id()) {
+            let current: crate::account::Account = serde_json::from_str(&current)?;
+            account.append_messages(
+                current
+                    .messages()
+                    .iter()
+                    .cloned()
+                    .filter(|m| !account.messages().contains(m))
+                    .collect(),
+            );
+            account.append_addresses(
+                current
+                    .addresses()
+                    .iter()
+                    .cloned()
+                    .filter(|m| !account.addresses().contains(m))
+                    .collect(),
+            );
+        }
+        storage.set(account.id(), serde_json::to_string(&account)?)
+    })?;
+    Ok(())
 }

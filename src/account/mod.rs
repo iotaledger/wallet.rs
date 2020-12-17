@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    address::Address,
+    address::{Address, IotaAddress},
     client::ClientOptions,
     message::{Message, MessageType},
     signing::{with_signer, SignerType},
@@ -11,25 +11,43 @@ use crate::{
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
 use iota::message::prelude::MessageId;
+use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 
-use std::path::PathBuf;
+use std::{
+    collections::HashMap,
+    convert::TryInto,
+    path::PathBuf,
+    sync::{Arc, Mutex},
+};
 
 mod sync;
 pub(crate) use sync::{repost_message, RepostAction};
 pub use sync::{AccountSynchronizer, SyncedAccount, TransferMetadata};
 
+type AddressesLock = Arc<Mutex<Vec<IotaAddress>>>;
+type AccountAddressesLock = Arc<Mutex<HashMap<AccountIdentifier, AddressesLock>>>;
+static ACCOUNT_ADDRESSES_LOCK: OnceCell<AccountAddressesLock> = OnceCell::new();
+
+pub(crate) fn get_account_addresses_lock(account_id: &AccountIdentifier) -> AddressesLock {
+    let mut locks = ACCOUNT_ADDRESSES_LOCK.get_or_init(Default::default).lock().unwrap();
+    if !locks.contains_key(&account_id) {
+        locks.insert(account_id.clone(), Default::default());
+    }
+    locks.get(&account_id).unwrap().clone()
+}
+
 /// The account identifier.
 #[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
 #[serde(untagged)]
 pub enum AccountIdentifier {
-    /// A hex string of the stronghold record id identifier.
+    /// A string identifier.
     Id(String),
     /// An index identifier.
-    Index(u64),
+    Index(usize),
 }
 
-// When the identifier is a stronghold id.
+// When the identifier is a string id.
 impl From<&String> for AccountIdentifier {
     fn from(value: &String) -> Self {
         Self::Id(value.clone())
@@ -42,9 +60,9 @@ impl From<String> for AccountIdentifier {
     }
 }
 
-// When the identifier is an id.
-impl From<u64> for AccountIdentifier {
-    fn from(value: u64) -> Self {
+// When the identifier is an index.
+impl From<usize> for AccountIdentifier {
+    fn from(value: usize) -> Self {
         Self::Index(value)
     }
 }
@@ -133,6 +151,17 @@ impl<'a> AccountInitialiser<'a> {
             .signer_type
             .ok_or_else(|| anyhow::anyhow!("account type is required"))?;
         let created_at = self.created_at.unwrap_or_else(chrono::Utc::now);
+        let mut mnemonic = self.mnemonic;
+        if signer_type == SignerType::EnvMnemonic && accounts.is_empty() {
+            let _ = dotenv::dotenv();
+            if std::env::var("IOTA_WALLET_MNEMONIC").is_err() {
+                mnemonic = Some(
+                    bip39::Mnemonic::new(bip39::MnemonicType::Words24, bip39::Language::English)
+                        .phrase()
+                        .to_string(),
+                );
+            }
+        }
 
         // check for empty latest account only when not skipping persistance (account discovery process)
         if !self.skip_persistance {
@@ -145,7 +174,7 @@ impl<'a> AccountInitialiser<'a> {
         }
 
         let mut account = Account {
-            id: "".to_string(), // TODO AccountIdentifier::Index(accounts.len()),
+            id: AccountIdentifier::Index(accounts.len()),
             signer_type: signer_type.clone(),
             index: accounts.len(),
             alias,
@@ -159,14 +188,10 @@ impl<'a> AccountInitialiser<'a> {
 
         let mnemonic = self.mnemonic;
         let id = with_signer(&signer_type, |signer| signer.init_account(&account, mnemonic))?;
-        account.set_id(id.clone());
-
-        let account_id: AccountIdentifier = id.into();
+        account.set_id(id.into());
 
         if !self.skip_persistance {
-            crate::storage::with_adapter(&self.storage_path, |storage| {
-                storage.set(account_id, serde_json::to_string(&account)?)
-            })?;
+            account.save()?;
         }
         Ok(account)
     }
@@ -178,8 +203,8 @@ impl<'a> AccountInitialiser<'a> {
 pub struct Account {
     /// The account identifier.
     #[getset(set = "pub(crate)")]
-    id: String,
-    /// The account type.
+    id: AccountIdentifier,
+    /// The account's signer type.
     signer_type: SignerType,
     /// The account index
     index: usize,
@@ -233,15 +258,9 @@ impl Account {
     /// For example, if a user with 50i total account balance has made a transaction spending 20i,
     /// the available balance should be (50i-30i) = 20i.
     pub fn available_balance(&self) -> u64 {
-        let total_balance = self.total_balance();
-        let spent = self
-            .list_messages(0, 0, Some(MessageType::Sent))
+        self.addresses()
             .iter()
-            .fold(0, |acc, message| {
-                let val = if *message.confirmed() { 0 } else { *message.value() };
-                acc + val
-            });
-        total_balance - (spent as u64)
+            .fold(0, |acc, addr| acc + addr.available_balance(&self))
     }
 
     /// Updates the account alias.
@@ -266,12 +285,15 @@ impl Account {
     /// This is automatically performed when the account goes out of scope.
     pub fn save_pending_changes(&mut self) -> crate::Result<()> {
         if self.has_pending_changes {
-            crate::storage::with_adapter(&self.storage_path, |storage| {
-                storage.set(self.id.clone().into(), serde_json::to_string(&self)?)
-            })?;
+            self.save()?;
             self.has_pending_changes = false;
         }
         Ok(())
+    }
+
+    pub(crate) fn save(&mut self) -> crate::Result<()> {
+        let storage_path = self.storage_path.clone();
+        crate::storage::save_account(&storage_path, self)
     }
 
     /// Gets a list of transactions on this account.
@@ -311,7 +333,7 @@ impl Account {
             if let Some(original_message_index) = messages.iter().position(|m| m.payload() == message.payload()) {
                 let original_message = messages[original_message_index];
                 // if the original message was confirmed, we ignore this reattachment
-                if *original_message.confirmed() {
+                if original_message.confirmed().unwrap_or(false) {
                     continue;
                 } else {
                     // remove the original message otherwise
@@ -323,7 +345,7 @@ impl Account {
                     MessageType::Received => *message.incoming(),
                     MessageType::Sent => !message.incoming(),
                     MessageType::Failed => !message.broadcasted(),
-                    MessageType::Unconfirmed => !message.confirmed(),
+                    MessageType::Unconfirmed => !message.confirmed().unwrap_or(false),
                     MessageType::Value => *message.value() > 0,
                 }
             } else {
@@ -356,10 +378,7 @@ impl Account {
         let address = crate::address::get_new_address(&self)?;
         self.addresses.push(address.clone());
 
-        let id: AccountIdentifier = self.id.clone().into();
-        crate::storage::with_adapter(&self.storage_path, |storage| {
-            storage.set(id, serde_json::to_string(self)?)
-        })?;
+        self.save()?;
 
         // ignore errors because we fallback to the polling system
         let _ = crate::monitor::monitor_address_balance(&self, address.address());
@@ -368,7 +387,7 @@ impl Account {
 
     #[doc(hidden)]
     pub fn append_messages(&mut self, messages: Vec<Message>) {
-        self.messages.extend(messages.iter().cloned());
+        self.messages.extend(messages);
     }
 
     pub(crate) fn append_addresses(&mut self, addresses: Vec<Address>) {
@@ -384,8 +403,14 @@ impl Account {
             });
     }
 
-    pub(crate) fn addresses_mut(&mut self) -> &mut Vec<Address> {
+    #[doc(hidden)]
+    pub fn addresses_mut(&mut self) -> &mut Vec<Address> {
         &mut self.addresses
+    }
+
+    #[doc(hidden)]
+    pub fn messages_mut(&mut self) -> &mut Vec<Message> {
+        &mut self.messages
     }
 
     /// Gets a message with the given id associated with this account.
@@ -441,11 +466,11 @@ mod tests {
                 .expect("failed to add account");
 
                 account.set_alias(updated_alias);
-                account.id().into()
+                account.id().clone()
             };
 
             let account_in_storage = manager
-                .get_account(account_id)
+                .get_account(&account_id)
                 .expect("failed to get account from storage");
             assert_eq!(
                 account_in_storage.alias().to_string(),

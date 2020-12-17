@@ -92,16 +92,21 @@ impl AccountManager {
         Ok(())
     }
 
-    /// Sets the stronghold password.
-    #[cfg(feature = "stronghold")]
-    pub async fn set_stronghold_password<P: AsRef<str>>(&mut self, password: P) -> crate::Result<()> {
-        let stronghold_path = self.storage_path.join(crate::storage::stronghold_snapshot_filename());
-        crate::stronghold::load_or_create(&self.storage_path, password.as_ref()).await?;
+    /// Initialises the background polling and MQTT monitoring.
+    pub fn start_background_sync(&mut self) {
         if !self.started_monitoring {
             let monitoring_disabled = self.start_monitoring().is_err();
             self.start_polling(monitoring_disabled);
             self.started_monitoring = true;
         }
+    }
+
+    /// Sets the stronghold password.
+    #[cfg(feature = "stronghold")]
+    pub async fn set_stronghold_password<P: AsRef<str>>(&mut self, password: P) -> crate::Result<()> {
+        let stronghold_path = self.storage_path.join(crate::storage::stronghold_snapshot_filename());
+        crate::stronghold::load_or_create(&self.storage_path, password.as_ref()).await?;
+        self.start_background_sync();
         Ok(())
     }
 
@@ -139,26 +144,28 @@ impl AccountManager {
     }
 
     /// Deletes an account.
-    pub fn remove_account(&self, account_id: AccountIdentifier) -> crate::Result<()> {
-        let account_str = crate::storage::with_adapter(&self.storage_path, |storage| storage.get(account_id.clone()))?;
+    pub fn remove_account(&self, account_id: &AccountIdentifier) -> crate::Result<()> {
+        let account_str = crate::storage::with_adapter(&self.storage_path, |storage| storage.get(&account_id))?;
         let account: Account = serde_json::from_str(&account_str)?;
         if !(account.messages().is_empty() && account.total_balance() == 0) {
             return Err(crate::WalletError::MessageNotEmpty);
         }
-        crate::storage::with_adapter(&self.storage_path, |storage| storage.remove(account_id))?;
+        crate::storage::with_adapter(&self.storage_path, |storage| storage.remove(&account_id))?;
         Ok(())
     }
 
     /// Syncs all accounts.
     pub async fn sync_accounts(&self) -> crate::Result<Vec<SyncedAccount>> {
-        sync_accounts(&self.storage_path, None).await
+        let accounts = crate::storage::with_adapter(&self.storage_path, |storage| storage.get_all())?;
+        let mut accounts = crate::storage::parse_accounts(&self.storage_path, &accounts)?;
+        sync_accounts(&self.storage_path, None, &mut accounts).await
     }
 
     /// Transfers an amount from an account to another.
     pub async fn internal_transfer(
         &self,
-        from_account_id: AccountIdentifier,
-        to_account_id: AccountIdentifier,
+        from_account_id: &AccountIdentifier,
+        to_account_id: &AccountIdentifier,
         amount: u64,
     ) -> crate::Result<InternalTransferMetadata> {
         let mut from_account = self.get_account(from_account_id)?;
@@ -210,8 +217,8 @@ impl AccountManager {
     }
 
     /// Gets the account associated with the given identifier.
-    pub fn get_account(&self, account_id: AccountIdentifier) -> crate::Result<Account> {
-        let mut account = crate::storage::get_account(&self.storage_path, account_id)?;
+    pub fn get_account(&self, account_id: &AccountIdentifier) -> crate::Result<Account> {
+        let mut account = crate::storage::get_account(&self.storage_path, &account_id)?;
         account.set_storage_path(self.storage_path.clone());
         Ok(account)
     }
@@ -234,19 +241,19 @@ impl AccountManager {
     }
 
     /// Reattaches an unconfirmed transaction.
-    pub async fn reattach(&self, account_id: AccountIdentifier, message_id: &MessageId) -> crate::Result<Message> {
+    pub async fn reattach(&self, account_id: &AccountIdentifier, message_id: &MessageId) -> crate::Result<Message> {
         let mut account = self.get_account(account_id)?;
         account.sync().execute().await?.reattach(message_id).await
     }
 
     /// Promotes an unconfirmed transaction.
-    pub async fn promote(&self, account_id: AccountIdentifier, message_id: &MessageId) -> crate::Result<Message> {
+    pub async fn promote(&self, account_id: &AccountIdentifier, message_id: &MessageId) -> crate::Result<Message> {
         let mut account = self.get_account(account_id)?;
         account.sync().execute().await?.promote(message_id).await
     }
 
     /// Retries an unconfirmed transaction.
-    pub async fn retry(&self, account_id: AccountIdentifier, message_id: &MessageId) -> crate::Result<Message> {
+    pub async fn retry(&self, account_id: &AccountIdentifier, message_id: &MessageId) -> crate::Result<Message> {
         let mut account = self.get_account(account_id)?;
         account.sync().execute().await?.retry(message_id).await
     }
@@ -255,15 +262,15 @@ impl AccountManager {
 async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
     let retried = if syncing {
         let accounts_before_sync = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
-        let accounts_before_sync = crate::storage::parse_accounts(&storage_path, &accounts_before_sync)?;
-        let synced_accounts = sync_accounts(&storage_path, Some(0)).await?;
+        let mut accounts_before_sync = crate::storage::parse_accounts(&storage_path, &accounts_before_sync)?;
+        let synced_accounts = sync_accounts(&storage_path, Some(0), &mut accounts_before_sync).await?;
         let accounts_after_sync = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
-        let accounts_after_sync = crate::storage::parse_accounts(&storage_path, &accounts_after_sync)?;
+        let mut accounts_after_sync = crate::storage::parse_accounts(&storage_path, &accounts_after_sync)?;
 
         // compare accounts to check for balance changes and new messages
         for account_before_sync in &accounts_before_sync {
             let account_after_sync = accounts_after_sync
-                .iter()
+                .iter_mut()
                 .find(|account| account.id() == account_before_sync.id())
                 .unwrap();
 
@@ -276,7 +283,7 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
                     .unwrap();
                 if address_after_sync.balance() != address_before_sync.balance() {
                     emit_balance_change(
-                        account_after_sync.id().clone(),
+                        account_after_sync.id(),
                         address_after_sync,
                         *address_after_sync.balance(),
                     );
@@ -289,23 +296,19 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
                 .iter()
                 .filter(|message| !account_before_sync.messages().contains(message))
                 .for_each(|message| {
-                    emit_transaction_event(
-                        TransactionEventType::NewTransaction,
-                        account_after_sync.id().clone(),
-                        &message,
-                    )
+                    emit_transaction_event(TransactionEventType::NewTransaction, account_after_sync.id(), &message)
                 });
 
             // confirmation state change event
-            account_after_sync.messages().iter().for_each(|message| {
+            for message in account_after_sync.messages() {
                 let changed = match account_before_sync.messages().iter().find(|m| m.id() == message.id()) {
                     Some(old_message) => message.confirmed() != old_message.confirmed(),
                     None => false,
                 };
                 if changed {
-                    emit_confirmation_state_change(account_after_sync.id().clone(), &message, true);
+                    emit_confirmation_state_change(account_after_sync.id(), &message, true);
                 }
-            });
+            }
         }
         retry_unconfirmed_transactions(synced_accounts.iter().zip(accounts_after_sync.iter()).collect()).await?
     } else {
@@ -319,13 +322,14 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
             let mut reattachments = vec![];
             for message in unconfirmed_messages {
                 let new_message =
-                    repost_message(account.id().into(), &storage_path, message.id(), RepostAction::Retry).await?;
+                    repost_message(account.id(), &storage_path, message.id(), RepostAction::Retry).await?;
                 if new_message.payload() == message.payload() {
                     reattachments.push(new_message);
                 } else {
                     promotions.push(new_message);
                 }
             }
+
             retried_messages.push(RetriedData {
                 promoted: promotions,
                 reattached: reattachments,
@@ -338,11 +342,7 @@ async fn poll(storage_path: PathBuf, syncing: bool) -> crate::Result<()> {
 
     retried.iter().for_each(|retried_data| {
         retried_data.reattached.iter().for_each(|message| {
-            emit_transaction_event(
-                TransactionEventType::Reattachment,
-                retried_data.account_id.clone(),
-                &message,
-            );
+            emit_transaction_event(TransactionEventType::Reattachment, &retried_data.account_id, &message);
         });
     });
     Ok(())
@@ -398,21 +398,20 @@ async fn discover_accounts(
             break;
         } else {
             synced_accounts.push(synced_account);
-            crate::storage::with_adapter(&storage_path, |storage| {
-                storage.set(account.id().into(), serde_json::to_string(&account)?)
-            })?;
+            account.save()?;
         }
     }
     Ok(synced_accounts)
 }
 
-async fn sync_accounts<'a>(storage_path: &PathBuf, address_index: Option<usize>) -> crate::Result<Vec<SyncedAccount>> {
-    let accounts = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
+async fn sync_accounts<'a>(
+    storage_path: &PathBuf,
+    address_index: Option<usize>,
+    accounts: &mut Vec<Account>,
+) -> crate::Result<Vec<SyncedAccount>> {
     let mut synced_accounts = vec![];
     let mut last_account = None;
-    for account_str in accounts {
-        let mut account: Account = serde_json::from_str(&account_str)?;
-        account.set_storage_path(storage_path.clone());
+    for account in accounts {
         let mut sync = account.sync();
         if let Some(index) = address_index {
             sync = sync.address_index(index);
@@ -447,7 +446,7 @@ async fn sync_accounts<'a>(storage_path: &PathBuf, address_index: Option<usize>)
 struct RetriedData {
     promoted: Vec<Message>,
     reattached: Vec<Message>,
-    account_id: String,
+    account_id: AccountIdentifier,
 }
 
 async fn retry_unconfirmed_transactions(accounts: Vec<(&SyncedAccount, &Account)>) -> crate::Result<Vec<RetriedData>> {
@@ -515,7 +514,7 @@ mod tests {
         client::ClientOptionsBuilder,
         message::Message,
     };
-    use iota::message::prelude::{Ed25519Address, Indexation, MessageBuilder, MessageId, Payload};
+    use iota::message::prelude::{Ed25519Address, Indexation, Message as IotaMessage, MessageId, Payload};
     use rusty_fork::rusty_fork_test;
 
     rusty_fork_test! {
@@ -534,7 +533,7 @@ mod tests {
                 .expect("failed to add account");
 
             manager
-                .remove_account(account.id().into())
+                .remove_account(account.id())
                 .expect("failed to remove account");
         }
     }
@@ -550,7 +549,7 @@ mod tests {
 
             let account = manager
                 .create_account(client_options)
-                .messages(vec![Message::from_iota_message(MessageId::new([0; 32]), &[], &MessageBuilder::new()
+                .messages(vec![Message::from_iota_message(MessageId::new([0; 32]), &[], &IotaMessage::builder()
                     .with_parent1(MessageId::new([0; 32]))
                     .with_parent2(MessageId::new([0; 32]))
                     .with_payload(Payload::Indexation(Box::new(Indexation::new(
@@ -559,10 +558,10 @@ mod tests {
                     ).unwrap())))
                     .with_network_id(0)
                     .finish()
-                    .unwrap()).unwrap()])
+                    .unwrap(), None).unwrap()])
                 .initialise().unwrap();
 
-            let remove_response = manager.remove_account(account.id().into());
+            let remove_response = manager.remove_account(account.id());
             assert!(remove_response.is_err());
         }
     }
@@ -588,7 +587,7 @@ mod tests {
                 .initialise()
                 .unwrap();
 
-            let remove_response = manager.remove_account(account.id().into());
+            let remove_response = manager.remove_account(account.id());
             assert!(remove_response.is_err());
         }
     }

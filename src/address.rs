@@ -4,7 +4,7 @@
 use crate::{account::Account, message::MessageType};
 use bech32::FromBase32;
 use getset::{Getters, Setters};
-pub use iota::message::prelude::{Address as IotaAddress, Ed25519Address};
+pub use iota::message::prelude::{Address as IotaAddress, Ed25519Address, Input, Payload, UTXOInput};
 use iota::{
     message::prelude::{MessageId, TransactionId},
     OutputMetadata,
@@ -17,7 +17,7 @@ use std::{
 };
 
 /// An Address output.
-#[derive(Debug, Getters, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Getters, Setters, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct AddressOutput {
     /// Transaction ID of the output
@@ -28,8 +28,32 @@ pub struct AddressOutput {
     index: u16,
     /// Output amount.
     amount: u64,
-    /// Spend status of the output.
+    /// Spend status of the output,
     is_spent: bool,
+}
+
+impl AddressOutput {
+    /// Checks if the output is referenced on a pending message or a confirmed message
+    pub(crate) fn is_used(&self, account: &Account) -> bool {
+        let output_id = UTXOInput::new(self.transaction_id, self.index).unwrap();
+        account.list_messages(0, 0, None).iter().any(|m| {
+            // message is pending or confirmed
+            if m.confirmed().unwrap_or(true) {
+                match m.payload() {
+                    Payload::Transaction(tx) => tx.essence().inputs().iter().any(|input| {
+                        if let Input::UTXO(x) = input {
+                            x == &output_id
+                        } else {
+                            false
+                        }
+                    }),
+                    _ => false,
+                }
+            } else {
+                false
+            }
+        })
+    }
 }
 
 impl TryFrom<OutputMetadata> for AddressOutput {
@@ -140,7 +164,7 @@ pub struct Address {
     internal: bool,
     /// The address outputs.
     #[getset(set = "pub(crate)")]
-    outputs: Vec<AddressOutput>,
+    pub(crate) outputs: Vec<AddressOutput>,
 }
 
 impl PartialOrd for Address {
@@ -185,6 +209,21 @@ impl Address {
                 self.outputs.push(output);
             }
         }
+    }
+
+    pub(crate) fn outputs_mut(&mut self) -> &mut Vec<AddressOutput> {
+        &mut self.outputs
+    }
+
+    /// Gets the list of outputs that aren't spent or pending.
+    pub fn available_outputs(&self, account: &Account) -> Vec<&AddressOutput> {
+        self.outputs.iter().filter(|o| !o.is_used(account)).collect()
+    }
+
+    pub(crate) fn available_balance(&self, account: &Account) -> u64 {
+        self.available_outputs(account)
+            .iter()
+            .fold(0, |acc, o| acc + *o.amount())
     }
 }
 

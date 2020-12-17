@@ -2,23 +2,35 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    account::{Account, AccountIdentifier},
+    account::{get_account_addresses_lock, Account, AccountIdentifier},
     address::{Address, AddressBuilder, AddressOutput, IotaAddress},
     client::get_client,
     message::{Message, RemainderValueStrategy, Transfer},
 };
 
 use getset::Getters;
-use iota::message::prelude::{
-    Input, Message as IotaMessage, MessageId, Payload, SignatureLockedSingleOutput, Transaction, TransactionEssence,
-    TransactionId, UTXOInput,
+use iota::{
+    message::prelude::{
+        Input, Message as IotaMessage, MessageBuilder, MessageId, Payload, SignatureLockedSingleOutput, Transaction,
+        TransactionEssence, UTXOInput,
+    },
+    ClientMiner,
 };
 use serde::{Deserialize, Serialize};
 use slip10::BIP32Path;
 
-use std::{convert::TryInto, num::NonZeroU64, path::PathBuf};
+use std::{
+    convert::TryInto,
+    num::NonZeroU64,
+    path::PathBuf,
+    sync::{mpsc::channel, Arc, Mutex, MutexGuard},
+    thread,
+    time::Duration,
+};
 
 mod input_selection;
+
+const OUTPUT_LOCK_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// Syncs addresses with the tangle.
 /// The method ensures that the wallet local state has all used addresses plus an unused address.
@@ -41,11 +53,8 @@ async fn sync_addresses(
     account: &'_ Account,
     address_index: usize,
     gap_limit: usize,
-) -> crate::Result<(Vec<Address>, Vec<(MessageId, IotaMessage)>)> {
+) -> crate::Result<(Vec<Address>, Vec<(MessageId, Option<bool>, IotaMessage)>)> {
     let mut address_index = address_index;
-
-    let client = crate::client::get_client(account.client_options());
-    let client = client.read().unwrap();
 
     let mut generated_addresses = vec![];
     let mut found_messages = vec![];
@@ -60,48 +69,59 @@ async fn sync_addresses(
         let mut curr_generated_addresses = vec![];
         let mut curr_found_messages = vec![];
 
+        let mut futures_ = vec![];
         for (iota_address_index, iota_address_internal, iota_address) in &generated_iota_addresses {
-            let address_outputs = client.get_address().outputs(&iota_address).await?;
-            let balance = client.get_address().balance(&iota_address).await?;
+            futures_.push(async move {
+                let client = crate::client::get_client(account.client_options());
+                let client = client.read().unwrap();
 
-            let mut curr_found_outputs: Vec<AddressOutput> = vec![];
-            for output in address_outputs.iter() {
-                let output = client.get_output(output).await?;
-                if let Ok(message) = client
-                    .get_message()
-                    .data(&MessageId::new(
+                let address_outputs = client.get_address().outputs(&iota_address).await?;
+                let balance = client.get_address().balance(&iota_address).await?;
+                let mut curr_found_messages = vec![];
+
+                let mut curr_found_outputs: Vec<AddressOutput> = vec![];
+                for output in address_outputs.iter() {
+                    let output = client.get_output(output).await?;
+                    let message_id = MessageId::new(
                         output.message_id[..]
                             .try_into()
                             .map_err(|_| crate::WalletError::InvalidMessageIdLength)?,
-                    ))
-                    .await
-                {
-                    curr_found_messages.push((
-                        MessageId::new(
-                            output.message_id[..]
-                                .try_into()
-                                .map_err(|_| crate::WalletError::InvalidMessageIdLength)?,
-                        ),
-                        message,
-                    ));
+                    );
+                    if let Ok(message) = client.get_message().data(&message_id).await {
+                        let metadata = client.get_message().metadata(&message_id).await?;
+                        curr_found_messages.push((
+                            message_id,
+                            metadata.ledger_inclusion_state.map(|l| l == "included"),
+                            message,
+                        ));
+                    }
+                    curr_found_outputs.push(output.try_into()?);
                 }
-                curr_found_outputs.push(output.try_into()?);
+
+                // ignore unused change addresses
+                if *iota_address_internal && curr_found_outputs.is_empty() {
+                    return crate::Result::Ok((curr_found_messages, None));
+                }
+
+                let address = AddressBuilder::new()
+                    .address(iota_address.clone())
+                    .key_index(*iota_address_index)
+                    .balance(balance)
+                    .outputs(curr_found_outputs)
+                    .internal(*iota_address_internal)
+                    .build()?;
+
+                crate::Result::Ok((curr_found_messages, Some(address)))
+            });
+        }
+
+        let results = futures::future::join_all(futures_).await;
+        for result in results {
+            let (found_messages, address_opt) = result?;
+            if let Some(address) = address_opt {
+                curr_generated_addresses.push(address);
             }
-
-            // ignore unused change addresses
-            if *iota_address_internal && curr_found_outputs.is_empty() {
-                continue;
-            }
-
-            let address = AddressBuilder::new()
-                .address(iota_address.clone())
-                .key_index(*iota_address_index)
-                .balance(balance)
-                .outputs(curr_found_outputs)
-                .internal(*iota_address_internal)
-                .build()?;
-
-            curr_generated_addresses.push(address);
+            curr_found_messages.extend(found_messages);
         }
 
         address_index += gap_limit;
@@ -127,57 +147,83 @@ async fn sync_addresses(
 async fn sync_messages(
     account: &mut Account,
     stop_at_address_index: usize,
-) -> crate::Result<Vec<(MessageId, IotaMessage)>> {
+) -> crate::Result<Vec<(MessageId, Option<bool>, IotaMessage)>> {
     let mut messages = vec![];
-    let client = crate::client::get_client(account.client_options());
-    let client = client.read().unwrap();
+    let client_options = account.client_options().clone();
 
-    for address in account.addresses_mut().iter_mut().take(stop_at_address_index) {
-        let address_outputs = client.get_address().outputs(address.address()).await?;
-        let balance = client.get_address().balance(address.address()).await?;
-        let mut outputs = vec![];
-        for output in address_outputs.iter() {
-            let output = client.get_output(output).await?;
-            let output: AddressOutput = output.try_into()?;
+    let futures_ = account
+        .addresses_mut()
+        .iter_mut()
+        .take(stop_at_address_index)
+        .map(|address| {
+            let client_options = client_options.clone();
+            async move {
+                let client = crate::client::get_client(&client_options);
+                let client = client.read().unwrap();
 
-            if let Ok(message) = client.get_message().data(output.message_id()).await {
-                messages.push((*output.message_id(), message));
+                let address_outputs = client.get_address().outputs(address.address()).await?;
+                let balance = client.get_address().balance(address.address()).await?;
+
+                let mut outputs = vec![];
+                let mut messages = vec![];
+                for output in address_outputs.iter() {
+                    let output = client.get_output(output).await?;
+                    let output: AddressOutput = output.try_into()?;
+
+                    if let Ok(message) = client.get_message().data(output.message_id()).await {
+                        let metadata = client.get_message().metadata(output.message_id()).await?;
+                        messages.push((
+                            *output.message_id(),
+                            metadata.ledger_inclusion_state.map(|l| l == "included"),
+                            message,
+                        ));
+                    }
+
+                    outputs.push(output);
+                }
+
+                address.set_outputs(outputs);
+                address.set_balance(balance);
+
+                crate::Result::Ok(messages)
             }
+        });
 
-            outputs.push(output);
-        }
-
-        address.set_outputs(outputs);
-        address.set_balance(balance);
+    for res in futures::future::join_all(futures_).await {
+        messages.extend(res?);
     }
 
     Ok(messages)
 }
 
 async fn update_account_messages<'a>(
-    account: &'a Account,
-    new_messages: &'a [(MessageId, IotaMessage)],
+    account: &'a mut Account,
+    new_messages: &'a [(MessageId, Option<bool>, IotaMessage)],
 ) -> crate::Result<()> {
-    let mut messages: Vec<Message> = account.messages().to_vec();
+    let client = get_client(account.client_options());
+    let messages = account.messages_mut();
 
     // sync `broadcasted` state
     messages
         .iter_mut()
-        .filter(|message| !message.broadcasted() && new_messages.iter().any(|(id, _)| id == message.id()))
+        .filter(|message| !message.broadcasted() && new_messages.iter().any(|(id, _, _)| id == message.id()))
         .for_each(|message| {
             message.set_broadcasted(true);
         });
 
     // sync `confirmed` state
-    let mut unconfirmed_messages: Vec<&mut Message> =
-        messages.iter_mut().filter(|message| !message.confirmed()).collect();
-    let client = get_client(account.client_options());
+    let mut unconfirmed_messages: Vec<&mut Message> = messages
+        .iter_mut()
+        .filter(|message| message.confirmed().is_none())
+        .collect();
+
     let client = client.read().unwrap();
+
     for message in unconfirmed_messages.iter_mut() {
         let metadata = client.get_message().metadata(message.id()).await?;
-        let confirmed = !(metadata.should_promote.unwrap_or(true) || metadata.should_reattach.unwrap_or(true));
-        if confirmed {
-            message.set_confirmed(true);
+        if let Some(inclusion_state) = metadata.ledger_inclusion_state {
+            let confirmed = inclusion_state == "included";
+            message.set_confirmed(Some(confirmed));
         }
     }
 
@@ -193,20 +239,20 @@ async fn perform_sync(
     let (found_addresses, found_messages) = sync_addresses(&storage_path, &account, address_index, gap_limit).await?;
 
     let mut new_messages = vec![];
-    for (found_message_id, found_message) in found_messages {
+    for (found_message_id, confirmed, found_message) in found_messages {
         if !account
             .messages()
             .iter()
             .any(|message| message.id() == &found_message_id)
         {
-            new_messages.push((found_message_id, found_message));
+            new_messages.push((found_message_id, confirmed, found_message));
         }
     }
 
     let synced_messages = sync_messages(&mut account, address_index).await?;
     new_messages.extend(synced_messages.into_iter());
 
-    update_account_messages(&account, &new_messages).await?;
+    update_account_messages(&mut account, &new_messages).await?;
 
     let mut addresses_to_save = vec![];
     let mut ignored_addresses = vec![];
@@ -242,7 +288,9 @@ async fn perform_sync(
 
     let parsed_messages = new_messages
         .iter()
-        .map(|(id, message)| Message::from_iota_message(*id, account.addresses(), &message).unwrap())
+        .map(|(id, confirmed, message)| {
+            Message::from_iota_message(*id, account.addresses(), &message, *confirmed).unwrap()
+        })
         .collect();
     account.append_messages(parsed_messages);
 
@@ -306,9 +354,7 @@ impl<'a> AccountSynchronizer<'a> {
                     self.account.set_addresses(account_.addresses().to_vec());
                     self.account.set_messages(account_.messages().to_vec());
                     if !self.skip_persistance {
-                        crate::storage::with_adapter(&self.storage_path, |storage| {
-                            storage.set(self.account.id().into(), serde_json::to_string(&self.account)?)
-                        })?;
+                        self.account.save()?;
                     }
 
                     let synced_account = SyncedAccount {
@@ -337,7 +383,7 @@ pub struct SyncedAccount {
     /// The associated account identifier.
     #[serde(rename = "accountId")]
     #[getset(get = "pub")]
-    account_id: String,
+    account_id: AccountIdentifier,
     /// The account's deposit address.
     #[serde(rename = "depositAddress")]
     #[getset(get = "pub")]
@@ -357,6 +403,7 @@ pub struct SyncedAccount {
 }
 
 /// Transfer response metadata.
+#[derive(Debug)]
 pub struct TransferMetadata {
     /// The transfer message.
     pub message: Message,
@@ -379,22 +426,37 @@ impl SyncedAccount {
     /// needed.
     fn select_inputs<'a>(
         &self,
+        locked_addresses: &'a mut MutexGuard<'_, Vec<IotaAddress>>,
         threshold: u64,
-        account: &'a Account,
+        account: &'a mut Account,
         address: &'a IotaAddress,
-    ) -> crate::Result<(Vec<Address>, Option<Address>)> {
-        let mut available_addresses: Vec<Address> = account
+    ) -> crate::Result<(Vec<input_selection::Input>, Option<input_selection::Input>)> {
+        let mut available_addresses: Vec<input_selection::Input> = account
             .addresses()
             .iter()
-            .cloned()
-            .filter(|a| a.address() != address && *a.balance() > 0)
+            .filter(|a| {
+                a.address() != address && a.available_balance(&account) > 0 && !locked_addresses.contains(a.address())
+            })
+            .map(|a| input_selection::Input {
+                address: a.address().clone(),
+                balance: a.available_balance(&account),
+            })
             .collect();
         let addresses = input_selection::select_input(threshold, &mut available_addresses)?;
-        let remainder = if addresses.iter().fold(0, |acc, a| acc + a.balance()) > threshold {
+
+        locked_addresses.extend(
+            addresses
+                .iter()
+                .map(|a| a.address.clone())
+                .collect::<Vec<IotaAddress>>(),
+        );
+
+        let remainder = if addresses.iter().fold(0, |acc, a| acc + a.balance) > threshold {
             addresses.last().cloned()
         } else {
             None
         };
+
         Ok((addresses, remainder))
     }
 
@@ -405,11 +467,53 @@ impl SyncedAccount {
             return Err(crate::WalletError::ZeroAmount);
         }
 
+        // lock the transfer process until we select the input addresses
+        // we do this to prevent multiple threads trying to transfer at the same time
+        // so it doesn't consume the same addresses multiple times, which leads to a conflict state
+        let account_addresses_locker = get_account_addresses_lock(&self.account_id);
+        let mut locked_addresses = account_addresses_locker.lock().unwrap();
+
         // prepare the transfer getting some needed objects and values
         let value: u64 = transfer_obj.amount;
-        let account_id: AccountIdentifier = self.account_id.clone().into();
-        let mut account = crate::storage::get_account(&self.storage_path, account_id.clone())?;
+        let mut account = crate::storage::get_account(&self.storage_path, &self.account_id)?;
         let mut addresses_to_watch = vec![];
+
+        if value > account.total_balance() {
+            return Err(crate::WalletError::InsufficientFunds);
+        }
+
+        // if the transfer value exceeds the account's available balance,
+        // wait for an account update or sync it with the tangle
+        if value > account.available_balance() {
+            let (tx, rx) = channel();
+            let tx = Arc::new(Mutex::new(tx));
+
+            let storage_path = self.storage_path.clone();
+            let account_id = self.account_id.clone();
+            thread::spawn(move || {
+                let tx = tx.lock().unwrap();
+                for _ in 1..30 {
+                    thread::sleep(OUTPUT_LOCK_TIMEOUT / 30);
+                    if let Ok(account) = crate::storage::get_account(&storage_path, &account_id) {
+                        // the account received an update and now the balance is sufficient
+                        if value <= account.available_balance() {
+                            let _ = tx.send(account);
+                            break;
+                        }
+                    }
+                }
+            });
+
+            match rx.recv_timeout(OUTPUT_LOCK_TIMEOUT) {
+                Ok(acc) => {
+                    account = acc;
+                }
+                Err(_) => {
+                    // if we got a timeout waiting for the account update, we try to sync it
+                    account.sync().execute().await?;
+                }
+            }
+        }
 
         let client = crate::client::get_client(account.client_options());
         let client = client.read().unwrap();
@@ -427,30 +531,41 @@ impl SyncedAccount {
         }
 
         // select the input addresses and check if a remainder address is needed
-        let (input_addresses, remainder_address) =
-            self.select_inputs(transfer_obj.amount, &account, &transfer_obj.address)?;
+        let (input_addresses, remainder_address) = self.select_inputs(
+            &mut locked_addresses,
+            transfer_obj.amount,
+            &mut account,
+            &transfer_obj.address,
+        )?;
+
+        // unlock the transfer process since we already selected the input addresses and locked them
+        drop(locked_addresses);
 
         let mut utxos = vec![];
         let mut transaction_inputs = vec![];
 
         for input_address in &input_addresses {
-            let address_outputs = input_address.outputs();
+            let account_address = account
+                .addresses()
+                .iter()
+                .find(|a| a.address() == &input_address.address)
+                .unwrap();
+
             let mut outputs = vec![];
             let address_path = BIP32Path::from_str(&format!(
                 "m/44H/4218H/{}H/{}H/{}H",
-                account.index(),
-                *input_address.internal() as u32,
-                *input_address.key_index()
+                *account.index(),
+                *account_address.internal() as u32,
+                *account_address.key_index()
             ))
             .unwrap();
-            for (offset, output) in address_outputs.iter().enumerate() {
-                let output = client
-                    .get_output(
-                        &UTXOInput::new(*output.transaction_id(), *output.index())
-                            .map_err(|e| anyhow::anyhow!(e.to_string()))?,
-                    )
-                    .await?;
-                outputs.push((output, *input_address.key_index(), address_path.clone()));
+
+            for (offset, address_output) in account_address.available_outputs(&account).iter().enumerate() {
+                outputs.push((
+                    (*address_output).clone(),
+                    *account_address.key_index(),
+                    address_path.clone(),
+                ));
             }
             utxos.extend(outputs.into_iter());
         }
@@ -459,16 +574,9 @@ impl SyncedAccount {
         let mut current_output_sum = 0;
         let mut remainder_value = 0;
         for (utxo, address_index, address_path) in utxos {
-            let input: Input = UTXOInput::new(
-                TransactionId::new(
-                    utxo.transaction_id[..]
-                        .try_into()
-                        .map_err(|_| crate::WalletError::InvalidTransactionIdLength)?,
-                ),
-                utxo.output_index,
-            )
-            .map_err(|e| anyhow::anyhow!(e.to_string()))?
-            .into();
+            let input: Input = UTXOInput::new(*utxo.transaction_id(), *utxo.index())
+                .map_err(|e| anyhow::anyhow!(e.to_string()))?
+                .into();
             essence_builder = essence_builder.add_input(input.clone());
             transaction_inputs.push(crate::signing::TransactionInput {
                 input,
@@ -477,12 +585,12 @@ impl SyncedAccount {
             });
             if current_output_sum == value {
                 // already filled the transfer value; just collect the output value as remainder
-                remainder_value += utxo.amount;
-            } else if current_output_sum + utxo.amount > value {
+                remainder_value += *utxo.amount();
+            } else if current_output_sum + *utxo.amount() > value {
                 // if the used UTXO amount is greater than the transfer value, this is the last iteration and we'll have
                 // remainder value. we add an Output for the missing value and collect the remainder
                 let missing_value = value - current_output_sum;
-                remainder_value += utxo.amount - missing_value;
+                remainder_value += *utxo.amount() - missing_value;
                 essence_builder = essence_builder.add_output(
                     SignatureLockedSingleOutput::new(
                         transfer_obj.address.clone(),
@@ -495,11 +603,11 @@ impl SyncedAccount {
                 essence_builder = essence_builder.add_output(
                     SignatureLockedSingleOutput::new(
                         transfer_obj.address.clone(),
-                        NonZeroU64::new(utxo.amount).ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
+                        NonZeroU64::new(*utxo.amount()).ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
                     )
                     .into(),
                 );
-                current_output_sum += utxo.amount;
+                current_output_sum += *utxo.amount();
             }
         }
 
@@ -508,6 +616,11 @@ impl SyncedAccount {
         if remainder_value > 0 {
             let remainder_address =
                 remainder_address.ok_or_else(|| anyhow::anyhow!("remainder address not defined"))?;
+            let remainder_address = account
+                .addresses()
+                .iter()
+                .find(|a| a.address() == &remainder_address.address)
+                .unwrap();
 
             let remainder_target_address = match transfer_obj.remainder_value_strategy {
                 // use one of the account's addresses to send the remainder value
@@ -555,15 +668,17 @@ impl SyncedAccount {
 
         let transaction = tx_builder.finish().map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
 
-        let message = IotaMessage::builder()
+        let message = MessageBuilder::<ClientMiner>::new()
             .with_parent1(parent1)
             .with_parent2(parent2)
             .with_payload(Payload::Transaction(Box::new(transaction)))
-            .with_network_id(0)
+            .with_network_id(client.get_network_id().await?)
+            .with_nonce_provider(client.get_pow_provider(), 4000f64)
             .finish()
             .map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
         let message_id = client.post_message(&message).await?;
+
         // if this is a transfer to the account's latest address or we used the latest as deposit of the remainder
         // value, we generate a new one to keep the latest address unused
         let latest_address = account.latest_address().unwrap().address();
@@ -586,11 +701,20 @@ impl SyncedAccount {
             let _ = crate::monitor::monitor_address_balance(&account, &address);
         }
 
-        let message = Message::from_iota_message(message_id, account.addresses(), &message)?;
+        let message = Message::from_iota_message(message_id, account.addresses(), &message, None)?;
         account.append_messages(vec![message.clone()]);
-        crate::storage::with_adapter(&self.storage_path, |storage| {
-            storage.set(account_id, serde_json::to_string(&account)?)
-        })?;
+
+        account.save()?;
+
+        let account_addresses_locker = get_account_addresses_lock(&self.account_id);
+        let mut locked_addresses = account_addresses_locker.lock().unwrap();
+        for input_address in &input_addresses {
+            let index = locked_addresses
+                .iter()
+                .position(|a| a == &input_address.address)
+                .unwrap();
+            locked_addresses.remove(index);
+        }
 
         // ignore errors because we fallback to the polling system
         let _ = crate::monitor::monitor_confirmation_state_change(&account, &message_id);
@@ -600,35 +724,17 @@ impl SyncedAccount {
 
     /// Retry message.
     pub async fn retry(&self, message_id: &MessageId) -> crate::Result<Message> {
-        repost_message(
-            self.account_id.clone().into(),
-            &self.storage_path,
-            message_id,
-            RepostAction::Retry,
-        )
-        .await
+        repost_message(&self.account_id, &self.storage_path, message_id, RepostAction::Retry).await
     }
 
     /// Promote message.
     pub async fn promote(&self, message_id: &MessageId) -> crate::Result<Message> {
-        repost_message(
-            self.account_id.clone().into(),
-            &self.storage_path,
-            message_id,
-            RepostAction::Promote,
-        )
-        .await
+        repost_message(&self.account_id, &self.storage_path, message_id, RepostAction::Promote).await
     }
 
     /// Reattach message.
     pub async fn reattach(&self, message_id: &MessageId) -> crate::Result<Message> {
-        repost_message(
-            self.account_id.clone().into(),
-            &self.storage_path,
-            message_id,
-            RepostAction::Reattach,
-        )
-        .await
+        repost_message(&self.account_id, &self.storage_path, message_id, RepostAction::Reattach).await
     }
 }
 
@@ -639,13 +745,13 @@ pub(crate) enum RepostAction {
 }
 
 pub(crate) async fn repost_message(
-    account_id: AccountIdentifier,
+    account_id: &AccountIdentifier,
     storage_path: &PathBuf,
     message_id: &MessageId,
     action: RepostAction,
 ) -> crate::Result<Message> {
     let mut account: Account = crate::storage::get_account(&storage_path, account_id)?;
-    match account.get_message(message_id) {
+    let message = match account.get_message(message_id) {
         Some(message_to_repost) => {
             // get the latest reattachment of the message we want to promote/rettry/reattach
             let messages = account.list_messages(0, 0, None);
@@ -653,7 +759,7 @@ pub(crate) async fn repost_message(
                 .iter()
                 .find(|m| m.payload() == message_to_repost.payload())
                 .unwrap();
-            if *message_to_repost.confirmed() {
+            if message_to_repost.confirmed().unwrap_or(false) {
                 return Err(crate::WalletError::ClientError(
                     iota::client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
                 ));
@@ -685,17 +791,18 @@ pub(crate) async fn repost_message(
                 }
                 RepostAction::Retry => client.retry(message_id).await?,
             };
-            let message = Message::from_iota_message(id, account.addresses(), &message)?;
+            let message = Message::from_iota_message(id, account.addresses(), &message, None)?;
 
             account.append_messages(vec![message.clone()]);
-            crate::storage::with_adapter(&storage_path, |storage| {
-                storage.set(account.id().into(), serde_json::to_string(&account)?)
-            })?;
+
+            account.save()?;
 
             Ok(message)
         }
         None => Err(crate::WalletError::MessageNotFound),
-    }
+    }?;
+
+    Ok(message)
 }
 
 #[cfg(test)]

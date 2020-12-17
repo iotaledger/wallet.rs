@@ -3,16 +3,16 @@
 
 use crate::account::Account;
 
-use std::{collections::HashMap, env};
+use std::{collections::HashMap, env, fs::OpenOptions, io::Write};
 
 use bech32::ToBase32;
-use bee_common::packable::Packable;
 use blake2::{
     digest::{Update, VariableOutput},
     VarBlake2b,
 };
+use dialoguer::Confirm;
 use hmac::Hmac;
-use iota::{Ed25519Signature, ReferenceUnlock, SignatureUnlock, UnlockBlock};
+use iota::{common::packable::Packable, Ed25519Signature, ReferenceUnlock, SignatureUnlock, UnlockBlock};
 use rand::{thread_rng, Rng};
 use unicode_normalization::UnicodeNormalization;
 
@@ -51,7 +51,7 @@ fn derive_into_address(private_key: ed25519::Ed25519PrivateKey) -> String {
         result.extend(res.to_vec());
     });
 
-    bech32::encode("iota", result.to_base32()).unwrap()
+    bech32::encode("iot", result.to_base32()).unwrap()
 }
 
 #[derive(Default)]
@@ -59,6 +59,7 @@ pub struct EnvMnemonicSigner;
 
 impl EnvMnemonicSigner {
     fn get_seed(&self) -> ed25519::Ed25519Seed {
+        let _ = dotenv::dotenv();
         mnemonic_to_ed25_seed(
             env::var("IOTA_WALLET_MNEMONIC").expect("must set the IOTA_WALLET_MNEMONIC environment variable"),
             env::var("IOTA_WALLET_MNEMONIC_PASSWORD").unwrap_or_else(|_| "password".to_string()),
@@ -78,7 +79,18 @@ impl EnvMnemonicSigner {
 impl super::Signer for EnvMnemonicSigner {
     fn init_account(&self, account: &Account, mnemonic: Option<String>) -> crate::Result<String> {
         if let Some(mnemonic) = mnemonic {
-            env::set_var("IOTA_WALLET_MNEMONIC", mnemonic);
+            env::set_var("IOTA_WALLET_MNEMONIC", &mnemonic);
+            println!("Your mnemonic is `{}`, you must store it on an environment variable called `IOTA_WALLET_MNEMONIC` to use this CLI", mnemonic);
+            if let Ok(flag) = Confirm::new()
+                .with_prompt("Do you want to store the mnemonic in a .env file?")
+                .interact()
+            {
+                if flag {
+                    let mut file = OpenOptions::new().append(true).create(true).open(".env")?;
+                    writeln!(file, r#"IOTA_WALLET_MNEMONIC="{}""#, mnemonic)?;
+                    println!("mnemonic added to {:?}", std::env::current_dir()?.join(".env"));
+                }
+            }
         }
         Ok(thread_rng().gen_ascii_chars().take(10).collect())
     }

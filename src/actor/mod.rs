@@ -148,9 +148,7 @@ impl WalletMessageHandler {
                 .try_into()
                 .map_err(|_| anyhow::anyhow!("invalid message id length"))?,
         );
-        self.account_manager
-            .reattach(account_id.clone(), &parsed_message_id)
-            .await?;
+        self.account_manager.reattach(account_id, &parsed_message_id).await?;
         Ok(ResponseType::Reattached(message_id.to_string()))
     }
 
@@ -164,7 +162,7 @@ impl WalletMessageHandler {
         account_id: &AccountIdentifier,
         method: &AccountMethod,
     ) -> Result<ResponseType> {
-        let mut account = self.account_manager.get_account(account_id.clone())?;
+        let mut account = self.account_manager.get_account(account_id)?;
         match method {
             AccountMethod::GenerateAddress => {
                 let address = account.generate_address()?;
@@ -215,7 +213,7 @@ impl WalletMessageHandler {
     /// The remove account message handler.
     fn remove_account(&self, account_id: &AccountIdentifier) -> Result<ResponseType> {
         self.account_manager
-            .remove_account(account_id.clone())
+            .remove_account(&account_id)
             .map(|_| ResponseType::RemovedAccount(account_id.clone()))
     }
 
@@ -241,7 +239,7 @@ impl WalletMessageHandler {
     }
 
     fn get_account(&self, account_id: &AccountIdentifier) -> Result<ResponseType> {
-        let account = self.account_manager.get_account(account_id.clone())?;
+        let account = self.account_manager.get_account(&account_id)?;
         Ok(ResponseType::ReadAccount(account))
     }
 
@@ -257,7 +255,7 @@ impl WalletMessageHandler {
     }
 
     async fn send_transfer(&self, account_id: &AccountIdentifier, transfer: &Transfer) -> Result<ResponseType> {
-        let mut account = self.account_manager.get_account(account_id.clone())?;
+        let mut account = self.account_manager.get_account(account_id)?;
         let synced = account.sync().execute().await?;
         let message = synced.transfer(transfer.clone()).await?.message;
         Ok(ResponseType::SentTransfer(message))
@@ -271,7 +269,7 @@ impl WalletMessageHandler {
     ) -> Result<ResponseType> {
         let message = self
             .account_manager
-            .internal_transfer(from_account_id.clone(), to_account_id.clone(), amount)
+            .internal_transfer(from_account_id, to_account_id, amount)
             .await?
             .message;
         Ok(ResponseType::SentTransfer(message))
@@ -362,7 +360,7 @@ mod tests {
         match response.response() {
             ResponseType::CreatedAccount(created_account) => {
                 // remove the created account
-                let response = send_message(&tx, MessageType::RemoveAccount(created_account.id().into())).await;
+                let response = send_message(&tx, MessageType::RemoveAccount(created_account.id().clone())).await;
                 assert!(matches!(response.response(), ResponseType::RemovedAccount(_)));
             }
             _ => panic!("unexpected response"),
