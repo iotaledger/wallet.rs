@@ -56,8 +56,7 @@ fn mutate_account<F: FnOnce(&mut Account)>(
 ) -> crate::Result<()> {
     let mut account = crate::storage::get_account(&storage_path, &account_id)?;
     cb(&mut account);
-    let account_str = serde_json::to_string(&account)?;
-    crate::storage::with_adapter(&storage_path, |storage| storage.set(&account_id, account_str))?;
+    account.save()?;
     Ok(())
 }
 
@@ -156,10 +155,11 @@ async fn process_output(
         match account.messages_mut().iter().position(|m| m.id() == &message_id_) {
             Some(message_index) => {
                 let message = &mut account.messages_mut()[message_index];
-                message.set_confirmed(true);
+                message.set_confirmed(Some(true));
             }
             None => {
-                let message = Message::from_iota_message(message_id_, account.addresses(), &message).unwrap();
+                let message =
+                    Message::from_iota_message(message_id_, account.addresses(), &message, Some(true)).unwrap();
                 crate::event::emit_transaction_event(
                     crate::event::TransactionEventType::NewTransaction,
                     &account_id,
@@ -220,18 +220,14 @@ fn process_metadata(
 
     if let Some(inclusion_state) = metadata.ledger_inclusion_state {
         let confirmed = inclusion_state == "included";
-        if confirmed != *message.confirmed() {
+        if message.confirmed().is_none() || confirmed != message.confirmed().unwrap() {
             mutate_account(&account_id, &storage_path, |account| {
                 let message_id = {
                     let messages = account.messages_mut();
                     let message = messages.iter_mut().find(|m| m.id() == &message_id).unwrap();
-                    message.set_confirmed(confirmed);
+                    message.set_confirmed(Some(confirmed));
                     *message.id()
                 };
-
-                if !confirmed {
-                    account.on_message_unconfirmed(&message_id);
-                }
 
                 crate::event::emit_confirmation_state_change(&account_id, &message, confirmed);
             })?;

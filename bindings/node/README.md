@@ -2,6 +2,10 @@
 
 Node.js binding to the IOTA wallet library.
 
+## Requirements
+
+Ensure you have first installed the required dependencies for the library [here](https://github.com/iotaledger/wallet.rs/blob/develop/README.md).
+
 ## Installation
 
 Currently the package isn't published so you'd need to link it to your project using `npm` or `yarn`.
@@ -27,15 +31,22 @@ $ yarn link iota-wallet
 
 After you linked the library, you can create an `AccountManager` instance and interface with it.
 
+While Stronghold is not ready, we recommend using the Sqlite StorageType and `EnvMnemonic` SignerType (this simply means you store your mnemonic as an environment variable).
+
+### Example 
+
 ```javascript
-const { AccountManager } = require('iota-wallet')
-const manager = new AccountManager()
-const account = await manager.createAccount({
-  alias: 'my first account',
-  clientOptions: {
-    node: 'http://localhost:14265'
-  }
+const { AccountManager, StorageType, SignerType } = require('iota-wallet')
+const manager = new AccountManager({
+    storagePath: './storage',
+    storageType: StorageType.Sqlite
 })
+const account = await manager.createAccount({
+  alias: 'Account1',
+  clientOptions: { node: 'http://api.lb-0.testnet.chrysalis2.com', localPow: false },
+  signerType: SignerType.EnvMnemonic
+})
+account.sync()
 ```
 
 ## API Reference
@@ -280,3 +291,4 @@ Returns the latest address (the one with the biggest keyIndex) or undefined if t
 | [nodes]           | <code>string[]</code> | <code>undefined</code> | A list node URL to connect to                                                                            |
 | [quorumSize]      | <code>number</code>   | <code>undefined</code> | If multiple nodes are provided, quorum size determines the number of nodes to query to check for quorum. |
 | [quorumThreshold] | <code>number</code>   | <code>undefined</code> | Minimum number of nodes from the quorum pool that need to agree to consider a result true.               |
+| [localPow]        | <code>boolean</code>  | <code>true</code>      | Whether to use local or remote PoW.                                                                      |

@@ -28,8 +28,8 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
 
     if !map.contains_key(&options) {
         let mut client_builder = ClientBuilder::new()
-            .quorum_threshold(*options.quorum_threshold())
-            .broker_options(BrokerOptions::new().automatic_disconnect(false));
+            .broker_options(BrokerOptions::new().automatic_disconnect(false))
+            .local_pow(*options.local_pow());
 
         // we validate the URL beforehand so it's safe to unwrap here
         if let Some(node) = options.node() {
@@ -44,10 +44,6 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
             client_builder = client_builder.network(network.clone());
         }
 
-        if let Some(quorum_size) = options.quorum_size() {
-            client_builder = client_builder.quorum_size(*quorum_size);
-        }
-
         let client = client_builder.build().expect("failed to initialise ClientBuilder");
 
         map.insert(options.clone(), Arc::new(RwLock::new(client)));
@@ -60,13 +56,23 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
 /// The options builder for a client connected to a single node.
 pub struct SingleNodeClientOptionsBuilder {
     node: Url,
+    local_pow: bool,
 }
 
 impl SingleNodeClientOptionsBuilder {
     fn new(node: &str) -> crate::Result<Self> {
         let node_url = Url::parse(node)?;
-        let builder = Self { node: node_url };
+        let builder = Self {
+            node: node_url,
+            local_pow: default_local_pow(),
+        };
         Ok(builder)
+    }
+
+    /// Sets the pow option.
+    pub fn local_pow(mut self, local_pow: bool) -> Self {
+        self.local_pow = local_pow;
+        self
     }
 
     /// Builds the options.
@@ -77,6 +83,7 @@ impl SingleNodeClientOptionsBuilder {
             network: None,
             quorum_size: None,
             quorum_threshold: 0,
+            local_pow: self.local_pow,
         }
     }
 }
@@ -87,6 +94,7 @@ pub struct MultiNodeClientOptionsBuilder {
     network: Option<Network>,
     quorum_size: Option<u8>,
     quorum_threshold: f32,
+    local_pow: bool,
     // state_adapter:
 }
 
@@ -117,6 +125,7 @@ impl Default for MultiNodeClientOptionsBuilder {
             network: None,
             quorum_size: None,
             quorum_threshold: 0.5,
+            local_pow: default_local_pow(),
         }
     }
 }
@@ -163,6 +172,12 @@ impl MultiNodeClientOptionsBuilder {
         self
     }
 
+    /// Sets the pow option.
+    pub fn local_pow(mut self, local_pow: bool) -> Self {
+        self.local_pow = local_pow;
+        self
+    }
+
     /// Builds the options.
     pub fn build(self) -> crate::Result<ClientOptions> {
         let node_len = match &self.nodes {
@@ -178,6 +193,7 @@ impl MultiNodeClientOptionsBuilder {
             network: self.network,
             quorum_size: self.quorum_size,
             quorum_threshold: (self.quorum_threshold * 100.0) as u8,
+            local_pow: self.local_pow,
         };
         Ok(options)
     }
@@ -237,4 +253,10 @@ pub struct ClientOptions {
     quorum_size: Option<u8>,
     #[serde(rename = "quorumThreshold", default)]
     quorum_threshold: u8,
+    #[serde(rename = "localPow", default = "default_local_pow")]
+    local_pow: bool,
+}
+
+fn default_local_pow() -> bool {
+    true
 }

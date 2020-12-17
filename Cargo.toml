@@ -31,7 +31,9 @@ blake2 = "0.9"
 unicode-normalization = "0.1"
 pbkdf2 = "0.6"
 sha2 = "0.9"
-bee-common = { git = "https://github.com/iotaledger/bee/", rev = "30e718917fd68320d74dc61124322bfa17556780" }
+dotenv = "0.15"
+dialoguer = "0.7"
+tiny-bip39 = "0.7"
 
 # stronghold
 iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", branch = "feat/pre-refactor", optional = true }

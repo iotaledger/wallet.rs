@@ -1,7 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::address::{Address, IotaAddress};
+use crate::address::IotaAddress;
 use rand::{prelude::SliceRandom, thread_rng};
 use std::convert::TryInto;
 
@@ -9,15 +9,6 @@ use std::convert::TryInto;
 pub struct Input {
     pub address: IotaAddress,
     pub balance: u64,
-}
-
-impl From<&Address> for Input {
-    fn from(address: &Address) -> Self {
-        Self {
-            address: address.address().clone(),
-            balance: address.available_balance(),
-        }
-    }
 }
 
 pub fn select_input(target: u64, available_utxos: &mut [Input]) -> crate::Result<Vec<Input>> {
@@ -33,7 +24,9 @@ pub fn select_input(target: u64, available_utxos: &mut [Input]) -> crate::Result
         0,
         &mut selected_coins,
         0,
-        2i64.pow(available_utxos.len().try_into().unwrap()),
+        2i128
+            .checked_pow(available_utxos.len().try_into().unwrap())
+            .unwrap_or(i128::max_value()),
     );
 
     if result {
@@ -68,7 +61,7 @@ fn branch_and_bound(
     depth: usize,
     current_selection: &mut Vec<Input>,
     effective_value: u64,
-    mut tries: i64,
+    mut tries: i128,
 ) -> bool {
     if effective_value > target {
         return false;
@@ -129,7 +122,10 @@ mod tests {
                 .outputs(vec![])
                 .build()
                 .unwrap();
-            available_utxos.push((&address).into());
+            available_utxos.push(super::Input {
+                address: address.address().clone(),
+                balance: *address.balance(),
+            });
         }
         available_utxos
     }

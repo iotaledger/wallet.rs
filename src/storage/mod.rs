@@ -14,11 +14,12 @@ use once_cell::sync::OnceCell;
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
-    sync::{Arc, RwLock},
+    sync::{Arc, Mutex, RwLock},
 };
 
 type Storage = Box<dyn StorageAdapter + Sync + Send>;
 type Storages = Arc<RwLock<HashMap<PathBuf, Storage>>>;
+type AccountReadLockMap = HashMap<AccountIdentifier, Arc<Mutex<()>>>;
 static INSTANCES: OnceCell<Storages> = OnceCell::new();
 
 /// Sets the storage adapter.
@@ -94,4 +95,30 @@ pub(crate) fn get_account(storage_path: &PathBuf, account_id: &AccountIdentifier
     let mut account: Account = serde_json::from_str(&account_str)?;
     account.set_storage_path(storage_path.clone());
     Ok(account)
+}
+
+pub(crate) fn save_account(storage_path: &PathBuf, account: &mut Account) -> crate::Result<()> {
+    with_adapter(&storage_path, |storage| {
+        if let Ok(current) = storage.get(account.id()) {
+            let current: crate::account::Account = serde_json::from_str(&current)?;
+            account.append_messages(
+                current
+                    .messages()
+                    .iter()
+                    .cloned()
+                    .filter(|m| !account.messages().contains(m))
+                    .collect(),
+            );
+            account.append_addresses(
+                current
+                    .addresses()
+                    .iter()
+                    .cloned()
+                    .filter(|m| !account.addresses().contains(m))
+                    .collect(),
+            );
+        }
+        storage.set(account.id(), serde_json::to_string(&account)?)
+    })?;
+    Ok(())
 }
