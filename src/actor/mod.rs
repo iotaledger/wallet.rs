@@ -343,15 +343,22 @@ mod tests {
             while let Some(message) = self.rx.recv().await {
                 self.message_handler.handle(message).await;
             }
+            println!("DONE");
         }
     }
 
     fn spawn_actor() -> UnboundedSender<Message> {
         let (tx, rx) = unbounded_channel();
-        let actor = WalletBuilder::new().rx(rx).build();
         std::thread::spawn(|| {
             let mut runtime = tokio::runtime::Runtime::new().unwrap();
-            runtime.block_on(async move { actor.await.run().await });
+            runtime.block_on(async move {
+                let actor = WalletBuilder::new()
+                    .rx(rx)
+                    .message_handler(WalletMessageHandler::new().await.unwrap())
+                    .build()
+                    .await;
+                actor.run().await
+            });
         });
         tx
     }
