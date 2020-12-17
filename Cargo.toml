@@ -39,7 +39,7 @@ tiny-bip39 = "0.7"
 iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", branch = "feat/pre-refactor", optional = true }
 
 [dev-dependencies]
-tokio = { version = "0.3", features = ["full"] }
+tokio = { version = "0.2", features = ["full"] }
 sled = "0.34"
 rusty-fork = "0.3"
 
