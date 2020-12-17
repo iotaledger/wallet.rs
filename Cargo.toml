@@ -33,7 +33,7 @@ pbkdf2 = "0.6"
 sha2 = "0.9"
 dotenv = "0.15"
 dialoguer = "0.7"
-tiny-bip39 = "0.7"
+tiny-bip39 = "0.8"
 
 # stronghold
 iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", branch = "feat/pre-refactor", optional = true }
