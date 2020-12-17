@@ -445,21 +445,25 @@ impl Account {
     /// use iota_wallet::{account_manager::AccountManager, client::ClientOptionsBuilder, message::MessageType};
     /// # use rand::{thread_rng, Rng};
     ///
-    /// # let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
-    /// # let storage_path = std::path::PathBuf::from(format!("./example-database/{}", storage_path));
-    /// // gets 10 received messages, skipping the first 5 most recent messages.
-    /// let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-    ///     .expect("invalid node URL")
-    ///     .build();
-    /// let mut manager = AccountManager::new().unwrap();
-    /// # let mut manager = AccountManager::with_storage_path(storage_path).unwrap();
-    /// manager.set_stronghold_password("password").unwrap();
-    /// let account = manager
-    ///     .create_account(client_options)
-    ///     .initialise()
-    ///     .expect("failed to add account");
-    /// let account = account_handle.read().await;
-    /// account.list_messages(10, 5, Some(MessageType::Received));
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     # let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
+    ///     # let storage_path = std::path::PathBuf::from(format!("./example-database/{}", storage_path));
+    ///     // gets 10 received messages, skipping the first 5 most recent messages.
+    ///     let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+    ///         .expect("invalid node URL")
+    ///         .build();
+    ///     let mut manager = AccountManager::new().await.unwrap();
+    ///     # let mut manager = AccountManager::with_storage_path(storage_path).await.unwrap();
+    ///     manager.set_stronghold_password("password").await.unwrap();
+    ///     let account_handle = manager
+    ///         .create_account(client_options)
+    ///         .initialise()
+    ///         .await
+    ///         .expect("failed to add account");
+    ///     let account = account_handle.read().await;
+    ///     account.list_messages(10, 5, Some(MessageType::Received));
+    /// }
     /// ```
     pub fn list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<&Message> {
         let mut messages: Vec<&Message> = vec![];
