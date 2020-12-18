@@ -682,7 +682,8 @@ mod tests {
                 .expect("invalid node URL")
                 .build();
 
-            crate::block_on(async move {
+            let mut runtime = tokio::runtime::Runtime::new().unwrap();
+            runtime.block_on(async move {
                 let account_handle = manager
                     .create_account(client_options)
                     .alias("alias")
