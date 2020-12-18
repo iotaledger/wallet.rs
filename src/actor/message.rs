@@ -12,7 +12,7 @@ use serde::{ser::Serializer, Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
 
 /// An account to create.
-#[derive(Clone, Debug, Deserialize, Default)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct AccountToCreate {
     /// The node options.
     #[serde(rename = "clientOptions")]
