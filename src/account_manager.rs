@@ -14,6 +14,7 @@ use crate::{
 };
 
 use std::{
+    borrow::Cow,
     collections::HashMap,
     convert::TryInto,
     fs,
@@ -70,7 +71,9 @@ impl Drop for AccountManager {
                     sender.send(()).expect("failed to stop polling process");
                 }
             });
-        });
+        })
+        .join()
+        .expect("failed to stop monitoring and polling systems");
     }
 }
 
@@ -171,9 +174,7 @@ impl AccountManager {
                                 if let Err(panic) = AssertUnwindSafe(poll(accounts_.clone(), storage_path_, is_monitoring_disabled))
                                     .catch_unwind()
                                     .await {
-                                    let msg = if let Some(message) = panic.downcast_ref::<String>() {
-                                        format!("Internal error: {}", message)
-                                    } else if let Some(message) = panic.downcast_ref::<&str>() {
+                                    let msg = if let Some(message) = panic.downcast_ref::<Cow<'_, str>>() {
                                         format!("Internal error: {}", message)
                                     } else {
                                         "Internal error".to_string()
@@ -195,7 +196,7 @@ impl AccountManager {
                     }
                 });
             });
-        });
+        }).join().expect("failed to start polling");
     }
 
     /// Adds a new account.
@@ -318,7 +319,7 @@ impl AccountManager {
                         stronghold_account.mnemonic().to_string(),
                         Some("password"),
                     )
-                    .map_err(|e| e.into())
+                    .map_err(Into::into)
             });
 
             account.save()?;
@@ -390,11 +391,7 @@ async fn poll(accounts: AccountStore, storage_path: PathBuf, syncing: bool) -> c
 
         // compare accounts to check for balance changes and new messages
         for account_before_sync in &accounts_before_sync {
-            let account_after_sync = accounts_after_sync
-                .iter()
-                .find(|(id, _)| id == &account_before_sync.id())
-                .unwrap()
-                .1;
+            let account_after_sync = accounts_after_sync.get(account_before_sync.id()).unwrap();
             let account_after_sync = account_after_sync.read().await;
 
             // balance event

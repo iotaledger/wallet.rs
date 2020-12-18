@@ -3,6 +3,7 @@
 
 use std::{
     any::Any,
+    borrow::Cow,
     collections::HashMap,
     panic::AssertUnwindSafe,
     sync::{Arc, Mutex, RwLock},
@@ -32,21 +33,23 @@ fn account_instances() -> &'static AccountInstanceMap {
 }
 
 pub(crate) fn get_account(id: &AccountIdentifier) -> AccountHandle {
-    let map = account_instances()
+    account_instances()
         .read()
-        .expect("failed to lock account instances: get_account()");
-    map.get(id).expect("account dropped or not initialised").clone()
+        .expect("failed to lock account instances: get_account()")
+        .get(id)
+        .expect("account dropped or not initialised")
+        .clone()
 }
 
 pub(crate) fn store_account(account_handle: AccountHandle) -> AccountIdentifier {
-    let mut map = account_instances()
-        .write()
-        .expect("failed to lock account instances: store_account()");
-
     let handle = account_handle.clone();
     let id = block_on(async move { handle.id().await });
 
-    map.insert(id.clone(), account_handle);
+    account_instances()
+        .write()
+        .expect("failed to lock account instances: store_account()")
+        .insert(id.clone(), account_handle);
+
     id
 }
 
@@ -57,10 +60,12 @@ fn synced_account_instances() -> &'static SyncedAccountInstanceMap {
 }
 
 pub(crate) fn get_synced_account(id: &str) -> SyncedAccountHandle {
-    let map = synced_account_instances()
+    synced_account_instances()
         .read()
-        .expect("failed to lock synced account instances: get_synced_account()");
-    map.get(id).expect("synced account dropped or not initialised").clone()
+        .expect("failed to lock synced account instances: get_synced_account()")
+        .get(id)
+        .expect("synced account dropped or not initialised")
+        .clone()
 }
 
 pub(crate) fn store_synced_account(synced_account: SyncedAccount) -> String {
@@ -73,16 +78,14 @@ pub(crate) fn store_synced_account(synced_account: SyncedAccount) -> String {
 }
 
 pub(crate) fn remove_synced_account(id: &str) {
-    let mut map = synced_account_instances()
+    synced_account_instances()
         .write()
-        .expect("failed to lock synced account instances: remove_synced_account()");
-    map.remove(id);
+        .expect("failed to lock synced account instances: remove_synced_account()")
+        .remove(id);
 }
 
 fn panic_to_response_message(panic: Box<dyn Any>) -> Result<String, WalletError> {
-    let msg = if let Some(message) = panic.downcast_ref::<String>() {
-        format!("Internal error: {}", message)
-    } else if let Some(message) = panic.downcast_ref::<&str>() {
+    let msg = if let Some(message) = panic.downcast_ref::<Cow<'_, str>>() {
         format!("Internal error: {}", message)
     } else {
         "Internal error".to_string()

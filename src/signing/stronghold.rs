@@ -67,7 +67,7 @@ impl super::Signer for StrongholdSigner {
                     &essence,
                     &mut inputs,
                 )
-                .map_err(|e| e.into())
+                .map_err(Into::into)
         })
     }
 }

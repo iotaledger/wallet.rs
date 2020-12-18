@@ -86,7 +86,7 @@ impl StorageAdapter for StrongholdStorageAdapter {
         let (_, index) = crate::with_stronghold_from_path(&self.path, |stronghold| get_account_index(&stronghold))?;
         for (_, record_id) in index {
             let account = crate::with_stronghold_from_path(&self.path, |stronghold| {
-                stronghold.record_read(&record_id).map_err(|e| e.into())
+                stronghold.record_read(&record_id).map_err(Into::into)
             })?;
             accounts.push(account);
         }
