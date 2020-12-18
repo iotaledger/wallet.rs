@@ -81,6 +81,7 @@ impl EnvMnemonicSigner {
 impl super::Signer for EnvMnemonicSigner {
     fn init_account(&self, account: &Account, mnemonic: Option<String>) -> crate::Result<String> {
         if let Some(mnemonic) = mnemonic {
+            // if the mnemonic is already on the env, we skip the logging and prompting processes
             if mnemonic != env::var(MNEMONIC_ENV_KEY).unwrap_or_default() {
                 env::set_var(MNEMONIC_ENV_KEY, &mnemonic);
                 println!("Your mnemonic is `{}`, you must store it on an environment variable called `IOTA_WALLET_MNEMONIC` to use this CLI", mnemonic);
