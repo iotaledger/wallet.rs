@@ -50,7 +50,7 @@ async fn load_private_data_actor(mut runtime: &mut ActorRuntime, snapshot_path: 
 
     let client_path = PRIVATE_DATA_CLIENT_PATH.to_vec();
     if runtime.spawned_client_paths.contains(&client_path) {
-        status_message_to_result(runtime.stronghold.switch_actor_target(client_path.clone()))?;
+        status_message_to_result(runtime.stronghold.switch_actor_target(client_path))?;
     } else {
         status_message_to_result(
             runtime
@@ -73,7 +73,7 @@ async fn load_account_actor(
     let client_path = account_id_to_client_path(account_id);
 
     if runtime.spawned_client_paths.contains(&client_path) {
-        status_message_to_result(runtime.stronghold.switch_actor_target(client_path.clone()))?;
+        status_message_to_result(runtime.stronghold.switch_actor_target(client_path))?;
     } else {
         status_message_to_result(
             runtime

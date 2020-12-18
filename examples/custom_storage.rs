@@ -61,14 +61,20 @@ impl StorageAdapter for MyStorage {
 
 #[tokio::main]
 async fn main() -> iota_wallet::Result<()> {
-    let mut manager =
-        AccountManager::with_storage_adapter("./example-database/sled", MyStorage::new("./example-database/sled")?)
-            .unwrap();
+    let mut manager = AccountManager::builder()
+        .with_storage("./example-database/sled", MyStorage::new("./example-database/sled")?)
+        .finish()
+        .await
+        .unwrap();
     manager.set_stronghold_password("password").await.unwrap();
 
     // first we'll create an example account
     let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")?.build();
-    manager.create_account(client_options).alias("alias").initialise()?;
+    manager
+        .create_account(client_options)
+        .alias("alias")
+        .initialise()
+        .await?;
 
     Ok(())
 }

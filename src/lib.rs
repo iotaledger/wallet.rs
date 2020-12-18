@@ -37,6 +37,8 @@ use once_cell::sync::OnceCell;
 use std::sync::Mutex;
 use tokio::runtime::Runtime;
 
+static RUNTIME: OnceCell<Mutex<Runtime>> = OnceCell::new();
+
 /// The wallet error type.
 #[derive(Debug, thiserror::Error)]
 pub enum WalletError {
@@ -132,27 +134,68 @@ impl Drop for WalletError {
     }
 }
 pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
-    static INSTANCE: OnceCell<Mutex<Runtime>> = OnceCell::new();
-    let runtime = INSTANCE.get_or_init(|| Mutex::new(Runtime::new().unwrap()));
+    let runtime = RUNTIME.get_or_init(|| Mutex::new(Runtime::new().unwrap()));
     runtime.lock().unwrap().block_on(cb)
+}
+
+pub(crate) fn enter<R, C: FnOnce() -> R>(cb: C) -> R {
+    let runtime = RUNTIME.get_or_init(|| Mutex::new(Runtime::new().unwrap()));
+    runtime.lock().unwrap().enter(cb)
 }
 
 #[cfg(test)]
 mod test_utils {
     use super::account_manager::AccountManager;
+    use iota::pow::providers::{Provider as PowProvider, ProviderBuilder as PowProviderBuilder};
     use once_cell::sync::OnceCell;
     use rand::{thread_rng, Rng};
-    use std::path::PathBuf;
+    use std::{path::PathBuf, sync::Mutex, time::Duration};
 
-    static MANAGER_INSTANCE: OnceCell<AccountManager> = OnceCell::new();
-    pub fn get_account_manager() -> &'static AccountManager {
+    static MANAGER_INSTANCE: OnceCell<Mutex<AccountManager>> = OnceCell::new();
+    pub fn get_account_manager() -> &'static Mutex<AccountManager> {
         MANAGER_INSTANCE.get_or_init(|| {
-            let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
-            let storage_path = PathBuf::from(format!("./example-database/{}", storage_path));
+            let mut runtime = tokio::runtime::Runtime::new().unwrap();
+            runtime.block_on(async move {
+                let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
+                let storage_path = PathBuf::from(format!("./example-database/{}", storage_path));
 
-            let mut manager = AccountManager::with_storage_path(storage_path).unwrap();
-            crate::block_on(manager.set_stronghold_password("password")).unwrap();
-            manager
+                let mut manager = AccountManager::builder()
+                    .with_storage_path(storage_path)
+                    .with_polling_interval(Duration::from_secs(4))
+                    .finish()
+                    .await
+                    .unwrap();
+                manager.set_stronghold_password("password").await.unwrap();
+                Mutex::new(manager)
+            })
         })
+    }
+
+    /// The miner builder.
+    #[derive(Default)]
+    pub struct NoopNonceProviderBuilder;
+
+    impl PowProviderBuilder for NoopNonceProviderBuilder {
+        type Provider = NoopNonceProvider;
+
+        fn new() -> Self {
+            Self::default()
+        }
+
+        fn finish(self) -> NoopNonceProvider {
+            NoopNonceProvider {}
+        }
+    }
+
+    /// The miner used for PoW
+    pub struct NoopNonceProvider;
+
+    impl PowProvider for NoopNonceProvider {
+        type Builder = NoopNonceProviderBuilder;
+        type Error = crate::WalletError;
+
+        fn nonce(&self, bytes: &[u8], target_score: f64) -> std::result::Result<u64, Self::Error> {
+            Ok(0)
+        }
     }
 }

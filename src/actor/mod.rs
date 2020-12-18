@@ -9,13 +9,12 @@ use crate::{
 };
 use futures::{Future, FutureExt};
 use iota::message::prelude::MessageId;
-#[cfg(any(feature = "stronghold", feature = "sqlite"))]
-use std::path::PathBuf;
+
 use std::{
     any::Any,
+    borrow::Cow,
     convert::TryInto,
     panic::{catch_unwind, AssertUnwindSafe},
-    time::Duration,
 };
 
 mod message;
@@ -26,19 +25,8 @@ pub struct WalletMessageHandler {
     account_manager: AccountManager,
 }
 
-#[cfg(any(feature = "stronghold", feature = "sqlite"))]
-impl Default for WalletMessageHandler {
-    fn default() -> Self {
-        Self {
-            account_manager: AccountManager::new().unwrap(),
-        }
-    }
-}
-
 fn panic_to_response_message(panic: Box<dyn Any>) -> Result<ResponseType> {
-    let msg = if let Some(message) = panic.downcast_ref::<String>() {
-        format!("Internal error: {}", message)
-    } else if let Some(message) = panic.downcast_ref::<&str>() {
+    let msg = if let Some(message) = panic.downcast_ref::<Cow<'_, str>>() {
         format!("Internal error: {}", message)
     } else {
         "Internal error".to_string()
@@ -66,35 +54,32 @@ where
 
 impl WalletMessageHandler {
     /// Creates a new instance of the message handler with the default account manager.
-    #[cfg(any(feature = "stronghold", feature = "sqlite"))]
-    pub fn new() -> Result<Self> {
+    pub async fn new() -> Result<Self> {
         let instance = Self {
-            account_manager: AccountManager::new()?,
+            account_manager: AccountManager::builder().finish().await?,
         };
         Ok(instance)
     }
 
-    /// Creates a new instance of the message handler with the account manager using the given storage path.
-    #[cfg(any(feature = "stronghold", feature = "sqlite"))]
-    pub fn with_storage_path(storage_path: PathBuf) -> Result<Self> {
-        let instance = Self {
-            account_manager: AccountManager::with_storage_path(storage_path)?,
-        };
+    /// Creates a new instance of the message handler with the specified account manager.
+    pub fn with_manager(account_manager: AccountManager) -> Result<Self> {
+        let instance = Self { account_manager };
         Ok(instance)
-    }
-
-    /// Gets the account manager instance.
-    pub fn set_polling_interval(&mut self, interval: Duration) {
-        self.account_manager.set_polling_interval(interval);
     }
 
     /// Handles a message.
     pub async fn handle(&mut self, message: Message) {
         let response: Result<ResponseType> = match message.message_type() {
-            MessageType::RemoveAccount(account_id) => convert_panics(|| self.remove_account(account_id)),
-            MessageType::CreateAccount(account) => convert_panics(|| self.create_account(account)),
-            MessageType::GetAccount(account_id) => convert_panics(|| self.get_account(account_id)),
-            MessageType::GetAccounts => convert_panics(|| self.get_accounts()),
+            MessageType::RemoveAccount(account_id) => {
+                convert_async_panics(|| async { self.remove_account(account_id).await }).await
+            }
+            MessageType::CreateAccount(account) => {
+                convert_async_panics(|| async { self.create_account(account).await }).await
+            }
+            MessageType::GetAccount(account_id) => {
+                convert_async_panics(|| async { self.get_account(account_id).await }).await
+            }
+            MessageType::GetAccounts => convert_async_panics(|| async { self.get_accounts().await }).await,
             MessageType::CallAccountMethod { account_id, method } => {
                 convert_async_panics(|| async { self.call_account_method(account_id, method).await }).await
             }
@@ -104,7 +89,9 @@ impl WalletMessageHandler {
             }
             MessageType::Backup(destination_path) => convert_panics(|| self.backup(destination_path)),
             #[cfg(any(feature = "stronghold", feature = "sqlite"))]
-            MessageType::RestoreBackup(backup_path) => convert_panics(|| self.restore_backup(backup_path)),
+            MessageType::RestoreBackup(backup_path) => {
+                convert_async_panics(|| async { self.restore_backup(backup_path).await }).await
+            }
             #[cfg(feature = "stronghold")]
             MessageType::SetStrongholdPassword(password) => {
                 convert_async_panics(|| async { self.set_stronghold_password(password).await }).await
@@ -137,8 +124,8 @@ impl WalletMessageHandler {
     }
 
     #[cfg(any(feature = "stronghold", feature = "sqlite"))]
-    fn restore_backup(&self, backup_path: &str) -> Result<ResponseType> {
-        self.account_manager.import_accounts(backup_path)?;
+    async fn restore_backup(&self, backup_path: &str) -> Result<ResponseType> {
+        self.account_manager.import_accounts(backup_path).await?;
         Ok(ResponseType::BackupRestored)
     }
 
@@ -162,10 +149,11 @@ impl WalletMessageHandler {
         account_id: &AccountIdentifier,
         method: &AccountMethod,
     ) -> Result<ResponseType> {
-        let mut account = self.account_manager.get_account(account_id)?;
+        let account_handle = self.account_manager.get_account(account_id).await?;
+
         match method {
             AccountMethod::GenerateAddress => {
-                let address = account.generate_address()?;
+                let address = account_handle.generate_address().await?;
                 Ok(ResponseType::GeneratedAddress(address))
             }
             AccountMethod::ListMessages {
@@ -173,6 +161,7 @@ impl WalletMessageHandler {
                 from,
                 message_type,
             } => {
+                let account = account_handle.read().await;
                 let messages: Vec<WalletMessage> = account
                     .list_messages(*count, *from, message_type.clone())
                     .into_iter()
@@ -181,18 +170,28 @@ impl WalletMessageHandler {
                 Ok(ResponseType::Messages(messages))
             }
             AccountMethod::ListAddresses { unspent } => {
+                let account = account_handle.read().await;
                 let addresses = account.list_addresses(*unspent).into_iter().cloned().collect();
                 Ok(ResponseType::Addresses(addresses))
             }
-            AccountMethod::GetAvailableBalance => Ok(ResponseType::AvailableBalance(account.available_balance())),
-            AccountMethod::GetTotalBalance => Ok(ResponseType::TotalBalance(account.total_balance())),
-            AccountMethod::GetLatestAddress => Ok(ResponseType::LatestAddress(account.latest_address().cloned())),
+            AccountMethod::GetAvailableBalance => {
+                let account = account_handle.read().await;
+                Ok(ResponseType::AvailableBalance(account.available_balance()))
+            }
+            AccountMethod::GetTotalBalance => {
+                let account = account_handle.read().await;
+                Ok(ResponseType::TotalBalance(account.total_balance()))
+            }
+            AccountMethod::GetLatestAddress => {
+                let account = account_handle.read().await;
+                Ok(ResponseType::LatestAddress(account.latest_address().cloned()))
+            }
             AccountMethod::SyncAccount {
                 address_index,
                 gap_limit,
                 skip_persistance,
             } => {
-                let mut synchronizer = account.sync();
+                let mut synchronizer = account_handle.sync().await;
                 if let Some(address_index) = address_index {
                     synchronizer = synchronizer.address_index(*address_index);
                 }
@@ -211,14 +210,15 @@ impl WalletMessageHandler {
     }
 
     /// The remove account message handler.
-    fn remove_account(&self, account_id: &AccountIdentifier) -> Result<ResponseType> {
+    async fn remove_account(&self, account_id: &AccountIdentifier) -> Result<ResponseType> {
         self.account_manager
             .remove_account(&account_id)
+            .await
             .map(|_| ResponseType::RemovedAccount(account_id.clone()))
     }
 
     /// The create account message handler.
-    fn create_account(&self, account: &AccountToCreate) -> Result<ResponseType> {
+    async fn create_account(&self, account: &AccountToCreate) -> Result<ResponseType> {
         let mut builder = self.account_manager.create_account(account.client_options.clone());
 
         if let Some(mnemonic) = &account.mnemonic {
@@ -235,17 +235,28 @@ impl WalletMessageHandler {
             );
         }
 
-        builder.initialise().map(ResponseType::CreatedAccount)
+        match builder.initialise().await {
+            Ok(account_handle) => {
+                let account = account_handle.read().await;
+                Ok(ResponseType::CreatedAccount(account.clone()))
+            }
+            Err(e) => Err(e),
+        }
     }
 
-    fn get_account(&self, account_id: &AccountIdentifier) -> Result<ResponseType> {
-        let account = self.account_manager.get_account(&account_id)?;
-        Ok(ResponseType::ReadAccount(account))
+    async fn get_account(&self, account_id: &AccountIdentifier) -> Result<ResponseType> {
+        let account_handle = self.account_manager.get_account(&account_id).await?;
+        let account = account_handle.read().await;
+        Ok(ResponseType::ReadAccount(account.clone()))
     }
 
-    fn get_accounts(&self) -> Result<ResponseType> {
-        let accounts = self.account_manager.get_accounts()?;
-        Ok(ResponseType::ReadAccounts(accounts))
+    async fn get_accounts(&self) -> Result<ResponseType> {
+        let accounts = self.account_manager.get_accounts().await;
+        let mut accounts_ = Vec::new();
+        for account_handle in accounts {
+            accounts_.push(account_handle.read().await.clone());
+        }
+        Ok(ResponseType::ReadAccounts(accounts_))
     }
 
     #[cfg(feature = "stronghold")]
@@ -255,9 +266,9 @@ impl WalletMessageHandler {
     }
 
     async fn send_transfer(&self, account_id: &AccountIdentifier, transfer: &Transfer) -> Result<ResponseType> {
-        let mut account = self.account_manager.get_account(account_id)?;
-        let synced = account.sync().execute().await?;
-        let message = synced.transfer(transfer.clone()).await?.message;
+        let account = self.account_manager.get_account(account_id).await?;
+        let synced = account.sync().await.execute().await?;
+        let message = synced.transfer(transfer.clone()).await?;
         Ok(ResponseType::SentTransfer(message))
     }
 
@@ -270,8 +281,7 @@ impl WalletMessageHandler {
         let message = self
             .account_manager
             .internal_transfer(from_account_id, to_account_id, amount)
-            .await?
-            .message;
+            .await?;
         Ok(ResponseType::SentTransfer(message))
     }
 }
@@ -279,6 +289,7 @@ impl WalletMessageHandler {
 #[cfg(test)]
 mod tests {
     use super::{AccountToCreate, Message, MessageType, Response, ResponseType, WalletMessageHandler};
+    use crate::client::ClientOptionsBuilder;
     use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
     /// The wallet actor builder.
@@ -307,10 +318,10 @@ mod tests {
         }
 
         /// Builds the Wallet actor.
-        pub fn build(self) -> Wallet {
+        pub async fn build(self) -> Wallet {
             Wallet {
                 rx: self.rx.expect("rx is required"),
-                message_handler: WalletMessageHandler::new().expect("failed to initialise account manager"),
+                message_handler: self.message_handler.expect("message handler is required"),
             }
         }
     }
@@ -329,15 +340,22 @@ mod tests {
             while let Some(message) = self.rx.recv().await {
                 self.message_handler.handle(message).await;
             }
+            println!("DONE");
         }
     }
 
     fn spawn_actor() -> UnboundedSender<Message> {
         let (tx, rx) = unbounded_channel();
-        let actor = WalletBuilder::new().rx(rx).build();
         std::thread::spawn(|| {
             let mut runtime = tokio::runtime::Runtime::new().unwrap();
-            runtime.block_on(actor.run());
+            runtime.block_on(async move {
+                let actor = WalletBuilder::new()
+                    .rx(rx)
+                    .message_handler(WalletMessageHandler::new().await.unwrap())
+                    .build()
+                    .await;
+                actor.run().await
+            });
         });
         tx
     }
@@ -354,14 +372,24 @@ mod tests {
         let tx = spawn_actor();
 
         // create an account
-        let account = AccountToCreate::default();
+        let account = AccountToCreate {
+            client_options: ClientOptionsBuilder::node("http://node.iota").unwrap().build(),
+            mnemonic: None,
+            alias: None,
+            created_at: None,
+        };
         send_message(&tx, MessageType::SetStrongholdPassword("password".to_string())).await;
         let response = send_message(&tx, MessageType::CreateAccount(account)).await;
         match response.response() {
             ResponseType::CreatedAccount(created_account) => {
-                // remove the created account
-                let response = send_message(&tx, MessageType::RemoveAccount(created_account.id().clone())).await;
-                assert!(matches!(response.response(), ResponseType::RemovedAccount(_)));
+                let id = created_account.id().clone();
+                std::thread::spawn(move || {
+                    std::thread::sleep(std::time::Duration::from_secs(6));
+                    // remove the created account
+                    let response =
+                        crate::block_on(async move { send_message(&tx, MessageType::RemoveAccount(id)).await });
+                    assert!(matches!(response.response(), ResponseType::RemovedAccount(_)));
+                });
             }
             _ => panic!("unexpected response"),
         }
