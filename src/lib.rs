@@ -182,8 +182,12 @@ mod test_utils {
                 let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
                 let storage_path = PathBuf::from(format!("./example-database/{}", storage_path));
 
-                let mut manager = AccountManager::with_storage_path(storage_path).await.unwrap();
-                manager.set_polling_interval(Duration::from_secs(4));
+                let mut manager = AccountManager::builder()
+                    .with_storage_path(storage_path)
+                    .with_polling_interval(Duration::from_secs(4))
+                    .finish()
+                    .await
+                    .unwrap();
                 manager.set_stronghold_password("password").await.unwrap();
                 Mutex::new(manager)
             })

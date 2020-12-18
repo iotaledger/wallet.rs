@@ -453,8 +453,8 @@ impl Account {
     ///     let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
     ///         .expect("invalid node URL")
     ///         .build();
-    ///     let mut manager = AccountManager::new().await.unwrap();
-    ///     # let mut manager = AccountManager::with_storage_path(storage_path).await.unwrap();
+    ///     let mut manager = AccountManager::builder().finish().await.unwrap();
+    ///     # let mut manager = AccountManager::builder().with_storage_path(storage_path).finish().await.unwrap();
     ///     manager.set_stronghold_password("password").await.unwrap();
     ///     let account_handle = manager
     ///         .create_account(client_options)
