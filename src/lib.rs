@@ -177,7 +177,8 @@ mod test_utils {
     static MANAGER_INSTANCE: OnceCell<Mutex<AccountManager>> = OnceCell::new();
     pub fn get_account_manager() -> &'static Mutex<AccountManager> {
         MANAGER_INSTANCE.get_or_init(|| {
-            crate::block_on(async move {
+            let mut runtime = tokio::runtime::Runtime::new().unwrap();
+            runtime.block_on(async move {
                 let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
                 let storage_path = PathBuf::from(format!("./example-database/{}", storage_path));
 
