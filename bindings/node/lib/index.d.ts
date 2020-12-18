@@ -35,13 +35,13 @@ export declare type Payload = Transaction;
 
 export declare interface Message {
   version: number;
-  trunk: string;
-  branch: string;
-  payload_length: number;
+  parent1: string;
+  parent2: string;
+  payloadLength: number;
   payload: Payload;
   timestamp: string;
   nonce: number;
-  confirmed: boolean;
+  confirmed?: boolean;
   broadcasted: boolean;
   incoming: boolean;
   value: number;
