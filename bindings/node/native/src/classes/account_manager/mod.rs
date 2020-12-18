@@ -101,8 +101,18 @@ declare_types! {
                 None => Default::default(),
             };
             let manager = match options.storage_type {
-                StorageType::Sqlite => crate::block_on(AccountManager::with_storage_adapter(&options.storage_path, SqliteStorageAdapter::new(&options.storage_path, "accounts").unwrap())),
-                StorageType::Stronghold => crate::block_on(AccountManager::with_storage_adapter(&options.storage_path, StrongholdStorageAdapter::new(&options.storage_path).unwrap())),
+                StorageType::Sqlite => crate::block_on(
+                    AccountManager::builder().with_storage(
+                        &options.storage_path,
+                        SqliteStorageAdapter::new(&options.storage_path, "accounts").unwrap()
+                    ).finish()
+                ),
+                StorageType::Stronghold => crate::block_on(
+                    AccountManager::builder().with_storage(
+                        &options.storage_path,
+                        StrongholdStorageAdapter::new(&options.storage_path).unwrap()
+                    ).finish()
+                ),
             };
             let manager = manager.expect("error initializing account manager");
             Ok(AccountManagerWrapper(Arc::new(RwLock::new(manager))))

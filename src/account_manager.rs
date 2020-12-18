@@ -26,7 +26,7 @@ use std::{
 };
 
 use futures::FutureExt;
-use getset::{Getters, Setters};
+use getset::Getters;
 use iota::{MessageId, Payload};
 use stronghold::Stronghold;
 use tokio::{
@@ -42,17 +42,86 @@ pub const DEFAULT_STORAGE_PATH: &str = "./example-database";
 
 pub(crate) type AccountStore = Arc<RwLock<HashMap<AccountIdentifier, AccountHandle>>>;
 
+/// Account manager builder.
+pub struct AccountManagerBuilder {
+    storage_path: PathBuf,
+    default_storage: bool,
+    polling_interval: Duration,
+}
+
+impl Default for AccountManagerBuilder {
+    fn default() -> Self {
+        Self {
+            storage_path: DEFAULT_STORAGE_PATH.into(),
+            default_storage: true,
+            polling_interval: Duration::from_millis(30_000),
+        }
+    }
+}
+
+impl AccountManagerBuilder {
+    /// Initialises a new instance of the account manager builder with the default storage adapter.
+    pub fn new() -> Self {
+        Default::default()
+    }
+
+    /// Use the specified storage path when initialising the default storage adapter.
+    pub fn with_storage_path(mut self, storage_path: impl AsRef<Path>) -> Self {
+        self.storage_path = storage_path.as_ref().to_path_buf();
+        self
+    }
+
+    /// Sets a custom storage adapter to be used.
+    pub fn with_storage<S: StorageAdapter + Sync + Send + 'static>(
+        mut self,
+        storage_path: impl AsRef<Path>,
+        adapter: S,
+    ) -> Self {
+        crate::storage::set_adapter(&storage_path, adapter);
+        self.storage_path = storage_path.as_ref().to_path_buf();
+        self.default_storage = false;
+        self
+    }
+
+    /// Sets the polling interval.
+    pub fn with_polling_interval(mut self, polling_interval: Duration) -> Self {
+        self.polling_interval = polling_interval;
+        self
+    }
+
+    /// Builds the manager.
+    pub async fn finish(self) -> crate::Result<AccountManager> {
+        if self.default_storage {
+            crate::storage::set_adapter(
+                &self.storage_path,
+                crate::storage::get_adapter_from_path(&self.storage_path)?,
+            );
+        }
+
+        let accounts = AccountManager::load_accounts(&self.storage_path)
+            .await
+            .unwrap_or_else(|_| Default::default());
+
+        let mut instance = AccountManager {
+            storage_path: self.storage_path,
+            accounts,
+            stop_polling_sender: None,
+        };
+
+        instance.start_background_sync(self.polling_interval).await;
+
+        Ok(instance)
+    }
+}
+
 /// The account manager.
 ///
 /// Used to manage multiple accounts.
-#[derive(Getters, Setters)]
+#[derive(Getters)]
 pub struct AccountManager {
     /// the path to the storage.
     #[getset(get = "pub")]
     storage_path: PathBuf,
-    /// the polling interval.
-    #[getset(get = "pub", set = "pub")]
-    polling_interval: Duration,
     accounts: AccountStore,
     stop_polling_sender: Option<BroadcastSender<()>>,
 }
@@ -78,36 +147,9 @@ impl Drop for AccountManager {
 }
 
 impl AccountManager {
-    /// Initialises a new instance of the account manager with the default storage adapter.
-    pub async fn new() -> crate::Result<Self> {
-        Self::with_storage_path(DEFAULT_STORAGE_PATH).await
-    }
-
-    /// Initialises a new instance of the account manager with the default storage adapter using the specified storage
-    /// path.
-    pub async fn with_storage_path(storage_path: impl AsRef<Path>) -> crate::Result<Self> {
-        Self::with_storage_adapter(&storage_path, crate::storage::get_adapter_from_path(&storage_path)?).await
-    }
-
-    /// Initialises a new instance of the account manager with the specified adapter.
-    pub async fn with_storage_adapter<S: StorageAdapter + Sync + Send + 'static>(
-        storage_path: impl AsRef<Path>,
-        adapter: S,
-    ) -> crate::Result<Self> {
-        crate::storage::set_adapter(&storage_path, adapter);
-        let storage_path = storage_path.as_ref().to_path_buf();
-        let mut instance = Self {
-            storage_path: storage_path.clone(),
-            polling_interval: Duration::from_millis(30_000),
-            accounts: Self::load_accounts(&storage_path)
-                .await
-                .unwrap_or_else(|_| Default::default()),
-            stop_polling_sender: None,
-        };
-
-        instance.start_background_sync().await;
-
-        Ok(instance)
+    /// Initialises the account manager builder.
+    pub fn builder() -> AccountManagerBuilder {
+        AccountManagerBuilder::new()
     }
 
     async fn load_accounts(storage_path: &PathBuf) -> crate::Result<AccountStore> {
@@ -129,10 +171,10 @@ impl AccountManager {
     }
 
     /// Initialises the background polling and MQTT monitoring.
-    async fn start_background_sync(&mut self) {
+    async fn start_background_sync(&mut self, polling_interval: Duration) {
         let monitoring_disabled = self.start_monitoring().await.is_err();
         let (stop_polling_sender, stop_polling_receiver) = broadcast_channel(1);
-        self.start_polling(monitoring_disabled, stop_polling_receiver);
+        self.start_polling(polling_interval, monitoring_disabled, stop_polling_receiver);
         self.stop_polling_sender = Some(stop_polling_sender);
     }
 
@@ -156,11 +198,11 @@ impl AccountManager {
     }
 
     /// Starts the polling mechanism.
-    fn start_polling(&self, is_monitoring_disabled: bool, mut stop: BroadcastReceiver<()>) {
+    fn start_polling(&self, polling_interval: Duration, is_monitoring_disabled: bool, mut stop: BroadcastReceiver<()>) {
         let storage_path = self.storage_path.clone();
         let accounts = self.accounts.clone();
 
-        let interval = AsyncDuration::from_millis(self.polling_interval.as_millis().try_into().unwrap());
+        let interval = AsyncDuration::from_millis(polling_interval.as_millis().try_into().unwrap());
 
         thread::spawn(move || {
             crate::enter(|| {

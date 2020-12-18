@@ -4,7 +4,7 @@
 use crate::address::{Address, IotaAddress};
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-pub use iota::message::prelude::{Message as IotaMessage, MessageId, Output, Payload};
+pub use iota::{common::packable::Packable, Message as IotaMessage, MessageId, Output, Payload};
 use serde::{Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
 use std::{
@@ -160,24 +160,21 @@ impl Value {
 }
 
 /// A message definition.
-#[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize)]
+#[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize, Eq)]
 #[getset(get = "pub", set = "pub(crate)")]
 pub struct Message {
     /// The message identifier.
-    #[serde(with = "crate::serde::message_id_serde")]
     pub(crate) id: MessageId,
     /// The message version.
     pub(crate) version: u64,
     /// Message id of the first message this message refers to.
-    #[serde(with = "crate::serde::message_id_serde")]
-    pub(crate) trunk: MessageId,
+    pub(crate) parent1: MessageId,
     /// Message id of the second message this message refers to.
-    #[serde(with = "crate::serde::message_id_serde")]
-    pub(crate) branch: MessageId,
+    pub(crate) parent2: MessageId,
     /// Length of the payload.
     #[serde(rename = "payloadLength")]
-    pub(crate) payload_length: u64,
-    /// Transaction amount.
+    pub(crate) payload_length: usize,
+    /// Message payload.
     pub(crate) payload: Payload,
     /// The transaction timestamp.
     pub(crate) timestamp: DateTime<Utc>,
@@ -202,17 +199,15 @@ impl Hash for Message {
     }
 }
 
-// TODO
 impl PartialEq for Message {
     fn eq(&self, other: &Self) -> bool {
-        self.nonce == other.nonce
+        self.id == other.id
     }
 }
-impl Eq for Message {}
 
 impl Ord for Message {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.nonce.cmp(&other.nonce)
+        self.id.as_ref().cmp(&other.id.as_ref())
     }
 }
 
@@ -229,18 +224,17 @@ impl Message {
         message: &IotaMessage,
         confirmed: Option<bool>,
     ) -> crate::Result<Self> {
+        let mut packed_payload = Vec::new();
+        let _ = message.payload().pack(&mut packed_payload);
+
         let message = Self {
             id,
             version: 1,
-            trunk: *message.parent1(),
-            branch: *message.parent2(),
-            payload_length: 5, // TODO
+            parent1: *message.parent1(),
+            parent2: *message.parent2(),
+            payload_length: packed_payload.len(),
             payload: message.payload().as_ref().unwrap().clone(),
             timestamp: Utc::now(),
-            // TODO timestamp: DateTime::<Utc>::from_utc(
-            //    NaiveDateTime::from_timestamp(*message.attachment_ts().to_inner() as i64, 0),
-            //    Utc,
-            // ),
             nonce: message.nonce(),
             confirmed,
             broadcasted: true,

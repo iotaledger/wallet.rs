@@ -14,8 +14,6 @@ use std::{
     borrow::Cow,
     convert::TryInto,
     panic::{catch_unwind, AssertUnwindSafe},
-    path::PathBuf,
-    time::Duration,
 };
 
 mod message;
@@ -57,22 +55,15 @@ impl WalletMessageHandler {
     /// Creates a new instance of the message handler with the default account manager.
     pub async fn new() -> Result<Self> {
         let instance = Self {
-            account_manager: AccountManager::new().await?,
+            account_manager: AccountManager::builder().finish().await?,
         };
         Ok(instance)
     }
 
-    /// Creates a new instance of the message handler with the account manager using the given storage path.
-    pub async fn with_storage_path(storage_path: PathBuf) -> Result<Self> {
-        let instance = Self {
-            account_manager: AccountManager::with_storage_path(storage_path).await?,
-        };
+    /// Creates a new instance of the message handler with the specified account manager.
+    pub fn with_manager(account_manager: AccountManager) -> Result<Self> {
+        let instance = Self { account_manager };
         Ok(instance)
-    }
-
-    /// Gets the account manager instance.
-    pub fn set_polling_interval(&mut self, interval: Duration) {
-        self.account_manager.set_polling_interval(interval);
     }
 
     /// Handles a message.

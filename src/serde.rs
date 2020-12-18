@@ -51,46 +51,6 @@ pub(crate) mod iota_address_serde {
     }
 }
 
-pub(crate) mod message_id_serde {
-    use iota::message::prelude::MessageId;
-    use serde::{
-        de::{Error as DeError, Visitor},
-        Deserializer, Serializer,
-    };
-    use std::convert::TryInto;
-
-    pub fn serialize<S: Serializer>(id: &MessageId, s: S) -> std::result::Result<S::Ok, S::Error> {
-        s.serialize_str(&id.to_string())
-    }
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<MessageId, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        struct MessageIdVisitor;
-        impl<'de> Visitor<'de> for MessageIdVisitor {
-            type Value = MessageId;
-            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                formatter.write_str("a message id as hex string")
-            }
-
-            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-            where
-                E: serde::de::Error,
-            {
-                let decoded = hex::decode(v).map_err(|e| DeError::custom(e.to_string()))?;
-                let id = MessageId::new(
-                    decoded[..]
-                        .try_into()
-                        .map_err(|_| DeError::custom("invalid serialized message id length"))?,
-                );
-                Ok(id)
-            }
-        }
-        deserializer.deserialize_str(MessageIdVisitor)
-    }
-}
-
 impl serde::Serialize for crate::Error {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
