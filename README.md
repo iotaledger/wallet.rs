@@ -80,16 +80,18 @@ use iota_wallet::{
     storage::sqlite::SqliteStorageAdapter,
 };
 use std::path::PathBuf;
+
 #[tokio::main]
 async fn main() -> iota_wallet::Result<()> {
     let storage_folder: PathBuf = "./my-db".into();
     let manager =
-        AccountManager::with_storage_adapter(&storage_folder, SqliteStorageAdapter::new(&storage_folder, "accounts")?)?;
+        AccountManager::with_storage_adapter(&storage_folder, SqliteStorageAdapter::new(&storage_folder, "accounts")?).await?;
     let client_options = ClientOptionsBuilder::node("http://api.lb-0.testnet.chrysalis2.com")?.build();
     let account = manager
         .create_account(client_options)
         .signer_type(SignerType::EnvMnemonic)
-        .initialise()?;
+        .initialise()
+        .await?;
     Ok(())
 }
 ```
