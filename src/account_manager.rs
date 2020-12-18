@@ -104,12 +104,11 @@ impl AccountManagerBuilder {
 
         let mut instance = AccountManager {
             storage_path: self.storage_path,
-            polling_interval: self.polling_interval,
             accounts,
             stop_polling_sender: None,
         };
 
-        instance.start_background_sync().await;
+        instance.start_background_sync(self.polling_interval).await;
 
         Ok(instance)
     }
@@ -123,9 +122,6 @@ pub struct AccountManager {
     /// the path to the storage.
     #[getset(get = "pub")]
     storage_path: PathBuf,
-    /// the polling interval.
-    #[getset(get = "pub")]
-    polling_interval: Duration,
     accounts: AccountStore,
     stop_polling_sender: Option<BroadcastSender<()>>,
 }
@@ -175,10 +171,10 @@ impl AccountManager {
     }
 
     /// Initialises the background polling and MQTT monitoring.
-    async fn start_background_sync(&mut self) {
+    async fn start_background_sync(&mut self, polling_interval: Duration) {
         let monitoring_disabled = self.start_monitoring().await.is_err();
         let (stop_polling_sender, stop_polling_receiver) = broadcast_channel(1);
-        self.start_polling(monitoring_disabled, stop_polling_receiver);
+        self.start_polling(polling_interval, monitoring_disabled, stop_polling_receiver);
         self.stop_polling_sender = Some(stop_polling_sender);
     }
 
@@ -202,11 +198,11 @@ impl AccountManager {
     }
 
     /// Starts the polling mechanism.
-    fn start_polling(&self, is_monitoring_disabled: bool, mut stop: BroadcastReceiver<()>) {
+    fn start_polling(&self, polling_interval: Duration, is_monitoring_disabled: bool, mut stop: BroadcastReceiver<()>) {
         let storage_path = self.storage_path.clone();
         let accounts = self.accounts.clone();
 
-        let interval = AsyncDuration::from_millis(self.polling_interval.as_millis().try_into().unwrap());
+        let interval = AsyncDuration::from_millis(polling_interval.as_millis().try_into().unwrap());
 
         thread::spawn(move || {
             crate::enter(|| {
