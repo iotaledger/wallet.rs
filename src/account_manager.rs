@@ -18,6 +18,7 @@ use std::{
     collections::HashMap,
     convert::TryInto,
     fs,
+    num::NonZeroU64,
     panic::AssertUnwindSafe,
     path::{Path, PathBuf},
     sync::Arc,
@@ -282,7 +283,7 @@ impl AccountManager {
         &self,
         from_account_id: &AccountIdentifier,
         to_account_id: &AccountIdentifier,
-        amount: u64,
+        amount: NonZeroU64,
     ) -> crate::Result<Message> {
         let to_address = self
             .get_account(to_account_id)
@@ -295,7 +296,7 @@ impl AccountManager {
 
         let from_synchronized = self.get_account(from_account_id).await?.sync().await.execute().await?;
         from_synchronized
-            .transfer(Transfer::new(to_address.address().clone(), amount))
+            .transfer(Transfer::builder(to_address.address().clone(), amount).finish())
             .await
     }
 

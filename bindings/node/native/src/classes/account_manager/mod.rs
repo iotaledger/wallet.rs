@@ -3,6 +3,7 @@
 
 use super::JsAccount;
 use std::{
+    num::NonZeroU64,
     path::PathBuf,
     sync::{Arc, RwLock},
 };
@@ -273,7 +274,7 @@ declare_types! {
                 manager,
                 from_account_id,
                 to_account_id,
-                amount,
+                amount: NonZeroU64::new(amount).expect("amount can't be zero"),
             };
             task.schedule(cb);
             Ok(cx.undefined().upcast())

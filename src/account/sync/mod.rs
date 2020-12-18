@@ -484,11 +484,6 @@ impl SyncedAccount {
 
     /// Send messages.
     pub async fn transfer(&self, transfer_obj: Transfer) -> crate::Result<Message> {
-        // validate the transfer
-        if transfer_obj.amount == 0 {
-            return Err(crate::WalletError::ZeroAmount);
-        }
-
         let account_ = self.account_handle.read().await;
 
         // lock the transfer process until we select the input addresses
@@ -498,7 +493,7 @@ impl SyncedAccount {
         let mut locked_addresses = account_addresses_locker.lock().unwrap();
 
         // prepare the transfer getting some needed objects and values
-        let value: u64 = transfer_obj.amount;
+        let value = transfer_obj.amount.get();
         let mut addresses_to_watch = vec![];
 
         if value > account_.total_balance() {
@@ -555,12 +550,8 @@ impl SyncedAccount {
         }
 
         // select the input addresses and check if a remainder address is needed
-        let (input_addresses, remainder_address) = self.select_inputs(
-            &mut locked_addresses,
-            transfer_obj.amount,
-            &account_,
-            &transfer_obj.address,
-        )?;
+        let (input_addresses, remainder_address) =
+            self.select_inputs(&mut locked_addresses, value, &account_, &transfer_obj.address)?;
 
         // unlock the transfer process since we already selected the input addresses and locked them
         drop(locked_addresses);
@@ -679,6 +670,10 @@ impl SyncedAccount {
         }
 
         let (parent1, parent2) = client.get_tips().await?;
+
+        if let Some(indexation) = transfer_obj.indexation {
+            essence_builder = essence_builder.with_payload(Payload::Indexation(Box::new(indexation)));
+        }
 
         let essence = essence_builder
             .finish()

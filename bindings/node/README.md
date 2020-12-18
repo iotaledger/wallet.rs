@@ -156,14 +156,33 @@ Imports a database file.
 
 ### SyncedAccount
 
-#### send(address, amount)
+#### send(address, amount[, options])
 
 Send funds to the given address.
 
-| Param   | Type                | Default                | Description                               |
-| ------- | ------------------- | ---------------------- | ----------------------------------------- |
-| address | <code>string</code> | <code>null</code>      | The bech32 string of the transfer address |
-| amount  | <code>number</code> | <code>undefined</code> | The transfer amount                       |
+| Param   | Type                         | Default                | Description                               |
+| ------- | ---------------------------- | ---------------------- | ----------------------------------------- |
+| address | <code>string</code>          | <code>null</code>      | The bech32 string of the transfer address |
+| amount  | <code>number</code>          | <code>undefined</code> | The transfer amount                       |
+| options | <code>TransferOptions</code> | <code>undefined</code> | The transfer options                      |
+
+##### TransferOptions
+
+| Param                  | Type                                              | Default           | Description                                        |
+| ---------------------- | ------------------------------------------------- | ----------------- | -------------------------------------------------- |
+| remainderValueStrategy | <code>RemainderValueStrategy</code>               | <code>null</code> | The strategy to use for the remainder value if any |
+| indexation             | <code>{ index: string, data?: Uint8Array }</code> | <code>null</code> | Message indexation                                 |
+
+##### RemainderValueStrategy
+
+###### changeAddress()
+Send the remainder value to an internal address.
+
+###### reuseAddress()
+Send the remainder value to its original address.
+
+###### accountAddress(address: string)
+Send the remainder value to a specific address that must belong to the account.
 
 #### retry(messageId)
 
