@@ -46,8 +46,9 @@ impl SqliteStorageAdapter {
     }
 }
 
+#[async_trait::async_trait]
 impl StorageAdapter for SqliteStorageAdapter {
-    fn get(&self, account_id: &AccountIdentifier) -> crate::Result<String> {
+    async fn get(&self, account_id: &AccountIdentifier) -> crate::Result<String> {
         let (sql, params) = match account_id {
             AccountIdentifier::Id(id) => (
                 format!("SELECT value FROM {} WHERE key = ?1 LIMIT 1", self.table_name),
@@ -71,7 +72,7 @@ impl StorageAdapter for SqliteStorageAdapter {
         Ok(account)
     }
 
-    fn get_all(&self) -> crate::Result<std::vec::Vec<String>> {
+    async fn get_all(&self) -> crate::Result<std::vec::Vec<String>> {
         let connection = self.connection.lock().expect("failed to get connection lock");
         let mut query = connection.prepare(&format!("SELECT value FROM {} ORDER BY created_at", self.table_name))?;
         let accounts = query
@@ -81,7 +82,7 @@ impl StorageAdapter for SqliteStorageAdapter {
         Ok(accounts)
     }
 
-    fn set(&self, account_id: &AccountIdentifier, account: String) -> crate::Result<()> {
+    async fn set(&self, account_id: &AccountIdentifier, account: String) -> crate::Result<()> {
         let id = match account_id {
             AccountIdentifier::Id(id) => id,
             _ => return Err(anyhow::anyhow!("only Id is supported").into()),
@@ -96,7 +97,7 @@ impl StorageAdapter for SqliteStorageAdapter {
         Ok(())
     }
 
-    fn remove(&self, account_id: &AccountIdentifier) -> crate::Result<()> {
+    async fn remove(&self, account_id: &AccountIdentifier) -> crate::Result<()> {
         let (sql, params) = match account_id {
             AccountIdentifier::Id(id) => (
                 format!("DELETE FROM {} WHERE key = ?1", self.table_name),

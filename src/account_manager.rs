@@ -132,8 +132,8 @@ impl Drop for AccountManager {
         let stop_polling_sender = self.stop_polling_sender.clone();
         thread::spawn(move || {
             let _ = crate::block_on(async {
-                for account in accounts.read().await.values() {
-                    let _ = crate::monitor::unsubscribe(account.clone());
+                for account_handle in accounts.read().await.values() {
+                    let _ = crate::monitor::unsubscribe(account_handle.clone());
                 }
 
                 if let Some(sender) = stop_polling_sender {
@@ -153,7 +153,7 @@ impl AccountManager {
     }
 
     async fn load_accounts(storage_path: &PathBuf) -> crate::Result<AccountStore> {
-        let accounts = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
+        let accounts = crate::storage::get(&storage_path)?.lock().await.get_all().await?;
         let accounts = crate::storage::parse_accounts(&storage_path, &accounts)?
             .into_iter()
             .map(|account| (account.id().clone(), account.into()))
@@ -261,7 +261,12 @@ impl AccountManager {
 
         accounts.remove(account_id);
 
-        if let Err(e) = crate::storage::with_adapter(&self.storage_path, |storage| storage.remove(&account_id)) {
+        if let Err(e) = crate::storage::get(&self.storage_path)?
+            .lock()
+            .await
+            .remove(&account_id)
+            .await
+        {
             match e {
                 // if we got an "AccountNotFound" error, that means we didn't save the cached account yet
                 crate::WalletError::AccountNotFound => {}
@@ -318,17 +323,17 @@ impl AccountManager {
     }
 
     /// Import backed up accounts.
-    pub fn import_accounts<P: AsRef<Path>>(&self, source: P) -> crate::Result<()> {
+    pub async fn import_accounts<P: AsRef<Path>>(&self, source: P) -> crate::Result<()> {
         let backup_stronghold_path = source.as_ref().join(crate::storage::stronghold_snapshot_filename());
         let backup_stronghold =
             stronghold::Stronghold::new(&backup_stronghold_path, false, "password".to_string(), None)?;
         crate::init_stronghold(&source.as_ref().to_path_buf(), backup_stronghold);
 
         let backup_storage = crate::storage::get_adapter_from_path(&source)?;
-        let accounts = backup_storage.get_all()?;
+        let accounts = backup_storage.get_all().await?;
         let mut accounts = crate::storage::parse_accounts(&source.as_ref().to_path_buf(), &accounts)?;
 
-        let stored_accounts = crate::storage::with_adapter(&self.storage_path, |storage| storage.get_all())?;
+        let stored_accounts = crate::storage::get(&self.storage_path)?.lock().await.get_all().await?;
         let stored_accounts = crate::storage::parse_accounts(&self.storage_path, &stored_accounts)?;
 
         let already_imported_account = stored_accounts.iter().find(|stored_account| {
@@ -364,7 +369,7 @@ impl AccountManager {
                     .map_err(Into::into)
             });
 
-            account.save()?;
+            account.save().await?;
         }
         crate::remove_stronghold(backup_stronghold_path);
         Ok(())
