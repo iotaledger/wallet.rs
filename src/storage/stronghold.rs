@@ -21,7 +21,7 @@ impl StrongholdStorageAdapter {
 }
 
 impl StorageAdapter for StrongholdStorageAdapter {
-    fn get(&self, account_id: AccountIdentifier) -> crate::Result<String> {
+    fn get(&self, account_id: &AccountIdentifier) -> crate::Result<String> {
         crate::block_on(async {
             let account = crate::stronghold::get_account(&self.path, account_id).await?;
             Ok(account)
@@ -35,14 +35,14 @@ impl StorageAdapter for StrongholdStorageAdapter {
         })
     }
 
-    fn set(&self, account_id: AccountIdentifier, account: String) -> crate::Result<()> {
+    fn set(&self, account_id: &AccountIdentifier, account: String) -> crate::Result<()> {
         crate::block_on(async {
             crate::stronghold::store_account(&self.path, account_id, account).await?;
             Ok(())
         })
     }
 
-    fn remove(&self, account_id: AccountIdentifier) -> crate::Result<()> {
+    fn remove(&self, account_id: &AccountIdentifier) -> crate::Result<()> {
         crate::block_on(async {
             crate::stronghold::remove_account(&self.path, account_id).await?;
             Ok(())

@@ -105,7 +105,7 @@ impl AccountManager {
     #[cfg(feature = "stronghold")]
     pub async fn set_stronghold_password<P: AsRef<str>>(&mut self, password: P) -> crate::Result<()> {
         let stronghold_path = self.storage_path.join(crate::storage::stronghold_snapshot_filename());
-        crate::stronghold::load_or_create(&self.storage_path, password.as_ref()).await?;
+        crate::stronghold::load_snapshot(&self.storage_path, password.as_ref()).await?;
         self.start_background_sync();
         Ok(())
     }
@@ -371,10 +371,7 @@ fn restore_backup(manager: &AccountManager, backup_account_manager: &AccountMana
     // TODO: import seed
     for backup_account in backup_accounts.iter() {
         crate::storage::with_adapter(manager.storage_path(), |storage| {
-            storage.set(
-                backup_account.id().clone().into(),
-                serde_json::to_string(&backup_account)?,
-            )
+            storage.set(backup_account.id(), serde_json::to_string(&backup_account)?)
         })?;
     }
     Ok(())

@@ -16,7 +16,6 @@ use serde::{Deserialize, Serialize};
 
 use std::{
     collections::HashMap,
-    convert::TryInto,
     path::PathBuf,
     sync::{Arc, Mutex},
 };
@@ -186,7 +185,6 @@ impl<'a> AccountInitialiser<'a> {
             has_pending_changes: false,
         };
 
-        let mnemonic = self.mnemonic;
         let id = with_signer(&signer_type, |signer| signer.init_account(&account, mnemonic))?;
         account.set_id(id.into());
 

@@ -4,21 +4,14 @@
 //! Stronghold interface abstractions over an account
 
 use crate::account::{Account, AccountIdentifier};
-use futures::future::RemoteHandle;
-use iota_stronghold::{ClientMsg, RecordHint, RecordId, SHRequest, SHResults, VaultId};
+use iota_stronghold::{Location, RecordHint, StatusMessage, Stronghold, StrongholdFlags};
 use once_cell::sync::{Lazy, OnceCell};
 use riker::actors::*;
-use riker_patterns::ask::ask;
 
 use std::{
-    collections::HashMap,
-    convert::TryInto,
-    fmt::{Display, Formatter, Result as FmtResult},
+    collections::{HashMap, HashSet},
     path::{Path, PathBuf},
-    sync::{
-        mpsc::{channel as mpsc_channel, Receiver as MpscReceiver, RecvTimeoutError, Sender as MpscSender},
-        Arc, Mutex, RwLock,
-    },
+    sync::{Arc, Mutex, RwLock},
     thread,
     time::Duration,
 };
@@ -27,78 +20,81 @@ static PASSWORD_STORE: OnceCell<Arc<Mutex<HashMap<PathBuf, String>>>> = OnceCell
 static STRONGHOLD_ACCESS_STORE: OnceCell<Arc<Mutex<HashMap<PathBuf, bool>>>> = OnceCell::new();
 static CURRENT_SNAPSHOT_PATH: OnceCell<Arc<RwLock<Option<PathBuf>>>> = OnceCell::new();
 static PASSWORD_CLEAR_INTERVAL: OnceCell<Arc<RwLock<Duration>>> = OnceCell::new();
+static PRIVATE_DATA_CLIENT_PATH: &[u8] = b"iota_seed";
 
-const SEED_HINT: &str = "IOTA_WALLET_SEED";
-const ACCOUNT_HINT: &str = "IOTA_WALLET_ACCOUNT";
 const TIMEOUT: Duration = Duration::from_millis(5000);
 const DEFAULT_PASSWORD_CLEAR_INTERVAL: Duration = Duration::from_secs(8 * 60);
+const ACCOUNT_ID_SEPARATOR: char = '|';
+const ACCOUNT_METADATA_VAULT_PATH: &str = "iota-wallet-account-metadata";
+const ACCOUNT_IDS_RECORD_PATH: &str = "iota-wallet-account-ids";
+const ACCOUNT_VAULT_PATH: &str = "iota-wallet-account-vault";
+const ACCOUNT_RECORD_PATH: &str = "iota-wallet-account-record";
 
-macro_rules! wait_for_result {
-    ($self:ident, $a:pat, $b:block) => {{
-        let result_rx = $self.result_rx.lock().unwrap();
-        let result = result_rx.recv_timeout(TIMEOUT)?;
-        std::mem::drop(result_rx);
-        if let $a = result {
-            $b
-        } else {
-            return Err(Error::UnexpectedResult(result));
-        }
-    }};
-    ($self:ident, $a:pat, $b:block, $r:expr) => {{
-        let result_rx = $self.result_rx.lock().unwrap();
-        let result = result_rx.recv_timeout(TIMEOUT)?;
-        std::mem::drop(result_rx);
-        if let $a = result {
-            $b
-        } else {
-            return Err($r);
-        }
-    }};
+fn account_id_to_client_path(id: &AccountIdentifier) -> Vec<u8> {
+    match id {
+        AccountIdentifier::Id(id) => format!("iota-wallet-account-{}", id).as_bytes().to_vec(),
+        _ => unreachable!(),
+    }
 }
 
-macro_rules! send_message {
-    ($snapshot_path:ident, $message:ident, $expected_response:pat, $b:block) => {{
-        on_stronghold_access(&$message, $snapshot_path)?;
-        let runtime = actor_runtime().lock().unwrap();
-        check_snapshot(&runtime, $snapshot_path).await?;
-
-        let handle: StrongholdRemoteHandle = ask(&runtime.system, &runtime.stronghold_actor, $message);
-        let result = handle.await.map_err(Error::FailedToPerformAction)?;
-        if let $expected_response = result {
-            $b
-        } else {
-            return Err(Error::FailedToPerformAction(format!("{:?}", result)));
-        }
-    }};
+fn status_message_to_result(status: StatusMessage) -> Result<()> {
+    match status {
+        StatusMessage::Ok(_) => Ok(()),
+        StatusMessage::Error(e) => Err(Error::FailedToPerformAction(e)),
+    }
 }
 
-#[derive(Debug, Clone)]
-pub enum Request {
-    LoadSnapshot(PathBuf, String),
-    SaveSnapshot(PathBuf, String),
-    CreateSnapshot(PathBuf, String),
-    GetAccountRecordId,
-    GetRecord(RecordType, RecordId),
-    GetAccounts,
-    StoreRecord(Option<RecordId>, Vec<u8>, RecordType),
-    RemoveRecord(RecordId),
-    ClearCache,
+async fn load_private_data_actor(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> Result<()> {
+    on_stronghold_access(&snapshot_path)?;
+    check_snapshot(&mut runtime, &snapshot_path).await?;
+
+    let client_path = PRIVATE_DATA_CLIENT_PATH.to_vec();
+    if runtime.spawned_client_paths.contains(&client_path) {
+        status_message_to_result(runtime.stronghold.switch_actor_target(client_path.clone()))?;
+    } else {
+        status_message_to_result(
+            runtime
+                .stronghold
+                .spawn_stronghold_actor(client_path.clone(), vec![StrongholdFlags::IsReadable(false)]),
+        )?;
+        runtime.spawned_client_paths.insert(client_path);
+    };
+
+    Ok(())
 }
 
-fn on_stronghold_access<S: AsRef<Path>>(message: &Request, snapshot_path: S) -> Result<()> {
-    match message {
-        Request::ClearCache => Ok(()),
-        _ => {
-            let mut store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().unwrap();
-            store.insert(snapshot_path.as_ref().to_path_buf(), true);
+async fn load_account_actor(
+    mut runtime: &mut ActorRuntime,
+    snapshot_path: &PathBuf,
+    account_id: &AccountIdentifier,
+) -> Result<()> {
+    on_stronghold_access(&snapshot_path)?;
+    check_snapshot(&mut runtime, &snapshot_path).await?;
+    let client_path = account_id_to_client_path(account_id);
 
-            let passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().unwrap();
-            if !passwords.contains_key(&snapshot_path.as_ref().to_path_buf()) {
-                Err(Error::PasswordNotSet)
-            } else {
-                Ok(())
-            }
-        }
+    if runtime.spawned_client_paths.contains(&client_path) {
+        status_message_to_result(runtime.stronghold.switch_actor_target(client_path.clone()))?;
+    } else {
+        status_message_to_result(
+            runtime
+                .stronghold
+                .spawn_stronghold_actor(client_path.clone(), vec![StrongholdFlags::IsReadable(true)]),
+        )?;
+        runtime.spawned_client_paths.insert(client_path);
+    };
+
+    Ok(())
+}
+
+fn on_stronghold_access<S: AsRef<Path>>(snapshot_path: S) -> Result<()> {
+    let mut store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().unwrap();
+    store.insert(snapshot_path.as_ref().to_path_buf(), true);
+
+    let passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().unwrap();
+    if !passwords.contains_key(&snapshot_path.as_ref().to_path_buf()) {
+        Err(Error::PasswordNotSet)
+    } else {
+        Ok(())
     }
 }
 
@@ -135,10 +131,8 @@ fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, String>>> {
                 passwords.remove(&remove_key);
                 if let Some(curr_snapshot_path) = &*current_snapshot_path {
                     if &remove_key == curr_snapshot_path {
-                        let _: Result<()> = crate::block_on(async move {
-                            let message = Request::ClearCache;
-                            send_message!(curr_snapshot_path, message, StrongholdResponse::ClearCache, { Ok(()) })
-                        });
+                        let mut runtime = actor_runtime().lock().unwrap();
+                        let _ = clear_stronghold_cache(&mut runtime);
                     }
                 }
             }
@@ -162,8 +156,6 @@ fn get_password<P: AsRef<Path>>(snapshot_path: P) -> Result<String> {
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("`{0}`")]
-    Timeout(#[from] RecvTimeoutError),
     #[error("account id isn't a valid record hint")]
     InvalidAccountIdentifier,
     #[error("must provide account id instead of string")]
@@ -174,8 +166,6 @@ pub enum Error {
     AccountNotFound,
     #[error("snapshot doesn't have accounts")]
     EmptySnapshot,
-    #[error("unexpected stronghold response type: `{0}`")]
-    UnexpectedResult(StrongholdResult),
     #[error("failed to perform action: `{0}`")]
     FailedToPerformAction(String),
     #[error("snapshot password not set")]
@@ -184,354 +174,38 @@ pub enum Error {
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-type StrongholdRemoteHandle = RemoteHandle<std::result::Result<StrongholdResponse, String>>;
-
 enum Crypto {
     GenAddress,
 }
 
-#[derive(Debug)]
-pub enum StrongholdResult {
-    InitialisedRecord(RecordId),
-    ReadRecord(Vec<u8>),
-    ListIds(Vec<(RecordId, RecordHint)>),
-    CreatedVault(VaultId),
-    ReadSnapshot(Vec<VaultId>),
-    Error(String),
-}
-
-impl Display for StrongholdResult {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        write!(f, "{:?}", self)
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-enum StrongholdResponse {
-    LoadedSnapshot,
-    SavedSnapshot,
-    InitialisedRecord(RecordId),
-    Accounts(Vec<Vec<u8>>),
-    Record(Vec<u8>),
-    StoredRecord(RecordId),
-    RemovedRecord,
-    CreatedSnapshot,
-    ClearCache,
-}
-
-#[actor(SHResults)]
-struct StrongholdResultReceiver {
-    channel: ChannelRef<SHResults>,
-    result_tx: Arc<Mutex<MpscSender<StrongholdResult>>>,
-}
-
-impl ActorFactoryArgs<(ChannelRef<SHResults>, Arc<Mutex<MpscSender<StrongholdResult>>>)> for StrongholdResultReceiver {
-    fn create_args((channel, result_tx): (ChannelRef<SHResults>, Arc<Mutex<MpscSender<StrongholdResult>>>)) -> Self {
-        StrongholdResultReceiver { channel, result_tx }
-    }
-}
-
-impl StrongholdResultReceiver {
-    fn receive_response(&mut self, ctx: &Context<StrongholdResultReceiverMsg>, msg: SHResults) -> Result<()> {
-        println!("response: {:?}", msg);
-        let result_tx = self.result_tx.lock().unwrap();
-        match msg {
-            SHResults::ReturnRebuild(vaults, vault_records) => {
-                result_tx.send(StrongholdResult::ReadSnapshot(vaults)).unwrap();
-            }
-            SHResults::ReturnList(records) => {
-                result_tx.send(StrongholdResult::ListIds(records)).unwrap();
-            }
-            SHResults::ReturnCreate(vault_id, record_id) => {
-                result_tx.send(StrongholdResult::CreatedVault(vault_id)).unwrap();
-            }
-            SHResults::ReturnInit(vault_id, record_id) => {
-                result_tx.send(StrongholdResult::InitialisedRecord(record_id)).unwrap();
-            }
-            SHResults::ReturnRead(record) => {
-                result_tx.send(StrongholdResult::ReadRecord(record)).unwrap();
-            }
-        }
-        Ok(())
-    }
-}
-
-impl Actor for StrongholdResultReceiver {
-    type Msg = StrongholdResultReceiverMsg;
-
-    // set up the channel.
-    fn pre_start(&mut self, ctx: &Context<Self::Msg>) {
-        let sub = Box::new(ctx.myself());
-        let topic = Topic::from("external");
-        self.channel.tell(Subscribe { actor: sub, topic }, None);
-    }
-
-    fn recv(&mut self, ctx: &Context<Self::Msg>, msg: Self::Msg, sender: Sender) {
-        self.receive(ctx, msg, sender);
-    }
-}
-
-impl Receive<SHResults> for StrongholdResultReceiver {
-    type Msg = StrongholdResultReceiverMsg;
-
-    fn receive(&mut self, ctx: &Context<Self::Msg>, msg: SHResults, sender: Sender) {
-        let _ = self.receive_response(ctx, msg);
-    }
-}
-
-#[actor(Request)]
-struct WalletStronghold {
-    result_rx: Arc<Mutex<MpscReceiver<StrongholdResult>>>,
-    seed_vault: Option<VaultId>,
-    accounts_vault: Option<VaultId>,
-}
-
-impl ActorFactoryArgs<Arc<Mutex<MpscReceiver<StrongholdResult>>>> for WalletStronghold {
-    fn create_args(result_rx: Arc<Mutex<MpscReceiver<StrongholdResult>>>) -> Self {
-        WalletStronghold {
-            result_rx,
-            seed_vault: None,
-            accounts_vault: None,
-        }
-    }
-}
-
-impl Actor for WalletStronghold {
-    type Msg = WalletStrongholdMsg;
-
-    fn recv(&mut self, ctx: &Context<Self::Msg>, msg: Self::Msg, sender: Sender) {
-        self.receive(ctx, msg, sender);
-    }
-}
-
-fn account_id_to_record_id(account_id: AccountIdentifier) -> Result<RecordId> {
-    let account_id_str = match account_id {
-        AccountIdentifier::Id(id) => id,
-        AccountIdentifier::Index(_) => {
-            return Err(Error::AccountIdMustBeString);
-        }
-    };
-    let id: RecordId = account_id_str.as_bytes()[0..24]
-        .try_into()
-        .map_err(|_| Error::InvalidAccountIdentifier)?;
-    Ok(id)
-}
-
-/// Stronghold record type.
-/// Determines the vault where the record will be stored, and its policy.
-#[derive(Debug, Clone)]
-pub enum RecordType {
-    /// Seed record.
-    Seed,
-    /// Account record.
-    Account,
-}
-
-impl WalletStronghold {
-    fn clear_state(&mut self) {
-        self.seed_vault = None;
-        self.accounts_vault = None;
-    }
-
-    fn record_type_metadata(&self, record_type: &RecordType) -> (VaultId, RecordHint) {
-        match record_type {
-            RecordType::Seed => (self.seed_vault.unwrap(), RecordHint::new(SEED_HINT.as_bytes()).unwrap()),
-            RecordType::Account => (
-                self.accounts_vault.unwrap(),
-                RecordHint::new(ACCOUNT_HINT.as_bytes()).unwrap(),
-            ),
-        }
-    }
-
-    fn receive_message(&mut self, ctx: &Context<WalletStrongholdMsg>, msg: Request) -> Result<StrongholdResponse> {
-        let stronghold_client = ctx
-            .select("/user/stronghold-internal/")
-            .expect("failed to select stronghold actor");
-        match msg {
-            Request::LoadSnapshot(snapshot_path, password) => {
-                self.clear_state();
-
-                // read snapshot
-                stronghold_client.try_tell(
-                    ClientMsg::SHRequest(SHRequest::ReadSnapshot(password, None, Some(snapshot_path))),
-                    None,
-                );
-                wait_for_result!(self, StrongholdResult::ReadSnapshot(vaults), {
-                    // search vault with the seed and vault with the accounts
-                    let mut vault_records = vec![];
-                    for vault in vaults.iter() {
-                        stronghold_client.try_tell(ClientMsg::SHRequest(SHRequest::ListIds(*vault)), None);
-                        let seed_hint = RecordHint::new(SEED_HINT).unwrap();
-                        let account_hint = RecordHint::new(ACCOUNT_HINT).unwrap();
-                        wait_for_result!(self, StrongholdResult::ListIds(records), {
-                            if records.iter().any(|(_, hint)| hint == &seed_hint) {
-                                self.seed_vault = Some(*vault);
-                            }
-                            if records.iter().any(|(_, hint)| hint == &account_hint) {
-                                self.accounts_vault = Some(*vault);
-                            }
-                            vault_records.push((*vault, records));
-                            if self.seed_vault.is_some() && self.accounts_vault.is_some() {
-                                break;
-                            }
-                        });
-                    }
-
-                    if self.seed_vault.is_none() {
-                        // if the last vault is empty, use it as the seed vault
-                        match vault_records.last() {
-                            Some((vault_id, records)) if records.is_empty() => {
-                                self.seed_vault = Some(*vault_id);
-                            }
-                            _ => {
-                                stronghold_client.try_tell(ClientMsg::SHRequest(SHRequest::CreateNewVault), None);
-                                wait_for_result!(self, StrongholdResult::CreatedVault(vault_id), {
-                                    self.seed_vault = Some(vault_id);
-                                });
-                            }
-                        }
-                    }
-                    if self.accounts_vault.is_none() {
-                        self.accounts_vault = Some(self.seed_vault.unwrap());
-                    }
-                    Ok(StrongholdResponse::LoadedSnapshot)
-                })
-            }
-            Request::SaveSnapshot(snapshot_path, password) => {
-                stronghold_client.try_tell(
-                    ClientMsg::SHRequest(SHRequest::WriteSnapshot(password, None, Some(snapshot_path))),
-                    None,
-                );
-                Ok(StrongholdResponse::SavedSnapshot)
-            }
-            Request::CreateSnapshot(snapshot_path, password) => {
-                self.clear_state();
-
-                // TODO stronghold_client.try_tell(ClientMsg::SHRequest(SHRequest::ClearCache), None);
-
-                stronghold_client.try_tell(ClientMsg::SHRequest(SHRequest::CreateNewVault), None);
-                wait_for_result!(self, StrongholdResult::CreatedVault(vault_id), {
-                    self.seed_vault = Some(vault_id);
-                    self.accounts_vault = Some(vault_id);
-
-                    stronghold_client.try_tell(
-                        ClientMsg::SHRequest(SHRequest::WriteSnapshot(password, None, Some(snapshot_path))),
-                        None,
-                    );
-
-                    Ok(StrongholdResponse::CreatedSnapshot)
-                })
-            }
-            Request::GetAccountRecordId => {
-                stronghold_client.try_tell(
-                    ClientMsg::SHRequest(SHRequest::InitRecord(self.accounts_vault.unwrap())),
-                    None,
-                );
-                wait_for_result!(self, StrongholdResult::InitialisedRecord(record_id), {
-                    Ok(StrongholdResponse::InitialisedRecord(record_id))
-                })
-            }
-            Request::GetRecord(record_type, record_id) => {
-                stronghold_client.try_tell(
-                    ClientMsg::SHRequest(SHRequest::ReadData(
-                        self.record_type_metadata(&record_type).0,
-                        Some(record_id),
-                    )),
-                    None,
-                );
-                wait_for_result!(
-                    self,
-                    StrongholdResult::ReadRecord(record),
-                    { Ok(StrongholdResponse::Record(record)) },
-                    Error::AccountNotFound
-                )
-            }
-            Request::GetAccounts => {
-                let vault_id = self.accounts_vault.ok_or(Error::EmptySnapshot)?;
-                stronghold_client.try_tell(ClientMsg::SHRequest(SHRequest::ListIds(vault_id)), None);
-                wait_for_result!(self, StrongholdResult::ListIds(record_pairs), {
-                    let mut accounts = vec![];
-                    let account_hint = RecordHint::new(ACCOUNT_HINT).unwrap();
-                    for (id, hint) in record_pairs {
-                        if hint == account_hint {
-                            stronghold_client.try_tell(
-                                ClientMsg::SHRequest(SHRequest::ReadData(self.accounts_vault.unwrap(), Some(id))),
-                                None,
-                            );
-                            wait_for_result!(
-                                self,
-                                StrongholdResult::ReadRecord(record),
-                                {
-                                    accounts.push(record);
-                                },
-                                Error::AccountNotFound
-                            );
-                        }
-                    }
-                    Ok(StrongholdResponse::Accounts(accounts))
-                })
-            }
-            Request::StoreRecord(record_id, record, record_type) => {
-                let (vault_id, record_hint) = self.record_type_metadata(&record_type);
-                stronghold_client.try_tell(
-                    ClientMsg::SHRequest(SHRequest::WriteData(vault_id, record_id, record, record_hint)),
-                    None,
-                );
-                // TODO wait for record id response
-                Ok(StrongholdResponse::StoredRecord(record_id.unwrap()))
-            }
-            Request::RemoveRecord(record_id) => {
-                stronghold_client.try_tell(
-                    ClientMsg::SHRequest(SHRequest::RevokeData(self.accounts_vault.unwrap(), record_id)),
-                    None,
-                );
-                Ok(StrongholdResponse::RemovedRecord)
-            }
-            Request::ClearCache => {
-                // TODO stronghold_client.try_tell(ClientMsg::SHRequest(SHRequest::ClearCache), None);
-                Ok(StrongholdResponse::ClearCache)
-            }
-        }
-    }
-}
-
-impl Receive<Request> for WalletStronghold {
-    type Msg = WalletStrongholdMsg;
-
-    fn receive(&mut self, ctx: &Context<Self::Msg>, msg: Request, sender: Sender) {
-        let res = self.receive_message(ctx, msg);
-        sender
-            .as_ref()
-            .unwrap()
-            .try_tell(res.map_err(|e| e.to_string()), Some(ctx.myself().into()))
-            .unwrap();
-    }
-}
-
 struct ActorRuntime {
-    system: ActorSystem,
-    stronghold_channel: ChannelRef<SHResults>,
-    stronghold_actor: ActorRef<WalletStrongholdMsg>,
+    stronghold: Stronghold,
+    spawned_client_paths: HashSet<Vec<u8>>,
+}
+
+fn system_runtime() -> &'static Arc<Mutex<ActorSystem>> {
+    static SYSTEM: Lazy<Arc<Mutex<ActorSystem>>> = Lazy::new(|| {
+        let system = ActorSystem::new().unwrap();
+        Arc::new(Mutex::new(system))
+    });
+    &SYSTEM
 }
 
 fn actor_runtime() -> &'static Arc<Mutex<ActorRuntime>> {
     static SYSTEM: Lazy<Arc<Mutex<ActorRuntime>>> = Lazy::new(|| {
         let system = ActorSystem::new().unwrap();
-        let (system, stronghold_channel) = iota_stronghold::init_stronghold(system);
-        let (result_tx, result_rx) = mpsc_channel();
-        let stronghold_result_receiver_actor = system
-            .actor_of_args::<StrongholdResultReceiver, _>(
-                "wallet-stronghold-result-receiver",
-                (stronghold_channel.clone(), Arc::new(Mutex::new(result_tx))),
-            )
-            .expect("failed to initialise stronghold actor");
-        let stronghold_actor = system
-            .actor_of_args::<WalletStronghold, _>("wallet-stronghold", Arc::new(Mutex::new(result_rx)))
-            .expect("failed to initialise stronghold actor");
-        let runtime = ActorRuntime {
+        let stronghold = Stronghold::init_stronghold_system(
             system,
-            stronghold_channel,
-            stronghold_actor,
+            PRIVATE_DATA_CLIENT_PATH.to_vec(),
+            vec![StrongholdFlags::IsReadable(false)],
+        );
+
+        let mut spawned_client_paths = HashSet::new();
+        spawned_client_paths.insert(PRIVATE_DATA_CLIENT_PATH.to_vec());
+
+        let runtime = ActorRuntime {
+            stronghold,
+            spawned_client_paths,
         };
         Arc::new(Mutex::new(runtime))
     });
@@ -540,7 +214,7 @@ fn actor_runtime() -> &'static Arc<Mutex<ActorRuntime>> {
 
 // check if the snapshot path is different than the current loaded one
 // if it is, write the current snapshot and load the new one
-async fn check_snapshot(runtime: &ActorRuntime, snapshot_path: &PathBuf) -> Result<()> {
+async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> Result<()> {
     let current_snapshot_path = CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).read().unwrap();
     let curr_snapshot_path = current_snapshot_path.clone();
     std::mem::drop(current_snapshot_path);
@@ -549,67 +223,58 @@ async fn check_snapshot(runtime: &ActorRuntime, snapshot_path: &PathBuf) -> Resu
         // if the current loaded snapshot is different than the snapshot we're tring to use,
         // save the current snapshot and read the new snapshot
         if curr_snapshot_path != snapshot_path {
-            println!("curr: {:?}, next: {:?}", curr_snapshot_path, &snapshot_path,);
-            let curr_snapshot_password = get_password(&curr_snapshot_path).unwrap();
-            let handle: StrongholdRemoteHandle = ask(
-                &runtime.system,
-                &runtime.stronghold_actor,
-                Request::SaveSnapshot(curr_snapshot_path.to_path_buf(), curr_snapshot_password),
-            );
+            let _curr_snapshot_password = get_password(&curr_snapshot_path).unwrap();
+            status_message_to_result(
+                runtime
+                    .stronghold
+                    .write_snapshot(
+                        PRIVATE_DATA_CLIENT_PATH.to_vec(),
+                        [0; 32].to_vec(), // TODO use curr_snapshot_password
+                        None,
+                        Some(curr_snapshot_path.to_path_buf()),
+                        None,
+                    )
+                    .await,
+            )?;
 
-            let result = handle.await.map_err(Error::FailedToPerformAction)?;
-            if let StrongholdResponse::SavedSnapshot = result {
-                let password = get_password(snapshot_path).unwrap();
-                println!("next: {:?}, exists: {}", snapshot_path, snapshot_path.exists());
-
-                let (handle, expected_response): (StrongholdRemoteHandle, StrongholdResponse) =
-                    if snapshot_path.exists() {
-                        (
-                            ask(
-                                &runtime.system,
-                                &runtime.stronghold_actor,
-                                Request::LoadSnapshot(snapshot_path.to_path_buf(), password),
-                            ),
-                            StrongholdResponse::LoadedSnapshot,
-                        )
-                    } else {
-                        (
-                            ask(
-                                &runtime.system,
-                                &runtime.stronghold_actor,
-                                Request::CreateSnapshot(snapshot_path.to_path_buf(), password),
-                            ),
-                            StrongholdResponse::CreatedSnapshot,
-                        )
-                    };
-                let result = handle.await.map_err(Error::FailedToPerformAction)?;
-                if expected_response == result {
-                    let mut current_snapshot_path =
-                        CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).write().unwrap();
-                    current_snapshot_path.replace(snapshot_path.clone());
-                } else {
-                    return Err(Error::FailedToPerformAction(format!("{:?}", result)));
-                }
-            } else {
-                return Err(Error::FailedToPerformAction(format!("{:?}", result)));
-            }
+            let password = get_password(snapshot_path).unwrap();
+            read_or_create_snapshot(&mut runtime, snapshot_path, password).await?;
         }
     }
 
     Ok(())
 }
 
-pub async fn load_or_create<P: Into<String>>(snapshot_path: &PathBuf, password: P) -> Result<()> {
-    let password = password.into();
-    set_password(snapshot_path, password.clone());
-    let res: Result<()> = if snapshot_path.exists() {
-        let message = Request::LoadSnapshot(snapshot_path.clone(), password);
-        send_message!(snapshot_path, message, StrongholdResponse::LoadedSnapshot, { Ok(()) })
+async fn clear_stronghold_cache(runtime: &mut ActorRuntime) -> Result<()> {
+    for path in &runtime.spawned_client_paths {
+        status_message_to_result(runtime.stronghold.kill_stronghold(path.clone(), false).await)?;
+        status_message_to_result(runtime.stronghold.kill_stronghold(path.clone(), true).await)?;
+    }
+    runtime.spawned_client_paths = HashSet::new();
+    Ok(())
+}
+
+async fn read_or_create_snapshot(
+    mut runtime: &mut ActorRuntime,
+    snapshot_path: &PathBuf,
+    _password: String,
+) -> Result<()> {
+    if snapshot_path.exists() {
+        status_message_to_result(
+            runtime
+                .stronghold
+                .read_snapshot(
+                    PRIVATE_DATA_CLIENT_PATH.to_vec(),
+                    [0; 32].to_vec(), // TODO
+                    None,
+                    Some(snapshot_path.clone()),
+                )
+                .await,
+        )?;
     } else {
-        let message = Request::CreateSnapshot(snapshot_path.clone(), password);
-        send_message!(snapshot_path, message, StrongholdResponse::CreatedSnapshot, { Ok(()) })
-    };
-    res?;
+        clear_stronghold_cache(&mut runtime).await?;
+        // TODO write all actors to snapshot
+    }
 
     let mut current_snapshot_path = CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).write().unwrap();
     current_snapshot_path.replace(snapshot_path.clone());
@@ -617,75 +282,134 @@ pub async fn load_or_create<P: Into<String>>(snapshot_path: &PathBuf, password: 
     Ok(())
 }
 
+pub async fn load_snapshot<P: Into<String>>(snapshot_path: &PathBuf, password: P) -> Result<()> {
+    let password = password.into();
+    set_password(snapshot_path, password.clone());
+
+    let mut runtime = actor_runtime().lock().unwrap();
+    check_snapshot(&mut runtime, snapshot_path).await?;
+    read_or_create_snapshot(&mut runtime, snapshot_path, password).await
+}
+
 pub async fn do_crypto(account: &Account) -> Result<()> {
     Ok(())
 }
 
 pub async fn get_accounts(snapshot_path: &PathBuf) -> Result<Vec<String>> {
-    let message = Request::GetAccounts;
-    send_message!(snapshot_path, message, StrongholdResponse::Accounts(accounts), {
-        Ok(accounts
-            .into_iter()
-            .map(|acc| String::from_utf8_lossy(&acc).to_string())
-            .collect())
-    })
+    let mut runtime = actor_runtime().lock().unwrap();
+    load_private_data_actor(&mut runtime, snapshot_path).await?;
+    let account_ids_location = Location::generic(ACCOUNT_METADATA_VAULT_PATH, ACCOUNT_IDS_RECORD_PATH);
+    let (data_opt, status) = runtime.stronghold.read_data(account_ids_location.clone()).await;
+
+    let mut accounts = Vec::new();
+    if let Some(data) = data_opt {
+        let account_ids = String::from_utf8_lossy(&data).to_string();
+        for account_id in account_ids.split(ACCOUNT_ID_SEPARATOR) {
+            let id = AccountIdentifier::Id(account_id.to_string());
+            let account = get_account_internal(&mut runtime, snapshot_path, &id).await?;
+            accounts.push(account);
+        }
+    }
+    Ok(accounts)
 }
 
-pub async fn read_record(snapshot_path: &PathBuf, record_type: RecordType, record_id: RecordId) -> Result<Vec<u8>> {
-    let message = Request::GetRecord(record_type, record_id);
-    send_message!(snapshot_path, message, StrongholdResponse::Record(record), {
-        Ok(record)
-    })
-}
-
-pub async fn get_account(snapshot_path: &PathBuf, account_id: AccountIdentifier) -> Result<String> {
-    let raw = read_record(snapshot_path, RecordType::Account, account_id_to_record_id(account_id)?).await?;
-    Ok(String::from_utf8_lossy(&raw).to_string())
-}
-
-pub async fn new_account_record(snapshot_path: &PathBuf) -> Result<RecordId> {
-    let message = Request::GetAccountRecordId;
-    send_message!(
-        snapshot_path,
-        message,
-        StrongholdResponse::InitialisedRecord(record_id),
-        { Ok(record_id) }
-    )
-}
-
-pub async fn store_record(
+async fn get_account_internal(
+    mut runtime: &mut ActorRuntime,
     snapshot_path: &PathBuf,
-    record_id: Option<RecordId>,
-    record: Vec<u8>,
-    record_type: RecordType,
-) -> Result<RecordId> {
-    let message = Request::StoreRecord(record_id, record, record_type);
-    send_message!(snapshot_path, message, StrongholdResponse::StoredRecord(id), { Ok(id) })
+    account_id: &AccountIdentifier,
+) -> Result<String> {
+    load_account_actor(&mut runtime, snapshot_path, account_id).await?;
+    let (data, _) = runtime
+        .stronghold
+        .read_data(Location::generic(ACCOUNT_VAULT_PATH, ACCOUNT_RECORD_PATH))
+        .await;
+    data.map(|d| String::from_utf8_lossy(&d).to_string())
+        .ok_or(Error::AccountNotFound)
 }
 
-pub async fn store_account(snapshot_path: &PathBuf, account_id: AccountIdentifier, account: String) -> Result<()> {
-    store_record(
-        snapshot_path,
-        Some(account_id_to_record_id(account_id)?),
-        account.as_bytes().to_vec(),
-        RecordType::Account,
+pub async fn get_account(snapshot_path: &PathBuf, account_id: &AccountIdentifier) -> Result<String> {
+    let mut runtime = actor_runtime().lock().unwrap();
+    get_account_internal(&mut runtime, snapshot_path, account_id).await
+}
+
+pub async fn store_account(snapshot_path: &PathBuf, account_id: &AccountIdentifier, account: String) -> Result<()> {
+    let mut runtime = actor_runtime().lock().unwrap();
+
+    // first we push the account id to the reference array
+    // the reference array holds all account ids so we can scan them on the `get_accounts` implementation
+    load_private_data_actor(&mut runtime, snapshot_path).await?;
+    let account_ids_location = Location::generic(ACCOUNT_METADATA_VAULT_PATH, ACCOUNT_IDS_RECORD_PATH);
+    let (data_opt, status) = runtime.stronghold.read_data(account_ids_location.clone()).await;
+    let mut account_ids = data_opt
+        .map(|d| String::from_utf8_lossy(&d).to_string())
+        .unwrap_or_else(String::new);
+
+    let id = match account_id {
+        AccountIdentifier::Id(id) => id,
+        AccountIdentifier::Index(_) => unreachable!(),
+    };
+    if !account_ids.contains(id.as_str()) {
+        account_ids.push_str(id);
+        status_message_to_result(
+            runtime
+                .stronghold
+                .write_data(
+                    account_ids_location,
+                    account_ids.as_bytes().to_vec(),
+                    RecordHint::new("wallet.rs-account-ids").unwrap(),
+                    vec![],
+                )
+                .await,
+        )?;
+    }
+
+    load_account_actor(&mut runtime, snapshot_path, account_id).await?;
+    status_message_to_result(
+        runtime
+            .stronghold
+            .write_data(
+                Location::generic(ACCOUNT_VAULT_PATH, ACCOUNT_RECORD_PATH),
+                account.as_bytes().to_vec(),
+                RecordHint::new("wallet.rs-account").unwrap(),
+                vec![],
+            )
+            .await,
     )
-    .await?;
-    Ok(())
 }
 
-pub async fn remove_record(snapshot_path: &PathBuf, record_id: RecordId) -> Result<()> {
-    let message = Request::RemoveRecord(record_id);
-    send_message!(snapshot_path, message, StrongholdResponse::RemovedRecord, { Ok(()) })
-}
+pub async fn remove_account(snapshot_path: &PathBuf, account_id: &AccountIdentifier) -> Result<()> {
+    let mut runtime = actor_runtime().lock().unwrap();
 
-pub async fn remove_account(snapshot_path: &PathBuf, account_id: AccountIdentifier) -> Result<()> {
-    remove_record(snapshot_path, account_id_to_record_id(account_id)?).await
+    // first we delete the account id from the reference array
+    load_private_data_actor(&mut runtime, snapshot_path).await?;
+    let account_ids_location = Location::generic(ACCOUNT_METADATA_VAULT_PATH, ACCOUNT_IDS_RECORD_PATH);
+    let (data_opt, status) = runtime.stronghold.read_data(account_ids_location.clone()).await;
+    let data = data_opt.ok_or(Error::AccountNotFound)?;
+    let account_ids = String::from_utf8_lossy(&data).to_string();
+    status_message_to_result(
+        runtime
+            .stronghold
+            .write_data(
+                account_ids_location,
+                account_ids.as_bytes().to_vec(),
+                RecordHint::new("wallet.rs-account-ids").unwrap(),
+                vec![],
+            )
+            .await,
+    )?;
+
+    load_account_actor(&mut runtime, snapshot_path, account_id).await?;
+    status_message_to_result(
+        runtime
+            .stronghold
+            .delete_data(Location::generic(ACCOUNT_VAULT_PATH, ACCOUNT_RECORD_PATH), true)
+            .await,
+    )
 }
 
 #[cfg(test)]
 mod tests {
-    use super::RecordType;
+    use crate::account::AccountIdentifier;
     use rand::{thread_rng, Rng};
     use std::{path::PathBuf, time::Duration};
 
@@ -695,10 +419,10 @@ mod tests {
         super::set_password_clear_interval(Duration::from_millis(interval));
         let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
         let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
-        super::load_or_create(&snapshot_path, "password").await?;
+        super::load_snapshot(&snapshot_path, "password").await?;
 
         std::thread::sleep(Duration::from_millis(interval * 2));
-        let res = super::new_account_record(&snapshot_path).await;
+        let res = super::get_account(&snapshot_path, &AccountIdentifier::Id("".to_string())).await;
         assert_eq!(res.is_err(), true);
         if let super::Error::PasswordNotSet = res.unwrap_err() {
         } else {
@@ -714,18 +438,25 @@ mod tests {
         super::set_password_clear_interval(Duration::from_millis(interval));
         let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
         let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
-        super::load_or_create(&snapshot_path, "password").await?;
+        super::load_snapshot(&snapshot_path, "password").await?;
 
-        for _ in 1..5 {
-            super::new_account_record(&snapshot_path).await?;
+        for i in 1..5 {
+            super::store_account(
+                &snapshot_path,
+                &AccountIdentifier::Id(i.to_string()),
+                "data".to_string(),
+            )
+            .await?;
             std::thread::sleep(Duration::from_millis(interval / 2));
         }
 
-        let res = super::new_account_record(&snapshot_path).await;
+        let id = AccountIdentifier::Id(1.to_string());
+        let res = super::get_account(&snapshot_path, &id).await;
         assert_eq!(res.is_ok(), true);
 
         std::thread::sleep(Duration::from_millis(interval * 2));
-        let res = super::new_account_record(&snapshot_path).await;
+
+        let res = super::get_account(&snapshot_path, &id).await;
         assert_eq!(res.is_err(), true);
         if let super::Error::PasswordNotSet = res.unwrap_err() {
         } else {
@@ -739,20 +470,13 @@ mod tests {
     async fn write_and_read() -> super::Result<()> {
         let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
         let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
-        println!("using {:?}", snapshot_path);
-        super::load_or_create(&snapshot_path, "password").await?;
+        super::load_snapshot(&snapshot_path, "password").await?;
 
+        let id = AccountIdentifier::Id("id".to_string());
         let data = "account data";
-        let record_id = super::new_account_record(&snapshot_path).await?;
-        super::store_record(
-            &snapshot_path,
-            Some(record_id),
-            data.as_bytes().to_vec(),
-            RecordType::Account,
-        )
-        .await?;
-        let stored_data = super::read_record(&snapshot_path, RecordType::Account, record_id).await?;
-        assert_eq!(stored_data, data.as_bytes().to_vec());
+        super::store_account(&snapshot_path, &id, data.to_string()).await?;
+        let stored_data = super::get_account(&snapshot_path, &id).await?;
+        assert_eq!(stored_data, data);
 
         Ok(())
     }
@@ -762,28 +486,20 @@ mod tests {
         let mut snapshot_saves = vec![];
         let _ = std::fs::create_dir("./example-database");
 
-        for _ in 1..3 {
+        for i in 1..3 {
             let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
             let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
-            println!("using {:?}", snapshot_path);
-            super::load_or_create(&snapshot_path, "password").await?;
+            super::load_snapshot(&snapshot_path, "password").await?;
 
+            let id = AccountIdentifier::Id(i.to_string());
             let data: String = thread_rng().gen_ascii_chars().take(10).collect();
-            let record_id = super::new_account_record(&snapshot_path).await?;
-            super::store_record(
-                &snapshot_path,
-                Some(record_id),
-                data.clone().as_bytes().to_vec(),
-                RecordType::Account,
-            )
-            .await?;
-            snapshot_saves.push((snapshot_path, record_id, data));
-            println!("\n\n\n\n");
+            super::store_account(&snapshot_path, &id, data.clone()).await?;
+            snapshot_saves.push((snapshot_path, id, data));
         }
 
-        for (snapshot_path, record_id, data) in snapshot_saves {
-            let stored_data = super::read_record(&snapshot_path, RecordType::Account, record_id).await?;
-            assert_eq!(stored_data, data.as_bytes().to_vec());
+        for (snapshot_path, account_id, data) in snapshot_saves {
+            let stored_data = super::get_account(&snapshot_path, &account_id).await?;
+            assert_eq!(stored_data, data);
         }
 
         Ok(())
