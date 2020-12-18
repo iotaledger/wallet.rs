@@ -136,7 +136,7 @@ impl WalletMessageHandler {
         let parsed_message_id = MessageId::new(
             message_id.as_bytes()[..]
                 .try_into()
-                .map_err(|_| anyhow::anyhow!("invalid message id length"))?,
+                .map_err(|_| crate::Error::InvalidMessageId)?,
         );
         self.account_manager.reattach(account_id, &parsed_message_id).await?;
         Ok(ResponseType::Reattached(message_id.to_string()))
@@ -231,11 +231,7 @@ impl WalletMessageHandler {
             builder = builder.alias(alias);
         }
         if let Some(created_at) = &account.created_at {
-            builder = builder.created_at(
-                created_at
-                    .parse::<DateTime<Utc>>()
-                    .map_err(|e| anyhow::anyhow!(e.to_string()))?,
-            );
+            builder = builder.created_at(created_at.parse::<DateTime<Utc>>()?);
         }
 
         match builder.initialise().await {

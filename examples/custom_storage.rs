@@ -19,10 +19,12 @@ impl MyStorage {
     }
 }
 
-fn account_id_value(account_id: &AccountIdentifier) -> anyhow::Result<String> {
+fn account_id_value(account_id: &AccountIdentifier) -> iota_wallet::Result<String> {
     match account_id {
         AccountIdentifier::Id(val) => Ok(val.to_string()),
-        _ => Err(anyhow::anyhow!("Unexpected AccountIdentifier type")),
+        _ => Err(iota_wallet::Error::Storage(
+            "Unexpected AccountIdentifier type".to_string(),
+        )),
     }
 }
 
@@ -30,8 +32,11 @@ impl StorageAdapter for MyStorage {
     fn get(&self, account_id: &AccountIdentifier) -> iota_wallet::Result<String> {
         match self.db.get(account_id_value(account_id)?) {
             Ok(Some(value)) => Ok(String::from_utf8(value.to_vec()).unwrap()),
-            Ok(None) => Err(anyhow::anyhow!("Value not found").into()),
-            Err(e) => Err(anyhow::anyhow!("operational problem encountered: {}", e).into()),
+            Ok(None) => Err(iota_wallet::Error::AccountNotFound),
+            Err(e) => Err(iota_wallet::Error::Storage(format!(
+                "operational problem encountered: {}",
+                e
+            ))),
         }
     }
 
@@ -47,14 +52,14 @@ impl StorageAdapter for MyStorage {
     fn set(&self, account_id: &AccountIdentifier, account: String) -> iota_wallet::Result<()> {
         self.db
             .insert(account_id_value(account_id)?, account.as_bytes())
-            .map_err(|e| iota_wallet::WalletError::UnknownError(e.to_string()))?;
+            .map_err(|e| iota_wallet::Error::Storage(e.to_string()))?;
         Ok(())
     }
 
     fn remove(&self, account_id: &AccountIdentifier) -> iota_wallet::Result<()> {
         self.db
             .remove(account_id_value(account_id)?)
-            .map_err(|e| iota_wallet::WalletError::UnknownError(e.to_string()))?;
+            .map_err(|e| iota_wallet::Error::Storage(e.to_string()))?;
         Ok(())
     }
 }

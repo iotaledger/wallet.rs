@@ -91,53 +91,62 @@ pub(crate) mod message_id_serde {
     }
 }
 
-impl serde::Serialize for crate::WalletError {
+impl serde::Serialize for crate::Error {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
         fn serialize_variant<S: Serializer>(
+            error: &crate::Error,
             serializer: S,
             variant_name: &str,
-            message: Option<&str>,
         ) -> std::result::Result<S::Ok, S::Error> {
-            let mut state = serializer.serialize_struct("WalletError", 2)?;
+            let mut state = serializer.serialize_struct("Error", 2)?;
             state.serialize_field("type", variant_name)?;
-            state.serialize_field("error", &message)?;
+            state.serialize_field("error", &error.to_string())?;
             state.end()
         }
+
         match self {
-            Self::UnknownError(error) => serialize_variant(serializer, "UnknownError", Some(error)),
-            Self::GenericError(error) => serialize_variant(serializer, "GenericError", Some(&error.to_string())),
-            Self::IoError(error) => serialize_variant(serializer, "IoError", Some(&error.to_string())),
-            Self::JsonError(error) => serialize_variant(serializer, "JsonError", Some(&error.to_string())),
-            Self::StrongholdError(error) => serialize_variant(serializer, "StrongholdError", Some(&error.to_string())),
-            Self::ClientError(error) => serialize_variant(serializer, "ClientError", Some(&error.to_string())),
-            Self::SqliteError(error) => serialize_variant(serializer, "SqliteError", Some(&error.to_string())),
-            Self::UrlError(error) => serialize_variant(serializer, "UrlError", Some(&error.to_string())),
-            Self::UnexpectedResponse(error) => serialize_variant(serializer, "UnexpectedResponse", Some(&error)),
-            Self::MessageAboveMaxDepth => serialize_variant(serializer, "MessageAboveMaxDepth", None),
-            Self::MessageAlreadyConfirmed => serialize_variant(serializer, "MessageAlreadyConfirmed", None),
-            Self::MessageNotFound => serialize_variant(serializer, "MessageNotFound", None),
-            Self::EmptyNodeList => serialize_variant(serializer, "EmptyNodeList", None),
-            Self::InvalidAddressLength => serialize_variant(serializer, "InvalidAddressLength", None),
-            Self::InvalidTransactionIdLength => {
-                serializer.serialize_newtype_variant("WalletError", 14, "InvalidTransactionIdLength", "")
+            Self::GenericError(error) => serialize_variant(self, serializer, "GenericError"),
+            Self::IoError(error) => serialize_variant(self, serializer, "IoError"),
+            Self::JsonError(error) => serialize_variant(self, serializer, "JsonError"),
+            Self::StrongholdError(error) => serialize_variant(self, serializer, "StrongholdError"),
+            Self::ClientError(error) => serialize_variant(self, serializer, "ClientError"),
+            Self::SqliteError(error) => serialize_variant(self, serializer, "SqliteError"),
+            Self::UrlError(error) => serialize_variant(self, serializer, "UrlError"),
+            Self::UnexpectedResponse(error) => serialize_variant(self, serializer, "UnexpectedResponse"),
+            Self::MessageAboveMaxDepth => serialize_variant(self, serializer, "MessageAboveMaxDepth"),
+            Self::MessageAlreadyConfirmed => serialize_variant(self, serializer, "MessageAlreadyConfirmed"),
+            Self::MessageNotFound => serialize_variant(self, serializer, "MessageNotFound"),
+            Self::EmptyNodeList => serialize_variant(self, serializer, "EmptyNodeList"),
+            Self::InvalidAddressLength => serialize_variant(self, serializer, "InvalidAddressLength"),
+            Self::InvalidMessageIdLength => serialize_variant(self, serializer, "InvalidMessageIdLength"),
+            Self::Bech32Error(error) => serialize_variant(self, serializer, "Bech32Error"),
+            Self::AccountAlreadyImported { alias } => serialize_variant(self, serializer, "AccountAlreadyImported"),
+            Self::StorageDoesntExist => serialize_variant(self, serializer, "StorageDoesntExist"),
+            Self::InsufficientFunds => serialize_variant(self, serializer, "InsufficientFunds"),
+            Self::MessageNotEmpty => serialize_variant(self, serializer, "MessageNotEmpty"),
+            Self::LatestAccountIsEmpty => serialize_variant(self, serializer, "LatestAccountIsEmpty"),
+            Self::ZeroAmount => serialize_variant(self, serializer, "ZeroAmount"),
+            Self::AccountNotFound => serialize_variant(self, serializer, "AccountNotFound"),
+            Self::InvalidRemainderValueAddress => serialize_variant(self, serializer, "InvalidRemainderValueAddress"),
+            Self::Storage(error) => serialize_variant(self, serializer, "Storage"),
+            Self::Panic(error) => serialize_variant(self, serializer, "Panic"),
+            Self::TransferDestinationEmpty => serialize_variant(self, serializer, "TransferDestinationEmpty"),
+            Self::InvalidMessageId => serialize_variant(self, serializer, "InvalidMessageId"),
+            Self::InvalidTransactionId => serialize_variant(self, serializer, "InvalidTransactionId"),
+            Self::AddressBuildRequiredField(field) => serialize_variant(self, serializer, "AddressBuildRequiredField"),
+            Self::AccountInitialiseRequiredField(field) => {
+                serialize_variant(self, serializer, "AccountInitialiseRequiredField")
             }
-            Self::InvalidMessageIdLength => serialize_variant(serializer, "InvalidMessageIdLength", None),
-            Self::Bech32Error(error) => serialize_variant(serializer, "Bech32Error", Some(&error.to_string())),
-            Self::AccountAlreadyImported { alias } => serialize_variant(
-                serializer,
-                "AccountAlreadyImported",
-                Some(&format!("account {} already imported", alias)),
-            ),
-            Self::StorageDoesntExist => serialize_variant(serializer, "StorageDoesntExist", None),
-            Self::InsufficientFunds => serialize_variant(serializer, "InsufficientFunds", None),
-            Self::MessageNotEmpty => serialize_variant(serializer, "MessageNotEmpty", None),
-            Self::LatestAccountIsEmpty => serialize_variant(serializer, "LatestAccountIsEmpty", None),
-            Self::ZeroAmount => serialize_variant(serializer, "ZeroAmount", None),
-            Self::AccountNotFound => serialize_variant(serializer, "AccountNotFound", None),
-            Self::InvalidRemainderValueAddress => serialize_variant(serializer, "InvalidRemainderValueAddress", None),
+            Self::StrongholdNotLoaded => serialize_variant(self, serializer, "StrongholdNotLoaded"),
+            Self::Hex(error) => serialize_variant(self, serializer, "Hex"),
+            Self::BeeMessage(error) => serialize_variant(self, serializer, "BeeMessage"),
+            Self::OutputAmountIsZero => serialize_variant(self, serializer, "OutputAmountIsZero"),
+            Self::InvalidDerivationPath(path) => serialize_variant(self, serializer, "InvalidDerivationPath"),
+            Self::FailedToGeneratePrivateKey(path) => serialize_variant(self, serializer, "FailedToGeneratePrivateKey"),
+            Self::ParseDate(error) => serialize_variant(self, serializer, "ParseDate"),
         }
     }
 }
