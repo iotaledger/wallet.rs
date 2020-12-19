@@ -6,7 +6,8 @@ use std::{
     sync::{Arc, RwLock},
 };
 
-use crate::account::Account;
+use crate::{account::Account, address::IotaAddress};
+use getset::Getters;
 use iota::Input;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
@@ -44,18 +45,46 @@ pub struct TransactionInput {
     pub address_path: BIP32Path,
 }
 
+/// Metadata provided to [generate_address](trait.Signer.html#method.generate_address).
+#[derive(Getters, Clone)]
+#[getset(get = "pub")]
+pub struct GenerateAddressMetadata {
+    /// Indicates that the address is being generated as part of the account syncing process.
+    /// This means that the account might not be saved.
+    pub(crate) syncing: bool,
+}
+
+/// Metadata provided to [sign_message](trait.Signer.html#method.sign_message).
+#[derive(Getters)]
+#[getset(get = "pub")]
+pub struct SignMessageMetadata {
+    /// The transfer's address that has remainder value if any.
+    pub(crate) remainder_address: Option<IotaAddress>,
+    /// The transfer's remainder value.
+    pub(crate) remainder_value: u64,
+    /// The transfer's deposit address for the remainder value if any.
+    pub(crate) remainder_deposit_address: Option<IotaAddress>,
+}
+
 /// Signer interface.
 pub trait Signer {
     /// Initialises an account.
     fn init_account(&self, account: &Account, mnemonic: Option<String>) -> crate::Result<String>;
     /// Generates an address.
-    fn generate_address(&self, account: &Account, index: usize, internal: bool) -> crate::Result<iota::Address>;
+    fn generate_address(
+        &self,
+        account: &Account,
+        index: usize,
+        internal: bool,
+        metadata: GenerateAddressMetadata,
+    ) -> crate::Result<IotaAddress>;
     /// Signs message.
     fn sign_message(
         &self,
         account: &Account,
         essence: &iota::TransactionEssence,
         inputs: &mut Vec<TransactionInput>,
+        metadata: SignMessageMetadata,
     ) -> crate::Result<Vec<iota::UnlockBlock>>;
 }
 

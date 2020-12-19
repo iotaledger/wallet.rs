@@ -6,6 +6,7 @@ use crate::{
     address::{Address, AddressBuilder, AddressOutput, IotaAddress},
     client::get_client,
     message::{Message, RemainderValueStrategy, Transfer},
+    signing::{GenerateAddressMetadata, SignMessageMetadata},
 };
 
 use getset::Getters;
@@ -60,8 +61,16 @@ async fn sync_addresses(
         let mut generated_iota_addresses = vec![]; // collection of (address_index, internal, address) pairs
         for i in address_index..(address_index + gap_limit) {
             // generate both `public` and `internal (change)` addresses
-            generated_iota_addresses.push((i, false, crate::address::get_iota_address(&account, i, false)?));
-            generated_iota_addresses.push((i, true, crate::address::get_iota_address(&account, i, true)?));
+            generated_iota_addresses.push((
+                i,
+                false,
+                crate::address::get_iota_address(&account, i, false, GenerateAddressMetadata { syncing: true })?,
+            ));
+            generated_iota_addresses.push((
+                i,
+                true,
+                crate::address::get_iota_address(&account, i, true, GenerateAddressMetadata { syncing: true })?,
+            ));
         }
 
         let mut curr_generated_addresses = vec![];
@@ -542,13 +551,13 @@ impl SyncedAccount {
         let client = crate::client::get_client(account_.client_options());
         let client = client.read().await;
 
-        if let RemainderValueStrategy::AccountAddress(ref remainder_target_address) =
+        if let RemainderValueStrategy::AccountAddress(ref remainder_deposit_address) =
             transfer_obj.remainder_value_strategy
         {
             if !account_
                 .addresses()
                 .iter()
-                .any(|addr| addr.address() == remainder_target_address)
+                .any(|addr| addr.address() == remainder_deposit_address)
             {
                 return Err(crate::WalletError::InvalidRemainderValueAddress);
             }
@@ -640,16 +649,17 @@ impl SyncedAccount {
 
         // if there's remainder value, we check the strategy defined in the transfer
         let mut remainder_value_deposit_address = None;
-        if remainder_value > 0 {
-            let remainder_address =
-                remainder_address.ok_or_else(|| anyhow::anyhow!("remainder address not defined"))?;
+        let remainder_deposit_address = if remainder_value > 0 {
+            let remainder_address = remainder_address
+                .as_ref()
+                .ok_or_else(|| anyhow::anyhow!("remainder address not defined"))?;
             let remainder_address = account_
                 .addresses()
                 .iter()
                 .find(|a| a.address() == &remainder_address.address)
                 .unwrap();
 
-            let remainder_target_address = match transfer_obj.remainder_value_strategy {
+            let remainder_deposit_address = match transfer_obj.remainder_value_strategy {
                 // use one of the account's addresses to send the remainder value
                 RemainderValueStrategy::AccountAddress(target_address) => target_address,
                 // generate a new change address to send the remainder value
@@ -658,7 +668,11 @@ impl SyncedAccount {
                         let deposit_address = account_.latest_address().unwrap().address().clone();
                         deposit_address
                     } else {
-                        let change_address = crate::address::get_new_change_address(&account_, &remainder_address)?;
+                        let change_address = crate::address::get_new_change_address(
+                            &account_,
+                            &remainder_address,
+                            GenerateAddressMetadata { syncing: false },
+                        )?;
                         let addr = change_address.address().clone();
                         account_.append_addresses(vec![change_address]);
                         addresses_to_watch.push(addr.clone());
@@ -668,15 +682,18 @@ impl SyncedAccount {
                 // keep the remainder value on the address
                 RemainderValueStrategy::ReuseAddress => remainder_address.address().clone(),
             };
-            remainder_value_deposit_address = Some(remainder_target_address.clone());
+            remainder_value_deposit_address = Some(remainder_deposit_address.clone());
             essence_builder = essence_builder.add_output(
                 SignatureLockedSingleOutput::new(
-                    remainder_target_address,
+                    remainder_deposit_address.clone(),
                     NonZeroU64::new(remainder_value).ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
                 )
                 .into(),
             );
-        }
+            Some(remainder_deposit_address)
+        } else {
+            None
+        };
 
         let (parent1, parent2) = client.get_tips().await?;
 
@@ -685,7 +702,16 @@ impl SyncedAccount {
             .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
 
         let unlock_blocks = crate::signing::with_signer(account_.signer_type(), |signer| {
-            signer.sign_message(&account_, &essence, &mut address_index_recorders)
+            signer.sign_message(
+                &account_,
+                &essence,
+                &mut address_index_recorders,
+                SignMessageMetadata {
+                    remainder_address: remainder_address.map(|a| a.address),
+                    remainder_value,
+                    remainder_deposit_address,
+                },
+            )
         })?;
         let mut tx_builder = Transaction::builder().with_essence(essence);
         for unlock_block in unlock_blocks {
@@ -711,7 +737,7 @@ impl SyncedAccount {
             || (remainder_value_deposit_address.is_some()
                 && &remainder_value_deposit_address.unwrap() == latest_address)
         {
-            let addr = crate::address::get_new_address(&account_)?;
+            let addr = crate::address::get_new_address(&account_, GenerateAddressMetadata { syncing: false })?;
             addresses_to_watch.push(addr.address().clone());
             account_.append_addresses(vec![addr]);
         }

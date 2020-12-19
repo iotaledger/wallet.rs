@@ -105,6 +105,7 @@ impl super::Signer for EnvMnemonicSigner {
         account: &Account,
         address_index: usize,
         internal: bool,
+        _: super::GenerateAddressMetadata,
     ) -> crate::Result<iota::Address> {
         let private_key = self.get_private_key(format!(
             "m/44H/4218H/{}H/{}H/{}H",
@@ -121,6 +122,7 @@ impl super::Signer for EnvMnemonicSigner {
         account: &Account,
         essence: &iota::TransactionEssence,
         inputs: &mut Vec<super::TransactionInput>,
+        _: super::SignMessageMetadata,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
         let serialized_essence = essence.pack_new();
 
