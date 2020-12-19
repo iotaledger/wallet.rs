@@ -117,12 +117,12 @@ impl super::Signer for EnvMnemonicSigner {
         crate::address::parse(address_str)
     }
 
-    fn sign_message(
+    fn sign_message<'a>(
         &self,
         account: &Account,
         essence: &iota::TransactionEssence,
         inputs: &mut Vec<super::TransactionInput>,
-        _: super::SignMessageMetadata,
+        _: super::SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
         let serialized_essence = essence.pack_new();
 

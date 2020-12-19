@@ -6,7 +6,10 @@ use std::{
     sync::{Arc, RwLock},
 };
 
-use crate::{account::Account, address::IotaAddress};
+use crate::{
+    account::Account,
+    address::{Address, IotaAddress},
+};
 use getset::Getters;
 use iota::Input;
 use once_cell::sync::OnceCell;
@@ -57,13 +60,13 @@ pub struct GenerateAddressMetadata {
 /// Metadata provided to [sign_message](trait.Signer.html#method.sign_message).
 #[derive(Getters)]
 #[getset(get = "pub")]
-pub struct SignMessageMetadata {
+pub struct SignMessageMetadata<'a> {
     /// The transfer's address that has remainder value if any.
-    pub(crate) remainder_address: Option<IotaAddress>,
+    pub(crate) remainder_address: Option<&'a Address>,
     /// The transfer's remainder value.
     pub(crate) remainder_value: u64,
     /// The transfer's deposit address for the remainder value if any.
-    pub(crate) remainder_deposit_address: Option<IotaAddress>,
+    pub(crate) remainder_deposit_address: Option<&'a Address>,
 }
 
 /// Signer interface.
@@ -79,12 +82,12 @@ pub trait Signer {
         metadata: GenerateAddressMetadata,
     ) -> crate::Result<IotaAddress>;
     /// Signs message.
-    fn sign_message(
+    fn sign_message<'a>(
         &self,
         account: &Account,
         essence: &iota::TransactionEssence,
         inputs: &mut Vec<TransactionInput>,
-        metadata: SignMessageMetadata,
+        metadata: SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>>;
 }
 

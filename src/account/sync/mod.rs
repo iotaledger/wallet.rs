@@ -707,9 +707,11 @@ impl SyncedAccount {
                 &essence,
                 &mut address_index_recorders,
                 SignMessageMetadata {
-                    remainder_address: remainder_address.map(|a| a.address),
+                    remainder_address: remainder_address
+                        .map(|remainder| account_.addresses().iter().find(|a| a.address() == &remainder.address).unwrap()),
                     remainder_value,
-                    remainder_deposit_address,
+                    remainder_deposit_address: remainder_deposit_address
+                        .map(|address| account_.addresses().iter().find(|a| a.address() == &address).unwrap()),
                 },
             )
         })?;

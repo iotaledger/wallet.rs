@@ -47,12 +47,12 @@ impl super::Signer for StrongholdSigner {
         })
     }
 
-    fn sign_message(
+    fn sign_message<'a>(
         &self,
         account: &Account,
         essence: &iota::TransactionEssence,
         inputs: &mut Vec<super::TransactionInput>,
-        _: super::SignMessageMetadata,
+        _: super::SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
         let mut inputs = inputs
             .iter_mut()
