@@ -813,7 +813,7 @@ pub(crate) async fn repost_message(
 
             account.append_messages(vec![message.clone()]);
 
-            account.save()?;
+            account.save().await?;
 
             Ok(message)
         }
