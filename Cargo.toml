@@ -23,6 +23,7 @@ bech32 = "0.7"
 hex = "0.4"
 futures = "0.3"
 backtrace = "0.3"
+async-trait = "0.1"
 
 # env mnemonic
 bee-signing-ext = { git = "https://github.com/wusyong/bee-p.git", branch = "sign-ext", version = "^0.1.0-alpha" }
