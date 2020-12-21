@@ -88,7 +88,9 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async { self.reattach(account_id, message_id).await }).await
             }
             MessageType::Backup(destination_path) => convert_panics(|| self.backup(destination_path)),
-            MessageType::RestoreBackup(backup_path) => convert_panics(|| self.restore_backup(backup_path)),
+            MessageType::RestoreBackup(backup_path) => {
+                convert_async_panics(|| async { self.restore_backup(backup_path).await }).await
+            }
             MessageType::SetStrongholdPassword(password) => {
                 convert_async_panics(|| async { self.set_stronghold_password(password).await }).await
             }
@@ -119,8 +121,8 @@ impl WalletMessageHandler {
         Ok(ResponseType::BackupSuccessful)
     }
 
-    fn restore_backup(&self, backup_path: &str) -> Result<ResponseType> {
-        self.account_manager.import_accounts(backup_path)?;
+    async fn restore_backup(&self, backup_path: &str) -> Result<ResponseType> {
+        self.account_manager.import_accounts(backup_path).await?;
         Ok(ResponseType::BackupRestored)
     }
 
@@ -330,7 +332,6 @@ mod tests {
             while let Some(message) = self.rx.recv().await {
                 self.message_handler.handle(message).await;
             }
-            println!("DONE");
         }
     }
 

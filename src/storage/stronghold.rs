@@ -69,8 +69,9 @@ fn get_from_index(
     }
 }
 
+#[async_trait::async_trait]
 impl StorageAdapter for StrongholdStorageAdapter {
-    fn get(&self, account_id: &AccountIdentifier) -> crate::Result<String> {
+    async fn get(&self, account_id: &AccountIdentifier) -> crate::Result<String> {
         let account = crate::with_stronghold_from_path(&self.path, |stronghold| {
             let (_, index) = get_account_index(&stronghold)?;
             let stronghold_id = get_from_index(&index, &account_id).ok_or(crate::Error::AccountNotFound)?;
@@ -81,7 +82,7 @@ impl StorageAdapter for StrongholdStorageAdapter {
         Ok(account)
     }
 
-    fn get_all(&self) -> crate::Result<std::vec::Vec<String>> {
+    async fn get_all(&self) -> crate::Result<std::vec::Vec<String>> {
         let mut accounts = vec![];
         let (_, index) = crate::with_stronghold_from_path(&self.path, |stronghold| get_account_index(&stronghold))?;
         for (_, record_id) in index {
@@ -93,7 +94,7 @@ impl StorageAdapter for StrongholdStorageAdapter {
         Ok(accounts)
     }
 
-    fn set(&self, account_id: &AccountIdentifier, account: String) -> crate::Result<()> {
+    async fn set(&self, account_id: &AccountIdentifier, account: String) -> crate::Result<()> {
         let res: crate::Result<()> = crate::with_stronghold_from_path(&self.path, |stronghold| {
             let (index_record_id, mut index) = get_account_index(&stronghold)?;
             let account_in_index = get_from_index(&index, &account_id);
@@ -125,7 +126,7 @@ impl StorageAdapter for StrongholdStorageAdapter {
         Ok(())
     }
 
-    fn remove(&self, account_id: &AccountIdentifier) -> crate::Result<()> {
+    async fn remove(&self, account_id: &AccountIdentifier) -> crate::Result<()> {
         let res: crate::Result<()> = crate::with_stronghold_from_path(&self.path, |stronghold| {
             let (index_record_id, index) = get_account_index(&stronghold)?;
             let stronghold_id = get_from_index(&index, &account_id).ok_or(crate::Error::AccountNotFound)?;

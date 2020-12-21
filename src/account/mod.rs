@@ -22,6 +22,7 @@ use std::{
     ops::Deref,
     path::PathBuf,
     sync::{Arc, Mutex},
+    thread,
 };
 
 mod sync;
@@ -370,6 +371,21 @@ impl AccountHandle {
     }
 }
 
+impl Drop for Account {
+    fn drop(&mut self) {
+        if self.has_pending_changes {
+            let storage_path = self.storage_path.clone();
+            let account_id = self.id().clone();
+            if let Ok(data) = serde_json::to_string(&self) {
+                let _ = thread::spawn(move || {
+                    crate::block_on(crate::storage::save_account(&storage_path, &account_id, data))
+                })
+                .join();
+            }
+        }
+    }
+}
+
 impl Account {
     pub(crate) fn do_mut<R>(&mut self, f: impl FnOnce(&mut Self) -> R) -> R {
         let res = f(self);
@@ -421,10 +437,11 @@ impl Account {
         self.client_options = options;
     }
 
-    pub(crate) fn save(&mut self) -> crate::Result<()> {
+    pub(crate) async fn save(&mut self) -> crate::Result<()> {
         if self.has_pending_changes {
             let storage_path = self.storage_path.clone();
-            crate::storage::save_account(&storage_path, self)?;
+            crate::storage::save_account(&storage_path, self.id(), serde_json::to_string(&self)?).await?;
+            self.has_pending_changes = false;
         }
         Ok(())
     }
@@ -542,12 +559,6 @@ impl Account {
     /// Gets a message with the given id associated with this account.
     pub fn get_message(&self, message_id: &MessageId) -> Option<&Message> {
         self.messages.iter().find(|tx| tx.id() == message_id)
-    }
-}
-
-impl Drop for Account {
-    fn drop(&mut self) {
-        let _ = self.save();
     }
 }
 
