@@ -4,44 +4,15 @@
 use crate::address::{Address, IotaAddress};
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-pub use iota::{common::packable::Packable, Message as IotaMessage, MessageId, Output, Payload};
+pub use iota::{common::packable::Packable, Indexation, Message as IotaMessage, MessageId, Output, Payload};
 use serde::{Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
 use std::{
     cmp::Ordering,
     fmt,
     hash::{Hash, Hasher},
+    num::NonZeroU64,
 };
-
-/// A transaction tag.
-#[derive(Debug, Clone)]
-pub struct Tag {
-    tag: [u8; 16],
-}
-
-impl Default for Tag {
-    /// Initialises an empty tag.
-    fn default() -> Self {
-        Self { tag: [0; 16] }
-    }
-}
-
-impl Tag {
-    /// Initialises a new tag.
-    pub fn new(tag: [u8; 16]) -> Self {
-        Self { tag }
-    }
-
-    /// Returns the tag formatted as ASCII.
-    pub fn as_ascii(&self) -> String {
-        String::from_utf8_lossy(&self.tag).to_string()
-    }
-
-    /// Returns the tag bytes.
-    pub fn as_bytes(&self) -> &[u8; 16] {
-        &self.tag
-    }
-}
 
 /// The strategy to use for the remainder value management when sending funds.
 #[derive(Debug, Clone, Deserialize)]
@@ -58,39 +29,70 @@ pub enum RemainderValueStrategy {
 
 /// A transfer to make a transaction.
 #[derive(Debug, Clone, Deserialize)]
-pub struct Transfer {
+pub struct TransferBuilder {
     /// The transfer value.
-    pub(crate) amount: u64,
+    amount: NonZeroU64,
     /// The transfer address.
     #[serde(with = "crate::serde::iota_address_serde")]
-    pub(crate) address: IotaAddress,
-    /// (Optional) transfer data.
-    pub(crate) data: Option<String>,
+    address: IotaAddress,
+    /// (Optional) message indexation.
+    indexation: Option<Indexation>,
     /// The strategy to use for the remainder value.
-    pub(crate) remainder_value_strategy: RemainderValueStrategy,
+    remainder_value_strategy: RemainderValueStrategy,
 }
 
-impl Transfer {
+impl TransferBuilder {
     /// Initialises a new transfer to the given address.
-    pub fn new(address: IotaAddress, amount: u64) -> Self {
+    pub fn new(address: IotaAddress, amount: NonZeroU64) -> Self {
         Self {
             address,
             amount,
-            data: None,
+            indexation: None,
             remainder_value_strategy: RemainderValueStrategy::ChangeAddress,
         }
     }
 
     /// Sets the remainder value strategy for the transfer.
-    pub fn remainder_value_strategy(mut self, strategy: RemainderValueStrategy) -> Self {
+    pub fn with_remainder_value_strategy(mut self, strategy: RemainderValueStrategy) -> Self {
         self.remainder_value_strategy = strategy;
         self
     }
 
-    /// (Optional) transfer data.
-    pub fn data(mut self, data: String) -> Self {
-        self.data = Some(data);
+    /// (Optional) message indexation.
+    pub fn with_indexation(mut self, indexation: Indexation) -> Self {
+        self.indexation = Some(indexation);
         self
+    }
+
+    /// Builds the transfer.
+    pub fn finish(self) -> Transfer {
+        Transfer {
+            address: self.address,
+            amount: self.amount,
+            indexation: self.indexation,
+            remainder_value_strategy: self.remainder_value_strategy,
+        }
+    }
+}
+
+/// A transfer to make a transaction.
+#[derive(Debug, Clone, Deserialize)]
+pub struct Transfer {
+    /// The transfer value.
+    pub(crate) amount: NonZeroU64,
+    /// The transfer address.
+    #[serde(with = "crate::serde::iota_address_serde")]
+    pub(crate) address: IotaAddress,
+    /// (Optional) message indexation.
+    pub(crate) indexation: Option<Indexation>,
+    /// The strategy to use for the remainder value.
+    pub(crate) remainder_value_strategy: RemainderValueStrategy,
+}
+
+impl Transfer {
+    /// Initialises the transfer builder.
+    pub fn builder(address: IotaAddress, amount: NonZeroU64) -> TransferBuilder {
+        TransferBuilder::new(address, amount)
     }
 }
 
