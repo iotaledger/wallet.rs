@@ -33,7 +33,7 @@ pub fn set_adapter<P: AsRef<Path>, S: StorageAdapter + Sync + Send + 'static>(st
 }
 
 pub(crate) fn stronghold_snapshot_filename() -> &'static str {
-    "snapshot"
+    "wallet.stronghold"
 }
 
 /// gets the storage adapter
