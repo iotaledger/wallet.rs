@@ -76,7 +76,7 @@ struct BalanceEventHandler {
 
 struct ErrorHandler {
     /// The on error callback.
-    on_error: Box<dyn Fn(&crate::WalletError) + Send>,
+    on_error: Box<dyn Fn(&crate::Error) + Send>,
 }
 
 #[derive(PartialEq)]
@@ -218,7 +218,7 @@ pub fn on_broadcast<F: Fn(&TransactionEvent<'_>) + Send + 'static>(cb: F) {
     add_transaction_listener(TransactionEventType::Broadcast, cb);
 }
 
-pub(crate) fn emit_error(error: &crate::WalletError) {
+pub(crate) fn emit_error(error: &crate::Error) {
     let listeners = error_listeners()
         .lock()
         .expect("Failed to lock error_listeners: emit_error()");
@@ -228,7 +228,7 @@ pub(crate) fn emit_error(error: &crate::WalletError) {
 }
 
 /// Listen to errors.
-pub fn on_error<F: Fn(&crate::WalletError) + Send + 'static>(cb: F) {
+pub fn on_error<F: Fn(&crate::Error) + Send + 'static>(cb: F) {
     let mut l = error_listeners()
         .lock()
         .expect("Failed to lock error_listeners: on_error()");
@@ -246,7 +246,7 @@ mod tests {
     use rusty_fork::rusty_fork_test;
 
     fn _create_and_drop_error() {
-        let _ = crate::WalletError::GenericError(anyhow::anyhow!("generic error"));
+        let _ = crate::Error::AccountNotFound;
     }
 
     // have to fork this test so other errors dropped doesn't affect it
@@ -254,7 +254,7 @@ mod tests {
         #[test]
         fn error_events() {
             on_error(|error| {
-                assert!(matches!(error, crate::WalletError::GenericError(_)));
+                assert!(matches!(error, crate::Error::AccountNotFound));
             });
             _create_and_drop_error();
         }

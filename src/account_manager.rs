@@ -214,16 +214,20 @@ impl AccountManager {
                                 let storage_path_ = storage_path.clone();
                                 let accounts_ = accounts.clone();
 
-                                if let Err(panic) = AssertUnwindSafe(poll(accounts_.clone(), storage_path_, is_monitoring_disabled))
+                                if let Err(error) = AssertUnwindSafe(poll(accounts_.clone(), storage_path_, is_monitoring_disabled))
                                     .catch_unwind()
                                     .await {
-                                    let msg = if let Some(message) = panic.downcast_ref::<Cow<'_, str>>() {
-                                        format!("Internal error: {}", message)
-                                    } else {
-                                        "Internal error".to_string()
-                                    };
-                                    let _error = crate::WalletError::UnknownError(msg);
-                                    // when the error is dropped, the on_error event will be triggered
+                                        if let Some(error) = error.downcast_ref::<crate::Error>() {
+                                            // when the error is dropped, the on_error event will be triggered
+                                        } else {
+                                            let msg = if let Some(message) = error.downcast_ref::<Cow<'_, str>>() {
+                                                format!("Internal error: {}", message)
+                                            } else {
+                                                "Internal error".to_string()
+                                            };
+                                            let _error = crate::Error::Panic(msg);
+                                            // when the error is dropped, the on_error event will be triggered
+                                        }
                                 }
 
                                 let accounts_ = accounts_.read().await;
@@ -252,11 +256,11 @@ impl AccountManager {
         let mut accounts = self.accounts.write().await;
 
         {
-            let account_handle = accounts.get(&account_id).ok_or(crate::WalletError::AccountNotFound)?;
+            let account_handle = accounts.get(&account_id).ok_or(crate::Error::AccountNotFound)?;
             let account = account_handle.read().await;
 
             if !(account.messages().is_empty() && account.total_balance() == 0) {
-                return Err(crate::WalletError::MessageNotEmpty);
+                return Err(crate::Error::MessageNotEmpty);
             }
         }
 
@@ -265,7 +269,7 @@ impl AccountManager {
         if let Err(e) = crate::storage::with_adapter(&self.storage_path, |storage| storage.remove(&account_id)) {
             match e {
                 // if we got an "AccountNotFound" error, that means we didn't save the cached account yet
-                crate::WalletError::AccountNotFound => {}
+                crate::Error::AccountNotFound => {}
                 _ => return Err(e),
             }
         }
@@ -291,7 +295,7 @@ impl AccountManager {
             .read()
             .await
             .latest_address()
-            .ok_or_else(|| anyhow::anyhow!("destination account address list empty"))?
+            .ok_or(crate::Error::TransferDestinationEmpty)?
             .clone();
 
         let from_synchronized = self.get_account(from_account_id).await?.sync().await.execute().await?;
@@ -314,7 +318,7 @@ impl AccountManager {
             }
             Ok(backup_path)
         } else {
-            Err(crate::WalletError::StorageDoesntExist)
+            Err(crate::Error::StorageDoesntExist)
         }
     }
 
@@ -343,7 +347,7 @@ impl AccountManager {
             })
         });
         if let Some(imported_account) = already_imported_account {
-            return Err(crate::WalletError::AccountAlreadyImported {
+            return Err(crate::Error::AccountAlreadyImported {
                 alias: imported_account.alias().to_string(),
             });
         }
@@ -374,10 +378,7 @@ impl AccountManager {
     /// Gets the account associated with the given identifier.
     pub async fn get_account(&self, account_id: &AccountIdentifier) -> crate::Result<AccountHandle> {
         let accounts = self.accounts.read().await;
-        accounts
-            .get(account_id)
-            .cloned()
-            .ok_or(crate::WalletError::AccountNotFound)
+        accounts.get(account_id).cloned().ok_or(crate::Error::AccountNotFound)
     }
 
     /// Gets the account associated with the given alias (case insensitive).

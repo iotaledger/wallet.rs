@@ -73,10 +73,10 @@ impl StorageAdapter for StrongholdStorageAdapter {
     fn get(&self, account_id: &AccountIdentifier) -> crate::Result<String> {
         let account = crate::with_stronghold_from_path(&self.path, |stronghold| {
             let (_, index) = get_account_index(&stronghold)?;
-            let stronghold_id = get_from_index(&index, &account_id).ok_or(crate::WalletError::AccountNotFound)?;
+            let stronghold_id = get_from_index(&index, &account_id).ok_or(crate::Error::AccountNotFound)?;
             stronghold
                 .record_read(&stronghold_id)
-                .map_err(crate::WalletError::GenericError)
+                .map_err(crate::Error::GenericError)
         })?;
         Ok(account)
     }
@@ -128,7 +128,7 @@ impl StorageAdapter for StrongholdStorageAdapter {
     fn remove(&self, account_id: &AccountIdentifier) -> crate::Result<()> {
         let res: crate::Result<()> = crate::with_stronghold_from_path(&self.path, |stronghold| {
             let (index_record_id, index) = get_account_index(&stronghold)?;
-            let stronghold_id = get_from_index(&index, &account_id).ok_or(crate::WalletError::AccountNotFound)?;
+            let stronghold_id = get_from_index(&index, &account_id).ok_or(crate::Error::AccountNotFound)?;
 
             stronghold.record_remove(stronghold_id)?;
 
@@ -145,7 +145,7 @@ impl StorageAdapter for StrongholdStorageAdapter {
                     &serde_json::to_string(&new_index)?,
                     RecordHint::new(ACCOUNT_ID_INDEX_HINT).unwrap(),
                 )
-                .map_err(crate::WalletError::GenericError)?;
+                .map_err(crate::Error::GenericError)?;
             Ok(())
         });
         res?;
