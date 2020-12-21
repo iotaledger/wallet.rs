@@ -106,7 +106,14 @@ pub enum MessageType {
     /// Backup storage.
     Backup(String),
     /// Import accounts from storage.
-    RestoreBackup(String),
+    RestoreBackup {
+        /// The path to the backed up storage.
+        #[serde(rename = "backupPath")]
+        backup_path: String,
+        /// The backup stronghold password.
+        #[cfg(feature = "stronghold")]
+        password: String,
+    },
     /// Set stronghold snapshot password.
     SetStrongholdPassword(String),
     /// Send funds.
@@ -150,7 +157,10 @@ impl Serialize for MessageType {
                 message_id: _,
             } => serializer.serialize_unit_variant("MessageType", 6, "Reattach"),
             MessageType::Backup(_) => serializer.serialize_unit_variant("MessageType", 7, "Backup"),
-            MessageType::RestoreBackup(_) => serializer.serialize_unit_variant("MessageType", 8, "RestoreBackup"),
+            MessageType::RestoreBackup {
+                backup_path: _,
+                password: _,
+            } => serializer.serialize_unit_variant("MessageType", 8, "RestoreBackup"),
             MessageType::SetStrongholdPassword(_) => {
                 serializer.serialize_unit_variant("MessageType", 9, "SetStrongholdPassword")
             }
