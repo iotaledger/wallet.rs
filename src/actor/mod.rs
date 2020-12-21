@@ -13,6 +13,7 @@ use std::{
     any::Any,
     borrow::Cow,
     convert::TryInto,
+    num::NonZeroU64,
     panic::{catch_unwind, AssertUnwindSafe},
 };
 
@@ -94,7 +95,7 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async { self.set_stronghold_password(password).await }).await
             }
             MessageType::SendTransfer { account_id, transfer } => {
-                convert_async_panics(|| async { self.send_transfer(account_id, transfer).await }).await
+                convert_async_panics(|| async { self.send_transfer(account_id, transfer.clone().finish()).await }).await
             }
             MessageType::InternalTransfer {
                 from_account_id,
@@ -256,10 +257,10 @@ impl WalletMessageHandler {
         Ok(ResponseType::StrongholdPasswordSet)
     }
 
-    async fn send_transfer(&self, account_id: &AccountIdentifier, transfer: &Transfer) -> Result<ResponseType> {
+    async fn send_transfer(&self, account_id: &AccountIdentifier, transfer: Transfer) -> Result<ResponseType> {
         let account = self.account_manager.get_account(account_id).await?;
         let synced = account.sync().await.execute().await?;
-        let message = synced.transfer(transfer.clone()).await?;
+        let message = synced.transfer(transfer).await?;
         Ok(ResponseType::SentTransfer(message))
     }
 
@@ -267,7 +268,7 @@ impl WalletMessageHandler {
         &self,
         from_account_id: &AccountIdentifier,
         to_account_id: &AccountIdentifier,
-        amount: u64,
+        amount: NonZeroU64,
     ) -> Result<ResponseType> {
         let message = self
             .account_manager

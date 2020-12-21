@@ -5,11 +5,13 @@ use crate::{
     account::{Account, AccountIdentifier, SyncedAccount},
     address::Address,
     client::ClientOptions,
-    message::{Message as WalletMessage, MessageType as WalletMessageType, Transfer},
+    message::{Message as WalletMessage, MessageType as WalletMessageType, TransferBuilder},
     Error,
 };
 use serde::{ser::Serializer, Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
+
+use std::num::NonZeroU64;
 
 /// An account to create.
 #[derive(Clone, Debug, Deserialize)]
@@ -113,7 +115,7 @@ pub enum MessageType {
         #[serde(rename = "accountId")]
         account_id: AccountIdentifier,
         /// The transfer details.
-        transfer: Transfer,
+        transfer: TransferBuilder,
     },
     /// Move funds on stored accounts.
     InternalTransfer {
@@ -124,7 +126,7 @@ pub enum MessageType {
         #[serde(rename = "toAccountId")]
         to_account_id: AccountIdentifier,
         /// The transfer amount.
-        amount: u64,
+        amount: NonZeroU64,
     },
 }
 
