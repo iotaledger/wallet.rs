@@ -70,11 +70,10 @@ impl EnvMnemonicSigner {
 
     fn get_private_key(&self, derivation_path: String) -> crate::Result<ed25519::Ed25519PrivateKey> {
         let seed = self.get_seed();
-        Ok(ed25519::Ed25519PrivateKey::generate_from_seed(
-            &seed,
-            &BIP32Path::from_str(&derivation_path).map_err(|e| anyhow::anyhow!(e.to_string()))?,
-        )
-        .map_err(|e| anyhow::anyhow!(e.to_string()))?)
+        let derivation_path = BIP32Path::from_str(&derivation_path)
+            .map_err(|_| crate::Error::InvalidDerivationPath(derivation_path.clone()))?;
+        Ok(ed25519::Ed25519PrivateKey::generate_from_seed(&seed, &derivation_path)
+            .map_err(|_| crate::Error::FailedToGeneratePrivateKey(derivation_path))?)
     }
 }
 
@@ -136,14 +135,11 @@ impl super::Signer for EnvMnemonicSigner {
             // Check if current path is same as previous path
             // If so, add a reference unlock block
             if let Some(block_index) = signature_indexes.get(&recorder.address_index) {
-                unlock_blocks.push(UnlockBlock::Reference(
-                    ReferenceUnlock::new(*block_index as u16)
-                        .map_err(|e| anyhow::anyhow!("failed to create reference unlock block"))?,
-                ));
+                unlock_blocks.push(UnlockBlock::Reference(ReferenceUnlock::new(*block_index as u16)?));
             } else {
                 // If not, we should create a signature unlock block
                 let private_key = ed25519::Ed25519PrivateKey::generate_from_seed(&seed, &recorder.address_path)
-                    .map_err(|_| anyhow::anyhow!("invalid parameter: seed inputs"))?;
+                    .map_err(|_| crate::Error::FailedToGeneratePrivateKey(recorder.address_path.clone()))?;
                 let public_key = private_key.generate_public_key().to_bytes();
                 // The block should sign the entire transaction essence part of the transaction payload
                 let signature = Box::new(private_key.sign(&serialized_essence).to_bytes());

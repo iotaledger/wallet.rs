@@ -54,7 +54,20 @@ class RemainderValueStrategy {
 }
 
 Account.prototype.sync = promisify(Account.prototype.sync)
-SyncedAccount.prototype.send = promisify(SyncedAccount.prototype.send)
+const send = SyncedAccount.prototype.send
+SyncedAccount.prototype.send = function (address, amount, options) {
+  if (options && (typeof options === 'object') && options.indexation && options.indexation.data) {
+    return promisify(send).apply(this, [address, amount, {
+      remainderValueStrategy: options.remainderValueStrategy,
+      indexation: {
+        index: options.indexation.index,
+        data: Array.from(options.indexation.data),
+      }
+    }])
+  } else {
+    return promisify(send).apply(this, options ? [address, amount, options] : [address, amount])
+  }
+}
 SyncedAccount.prototype.retry = promisify(SyncedAccount.prototype.retry)
 SyncedAccount.prototype.reattach = promisify(SyncedAccount.prototype.reattach)
 SyncedAccount.prototype.promote = promisify(SyncedAccount.prototype.promote)

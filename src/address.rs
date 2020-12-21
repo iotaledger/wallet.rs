@@ -61,19 +61,19 @@ impl AddressOutput {
 }
 
 impl TryFrom<OutputMetadata> for AddressOutput {
-    type Error = crate::WalletError;
+    type Error = crate::Error;
 
     fn try_from(output: OutputMetadata) -> crate::Result<Self> {
         let output = Self {
             transaction_id: TransactionId::new(
                 output.transaction_id[..]
                     .try_into()
-                    .map_err(|_| anyhow::anyhow!("invalid transaction id length"))?,
+                    .map_err(|_| crate::Error::InvalidTransactionId)?,
             ),
             message_id: MessageId::new(
                 output.message_id[..]
                     .try_into()
-                    .map_err(|_| anyhow::anyhow!("invalid message id length"))?,
+                    .map_err(|_| crate::Error::InvalidMessageId)?,
             ),
             index: output.output_index,
             amount: output.amount,
@@ -131,21 +131,21 @@ impl AddressBuilder {
 
     /// Builds the address.
     pub fn build(self) -> crate::Result<Address> {
-        let iota_address = self
-            .address
-            .ok_or_else(|| anyhow::anyhow!("the `address` field is required"))?;
+        let iota_address = self.address.ok_or(crate::Error::AddressBuildRequiredField(
+            crate::AddressBuildRequiredField::Address,
+        ))?;
         let address = Address {
             address: iota_address,
-            balance: self
-                .balance
-                .ok_or_else(|| anyhow::anyhow!("the `balance` field is required"))?,
-            key_index: self
-                .key_index
-                .ok_or_else(|| anyhow::anyhow!("the `key_index` field is required"))?,
+            balance: self.balance.ok_or(crate::Error::AddressBuildRequiredField(
+                crate::AddressBuildRequiredField::Balance,
+            ))?,
+            key_index: self.key_index.ok_or(crate::Error::AddressBuildRequiredField(
+                crate::AddressBuildRequiredField::KeyIndex,
+            ))?,
             internal: self.internal,
-            outputs: self
-                .outputs
-                .ok_or_else(|| anyhow::anyhow!("the `outputs` field is required"))?,
+            outputs: self.outputs.ok_or(crate::Error::AddressBuildRequiredField(
+                crate::AddressBuildRequiredField::Outputs,
+            ))?,
         };
         Ok(address)
     }
@@ -237,7 +237,7 @@ pub fn parse(address: String) -> crate::Result<IotaAddress> {
     let iota_address = IotaAddress::Ed25519(Ed25519Address::new(
         address_ed25519[1..]
             .try_into()
-            .map_err(|_| crate::WalletError::InvalidAddressLength)?,
+            .map_err(|_| crate::Error::InvalidAddressLength)?,
     ));
     Ok(iota_address)
 }

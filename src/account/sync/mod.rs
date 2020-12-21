@@ -92,7 +92,7 @@ async fn sync_addresses(
                     let message_id = MessageId::new(
                         output.message_id[..]
                             .try_into()
-                            .map_err(|_| crate::WalletError::InvalidMessageIdLength)?,
+                            .map_err(|_| crate::Error::InvalidMessageIdLength)?,
                     );
                     if let Ok(message) = client.get_message().data(&message_id).await {
                         let metadata = client.get_message().metadata(&message_id).await?;
@@ -493,11 +493,6 @@ impl SyncedAccount {
 
     /// Send messages.
     pub async fn transfer(&self, transfer_obj: Transfer) -> crate::Result<Message> {
-        // validate the transfer
-        if transfer_obj.amount == 0 {
-            return Err(crate::WalletError::ZeroAmount);
-        }
-
         let account_ = self.account_handle.read().await;
 
         // lock the transfer process until we select the input addresses
@@ -507,11 +502,11 @@ impl SyncedAccount {
         let mut locked_addresses = account_addresses_locker.lock().unwrap();
 
         // prepare the transfer getting some needed objects and values
-        let value: u64 = transfer_obj.amount;
+        let value = transfer_obj.amount.get();
         let mut addresses_to_watch = vec![];
 
         if value > account_.total_balance() {
-            return Err(crate::WalletError::InsufficientFunds);
+            return Err(crate::Error::InsufficientFunds);
         }
 
         let available_balance = account_.available_balance();
@@ -559,17 +554,13 @@ impl SyncedAccount {
                 .iter()
                 .any(|addr| addr.address() == remainder_deposit_address)
             {
-                return Err(crate::WalletError::InvalidRemainderValueAddress);
+                return Err(crate::Error::InvalidRemainderValueAddress);
             }
         }
 
         // select the input addresses and check if a remainder address is needed
-        let (input_addresses, remainder_address) = self.select_inputs(
-            &mut locked_addresses,
-            transfer_obj.amount,
-            &account_,
-            &transfer_obj.address,
-        )?;
+        let (input_addresses, remainder_address) =
+            self.select_inputs(&mut locked_addresses, value, &account_, &transfer_obj.address)?;
 
         // unlock the transfer process since we already selected the input addresses and locked them
         drop(locked_addresses);
@@ -607,9 +598,7 @@ impl SyncedAccount {
         let mut current_output_sum = 0;
         let mut remainder_value = 0;
         for (utxo, address_index, address_path) in utxos {
-            let input: Input = UTXOInput::new(*utxo.transaction_id(), *utxo.index())
-                .map_err(|e| anyhow::anyhow!(e.to_string()))?
-                .into();
+            let input: Input = UTXOInput::new(*utxo.transaction_id(), *utxo.index())?.into();
             essence_builder = essence_builder.add_input(input.clone());
             address_index_recorders.push(crate::signing::TransactionInput {
                 input,
@@ -627,7 +616,7 @@ impl SyncedAccount {
                 essence_builder = essence_builder.add_output(
                     SignatureLockedSingleOutput::new(
                         transfer_obj.address.clone(),
-                        NonZeroU64::new(missing_value).ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
+                        NonZeroU64::new(missing_value).ok_or(crate::Error::OutputAmountIsZero)?,
                     )
                     .into(),
                 );
@@ -636,7 +625,7 @@ impl SyncedAccount {
                 essence_builder = essence_builder.add_output(
                     SignatureLockedSingleOutput::new(
                         transfer_obj.address.clone(),
-                        NonZeroU64::new(*utxo.amount()).ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
+                        NonZeroU64::new(*utxo.amount()).ok_or(crate::Error::OutputAmountIsZero)?,
                     )
                     .into(),
                 );
@@ -650,9 +639,7 @@ impl SyncedAccount {
         // if there's remainder value, we check the strategy defined in the transfer
         let mut remainder_value_deposit_address = None;
         let remainder_deposit_address = if remainder_value > 0 {
-            let remainder_address = remainder_address
-                .as_ref()
-                .ok_or_else(|| anyhow::anyhow!("remainder address not defined"))?;
+            let remainder_address = remainder_address.as_ref().expect("remainder address not defined");
             let remainder_address = account_
                 .addresses()
                 .iter()
@@ -686,7 +673,7 @@ impl SyncedAccount {
             essence_builder = essence_builder.add_output(
                 SignatureLockedSingleOutput::new(
                     remainder_deposit_address.clone(),
-                    NonZeroU64::new(remainder_value).ok_or_else(|| anyhow::anyhow!("invalid amount"))?,
+                    NonZeroU64::new(remainder_value).ok_or(crate::Error::OutputAmountIsZero)?,
                 )
                 .into(),
             );
@@ -697,9 +684,11 @@ impl SyncedAccount {
 
         let (parent1, parent2) = client.get_tips().await?;
 
-        let essence = essence_builder
-            .finish()
-            .map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
+        if let Some(indexation) = transfer_obj.indexation {
+            essence_builder = essence_builder.with_payload(Payload::Indexation(Box::new(indexation)));
+        }
+
+        let essence = essence_builder.finish()?;
 
         let unlock_blocks = crate::signing::with_signer(account_.signer_type(), |signer| {
             signer.sign_message(
@@ -707,8 +696,13 @@ impl SyncedAccount {
                 &essence,
                 &mut address_index_recorders,
                 SignMessageMetadata {
-                    remainder_address: remainder_address
-                        .map(|remainder| account_.addresses().iter().find(|a| a.address() == &remainder.address).unwrap()),
+                    remainder_address: remainder_address.map(|remainder| {
+                        account_
+                            .addresses()
+                            .iter()
+                            .find(|a| a.address() == &remainder.address)
+                            .unwrap()
+                    }),
                     remainder_value,
                     remainder_deposit_address: remainder_deposit_address
                         .map(|address| account_.addresses().iter().find(|a| a.address() == &address).unwrap()),
@@ -719,7 +713,7 @@ impl SyncedAccount {
         for unlock_block in unlock_blocks {
             tx_builder = tx_builder.add_unlock_block(unlock_block);
         }
-        let transaction = tx_builder.finish().map_err(|e| anyhow::anyhow!(format!("{:?}", e)))?;
+        let transaction = tx_builder.finish()?;
 
         let message = MessageBuilder::<ClientMiner>::new()
             .with_parent1(parent1)
@@ -727,8 +721,7 @@ impl SyncedAccount {
             .with_payload(Payload::Transaction(Box::new(transaction)))
             .with_network_id(client.get_network_id().await?)
             .with_nonce_provider(client.get_pow_provider(), 4000f64)
-            .finish()
-            .map_err(|e| anyhow::anyhow!(e.to_string()))?;
+            .finish()?;
 
         let message_id = client.post_message(&message).await?;
 
@@ -812,9 +805,9 @@ pub(crate) async fn repost_message(
                 .find(|m| m.payload() == message_to_repost.payload())
                 .unwrap();
             if message_to_repost.confirmed().unwrap_or(false) {
-                return Err(crate::WalletError::ClientError(
-                    iota::client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
-                ));
+                return Err(crate::Error::ClientError(iota::client::Error::NoNeedPromoteOrReattach(
+                    message_id.to_string(),
+                )));
             }
 
             let client = crate::client::get_client(account.client_options());
@@ -826,9 +819,9 @@ pub(crate) async fn repost_message(
                     if metadata.should_promote.unwrap_or(false) {
                         client.promote(message_id).await?
                     } else {
-                        return Err(crate::WalletError::ClientError(
-                            iota::client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
-                        ));
+                        return Err(crate::Error::ClientError(iota::client::Error::NoNeedPromoteOrReattach(
+                            message_id.to_string(),
+                        )));
                     }
                 }
                 RepostAction::Reattach => {
@@ -836,9 +829,9 @@ pub(crate) async fn repost_message(
                     if metadata.should_reattach.unwrap_or(false) {
                         client.reattach(message_id).await?
                     } else {
-                        return Err(crate::WalletError::ClientError(
-                            iota::client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
-                        ));
+                        return Err(crate::Error::ClientError(iota::client::Error::NoNeedPromoteOrReattach(
+                            message_id.to_string(),
+                        )));
                     }
                 }
                 RepostAction::Retry => client.retry(message_id).await?,
@@ -847,11 +840,11 @@ pub(crate) async fn repost_message(
 
             account.append_messages(vec![message.clone()]);
 
-            account.save()?;
+            account.save().await?;
 
             Ok(message)
         }
-        None => Err(crate::WalletError::MessageNotFound),
+        None => Err(crate::Error::MessageNotFound),
     }?;
 
     Ok(message)

@@ -22,6 +22,7 @@ use std::{
     ops::Deref,
     path::PathBuf,
     sync::{Arc, Mutex},
+    thread,
 };
 
 mod sync;
@@ -153,9 +154,9 @@ impl AccountInitialiser {
         let mut accounts = self.accounts.write().await;
 
         let alias = self.alias.unwrap_or_else(|| format!("Account {}", accounts.len()));
-        let signer_type = self
-            .signer_type
-            .ok_or_else(|| anyhow::anyhow!("account signer type is required"))?;
+        let signer_type = self.signer_type.ok_or(crate::Error::AccountInitialiseRequiredField(
+            crate::AccountInitialiseRequiredField::SignerType,
+        ))?;
         let created_at = self.created_at.unwrap_or_else(chrono::Utc::now);
         let mut mnemonic = self.mnemonic;
         if signer_type == SignerType::EnvMnemonic && accounts.is_empty() {
@@ -172,7 +173,7 @@ impl AccountInitialiser {
         if let Some(latest_account_handle) = accounts.values().last() {
             let latest_account = latest_account_handle.read().await;
             if latest_account.messages().is_empty() && latest_account.total_balance() == 0 {
-                return Err(crate::WalletError::LatestAccountIsEmpty);
+                return Err(crate::Error::LatestAccountIsEmpty);
             }
         }
 
@@ -207,13 +208,11 @@ impl AccountInitialiser {
 
 pub(crate) fn account_id_to_stronghold_record_id(account_id: &AccountIdentifier) -> crate::Result<[u8; 32]> {
     if let AccountIdentifier::Id(id) = account_id {
-        let decoded = hex::decode(id).map_err(|_| anyhow::anyhow!("account id must be a hex string"))?;
-        let id: [u8; 32] = decoded
-            .try_into()
-            .map_err(|_| anyhow::anyhow!("invalid account id length"))?;
+        let decoded = hex::decode(id)?;
+        let id: [u8; 32] = decoded.try_into().unwrap();
         Ok(id)
     } else {
-        Err(anyhow::anyhow!("id can't be index").into())
+        Err(crate::Error::Storage("id can't be index".to_string()))
     }
 }
 
@@ -372,6 +371,21 @@ impl AccountHandle {
     }
 }
 
+impl Drop for Account {
+    fn drop(&mut self) {
+        if self.has_pending_changes {
+            let storage_path = self.storage_path.clone();
+            let account_id = self.id().clone();
+            if let Ok(data) = serde_json::to_string(&self) {
+                let _ = thread::spawn(move || {
+                    crate::block_on(crate::storage::save_account(&storage_path, &account_id, data))
+                })
+                .join();
+            }
+        }
+    }
+}
+
 impl Account {
     pub(crate) fn do_mut<R>(&mut self, f: impl FnOnce(&mut Self) -> R) -> R {
         let res = f(self);
@@ -423,10 +437,11 @@ impl Account {
         self.client_options = options;
     }
 
-    pub(crate) fn save(&mut self) -> crate::Result<()> {
+    pub(crate) async fn save(&mut self) -> crate::Result<()> {
         if self.has_pending_changes {
             let storage_path = self.storage_path.clone();
-            crate::storage::save_account(&storage_path, self)?;
+            crate::storage::save_account(&storage_path, self.id(), serde_json::to_string(&self)?).await?;
+            self.has_pending_changes = false;
         }
         Ok(())
     }
@@ -544,12 +559,6 @@ impl Account {
     /// Gets a message with the given id associated with this account.
     pub fn get_message(&self, message_id: &MessageId) -> Option<&Message> {
         self.messages.iter().find(|tx| tx.id() == message_id)
-    }
-}
-
-impl Drop for Account {
-    fn drop(&mut self) {
-        let _ = self.save();
     }
 }
 
