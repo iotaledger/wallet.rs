@@ -3,7 +3,7 @@
 
 use iota_wallet::{
     message::{Message, MessageId},
-    WalletError,
+    Error,
 };
 use neon::prelude::*;
 
@@ -21,7 +21,7 @@ pub struct RepostTask {
 
 impl Task for RepostTask {
     type Output = Message;
-    type Error = WalletError;
+    type Error = Error;
     type JsEvent = JsValue;
 
     fn perform(&self) -> Result<Self::Output, Self::Error> {

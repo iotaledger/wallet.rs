@@ -29,7 +29,7 @@ pub mod signing;
 pub mod storage;
 
 /// The wallet Result type.
-pub type Result<T> = std::result::Result<T, WalletError>;
+pub type Result<T> = std::result::Result<T, Error>;
 pub use chrono::prelude::{DateTime, Utc};
 use once_cell::sync::OnceCell;
 use std::{
@@ -45,13 +45,10 @@ static RUNTIME: OnceCell<Mutex<Runtime>> = OnceCell::new();
 
 /// The wallet error type.
 #[derive(Debug, thiserror::Error)]
-pub enum WalletError {
-    /// Unknown error.
-    #[error("`{0}`")]
-    UnknownError(String),
+pub enum Error {
     /// Generic error.
     #[error("{0}")]
-    GenericError(#[from] anyhow::Error),
+    GenericError(#[from] anyhow::Error), // TODO remove this with stronghold update
     /// IO error.
     #[error("`{0}`")]
     IoError(#[from] std::io::Error),
@@ -89,9 +86,6 @@ pub enum WalletError {
     /// Address length invalid.
     #[error("unexpected address length")]
     InvalidAddressLength,
-    /// Transaction id length response invalid.
-    #[error("unexpected transaction_id length")]
-    InvalidTransactionIdLength,
     /// Message id length response invalid.
     #[error("unexpected message_id length")]
     InvalidMessageIdLength,
@@ -126,9 +120,91 @@ pub enum WalletError {
     /// the address must belong to the account.
     #[error("the remainder value address doesn't belong to the account")]
     InvalidRemainderValueAddress,
+    /// Storage access error.
+    #[error("error accessing storage: {0}")]
+    Storage(String),
+    /// Panic error.
+    #[error("a panic happened: {0}")]
+    Panic(String),
+    /// Error on `internal_transfer` when the destination account address list is empty
+    #[error("destination account has no addresses")]
+    TransferDestinationEmpty,
+    /// Invalid message identifier.
+    #[error("invalid message id received by node")]
+    InvalidMessageId,
+    /// Invalid transaction identifier.
+    #[error("invalid transaction id received by node")]
+    InvalidTransactionId,
+    /// Address build error: required field not filled.
+    #[error("address build error, field `{0}` is required")]
+    AddressBuildRequiredField(AddressBuildRequiredField),
+    /// Account initialisation error: required field not filled.
+    #[error("account initialisation error, field `{0}` is required")]
+    AccountInitialiseRequiredField(AccountInitialiseRequiredField),
+    /// Error that happens when the stronghold snapshot wasn't loaded.
+    /// The snapshot is loaded through the
+    /// [AccountManager#set_stronghold_password](struct.AccountManager.html#method.set_stronghold_password).
+    #[error("stronghold not loaded")]
+    StrongholdNotLoaded,
+    /// Invalid hex string.
+    #[error("invalid hex string received: {0}")]
+    Hex(#[from] hex::FromHexError),
+    /// Error from bee_message crate.
+    #[error("{0}")]
+    BeeMessage(iota::message::Error),
+    /// Transaction output amount can't be zero.
+    #[error("transaction output amount can't be zero")]
+    OutputAmountIsZero,
+    /// invalid BIP32 derivation path.
+    #[error("invalid BIP32 derivation path: {0}")]
+    InvalidDerivationPath(String),
+    /// Failed to generate private key from BIP32 path.
+    #[error("failed to generate private key from derivation path")]
+    FailedToGeneratePrivateKey(bee_signing_ext::binary::BIP32Path),
+    /// Failed to parse date string.
+    #[error("error parsing date: {0}")]
+    ParseDate(#[from] chrono::ParseError),
 }
 
-impl Drop for WalletError {
+impl From<iota::message::Error> for Error {
+    fn from(error: iota::message::Error) -> Self {
+        Self::BeeMessage(error)
+    }
+}
+
+/// Each of the account initialisation required fields.
+#[derive(Debug)]
+pub enum AccountInitialiseRequiredField {
+    /// `signer_type` field.
+    SignerType,
+}
+
+impl std::fmt::Display for AccountInitialiseRequiredField {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", format!("{:?}", self).to_lowercase())
+    }
+}
+
+/// Each of the address builder required fields.
+#[derive(Debug)]
+pub enum AddressBuildRequiredField {
+    /// address field.
+    Address,
+    /// balance field.
+    Balance,
+    /// key_index field.
+    KeyIndex,
+    /// outputs field.
+    Outputs,
+}
+
+impl std::fmt::Display for AddressBuildRequiredField {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", format!("{:?}", self).to_lowercase())
+    }
+}
+
+impl Drop for Error {
     fn drop(&mut self) {
         event::emit_error(self);
     }
@@ -152,7 +228,7 @@ pub(crate) fn with_stronghold_from_path<T, F: FnOnce(&Stronghold) -> crate::Resu
     if let Some(stronghold) = stronghold_map.get(path) {
         cb(stronghold)
     } else {
-        Err(anyhow::anyhow!("should initialize stronghold instance before using it").into())
+        Err(Error::StrongholdNotLoaded)
     }
 }
 
@@ -215,7 +291,7 @@ mod test_utils {
 
     impl PowProvider for NoopNonceProvider {
         type Builder = NoopNonceProviderBuilder;
-        type Error = crate::WalletError;
+        type Error = crate::Error;
 
         fn nonce(&self, bytes: &[u8], target_score: f64) -> std::result::Result<u64, Self::Error> {
             Ok(0)

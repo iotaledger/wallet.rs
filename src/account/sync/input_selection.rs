@@ -13,7 +13,7 @@ pub struct Input {
 
 pub fn select_input(target: u64, available_utxos: &mut [Input]) -> crate::Result<Vec<Input>> {
     if target > available_utxos.iter().fold(0, |acc, address| acc + address.balance) {
-        return Err(crate::WalletError::InsufficientFunds);
+        return Err(crate::Error::InsufficientFunds);
     }
 
     available_utxos.sort_by(|a, b| b.balance.cmp(&a.balance));

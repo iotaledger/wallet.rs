@@ -6,7 +6,7 @@ use crate::{
     address::Address,
     client::ClientOptions,
     message::{Message as WalletMessage, MessageType as WalletMessageType, Transfer},
-    WalletError,
+    Error,
 };
 use serde::{ser::Serializer, Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
@@ -229,7 +229,7 @@ pub enum ResponseType {
     /// SendTransfer and InternalTransfer response.
     SentTransfer(WalletMessage),
     /// An error occurred.
-    Error(WalletError),
+    Error(Error),
     /// A panic occurred.
     Panic(String),
 }
