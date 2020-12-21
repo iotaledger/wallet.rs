@@ -3,7 +3,7 @@
 
 use std::sync::{Arc, RwLock};
 
-use iota_wallet::{account::AccountIdentifier, account_manager::AccountManager, message::Message, WalletError};
+use iota_wallet::{account::AccountIdentifier, account_manager::AccountManager, message::Message, Error};
 use neon::prelude::*;
 
 pub struct InternalTransferTask {
@@ -15,7 +15,7 @@ pub struct InternalTransferTask {
 
 impl Task for InternalTransferTask {
     type Output = Message;
-    type Error = WalletError;
+    type Error = Error;
     type JsEvent = JsValue;
 
     fn perform(&self) -> Result<Self::Output, Self::Error> {

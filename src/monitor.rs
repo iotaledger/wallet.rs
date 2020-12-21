@@ -101,8 +101,8 @@ async fn process_output(
 ) -> crate::Result<()> {
     let output: AddressOutputPayload = serde_json::from_str(&payload)?;
     let metadata = OutputMetadata {
-        message_id: hex::decode(output.message_id).map_err(|e| anyhow::anyhow!(e.to_string()))?,
-        transaction_id: hex::decode(output.transaction_id).map_err(|e| anyhow::anyhow!(e.to_string()))?,
+        message_id: hex::decode(output.message_id)?,
+        transaction_id: hex::decode(output.transaction_id)?,
         output_index: output.output_index,
         is_spent: output.is_spent,
         amount: output.output.amount,

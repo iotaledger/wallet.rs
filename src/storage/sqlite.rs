@@ -67,7 +67,7 @@ impl StorageAdapter for SqliteStorageAdapter {
         let account = results
             .first()
             .map(|val| val.as_ref().unwrap().to_string())
-            .ok_or(crate::WalletError::AccountNotFound)?;
+            .ok_or(crate::Error::AccountNotFound)?;
         Ok(account)
     }
 
@@ -84,7 +84,7 @@ impl StorageAdapter for SqliteStorageAdapter {
     fn set(&self, account_id: &AccountIdentifier, account: String) -> crate::Result<()> {
         let id = match account_id {
             AccountIdentifier::Id(id) => id,
-            _ => return Err(anyhow::anyhow!("only Id is supported").into()),
+            _ => return Err(crate::Error::Storage("only Id is supported".into())),
         };
         let connection = self.connection.lock().expect("failed to get connection lock");
         let result = connection
@@ -92,7 +92,7 @@ impl StorageAdapter for SqliteStorageAdapter {
                 &format!("INSERT OR REPLACE INTO {} VALUES (?1, ?2, ?3)", self.table_name),
                 params![id, account, Utc::now().timestamp()],
             )
-            .map_err(|_| anyhow::anyhow!("failed to insert data"))?;
+            .map_err(|_| crate::Error::Storage("failed to insert data".into()))?;
         Ok(())
     }
 
@@ -115,7 +115,7 @@ impl StorageAdapter for SqliteStorageAdapter {
         let connection = self.connection.lock().expect("failed to get connection lock");
         let result = connection
             .execute(&sql, params)
-            .map_err(|_| anyhow::anyhow!("failed to delete data"))?;
+            .map_err(|_| crate::Error::Storage("failed to delete data".into()))?;
         Ok(())
     }
 }

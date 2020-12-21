@@ -3,7 +3,7 @@
 
 use std::sync::{Arc, RwLock};
 
-use iota_wallet::{account::SyncedAccount, account_manager::AccountManager, WalletError};
+use iota_wallet::{account::SyncedAccount, account_manager::AccountManager, Error};
 use neon::prelude::*;
 
 pub struct SyncTask {
@@ -12,7 +12,7 @@ pub struct SyncTask {
 
 impl Task for SyncTask {
     type Output = Vec<SyncedAccount>;
-    type Error = WalletError;
+    type Error = Error;
     type JsEvent = JsArray;
 
     fn perform(&self) -> Result<Self::Output, Self::Error> {

@@ -3,7 +3,7 @@
 
 use iota_wallet::{
     account::{AccountIdentifier, SyncedAccount},
-    WalletError,
+    Error,
 };
 use neon::prelude::*;
 use serde::Deserialize;
@@ -25,7 +25,7 @@ pub struct SyncTask {
 
 impl Task for SyncTask {
     type Output = SyncedAccount;
-    type Error = WalletError;
+    type Error = Error;
     type JsEvent = JsValue;
 
     fn perform(&self) -> Result<Self::Output, Self::Error> {
