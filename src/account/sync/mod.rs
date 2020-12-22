@@ -141,7 +141,9 @@ async fn sync_addresses(
         generated_addresses.extend(curr_generated_addresses.into_iter());
 
         if is_empty {
-            log::debug!("[SYNC] finishing address syncing because the current messages list and address list are empty");
+            log::debug!(
+                "[SYNC] finishing address syncing because the current messages list and address list are empty"
+            );
             break;
         }
     }
