@@ -56,6 +56,20 @@ async fn load_private_data_actor(mut runtime: &mut ActorRuntime, snapshot_path: 
     if runtime.spawned_client_paths.contains(&client_path) {
         status_message_to_result(runtime.stronghold.switch_actor_target(client_path))?;
     } else {
+        if snapshot_path.exists() {
+            status_message_to_result(
+                runtime
+                    .stronghold
+                    .read_snapshot(
+                        client_path.clone(),
+                        None,
+                        [0; 32].to_vec(), // TODO
+                        None,
+                        Some(snapshot_path.clone()),
+                    )
+                    .await,
+            )?;
+        }
         status_message_to_result(
             runtime
                 .stronghold
@@ -133,10 +147,10 @@ fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, String>>> {
                         access_store.insert(snapshot_path.clone(), false);
                     }
 
-                    let current_snapshot_path = CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await;
+                    let current_snapshot_path = &*CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await;
                     for remove_key in remove_keys {
                         passwords.remove(&remove_key);
-                        if let Some(curr_snapshot_path) = &*current_snapshot_path {
+                        if let Some(curr_snapshot_path) = current_snapshot_path {
                             if &remove_key == curr_snapshot_path {
                                 let mut runtime = actor_runtime().lock().await;
                                 let _ = clear_stronghold_cache(&mut runtime);
@@ -224,28 +238,18 @@ fn actor_runtime() -> &'static Arc<Mutex<ActorRuntime>> {
 // check if the snapshot path is different than the current loaded one
 // if it is, write the current snapshot and load the new one
 async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> Result<()> {
-    let current_snapshot_path = CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await;
-    let curr_snapshot_path = current_snapshot_path.clone();
-    std::mem::drop(current_snapshot_path);
+    let curr_snapshot_path = CURRENT_SNAPSHOT_PATH
+        .get_or_init(Default::default)
+        .lock()
+        .await
+        .as_ref()
+        .cloned();
 
     if let Some(curr_snapshot_path) = &curr_snapshot_path {
         // if the current loaded snapshot is different than the snapshot we're tring to use,
         // save the current snapshot and read the new snapshot
         if curr_snapshot_path != snapshot_path {
-            let _curr_snapshot_password = get_password(&curr_snapshot_path).await.unwrap();
-            status_message_to_result(
-                runtime
-                    .stronghold
-                    .write_snapshot(
-                        PRIVATE_DATA_CLIENT_PATH.to_vec(),
-                        [0; 32].to_vec(), // TODO use curr_snapshot_password
-                        None,
-                        Some(curr_snapshot_path.to_path_buf()),
-                        None,
-                    )
-                    .await,
-            )?;
-
+            clear_stronghold_cache(&mut runtime).await?;
             let password = get_password(snapshot_path).await.unwrap();
             read_or_create_snapshot(&mut runtime, snapshot_path, password).await?;
         }
@@ -255,11 +259,26 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf)
 }
 
 async fn clear_stronghold_cache(runtime: &mut ActorRuntime) -> Result<()> {
-    for path in &runtime.spawned_client_paths {
-        status_message_to_result(runtime.stronghold.kill_stronghold(path.clone(), false).await)?;
-        status_message_to_result(runtime.stronghold.kill_stronghold(path.clone(), true).await)?;
+    if let Some(curr_snapshot_path) = CURRENT_SNAPSHOT_PATH
+        .get_or_init(Default::default)
+        .lock()
+        .await
+        .as_ref()
+    {
+        runtime
+            .stronghold
+            .write_all_to_snapshot(
+                [0; 32].to_vec(), // TODO use curr_snapshot_password
+                None,
+                Some(curr_snapshot_path.to_path_buf()),
+            )
+            .await;
+        for path in &runtime.spawned_client_paths {
+            status_message_to_result(runtime.stronghold.kill_stronghold(path.clone(), false).await)?;
+            status_message_to_result(runtime.stronghold.kill_stronghold(path.clone(), true).await)?;
+        }
+        runtime.spawned_client_paths = HashSet::new();
     }
-    runtime.spawned_client_paths = HashSet::new();
     Ok(())
 }
 
@@ -269,6 +288,10 @@ async fn read_or_create_snapshot(
     _password: String,
 ) -> Result<()> {
     if snapshot_path.exists() {
+        status_message_to_result(runtime.stronghold.spawn_stronghold_actor(
+            PRIVATE_DATA_CLIENT_PATH.to_vec(),
+            vec![StrongholdFlags::IsReadable(false)],
+        ))?;
         status_message_to_result(
             runtime
                 .stronghold
@@ -283,7 +306,6 @@ async fn read_or_create_snapshot(
         )?;
     } else {
         clear_stronghold_cache(&mut runtime).await?;
-        // TODO write all actors to snapshot
     }
 
     let mut current_snapshot_path = CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await;
@@ -314,7 +336,7 @@ pub async fn get_accounts(snapshot_path: &PathBuf) -> Result<Vec<String>> {
     let mut accounts = Vec::new();
     if let Some(data) = data_opt {
         let account_ids = String::from_utf8_lossy(&data).to_string();
-        for account_id in account_ids.split(ACCOUNT_ID_SEPARATOR) {
+        for account_id in account_ids.split(ACCOUNT_ID_SEPARATOR).filter(|id| id != &"") {
             let id = AccountIdentifier::Id(account_id.to_string());
             let account = get_account_internal(&mut runtime, snapshot_path, &id).await?;
             accounts.push(account);
@@ -333,8 +355,16 @@ async fn get_account_internal(
         .stronghold
         .read_data(Location::generic(ACCOUNT_VAULT_PATH, ACCOUNT_RECORD_PATH))
         .await;
-    data.map(|d| String::from_utf8_lossy(&d).to_string())
-        .ok_or(Error::AccountNotFound)
+    if let Some(data) = data {
+        let data = String::from_utf8_lossy(&data).to_string();
+        if data == "" {
+            Err(Error::AccountNotFound)
+        } else {
+            Ok(data)
+        }
+    } else {
+        Err(Error::AccountNotFound)
+    }
 }
 
 pub async fn get_account(snapshot_path: &PathBuf, account_id: &AccountIdentifier) -> Result<String> {
