@@ -28,20 +28,11 @@ struct IndexationDto {
     data: Option<Vec<u8>>,
 }
 
-#[derive(Deserialize)]
+#[derive(Default, Deserialize)]
 struct TransferOptions {
-    #[serde(rename = "remainderValueStrategy")]
+    #[serde(rename = "remainderValueStrategy", default)]
     remainder_value_strategy: RemainderValueStrategy,
     indexation: Option<IndexationDto>,
-}
-
-impl Default for TransferOptions {
-    fn default() -> Self {
-        Self {
-            remainder_value_strategy: RemainderValueStrategy::ChangeAddress,
-            indexation: None,
-        }
-    }
 }
 
 declare_types! {
