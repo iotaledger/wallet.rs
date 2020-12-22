@@ -1,21 +1,24 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::sync::{Arc, RwLock};
+use std::{
+    num::NonZeroU64,
+    sync::{Arc, RwLock},
+};
 
-use iota_wallet::{account::AccountIdentifier, account_manager::AccountManager, message::Message, WalletError};
+use iota_wallet::{account::AccountIdentifier, account_manager::AccountManager, message::Message, Error};
 use neon::prelude::*;
 
 pub struct InternalTransferTask {
     pub manager: Arc<RwLock<AccountManager>>,
     pub from_account_id: AccountIdentifier,
     pub to_account_id: AccountIdentifier,
-    pub amount: u64,
+    pub amount: NonZeroU64,
 }
 
 impl Task for InternalTransferTask {
     type Output = Message;
-    type Error = WalletError;
+    type Error = Error;
     type JsEvent = JsValue;
 
     fn perform(&self) -> Result<Self::Output, Self::Error> {

@@ -15,6 +15,7 @@ use std::{
     collections::HashMap,
     convert::TryInto,
     fs,
+    num::NonZeroU64,
     panic::AssertUnwindSafe,
     path::{Path, PathBuf},
     sync::Arc,
@@ -22,6 +23,7 @@ use std::{
     time::Duration,
 };
 
+use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
 use iota::{MessageId, Payload};
@@ -100,7 +102,7 @@ impl AccountManagerBuilder {
             #[cfg(not(any(feature = "stronghold", feature = "sqlite")))]
             {
                 // TODO appropriate error kind
-                return Err(crate::WalletError::UnknownError("".to_string()));
+                return Err(crate::Error::UnknownError("".to_string()));
             }
         }
 
@@ -138,8 +140,8 @@ impl Drop for AccountManager {
         let stop_polling_sender = self.stop_polling_sender.clone();
         thread::spawn(move || {
             let _ = crate::block_on(async {
-                for account in accounts.read().await.values() {
-                    let _ = crate::monitor::unsubscribe(account.clone());
+                for account_handle in accounts.read().await.values() {
+                    let _ = crate::monitor::unsubscribe(account_handle.clone());
                 }
 
                 if let Some(sender) = stop_polling_sender {
@@ -159,7 +161,7 @@ impl AccountManager {
     }
 
     async fn load_accounts(storage_path: &PathBuf) -> crate::Result<AccountStore> {
-        let accounts = crate::storage::with_adapter(&storage_path, |storage| storage.get_all())?;
+        let accounts = crate::storage::get(&storage_path)?.lock().await.get_all().await?;
         let accounts = crate::storage::parse_accounts(&storage_path, &accounts)?
             .into_iter()
             .map(|account| (account.id().clone(), account.into()))
@@ -213,16 +215,20 @@ impl AccountManager {
                                 let storage_path_ = storage_path.clone();
                                 let accounts_ = accounts.clone();
 
-                                if let Err(panic) = AssertUnwindSafe(poll(accounts_.clone(), storage_path_, is_monitoring_disabled))
+                                if let Err(error) = AssertUnwindSafe(poll(accounts_.clone(), storage_path_, is_monitoring_disabled))
                                     .catch_unwind()
                                     .await {
-                                    let msg = if let Some(message) = panic.downcast_ref::<Cow<'_, str>>() {
-                                        format!("Internal error: {}", message)
-                                    } else {
-                                        "Internal error".to_string()
-                                    };
-                                    let _error = crate::WalletError::UnknownError(msg);
-                                    // when the error is dropped, the on_error event will be triggered
+                                        if let Some(error) = error.downcast_ref::<crate::Error>() {
+                                            // when the error is dropped, the on_error event will be triggered
+                                        } else {
+                                            let msg = if let Some(message) = error.downcast_ref::<Cow<'_, str>>() {
+                                                format!("Internal error: {}", message)
+                                            } else {
+                                                "Internal error".to_string()
+                                            };
+                                            let _error = crate::Error::Panic(msg);
+                                            // when the error is dropped, the on_error event will be triggered
+                                        }
                                 }
 
                                 let accounts_ = accounts_.read().await;
@@ -251,20 +257,25 @@ impl AccountManager {
         let mut accounts = self.accounts.write().await;
 
         {
-            let account_handle = accounts.get(&account_id).ok_or(crate::WalletError::AccountNotFound)?;
+            let account_handle = accounts.get(&account_id).ok_or(crate::Error::AccountNotFound)?;
             let account = account_handle.read().await;
 
             if !(account.messages().is_empty() && account.total_balance() == 0) {
-                return Err(crate::WalletError::MessageNotEmpty);
+                return Err(crate::Error::MessageNotEmpty);
             }
         }
 
         accounts.remove(account_id);
 
-        if let Err(e) = crate::storage::with_adapter(&self.storage_path, |storage| storage.remove(&account_id)) {
+        if let Err(e) = crate::storage::get(&self.storage_path)?
+            .lock()
+            .await
+            .remove(&account_id)
+            .await
+        {
             match e {
                 // if we got an "AccountNotFound" error, that means we didn't save the cached account yet
-                crate::WalletError::AccountNotFound => {}
+                crate::Error::AccountNotFound => {}
                 _ => return Err(e),
             }
         }
@@ -282,7 +293,7 @@ impl AccountManager {
         &self,
         from_account_id: &AccountIdentifier,
         to_account_id: &AccountIdentifier,
-        amount: u64,
+        amount: NonZeroU64,
     ) -> crate::Result<Message> {
         let to_address = self
             .get_account(to_account_id)
@@ -290,12 +301,12 @@ impl AccountManager {
             .read()
             .await
             .latest_address()
-            .ok_or_else(|| anyhow::anyhow!("destination account address list empty"))?
+            .ok_or(crate::Error::TransferDestinationEmpty)?
             .clone();
 
         let from_synchronized = self.get_account(from_account_id).await?.sync().await.execute().await?;
         from_synchronized
-            .transfer(Transfer::new(to_address.address().clone(), amount))
+            .transfer(Transfer::builder(to_address.address().clone(), amount).finish())
             .await
     }
 
@@ -306,14 +317,19 @@ impl AccountManager {
             let metadata = fs::metadata(&storage_path)?;
             let backup_path = destination.as_ref().to_path_buf();
             if metadata.is_dir() {
-                copy_dir(storage_path, &backup_path)?;
-            } else {
+                backup_dir(storage_path, &backup_path)?;
+            } else if let Some(filename) = storage_path.file_name() {
                 fs::create_dir_all(&destination)?;
-                fs::copy(storage_path, &backup_path)?;
+                fs::copy(
+                    storage_path,
+                    &backup_path.join(backup_filename(filename.to_str().unwrap())),
+                )?;
+            } else {
+                return Err(crate::Error::StorageDoesntExist);
             }
             Ok(backup_path)
         } else {
-            Err(crate::WalletError::StorageDoesntExist)
+            Err(crate::Error::StorageDoesntExist)
         }
     }
 
@@ -333,10 +349,7 @@ impl AccountManager {
     /// Gets the account associated with the given identifier.
     pub async fn get_account(&self, account_id: &AccountIdentifier) -> crate::Result<AccountHandle> {
         let accounts = self.accounts.read().await;
-        accounts
-            .get(account_id)
-            .cloned()
-            .ok_or(crate::WalletError::AccountNotFound)
+        accounts.get(account_id).cloned().ok_or(crate::Error::AccountNotFound)
     }
 
     /// Gets the account associated with the given alias (case insensitive).
@@ -504,7 +517,7 @@ async fn restore_backup(manager: &AccountManager, backup_account_manager: &Accou
     }
 
     if let Some(imported_account_alias) = already_imported_account {
-        return Err(crate::WalletError::AccountAlreadyImported {
+        return Err(crate::Error::AccountAlreadyImported {
             alias: imported_account_alias,
         });
     }
@@ -513,9 +526,11 @@ async fn restore_backup(manager: &AccountManager, backup_account_manager: &Accou
 
     for backup_account_handle in backup_account_handles {
         let backup_account = backup_account_handle.read().await;
-        crate::storage::with_adapter(manager.storage_path(), |storage| {
-            storage.set(backup_account.id(), serde_json::to_string(&*backup_account)?)
-        })?;
+        crate::storage::get(manager.storage_path())?
+            .lock()
+            .await
+            .set(backup_account.id(), serde_json::to_string(&*backup_account)?)
+            .await?;
     }
     Ok(())
 }
@@ -627,7 +642,7 @@ async fn retry_unconfirmed_transactions(synced_accounts: Vec<SyncedAccount>) -> 
     Ok(retried_messages)
 }
 
-fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std::io::Error> {
+fn backup_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std::io::Error> {
     let mut stack = Vec::new();
     stack.push(PathBuf::from(from.as_ref()));
 
@@ -652,13 +667,18 @@ fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std::i
             if path.is_dir() {
                 stack.push(path);
             } else if let Some(filename) = path.file_name() {
-                let dest_path = dest.join(filename);
+                let dest_path = dest.join(backup_filename(filename.to_str().unwrap()));
                 fs::copy(&path, &dest_path)?;
             }
         }
     }
 
     Ok(())
+}
+
+fn backup_filename(original: &str) -> String {
+    let date = Utc::now();
+    format!("{}-backup-{}", date.to_rfc3339(), original)
 }
 
 #[cfg(test)]
@@ -681,7 +701,8 @@ mod tests {
                 .expect("invalid node URL")
                 .build();
 
-            crate::block_on(async move {
+            let mut runtime = tokio::runtime::Runtime::new().unwrap();
+            runtime.block_on(async move {
                 let account_handle = manager
                     .create_account(client_options)
                     .alias("alias")

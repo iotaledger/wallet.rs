@@ -265,6 +265,7 @@ async fn read_or_create_snapshot(
                 .stronghold
                 .read_snapshot(
                     PRIVATE_DATA_CLIENT_PATH.to_vec(),
+                    None,
                     [0; 32].to_vec(), // TODO
                     None,
                     Some(snapshot_path.clone()),

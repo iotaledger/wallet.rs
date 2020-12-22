@@ -14,6 +14,7 @@ use std::{
     any::Any,
     borrow::Cow,
     convert::TryInto,
+    num::NonZeroU64,
     panic::{catch_unwind, AssertUnwindSafe},
 };
 
@@ -97,7 +98,7 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async { self.set_stronghold_password(password).await }).await
             }
             MessageType::SendTransfer { account_id, transfer } => {
-                convert_async_panics(|| async { self.send_transfer(account_id, transfer).await }).await
+                convert_async_panics(|| async { self.send_transfer(account_id, transfer.clone().finish()).await }).await
             }
             MessageType::InternalTransfer {
                 from_account_id,
@@ -133,7 +134,7 @@ impl WalletMessageHandler {
         let parsed_message_id = MessageId::new(
             message_id.as_bytes()[..]
                 .try_into()
-                .map_err(|_| anyhow::anyhow!("invalid message id length"))?,
+                .map_err(|_| crate::Error::InvalidMessageId)?,
         );
         self.account_manager.reattach(account_id, &parsed_message_id).await?;
         Ok(ResponseType::Reattached(message_id.to_string()))
@@ -228,11 +229,7 @@ impl WalletMessageHandler {
             builder = builder.alias(alias);
         }
         if let Some(created_at) = &account.created_at {
-            builder = builder.created_at(
-                created_at
-                    .parse::<DateTime<Utc>>()
-                    .map_err(|e| anyhow::anyhow!(e.to_string()))?,
-            );
+            builder = builder.created_at(created_at.parse::<DateTime<Utc>>()?);
         }
 
         match builder.initialise().await {
@@ -265,10 +262,10 @@ impl WalletMessageHandler {
         Ok(ResponseType::StrongholdPasswordSet)
     }
 
-    async fn send_transfer(&self, account_id: &AccountIdentifier, transfer: &Transfer) -> Result<ResponseType> {
+    async fn send_transfer(&self, account_id: &AccountIdentifier, transfer: Transfer) -> Result<ResponseType> {
         let account = self.account_manager.get_account(account_id).await?;
         let synced = account.sync().await.execute().await?;
-        let message = synced.transfer(transfer.clone()).await?;
+        let message = synced.transfer(transfer).await?;
         Ok(ResponseType::SentTransfer(message))
     }
 
@@ -276,7 +273,7 @@ impl WalletMessageHandler {
         &self,
         from_account_id: &AccountIdentifier,
         to_account_id: &AccountIdentifier,
-        amount: u64,
+        amount: NonZeroU64,
     ) -> Result<ResponseType> {
         let message = self
             .account_manager
@@ -340,7 +337,6 @@ mod tests {
             while let Some(message) = self.rx.recv().await {
                 self.message_handler.handle(message).await;
             }
-            println!("DONE");
         }
     }
 

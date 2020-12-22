@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_wallet::{account_manager::AccountManager, client::ClientOptionsBuilder, message::Transfer};
+use std::num::NonZeroU64;
 
 #[tokio::main]
 async fn main() -> iota_wallet::Result<()> {
@@ -21,10 +22,13 @@ async fn main() -> iota_wallet::Result<()> {
     let sync_account = sync_accounts.first().unwrap();
 
     sync_account
-        .transfer(Transfer::new(
-            account.latest_address().await.unwrap().address().clone(),
-            150,
-        ))
+        .transfer(
+            Transfer::builder(
+                account.latest_address().await.unwrap().address().clone(),
+                NonZeroU64::new(150).unwrap(),
+            )
+            .finish(),
+        )
         .await?;
 
     Ok(())
