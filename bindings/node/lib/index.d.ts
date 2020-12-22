@@ -154,7 +154,8 @@ export declare type Event = 'ErrorThrown' |
 
 export interface LoggerOutput {
   name?: string
-  level?: 'off' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
+  level_filter: 'off' | 'error' | 'warn' | 'info' | 'debug' | 'trace' = 'info'
+  target_filters?: string[]
 }
 
 export interface LoggerConfig {

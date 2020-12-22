@@ -64,10 +64,11 @@ Initializes the logging system.
 
 #### LogOutput
 
-| Param | Type                | Default                | Description                                    |
-| ----- | ------------------- | ---------------------- | ---------------------------------------------- |
-| name  | <code>string</code> | <code>undefined</code> | 'stdout' or a path to a file                   |
-| level | <code>string</code> | <code>undefined</code> | The maximum log level that this output accepts |
+| Param          | Type                  | Default                | Description                                          |
+| -------------- | --------------------- | ---------------------- | ---------------------------------------------------- |
+| name           | <code>string</code>   | <code>undefined</code> | 'stdout' or a path to a file                         |
+| level_filter   | <code>string</code>   | <code>'info'</code>    | The maximum log level that this output accepts       |
+| target_filters | <code>string[]</code> | <code>[]</code>        | Filters on the log target (library and module names) |
 
 ### addEventListener(event, cb)
 
