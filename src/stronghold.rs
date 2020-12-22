@@ -48,14 +48,19 @@ fn status_message_to_result(status: StatusMessage) -> Result<()> {
     }
 }
 
-async fn load_private_data_actor(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> Result<()> {
+async fn load_actor(
+    mut runtime: &mut ActorRuntime,
+    snapshot_path: &PathBuf,
+    client_path: Vec<u8>,
+    flags: Vec<StrongholdFlags>,
+) -> Result<()> {
     on_stronghold_access(&snapshot_path).await?;
     check_snapshot(&mut runtime, &snapshot_path).await?;
 
-    let client_path = PRIVATE_DATA_CLIENT_PATH.to_vec();
     if runtime.spawned_client_paths.contains(&client_path) {
         status_message_to_result(runtime.stronghold.switch_actor_target(client_path))?;
     } else {
+        status_message_to_result(runtime.stronghold.spawn_stronghold_actor(client_path.clone(), flags))?;
         if snapshot_path.exists() {
             status_message_to_result(
                 runtime
@@ -70,38 +75,34 @@ async fn load_private_data_actor(mut runtime: &mut ActorRuntime, snapshot_path: 
                     .await,
             )?;
         }
-        status_message_to_result(
-            runtime
-                .stronghold
-                .spawn_stronghold_actor(client_path.clone(), vec![StrongholdFlags::IsReadable(false)]),
-        )?;
         runtime.spawned_client_paths.insert(client_path);
     };
 
     Ok(())
 }
 
+async fn load_private_data_actor(runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> Result<()> {
+    load_actor(
+        runtime,
+        snapshot_path,
+        PRIVATE_DATA_CLIENT_PATH.to_vec(),
+        vec![StrongholdFlags::IsReadable(false)],
+    )
+    .await
+}
+
 async fn load_account_actor(
-    mut runtime: &mut ActorRuntime,
+    runtime: &mut ActorRuntime,
     snapshot_path: &PathBuf,
     account_id: &AccountIdentifier,
 ) -> Result<()> {
-    on_stronghold_access(&snapshot_path).await?;
-    check_snapshot(&mut runtime, &snapshot_path).await?;
-    let client_path = account_id_to_client_path(account_id);
-
-    if runtime.spawned_client_paths.contains(&client_path) {
-        status_message_to_result(runtime.stronghold.switch_actor_target(client_path))?;
-    } else {
-        status_message_to_result(
-            runtime
-                .stronghold
-                .spawn_stronghold_actor(client_path.clone(), vec![StrongholdFlags::IsReadable(true)]),
-        )?;
-        runtime.spawned_client_paths.insert(client_path);
-    };
-
-    Ok(())
+    load_actor(
+        runtime,
+        snapshot_path,
+        account_id_to_client_path(account_id),
+        vec![StrongholdFlags::IsReadable(true)],
+    )
+    .await
 }
 
 async fn on_stronghold_access<S: AsRef<Path>>(snapshot_path: S) -> Result<()> {
@@ -251,7 +252,7 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf)
         if curr_snapshot_path != snapshot_path {
             clear_stronghold_cache(&mut runtime).await?;
             let password = get_password(snapshot_path).await.unwrap();
-            read_or_create_snapshot(&mut runtime, snapshot_path, password).await?;
+            switch_snapshot(&mut runtime, snapshot_path, password).await?;
         }
     }
 
@@ -282,31 +283,8 @@ async fn clear_stronghold_cache(runtime: &mut ActorRuntime) -> Result<()> {
     Ok(())
 }
 
-async fn read_or_create_snapshot(
-    mut runtime: &mut ActorRuntime,
-    snapshot_path: &PathBuf,
-    _password: String,
-) -> Result<()> {
-    if snapshot_path.exists() {
-        status_message_to_result(runtime.stronghold.spawn_stronghold_actor(
-            PRIVATE_DATA_CLIENT_PATH.to_vec(),
-            vec![StrongholdFlags::IsReadable(false)],
-        ))?;
-        status_message_to_result(
-            runtime
-                .stronghold
-                .read_snapshot(
-                    PRIVATE_DATA_CLIENT_PATH.to_vec(),
-                    None,
-                    [0; 32].to_vec(), // TODO
-                    None,
-                    Some(snapshot_path.clone()),
-                )
-                .await,
-        )?;
-    } else {
-        clear_stronghold_cache(&mut runtime).await?;
-    }
+async fn switch_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf, _password: String) -> Result<()> {
+    clear_stronghold_cache(&mut runtime).await?;
 
     let mut current_snapshot_path = CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await;
     current_snapshot_path.replace(snapshot_path.clone());
@@ -320,7 +298,7 @@ pub async fn load_snapshot<P: Into<String>>(snapshot_path: &PathBuf, password: P
 
     let mut runtime = actor_runtime().lock().await;
     check_snapshot(&mut runtime, snapshot_path).await?;
-    read_or_create_snapshot(&mut runtime, snapshot_path, password).await
+    switch_snapshot(&mut runtime, snapshot_path, password).await
 }
 
 pub async fn do_crypto(account: &Account) -> Result<()> {
