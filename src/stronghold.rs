@@ -33,6 +33,7 @@ const ACCOUNT_METADATA_VAULT_PATH: &str = "iota-wallet-account-metadata";
 const ACCOUNT_IDS_RECORD_PATH: &str = "iota-wallet-account-ids";
 const ACCOUNT_VAULT_PATH: &str = "iota-wallet-account-vault";
 const ACCOUNT_RECORD_PATH: &str = "iota-wallet-account-record";
+const SNAPSHOT_FILENAME: &str = "wallet.stronghold";
 
 fn account_id_to_client_path(id: &AccountIdentifier) -> Vec<u8> {
     match id {
@@ -61,7 +62,8 @@ async fn load_actor(
         status_message_to_result(runtime.stronghold.switch_actor_target(client_path))?;
     } else {
         status_message_to_result(runtime.stronghold.spawn_stronghold_actor(client_path.clone(), flags))?;
-        if snapshot_path.exists() {
+        let snapshot_file_path = snapshot_path.join(SNAPSHOT_FILENAME);
+        if snapshot_file_path.exists() {
             status_message_to_result(
                 runtime
                     .stronghold
@@ -70,7 +72,7 @@ async fn load_actor(
                         None,
                         [0; 32].to_vec(), // TODO
                         None,
-                        Some(snapshot_path.clone()),
+                        Some(snapshot_file_path),
                     )
                     .await,
             )?;
@@ -194,6 +196,8 @@ pub enum Error {
     FailedToPerformAction(String),
     #[error("snapshot password not set")]
     PasswordNotSet,
+    #[error("failed to create snapshot directory")]
+    FailedToCreateSnapshotDir,
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -271,7 +275,7 @@ async fn clear_stronghold_cache(runtime: &mut ActorRuntime) -> Result<()> {
             .write_all_to_snapshot(
                 [0; 32].to_vec(), // TODO use curr_snapshot_password
                 None,
-                Some(curr_snapshot_path.to_path_buf()),
+                Some(curr_snapshot_path.join(SNAPSHOT_FILENAME).to_path_buf()),
             )
             .await;
         for path in &runtime.spawned_client_paths {
@@ -293,12 +297,12 @@ async fn switch_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf
 }
 
 pub async fn load_snapshot<P: Into<String>>(snapshot_path: &PathBuf, password: P) -> Result<()> {
-    let password = password.into();
-    set_password(snapshot_path, password.clone()).await;
-
     let mut runtime = actor_runtime().lock().await;
-    check_snapshot(&mut runtime, snapshot_path).await?;
-    switch_snapshot(&mut runtime, snapshot_path, password).await
+    let password = password.into();
+    std::fs::create_dir_all(&snapshot_path).map_err(|_| Error::FailedToCreateSnapshotDir)?;
+    set_password(&snapshot_path, password.clone()).await;
+    check_snapshot(&mut runtime, &snapshot_path).await?;
+    switch_snapshot(&mut runtime, &snapshot_path, password).await
 }
 
 pub async fn do_crypto(account: &Account) -> Result<()> {
@@ -333,16 +337,9 @@ async fn get_account_internal(
         .stronghold
         .read_data(Location::generic(ACCOUNT_VAULT_PATH, ACCOUNT_RECORD_PATH))
         .await;
-    if let Some(data) = data {
-        let data = String::from_utf8_lossy(&data).to_string();
-        if data == "" {
-            Err(Error::AccountNotFound)
-        } else {
-            Ok(data)
-        }
-    } else {
-        Err(Error::AccountNotFound)
-    }
+    data.filter(|data| data.len() > 0)
+        .map(|data| String::from_utf8_lossy(&data).to_string())
+        .ok_or(Error::AccountNotFound)
 }
 
 pub async fn get_account(snapshot_path: &PathBuf, account_id: &AccountIdentifier) -> Result<String> {
@@ -392,7 +389,9 @@ pub async fn store_account(snapshot_path: &PathBuf, account_id: &AccountIdentifi
                 vec![],
             )
             .await,
-    )
+    )?;
+
+    Ok(())
 }
 
 pub async fn remove_account(snapshot_path: &PathBuf, account_id: &AccountIdentifier) -> Result<()> {
@@ -402,8 +401,10 @@ pub async fn remove_account(snapshot_path: &PathBuf, account_id: &AccountIdentif
     load_private_data_actor(&mut runtime, snapshot_path).await?;
     let account_ids_location = Location::generic(ACCOUNT_METADATA_VAULT_PATH, ACCOUNT_IDS_RECORD_PATH);
     let (data_opt, status) = runtime.stronghold.read_data(account_ids_location.clone()).await;
-    let data = data_opt.ok_or(Error::AccountNotFound)?;
-    let account_ids = String::from_utf8_lossy(&data).to_string();
+    let account_ids = data_opt
+        .filter(|data| data.len() > 0)
+        .map(|data| String::from_utf8_lossy(&data).to_string())
+        .ok_or(Error::AccountNotFound)?;
     status_message_to_result(
         runtime
             .stronghold
@@ -501,9 +502,22 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn write_and_delete() -> super::Result<()> {
+        let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
+        let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
+        super::load_snapshot(&snapshot_path, "password").await?;
+
+        let id = AccountIdentifier::Id("id".to_string());
+        let data = "account data";
+        super::store_account(&snapshot_path, &id, data.to_string()).await?;
+        super::remove_account(&snapshot_path, &id).await?;
+
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn write_and_read_multiple_snapshots() -> super::Result<()> {
         let mut snapshot_saves = vec![];
-        let _ = std::fs::create_dir("./example-database");
 
         for i in 1..3 {
             let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();

@@ -709,6 +709,10 @@ mod tests {
                     .initialise()
                     .await
                     .expect("failed to add account");
+                let mut account = account_handle.write().await;
+
+                account.save().await.unwrap();
+                drop(account);
                 let account = account_handle.read().await;
 
                 manager

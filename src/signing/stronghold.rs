@@ -8,7 +8,7 @@ pub struct StrongholdSigner;
 
 impl super::Signer for StrongholdSigner {
     fn init_account(&self, account: &Account, mnemonic: Option<String>) -> crate::Result<String> {
-        Ok("".to_string())
+        Ok("ID".to_string())
         // let stronghold_account_res: crate::Result<stronghold::Account> =
         // crate::with_stronghold_from_path(account.storage_path(), |stronghold| {
         // let created_at_timestamp: u128 = account.created_at().timestamp().try_into().unwrap(); // safe to unwrap
