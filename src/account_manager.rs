@@ -334,10 +334,10 @@ impl AccountManager {
     }
 
     /// Import backed up accounts.
-    pub async fn import_accounts<P: AsRef<Path>>(&self, source: P) -> crate::Result<()> {
+    pub async fn import_accounts<S: AsRef<Path>, P: AsRef<str>>(&self, source: S, password: P) -> crate::Result<()> {
         let backup_stronghold_path = source.as_ref().join(crate::storage::stronghold_snapshot_filename());
         let backup_stronghold =
-            stronghold::Stronghold::new(&backup_stronghold_path, false, "password".to_string(), None)?;
+            stronghold::Stronghold::new(&backup_stronghold_path, false, password.as_ref().to_string(), None)?;
         crate::init_stronghold(&source.as_ref().to_path_buf(), backup_stronghold);
 
         let backup_storage = crate::storage::get_adapter_from_path(&source)?;

@@ -150,9 +150,10 @@ Backups the database.
 
 Imports a database file.
 
-| Param  | Type                | Default                | Description                 |
-| ------ | ------------------- | ---------------------- | --------------------------- |
-| source | <code>string</code> | <code>undefined</code> | The path to the backup file |
+| Param    | Type                | Default                  | Description                    |
+| ------   | ------------------- | ----------------------   | ---------------------------    |
+| source   | <code>string</code> | <code>undefined</code>   | The path to the backup file    |
+| password | <code>string</code> | <code>undefined</code>   | The backup stronghold password |
 
 ### SyncedAccount
 
