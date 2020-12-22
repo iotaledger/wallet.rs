@@ -2,6 +2,10 @@
 
 Node.js binding to the IOTA wallet library.
 
+## Requirements
+
+Ensure you have first installed the required dependencies for the library [here](https://github.com/iotaledger/wallet.rs/blob/develop/README.md).
+
 ## Installation
 
 Currently the package isn't published so you'd need to link it to your project using `npm` or `yarn`.
@@ -27,15 +31,22 @@ $ yarn link iota-wallet
 
 After you linked the library, you can create an `AccountManager` instance and interface with it.
 
+While Stronghold is not ready, we recommend using the Sqlite StorageType and `EnvMnemonic` SignerType (this simply means you store your mnemonic as an environment variable).
+
+### Example 
+
 ```javascript
-const { AccountManager } = require('iota-wallet')
-const manager = new AccountManager()
-const account = await manager.createAccount({
-  alias: 'my first account',
-  clientOptions: {
-    node: 'http://localhost:14265'
-  }
+const { AccountManager, StorageType, SignerType } = require('iota-wallet')
+const manager = new AccountManager({
+    storagePath: './storage',
+    storageType: StorageType.Sqlite
 })
+const account = await manager.createAccount({
+  alias: 'Account1',
+  clientOptions: { node: 'http://api.lb-0.testnet.chrysalis2.com', localPow: false },
+  signerType: SignerType.EnvMnemonic
+})
+account.sync()
 ```
 
 ## API Reference
@@ -80,10 +91,6 @@ Creates a new instance of the AccountManager.
 | [options]     | <code>object</code> | <code>undefined</code> | The options to configure the account manager          |
 | [storagePath] | <code>string</code> | <code>undefined</code> | The path where the database file will be saved        |
 | [storageType] | <code>number</code> | <code>undefined</code> | The type of the database.  Stronghold = 1, Sqlite = 2 |
-
-#### startBackgroundSync(): void
-
-Initialises the background polling mechanism and MQTT monitoring. Automatically called on `setStrongholdPassword`.
 
 #### setStrongholdPassword(password): void
 
@@ -178,14 +185,33 @@ Imports a database file.
 
 ### SyncedAccount
 
-#### send(address, amount)
+#### send(address, amount[, options])
 
 Send funds to the given address.
 
-| Param   | Type                | Default                | Description                               |
-| ------- | ------------------- | ---------------------- | ----------------------------------------- |
-| address | <code>string</code> | <code>null</code>      | The bech32 string of the transfer address |
-| amount  | <code>number</code> | <code>undefined</code> | The transfer amount                       |
+| Param   | Type                         | Default                | Description                               |
+| ------- | ---------------------------- | ---------------------- | ----------------------------------------- |
+| address | <code>string</code>          | <code>null</code>      | The bech32 string of the transfer address |
+| amount  | <code>number</code>          | <code>undefined</code> | The transfer amount                       |
+| options | <code>TransferOptions</code> | <code>undefined</code> | The transfer options                      |
+
+##### TransferOptions
+
+| Param                  | Type                                              | Default           | Description                                        |
+| ---------------------- | ------------------------------------------------- | ----------------- | -------------------------------------------------- |
+| remainderValueStrategy | <code>RemainderValueStrategy</code>               | <code>null</code> | The strategy to use for the remainder value if any |
+| indexation             | <code>{ index: string, data?: Uint8Array }</code> | <code>null</code> | Message indexation                                 |
+
+##### RemainderValueStrategy
+
+###### changeAddress()
+Send the remainder value to an internal address.
+
+###### reuseAddress()
+Send the remainder value to its original address.
+
+###### accountAddress(address: string)
+Send the remainder value to a specific address that must belong to the account.
 
 #### retry(messageId)
 

@@ -15,7 +15,7 @@ serde_repr = "0.1"
 once_cell = "1.4"
 iota-core = { git = "https://github.com/iotaledger/iota.rs", branch = "dev" }
 url = { version = "2.1", features = [ "serde" ] }
-tokio = "0.2"
+tokio = { version = "0.2", features = ["macros", "sync"] }
 rand = "0.3"
 rusqlite = { version = "0.23", features = ["bundled"], optional = true }
 slip10 = "0.4"
@@ -23,6 +23,7 @@ bech32 = "0.7"
 hex = "0.4"
 futures = "0.3"
 backtrace = "0.3"
+async-trait = "0.1"
 log = "0.4"
 
 # env mnemonic
@@ -32,7 +33,9 @@ blake2 = "0.9"
 unicode-normalization = "0.1.13"
 pbkdf2 = "0.3.0"
 sha2 = "0.8.1"
-bee-common = { git = "https://github.com/iotaledger/bee/", branch = "chrysalis-pt-2" }
+dotenv = "0.15"
+dialoguer = "0.7"
+tiny-bip39 = "0.7"
 
 # stronghold
 iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", branch = "feat/pre-refactor", optional = true }

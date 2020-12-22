@@ -10,34 +10,39 @@ pub mod stronghold;
 
 use crate::account::{Account, AccountIdentifier};
 use once_cell::sync::OnceCell;
+use tokio::sync::Mutex as AsyncMutex;
 
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
-    sync::{Arc, RwLock},
+    sync::{Arc, Mutex, RwLock},
 };
 
-type Storage = Box<dyn StorageAdapter + Sync + Send>;
+type Storage = Arc<AsyncMutex<Box<dyn StorageAdapter + Sync + Send>>>;
 type Storages = Arc<RwLock<HashMap<PathBuf, Storage>>>;
+type AccountReadLockMap = HashMap<AccountIdentifier, Arc<Mutex<()>>>;
 static INSTANCES: OnceCell<Storages> = OnceCell::new();
 
 /// Sets the storage adapter.
 pub fn set_adapter<P: AsRef<Path>, S: StorageAdapter + Sync + Send + 'static>(storage_path: P, storage: S) {
     let mut instances = INSTANCES.get_or_init(Default::default).write().unwrap();
-    instances.insert(storage_path.as_ref().to_path_buf(), Box::new(storage));
+    instances.insert(
+        storage_path.as_ref().to_path_buf(),
+        Arc::new(AsyncMutex::new(Box::new(storage))),
+    );
 }
 
 pub(crate) fn stronghold_snapshot_filename() -> &'static str {
-    "snapshot"
+    "wallet.stronghold"
 }
 
 /// gets the storage adapter
-pub(crate) fn with_adapter<T, F: FnOnce(&Storage) -> T>(storage_path: &PathBuf, cb: F) -> T {
+pub(crate) fn get(storage_path: &PathBuf) -> crate::Result<Storage> {
     let instances = INSTANCES.get_or_init(Default::default).read().unwrap();
     if let Some(instance) = instances.get(storage_path) {
-        cb(instance)
+        Ok(instance.clone())
     } else {
-        panic!(format!("adapter not initialized with path {:?}", storage_path))
+        Err(crate::Error::StorageDoesntExist) // TODO proper error kind
     }
 }
 
@@ -54,15 +59,16 @@ pub(crate) fn get_adapter_from_path<P: AsRef<Path>>(storage_path: P) -> crate::R
 }
 
 /// The storage adapter.
+#[async_trait::async_trait]
 pub trait StorageAdapter {
     /// Gets the account with the given id/alias from the storage.
-    fn get(&self, account_id: &AccountIdentifier) -> crate::Result<String>;
+    async fn get(&self, account_id: &AccountIdentifier) -> crate::Result<String>;
     /// Gets all the accounts from the storage.
-    fn get_all(&self) -> crate::Result<Vec<String>>;
+    async fn get_all(&self) -> crate::Result<Vec<String>>;
     /// Saves or updates an account on the storage.
-    fn set(&self, account_id: &AccountIdentifier, account: String) -> crate::Result<()>;
+    async fn set(&self, account_id: &AccountIdentifier, account: String) -> crate::Result<()>;
     /// Removes an account from the storage.
-    fn remove(&self, account_id: &AccountIdentifier) -> crate::Result<()>;
+    async fn remove(&self, account_id: &AccountIdentifier) -> crate::Result<()>;
 }
 
 pub(crate) fn parse_accounts(storage_path: &PathBuf, accounts: &[String]) -> crate::Result<Vec<Account>> {
@@ -89,9 +95,20 @@ pub(crate) fn parse_accounts(storage_path: &PathBuf, accounts: &[String]) -> cra
     }
 }
 
-pub(crate) fn get_account(storage_path: &PathBuf, account_id: &AccountIdentifier) -> crate::Result<Account> {
-    let account_str = with_adapter(&storage_path, |storage| storage.get(account_id))?;
+pub(crate) async fn get_account(storage_path: &PathBuf, account_id: &AccountIdentifier) -> crate::Result<Account> {
+    let account_str = get(&storage_path)?.lock().await.get(account_id).await?;
     let mut account: Account = serde_json::from_str(&account_str)?;
     account.set_storage_path(storage_path.clone());
     Ok(account)
+}
+
+pub(crate) async fn save_account(
+    storage_path: &PathBuf,
+    account_id: &AccountIdentifier,
+    account: String,
+) -> crate::Result<()> {
+    let storage_handle = get(&storage_path)?;
+    let storage = storage_handle.lock().await;
+    storage.set(account_id, account).await?;
+    Ok(())
 }

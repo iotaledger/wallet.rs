@@ -3,7 +3,7 @@
 
 use std::sync::{Arc, RwLock};
 
-use iota_wallet::{account::SyncedAccount, account_manager::AccountManager, WalletError};
+use iota_wallet::{account::SyncedAccount, account_manager::AccountManager, Error};
 use neon::prelude::*;
 
 pub struct SyncTask {
@@ -12,7 +12,7 @@ pub struct SyncTask {
 
 impl Task for SyncTask {
     type Output = Vec<SyncedAccount>;
-    type Error = WalletError;
+    type Error = Error;
     type JsEvent = JsArray;
 
     fn perform(&self) -> Result<Self::Output, Self::Error> {
@@ -24,10 +24,10 @@ impl Task for SyncTask {
         match value {
             Ok(synced_accounts) => {
                 let js_array = JsArray::new(&mut cx, synced_accounts.len() as u32);
-                for (index, synced_account) in synced_accounts.iter().enumerate() {
-                    let synced = serde_json::to_string(&synced_account).unwrap();
-                    let synced = cx.string(synced);
-                    let synced_instance = crate::JsSyncedAccount::new(&mut cx, vec![synced])?;
+                for (index, synced_account) in synced_accounts.into_iter().enumerate() {
+                    let id = crate::store_synced_account(synced_account);
+                    let id = cx.string(id);
+                    let synced_instance = crate::JsSyncedAccount::new(&mut cx, vec![id])?;
                     js_array.set(&mut cx, index as u32, synced_instance)?;
                 }
 

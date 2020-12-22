@@ -3,16 +3,16 @@
 
 use crate::account::Account;
 
-use std::{collections::HashMap, env};
+use std::{collections::HashMap, env, fs::OpenOptions, io::Write};
 
 use bech32::ToBase32;
-use bee_common::packable::Packable;
 use blake2::{
     digest::{Update, VariableOutput},
     VarBlake2b,
 };
+use dialoguer::Confirm;
 use hmac::Hmac;
-use iota::{Ed25519Signature, ReferenceUnlock, SignatureUnlock, UnlockBlock};
+use iota::{common::packable::Packable, Ed25519Signature, ReferenceUnlock, SignatureUnlock, UnlockBlock};
 use rand::{thread_rng, Rng};
 use unicode_normalization::UnicodeNormalization;
 
@@ -21,6 +21,8 @@ use bee_signing_ext::{
     Signer,
 };
 
+const MNEMONIC_ENV_KEY: &str = "IOTA_WALLET_MNEMONIC";
+const MNEMONIC_PASSWORD_ENV_KEY: &str = "IOTA_WALLET_MNEMONIC_PASSWORD";
 const PBKDF2_ROUNDS: usize = 2048;
 const PBKDF2_BYTES: usize = 32; // 64 for secp256k1 , 32 for ed25
 
@@ -59,26 +61,40 @@ pub struct EnvMnemonicSigner;
 
 impl EnvMnemonicSigner {
     fn get_seed(&self) -> ed25519::Ed25519Seed {
+        let _ = dotenv::dotenv();
         mnemonic_to_ed25_seed(
-            env::var("IOTA_WALLET_MNEMONIC").expect("must set the IOTA_WALLET_MNEMONIC environment variable"),
-            env::var("IOTA_WALLET_MNEMONIC_PASSWORD").unwrap_or_else(|_| "password".to_string()),
+            env::var(MNEMONIC_ENV_KEY).expect("must set the IOTA_WALLET_MNEMONIC environment variable"),
+            env::var(MNEMONIC_PASSWORD_ENV_KEY).unwrap_or_else(|_| "password".to_string()),
         )
     }
 
     fn get_private_key(&self, derivation_path: String) -> crate::Result<ed25519::Ed25519PrivateKey> {
         let seed = self.get_seed();
-        Ok(ed25519::Ed25519PrivateKey::generate_from_seed(
-            &seed,
-            &BIP32Path::from_str(&derivation_path).map_err(|e| anyhow::anyhow!(e.to_string()))?,
-        )
-        .map_err(|e| anyhow::anyhow!(e.to_string()))?)
+        let derivation_path = BIP32Path::from_str(&derivation_path)
+            .map_err(|_| crate::Error::InvalidDerivationPath(derivation_path.clone()))?;
+        Ok(ed25519::Ed25519PrivateKey::generate_from_seed(&seed, &derivation_path)
+            .map_err(|_| crate::Error::FailedToGeneratePrivateKey(derivation_path))?)
     }
 }
 
 impl super::Signer for EnvMnemonicSigner {
     fn init_account(&self, account: &Account, mnemonic: Option<String>) -> crate::Result<String> {
         if let Some(mnemonic) = mnemonic {
-            env::set_var("IOTA_WALLET_MNEMONIC", mnemonic);
+            // if the mnemonic is already on the env, we skip the logging and prompting processes
+            if mnemonic != env::var(MNEMONIC_ENV_KEY).unwrap_or_default() {
+                env::set_var(MNEMONIC_ENV_KEY, &mnemonic);
+                println!("Your mnemonic is `{}`, you must store it on an environment variable called `IOTA_WALLET_MNEMONIC` to use this CLI", mnemonic);
+                if let Ok(flag) = Confirm::new()
+                    .with_prompt("Do you want to store the mnemonic in a .env file?")
+                    .interact()
+                {
+                    if flag {
+                        let mut file = OpenOptions::new().append(true).create(true).open(".env")?;
+                        writeln!(file, r#"IOTA_WALLET_MNEMONIC="{}""#, mnemonic)?;
+                        println!("mnemonic added to {:?}", std::env::current_dir()?.join(".env"));
+                    }
+                }
+            }
         }
         Ok(thread_rng().gen_ascii_chars().take(10).collect())
     }
@@ -117,14 +133,11 @@ impl super::Signer for EnvMnemonicSigner {
             // Check if current path is same as previous path
             // If so, add a reference unlock block
             if let Some(block_index) = signature_indexes.get(&recorder.address_index) {
-                unlock_blocks.push(UnlockBlock::Reference(
-                    ReferenceUnlock::new(*block_index as u16)
-                        .map_err(|e| anyhow::anyhow!("failed to create reference unlock block"))?,
-                ));
+                unlock_blocks.push(UnlockBlock::Reference(ReferenceUnlock::new(*block_index as u16)?));
             } else {
                 // If not, we should create a signature unlock block
                 let private_key = ed25519::Ed25519PrivateKey::generate_from_seed(&seed, &recorder.address_path)
-                    .map_err(|_| anyhow::anyhow!("invalid parameter: seed inputs"))?;
+                    .map_err(|_| crate::Error::FailedToGeneratePrivateKey(recorder.address_path.clone()))?;
                 let public_key = private_key.generate_public_key().to_bytes();
                 // The block should sign the entire transaction essence part of the transaction payload
                 let signature = Box::new(private_key.sign(&serialized_essence).to_bytes());

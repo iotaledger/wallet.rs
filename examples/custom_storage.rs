@@ -19,23 +19,29 @@ impl MyStorage {
     }
 }
 
-fn account_id_value(account_id: &AccountIdentifier) -> anyhow::Result<String> {
+fn account_id_value(account_id: &AccountIdentifier) -> iota_wallet::Result<String> {
     match account_id {
         AccountIdentifier::Id(val) => Ok(val.to_string()),
-        _ => Err(anyhow::anyhow!("Unexpected AccountIdentifier type")),
+        _ => Err(iota_wallet::Error::Storage(
+            "Unexpected AccountIdentifier type".to_string(),
+        )),
     }
 }
 
+#[async_trait::async_trait]
 impl StorageAdapter for MyStorage {
-    fn get(&self, account_id: &AccountIdentifier) -> iota_wallet::Result<String> {
+    async fn get(&self, account_id: &AccountIdentifier) -> iota_wallet::Result<String> {
         match self.db.get(account_id_value(account_id)?) {
             Ok(Some(value)) => Ok(String::from_utf8(value.to_vec()).unwrap()),
-            Ok(None) => Err(anyhow::anyhow!("Value not found").into()),
-            Err(e) => Err(anyhow::anyhow!("operational problem encountered: {}", e).into()),
+            Ok(None) => Err(iota_wallet::Error::AccountNotFound),
+            Err(e) => Err(iota_wallet::Error::Storage(format!(
+                "operational problem encountered: {}",
+                e
+            ))),
         }
     }
 
-    fn get_all(&self) -> iota_wallet::Result<std::vec::Vec<String>> {
+    async fn get_all(&self) -> iota_wallet::Result<std::vec::Vec<String>> {
         let mut accounts = vec![];
         for tuple in self.db.iter() {
             let (_, value) = tuple.unwrap();
@@ -44,30 +50,37 @@ impl StorageAdapter for MyStorage {
         Ok(accounts)
     }
 
-    fn set(&self, account_id: &AccountIdentifier, account: String) -> iota_wallet::Result<()> {
+    async fn set(&self, account_id: &AccountIdentifier, account: String) -> iota_wallet::Result<()> {
         self.db
             .insert(account_id_value(account_id)?, account.as_bytes())
-            .map_err(|e| iota_wallet::WalletError::UnknownError(e.to_string()))?;
+            .map_err(|e| iota_wallet::Error::Storage(e.to_string()))?;
         Ok(())
     }
 
-    fn remove(&self, account_id: &AccountIdentifier) -> iota_wallet::Result<()> {
+    async fn remove(&self, account_id: &AccountIdentifier) -> iota_wallet::Result<()> {
         self.db
             .remove(account_id_value(account_id)?)
-            .map_err(|e| iota_wallet::WalletError::UnknownError(e.to_string()))?;
+            .map_err(|e| iota_wallet::Error::Storage(e.to_string()))?;
         Ok(())
     }
 }
 
-fn main() -> iota_wallet::Result<()> {
-    let mut manager =
-        AccountManager::with_storage_adapter("./example-database/sled", MyStorage::new("./example-database/sled")?)
-            .unwrap();
-    manager.set_stronghold_password("password").unwrap();
+#[tokio::main]
+async fn main() -> iota_wallet::Result<()> {
+    let mut manager = AccountManager::builder()
+        .with_storage("./example-database/sled", MyStorage::new("./example-database/sled")?)
+        .finish()
+        .await
+        .unwrap();
+    manager.set_stronghold_password("password").await.unwrap();
 
     // first we'll create an example account
     let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")?.build();
-    manager.create_account(client_options).alias("alias").initialise()?;
+    manager
+        .create_account(client_options)
+        .alias("alias")
+        .initialise()
+        .await?;
 
     Ok(())
 }

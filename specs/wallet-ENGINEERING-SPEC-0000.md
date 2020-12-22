@@ -959,13 +959,13 @@ Note: Currently, it is not possible to send multiple payloads as part of the mes
     <td>Message version. Defaults to `1`.</td>
   </tr>
   <tr>
-    <td>trunk</td>
+    <td>parent1</td>
     <td>&#10004;</td>
     <td>string</td>
     <td>Message id of the first message this message refers to.</td>
   </tr>
   <tr>
-    <td>branch</td>
+    <td>parent2</td>
     <td>&#10004;</td>
     <td>string</td>
     <td>Message id of the second message this message refers to.</td>

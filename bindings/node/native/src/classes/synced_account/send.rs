@@ -1,32 +1,28 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::sync::{Arc, RwLock};
-
 use iota_wallet::{
-    account::SyncedAccount,
     message::{Message, Transfer},
-    WalletError,
+    Error,
 };
 use neon::prelude::*;
 
 pub struct SendTask {
-    pub synced: Arc<RwLock<SyncedAccount>>,
-    pub account_id: String,
+    pub synced_account_id: String,
     pub transfer: Transfer,
 }
 
 impl Task for SendTask {
     type Output = Message;
-    type Error = WalletError;
+    type Error = Error;
     type JsEvent = JsValue;
 
     fn perform(&self) -> Result<Self::Output, Self::Error> {
-        let synced = self.synced.read().unwrap();
+        let synced = crate::get_synced_account(&self.synced_account_id);
+        let synced = synced.read().unwrap();
+
         crate::block_on(crate::convert_async_panics(|| async {
-            let res = synced.transfer(self.transfer.clone()).await?;
-            crate::update_account(&self.account_id, res.account);
-            Ok(res.message)
+            synced.transfer(self.transfer.clone()).await
         }))
     }
 

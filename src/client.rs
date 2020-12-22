@@ -6,11 +6,12 @@ pub use iota::client::builder::Network;
 use iota::client::{BrokerOptions, Client, ClientBuilder};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
+use tokio::sync::RwLock;
 use url::Url;
 
 use std::{
     collections::HashMap,
-    sync::{Arc, Mutex, RwLock},
+    sync::{Arc, Mutex},
 };
 
 type ClientInstanceMap = Arc<Mutex<HashMap<ClientOptions, Arc<RwLock<Client>>>>>;
@@ -28,7 +29,6 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
 
     if !map.contains_key(&options) {
         let mut client_builder = ClientBuilder::new()
-            .quorum_threshold(*options.quorum_threshold())
             .broker_options(BrokerOptions::new().automatic_disconnect(false))
             .local_pow(*options.local_pow());
 
@@ -43,10 +43,6 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
 
         if let Some(network) = options.network() {
             client_builder = client_builder.network(network.clone());
-        }
-
-        if let Some(quorum_size) = options.quorum_size() {
-            client_builder = client_builder.quorum_size(*quorum_size);
         }
 
         let client = client_builder.build().expect("failed to initialise ClientBuilder");
@@ -190,7 +186,7 @@ impl MultiNodeClientOptionsBuilder {
             None => 0,
         };
         if node_len == 0 {
-            return Err(crate::WalletError::EmptyNodeList);
+            return Err(crate::Error::EmptyNodeList);
         }
         let options = ClientOptions {
             node: None,
@@ -248,7 +244,7 @@ impl ClientOptionsBuilder {
 }
 
 /// The client options type.
-#[derive(Default, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Getters)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Getters)]
 #[getset(get = "pub(crate)")]
 pub struct ClientOptions {
     node: Option<Url>,
