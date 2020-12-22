@@ -23,30 +23,22 @@ impl StrongholdStorageAdapter {
 #[async_trait::async_trait]
 impl StorageAdapter for StrongholdStorageAdapter {
     async fn get(&self, account_id: &AccountIdentifier) -> crate::Result<String> {
-        crate::block_on(async {
-            let account = crate::stronghold::get_account(&self.path, account_id).await?;
-            Ok(account)
-        })
+        let account = crate::stronghold::get_account(&self.path, account_id).await?;
+        Ok(account)
     }
 
     async fn get_all(&self) -> crate::Result<std::vec::Vec<String>> {
-        crate::block_on(async {
-            let accounts = crate::stronghold::get_accounts(&self.path).await?;
-            Ok(accounts)
-        })
+        let accounts = crate::stronghold::get_accounts(&self.path).await?;
+        Ok(accounts)
     }
 
     async fn set(&self, account_id: &AccountIdentifier, account: String) -> crate::Result<()> {
-        crate::block_on(async {
-            crate::stronghold::store_account(&self.path, account_id, account).await?;
-            Ok(())
-        })
+        crate::stronghold::store_account(&self.path, account_id, account).await?;
+        Ok(())
     }
 
     async fn remove(&self, account_id: &AccountIdentifier) -> crate::Result<()> {
-        crate::block_on(async {
-            crate::stronghold::remove_account(&self.path, account_id).await?;
-            Ok(())
-        })
+        crate::stronghold::remove_account(&self.path, account_id).await?;
+        Ok(())
     }
 }
