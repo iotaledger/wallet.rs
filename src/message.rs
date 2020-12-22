@@ -27,6 +27,12 @@ pub enum RemainderValueStrategy {
     AccountAddress(IotaAddress),
 }
 
+impl Default for RemainderValueStrategy {
+    fn default() -> Self {
+        Self::ChangeAddress
+    }
+}
+
 /// A transfer to make a transaction.
 #[derive(Debug, Clone, Deserialize)]
 pub struct TransferBuilder {
