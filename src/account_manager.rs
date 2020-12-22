@@ -26,6 +26,7 @@ use std::{
     time::Duration,
 };
 
+use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
 use iota::{MessageId, Payload};
@@ -316,10 +317,15 @@ impl AccountManager {
             let metadata = fs::metadata(&storage_path)?;
             let backup_path = destination.as_ref().to_path_buf();
             if metadata.is_dir() {
-                copy_dir(storage_path, &backup_path)?;
-            } else {
+                backup_dir(storage_path, &backup_path)?;
+            } else if let Some(filename) = storage_path.file_name() {
                 fs::create_dir_all(&destination)?;
-                fs::copy(storage_path, &backup_path)?;
+                fs::copy(
+                    storage_path,
+                    &backup_path.join(backup_filename(filename.to_str().unwrap())),
+                )?;
+            } else {
+                return Err(crate::Error::StorageDoesntExist);
             }
             Ok(backup_path)
         } else {
@@ -630,7 +636,7 @@ async fn retry_unconfirmed_transactions(synced_accounts: Vec<SyncedAccount>) -> 
     Ok(retried_messages)
 }
 
-fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std::io::Error> {
+fn backup_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std::io::Error> {
     let mut stack = Vec::new();
     stack.push(PathBuf::from(from.as_ref()));
 
@@ -655,13 +661,18 @@ fn copy_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std::i
             if path.is_dir() {
                 stack.push(path);
             } else if let Some(filename) = path.file_name() {
-                let dest_path = dest.join(filename);
+                let dest_path = dest.join(backup_filename(filename.to_str().unwrap()));
                 fs::copy(&path, &dest_path)?;
             }
         }
     }
 
     Ok(())
+}
+
+fn backup_filename(original: &str) -> String {
+    let date = Utc::now();
+    format!("{}-backup-{}", date.to_rfc3339(), original)
 }
 
 #[cfg(test)]
