@@ -221,28 +221,21 @@ pub(crate) fn enter<R, C: FnOnce() -> R>(cb: C) -> R {
 mod test_utils {
     use super::account_manager::AccountManager;
     use iota::pow::providers::{Provider as PowProvider, ProviderBuilder as PowProviderBuilder};
-    use once_cell::sync::OnceCell;
     use rand::{thread_rng, Rng};
-    use std::{path::PathBuf, sync::Mutex, time::Duration};
+    use std::{path::PathBuf, time::Duration};
 
-    static MANAGER_INSTANCE: OnceCell<Mutex<AccountManager>> = OnceCell::new();
-    pub fn get_account_manager() -> &'static Mutex<AccountManager> {
-        MANAGER_INSTANCE.get_or_init(|| {
-            let mut runtime = tokio::runtime::Runtime::new().unwrap();
-            runtime.block_on(async move {
-                let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
-                let storage_path = PathBuf::from(format!("./example-database/{}", storage_path));
+    pub async fn get_account_manager() -> AccountManager {
+        let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
+        let storage_path = PathBuf::from(format!("./example-database/{}", storage_path));
 
-                let mut manager = AccountManager::builder()
-                    .with_storage_path(storage_path)
-                    .with_polling_interval(Duration::from_secs(4))
-                    .finish()
-                    .await
-                    .unwrap();
-                manager.set_stronghold_password("password").await.unwrap();
-                Mutex::new(manager)
-            })
-        })
+        let mut manager = AccountManager::builder()
+            .with_storage_path(storage_path)
+            .with_polling_interval(Duration::from_secs(4))
+            .finish()
+            .await
+            .unwrap();
+        manager.set_stronghold_password("password").await.unwrap();
+        manager
     }
 
     /// The miner builder.

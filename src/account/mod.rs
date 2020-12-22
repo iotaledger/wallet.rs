@@ -572,42 +572,33 @@ pub struct InitialisedAccount<'a> {
 #[cfg(test)]
 mod tests {
     use crate::client::ClientOptionsBuilder;
-    use rusty_fork::rusty_fork_test;
 
-    rusty_fork_test! {
-        #[test]
-        fn set_alias() {
-            let manager = crate::test_utils::get_account_manager();
-            let manager = manager.lock().unwrap();
+    #[tokio::test]
+    async fn set_alias() {
+        let manager = crate::test_utils::get_account_manager().await;
 
-            let updated_alias = "updated alias";
-            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-                .expect("invalid node URL")
-                .build();
+        let updated_alias = "updated alias";
+        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+            .expect("invalid node URL")
+            .build();
 
-            crate::block_on(async move {
-                let account_id = {
-                    let account_handle = manager
-                        .create_account(client_options)
-                        .alias("alias")
-                        .initialise()
-                        .await
-                        .expect("failed to add account");
+        let account_id = {
+            let account_handle = manager
+                .create_account(client_options)
+                .alias("alias")
+                .initialise()
+                .await
+                .expect("failed to add account");
 
-                    account_handle.set_alias(updated_alias).await;
-                    account_handle.id().await
-                };
+            account_handle.set_alias(updated_alias).await;
+            account_handle.id().await
+        };
 
-                let account_in_storage = manager
-                    .get_account(&account_id)
-                    .await
-                    .expect("failed to get account from storage");
-                let account_in_storage = account_in_storage.read().await;
-                assert_eq!(
-                    account_in_storage.alias().to_string(),
-                    updated_alias.to_string()
-                );
-            });
-        }
+        let account_in_storage = manager
+            .get_account(&account_id)
+            .await
+            .expect("failed to get account from storage");
+        let account_in_storage = account_in_storage.read().await;
+        assert_eq!(account_in_storage.alias().to_string(), updated_alias.to_string());
     }
 }

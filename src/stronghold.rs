@@ -129,7 +129,7 @@ pub async fn set_password_clear_interval(interval: Duration) {
 
 fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, String>>> {
     thread::spawn(|| {
-        crate::block_on(async {
+        crate::enter(|| {
             task::spawn(async {
                 loop {
                     delay_for(
@@ -139,6 +139,7 @@ fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, String>>> {
                             .await,
                     )
                     .await;
+
                     let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
                     let mut access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
                     let mut remove_keys = Vec::new();
@@ -441,12 +442,13 @@ mod tests {
         let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
         super::load_snapshot(&snapshot_path, "password").await?;
 
-        std::thread::sleep(Duration::from_millis(interval * 2));
+        std::thread::sleep(Duration::from_millis(interval * 3));
         let res = super::get_account(&snapshot_path, &AccountIdentifier::Id("".to_string())).await;
         assert_eq!(res.is_err(), true);
-        if let super::Error::PasswordNotSet = res.unwrap_err() {
+        let error = res.unwrap_err();
+        if let super::Error::PasswordNotSet = error {
         } else {
-            panic!("unexpected error");
+            panic!("unexpected error: {:?}", error);
         }
 
         Ok(())

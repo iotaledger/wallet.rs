@@ -689,134 +689,112 @@ mod tests {
         message::Message,
     };
     use iota::{Ed25519Address, Indexation, MessageBuilder, MessageId, Payload};
-    use rusty_fork::rusty_fork_test;
 
-    rusty_fork_test! {
-        #[test]
-        fn store_accounts() {
-            let manager = crate::test_utils::get_account_manager();
-            let manager = manager.lock().unwrap();
+    #[tokio::test]
+    async fn store_accounts() {
+        let manager = crate::test_utils::get_account_manager().await;
 
-            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-                .expect("invalid node URL")
-                .build();
+        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+            .expect("invalid node URL")
+            .build();
 
-            let mut runtime = tokio::runtime::Runtime::new().unwrap();
-            runtime.block_on(async move {
-                let account_handle = manager
-                    .create_account(client_options)
-                    .alias("alias")
-                    .initialise()
-                    .await
-                    .expect("failed to add account");
-                let mut account = account_handle.write().await;
+        let account_handle = manager
+            .create_account(client_options)
+            .alias("alias")
+            .initialise()
+            .await
+            .expect("failed to add account");
+        let mut account = account_handle.write().await;
 
-                account.save().await.unwrap();
-                drop(account);
-                let account = account_handle.read().await;
+        account.save().await.unwrap();
+        drop(account);
+        let account = account_handle.read().await;
 
-                manager
-                    .remove_account(account.id())
-                    .await
-                    .expect("failed to remove account");
-            });
-        }
+        manager
+            .remove_account(account.id())
+            .await
+            .expect("failed to remove account");
     }
 
-    rusty_fork_test! {
-        #[test]
-        fn remove_account_with_message_history() {
-            let manager = crate::test_utils::get_account_manager();
-            let manager = manager.lock().unwrap();
+    #[tokio::test]
+    async fn remove_account_with_message_history() {
+        let manager = crate::test_utils::get_account_manager().await;
 
-            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-                .expect("invalid node URL")
-                .build();
+        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+            .expect("invalid node URL")
+            .build();
 
-            let messages = vec![Message::from_iota_message(
-                MessageId::new([0; 32]),
-                &[],
-                &MessageBuilder::<crate::test_utils::NoopNonceProvider>::new()
-                    .with_parent1(MessageId::new([0; 32]))
-                    .with_parent2(MessageId::new([0; 32]))
-                    .with_payload(Payload::Indexation(Box::new(
-                        Indexation::new("index".to_string(), &[0; 16]).unwrap(),
-                    )))
-                    .with_network_id(0)
-                    .with_nonce_provider(crate::test_utils::NoopNonceProvider {}, 0f64)
-                    .finish()
-                    .unwrap(),
-                None,
-            )
-            .unwrap()];
+        let messages = vec![Message::from_iota_message(
+            MessageId::new([0; 32]),
+            &[],
+            &MessageBuilder::<crate::test_utils::NoopNonceProvider>::new()
+                .with_parent1(MessageId::new([0; 32]))
+                .with_parent2(MessageId::new([0; 32]))
+                .with_payload(Payload::Indexation(Box::new(
+                    Indexation::new("index".to_string(), &[0; 16]).unwrap(),
+                )))
+                .with_network_id(0)
+                .with_nonce_provider(crate::test_utils::NoopNonceProvider {}, 0f64)
+                .finish()
+                .unwrap(),
+            None,
+        )
+        .unwrap()];
 
-            crate::block_on(async move {
-                let account_handle = manager
-                    .create_account(client_options)
-                    .messages(messages)
-                    .initialise()
-                    .await
-                    .unwrap();
+        let account_handle = manager
+            .create_account(client_options)
+            .messages(messages)
+            .initialise()
+            .await
+            .unwrap();
 
-                let account = account_handle.read().await;
-                let remove_response = manager.remove_account(account.id()).await;
-                assert!(remove_response.is_err());
-            });
-        }
+        let account = account_handle.read().await;
+        let remove_response = manager.remove_account(account.id()).await;
+        assert!(remove_response.is_err());
     }
 
-    rusty_fork_test! {
-        #[test]
-        fn remove_account_with_balance() {
-            let manager = crate::test_utils::get_account_manager();
-            let manager = manager.lock().unwrap();
+    #[tokio::test]
+    async fn remove_account_with_balance() {
+        let manager = crate::test_utils::get_account_manager().await;
 
-            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-                .expect("invalid node URL")
-                .build();
+        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+            .expect("invalid node URL")
+            .build();
 
-            crate::block_on(async move {
-                let account_handle = manager
-                    .create_account(client_options)
-                    .addresses(vec![AddressBuilder::new()
-                        .balance(5)
-                        .key_index(0)
-                        .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
-                        .outputs(vec![])
-                        .build()
-                        .unwrap()])
-                    .initialise()
-                    .await
-                    .unwrap();
-                let account = account_handle.read().await;
+        let account_handle = manager
+            .create_account(client_options)
+            .addresses(vec![AddressBuilder::new()
+                .balance(5)
+                .key_index(0)
+                .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
+                .outputs(vec![])
+                .build()
+                .unwrap()])
+            .initialise()
+            .await
+            .unwrap();
+        let account = account_handle.read().await;
 
-                let remove_response = manager.remove_account(account.id()).await;
-                assert!(remove_response.is_err());
-            });
-        }
+        let remove_response = manager.remove_account(account.id()).await;
+        assert!(remove_response.is_err());
     }
 
-    rusty_fork_test! {
-        #[test]
-        fn create_account_with_latest_without_history() {
-            let manager = crate::test_utils::get_account_manager();
-            let manager = manager.lock().unwrap();
+    #[tokio::test]
+    async fn create_account_with_latest_without_history() {
+        let manager = crate::test_utils::get_account_manager().await;
 
-            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-                .expect("invalid node URL")
-                .build();
+        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+            .expect("invalid node URL")
+            .build();
 
-            crate::block_on(async move {
-                let account = manager
-                    .create_account(client_options.clone())
-                    .alias("alias")
-                    .initialise()
-                    .await
-                    .expect("failed to add account");
+        let account = manager
+            .create_account(client_options.clone())
+            .alias("alias")
+            .initialise()
+            .await
+            .expect("failed to add account");
 
-                let create_response = manager.create_account(client_options).initialise().await;
-                assert!(create_response.is_err());
-            });
-        }
+        let create_response = manager.create_account(client_options).initialise().await;
+        assert!(create_response.is_err());
     }
 }

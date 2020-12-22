@@ -822,28 +822,22 @@ pub(crate) async fn repost_message(
 #[cfg(test)]
 mod tests {
     use crate::client::ClientOptionsBuilder;
-    use rusty_fork::rusty_fork_test;
 
-    rusty_fork_test! {
-        #[test]
-        fn account_sync() {
-            let manager = crate::test_utils::get_account_manager();
-            let manager = manager.lock().unwrap();
+    #[tokio::test]
+    async fn account_sync() {
+        let manager = crate::test_utils::get_account_manager().await;
 
-            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-                .unwrap()
-                .build();
-            crate::block_on(async move {
-                let account = manager
-                    .create_account(client_options)
-                    .alias("alias")
-                    .initialise()
-                    .await
-                    .unwrap();
-            });
+        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+            .unwrap()
+            .build();
+        let account = manager
+            .create_account(client_options)
+            .alias("alias")
+            .initialise()
+            .await
+            .unwrap();
 
-            // let synced_accounts = account.sync().execute().await.unwrap();
-            // TODO improve test when the node API is ready to use
-        }
+        // let synced_accounts = account.sync().execute().await.unwrap();
+        // TODO improve test when the node API is ready to use
     }
 }
