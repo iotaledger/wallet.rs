@@ -141,7 +141,7 @@ async fn sync_addresses(
         generated_addresses.extend(curr_generated_addresses.into_iter());
 
         if is_empty {
-            log::debug!("[SYNC] finishing address syncing because the current messages list and address list is empty");
+            log::debug!("[SYNC] finishing address syncing because the current messages list and address list are empty");
             break;
         }
     }
@@ -636,7 +636,7 @@ impl SyncedAccount {
             });
             if current_output_sum == value {
                 log::debug!(
-                    "[TRANFER] current output sum matches the transfer value, adding {} to the remainder value (currently at {})",
+                    "[TRANSFER] current output sum matches the transfer value, adding {} to the remainder value (currently at {})",
                     utxo.amount(),
                     remainder_value
                 );
@@ -644,7 +644,7 @@ impl SyncedAccount {
                 remainder_value += *utxo.amount();
             } else if current_output_sum + *utxo.amount() > value {
                 log::debug!(
-                    "[TRANFER] current output sum ({}) would exceed the transfer value if added the output amount ({})",
+                    "[TRANSFER] current output sum ({}) would exceed the transfer value if added to the output amount ({})",
                     current_output_sum,
                     utxo.amount()
                 );
@@ -695,7 +695,7 @@ impl SyncedAccount {
                 .find(|a| a.address() == &remainder_address.address)
                 .unwrap();
 
-            println!("[TRANFER] remainder value is {}", remainder_value);
+            println!("[TRANSFER] remainder value is {}", remainder_value);
 
             let remainder_target_address = match transfer_obj.remainder_value_strategy {
                 // use one of the account's addresses to send the remainder value
@@ -710,7 +710,7 @@ impl SyncedAccount {
                 RemainderValueStrategy::ChangeAddress => {
                     if *remainder_address.internal() {
                         let deposit_address = account_.latest_address().unwrap().address().clone();
-                        log::debug!("[TRANFER] the remainder address is internal, so using latest address as remainder target: {}", deposit_address.to_bech32());
+                        log::debug!("[TRANSFER] the remainder address is internal, so using latest address as remainder target: {}", deposit_address.to_bech32());
                         deposit_address
                     } else {
                         let change_address = crate::address::get_new_change_address(&account_, &remainder_address)?;
