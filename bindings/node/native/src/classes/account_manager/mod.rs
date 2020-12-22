@@ -294,12 +294,13 @@ declare_types! {
 
         method importAccounts(mut cx) {
             let source = cx.argument::<JsString>(0)?.value();
+            let password = cx.argument::<JsString>(1)?.value();
             {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
                 let manager = ref_.read().unwrap();
-                crate::block_on(manager.import_accounts(source)).expect("error importing accounts");
+                crate::block_on(manager.import_accounts(source, password)).expect("error importing accounts");
             };
             Ok(cx.undefined().upcast())
         }

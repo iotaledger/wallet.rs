@@ -142,7 +142,7 @@ export declare class AccountManager {
   syncAccounts(): Promise<SyncedAccount[]>
   internalTransfer(fromAccount: Account, toAccount: Account, amount: number): Promise<Message>
   backup(destination: string): string
-  importAccounts(source: string): void
+  importAccounts(source: string, password: string): void
 }
 
 export declare type Event = 'ErrorThrown' |
