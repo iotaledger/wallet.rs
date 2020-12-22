@@ -77,8 +77,9 @@ impl EnvMnemonicSigner {
     }
 }
 
+#[async_trait::async_trait]
 impl super::Signer for EnvMnemonicSigner {
-    fn init_account(&self, account: &Account, mnemonic: Option<String>) -> crate::Result<String> {
+    async fn init_account(&self, account: &Account, mnemonic: Option<String>) -> crate::Result<String> {
         if let Some(mnemonic) = mnemonic {
             // if the mnemonic is already on the env, we skip the logging and prompting processes
             if mnemonic != env::var(MNEMONIC_ENV_KEY).unwrap_or_default() {
@@ -99,7 +100,7 @@ impl super::Signer for EnvMnemonicSigner {
         Ok(thread_rng().gen_ascii_chars().take(10).collect())
     }
 
-    fn generate_address(
+    async fn generate_address(
         &self,
         account: &Account,
         address_index: usize,
@@ -115,7 +116,7 @@ impl super::Signer for EnvMnemonicSigner {
         crate::address::parse(address_str)
     }
 
-    fn sign_message(
+    async fn sign_message(
         &self,
         account: &Account,
         essence: &iota::TransactionEssence,

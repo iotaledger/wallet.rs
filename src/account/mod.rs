@@ -6,7 +6,7 @@ use crate::{
     address::{Address, IotaAddress},
     client::ClientOptions,
     message::{Message, MessageType},
-    signing::{with_signer, SignerType},
+    signing::{get_signer, SignerType},
 };
 
 use chrono::prelude::{DateTime, Utc};
@@ -189,7 +189,9 @@ impl AccountInitialiser {
             has_pending_changes: true,
         };
 
-        let id = with_signer(&signer_type, |signer| signer.init_account(&account, mnemonic))?;
+        let signer = get_signer(&signer_type).await;
+        let signer = signer.lock().await;
+        let id = signer.init_account(&account, mnemonic).await?;
         account.set_id(id.into());
 
         let guard = if self.skip_persistance {
@@ -292,7 +294,7 @@ impl AccountHandle {
     /// Gets a new unused address and links it to this account.
     pub async fn generate_address(&self) -> crate::Result<Address> {
         let mut account = self.0.write().await;
-        let address = crate::address::get_new_address(&account)?;
+        let address = crate::address::get_new_address(&account).await?;
 
         account.do_mut(|account| {
             account.addresses.push(address.clone());

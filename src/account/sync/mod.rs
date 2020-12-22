@@ -60,8 +60,8 @@ async fn sync_addresses(
         let mut generated_iota_addresses = vec![]; // collection of (address_index, internal, address) pairs
         for i in address_index..(address_index + gap_limit) {
             // generate both `public` and `internal (change)` addresses
-            generated_iota_addresses.push((i, false, crate::address::get_iota_address(&account, i, false)?));
-            generated_iota_addresses.push((i, true, crate::address::get_iota_address(&account, i, true)?));
+            generated_iota_addresses.push((i, false, crate::address::get_iota_address(&account, i, false).await?));
+            generated_iota_addresses.push((i, true, crate::address::get_iota_address(&account, i, true).await?));
         }
 
         let mut curr_generated_addresses = vec![];
@@ -579,6 +579,7 @@ impl SyncedAccount {
                 outputs.push((
                     (*address_output).clone(),
                     *account_address.key_index(),
+                    *account_address.internal(),
                     address_path.clone(),
                 ));
             }
@@ -588,13 +589,14 @@ impl SyncedAccount {
         let mut essence_builder = TransactionEssence::builder();
         let mut current_output_sum = 0;
         let mut remainder_value = 0;
-        for (utxo, address_index, address_path) in utxos {
+        for (utxo, address_index, address_internal, address_path) in utxos {
             let input: Input = UTXOInput::new(*utxo.transaction_id(), *utxo.index())?.into();
             essence_builder = essence_builder.add_input(input.clone());
             transaction_inputs.push(crate::signing::TransactionInput {
                 input,
                 address_index,
                 address_path,
+                address_internal,
             });
             if current_output_sum == value {
                 // already filled the transfer value; just collect the output value as remainder
@@ -646,7 +648,8 @@ impl SyncedAccount {
                         let deposit_address = account_.latest_address().unwrap().address().clone();
                         deposit_address
                     } else {
-                        let change_address = crate::address::get_new_change_address(&account_, &remainder_address)?;
+                        let change_address =
+                            crate::address::get_new_change_address(&account_, &remainder_address).await?;
                         let addr = change_address.address().clone();
                         account_.append_addresses(vec![change_address]);
                         addresses_to_watch.push(addr.clone());
@@ -674,9 +677,11 @@ impl SyncedAccount {
 
         let essence = essence_builder.finish()?;
 
-        let unlock_blocks = crate::signing::with_signer(account_.signer_type(), |signer| {
-            signer.sign_message(&account_, &essence, &mut transaction_inputs)
-        })?;
+        let signer = crate::signing::get_signer(account_.signer_type()).await;
+        let signer = signer.lock().await;
+        let unlock_blocks = signer
+            .sign_message(&account_, &essence, &mut transaction_inputs)
+            .await?;
 
         let mut tx_builder = Transaction::builder().with_essence(essence);
         for unlock_block in unlock_blocks {
@@ -701,7 +706,7 @@ impl SyncedAccount {
             || (remainder_value_deposit_address.is_some()
                 && &remainder_value_deposit_address.unwrap() == latest_address)
         {
-            let addr = crate::address::get_new_address(&account_)?;
+            let addr = crate::address::get_new_address(&account_).await?;
             addresses_to_watch.push(addr.address().clone());
             account_.append_addresses(vec![addr]);
         }
