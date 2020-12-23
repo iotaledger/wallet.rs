@@ -399,35 +399,19 @@ pub async fn sign_essence(
         address_index.try_into()?,
     ]);
 
-    let key_location = Location::generic(SECRET_VAULT_PATH, "iota-wallet-slip10-key");
     let res = runtime
         .stronghold
-        .runtime_exec(Procedure::SLIP10Derive {
-            chain: chain.clone(),
-            input: SLIP10DeriveInput::Seed(Location::generic(SECRET_VAULT_PATH, SEED_RECORD_PATH)),
-            output: key_location.clone(),
-            hint: RecordHint::new("").unwrap(),
+        .runtime_exec(Procedure::SignUnlockBlock {
+            path: chain,
+            seed: Location::generic(SECRET_VAULT_PATH, SEED_RECORD_PATH),
+            essence: transaction_essence,
         })
         .await;
-
-    if let ProcResult::SLIP10Derive(response) = res {
-        stronghold_response_to_result(response)?;
-        let res = runtime
-            .stronghold
-            .runtime_exec(Procedure::SignUnlockBlock {
-                path: chain,
-                key: key_location,
-                essence: transaction_essence,
-            })
-            .await;
-        if let ProcResult::SignUnlockBlock(signature, public_key) = res {
-            Ok(Ed25519Signature::new(
-                stronghold_response_to_result(public_key)?,
-                Box::new(stronghold_response_to_result(signature)?),
-            ))
-        } else {
-            Err(Error::FailedToPerformAction(format!("{:?}", res)))
-        }
+    if let ProcResult::SignUnlockBlock(signature, public_key) = res {
+        Ok(Ed25519Signature::new(
+            stronghold_response_to_result(public_key)?,
+            Box::new(stronghold_response_to_result(signature)?),
+        ))
     } else {
         Err(Error::FailedToPerformAction(format!("{:?}", res)))
     }
