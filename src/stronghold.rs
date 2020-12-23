@@ -358,6 +358,8 @@ pub async fn generate_address(
     let mut runtime = actor_runtime().lock().await;
     load_private_data_actor(&mut runtime, snapshot_path).await?;
 
+    let key_location = Location::generic(SECRET_VAULT_PATH, DERIVE_OUTPUT_RECORD_PATH);
+
     let res = runtime
         .stronghold
         .runtime_exec(Procedure::SLIP10Derive {
@@ -369,13 +371,22 @@ pub async fn generate_address(
                 address_index.try_into()?,
             ]),
             input: SLIP10DeriveInput::Seed(Location::generic(SECRET_VAULT_PATH, SEED_RECORD_PATH)),
-            output: Location::generic(SECRET_VAULT_PATH, DERIVE_OUTPUT_RECORD_PATH),
+            output: key_location.clone(),
             hint: RecordHint::new("wallet.rs-derived").unwrap(),
         })
         .await;
-    if let ProcResult::SLIP10Derive(result) = res {
-        let key: hd::Key = stronghold_response_to_result(result)?;
-        Ok(Address::Ed25519(Ed25519Address::new(key.chain_code())))
+    if let ProcResult::SLIP10Derive(response) = res {
+        stronghold_response_to_result(response)?;
+        let res = runtime
+            .stronghold
+            .runtime_exec(Procedure::Ed25519PublicKey { key: key_location })
+            .await;
+        if let ProcResult::Ed25519PublicKey(response) = res {
+            let public_key = stronghold_response_to_result(response)?;
+            Ok(Address::Ed25519(Ed25519Address::new(public_key)))
+        } else {
+            Err(Error::FailedToPerformAction(format!("{:?}", res)))
+        }
     } else {
         Err(Error::FailedToPerformAction(format!("{:?}", res)))
     }
