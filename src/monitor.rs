@@ -80,13 +80,18 @@ pub async fn monitor_address_balance(account_handle: AccountHandle, address: &Io
         &client_options_,
         format!("addresses/{}/outputs", address.to_bech32()),
         move |topic_event| {
+            log::info!("[MQTT] got {:?}", topic_event);
             let topic_event = topic_event.clone();
             let address = address.clone();
             let client_options = client_options.clone();
             let account_handle = account_handle.clone();
 
             crate::block_on(async {
-                let _ = process_output(topic_event.payload.clone(), account_handle, address, client_options).await;
+                if let Err(e) =
+                    process_output(topic_event.payload.clone(), account_handle, address, client_options).await
+                {
+                    log::error!("[MQTT] error processing output: {:?}", e);
+                }
             });
         },
     )
@@ -183,7 +188,11 @@ pub async fn monitor_confirmation_state_change(
         move |topic_event| {
             let account_handle = account_handle.clone();
             crate::block_on(async {
-                let _ = process_metadata(topic_event.payload.clone(), account_handle, message_id, &message).await;
+                if let Err(e) =
+                    process_metadata(topic_event.payload.clone(), account_handle, message_id, &message).await
+                {
+                    log::error!("[MQTT] error processing metadata: {:?}", e);
+                }
             });
         },
     )

@@ -77,6 +77,13 @@ async fn sync_addresses(
                 let balance = client.get_address().balance(&iota_address).await?;
                 let mut curr_found_messages = vec![];
 
+                log::debug!(
+                    "[SYNC] syncing address {}, got {} outputs and balance {}",
+                    iota_address.to_bech32(),
+                    address_outputs.len(),
+                    balance
+                );
+
                 let mut curr_found_outputs: Vec<AddressOutput> = vec![];
                 for output in address_outputs.iter() {
                     let output = client.get_output(output).await?;
@@ -98,6 +105,7 @@ async fn sync_addresses(
 
                 // ignore unused change addresses
                 if *iota_address_internal && curr_found_outputs.is_empty() {
+                    log::debug!("[SYNC] ignoring address because it's internal and the output list is empty");
                     return crate::Result::Ok((curr_found_messages, None));
                 }
 
@@ -133,6 +141,9 @@ async fn sync_addresses(
         generated_addresses.extend(curr_generated_addresses.into_iter());
 
         if is_empty {
+            log::debug!(
+                "[SYNC] finishing address syncing because the current messages list and address list are empty"
+            );
             break;
         }
     }
@@ -161,6 +172,13 @@ async fn sync_messages(
 
                 let address_outputs = client.get_address().outputs(address.address()).await?;
                 let balance = client.get_address().balance(address.address()).await?;
+
+                log::debug!(
+                    "[SYNC] syncing messages and outputs for address {}, got {} outputs and balance {}",
+                    address.address().to_bech32(),
+                    address_outputs.len(),
+                    balance
+                );
 
                 let mut outputs = vec![];
                 let mut messages = vec![];
@@ -232,6 +250,11 @@ async fn update_account_messages<'a>(
                     .iter_mut()
                     .find(|m| m.id() == &message_id)
                     .unwrap();
+                log::debug!(
+                    "[SYNC] marking message {:?} as {}",
+                    message.id(),
+                    if confirmed { "confirmed" } else { "unconfirmed" }
+                );
                 message.set_confirmed(Some(confirmed));
             });
         }
@@ -241,6 +264,11 @@ async fn update_account_messages<'a>(
 }
 
 async fn perform_sync(mut account: &mut Account, address_index: usize, gap_limit: usize) -> crate::Result<bool> {
+    log::debug!(
+        "[SYNC] syncing with address_index = {}, gap_limit = {}",
+        address_index,
+        gap_limit
+    );
     let (found_addresses, found_messages) = sync_addresses(&account, address_index, gap_limit).await?;
 
     let mut new_messages = vec![];
@@ -286,6 +314,7 @@ async fn perform_sync(mut account: &mut Account, address_index: usize, gap_limit
         }
         previous_address_is_unused = address_is_unused;
     }
+    log::debug!("[SYNC] new addresses: {:#?}", addresses_to_save);
 
     let is_empty = new_messages.is_empty() && addresses_to_save.iter().all(|address| address.outputs().is_empty());
 
@@ -297,7 +326,10 @@ async fn perform_sync(mut account: &mut Account, address_index: usize, gap_limit
             Message::from_iota_message(*id, account.addresses(), &message, *confirmed).unwrap()
         })
         .collect();
+    log::debug!("[SYNC] new messages: {:#?}", parsed_messages);
     account.append_messages(parsed_messages);
+
+    log::debug!("[SYNC] is empty: {}", is_empty);
 
     Ok(is_empty)
 }
@@ -348,7 +380,9 @@ impl AccountSynchronizer {
         let options = self.account_handle.client_options().await;
         let client = get_client(&options);
 
-        let _ = crate::monitor::unsubscribe(self.account_handle.clone());
+        if let Err(e) = crate::monitor::unsubscribe(self.account_handle.clone()).await {
+            log::error!("[MQTT] error unsubscribing from MQTT topics before syncing: {:?}", e);
+        }
 
         let mut account_ = {
             let account_ref = self.account_handle.read().await;
@@ -553,6 +587,12 @@ impl SyncedAccount {
         let (input_addresses, remainder_address) =
             self.select_inputs(&mut locked_addresses, value, &account_, &transfer_obj.address)?;
 
+        log::debug!(
+            "[TRANSFER] inputs: {:#?} - remainder address: {:?}",
+            input_addresses,
+            remainder_address
+        );
+
         // unlock the transfer process since we already selected the input addresses and locked them
         drop(locked_addresses);
 
@@ -597,9 +637,19 @@ impl SyncedAccount {
                 address_path,
             });
             if current_output_sum == value {
+                log::debug!(
+                    "[TRANSFER] current output sum matches the transfer value, adding {} to the remainder value (currently at {})",
+                    utxo.amount(),
+                    remainder_value
+                );
                 // already filled the transfer value; just collect the output value as remainder
                 remainder_value += *utxo.amount();
             } else if current_output_sum + *utxo.amount() > value {
+                log::debug!(
+                    "[TRANSFER] current output sum ({}) would exceed the transfer value if added to the output amount ({})",
+                    current_output_sum,
+                    utxo.amount()
+                );
                 // if the used UTXO amount is greater than the transfer value, this is the last iteration and we'll have
                 // remainder value. we add an Output for the missing value and collect the remainder
                 let missing_value = value - current_output_sum;
@@ -612,7 +662,17 @@ impl SyncedAccount {
                     .into(),
                 );
                 current_output_sum += missing_value;
+                log::debug!(
+                    "[TRANSFER] added output with the missing value {}, and the remainder is {}",
+                    missing_value,
+                    remainder_value
+                );
             } else {
+                log::debug!(
+                    "[TRANSFER] adding output amount {}, current sum {}",
+                    utxo.amount(),
+                    current_output_sum
+                );
                 essence_builder = essence_builder.add_output(
                     SignatureLockedSingleOutput::new(
                         transfer_obj.address.clone(),
@@ -637,24 +697,41 @@ impl SyncedAccount {
                 .find(|a| a.address() == &remainder_address.address)
                 .unwrap();
 
+            println!("[TRANSFER] remainder value is {}", remainder_value);
+
             let remainder_target_address = match transfer_obj.remainder_value_strategy {
                 // use one of the account's addresses to send the remainder value
-                RemainderValueStrategy::AccountAddress(target_address) => target_address,
+                RemainderValueStrategy::AccountAddress(target_address) => {
+                    log::debug!(
+                        "[TARGET] using user defined account address as remainder target: {}",
+                        target_address.to_bech32()
+                    );
+                    target_address
+                }
                 // generate a new change address to send the remainder value
                 RemainderValueStrategy::ChangeAddress => {
                     if *remainder_address.internal() {
                         let deposit_address = account_.latest_address().unwrap().address().clone();
+                        log::debug!("[TRANSFER] the remainder address is internal, so using latest address as remainder target: {}", deposit_address.to_bech32());
                         deposit_address
                     } else {
                         let change_address = crate::address::get_new_change_address(&account_, &remainder_address)?;
                         let addr = change_address.address().clone();
+                        log::debug!(
+                            "[TRANSFER] generated new change address as remainder target: {}",
+                            addr.to_bech32()
+                        );
                         account_.append_addresses(vec![change_address]);
                         addresses_to_watch.push(addr.clone());
                         addr
                     }
                 }
                 // keep the remainder value on the address
-                RemainderValueStrategy::ReuseAddress => remainder_address.address().clone(),
+                RemainderValueStrategy::ReuseAddress => {
+                    let address = remainder_address.address().clone();
+                    log::debug!("[TRANSFER] reusing address as remainder target {}", address.to_bech32());
+                    address
+                }
             };
             remainder_value_deposit_address = Some(remainder_target_address.clone());
             essence_builder = essence_builder.add_output(
@@ -691,6 +768,8 @@ impl SyncedAccount {
             .with_nonce_provider(client.get_pow_provider(), 4000f64)
             .finish()?;
 
+        log::debug!("[TRANSFER] submitting message {:#?}", message);
+
         let message_id = client.post_message(&message).await?;
 
         // if this is a transfer to the account's latest address or we used the latest as deposit of the remainder
@@ -700,6 +779,14 @@ impl SyncedAccount {
             || (remainder_value_deposit_address.is_some()
                 && &remainder_value_deposit_address.unwrap() == latest_address)
         {
+            log::debug!(
+                "[TRANSFER] generating new address since {}",
+                if latest_address == &transfer_obj.address {
+                    "latest address equals the transfer address"
+                } else {
+                    "latest address equals the remainder value deposit address"
+                }
+            );
             let addr = crate::address::get_new_address(&account_)?;
             addresses_to_watch.push(addr.address().clone());
             account_.append_addresses(vec![addr]);
@@ -730,7 +817,11 @@ impl SyncedAccount {
         }
 
         // ignore errors because we fallback to the polling system
-        let _ = crate::monitor::monitor_confirmation_state_change(self.account_handle.clone(), &message_id);
+        if let Err(e) =
+            crate::monitor::monitor_confirmation_state_change(self.account_handle.clone(), &message_id).await
+        {
+            log::error!("[MQTT] error monitoring for confirmation change: {:?}", e);
+        }
 
         Ok(message)
     }
