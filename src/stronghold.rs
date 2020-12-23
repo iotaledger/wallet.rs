@@ -402,13 +402,12 @@ pub async fn sign_essence(
     let mut runtime = actor_runtime().lock().await;
     load_private_data_actor(&mut runtime, snapshot_path).await?;
 
-    let chain = hd::Chain::from_u32_hardened(vec![
-        44,
-        4218,
-        account_index.try_into()?,
+    let chain = format!(
+        "m/44H/4218H/{}H/{}H/{}H",
+        account_index,
         internal as u32,
-        address_index.try_into()?,
-    ]);
+        address_index,
+    );
 
     let res = runtime
         .stronghold
@@ -418,11 +417,9 @@ pub async fn sign_essence(
             essence: transaction_essence,
         })
         .await;
-    if let ProcResult::SignUnlockBlock(signature, public_key) = res {
-        Ok(Ed25519Signature::new(
-            stronghold_response_to_result(public_key)?,
-            Box::new(stronghold_response_to_result(signature)?),
-        ))
+    if let ProcResult::SignUnlockBlock(response) = res {
+        let (signature, public_key) = stronghold_response_to_result(response)?;
+        Ok(Ed25519Signature::new(public_key, Box::new(signature)))
     } else {
         Err(Error::FailedToPerformAction(format!("{:?}", res)))
     }
