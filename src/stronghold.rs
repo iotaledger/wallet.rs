@@ -65,11 +65,16 @@ async fn load_actor(
     on_stronghold_access(&snapshot_path).await?;
     check_snapshot(&mut runtime, &snapshot_path).await?;
 
+    let snapshot_file_path = snapshot_path.join(SNAPSHOT_FILENAME);
+
     if runtime.spawned_client_paths.contains(&client_path) {
-        stronghold_response_to_result(runtime.stronghold.switch_actor_target(client_path))?;
+        stronghold_response_to_result(runtime.stronghold.switch_actor_target(client_path.clone()))?;
     } else {
         stronghold_response_to_result(runtime.stronghold.spawn_stronghold_actor(client_path.clone(), flags))?;
-        let snapshot_file_path = snapshot_path.join(SNAPSHOT_FILENAME);
+        runtime.spawned_client_paths.insert(client_path.clone());
+    };
+
+    if !runtime.loaded_client_paths.contains(&client_path) {
         if snapshot_file_path.exists() {
             stronghold_response_to_result(
                 runtime
@@ -84,8 +89,8 @@ async fn load_actor(
                     .await,
             )?;
         }
-        runtime.spawned_client_paths.insert(client_path);
-    };
+        runtime.loaded_client_paths.insert(client_path);
+    }
 
     Ok(())
 }
@@ -215,6 +220,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 struct ActorRuntime {
     stronghold: Stronghold,
     spawned_client_paths: HashSet<Vec<u8>>,
+    loaded_client_paths: HashSet<Vec<u8>>,
 }
 
 fn system_runtime() -> &'static Arc<Mutex<ActorSystem>> {
@@ -240,6 +246,7 @@ fn actor_runtime() -> &'static Arc<Mutex<ActorRuntime>> {
         let runtime = ActorRuntime {
             stronghold,
             spawned_client_paths,
+            loaded_client_paths: HashSet::new(),
         };
         Arc::new(Mutex::new(runtime))
     });
@@ -269,27 +276,36 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf)
     Ok(())
 }
 
-async fn clear_stronghold_cache(runtime: &mut ActorRuntime) -> Result<()> {
+// saves the snapshot to the file system.
+async fn save_snapshot(runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> Result<()> {
+    stronghold_response_to_result(
+        runtime
+            .stronghold
+            .write_all_to_snapshot(
+                [0; 32].to_vec(), // TODO use curr_snapshot_password
+                None,
+                Some(snapshot_path.join(SNAPSHOT_FILENAME)),
+            )
+            .await,
+    )
+}
+
+async fn clear_stronghold_cache(mut runtime: &mut ActorRuntime) -> Result<()> {
     if let Some(curr_snapshot_path) = CURRENT_SNAPSHOT_PATH
         .get_or_init(Default::default)
         .lock()
         .await
         .as_ref()
     {
-        runtime
-            .stronghold
-            .write_all_to_snapshot(
-                [0; 32].to_vec(), // TODO use curr_snapshot_password
-                None,
-                Some(curr_snapshot_path.join(SNAPSHOT_FILENAME).to_path_buf()),
-            )
-            .await;
+        save_snapshot(&mut runtime, &curr_snapshot_path).await?;
         for path in &runtime.spawned_client_paths {
             stronghold_response_to_result(runtime.stronghold.kill_stronghold(path.clone(), false).await)?;
             stronghold_response_to_result(runtime.stronghold.kill_stronghold(path.clone(), true).await)?;
         }
         runtime.spawned_client_paths = HashSet::new();
+        runtime.loaded_client_paths = HashSet::new();
     }
+
     Ok(())
 }
 
@@ -326,7 +342,8 @@ pub async fn store_mnemonic(snapshot_path: &PathBuf, mnemonic: String) -> Result
         .await;
 
     if let ProcResult::BIP39Recover(status) = res {
-        stronghold_response_to_result(status)
+        stronghold_response_to_result(status)?;
+        save_snapshot(&mut runtime, snapshot_path).await
     } else {
         Err(Error::FailedToPerformAction(format!("{:?}", res)))
     }
@@ -374,25 +391,43 @@ pub async fn sign_essence(
     let mut runtime = actor_runtime().lock().await;
     load_private_data_actor(&mut runtime, snapshot_path).await?;
 
+    let chain = hd::Chain::from_u32_hardened(vec![
+        44,
+        4218,
+        account_index.try_into()?,
+        internal as u32,
+        address_index.try_into()?,
+    ]);
+
+    let key_location = Location::generic(SECRET_VAULT_PATH, "iota-wallet-slip10-key");
     let res = runtime
         .stronghold
-        .runtime_exec(Procedure::SignUnlockBlock {
-            path: hd::Chain::from_u32_hardened(vec![
-                44,
-                4218,
-                account_index.try_into()?,
-                internal as u32,
-                address_index.try_into()?,
-            ]),
-            key: Location::generic(SECRET_VAULT_PATH, SEED_RECORD_PATH),
-            essence: transaction_essence,
+        .runtime_exec(Procedure::SLIP10Derive {
+            chain: chain.clone(),
+            input: SLIP10DeriveInput::Seed(Location::generic(SECRET_VAULT_PATH, SEED_RECORD_PATH)),
+            output: key_location.clone(),
+            hint: RecordHint::new("").unwrap(),
         })
         .await;
-    if let ProcResult::SignUnlockBlock(signature, public_key) = res {
-        Ok(Ed25519Signature::new(
-            stronghold_response_to_result(public_key)?,
-            Box::new(stronghold_response_to_result(signature)?),
-        ))
+
+    if let ProcResult::SLIP10Derive(response) = res {
+        stronghold_response_to_result(response)?;
+        let res = runtime
+            .stronghold
+            .runtime_exec(Procedure::SignUnlockBlock {
+                path: chain,
+                key: key_location,
+                essence: transaction_essence,
+            })
+            .await;
+        if let ProcResult::SignUnlockBlock(signature, public_key) = res {
+            Ok(Ed25519Signature::new(
+                stronghold_response_to_result(public_key)?,
+                Box::new(stronghold_response_to_result(signature)?),
+            ))
+        } else {
+            Err(Error::FailedToPerformAction(format!("{:?}", res)))
+        }
     } else {
         Err(Error::FailedToPerformAction(format!("{:?}", res)))
     }
@@ -413,6 +448,7 @@ pub async fn get_accounts(snapshot_path: &PathBuf) -> Result<Vec<String>> {
             accounts.push(account);
         }
     }
+
     Ok(accounts)
 }
 
@@ -480,6 +516,8 @@ pub async fn store_account(snapshot_path: &PathBuf, account_id: &AccountIdentifi
             .await,
     )?;
 
+    save_snapshot(&mut runtime, snapshot_path).await?;
+
     Ok(())
 }
 
@@ -512,7 +550,9 @@ pub async fn remove_account(snapshot_path: &PathBuf, account_id: &AccountIdentif
             .stronghold
             .delete_data(Location::generic(ACCOUNT_VAULT_PATH, ACCOUNT_RECORD_PATH), true)
             .await,
-    )
+    )?;
+
+    save_snapshot(&mut runtime, snapshot_path).await
 }
 
 #[cfg(test)]
@@ -572,6 +612,26 @@ mod tests {
         } else {
             panic!("unexpected error");
         }
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn write_and_get_all() -> super::Result<()> {
+        let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
+        let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
+        std::fs::create_dir_all(&snapshot_path).unwrap();
+        super::load_snapshot(&snapshot_path, "password").await?;
+
+        let id = AccountIdentifier::Id("id".to_string());
+        let data = "account data";
+        super::store_account(&snapshot_path, &id, data.to_string()).await?;
+        let mut r = super::actor_runtime().lock().await;
+        super::clear_stronghold_cache(&mut r).await?;
+        drop(r);
+        let stored_data = super::get_accounts(&snapshot_path).await?;
+        assert_eq!(stored_data.len(), 1);
+        assert_eq!(stored_data[0], data);
 
         Ok(())
     }

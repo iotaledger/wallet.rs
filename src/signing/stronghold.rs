@@ -60,6 +60,7 @@ impl super::Signer for StrongholdSigner {
                     recorder.address_internal,
                 )
                 .await?;
+                unlock_blocks.push(UnlockBlock::Signature(signature.into()));
                 signature_indexes.insert(recorder.address_index, current_block_index);
 
                 // Update current block index
