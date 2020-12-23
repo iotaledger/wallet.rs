@@ -51,6 +51,36 @@ account.sync()
 
 ## API Reference
 
+### initLogger(config: LogOptions)
+
+Initializes the logging system.
+
+#### LogOptions
+
+| Param         | Type                     | Default                | Description                             |
+| ------------- | ------------------------ | ---------------------- | --------------------------------------- |
+| color_enabled | <code>boolean</code>     | <code>undefined</code> | Whether to enable colored output or not |
+| outputs       | <code>LogOutput[]</code> | <code>undefined</code> | The log outputs                         |
+
+#### LogOutput
+
+| Param          | Type                  | Default                | Description                                          |
+| -------------- | --------------------- | ---------------------- | ---------------------------------------------------- |
+| name           | <code>string</code>   | <code>undefined</code> | 'stdout' or a path to a file                         |
+| level_filter   | <code>string</code>   | <code>'info'</code>    | The maximum log level that this output accepts       |
+| target_filters | <code>string[]</code> | <code>[]</code>        | Filters on the log target (library and module names) |
+
+### addEventListener(event, cb)
+
+Adds a new event listener with a callback in the form of `(err, data) => {}`.
+Supported event names:
+- ErrorThrown
+- BalanceChange
+- NewTransaction
+- ConfirmationStateChange
+- Reattachment
+- Broadcast
+
 ### AccountManager
 
 #### constructor([options])

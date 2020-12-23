@@ -226,6 +226,7 @@ impl AccountManager {
                                             } else {
                                                 "Internal error".to_string()
                                             };
+                                            log::error!("[POLLING] error: {}", msg);
                                             let _error = crate::Error::Panic(msg);
                                             // when the error is dropped, the on_error event will be triggered
                                         }
@@ -444,6 +445,8 @@ async fn poll(accounts: AccountStore, storage_path: PathBuf, syncing: bool) -> c
         let synced_accounts = sync_accounts(accounts.clone(), &storage_path, Some(0)).await?;
         let accounts_after_sync = accounts.read().await;
 
+        log::debug!("[POLLING] synced accounts");
+
         // compare accounts to check for balance changes and new messages
         for account_before_sync in &accounts_before_sync {
             let account_after_sync = accounts_after_sync.get(account_before_sync.id()).unwrap();
@@ -457,6 +460,12 @@ async fn poll(accounts: AccountStore, storage_path: PathBuf, syncing: bool) -> c
                     .find(|addr| addr == &address_before_sync)
                     .unwrap();
                 if address_after_sync.balance() != address_before_sync.balance() {
+                    log::debug!(
+                        "[POLLING] address {} balance changed from {} to {}",
+                        address_after_sync.address().to_bech32(),
+                        address_before_sync.balance(),
+                        address_after_sync.balance()
+                    );
                     emit_balance_change(
                         account_after_sync.id(),
                         address_after_sync,
@@ -471,6 +480,7 @@ async fn poll(accounts: AccountStore, storage_path: PathBuf, syncing: bool) -> c
                 .iter()
                 .filter(|message| !account_before_sync.messages().contains(message))
                 .for_each(|message| {
+                    log::info!("[POLLING] new message: {:?}", message.id());
                     emit_transaction_event(TransactionEventType::NewTransaction, account_after_sync.id(), &message)
                 });
 
@@ -481,12 +491,14 @@ async fn poll(accounts: AccountStore, storage_path: PathBuf, syncing: bool) -> c
                     None => false,
                 };
                 if changed {
+                    log::info!("[POLLING] message confirmed: {:?}", message.id());
                     emit_confirmation_state_change(account_after_sync.id(), &message, true);
                 }
             }
         }
         retry_unconfirmed_transactions(synced_accounts).await?
     } else {
+        log::info!("[POLLING] skipping syncing process because MQTT is running");
         let mut retried_messages = vec![];
         for account_handle in accounts.read().await.values() {
             let (account_id, unconfirmed_messages): (AccountIdentifier, Vec<(MessageId, Payload)>) = {
@@ -507,6 +519,7 @@ async fn poll(accounts: AccountStore, storage_path: PathBuf, syncing: bool) -> c
                 if new_message.payload() == &payload {
                     reattachments.push(new_message);
                 } else {
+                    log::info!("[POLLING] promoted and new message is {:?}", new_message.id());
                     promotions.push(new_message);
                 }
             }
@@ -542,13 +555,19 @@ async fn discover_accounts(
         if let Some(signer_type) = &signer_type {
             account_initialiser = account_initialiser.signer_type(signer_type.clone());
         }
-        let account = account_initialiser.initialise().await?;
-        let synced_account = account.sync().await.execute().await?;
+        let account_handle = account_initialiser.initialise().await?;
+        log::debug!(
+            "[SYNC] discovering account {}, signer type {:?}",
+            account_handle.read().await.alias(),
+            account_handle.read().await.signer_type()
+        );
+        let synced_account = account_handle.sync().await.execute().await?;
         let is_empty = *synced_account.is_empty();
+        log::debug!("[SYNC] account is empty? {}", is_empty);
         if is_empty {
             break;
         } else {
-            synced_accounts.push((account, synced_account));
+            synced_accounts.push((account_handle, synced_account));
         }
     }
     Ok(synced_accounts)
@@ -584,8 +603,10 @@ async fn sync_accounts<'a>(
     let discovered_accounts_res = match last_account {
         Some((is_empty, client_options, signer_type)) => {
             if is_empty {
+                log::debug!("[SYNC] running account discovery because the latest account is empty");
                 discover_accounts(accounts.clone(), &storage_path, &client_options, Some(signer_type)).await
             } else {
+                log::debug!("[SYNC] skipping account discovery because the latest account isn't empty");
                 Ok(vec![])
             }
         }
@@ -619,11 +640,14 @@ async fn retry_unconfirmed_transactions(synced_accounts: Vec<SyncedAccount>) -> 
         let mut reattachments = vec![];
         let mut promotions = vec![];
         for message in unconfirmed_messages {
+            log::debug!("[POLLING] retrying {:?}", message);
             let new_message = synced.retry(message.id()).await?;
             // if the payload is the same, it was reattached; otherwise it was promoted
             if new_message.payload() == message.payload() {
+                log::debug!("[POLLING] rettached and new message is {:?}", new_message);
                 reattachments.push(new_message);
             } else {
+                log::debug!("[POLLING] promoted and new message is {:?}", new_message);
                 promotions.push(new_message);
             }
         }
