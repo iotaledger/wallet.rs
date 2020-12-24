@@ -191,7 +191,7 @@ impl AccountManager {
     pub async fn set_stronghold_password<P: AsRef<str>>(&mut self, password: P) -> crate::Result<()> {
         let mut dk = [0; 64];
         crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_ref().as_bytes(), b"wallet.rs", 100, &mut dk)?;
-        crate::stronghold::load_snapshot(&self.storage_path, &dk[..].try_into().unwrap()).await?;
+        crate::stronghold::load_snapshot(&self.storage_path, &dk[0..32][..].try_into().unwrap()).await?;
 
         if self.accounts.read().await.is_empty() {
             self.accounts = Self::load_accounts(&self.storage_path).await?;

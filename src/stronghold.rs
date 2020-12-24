@@ -279,16 +279,20 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf)
 
 // saves the snapshot to the file system.
 async fn save_snapshot(runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> Result<()> {
-    stronghold_response_to_result(
-        runtime
-            .stronghold
-            .write_all_to_snapshot(
-                [0; 32].to_vec(), // TODO use curr_snapshot_password
-                None,
-                Some(snapshot_path.join(SNAPSHOT_FILENAME)),
-            )
-            .await,
-    )
+    if !runtime.spawned_client_paths.is_empty() {
+        stronghold_response_to_result(
+            runtime
+                .stronghold
+                .write_all_to_snapshot(
+                    [0; 32].to_vec(), // TODO use curr_snapshot_password
+                    None,
+                    Some(snapshot_path.join(SNAPSHOT_FILENAME)),
+                )
+                .await,
+        )
+    } else {
+        Ok(())
+    }
 }
 
 async fn clear_stronghold_cache(mut runtime: &mut ActorRuntime) -> Result<()> {
@@ -579,6 +583,7 @@ mod tests {
 
         let id = AccountIdentifier::Id(1.to_string());
         let res = super::get_account(&snapshot_path, &id).await;
+        println!("{:?}", res);
         assert_eq!(res.is_ok(), true);
 
         std::thread::sleep(Duration::from_millis(interval * 2));
