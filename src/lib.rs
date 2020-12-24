@@ -159,11 +159,20 @@ pub enum Error {
     /// Failed to parse date string.
     #[error("error parsing date: {0}")]
     ParseDate(#[from] chrono::ParseError),
+    /// Error from iota crypto.rs
+    #[error("crypto error: {0}")]
+    Crypto(crypto::Error),
 }
 
 impl From<iota::message::Error> for Error {
     fn from(error: iota::message::Error) -> Self {
         Self::BeeMessage(error)
+    }
+}
+
+impl From<crypto::Error> for Error {
+    fn from(error: crypto::Error) -> Self {
+        Self::Crypto(error)
     }
 }
 

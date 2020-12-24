@@ -109,6 +109,7 @@ impl serde::Serialize for crate::Error {
             Self::InvalidDerivationPath(path) => serialize_variant(self, serializer, "InvalidDerivationPath"),
             Self::FailedToGeneratePrivateKey(path) => serialize_variant(self, serializer, "FailedToGeneratePrivateKey"),
             Self::ParseDate(error) => serialize_variant(self, serializer, "ParseDate"),
+            Self::Crypto(error) => serialize_variant(self, serializer, "Crypto"),
         }
     }
 }

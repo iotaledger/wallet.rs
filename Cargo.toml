@@ -23,6 +23,7 @@ hex = "0.4"
 futures = "0.3"
 backtrace = "0.3"
 async-trait = "0.1"
+iota-crypto = { git = "https://github.com/iotaledger/crypto.rs", rev = "78b747be00fe960a5fccd97c06c39f3513221dc7", features = ["pbkdf", "hmac", "sha"] }
 
 # env mnemonic
 bee-signing-ext = { git = "https://github.com/wusyong/bee-p.git", branch = "sign-ext", version = "^0.1.0-alpha" }

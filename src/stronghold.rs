@@ -26,7 +26,8 @@ use std::{
     thread,
 };
 
-static PASSWORD_STORE: OnceCell<Arc<Mutex<HashMap<PathBuf, String>>>> = OnceCell::new();
+type SnapshotToPasswordMap = HashMap<PathBuf, [u8; 32]>;
+static PASSWORD_STORE: OnceCell<Arc<Mutex<SnapshotToPasswordMap>>> = OnceCell::new();
 static STRONGHOLD_ACCESS_STORE: OnceCell<Arc<Mutex<HashMap<PathBuf, bool>>>> = OnceCell::new();
 static CURRENT_SNAPSHOT_PATH: OnceCell<Arc<Mutex<Option<PathBuf>>>> = OnceCell::new();
 static PASSWORD_CLEAR_INTERVAL: OnceCell<Arc<Mutex<Duration>>> = OnceCell::new();
@@ -141,7 +142,7 @@ pub async fn set_password_clear_interval(interval: Duration) {
     *clear_interval = interval;
 }
 
-fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, String>>> {
+fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, [u8; 32]>>> {
     thread::spawn(|| {
         crate::enter(|| {
             task::spawn(async {
@@ -182,12 +183,12 @@ fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, String>>> {
     Default::default()
 }
 
-pub async fn set_password<S: AsRef<Path>, P: Into<String>>(snapshot_path: S, password: P) {
+pub async fn set_password<S: AsRef<Path>>(snapshot_path: S, password: &[u8; 32]) {
     let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
-    passwords.insert(snapshot_path.as_ref().to_path_buf(), password.into());
+    passwords.insert(snapshot_path.as_ref().to_path_buf(), *password);
 }
 
-async fn get_password<P: AsRef<Path>>(snapshot_path: P) -> Result<String> {
+async fn get_password<P: AsRef<Path>>(snapshot_path: P) -> Result<[u8; 32]> {
     let passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
     passwords
         .get(&snapshot_path.as_ref().to_path_buf())
@@ -267,11 +268,9 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf)
 
     if let Some(curr_snapshot_path) = &curr_snapshot_path {
         // if the current loaded snapshot is different than the snapshot we're tring to use,
-        // save the current snapshot and read the new snapshot
+        // save the current snapshot and clear the cache
         if curr_snapshot_path != snapshot_path {
-            clear_stronghold_cache(&mut runtime).await?;
-            let password = get_password(snapshot_path).await.unwrap();
-            switch_snapshot(&mut runtime, snapshot_path, password).await?;
+            switch_snapshot(&mut runtime, snapshot_path).await?;
         }
     }
 
@@ -311,7 +310,7 @@ async fn clear_stronghold_cache(mut runtime: &mut ActorRuntime) -> Result<()> {
     Ok(())
 }
 
-async fn switch_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf, _password: String) -> Result<()> {
+async fn switch_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> Result<()> {
     clear_stronghold_cache(&mut runtime).await?;
 
     let mut current_snapshot_path = CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await;
@@ -320,13 +319,12 @@ async fn switch_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf
     Ok(())
 }
 
-pub async fn load_snapshot<P: Into<String>>(snapshot_path: &PathBuf, password: P) -> Result<()> {
+pub async fn load_snapshot(snapshot_path: &PathBuf, password: &[u8; 32]) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
-    let password = password.into();
     std::fs::create_dir_all(&snapshot_path).map_err(|_| Error::FailedToCreateSnapshotDir)?;
-    set_password(&snapshot_path, password.clone()).await;
+    set_password(&snapshot_path, password).await;
     check_snapshot(&mut runtime, &snapshot_path).await?;
-    switch_snapshot(&mut runtime, &snapshot_path, password).await
+    switch_snapshot(&mut runtime, &snapshot_path).await
 }
 
 pub async fn store_mnemonic(snapshot_path: &PathBuf, mnemonic: String) -> Result<()> {
@@ -547,7 +545,7 @@ mod tests {
         super::set_password_clear_interval(Duration::from_millis(interval)).await;
         let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
         let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
-        super::load_snapshot(&snapshot_path, "password").await?;
+        super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
         std::thread::sleep(Duration::from_millis(interval * 3));
         let res = super::get_account(&snapshot_path, &AccountIdentifier::Id("".to_string())).await;
@@ -567,7 +565,7 @@ mod tests {
         super::set_password_clear_interval(Duration::from_millis(interval)).await;
         let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
         let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
-        super::load_snapshot(&snapshot_path, "password").await?;
+        super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
         for i in 1..5 {
             super::store_account(
@@ -600,7 +598,7 @@ mod tests {
         let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
         let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
         std::fs::create_dir_all(&snapshot_path).unwrap();
-        super::load_snapshot(&snapshot_path, "password").await?;
+        super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
         let id = AccountIdentifier::Id("id".to_string());
         let data = "account data";
@@ -619,7 +617,7 @@ mod tests {
     async fn write_and_read() -> super::Result<()> {
         let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
         let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
-        super::load_snapshot(&snapshot_path, "password").await?;
+        super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
         let id = AccountIdentifier::Id("id".to_string());
         let data = "account data";
@@ -634,7 +632,7 @@ mod tests {
     async fn write_and_delete() -> super::Result<()> {
         let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
         let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
-        super::load_snapshot(&snapshot_path, "password").await?;
+        super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
         let id = AccountIdentifier::Id("id".to_string());
         let data = "account data";
@@ -651,7 +649,7 @@ mod tests {
         for i in 1..3 {
             let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
             let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
-            super::load_snapshot(&snapshot_path, "password").await?;
+            super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
             let id = AccountIdentifier::Id(i.to_string());
             let data: String = thread_rng().gen_ascii_chars().take(10).collect();
