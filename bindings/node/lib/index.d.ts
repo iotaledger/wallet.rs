@@ -142,7 +142,7 @@ export declare class AccountManager {
   syncAccounts(): Promise<SyncedAccount[]>
   internalTransfer(fromAccount: Account, toAccount: Account, amount: number): Promise<Message>
   backup(destination: string): string
-  importAccounts(source: string): void
+  importAccounts(source: string, password: string): void
 }
 
 export declare type Event = 'ErrorThrown' |
@@ -152,4 +152,16 @@ export declare type Event = 'ErrorThrown' |
   'Reattachment' |
   'Broadcast'
 
+export interface LoggerOutput {
+  name?: string
+  level_filter: 'off' | 'error' | 'warn' | 'info' | 'debug' | 'trace' = 'info'
+  target_filters?: string[]
+}
+
+export interface LoggerConfig {
+  color_enabled?: boolean
+  outputs?: LoggerOutput[]
+}
+
 export declare function addEventListener(event: Event, cb: (err?: any, data?: { [k: string]: any }) => void): void
+export declare function initLogger(config: LoggerConfig)

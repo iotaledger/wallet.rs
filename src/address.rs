@@ -202,9 +202,11 @@ impl Address {
                     && (!o.is_spent && output.is_spent)
             });
             if let Some(spent_output) = spent_existing_output {
+                log::debug!("[ADDRESS] got spent of {:?}", spent_output);
                 self.balance -= output.amount;
                 self.outputs.remove(spent_output);
             } else {
+                log::debug!("[ADDRESS] got new output {:?}", output);
                 self.balance += output.amount;
                 self.outputs.push(output);
             }

@@ -5,7 +5,7 @@ use crate::address::IotaAddress;
 use rand::{thread_rng, Rng};
 use std::convert::TryInto;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Input {
     pub address: IotaAddress,
     pub balance: u64,
