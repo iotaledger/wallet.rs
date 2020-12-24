@@ -4,10 +4,12 @@
 //! Stronghold interface abstractions over an account
 
 use crate::account::AccountIdentifier;
-use iota::{Address, Ed25519Address, Ed25519Signature};
-use iota_stronghold::{
-    hd, Location, ProcResult, Procedure, RecordHint, ResultMessage, SLIP10DeriveInput, Stronghold, StrongholdFlags,
+use blake2::{
+    digest::{Update, VariableOutput},
+    VarBlake2b,
 };
+use iota::{Address, Ed25519Address, Ed25519Signature};
+use iota_stronghold::{Location, ProcResult, Procedure, RecordHint, ResultMessage, Stronghold, StrongholdFlags};
 use once_cell::sync::{Lazy, OnceCell};
 use riker::actors::*;
 use tokio::{
@@ -358,35 +360,25 @@ pub async fn generate_address(
     let mut runtime = actor_runtime().lock().await;
     load_private_data_actor(&mut runtime, snapshot_path).await?;
 
-    let key_location = Location::generic(SECRET_VAULT_PATH, DERIVE_OUTPUT_RECORD_PATH);
+    let chain = format!("m/44H/4218H/{}H/{}H/{}H", account_index, internal as u32, address_index,);
 
     let res = runtime
         .stronghold
-        .runtime_exec(Procedure::SLIP10Derive {
-            chain: hd::Chain::from_u32_hardened(vec![
-                44,
-                4218,
-                account_index.try_into()?,
-                internal as u32,
-                address_index.try_into()?,
-            ]),
-            input: SLIP10DeriveInput::Seed(Location::generic(SECRET_VAULT_PATH, SEED_RECORD_PATH)),
-            output: key_location.clone(),
-            hint: RecordHint::new("wallet.rs-derived").unwrap(),
+        .runtime_exec(Procedure::Ed25519PublicKey {
+            key: Location::generic(SECRET_VAULT_PATH, SEED_RECORD_PATH),
+            path: chain,
         })
         .await;
-    if let ProcResult::SLIP10Derive(response) = res {
-        stronghold_response_to_result(response)?;
-        let res = runtime
-            .stronghold
-            .runtime_exec(Procedure::Ed25519PublicKey { key: key_location })
-            .await;
-        if let ProcResult::Ed25519PublicKey(response) = res {
-            let public_key = stronghold_response_to_result(response)?;
-            Ok(Address::Ed25519(Ed25519Address::new(public_key)))
-        } else {
-            Err(Error::FailedToPerformAction(format!("{:?}", res)))
-        }
+    if let ProcResult::Ed25519PublicKey(response) = res {
+        let public_key = stronghold_response_to_result(response)?;
+        // Hash the public key to get the address
+        let mut hasher = VarBlake2b::new(32).unwrap();
+        hasher.update(public_key);
+        let mut result = vec![];
+        hasher.finalize_variable(|res| {
+            result = res.to_vec();
+        });
+        Ok(Address::Ed25519(Ed25519Address::new(result.try_into().unwrap())))
     } else {
         Err(Error::FailedToPerformAction(format!("{:?}", res)))
     }
@@ -402,12 +394,7 @@ pub async fn sign_essence(
     let mut runtime = actor_runtime().lock().await;
     load_private_data_actor(&mut runtime, snapshot_path).await?;
 
-    let chain = format!(
-        "m/44H/4218H/{}H/{}H/{}H",
-        account_index,
-        internal as u32,
-        address_index,
-    );
+    let chain = format!("m/44H/4218H/{}H/{}H/{}H", account_index, internal as u32, address_index,);
 
     let res = runtime
         .stronghold
