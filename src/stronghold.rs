@@ -441,7 +441,7 @@ async fn get_account_internal(
         .stronghold
         .read_data(Location::generic(ACCOUNT_VAULT_PATH, ACCOUNT_RECORD_PATH))
         .await;
-    data.filter(|data| data.len() > 0)
+    data.filter(|data| !data.is_empty())
         .map(|data| String::from_utf8_lossy(&data).to_string())
         .ok_or(Error::AccountNotFound)
 }
@@ -508,7 +508,7 @@ pub async fn remove_account(snapshot_path: &PathBuf, account_id: &AccountIdentif
     let account_ids_location = Location::generic(ACCOUNT_METADATA_VAULT_PATH, ACCOUNT_IDS_RECORD_PATH);
     let (data_opt, status) = runtime.stronghold.read_data(account_ids_location.clone()).await;
     let account_ids = data_opt
-        .filter(|data| data.len() > 0)
+        .filter(|data| !data.is_empty())
         .map(|data| String::from_utf8_lossy(&data).to_string())
         .ok_or(Error::AccountNotFound)?;
     stronghold_response_to_result(

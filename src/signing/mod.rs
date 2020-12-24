@@ -100,5 +100,5 @@ pub(crate) async fn get_signer(signer_type: &SignerType) -> SignerHandle {
         .await
         .get(signer_type)
         .cloned()
-        .expect(&format!("signer not initialized for type {:?}", signer_type))
+        .unwrap_or_else(|| panic!("signer not initialized for type {:?}", signer_type))
 }
