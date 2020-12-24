@@ -26,7 +26,9 @@ impl super::Signer for StrongholdSigner {
         address_index: usize,
         internal: bool,
     ) -> crate::Result<iota::Address> {
-        let address = crate::stronghold::generate_address(account.storage_path(), *account.index(), address_index, internal).await?;
+        let address =
+            crate::stronghold::generate_address(account.storage_path(), *account.index(), address_index, internal)
+                .await?;
         Ok(address)
     }
 

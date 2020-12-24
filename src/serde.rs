@@ -68,7 +68,6 @@ impl serde::Serialize for crate::Error {
         }
 
         match self {
-            Self::GenericError(error) => serialize_variant(self, serializer, "GenericError"),
             Self::IoError(error) => serialize_variant(self, serializer, "IoError"),
             Self::JsonError(error) => serialize_variant(self, serializer, "JsonError"),
             #[cfg(feature = "stronghold")]

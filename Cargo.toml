@@ -5,7 +5,6 @@ authors = ["Lucas Nogueira <lucas.nogueira@iota.org>"]
 edition = "2018"
 
 [dependencies]
-anyhow = "1.0"
 thiserror = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 getset = "0.1"
@@ -45,6 +44,7 @@ riker-patterns = { version = "0.4", optional = true }
 tokio = { version = "0.2", features = ["full"] }
 sled = "0.34"
 rusty-fork = "0.3.0"
+anyhow = "1.0"
 
 [features]
 default = ["stronghold"]

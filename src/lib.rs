@@ -42,9 +42,6 @@ static RUNTIME: OnceCell<Mutex<Runtime>> = OnceCell::new();
 /// The wallet error type.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    /// Generic error.
-    #[error("{0}")]
-    GenericError(#[from] anyhow::Error), // TODO remove this with stronghold update
     /// IO error.
     #[error("`{0}`")]
     IoError(#[from] std::io::Error),
