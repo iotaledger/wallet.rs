@@ -596,7 +596,7 @@ mod tests {
             let mut runtime = tokio::runtime::Runtime::new().unwrap();
             runtime.block_on(async {
                 let interval = Duration::from_millis(500);
-                super::set_password_clear_interval(interval.clone()).await;
+                super::set_password_clear_interval(interval).await;
                 let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
                 let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
                 super::load_snapshot(&snapshot_path, &[0; 32]).await.unwrap();
