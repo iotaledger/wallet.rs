@@ -85,7 +85,7 @@ async fn load_actor(
                     .read_snapshot(
                         client_path.clone(),
                         None,
-                        [0; 32].to_vec(), // TODO
+                        get_password(snapshot_path).await?.to_vec(),
                         None,
                         Some(snapshot_file_path),
                     )
@@ -272,6 +272,8 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf)
         if curr_snapshot_path != snapshot_path {
             switch_snapshot(&mut runtime, snapshot_path).await?;
         }
+    } else {
+        switch_snapshot(&mut runtime, snapshot_path).await?;
     }
 
     Ok(())
@@ -279,20 +281,16 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf)
 
 // saves the snapshot to the file system.
 async fn save_snapshot(runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> Result<()> {
-    if !runtime.spawned_client_paths.is_empty() {
-        stronghold_response_to_result(
-            runtime
-                .stronghold
-                .write_all_to_snapshot(
-                    [0; 32].to_vec(), // TODO use curr_snapshot_password
-                    None,
-                    Some(snapshot_path.join(SNAPSHOT_FILENAME)),
-                )
-                .await,
-        )
-    } else {
-        Ok(())
-    }
+    stronghold_response_to_result(
+        runtime
+            .stronghold
+            .write_all_to_snapshot(
+                get_password(snapshot_path).await?.to_vec(),
+                None,
+                Some(snapshot_path.join(SNAPSHOT_FILENAME)),
+            )
+            .await,
+    )
 }
 
 async fn clear_stronghold_cache(mut runtime: &mut ActorRuntime) -> Result<()> {
@@ -302,7 +300,9 @@ async fn clear_stronghold_cache(mut runtime: &mut ActorRuntime) -> Result<()> {
         .await
         .as_ref()
     {
-        save_snapshot(&mut runtime, &curr_snapshot_path).await?;
+        if !runtime.spawned_client_paths.is_empty() {
+            save_snapshot(&mut runtime, &curr_snapshot_path).await?;
+        }
         for path in &runtime.spawned_client_paths {
             stronghold_response_to_result(runtime.stronghold.kill_stronghold(path.clone(), false).await)?;
             stronghold_response_to_result(runtime.stronghold.kill_stronghold(path.clone(), true).await)?;
@@ -423,7 +423,7 @@ pub async fn get_accounts(snapshot_path: &PathBuf) -> Result<Vec<String>> {
     let mut accounts = Vec::new();
     if let Some(data) = data_opt {
         let account_ids = String::from_utf8_lossy(&data).to_string();
-        for account_id in account_ids.split(ACCOUNT_ID_SEPARATOR).filter(|id| id != &"") {
+        for account_id in account_ids.split(ACCOUNT_ID_SEPARATOR).filter(|id| !id.is_empty()) {
             let id = AccountIdentifier::Id(account_id.to_string());
             let account = get_account_internal(&mut runtime, snapshot_path, &id).await?;
             accounts.push(account);
@@ -552,7 +552,7 @@ mod tests {
         super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
         std::thread::sleep(Duration::from_millis(interval * 3));
-        let res = super::get_account(&snapshot_path, &AccountIdentifier::Id("".to_string())).await;
+        let res = super::get_account(&snapshot_path, &AccountIdentifier::Id("passwordexpires".to_string())).await;
         assert_eq!(res.is_err(), true);
         let error = res.unwrap_err();
         if let super::Error::PasswordNotSet = error {
@@ -565,8 +565,8 @@ mod tests {
 
     #[tokio::test]
     async fn action_keeps_password() -> super::Result<()> {
-        let interval = 500;
-        super::set_password_clear_interval(Duration::from_millis(interval)).await;
+        let interval = Duration::from_millis(500);
+        super::set_password_clear_interval(interval.clone()).await;
         let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
         let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
         super::load_snapshot(&snapshot_path, &[0; 32]).await?;
@@ -574,19 +574,19 @@ mod tests {
         for i in 1..5 {
             super::store_account(
                 &snapshot_path,
-                &AccountIdentifier::Id(i.to_string()),
+                &AccountIdentifier::Id(format!("actionkeepspassword{}", i)),
                 "data".to_string(),
             )
             .await?;
-            std::thread::sleep(Duration::from_millis(interval / 2));
+            std::thread::sleep(interval / 2);
         }
 
-        let id = AccountIdentifier::Id(1.to_string());
+        let id = AccountIdentifier::Id("actionkeepspassword1".to_string());
         let res = super::get_account(&snapshot_path, &id).await;
         println!("{:?}", res);
         assert_eq!(res.is_ok(), true);
 
-        std::thread::sleep(Duration::from_millis(interval * 2));
+        std::thread::sleep(interval * 2);
 
         let res = super::get_account(&snapshot_path, &id).await;
         assert_eq!(res.is_err(), true);
@@ -624,7 +624,7 @@ mod tests {
         let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
         super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
-        let id = AccountIdentifier::Id("id".to_string());
+        let id = AccountIdentifier::Id("writeandreadtest".to_string());
         let data = "account data";
         super::store_account(&snapshot_path, &id, data.to_string()).await?;
         let stored_data = super::get_account(&snapshot_path, &id).await?;
@@ -639,7 +639,7 @@ mod tests {
         let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
         super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
-        let id = AccountIdentifier::Id("id".to_string());
+        let id = AccountIdentifier::Id("writeanddeleteid".to_string());
         let data = "account data";
         super::store_account(&snapshot_path, &id, data.to_string()).await?;
         super::remove_account(&snapshot_path, &id).await?;
@@ -656,7 +656,7 @@ mod tests {
             let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
             super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
-            let id = AccountIdentifier::Id(i.to_string());
+            let id = AccountIdentifier::Id(format!("multiplesnapshots{}", i));
             let data: String = thread_rng().gen_ascii_chars().take(10).collect();
             super::store_account(&snapshot_path, &id, data.clone()).await?;
             snapshot_saves.push((snapshot_path, id, data));
