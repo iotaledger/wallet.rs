@@ -34,6 +34,9 @@ static PASSWORD_CLEAR_INTERVAL: OnceCell<Arc<Mutex<Duration>>> = OnceCell::new()
 static PRIVATE_DATA_CLIENT_PATH: &[u8] = b"iota_seed";
 
 const TIMEOUT: Duration = Duration::from_millis(5000);
+#[cfg(test)]
+const DEFAULT_PASSWORD_CLEAR_INTERVAL: Duration = Duration::from_secs(0);
+#[cfg(not(test))]
 const DEFAULT_PASSWORD_CLEAR_INTERVAL: Duration = Duration::from_secs(8 * 60);
 const ACCOUNT_ID_SEPARATOR: char = '|';
 const ACCOUNT_METADATA_VAULT_PATH: &str = "iota-wallet-account-metadata";
@@ -60,13 +63,12 @@ fn stronghold_response_to_result<T>(status: ResultMessage<T>) -> Result<T> {
 }
 
 async fn load_actor(
-    mut runtime: &mut ActorRuntime,
+    runtime: &mut ActorRuntime,
     snapshot_path: &PathBuf,
     client_path: Vec<u8>,
     flags: Vec<StrongholdFlags>,
 ) -> Result<()> {
     on_stronghold_access(&snapshot_path).await?;
-    check_snapshot(&mut runtime, &snapshot_path).await?;
 
     let snapshot_file_path = snapshot_path.join(SNAPSHOT_FILENAME);
 
@@ -146,14 +148,16 @@ fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, [u8; 32]>>> {
     thread::spawn(|| {
         crate::enter(|| {
             task::spawn(async {
-                loop {
-                    delay_for(
-                        *PASSWORD_CLEAR_INTERVAL
-                            .get_or_init(|| Arc::new(Mutex::new(DEFAULT_PASSWORD_CLEAR_INTERVAL)))
-                            .lock()
-                            .await,
-                    )
+                let interval = *PASSWORD_CLEAR_INTERVAL
+                    .get_or_init(|| Arc::new(Mutex::new(DEFAULT_PASSWORD_CLEAR_INTERVAL)))
+                    .lock()
                     .await;
+                loop {
+                    delay_for(interval).await;
+
+                    if interval.as_nanos() == 0 {
+                        continue;
+                    }
 
                     let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
                     let mut access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
@@ -272,8 +276,6 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf)
         if curr_snapshot_path != snapshot_path {
             switch_snapshot(&mut runtime, snapshot_path).await?;
         }
-    } else {
-        switch_snapshot(&mut runtime, snapshot_path).await?;
     }
 
     Ok(())
@@ -307,6 +309,8 @@ async fn clear_stronghold_cache(mut runtime: &mut ActorRuntime) -> Result<()> {
             stronghold_response_to_result(runtime.stronghold.kill_stronghold(path.clone(), false).await)?;
             stronghold_response_to_result(runtime.stronghold.kill_stronghold(path.clone(), true).await)?;
         }
+        // delay to wait for the actors to be killed
+        thread::sleep(std::time::Duration::from_millis(300));
         runtime.spawned_client_paths = HashSet::new();
         runtime.loaded_client_paths = HashSet::new();
     }
@@ -320,6 +324,19 @@ async fn switch_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf
     let mut current_snapshot_path = CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await;
     current_snapshot_path.replace(snapshot_path.clone());
 
+    // load all actors to prevent lost data on save
+    load_private_data_actor(&mut runtime, snapshot_path).await?;
+    let account_ids_location = Location::generic(ACCOUNT_METADATA_VAULT_PATH, ACCOUNT_IDS_RECORD_PATH);
+    let (data_opt, status) = runtime.stronghold.read_data(account_ids_location.clone()).await;
+
+    if let Some(data) = data_opt {
+        let account_ids = String::from_utf8_lossy(&data).to_string();
+        for account_id in account_ids.split(ACCOUNT_ID_SEPARATOR).filter(|id| !id.is_empty()) {
+            let id = AccountIdentifier::Id(account_id.to_string());
+            load_account_actor(&mut runtime, snapshot_path, &id).await?;
+        }
+    }
+
     Ok(())
 }
 
@@ -327,12 +344,12 @@ pub async fn load_snapshot(snapshot_path: &PathBuf, password: &[u8; 32]) -> Resu
     let mut runtime = actor_runtime().lock().await;
     std::fs::create_dir_all(&snapshot_path).map_err(|_| Error::FailedToCreateSnapshotDir)?;
     set_password(&snapshot_path, password).await;
-    check_snapshot(&mut runtime, &snapshot_path).await?;
     switch_snapshot(&mut runtime, &snapshot_path).await
 }
 
 pub async fn store_mnemonic(snapshot_path: &PathBuf, mnemonic: String) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
+    check_snapshot(&mut runtime, snapshot_path).await?;
     load_private_data_actor(&mut runtime, snapshot_path).await?;
 
     let res = runtime
@@ -360,6 +377,7 @@ pub async fn generate_address(
     internal: bool,
 ) -> Result<Address> {
     let mut runtime = actor_runtime().lock().await;
+    check_snapshot(&mut runtime, &snapshot_path).await?;
     load_private_data_actor(&mut runtime, snapshot_path).await?;
 
     let chain = format!("m/44H/4218H/{}H/{}H/{}H", account_index, internal as u32, address_index,);
@@ -394,6 +412,7 @@ pub async fn sign_essence(
     internal: bool,
 ) -> Result<Ed25519Signature> {
     let mut runtime = actor_runtime().lock().await;
+    check_snapshot(&mut runtime, &snapshot_path).await?;
     load_private_data_actor(&mut runtime, snapshot_path).await?;
 
     let chain = format!("m/44H/4218H/{}H/{}H/{}H", account_index, internal as u32, address_index,);
@@ -416,6 +435,7 @@ pub async fn sign_essence(
 
 pub async fn get_accounts(snapshot_path: &PathBuf) -> Result<Vec<String>> {
     let mut runtime = actor_runtime().lock().await;
+    check_snapshot(&mut runtime, &snapshot_path).await?;
     load_private_data_actor(&mut runtime, snapshot_path).await?;
     let account_ids_location = Location::generic(ACCOUNT_METADATA_VAULT_PATH, ACCOUNT_IDS_RECORD_PATH);
     let (data_opt, status) = runtime.stronghold.read_data(account_ids_location.clone()).await;
@@ -450,11 +470,13 @@ async fn get_account_internal(
 
 pub async fn get_account(snapshot_path: &PathBuf, account_id: &AccountIdentifier) -> Result<String> {
     let mut runtime = actor_runtime().lock().await;
+    check_snapshot(&mut runtime, &snapshot_path).await?;
     get_account_internal(&mut runtime, snapshot_path, account_id).await
 }
 
 pub async fn store_account(snapshot_path: &PathBuf, account_id: &AccountIdentifier, account: String) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
+    check_snapshot(&mut runtime, &snapshot_path).await?;
 
     // first we push the account id to the reference array
     // the reference array holds all account ids so we can scan them on the `get_accounts` implementation
@@ -504,6 +526,7 @@ pub async fn store_account(snapshot_path: &PathBuf, account_id: &AccountIdentifi
 
 pub async fn remove_account(snapshot_path: &PathBuf, account_id: &AccountIdentifier) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
+    check_snapshot(&mut runtime, &snapshot_path).await?;
 
     // first we delete the account id from the reference array
     load_private_data_actor(&mut runtime, snapshot_path).await?;
@@ -540,62 +563,69 @@ pub async fn remove_account(snapshot_path: &PathBuf, account_id: &AccountIdentif
 mod tests {
     use crate::account::AccountIdentifier;
     use rand::{thread_rng, Rng};
+    use rusty_fork::rusty_fork_test;
     use std::path::PathBuf;
     use tokio::time::Duration;
 
-    #[tokio::test]
-    async fn password_expires() -> super::Result<()> {
-        let interval = 500;
-        super::set_password_clear_interval(Duration::from_millis(interval)).await;
-        let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
-        let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
-        super::load_snapshot(&snapshot_path, &[0; 32]).await?;
+    rusty_fork_test! {
+        #[test]
+        fn password_expires() {
+            let mut runtime = tokio::runtime::Runtime::new().unwrap();
+            runtime.block_on(async {
+                let interval = 500;
+                super::set_password_clear_interval(Duration::from_millis(interval)).await;
+                let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
+                let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
+                super::load_snapshot(&snapshot_path, &[0; 32]).await.unwrap();
 
-        std::thread::sleep(Duration::from_millis(interval * 3));
-        let res = super::get_account(&snapshot_path, &AccountIdentifier::Id("passwordexpires".to_string())).await;
-        assert_eq!(res.is_err(), true);
-        let error = res.unwrap_err();
-        if let super::Error::PasswordNotSet = error {
-        } else {
-            panic!("unexpected error: {:?}", error);
+                std::thread::sleep(Duration::from_millis(interval * 3));
+                let res = super::get_account(&snapshot_path, &AccountIdentifier::Id("passwordexpires".to_string())).await;
+                assert_eq!(res.is_err(), true);
+                let error = res.unwrap_err();
+                if let super::Error::PasswordNotSet = error {
+                } else {
+                    panic!("unexpected error: {:?}", error);
+                }
+            });
         }
-
-        Ok(())
     }
 
-    #[tokio::test]
-    async fn action_keeps_password() -> super::Result<()> {
-        let interval = Duration::from_millis(500);
-        super::set_password_clear_interval(interval.clone()).await;
-        let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
-        let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
-        super::load_snapshot(&snapshot_path, &[0; 32]).await?;
+    rusty_fork_test! {
+        #[test]
+        fn action_keeps_password() {
+            let mut runtime = tokio::runtime::Runtime::new().unwrap();
+            runtime.block_on(async {
+                let interval = Duration::from_millis(500);
+                super::set_password_clear_interval(interval.clone()).await;
+                let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
+                let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
+                super::load_snapshot(&snapshot_path, &[0; 32]).await.unwrap();
 
-        for i in 1..5 {
-            super::store_account(
-                &snapshot_path,
-                &AccountIdentifier::Id(format!("actionkeepspassword{}", i)),
-                "data".to_string(),
-            )
-            .await?;
-            std::thread::sleep(interval / 2);
+                for i in 1..5 {
+                    super::store_account(
+                        &snapshot_path,
+                        &AccountIdentifier::Id(format!("actionkeepspassword{}", i)),
+                        "data".to_string(),
+                    )
+                    .await
+                    .unwrap();
+                    std::thread::sleep(interval / 2);
+                }
+
+                let id = AccountIdentifier::Id("actionkeepspassword1".to_string());
+                let res = super::get_account(&snapshot_path, &id).await;
+                assert_eq!(res.is_ok(), true);
+
+                std::thread::sleep(interval * 2);
+
+                let res = super::get_account(&snapshot_path, &id).await;
+                assert_eq!(res.is_err(), true);
+                if let super::Error::PasswordNotSet = res.unwrap_err() {
+                } else {
+                    panic!("unexpected error");
+                }
+            });
         }
-
-        let id = AccountIdentifier::Id("actionkeepspassword1".to_string());
-        let res = super::get_account(&snapshot_path, &id).await;
-        println!("{:?}", res);
-        assert_eq!(res.is_ok(), true);
-
-        std::thread::sleep(interval * 2);
-
-        let res = super::get_account(&snapshot_path, &id).await;
-        assert_eq!(res.is_err(), true);
-        if let super::Error::PasswordNotSet = res.unwrap_err() {
-        } else {
-            panic!("unexpected error");
-        }
-
-        Ok(())
     }
 
     #[tokio::test]
