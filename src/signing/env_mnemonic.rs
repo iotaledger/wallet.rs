@@ -62,8 +62,10 @@ pub struct EnvMnemonicSigner;
 impl EnvMnemonicSigner {
     fn get_seed(&self) -> ed25519::Ed25519Seed {
         let _ = dotenv::dotenv();
+        let mnemonic = env::var(MNEMONIC_ENV_KEY).expect("must set the IOTA_WALLET_MNEMONIC environment variable");
+        bip39::Mnemonic::validate(mnemonic.as_str(), bip39::Language::English).expect("invalid BIP-39 mnemonic");
         mnemonic_to_ed25_seed(
-            env::var(MNEMONIC_ENV_KEY).expect("must set the IOTA_WALLET_MNEMONIC environment variable"),
+            mnemonic,
             env::var(MNEMONIC_PASSWORD_ENV_KEY).unwrap_or_else(|_| "password".to_string()),
         )
     }
