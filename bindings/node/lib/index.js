@@ -79,10 +79,6 @@ module.exports = {
   addEventListener,
   initLogger: config => initLogger(JSON.stringify(config)),
   RemainderValueStrategy,
-  StorageType: {
-    Stronghold: 1,
-    Sqlite: 2
-  },
   SignerType: {
     Stronghold: 1,
     EnvMnemonic: 2

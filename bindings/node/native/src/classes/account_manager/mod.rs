@@ -13,7 +13,7 @@ use iota_wallet::{
     account_manager::{AccountManager, DEFAULT_STORAGE_PATH},
     client::ClientOptions,
     signing::SignerType,
-    storage::{sqlite::SqliteStorageAdapter, stronghold::StrongholdStorageAdapter},
+    storage::{stronghold::StrongholdStorageAdapter},
     DateTime, Utc,
 };
 use neon::prelude::*;
@@ -66,19 +66,6 @@ fn js_value_to_account_id(
 
 pub struct AccountManagerWrapper(Arc<RwLock<AccountManager>>);
 
-#[repr(u8)]
-#[derive(Deserialize_repr)]
-enum StorageType {
-    Stronghold = 1,
-    Sqlite = 2,
-}
-
-impl Default for StorageType {
-    fn default() -> Self {
-        Self::Stronghold
-    }
-}
-
 fn default_storage_path() -> PathBuf {
     DEFAULT_STORAGE_PATH.into()
 }
@@ -87,8 +74,6 @@ fn default_storage_path() -> PathBuf {
 struct ManagerOptions {
     #[serde(rename = "storagePath", default = "default_storage_path")]
     storage_path: PathBuf,
-    #[serde(default, rename = "storageType")]
-    storage_type: StorageType,
 }
 
 declare_types! {
@@ -101,21 +86,12 @@ declare_types! {
                 }
                 None => Default::default(),
             };
-            let manager = match options.storage_type {
-                StorageType::Sqlite => crate::block_on(
-                    AccountManager::builder().with_storage(
-                        &options.storage_path,
-                        SqliteStorageAdapter::new(&options.storage_path, "accounts").unwrap()
-                    ).finish()
-                ),
-                StorageType::Stronghold => crate::block_on(
+            let manager = crate::block_on(
                     AccountManager::builder().with_storage(
                         &options.storage_path,
                         StrongholdStorageAdapter::new(&options.storage_path).unwrap()
                     ).finish()
-                ),
-            };
-            let manager = manager.expect("error initializing account manager");
+                ).expect("error initializing account manager");
             Ok(AccountManagerWrapper(Arc::new(RwLock::new(manager))))
         }
 

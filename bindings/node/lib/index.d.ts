@@ -121,14 +121,8 @@ export declare interface AccountToCreate {
   signerType?: SignerType;
 }
 
-export declare enum StorageType {
-  Stronghold = 1,
-  Sqlite = 2
-}
-
 export declare interface ManagerOptions {
   storagePath?: string
-  storageType?: StorageType
 }
 
 export declare class AccountManager {

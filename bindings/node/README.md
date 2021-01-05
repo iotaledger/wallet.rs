@@ -31,20 +31,16 @@ $ yarn link iota-wallet
 
 After you linked the library, you can create an `AccountManager` instance and interface with it.
 
-While Stronghold is not ready, we recommend using the Sqlite StorageType and `EnvMnemonic` SignerType (this simply means you store your mnemonic as an environment variable).
-
 ### Example 
 
 ```javascript
-const { AccountManager, StorageType, SignerType } = require('iota-wallet')
+const { AccountManager } = require('iota-wallet')
 const manager = new AccountManager({
-    storagePath: './storage',
-    storageType: StorageType.Sqlite
+    storagePath: './storage'
 })
 const account = await manager.createAccount({
   alias: 'Account1',
-  clientOptions: { node: 'http://api.lb-0.testnet.chrysalis2.com', localPow: false },
-  signerType: SignerType.EnvMnemonic
+  clientOptions: { node: 'http://api.lb-0.testnet.chrysalis2.com', localPow: false }
 })
 account.sync()
 ```
@@ -87,11 +83,10 @@ Supported event names:
 
 Creates a new instance of the AccountManager.
 
-| Param         | Type                | Default                | Description                                           |
-| ------------- | ------------------- | ---------------------- | ----------------------------------------------------- |
-| [options]     | <code>object</code> | <code>undefined</code> | The options to configure the account manager          |
-| [storagePath] | <code>string</code> | <code>undefined</code> | The path where the database file will be saved        |
-| [storageType] | <code>number</code> | <code>undefined</code> | The type of the database.  Stronghold = 1, Sqlite = 2 |
+| Param         | Type                | Default                | Description                                    |
+| ------------- | ------------------- | ---------------------- | ---------------------------------------------- |
+| [options]     | <code>object</code> | <code>undefined</code> | The options to configure the account manager   |
+| [storagePath] | <code>string</code> | <code>undefined</code> | The path where the database file will be saved |
 
 #### setStrongholdPassword(password): void
 
@@ -180,10 +175,10 @@ Backups the database.
 
 Imports a database file.
 
-| Param    | Type                | Default                  | Description                    |
-| ------   | ------------------- | ----------------------   | ---------------------------    |
-| source   | <code>string</code> | <code>undefined</code>   | The path to the backup file    |
-| password | <code>string</code> | <code>undefined</code>   | The backup stronghold password |
+| Param    | Type                | Default                | Description                    |
+| -------- | ------------------- | ---------------------- | ------------------------------ |
+| source   | <code>string</code> | <code>undefined</code> | The path to the backup file    |
+| password | <code>string</code> | <code>undefined</code> | The backup stronghold password |
 
 ### SyncedAccount
 

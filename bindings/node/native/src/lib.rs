@@ -3,7 +3,6 @@
 
 use std::{
     any::Any,
-    borrow::Cow,
     collections::HashMap,
     panic::AssertUnwindSafe,
     sync::{Arc, Mutex, RwLock},
