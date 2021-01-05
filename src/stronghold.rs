@@ -46,7 +46,6 @@ const ACCOUNT_RECORD_PATH: &str = "iota-wallet-account-record";
 const SECRET_VAULT_PATH: &str = "iota-wallet-secret";
 const SEED_RECORD_PATH: &str = "iota-wallet-seed";
 const DERIVE_OUTPUT_RECORD_PATH: &str = "iota-wallet-derived";
-pub const SNAPSHOT_FILENAME: &str = "wallet.stronghold";
 
 fn account_id_to_client_path(id: &AccountIdentifier) -> Vec<u8> {
     match id {
@@ -70,8 +69,6 @@ async fn load_actor(
 ) -> Result<()> {
     on_stronghold_access(&snapshot_path).await?;
 
-    let snapshot_file_path = snapshot_path.join(SNAPSHOT_FILENAME);
-
     if runtime.spawned_client_paths.contains(&client_path) {
         stronghold_response_to_result(runtime.stronghold.switch_actor_target(client_path.clone()))?;
     } else {
@@ -80,7 +77,7 @@ async fn load_actor(
     };
 
     if !runtime.loaded_client_paths.contains(&client_path) {
-        if snapshot_file_path.exists() {
+        if snapshot_path.exists() {
             stronghold_response_to_result(
                 runtime
                     .stronghold
@@ -89,7 +86,7 @@ async fn load_actor(
                         None,
                         get_password(snapshot_path).await?.to_vec(),
                         None,
-                        Some(snapshot_file_path),
+                        Some(snapshot_path.to_path_buf()),
                     )
                     .await,
             )?;
@@ -216,8 +213,6 @@ pub enum Error {
     FailedToPerformAction(String),
     #[error("snapshot password not set")]
     PasswordNotSet,
-    #[error("failed to create snapshot directory")]
-    FailedToCreateSnapshotDir,
     #[error("invalid address or account index {0}")]
     TryFromIntError(#[from] std::num::TryFromIntError),
 }
@@ -289,7 +284,7 @@ async fn save_snapshot(runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> R
             .write_all_to_snapshot(
                 get_password(snapshot_path).await?.to_vec(),
                 None,
-                Some(snapshot_path.join(SNAPSHOT_FILENAME)),
+                Some(snapshot_path.to_path_buf()),
             )
             .await,
     )
@@ -342,7 +337,6 @@ async fn switch_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf
 
 pub async fn load_snapshot(snapshot_path: &PathBuf, password: &[u8; 32]) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
-    std::fs::create_dir_all(&snapshot_path).map_err(|_| Error::FailedToCreateSnapshotDir)?;
     set_password(&snapshot_path, password).await;
     switch_snapshot(&mut runtime, &snapshot_path).await
 }
@@ -632,7 +626,6 @@ mod tests {
     async fn write_and_get_all() -> super::Result<()> {
         let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
         let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
-        std::fs::create_dir_all(&snapshot_path).unwrap();
         super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
         let id = AccountIdentifier::Id("id".to_string());

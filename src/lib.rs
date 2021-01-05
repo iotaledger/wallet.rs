@@ -162,9 +162,12 @@ pub enum Error {
     /// Error from iota crypto.rs
     #[error("crypto error: {0}")]
     Crypto(crypto::Error),
-    /// Path provided to `import_accounts` doesn't have a backed up storage
-    #[error("couldn't import accounts because the provided source doesn't have a backup")]
-    BackupNotFound,
+    /// Path provided to `import_accounts` isn't a file
+    #[error("provided backup path isn't a file")]
+    BackupNotFile,
+    /// Backup `destination` argument is invalid
+    #[error("backup destination must be a directory and it must exist")]
+    InvalidBackupDestination,
     /// the storage adapter isn't set
     #[error("the storage adapter isn't set; use the AccountManagerBuilder's `with_storage` method or one of the default storages with the crate features `sqlite-storage` and `stronghold-storage`.")]
     StorageAdapterNotDefined,
@@ -239,6 +242,7 @@ mod test_utils {
     static POLLING_INTERVAL: Duration = Duration::from_secs(2);
 
     pub async fn get_account_manager() -> AccountManager {
+        std::fs::create_dir_all("./example-database").unwrap();
         let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
         let storage_path = PathBuf::from(format!("./example-database/{}", storage_path));
 
