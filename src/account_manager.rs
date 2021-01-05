@@ -11,7 +11,6 @@ use crate::{
 };
 
 use std::{
-    borrow::Cow,
     collections::HashMap,
     convert::TryInto,
     fs,
@@ -223,7 +222,9 @@ impl AccountManager {
                                         if let Some(error) = error.downcast_ref::<crate::Error>() {
                                             // when the error is dropped, the on_error event will be triggered
                                         } else {
-                                            let msg = if let Some(message) = error.downcast_ref::<Cow<'_, str>>() {
+                                            let msg = if let Some(message) = error.downcast_ref::<String>() {
+                                                format!("Internal error: {}", message)
+                                            } else if let Some(message) = error.downcast_ref::<&str>() {
                                                 format!("Internal error: {}", message)
                                             } else {
                                                 "Internal error".to_string()

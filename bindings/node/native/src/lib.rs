@@ -86,7 +86,9 @@ pub(crate) fn remove_synced_account(id: &str) {
 }
 
 fn panic_to_response_message(panic: Box<dyn Any>) -> Result<String, Error> {
-    let msg = if let Some(message) = panic.downcast_ref::<Cow<'_, str>>() {
+    let msg = if let Some(message) = panic.downcast_ref::<String>() {
+        format!("Internal error: {}", message)
+    } else if let Some(message) = panic.downcast_ref::<&str>() {
         format!("Internal error: {}", message)
     } else {
         "Internal error".to_string()

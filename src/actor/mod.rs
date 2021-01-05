@@ -12,7 +12,6 @@ use iota::message::prelude::MessageId;
 
 use std::{
     any::Any,
-    borrow::Cow,
     convert::TryInto,
     num::NonZeroU64,
     panic::{catch_unwind, AssertUnwindSafe},
@@ -27,7 +26,9 @@ pub struct WalletMessageHandler {
 }
 
 fn panic_to_response_message(panic: Box<dyn Any>) -> Result<ResponseType> {
-    let msg = if let Some(message) = panic.downcast_ref::<Cow<'_, str>>() {
+    let msg = if let Some(message) = panic.downcast_ref::<String>() {
+        format!("Internal error: {}", message)
+    } else if let Some(message) = panic.downcast_ref::<&str>() {
         format!("Internal error: {}", message)
     } else {
         "Internal error".to_string()
