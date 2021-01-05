@@ -90,11 +90,11 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async { self.reattach(account_id, message_id).await }).await
             }
             MessageType::Backup(destination_path) => convert_panics(|| self.backup(destination_path)),
-            #[cfg(any(feature = "stronghold", feature = "sqlite"))]
+            #[cfg(any(feature = "stronghold", feature = "sqlite-storage"))]
             MessageType::RestoreBackup { backup_path, password } => {
                 convert_async_panics(|| async { self.restore_backup(backup_path, password).await }).await
             }
-            #[cfg(feature = "stronghold")]
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             MessageType::SetStrongholdPassword(password) => {
                 convert_async_panics(|| async { self.set_stronghold_password(password).await }).await
             }
@@ -125,7 +125,7 @@ impl WalletMessageHandler {
         Ok(ResponseType::BackupSuccessful)
     }
 
-    #[cfg(any(feature = "stronghold", feature = "sqlite"))]
+    #[cfg(any(feature = "stronghold", feature = "sqlite-storage"))]
     async fn restore_backup(&self, backup_path: &str, password: &str) -> Result<ResponseType> {
         self.account_manager.import_accounts(backup_path, password).await?;
         Ok(ResponseType::BackupRestored)

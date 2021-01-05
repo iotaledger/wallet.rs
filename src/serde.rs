@@ -70,10 +70,10 @@ impl serde::Serialize for crate::Error {
         match self {
             Self::IoError(error) => serialize_variant(self, serializer, "IoError"),
             Self::JsonError(error) => serialize_variant(self, serializer, "JsonError"),
-            #[cfg(feature = "stronghold")]
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             Self::StrongholdError(error) => serialize_variant(self, serializer, "StrongholdError"),
             Self::ClientError(error) => serialize_variant(self, serializer, "ClientError"),
-            #[cfg(feature = "sqlite")]
+            #[cfg(feature = "sqlite-storage")]
             Self::SqliteError(error) => serialize_variant(self, serializer, "SqliteError"),
             Self::UrlError(error) => serialize_variant(self, serializer, "UrlError"),
             Self::UnexpectedResponse(error) => serialize_variant(self, serializer, "UnexpectedResponse"),
@@ -101,7 +101,7 @@ impl serde::Serialize for crate::Error {
             Self::AccountInitialiseRequiredField(field) => {
                 serialize_variant(self, serializer, "AccountInitialiseRequiredField")
             }
-            #[cfg(feature = "stronghold")]
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             Self::StrongholdNotLoaded => serialize_variant(self, serializer, "StrongholdNotLoaded"),
             Self::Hex(error) => serialize_variant(self, serializer, "Hex"),
             Self::BeeMessage(error) => serialize_variant(self, serializer, "BeeMessage"),
@@ -111,6 +111,7 @@ impl serde::Serialize for crate::Error {
             Self::ParseDate(error) => serialize_variant(self, serializer, "ParseDate"),
             Self::Crypto(error) => serialize_variant(self, serializer, "Crypto"),
             Self::BackupNotFound => serialize_variant(self, serializer, "BackupNotFound"),
+            Self::StorageAdapterNotDefined => serialize_variant(self, serializer, "StorageAdapterNotDefined"),
         }
     }
 }

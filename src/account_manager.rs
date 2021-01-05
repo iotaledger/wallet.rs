@@ -63,7 +63,7 @@ impl AccountManagerBuilder {
     }
 
     /// Use the specified storage path when initialising the default storage adapter.
-    #[cfg(any(feature = "stronghold", feature = "sqlite"))]
+    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
     pub fn with_storage_path(mut self, storage_path: impl AsRef<Path>) -> Self {
         self.storage_path = storage_path.as_ref().to_path_buf();
         self
@@ -90,18 +90,17 @@ impl AccountManagerBuilder {
     /// Builds the manager.
     pub async fn finish(self) -> crate::Result<AccountManager> {
         if !self.initialised_storage {
-            #[cfg(any(feature = "stronghold", feature = "sqlite"))]
+            #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
             {
-                #[cfg(not(feature = "stronghold"))]
+                #[cfg(feature = "sqlite-storaeg")]
                 let adapter = crate::storage::sqlite::SqliteStorageAdapter::new(&self.storage_path, "accounts")?;
-                #[cfg(feature = "stronghold")]
+                #[cfg(feature = "stronghold-storage")]
                 let adapter = crate::storage::stronghold::StrongholdStorageAdapter::new(&self.storage_path)?;
                 crate::storage::set_adapter(&self.storage_path, adapter);
             }
-            #[cfg(not(any(feature = "stronghold", feature = "sqlite")))]
+            #[cfg(not(any(feature = "stronghold-storage", feature = "sqlite-storage")))]
             {
-                // TODO appropriate error kind
-                return Err(crate::Error::UnknownError("".to_string()));
+                return Err(crate::Error::StorageAdapterNotDefined);
             }
         }
 
@@ -186,7 +185,7 @@ impl AccountManager {
     }
 
     /// Sets the stronghold password.
-    #[cfg(feature = "stronghold")]
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     pub async fn set_stronghold_password<P: AsRef<str>>(&mut self, password: P) -> crate::Result<()> {
         let mut dk = [0; 64];
         crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_ref().as_bytes(), b"wallet.rs", 100, &mut dk)?;
@@ -345,7 +344,7 @@ impl AccountManager {
     }
 
     /// Import backed up accounts.
-    #[cfg(any(feature = "stronghold", feature = "sqlite"))]
+    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
     pub async fn import_accounts<S: AsRef<Path>, P: AsRef<str>>(
         &self,
         source: S,
@@ -353,13 +352,13 @@ impl AccountManager {
     ) -> crate::Result<()> {
         let source = source.as_ref();
         let source = if source.is_dir() {
-            #[cfg(feature = "stronghold")]
+            #[cfg(feature = "stronghold-storage")]
             {
                 if !source.join(crate::stronghold::SNAPSHOT_FILENAME).exists() {
                     return Err(crate::Error::BackupNotFound);
                 }
             }
-            #[cfg(feature = "sqlite")]
+            #[cfg(feature = "sqlite-storage")]
             {
                 if !source.join(crate::storage::sqlite::STORAGE_FILENAME).exists() {
                     return Err(crate::Error::BackupNotFound);
@@ -368,13 +367,13 @@ impl AccountManager {
             source
         } else {
             let filename = source.file_name().unwrap().to_str().unwrap();
-            #[cfg(feature = "stronghold")]
+            #[cfg(feature = "stronghold-storage")]
             {
                 if filename != crate::stronghold::SNAPSHOT_FILENAME {
                     return Err(crate::Error::BackupNotFound);
                 }
             }
-            #[cfg(feature = "sqlite")]
+            #[cfg(feature = "sqlite-storage")]
             {
                 if filename != crate::storage::sqlite::STORAGE_FILENAME {
                     return Err(crate::Error::BackupNotFound);
@@ -391,7 +390,7 @@ impl AccountManager {
     }
 
     /// Import backed up accounts.
-    #[cfg(not(any(feature = "stronghold", feature = "sqlite")))]
+    #[cfg(not(any(feature = "stronghold-storage", feature = "sqlite-storage")))]
     pub async fn import_accounts(&self, backup_manager: &Self) -> crate::Result<()> {
         restore_backup(&self, &backup_manager).await
     }

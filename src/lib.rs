@@ -27,7 +27,7 @@ pub(crate) mod serde;
 pub mod signing;
 /// The storage module.
 pub mod storage;
-#[cfg(feature = "stronghold")]
+#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
 pub(crate) mod stronghold;
 
 /// The wallet Result type.
@@ -49,14 +49,14 @@ pub enum Error {
     #[error("`{0}`")]
     JsonError(#[from] serde_json::error::Error),
     /// stronghold client error.
-    #[cfg(feature = "stronghold")]
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     #[error("`{0}`")]
     StrongholdError(#[from] stronghold::Error),
     /// iota.rs error.
     #[error("`{0}`")]
     ClientError(#[from] iota::client::Error),
     /// rusqlite error.
-    #[cfg(feature = "sqlite")]
+    #[cfg(feature = "sqlite-storage")]
     #[error("`{0}`")]
     SqliteError(#[from] rusqlite::Error),
     /// url parse error.
@@ -138,7 +138,7 @@ pub enum Error {
     /// Error that happens when the stronghold snapshot wasn't loaded.
     /// The snapshot is loaded through the
     /// [AccountManager#set_stronghold_password](struct.AccountManager.html#method.set_stronghold_password).
-    #[cfg(feature = "stronghold")]
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     #[error("stronghold not loaded")]
     StrongholdNotLoaded,
     /// Invalid hex string.
@@ -165,6 +165,9 @@ pub enum Error {
     /// Path provided to `import_accounts` doesn't have a backed up storage
     #[error("couldn't import accounts because the provided source doesn't have a backup")]
     BackupNotFound,
+    /// the storage adapter isn't set
+    #[error("the storage adapter isn't set; use the AccountManagerBuilder's `with_storage` method or one of the default storages with the crate features `sqlite-storage` and `stronghold-storage`.")]
+    StorageAdapterNotDefined,
 }
 
 impl From<iota::message::Error> for Error {

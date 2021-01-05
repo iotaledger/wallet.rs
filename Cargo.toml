@@ -49,6 +49,7 @@ rusty-fork = "0.3.0"
 anyhow = "1.0"
 
 [features]
-default = ["stronghold"]
+default = ["stronghold", "stronghold-storage"]
 stronghold = ["iota-stronghold", "riker", "riker-patterns"]
-sqlite = ["rusqlite"]
+stronghold-storage = ["iota-stronghold", "riker", "riker-patterns"]
+sqlite-storage = ["rusqlite"]

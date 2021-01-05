@@ -1,10 +1,10 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(feature = "sqlite")]
+#[cfg(feature = "sqlite-storage")]
 /// Sqlite storage.
 pub mod sqlite;
-#[cfg(feature = "stronghold")]
+#[cfg(feature = "stronghold-storage")]
 /// Stronghold storage.
 pub mod stronghold;
 
