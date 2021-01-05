@@ -3,14 +3,13 @@
 
 async function run() {
   try {
-    const { AccountManager, SignerType } = require('../lib')
+    const { AccountManager } = require('../lib')
     const manager = new AccountManager({
       storagePath: './test-database'
     })
     manager.setStrongholdPassword('password')
 
     const account = manager.createAccount({
-      signerType: SignerType.EnvMnemonic,
       clientOptions: { node: 'http://localhost:14265' }
     })
     account.setAlias('banana')

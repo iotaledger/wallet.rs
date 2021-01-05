@@ -82,21 +82,3 @@ pub(crate) fn parse_accounts(storage_path: &PathBuf, accounts: &[String]) -> cra
         Ok(accounts)
     }
 }
-
-pub(crate) async fn get_account(storage_path: &PathBuf, account_id: &AccountIdentifier) -> crate::Result<Account> {
-    let account_str = get(&storage_path)?.lock().await.get(account_id).await?;
-    let mut account: Account = serde_json::from_str(&account_str)?;
-    account.set_storage_path(storage_path.clone());
-    Ok(account)
-}
-
-pub(crate) async fn save_account(
-    storage_path: &PathBuf,
-    account_id: &AccountIdentifier,
-    account: String,
-) -> crate::Result<()> {
-    let storage_handle = get(&storage_path)?;
-    let storage = storage_handle.lock().await;
-    storage.set(account_id, account).await?;
-    Ok(())
-}

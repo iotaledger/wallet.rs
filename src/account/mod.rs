@@ -362,7 +362,13 @@ impl Drop for Account {
             let account_id = self.id().clone();
             if let Ok(data) = serde_json::to_string(&self) {
                 let _ = thread::spawn(move || {
-                    crate::block_on(crate::storage::save_account(&storage_path, &account_id, data))
+                    crate::block_on(async {
+                        crate::storage::get(&storage_path)?
+                            .lock()
+                            .await
+                            .set(&account_id, data)
+                            .await
+                    })
                 })
                 .join();
             }
@@ -419,15 +425,6 @@ impl Account {
             self.has_pending_changes = options != self.client_options;
         }
         self.client_options = options;
-    }
-
-    pub(crate) async fn save(&mut self) -> crate::Result<()> {
-        if self.has_pending_changes {
-            let storage_path = self.storage_path.clone();
-            crate::storage::save_account(&storage_path, self.id(), serde_json::to_string(&self)?).await?;
-            self.has_pending_changes = false;
-        }
-        Ok(())
     }
 
     /// Gets a list of transactions on this account.

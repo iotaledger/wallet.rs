@@ -251,13 +251,6 @@ impl AccountManager {
                                     }
                                 }
 
-                                let accounts_ = accounts.clone();
-                                let accounts_map = accounts_.read().await;
-                                for account_handle in accounts_map.values() {
-                                    let mut account = account_handle.write().await;
-                                    let _ = account.save().await;
-                                }
-
                                 delay_for(interval).await;
                             } => {}
                             _ = stop.recv() => {}
@@ -265,7 +258,9 @@ impl AccountManager {
                     }
                 });
             });
-        }).join().expect("failed to start polling");
+        })
+        .join()
+        .expect("failed to start polling");
     }
 
     /// Adds a new account.
