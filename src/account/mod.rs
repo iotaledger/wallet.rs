@@ -12,33 +12,14 @@ use crate::{
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
 use iota::message::prelude::MessageId;
-use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex, RwLock};
 
-use std::{
-    collections::HashMap,
-    ops::Deref,
-    path::PathBuf,
-    sync::{Arc, Mutex},
-    thread,
-};
+use std::{ops::Deref, path::PathBuf, sync::Arc, thread};
 
 mod sync;
 pub(crate) use sync::{repost_message, RepostAction};
 pub use sync::{AccountSynchronizer, SyncedAccount};
-
-type AddressesLock = Arc<Mutex<Vec<IotaAddress>>>;
-type AccountAddressesLock = Arc<Mutex<HashMap<AccountIdentifier, AddressesLock>>>;
-static ACCOUNT_ADDRESSES_LOCK: OnceCell<AccountAddressesLock> = OnceCell::new();
-
-pub(crate) fn get_account_addresses_lock(account_id: &AccountIdentifier) -> AddressesLock {
-    let mut locks = ACCOUNT_ADDRESSES_LOCK.get_or_init(Default::default).lock().unwrap();
-    if !locks.contains_key(&account_id) {
-        locks.insert(account_id.clone(), Default::default());
-    }
-    locks.get(&account_id).unwrap().clone()
-}
 
 /// The account identifier.
 #[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
@@ -243,18 +224,30 @@ pub struct Account {
 
 /// A thread guard over an account.
 #[derive(Debug, Clone)]
-pub struct AccountHandle(Arc<RwLock<Account>>);
+pub struct AccountHandle {
+    inner: Arc<RwLock<Account>>,
+    locked_addresses: Arc<Mutex<Vec<IotaAddress>>>,
+}
+
+impl AccountHandle {
+    pub(crate) fn locked_addresses(&self) -> Arc<Mutex<Vec<IotaAddress>>> {
+        self.locked_addresses.clone()
+    }
+}
 
 impl From<Account> for AccountHandle {
     fn from(account: Account) -> Self {
-        Self(Arc::new(RwLock::new(account)))
+        Self {
+            inner: Arc::new(RwLock::new(account)),
+            locked_addresses: Default::default(),
+        }
     }
 }
 
 impl Deref for AccountHandle {
     type Target = RwLock<Account>;
     fn deref(&self) -> &Self::Target {
-        &self.0.deref()
+        &self.inner.deref()
     }
 }
 
@@ -264,7 +257,7 @@ macro_rules! guard_field_getters {
             $(
                 #[$attr]
                 pub async fn $x(&self) -> $ret {
-                    self.0.read().await.$x().clone()
+                    self.inner.read().await.$x().clone()
                 }
             )*
         }
@@ -293,7 +286,7 @@ impl AccountHandle {
 
     /// Gets a new unused address and links it to this account.
     pub async fn generate_address(&self) -> crate::Result<Address> {
-        let mut account = self.0.write().await;
+        let mut account = self.inner.write().await;
         let address = crate::address::get_new_address(&account).await?;
 
         account.do_mut(|account| {
@@ -307,34 +300,34 @@ impl AccountHandle {
 
     /// Bridge to [Account#latest_address](struct.Account.html#method.latest_address).
     pub async fn latest_address(&self) -> Option<Address> {
-        self.0.read().await.latest_address().cloned()
+        self.inner.read().await.latest_address().cloned()
     }
 
     /// Bridge to [Account#total_balance](struct.Account.html#method.total_balance).
     pub async fn total_balance(&self) -> u64 {
-        self.0.read().await.total_balance()
+        self.inner.read().await.total_balance()
     }
 
     /// Bridge to [Account#available_balance](struct.Account.html#method.available_balance).
     pub async fn available_balance(&self) -> u64 {
-        self.0.read().await.available_balance()
+        self.inner.read().await.available_balance()
     }
 
     /// Bridge to [Account#set_alias](struct.Account.html#method.set_alias).
     pub async fn set_alias(&self, alias: impl AsRef<str>) {
-        self.0.write().await.set_alias(alias);
+        self.inner.write().await.set_alias(alias);
     }
 
     /// Bridge to [Account#set_client_options](struct.Account.html#method.set_client_options).
     pub async fn set_client_options(&self, options: ClientOptions) {
-        self.0.write().await.set_client_options(options);
+        self.inner.write().await.set_client_options(options);
     }
 
     /// Bridge to [Account#list_messages](struct.Account.html#method.list_messages).
     /// This method clones the account's messages so when querying a large list of messages
     /// prefer using the `read` method to access the account instance.
     pub async fn list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<Message> {
-        self.0
+        self.inner
             .read()
             .await
             .list_messages(count, from, message_type)
@@ -347,7 +340,7 @@ impl AccountHandle {
     /// This method clones the account's addresses so when querying a large list of addresses
     /// prefer using the `read` method to access the account instance.
     pub async fn list_addresses(&self, unspent: bool) -> Vec<Address> {
-        self.0
+        self.inner
             .read()
             .await
             .list_addresses(unspent)
@@ -358,7 +351,7 @@ impl AccountHandle {
 
     /// Bridge to [Account#get_message](struct.Account.html#method.get_message).
     pub async fn get_message(&self, message_id: &MessageId) -> Option<Message> {
-        self.0.read().await.get_message(message_id).cloned()
+        self.inner.read().await.get_message(message_id).cloned()
     }
 }
 

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    account::{get_account_addresses_lock, Account, AccountHandle},
+    account::{Account, AccountHandle},
     address::{Address, AddressBuilder, AddressOutput, IotaAddress},
     client::get_client,
     message::{Message, RemainderValueStrategy, Transfer},
@@ -18,11 +18,12 @@ use iota::{
 };
 use serde::{ser::Serializer, Serialize};
 use slip10::BIP32Path;
+use tokio::sync::MutexGuard;
 
 use std::{
     convert::TryInto,
     num::NonZeroU64,
-    sync::{mpsc::channel, Arc, Mutex, MutexGuard},
+    sync::{mpsc::channel, Arc, Mutex},
     thread,
     time::Duration,
 };
@@ -523,8 +524,8 @@ impl SyncedAccount {
         // lock the transfer process until we select the input addresses
         // we do this to prevent multiple threads trying to transfer at the same time
         // so it doesn't consume the same addresses multiple times, which leads to a conflict state
-        let account_addresses_locker = get_account_addresses_lock(account_.id());
-        let mut locked_addresses = account_addresses_locker.lock().unwrap();
+        let account_address_locker = self.account_handle.locked_addresses();
+        let mut locked_addresses = account_address_locker.lock().await;
 
         // prepare the transfer getting some needed objects and values
         let value = transfer_obj.amount.get();
@@ -803,8 +804,7 @@ impl SyncedAccount {
         let message = Message::from_iota_message(message_id, account_.addresses(), &message, None)?;
         account_.append_messages(vec![message.clone()]);
 
-        let account_addresses_locker = get_account_addresses_lock(account_.id());
-        let mut locked_addresses = account_addresses_locker.lock().unwrap();
+        let mut locked_addresses = account_address_locker.lock().await;
         for input_address in &input_addresses {
             let index = locked_addresses
                 .iter()
