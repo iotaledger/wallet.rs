@@ -192,8 +192,14 @@ impl AccountManager {
         crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_ref().as_bytes(), b"wallet.rs", 100, &mut dk)?;
         crate::stronghold::load_snapshot(&self.storage_path, &dk[0..32][..].try_into().unwrap()).await?;
 
+        // let is_empty = self.accounts.read().await.is_empty();
         if self.accounts.read().await.is_empty() {
-            self.accounts = Self::load_accounts(&self.storage_path).await?;
+            let accounts = Self::load_accounts(&self.storage_path).await?;
+            let mut accounts_store = self.accounts.write().await;
+            for (id, account) in &*accounts.read().await {
+                accounts_store.insert(id.clone(), account.clone());
+            }
+            drop(accounts_store);
             let _ = self.start_monitoring().await;
         }
 
@@ -214,31 +220,31 @@ impl AccountManager {
                         tokio::select! {
                             _ = async {
                                 let storage_path_ = storage_path.clone();
-                                let accounts_ = accounts.clone();
 
-                                if let Err(error) = AssertUnwindSafe(poll(accounts_.clone(), storage_path_, is_monitoring_disabled))
+                                if let Err(error) = AssertUnwindSafe(poll(accounts.clone(), storage_path_, is_monitoring_disabled))
                                     .catch_unwind()
                                     .await {
-                                        if let Some(error) = error.downcast_ref::<crate::Error>() {
-                                            // when the error is dropped, the on_error event will be triggered
+                                    if let Some(error) = error.downcast_ref::<crate::Error>() {
+                                        // when the error is dropped, the on_error event will be triggered
+                                    } else {
+                                        let msg = if let Some(message) = error.downcast_ref::<String>() {
+                                            format!("Internal error: {}", message)
+                                        } else if let Some(message) = error.downcast_ref::<&str>() {
+                                            format!("Internal error: {}", message)
                                         } else {
-                                            let msg = if let Some(message) = error.downcast_ref::<String>() {
-                                                format!("Internal error: {}", message)
-                                            } else if let Some(message) = error.downcast_ref::<&str>() {
-                                                format!("Internal error: {}", message)
-                                            } else {
-                                                "Internal error".to_string()
-                                            };
-                                            log::error!("[POLLING] error: {}", msg);
-                                            let _error = crate::Error::Panic(msg);
-                                            // when the error is dropped, the on_error event will be triggered
-                                        }
+                                            "Internal error".to_string()
+                                        };
+                                        log::error!("[POLLING] error: {}", msg);
+                                        let _error = crate::Error::Panic(msg);
+                                        // when the error is dropped, the on_error event will be triggered
+                                    }
                                 }
 
-                                let accounts_ = accounts_.read().await;
-                                for account_handle in accounts_.values() {
+                                let accounts_ = accounts.clone();
+                                let accounts_map = accounts_.read().await;
+                                for account_handle in accounts_map.values() {
                                     let mut account = account_handle.write().await;
-                                    let _ = account.save();
+                                    let _ = account.save().await;
                                 }
 
                                 delay_for(interval).await;
@@ -318,20 +324,21 @@ impl AccountManager {
     pub fn backup<P: AsRef<Path>>(&self, destination: P) -> crate::Result<PathBuf> {
         let storage_path = &self.storage_path;
         if storage_path.exists() {
-            let metadata = fs::metadata(&storage_path)?;
             let backup_path = destination.as_ref().to_path_buf();
-            if metadata.is_dir() {
-                backup_dir(storage_path, &backup_path)?;
+
+            let destination = if storage_path.is_dir() {
+                let destination = backup_path.join(backup_filename(""));
+                backup_dir(storage_path, &destination)?;
+                destination
             } else if let Some(filename) = storage_path.file_name() {
                 fs::create_dir_all(&destination)?;
-                fs::copy(
-                    storage_path,
-                    &backup_path.join(backup_filename(filename.to_str().unwrap())),
-                )?;
+                let destination = backup_path.join(backup_filename(filename.to_str().unwrap()));
+                fs::copy(storage_path, &destination)?;
+                destination
             } else {
                 return Err(crate::Error::StorageDoesntExist);
-            }
-            Ok(backup_path)
+            };
+            Ok(destination)
         } else {
             Err(crate::Error::StorageDoesntExist)
         }
@@ -344,6 +351,37 @@ impl AccountManager {
         source: S,
         stronghold_password: P,
     ) -> crate::Result<()> {
+        let source = source.as_ref();
+        let source = if source.is_dir() {
+            #[cfg(feature = "stronghold")]
+            {
+                if !source.join(crate::stronghold::SNAPSHOT_FILENAME).exists() {
+                    return Err(crate::Error::BackupNotFound);
+                }
+            }
+            #[cfg(feature = "sqlite")]
+            {
+                if !source.join(crate::storage::sqlite::STORAGE_FILENAME).exists() {
+                    return Err(crate::Error::BackupNotFound);
+                }
+            }
+            source
+        } else {
+            let filename = source.file_name().unwrap().to_str().unwrap();
+            #[cfg(feature = "stronghold")]
+            {
+                if filename != crate::stronghold::SNAPSHOT_FILENAME {
+                    return Err(crate::Error::BackupNotFound);
+                }
+            }
+            #[cfg(feature = "sqlite")]
+            {
+                if filename != crate::storage::sqlite::STORAGE_FILENAME {
+                    return Err(crate::Error::BackupNotFound);
+                }
+            }
+            source.parent().unwrap()
+        };
         let mut backup_account_manager = Self::builder().with_storage_path(source).finish().await?;
         let password = stronghold_password.as_ref();
         if !password.is_empty() {
@@ -549,12 +587,12 @@ async fn restore_backup(manager: &AccountManager, backup_account_manager: &Accou
     // TODO: import seed
 
     for backup_account_handle in backup_account_handles {
-        let backup_account = backup_account_handle.read().await;
-        crate::storage::get(manager.storage_path())?
-            .lock()
-            .await
-            .set(backup_account.id(), serde_json::to_string(&*backup_account)?)
-            .await?;
+        let mut accounts = manager.accounts.write().await;
+        {
+            let mut account = backup_account_handle.write().await;
+            account.set_storage_path(manager.storage_path().clone());
+        }
+        accounts.insert(backup_account_handle.id().await, backup_account_handle);
     }
     Ok(())
 }
@@ -702,7 +740,7 @@ fn backup_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std:
             if path.is_dir() {
                 stack.push(path);
             } else if let Some(filename) = path.file_name() {
-                let dest_path = dest.join(backup_filename(filename.to_str().unwrap()));
+                let dest_path = dest.join(filename.to_str().unwrap());
                 fs::copy(&path, &dest_path)?;
             }
         }
@@ -713,7 +751,15 @@ fn backup_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std:
 
 fn backup_filename(original: &str) -> String {
     let date = Utc::now();
-    format!("{}-backup-{}", date.to_rfc3339(), original)
+    format!(
+        "{}-iota-wallet-backup{}",
+        date.format("%FT%T").to_string(),
+        if original.is_empty() {
+            "".to_string()
+        } else {
+            format!("-{}", original)
+        }
+    )
 }
 
 #[cfg(test)]
@@ -739,10 +785,9 @@ mod tests {
             .initialise()
             .await
             .expect("failed to add account");
-        let mut account = account_handle.write().await;
 
-        account.save().await.unwrap();
-        drop(account);
+        crate::test_utils::wait_accounts_save();
+
         let account = account_handle.read().await;
 
         manager
@@ -831,5 +876,37 @@ mod tests {
 
         let create_response = manager.create_account(client_options).initialise().await;
         assert!(create_response.is_err());
+    }
+
+    #[tokio::test]
+    async fn backup_and_restore_happy_path() {
+        let backup_path = "./backup/happy-path";
+        let _ = std::fs::remove_dir_all(backup_path);
+
+        let manager = crate::test_utils::get_account_manager().await;
+
+        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+            .expect("invalid node URL")
+            .build();
+
+        let account = manager
+            .create_account(client_options)
+            .alias("alias")
+            .initialise()
+            .await
+            .expect("failed to add account");
+
+        crate::test_utils::wait_accounts_save();
+
+        // backup the stored accounts to ./backup/happy-path/${backup_name}
+        let backup_path = manager.backup(backup_path).unwrap();
+
+        // delete the account on the current storage
+        manager.remove_account(account.read().await.id()).await.unwrap();
+
+        // import the accounts from the backup and assert that it's the same
+        manager.import_accounts(backup_path, "password").await.unwrap();
+        let imported_account = manager.get_account(account.read().await.id()).await.unwrap();
+        assert_eq!(&*account.read().await, &*imported_account.read().await);
     }
 }

@@ -46,7 +46,7 @@ const ACCOUNT_RECORD_PATH: &str = "iota-wallet-account-record";
 const SECRET_VAULT_PATH: &str = "iota-wallet-secret";
 const SEED_RECORD_PATH: &str = "iota-wallet-seed";
 const DERIVE_OUTPUT_RECORD_PATH: &str = "iota-wallet-derived";
-const SNAPSHOT_FILENAME: &str = "wallet.stronghold";
+pub const SNAPSHOT_FILENAME: &str = "wallet.stronghold";
 
 fn account_id_to_client_path(id: &AccountIdentifier) -> Vec<u8> {
     match id {

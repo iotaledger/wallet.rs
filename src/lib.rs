@@ -162,6 +162,9 @@ pub enum Error {
     /// Error from iota crypto.rs
     #[error("crypto error: {0}")]
     Crypto(crypto::Error),
+    /// Path provided to `import_accounts` doesn't have a backed up storage
+    #[error("couldn't import accounts because the provided source doesn't have a backup")]
+    BackupNotFound,
 }
 
 impl From<iota::message::Error> for Error {
@@ -228,7 +231,9 @@ mod test_utils {
     use super::account_manager::AccountManager;
     use iota::pow::providers::{Provider as PowProvider, ProviderBuilder as PowProviderBuilder};
     use rand::{thread_rng, Rng};
-    use std::{path::PathBuf, time::Duration};
+    use std::{path::PathBuf, thread::sleep, time::Duration};
+
+    static POLLING_INTERVAL: Duration = Duration::from_secs(2);
 
     pub async fn get_account_manager() -> AccountManager {
         let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
@@ -236,12 +241,16 @@ mod test_utils {
 
         let mut manager = AccountManager::builder()
             .with_storage_path(storage_path)
-            .with_polling_interval(Duration::from_secs(4))
+            .with_polling_interval(POLLING_INTERVAL)
             .finish()
             .await
             .unwrap();
         manager.set_stronghold_password("password").await.unwrap();
         manager
+    }
+
+    pub fn wait_accounts_save() {
+        sleep(POLLING_INTERVAL * 2);
     }
 
     /// The miner builder.

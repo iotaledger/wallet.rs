@@ -20,12 +20,15 @@ pub struct SqliteStorageAdapter {
     connection: Arc<Mutex<Connection>>,
 }
 
+/// The storage file name.
+pub const STORAGE_FILENAME: &str = "wallet.db";
+
 impl SqliteStorageAdapter {
     /// Initialises the storage adapter.
     pub fn new(path: impl AsRef<Path>, table_name: impl AsRef<str>) -> crate::Result<Self> {
         std::fs::create_dir_all(&path)?;
 
-        let connection = Connection::open(path.as_ref().join("wallet.db"))?;
+        let connection = Connection::open(path.as_ref().join(STORAGE_FILENAME))?;
 
         connection.execute(
             &format!(

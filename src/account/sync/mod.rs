@@ -905,8 +905,6 @@ pub(crate) async fn repost_message(
 
             account.append_messages(vec![message.clone()]);
 
-            account.save().await?;
-
             Ok(message)
         }
         None => Err(crate::Error::MessageNotFound),
