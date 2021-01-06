@@ -700,7 +700,7 @@ impl SyncedAccount {
                 .find(|a| a.address() == &remainder_address.address)
                 .unwrap();
 
-            println!("[TRANSFER] remainder value is {}", remainder_value);
+            log::debug!("[TRANSFER] remainder value is {}", remainder_value);
 
             let remainder_target_address = match transfer_obj.remainder_value_strategy {
                 // use one of the account's addresses to send the remainder value

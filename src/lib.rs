@@ -237,14 +237,14 @@ mod test_utils {
     use super::account_manager::AccountManager;
     use iota::pow::providers::{Provider as PowProvider, ProviderBuilder as PowProviderBuilder};
     use rand::{thread_rng, Rng};
-    use std::{path::PathBuf, thread::sleep, time::Duration};
+    use std::{path::PathBuf, time::Duration};
 
     static POLLING_INTERVAL: Duration = Duration::from_secs(2);
 
     pub async fn get_account_manager() -> AccountManager {
         std::fs::create_dir_all("./example-database").unwrap();
         let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
-        let storage_path = PathBuf::from(format!("./example-database/{}", storage_path));
+        let storage_path = PathBuf::from(format!("./example-database/{}.stronghold", storage_path));
 
         let mut manager = AccountManager::builder()
             .with_storage_path(storage_path)
@@ -254,10 +254,6 @@ mod test_utils {
             .unwrap();
         manager.set_stronghold_password("password").await.unwrap();
         manager
-    }
-
-    pub fn wait_accounts_save() {
-        sleep(POLLING_INTERVAL * 2);
     }
 
     /// The miner builder.

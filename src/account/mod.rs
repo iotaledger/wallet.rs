@@ -131,7 +131,7 @@ impl AccountInitialiser {
 
     /// Initialises the account.
     pub async fn initialise(self) -> crate::Result<AccountHandle> {
-        let mut accounts = self.accounts.write().await;
+        let accounts = self.accounts.read().await;
 
         let alias = self.alias.unwrap_or_else(|| format!("Account {}", accounts.len()));
         let signer_type = self.signer_type.ok_or(crate::Error::AccountInitialiseRequiredField(
@@ -180,7 +180,8 @@ impl AccountInitialiser {
         } else {
             let account_id = account.id().clone();
             let guard: AccountHandle = account.into();
-            accounts.insert(account_id, guard.clone());
+            drop(accounts);
+            self.accounts.write().await.insert(account_id, guard.clone());
             guard
         };
 
@@ -357,6 +358,12 @@ impl AccountHandle {
 
 impl Drop for Account {
     fn drop(&mut self) {
+        self.save();
+    }
+}
+
+impl Account {
+    pub(crate) fn save(&mut self) {
         if self.has_pending_changes {
             let storage_path = self.storage_path.clone();
             let account_id = self.id().clone();
@@ -372,11 +379,10 @@ impl Drop for Account {
                 })
                 .join();
             }
+            self.has_pending_changes = false;
         }
     }
-}
 
-impl Account {
     pub(crate) fn do_mut<R>(&mut self, f: impl FnOnce(&mut Self) -> R) -> R {
         let res = f(self);
         self.has_pending_changes = true;

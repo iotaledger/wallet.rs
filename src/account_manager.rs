@@ -51,6 +51,7 @@ pub struct AccountManagerBuilder {
     storage_path: PathBuf,
     initialised_storage: bool,
     polling_interval: Duration,
+    skip_polling: bool,
 }
 
 impl Default for AccountManagerBuilder {
@@ -64,6 +65,7 @@ impl Default for AccountManagerBuilder {
             storage_path: PathBuf::from(DEFAULT_STORAGE_PATH),
             initialised_storage: false,
             polling_interval: Duration::from_millis(30_000),
+            skip_polling: false,
         }
     }
 }
@@ -99,6 +101,11 @@ impl AccountManagerBuilder {
         self
     }
 
+    pub(crate) fn skip_polling(mut self) -> Self {
+        self.skip_polling = true;
+        self
+    }
+
     /// Builds the manager.
     pub async fn finish(self) -> crate::Result<AccountManager> {
         if !self.initialised_storage {
@@ -126,7 +133,9 @@ impl AccountManagerBuilder {
             stop_polling_sender: None,
         };
 
-        instance.start_background_sync(self.polling_interval).await;
+        if !self.skip_polling {
+            instance.start_background_sync(self.polling_interval).await;
+        }
 
         Ok(instance)
     }
@@ -146,21 +155,19 @@ pub struct AccountManager {
 
 impl Drop for AccountManager {
     fn drop(&mut self) {
-        let accounts = self.accounts.clone();
-        let stop_polling_sender = self.stop_polling_sender.clone();
-        thread::spawn(move || {
-            let _ = crate::block_on(async {
-                for account_handle in accounts.read().await.values() {
-                    let _ = crate::monitor::unsubscribe(account_handle.clone());
-                }
-
-                if let Some(sender) = stop_polling_sender {
-                    sender.send(()).expect("failed to stop polling process");
-                }
-            });
-        })
-        .join()
-        .expect("failed to stop monitoring and polling systems");
+        if let Some(stop_polling_sender) = self.stop_polling_sender.take() {
+            stop_polling_sender.send(()).expect("failed to stop polling process");
+            let accounts = self.accounts.clone();
+            thread::spawn(move || {
+                crate::block_on(async move {
+                    for account_handle in accounts.read().await.values() {
+                        let _ = crate::monitor::unsubscribe(account_handle.clone());
+                    }
+                });
+            })
+            .join()
+            .expect("failed to stop monitoring and polling systems");
+        }
     }
 }
 
@@ -210,8 +217,6 @@ impl AccountManager {
             for (id, account) in &*accounts.read().await {
                 accounts_store.insert(id.clone(), account.clone());
             }
-            drop(accounts_store);
-            let _ = self.start_monitoring().await;
         }
 
         Ok(())
@@ -253,7 +258,9 @@ impl AccountManager {
 
                                 delay_for(interval).await;
                             } => {}
-                            _ = stop.recv() => {}
+                            _ = stop.recv() => {
+                                break;
+                            }
                         }
                     }
                 });
@@ -283,18 +290,11 @@ impl AccountManager {
 
         accounts.remove(account_id);
 
-        if let Err(e) = crate::storage::get(&self.storage_path)?
+        crate::storage::get(&self.storage_path)?
             .lock()
             .await
             .remove(&account_id)
-            .await
-        {
-            match e {
-                // if we got an "AccountNotFound" error, that means we didn't save the cached account yet
-                crate::Error::AccountNotFound => {}
-                _ => return Err(e),
-            }
-        }
+            .await?;
 
         Ok(())
     }
@@ -363,12 +363,17 @@ impl AccountManager {
             return Err(crate::Error::BackupNotFile);
         }
 
-        let mut backup_account_manager = Self::builder().with_storage_path(source).finish().await?;
+        let mut backup_account_manager = Self::builder()
+            .skip_polling()
+            .with_storage_path(source)
+            .finish()
+            .await?;
         let password = stronghold_password.as_ref();
         if !password.is_empty() {
             backup_account_manager.set_stronghold_password(password).await?;
         }
-        restore_backup(&self, &backup_account_manager).await
+        restore_backup(&self, &backup_account_manager).await?;
+        Ok(())
     }
 
     /// Import backed up accounts.
@@ -533,6 +538,7 @@ async fn poll(accounts: AccountStore, storage_path: PathBuf, syncing: bool) -> c
 }
 
 async fn restore_backup(manager: &AccountManager, backup_account_manager: &AccountManager) -> crate::Result<()> {
+    let i = std::time::Instant::now();
     let backup_account_handles = backup_account_manager.get_accounts().await;
     let stored_account_handles = manager.get_accounts().await;
 
@@ -567,8 +573,8 @@ async fn restore_backup(manager: &AccountManager, backup_account_manager: &Accou
 
     // TODO: import seed
 
+    let mut accounts = manager.accounts.write().await;
     for backup_account_handle in backup_account_handles {
-        let mut accounts = manager.accounts.write().await;
         {
             let mut account = backup_account_handle.write().await;
             account.set_storage_path(manager.storage_path().clone());
@@ -618,8 +624,8 @@ async fn sync_accounts<'a>(
     let mut last_account = None;
 
     {
-        let mut accounts = accounts.write().await;
-        for account_handle in accounts.values_mut() {
+        let accounts = accounts.read().await;
+        for account_handle in accounts.values() {
             let mut sync = account_handle.sync().await;
             if let Some(index) = address_index {
                 sync = sync.address_index(index);
@@ -651,10 +657,12 @@ async fn sync_accounts<'a>(
     };
 
     if let Ok(discovered_accounts) = discovered_accounts_res {
-        let mut accounts = accounts.write().await;
-        for (account_handle, synced_account) in discovered_accounts {
-            accounts.insert(account_handle.id().await, account_handle);
-            synced_accounts.push(synced_account);
+        if !discovered_accounts.is_empty() {
+            let mut accounts = accounts.write().await;
+            for (account_handle, synced_account) in discovered_accounts {
+                accounts.insert(account_handle.id().await, account_handle);
+                synced_accounts.push(synced_account);
+            }
         }
     }
 
@@ -766,13 +774,10 @@ mod tests {
             .initialise()
             .await
             .expect("failed to add account");
-
-        crate::test_utils::wait_accounts_save();
-
-        let account = account_handle.read().await;
+        account_handle.write().await.save();
 
         manager
-            .remove_account(account.id())
+            .remove_account(account_handle.read().await.id())
             .await
             .expect("failed to remove account");
     }
@@ -871,24 +876,24 @@ mod tests {
             .expect("invalid node URL")
             .build();
 
-        let account = manager
+        let account_handle = manager
             .create_account(client_options)
             .alias("alias")
             .initialise()
             .await
             .expect("failed to add account");
-
-        crate::test_utils::wait_accounts_save();
+        account_handle.write().await.save();
 
         // backup the stored accounts to ./backup/happy-path/${backup_name}
         let backup_path = manager.backup(backup_path).unwrap();
 
         // delete the account on the current storage
-        manager.remove_account(account.read().await.id()).await.unwrap();
+        let _ = manager.remove_account(account_handle.read().await.id()).await;
 
         // import the accounts from the backup and assert that it's the same
+        let i = std::time::Instant::now();
         manager.import_accounts(backup_path, "password").await.unwrap();
-        let imported_account = manager.get_account(account.read().await.id()).await.unwrap();
-        assert_eq!(&*account.read().await, &*imported_account.read().await);
+        let imported_account = manager.get_account(account_handle.read().await.id()).await.unwrap();
+        assert_eq!(&*account_handle.read().await, &*imported_account.read().await);
     }
 }
