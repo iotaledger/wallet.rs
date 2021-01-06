@@ -26,6 +26,7 @@ use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
 use iota::{MessageId, Payload};
+use rand::{rngs::OsRng, RngCore};
 use tokio::{
     sync::{
         broadcast::{channel as broadcast_channel, Receiver as BroadcastReceiver, Sender as BroadcastSender},
@@ -268,6 +269,34 @@ impl AccountManager {
         })
         .join()
         .expect("failed to start polling");
+    }
+
+    /// Stores a mnemonic for the given signer type.
+    /// If the mnemonic is not provided, we'll generate one.
+    pub async fn store_mnemonic(&self, signer_type: SignerType, mnemonic: Option<String>) -> crate::Result<()> {
+        let mut mnemonic = mnemonic;
+        if signer_type == SignerType::EnvMnemonic {
+            let _ = dotenv::dotenv();
+            if let Ok(m) = std::env::var("IOTA_WALLET_MNEMONIC") {
+                mnemonic = Some(m);
+            }
+        }
+
+        let mnemonic = match mnemonic {
+            Some(m) => m,
+            None => self.generate_mnemonic()?,
+        };
+
+        Ok(())
+    }
+
+    /// Generates a new mnemonic.
+    pub fn generate_mnemonic(&self) -> crate::Result<String> {
+        // TODO generate mnemonic with stronghold if feature enabled
+        let mut data = vec![0; 24 * 8];
+        OsRng.fill_bytes(&mut data);
+        crypto::bip39::wordlist::encode(&mut data, &crypto::bip39::wordlist::ENGLISH)
+            .map_err(|_| crate::Error::MnemonicEncode)
     }
 
     /// Adds a new account.

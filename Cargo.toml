@@ -15,7 +15,7 @@ once_cell = "1.4"
 iota-core = { git = "https://github.com/iotaledger/iota.rs", branch = "dev" }
 url = { version = "2.1", features = [ "serde" ] }
 tokio = { version = "0.2", features = ["macros", "sync", "time"] }
-rand = "0.3"
+rand = "0.7"
 rusqlite = { version = "0.23", features = ["bundled"], optional = true }
 slip10 = "0.4"
 bech32 = "0.7"
@@ -24,7 +24,7 @@ futures = "0.3"
 backtrace = "0.3"
 async-trait = "0.1"
 log = "0.4"
-iota-crypto = { git = "https://github.com/iotaledger/crypto.rs", rev = "78b747be00fe960a5fccd97c06c39f3513221dc7", features = ["pbkdf", "hmac", "sha"] }
+iota-crypto = { git = "https://github.com/iotaledger/crypto.rs", rev = "b7148617a87ea03a0653d5784b87644e1167a8c2", features = ["pbkdf", "hmac", "sha", "bip39", "bip39-en"] }
 
 # env mnemonic
 bee-signing-ext = { git = "https://github.com/wusyong/bee-p.git", branch = "sign-ext", version = "^0.1.0-alpha" }

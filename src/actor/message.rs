@@ -6,6 +6,7 @@ use crate::{
     address::Address,
     client::ClientOptions,
     message::{Message as WalletMessage, MessageType as WalletMessageType, TransferBuilder},
+    signing::SignerType,
     Error,
 };
 use serde::{ser::Serializer, Deserialize, Serialize};
@@ -19,8 +20,6 @@ pub struct AccountToCreate {
     /// The node options.
     #[serde(rename = "clientOptions")]
     pub client_options: ClientOptions,
-    /// The account mnemonic.
-    pub mnemonic: Option<String>,
     /// The account alias.
     pub alias: Option<String>,
     /// The account createdAt date string.
@@ -137,6 +136,16 @@ pub enum MessageType {
         /// The transfer amount.
         amount: NonZeroU64,
     },
+    /// Generates a new mnemonic.
+    GenerateMnemonic,
+    /// Store mnemonic.
+    StoreMnemonic {
+        /// The signer type.
+        #[serde(rename = "signerType")]
+        signer_type: SignerType,
+        /// The mnemonic. If empty, we'll generate one.
+        mnemonic: Option<String>,
+    },
 }
 
 impl Serialize for MessageType {
@@ -177,6 +186,11 @@ impl Serialize for MessageType {
                 to_account_id: _,
                 amount: _,
             } => serializer.serialize_unit_variant("MessageType", 11, "InternalTransfer"),
+            MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 12, "GenerateMnemonic"),
+            MessageType::StoreMnemonic {
+                signer_type: _,
+                mnemonic: _,
+            } => serializer.serialize_unit_variant("MessageType", 13, "StoreMnemonic"),
         }
     }
 }
@@ -248,6 +262,10 @@ pub enum ResponseType {
     Error(Error),
     /// A panic occurred.
     Panic(String),
+    /// GenerateMnemonic response.
+    GeneratedMnemonic(String),
+    /// StoreMnemonic response.
+    StoredMnemonic,
 }
 
 /// The message type.

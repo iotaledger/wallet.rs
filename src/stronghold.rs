@@ -556,7 +556,7 @@ pub async fn remove_account(snapshot_path: &PathBuf, account_id: &AccountIdentif
 #[cfg(test)]
 mod tests {
     use crate::account::AccountIdentifier;
-    use rand::{thread_rng, Rng};
+    use rand::{distributions::Alphanumeric, thread_rng, Rng};
     use rusty_fork::rusty_fork_test;
     use std::path::PathBuf;
     use tokio::time::Duration;
@@ -568,7 +568,7 @@ mod tests {
             runtime.block_on(async {
                 let interval = 500;
                 super::set_password_clear_interval(Duration::from_millis(interval)).await;
-                let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
+                let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
                 let snapshot_path = PathBuf::from(format!("./example-database/{}.stronghold", snapshot_path));
                 super::load_snapshot(&snapshot_path, &[0; 32]).await.unwrap();
 
@@ -591,8 +591,8 @@ mod tests {
             runtime.block_on(async {
                 let interval = Duration::from_millis(500);
                 super::set_password_clear_interval(interval).await;
-                let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
-                let snapshot_path = PathBuf::from(format!("./example-database/{}.stronghold", snapshot_path));
+                let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
+                let snapshot_path = PathBuf::from(format!("./example-database/{}", snapshot_path));
                 super::load_snapshot(&snapshot_path, &[0; 32]).await.unwrap();
 
                 for i in 1..5 {
@@ -624,7 +624,7 @@ mod tests {
 
     #[tokio::test]
     async fn write_and_get_all() -> super::Result<()> {
-        let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
+        let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
         let snapshot_path = PathBuf::from(format!("./example-database/{}.stronghold", snapshot_path));
         super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
@@ -643,7 +643,7 @@ mod tests {
 
     #[tokio::test]
     async fn write_and_read() -> super::Result<()> {
-        let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
+        let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
         let snapshot_path = PathBuf::from(format!("./example-database/{}.stronghold", snapshot_path));
         super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
@@ -658,7 +658,7 @@ mod tests {
 
     #[tokio::test]
     async fn write_and_delete() -> super::Result<()> {
-        let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
+        let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
         let snapshot_path = PathBuf::from(format!("./example-database/{}.stronghold", snapshot_path));
         super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
@@ -675,12 +675,12 @@ mod tests {
         let mut snapshot_saves = vec![];
 
         for i in 1..3 {
-            let snapshot_path: String = thread_rng().gen_ascii_chars().take(10).collect();
+            let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
             let snapshot_path = PathBuf::from(format!("./example-database/{}.stronghold", snapshot_path));
             super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
             let id = AccountIdentifier::Id(format!("multiplesnapshots{}", i));
-            let data: String = thread_rng().gen_ascii_chars().take(10).collect();
+            let data: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
             super::store_account(&snapshot_path, &id, data.clone()).await?;
             snapshot_saves.push((snapshot_path, id, data));
         }

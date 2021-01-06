@@ -171,6 +171,9 @@ pub enum Error {
     /// the storage adapter isn't set
     #[error("the storage adapter isn't set; use the AccountManagerBuilder's `with_storage` method or one of the default storages with the crate features `sqlite-storage` and `stronghold-storage`.")]
     StorageAdapterNotDefined,
+    /// Mnemonic generation error.
+    #[error("mnemonic encode error")]
+    MnemonicEncode,
 }
 
 impl From<iota::message::Error> for Error {
@@ -234,16 +237,16 @@ pub(crate) fn enter<R, C: FnOnce() -> R>(cb: C) -> R {
 
 #[cfg(test)]
 mod test_utils {
-    use super::account_manager::AccountManager;
+    use super::{account_manager::AccountManager, signing::SignerType};
     use iota::pow::providers::{Provider as PowProvider, ProviderBuilder as PowProviderBuilder};
-    use rand::{thread_rng, Rng};
+    use rand::{distributions::Alphanumeric, thread_rng, Rng};
     use std::{path::PathBuf, time::Duration};
 
     static POLLING_INTERVAL: Duration = Duration::from_secs(2);
 
     pub async fn get_account_manager() -> AccountManager {
         std::fs::create_dir_all("./example-database").unwrap();
-        let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
+        let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
         let storage_path = PathBuf::from(format!("./example-database/{}.stronghold", storage_path));
 
         let mut manager = AccountManager::builder()
@@ -253,6 +256,7 @@ mod test_utils {
             .await
             .unwrap();
         manager.set_stronghold_password("password").await.unwrap();
+        manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
         manager
     }
 

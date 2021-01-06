@@ -4,20 +4,17 @@
 use crate::account::Account;
 
 use iota::{common::packable::Packable, ReferenceUnlock, UnlockBlock};
-use rand::{thread_rng, Rng};
 
-use std::collections::HashMap;
+use std::{collections::HashMap, path::PathBuf};
 
 #[derive(Default)]
 pub struct StrongholdSigner;
 
 #[async_trait::async_trait]
 impl super::Signer for StrongholdSigner {
-    async fn init_account(&self, account: &Account, mnemonic: Option<String>) -> crate::Result<String> {
-        if let Some(mnemonic) = mnemonic {
-            crate::stronghold::store_mnemonic(account.storage_path(), mnemonic).await?;
-        }
-        Ok(thread_rng().gen_ascii_chars().take(10).collect())
+    async fn store_mnemonic(&self, storage_path: &PathBuf, mnemonic: String) -> crate::Result<()> {
+        crate::stronghold::store_mnemonic(storage_path, mnemonic).await?;
+        Ok(())
     }
 
     async fn generate_address(

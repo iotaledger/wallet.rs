@@ -1,7 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
 use crate::account::Account;
 use iota::Input;
@@ -47,8 +47,8 @@ pub struct TransactionInput {
 /// Signer interface.
 #[async_trait::async_trait]
 pub trait Signer {
-    /// Initialises an account.
-    async fn init_account(&self, account: &Account, mnemonic: Option<String>) -> crate::Result<String>;
+    /// Initialises a mnemonic.
+    async fn store_mnemonic(&self, storage_path: &PathBuf, mnemonic: String) -> crate::Result<()>;
     /// Generates an address.
     async fn generate_address(&self, account: &Account, index: usize, internal: bool) -> crate::Result<iota::Address>;
     /// Signs message.

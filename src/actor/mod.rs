@@ -98,6 +98,20 @@ impl WalletMessageHandler {
             MessageType::SetStrongholdPassword(password) => {
                 convert_async_panics(|| async { self.set_stronghold_password(password).await }).await
             }
+            MessageType::GenerateMnemonic => convert_panics(|| {
+                self.account_manager
+                    .generate_mnemonic()
+                    .map(ResponseType::GeneratedMnemonic)
+            }),
+            MessageType::StoreMnemonic { signer_type, mnemonic } => {
+                convert_async_panics(|| async {
+                    self.account_manager
+                        .store_mnemonic(signer_type.clone(), mnemonic.clone())
+                        .await
+                        .map(|_| ResponseType::StoredMnemonic)
+                })
+                .await
+            }
             MessageType::SendTransfer { account_id, transfer } => {
                 convert_async_panics(|| async { self.send_transfer(account_id, transfer.clone().finish()).await }).await
             }
@@ -223,9 +237,6 @@ impl WalletMessageHandler {
     async fn create_account(&self, account: &AccountToCreate) -> Result<ResponseType> {
         let mut builder = self.account_manager.create_account(account.client_options.clone());
 
-        if let Some(mnemonic) = &account.mnemonic {
-            builder = builder.mnemonic(mnemonic);
-        }
         if let Some(alias) = &account.alias {
             builder = builder.alias(alias);
         }
@@ -287,7 +298,7 @@ impl WalletMessageHandler {
 #[cfg(test)]
 mod tests {
     use super::{AccountToCreate, Message, MessageType, Response, ResponseType, WalletMessageHandler};
-    use crate::client::ClientOptionsBuilder;
+    use crate::{client::ClientOptionsBuilder, signing::SignerType};
     use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
     /// The wallet actor builder.
@@ -373,11 +384,18 @@ mod tests {
         // create an account
         let account = AccountToCreate {
             client_options: ClientOptionsBuilder::node("http://node.iota").unwrap().build(),
-            mnemonic: None,
             alias: None,
             created_at: None,
         };
         send_message(&tx, MessageType::SetStrongholdPassword("password".to_string())).await;
+        send_message(
+            &tx,
+            MessageType::StoreMnemonic {
+                signer_type: SignerType::Stronghold,
+                mnemonic: None,
+            },
+        )
+        .await;
         let response = send_message(&tx, MessageType::CreateAccount(account)).await;
         match response.response() {
             ResponseType::CreatedAccount(created_account) => {

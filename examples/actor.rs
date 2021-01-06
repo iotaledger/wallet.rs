@@ -4,6 +4,7 @@
 use iota_wallet::{
     actor::{AccountToCreate, Message, MessageType, Response, ResponseType, WalletMessageHandler},
     client::ClientOptionsBuilder,
+    signing::SignerType,
 };
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
@@ -52,13 +53,21 @@ async fn main() {
 
     let account = AccountToCreate {
         client_options: ClientOptionsBuilder::node("http://node.iota").unwrap().build(),
-        mnemonic: None,
         alias: None,
         created_at: None,
     };
 
     send_message(&tx, MessageType::SetStrongholdPassword("password".to_string())).await;
+    send_message(
+        &tx,
+        MessageType::StoreMnemonic {
+            signer_type: SignerType::Stronghold,
+            mnemonic: None,
+        },
+    )
+    .await;
     let response = send_message(&tx, MessageType::CreateAccount(account)).await;
+
     match response.response() {
         ResponseType::CreatedAccount(created_account) => {
             // remove the created account

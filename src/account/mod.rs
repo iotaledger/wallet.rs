@@ -6,7 +6,7 @@ use crate::{
     address::{Address, IotaAddress},
     client::ClientOptions,
     message::{Message, MessageType},
-    signing::{get_signer, SignerType},
+    signing::SignerType,
 };
 
 use chrono::prelude::{DateTime, Utc};
@@ -55,7 +55,6 @@ impl From<usize> for AccountIdentifier {
 pub struct AccountInitialiser {
     accounts: AccountStore,
     storage_path: PathBuf,
-    mnemonic: Option<String>,
     alias: Option<String>,
     created_at: Option<DateTime<Utc>>,
     messages: Vec<Message>,
@@ -71,7 +70,6 @@ impl AccountInitialiser {
         Self {
             accounts,
             storage_path,
-            mnemonic: None,
             alias: None,
             created_at: None,
             messages: vec![],
@@ -88,13 +86,6 @@ impl AccountInitialiser {
     /// Sets the account type.
     pub fn signer_type(mut self, signer_type: SignerType) -> Self {
         self.signer_type.replace(signer_type);
-        self
-    }
-
-    /// Defines the account BIP-39 mnemonic.
-    /// When importing an account from stronghold, the mnemonic won't be required.
-    pub fn mnemonic(mut self, mnemonic: impl AsRef<str>) -> Self {
-        self.mnemonic = Some(mnemonic.as_ref().to_string());
         self
     }
 
@@ -138,17 +129,6 @@ impl AccountInitialiser {
             crate::AccountInitialiseRequiredField::SignerType,
         ))?;
         let created_at = self.created_at.unwrap_or_else(chrono::Utc::now);
-        let mut mnemonic = self.mnemonic;
-        if signer_type == SignerType::EnvMnemonic && accounts.is_empty() {
-            let _ = dotenv::dotenv();
-            if std::env::var("IOTA_WALLET_MNEMONIC").is_err() {
-                mnemonic = Some(
-                    bip39::Mnemonic::new(bip39::MnemonicType::Words24, bip39::Language::English)
-                        .phrase()
-                        .to_string(),
-                );
-            }
-        }
 
         if let Some(latest_account_handle) = accounts.values().last() {
             let latest_account = latest_account_handle.read().await;
@@ -170,10 +150,8 @@ impl AccountInitialiser {
             has_pending_changes: true,
         };
 
-        let signer = get_signer(&signer_type).await;
-        let signer = signer.lock().await;
-        let id = signer.init_account(&account, mnemonic).await?;
-        account.set_id(id.into());
+        let address = crate::address::get_iota_address(&account, 0, false).await?;
+        account.set_id(AccountIdentifier::Id(address.to_bech32()));
 
         let guard = if self.skip_persistance {
             account.into()
