@@ -26,7 +26,6 @@ use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
 use iota::{MessageId, Payload};
-use rand::{rngs::OsRng, RngCore};
 use tokio::{
     sync::{
         broadcast::{channel as broadcast_channel, Receiver as BroadcastReceiver, Sender as BroadcastSender},
@@ -283,19 +282,27 @@ impl AccountManager {
         }
 
         let mnemonic = match mnemonic {
-            Some(m) => m,
+            Some(m) => {
+                crypto::bip39::wordlist::verify(&m, &crypto::bip39::wordlist::ENGLISH)
+                    // TODO: crypto::bip39::wordlist::Error should impl Display
+                    .map_err(|e| crate::Error::InvalidMnemonic(format!("{:?}", e)))?;
+                m
+            }
             None => self.generate_mnemonic()?,
         };
+
+        let signer = crate::signing::get_signer(&signer_type).await;
+        let signer = signer.lock().await;
+        signer.store_mnemonic(&self.storage_path, mnemonic).await?;
 
         Ok(())
     }
 
     /// Generates a new mnemonic.
     pub fn generate_mnemonic(&self) -> crate::Result<String> {
-        // TODO generate mnemonic with stronghold if feature enabled
-        let mut data = vec![0; 24 * 8];
-        OsRng.fill_bytes(&mut data);
-        crypto::bip39::wordlist::encode(&mut data, &crypto::bip39::wordlist::ENGLISH)
+        let mut entropy = [0u8; 32];
+        crypto::rand::fill(&mut entropy)?;
+        crypto::bip39::wordlist::encode(&entropy, &crypto::bip39::wordlist::ENGLISH)
             .map_err(|_| crate::Error::MnemonicEncode)
     }
 

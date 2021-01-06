@@ -174,6 +174,9 @@ pub enum Error {
     /// Mnemonic generation error.
     #[error("mnemonic encode error")]
     MnemonicEncode,
+    /// Invalid mnemonic error
+    #[error("invalid mnemonic: {0}")]
+    InvalidMnemonic(String),
 }
 
 impl From<iota::message::Error> for Error {
