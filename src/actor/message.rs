@@ -25,6 +25,9 @@ pub struct AccountToCreate {
     /// The account createdAt date string.
     #[serde(rename = "createdAt")]
     pub created_at: Option<String>,
+    /// Whether to skip saving the account to storage or not.
+    #[serde(rename = "skipPersistance", default)]
+    pub skip_persistance: bool,
 }
 
 /// Each public account method.

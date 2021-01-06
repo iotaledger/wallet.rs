@@ -245,6 +245,9 @@ impl WalletMessageHandler {
         if let Some(created_at) = &account.created_at {
             builder = builder.created_at(created_at.parse::<DateTime<Utc>>()?);
         }
+        if account.skip_persistance {
+            builder = builder.skip_persistance();
+        }
 
         match builder.initialise().await {
             Ok(account_handle) => {
@@ -388,6 +391,7 @@ mod tests {
             client_options: ClientOptionsBuilder::node("http://node.iota").unwrap().build(),
             alias: None,
             created_at: None,
+            skip_persistance: false,
         };
         send_message(&tx, MessageType::SetStrongholdPassword("password".to_string())).await;
         send_message(
