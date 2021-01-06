@@ -422,12 +422,12 @@ impl Account {
     /// # Example
     ///
     /// ```
-    /// use iota_wallet::{account_manager::AccountManager, client::ClientOptionsBuilder, message::MessageType};
-    /// # use rand::{thread_rng, Rng};
+    /// use iota_wallet::{account_manager::AccountManager, client::ClientOptionsBuilder, message::MessageType, signing::SignerType};
+    /// # use rand::{distributions::Alphanumeric, thread_rng, Rng};
     ///
     /// #[tokio::main]
     /// async fn main() {
-    ///     # let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
+    ///     # let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
     ///     # let storage_path = std::path::PathBuf::from(format!("./example-database/{}", storage_path));
     ///     // gets 10 received messages, skipping the first 5 most recent messages.
     ///     let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
@@ -436,6 +436,8 @@ impl Account {
     ///     let mut manager = AccountManager::builder().finish().await.unwrap();
     ///     # let mut manager = AccountManager::builder().with_storage_path(storage_path).finish().await.unwrap();
     ///     manager.set_stronghold_password("password").await.unwrap();
+    ///     manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
+    ///
     ///     let account_handle = manager
     ///         .create_account(client_options)
     ///         .initialise()
