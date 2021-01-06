@@ -1,8 +1,8 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-var addon = require('../native')
-const { AccountManager, Account, SyncedAccount, EventListener, initLogger } = addon
+const addon = require('../native')
+let { AccountManager, Account, SyncedAccount, EventListener, initLogger } = addon
 
 function promisify (fn) {
   return function () {
@@ -71,6 +71,31 @@ SyncedAccount.prototype.send = function (address, amount, options) {
 SyncedAccount.prototype.retry = promisify(SyncedAccount.prototype.retry)
 SyncedAccount.prototype.reattach = promisify(SyncedAccount.prototype.reattach)
 SyncedAccount.prototype.promote = promisify(SyncedAccount.prototype.promote)
+
+const managerClass = AccountManager
+AccountManager = function () {
+  const instance = new managerClass(arguments[0])
+
+  // workaround to force the manager to cleanup
+  // this is needed because somehow the manager `drop` impl isn't being called - issue on Neon
+  const cleanup = () => {
+    try {
+      instance.stopBackgroundSync()
+    }
+    finally {
+      process.exit()
+    }
+  }
+
+  process.on('exit', cleanup)
+  process.on('SIGINT', cleanup)
+  process.on('SIGTERM', cleanup)
+  process.on('SIGHUP', cleanup)
+  process.on('SIGBREAK', cleanup)
+
+  return instance
+}
+AccountManager.prototype = managerClass.prototype
 AccountManager.prototype.syncAccounts = promisify(AccountManager.prototype.syncAccounts)
 AccountManager.prototype.internalTransfer = promisify(AccountManager.prototype.internalTransfer)
 

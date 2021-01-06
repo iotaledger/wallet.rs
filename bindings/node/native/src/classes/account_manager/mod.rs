@@ -94,6 +94,17 @@ declare_types! {
             Ok(AccountManagerWrapper(Arc::new(RwLock::new(manager))))
         }
 
+        method stopBackgroundSync(mut cx) {
+            {
+                let this = cx.this();
+                let guard = cx.lock();
+                let ref_ = &this.borrow(&guard).0;
+                let mut manager = ref_.write().unwrap();
+                manager.stop_background_sync()
+            }
+            Ok(cx.undefined().upcast())
+        }
+
         method setStrongholdPassword(mut cx) {
             let password = cx.argument::<JsString>(0)?.value();
             {

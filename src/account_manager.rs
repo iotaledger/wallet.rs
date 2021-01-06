@@ -64,7 +64,7 @@ impl Default for AccountManagerBuilder {
             #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage", feature = "sqlite-storage")))]
             storage_path: PathBuf::from(DEFAULT_STORAGE_PATH),
             initialised_storage: false,
-            polling_interval: Duration::from_millis(30_000),
+            polling_interval: Duration::from_millis(3_000),
             skip_polling: false,
         }
     }
@@ -131,6 +131,7 @@ impl AccountManagerBuilder {
             storage_path: self.storage_path,
             accounts,
             stop_polling_sender: None,
+            polling_handle: None,
         };
 
         if !self.skip_polling {
@@ -151,23 +152,12 @@ pub struct AccountManager {
     storage_path: PathBuf,
     accounts: AccountStore,
     stop_polling_sender: Option<BroadcastSender<()>>,
+    polling_handle: Option<thread::JoinHandle<()>>,
 }
 
 impl Drop for AccountManager {
     fn drop(&mut self) {
-        if let Some(stop_polling_sender) = self.stop_polling_sender.take() {
-            stop_polling_sender.send(()).expect("failed to stop polling process");
-            let accounts = self.accounts.clone();
-            thread::spawn(move || {
-                crate::block_on(async move {
-                    for account_handle in accounts.read().await.values() {
-                        let _ = crate::monitor::unsubscribe(account_handle.clone());
-                    }
-                });
-            })
-            .join()
-            .expect("failed to stop monitoring and polling systems");
-        }
+        self.stop_background_sync();
     }
 }
 
@@ -203,6 +193,28 @@ impl AccountManager {
         self.stop_polling_sender = Some(stop_polling_sender);
     }
 
+    /// Stops the background polling and MQTT monitoring.
+    pub fn stop_background_sync(&mut self) {
+        if let Some(stop_polling_sender) = self.stop_polling_sender.take() {
+            stop_polling_sender.send(()).expect("failed to stop polling process");
+            self.polling_handle
+                .take()
+                .unwrap()
+                .join()
+                .expect("failed to join polling thread");
+            let accounts = self.accounts.clone();
+            thread::spawn(move || {
+                crate::block_on(async move {
+                    for account_handle in accounts.read().await.values() {
+                        let _ = crate::monitor::unsubscribe(account_handle.clone());
+                    }
+                });
+            })
+            .join()
+            .expect("failed to stop monitoring and polling systems");
+        }
+    }
+
     /// Sets the stronghold password.
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     pub async fn set_stronghold_password<P: AsRef<str>>(&mut self, password: P) -> crate::Result<()> {
@@ -223,51 +235,66 @@ impl AccountManager {
     }
 
     /// Starts the polling mechanism.
-    fn start_polling(&self, polling_interval: Duration, is_monitoring_disabled: bool, mut stop: BroadcastReceiver<()>) {
+    fn start_polling(
+        &mut self,
+        polling_interval: Duration,
+        is_monitoring_disabled: bool,
+        mut stop: BroadcastReceiver<()>,
+    ) {
         let storage_path = self.storage_path.clone();
         let accounts = self.accounts.clone();
 
         let interval = AsyncDuration::from_millis(polling_interval.as_millis().try_into().unwrap());
 
-        thread::spawn(move || {
-            crate::enter(|| {
-                tokio::spawn(async move {
-                    loop {
-                        tokio::select! {
-                            _ = async {
-                                let storage_path_ = storage_path.clone();
+        let handle = thread::spawn(move || {
+            let mut runtime = tokio::runtime::Builder::new()
+                .basic_scheduler()
+                .enable_time()
+                .build()
+                .unwrap();
+            runtime.block_on(async {
+                loop {
+                    tokio::select! {
+                        _ = async {
+                            let storage_path_ = storage_path.clone();
 
-                                if let Err(error) = AssertUnwindSafe(poll(accounts.clone(), storage_path_, is_monitoring_disabled))
-                                    .catch_unwind()
-                                    .await {
-                                    if let Some(error) = error.downcast_ref::<crate::Error>() {
-                                        // when the error is dropped, the on_error event will be triggered
+                            if let Err(error) = AssertUnwindSafe(poll(accounts.clone(), storage_path_, is_monitoring_disabled))
+                                .catch_unwind()
+                                .await {
+                                if let Some(error) = error.downcast_ref::<crate::Error>() {
+                                    // when the error is dropped, the on_error event will be triggered
+                                } else {
+                                    let msg = if let Some(message) = error.downcast_ref::<String>() {
+                                        format!("Internal error: {}", message)
+                                    } else if let Some(message) = error.downcast_ref::<&str>() {
+                                        format!("Internal error: {}", message)
                                     } else {
-                                        let msg = if let Some(message) = error.downcast_ref::<String>() {
-                                            format!("Internal error: {}", message)
-                                        } else if let Some(message) = error.downcast_ref::<&str>() {
-                                            format!("Internal error: {}", message)
-                                        } else {
-                                            "Internal error".to_string()
-                                        };
-                                        log::error!("[POLLING] error: {}", msg);
-                                        let _error = crate::Error::Panic(msg);
-                                        // when the error is dropped, the on_error event will be triggered
-                                    }
+                                        "Internal error".to_string()
+                                    };
+                                    log::error!("[POLLING] error: {}", msg);
+                                    let _error = crate::Error::Panic(msg);
+                                    // when the error is dropped, the on_error event will be triggered
                                 }
-
-                                delay_for(interval).await;
-                            } => {}
-                            _ = stop.recv() => {
-                                break;
                             }
+
+                            for account_handle in accounts.read().await.values() {
+                                let _ = account_handle.write().await.save().await;
+                            }
+
+                            delay_for(interval).await;
+                        } => {}
+                        _ = stop.recv() => {
+                            // before stopping the polling loop, we save the accounts
+                            for account_handle in accounts.read().await.values() {
+                                let _ = account_handle.write().await.save().await;
+                            }
+                            break;
                         }
                     }
-                });
+                }
             });
-        })
-        .join()
-        .expect("failed to start polling");
+        });
+        self.polling_handle = Some(handle);
     }
 
     /// Stores a mnemonic for the given signer type.
@@ -370,7 +397,7 @@ impl AccountManager {
         }
 
         for account_handle in self.accounts.read().await.values() {
-            account_handle.write().await.save();
+            account_handle.write().await.save().await?;
         }
 
         let storage_path = &self.storage_path;
@@ -700,6 +727,7 @@ async fn sync_accounts<'a>(
         if !discovered_accounts.is_empty() {
             let mut accounts = accounts.write().await;
             for (account_handle, synced_account) in discovered_accounts {
+                account_handle.write().await.set_skip_persistance(false);
                 accounts.insert(account_handle.id().await, account_handle);
                 synced_accounts.push(synced_account);
             }

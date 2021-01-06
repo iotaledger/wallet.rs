@@ -15,7 +15,7 @@ use iota::message::prelude::MessageId;
 use serde::{Deserialize, Serialize};
 use tokio::sync::{Mutex, RwLock};
 
-use std::{ops::Deref, path::PathBuf, sync::Arc, thread};
+use std::{ops::Deref, path::PathBuf, sync::Arc};
 
 mod sync;
 pub(crate) use sync::{repost_message, RepostAction};
@@ -148,6 +148,7 @@ impl AccountInitialiser {
             client_options: self.client_options,
             storage_path: self.storage_path,
             has_pending_changes: true,
+            skip_persistance: self.skip_persistance,
         };
 
         let address = crate::address::get_iota_address(&account, 0, false).await?;
@@ -199,6 +200,8 @@ pub struct Account {
     #[doc(hidden)]
     #[serde(skip)]
     has_pending_changes: bool,
+    #[getset(set = "pub(crate)", get = "pub(crate)")]
+    skip_persistance: bool,
 }
 
 /// A thread guard over an account.
@@ -334,31 +337,20 @@ impl AccountHandle {
     }
 }
 
-impl Drop for Account {
-    fn drop(&mut self) {
-        self.save();
-    }
-}
-
 impl Account {
-    pub(crate) fn save(&mut self) {
-        if self.has_pending_changes {
+    pub(crate) async fn save(&mut self) -> crate::Result<()> {
+        if self.has_pending_changes && !self.skip_persistance {
             let storage_path = self.storage_path.clone();
             let account_id = self.id().clone();
-            if let Ok(data) = serde_json::to_string(&self) {
-                let _ = thread::spawn(move || {
-                    crate::block_on(async {
-                        crate::storage::get(&storage_path)?
-                            .lock()
-                            .await
-                            .set(&account_id, data)
-                            .await
-                    })
-                })
-                .join();
-            }
+            let data = serde_json::to_string(&self)?;
+            crate::storage::get(&storage_path)?
+                .lock()
+                .await
+                .set(&account_id, data)
+                .await?;
             self.has_pending_changes = false;
         }
+        Ok(())
     }
 
     pub(crate) fn do_mut<R>(&mut self, f: impl FnOnce(&mut Self) -> R) -> R {
