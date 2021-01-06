@@ -363,10 +363,14 @@ impl AccountManager {
     }
 
     /// Backups the accounts to the given destination
-    pub fn backup<P: AsRef<Path>>(&self, destination: P) -> crate::Result<PathBuf> {
+    pub async fn backup<P: AsRef<Path>>(&self, destination: P) -> crate::Result<PathBuf> {
         let destination = destination.as_ref().to_path_buf();
         if !(destination.is_dir() && destination.exists()) {
             return Err(crate::Error::InvalidBackupDestination);
+        }
+
+        for account_handle in self.accounts.read().await.values() {
+            account_handle.write().await.save();
         }
 
         let storage_path = &self.storage_path;

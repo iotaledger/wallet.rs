@@ -292,7 +292,7 @@ declare_types! {
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
                 let manager = ref_.read().unwrap();
-                manager.backup(backup_path).expect("error performing backup").display().to_string()
+                crate::block_on(manager.backup(backup_path)).expect("error performing backup").display().to_string()
             };
             Ok(cx.string(destination).upcast())
         }
