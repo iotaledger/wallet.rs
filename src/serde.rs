@@ -115,6 +115,7 @@ impl serde::Serialize for crate::Error {
             Self::BackupNotFile => serialize_variant(self, serializer, "BackupNotFile"),
             Self::InvalidBackupDestination => serialize_variant(self, serializer, "InvalidBackupDestination"),
             Self::StorageAdapterNotDefined => serialize_variant(self, serializer, "StorageAdapterNotDefined"),
+            Self::StorageExists => serialize_variant(self, serializer, "StorageExists"),
         }
     }
 }

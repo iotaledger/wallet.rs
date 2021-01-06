@@ -142,7 +142,7 @@ impl WalletMessageHandler {
     }
 
     #[cfg(any(feature = "stronghold", feature = "sqlite-storage"))]
-    async fn restore_backup(&self, backup_path: &str, password: &str) -> Result<ResponseType> {
+    async fn restore_backup(&mut self, backup_path: &str, password: &str) -> Result<ResponseType> {
         self.account_manager.import_accounts(backup_path, password).await?;
         Ok(ResponseType::BackupRestored)
     }

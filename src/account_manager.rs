@@ -421,7 +421,7 @@ impl AccountManager {
     /// Import backed up accounts.
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
     pub async fn import_accounts<S: AsRef<Path>, P: AsRef<str>>(
-        &self,
+        &mut self,
         source: S,
         stronghold_password: P,
     ) -> crate::Result<()> {
@@ -430,17 +430,17 @@ impl AccountManager {
             return Err(crate::Error::BackupNotFile);
         }
 
-        let mut backup_account_manager = Self::builder()
-            .skip_polling()
-            .with_storage_path(source)
-            .finish()
-            .await?;
-        let password = stronghold_password.as_ref();
-        if !password.is_empty() {
-            backup_account_manager.set_stronghold_password(password).await?;
+        if self.storage_path.exists() {
+            return Err(crate::Error::StorageExists);
         }
-        restore_backup(&self, &backup_account_manager).await?;
-        Ok(())
+
+        fs::copy(source, &self.storage_path)?;
+        if let Err(e) = self.set_stronghold_password(stronghold_password).await {
+            fs::remove_file(&self.storage_path)?;
+            Err(e)
+        } else {
+            Ok(())
+        }
     }
 
     /// Import backed up accounts.
@@ -842,7 +842,7 @@ mod tests {
             .initialise()
             .await
             .expect("failed to add account");
-        account_handle.write().await.save();
+        account_handle.write().await.save().await.unwrap();
 
         manager
             .remove_account(account_handle.read().await.id())
@@ -938,7 +938,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(backup_path);
         std::fs::create_dir_all(backup_path).unwrap();
 
-        let manager = crate::test_utils::get_account_manager().await;
+        let mut manager = crate::test_utils::get_account_manager().await;
 
         let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
             .expect("invalid node URL")
@@ -950,13 +950,13 @@ mod tests {
             .initialise()
             .await
             .expect("failed to add account");
-        account_handle.write().await.save();
+        account_handle.write().await.save().await.unwrap();
 
         // backup the stored accounts to ./backup/happy-path/${backup_name}
-        let backup_path = manager.backup(backup_path).unwrap();
+        let backup_path = manager.backup(backup_path).await.unwrap();
 
-        // delete the account on the current storage
-        let _ = manager.remove_account(account_handle.read().await.id()).await;
+        // delete the current storage
+        std::fs::remove_file(manager.storage_path()).unwrap();
 
         // import the accounts from the backup and assert that it's the same
         let i = std::time::Instant::now();

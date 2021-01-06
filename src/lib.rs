@@ -177,6 +177,9 @@ pub enum Error {
     /// Invalid mnemonic error
     #[error("invalid mnemonic: {0}")]
     InvalidMnemonic(String),
+    /// Can't import accounts because the storage already exist
+    #[error("failed to restore backup: storage file already exists")]
+    StorageExists,
 }
 
 impl From<iota::message::Error> for Error {

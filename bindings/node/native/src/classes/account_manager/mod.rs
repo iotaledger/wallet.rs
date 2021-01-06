@@ -315,7 +315,7 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let manager = ref_.read().unwrap();
+                let mut manager = ref_.write().unwrap();
                 crate::block_on(manager.import_accounts(source, password)).expect("error importing accounts");
             };
             Ok(cx.undefined().upcast())
