@@ -128,6 +128,8 @@ export declare interface ManagerOptions {
 export declare class AccountManager {
   constructor(storagePath?: string)
   setStrongholdPassword(password: string): void
+  generateMnemonic(): string
+  storeMnemonic(signerType: SignerType, mnemonic?: string): void
   createAccount(account: AccountToCreate): Account
   getAccount(accountId: string | number): Account | undefined
   getAccountByAlias(alias: string): Account | undefined

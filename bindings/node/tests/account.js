@@ -3,11 +3,12 @@
 
 async function run() {
   try {
-    const { AccountManager } = require('../lib')
+    const { AccountManager, SignerType } = require('../lib')
     const manager = new AccountManager({
       storagePath: './test-database'
     })
     manager.setStrongholdPassword('password')
+    manager.storeMnemonic(SignerType.Stronghold)
 
     const account = manager.createAccount({
       clientOptions: { node: 'http://localhost:14265' }

@@ -34,10 +34,12 @@ After you linked the library, you can create an `AccountManager` instance and in
 ### Example 
 
 ```javascript
-const { AccountManager } = require('iota-wallet')
+const { AccountManager, SignerType } = require('iota-wallet')
 const manager = new AccountManager({
     storagePath: './storage'
 })
+manager.setStrongholdPassword('password')
+manager.storeMnemonic(SignerType.Stronghold, manager.generateMnemonic())
 const account = await manager.createAccount({
   alias: 'Account1',
   clientOptions: { node: 'http://api.lb-0.testnet.chrysalis2.com', localPow: false }
@@ -95,6 +97,21 @@ Sets the stronghold password and initialises it.
 | Param    | Type                | Default                | Description                      |
 | -------- | ------------------- | ---------------------- | -------------------------------- |
 | password | <code>string</code> | <code>undefined</code> | The stronghold snapshot password |
+
+#### generateMnemonic(): string
+
+Generates a new mnemonic phrase.
+
+**Returns** the generated mnemonic string.
+
+#### storeMnemonic(signerType[, mnemonic])
+
+Saves the mnemonic using the given signer provider.
+
+| Param      | Type                               | Default | Description                                       |
+| ---------- | ---------------------------------- | ------- | ------------------------------------------------- |
+| signerType | <code>number</code>                | null    | The signer type. 1 = Stronghold, 2 = EnvMnemonic  |
+| mnemonic   | <code>string        \| null</code> | null    | The mnemonic to save. If null, we'll generate one |
 
 #### createAccount(account): Account
 

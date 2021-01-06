@@ -13,7 +13,7 @@ use iota_wallet::{
     account_manager::{AccountManager, DEFAULT_STORAGE_PATH},
     client::ClientOptions,
     signing::SignerType,
-    storage::{stronghold::StrongholdStorageAdapter},
+    storage::stronghold::StrongholdStorageAdapter,
     DateTime, Utc,
 };
 use neon::prelude::*;
@@ -40,7 +40,6 @@ impl Default for AccountSignerType {
 pub struct AccountToCreate {
     #[serde(rename = "clientOptions")]
     pub client_options: ClientOptions,
-    pub mnemonic: Option<String>,
     pub alias: Option<String>,
     #[serde(rename = "createdAt")]
     pub created_at: Option<String>,
@@ -107,6 +106,39 @@ declare_types! {
             Ok(cx.undefined().upcast())
         }
 
+        method generateMnemonic(mut cx) {
+            let mnemonic = {
+                let this = cx.this();
+                let guard = cx.lock();
+                let ref_ = &this.borrow(&guard).0;
+                let manager = ref_.read().unwrap();
+                manager.generate_mnemonic().expect("failed to generate mnemonic")
+            };
+            Ok(cx.string(&mnemonic).upcast())
+        }
+
+        method storeMnemonic(mut cx) {
+            let signer_type = cx.argument::<JsNumber>(0)?.value() as usize;
+            let signer_type: AccountSignerType = serde_json::from_str(&signer_type.to_string()).expect("invalid signer type");
+            let signer_type = match signer_type {
+                AccountSignerType::Stronghold => SignerType::Stronghold,
+                AccountSignerType::EnvMnemonic => SignerType::EnvMnemonic,
+            };
+            let mnemonic = match cx.argument_opt(1) {
+                Some(arg) => Some(arg.downcast::<JsString>().or_throw(&mut cx)?.value()),
+                None => None,
+            };
+
+            {
+                let this = cx.this();
+                let guard = cx.lock();
+                let ref_ = &this.borrow(&guard).0;
+                let manager = ref_.read().unwrap();
+                crate::block_on(manager.store_mnemonic(signer_type, mnemonic)).expect("failed to store mnemonic");
+            }
+            Ok(cx.undefined().upcast())
+        }
+
         method createAccount(mut cx) {
             let account = {
                 let account_to_create = cx.argument::<JsValue>(0)?;
@@ -122,9 +154,6 @@ declare_types! {
                         AccountSignerType::Stronghold => SignerType::Stronghold,
                         AccountSignerType::EnvMnemonic => SignerType::EnvMnemonic,
                     });
-                if let Some(mnemonic) = &account_to_create.mnemonic {
-                    builder = builder.mnemonic(mnemonic);
-                }
                 if let Some(alias) = &account_to_create.alias {
                     builder = builder.alias(alias);
                 }
