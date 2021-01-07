@@ -18,12 +18,15 @@ use iota::{
 };
 use serde::{ser::Serializer, Serialize};
 use slip10::BIP32Path;
-use tokio::sync::MutexGuard;
+use tokio::{
+    sync::{mpsc::channel, MutexGuard},
+    time::delay_for,
+};
 
 use std::{
     convert::TryInto,
     num::NonZeroU64,
-    sync::{mpsc::channel, Arc, Mutex},
+    sync::{Arc, Mutex},
     thread,
     time::Duration,
 };
@@ -541,12 +544,12 @@ impl SyncedAccount {
         // if the transfer value exceeds the account's available balance,
         // wait for an account update or sync it with the tangle
         if value > available_balance {
-            let (tx, rx) = channel();
+            let (tx, mut rx) = channel(1);
             let tx = Arc::new(Mutex::new(tx));
 
             let account_handle = self.account_handle.clone();
             thread::spawn(move || {
-                let tx = tx.lock().unwrap();
+                let mut tx = tx.lock().unwrap();
                 for _ in 1..30 {
                     thread::sleep(OUTPUT_LOCK_TIMEOUT / 30);
                     let account = crate::block_on(async { account_handle.read().await });
@@ -558,9 +561,15 @@ impl SyncedAccount {
                 }
             });
 
-            match rx.recv_timeout(OUTPUT_LOCK_TIMEOUT) {
-                Ok(_) => {}
-                Err(_) => {
+            let mut delay = delay_for(Duration::from_millis(50));
+            tokio::select! {
+                v = rx.recv() => {
+                    if v.is_none() {
+                        // if we got an error waiting for the account update, we try to sync it
+                        self.account_handle.sync().await.execute().await?;
+                    }
+                }
+                _ = &mut delay => {
                     // if we got a timeout waiting for the account update, we try to sync it
                     self.account_handle.sync().await.execute().await?;
                 }
