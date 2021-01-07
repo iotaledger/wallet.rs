@@ -152,7 +152,14 @@ impl AccountInitialiser {
         };
 
         let address = crate::address::get_iota_address(&account, 0, false).await?;
-        account.set_id(AccountIdentifier::Id(address.to_bech32()));
+        let mut digest = [0; 32];
+        let raw = match address {
+            iota::Address::Ed25519(a) => a.as_ref().to_vec(),
+            iota::Address::Wots(a) => a.as_ref().to_vec(),
+            _ => unimplemented!(),
+        };
+        crypto::hashes::sha::SHA256(&raw, &mut digest);
+        account.set_id(AccountIdentifier::Id(hex::encode(digest)));
 
         let guard = if self.skip_persistance {
             account.into()
