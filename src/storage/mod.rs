@@ -42,7 +42,7 @@ pub(crate) fn get(storage_path: &PathBuf) -> crate::Result<Storage> {
     if let Some(instance) = instances.get(storage_path) {
         Ok(instance.clone())
     } else {
-        Err(crate::Error::StorageDoesntExist) // TODO proper error kind
+        Err(crate::Error::StorageAdapterNotSet(storage_path.clone()))
     }
 }
 

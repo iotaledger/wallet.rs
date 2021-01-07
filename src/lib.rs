@@ -34,7 +34,7 @@ pub(crate) mod stronghold;
 pub type Result<T> = std::result::Result<T, Error>;
 pub use chrono::prelude::{DateTime, Utc};
 use once_cell::sync::OnceCell;
-use std::sync::Mutex;
+use std::{path::PathBuf, sync::Mutex};
 use tokio::runtime::Runtime;
 
 static RUNTIME: OnceCell<Mutex<Runtime>> = OnceCell::new();
@@ -180,6 +180,11 @@ pub enum Error {
     /// Can't import accounts because the storage already exist
     #[error("failed to restore backup: storage file already exists")]
     StorageExists,
+    /// Storage adapter not defined for the given storage path.
+    #[error(
+        "storage adapter not set for path `{0}`; please use the method `with_storage` on the AccountManager builder"
+    )]
+    StorageAdapterNotSet(PathBuf),
 }
 
 impl From<iota::message::Error> for Error {
