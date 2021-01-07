@@ -219,8 +219,8 @@ pub enum Error {
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-struct ActorRuntime {
-    stronghold: Stronghold,
+pub struct ActorRuntime {
+    pub stronghold: Stronghold,
     spawned_client_paths: HashSet<Vec<u8>>,
     loaded_client_paths: HashSet<Vec<u8>>,
 }
@@ -233,7 +233,7 @@ fn system_runtime() -> &'static Arc<Mutex<ActorSystem>> {
     &SYSTEM
 }
 
-fn actor_runtime() -> &'static Arc<Mutex<ActorRuntime>> {
+pub fn actor_runtime() -> &'static Arc<Mutex<ActorRuntime>> {
     static SYSTEM: Lazy<Arc<Mutex<ActorRuntime>>> = Lazy::new(|| {
         let system = ActorSystem::new().unwrap();
         let stronghold = Stronghold::init_stronghold_system(

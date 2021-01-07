@@ -246,6 +246,13 @@ pub(crate) fn enter<R, C: FnOnce() -> R>(cb: C) -> R {
     runtime.lock().unwrap().enter(cb)
 }
 
+/// Access the stronghold's actor system.
+#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+pub async fn with_actor_system<F: FnOnce(&riker::actors::ActorSystem)>(cb: F) {
+    let runtime = self::stronghold::actor_runtime().lock().await;
+    cb(&runtime.stronghold.system)
+}
+
 #[cfg(test)]
 mod test_utils {
     use super::{account_manager::AccountManager, signing::SignerType};
