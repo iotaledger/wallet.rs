@@ -55,6 +55,7 @@ async fn main() {
         client_options: ClientOptionsBuilder::node("http://node.iota").unwrap().build(),
         alias: None,
         created_at: None,
+        skip_persistance: false,
     };
 
     send_message(&tx, MessageType::SetStrongholdPassword("password".to_string())).await;
