@@ -123,6 +123,10 @@ impl AccountManagerBuilder {
             }
         }
 
+        // with one of the stronghold features, the accounts are loaded when the password is set
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        let accounts = Default::default();
+        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
         let accounts = AccountManager::load_accounts(&self.storage_path)
             .await
             .unwrap_or_else(|_| Default::default());
