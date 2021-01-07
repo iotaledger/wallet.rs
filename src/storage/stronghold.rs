@@ -4,7 +4,10 @@
 use super::StorageAdapter;
 use crate::account::AccountIdentifier;
 
-use std::{path::{Path, PathBuf}, fs};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 /// Stronghold storage adapter.
 pub struct StrongholdStorageAdapter {

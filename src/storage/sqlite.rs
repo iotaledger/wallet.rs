@@ -10,9 +10,9 @@ use rusqlite::{
     Connection, NO_PARAMS,
 };
 use std::{
+    fs,
     path::Path,
     sync::{Arc, Mutex},
-    fs,
 };
 
 /// Key value storage adapter.
