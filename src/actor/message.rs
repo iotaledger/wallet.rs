@@ -106,6 +106,7 @@ pub enum MessageType {
         message_id: String,
     },
     /// Backup storage.
+    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
     Backup(String),
     /// Import accounts from storage.
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
@@ -170,8 +171,9 @@ impl Serialize for MessageType {
                 account_id: _,
                 message_id: _,
             } => serializer.serialize_unit_variant("MessageType", 6, "Reattach"),
+            #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
             MessageType::Backup(_) => serializer.serialize_unit_variant("MessageType", 7, "Backup"),
-            #[cfg(any(feature = "stronghold", feature = "sqlite-storage"))]
+            #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
             MessageType::RestoreBackup {
                 backup_path: _,
                 password: _,
@@ -254,10 +256,13 @@ pub enum ResponseType {
     /// Reattach response.
     Reattached(String),
     /// Backup response.
+    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
     BackupSuccessful,
     /// ImportAccounts response.
+    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
     BackupRestored,
     /// SetStrongholdPassword response.
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     StrongholdPasswordSet,
     /// SendTransfer and InternalTransfer response.
     SentTransfer(WalletMessage),

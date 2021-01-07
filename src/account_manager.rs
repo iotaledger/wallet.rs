@@ -390,6 +390,7 @@ impl AccountManager {
     }
 
     /// Backups the accounts to the given destination
+    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
     pub async fn backup<P: AsRef<Path>>(&self, destination: P) -> crate::Result<PathBuf> {
         let destination = destination.as_ref().to_path_buf();
         if !(destination.is_dir() && destination.exists()) {
@@ -441,12 +442,6 @@ impl AccountManager {
         } else {
             Ok(())
         }
-    }
-
-    /// Import backed up accounts.
-    #[cfg(not(any(feature = "stronghold-storage", feature = "sqlite-storage")))]
-    pub async fn import_accounts(&self, backup_manager: &Self) -> crate::Result<()> {
-        restore_backup(&self, &backup_manager).await
     }
 
     /// Gets the account associated with the given identifier.
@@ -601,53 +596,6 @@ async fn poll(accounts: AccountStore, storage_path: PathBuf, syncing: bool) -> c
             emit_transaction_event(TransactionEventType::Reattachment, &retried_data.account_id, &message);
         });
     });
-    Ok(())
-}
-
-async fn restore_backup(manager: &AccountManager, backup_account_manager: &AccountManager) -> crate::Result<()> {
-    let i = std::time::Instant::now();
-    let backup_account_handles = backup_account_manager.get_accounts().await;
-    let stored_account_handles = manager.get_accounts().await;
-
-    let mut already_imported_account = None;
-    for stored_account_handle in stored_account_handles {
-        let stored_account = stored_account_handle.read().await;
-
-        let mut exists = false;
-        for backup_account_handle in &backup_account_handles {
-            let backup_account = backup_account_handle.read().await;
-            let found_address = backup_account
-                .addresses()
-                .iter()
-                .any(|address| stored_account.addresses().contains(address));
-            if found_address {
-                exists = true;
-                break;
-            }
-        }
-
-        if exists {
-            already_imported_account = Some(stored_account.alias().to_string());
-            break;
-        }
-    }
-
-    if let Some(imported_account_alias) = already_imported_account {
-        return Err(crate::Error::AccountAlreadyImported {
-            alias: imported_account_alias,
-        });
-    }
-
-    // TODO: import seed
-
-    let mut accounts = manager.accounts.write().await;
-    for backup_account_handle in backup_account_handles {
-        {
-            let mut account = backup_account_handle.write().await;
-            account.set_storage_path(manager.storage_path().clone());
-        }
-        accounts.insert(backup_account_handle.id().await, backup_account_handle);
-    }
     Ok(())
 }
 
