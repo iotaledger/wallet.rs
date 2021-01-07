@@ -420,7 +420,7 @@ impl Account {
     /// #[tokio::main]
     /// async fn main() {
     ///     # let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
-    ///     # let storage_path = std::path::PathBuf::from(format!("./example-database/{}", storage_path));
+    ///     # let storage_path = std::path::PathBuf::from(format!("./test-storage/{}", storage_path));
     ///     // gets 10 received messages, skipping the first 5 most recent messages.
     ///     let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
     ///         .expect("invalid node URL")

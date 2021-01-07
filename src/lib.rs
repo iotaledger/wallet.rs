@@ -264,7 +264,7 @@ mod test_utils {
 
     pub async fn get_account_manager() -> AccountManager {
         let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
-        let storage_path = PathBuf::from(format!("./example-database/{}.stronghold", storage_path));
+        let storage_path = PathBuf::from(format!("./test-storage/{}.stronghold", storage_path));
 
         let mut manager = AccountManager::builder()
             .with_storage_path(storage_path)

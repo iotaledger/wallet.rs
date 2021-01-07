@@ -35,7 +35,7 @@ use tokio::{
 };
 
 /// The default storage path.
-pub const DEFAULT_STORAGE_PATH: &str = "./example-database";
+pub const DEFAULT_STORAGE_PATH: &str = "./storage";
 
 /// The default SQLite storage file name.
 #[cfg(feature = "sqlite-storage")]

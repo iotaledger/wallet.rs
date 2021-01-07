@@ -70,8 +70,8 @@ impl StorageAdapter for MyStorage {
 async fn main() -> iota_wallet::Result<()> {
     let mut manager = AccountManager::builder()
         .with_storage(
-            "./example-database/sled",
-            MyStorage::new("./example-database/sled").map_err(|e| iota_wallet::Error::Storage(e.to_string()))?,
+            "./test-storage/sled",
+            MyStorage::new("./test-storage/sled").map_err(|e| iota_wallet::Error::Storage(e.to_string()))?,
         )
         .finish()
         .await
