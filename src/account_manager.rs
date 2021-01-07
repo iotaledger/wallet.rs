@@ -64,7 +64,7 @@ impl Default for AccountManagerBuilder {
             #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage", feature = "sqlite-storage")))]
             storage_path: PathBuf::from(DEFAULT_STORAGE_PATH),
             initialised_storage: false,
-            polling_interval: Duration::from_millis(3_000),
+            polling_interval: Duration::from_millis(30_000),
             skip_polling: false,
         }
     }
