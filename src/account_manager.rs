@@ -439,7 +439,11 @@ impl AccountManager {
             return Err(crate::Error::StorageExists);
         }
 
+        if let Some(parent) = self.storage_path.parent() {
+            fs::create_dir_all(&parent)?;
+        }
         fs::copy(source, &self.storage_path)?;
+
         if let Err(e) = self.set_stronghold_password(stronghold_password).await {
             fs::remove_file(&self.storage_path)?;
             Err(e)

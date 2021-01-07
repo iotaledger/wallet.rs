@@ -12,6 +12,7 @@ use rusqlite::{
 use std::{
     path::Path,
     sync::{Arc, Mutex},
+    fs,
 };
 
 /// Key value storage adapter.
@@ -23,6 +24,10 @@ pub struct SqliteStorageAdapter {
 impl SqliteStorageAdapter {
     /// Initialises the storage adapter.
     pub fn new(path: impl AsRef<Path>, table_name: impl AsRef<str>) -> crate::Result<Self> {
+        if let Some(parent) = path.as_ref().parent() {
+            fs::create_dir_all(&parent)?;
+        }
+
         let connection = Connection::open(path)?;
 
         connection.execute(

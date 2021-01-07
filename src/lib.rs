@@ -263,7 +263,6 @@ mod test_utils {
     static POLLING_INTERVAL: Duration = Duration::from_secs(2);
 
     pub async fn get_account_manager() -> AccountManager {
-        std::fs::create_dir_all("./example-database").unwrap();
         let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
         let storage_path = PathBuf::from(format!("./example-database/{}.stronghold", storage_path));
 
