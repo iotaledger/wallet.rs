@@ -314,9 +314,7 @@ impl AccountManager {
 
         let mnemonic = match mnemonic {
             Some(m) => {
-                crypto::bip39::wordlist::verify(&m, &crypto::bip39::wordlist::ENGLISH)
-                    // TODO: crypto::bip39::wordlist::Error should impl Display
-                    .map_err(|e| crate::Error::InvalidMnemonic(format!("{:?}", e)))?;
+                self.verify_mnemonic(&m)?;
                 m
             }
             None => self.generate_mnemonic()?,
@@ -335,6 +333,14 @@ impl AccountManager {
         crypto::rand::fill(&mut entropy)?;
         crypto::bip39::wordlist::encode(&entropy, &crypto::bip39::wordlist::ENGLISH)
             .map_err(|_| crate::Error::MnemonicEncode)
+    }
+
+    /// Checks is the mnemonic is valid.
+    pub fn verify_mnemonic<S: AsRef<str>>(&self, mnemonic: S) -> crate::Result<()> {
+        crypto::bip39::wordlist::verify(mnemonic.as_ref(), &crypto::bip39::wordlist::ENGLISH)
+            // TODO: crypto::bip39::wordlist::Error should impl Display
+            .map_err(|e| crate::Error::InvalidMnemonic(format!("{:?}", e)))?;
+        Ok(())
     }
 
     /// Adds a new account.

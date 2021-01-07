@@ -106,6 +106,11 @@ impl WalletMessageHandler {
                     .generate_mnemonic()
                     .map(ResponseType::GeneratedMnemonic)
             }),
+            MessageType::VerifyMnemonic(mnemonic) => convert_panics(|| {
+                self.account_manager
+                    .verify_mnemonic(mnemonic)
+                    .map(|_| ResponseType::VerifiedMnemonic)
+            }),
             MessageType::StoreMnemonic { signer_type, mnemonic } => {
                 convert_async_panics(|| async {
                     self.account_manager

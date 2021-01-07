@@ -142,6 +142,8 @@ pub enum MessageType {
     },
     /// Generates a new mnemonic.
     GenerateMnemonic,
+    /// Checks if the given mnemonic is valid.
+    VerifyMnemonic(String),
     /// Store mnemonic.
     StoreMnemonic {
         /// The signer type.
@@ -192,10 +194,11 @@ impl Serialize for MessageType {
                 amount: _,
             } => serializer.serialize_unit_variant("MessageType", 11, "InternalTransfer"),
             MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 12, "GenerateMnemonic"),
+            MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 13, "GenerateMnemonic"),
             MessageType::StoreMnemonic {
                 signer_type: _,
                 mnemonic: _,
-            } => serializer.serialize_unit_variant("MessageType", 13, "StoreMnemonic"),
+            } => serializer.serialize_unit_variant("MessageType", 14, "StoreMnemonic"),
         }
     }
 }
@@ -272,6 +275,8 @@ pub enum ResponseType {
     Panic(String),
     /// GenerateMnemonic response.
     GeneratedMnemonic(String),
+    /// VerifyMnemonic response.
+    VerifiedMnemonic,
     /// StoreMnemonic response.
     StoredMnemonic,
 }
