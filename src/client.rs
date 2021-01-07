@@ -29,23 +29,23 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
 
     if !map.contains_key(&options) {
         let mut client_builder = ClientBuilder::new()
-            .broker_options(BrokerOptions::new().automatic_disconnect(false))
-            .local_pow(*options.local_pow());
+            .with_mqtt_broker_options(BrokerOptions::new().automatic_disconnect(false))
+            .with_local_pow(*options.local_pow());
 
         // we validate the URL beforehand so it's safe to unwrap here
         if let Some(node) = options.node() {
-            client_builder = client_builder.node(node.as_str()).unwrap();
+            client_builder = client_builder.with_node(node.as_str()).unwrap();
         } else if let Some(nodes) = options.nodes() {
             client_builder = client_builder
-                .nodes(&nodes.iter().map(|url| url.as_str()).collect::<Vec<&str>>()[..])
+                .with_nodes(&nodes.iter().map(|url| url.as_str()).collect::<Vec<&str>>()[..])
                 .unwrap();
         }
 
         if let Some(network) = options.network() {
-            client_builder = client_builder.network(network.clone());
+            client_builder = client_builder.with_network(network.clone());
         }
 
-        let client = client_builder.build().expect("failed to initialise ClientBuilder");
+        let client = client_builder.finish().expect("failed to initialise ClientBuilder");
 
         map.insert(options.clone(), Arc::new(RwLock::new(client)));
     }
