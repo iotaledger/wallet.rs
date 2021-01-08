@@ -976,9 +976,8 @@ mod tests {
         std::fs::remove_file(storage_file_path).unwrap();
 
         // import the accounts from the backup and assert that it's the same
-        let i = std::time::Instant::now();
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-        manager.import_accounts(backup_path, "password").await.unwrap();
+        manager.import_accounts(std::fs::read_dir(backup_path).unwrap().next().unwrap().unwrap().path(), "password").await.unwrap();
         #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
         manager.import_accounts(backup_path).await.unwrap();
         let imported_account = manager.get_account(account_handle.read().await.id()).await.unwrap();
