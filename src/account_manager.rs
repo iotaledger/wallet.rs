@@ -37,13 +37,6 @@ use tokio::{
 /// The default storage path.
 pub const DEFAULT_STORAGE_PATH: &str = "./storage";
 
-/// The default SQLite storage file name.
-#[cfg(feature = "sqlite-storage")]
-pub const SQLITE_STORAGE_FILENAME: &str = "wallet.db";
-/// The default stronghold storage file name.
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-pub const SNAPSHOT_FILENAME: &str = "wallet.stronghold";
-
 pub(crate) type AccountStore = Arc<RwLock<HashMap<AccountIdentifier, AccountHandle>>>;
 
 /// Account manager builder.
@@ -57,11 +50,6 @@ pub struct AccountManagerBuilder {
 impl Default for AccountManagerBuilder {
     fn default() -> Self {
         Self {
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-            storage_path: PathBuf::from(DEFAULT_STORAGE_PATH).join(SNAPSHOT_FILENAME),
-            #[cfg(feature = "sqlite-storage")]
-            storage_path: PathBuf::from(DEFAULT_STORAGE_PATH).join(SQLITE_STORAGE_FILENAME),
-            #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage", feature = "sqlite-storage")))]
             storage_path: PathBuf::from(DEFAULT_STORAGE_PATH),
             initialised_storage: false,
             polling_interval: Duration::from_millis(30_000),
@@ -125,7 +113,7 @@ impl AccountManagerBuilder {
 
         // with one of the stronghold features, the accounts are loaded when the password is set
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-        let accounts = Default::default();
+        let accounts: AccountStore = Default::default();
         #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
         let accounts = AccountManager::load_accounts(&self.storage_path)
             .await
@@ -416,7 +404,7 @@ impl AccountManager {
             .await
     }
 
-    /// Backups the accounts to the given destination
+    /// Backups the storage to the given destination
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
     pub async fn backup<P: AsRef<Path>>(&self, destination: P) -> crate::Result<PathBuf> {
         let destination = destination.as_ref().to_path_buf();
@@ -429,13 +417,51 @@ impl AccountManager {
         }
 
         let storage_path = &self.storage_path;
+
+        // if we're using SQLite for storage and stronghold for seed,
+        // we'll backup only the stronghold file, copying SQLite data to its snapshot
+        #[cfg(all(
+            feature = "sqlite-storage",
+            feature = "stronghold",
+            not(feature = "stronghold-storage")
+        ))]
+        let storage_path = {
+            let stronghold_storage =
+                crate::storage::stronghold::StrongholdStorageAdapter::new(&self.storage_path).unwrap();
+
+            for (account_id, account_handle) in &*self.accounts.read().await {
+                stronghold_storage
+                    .set(account_id, serde_json::to_string(&*account_handle.read().await)?)
+                    .await?;
+            }
+
+            self.storage_path.join(crate::stronghold::SNAPSHOT_FILENAME)
+        };
+
         if storage_path.exists() {
             let destination = if storage_path.is_dir() {
                 backup_dir(storage_path, &destination)?;
                 destination
             } else if let Some(filename) = storage_path.file_name() {
                 let destination = destination.join(backup_filename(filename.to_str().unwrap()));
-                fs::copy(storage_path, &destination)?;
+                let res = fs::copy(storage_path, &destination);
+
+                // if we're using SQLite for storage and stronghold for seed,
+                // we'll remove the accounts from stronghold after the backup
+                #[cfg(all(
+                    feature = "sqlite-storage",
+                    feature = "stronghold",
+                    not(feature = "stronghold-storage")
+                ))]
+                {
+                    let stronghold_storage =
+                        crate::storage::stronghold::StrongholdStorageAdapter::new(&self.storage_path).unwrap();
+                    for account_id in self.accounts.read().await.keys() {
+                        stronghold_storage.remove(account_id).await?;
+                    }
+                }
+
+                res?;
                 destination
             } else {
                 return Err(crate::Error::StorageDoesntExist);
@@ -448,31 +474,35 @@ impl AccountManager {
 
     /// Import backed up accounts.
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    pub async fn import_accounts<S: AsRef<Path>, P: AsRef<str>>(
+    pub async fn import_accounts<S: AsRef<Path>>(
         &mut self,
         source: S,
-        stronghold_password: P,
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))] stronghold_password: impl AsRef<str>,
     ) -> crate::Result<()> {
         let source = source.as_ref();
         if source.is_dir() {
             return Err(crate::Error::BackupNotFile);
         }
 
-        if self.storage_path.exists() {
+        #[cfg(feature = "stronghold-storage")]
+        let storage_file_path = self.storage_path.join(crate::stronghold::SNAPSHOT_FILENAME);
+        #[cfg(feature = "sqlite-storage")]
+        let storage_file_path = self.storage_path.join(crate::storage::sqlite::SQLITE_STORAGE_FILENAME);
+        if storage_file_path.exists() {
             return Err(crate::Error::StorageExists);
         }
 
-        if let Some(parent) = self.storage_path.parent() {
-            fs::create_dir_all(&parent)?;
-        }
-        fs::copy(source, &self.storage_path)?;
+        fs::create_dir_all(&self.storage_path)?;
 
+        fs::copy(source, &storage_file_path)?;
+
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         if let Err(e) = self.set_stronghold_password(stronghold_password).await {
-            fs::remove_file(&self.storage_path)?;
-            Err(e)
-        } else {
-            Ok(())
+            fs::remove_file(&storage_file_path)?;
+            return Err(e);
         }
+
+        Ok(())
     }
 
     /// Gets the account associated with the given identifier.
@@ -935,11 +965,22 @@ mod tests {
         let backup_path = manager.backup(backup_path).await.unwrap();
 
         // delete the current storage
-        std::fs::remove_file(manager.storage_path()).unwrap();
+        #[cfg(feature = "sqlite-storage")]
+        let storage_file_path = manager
+            .storage_path()
+            .join(crate::storage::sqlite::SQLITE_STORAGE_FILENAME);
+        #[cfg(feature = "stronghold-storage")]
+        let storage_file_path = manager.storage_path().join(crate::stronghold::SNAPSHOT_FILENAME);
+        #[cfg(not(any(feature = "sqlite-storage", feature = "stronghold-storage")))]
+        let storage_file_path = manager.storage_path().to_path_buf();
+        std::fs::remove_file(storage_file_path).unwrap();
 
         // import the accounts from the backup and assert that it's the same
         let i = std::time::Instant::now();
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         manager.import_accounts(backup_path, "password").await.unwrap();
+        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
+        manager.import_accounts(backup_path).await.unwrap();
         let imported_account = manager.get_account(account_handle.read().await.id()).await.unwrap();
         assert_eq!(&*account_handle.read().await, &*imported_account.read().await);
     }

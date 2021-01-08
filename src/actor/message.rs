@@ -118,7 +118,7 @@ pub enum MessageType {
         #[serde(rename = "backupPath")]
         backup_path: String,
         /// The backup stronghold password.
-        #[cfg(feature = "stronghold-storage")]
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         password: String,
     },
     /// Set stronghold snapshot password.
@@ -181,7 +181,8 @@ impl Serialize for MessageType {
             #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
             MessageType::RestoreBackup {
                 backup_path: _,
-                password: _,
+                #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+                    password: _,
             } => serializer.serialize_unit_variant("MessageType", 8, "RestoreBackup"),
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             MessageType::SetStrongholdPassword(_) => {

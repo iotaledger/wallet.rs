@@ -93,9 +93,13 @@ impl WalletMessageHandler {
             MessageType::Backup(destination_path) => {
                 convert_async_panics(|| async { self.backup(destination_path).await }).await
             }
-            #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             MessageType::RestoreBackup { backup_path, password } => {
                 convert_async_panics(|| async { self.restore_backup(backup_path, password).await }).await
+            }
+            #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
+            MessageType::RestoreBackup { backup_path } => {
+                convert_async_panics(|| async { self.restore_backup(backup_path).await }).await
             }
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             MessageType::SetStrongholdPassword(password) => {
@@ -149,8 +153,15 @@ impl WalletMessageHandler {
     }
 
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    async fn restore_backup(&mut self, backup_path: &str, password: &str) -> Result<ResponseType> {
+    async fn restore_backup(
+        &mut self,
+        backup_path: &str,
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))] password: &str,
+    ) -> Result<ResponseType> {
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         self.account_manager.import_accounts(backup_path, password).await?;
+        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
+        self.account_manager.import_accounts(backup_path).await?;
         Ok(ResponseType::BackupRestored)
     }
 
@@ -402,6 +413,7 @@ mod tests {
             alias: None,
             created_at: None,
             skip_persistance: false,
+            signer_type: None,
         };
         send_message(&tx, MessageType::SetStrongholdPassword("password".to_string())).await;
         send_message(
