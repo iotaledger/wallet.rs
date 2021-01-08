@@ -28,6 +28,9 @@ pub struct AccountToCreate {
     /// Whether to skip saving the account to storage or not.
     #[serde(rename = "skipPersistance", default)]
     pub skip_persistance: bool,
+    /// The account's signer type.
+    #[serde(rename = "signerType")]
+    pub signer_type: Option<SignerType>,
 }
 
 /// Each public account method.

@@ -255,6 +255,9 @@ impl WalletMessageHandler {
         if account.skip_persistance {
             builder = builder.skip_persistance();
         }
+        if let Some(signer_type) = &account.signer_type {
+            builder = builder.signer_type(signer_type.clone());
+        }
 
         match builder.initialise().await {
             Ok(account_handle) => {
