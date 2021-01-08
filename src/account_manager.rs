@@ -819,7 +819,7 @@ fn backup_filename(original: &str) -> String {
     let date = Local::now();
     format!(
         "{}-iota-wallet-backup{}",
-        date.format("%FT%T").to_string(),
+        date.format("%FT%H-%M-%S").to_string(),
         if original.is_empty() {
             "".to_string()
         } else {
