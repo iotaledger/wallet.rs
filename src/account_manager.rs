@@ -329,7 +329,8 @@ impl AccountManager {
         Ok(mnemonic)
     }
 
-    /// Checks is the mnemonic is valid. If a mnemonic was generated with `generate_mnemonic()`, the mnemonic here should match the generated.
+    /// Checks is the mnemonic is valid. If a mnemonic was generated with `generate_mnemonic()`, the mnemonic here
+    /// should match the generated.
     pub fn verify_mnemonic<S: AsRef<str>>(&mut self, mnemonic: S) -> crate::Result<()> {
         // first we check if the mnemonic is valid to give meaningful errors
         crypto::bip39::wordlist::verify(mnemonic.as_ref(), &crypto::bip39::wordlist::ENGLISH)
@@ -977,7 +978,13 @@ mod tests {
 
         // import the accounts from the backup and assert that it's the same
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-        manager.import_accounts(std::fs::read_dir(backup_path).unwrap().next().unwrap().unwrap().path(), "password").await.unwrap();
+        manager
+            .import_accounts(
+                std::fs::read_dir(backup_path).unwrap().next().unwrap().unwrap().path(),
+                "password",
+            )
+            .await
+            .unwrap();
         #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
         manager.import_accounts(backup_path).await.unwrap();
         let imported_account = manager.get_account(account_handle.read().await.id()).await.unwrap();
