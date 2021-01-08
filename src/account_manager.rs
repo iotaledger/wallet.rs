@@ -136,6 +136,7 @@ impl AccountManagerBuilder {
             accounts,
             stop_polling_sender: None,
             polling_handle: None,
+            generated_mnemonic: None,
         };
 
         if !self.skip_polling {
@@ -157,6 +158,7 @@ pub struct AccountManager {
     accounts: AccountStore,
     stop_polling_sender: Option<BroadcastSender<()>>,
     polling_handle: Option<thread::JoinHandle<()>>,
+    generated_mnemonic: Option<String>,
 }
 
 impl Drop for AccountManager {
@@ -303,7 +305,7 @@ impl AccountManager {
 
     /// Stores a mnemonic for the given signer type.
     /// If the mnemonic is not provided, we'll generate one.
-    pub async fn store_mnemonic(&self, signer_type: SignerType, mnemonic: Option<String>) -> crate::Result<()> {
+    pub async fn store_mnemonic(&mut self, signer_type: SignerType, mnemonic: Option<String>) -> crate::Result<()> {
         let mut mnemonic = mnemonic;
         if signer_type == SignerType::EnvMnemonic {
             let _ = dotenv::dotenv();
@@ -324,22 +326,37 @@ impl AccountManager {
         let signer = signer.lock().await;
         signer.store_mnemonic(&self.storage_path, mnemonic).await?;
 
+        self.generated_mnemonic = None;
+
         Ok(())
     }
 
     /// Generates a new mnemonic.
-    pub fn generate_mnemonic(&self) -> crate::Result<String> {
+    pub fn generate_mnemonic(&mut self) -> crate::Result<String> {
         let mut entropy = [0u8; 32];
         crypto::rand::fill(&mut entropy)?;
-        crypto::bip39::wordlist::encode(&entropy, &crypto::bip39::wordlist::ENGLISH)
-            .map_err(|_| crate::Error::MnemonicEncode)
+        let mnemonic = crypto::bip39::wordlist::encode(&entropy, &crypto::bip39::wordlist::ENGLISH)
+            .map_err(|_| crate::Error::MnemonicEncode)?;
+        self.generated_mnemonic = Some(mnemonic.clone());
+        Ok(mnemonic)
     }
 
-    /// Checks is the mnemonic is valid.
-    pub fn verify_mnemonic<S: AsRef<str>>(&self, mnemonic: S) -> crate::Result<()> {
+    /// Checks is the mnemonic is valid. If a mnemonic was generated with `generate_mnemonic()`, the mnemonic here should match the generated.
+    pub fn verify_mnemonic<S: AsRef<str>>(&mut self, mnemonic: S) -> crate::Result<()> {
+        // first we check if the mnemonic is valid to give meaningful errors
         crypto::bip39::wordlist::verify(mnemonic.as_ref(), &crypto::bip39::wordlist::ENGLISH)
             // TODO: crypto::bip39::wordlist::Error should impl Display
             .map_err(|e| crate::Error::InvalidMnemonic(format!("{:?}", e)))?;
+
+        // then we check if the provided mnemonic matches the mnemonic generated with `generate_mnemonic`
+        if let Some(generated_mnemonic) = &self.generated_mnemonic {
+            if generated_mnemonic != mnemonic.as_ref() {
+                return Err(crate::Error::InvalidMnemonic(
+                    "doesn't match the generated mnemonic".to_string(),
+                ));
+            }
+            self.generated_mnemonic = None;
+        }
         Ok(())
     }
 
