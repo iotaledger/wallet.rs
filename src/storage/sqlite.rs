@@ -3,7 +3,7 @@
 
 use super::StorageAdapter;
 use crate::account::AccountIdentifier;
-use chrono::Utc;
+use chrono::prelude::*;
 use rusqlite::{
     params,
     types::{ToSqlOutput, Value},
