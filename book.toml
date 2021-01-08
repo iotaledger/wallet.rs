@@ -1,0 +1,10 @@
+[book]
+authors = ["Sebastian Heusser <sebastian.heusser@iota.org>"]
+language = "en"
+multilingual = false
+src = "./docs"
+title = "IOTA Wallet Library"
+
+[output.html]
+# additional-css = ["docs/theme/style.css"]
+# additional-js = ["./docs/theme/sidebar.js"]
