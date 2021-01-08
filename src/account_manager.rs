@@ -786,7 +786,7 @@ fn backup_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std:
 }
 
 fn backup_filename(original: &str) -> String {
-    let date = Utc::now();
+    let date = Local::now();
     format!(
         "{}-iota-wallet-backup{}",
         date.format("%FT%T").to_string(),

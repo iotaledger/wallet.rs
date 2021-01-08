@@ -94,7 +94,7 @@ impl StorageAdapter for SqliteStorageAdapter {
         let result = connection
             .execute(
                 &format!("INSERT OR REPLACE INTO {} VALUES (?1, ?2, ?3)", self.table_name),
-                params![id, account, Utc::now().timestamp()],
+                params![id, account, Local::now().timestamp()],
             )
             .map_err(|_| crate::Error::Storage("failed to insert data".into()))?;
         Ok(())
