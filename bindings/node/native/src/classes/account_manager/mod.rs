@@ -121,7 +121,7 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let manager = crate::block_on(ref_.read());
+                let mut manager = crate::block_on(ref_.write());
                 manager.generate_mnemonic().expect("failed to generate mnemonic")
             };
             Ok(cx.string(&mnemonic).upcast())
@@ -144,7 +144,7 @@ declare_types! {
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
                 crate::block_on(async move {
-                    let manager = ref_.read().await;
+                    let mut manager = ref_.write().await;
                     manager.store_mnemonic(signer_type, mnemonic).await
                 }).expect("failed to store mnemonic");
             }
