@@ -1,0 +1,28 @@
+[book]
+authors = ["Sebastian Heusser <sebastian.heusser@iota.org>"]
+language = "en"
+multilingual = false
+src = "./src"
+title = "IOTA Wallet Library"
+
+[output.html]
+default-theme = "IOTA"
+git-repository-url = "https://github.com/iotaledger/wallet.rs"
+git-repository-icon = "fa-github"
+
+# This is for another Sidebar
+additional-css = ["custom/custom.css"]
+# additional-css = ["custom/custom.css", "custom/sidebar.css"]
+# additional-js = ["custom/sidebar.js"]
+
+[output.html.playpen]
+editable = false
+
+[output.html.search]
+limit-results = 20
+use-boolean-and = true
+boost-title = 2
+boost-hierarchy = 2
+boost-paragraph = 1
+expand = true
+heading-split-level = 2

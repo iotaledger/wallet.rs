@@ -1,0 +1,36 @@
+.header__brand {
+    height: 22px;
+    margin: 18px 20px 22px;
+}
+
+.header__wrapper {
+    background-color: #1e9a93;
+}
+
+.top-header, .top-header__items {
+    display: flex;
+    align-items: center;
+}
+
+.top-header {
+    justify-content: flex-end;
+    width: 100%;
+    height: 50px;
+    background: linear-gradient(270deg,rgba(90,90,90,.1),hsla(0,0%,100%,0));
+}
+
+.top-header__item {
+    padding: 0 15px;
+    text-transform: uppercase;
+}
+
+.top-header__item-link {
+    color: #fff !important;
+    text-decoration: none;
+}
+
+.top-header__items {
+    margin: 0 25px;
+    list-style: none;
+}
+
