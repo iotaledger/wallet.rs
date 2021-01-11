@@ -32,20 +32,20 @@
     --theme-hover: #c6ebc9;
 
     --quote-bg: #f1f1f1;
-    --quote-fg: #70af85;
-    --quote-border: #c6ebc9;
+    --quote-fg: #1e9a93;
+    --quote-border: #019792;
 
-    --table-border-color: #ffffff;
-    --table-header-bg: #70af85;
-    --table-alternate-bg: #70af85;
+    --table-border-color: #019792;
+    --table-header-bg: #ffffff;
+    --table-alternate-bg: #ffffff;
 
     --searchbar-border-color: #ffffff;
     --searchbar-bg: #ffffff;
     --searchbar-fg: #fff;
-    --searchbar-shadow-color: #c6ebc9;
+    --searchbar-shadow-color: #019792;
     --searchresults-header-fg: #1e9a93;
     --searchresults-border-color: #ffffff;
-    --searchresults-li-bg: #c6ebc9;
+    --searchresults-li-bg: #019792;
     --search-mark-bg: #ffb454;
 }
 
