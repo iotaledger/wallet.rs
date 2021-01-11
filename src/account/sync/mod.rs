@@ -25,7 +25,6 @@ use tokio::{
 
 use std::{
     convert::TryInto,
-    num::NonZeroU64,
     sync::{Arc, Mutex},
     thread,
     time::Duration,
@@ -666,13 +665,8 @@ impl SyncedAccount {
                 // remainder value. we add an Output for the missing value and collect the remainder
                 let missing_value = value - current_output_sum;
                 remainder_value += *utxo.amount() - missing_value;
-                essence_builder = essence_builder.add_output(
-                    SignatureLockedSingleOutput::new(
-                        transfer_obj.address.clone(),
-                        NonZeroU64::new(missing_value).ok_or(crate::Error::OutputAmountIsZero)?,
-                    )
-                    .into(),
-                );
+                essence_builder = essence_builder
+                    .add_output(SignatureLockedSingleOutput::new(transfer_obj.address.clone(), missing_value)?.into());
                 current_output_sum += missing_value;
                 log::debug!(
                     "[TRANSFER] added output with the missing value {}, and the remainder is {}",
@@ -685,13 +679,8 @@ impl SyncedAccount {
                     utxo.amount(),
                     current_output_sum
                 );
-                essence_builder = essence_builder.add_output(
-                    SignatureLockedSingleOutput::new(
-                        transfer_obj.address.clone(),
-                        NonZeroU64::new(*utxo.amount()).ok_or(crate::Error::OutputAmountIsZero)?,
-                    )
-                    .into(),
-                );
+                essence_builder = essence_builder
+                    .add_output(SignatureLockedSingleOutput::new(transfer_obj.address.clone(), *utxo.amount())?.into());
                 current_output_sum += *utxo.amount();
             }
         }
@@ -747,13 +736,8 @@ impl SyncedAccount {
                 }
             };
             remainder_value_deposit_address = Some(remainder_target_address.clone());
-            essence_builder = essence_builder.add_output(
-                SignatureLockedSingleOutput::new(
-                    remainder_target_address,
-                    NonZeroU64::new(remainder_value).ok_or(crate::Error::OutputAmountIsZero)?,
-                )
-                .into(),
-            );
+            essence_builder = essence_builder
+                .add_output(SignatureLockedSingleOutput::new(remainder_target_address, remainder_value)?.into());
         }
 
         let (parent1, parent2) = client.get_tips().await?;

@@ -295,10 +295,10 @@ impl Message {
                             if address_belongs_to_account {
                                 acc
                             } else {
-                                acc + x.amount().get()
+                                acc + x.amount()
                             }
                         } else if address_belongs_to_account {
-                            acc + x.amount().get()
+                            acc + x.amount()
                         } else {
                             acc
                         }

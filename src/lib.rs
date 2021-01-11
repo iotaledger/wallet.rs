@@ -147,9 +147,6 @@ pub enum Error {
     /// Error from bee_message crate.
     #[error("{0}")]
     BeeMessage(iota::message::Error),
-    /// Transaction output amount can't be zero.
-    #[error("transaction output amount can't be zero")]
-    OutputAmountIsZero,
     /// invalid BIP32 derivation path.
     #[error("invalid BIP32 derivation path: {0}")]
     InvalidDerivationPath(String),
