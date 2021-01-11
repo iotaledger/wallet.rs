@@ -33,6 +33,32 @@ impl Default for RemainderValueStrategy {
     }
 }
 
+/// The message's index builder.
+#[derive(Debug, Clone, Deserialize)]
+pub struct IndexationBuilder {
+    index: String,
+    data: Option<Vec<u8>>,
+}
+
+impl IndexationBuilder {
+    /// Initialises a new message indexation.
+    pub fn new(index: String) -> Self {
+        Self { index, data: None }
+    }
+
+    /// Sets the indexation data.
+    pub fn with_data(mut self, data: &[u8]) -> Self {
+        self.data = Some(data.into());
+        self
+    }
+
+    /// Builds the indexation.
+    pub fn finish(self) -> crate::Result<Indexation> {
+        let indexation = Indexation::new(self.index, &self.data.unwrap_or_default())?;
+        Ok(indexation)
+    }
+}
+
 /// A transfer to make a transaction.
 #[derive(Debug, Clone, Deserialize)]
 pub struct TransferBuilder {
@@ -42,7 +68,7 @@ pub struct TransferBuilder {
     #[serde(with = "crate::serde::iota_address_serde")]
     address: IotaAddress,
     /// (Optional) message indexation.
-    indexation: Option<Indexation>,
+    indexation: Option<IndexationBuilder>,
     /// The strategy to use for the remainder value.
     remainder_value_strategy: RemainderValueStrategy,
 }
@@ -65,7 +91,7 @@ impl TransferBuilder {
     }
 
     /// (Optional) message indexation.
-    pub fn with_indexation(mut self, indexation: Indexation) -> Self {
+    pub fn with_indexation(mut self, indexation: IndexationBuilder) -> Self {
         self.indexation = Some(indexation);
         self
     }
@@ -90,7 +116,7 @@ pub struct Transfer {
     #[serde(with = "crate::serde::iota_address_serde")]
     pub(crate) address: IotaAddress,
     /// (Optional) message indexation.
-    pub(crate) indexation: Option<Indexation>,
+    pub(crate) indexation: Option<IndexationBuilder>,
     /// The strategy to use for the remainder value.
     pub(crate) remainder_value_strategy: RemainderValueStrategy,
 }

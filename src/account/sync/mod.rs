@@ -743,7 +743,7 @@ impl SyncedAccount {
         let (parent1, parent2) = client.get_tips().await?;
 
         if let Some(indexation) = transfer_obj.indexation {
-            essence_builder = essence_builder.with_payload(Payload::Indexation(Box::new(indexation)));
+            essence_builder = essence_builder.with_payload(Payload::Indexation(Box::new(indexation.finish()?)));
         }
 
         let essence = essence_builder.finish()?;
