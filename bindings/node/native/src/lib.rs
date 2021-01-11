@@ -43,7 +43,7 @@ pub(crate) async fn get_account(id: &AccountIdentifier) -> AccountHandle {
 
 pub(crate) async fn store_account(account_handle: AccountHandle) -> AccountIdentifier {
     let handle = account_handle.clone();
-    let id = block_on(async move { handle.id().await });
+    let id =  handle.id().await;
 
     account_instances().write().await.insert(id.clone(), account_handle);
 
