@@ -530,21 +530,32 @@ impl AccountManager {
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))] stronghold_password: impl AsRef<str>,
     ) -> crate::Result<()> {
         let source = source.as_ref();
-        if source.is_dir() {
+        if source.is_dir() || !source.exists() {
             return Err(crate::Error::BackupNotFile);
         }
 
         #[cfg(feature = "stronghold-storage")]
-        let storage_file_path = self.storage_path.join(crate::stronghold::SNAPSHOT_FILENAME);
+        let storage_file_path = {
+            let storage_file_path = self.storage_path.join(crate::stronghold::SNAPSHOT_FILENAME);
+            let storage_id = crate::storage::get(&self.storage_path)?.lock().await.id();
+            if storage_id == crate::storage::stronghold::STORAGE_ID && storage_file_path.exists() {
+                return Err(crate::Error::StorageExists);
+            }
+            storage_file_path
+        };
         #[cfg(feature = "sqlite-storage")]
-        let storage_file_path = self.storage_path.join(crate::storage::sqlite::SQLITE_STORAGE_FILENAME);
-        if storage_file_path.exists() {
-            return Err(crate::Error::StorageExists);
-        }
+        let storage_file_path = {
+            if !self.accounts.read().await.is_empty() {
+                return Err(crate::Error::StorageExists);
+            }
+            self.storage_path.join(crate::storage::sqlite::SQLITE_STORAGE_FILENAME)
+        };
 
         fs::create_dir_all(&self.storage_path)?;
 
         fs::copy(source, &storage_file_path)?;
+
+        self.accounts = Self::load_accounts(&self.storage_path).await?;
 
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         if let Err(e) = self.set_stronghold_password(stronghold_password).await {
@@ -1006,6 +1017,7 @@ mod tests {
         let account_handle = manager
             .create_account(client_options)
             .alias("alias")
+            .signer_type(crate::test_utils::signer_type())
             .initialise()
             .await
             .expect("failed to add account");
@@ -1013,22 +1025,22 @@ mod tests {
 
         // backup the stored accounts to ./backup/happy-path/${backup_name}
         let backup_path = manager.backup(backup_path).await.unwrap();
+        let backup_file_path = std::fs::read_dir(backup_path).unwrap().next().unwrap().unwrap().path();
 
         // get another manager instance so we can import the accounts to a different storage
         let mut manager = crate::test_utils::get_account_manager().await;
         // import the accounts from the backup and assert that it's the same
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-        manager
-            .import_accounts(
-                std::fs::read_dir(backup_path).unwrap().next().unwrap().unwrap().path(),
-                "password",
-            )
-            .await
-            .unwrap();
+        manager.import_accounts(backup_file_path, "password").await.unwrap();
         #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-        manager.import_accounts(backup_path).await.unwrap();
+        manager.import_accounts(backup_file_path).await.unwrap();
 
         let imported_account = manager.get_account(account_handle.read().await.id()).await.unwrap();
+        // set the account storage path field so the assert works
+        account_handle
+            .write()
+            .await
+            .set_storage_path(manager.storage_path().clone());
         assert_eq!(&*account_handle.read().await, &*imported_account.read().await);
     }
 }

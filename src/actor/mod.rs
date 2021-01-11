@@ -324,7 +324,7 @@ impl WalletMessageHandler {
 #[cfg(test)]
 mod tests {
     use super::{AccountToCreate, Message, MessageType, Response, ResponseType, WalletMessageHandler};
-    use crate::{client::ClientOptionsBuilder, signing::SignerType};
+    use crate::client::ClientOptionsBuilder;
     use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
     /// The wallet actor builder.
@@ -407,10 +407,7 @@ mod tests {
     async fn create_and_remove_account() {
         let tx = spawn_actor();
 
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-        let signer_type = SignerType::Stronghold;
-        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-        let signer_type = SignerType::EnvMnemonic;
+        let signer_type = crate::test_utils::signer_type();
 
         // create an account
         let account = AccountToCreate {
