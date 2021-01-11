@@ -63,11 +63,11 @@ pub struct AccountManagerBuilder {
 
 impl Default for AccountManagerBuilder {
     fn default() -> Self {
-        let default_storage = None;
+        let default_storage: Option<DefaultStorage> = None;
         #[cfg(all(feature = "stronghold-storage", not(feature = "sqlite-storage")))]
         let default_storage = Some(DefaultStorage::Stronghold);
         #[cfg(all(feature = "sqlite-storage", not(feature = "stronghold-storage")))]
-        let default_storage = (DefaultStorage::Sqlite);
+        let default_storage = Some(DefaultStorage::Sqlite);
 
         Self {
             storage_path: PathBuf::from(DEFAULT_STORAGE_PATH),
