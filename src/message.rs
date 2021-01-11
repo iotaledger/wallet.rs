@@ -5,7 +5,7 @@ use crate::address::{Address, IotaAddress};
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
 pub use iota::{common::packable::Packable, Indexation, Message as IotaMessage, MessageId, Output, Payload};
-use serde::{Deserialize, Serialize};
+use serde::{de::Deserializer, Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
 use std::{
     cmp::Ordering,
@@ -33,44 +33,64 @@ impl Default for RemainderValueStrategy {
     }
 }
 
-/// The message's index builder.
-#[derive(Debug, Clone, Deserialize)]
-pub struct IndexationBuilder {
-    index: String,
-    data: Option<Vec<u8>>,
-}
-
-impl IndexationBuilder {
-    /// Initialises a new message indexation.
-    pub fn new(index: String) -> Self {
-        Self { index, data: None }
-    }
-
-    /// Sets the indexation data.
-    pub fn with_data(mut self, data: &[u8]) -> Self {
-        self.data = Some(data.into());
-        self
-    }
-
-    /// Builds the indexation.
-    pub fn finish(self) -> crate::Result<Indexation> {
-        let indexation = Indexation::new(self.index, &self.data.unwrap_or_default())?;
-        Ok(indexation)
-    }
-}
-
 /// A transfer to make a transaction.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct TransferBuilder {
     /// The transfer value.
     amount: NonZeroU64,
     /// The transfer address.
-    #[serde(with = "crate::serde::iota_address_serde")]
     address: IotaAddress,
     /// (Optional) message indexation.
-    indexation: Option<IndexationBuilder>,
+    indexation: Option<Indexation>,
     /// The strategy to use for the remainder value.
     remainder_value_strategy: RemainderValueStrategy,
+}
+
+impl<'de> Deserialize<'de> for TransferBuilder {
+    fn deserialize<D>(deserializer: D) -> Result<TransferBuilder, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        /// The message's index builder.
+        #[derive(Debug, Clone, Deserialize)]
+        struct IndexationBuilder {
+            index: String,
+            data: Option<Vec<u8>>,
+        }
+
+        impl IndexationBuilder {
+            /// Builds the indexation.
+            pub fn finish(self) -> crate::Result<Indexation> {
+                let indexation = Indexation::new(self.index, &self.data.unwrap_or_default())?;
+                Ok(indexation)
+            }
+        }
+
+        #[derive(Debug, Clone, Deserialize)]
+        pub struct TransferBuilderWrapper {
+            /// The transfer value.
+            amount: NonZeroU64,
+            /// The transfer address.
+            #[serde(with = "crate::serde::iota_address_serde")]
+            address: IotaAddress,
+            /// (Optional) message indexation.
+            indexation: Option<IndexationBuilder>,
+            /// The strategy to use for the remainder value.
+            remainder_value_strategy: RemainderValueStrategy,
+        }
+
+        TransferBuilderWrapper::deserialize(deserializer).and_then(|builder| {
+            Ok(TransferBuilder {
+                amount: builder.amount,
+                address: builder.address,
+                indexation: match builder.indexation {
+                    Some(i) => Some(i.finish().map_err(|e| serde::de::Error::custom(e))?),
+                    None => None,
+                },
+                remainder_value_strategy: builder.remainder_value_strategy,
+            })
+        })
+    }
 }
 
 impl TransferBuilder {
@@ -91,7 +111,7 @@ impl TransferBuilder {
     }
 
     /// (Optional) message indexation.
-    pub fn with_indexation(mut self, indexation: IndexationBuilder) -> Self {
+    pub fn with_indexation_builder(mut self, indexation: Indexation) -> Self {
         self.indexation = Some(indexation);
         self
     }
@@ -116,7 +136,7 @@ pub struct Transfer {
     #[serde(with = "crate::serde::iota_address_serde")]
     pub(crate) address: IotaAddress,
     /// (Optional) message indexation.
-    pub(crate) indexation: Option<IndexationBuilder>,
+    pub(crate) indexation: Option<Indexation>,
     /// The strategy to use for the remainder value.
     pub(crate) remainder_value_strategy: RemainderValueStrategy,
 }
