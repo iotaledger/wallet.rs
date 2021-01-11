@@ -121,19 +121,15 @@ export declare interface AccountToCreate {
   signerType?: SignerType;
 }
 
-export declare enum StorageType {
-  Stronghold = 1,
-  Sqlite = 2
-}
-
 export declare interface ManagerOptions {
   storagePath?: string
-  storageType?: StorageType
 }
 
 export declare class AccountManager {
   constructor(storagePath?: string)
   setStrongholdPassword(password: string): void
+  generateMnemonic(): string
+  storeMnemonic(signerType: SignerType, mnemonic?: string): void
   createAccount(account: AccountToCreate): Account
   getAccount(accountId: string | number): Account | undefined
   getAccountByAlias(alias: string): Account | undefined
@@ -154,7 +150,7 @@ export declare type Event = 'ErrorThrown' |
 
 export interface LoggerOutput {
   name?: string
-  level_filter: 'off' | 'error' | 'warn' | 'info' | 'debug' | 'trace' = 'info'
+  level_filter: 'off' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
   target_filters?: string[]
 }
 

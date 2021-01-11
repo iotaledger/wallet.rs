@@ -3,7 +3,7 @@
 
 use crate::account::Account;
 
-use std::{collections::HashMap, env, fs::OpenOptions, io::Write};
+use std::{collections::HashMap, env, fs::OpenOptions, io::Write, path::PathBuf};
 
 use bech32::ToBase32;
 use blake2::{
@@ -13,7 +13,6 @@ use blake2::{
 use dialoguer::Confirm;
 use hmac::Hmac;
 use iota::{common::packable::Packable, Ed25519Signature, ReferenceUnlock, SignatureUnlock, UnlockBlock};
-use rand::{thread_rng, Rng};
 use unicode_normalization::UnicodeNormalization;
 
 use bee_signing_ext::{
@@ -79,29 +78,28 @@ impl EnvMnemonicSigner {
     }
 }
 
+#[async_trait::async_trait]
 impl super::Signer for EnvMnemonicSigner {
-    fn init_account(&self, account: &Account, mnemonic: Option<String>) -> crate::Result<String> {
-        if let Some(mnemonic) = mnemonic {
-            // if the mnemonic is already on the env, we skip the logging and prompting processes
-            if mnemonic != env::var(MNEMONIC_ENV_KEY).unwrap_or_default() {
-                env::set_var(MNEMONIC_ENV_KEY, &mnemonic);
-                println!("Your mnemonic is `{}`, you must store it on an environment variable called `IOTA_WALLET_MNEMONIC` to use this CLI", mnemonic);
-                if let Ok(flag) = Confirm::new()
-                    .with_prompt("Do you want to store the mnemonic in a .env file?")
-                    .interact()
-                {
-                    if flag {
-                        let mut file = OpenOptions::new().append(true).create(true).open(".env")?;
-                        writeln!(file, r#"IOTA_WALLET_MNEMONIC="{}""#, mnemonic)?;
-                        println!("mnemonic added to {:?}", std::env::current_dir()?.join(".env"));
-                    }
+    async fn store_mnemonic(&self, _: &PathBuf, mnemonic: String) -> crate::Result<()> {
+        // if the mnemonic is already on the env, we skip the logging and prompting processes
+        if mnemonic != env::var(MNEMONIC_ENV_KEY).unwrap_or_default() {
+            env::set_var(MNEMONIC_ENV_KEY, &mnemonic);
+            println!("Your mnemonic is `{}`, you must store it on an environment variable called `IOTA_WALLET_MNEMONIC` to use this CLI", mnemonic);
+            if let Ok(flag) = Confirm::new()
+                .with_prompt("Do you want to store the mnemonic in a .env file?")
+                .interact()
+            {
+                if flag {
+                    let mut file = OpenOptions::new().append(true).create(true).open(".env")?;
+                    writeln!(file, r#"IOTA_WALLET_MNEMONIC="{}""#, mnemonic)?;
+                    println!("mnemonic added to {:?}", std::env::current_dir()?.join(".env"));
                 }
             }
         }
-        Ok(thread_rng().gen_ascii_chars().take(10).collect())
+        Ok(())
     }
 
-    fn generate_address(
+    async fn generate_address(
         &self,
         account: &Account,
         address_index: usize,
@@ -117,7 +115,7 @@ impl super::Signer for EnvMnemonicSigner {
         crate::address::parse(address_str)
     }
 
-    fn sign_message(
+    async fn sign_message(
         &self,
         account: &Account,
         essence: &iota::TransactionEssence,

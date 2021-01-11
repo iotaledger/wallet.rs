@@ -240,16 +240,20 @@ pub fn parse(address: String) -> crate::Result<IotaAddress> {
     Ok(iota_address)
 }
 
-pub(crate) fn get_iota_address(account: &Account, address_index: usize, internal: bool) -> crate::Result<IotaAddress> {
-    crate::signing::with_signer(account.signer_type(), |signer| {
-        signer.generate_address(&account, address_index, internal)
-    })
+pub(crate) async fn get_iota_address(
+    account: &Account,
+    address_index: usize,
+    internal: bool,
+) -> crate::Result<IotaAddress> {
+    let signer = crate::signing::get_signer(account.signer_type()).await;
+    let signer = signer.lock().await;
+    signer.generate_address(&account, address_index, internal).await
 }
 
 /// Gets an unused public address for the given account.
-pub(crate) fn get_new_address(account: &Account) -> crate::Result<Address> {
+pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address> {
     let key_index = account.addresses().iter().filter(|a| !a.internal()).count();
-    let iota_address = get_iota_address(&account, key_index, false)?;
+    let iota_address = get_iota_address(&account, key_index, false).await?;
     let address = Address {
         address: iota_address,
         balance: 0,
@@ -261,9 +265,9 @@ pub(crate) fn get_new_address(account: &Account) -> crate::Result<Address> {
 }
 
 /// Gets an unused change address for the given account and address.
-pub(crate) fn get_new_change_address(account: &Account, address: &Address) -> crate::Result<Address> {
+pub(crate) async fn get_new_change_address(account: &Account, address: &Address) -> crate::Result<Address> {
     let key_index = *address.key_index();
-    let iota_address = get_iota_address(&account, key_index, true)?;
+    let iota_address = get_iota_address(&account, key_index, true).await?;
     let address = Address {
         address: iota_address,
         balance: 0,
@@ -275,10 +279,10 @@ pub(crate) fn get_new_change_address(account: &Account, address: &Address) -> cr
 }
 
 /// Batch address generation.
-pub(crate) fn get_addresses(account: &Account, count: usize) -> crate::Result<Vec<Address>> {
+pub(crate) async fn get_addresses(account: &Account, count: usize) -> crate::Result<Vec<Address>> {
     let mut addresses = vec![];
     for i in 0..count {
-        addresses.push(get_new_address(&account)?);
+        addresses.push(get_new_address(&account).await?);
     }
     Ok(addresses)
 }

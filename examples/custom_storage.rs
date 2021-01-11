@@ -3,7 +3,8 @@
 
 /// ! An example of using a custom storage adapter (in this case, using sled).
 use iota_wallet::{
-    account::AccountIdentifier, account_manager::AccountManager, client::ClientOptionsBuilder, storage::StorageAdapter,
+    account::AccountIdentifier, account_manager::AccountManager, client::ClientOptionsBuilder, signing::SignerType,
+    storage::StorageAdapter,
 };
 use sled::Db;
 use std::path::Path;
@@ -68,11 +69,15 @@ impl StorageAdapter for MyStorage {
 #[tokio::main]
 async fn main() -> iota_wallet::Result<()> {
     let mut manager = AccountManager::builder()
-        .with_storage("./example-database/sled", MyStorage::new("./example-database/sled")?)
+        .with_storage(
+            "./test-storage/sled",
+            MyStorage::new("./test-storage/sled").map_err(|e| iota_wallet::Error::Storage(e.to_string()))?,
+        )
         .finish()
         .await
         .unwrap();
     manager.set_stronghold_password("password").await.unwrap();
+    manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
 
     // first we'll create an example account
     let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")?.build();

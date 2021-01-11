@@ -1,10 +1,10 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(feature = "sqlite")]
+#[cfg(feature = "sqlite-storage")]
 /// Sqlite storage.
 pub mod sqlite;
-#[cfg(feature = "stronghold")]
+#[cfg(any(feature = "stronghold-storage", feature = "stronghold"))]
 /// Stronghold storage.
 pub mod stronghold;
 
@@ -42,20 +42,8 @@ pub(crate) fn get(storage_path: &PathBuf) -> crate::Result<Storage> {
     if let Some(instance) = instances.get(storage_path) {
         Ok(instance.clone())
     } else {
-        Err(crate::Error::StorageDoesntExist) // TODO proper error kind
+        Err(crate::Error::StorageAdapterNotSet(storage_path.clone()))
     }
-}
-
-#[cfg(not(feature = "sqlite"))]
-pub(crate) fn get_adapter_from_path<P: AsRef<Path>>(
-    storage_path: P,
-) -> crate::Result<stronghold::StrongholdStorageAdapter> {
-    stronghold::StrongholdStorageAdapter::new(storage_path)
-}
-
-#[cfg(feature = "sqlite")]
-pub(crate) fn get_adapter_from_path<P: AsRef<Path>>(storage_path: P) -> crate::Result<sqlite::SqliteStorageAdapter> {
-    sqlite::SqliteStorageAdapter::new(storage_path, "accounts")
 }
 
 /// The storage adapter.
@@ -93,22 +81,4 @@ pub(crate) fn parse_accounts(storage_path: &PathBuf, accounts: &[String]) -> cra
         let accounts = accounts.iter().map(|account| account.clone().unwrap()).collect();
         Ok(accounts)
     }
-}
-
-pub(crate) async fn get_account(storage_path: &PathBuf, account_id: &AccountIdentifier) -> crate::Result<Account> {
-    let account_str = get(&storage_path)?.lock().await.get(account_id).await?;
-    let mut account: Account = serde_json::from_str(&account_str)?;
-    account.set_storage_path(storage_path.clone());
-    Ok(account)
-}
-
-pub(crate) async fn save_account(
-    storage_path: &PathBuf,
-    account_id: &AccountIdentifier,
-    account: String,
-) -> crate::Result<()> {
-    let storage_handle = get(&storage_path)?;
-    let storage = storage_handle.lock().await;
-    storage.set(account_id, account).await?;
-    Ok(())
 }

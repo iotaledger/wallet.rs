@@ -42,8 +42,8 @@ $ set VCPKGRS_DYNAMIC=1
 
 ```
 $ choco install openssl
-# you may need to set the OPENSSL_ROOT_DIR environment variable
-$ set OPENSSL_ROOT_DIR="C:\Program Files\OpenSSL-Win64"
+# you may need to set the OPENSSL_DIR environment variable
+$ set OPENSSL_DIR="C:\Program Files\OpenSSL-Win64"
 ```
 
 ### macOS
