@@ -1,6 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#[allow(unused_imports)]
 use crate::{
     account::{repost_message, AccountHandle, AccountIdentifier, AccountInitialiser, RepostAction, SyncedAccount},
     client::ClientOptions,
@@ -556,12 +557,15 @@ impl AccountManager {
 
         fs::copy(source, &storage_file_path)?;
 
-        self.accounts = Self::load_accounts(&self.storage_path).await?;
-
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         if let Err(e) = self.set_stronghold_password(stronghold_password).await {
             fs::remove_file(&storage_file_path)?;
             return Err(e);
+        }
+
+        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
+        {
+            self.accounts = Self::load_accounts(&self.storage_path).await?;
         }
 
         Ok(())
@@ -1022,14 +1026,14 @@ mod tests {
             .initialise()
             .await
             .expect("failed to add account");
-        account_handle.write().await.save().await.unwrap();
 
         // backup the stored accounts to ./backup/happy-path/${backup_name}
         let backup_path = manager.backup(backup_path).await.unwrap();
         let backup_file_path = std::fs::read_dir(backup_path).unwrap().next().unwrap().unwrap().path();
 
         // get another manager instance so we can import the accounts to a different storage
-        let mut manager = crate::test_utils::get_account_manager().await;
+        let mut manager = crate::test_utils::get_empty_account_manager().await;
+
         // import the accounts from the backup and assert that it's the same
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         manager.import_accounts(backup_file_path, "password").await.unwrap();

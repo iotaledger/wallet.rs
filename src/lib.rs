@@ -297,24 +297,34 @@ mod test_utils {
     }
 
     pub async fn get_account_manager() -> AccountManager {
-        let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
-        let storage_path = PathBuf::from(format!("./test-storage/{}", storage_path));
+        let mut manager = get_empty_account_manager().await;
 
-        let mut manager = AccountManager::builder()
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        manager.set_stronghold_password("password").await.unwrap();
+
+        manager.store_mnemonic(signer_type(), None).await.unwrap();
+        manager
+    }
+
+    pub async fn get_empty_account_manager() -> AccountManager {
+        let storage_path = loop {
+            let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
+            let storage_path = PathBuf::from(format!("./test-storage/{}", storage_path));
+            if !storage_path.exists() {
+                break storage_path;
+            }
+        };
+
+        let manager = AccountManager::builder()
             .with_storage_path(storage_path)
             .with_polling_interval(POLLING_INTERVAL)
             .finish()
             .await
             .unwrap();
 
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-        manager.set_stronghold_password("password").await.unwrap();
-
         let signer_type = signer_type();
         #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
         crate::signing::set_signer(signer_type.clone(), TestSigner {}).await;
-
-        manager.store_mnemonic(signer_type, None).await.unwrap();
 
         manager
     }
