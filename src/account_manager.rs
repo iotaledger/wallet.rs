@@ -7,7 +7,6 @@ use crate::{
     event::{emit_balance_change, emit_confirmation_state_change, emit_transaction_event, TransactionEventType},
     message::{Message, MessageType, Transfer},
     signing::SignerType,
-    storage::StorageAdapter,
 };
 
 use std::{
@@ -101,7 +100,7 @@ impl AccountManagerBuilder {
 
     /// Sets a custom storage adapter to be used.
     #[cfg(not(any(feature = "sqlite-storage", feature = "stronghold-storage")))]
-    pub fn with_storage<S: StorageAdapter + Sync + Send + 'static>(
+    pub fn with_storage<S: crate::storage::StorageAdapter + Sync + Send + 'static>(
         mut self,
         storage_path: impl AsRef<Path>,
         adapter: S,

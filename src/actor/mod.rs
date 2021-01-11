@@ -407,19 +407,25 @@ mod tests {
     async fn create_and_remove_account() {
         let tx = spawn_actor();
 
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        let signer_type = SignerType::Stronghold;
+        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
+        let signer_type = SignerType::EnvMnemonic;
+
         // create an account
         let account = AccountToCreate {
             client_options: ClientOptionsBuilder::node("http://node.iota").unwrap().build(),
             alias: None,
             created_at: None,
             skip_persistance: false,
-            signer_type: None,
+            signer_type: Some(signer_type.clone()),
         };
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         send_message(&tx, MessageType::SetStrongholdPassword("password".to_string())).await;
         send_message(
             &tx,
             MessageType::StoreMnemonic {
-                signer_type: SignerType::Stronghold,
+                signer_type,
                 mnemonic: None,
             },
         )

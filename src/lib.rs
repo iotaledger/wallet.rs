@@ -269,8 +269,17 @@ mod test_utils {
             .finish()
             .await
             .unwrap();
+
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         manager.set_stronghold_password("password").await.unwrap();
-        manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
+
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        let signer_type = SignerType::Stronghold;
+        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
+        let signer_type = SignerType::EnvMnemonic;
+
+        manager.store_mnemonic(signer_type, None).await.unwrap();
+
         manager
     }
 
