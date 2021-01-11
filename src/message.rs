@@ -84,7 +84,7 @@ impl<'de> Deserialize<'de> for TransferBuilder {
                 amount: builder.amount,
                 address: builder.address,
                 indexation: match builder.indexation {
-                    Some(i) => Some(i.finish().map_err(|e| serde::de::Error::custom(e))?),
+                    Some(i) => Some(i.finish().map_err(serde::de::Error::custom)?),
                     None => None,
                 },
                 remainder_value_strategy: builder.remainder_value_strategy,
@@ -111,7 +111,7 @@ impl TransferBuilder {
     }
 
     /// (Optional) message indexation.
-    pub fn with_indexation_builder(mut self, indexation: Indexation) -> Self {
+    pub fn with_indexation(mut self, indexation: Indexation) -> Self {
         self.indexation = Some(indexation);
         self
     }
