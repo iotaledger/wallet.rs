@@ -141,6 +141,8 @@ async fn on_stronghold_access<S: AsRef<Path>>(snapshot_path: S) -> Result<()> {
     }
 }
 
+/// Set the password clear interval.
+/// If the stronghold isn't used after `interval`, the password is cleared and must be set again.
 pub async fn set_password_clear_interval(interval: Duration) {
     let mut clear_interval = PASSWORD_CLEAR_INTERVAL
         .get_or_init(|| Arc::new(Mutex::new(DEFAULT_PASSWORD_CLEAR_INTERVAL)))
