@@ -3,4 +3,4 @@
 We currently support the following libraries:
 
 - [Rust](./rust/) 
-- [WASM](./nodejs/) 
+- [Node.js](./nodejs/) 

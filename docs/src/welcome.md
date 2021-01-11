@@ -1,15 +1,16 @@
 # Welcome
-
 This is the documentation for the official IOTA Wallet Library Software. It can be used to easily intgrate an IOTA Wallet into your application. 
 
 ## Warning
-
 This library is in active development. The library targets the Chrysalis testnet and does not work with current IOTA mainnet.
 
+## Chrysalis Testnet
 To join the Chrysalis public testnet checkout [this link](https://blog.iota.org/chrysalis-phase-2-testnet-out-now/).
 
-## What you will find here
+## Joining the discussion
+If you want to get involved in discussions about this library, or you're looking for support, go to the #clients-discussion channel on [Discord](https://discord.iota.org).
 
+## What you will find here
 This documentation has five paths. 
 
 1. The Overview, an detailed overview of the wallet library. 
