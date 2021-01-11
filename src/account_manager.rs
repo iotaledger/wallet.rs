@@ -998,7 +998,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(backup_path);
         std::fs::create_dir_all(backup_path).unwrap();
 
-        let mut manager = crate::test_utils::get_account_manager().await;
+        let manager = crate::test_utils::get_account_manager().await;
 
         let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
             .expect("invalid node URL")
@@ -1015,17 +1015,8 @@ mod tests {
         // backup the stored accounts to ./backup/happy-path/${backup_name}
         let backup_path = manager.backup(backup_path).await.unwrap();
 
-        // delete the current storage
-        #[cfg(feature = "sqlite-storage")]
-        let storage_file_path = manager
-            .storage_path()
-            .join(crate::storage::sqlite::SQLITE_STORAGE_FILENAME);
-        #[cfg(feature = "stronghold-storage")]
-        let storage_file_path = manager.storage_path().join(crate::stronghold::SNAPSHOT_FILENAME);
-        #[cfg(not(any(feature = "sqlite-storage", feature = "stronghold-storage")))]
-        let storage_file_path = manager.storage_path().to_path_buf();
-        std::fs::remove_file(storage_file_path).unwrap();
-
+        // get another manager instance so we can import the accounts to a different storage
+        let mut manager = crate::test_utils::get_account_manager().await;
         // import the accounts from the backup and assert that it's the same
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         manager
@@ -1037,6 +1028,7 @@ mod tests {
             .unwrap();
         #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
         manager.import_accounts(backup_path).await.unwrap();
+
         let imported_account = manager.get_account(account_handle.read().await.id()).await.unwrap();
         assert_eq!(&*account_handle.read().await, &*imported_account.read().await);
     }
