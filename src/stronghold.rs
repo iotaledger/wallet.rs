@@ -155,11 +155,11 @@ fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, [u8; 32]>>> {
     thread::spawn(|| {
         crate::enter(|| {
             task::spawn(async {
-                let interval = *PASSWORD_CLEAR_INTERVAL
-                    .get_or_init(|| Arc::new(Mutex::new(DEFAULT_PASSWORD_CLEAR_INTERVAL)))
-                    .lock()
-                    .await;
                 loop {
+                    let interval = *PASSWORD_CLEAR_INTERVAL
+                        .get_or_init(|| Arc::new(Mutex::new(DEFAULT_PASSWORD_CLEAR_INTERVAL)))
+                        .lock()
+                        .await;
                     delay_for(interval).await;
 
                     if interval.as_nanos() == 0 {
