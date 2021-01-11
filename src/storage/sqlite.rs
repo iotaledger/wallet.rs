@@ -17,6 +17,8 @@ use std::{
 
 /// The default SQLite storage file name.
 pub const SQLITE_STORAGE_FILENAME: &str = "wallet.db";
+/// The storage id.
+pub const STORAGE_ID: &str = "SQLITE";
 
 /// Key value storage adapter.
 pub struct SqliteStorageAdapter {
@@ -25,6 +27,10 @@ pub struct SqliteStorageAdapter {
 }
 
 impl SqliteStorageAdapter {
+    async fn id(&self) -> &'static str {
+        STORAGE_ID
+    }
+
     /// Initialises the storage adapter.
     pub fn new(path: impl AsRef<Path>, table_name: impl AsRef<str>) -> crate::Result<Self> {
         fs::create_dir_all(&path)?;

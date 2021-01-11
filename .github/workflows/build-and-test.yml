@@ -88,13 +88,13 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: build
-        args: --all --release
+        args: --all-features --release
 
     - name: Run tests
       uses: actions-rs/cargo@v1
       with:
         command: test
-        args: --all --release
+        args: --all-features --release
 
     - name: Build nodejs binding
       run: yarn
