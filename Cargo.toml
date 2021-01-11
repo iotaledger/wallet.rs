@@ -38,7 +38,7 @@ dialoguer = "0.7"
 tiny-bip39 = "0.7"
 
 # stronghold
-iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "c9954417568d19532789d5cb47ee457df8764195", optional = true }
+iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", branch = "dev", optional = true }
 riker = { version = "0.4", optional = true }
 riker-patterns = { version = "0.4", optional = true }
 

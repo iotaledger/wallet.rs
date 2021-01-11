@@ -9,7 +9,10 @@ use blake2::{
     VarBlake2b,
 };
 use iota::{Address, Ed25519Address, Ed25519Signature};
-use iota_stronghold::{Location, ProcResult, Procedure, RecordHint, ResultMessage, Stronghold, StrongholdFlags};
+use iota_stronghold::{
+    hd::Chain, Location, ProcResult, Procedure, RecordHint, ResultMessage, SLIP10DeriveInput, Stronghold,
+    StrongholdFlags,
+};
 use once_cell::sync::{Lazy, OnceCell};
 use riker::actors::*;
 use tokio::{
@@ -21,6 +24,7 @@ use tokio::{
 use std::{
     collections::{HashMap, HashSet},
     convert::TryInto,
+    num::TryFromIntError,
     path::{Path, PathBuf},
     sync::Arc,
     thread,
@@ -220,7 +224,7 @@ pub enum Error {
     #[error("failed to create snapshot directory")]
     FailedToCreateSnapshotDir,
     #[error("invalid address or account index {0}")]
-    TryFromIntError(#[from] std::num::TryFromIntError),
+    TryFromIntError(#[from] TryFromIntError),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -371,6 +375,39 @@ pub async fn store_mnemonic(snapshot_path: &PathBuf, mnemonic: String) -> Result
     }
 }
 
+async fn derive(runtime: &mut ActorRuntime, chain: Chain) -> Result<Location> {
+    let derive_output = Location::generic(SECRET_VAULT_PATH, DERIVE_OUTPUT_RECORD_PATH);
+    let res = runtime
+        .stronghold
+        .runtime_exec(Procedure::SLIP10Derive {
+            chain,
+            input: SLIP10DeriveInput::Seed(Location::generic(SECRET_VAULT_PATH, SEED_RECORD_PATH)),
+            output: derive_output.clone(),
+            hint: RecordHint::new("wallet.rs-derive").unwrap(),
+        })
+        .await;
+    if let ProcResult::SLIP10Derive(response) = res {
+        stronghold_response_to_result(response)?;
+        Ok(derive_output)
+    } else {
+        Err(Error::FailedToPerformAction(format!("{:?}", res)))
+    }
+}
+
+async fn get_public_key(runtime: &mut ActorRuntime, derived_location: Location) -> Result<[u8; 32]> {
+    let res = runtime
+        .stronghold
+        .runtime_exec(Procedure::Ed25519PublicKey {
+            private_key: derived_location,
+        })
+        .await;
+    if let ProcResult::Ed25519PublicKey(response) = res {
+        stronghold_response_to_result(response)
+    } else {
+        Err(Error::FailedToPerformAction(format!("{:?}", res)))
+    }
+}
+
 pub async fn generate_address(
     snapshot_path: &PathBuf,
     account_index: usize,
@@ -381,28 +418,28 @@ pub async fn generate_address(
     check_snapshot(&mut runtime, &snapshot_path).await?;
     load_private_data_actor(&mut runtime, snapshot_path).await?;
 
-    let chain = format!("m/44H/4218H/{}H/{}H/{}H", account_index, internal as u32, address_index,);
+    let chain = Chain::from_u32_hardened(vec![
+        44,
+        4218,
+        account_index.try_into()?,
+        internal as u32,
+        address_index.try_into()?,
+    ]);
 
-    let res = runtime
-        .stronghold
-        .runtime_exec(Procedure::Ed25519PublicKey {
-            key: Location::generic(SECRET_VAULT_PATH, SEED_RECORD_PATH),
-            path: chain,
-        })
-        .await;
-    if let ProcResult::Ed25519PublicKey(response) = res {
-        let public_key = stronghold_response_to_result(response)?;
-        // Hash the public key to get the address
-        let mut hasher = VarBlake2b::new(32).unwrap();
-        hasher.update(public_key);
-        let mut result = vec![];
-        hasher.finalize_variable(|res| {
-            result = res.to_vec();
-        });
-        Ok(Address::Ed25519(Ed25519Address::new(result.try_into().unwrap())))
-    } else {
-        Err(Error::FailedToPerformAction(format!("{:?}", res)))
-    }
+    let derived_location = derive(&mut runtime, chain).await?;
+    let public_key = get_public_key(&mut runtime, derived_location).await?;
+
+    // Hash the public key to get the address
+    let mut hasher = VarBlake2b::new(32).unwrap();
+    hasher.update(public_key);
+    let mut result = vec![];
+    hasher.finalize_variable(|res| {
+        result = res.to_vec();
+    });
+
+    let ed25519_address = Ed25519Address::new(result.try_into().unwrap());
+    let address = Address::Ed25519(ed25519_address);
+    Ok(address)
 }
 
 pub async fn sign_essence(
@@ -416,18 +453,26 @@ pub async fn sign_essence(
     check_snapshot(&mut runtime, &snapshot_path).await?;
     load_private_data_actor(&mut runtime, snapshot_path).await?;
 
-    let chain = format!("m/44H/4218H/{}H/{}H/{}H", account_index, internal as u32, address_index,);
+    let chain = Chain::from_u32_hardened(vec![
+        44,
+        4218,
+        account_index.try_into()?,
+        internal as u32,
+        address_index.try_into()?,
+    ]);
+
+    let derived_location = derive(&mut runtime, chain).await?;
+    let public_key = get_public_key(&mut runtime, derived_location.clone()).await?;
 
     let res = runtime
         .stronghold
-        .runtime_exec(Procedure::SignUnlockBlock {
-            path: chain,
-            seed: Location::generic(SECRET_VAULT_PATH, SEED_RECORD_PATH),
-            essence: transaction_essence,
+        .runtime_exec(Procedure::Ed25519Sign {
+            private_key: derived_location,
+            msg: transaction_essence,
         })
         .await;
-    if let ProcResult::SignUnlockBlock(response) = res {
-        let (signature, public_key) = stronghold_response_to_result(response)?;
+    if let ProcResult::Ed25519Sign(response) = res {
+        let signature = stronghold_response_to_result(response)?;
         Ok(Ed25519Signature::new(public_key, Box::new(signature)))
     } else {
         Err(Error::FailedToPerformAction(format!("{:?}", res)))
