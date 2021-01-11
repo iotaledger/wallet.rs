@@ -5,7 +5,7 @@ use std::{num::NonZeroU64, str::FromStr};
 
 use iota_wallet::{
     address::parse as parse_address,
-    message::{Indexation, MessageId, RemainderValueStrategy, Transfer},
+    message::{IndexationBuilder, MessageId, RemainderValueStrategy, Transfer},
 };
 use neon::prelude::*;
 use serde::Deserialize;
@@ -22,17 +22,11 @@ impl Drop for SyncedAccountWrapper {
     }
 }
 
-#[derive(Deserialize)]
-struct IndexationDto {
-    index: String,
-    data: Option<Vec<u8>>,
-}
-
 #[derive(Default, Deserialize)]
 struct TransferOptions {
     #[serde(rename = "remainderValueStrategy", default)]
     remainder_value_strategy: RemainderValueStrategy,
-    indexation: Option<IndexationDto>,
+    indexation: Option<IndexationBuilder>,
 }
 
 declare_types! {
@@ -60,9 +54,7 @@ declare_types! {
                 NonZeroU64::new(amount).expect("amount can't be zero")
             ).with_remainder_value_strategy(options.remainder_value_strategy);
             if let Some(indexation) = options.indexation {
-                transfer_builder = transfer_builder.with_indexation(
-                    Indexation::new(indexation.index, &indexation.data.unwrap_or_default()).expect("index can't be empty")
-                );
+                transfer_builder = transfer_builder.with_indexation(indexation);
             }
 
             let this = cx.this();
