@@ -18,7 +18,7 @@ pub struct SyncedAccountWrapper(pub String);
 
 impl Drop for SyncedAccountWrapper {
     fn drop(&mut self) {
-        crate::remove_synced_account(&self.0);
+        crate::block_on(crate::remove_synced_account(&self.0));
     }
 }
 

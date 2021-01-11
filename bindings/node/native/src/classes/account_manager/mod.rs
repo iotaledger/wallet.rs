@@ -2,23 +2,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use super::JsAccount;
-use std::{
-    num::NonZeroU64,
-    path::PathBuf,
-    sync::{Arc, RwLock},
-};
+use std::{num::NonZeroU64, path::PathBuf, sync::Arc};
 
 use iota_wallet::{
     account::AccountIdentifier,
     account_manager::{AccountManager, DEFAULT_STORAGE_PATH},
     client::ClientOptions,
     signing::SignerType,
-    storage::{sqlite::SqliteStorageAdapter, stronghold::StrongholdStorageAdapter},
+    storage::stronghold::StrongholdStorageAdapter,
     DateTime, Utc,
 };
 use neon::prelude::*;
 use serde::Deserialize;
 use serde_repr::Deserialize_repr;
+use tokio::sync::RwLock;
 
 mod internal_transfer;
 mod sync;
@@ -40,7 +37,6 @@ impl Default for AccountSignerType {
 pub struct AccountToCreate {
     #[serde(rename = "clientOptions")]
     pub client_options: ClientOptions,
-    pub mnemonic: Option<String>,
     pub alias: Option<String>,
     #[serde(rename = "createdAt")]
     pub created_at: Option<String>,
@@ -66,19 +62,6 @@ fn js_value_to_account_id(
 
 pub struct AccountManagerWrapper(Arc<RwLock<AccountManager>>);
 
-#[repr(u8)]
-#[derive(Deserialize_repr)]
-enum StorageType {
-    Stronghold = 1,
-    Sqlite = 2,
-}
-
-impl Default for StorageType {
-    fn default() -> Self {
-        Self::Stronghold
-    }
-}
-
 fn default_storage_path() -> PathBuf {
     DEFAULT_STORAGE_PATH.into()
 }
@@ -87,8 +70,6 @@ fn default_storage_path() -> PathBuf {
 struct ManagerOptions {
     #[serde(rename = "storagePath", default = "default_storage_path")]
     storage_path: PathBuf,
-    #[serde(default, rename = "storageType")]
-    storage_type: StorageType,
 }
 
 declare_types! {
@@ -101,22 +82,24 @@ declare_types! {
                 }
                 None => Default::default(),
             };
-            let manager = match options.storage_type {
-                StorageType::Sqlite => crate::block_on(
-                    AccountManager::builder().with_storage(
-                        &options.storage_path,
-                        SqliteStorageAdapter::new(&options.storage_path, "accounts").unwrap()
-                    ).finish()
-                ),
-                StorageType::Stronghold => crate::block_on(
+            let manager = crate::block_on(
                     AccountManager::builder().with_storage(
                         &options.storage_path,
                         StrongholdStorageAdapter::new(&options.storage_path).unwrap()
                     ).finish()
-                ),
-            };
-            let manager = manager.expect("error initializing account manager");
+                ).expect("error initializing account manager");
             Ok(AccountManagerWrapper(Arc::new(RwLock::new(manager))))
+        }
+
+        method stopBackgroundSync(mut cx) {
+            {
+                let this = cx.this();
+                let guard = cx.lock();
+                let ref_ = &this.borrow(&guard).0;
+                let mut manager = crate::block_on(ref_.write());
+                manager.stop_background_sync()
+            }
+            Ok(cx.undefined().upcast())
         }
 
         method setStrongholdPassword(mut cx) {
@@ -125,8 +108,45 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let mut manager = ref_.write().unwrap();
-                crate::block_on(async move { manager.set_stronghold_password(password).await }).expect("error setting stronghold password");
+                crate::block_on(async move {
+                    let mut manager = ref_.write().await;
+                    manager.set_stronghold_password(password).await
+                }).expect("error setting stronghold password");
+            }
+            Ok(cx.undefined().upcast())
+        }
+
+        method generateMnemonic(mut cx) {
+            let mnemonic = {
+                let this = cx.this();
+                let guard = cx.lock();
+                let ref_ = &this.borrow(&guard).0;
+                let mut manager = crate::block_on(ref_.write());
+                manager.generate_mnemonic().expect("failed to generate mnemonic")
+            };
+            Ok(cx.string(&mnemonic).upcast())
+        }
+
+        method storeMnemonic(mut cx) {
+            let signer_type = cx.argument::<JsNumber>(0)?.value() as usize;
+            let signer_type: AccountSignerType = serde_json::from_str(&signer_type.to_string()).expect("invalid signer type");
+            let signer_type = match signer_type {
+                AccountSignerType::Stronghold => SignerType::Stronghold,
+                AccountSignerType::EnvMnemonic => SignerType::EnvMnemonic,
+            };
+            let mnemonic = match cx.argument_opt(1) {
+                Some(arg) => Some(arg.downcast::<JsString>().or_throw(&mut cx)?.value()),
+                None => None,
+            };
+
+            {
+                let this = cx.this();
+                let guard = cx.lock();
+                let ref_ = &this.borrow(&guard).0;
+                crate::block_on(async move {
+                    let mut manager = ref_.write().await;
+                    manager.store_mnemonic(signer_type, mnemonic).await
+                }).expect("failed to store mnemonic");
             }
             Ok(cx.undefined().upcast())
         }
@@ -138,7 +158,7 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let manager = ref_.read().unwrap();
+                let manager = crate::block_on(ref_.read());
 
                 let mut builder = manager
                     .create_account(account_to_create.client_options)
@@ -146,9 +166,6 @@ declare_types! {
                         AccountSignerType::Stronghold => SignerType::Stronghold,
                         AccountSignerType::EnvMnemonic => SignerType::EnvMnemonic,
                     });
-                if let Some(mnemonic) = &account_to_create.mnemonic {
-                    builder = builder.mnemonic(mnemonic);
-                }
                 if let Some(alias) = &account_to_create.alias {
                     builder = builder.alias(alias);
                 }
@@ -159,10 +176,10 @@ declare_types! {
                         .expect("invalid account created at format"),
                     );
                 }
-                crate::block_on(async move { builder.initialise().await }).expect("error creating account")
+                crate::block_on(builder.initialise()).expect("error creating account")
             };
 
-            let id = crate::store_account(account);
+            let id = crate::block_on(crate::store_account(account));
             let id = cx.string(serde_json::to_string(&id).unwrap());
 
             Ok(JsAccount::new(&mut cx, vec![id])?.upcast())
@@ -175,12 +192,14 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let manager = ref_.read().unwrap();
-                crate::block_on(async move { manager.get_account(&id).await })
+                crate::block_on(async move {
+                    let manager = ref_.read().await;
+                    manager.get_account(&id).await
+                })
             };
             match account {
                 Ok(account) => {
-                    let id = crate::store_account(account);
+                    let id = crate::block_on(crate::store_account(account));
                     let id = cx.string(serde_json::to_string(&id).unwrap());
                     Ok(JsAccount::new(&mut cx, vec![id])?.upcast())
                 },
@@ -194,12 +213,14 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let manager = ref_.read().unwrap();
-                crate::block_on(async move { manager.get_account_by_alias(alias).await })
+                crate::block_on(async move {
+                    let manager = ref_.read().await;
+                    manager.get_account_by_alias(alias).await
+                })
             };
             match account {
                 Some(account) => {
-                    let id = crate::store_account(account);
+                    let id = crate::block_on(crate::store_account(account));
                     let id = cx.string(serde_json::to_string(&id).unwrap());
                     Ok(JsAccount::new(&mut cx, vec![id])?.upcast())
                 },
@@ -212,13 +233,15 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let manager = ref_.read().unwrap();
-                crate::block_on(async move { manager.get_accounts().await })
+                crate::block_on(async move {
+                    let manager = ref_.read().await;
+                    manager.get_accounts().await
+                })
             };
 
             let js_array = JsArray::new(&mut cx, accounts.len() as u32);
             for (index, account) in accounts.into_iter().enumerate() {
-                let id = crate::store_account(account);
+                let id = crate::block_on(crate::store_account(account));
                 let id = cx.string(serde_json::to_string(&id).unwrap());
                 let js_account = JsAccount::new(&mut cx, vec![id])?;
                 js_array.set(&mut cx, index as u32, js_account)?;
@@ -234,8 +257,10 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let manager = ref_.read().unwrap();
-                crate::block_on(async move { manager.remove_account(&id).await }).expect("error removing account")
+                crate::block_on(async move {
+                    let manager = ref_.read().await;
+                    manager.remove_account(&id).await
+                }).expect("error removing account")
             };
             Ok(cx.undefined().upcast())
         }
@@ -286,8 +311,10 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let manager = ref_.read().unwrap();
-                manager.backup(backup_path).expect("error performing backup").display().to_string()
+                crate::block_on(async move {
+                    let manager = ref_.read().await;
+                    manager.backup(backup_path).await
+                }).expect("error performing backup").display().to_string()
             };
             Ok(cx.string(destination).upcast())
         }
@@ -299,8 +326,10 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let manager = ref_.read().unwrap();
-                crate::block_on(manager.import_accounts(source, password)).expect("error importing accounts");
+                crate::block_on(async move {
+                    let mut manager = ref_.write().await;
+                    manager.import_accounts(source, password).await
+                }).expect("error importing accounts");
             };
             Ok(cx.undefined().upcast())
         }

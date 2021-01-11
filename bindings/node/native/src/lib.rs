@@ -3,10 +3,9 @@
 
 use std::{
     any::Any,
-    borrow::Cow,
     collections::HashMap,
     panic::AssertUnwindSafe,
-    sync::{Arc, Mutex, RwLock},
+    sync::{Arc, Mutex},
 };
 
 use futures::{Future, FutureExt};
@@ -18,7 +17,7 @@ use iota_wallet::{
 use neon::prelude::*;
 use once_cell::sync::{Lazy, OnceCell};
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
-use tokio::runtime::Runtime;
+use tokio::{runtime::Runtime, sync::RwLock};
 
 mod classes;
 use classes::*;
@@ -33,23 +32,20 @@ fn account_instances() -> &'static AccountInstanceMap {
     &INSTANCES
 }
 
-pub(crate) fn get_account(id: &AccountIdentifier) -> AccountHandle {
+pub(crate) async fn get_account(id: &AccountIdentifier) -> AccountHandle {
     account_instances()
         .read()
-        .expect("failed to lock account instances: get_account()")
+        .await
         .get(id)
         .expect("account dropped or not initialised")
         .clone()
 }
 
-pub(crate) fn store_account(account_handle: AccountHandle) -> AccountIdentifier {
+pub(crate) async fn store_account(account_handle: AccountHandle) -> AccountIdentifier {
     let handle = account_handle.clone();
-    let id = block_on(async move { handle.id().await });
+    let id = handle.id().await;
 
-    account_instances()
-        .write()
-        .expect("failed to lock account instances: store_account()")
-        .insert(id.clone(), account_handle);
+    account_instances().write().await.insert(id.clone(), account_handle);
 
     id
 }
@@ -60,33 +56,30 @@ fn synced_account_instances() -> &'static SyncedAccountInstanceMap {
     &INSTANCES
 }
 
-pub(crate) fn get_synced_account(id: &str) -> SyncedAccountHandle {
+pub(crate) async fn get_synced_account(id: &str) -> SyncedAccountHandle {
     synced_account_instances()
         .read()
-        .expect("failed to lock synced account instances: get_synced_account()")
+        .await
         .get(id)
         .expect("synced account dropped or not initialised")
         .clone()
 }
 
-pub(crate) fn store_synced_account(synced_account: SyncedAccount) -> String {
-    let mut map = synced_account_instances()
-        .write()
-        .expect("failed to lock synced account instances: store_synced_account()");
+pub(crate) async fn store_synced_account(synced_account: SyncedAccount) -> String {
+    let mut map = synced_account_instances().write().await;
     let id: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
     map.insert(id.clone(), Arc::new(RwLock::new(synced_account)));
     id
 }
 
-pub(crate) fn remove_synced_account(id: &str) {
-    synced_account_instances()
-        .write()
-        .expect("failed to lock synced account instances: remove_synced_account()")
-        .remove(id);
+pub(crate) async fn remove_synced_account(id: &str) {
+    synced_account_instances().write().await.remove(id);
 }
 
 fn panic_to_response_message(panic: Box<dyn Any>) -> Result<String, Error> {
-    let msg = if let Some(message) = panic.downcast_ref::<Cow<'_, str>>() {
+    let msg = if let Some(message) = panic.downcast_ref::<String>() {
+        format!("Internal error: {}", message)
+    } else if let Some(message) = panic.downcast_ref::<&str>() {
         format!("Internal error: {}", message)
     } else {
         "Internal error".to_string()

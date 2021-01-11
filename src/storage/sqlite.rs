@@ -3,16 +3,20 @@
 
 use super::StorageAdapter;
 use crate::account::AccountIdentifier;
-use chrono::Utc;
+use chrono::prelude::*;
 use rusqlite::{
     params,
     types::{ToSqlOutput, Value},
     Connection, NO_PARAMS,
 };
 use std::{
+    fs,
     path::Path,
     sync::{Arc, Mutex},
 };
+
+/// The default SQLite storage file name.
+pub const SQLITE_STORAGE_FILENAME: &str = "wallet.db";
 
 /// Key value storage adapter.
 pub struct SqliteStorageAdapter {
@@ -23,9 +27,9 @@ pub struct SqliteStorageAdapter {
 impl SqliteStorageAdapter {
     /// Initialises the storage adapter.
     pub fn new(path: impl AsRef<Path>, table_name: impl AsRef<str>) -> crate::Result<Self> {
-        std::fs::create_dir_all(&path)?;
+        fs::create_dir_all(&path)?;
 
-        let connection = Connection::open(path.as_ref().join("wallet.db"))?;
+        let connection = Connection::open(path.as_ref().join(SQLITE_STORAGE_FILENAME))?;
 
         connection.execute(
             &format!(
@@ -91,7 +95,7 @@ impl StorageAdapter for SqliteStorageAdapter {
         let result = connection
             .execute(
                 &format!("INSERT OR REPLACE INTO {} VALUES (?1, ?2, ?3)", self.table_name),
-                params![id, account, Utc::now().timestamp()],
+                params![id, account, Local::now().timestamp()],
             )
             .map_err(|_| crate::Error::Storage("failed to insert data".into()))?;
         Ok(())

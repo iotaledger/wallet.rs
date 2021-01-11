@@ -6,40 +6,20 @@ use crate::{
     address::{Address, IotaAddress},
     client::ClientOptions,
     message::{Message, MessageType},
-    signing::{with_signer, SignerType},
+    signing::SignerType,
 };
 
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
 use iota::message::prelude::MessageId;
-use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex, RwLock};
 
-use std::{
-    collections::HashMap,
-    convert::TryInto,
-    ops::Deref,
-    path::PathBuf,
-    sync::{Arc, Mutex},
-    thread,
-};
+use std::{ops::Deref, path::PathBuf, sync::Arc};
 
 mod sync;
 pub(crate) use sync::{repost_message, RepostAction};
 pub use sync::{AccountSynchronizer, SyncedAccount};
-
-type AddressesLock = Arc<Mutex<Vec<IotaAddress>>>;
-type AccountAddressesLock = Arc<Mutex<HashMap<AccountIdentifier, AddressesLock>>>;
-static ACCOUNT_ADDRESSES_LOCK: OnceCell<AccountAddressesLock> = OnceCell::new();
-
-pub(crate) fn get_account_addresses_lock(account_id: &AccountIdentifier) -> AddressesLock {
-    let mut locks = ACCOUNT_ADDRESSES_LOCK.get_or_init(Default::default).lock().unwrap();
-    if !locks.contains_key(&account_id) {
-        locks.insert(account_id.clone(), Default::default());
-    }
-    locks.get(&account_id).unwrap().clone()
-}
 
 /// The account identifier.
 #[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
@@ -75,7 +55,6 @@ impl From<usize> for AccountIdentifier {
 pub struct AccountInitialiser {
     accounts: AccountStore,
     storage_path: PathBuf,
-    mnemonic: Option<String>,
     alias: Option<String>,
     created_at: Option<DateTime<Utc>>,
     messages: Vec<Message>,
@@ -91,7 +70,6 @@ impl AccountInitialiser {
         Self {
             accounts,
             storage_path,
-            mnemonic: None,
             alias: None,
             created_at: None,
             messages: vec![],
@@ -105,16 +83,9 @@ impl AccountInitialiser {
         }
     }
 
-    /// Sets the account's signer type.
+    /// Sets the account type.
     pub fn signer_type(mut self, signer_type: SignerType) -> Self {
         self.signer_type.replace(signer_type);
-        self
-    }
-
-    /// Defines the account BIP-39 mnemonic.
-    /// When importing an account from stronghold, the mnemonic won't be required.
-    pub fn mnemonic(mut self, mnemonic: impl AsRef<str>) -> Self {
-        self.mnemonic = Some(mnemonic.as_ref().to_string());
         self
     }
 
@@ -151,24 +122,13 @@ impl AccountInitialiser {
 
     /// Initialises the account.
     pub async fn initialise(self) -> crate::Result<AccountHandle> {
-        let mut accounts = self.accounts.write().await;
+        let accounts = self.accounts.read().await;
 
         let alias = self.alias.unwrap_or_else(|| format!("Account {}", accounts.len()));
         let signer_type = self.signer_type.ok_or(crate::Error::AccountInitialiseRequiredField(
             crate::AccountInitialiseRequiredField::SignerType,
         ))?;
         let created_at = self.created_at.unwrap_or_else(chrono::Utc::now);
-        let mut mnemonic = self.mnemonic;
-        if signer_type == SignerType::EnvMnemonic && accounts.is_empty() {
-            let _ = dotenv::dotenv();
-            if std::env::var("IOTA_WALLET_MNEMONIC").is_err() {
-                mnemonic = Some(
-                    bip39::Mnemonic::new(bip39::MnemonicType::Words24, bip39::Language::English)
-                        .phrase()
-                        .to_string(),
-                );
-            }
-        }
 
         if let Some(latest_account_handle) = accounts.values().last() {
             let latest_account = latest_account_handle.read().await;
@@ -188,31 +148,30 @@ impl AccountInitialiser {
             client_options: self.client_options,
             storage_path: self.storage_path,
             has_pending_changes: true,
+            skip_persistance: self.skip_persistance,
         };
 
-        let id = with_signer(&signer_type, |signer| signer.init_account(&account, mnemonic))?;
-        account.set_id(id.into());
+        let address = crate::address::get_iota_address(&account, 0, false).await?;
+        let mut digest = [0; 32];
+        let raw = match address {
+            iota::Address::Ed25519(a) => a.as_ref().to_vec(),
+            iota::Address::Wots(a) => a.as_ref().to_vec(),
+            _ => unimplemented!(),
+        };
+        crypto::hashes::sha::SHA256(&raw, &mut digest);
+        account.set_id(AccountIdentifier::Id(hex::encode(digest)));
 
         let guard = if self.skip_persistance {
             account.into()
         } else {
             let account_id = account.id().clone();
             let guard: AccountHandle = account.into();
-            accounts.insert(account_id, guard.clone());
+            drop(accounts);
+            self.accounts.write().await.insert(account_id, guard.clone());
             guard
         };
 
         Ok(guard)
-    }
-}
-
-pub(crate) fn account_id_to_stronghold_record_id(account_id: &AccountIdentifier) -> crate::Result<[u8; 32]> {
-    if let AccountIdentifier::Id(id) = account_id {
-        let decoded = hex::decode(id)?;
-        let id: [u8; 32] = decoded.try_into().unwrap();
-        Ok(id)
-    } else {
-        Err(crate::Error::Storage("id can't be index".to_string()))
     }
 }
 
@@ -248,22 +207,36 @@ pub struct Account {
     #[doc(hidden)]
     #[serde(skip)]
     has_pending_changes: bool,
+    #[getset(set = "pub(crate)", get = "pub(crate)")]
+    skip_persistance: bool,
 }
 
 /// A thread guard over an account.
 #[derive(Debug, Clone)]
-pub struct AccountHandle(Arc<RwLock<Account>>);
+pub struct AccountHandle {
+    inner: Arc<RwLock<Account>>,
+    locked_addresses: Arc<Mutex<Vec<IotaAddress>>>,
+}
+
+impl AccountHandle {
+    pub(crate) fn locked_addresses(&self) -> Arc<Mutex<Vec<IotaAddress>>> {
+        self.locked_addresses.clone()
+    }
+}
 
 impl From<Account> for AccountHandle {
     fn from(account: Account) -> Self {
-        Self(Arc::new(RwLock::new(account)))
+        Self {
+            inner: Arc::new(RwLock::new(account)),
+            locked_addresses: Default::default(),
+        }
     }
 }
 
 impl Deref for AccountHandle {
     type Target = RwLock<Account>;
     fn deref(&self) -> &Self::Target {
-        &self.0.deref()
+        &self.inner.deref()
     }
 }
 
@@ -273,7 +246,7 @@ macro_rules! guard_field_getters {
             $(
                 #[$attr]
                 pub async fn $x(&self) -> $ret {
-                    self.0.read().await.$x().clone()
+                    self.inner.read().await.$x().clone()
                 }
             )*
         }
@@ -302,8 +275,8 @@ impl AccountHandle {
 
     /// Gets a new unused address and links it to this account.
     pub async fn generate_address(&self) -> crate::Result<Address> {
-        let mut account = self.0.write().await;
-        let address = crate::address::get_new_address(&account)?;
+        let mut account = self.inner.write().await;
+        let address = crate::address::get_new_address(&account).await?;
 
         account.do_mut(|account| {
             account.addresses.push(address.clone());
@@ -316,34 +289,34 @@ impl AccountHandle {
 
     /// Bridge to [Account#latest_address](struct.Account.html#method.latest_address).
     pub async fn latest_address(&self) -> Option<Address> {
-        self.0.read().await.latest_address().cloned()
+        self.inner.read().await.latest_address().cloned()
     }
 
     /// Bridge to [Account#total_balance](struct.Account.html#method.total_balance).
     pub async fn total_balance(&self) -> u64 {
-        self.0.read().await.total_balance()
+        self.inner.read().await.total_balance()
     }
 
     /// Bridge to [Account#available_balance](struct.Account.html#method.available_balance).
     pub async fn available_balance(&self) -> u64 {
-        self.0.read().await.available_balance()
+        self.inner.read().await.available_balance()
     }
 
     /// Bridge to [Account#set_alias](struct.Account.html#method.set_alias).
     pub async fn set_alias(&self, alias: impl AsRef<str>) {
-        self.0.write().await.set_alias(alias);
+        self.inner.write().await.set_alias(alias);
     }
 
     /// Bridge to [Account#set_client_options](struct.Account.html#method.set_client_options).
     pub async fn set_client_options(&self, options: ClientOptions) {
-        self.0.write().await.set_client_options(options);
+        self.inner.write().await.set_client_options(options);
     }
 
     /// Bridge to [Account#list_messages](struct.Account.html#method.list_messages).
     /// This method clones the account's messages so when querying a large list of messages
     /// prefer using the `read` method to access the account instance.
     pub async fn list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<Message> {
-        self.0
+        self.inner
             .read()
             .await
             .list_messages(count, from, message_type)
@@ -356,7 +329,7 @@ impl AccountHandle {
     /// This method clones the account's addresses so when querying a large list of addresses
     /// prefer using the `read` method to access the account instance.
     pub async fn list_addresses(&self, unspent: bool) -> Vec<Address> {
-        self.0
+        self.inner
             .read()
             .await
             .list_addresses(unspent)
@@ -367,26 +340,26 @@ impl AccountHandle {
 
     /// Bridge to [Account#get_message](struct.Account.html#method.get_message).
     pub async fn get_message(&self, message_id: &MessageId) -> Option<Message> {
-        self.0.read().await.get_message(message_id).cloned()
-    }
-}
-
-impl Drop for Account {
-    fn drop(&mut self) {
-        if self.has_pending_changes {
-            let storage_path = self.storage_path.clone();
-            let account_id = self.id().clone();
-            if let Ok(data) = serde_json::to_string(&self) {
-                let _ = thread::spawn(move || {
-                    crate::block_on(crate::storage::save_account(&storage_path, &account_id, data))
-                })
-                .join();
-            }
-        }
+        self.inner.read().await.get_message(message_id).cloned()
     }
 }
 
 impl Account {
+    pub(crate) async fn save(&mut self) -> crate::Result<()> {
+        if self.has_pending_changes && !self.skip_persistance {
+            let storage_path = self.storage_path.clone();
+            let account_id = self.id().clone();
+            let data = serde_json::to_string(&self)?;
+            crate::storage::get(&storage_path)?
+                .lock()
+                .await
+                .set(&account_id, data)
+                .await?;
+            self.has_pending_changes = false;
+        }
+        Ok(())
+    }
+
     pub(crate) fn do_mut<R>(&mut self, f: impl FnOnce(&mut Self) -> R) -> R {
         let res = f(self);
         self.has_pending_changes = true;
@@ -437,15 +410,6 @@ impl Account {
         self.client_options = options;
     }
 
-    pub(crate) async fn save(&mut self) -> crate::Result<()> {
-        if self.has_pending_changes {
-            let storage_path = self.storage_path.clone();
-            crate::storage::save_account(&storage_path, self.id(), serde_json::to_string(&self)?).await?;
-            self.has_pending_changes = false;
-        }
-        Ok(())
-    }
-
     /// Gets a list of transactions on this account.
     /// It's fetched from the storage. To ensure the database is updated with the latest transactions,
     /// `sync` should be called first.
@@ -457,13 +421,13 @@ impl Account {
     /// # Example
     ///
     /// ```
-    /// use iota_wallet::{account_manager::AccountManager, client::ClientOptionsBuilder, message::MessageType};
-    /// # use rand::{thread_rng, Rng};
+    /// use iota_wallet::{account_manager::AccountManager, client::ClientOptionsBuilder, message::MessageType, signing::SignerType};
+    /// # use rand::{distributions::Alphanumeric, thread_rng, Rng};
     ///
     /// #[tokio::main]
     /// async fn main() {
-    ///     # let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
-    ///     # let storage_path = std::path::PathBuf::from(format!("./example-database/{}", storage_path));
+    ///     # let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
+    ///     # let storage_path = std::path::PathBuf::from(format!("./test-storage/{}", storage_path));
     ///     // gets 10 received messages, skipping the first 5 most recent messages.
     ///     let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
     ///         .expect("invalid node URL")
@@ -471,6 +435,8 @@ impl Account {
     ///     let mut manager = AccountManager::builder().finish().await.unwrap();
     ///     # let mut manager = AccountManager::builder().with_storage_path(storage_path).finish().await.unwrap();
     ///     manager.set_stronghold_password("password").await.unwrap();
+    ///     manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
+    ///
     ///     let account_handle = manager
     ///         .create_account(client_options)
     ///         .initialise()
@@ -583,42 +549,33 @@ pub struct InitialisedAccount<'a> {
 #[cfg(test)]
 mod tests {
     use crate::client::ClientOptionsBuilder;
-    use rusty_fork::rusty_fork_test;
 
-    rusty_fork_test! {
-        #[test]
-        fn set_alias() {
-            let manager = crate::test_utils::get_account_manager();
-            let manager = manager.lock().unwrap();
+    #[tokio::test]
+    async fn set_alias() {
+        let manager = crate::test_utils::get_account_manager().await;
 
-            let updated_alias = "updated alias";
-            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-                .expect("invalid node URL")
-                .build();
+        let updated_alias = "updated alias";
+        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+            .expect("invalid node URL")
+            .build();
 
-            crate::block_on(async move {
-                let account_id = {
-                    let account_handle = manager
-                        .create_account(client_options)
-                        .alias("alias")
-                        .initialise()
-                        .await
-                        .expect("failed to add account");
+        let account_id = {
+            let account_handle = manager
+                .create_account(client_options)
+                .alias("alias")
+                .initialise()
+                .await
+                .expect("failed to add account");
 
-                    account_handle.set_alias(updated_alias).await;
-                    account_handle.id().await
-                };
+            account_handle.set_alias(updated_alias).await;
+            account_handle.id().await
+        };
 
-                let account_in_storage = manager
-                    .get_account(&account_id)
-                    .await
-                    .expect("failed to get account from storage");
-                let account_in_storage = account_in_storage.read().await;
-                assert_eq!(
-                    account_in_storage.alias().to_string(),
-                    updated_alias.to_string()
-                );
-            });
-        }
+        let account_in_storage = manager
+            .get_account(&account_id)
+            .await
+            .expect("failed to get account from storage");
+        let account_in_storage = account_in_storage.read().await;
+        assert_eq!(account_in_storage.alias().to_string(), updated_alias.to_string());
     }
 }

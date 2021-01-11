@@ -6,6 +6,7 @@ use crate::{
     address::Address,
     client::ClientOptions,
     message::{Message as WalletMessage, MessageType as WalletMessageType, TransferBuilder},
+    signing::SignerType,
     Error,
 };
 use serde::{ser::Serializer, Deserialize, Serialize};
@@ -19,13 +20,17 @@ pub struct AccountToCreate {
     /// The node options.
     #[serde(rename = "clientOptions")]
     pub client_options: ClientOptions,
-    /// The account mnemonic.
-    pub mnemonic: Option<String>,
     /// The account alias.
     pub alias: Option<String>,
     /// The account createdAt date string.
     #[serde(rename = "createdAt")]
     pub created_at: Option<String>,
+    /// Whether to skip saving the account to storage or not.
+    #[serde(rename = "skipPersistance", default)]
+    pub skip_persistance: bool,
+    /// The account's signer type.
+    #[serde(rename = "signerType")]
+    pub signer_type: Option<SignerType>,
 }
 
 /// Each public account method.
@@ -104,17 +109,20 @@ pub enum MessageType {
         message_id: String,
     },
     /// Backup storage.
+    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
     Backup(String),
     /// Import accounts from storage.
+    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
     RestoreBackup {
         /// The path to the backed up storage.
         #[serde(rename = "backupPath")]
         backup_path: String,
         /// The backup stronghold password.
-        #[cfg(feature = "stronghold")]
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         password: String,
     },
     /// Set stronghold snapshot password.
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     SetStrongholdPassword(String),
     /// Send funds.
     SendTransfer {
@@ -134,6 +142,18 @@ pub enum MessageType {
         to_account_id: AccountIdentifier,
         /// The transfer amount.
         amount: NonZeroU64,
+    },
+    /// Generates a new mnemonic.
+    GenerateMnemonic,
+    /// Checks if the given mnemonic is valid.
+    VerifyMnemonic(String),
+    /// Store mnemonic.
+    StoreMnemonic {
+        /// The signer type.
+        #[serde(rename = "signerType")]
+        signer_type: SignerType,
+        /// The mnemonic. If empty, we'll generate one.
+        mnemonic: Option<String>,
     },
 }
 
@@ -156,11 +176,15 @@ impl Serialize for MessageType {
                 account_id: _,
                 message_id: _,
             } => serializer.serialize_unit_variant("MessageType", 6, "Reattach"),
+            #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
             MessageType::Backup(_) => serializer.serialize_unit_variant("MessageType", 7, "Backup"),
+            #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
             MessageType::RestoreBackup {
                 backup_path: _,
-                password: _,
+                #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+                    password: _,
             } => serializer.serialize_unit_variant("MessageType", 8, "RestoreBackup"),
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             MessageType::SetStrongholdPassword(_) => {
                 serializer.serialize_unit_variant("MessageType", 9, "SetStrongholdPassword")
             }
@@ -173,6 +197,12 @@ impl Serialize for MessageType {
                 to_account_id: _,
                 amount: _,
             } => serializer.serialize_unit_variant("MessageType", 11, "InternalTransfer"),
+            MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 12, "GenerateMnemonic"),
+            MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 13, "GenerateMnemonic"),
+            MessageType::StoreMnemonic {
+                signer_type: _,
+                mnemonic: _,
+            } => serializer.serialize_unit_variant("MessageType", 14, "StoreMnemonic"),
         }
     }
 }
@@ -233,10 +263,13 @@ pub enum ResponseType {
     /// Reattach response.
     Reattached(String),
     /// Backup response.
+    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
     BackupSuccessful,
     /// ImportAccounts response.
+    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
     BackupRestored,
     /// SetStrongholdPassword response.
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     StrongholdPasswordSet,
     /// SendTransfer and InternalTransfer response.
     SentTransfer(WalletMessage),
@@ -244,6 +277,12 @@ pub enum ResponseType {
     Error(Error),
     /// A panic occurred.
     Panic(String),
+    /// GenerateMnemonic response.
+    GeneratedMnemonic(String),
+    /// VerifyMnemonic response.
+    VerifiedMnemonic,
+    /// StoreMnemonic response.
+    StoredMnemonic,
 }
 
 /// The message type.
