@@ -85,8 +85,8 @@ async fn sync_addresses(
                 let client = crate::client::get_client(account.client_options());
                 let client = client.read().await;
 
-                let address_outputs = client.get_address().outputs(&iota_address).await?;
-                let balance = client.get_address().balance(&iota_address).await?;
+                let address_outputs = client.get_address().outputs(&iota_address.to_bech32().into()).await?;
+                let balance = client.get_address().balance(&iota_address.to_bech32().into()).await?;
                 let mut curr_found_messages = vec![];
 
                 log::debug!(
@@ -182,8 +182,14 @@ async fn sync_messages(
                 let client = crate::client::get_client(&client_options);
                 let client = client.read().await;
 
-                let address_outputs = client.get_address().outputs(address.address()).await?;
-                let balance = client.get_address().balance(address.address()).await?;
+                let address_outputs = client
+                    .get_address()
+                    .outputs(&address.address().to_bech32().into())
+                    .await?;
+                let balance = client
+                    .get_address()
+                    .balance(&address.address().to_bech32().into())
+                    .await?;
 
                 log::debug!(
                     "[SYNC] syncing messages and outputs for address {}, got {} outputs and balance {}",
