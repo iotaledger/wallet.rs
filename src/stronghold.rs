@@ -51,9 +51,6 @@ const SECRET_VAULT_PATH: &str = "iota-wallet-secret";
 const SEED_RECORD_PATH: &str = "iota-wallet-seed";
 const DERIVE_OUTPUT_RECORD_PATH: &str = "iota-wallet-derived";
 
-/// The default stronghold storage file name.
-pub const SNAPSHOT_FILENAME: &str = "wallet.stronghold";
-
 fn account_id_to_client_path(id: &AccountIdentifier) -> Vec<u8> {
     match id {
         AccountIdentifier::Id(id) => format!("iota-wallet-account-{}", id).as_bytes().to_vec(),
@@ -84,8 +81,7 @@ async fn load_actor(
     };
 
     if !runtime.loaded_client_paths.contains(&client_path) {
-        let snapshot_file_path = snapshot_path.join(SNAPSHOT_FILENAME);
-        if snapshot_file_path.exists() {
+        if snapshot_path.exists() {
             stronghold_response_to_result(
                 runtime
                     .stronghold
@@ -94,7 +90,7 @@ async fn load_actor(
                         None,
                         get_password(snapshot_path).await?.to_vec(),
                         None,
-                        Some(snapshot_file_path),
+                        Some(snapshot_path.to_path_buf()),
                     )
                     .await,
             )?;
@@ -223,8 +219,6 @@ pub enum Error {
     FailedToPerformAction(String),
     #[error("snapshot password not set")]
     PasswordNotSet,
-    #[error("failed to create snapshot directory")]
-    FailedToCreateSnapshotDir,
     #[error("invalid address or account index {0}")]
     TryFromIntError(#[from] TryFromIntError),
 }
@@ -296,7 +290,7 @@ async fn save_snapshot(runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> R
             .write_all_to_snapshot(
                 get_password(snapshot_path).await?.to_vec(),
                 None,
-                Some(snapshot_path.join(SNAPSHOT_FILENAME)),
+                Some(snapshot_path.to_path_buf()),
             )
             .await,
     )
@@ -349,7 +343,6 @@ async fn switch_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf
 
 pub async fn load_snapshot(snapshot_path: &PathBuf, password: &[u8; 32]) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
-    std::fs::create_dir_all(&snapshot_path).map_err(|_| Error::FailedToCreateSnapshotDir)?;
     set_password(&snapshot_path, password).await;
     switch_snapshot(&mut runtime, &snapshot_path).await
 }
@@ -623,7 +616,8 @@ mod tests {
                 let interval = 500;
                 super::set_password_clear_interval(Duration::from_millis(interval)).await;
                 let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
-                let snapshot_path = PathBuf::from(format!("./test-storage/{}", snapshot_path));
+                std::fs::create_dir_all("./test-storage").unwrap();
+                let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
                 super::load_snapshot(&snapshot_path, &[0; 32]).await.unwrap();
 
                 std::thread::sleep(Duration::from_millis(interval * 3));
@@ -646,7 +640,8 @@ mod tests {
                 let interval = Duration::from_millis(500);
                 super::set_password_clear_interval(interval).await;
                 let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
-                let snapshot_path = PathBuf::from(format!("./test-storage/{}", snapshot_path));
+                std::fs::create_dir_all("./test-storage").unwrap();
+                let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
                 super::load_snapshot(&snapshot_path, &[0; 32]).await.unwrap();
 
                 for i in 1..5 {
@@ -679,7 +674,8 @@ mod tests {
     #[tokio::test]
     async fn write_and_get_all() -> super::Result<()> {
         let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
-        let snapshot_path = PathBuf::from(format!("./test-storage/{}", snapshot_path));
+        std::fs::create_dir_all("./test-storage").unwrap();
+        let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
         super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
         let id = AccountIdentifier::Id("id".to_string());
@@ -698,7 +694,8 @@ mod tests {
     #[tokio::test]
     async fn write_and_read() -> super::Result<()> {
         let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
-        let snapshot_path = PathBuf::from(format!("./test-storage/{}", snapshot_path));
+        std::fs::create_dir_all("./test-storage").unwrap();
+        let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
         super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
         let id = AccountIdentifier::Id("writeandreadtest".to_string());
@@ -713,7 +710,8 @@ mod tests {
     #[tokio::test]
     async fn write_and_delete() -> super::Result<()> {
         let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
-        let snapshot_path = PathBuf::from(format!("./test-storage/{}", snapshot_path));
+        std::fs::create_dir_all("./test-storage").unwrap();
+        let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
         super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
         let id = AccountIdentifier::Id("writeanddeleteid".to_string());
@@ -730,7 +728,8 @@ mod tests {
 
         for i in 1..3 {
             let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
-            let snapshot_path = PathBuf::from(format!("./test-storage/{}", snapshot_path));
+            std::fs::create_dir_all("./test-storage").unwrap();
+            let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
             super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
             let id = AccountIdentifier::Id(format!("multiplesnapshots{}", i));

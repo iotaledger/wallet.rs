@@ -9,6 +9,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// The storage id.
+pub const STORAGE_ID: &str = "STRONGHOLD";
+
 /// Stronghold storage adapter.
 pub struct StrongholdStorageAdapter {
     path: PathBuf,
@@ -17,7 +20,9 @@ pub struct StrongholdStorageAdapter {
 impl StrongholdStorageAdapter {
     /// Initialises the storage adapter.
     pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
-        fs::create_dir_all(&path)?;
+        if let Some(parent) = path.as_ref().parent() {
+            fs::create_dir_all(&parent)?;
+        }
 
         Ok(Self {
             path: path.as_ref().to_path_buf(),
@@ -27,6 +32,10 @@ impl StrongholdStorageAdapter {
 
 #[async_trait::async_trait]
 impl StorageAdapter for StrongholdStorageAdapter {
+    fn id(&self) -> &'static str {
+        STORAGE_ID
+    }
+
     async fn get(&self, account_id: &AccountIdentifier) -> crate::Result<String> {
         let account = crate::stronghold::get_account(&self.path, account_id).await?;
         Ok(account)

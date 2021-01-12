@@ -324,7 +324,7 @@ impl WalletMessageHandler {
 #[cfg(test)]
 mod tests {
     use super::{AccountToCreate, Message, MessageType, Response, ResponseType, WalletMessageHandler};
-    use crate::{client::ClientOptionsBuilder, signing::SignerType};
+    use crate::client::ClientOptionsBuilder;
     use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
     /// The wallet actor builder.
@@ -407,19 +407,22 @@ mod tests {
     async fn create_and_remove_account() {
         let tx = spawn_actor();
 
+        let signer_type = crate::test_utils::signer_type();
+
         // create an account
         let account = AccountToCreate {
             client_options: ClientOptionsBuilder::node("http://node.iota").unwrap().build(),
             alias: None,
             created_at: None,
             skip_persistance: false,
-            signer_type: None,
+            signer_type: Some(signer_type.clone()),
         };
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         send_message(&tx, MessageType::SetStrongholdPassword("password".to_string())).await;
         send_message(
             &tx,
             MessageType::StoreMnemonic {
-                signer_type: SignerType::Stronghold,
+                signer_type,
                 mnemonic: None,
             },
         )

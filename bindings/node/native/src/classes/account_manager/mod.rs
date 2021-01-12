@@ -6,10 +6,9 @@ use std::{num::NonZeroU64, path::PathBuf, sync::Arc};
 
 use iota_wallet::{
     account::AccountIdentifier,
-    account_manager::{AccountManager, DEFAULT_STORAGE_PATH},
+    account_manager::{AccountManager, DefaultStorage, DEFAULT_STORAGE_FOLDER},
     client::ClientOptions,
     signing::SignerType,
-    storage::stronghold::StrongholdStorageAdapter,
     DateTime, Utc,
 };
 use neon::prelude::*;
@@ -63,13 +62,15 @@ fn js_value_to_account_id(
 pub struct AccountManagerWrapper(Arc<RwLock<AccountManager>>);
 
 fn default_storage_path() -> PathBuf {
-    DEFAULT_STORAGE_PATH.into()
+    DEFAULT_STORAGE_FOLDER.into()
 }
 
 #[derive(Default, Deserialize)]
 struct ManagerOptions {
     #[serde(rename = "storagePath", default = "default_storage_path")]
     storage_path: PathBuf,
+    #[serde(rename = "storageType")]
+    storage_type: Option<DefaultStorage>,
 }
 
 declare_types! {
@@ -83,11 +84,11 @@ declare_types! {
                 None => Default::default(),
             };
             let manager = crate::block_on(
-                    AccountManager::builder().with_storage(
-                        &options.storage_path,
-                        StrongholdStorageAdapter::new(&options.storage_path).unwrap()
-                    ).finish()
-                ).expect("error initializing account manager");
+                AccountManager::builder()
+                .with_storage_path(&options.storage_path)
+                .with_storage(options.storage_type.unwrap_or(DefaultStorage::Stronghold))
+                .finish()
+            ).expect("error initializing account manager");
             Ok(AccountManagerWrapper(Arc::new(RwLock::new(manager))))
         }
 

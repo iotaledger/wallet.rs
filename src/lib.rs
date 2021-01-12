@@ -161,9 +161,9 @@ pub enum Error {
     /// Error from iota crypto.rs
     #[error("crypto error: {0}")]
     Crypto(crypto::Error),
-    /// Path provided to `import_accounts` isn't a file
-    #[error("provided backup path isn't a file")]
-    BackupNotFile,
+    /// Path provided to `import_accounts` isn't a valid file
+    #[error("provided backup path isn't a valid file")]
+    InvalidBackupFile,
     /// Backup `destination` argument is invalid
     #[error("backup destination must be a directory and it must exist")]
     InvalidBackupDestination,
@@ -261,18 +261,73 @@ mod test_utils {
 
     static POLLING_INTERVAL: Duration = Duration::from_secs(2);
 
-    pub async fn get_account_manager() -> AccountManager {
-        let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
-        let storage_path = PathBuf::from(format!("./test-storage/{}", storage_path));
+    struct TestSigner {}
 
-        let mut manager = AccountManager::builder()
+    #[async_trait::async_trait]
+    impl crate::signing::Signer for TestSigner {
+        async fn store_mnemonic(&self, _: &PathBuf, mnemonic: String) -> crate::Result<()> {
+            Ok(())
+        }
+
+        async fn generate_address(
+            &self,
+            account: &crate::account::Account,
+            address_index: usize,
+            internal: bool,
+        ) -> crate::Result<iota::Address> {
+            let mut address = [0; iota::ED25519_ADDRESS_LENGTH];
+            crypto::rand::fill(&mut address).unwrap();
+            Ok(iota::Address::Ed25519(iota::Ed25519Address::new(address)))
+        }
+
+        async fn sign_message(
+            &self,
+            account: &crate::account::Account,
+            essence: &iota::TransactionEssence,
+            inputs: &mut Vec<crate::signing::TransactionInput>,
+        ) -> crate::Result<Vec<iota::UnlockBlock>> {
+            Ok(Vec::new())
+        }
+    }
+
+    pub fn signer_type() -> SignerType {
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        let signer_type = SignerType::Stronghold;
+        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
+        let signer_type = SignerType::Custom("".to_string());
+        signer_type
+    }
+
+    pub async fn get_account_manager() -> AccountManager {
+        let mut manager = get_empty_account_manager().await;
+
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        manager.set_stronghold_password("password").await.unwrap();
+
+        manager.store_mnemonic(signer_type(), None).await.unwrap();
+        manager
+    }
+
+    pub async fn get_empty_account_manager() -> AccountManager {
+        let storage_path = loop {
+            let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
+            let storage_path = PathBuf::from(format!("./test-storage/{}", storage_path));
+            if !storage_path.exists() {
+                break storage_path;
+            }
+        };
+
+        let manager = AccountManager::builder()
             .with_storage_path(storage_path)
             .with_polling_interval(POLLING_INTERVAL)
             .finish()
             .await
             .unwrap();
-        manager.set_stronghold_password("password").await.unwrap();
-        manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
+
+        let signer_type = signer_type();
+        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
+        crate::signing::set_signer(signer_type.clone(), TestSigner {}).await;
+
         manager
     }
 
