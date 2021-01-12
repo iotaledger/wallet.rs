@@ -87,6 +87,7 @@ pub struct AccountManagerBuilder {
 
 impl Default for AccountManagerBuilder {
     fn default() -> Self {
+        #[allow(unused_variables)]
         let default_storage: Option<DefaultStorage> = None;
         #[cfg(all(feature = "stronghold-storage", not(feature = "sqlite-storage")))]
         let default_storage = Some(DefaultStorage::Stronghold);
