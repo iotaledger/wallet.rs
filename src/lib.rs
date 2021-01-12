@@ -314,8 +314,6 @@ mod test_utils {
             .await
             .unwrap();
 
-        manager.set_storage_password("password").await.unwrap();
-
         #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
         crate::signing::set_signer(signer_type(), TestSigner {}).await;
 
