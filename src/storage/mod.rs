@@ -33,10 +33,6 @@ pub fn set_adapter<P: AsRef<Path>, S: StorageAdapter + Sync + Send + 'static>(st
     );
 }
 
-pub(crate) fn stronghold_snapshot_filename() -> &'static str {
-    "wallet.stronghold"
-}
-
 /// gets the storage adapter
 pub(crate) fn get(storage_path: &PathBuf) -> crate::Result<Storage> {
     let instances = INSTANCES.get_or_init(Default::default).read().unwrap();

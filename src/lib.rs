@@ -30,6 +30,8 @@ pub mod storage;
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
 pub(crate) mod stronghold;
 
+pub use stronghold::set_password_clear_interval as set_stronghold_password_clear_interval;
+
 /// The wallet Result type.
 pub type Result<T> = std::result::Result<T, Error>;
 pub use chrono::prelude::{DateTime, Utc};
