@@ -534,6 +534,7 @@ pub async fn store_account(snapshot_path: &PathBuf, account_id: &AccountIdentifi
     };
     if !account_ids.contains(id.as_str()) {
         account_ids.push_str(id);
+        account_ids.push(ACCOUNT_ID_SEPARATOR);
         stronghold_response_to_result(
             runtime
                 .stronghold
@@ -577,12 +578,20 @@ pub async fn remove_account(snapshot_path: &PathBuf, account_id: &AccountIdentif
         .filter(|data| !data.is_empty())
         .map(|data| String::from_utf8_lossy(&data).to_string())
         .ok_or(Error::AccountNotFound)?;
+
+    let id = match account_id {
+        AccountIdentifier::Id(id) => id,
+        AccountIdentifier::Index(_) => unreachable!(),
+    };
     stronghold_response_to_result(
         runtime
             .stronghold
             .write_data(
                 account_ids_location,
-                account_ids.as_bytes().to_vec(),
+                account_ids
+                    .replace(&format!("{}{}", id, ACCOUNT_ID_SEPARATOR), "")
+                    .as_bytes()
+                    .to_vec(),
                 RecordHint::new("wallet.rs-account-ids").unwrap(),
                 vec![],
             )
