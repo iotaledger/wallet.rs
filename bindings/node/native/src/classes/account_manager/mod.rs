@@ -6,7 +6,7 @@ use std::{num::NonZeroU64, path::PathBuf, sync::Arc};
 
 use iota_wallet::{
     account::AccountIdentifier,
-    account_manager::{AccountManager, DefaultStorage, DEFAULT_STORAGE_PATH},
+    account_manager::{AccountManager, DefaultStorage, DEFAULT_STORAGE_FOLDER},
     client::ClientOptions,
     signing::SignerType,
     DateTime, Utc,
@@ -62,7 +62,7 @@ fn js_value_to_account_id(
 pub struct AccountManagerWrapper(Arc<RwLock<AccountManager>>);
 
 fn default_storage_path() -> PathBuf {
-    DEFAULT_STORAGE_PATH.into()
+    DEFAULT_STORAGE_FOLDER.into()
 }
 
 #[derive(Default, Deserialize)]

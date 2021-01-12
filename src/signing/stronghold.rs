@@ -10,10 +10,22 @@ use std::{collections::HashMap, path::PathBuf};
 #[derive(Default)]
 pub struct StrongholdSigner;
 
+fn stronghold_path(storage_path: &PathBuf) -> PathBuf {
+    if storage_path.extension().unwrap_or_default() == "stronghold" {
+        storage_path.clone()
+    } else if storage_path.is_dir() {
+        storage_path.join(crate::account_manager::STRONGHOLD_FILENAME)
+    } else if let Some(parent) = storage_path.parent() {
+        parent.join(crate::account_manager::STRONGHOLD_FILENAME)
+    } else {
+        storage_path.clone()
+    }
+}
+
 #[async_trait::async_trait]
 impl super::Signer for StrongholdSigner {
     async fn store_mnemonic(&self, storage_path: &PathBuf, mnemonic: String) -> crate::Result<()> {
-        crate::stronghold::store_mnemonic(storage_path, mnemonic).await?;
+        crate::stronghold::store_mnemonic(&stronghold_path(storage_path), mnemonic).await?;
         Ok(())
     }
 
@@ -23,9 +35,13 @@ impl super::Signer for StrongholdSigner {
         address_index: usize,
         internal: bool,
     ) -> crate::Result<iota::Address> {
-        let address =
-            crate::stronghold::generate_address(account.storage_path(), *account.index(), address_index, internal)
-                .await?;
+        let address = crate::stronghold::generate_address(
+            &stronghold_path(account.storage_path()),
+            *account.index(),
+            address_index,
+            internal,
+        )
+        .await?;
         Ok(address)
     }
 
@@ -50,7 +66,7 @@ impl super::Signer for StrongholdSigner {
             } else {
                 // If not, we should create a signature unlock block
                 let signature = crate::stronghold::sign_essence(
-                    account.storage_path(),
+                    &stronghold_path(account.storage_path()),
                     serialized_essence.clone(),
                     *account.index(),
                     recorder.address_index,

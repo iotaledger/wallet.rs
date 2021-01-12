@@ -159,9 +159,9 @@ pub enum Error {
     /// Error from iota crypto.rs
     #[error("crypto error: {0}")]
     Crypto(crypto::Error),
-    /// Path provided to `import_accounts` isn't a file
-    #[error("provided backup path isn't a file")]
-    BackupNotFile,
+    /// Path provided to `import_accounts` isn't a valid file
+    #[error("provided backup path isn't a valid file")]
+    InvalidBackupFile,
     /// Backup `destination` argument is invalid
     #[error("backup destination must be a directory and it must exist")]
     InvalidBackupDestination,
