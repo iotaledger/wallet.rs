@@ -1120,17 +1120,20 @@ mod tests {
         };
 
         // get another manager instance so we can import the accounts to a different storage
+        #[allow(unused_mut)]
         let mut manager = crate::test_utils::get_account_manager().await;
 
-        // import the accounts from the backup and assert that it's the same
         #[cfg(all(
             not(feature = "sqlite-storage"),
             any(feature = "stronghold", feature = "stronghold-storage")
         ))]
-        {
-            std::fs::remove_file(manager.storage_path()).unwrap();
-            manager.import_accounts(backup_file_path, "password").await.unwrap();
-        }
+        std::fs::remove_file(manager.storage_path()).unwrap();
+
+        // import the accounts from the backup and assert that it's the same
+
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        manager.import_accounts(backup_file_path, "password").await.unwrap();
+
         #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
         manager.import_accounts(backup_file_path).await.unwrap();
 
