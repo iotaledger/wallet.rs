@@ -5,7 +5,7 @@ use crate::address::{Address, IotaAddress};
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
 pub use iota::{common::packable::Packable, Indexation, Message as IotaMessage, MessageId, Output, Payload};
-use serde::{Deserialize, Serialize};
+use serde::{de::Deserializer, Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
 use std::{
     cmp::Ordering,
@@ -27,18 +27,70 @@ pub enum RemainderValueStrategy {
     AccountAddress(IotaAddress),
 }
 
+impl Default for RemainderValueStrategy {
+    fn default() -> Self {
+        Self::ChangeAddress
+    }
+}
+
 /// A transfer to make a transaction.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct TransferBuilder {
     /// The transfer value.
     amount: NonZeroU64,
     /// The transfer address.
-    #[serde(with = "crate::serde::iota_address_serde")]
     address: IotaAddress,
     /// (Optional) message indexation.
     indexation: Option<Indexation>,
     /// The strategy to use for the remainder value.
     remainder_value_strategy: RemainderValueStrategy,
+}
+
+impl<'de> Deserialize<'de> for TransferBuilder {
+    fn deserialize<D>(deserializer: D) -> Result<TransferBuilder, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        /// The message's index builder.
+        #[derive(Debug, Clone, Deserialize)]
+        struct IndexationBuilder {
+            index: String,
+            data: Option<Vec<u8>>,
+        }
+
+        impl IndexationBuilder {
+            /// Builds the indexation.
+            pub fn finish(self) -> crate::Result<Indexation> {
+                let indexation = Indexation::new(self.index, &self.data.unwrap_or_default())?;
+                Ok(indexation)
+            }
+        }
+
+        #[derive(Debug, Clone, Deserialize)]
+        pub struct TransferBuilderWrapper {
+            /// The transfer value.
+            amount: NonZeroU64,
+            /// The transfer address.
+            #[serde(with = "crate::serde::iota_address_serde")]
+            address: IotaAddress,
+            /// (Optional) message indexation.
+            indexation: Option<IndexationBuilder>,
+            /// The strategy to use for the remainder value.
+            remainder_value_strategy: RemainderValueStrategy,
+        }
+
+        TransferBuilderWrapper::deserialize(deserializer).and_then(|builder| {
+            Ok(TransferBuilder {
+                amount: builder.amount,
+                address: builder.address,
+                indexation: match builder.indexation {
+                    Some(i) => Some(i.finish().map_err(serde::de::Error::custom)?),
+                    None => None,
+                },
+                remainder_value_strategy: builder.remainder_value_strategy,
+            })
+        })
+    }
 }
 
 impl TransferBuilder {
@@ -289,10 +341,10 @@ impl Message {
                             if address_belongs_to_account {
                                 acc
                             } else {
-                                acc + x.amount().get()
+                                acc + x.amount()
                             }
                         } else if address_belongs_to_account {
-                            acc + x.amount().get()
+                            acc + x.amount()
                         } else {
                             acc
                         }

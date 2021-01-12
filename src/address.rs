@@ -1,11 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    account::Account,
-    message::MessageType,
-    signing::{with_signer, GenerateAddressMetadata},
-};
+use crate::{account::Account, message::MessageType, signing::GenerateAddressMetadata};
 use bech32::FromBase32;
 use getset::{Getters, Setters};
 pub use iota::message::prelude::{Address as IotaAddress, Ed25519Address, Input, Payload, UTXOInput};
@@ -206,9 +202,11 @@ impl Address {
                     && (!o.is_spent && output.is_spent)
             });
             if let Some(spent_output) = spent_existing_output {
+                log::debug!("[ADDRESS] got spent of {:?}", spent_output);
                 self.balance -= output.amount;
                 self.outputs.remove(spent_output);
             } else {
+                log::debug!("[ADDRESS] got new output {:?}", output);
                 self.balance += output.amount;
                 self.outputs.push(output);
             }
@@ -242,21 +240,23 @@ pub fn parse(address: String) -> crate::Result<IotaAddress> {
     Ok(iota_address)
 }
 
-pub(crate) fn get_iota_address(
+pub(crate) async fn get_iota_address(
     account: &Account,
     address_index: usize,
     internal: bool,
     metadata: GenerateAddressMetadata,
 ) -> crate::Result<IotaAddress> {
-    with_signer(account.signer_type(), |signer| {
-        signer.generate_address(&account, address_index, internal, metadata)
-    })
+    let signer = crate::signing::get_signer(account.signer_type()).await;
+    let signer = signer.lock().await;
+    signer
+        .generate_address(&account, address_index, internal, metadata)
+        .await
 }
 
 /// Gets an unused public address for the given account.
-pub(crate) fn get_new_address(account: &Account, metadata: GenerateAddressMetadata) -> crate::Result<Address> {
+pub(crate) async fn get_new_address(account: &Account, metadata: GenerateAddressMetadata) -> crate::Result<Address> {
     let key_index = account.addresses().iter().filter(|a| !a.internal()).count();
-    let iota_address = get_iota_address(&account, key_index, false, metadata)?;
+    let iota_address = get_iota_address(&account, key_index, false, metadata).await?;
     let address = Address {
         address: iota_address,
         balance: 0,
@@ -268,13 +268,13 @@ pub(crate) fn get_new_address(account: &Account, metadata: GenerateAddressMetada
 }
 
 /// Gets an unused change address for the given account and address.
-pub(crate) fn get_new_change_address(
+pub(crate) async fn get_new_change_address(
     account: &Account,
     address: &Address,
     metadata: GenerateAddressMetadata,
 ) -> crate::Result<Address> {
     let key_index = *address.key_index();
-    let iota_address = get_iota_address(&account, key_index, true, metadata)?;
+    let iota_address = get_iota_address(&account, key_index, true, metadata).await?;
     let address = Address {
         address: iota_address,
         balance: 0,
@@ -286,14 +286,14 @@ pub(crate) fn get_new_change_address(
 }
 
 /// Batch address generation.
-pub(crate) fn get_addresses(
+pub(crate) async fn get_addresses(
     account: &Account,
     count: usize,
     metadata: GenerateAddressMetadata,
 ) -> crate::Result<Vec<Address>> {
     let mut addresses = vec![];
     for i in 0..count {
-        addresses.push(get_new_address(&account, metadata.clone())?);
+        addresses.push(get_new_address(&account, metadata.clone()).await?);
     }
     Ok(addresses)
 }

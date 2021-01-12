@@ -31,25 +31,53 @@ $ yarn link iota-wallet
 
 After you linked the library, you can create an `AccountManager` instance and interface with it.
 
-While Stronghold is not ready, we recommend using the Sqlite StorageType and `EnvMnemonic` SignerType (this simply means you store your mnemonic as an environment variable).
-
 ### Example 
 
 ```javascript
-const { AccountManager, StorageType, SignerType } = require('iota-wallet')
+const { AccountManager, SignerType } = require('iota-wallet')
 const manager = new AccountManager({
-    storagePath: './storage',
-    storageType: StorageType.Sqlite
+    storagePath: './storage'
 })
+manager.setStrongholdPassword('password')
+manager.storeMnemonic(SignerType.Stronghold, manager.generateMnemonic())
 const account = await manager.createAccount({
   alias: 'Account1',
-  clientOptions: { node: 'http://api.lb-0.testnet.chrysalis2.com', localPow: false },
-  signerType: SignerType.EnvMnemonic
+  clientOptions: { node: 'http://api.lb-0.testnet.chrysalis2.com', localPow: false }
 })
 account.sync()
 ```
 
 ## API Reference
+
+### initLogger(config: LogOptions)
+
+Initializes the logging system.
+
+#### LogOptions
+
+| Param         | Type                     | Default                | Description                             |
+| ------------- | ------------------------ | ---------------------- | --------------------------------------- |
+| color_enabled | <code>boolean</code>     | <code>undefined</code> | Whether to enable colored output or not |
+| outputs       | <code>LogOutput[]</code> | <code>undefined</code> | The log outputs                         |
+
+#### LogOutput
+
+| Param          | Type                  | Default                | Description                                          |
+| -------------- | --------------------- | ---------------------- | ---------------------------------------------------- |
+| name           | <code>string</code>   | <code>undefined</code> | 'stdout' or a path to a file                         |
+| level_filter   | <code>string</code>   | <code>'info'</code>    | The maximum log level that this output accepts       |
+| target_filters | <code>string[]</code> | <code>[]</code>        | Filters on the log target (library and module names) |
+
+### addEventListener(event, cb)
+
+Adds a new event listener with a callback in the form of `(err, data) => {}`.
+Supported event names:
+- ErrorThrown
+- BalanceChange
+- NewTransaction
+- ConfirmationStateChange
+- Reattachment
+- Broadcast
 
 ### AccountManager
 
@@ -57,11 +85,21 @@ account.sync()
 
 Creates a new instance of the AccountManager.
 
-| Param         | Type                | Default                | Description                                           |
-| ------------- | ------------------- | ---------------------- | ----------------------------------------------------- |
-| [options]     | <code>object</code> | <code>undefined</code> | The options to configure the account manager          |
-| [storagePath] | <code>string</code> | <code>undefined</code> | The path where the database file will be saved        |
-| [storageType] | <code>number</code> | <code>undefined</code> | The type of the database.  Stronghold = 1, Sqlite = 2 |
+| Param         | Type                     | Default                             | Description                                    |
+| ------------- | ------------------------ | ----------------------------------- | ---------------------------------------------- |
+| [options]     | <code>object</code>      | <code>undefined</code>              | The options to configure the account manager   |
+| [storagePath] | <code>string</code>      | <code>undefined</code>              | The path where the database file will be saved |
+| [storageType] | <code>StorageType</code> | <code>StorageType.Stronghold</code> | The storage implementation to use              |
+
+- StorageType
+  
+One of the default storage implementations provided by the wallet library.
+
+| Param      | Description                     |
+| ---------- | ------------------------------- |
+| Sqlite     | Storage using a SQLite database |
+| Stronghold | Storage using Stronghold        |
+
 
 #### setStrongholdPassword(password): void
 
@@ -70,6 +108,21 @@ Sets the stronghold password and initialises it.
 | Param    | Type                | Default                | Description                      |
 | -------- | ------------------- | ---------------------- | -------------------------------- |
 | password | <code>string</code> | <code>undefined</code> | The stronghold snapshot password |
+
+#### generateMnemonic(): string
+
+Generates a new mnemonic phrase.
+
+**Returns** the generated mnemonic string.
+
+#### storeMnemonic(signerType[, mnemonic])
+
+Saves the mnemonic using the given signer provider.
+
+| Param      | Type                               | Default | Description                                       |
+| ---------- | ---------------------------------- | ------- | ------------------------------------------------- |
+| signerType | <code>number</code>                | null    | The signer type. 1 = Stronghold, 2 = EnvMnemonic  |
+| mnemonic   | <code>string        \| null</code> | null    | The mnemonic to save. If null, we'll generate one |
 
 #### createAccount(account): Account
 
@@ -150,9 +203,10 @@ Backups the database.
 
 Imports a database file.
 
-| Param  | Type                | Default                | Description                 |
-| ------ | ------------------- | ---------------------- | --------------------------- |
-| source | <code>string</code> | <code>undefined</code> | The path to the backup file |
+| Param    | Type                | Default                | Description                    |
+| -------- | ------------------- | ---------------------- | ------------------------------ |
+| source   | <code>string</code> | <code>undefined</code> | The path to the backup file    |
+| password | <code>string</code> | <code>undefined</code> | The backup stronghold password |
 
 ### SyncedAccount
 

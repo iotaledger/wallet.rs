@@ -27,42 +27,38 @@ pub(crate) mod serde;
 pub mod signing;
 /// The storage module.
 pub mod storage;
+#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+pub(crate) mod stronghold;
+
+pub use stronghold::set_password_clear_interval as set_stronghold_password_clear_interval;
 
 /// The wallet Result type.
 pub type Result<T> = std::result::Result<T, Error>;
 pub use chrono::prelude::{DateTime, Utc};
 use once_cell::sync::OnceCell;
-use std::{
-    collections::HashMap,
-    path::PathBuf,
-    sync::{Arc, Mutex},
-};
-use stronghold::Stronghold;
+use std::{path::PathBuf, sync::Mutex};
 use tokio::runtime::Runtime;
 
-static STRONGHOLD_INSTANCE: OnceCell<Arc<Mutex<HashMap<PathBuf, Stronghold>>>> = OnceCell::new();
 static RUNTIME: OnceCell<Mutex<Runtime>> = OnceCell::new();
 
 /// The wallet error type.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    /// Generic error.
-    #[error("{0}")]
-    GenericError(#[from] anyhow::Error), // TODO remove this with stronghold update
     /// IO error.
     #[error("`{0}`")]
     IoError(#[from] std::io::Error),
     /// serde_json error.
     #[error("`{0}`")]
     JsonError(#[from] serde_json::error::Error),
-    /// stronghold error.
+    /// stronghold client error.
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     #[error("`{0}`")]
-    StrongholdError(#[from] stronghold::VaultError),
+    StrongholdError(#[from] stronghold::Error),
     /// iota.rs error.
     #[error("`{0}`")]
     ClientError(#[from] iota::client::Error),
     /// rusqlite error.
-    #[cfg(any(feature = "sqlite", feature = "stronghold"))]
+    #[cfg(feature = "sqlite-storage")]
     #[error("`{0}`")]
     SqliteError(#[from] rusqlite::Error),
     /// url parse error.
@@ -144,6 +140,7 @@ pub enum Error {
     /// Error that happens when the stronghold snapshot wasn't loaded.
     /// The snapshot is loaded through the
     /// [AccountManager#set_stronghold_password](struct.AccountManager.html#method.set_stronghold_password).
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     #[error("stronghold not loaded")]
     StrongholdNotLoaded,
     /// Invalid hex string.
@@ -152,9 +149,6 @@ pub enum Error {
     /// Error from bee_message crate.
     #[error("{0}")]
     BeeMessage(iota::message::Error),
-    /// Transaction output amount can't be zero.
-    #[error("transaction output amount can't be zero")]
-    OutputAmountIsZero,
     /// invalid BIP32 derivation path.
     #[error("invalid BIP32 derivation path: {0}")]
     InvalidDerivationPath(String),
@@ -164,11 +158,43 @@ pub enum Error {
     /// Failed to parse date string.
     #[error("error parsing date: {0}")]
     ParseDate(#[from] chrono::ParseError),
+    /// Error from iota crypto.rs
+    #[error("crypto error: {0}")]
+    Crypto(crypto::Error),
+    /// Path provided to `import_accounts` isn't a valid file
+    #[error("provided backup path isn't a valid file")]
+    InvalidBackupFile,
+    /// Backup `destination` argument is invalid
+    #[error("backup destination must be a directory and it must exist")]
+    InvalidBackupDestination,
+    /// the storage adapter isn't set
+    #[error("the storage adapter isn't set; use the AccountManagerBuilder's `with_storage` method or one of the default storages with the crate features `sqlite-storage` and `stronghold-storage`.")]
+    StorageAdapterNotDefined,
+    /// Mnemonic generation error.
+    #[error("mnemonic encode error")]
+    MnemonicEncode,
+    /// Invalid mnemonic error
+    #[error("invalid mnemonic: {0}")]
+    InvalidMnemonic(String),
+    /// Can't import accounts because the storage already exist
+    #[error("failed to restore backup: storage file already exists")]
+    StorageExists,
+    /// Storage adapter not defined for the given storage path.
+    #[error(
+        "storage adapter not set for path `{0}`; please use the method `with_storage` on the AccountManager builder"
+    )]
+    StorageAdapterNotSet(PathBuf),
 }
 
 impl From<iota::message::Error> for Error {
     fn from(error: iota::message::Error) -> Self {
         Self::BeeMessage(error)
+    }
+}
+
+impl From<crypto::Error> for Error {
+    fn from(error: crypto::Error) -> Self {
+        Self::Crypto(error)
     }
 }
 
@@ -209,29 +235,6 @@ impl Drop for Error {
         event::emit_error(self);
     }
 }
-
-pub(crate) fn init_stronghold(stronghold_path: &PathBuf, stronghold: Stronghold) {
-    let mut stronghold_map = STRONGHOLD_INSTANCE.get_or_init(Default::default).lock().unwrap();
-    stronghold_map.insert(stronghold_path.to_path_buf(), stronghold);
-}
-
-pub(crate) fn remove_stronghold(stronghold_path: PathBuf) {
-    let mut stronghold_map = STRONGHOLD_INSTANCE.get_or_init(Default::default).lock().unwrap();
-    stronghold_map.remove(&stronghold_path);
-}
-
-pub(crate) fn with_stronghold_from_path<T, F: FnOnce(&Stronghold) -> crate::Result<T>>(
-    path: &PathBuf,
-    cb: F,
-) -> crate::Result<T> {
-    let stronghold_map = STRONGHOLD_INSTANCE.get_or_init(Default::default).lock().unwrap();
-    if let Some(stronghold) = stronghold_map.get(path) {
-        cb(stronghold)
-    } else {
-        Err(Error::StrongholdNotLoaded)
-    }
-}
-
 pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
     let runtime = RUNTIME.get_or_init(|| Mutex::new(Runtime::new().unwrap()));
     runtime.lock().unwrap().block_on(cb)
@@ -242,32 +245,92 @@ pub(crate) fn enter<R, C: FnOnce() -> R>(cb: C) -> R {
     runtime.lock().unwrap().enter(cb)
 }
 
+/// Access the stronghold's actor system.
+#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+pub async fn with_actor_system<F: FnOnce(&riker::actors::ActorSystem)>(cb: F) {
+    let runtime = self::stronghold::actor_runtime().lock().await;
+    cb(&runtime.stronghold.system)
+}
+
 #[cfg(test)]
 mod test_utils {
-    use super::account_manager::AccountManager;
+    use super::{account_manager::AccountManager, signing::SignerType};
     use iota::pow::providers::{Provider as PowProvider, ProviderBuilder as PowProviderBuilder};
-    use once_cell::sync::OnceCell;
-    use rand::{thread_rng, Rng};
-    use std::{path::PathBuf, sync::Mutex, time::Duration};
+    use rand::{distributions::Alphanumeric, thread_rng, Rng};
+    use std::{path::PathBuf, time::Duration};
 
-    static MANAGER_INSTANCE: OnceCell<Mutex<AccountManager>> = OnceCell::new();
-    pub fn get_account_manager() -> &'static Mutex<AccountManager> {
-        MANAGER_INSTANCE.get_or_init(|| {
-            let mut runtime = tokio::runtime::Runtime::new().unwrap();
-            runtime.block_on(async move {
-                let storage_path: String = thread_rng().gen_ascii_chars().take(10).collect();
-                let storage_path = PathBuf::from(format!("./example-database/{}", storage_path));
+    static POLLING_INTERVAL: Duration = Duration::from_secs(2);
 
-                let mut manager = AccountManager::builder()
-                    .with_storage_path(storage_path)
-                    .with_polling_interval(Duration::from_secs(4))
-                    .finish()
-                    .await
-                    .unwrap();
-                manager.set_stronghold_password("password").await.unwrap();
-                Mutex::new(manager)
-            })
-        })
+    struct TestSigner {}
+
+    #[async_trait::async_trait]
+    impl crate::signing::Signer for TestSigner {
+        async fn store_mnemonic(&self, _: &PathBuf, mnemonic: String) -> crate::Result<()> {
+            Ok(())
+        }
+
+        async fn generate_address(
+            &self,
+            account: &crate::account::Account,
+            address_index: usize,
+            internal: bool,
+            metadata: crate::signing::GenerateAddressMetadata,
+        ) -> crate::Result<iota::Address> {
+            let mut address = [0; iota::ED25519_ADDRESS_LENGTH];
+            crypto::rand::fill(&mut address).unwrap();
+            Ok(iota::Address::Ed25519(iota::Ed25519Address::new(address)))
+        }
+
+        async fn sign_message<'a>(
+            &self,
+            account: &crate::account::Account,
+            essence: &iota::TransactionEssence,
+            inputs: &mut Vec<crate::signing::TransactionInput>,
+            metadata: crate::signing::SignMessageMetadata<'a>,
+        ) -> crate::Result<Vec<iota::UnlockBlock>> {
+            Ok(Vec::new())
+        }
+    }
+
+    pub fn signer_type() -> SignerType {
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        let signer_type = SignerType::Stronghold;
+        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
+        let signer_type = SignerType::Custom("".to_string());
+        signer_type
+    }
+
+    pub async fn get_account_manager() -> AccountManager {
+        let mut manager = get_empty_account_manager().await;
+
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        manager.set_stronghold_password("password").await.unwrap();
+
+        manager.store_mnemonic(signer_type(), None).await.unwrap();
+        manager
+    }
+
+    pub async fn get_empty_account_manager() -> AccountManager {
+        let storage_path = loop {
+            let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
+            let storage_path = PathBuf::from(format!("./test-storage/{}", storage_path));
+            if !storage_path.exists() {
+                break storage_path;
+            }
+        };
+
+        let manager = AccountManager::builder()
+            .with_storage_path(storage_path)
+            .with_polling_interval(POLLING_INTERVAL)
+            .finish()
+            .await
+            .unwrap();
+
+        let signer_type = signer_type();
+        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
+        crate::signing::set_signer(signer_type.clone(), TestSigner {}).await;
+
+        manager
     }
 
     /// The miner builder.

@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::address::IotaAddress;
-use rand::{thread_rng, Rng};
+use rand::{prelude::SliceRandom, thread_rng};
 use std::convert::TryInto;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Input {
     pub address: IotaAddress,
     pub balance: u64,
@@ -38,7 +38,7 @@ pub fn select_input(target: u64, available_utxos: &mut [Input]) -> crate::Result
 }
 
 fn single_random_draw(target: u64, available_utxos: &mut [Input]) -> crate::Result<Vec<Input>> {
-    thread_rng().shuffle(available_utxos);
+    available_utxos.shuffle(&mut thread_rng());
     let mut sum = 0;
 
     let selected_coins_iter = available_utxos.iter_mut().take_while(|address| {
@@ -110,7 +110,7 @@ mod tests {
     use super::*;
     use crate::address::{AddressBuilder, IotaAddress};
     use iota::message::prelude::Ed25519Address;
-    use rand::{Rng, SeedableRng, StdRng};
+    use rand::prelude::{Rng, SeedableRng, SliceRandom, StdRng};
 
     fn generate_random_utxos(rng: &mut StdRng, utxos_number: usize) -> Vec<Input> {
         let mut available_utxos = Vec::new();
@@ -132,7 +132,7 @@ mod tests {
 
     fn sum_random_utxos(rng: &mut StdRng, available_utxos: &mut Vec<Input>) -> u64 {
         let utxos_picked_len = rng.gen_range(2, available_utxos.len() / 2);
-        thread_rng().shuffle(available_utxos);
+        available_utxos.shuffle(&mut thread_rng());
         available_utxos[..utxos_picked_len]
             .iter()
             .fold(0, |acc, address| acc + address.balance)
@@ -140,7 +140,7 @@ mod tests {
 
     #[test]
     fn exact_match() {
-        let seed: &[_] = &[1, 2, 3, 4];
+        let seed: [u8; 32] = [1; 32];
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         for _i in 0..20 {
             let mut available_utxos = generate_random_utxos(&mut rng, 30);
@@ -155,7 +155,7 @@ mod tests {
 
     #[test]
     fn insufficient_funds() {
-        let seed: &[_] = &[1, 2, 3, 4];
+        let seed: [u8; 32] = [1; 32];
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         let mut available_utxos = generate_random_utxos(&mut rng, 30);
         let target = available_utxos.iter().fold(0, |acc, address| acc + address.balance) + 1;
@@ -165,7 +165,7 @@ mod tests {
 
     #[test]
     fn random_target() {
-        let seed: &[_] = &[1, 2, 3, 4];
+        let seed: [u8; 32] = [1; 32];
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         for _ in 0..20 {
             let mut available_utxos = generate_random_utxos(&mut rng, 30);
