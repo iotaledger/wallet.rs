@@ -85,6 +85,7 @@ pub struct AccountManagerBuilder {
     polling_interval: Duration,
     skip_polling: bool,
     default_storage: Option<DefaultStorage>,
+    storage_encryption_key: Option<[u8; 32]>,
 }
 
 impl Default for AccountManagerBuilder {
@@ -101,6 +102,7 @@ impl Default for AccountManagerBuilder {
             polling_interval: Duration::from_millis(30_000),
             skip_polling: false,
             default_storage,
+            storage_encryption_key: None,
         }
     }
 }
@@ -146,6 +148,11 @@ impl AccountManagerBuilder {
 
     pub(crate) fn skip_polling(mut self) -> Self {
         self.skip_polling = true;
+        self
+    }
+
+    pub(crate) fn with_storage_encryption_key(mut self, key: Option<[u8; 32]>) -> Self {
+        self.storage_encryption_key = key;
         self
     }
 
@@ -204,7 +211,7 @@ impl AccountManagerBuilder {
             stop_polling_sender: None,
             polling_handle: None,
             generated_mnemonic: None,
-            storage_encryption_key: Arc::new(Mutex::new(None)),
+            storage_encryption_key: Arc::new(Mutex::new(self.storage_encryption_key)),
             encypted_accounts: Vec::new(),
         };
 
@@ -662,6 +669,7 @@ impl AccountManager {
                 let mut stronghold_manager = Self::builder()
                     .with_storage_path(&source)
                     .with_storage(DefaultStorage::Stronghold)
+                    .with_storage_encryption_key(self.storage_encryption_key.lock().await.clone())
                     .skip_polling()
                     .finish()
                     .await?;
