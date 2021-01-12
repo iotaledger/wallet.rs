@@ -179,7 +179,7 @@ fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, [u8; 32]>>> {
                         if let Some(curr_snapshot_path) = current_snapshot_path {
                             if &remove_key == curr_snapshot_path {
                                 let mut runtime = actor_runtime().lock().await;
-                                let _ = clear_stronghold_cache(&mut runtime);
+                                let _ = clear_stronghold_cache(&mut runtime, true);
                             }
                         }
                     }
@@ -277,6 +277,12 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf)
         if curr_snapshot_path != snapshot_path {
             switch_snapshot(&mut runtime, snapshot_path).await?;
         }
+    } else {
+        CURRENT_SNAPSHOT_PATH
+            .get_or_init(Default::default)
+            .lock()
+            .await
+            .replace(snapshot_path.clone());
     }
 
     Ok(())
@@ -296,14 +302,14 @@ async fn save_snapshot(runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> R
     )
 }
 
-async fn clear_stronghold_cache(mut runtime: &mut ActorRuntime) -> Result<()> {
+async fn clear_stronghold_cache(mut runtime: &mut ActorRuntime, persist: bool) -> Result<()> {
     if let Some(curr_snapshot_path) = CURRENT_SNAPSHOT_PATH
         .get_or_init(Default::default)
         .lock()
         .await
         .as_ref()
     {
-        if !runtime.spawned_client_paths.is_empty() {
+        if persist && !runtime.spawned_client_paths.is_empty() {
             save_snapshot(&mut runtime, &curr_snapshot_path).await?;
         }
         for path in &runtime.spawned_client_paths {
@@ -320,10 +326,13 @@ async fn clear_stronghold_cache(mut runtime: &mut ActorRuntime) -> Result<()> {
 }
 
 async fn switch_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> Result<()> {
-    clear_stronghold_cache(&mut runtime).await?;
+    clear_stronghold_cache(&mut runtime, true).await?;
 
-    let mut current_snapshot_path = CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await;
-    current_snapshot_path.replace(snapshot_path.clone());
+    CURRENT_SNAPSHOT_PATH
+        .get_or_init(Default::default)
+        .lock()
+        .await
+        .replace(snapshot_path.clone());
 
     // load all actors to prevent lost data on save
     load_private_data_actor(&mut runtime, snapshot_path).await?;
@@ -341,10 +350,23 @@ async fn switch_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf
     Ok(())
 }
 
+pub async fn unload_snapshot(storage_path: &PathBuf, persist: bool) -> Result<()> {
+    let current_snapshot_path = CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await.clone();
+    if let Some(current) = &current_snapshot_path {
+        if current == storage_path {
+            let mut runtime = actor_runtime().lock().await;
+            clear_stronghold_cache(&mut runtime, persist).await?;
+            CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await.take();
+        }
+    }
+
+    Ok(())
+}
+
 pub async fn load_snapshot(snapshot_path: &PathBuf, password: &[u8; 32]) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
     set_password(&snapshot_path, password).await;
-    switch_snapshot(&mut runtime, &snapshot_path).await
+    check_snapshot(&mut runtime, &snapshot_path).await
 }
 
 pub async fn store_mnemonic(snapshot_path: &PathBuf, mnemonic: String) -> Result<()> {
@@ -547,6 +569,11 @@ pub async fn store_account(snapshot_path: &PathBuf, account_id: &AccountIdentifi
         )?;
     }
 
+    // since we're creating a new account, we don't need to load it from the snapshot
+    runtime
+        .loaded_client_paths
+        .insert(account_id_to_client_path(account_id));
+
     load_account_actor(&mut runtime, snapshot_path, account_id).await?;
     stronghold_response_to_result(
         runtime
@@ -682,7 +709,7 @@ mod tests {
         let data = "account data";
         super::store_account(&snapshot_path, &id, data.to_string()).await?;
         let mut r = super::actor_runtime().lock().await;
-        super::clear_stronghold_cache(&mut r).await?;
+        super::clear_stronghold_cache(&mut r, true).await?;
         drop(r);
         let stored_data = super::get_accounts(&snapshot_path).await?;
         assert_eq!(stored_data.len(), 1);
