@@ -1123,7 +1123,10 @@ mod tests {
         let mut manager = crate::test_utils::get_account_manager().await;
 
         // import the accounts from the backup and assert that it's the same
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        #[cfg(all(
+            not(feature = "sqlite-storage"),
+            any(feature = "stronghold", feature = "stronghold-storage")
+        ))]
         {
             std::fs::remove_file(manager.storage_path()).unwrap();
             manager.import_accounts(backup_file_path, "password").await.unwrap();
