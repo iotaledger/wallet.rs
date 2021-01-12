@@ -380,9 +380,6 @@ impl AccountSynchronizer {
     /// The account syncing process ensures that the latest metadata (balance, transactions)
     /// associated with an account is fetched from the tangle and is stored locally.
     pub async fn execute(self) -> crate::Result<SyncedAccount> {
-        let options = self.account_handle.client_options().await;
-        let client = get_client(&options);
-
         if let Err(e) = crate::monitor::unsubscribe(self.account_handle.clone()).await {
             log::error!("[MQTT] error unsubscribing from MQTT topics before syncing: {:?}", e);
         }
@@ -624,7 +621,7 @@ impl SyncedAccount {
             ))
             .unwrap();
 
-            for (offset, address_output) in account_address.available_outputs(&account_).iter().enumerate() {
+            for address_output in account_address.available_outputs(&account_) {
                 outputs.push((
                     (*address_output).clone(),
                     *account_address.key_index(),
@@ -917,7 +914,7 @@ mod tests {
         let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
             .unwrap()
             .build();
-        let account = manager
+        let _account = manager
             .create_account(client_options)
             .alias("alias")
             .initialise()

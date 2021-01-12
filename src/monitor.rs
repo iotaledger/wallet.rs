@@ -28,17 +28,7 @@ struct AddressOutputPayload {
 
 #[derive(Deserialize)]
 struct AddressOutputPayloadOutput {
-    #[serde(rename = "type")]
-    type_: u8,
     amount: u64,
-    address: AddressOutputPayloadAddress,
-}
-
-#[derive(Deserialize)]
-struct AddressOutputPayloadAddress {
-    #[serde(rename = "type")]
-    type_: u8,
-    address: String,
 }
 
 /// Unsubscribe from all topics associated with the account.
@@ -57,7 +47,7 @@ async fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
 ) -> crate::Result<()> {
     let client = crate::client::get_client(&client_options);
     let mut client = client.write().await;
-    client.subscriber().topic(Topic::new(topic)?).subscribe(handler)?;
+    client.subscriber().with_topic(Topic::new(topic)?).subscribe(handler)?;
     Ok(())
 }
 

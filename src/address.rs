@@ -213,10 +213,6 @@ impl Address {
         }
     }
 
-    pub(crate) fn outputs_mut(&mut self) -> &mut Vec<AddressOutput> {
-        &mut self.outputs
-    }
-
     /// Gets the list of outputs that aren't spent or pending.
     pub fn available_outputs(&self, account: &Account) -> Vec<&AddressOutput> {
         self.outputs.iter().filter(|o| !o.is_used(account)).collect()
@@ -276,15 +272,6 @@ pub(crate) async fn get_new_change_address(account: &Account, address: &Address)
         outputs: vec![],
     };
     Ok(address)
-}
-
-/// Batch address generation.
-pub(crate) async fn get_addresses(account: &Account, count: usize) -> crate::Result<Vec<Address>> {
-    let mut addresses = vec![];
-    for i in 0..count {
-        addresses.push(get_new_address(&account).await?);
-    }
-    Ok(addresses)
 }
 
 pub(crate) fn is_unspent(account: &Account, address: &IotaAddress) -> bool {
