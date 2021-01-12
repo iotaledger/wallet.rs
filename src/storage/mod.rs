@@ -16,12 +16,11 @@ use tokio::sync::Mutex as AsyncMutex;
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
-    sync::{Arc, Mutex, RwLock},
+    sync::{Arc, RwLock},
 };
 
 type Storage = Arc<AsyncMutex<Box<dyn StorageAdapter + Sync + Send>>>;
 type Storages = Arc<RwLock<HashMap<PathBuf, Storage>>>;
-type AccountReadLockMap = HashMap<AccountIdentifier, Arc<Mutex<()>>>;
 static INSTANCES: OnceCell<Storages> = OnceCell::new();
 
 /// Sets the storage adapter.

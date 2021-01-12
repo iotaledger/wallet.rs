@@ -87,6 +87,7 @@ pub struct AccountManagerBuilder {
 
 impl Default for AccountManagerBuilder {
     fn default() -> Self {
+        #[allow(unused_variables)]
         let default_storage: Option<DefaultStorage> = None;
         #[cfg(all(feature = "stronghold-storage", not(feature = "sqlite-storage")))]
         let default_storage = Some(DefaultStorage::Stronghold);
@@ -339,9 +340,8 @@ impl AccountManager {
                             if let Err(error) = AssertUnwindSafe(poll(accounts.clone(), storage_file_path_, is_monitoring_disabled))
                                 .catch_unwind()
                                 .await {
-                                if let Some(error) = error.downcast_ref::<crate::Error>() {
-                                    // when the error is dropped, the on_error event will be triggered
-                                } else {
+                                    // if the error isn't a crate::Error type
+                                if error.downcast_ref::<crate::Error>().is_none() {
                                     let msg = if let Some(message) = error.downcast_ref::<String>() {
                                         format!("Internal error: {}", message)
                                     } else if let Some(message) = error.downcast_ref::<&str>() {
@@ -501,6 +501,7 @@ impl AccountManager {
             account_handle.write().await.save().await?;
         }
 
+        #[allow(unused_variables)]
         let (storage_path, backup_entire_directory) = (
             &self.storage_path,
             cfg!(feature = "stronghold") && cfg!(feature = "sqlite-storage"),
@@ -584,6 +585,7 @@ impl AccountManager {
             return Err(crate::Error::InvalidBackupFile);
         }
 
+        #[allow(unused_variables)]
         #[cfg(feature = "stronghold-storage")]
         let storage_file_path = {
             let storage_file_path = self.storage_folder.join(STRONGHOLD_FILENAME);
@@ -882,6 +884,7 @@ async fn sync_accounts<'a>(
 }
 
 struct RetriedData {
+    #[allow(dead_code)]
     promoted: Vec<Message>,
     reattached: Vec<Message>,
     account_id: AccountIdentifier,
@@ -1065,7 +1068,7 @@ mod tests {
             .expect("invalid node URL")
             .build();
 
-        let account = manager
+        manager
             .create_account(client_options.clone())
             .alias("alias")
             .initialise()
