@@ -669,7 +669,7 @@ impl AccountManager {
                 let mut stronghold_manager = Self::builder()
                     .with_storage_path(&source)
                     .with_storage(DefaultStorage::Stronghold)
-                    .with_storage_encryption_key(self.storage_encryption_key.lock().await.clone())
+                    .with_storage_encryption_key(*self.storage_encryption_key.lock().await)
                     .skip_polling()
                     .finish()
                     .await?;
