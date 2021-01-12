@@ -111,7 +111,7 @@ impl serde::Serialize for crate::Error {
             Self::MnemonicEncode => serialize_variant(self, serializer, "MnemonicEncode"),
             Self::InvalidMnemonic(_) => serialize_variant(self, serializer, "InvalidMnemonic"),
             Self::Crypto(_) => serialize_variant(self, serializer, "Crypto"),
-            Self::BackupNotFile => serialize_variant(self, serializer, "BackupNotFile"),
+            Self::InvalidBackupFile => serialize_variant(self, serializer, "InvalidBackupFile"),
             Self::InvalidBackupDestination => serialize_variant(self, serializer, "InvalidBackupDestination"),
             Self::StorageAdapterNotDefined => serialize_variant(self, serializer, "StorageAdapterNotDefined"),
             Self::StorageExists => serialize_variant(self, serializer, "StorageExists"),

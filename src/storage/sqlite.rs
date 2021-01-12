@@ -15,8 +15,8 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-/// The default SQLite storage file name.
-pub const SQLITE_STORAGE_FILENAME: &str = "wallet.db";
+/// The storage id.
+pub const STORAGE_ID: &str = "SQLITE";
 
 /// Key value storage adapter.
 pub struct SqliteStorageAdapter {
@@ -27,9 +27,11 @@ pub struct SqliteStorageAdapter {
 impl SqliteStorageAdapter {
     /// Initialises the storage adapter.
     pub fn new(path: impl AsRef<Path>, table_name: impl AsRef<str>) -> crate::Result<Self> {
-        fs::create_dir_all(&path)?;
+        if let Some(parent) = path.as_ref().parent() {
+            fs::create_dir_all(&parent)?;
+        }
 
-        let connection = Connection::open(path.as_ref().join(SQLITE_STORAGE_FILENAME))?;
+        let connection = Connection::open(path.as_ref())?;
 
         connection.execute(
             &format!(
@@ -52,6 +54,10 @@ impl SqliteStorageAdapter {
 
 #[async_trait::async_trait]
 impl StorageAdapter for SqliteStorageAdapter {
+    fn id(&self) -> &'static str {
+        STORAGE_ID
+    }
+
     async fn get(&self, account_id: &AccountIdentifier) -> crate::Result<String> {
         let (sql, params) = match account_id {
             AccountIdentifier::Id(id) => (

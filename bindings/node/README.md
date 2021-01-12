@@ -85,10 +85,21 @@ Supported event names:
 
 Creates a new instance of the AccountManager.
 
-| Param         | Type                | Default                | Description                                    |
-| ------------- | ------------------- | ---------------------- | ---------------------------------------------- |
-| [options]     | <code>object</code> | <code>undefined</code> | The options to configure the account manager   |
-| [storagePath] | <code>string</code> | <code>undefined</code> | The path where the database file will be saved |
+| Param         | Type                     | Default                             | Description                                    |
+| ------------- | ------------------------ | ----------------------------------- | ---------------------------------------------- |
+| [options]     | <code>object</code>      | <code>undefined</code>              | The options to configure the account manager   |
+| [storagePath] | <code>string</code>      | <code>undefined</code>              | The path where the database file will be saved |
+| [storageType] | <code>StorageType</code> | <code>StorageType.Stronghold</code> | The storage implementation to use              |
+
+- StorageType
+  
+One of the default storage implementations provided by the wallet library.
+
+| Param      | Description                     |
+| ---------- | ------------------------------- |
+| Sqlite     | Storage using a SQLite database |
+| Stronghold | Storage using Stronghold        |
+
 
 #### setStrongholdPassword(password): void
 

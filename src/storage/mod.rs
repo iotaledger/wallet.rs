@@ -4,6 +4,7 @@
 #[cfg(feature = "sqlite-storage")]
 /// Sqlite storage.
 pub mod sqlite;
+
 #[cfg(any(feature = "stronghold-storage", feature = "stronghold"))]
 /// Stronghold storage.
 pub mod stronghold;
@@ -45,6 +46,10 @@ pub(crate) fn get(storage_path: &PathBuf) -> crate::Result<Storage> {
 /// The storage adapter.
 #[async_trait::async_trait]
 pub trait StorageAdapter {
+    /// Gets the storage identifier (used internally on the default storage adapters)
+    fn id(&self) -> &'static str {
+        "custom-adapter"
+    }
     /// Gets the account with the given id/alias from the storage.
     async fn get(&self, account_id: &AccountIdentifier) -> crate::Result<String>;
     /// Gets all the accounts from the storage.

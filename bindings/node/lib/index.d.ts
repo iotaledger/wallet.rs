@@ -121,12 +121,18 @@ export declare interface AccountToCreate {
   signerType?: SignerType;
 }
 
+export declare enum StorageType {
+  Sqlite,
+  Stronghold
+}
+
 export declare interface ManagerOptions {
   storagePath?: string
+  storageType?: StorageType
 }
 
 export declare class AccountManager {
-  constructor(storagePath?: string)
+  constructor(options: ManagerOptions)
   setStrongholdPassword(password: string): void
   generateMnemonic(): string
   storeMnemonic(signerType: SignerType, mnemonic?: string): void

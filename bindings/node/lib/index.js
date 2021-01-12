@@ -107,5 +107,9 @@ module.exports = {
   SignerType: {
     Stronghold: 1,
     EnvMnemonic: 2
+  },
+  StorageType: {
+    Sqlite: { type: 'Sqlite' },
+    Stronghold: { type: 'Stronghold' }
   }
 }
