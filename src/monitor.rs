@@ -57,7 +57,7 @@ async fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
 ) -> crate::Result<()> {
     let client = crate::client::get_client(&client_options);
     let mut client = client.write().await;
-    client.subscriber().topic(Topic::new(topic)?).subscribe(handler)?;
+    client.subscriber().with_topic(Topic::new(topic)?).subscribe(handler)?;
     Ok(())
 }
 
