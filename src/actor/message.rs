@@ -202,8 +202,8 @@ impl Serialize for MessageType {
                 to_account_id: _,
                 amount: _,
             } => serializer.serialize_unit_variant("MessageType", 12, "InternalTransfer"),
-            MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageTpe", 13, "GenerateMnemonic"),
-            MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 14, "GenerateMnemonic"),
+            MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 13, "GenerateMnemonic"),
+            MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 14, "VerifyMnemonic"),
             MessageType::StoreMnemonic {
                 signer_type: _,
                 mnemonic: _,

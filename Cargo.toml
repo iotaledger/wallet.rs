@@ -44,7 +44,7 @@ riker-patterns = { version = "0.4", optional = true }
 [dependencies.iota-crypto]
 git = "https://github.com/iotaledger/crypto.rs"
 rev = "c2514969c3f6693b86425ec84bada84b3ebea645"
-features = ["random", "sha", "pbkdf", "hmac", "sha", "bip39", "bip39-en", "chacha"]
+features = ["random", "sha", "pbkdf", "hmac", "bip39", "bip39-en", "chacha"]
 
 [dev-dependencies]
 tokio = { version = "0.2", features = ["full"] }

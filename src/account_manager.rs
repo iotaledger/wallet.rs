@@ -212,7 +212,7 @@ impl AccountManagerBuilder {
             polling_handle: None,
             generated_mnemonic: None,
             storage_encryption_key: Arc::new(Mutex::new(self.storage_encryption_key)),
-            encypted_accounts: Vec::new(),
+            encrypted_accounts: Vec::new(),
         };
 
         if !self.skip_polling {
@@ -237,7 +237,7 @@ pub struct AccountManager {
     polling_handle: Option<thread::JoinHandle<()>>,
     generated_mnemonic: Option<String>,
     storage_encryption_key: Arc<Mutex<Option<[u8; 32]>>>,
-    encypted_accounts: Vec<String>,
+    encrypted_accounts: Vec<String>,
 }
 
 impl Drop for AccountManager {
@@ -322,12 +322,12 @@ impl AccountManager {
         *self.storage_encryption_key.lock().await = Some(key);
 
         let mut accounts = self.accounts.write().await;
-        for encrypted_account in &self.encypted_accounts {
+        for encrypted_account in &self.encrypted_accounts {
             let decrypted = crate::storage::decrypt_account_json(encrypted_account, &key)?;
             let account = serde_json::from_str::<Account>(&decrypted)?;
             accounts.insert(account.id().clone(), account.into());
         }
-        self.encypted_accounts = Vec::new();
+        self.encrypted_accounts = Vec::new();
 
         Ok(())
     }
@@ -349,7 +349,7 @@ impl AccountManager {
         if self.accounts.read().await.is_empty() {
             let (accounts, encrypted_accounts) =
                 Self::load_accounts(&self.storage_path, &*self.storage_encryption_key.lock().await).await?;
-            self.encypted_accounts = encrypted_accounts;
+            self.encrypted_accounts = encrypted_accounts;
             let mut accounts_store = self.accounts.write().await;
             for (id, account) in &*accounts.read().await {
                 accounts_store.insert(id.clone(), account.clone());
