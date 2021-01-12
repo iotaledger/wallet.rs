@@ -98,7 +98,7 @@ impl StorageAdapter for SqliteStorageAdapter {
             _ => return Err(crate::Error::Storage("only Id is supported".into())),
         };
         let connection = self.connection.lock().expect("failed to get connection lock");
-        let result = connection
+        connection
             .execute(
                 &format!("INSERT OR REPLACE INTO {} VALUES (?1, ?2, ?3)", self.table_name),
                 params![id, account, Local::now().timestamp()],
@@ -124,7 +124,7 @@ impl StorageAdapter for SqliteStorageAdapter {
         };
 
         let connection = self.connection.lock().expect("failed to get connection lock");
-        let result = connection
+        connection
             .execute(&sql, params)
             .map_err(|_| crate::Error::Storage("failed to delete data".into()))?;
         Ok(())
