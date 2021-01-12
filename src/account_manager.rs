@@ -3,7 +3,9 @@
 
 #[allow(unused_imports)]
 use crate::{
-    account::{repost_message, AccountHandle, AccountIdentifier, AccountInitialiser, RepostAction, SyncedAccount},
+    account::{
+        repost_message, Account, AccountHandle, AccountIdentifier, AccountInitialiser, RepostAction, SyncedAccount,
+    },
     client::ClientOptions,
     event::{emit_balance_change, emit_confirmation_state_change, emit_transaction_event, TransactionEventType},
     message::{Message, MessageType, Transfer},
@@ -31,7 +33,7 @@ use serde::Deserialize;
 use tokio::{
     sync::{
         broadcast::{channel as broadcast_channel, Receiver as BroadcastReceiver, Sender as BroadcastSender},
-        RwLock,
+        Mutex, RwLock,
     },
     time::{delay_for, Duration as AsyncDuration},
 };
@@ -202,6 +204,8 @@ impl AccountManagerBuilder {
             stop_polling_sender: None,
             polling_handle: None,
             generated_mnemonic: None,
+            storage_encryption_key: Arc::new(Mutex::new(None)),
+            encypted_accounts: Vec::new(),
         };
 
         if !self.skip_polling {
@@ -225,6 +229,8 @@ pub struct AccountManager {
     stop_polling_sender: Option<BroadcastSender<()>>,
     polling_handle: Option<thread::JoinHandle<()>>,
     generated_mnemonic: Option<String>,
+    storage_encryption_key: Arc<Mutex<Option<[u8; 32]>>>,
+    encypted_accounts: Vec<String>,
 }
 
 impl Drop for AccountManager {
@@ -239,13 +245,27 @@ impl AccountManager {
         AccountManagerBuilder::new()
     }
 
-    async fn load_accounts(storage_file_path: &PathBuf) -> crate::Result<AccountStore> {
+    async fn load_accounts(
+        storage_file_path: &PathBuf,
+        encryption_key: &Option<[u8; 32]>,
+    ) -> crate::Result<(AccountStore, Vec<String>)> {
+        let mut encrypted_accounts = Vec::new();
+        let mut parsed_accounts = HashMap::new();
+
         let accounts = crate::storage::get(&storage_file_path)?.lock().await.get_all().await?;
-        let accounts = crate::storage::parse_accounts(&storage_file_path, &accounts)?
-            .into_iter()
-            .map(|account| (account.id().clone(), account.into()))
-            .collect();
-        Ok(Arc::new(RwLock::new(accounts)))
+        let accounts = crate::storage::parse_accounts(&storage_file_path, &accounts, encryption_key)?;
+        for parsed_account in accounts {
+            match parsed_account {
+                crate::storage::ParsedAccount::Account(account) => {
+                    parsed_accounts.insert(account.id().clone(), account.into());
+                }
+                crate::storage::ParsedAccount::EncryptedAccount(value) => {
+                    encrypted_accounts.push(value);
+                }
+            }
+        }
+
+        Ok((Arc::new(RwLock::new(parsed_accounts)), encrypted_accounts))
     }
 
     /// Starts monitoring the accounts with the node's mqtt topics.
@@ -287,6 +307,24 @@ impl AccountManager {
         }
     }
 
+    /// Sets the password for the stored accounts.
+    pub async fn set_storage_password<P: AsRef<str>>(&mut self, key: P) -> crate::Result<()> {
+        let mut dk = [0; 64];
+        crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(key.as_ref().as_bytes(), b"wallet.rs::storage", 100, &mut dk)?;
+        let key: [u8; 32] = dk[0..32][..].try_into().unwrap();
+        *self.storage_encryption_key.lock().await = Some(key);
+
+        let mut accounts = self.accounts.write().await;
+        for encrypted_account in &self.encypted_accounts {
+            let decrypted = crate::storage::decrypt_account_json(encrypted_account, &key)?;
+            let account = serde_json::from_str::<Account>(&decrypted)?;
+            accounts.insert(account.id().clone(), account.into());
+        }
+        self.encypted_accounts = Vec::new();
+
+        Ok(())
+    }
+
     /// Sets the stronghold password.
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     pub async fn set_stronghold_password<P: AsRef<str>>(&mut self, password: P) -> crate::Result<()> {
@@ -302,7 +340,9 @@ impl AccountManager {
 
         // let is_empty = self.accounts.read().await.is_empty();
         if self.accounts.read().await.is_empty() {
-            let accounts = Self::load_accounts(&self.storage_path).await?;
+            let (accounts, encrypted_accounts) =
+                Self::load_accounts(&self.storage_path, &*self.storage_encryption_key.lock().await).await?;
+            self.encypted_accounts = encrypted_accounts;
             let mut accounts_store = self.accounts.write().await;
             for (id, account) in &*accounts.read().await {
                 accounts_store.insert(id.clone(), account.clone());
@@ -321,6 +361,7 @@ impl AccountManager {
     ) {
         let storage_file_path = self.storage_path.clone();
         let accounts = self.accounts.clone();
+        let storage_encryption_key = self.storage_encryption_key.clone();
 
         let interval = AsyncDuration::from_millis(polling_interval.as_millis().try_into().unwrap());
 
@@ -355,16 +396,20 @@ impl AccountManager {
                                 }
                             }
 
-                            for account_handle in accounts.read().await.values() {
-                                let _ = account_handle.write().await.save().await;
+                            {
+                                let encryption_key = &*storage_encryption_key.lock().await;
+                                for account_handle in accounts.read().await.values() {
+                                    let _ = account_handle.write().await.save(&encryption_key).await;
+                                }
                             }
 
                             delay_for(interval).await;
                         } => {}
                         _ = stop.recv() => {
+                            let encryption_key = &*storage_encryption_key.lock().await;
                             // before stopping the polling loop, we save the accounts
                             for account_handle in accounts.read().await.values() {
-                                let _ = account_handle.write().await.save().await;
+                                let _ = account_handle.write().await.save(&encryption_key).await;
                             }
                             break;
                         }
@@ -497,8 +542,11 @@ impl AccountManager {
             return Err(crate::Error::InvalidBackupDestination);
         }
 
-        for account_handle in self.accounts.read().await.values() {
-            account_handle.write().await.save().await?;
+        {
+            let encryption_key = &*self.storage_encryption_key.lock().await;
+            for account_handle in self.accounts.read().await.values() {
+                account_handle.write().await.save(&encryption_key).await?;
+            }
         }
 
         let (storage_path, backup_entire_directory) = (
@@ -521,9 +569,13 @@ impl AccountManager {
                 )
                 .unwrap();
 
+                let encryption_key = &*self.storage_encryption_key.lock().await;
                 for (account_id, account_handle) in &*self.accounts.read().await {
                     stronghold_storage
-                        .set(account_id, serde_json::to_string(&*account_handle.read().await)?)
+                        .set(
+                            account_id,
+                            crate::storage::get_account_string_to_save(&*account_handle.read().await, &encryption_key)?,
+                        )
                         .await?;
                 }
                 self.storage_folder.join(STRONGHOLD_FILENAME)
@@ -986,7 +1038,7 @@ mod tests {
             .initialise()
             .await
             .expect("failed to add account");
-        account_handle.write().await.save().await.unwrap();
+        account_handle.write().await.save(&None).await.unwrap();
 
         manager
             .remove_account(account_handle.read().await.id())
@@ -1112,6 +1164,8 @@ mod tests {
 
         // get another manager instance so we can import the accounts to a different storage
         let mut manager = crate::test_utils::get_empty_account_manager().await;
+
+        manager.set_storage_password("password").await.unwrap();
 
         // import the accounts from the backup and assert that it's the same
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]

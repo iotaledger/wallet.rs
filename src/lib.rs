@@ -184,6 +184,9 @@ pub enum Error {
         "storage adapter not set for path `{0}`; please use the method `with_storage` on the AccountManager builder"
     )]
     StorageAdapterNotSet(PathBuf),
+    /// error decrypting stored account using provided encryptionKey
+    #[error("failed to decrypt account")]
+    AccountDecrypt,
 }
 
 impl From<iota::message::Error> for Error {
@@ -303,6 +306,8 @@ mod test_utils {
 
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         manager.set_stronghold_password("password").await.unwrap();
+
+        manager.set_storage_password("password").await.unwrap();
 
         manager.store_mnemonic(signer_type(), None).await.unwrap();
         manager
