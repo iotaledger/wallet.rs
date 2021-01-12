@@ -327,7 +327,7 @@ impl AccountManager {
             let account = serde_json::from_str::<Account>(&decrypted)?;
             accounts.insert(account.id().clone(), account.into());
         }
-        self.encrypted_accounts = Vec::new();
+        self.encrypted_accounts.clear();
 
         Ok(())
     }
