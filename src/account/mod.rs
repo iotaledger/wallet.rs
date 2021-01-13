@@ -675,12 +675,9 @@ mod tests {
 
         let mut unconfirmed_message =
             crate::test_utils::generate_message(15, first_address.clone(), false, false, true);
-        _update_transaction_id(
-            &mut unconfirmed_message,
-            first_address.outputs[0].transaction_id.clone(),
-        );
+        _update_transaction_id(&mut unconfirmed_message, first_address.outputs[0].transaction_id);
         let mut confirmed_message = crate::test_utils::generate_message(10, second_address.clone(), true, true, true);
-        _update_transaction_id(&mut confirmed_message, second_address.outputs[0].transaction_id.clone());
+        _update_transaction_id(&mut confirmed_message, second_address.outputs[0].transaction_id);
 
         account_handle
             .write()

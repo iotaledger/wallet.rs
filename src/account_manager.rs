@@ -1221,7 +1221,7 @@ mod tests {
         let err = response.unwrap_err();
         assert_eq!(
             err.to_string(),
-            format!("failed to restore backup: storage file already exists")
+            "failed to restore backup: storage file already exists".to_string()
         );
     }
 }
