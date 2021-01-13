@@ -4,7 +4,6 @@
 //! The IOTA Wallet Library
 
 #![warn(missing_docs, rust_2018_idioms)]
-#![allow(unused_variables, dead_code)]
 
 /// The account module.
 pub mod account;
@@ -184,6 +183,9 @@ pub enum Error {
         "storage adapter not set for path `{0}`; please use the method `with_storage` on the AccountManager builder"
     )]
     StorageAdapterNotSet(PathBuf),
+    /// error decrypting stored account using provided encryptionKey
+    #[error("failed to decrypt account")]
+    AccountDecrypt,
 }
 
 impl From<iota::message::Error> for Error {
@@ -265,15 +267,15 @@ mod test_utils {
 
     #[async_trait::async_trait]
     impl crate::signing::Signer for TestSigner {
-        async fn store_mnemonic(&self, _: &PathBuf, mnemonic: String) -> crate::Result<()> {
+        async fn store_mnemonic(&self, _: &PathBuf, _mnemonic: String) -> crate::Result<()> {
             Ok(())
         }
 
         async fn generate_address(
             &self,
-            account: &crate::account::Account,
-            address_index: usize,
-            internal: bool,
+            _account: &crate::account::Account,
+            _address_index: usize,
+            _internal: bool,
         ) -> crate::Result<iota::Address> {
             let mut address = [0; iota::ED25519_ADDRESS_LENGTH];
             crypto::rand::fill(&mut address).unwrap();
@@ -282,9 +284,9 @@ mod test_utils {
 
         async fn sign_message(
             &self,
-            account: &crate::account::Account,
-            essence: &iota::TransactionEssence,
-            inputs: &mut Vec<crate::signing::TransactionInput>,
+            _account: &crate::account::Account,
+            _essence: &iota::TransactionEssence,
+            _inputs: &mut Vec<crate::signing::TransactionInput>,
         ) -> crate::Result<Vec<iota::UnlockBlock>> {
             Ok(Vec::new())
         }
@@ -314,9 +316,10 @@ mod test_utils {
             .await
             .unwrap();
 
+        manager.set_storage_password("password").await.unwrap();
+
         #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
         crate::signing::set_signer(signer_type(), TestSigner {}).await;
-
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         manager.set_stronghold_password("password").await.unwrap();
 
@@ -348,7 +351,7 @@ mod test_utils {
         type Builder = NoopNonceProviderBuilder;
         type Error = crate::Error;
 
-        fn nonce(&self, bytes: &[u8], target_score: f64) -> std::result::Result<u64, Self::Error> {
+        fn nonce(&self, _bytes: &[u8], _target_score: f64) -> std::result::Result<u64, Self::Error> {
             Ok(0)
         }
     }

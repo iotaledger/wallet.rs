@@ -101,6 +101,9 @@ impl WalletMessageHandler {
             MessageType::RestoreBackup { backup_path } => {
                 convert_async_panics(|| async { self.restore_backup(backup_path).await }).await
             }
+            MessageType::SetStoragePassword(password) => {
+                convert_async_panics(|| async { self.set_storage_password(password).await }).await
+            }
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             MessageType::SetStrongholdPassword(password) => {
                 convert_async_panics(|| async { self.set_stronghold_password(password).await }).await
@@ -292,6 +295,11 @@ impl WalletMessageHandler {
             accounts_.push(account_handle.read().await.clone());
         }
         Ok(ResponseType::ReadAccounts(accounts_))
+    }
+
+    async fn set_storage_password(&mut self, password: &str) -> Result<ResponseType> {
+        self.account_manager.set_storage_password(password).await?;
+        Ok(ResponseType::StoragePasswordSet)
     }
 
     #[cfg(feature = "stronghold")]

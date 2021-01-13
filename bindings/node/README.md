@@ -101,13 +101,21 @@ One of the default storage implementations provided by the wallet library.
 | Stronghold | Storage using Stronghold        |
 
 
+#### setStoragePassword(password): void
+
+Sets the password used for encrypting the storage.
+
+| Param    | Type                | Default                | Description          |
+| -------- | ------------------- | ---------------------- | -------------------- |
+| password | <code>string</code> | <code>undefined</code> | The storage password |
+
 #### setStrongholdPassword(password): void
 
 Sets the stronghold password and initialises it.
 
-| Param    | Type                | Default                | Description                      |
-| -------- | ------------------- | ---------------------- | -------------------------------- |
-| password | <code>string</code> | <code>undefined</code> | The stronghold snapshot password |
+| Param    | Type                | Default                | Description             |
+| -------- | ------------------- | ---------------------- | ----------------------- |
+| password | <code>string</code> | <code>undefined</code> | The stronghold password |
 
 #### generateMnemonic(): string
 
