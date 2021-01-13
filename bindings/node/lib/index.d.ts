@@ -133,6 +133,7 @@ export declare interface ManagerOptions {
 
 export declare class AccountManager {
   constructor(options: ManagerOptions)
+  setStoragePassword(password: string): void
   setStrongholdPassword(password: string): void
   generateMnemonic(): string
   storeMnemonic(signerType: SignerType, mnemonic?: string): void

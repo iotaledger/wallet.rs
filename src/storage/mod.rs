@@ -10,11 +10,13 @@ pub mod sqlite;
 pub mod stronghold;
 
 use crate::account::{Account, AccountIdentifier};
+use crypto::ciphers::chacha::xchacha20poly1305;
 use once_cell::sync::OnceCell;
 use tokio::sync::Mutex as AsyncMutex;
 
 use std::{
     collections::HashMap,
+    io::{Read, Write},
     path::{Path, PathBuf},
     sync::{Arc, RwLock},
 };
@@ -59,26 +61,115 @@ pub trait StorageAdapter {
     async fn remove(&self, account_id: &AccountIdentifier) -> crate::Result<()>;
 }
 
-pub(crate) fn parse_accounts(storage_path: &PathBuf, accounts: &[String]) -> crate::Result<Vec<Account>> {
+fn encrypt_account_json<O: Write>(account: &[u8], key: &[u8; 32], output: &mut O) -> crate::Result<()> {
+    let mut nonce = [0; xchacha20poly1305::XCHACHA20POLY1305_NONCE_SIZE];
+    crypto::rand::fill(&mut nonce)?;
+
+    let mut tag = [0; xchacha20poly1305::XCHACHA20POLY1305_TAG_SIZE];
+    let mut ct = vec![0; account.len()];
+    xchacha20poly1305::encrypt(&mut ct, &mut tag, account, key, &nonce, &[])?;
+
+    output.write_all(&nonce)?;
+    output.write_all(&tag)?;
+    output.write_all(&ct)?;
+
+    Ok(())
+}
+
+pub(crate) fn decrypt_account_json(account: &str, key: &[u8; 32]) -> crate::Result<String> {
+    let account: Vec<u8> = serde_json::from_str(&account)?;
+    let mut account: &[u8] = &account;
+
+    let mut nonce = [0; xchacha20poly1305::XCHACHA20POLY1305_NONCE_SIZE];
+    account.read_exact(&mut nonce)?;
+
+    let mut tag = [0; xchacha20poly1305::XCHACHA20POLY1305_TAG_SIZE];
+    account.read_exact(&mut tag)?;
+
+    let mut ct = Vec::new();
+    account.read_to_end(&mut ct)?;
+
+    let mut pt = vec![0; ct.len()];
+    xchacha20poly1305::decrypt(&mut pt, &ct, key, &tag, &nonce, &[])?;
+
+    Ok(String::from_utf8_lossy(&pt).to_string())
+}
+
+pub(crate) enum ParsedAccount {
+    Account(Account),
+    EncryptedAccount(String),
+}
+
+pub(crate) fn get_account_string_to_save(
+    account: &Account,
+    encryption_key: &Option<[u8; 32]>,
+) -> crate::Result<String> {
+    let json = serde_json::to_string(&account)?;
+    let data = if let Some(key) = encryption_key {
+        let mut output = Vec::new();
+        encrypt_account_json(json.as_bytes(), key, &mut output)?;
+        serde_json::to_string(&output)?
+    } else {
+        json
+    };
+    Ok(data)
+}
+
+pub(crate) async fn save_account(
+    storage_path: &PathBuf,
+    account: &Account,
+    encryption_key: &Option<[u8; 32]>,
+) -> crate::Result<()> {
+    crate::storage::get(&storage_path)?
+        .lock()
+        .await
+        .set(account.id(), get_account_string_to_save(account, encryption_key)?)
+        .await?;
+    Ok(())
+}
+
+pub(crate) fn parse_accounts(
+    storage_path: &PathBuf,
+    accounts: &[String],
+    encryption_key: &Option<[u8; 32]>,
+) -> crate::Result<Vec<ParsedAccount>> {
     let mut err = None;
-    let accounts: Vec<Option<Account>> = accounts
+    let accounts: Vec<Option<ParsedAccount>> = accounts
         .iter()
-        .map(|account| match serde_json::from_str::<Account>(&account) {
-            Ok(mut acc) => {
-                acc.set_storage_path(storage_path.clone());
-                Some(acc)
-            }
-            Err(e) => {
-                err = Some(e);
+        .map(|account| {
+            let account_json = if account.starts_with('{') {
+                Some(account.to_string())
+            } else if let Some(key) = encryption_key {
+                if let Ok(json) = decrypt_account_json(account, key) {
+                    Some(json)
+                } else {
+                    err = Some(crate::Error::AccountDecrypt);
+                    return None;
+                }
+            } else {
                 None
+            };
+            if let Some(json) = account_json {
+                match serde_json::from_str::<Account>(&json) {
+                    Ok(mut acc) => {
+                        acc.set_storage_path(storage_path.clone());
+                        Some(ParsedAccount::Account(acc))
+                    }
+                    Err(e) => {
+                        err = Some(e.into());
+                        None
+                    }
+                }
+            } else {
+                Some(ParsedAccount::EncryptedAccount(account.to_string()))
             }
         })
         .collect();
 
     if let Some(err) = err {
-        Err(err.into())
+        Err(err)
     } else {
-        let accounts = accounts.iter().map(|account| account.clone().unwrap()).collect();
+        let accounts = accounts.into_iter().map(|account| account.unwrap()).collect();
         Ok(accounts)
     }
 }
