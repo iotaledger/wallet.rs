@@ -346,16 +346,10 @@ impl AccountHandle {
 }
 
 impl Account {
-    pub(crate) async fn save(&mut self) -> crate::Result<()> {
+    pub(crate) async fn save(&mut self, encryption_key: &Option<[u8; 32]>) -> crate::Result<()> {
         if self.has_pending_changes && !self.skip_persistance {
             let storage_path = self.storage_path.clone();
-            let account_id = self.id().clone();
-            let data = serde_json::to_string(&self)?;
-            crate::storage::get(&storage_path)?
-                .lock()
-                .await
-                .set(&account_id, data)
-                .await?;
+            crate::storage::save_account(&storage_path, &self, encryption_key).await?;
             self.has_pending_changes = false;
         }
         Ok(())

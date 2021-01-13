@@ -301,13 +301,6 @@ impl Message {
         Ok(message)
     }
 
-    /// Check if attachment timestamp on transaction is above max depth (~11 minutes)
-    pub(crate) fn is_above_max_depth(&self) -> bool {
-        let current_timestamp = Utc::now().timestamp();
-        let attachment_timestamp = self.timestamp.timestamp();
-        attachment_timestamp < current_timestamp && current_timestamp - attachment_timestamp < 11 * 60 * 1000
-    }
-
     /// The message's addresses.
     pub fn addresses(&self) -> Vec<&IotaAddress> {
         match &self.payload {

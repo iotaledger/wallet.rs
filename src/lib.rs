@@ -4,7 +4,6 @@
 //! The IOTA Wallet Library
 
 #![warn(missing_docs, rust_2018_idioms)]
-#![allow(unused_variables, dead_code)]
 
 /// The account module.
 pub mod account;
@@ -184,6 +183,9 @@ pub enum Error {
         "storage adapter not set for path `{0}`; please use the method `with_storage` on the AccountManager builder"
     )]
     StorageAdapterNotSet(PathBuf),
+    /// error decrypting stored account using provided encryptionKey
+    #[error("failed to decrypt account")]
+    AccountDecrypt,
 }
 
 impl From<iota::message::Error> for Error {
@@ -265,16 +267,16 @@ mod test_utils {
 
     #[async_trait::async_trait]
     impl crate::signing::Signer for TestSigner {
-        async fn store_mnemonic(&self, _: &PathBuf, mnemonic: String) -> crate::Result<()> {
+        async fn store_mnemonic(&self, _: &PathBuf, _mnemonic: String) -> crate::Result<()> {
             Ok(())
         }
 
         async fn generate_address(
             &self,
-            account: &crate::account::Account,
-            address_index: usize,
-            internal: bool,
-            metadata: crate::signing::GenerateAddressMetadata,
+            _account: &crate::account::Account,
+            _address_index: usize,
+            _internal: bool,
+            _metadata: crate::signing::GenerateAddressMetadata,
         ) -> crate::Result<iota::Address> {
             let mut address = [0; iota::ED25519_ADDRESS_LENGTH];
             crypto::rand::fill(&mut address).unwrap();
@@ -283,10 +285,10 @@ mod test_utils {
 
         async fn sign_message<'a>(
             &self,
-            account: &crate::account::Account,
-            essence: &iota::TransactionEssence,
-            inputs: &mut Vec<crate::signing::TransactionInput>,
-            metadata: crate::signing::SignMessageMetadata<'a>,
+            _account: &crate::account::Account,
+            _essence: &iota::TransactionEssence,
+            _inputs: &mut Vec<crate::signing::TransactionInput>,
+            _metadata: crate::signing::SignMessageMetadata<'a>,
         ) -> crate::Result<Vec<iota::UnlockBlock>> {
             Ok(Vec::new())
         }
@@ -301,16 +303,6 @@ mod test_utils {
     }
 
     pub async fn get_account_manager() -> AccountManager {
-        let mut manager = get_empty_account_manager().await;
-
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-        manager.set_stronghold_password("password").await.unwrap();
-
-        manager.store_mnemonic(signer_type(), None).await.unwrap();
-        manager
-    }
-
-    pub async fn get_empty_account_manager() -> AccountManager {
         let storage_path = loop {
             let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
             let storage_path = PathBuf::from(format!("./test-storage/{}", storage_path));
@@ -319,16 +311,21 @@ mod test_utils {
             }
         };
 
-        let manager = AccountManager::builder()
+        let mut manager = AccountManager::builder()
             .with_storage_path(storage_path)
             .with_polling_interval(POLLING_INTERVAL)
             .finish()
             .await
             .unwrap();
 
-        let signer_type = signer_type();
+        manager.set_storage_password("password").await.unwrap();
+
         #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-        crate::signing::set_signer(signer_type.clone(), TestSigner {}).await;
+        crate::signing::set_signer(signer_type(), TestSigner {}).await;
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        manager.set_stronghold_password("password").await.unwrap();
+
+        manager.store_mnemonic(signer_type(), None).await.unwrap();
 
         manager
     }
@@ -356,7 +353,7 @@ mod test_utils {
         type Builder = NoopNonceProviderBuilder;
         type Error = crate::Error;
 
-        fn nonce(&self, bytes: &[u8], target_score: f64) -> std::result::Result<u64, Self::Error> {
+        fn nonce(&self, _bytes: &[u8], _target_score: f64) -> std::result::Result<u64, Self::Error> {
             Ok(0)
         }
     }

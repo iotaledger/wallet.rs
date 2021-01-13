@@ -118,7 +118,7 @@ impl super::Signer for EnvMnemonicSigner {
 
     async fn sign_message<'a>(
         &self,
-        account: &Account,
+        _account: &Account,
         essence: &iota::TransactionEssence,
         inputs: &mut Vec<super::TransactionInput>,
         _: super::SignMessageMetadata<'a>,
