@@ -5,123 +5,78 @@ use std::{
     any::Any,
     collections::HashMap,
     panic::AssertUnwindSafe,
-    sync::{Arc, Mutex, RwLock},
-    thread,
+    sync::{Arc, Mutex},
 };
 
 use futures::{Future, FutureExt};
+use iota::common::logger::{logger_init, LoggerConfigBuilder};
 use iota_wallet::{
-    account::{Account, AccountIdentifier},
-    WalletError,
+    account::{AccountHandle, AccountIdentifier, SyncedAccount},
+    Error,
 };
 use neon::prelude::*;
 use once_cell::sync::{Lazy, OnceCell};
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
-use tokio::runtime::Runtime;
+use tokio::{runtime::Runtime, sync::RwLock};
 
 mod classes;
 use classes::*;
 
-type AccountInstanceMap = Arc<RwLock<HashMap<String, Arc<RwLock<Account>>>>>;
-
-/// check if the account instance is loaded on the JS side (AccountInstanceMap) and update it by running a callback
-fn mutate_account_if_exists<F: FnOnce(&mut Account) + Send + Sync + 'static>(account_id: &AccountIdentifier, cb: F) {
-    let account_id = account_id.clone();
-    thread::spawn(move || {
-        let map = instances()
-            .read()
-            .expect("failed to lock read on account instances: mutate_account_if_exists()");
-
-        for account in map.values() {
-            let account_ = account.read().unwrap();
-            if account_.id() == &account_id {
-                std::mem::drop(account_);
-                let mut account = account.write().unwrap();
-                cb(&mut account);
-                break;
-            }
-        }
-    });
-}
+type AccountInstanceMap = Arc<RwLock<HashMap<AccountIdentifier, AccountHandle>>>;
+type SyncedAccountHandle = Arc<RwLock<SyncedAccount>>;
+type SyncedAccountInstanceMap = Arc<RwLock<HashMap<String, SyncedAccountHandle>>>;
 
 /// Gets the account instances map.
-fn instances() -> &'static AccountInstanceMap {
-    static INSTANCES: Lazy<AccountInstanceMap> = Lazy::new(|| {
-        iota_wallet::event::on_balance_change(|event| {
-            let address = event.cloned_address();
-            let balance = *event.balance();
-            mutate_account_if_exists(event.account_id(), move |account| {
-                let addresses = account.addresses_mut();
-                if let Some(address) = addresses.iter_mut().find(|a| a == &&address) {
-                    address.set_balance(balance);
-                }
-            });
-        });
-        iota_wallet::event::on_new_transaction(|event| {
-            let message = event.cloned_message();
-            mutate_account_if_exists(event.account_id(), move |account| {
-                account.append_messages(vec![message]);
-            });
-        });
-        iota_wallet::event::on_confirmation_state_change(|event| {
-            let message = event.cloned_message();
-            let confirmed = *event.confirmed();
-            mutate_account_if_exists(event.account_id(), move |account| {
-                if let Some(message) = account.messages_mut().iter_mut().find(|m| m == &&message) {
-                    message.set_confirmed(Some(confirmed));
-                }
-            });
-        });
-        iota_wallet::event::on_reattachment(|event| {
-            let message = event.cloned_message();
-            mutate_account_if_exists(event.account_id(), move |account| {
-                account.append_messages(vec![message]);
-            });
-        });
-        iota_wallet::event::on_broadcast(|event| {
-            let message = event.cloned_message();
-            mutate_account_if_exists(event.account_id(), move |account| {
-                if let Some(message) = account.messages_mut().iter_mut().find(|m| m == &&message) {
-                    message.set_broadcasted(true);
-                }
-            });
-        });
-        Default::default()
-    });
+fn account_instances() -> &'static AccountInstanceMap {
+    static INSTANCES: Lazy<AccountInstanceMap> = Lazy::new(Default::default);
     &INSTANCES
 }
 
-pub(crate) fn get_account(id: &str) -> Arc<RwLock<Account>> {
-    let map = instances()
+pub(crate) async fn get_account(id: &AccountIdentifier) -> AccountHandle {
+    account_instances()
         .read()
-        .expect("failed to lock account instances: get_account()");
-    map.get(id).expect("account dropped or not initialised").clone()
+        .await
+        .get(id)
+        .expect("account dropped or not initialised")
+        .clone()
 }
 
-pub(crate) fn store_account(account: Account) -> String {
-    let mut map = instances()
-        .write()
-        .expect("failed to lock account instances: store_account()");
-    let id: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
-    map.insert(id.clone(), Arc::new(RwLock::new(account)));
+pub(crate) async fn store_account(account_handle: AccountHandle) -> AccountIdentifier {
+    let handle = account_handle.clone();
+    let id = handle.id().await;
+
+    account_instances().write().await.insert(id.clone(), account_handle);
+
     id
 }
 
-pub(crate) fn update_account(id: &str, account: Account) {
-    let mut map = instances()
-        .write()
-        .expect("failed to lock account instances: store_account()");
-    map.insert(id.to_string(), Arc::new(RwLock::new(account)));
+/// Gets the synced account instances map.
+fn synced_account_instances() -> &'static SyncedAccountInstanceMap {
+    static INSTANCES: Lazy<SyncedAccountInstanceMap> = Lazy::new(Default::default);
+    &INSTANCES
 }
 
-pub(crate) fn remove_account(id: &str) {
-    let mut map = instances()
-        .write()
-        .expect("failed to lock account instances: remove_account()");
-    map.remove(id);
+pub(crate) async fn get_synced_account(id: &str) -> SyncedAccountHandle {
+    synced_account_instances()
+        .read()
+        .await
+        .get(id)
+        .expect("synced account dropped or not initialised")
+        .clone()
 }
 
-fn panic_to_response_message(panic: Box<dyn Any>) -> Result<String, WalletError> {
+pub(crate) async fn store_synced_account(synced_account: SyncedAccount) -> String {
+    let mut map = synced_account_instances().write().await;
+    let id: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
+    map.insert(id.clone(), Arc::new(RwLock::new(synced_account)));
+    id
+}
+
+pub(crate) async fn remove_synced_account(id: &str) {
+    synced_account_instances().write().await.remove(id);
+}
+
+fn panic_to_response_message(panic: Box<dyn Any>) -> Result<String, Error> {
     let msg = if let Some(message) = panic.downcast_ref::<String>() {
         format!("Internal error: {}", message)
     } else if let Some(message) = panic.downcast_ref::<&str>() {
@@ -133,12 +88,10 @@ fn panic_to_response_message(panic: Box<dyn Any>) -> Result<String, WalletError>
     Ok(format!("{}\n\n{:?}", msg, current_backtrace))
 }
 
-pub async fn convert_async_panics<T, F: Future<Output = Result<T, WalletError>>>(
-    f: impl FnOnce() -> F,
-) -> Result<T, WalletError> {
+pub async fn convert_async_panics<T, F: Future<Output = Result<T, Error>>>(f: impl FnOnce() -> F) -> Result<T, Error> {
     match AssertUnwindSafe(f()).catch_unwind().await {
         Ok(result) => result,
-        Err(panic) => Err(WalletError::UnknownError(panic_to_response_message(panic)?)),
+        Err(panic) => Err(Error::Panic(panic_to_response_message(panic)?)),
     }
 }
 
@@ -148,8 +101,16 @@ pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
     runtime.lock().unwrap().block_on(cb)
 }
 
+pub fn init_logger(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let config = cx.argument::<JsString>(0)?.value();
+    let config: LoggerConfigBuilder = serde_json::from_str(&config).expect("invalid logger config");
+    logger_init(config.finish()).expect("failed to init logger");
+    Ok(cx.undefined())
+}
+
 // Export the class
 register_module!(mut m, {
+    m.export_function("initLogger", init_logger)?;
     m.export_class::<JsAccountManager>("AccountManager")?;
     m.export_class::<JsAccount>("Account")?;
     m.export_class::<JsSyncedAccount>("SyncedAccount")?;

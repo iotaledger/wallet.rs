@@ -35,13 +35,13 @@ export declare type Payload = Transaction;
 
 export declare interface Message {
   version: number;
-  trunk: string;
-  branch: string;
-  payload_length: number;
+  parent1: string;
+  parent2: string;
+  payloadLength: number;
   payload: Payload;
   timestamp: string;
   nonce: number;
-  confirmed: boolean;
+  confirmed?: boolean;
   broadcasted: boolean;
   incoming: boolean;
   value: number;
@@ -81,8 +81,13 @@ export declare class RemainderValueStrategy {
   static accountAddress(address: string): RemainderValueStrategy
 }
 
+export declare class TransferOptions {
+  remainderValueStrategy?: RemainderValueStrategy
+  indexation?: { index: string, data?: Uint8Array }
+}
+
 export declare class SyncedAccount {
-  send(address: string, amount: number, remainderValueStrategy?: RemainderValueStrategy): Promise<Message>
+  send(address: string, amount: number, options?: TransferOptions): Promise<Message>
   retry(messageId: string): Promise<Message>
   reattach(messageId: string): Promise<Message>
   promote(messageId: string): Promise<Message>
@@ -117,8 +122,8 @@ export declare interface AccountToCreate {
 }
 
 export declare enum StorageType {
-  Stronghold = 1,
-  Sqlite = 2
+  Sqlite,
+  Stronghold
 }
 
 export declare interface ManagerOptions {
@@ -127,9 +132,11 @@ export declare interface ManagerOptions {
 }
 
 export declare class AccountManager {
-  constructor(storagePath?: string)
-  startBackgroundSync(): void
+  constructor(options: ManagerOptions)
+  setStoragePassword(password: string): void
   setStrongholdPassword(password: string): void
+  generateMnemonic(): string
+  storeMnemonic(signerType: SignerType, mnemonic?: string): void
   createAccount(account: AccountToCreate): Account
   getAccount(accountId: string | number): Account | undefined
   getAccountByAlias(alias: string): Account | undefined
@@ -138,7 +145,7 @@ export declare class AccountManager {
   syncAccounts(): Promise<SyncedAccount[]>
   internalTransfer(fromAccount: Account, toAccount: Account, amount: number): Promise<Message>
   backup(destination: string): string
-  importAccounts(source: string): void
+  importAccounts(source: string, password: string): void
 }
 
 export declare type Event = 'ErrorThrown' |
@@ -148,4 +155,16 @@ export declare type Event = 'ErrorThrown' |
   'Reattachment' |
   'Broadcast'
 
+export interface LoggerOutput {
+  name?: string
+  level_filter: 'off' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
+  target_filters?: string[]
+}
+
+export interface LoggerConfig {
+  color_enabled?: boolean
+  outputs?: LoggerOutput[]
+}
+
 export declare function addEventListener(event: Event, cb: (err?: any, data?: { [k: string]: any }) => void): void
+export declare function initLogger(config: LoggerConfig)

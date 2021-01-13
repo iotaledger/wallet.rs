@@ -5,7 +5,7 @@ use crate::address::IotaAddress;
 use rand::{prelude::SliceRandom, thread_rng};
 use std::convert::TryInto;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Input {
     pub address: IotaAddress,
     pub balance: u64,
@@ -13,7 +13,7 @@ pub struct Input {
 
 pub fn select_input(target: u64, available_utxos: &mut [Input]) -> crate::Result<Vec<Input>> {
     if target > available_utxos.iter().fold(0, |acc, address| acc + address.balance) {
-        return Err(crate::WalletError::InsufficientFunds);
+        return Err(crate::Error::InsufficientFunds);
     }
 
     available_utxos.sort_by(|a, b| b.balance.cmp(&a.balance));

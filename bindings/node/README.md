@@ -31,25 +31,53 @@ $ yarn link iota-wallet
 
 After you linked the library, you can create an `AccountManager` instance and interface with it.
 
-While Stronghold is not ready, we recommend using the Sqlite StorageType and `EnvMnemonic` SignerType (this simply means you store your mnemonic as an environment variable).
-
 ### Example 
 
 ```javascript
-const { AccountManager, StorageType, SignerType } = require('iota-wallet')
+const { AccountManager, SignerType } = require('iota-wallet')
 const manager = new AccountManager({
-    storagePath: './storage',
-    storageType: StorageType.Sqlite
+    storagePath: './storage'
 })
+manager.setStrongholdPassword('password')
+manager.storeMnemonic(SignerType.Stronghold, manager.generateMnemonic())
 const account = await manager.createAccount({
   alias: 'Account1',
-  clientOptions: { node: 'http://api.lb-0.testnet.chrysalis2.com', localPow: false },
-  signerType: SignerType.EnvMnemonic
+  clientOptions: { node: 'http://api.lb-0.testnet.chrysalis2.com', localPow: false }
 })
 account.sync()
 ```
 
 ## API Reference
+
+### initLogger(config: LogOptions)
+
+Initializes the logging system.
+
+#### LogOptions
+
+| Param         | Type                     | Default                | Description                             |
+| ------------- | ------------------------ | ---------------------- | --------------------------------------- |
+| color_enabled | <code>boolean</code>     | <code>undefined</code> | Whether to enable colored output or not |
+| outputs       | <code>LogOutput[]</code> | <code>undefined</code> | The log outputs                         |
+
+#### LogOutput
+
+| Param          | Type                  | Default                | Description                                          |
+| -------------- | --------------------- | ---------------------- | ---------------------------------------------------- |
+| name           | <code>string</code>   | <code>undefined</code> | 'stdout' or a path to a file                         |
+| level_filter   | <code>string</code>   | <code>'info'</code>    | The maximum log level that this output accepts       |
+| target_filters | <code>string[]</code> | <code>[]</code>        | Filters on the log target (library and module names) |
+
+### addEventListener(event, cb)
+
+Adds a new event listener with a callback in the form of `(err, data) => {}`.
+Supported event names:
+- ErrorThrown
+- BalanceChange
+- NewTransaction
+- ConfirmationStateChange
+- Reattachment
+- Broadcast
 
 ### AccountManager
 
@@ -57,23 +85,52 @@ account.sync()
 
 Creates a new instance of the AccountManager.
 
-| Param         | Type                | Default                | Description                                           |
-| ------------- | ------------------- | ---------------------- | ----------------------------------------------------- |
-| [options]     | <code>object</code> | <code>undefined</code> | The options to configure the account manager          |
-| [storagePath] | <code>string</code> | <code>undefined</code> | The path where the database file will be saved        |
-| [storageType] | <code>number</code> | <code>undefined</code> | The type of the database.  Stronghold = 1, Sqlite = 2 |
+| Param         | Type                     | Default                             | Description                                    |
+| ------------- | ------------------------ | ----------------------------------- | ---------------------------------------------- |
+| [options]     | <code>object</code>      | <code>undefined</code>              | The options to configure the account manager   |
+| [storagePath] | <code>string</code>      | <code>undefined</code>              | The path where the database file will be saved |
+| [storageType] | <code>StorageType</code> | <code>StorageType.Stronghold</code> | The storage implementation to use              |
 
-#### startBackgroundSync(): void
+- StorageType
+  
+One of the default storage implementations provided by the wallet library.
 
-Initialises the background polling mechanism and MQTT monitoring. Automatically called on `setStrongholdPassword`.
+| Param      | Description                     |
+| ---------- | ------------------------------- |
+| Sqlite     | Storage using a SQLite database |
+| Stronghold | Storage using Stronghold        |
+
+
+#### setStoragePassword(password): void
+
+Sets the password used for encrypting the storage.
+
+| Param    | Type                | Default                | Description          |
+| -------- | ------------------- | ---------------------- | -------------------- |
+| password | <code>string</code> | <code>undefined</code> | The storage password |
 
 #### setStrongholdPassword(password): void
 
 Sets the stronghold password and initialises it.
 
-| Param    | Type                | Default                | Description                      |
-| -------- | ------------------- | ---------------------- | -------------------------------- |
-| password | <code>string</code> | <code>undefined</code> | The stronghold snapshot password |
+| Param    | Type                | Default                | Description             |
+| -------- | ------------------- | ---------------------- | ----------------------- |
+| password | <code>string</code> | <code>undefined</code> | The stronghold password |
+
+#### generateMnemonic(): string
+
+Generates a new mnemonic phrase.
+
+**Returns** the generated mnemonic string.
+
+#### storeMnemonic(signerType[, mnemonic])
+
+Saves the mnemonic using the given signer provider.
+
+| Param      | Type                               | Default | Description                                       |
+| ---------- | ---------------------------------- | ------- | ------------------------------------------------- |
+| signerType | <code>number</code>                | null    | The signer type. 1 = Stronghold, 2 = EnvMnemonic  |
+| mnemonic   | <code>string        \| null</code> | null    | The mnemonic to save. If null, we'll generate one |
 
 #### createAccount(account): Account
 
@@ -154,20 +211,40 @@ Backups the database.
 
 Imports a database file.
 
-| Param  | Type                | Default                | Description                 |
-| ------ | ------------------- | ---------------------- | --------------------------- |
-| source | <code>string</code> | <code>undefined</code> | The path to the backup file |
+| Param    | Type                | Default                | Description                    |
+| -------- | ------------------- | ---------------------- | ------------------------------ |
+| source   | <code>string</code> | <code>undefined</code> | The path to the backup file    |
+| password | <code>string</code> | <code>undefined</code> | The backup stronghold password |
 
 ### SyncedAccount
 
-#### send(address, amount)
+#### send(address, amount[, options])
 
 Send funds to the given address.
 
-| Param   | Type                | Default                | Description                               |
-| ------- | ------------------- | ---------------------- | ----------------------------------------- |
-| address | <code>string</code> | <code>null</code>      | The bech32 string of the transfer address |
-| amount  | <code>number</code> | <code>undefined</code> | The transfer amount                       |
+| Param   | Type                         | Default                | Description                               |
+| ------- | ---------------------------- | ---------------------- | ----------------------------------------- |
+| address | <code>string</code>          | <code>null</code>      | The bech32 string of the transfer address |
+| amount  | <code>number</code>          | <code>undefined</code> | The transfer amount                       |
+| options | <code>TransferOptions</code> | <code>undefined</code> | The transfer options                      |
+
+##### TransferOptions
+
+| Param                  | Type                                              | Default           | Description                                        |
+| ---------------------- | ------------------------------------------------- | ----------------- | -------------------------------------------------- |
+| remainderValueStrategy | <code>RemainderValueStrategy</code>               | <code>null</code> | The strategy to use for the remainder value if any |
+| indexation             | <code>{ index: string, data?: Uint8Array }</code> | <code>null</code> | Message indexation                                 |
+
+##### RemainderValueStrategy
+
+###### changeAddress()
+Send the remainder value to an internal address.
+
+###### reuseAddress()
+Send the remainder value to its original address.
+
+###### accountAddress(address: string)
+Send the remainder value to a specific address that must belong to the account.
 
 #### retry(messageId)
 

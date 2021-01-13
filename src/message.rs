@@ -4,44 +4,15 @@
 use crate::address::{Address, IotaAddress};
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-pub use iota::message::prelude::{Message as IotaMessage, MessageId, Output, Payload};
-use serde::{Deserialize, Serialize};
+pub use iota::{common::packable::Packable, Indexation, Message as IotaMessage, MessageId, Output, Payload};
+use serde::{de::Deserializer, Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
 use std::{
     cmp::Ordering,
     fmt,
     hash::{Hash, Hasher},
+    num::NonZeroU64,
 };
-
-/// A transaction tag.
-#[derive(Debug, Clone)]
-pub struct Tag {
-    tag: [u8; 16],
-}
-
-impl Default for Tag {
-    /// Initialises an empty tag.
-    fn default() -> Self {
-        Self { tag: [0; 16] }
-    }
-}
-
-impl Tag {
-    /// Initialises a new tag.
-    pub fn new(tag: [u8; 16]) -> Self {
-        Self { tag }
-    }
-
-    /// Returns the tag formatted as ASCII.
-    pub fn as_ascii(&self) -> String {
-        String::from_utf8_lossy(&self.tag).to_string()
-    }
-
-    /// Returns the tag bytes.
-    pub fn as_bytes(&self) -> &[u8; 16] {
-        &self.tag
-    }
-}
 
 /// The strategy to use for the remainder value management when sending funds.
 #[derive(Debug, Clone, Deserialize)]
@@ -56,41 +27,124 @@ pub enum RemainderValueStrategy {
     AccountAddress(IotaAddress),
 }
 
-/// A transfer to make a transaction.
-#[derive(Debug, Clone, Deserialize)]
-pub struct Transfer {
-    /// The transfer value.
-    pub(crate) amount: u64,
-    /// The transfer address.
-    #[serde(with = "crate::serde::iota_address_serde")]
-    pub(crate) address: IotaAddress,
-    /// (Optional) transfer data.
-    pub(crate) data: Option<String>,
-    /// The strategy to use for the remainder value.
-    pub(crate) remainder_value_strategy: RemainderValueStrategy,
+impl Default for RemainderValueStrategy {
+    fn default() -> Self {
+        Self::ChangeAddress
+    }
 }
 
-impl Transfer {
+/// A transfer to make a transaction.
+#[derive(Debug, Clone)]
+pub struct TransferBuilder {
+    /// The transfer value.
+    amount: NonZeroU64,
+    /// The transfer address.
+    address: IotaAddress,
+    /// (Optional) message indexation.
+    indexation: Option<Indexation>,
+    /// The strategy to use for the remainder value.
+    remainder_value_strategy: RemainderValueStrategy,
+}
+
+impl<'de> Deserialize<'de> for TransferBuilder {
+    fn deserialize<D>(deserializer: D) -> Result<TransferBuilder, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        /// The message's index builder.
+        #[derive(Debug, Clone, Deserialize)]
+        struct IndexationBuilder {
+            index: String,
+            data: Option<Vec<u8>>,
+        }
+
+        impl IndexationBuilder {
+            /// Builds the indexation.
+            pub fn finish(self) -> crate::Result<Indexation> {
+                let indexation = Indexation::new(self.index, &self.data.unwrap_or_default())?;
+                Ok(indexation)
+            }
+        }
+
+        #[derive(Debug, Clone, Deserialize)]
+        pub struct TransferBuilderWrapper {
+            /// The transfer value.
+            amount: NonZeroU64,
+            /// The transfer address.
+            #[serde(with = "crate::serde::iota_address_serde")]
+            address: IotaAddress,
+            /// (Optional) message indexation.
+            indexation: Option<IndexationBuilder>,
+            /// The strategy to use for the remainder value.
+            remainder_value_strategy: RemainderValueStrategy,
+        }
+
+        TransferBuilderWrapper::deserialize(deserializer).and_then(|builder| {
+            Ok(TransferBuilder {
+                amount: builder.amount,
+                address: builder.address,
+                indexation: match builder.indexation {
+                    Some(i) => Some(i.finish().map_err(serde::de::Error::custom)?),
+                    None => None,
+                },
+                remainder_value_strategy: builder.remainder_value_strategy,
+            })
+        })
+    }
+}
+
+impl TransferBuilder {
     /// Initialises a new transfer to the given address.
-    pub fn new(address: IotaAddress, amount: u64) -> Self {
+    pub fn new(address: IotaAddress, amount: NonZeroU64) -> Self {
         Self {
             address,
             amount,
-            data: None,
+            indexation: None,
             remainder_value_strategy: RemainderValueStrategy::ChangeAddress,
         }
     }
 
     /// Sets the remainder value strategy for the transfer.
-    pub fn remainder_value_strategy(mut self, strategy: RemainderValueStrategy) -> Self {
+    pub fn with_remainder_value_strategy(mut self, strategy: RemainderValueStrategy) -> Self {
         self.remainder_value_strategy = strategy;
         self
     }
 
-    /// (Optional) transfer data.
-    pub fn data(mut self, data: String) -> Self {
-        self.data = Some(data);
+    /// (Optional) message indexation.
+    pub fn with_indexation(mut self, indexation: Indexation) -> Self {
+        self.indexation = Some(indexation);
         self
+    }
+
+    /// Builds the transfer.
+    pub fn finish(self) -> Transfer {
+        Transfer {
+            address: self.address,
+            amount: self.amount,
+            indexation: self.indexation,
+            remainder_value_strategy: self.remainder_value_strategy,
+        }
+    }
+}
+
+/// A transfer to make a transaction.
+#[derive(Debug, Clone, Deserialize)]
+pub struct Transfer {
+    /// The transfer value.
+    pub(crate) amount: NonZeroU64,
+    /// The transfer address.
+    #[serde(with = "crate::serde::iota_address_serde")]
+    pub(crate) address: IotaAddress,
+    /// (Optional) message indexation.
+    pub(crate) indexation: Option<Indexation>,
+    /// The strategy to use for the remainder value.
+    pub(crate) remainder_value_strategy: RemainderValueStrategy,
+}
+
+impl Transfer {
+    /// Initialises the transfer builder.
+    pub fn builder(address: IotaAddress, amount: NonZeroU64) -> TransferBuilder {
+        TransferBuilder::new(address, amount)
     }
 }
 
@@ -160,24 +214,21 @@ impl Value {
 }
 
 /// A message definition.
-#[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize)]
+#[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize, Eq)]
 #[getset(get = "pub", set = "pub(crate)")]
 pub struct Message {
     /// The message identifier.
-    #[serde(with = "crate::serde::message_id_serde")]
     pub(crate) id: MessageId,
     /// The message version.
     pub(crate) version: u64,
     /// Message id of the first message this message refers to.
-    #[serde(with = "crate::serde::message_id_serde")]
-    pub(crate) trunk: MessageId,
+    pub(crate) parent1: MessageId,
     /// Message id of the second message this message refers to.
-    #[serde(with = "crate::serde::message_id_serde")]
-    pub(crate) branch: MessageId,
+    pub(crate) parent2: MessageId,
     /// Length of the payload.
     #[serde(rename = "payloadLength")]
-    pub(crate) payload_length: u64,
-    /// Transaction amount.
+    pub(crate) payload_length: usize,
+    /// Message payload.
     pub(crate) payload: Payload,
     /// The transaction timestamp.
     pub(crate) timestamp: DateTime<Utc>,
@@ -202,17 +253,15 @@ impl Hash for Message {
     }
 }
 
-// TODO
 impl PartialEq for Message {
     fn eq(&self, other: &Self) -> bool {
-        self.nonce == other.nonce
+        self.id == other.id
     }
 }
-impl Eq for Message {}
 
 impl Ord for Message {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.nonce.cmp(&other.nonce)
+        self.id.as_ref().cmp(&other.id.as_ref())
     }
 }
 
@@ -229,18 +278,17 @@ impl Message {
         message: &IotaMessage,
         confirmed: Option<bool>,
     ) -> crate::Result<Self> {
+        let mut packed_payload = Vec::new();
+        let _ = message.payload().pack(&mut packed_payload);
+
         let message = Self {
             id,
             version: 1,
-            trunk: *message.parent1(),
-            branch: *message.parent2(),
-            payload_length: 5, // TODO
+            parent1: *message.parent1(),
+            parent2: *message.parent2(),
+            payload_length: packed_payload.len(),
             payload: message.payload().as_ref().unwrap().clone(),
             timestamp: Utc::now(),
-            // TODO timestamp: DateTime::<Utc>::from_utc(
-            //    NaiveDateTime::from_timestamp(*message.attachment_ts().to_inner() as i64, 0),
-            //    Utc,
-            // ),
             nonce: message.nonce(),
             confirmed,
             broadcasted: true,
@@ -251,13 +299,6 @@ impl Message {
         };
 
         Ok(message)
-    }
-
-    /// Check if attachment timestamp on transaction is above max depth (~11 minutes)
-    pub(crate) fn is_above_max_depth(&self) -> bool {
-        let current_timestamp = Utc::now().timestamp();
-        let attachment_timestamp = self.timestamp.timestamp();
-        attachment_timestamp < current_timestamp && current_timestamp - attachment_timestamp < 11 * 60 * 1000
     }
 
     /// The message's addresses.
@@ -293,10 +334,10 @@ impl Message {
                             if address_belongs_to_account {
                                 acc
                             } else {
-                                acc + x.amount().get()
+                                acc + x.amount()
                             }
                         } else if address_belongs_to_account {
-                            acc + x.amount().get()
+                            acc + x.amount()
                         } else {
                             acc
                         }

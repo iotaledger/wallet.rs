@@ -42,8 +42,8 @@ $ set VCPKGRS_DYNAMIC=1
 
 ```
 $ choco install openssl
-# you may need to set the OPENSSL_ROOT_DIR environment variable
-$ set OPENSSL_ROOT_DIR="C:\Program Files\OpenSSL-Win64"
+# you may need to set the OPENSSL_DIR environment variable
+$ set OPENSSL_DIR="C:\Program Files\OpenSSL-Win64"
 ```
 
 ### macOS
@@ -51,10 +51,7 @@ $ set OPENSSL_ROOT_DIR="C:\Program Files\OpenSSL-Win64"
 `cmake` and `openssl` can be installed with `Homebrew`:
 
 ```
-$ brew install cmake
-$ brew install openssl@1.1
-# you may want to add this to your .zshrc or .bashrc since you'll need it to compile the crate
-$ OPENSSL_ROOT_DIR=$(brew --prefix openssl@1.1)
+$ brew install cmake openssl@1.1
 ```
 
 ### Linux
@@ -80,16 +77,21 @@ use iota_wallet::{
     storage::sqlite::SqliteStorageAdapter,
 };
 use std::path::PathBuf;
+
 #[tokio::main]
 async fn main() -> iota_wallet::Result<()> {
     let storage_folder: PathBuf = "./my-db".into();
     let manager =
-        AccountManager::with_storage_adapter(&storage_folder, SqliteStorageAdapter::new(&storage_folder, "accounts")?)?;
+        AccountManager::builder()
+            .with_storage(&storage_folder, SqliteStorageAdapter::new(&storage_folder, "accounts")?)
+            .finish()
+            .await?;
     let client_options = ClientOptionsBuilder::node("http://api.lb-0.testnet.chrysalis2.com")?.build();
     let account = manager
         .create_account(client_options)
         .signer_type(SignerType::EnvMnemonic)
-        .initialise()?;
+        .initialise()
+        .await?;
     Ok(())
 }
 ```
