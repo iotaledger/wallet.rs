@@ -28,17 +28,7 @@ struct AddressOutputPayload {
 
 #[derive(Deserialize)]
 struct AddressOutputPayloadOutput {
-    #[serde(rename = "type")]
-    type_: u8,
     amount: u64,
-    address: AddressOutputPayloadAddress,
-}
-
-#[derive(Deserialize)]
-struct AddressOutputPayloadAddress {
-    #[serde(rename = "type")]
-    type_: u8,
-    address: String,
 }
 
 /// Unsubscribe from all topics associated with the account.
@@ -57,7 +47,7 @@ async fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
 ) -> crate::Result<()> {
     let client = crate::client::get_client(&client_options);
     let mut client = client.write().await;
-    client.subscriber().topic(Topic::new(topic)?).subscribe(handler)?;
+    client.subscriber().with_topic(Topic::new(topic)?).subscribe(handler)?;
     Ok(())
 }
 
@@ -80,13 +70,18 @@ pub async fn monitor_address_balance(account_handle: AccountHandle, address: &Io
         &client_options_,
         format!("addresses/{}/outputs", address.to_bech32()),
         move |topic_event| {
+            log::info!("[MQTT] got {:?}", topic_event);
             let topic_event = topic_event.clone();
             let address = address.clone();
             let client_options = client_options.clone();
             let account_handle = account_handle.clone();
 
             crate::block_on(async {
-                let _ = process_output(topic_event.payload.clone(), account_handle, address, client_options).await;
+                if let Err(e) =
+                    process_output(topic_event.payload.clone(), account_handle, address, client_options).await
+                {
+                    log::error!("[MQTT] error processing output: {:?}", e);
+                }
             });
         },
     )
@@ -101,8 +96,8 @@ async fn process_output(
 ) -> crate::Result<()> {
     let output: AddressOutputPayload = serde_json::from_str(&payload)?;
     let metadata = OutputMetadata {
-        message_id: hex::decode(output.message_id).map_err(|e| anyhow::anyhow!(e.to_string()))?,
-        transaction_id: hex::decode(output.transaction_id).map_err(|e| anyhow::anyhow!(e.to_string()))?,
+        message_id: hex::decode(output.message_id)?,
+        transaction_id: hex::decode(output.transaction_id)?,
         output_index: output.output_index,
         is_spent: output.is_spent,
         amount: output.output.amount,
@@ -183,7 +178,11 @@ pub async fn monitor_confirmation_state_change(
         move |topic_event| {
             let account_handle = account_handle.clone();
             crate::block_on(async {
-                let _ = process_metadata(topic_event.payload.clone(), account_handle, message_id, &message).await;
+                if let Err(e) =
+                    process_metadata(topic_event.payload.clone(), account_handle, message_id, &message).await
+                {
+                    log::error!("[MQTT] error processing metadata: {:?}", e);
+                }
             });
         },
     )

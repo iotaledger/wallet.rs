@@ -57,19 +57,19 @@ impl AddressOutput {
 }
 
 impl TryFrom<OutputMetadata> for AddressOutput {
-    type Error = crate::WalletError;
+    type Error = crate::Error;
 
     fn try_from(output: OutputMetadata) -> crate::Result<Self> {
         let output = Self {
             transaction_id: TransactionId::new(
                 output.transaction_id[..]
                     .try_into()
-                    .map_err(|_| anyhow::anyhow!("invalid transaction id length"))?,
+                    .map_err(|_| crate::Error::InvalidTransactionId)?,
             ),
             message_id: MessageId::new(
                 output.message_id[..]
                     .try_into()
-                    .map_err(|_| anyhow::anyhow!("invalid message id length"))?,
+                    .map_err(|_| crate::Error::InvalidMessageId)?,
             ),
             index: output.output_index,
             amount: output.amount,
@@ -127,21 +127,21 @@ impl AddressBuilder {
 
     /// Builds the address.
     pub fn build(self) -> crate::Result<Address> {
-        let iota_address = self
-            .address
-            .ok_or_else(|| anyhow::anyhow!("the `address` field is required"))?;
+        let iota_address = self.address.ok_or(crate::Error::AddressBuildRequiredField(
+            crate::AddressBuildRequiredField::Address,
+        ))?;
         let address = Address {
             address: iota_address,
-            balance: self
-                .balance
-                .ok_or_else(|| anyhow::anyhow!("the `balance` field is required"))?,
-            key_index: self
-                .key_index
-                .ok_or_else(|| anyhow::anyhow!("the `key_index` field is required"))?,
+            balance: self.balance.ok_or(crate::Error::AddressBuildRequiredField(
+                crate::AddressBuildRequiredField::Balance,
+            ))?,
+            key_index: self.key_index.ok_or(crate::Error::AddressBuildRequiredField(
+                crate::AddressBuildRequiredField::KeyIndex,
+            ))?,
             internal: self.internal,
-            outputs: self
-                .outputs
-                .ok_or_else(|| anyhow::anyhow!("the `outputs` field is required"))?,
+            outputs: self.outputs.ok_or(crate::Error::AddressBuildRequiredField(
+                crate::AddressBuildRequiredField::Outputs,
+            ))?,
         };
         Ok(address)
     }
@@ -202,17 +202,15 @@ impl Address {
                     && (!o.is_spent && output.is_spent)
             });
             if let Some(spent_output) = spent_existing_output {
+                log::debug!("[ADDRESS] got spent of {:?}", spent_output);
                 self.balance -= output.amount;
                 self.outputs.remove(spent_output);
             } else {
+                log::debug!("[ADDRESS] got new output {:?}", output);
                 self.balance += output.amount;
                 self.outputs.push(output);
             }
         }
-    }
-
-    pub(crate) fn outputs_mut(&mut self) -> &mut Vec<AddressOutput> {
-        &mut self.outputs
     }
 
     /// Gets the list of outputs that aren't spent or pending.
@@ -233,21 +231,25 @@ pub fn parse(address: String) -> crate::Result<IotaAddress> {
     let iota_address = IotaAddress::Ed25519(Ed25519Address::new(
         address_ed25519[1..]
             .try_into()
-            .map_err(|_| crate::WalletError::InvalidAddressLength)?,
+            .map_err(|_| crate::Error::InvalidAddressLength)?,
     ));
     Ok(iota_address)
 }
 
-pub(crate) fn get_iota_address(account: &Account, address_index: usize, internal: bool) -> crate::Result<IotaAddress> {
-    crate::signing::with_signer(account.signer_type(), |signer| {
-        signer.generate_address(&account, address_index, internal)
-    })
+pub(crate) async fn get_iota_address(
+    account: &Account,
+    address_index: usize,
+    internal: bool,
+) -> crate::Result<IotaAddress> {
+    let signer = crate::signing::get_signer(account.signer_type()).await;
+    let signer = signer.lock().await;
+    signer.generate_address(&account, address_index, internal).await
 }
 
 /// Gets an unused public address for the given account.
-pub(crate) fn get_new_address(account: &Account) -> crate::Result<Address> {
+pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address> {
     let key_index = account.addresses().iter().filter(|a| !a.internal()).count();
-    let iota_address = get_iota_address(&account, key_index, false)?;
+    let iota_address = get_iota_address(&account, key_index, false).await?;
     let address = Address {
         address: iota_address,
         balance: 0,
@@ -259,9 +261,9 @@ pub(crate) fn get_new_address(account: &Account) -> crate::Result<Address> {
 }
 
 /// Gets an unused change address for the given account and address.
-pub(crate) fn get_new_change_address(account: &Account, address: &Address) -> crate::Result<Address> {
+pub(crate) async fn get_new_change_address(account: &Account, address: &Address) -> crate::Result<Address> {
     let key_index = *address.key_index();
-    let iota_address = get_iota_address(&account, key_index, true)?;
+    let iota_address = get_iota_address(&account, key_index, true).await?;
     let address = Address {
         address: iota_address,
         balance: 0,
@@ -270,15 +272,6 @@ pub(crate) fn get_new_change_address(account: &Account, address: &Address) -> cr
         outputs: vec![],
     };
     Ok(address)
-}
-
-/// Batch address generation.
-pub(crate) fn get_addresses(account: &Account, count: usize) -> crate::Result<Vec<Address>> {
-    let mut addresses = vec![];
-    for i in 0..count {
-        addresses.push(get_new_address(&account)?);
-    }
-    Ok(addresses)
 }
 
 pub(crate) fn is_unspent(account: &Account, address: &IotaAddress) -> bool {

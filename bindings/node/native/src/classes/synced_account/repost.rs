@@ -3,7 +3,7 @@
 
 use iota_wallet::{
     message::{Message, MessageId},
-    WalletError,
+    Error,
 };
 use neon::prelude::*;
 
@@ -21,14 +21,13 @@ pub struct RepostTask {
 
 impl Task for RepostTask {
     type Output = Message;
-    type Error = WalletError;
+    type Error = Error;
     type JsEvent = JsValue;
 
     fn perform(&self) -> Result<Self::Output, Self::Error> {
-        let synced = crate::get_synced_account(&self.synced_account_id);
-        let synced = synced.read().unwrap();
-
         crate::block_on(crate::convert_async_panics(|| async {
+            let synced = crate::get_synced_account(&self.synced_account_id).await;
+            let synced = synced.read().await;
             let message = match self.action {
                 RepostAction::Retry => synced.retry(&self.message_id).await?,
                 RepostAction::Reattach => synced.reattach(&self.message_id).await?,

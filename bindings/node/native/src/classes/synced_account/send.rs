@@ -3,7 +3,7 @@
 
 use iota_wallet::{
     message::{Message, Transfer},
-    WalletError,
+    Error,
 };
 use neon::prelude::*;
 
@@ -14,14 +14,13 @@ pub struct SendTask {
 
 impl Task for SendTask {
     type Output = Message;
-    type Error = WalletError;
+    type Error = Error;
     type JsEvent = JsValue;
 
     fn perform(&self) -> Result<Self::Output, Self::Error> {
-        let synced = crate::get_synced_account(&self.synced_account_id);
-        let synced = synced.read().unwrap();
-
         crate::block_on(crate::convert_async_panics(|| async {
+            let synced = crate::get_synced_account(&self.synced_account_id).await;
+            let synced = synced.read().await;
             synced.transfer(self.transfer.clone()).await
         }))
     }

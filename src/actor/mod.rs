@@ -9,10 +9,11 @@ use crate::{
 };
 use futures::{Future, FutureExt};
 use iota::message::prelude::MessageId;
+
 use std::{
     any::Any,
-    borrow::Cow,
     convert::TryInto,
+    num::NonZeroU64,
     panic::{catch_unwind, AssertUnwindSafe},
 };
 
@@ -25,7 +26,9 @@ pub struct WalletMessageHandler {
 }
 
 fn panic_to_response_message(panic: Box<dyn Any>) -> Result<ResponseType> {
-    let msg = if let Some(message) = panic.downcast_ref::<Cow<'_, str>>() {
+    let msg = if let Some(message) = panic.downcast_ref::<String>() {
+        format!("Internal error: {}", message)
+    } else if let Some(message) = panic.downcast_ref::<&str>() {
         format!("Internal error: {}", message)
     } else {
         "Internal error".to_string()
@@ -86,13 +89,46 @@ impl WalletMessageHandler {
             MessageType::Reattach { account_id, message_id } => {
                 convert_async_panics(|| async { self.reattach(account_id, message_id).await }).await
             }
-            MessageType::Backup(destination_path) => convert_panics(|| self.backup(destination_path)),
-            MessageType::RestoreBackup(backup_path) => convert_panics(|| self.restore_backup(backup_path)),
+            #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
+            MessageType::Backup(destination_path) => {
+                convert_async_panics(|| async { self.backup(destination_path).await }).await
+            }
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            MessageType::RestoreBackup { backup_path, password } => {
+                convert_async_panics(|| async { self.restore_backup(backup_path, password).await }).await
+            }
+            #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
+            MessageType::RestoreBackup { backup_path } => {
+                convert_async_panics(|| async { self.restore_backup(backup_path).await }).await
+            }
+            MessageType::SetStoragePassword(password) => {
+                convert_async_panics(|| async { self.set_storage_password(password).await }).await
+            }
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             MessageType::SetStrongholdPassword(password) => {
                 convert_async_panics(|| async { self.set_stronghold_password(password).await }).await
             }
+            MessageType::GenerateMnemonic => convert_panics(|| {
+                self.account_manager
+                    .generate_mnemonic()
+                    .map(ResponseType::GeneratedMnemonic)
+            }),
+            MessageType::VerifyMnemonic(mnemonic) => convert_panics(|| {
+                self.account_manager
+                    .verify_mnemonic(mnemonic)
+                    .map(|_| ResponseType::VerifiedMnemonic)
+            }),
+            MessageType::StoreMnemonic { signer_type, mnemonic } => {
+                convert_async_panics(|| async {
+                    self.account_manager
+                        .store_mnemonic(signer_type.clone(), mnemonic.clone())
+                        .await
+                        .map(|_| ResponseType::StoredMnemonic)
+                })
+                .await
+            }
             MessageType::SendTransfer { account_id, transfer } => {
-                convert_async_panics(|| async { self.send_transfer(account_id, transfer).await }).await
+                convert_async_panics(|| async { self.send_transfer(account_id, transfer.clone().finish()).await }).await
             }
             MessageType::InternalTransfer {
                 from_account_id,
@@ -113,13 +149,22 @@ impl WalletMessageHandler {
             .send(Response::new(message.id().to_string(), message.message_type, response));
     }
 
-    fn backup(&self, destination_path: &str) -> Result<ResponseType> {
-        self.account_manager.backup(destination_path)?;
+    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
+    async fn backup(&self, destination_path: &str) -> Result<ResponseType> {
+        self.account_manager.backup(destination_path).await?;
         Ok(ResponseType::BackupSuccessful)
     }
 
-    fn restore_backup(&self, backup_path: &str) -> Result<ResponseType> {
-        self.account_manager.import_accounts(backup_path)?;
+    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
+    async fn restore_backup(
+        &mut self,
+        backup_path: &str,
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))] password: &str,
+    ) -> Result<ResponseType> {
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        self.account_manager.import_accounts(backup_path, password).await?;
+        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
+        self.account_manager.import_accounts(backup_path).await?;
         Ok(ResponseType::BackupRestored)
     }
 
@@ -127,7 +172,7 @@ impl WalletMessageHandler {
         let parsed_message_id = MessageId::new(
             message_id.as_bytes()[..]
                 .try_into()
-                .map_err(|_| anyhow::anyhow!("invalid message id length"))?,
+                .map_err(|_| crate::Error::InvalidMessageId)?,
         );
         self.account_manager.reattach(account_id, &parsed_message_id).await?;
         Ok(ResponseType::Reattached(message_id.to_string()))
@@ -215,18 +260,17 @@ impl WalletMessageHandler {
     async fn create_account(&self, account: &AccountToCreate) -> Result<ResponseType> {
         let mut builder = self.account_manager.create_account(account.client_options.clone());
 
-        if let Some(mnemonic) = &account.mnemonic {
-            builder = builder.mnemonic(mnemonic);
-        }
         if let Some(alias) = &account.alias {
             builder = builder.alias(alias);
         }
         if let Some(created_at) = &account.created_at {
-            builder = builder.created_at(
-                created_at
-                    .parse::<DateTime<Utc>>()
-                    .map_err(|e| anyhow::anyhow!(e.to_string()))?,
-            );
+            builder = builder.created_at(created_at.parse::<DateTime<Utc>>()?);
+        }
+        if account.skip_persistance {
+            builder = builder.skip_persistance();
+        }
+        if let Some(signer_type) = &account.signer_type {
+            builder = builder.signer_type(signer_type.clone());
         }
 
         match builder.initialise().await {
@@ -253,15 +297,21 @@ impl WalletMessageHandler {
         Ok(ResponseType::ReadAccounts(accounts_))
     }
 
+    async fn set_storage_password(&mut self, password: &str) -> Result<ResponseType> {
+        self.account_manager.set_storage_password(password).await?;
+        Ok(ResponseType::StoragePasswordSet)
+    }
+
+    #[cfg(feature = "stronghold")]
     async fn set_stronghold_password(&mut self, password: &str) -> Result<ResponseType> {
         self.account_manager.set_stronghold_password(password).await?;
         Ok(ResponseType::StrongholdPasswordSet)
     }
 
-    async fn send_transfer(&self, account_id: &AccountIdentifier, transfer: &Transfer) -> Result<ResponseType> {
+    async fn send_transfer(&self, account_id: &AccountIdentifier, transfer: Transfer) -> Result<ResponseType> {
         let account = self.account_manager.get_account(account_id).await?;
         let synced = account.sync().await.execute().await?;
-        let message = synced.transfer(transfer.clone()).await?;
+        let message = synced.transfer(transfer).await?;
         Ok(ResponseType::SentTransfer(message))
     }
 
@@ -269,7 +319,7 @@ impl WalletMessageHandler {
         &self,
         from_account_id: &AccountIdentifier,
         to_account_id: &AccountIdentifier,
-        amount: u64,
+        amount: NonZeroU64,
     ) -> Result<ResponseType> {
         let message = self
             .account_manager
@@ -333,7 +383,6 @@ mod tests {
             while let Some(message) = self.rx.recv().await {
                 self.message_handler.handle(message).await;
             }
-            println!("DONE");
         }
     }
 
@@ -344,7 +393,9 @@ mod tests {
             runtime.block_on(async move {
                 let actor = WalletBuilder::new()
                     .rx(rx)
-                    .message_handler(WalletMessageHandler::new().await.unwrap())
+                    .message_handler(
+                        WalletMessageHandler::with_manager(crate::test_utils::get_account_manager().await).unwrap(),
+                    )
                     .build()
                     .await;
                 actor.run().await
@@ -364,14 +415,26 @@ mod tests {
     async fn create_and_remove_account() {
         let tx = spawn_actor();
 
+        let signer_type = crate::test_utils::signer_type();
+
         // create an account
         let account = AccountToCreate {
             client_options: ClientOptionsBuilder::node("http://node.iota").unwrap().build(),
-            mnemonic: None,
             alias: None,
             created_at: None,
+            skip_persistance: false,
+            signer_type: Some(signer_type.clone()),
         };
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         send_message(&tx, MessageType::SetStrongholdPassword("password".to_string())).await;
+        send_message(
+            &tx,
+            MessageType::StoreMnemonic {
+                signer_type,
+                mnemonic: None,
+            },
+        )
+        .await;
         let response = send_message(&tx, MessageType::CreateAccount(account)).await;
         match response.response() {
             ResponseType::CreatedAccount(created_account) => {
@@ -384,7 +447,7 @@ mod tests {
                     assert!(matches!(response.response(), ResponseType::RemovedAccount(_)));
                 });
             }
-            _ => panic!("unexpected response"),
+            _ => panic!("unexpected response {:?}", response),
         }
     }
 }
