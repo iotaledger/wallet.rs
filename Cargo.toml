@@ -24,7 +24,6 @@ futures = "0.3"
 backtrace = "0.3"
 async-trait = "0.1"
 log = "0.4"
-iota-crypto = { git = "https://github.com/iotaledger/crypto.rs", rev = "b7148617a87ea03a0653d5784b87644e1167a8c2", features = ["random", "sha", "pbkdf", "hmac", "sha", "bip39", "bip39-en"] }
 
 # env mnemonic
 bee-signing-ext = { git = "https://github.com/wusyong/bee-p.git", branch = "sign-ext", version = "^0.1.0-alpha" }
@@ -41,6 +40,11 @@ tiny-bip39 = "0.7"
 iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "ad7980c273f14657ba310f66d50ebbc2320ae384", optional = true }
 riker = { version = "0.4", optional = true }
 riker-patterns = { version = "0.4", optional = true }
+
+[dependencies.iota-crypto]
+git = "https://github.com/iotaledger/crypto.rs"
+rev = "c2514969c3f6693b86425ec84bada84b3ebea645"
+features = ["random", "sha", "pbkdf", "hmac", "bip39", "bip39-en", "chacha"]
 
 [dev-dependencies]
 tokio = { version = "0.2", features = ["full"] }

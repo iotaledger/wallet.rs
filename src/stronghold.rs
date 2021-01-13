@@ -37,7 +37,6 @@ static CURRENT_SNAPSHOT_PATH: OnceCell<Arc<Mutex<Option<PathBuf>>>> = OnceCell::
 static PASSWORD_CLEAR_INTERVAL: OnceCell<Arc<Mutex<Duration>>> = OnceCell::new();
 static PRIVATE_DATA_CLIENT_PATH: &[u8] = b"iota_seed";
 
-const TIMEOUT: Duration = Duration::from_millis(5000);
 #[cfg(test)]
 const DEFAULT_PASSWORD_CLEAR_INTERVAL: Duration = Duration::from_secs(0);
 #[cfg(not(test))]
@@ -229,14 +228,6 @@ pub struct ActorRuntime {
     pub stronghold: Stronghold,
     spawned_client_paths: HashSet<Vec<u8>>,
     loaded_client_paths: HashSet<Vec<u8>>,
-}
-
-fn system_runtime() -> &'static Arc<Mutex<ActorSystem>> {
-    static SYSTEM: Lazy<Arc<Mutex<ActorSystem>>> = Lazy::new(|| {
-        let system = ActorSystem::new().unwrap();
-        Arc::new(Mutex::new(system))
-    });
-    &SYSTEM
 }
 
 pub fn actor_runtime() -> &'static Arc<Mutex<ActorRuntime>> {
@@ -527,6 +518,7 @@ pub async fn store_account(snapshot_path: &PathBuf, account_id: &AccountIdentifi
     };
     if !account_ids.contains(id.as_str()) {
         account_ids.push_str(id);
+        account_ids.push(ACCOUNT_ID_SEPARATOR);
         stronghold_response_to_result(
             runtime
                 .stronghold
@@ -562,10 +554,22 @@ pub async fn remove_account(snapshot_path: &PathBuf, account_id: &AccountIdentif
     let (data, status) = runtime.stronghold.read_from_store(account_ids_location.clone()).await;
     stronghold_response_to_result(status).map_err(|_| Error::AccountNotFound)?;
     let account_ids = String::from_utf8_lossy(&data).to_string();
+
+    let id = match account_id {
+        AccountIdentifier::Id(id) => id,
+        AccountIdentifier::Index(_) => unreachable!(),
+    };
     stronghold_response_to_result(
         runtime
             .stronghold
-            .write_to_store(account_ids_location, account_ids.as_bytes().to_vec(), None)
+            .write_to_store(
+                account_ids_location,
+                account_ids
+                    .replace(&format!("{}{}", id, ACCOUNT_ID_SEPARATOR), "")
+                    .as_bytes()
+                    .to_vec(),
+                None,
+            )
             .await,
     )?;
 

@@ -28,17 +28,7 @@ struct AddressOutputPayload {
 
 #[derive(Deserialize)]
 struct AddressOutputPayloadOutput {
-    #[serde(rename = "type")]
-    type_: u8,
     amount: u64,
-    address: AddressOutputPayloadAddress,
-}
-
-#[derive(Deserialize)]
-struct AddressOutputPayloadAddress {
-    #[serde(rename = "type")]
-    type_: u8,
-    address: String,
 }
 
 /// Unsubscribe from all topics associated with the account.

@@ -72,7 +72,7 @@ impl serde::Serialize for crate::Error {
             Self::JsonError(_) => serialize_variant(self, serializer, "JsonError"),
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             Self::StrongholdError(_) => serialize_variant(self, serializer, "StrongholdError"),
-            Self::ClientError(error) => serialize_variant(self, serializer, "ClientError"),
+            Self::ClientError(_) => serialize_variant(self, serializer, "ClientError"),
             #[cfg(feature = "sqlite-storage")]
             Self::SqliteError(_) => serialize_variant(self, serializer, "SqliteError"),
             Self::UrlError(_) => serialize_variant(self, serializer, "UrlError"),
@@ -116,6 +116,7 @@ impl serde::Serialize for crate::Error {
             Self::StorageAdapterNotDefined => serialize_variant(self, serializer, "StorageAdapterNotDefined"),
             Self::StorageExists => serialize_variant(self, serializer, "StorageExists"),
             Self::StorageAdapterNotSet(_) => serialize_variant(self, serializer, "StorageAdapterNotSet"),
+            Self::AccountDecrypt => serialize_variant(self, serializer, "AccountDecrypt"),
         }
     }
 }

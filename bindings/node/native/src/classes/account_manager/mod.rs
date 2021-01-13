@@ -103,6 +103,20 @@ declare_types! {
             Ok(cx.undefined().upcast())
         }
 
+        method setStoragePassword(mut cx) {
+            let password = cx.argument::<JsString>(0)?.value();
+            {
+                let this = cx.this();
+                let guard = cx.lock();
+                let ref_ = &this.borrow(&guard).0;
+                crate::block_on(async move {
+                    let mut manager = ref_.write().await;
+                    manager.set_storage_password(password).await
+                }).expect("error setting storage password");
+            }
+            Ok(cx.undefined().upcast())
+        }
+
         method setStrongholdPassword(mut cx) {
             let password = cx.argument::<JsString>(0)?.value();
             {
