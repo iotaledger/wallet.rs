@@ -4,7 +4,6 @@
 use crate::{
     account::{Account, AccountHandle},
     address::{Address, AddressBuilder, AddressOutput, IotaAddress},
-    client::get_client,
     message::{Message, RemainderValueStrategy, Transfer},
 };
 
@@ -95,6 +94,19 @@ async fn sync_addresses(
                             .try_into()
                             .map_err(|_| crate::Error::InvalidMessageIdLength)?,
                     );
+                    curr_found_outputs.push(output.try_into()?);
+
+                    // if we already have the message stored
+                    // and the confirmation state is known
+                    // we skip the `get_message` call
+                    if account
+                        .messages()
+                        .iter()
+                        .any(|m| m.id() == &message_id && m.confirmed().is_some())
+                    {
+                        continue;
+                    }
+
                     if let Ok(message) = client.get_message().data(&message_id).await {
                         let metadata = client.get_message().metadata(&message_id).await?;
                         curr_found_messages.push((
@@ -103,7 +115,6 @@ async fn sync_addresses(
                             message,
                         ));
                     }
-                    curr_found_outputs.push(output.try_into()?);
                 }
 
                 // ignore unused change addresses
@@ -163,12 +174,20 @@ async fn sync_messages(
     let mut messages = vec![];
     let client_options = account.client_options().clone();
 
+    let messages_with_known_confirmation: Vec<MessageId> = account
+        .messages()
+        .iter()
+        .filter(|m| m.confirmed().is_some())
+        .map(|m| *m.id())
+        .collect();
+
     let futures_ = account
         .addresses_mut()
         .iter_mut()
         .take(stop_at_address_index)
         .map(|address| {
             let client_options = client_options.clone();
+            let messages_with_known_confirmation = messages_with_known_confirmation.clone();
             async move {
                 let client = crate::client::get_client(&client_options);
                 let client = client.read().await;
@@ -194,6 +213,13 @@ async fn sync_messages(
                 for output in address_outputs.iter() {
                     let output = client.get_output(output).await?;
                     let output: AddressOutput = output.try_into()?;
+
+                    // if we already have the message stored
+                    // and the confirmation state is known
+                    // we skip the `get_message` call
+                    if messages_with_known_confirmation.contains(output.message_id()) {
+                        continue;
+                    }
 
                     if let Ok(message) = client.get_message().data(output.message_id()).await {
                         let metadata = client.get_message().metadata(output.message_id()).await?;
@@ -221,57 +247,6 @@ async fn sync_messages(
     Ok(messages)
 }
 
-async fn update_account_messages<'a>(
-    account: &'a mut Account,
-    new_messages: &'a [(MessageId, Option<bool>, IotaMessage)],
-) -> crate::Result<()> {
-    let client = get_client(account.client_options());
-
-    account.do_mut(|account| {
-        let messages = account.messages_mut();
-
-        // sync `broadcasted` state
-        messages
-            .iter_mut()
-            .filter(|message| !message.broadcasted() && new_messages.iter().any(|(id, _, _)| id == message.id()))
-            .for_each(|message| {
-                message.set_broadcasted(true);
-            });
-    });
-
-    // sync `confirmed` state
-    let unconfirmed_message_ids: Vec<MessageId> = account
-        .messages()
-        .iter()
-        .filter(|message| message.confirmed().is_none())
-        .map(|m| *m.id())
-        .collect();
-
-    let client = client.read().await;
-
-    for message_id in unconfirmed_message_ids {
-        let metadata = client.get_message().metadata(&message_id).await?;
-        if let Some(inclusion_state) = metadata.ledger_inclusion_state {
-            let confirmed = inclusion_state == "included";
-            account.do_mut(|account| {
-                let message = account
-                    .messages_mut()
-                    .iter_mut()
-                    .find(|m| m.id() == &message_id)
-                    .unwrap();
-                log::debug!(
-                    "[SYNC] marking message {:?} as {}",
-                    message.id(),
-                    if confirmed { "confirmed" } else { "unconfirmed" }
-                );
-                message.set_confirmed(Some(confirmed));
-            });
-        }
-    }
-
-    Ok(())
-}
-
 async fn perform_sync(mut account: &mut Account, address_index: usize, gap_limit: usize) -> crate::Result<bool> {
     log::debug!(
         "[SYNC] syncing with address_index = {}, gap_limit = {}",
@@ -293,8 +268,6 @@ async fn perform_sync(mut account: &mut Account, address_index: usize, gap_limit
 
     let synced_messages = sync_messages(&mut account, address_index).await?;
     new_messages.extend(synced_messages.into_iter());
-
-    update_account_messages(&mut account, &new_messages).await?;
 
     let mut addresses_to_save = vec![];
     let mut ignored_addresses = vec![];
@@ -795,8 +768,6 @@ impl SyncedAccount {
             account_.append_addresses(vec![addr]);
         }
 
-        let message = client.get_message().data(&message_id).await?;
-
         let message = Message::from_iota_message(message_id, account_.addresses(), &message, None)?;
         account_.append_messages(vec![message.clone()]);
 
@@ -875,26 +846,8 @@ pub(crate) async fn repost_message(
             let client = client.read().await;
 
             let (id, message) = match action {
-                RepostAction::Promote => {
-                    let metadata = client.get_message().metadata(message_id).await?;
-                    if metadata.should_promote.unwrap_or(false) {
-                        client.promote(message_id).await?
-                    } else {
-                        return Err(crate::Error::ClientError(iota::client::Error::NoNeedPromoteOrReattach(
-                            message_id.to_string(),
-                        )));
-                    }
-                }
-                RepostAction::Reattach => {
-                    let metadata = client.get_message().metadata(message_id).await?;
-                    if metadata.should_reattach.unwrap_or(false) {
-                        client.reattach(message_id).await?
-                    } else {
-                        return Err(crate::Error::ClientError(iota::client::Error::NoNeedPromoteOrReattach(
-                            message_id.to_string(),
-                        )));
-                    }
-                }
+                RepostAction::Promote => client.promote(message_id).await?,
+                RepostAction::Reattach => client.reattach(message_id).await?,
                 RepostAction::Retry => client.retry(message_id).await?,
             };
             let message = Message::from_iota_message(id, account.addresses(), &message, None)?;
