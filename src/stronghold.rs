@@ -328,14 +328,12 @@ async fn switch_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf
     // load all actors to prevent lost data on save
     load_private_data_actor(&mut runtime, snapshot_path).await?;
     let account_ids_location = Location::generic(ACCOUNT_METADATA_VAULT_PATH, ACCOUNT_IDS_RECORD_PATH);
-    let (data_opt, _status) = runtime.stronghold.read_data(account_ids_location.clone()).await;
+    let (data, _) = runtime.stronghold.read_from_store(account_ids_location.clone()).await;
 
-    if let Some(data) = data_opt {
-        let account_ids = String::from_utf8_lossy(&data).to_string();
-        for account_id in account_ids.split(ACCOUNT_ID_SEPARATOR).filter(|id| !id.is_empty()) {
-            let id = AccountIdentifier::Id(account_id.to_string());
-            load_account_actor(&mut runtime, snapshot_path, &id).await?;
-        }
+    let account_ids = String::from_utf8_lossy(&data).to_string();
+    for account_id in account_ids.split(ACCOUNT_ID_SEPARATOR).filter(|id| !id.is_empty()) {
+        let id = AccountIdentifier::Id(account_id.to_string());
+        load_account_actor(&mut runtime, snapshot_path, &id).await?;
     }
 
     Ok(())
@@ -492,16 +490,14 @@ pub async fn get_accounts(snapshot_path: &PathBuf) -> Result<Vec<String>> {
     check_snapshot(&mut runtime, &snapshot_path).await?;
     load_private_data_actor(&mut runtime, snapshot_path).await?;
     let account_ids_location = Location::generic(ACCOUNT_METADATA_VAULT_PATH, ACCOUNT_IDS_RECORD_PATH);
-    let (data_opt, _status) = runtime.stronghold.read_data(account_ids_location.clone()).await;
+    let (data, _) = runtime.stronghold.read_from_store(account_ids_location.clone()).await;
 
     let mut accounts = Vec::new();
-    if let Some(data) = data_opt {
-        let account_ids = String::from_utf8_lossy(&data).to_string();
-        for account_id in account_ids.split(ACCOUNT_ID_SEPARATOR).filter(|id| !id.is_empty()) {
-            let id = AccountIdentifier::Id(account_id.to_string());
-            let account = get_account_internal(&mut runtime, snapshot_path, &id).await?;
-            accounts.push(account);
-        }
+    let account_ids = String::from_utf8_lossy(&data).to_string();
+    for account_id in account_ids.split(ACCOUNT_ID_SEPARATOR).filter(|id| !id.is_empty()) {
+        let id = AccountIdentifier::Id(account_id.to_string());
+        let account = get_account_internal(&mut runtime, snapshot_path, &id).await?;
+        accounts.push(account);
     }
 
     Ok(accounts)
@@ -513,13 +509,12 @@ async fn get_account_internal(
     account_id: &AccountIdentifier,
 ) -> Result<String> {
     load_account_actor(&mut runtime, snapshot_path, account_id).await?;
-    let (data, _) = runtime
+    let (data, status) = runtime
         .stronghold
-        .read_data(Location::generic(ACCOUNT_VAULT_PATH, ACCOUNT_RECORD_PATH))
+        .read_from_store(Location::generic(ACCOUNT_VAULT_PATH, ACCOUNT_RECORD_PATH))
         .await;
-    data.filter(|data| !data.is_empty())
-        .map(|data| String::from_utf8_lossy(&data).to_string())
-        .ok_or(Error::AccountNotFound)
+    stronghold_response_to_result(status).map_err(|_| Error::AccountNotFound)?;
+    Ok(String::from_utf8_lossy(&data).to_string())
 }
 
 pub async fn get_account(snapshot_path: &PathBuf, account_id: &AccountIdentifier) -> Result<String> {
@@ -536,10 +531,8 @@ pub async fn store_account(snapshot_path: &PathBuf, account_id: &AccountIdentifi
     // the reference array holds all account ids so we can scan them on the `get_accounts` implementation
     load_private_data_actor(&mut runtime, snapshot_path).await?;
     let account_ids_location = Location::generic(ACCOUNT_METADATA_VAULT_PATH, ACCOUNT_IDS_RECORD_PATH);
-    let (data_opt, _status) = runtime.stronghold.read_data(account_ids_location.clone()).await;
-    let mut account_ids = data_opt
-        .map(|d| String::from_utf8_lossy(&d).to_string())
-        .unwrap_or_else(String::new);
+    let (data, _) = runtime.stronghold.read_from_store(account_ids_location.clone()).await;
+    let mut account_ids = String::from_utf8_lossy(&data).to_string();
 
     let id = match account_id {
         AccountIdentifier::Id(id) => id,
@@ -551,12 +544,7 @@ pub async fn store_account(snapshot_path: &PathBuf, account_id: &AccountIdentifi
         stronghold_response_to_result(
             runtime
                 .stronghold
-                .write_data(
-                    account_ids_location,
-                    account_ids.as_bytes().to_vec(),
-                    RecordHint::new("wallet.rs-account-ids").unwrap(),
-                    vec![],
-                )
+                .write_to_store(account_ids_location, account_ids.as_bytes().to_vec(), None)
                 .await,
         )?;
     }
@@ -570,11 +558,10 @@ pub async fn store_account(snapshot_path: &PathBuf, account_id: &AccountIdentifi
     stronghold_response_to_result(
         runtime
             .stronghold
-            .write_data(
+            .write_to_store(
                 Location::generic(ACCOUNT_VAULT_PATH, ACCOUNT_RECORD_PATH),
                 account.as_bytes().to_vec(),
-                RecordHint::new("wallet.rs-account").unwrap(),
-                vec![],
+                None,
             )
             .await,
     )?;
@@ -591,11 +578,9 @@ pub async fn remove_account(snapshot_path: &PathBuf, account_id: &AccountIdentif
     // first we delete the account id from the reference array
     load_private_data_actor(&mut runtime, snapshot_path).await?;
     let account_ids_location = Location::generic(ACCOUNT_METADATA_VAULT_PATH, ACCOUNT_IDS_RECORD_PATH);
-    let (data_opt, _status) = runtime.stronghold.read_data(account_ids_location.clone()).await;
-    let account_ids = data_opt
-        .filter(|data| !data.is_empty())
-        .map(|data| String::from_utf8_lossy(&data).to_string())
-        .ok_or(Error::AccountNotFound)?;
+    let (data, status) = runtime.stronghold.read_from_store(account_ids_location.clone()).await;
+    stronghold_response_to_result(status).map_err(|_| Error::AccountNotFound)?;
+    let account_ids = String::from_utf8_lossy(&data).to_string();
 
     let id = match account_id {
         AccountIdentifier::Id(id) => id,
@@ -604,14 +589,13 @@ pub async fn remove_account(snapshot_path: &PathBuf, account_id: &AccountIdentif
     stronghold_response_to_result(
         runtime
             .stronghold
-            .write_data(
+            .write_to_store(
                 account_ids_location,
                 account_ids
                     .replace(&format!("{}{}", id, ACCOUNT_ID_SEPARATOR), "")
                     .as_bytes()
                     .to_vec(),
-                RecordHint::new("wallet.rs-account-ids").unwrap(),
-                vec![],
+                None,
             )
             .await,
     )?;
@@ -620,7 +604,7 @@ pub async fn remove_account(snapshot_path: &PathBuf, account_id: &AccountIdentif
     stronghold_response_to_result(
         runtime
             .stronghold
-            .delete_data(Location::generic(ACCOUNT_VAULT_PATH, ACCOUNT_RECORD_PATH), true)
+            .delete_from_store(Location::generic(ACCOUNT_VAULT_PATH, ACCOUNT_RECORD_PATH))
             .await,
     )?;
 
