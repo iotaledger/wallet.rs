@@ -684,6 +684,11 @@ impl AccountManager {
             #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
             return Err(crate::Error::InvalidBackupFile);
         } else {
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            {
+                // wait for stronghold to finish its tasks
+                let _ = crate::stronghold::actor_runtime().lock().await;
+            }
             fs::copy(source, &storage_file_path)?;
         }
 
@@ -694,9 +699,13 @@ impl AccountManager {
         }
 
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-        if let Err(e) = self.set_stronghold_password(stronghold_password).await {
-            fs::remove_file(&storage_file_path)?;
-            return Err(e);
+        {
+            // force stronghold to read the snapshot again, ignoring any previous cached value
+            crate::stronghold::unload_snapshot(&self.storage_path, false).await?;
+            if let Err(e) = self.set_stronghold_password(stronghold_password).await {
+                fs::remove_file(&storage_file_path)?;
+                return Err(e);
+            }
         }
 
         Ok(())
@@ -1174,13 +1183,22 @@ mod tests {
         };
 
         // get another manager instance so we can import the accounts to a different storage
-        let mut manager = crate::test_utils::get_empty_account_manager().await;
+        #[allow(unused_mut)]
+        let mut manager = crate::test_utils::get_account_manager().await;
+
+        #[cfg(all(
+            not(feature = "sqlite-storage"),
+            any(feature = "stronghold", feature = "stronghold-storage")
+        ))]
+        std::fs::remove_file(manager.storage_path()).unwrap();
 
         manager.set_storage_password("password").await.unwrap();
 
         // import the accounts from the backup and assert that it's the same
+
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         manager.import_accounts(backup_file_path, "password").await.unwrap();
+
         #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
         manager.import_accounts(backup_file_path).await.unwrap();
 
