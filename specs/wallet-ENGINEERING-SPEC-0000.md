@@ -959,13 +959,13 @@ Note: Currently, it is not possible to send multiple payloads as part of the mes
     <td>Message version. Defaults to `1`.</td>
   </tr>
   <tr>
-    <td>trunk</td>
+    <td>parent1</td>
     <td>&#10004;</td>
     <td>string</td>
     <td>Message id of the first message this message refers to.</td>
   </tr>
   <tr>
-    <td>branch</td>
+    <td>parent2</td>
     <td>&#10004;</td>
     <td>string</td>
     <td>Message id of the second message this message refers to.</td>
@@ -976,7 +976,7 @@ Note: Currently, it is not possible to send multiple payloads as part of the mes
     <td>number</td>
     <td>Length of the payload.</td>
   </tr>
-    <tr>
+  <tr>
     <td>payload</td>
     <td>&#10004;</td>
     <td>
@@ -1016,6 +1016,18 @@ Note: Currently, it is not possible to send multiple payloads as part of the mes
       </ul>
       Note: This property may only be required for clients with persistent storage.
     </td>
+  </tr>
+  <tr>
+    <td>incoming</td>
+    <td>&#10004;</td>
+    <td>boolean</td>
+    <td>Determines if the message is an incoming transaction or not.</td>
+  </tr>
+  <tr>
+    <td>value</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Message transfer value.</td>
   </tr>
 </table>
 
@@ -1150,7 +1162,7 @@ Syncs addresses with the Tangle. The method should ensure that the wallet's loca
 The following should be considered when implementing this method:
 
 *   The updated address history should not be written down in the database/persistent storage. Instead the method should only return the updated address history (with transaction hashes).  This will ensure that there are no partial writes to the database;
-*   To sync addresses for an account from scratch, index = 0 and gap_limit = 20 should be provided;
+*   To sync addresses for an account from scratch, index = 0 and gap_limit = 10 should be provided;
 *   To sync addresses from the latest address, index = latest address index and gap_limit = 1 should be provided. 
 
 <table>
@@ -1212,9 +1224,9 @@ The following should be considered when implementing this method:
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#get_address_balances">get_address_balances()</a></li>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#find_messages">find_messages()</a></li>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#find_outputs">find_outputs()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#get_address_balances">get_address_balances()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages">find_messages()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_outputs">find_outputs()</a></li>
       </ul>
     </td>
   </tr>
@@ -1278,7 +1290,7 @@ The following should be considered when implementing this method:
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#find_messages">find_messages()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages">find_messages()</a></li>
       </ul>
     </td>
   </tr>
@@ -1421,8 +1433,8 @@ The process for sending a value transaction:
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#find_messages">find_messages()</a></li>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#send">send()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages">find_messages()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#send">send()</a></li>
       </ul>
     </td>
   </tr>
@@ -1488,7 +1500,7 @@ The process for retrying a failed message:
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#post_message">post_message()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#post_message">post_message()</a></li>
       </ul>
     </td>
   </tr>
@@ -1568,8 +1580,8 @@ The process for account syncing:_
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#find_messages">find_messages()</a></li>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#get_address_balances">get_address_balances()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages">find_messages()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#get_address_balances">get_address_balances()</a></li>
       </ul>
     </td>
   </tr>
@@ -1633,7 +1645,7 @@ The following should be considered when implementing this method:
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#reattach">reattach()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#reattach">reattach()</a></li>
       </ul>
     </td>
   </tr>

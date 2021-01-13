@@ -7,7 +7,7 @@ on:
   pull_request:
     branches:
       - master
-      - dev
+      - develop
     paths-ignore:
       - 'specs/**'
 
@@ -30,3 +30,8 @@ jobs:
       with:
         command: fmt
         args: --all -- --check
+    - name: nodejs binding fmt check
+      uses: actions-rs/cargo@v1
+      with:
+        command: fmt
+        args: --manifest-path ./bindings/node/native/Cargo.toml --all -- --check

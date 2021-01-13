@@ -1,16 +1,22 @@
-use crate::address::Address;
-use rand::{prelude::SliceRandom, thread_rng};
+// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 
-pub fn select_input(target: u64, available_utxos: &mut [Address]) -> crate::Result<Vec<Address>> {
-    if target
-        > available_utxos
-            .iter()
-            .fold(0, |acc, address| acc + address.balance())
-    {
-        return Err(crate::WalletError::InsufficientFunds);
+use crate::address::IotaAddress;
+use rand::{prelude::SliceRandom, thread_rng};
+use std::convert::TryInto;
+
+#[derive(Debug, Clone)]
+pub struct Input {
+    pub address: IotaAddress,
+    pub balance: u64,
+}
+
+pub fn select_input(target: u64, available_utxos: &mut [Input]) -> crate::Result<Vec<Input>> {
+    if target > available_utxos.iter().fold(0, |acc, address| acc + address.balance) {
+        return Err(crate::Error::InsufficientFunds);
     }
 
-    available_utxos.sort_by(|a, b| b.balance().cmp(a.balance()));
+    available_utxos.sort_by(|a, b| b.balance.cmp(&a.balance));
     let mut selected_coins = Vec::new();
     let result = branch_and_bound(
         target,
@@ -18,7 +24,9 @@ pub fn select_input(target: u64, available_utxos: &mut [Address]) -> crate::Resu
         0,
         &mut selected_coins,
         0,
-        2i64.pow(available_utxos.len() as u32),
+        2i128
+            .checked_pow(available_utxos.len().try_into().unwrap())
+            .unwrap_or(i128::max_value()),
     );
 
     if result {
@@ -29,12 +37,12 @@ pub fn select_input(target: u64, available_utxos: &mut [Address]) -> crate::Resu
     }
 }
 
-fn single_random_draw(target: u64, available_utxos: &mut [Address]) -> crate::Result<Vec<Address>> {
+fn single_random_draw(target: u64, available_utxos: &mut [Input]) -> crate::Result<Vec<Input>> {
     available_utxos.shuffle(&mut thread_rng());
     let mut sum = 0;
 
     let selected_coins_iter = available_utxos.iter_mut().take_while(|address| {
-        let value = address.balance();
+        let value = address.balance;
         let old_sum = sum;
         sum += value;
         old_sum < target
@@ -49,11 +57,11 @@ fn single_random_draw(target: u64, available_utxos: &mut [Address]) -> crate::Re
 
 fn branch_and_bound(
     target: u64,
-    available_utxos: &mut [Address],
+    available_utxos: &mut [Input],
     depth: usize,
-    current_selection: &mut Vec<Address>,
+    current_selection: &mut Vec<Input>,
     effective_value: u64,
-    mut tries: i64,
+    mut tries: i128,
 ) -> bool {
     if effective_value > target {
         return false;
@@ -70,7 +78,7 @@ fn branch_and_bound(
     tries -= 1;
 
     // Exploring omission and inclusion branch
-    let current_utxo_value = *available_utxos[depth].balance();
+    let current_utxo_value = available_utxos[depth].balance;
     current_selection.push(available_utxos[depth].clone());
 
     if branch_and_bound(
@@ -100,32 +108,34 @@ fn branch_and_bound(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::address::{Address, AddressBuilder, IotaAddress};
+    use crate::address::{AddressBuilder, IotaAddress};
     use iota::message::prelude::Ed25519Address;
-    use rand::prelude::{Rng, SeedableRng, StdRng};
+    use rand::prelude::{Rng, SeedableRng, SliceRandom, StdRng};
 
-    fn generate_random_utxos(rng: &mut StdRng, utxos_number: usize) -> Vec<Address> {
+    fn generate_random_utxos(rng: &mut StdRng, utxos_number: usize) -> Vec<Input> {
         let mut available_utxos = Vec::new();
         for i in 0..utxos_number {
-            available_utxos.push(
-                AddressBuilder::new()
-                    .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
-                    .balance(rng.gen_range(0, 2000))
-                    .key_index(i)
-                    .outputs(vec![])
-                    .build()
-                    .unwrap(),
-            );
+            let address = AddressBuilder::new()
+                .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
+                .balance(rng.gen_range(0, 2000))
+                .key_index(i)
+                .outputs(vec![])
+                .build()
+                .unwrap();
+            available_utxos.push(super::Input {
+                address: address.address().clone(),
+                balance: *address.balance(),
+            });
         }
         available_utxos
     }
 
-    fn sum_random_utxos(rng: &mut StdRng, available_utxos: &mut Vec<Address>) -> u64 {
+    fn sum_random_utxos(rng: &mut StdRng, available_utxos: &mut Vec<Input>) -> u64 {
         let utxos_picked_len = rng.gen_range(2, available_utxos.len() / 2);
         available_utxos.shuffle(&mut thread_rng());
         available_utxos[..utxos_picked_len]
             .iter()
-            .fold(0, |acc, address| acc + address.balance())
+            .fold(0, |acc, address| acc + address.balance)
     }
 
     #[test]
@@ -137,9 +147,7 @@ mod tests {
             let sum_utxos_picked = sum_random_utxos(&mut rng, &mut available_utxos);
             let selected = select_input(sum_utxos_picked, &mut available_utxos).unwrap();
             assert_eq!(
-                selected
-                    .iter()
-                    .fold(0, |acc, address| { acc + address.balance() }),
+                selected.iter().fold(0, |acc, address| { acc + address.balance }),
                 sum_utxos_picked
             );
         }
@@ -151,17 +159,9 @@ mod tests {
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         for _i in 0..20 {
             let mut available_utxos = generate_random_utxos(&mut rng, 5);
-            let target = available_utxos
-                .iter()
-                .fold(0, |acc, address| acc + address.balance())
-                - 1;
+            let target = available_utxos.iter().fold(0, |acc, address| acc + address.balance) - 1;
             let selected = select_input(target, &mut available_utxos).unwrap();
-            assert!(
-                selected
-                    .into_iter()
-                    .fold(0, |acc, address| acc + address.balance())
-                    >= target
-            );
+            assert!(selected.into_iter().fold(0, |acc, address| acc + address.balance) >= target);
         }
     }
 
@@ -170,10 +170,7 @@ mod tests {
         let seed: [u8; 32] = [1; 32];
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         let mut available_utxos = generate_random_utxos(&mut rng, 30);
-        let target = available_utxos
-            .iter()
-            .fold(0, |acc, address| acc + address.balance())
-            + 1;
+        let target = available_utxos.iter().fold(0, |acc, address| acc + address.balance) + 1;
         let response = select_input(target, &mut available_utxos);
         assert!(response.is_err());
     }
@@ -184,9 +181,7 @@ mod tests {
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         for _ in 0..20 {
             let mut available_utxos = generate_random_utxos(&mut rng, 30);
-            let sum_utxos = available_utxos
-                .iter()
-                .fold(0, |acc, address| acc + address.balance());
+            let sum_utxos = available_utxos.iter().fold(0, |acc, address| acc + address.balance);
             let target = rng.gen_range(sum_utxos / 2, sum_utxos * 2);
             let response = select_input(target, &mut available_utxos);
             if target > sum_utxos {
@@ -194,12 +189,7 @@ mod tests {
             } else {
                 assert!(response.is_ok());
                 let selected = response.unwrap();
-                assert!(
-                    selected
-                        .into_iter()
-                        .fold(0, |acc, address| acc + address.balance())
-                        >= target
-                );
+                assert!(selected.into_iter().fold(0, |acc, address| acc + address.balance) >= target);
             }
         }
     }

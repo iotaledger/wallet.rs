@@ -1,46 +1,75 @@
-use crate::account::Account;
-use crate::message::MessageType;
+// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+use crate::{account::Account, message::MessageType};
 use bech32::FromBase32;
-use getset::Getters;
-pub use iota::message::prelude::{Address as IotaAddress, Ed25519Address};
-use iota::message::prelude::{MessageId, TransactionId};
-use iota::OutputMetadata;
+use getset::{Getters, Setters};
+pub use iota::message::prelude::{Address as IotaAddress, Ed25519Address, Input, Payload, UTXOInput};
+use iota::{
+    message::prelude::{MessageId, TransactionId},
+    OutputMetadata,
+};
 use serde::{Deserialize, Serialize};
-use std::cmp::Ordering;
-use std::convert::{TryFrom, TryInto};
-use std::hash::{Hash, Hasher};
-use std::path::PathBuf;
+use std::{
+    cmp::Ordering,
+    convert::{TryFrom, TryInto},
+    hash::{Hash, Hasher},
+};
 
 /// An Address output.
-#[derive(Debug, Getters, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Getters, Setters, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct AddressOutput {
     /// Transaction ID of the output
-    transaction_id: TransactionId,
+    pub(crate) transaction_id: TransactionId,
     /// Message ID of the output
-    message_id: MessageId,
+    pub(crate) message_id: MessageId,
     /// Output index.
-    index: u16,
+    pub(crate) index: u16,
     /// Output amount.
-    amount: u64,
-    /// Spend status of the output.
-    is_spent: bool,
+    pub(crate) amount: u64,
+    /// Spend status of the output,
+    pub(crate) is_spent: bool,
+}
+
+impl AddressOutput {
+    /// Checks if the output is referenced on a pending message or a confirmed message
+    pub(crate) fn is_used(&self, account: &Account) -> bool {
+        let output_id = UTXOInput::new(self.transaction_id, self.index).unwrap();
+        account.list_messages(0, 0, None).iter().any(|m| {
+            // message is pending or confirmed
+            if m.confirmed().unwrap_or(true) {
+                match m.payload() {
+                    Payload::Transaction(tx) => tx.essence().inputs().iter().any(|input| {
+                        if let Input::UTXO(x) = input {
+                            x == &output_id
+                        } else {
+                            false
+                        }
+                    }),
+                    _ => false,
+                }
+            } else {
+                false
+            }
+        })
+    }
 }
 
 impl TryFrom<OutputMetadata> for AddressOutput {
-    type Error = crate::WalletError;
+    type Error = crate::Error;
 
     fn try_from(output: OutputMetadata) -> crate::Result<Self> {
         let output = Self {
             transaction_id: TransactionId::new(
                 output.transaction_id[..]
                     .try_into()
-                    .map_err(|_| anyhow::anyhow!("invalid transaction id length"))?,
+                    .map_err(|_| crate::Error::InvalidTransactionId)?,
             ),
             message_id: MessageId::new(
                 output.message_id[..]
                     .try_into()
-                    .map_err(|_| anyhow::anyhow!("invalid message id length"))?,
+                    .map_err(|_| crate::Error::InvalidMessageId)?,
             ),
             index: output.output_index,
             amount: output.amount,
@@ -98,34 +127,35 @@ impl AddressBuilder {
 
     /// Builds the address.
     pub fn build(self) -> crate::Result<Address> {
-        let iota_address = self
-            .address
-            .ok_or_else(|| anyhow::anyhow!("the `address` field is required"))?;
+        let iota_address = self.address.ok_or(crate::Error::AddressBuildRequiredField(
+            crate::AddressBuildRequiredField::Address,
+        ))?;
         let address = Address {
             address: iota_address,
-            balance: self
-                .balance
-                .ok_or_else(|| anyhow::anyhow!("the `balance` field is required"))?,
-            key_index: self
-                .key_index
-                .ok_or_else(|| anyhow::anyhow!("the `key_index` field is required"))?,
+            balance: self.balance.ok_or(crate::Error::AddressBuildRequiredField(
+                crate::AddressBuildRequiredField::Balance,
+            ))?,
+            key_index: self.key_index.ok_or(crate::Error::AddressBuildRequiredField(
+                crate::AddressBuildRequiredField::KeyIndex,
+            ))?,
             internal: self.internal,
-            outputs: self
-                .outputs
-                .ok_or_else(|| anyhow::anyhow!("the `outputs` field is required"))?,
+            outputs: self.outputs.ok_or(crate::Error::AddressBuildRequiredField(
+                crate::AddressBuildRequiredField::Outputs,
+            ))?,
         };
         Ok(address)
     }
 }
 
 /// An address.
-#[derive(Debug, Getters, Clone, Eq, Serialize, Deserialize)]
+#[derive(Debug, Getters, Setters, Clone, Eq, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct Address {
     /// The address.
     #[serde(with = "crate::serde::iota_address_serde")]
     address: IotaAddress,
     /// The address balance.
+    #[getset(set = "pub")]
     balance: u64,
     /// The address key index.
     #[serde(rename = "keyIndex")]
@@ -133,7 +163,8 @@ pub struct Address {
     /// Determines if an address is a public or an internal (change) address.
     internal: bool,
     /// The address outputs.
-    outputs: Vec<AddressOutput>,
+    #[getset(set = "pub(crate)")]
+    pub(crate) outputs: Vec<AddressOutput>,
 }
 
 impl PartialOrd for Address {
@@ -161,44 +192,64 @@ impl PartialEq for Address {
 }
 
 impl Address {
-    pub(crate) fn append_output(&mut self, output: AddressOutput) {
+    pub(crate) fn handle_new_output(&mut self, output: AddressOutput) {
         if !self.outputs.iter().any(|o| o == &output) {
-            self.balance += output.amount;
-            self.outputs.push(output);
+            let spent_existing_output = self.outputs.iter().position(|o| {
+                o.message_id == output.message_id
+                    && o.transaction_id == output.transaction_id
+                    && o.index == output.index
+                    && o.amount == output.amount
+                    && (!o.is_spent && output.is_spent)
+            });
+            if let Some(spent_output) = spent_existing_output {
+                log::debug!("[ADDRESS] got spent of {:?}", spent_output);
+                self.balance -= output.amount;
+                self.outputs.remove(spent_output);
+            } else {
+                log::debug!("[ADDRESS] got new output {:?}", output);
+                self.balance += output.amount;
+                self.outputs.push(output);
+            }
         }
+    }
+
+    /// Gets the list of outputs that aren't spent or pending.
+    pub fn available_outputs(&self, account: &Account) -> Vec<&AddressOutput> {
+        self.outputs.iter().filter(|o| !o.is_used(account)).collect()
+    }
+
+    pub(crate) fn available_balance(&self, account: &Account) -> u64 {
+        self.available_outputs(account)
+            .iter()
+            .fold(0, |acc, o| acc + *o.amount())
     }
 }
 
-pub(crate) fn get_iota_address(
-    storage_path: &PathBuf,
-    account_id: &[u8; 32],
-    account_index: usize,
+/// Parses a bech32 address string.
+pub fn parse(address: String) -> crate::Result<IotaAddress> {
+    let address_ed25519 = Vec::from_base32(&bech32::decode(&address)?.1)?;
+    let iota_address = IotaAddress::Ed25519(Ed25519Address::new(
+        address_ed25519[1..]
+            .try_into()
+            .map_err(|_| crate::Error::InvalidAddressLength)?,
+    ));
+    Ok(iota_address)
+}
+
+pub(crate) async fn get_iota_address(
+    account: &Account,
     address_index: usize,
     internal: bool,
 ) -> crate::Result<IotaAddress> {
-    crate::with_stronghold_from_path(&storage_path, |stronghold| {
-        let address_str =
-            stronghold.address_get(account_id, Some(account_index), address_index, internal)?;
-        let address_ed25519 = Vec::from_base32(&bech32::decode(&address_str)?.1)?;
-        let iota_address = IotaAddress::Ed25519(Ed25519Address::new(
-            address_ed25519[1..]
-                .try_into()
-                .map_err(|_| crate::WalletError::InvalidAddressLength)?,
-        ));
-        Ok(iota_address)
-    })
+    let signer = crate::signing::get_signer(account.signer_type()).await;
+    let signer = signer.lock().await;
+    signer.generate_address(&account, address_index, internal).await
 }
 
 /// Gets an unused public address for the given account.
-pub(crate) fn get_new_address(account: &Account) -> crate::Result<Address> {
+pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address> {
     let key_index = account.addresses().iter().filter(|a| !a.internal()).count();
-    let iota_address = get_iota_address(
-        account.storage_path(),
-        account.id(),
-        *account.index(),
-        key_index,
-        false,
-    )?;
+    let iota_address = get_iota_address(&account, key_index, false).await?;
     let address = Address {
         address: iota_address,
         balance: 0,
@@ -210,18 +261,9 @@ pub(crate) fn get_new_address(account: &Account) -> crate::Result<Address> {
 }
 
 /// Gets an unused change address for the given account and address.
-pub(crate) fn get_new_change_address(
-    account: &Account,
-    address: &Address,
-) -> crate::Result<Address> {
+pub(crate) async fn get_new_change_address(account: &Account, address: &Address) -> crate::Result<Address> {
     let key_index = *address.key_index();
-    let iota_address = get_iota_address(
-        account.storage_path(),
-        account.id(),
-        *account.index(),
-        key_index,
-        true,
-    )?;
+    let iota_address = get_iota_address(&account, key_index, true).await?;
     let address = Address {
         address: iota_address,
         balance: 0,
@@ -230,15 +272,6 @@ pub(crate) fn get_new_change_address(
         outputs: vec![],
     };
     Ok(address)
-}
-
-/// Batch address generation.
-pub(crate) fn get_addresses(account: &Account, count: usize) -> crate::Result<Vec<Address>> {
-    let mut addresses = vec![];
-    for i in 0..count {
-        addresses.push(get_new_address(&account)?);
-    }
-    Ok(addresses)
 }
 
 pub(crate) fn is_unspent(account: &Account, address: &IotaAddress) -> bool {
@@ -250,25 +283,25 @@ pub(crate) fn is_unspent(account: &Account, address: &IotaAddress) -> bool {
 
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn is_unspent_false() {
-        let manager = crate::test_utils::get_account_manager();
-        let mut account = crate::test_utils::create_account(&manager, vec![], vec![]);
-        let address = super::get_new_address(&account).unwrap();
+    #[tokio::test]
+    async fn is_unspent_false() {
+        let manager = crate::test_utils::get_account_manager().await;
+        let account_handle = crate::test_utils::create_account(&manager, vec![], vec![]).await;
+        let address = super::get_new_address(&*account_handle.read().await).await.unwrap();
         let spent_tx = crate::test_utils::generate_message(50, address.clone(), true, true, false);
-        account.append_messages(vec![spent_tx]);
+        account_handle.write().await.append_messages(vec![spent_tx]);
 
-        let response = super::is_unspent(&account, address.address());
-        assert_eq!(response, true);
+        let response = super::is_unspent(&*account_handle.read().await, address.address());
+        assert_eq!(response, false);
     }
 
     #[tokio::test]
     async fn is_unspent_true() {
-        let manager = crate::test_utils::get_account_manager();
-        let account = crate::test_utils::create_account(&manager, vec![], vec![]);
+        let manager = crate::test_utils::get_account_manager().await;
+        let account_handle = crate::test_utils::create_account(&manager, vec![], vec![]).await;
         let address = crate::test_utils::generate_random_iota_address();
 
-        let response = super::is_unspent(&account, &address);
-        assert_eq!(response, false);
+        let response = super::is_unspent(&*account_handle.read().await, &address);
+        assert_eq!(response, true);
     }
 }

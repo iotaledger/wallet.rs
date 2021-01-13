@@ -1,12 +1,18 @@
+// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use getset::Getters;
 pub use iota::client::builder::Network;
-use iota::client::{Client, ClientBuilder};
+use iota::client::{BrokerOptions, Client, ClientBuilder};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
+use tokio::sync::RwLock;
 use url::Url;
 
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex, RwLock};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 
 type ClientInstanceMap = Arc<Mutex<HashMap<ClientOptions, Arc<RwLock<Client>>>>>;
 
@@ -22,28 +28,24 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
         .expect("failed to lock client instances: get_client()");
 
     if !map.contains_key(&options) {
-        let mut client_builder = ClientBuilder::new().quorum_threshold(*options.quorum_threshold());
+        let mut client_builder = ClientBuilder::new()
+            .with_mqtt_broker_options(BrokerOptions::new().automatic_disconnect(false))
+            .with_local_pow(*options.local_pow());
 
         // we validate the URL beforehand so it's safe to unwrap here
         if let Some(node) = options.node() {
-            client_builder = client_builder.node(node.as_str()).unwrap();
+            client_builder = client_builder.with_node(node.as_str()).unwrap();
         } else if let Some(nodes) = options.nodes() {
             client_builder = client_builder
-                .nodes(&nodes.iter().map(|url| url.as_str()).collect::<Vec<&str>>()[..])
+                .with_nodes(&nodes.iter().map(|url| url.as_str()).collect::<Vec<&str>>()[..])
                 .unwrap();
         }
 
         if let Some(network) = options.network() {
-            client_builder = client_builder.network(network.clone());
+            client_builder = client_builder.with_network(network.clone());
         }
 
-        if let Some(quorum_size) = options.quorum_size() {
-            client_builder = client_builder.quorum_size(*quorum_size);
-        }
-
-        let client = client_builder
-            .build()
-            .expect("failed to initialise ClientBuilder");
+        let client = client_builder.finish().expect("failed to initialise ClientBuilder");
 
         map.insert(options.clone(), Arc::new(RwLock::new(client)));
     }
@@ -55,13 +57,23 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
 /// The options builder for a client connected to a single node.
 pub struct SingleNodeClientOptionsBuilder {
     node: Url,
+    local_pow: bool,
 }
 
 impl SingleNodeClientOptionsBuilder {
     fn new(node: &str) -> crate::Result<Self> {
         let node_url = Url::parse(node)?;
-        let builder = Self { node: node_url };
+        let builder = Self {
+            node: node_url,
+            local_pow: default_local_pow(),
+        };
         Ok(builder)
+    }
+
+    /// Sets the pow option.
+    pub fn local_pow(mut self, local_pow: bool) -> Self {
+        self.local_pow = local_pow;
+        self
     }
 
     /// Builds the options.
@@ -72,6 +84,7 @@ impl SingleNodeClientOptionsBuilder {
             network: None,
             quorum_size: None,
             quorum_threshold: 0,
+            local_pow: self.local_pow,
         }
     }
 }
@@ -82,6 +95,7 @@ pub struct MultiNodeClientOptionsBuilder {
     network: Option<Network>,
     quorum_size: Option<u8>,
     quorum_threshold: f32,
+    local_pow: bool,
     // state_adapter:
 }
 
@@ -112,6 +126,7 @@ impl Default for MultiNodeClientOptionsBuilder {
             network: None,
             quorum_size: None,
             quorum_threshold: 0.5,
+            local_pow: default_local_pow(),
         }
     }
 }
@@ -158,6 +173,12 @@ impl MultiNodeClientOptionsBuilder {
         self
     }
 
+    /// Sets the pow option.
+    pub fn local_pow(mut self, local_pow: bool) -> Self {
+        self.local_pow = local_pow;
+        self
+    }
+
     /// Builds the options.
     pub fn build(self) -> crate::Result<ClientOptions> {
         let node_len = match &self.nodes {
@@ -165,7 +186,7 @@ impl MultiNodeClientOptionsBuilder {
             None => 0,
         };
         if node_len == 0 {
-            return Err(crate::WalletError::EmptyNodeList);
+            return Err(crate::Error::EmptyNodeList);
         }
         let options = ClientOptions {
             node: None,
@@ -173,6 +194,7 @@ impl MultiNodeClientOptionsBuilder {
             network: self.network,
             quorum_size: self.quorum_size,
             quorum_threshold: (self.quorum_threshold * 100.0) as u8,
+            local_pow: self.local_pow,
         };
         Ok(options)
     }
@@ -188,8 +210,8 @@ impl ClientOptionsBuilder {
     /// ```
     /// use iota_wallet::client::ClientOptionsBuilder;
     /// let client_options = ClientOptionsBuilder::node("https://tangle.iotaqubic.us:14267")
-    ///   .expect("invalid node URL")
-    ///   .build();
+    ///     .expect("invalid node URL")
+    ///     .build();
     /// ```
     pub fn node(node: &str) -> crate::Result<SingleNodeClientOptionsBuilder> {
         SingleNodeClientOptionsBuilder::new(node)
@@ -200,9 +222,10 @@ impl ClientOptionsBuilder {
     /// # Examples
     /// ```
     /// use iota_wallet::client::ClientOptionsBuilder;
-    /// let client_options = ClientOptionsBuilder::nodes(&["https://tangle.iotaqubic.us:14267", "https://gewirr.com:14267/"])
-    ///   .expect("invalid nodes URLs")
-    ///   .build();
+    /// let client_options =
+    ///     ClientOptionsBuilder::nodes(&["https://tangle.iotaqubic.us:14267", "https://gewirr.com:14267/"])
+    ///         .expect("invalid nodes URLs")
+    ///         .build();
     /// ```
     pub fn nodes(nodes: &[&str]) -> crate::Result<MultiNodeClientOptionsBuilder> {
         MultiNodeClientOptionsBuilder::with_nodes(nodes)
@@ -213,8 +236,7 @@ impl ClientOptionsBuilder {
     /// # Examples
     /// ```
     /// use iota_wallet::client::{ClientOptionsBuilder, Network};
-    /// let client_options = ClientOptionsBuilder::network(Network::Devnet)
-    ///   .build();
+    /// let client_options = ClientOptionsBuilder::network(Network::Testnet).build();
     /// ```
     pub fn network(network: Network) -> MultiNodeClientOptionsBuilder {
         MultiNodeClientOptionsBuilder::with_network(network)
@@ -222,7 +244,7 @@ impl ClientOptionsBuilder {
 }
 
 /// The client options type.
-#[derive(Default, Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Getters)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Getters)]
 #[getset(get = "pub(crate)")]
 pub struct ClientOptions {
     node: Option<Url>,
@@ -232,6 +254,12 @@ pub struct ClientOptions {
     quorum_size: Option<u8>,
     #[serde(rename = "quorumThreshold", default)]
     quorum_threshold: u8,
+    #[serde(rename = "localPow", default = "default_local_pow")]
+    local_pow: bool,
+}
+
+fn default_local_pow() -> bool {
+    true
 }
 
 #[cfg(test)]
@@ -270,7 +298,7 @@ mod tests {
 
     #[test]
     fn network_node_empty() {
-        let builder_res = ClientOptionsBuilder::network(Network::Comnet).build();
+        let builder_res = ClientOptionsBuilder::network(Network::Testnet).build();
         assert!(builder_res.is_err());
     }
 
@@ -301,13 +329,13 @@ mod tests {
         assert_eq!(client.nodes(), &Some(super::convert_urls(&nodes).unwrap()));
         assert!(client.network().is_none());
         assert_eq!(*client.quorum_size(), Some(quorum_size));
-        assert_eq!(*client.quorum_threshold() as f32 / 100.0, quorum_threshold);
+        assert!((*client.quorum_threshold() as f32 / 100.0 - quorum_threshold).abs() < f32::EPSILON);
     }
 
     #[test]
     fn network_constructor() {
         let nodes = ["https://tangle.iotaqubic.us:14267"];
-        let network = Network::Comnet;
+        let network = Network::Testnet;
         let quorum_size = 50;
         let quorum_threshold = 0.9;
         let client = ClientOptionsBuilder::network(network.clone())
@@ -321,7 +349,7 @@ mod tests {
         assert_eq!(client.nodes(), &Some(super::convert_urls(&nodes).unwrap()));
         assert_eq!(*client.network(), Some(network));
         assert_eq!(*client.quorum_size(), Some(quorum_size));
-        assert_eq!(*client.quorum_threshold() as f32 / 100.0, quorum_threshold);
+        assert!((*client.quorum_threshold() as f32 / 100.0 - quorum_threshold).abs() < f32::EPSILON);
     }
 
     #[test]
@@ -363,30 +391,12 @@ mod tests {
                 .unwrap()
                 .quorum_size(55)
                 .quorum_threshold(0.6)
-                .network(Network::Devnet)
+                .network(Network::Testnet)
                 .build()
                 .unwrap(),
-            ClientOptionsBuilder::network(Network::Comnet)
+            ClientOptionsBuilder::network(Network::Testnet)
                 .nodes(&["https://node.deviceproof.org:443"])
                 .unwrap()
-                .build()
-                .unwrap(),
-            ClientOptionsBuilder::network(Network::Devnet)
-                .nodes(&["https://node.deviceproof.org:443"])
-                .unwrap()
-                .build()
-                .unwrap(),
-            ClientOptionsBuilder::network(Network::Comnet)
-                .nodes(&["https://node.deviceproof.org:443"])
-                .unwrap()
-                .quorum_size(55)
-                .build()
-                .unwrap(),
-            ClientOptionsBuilder::network(Network::Comnet)
-                .nodes(&["https://node.deviceproof.org:443"])
-                .unwrap()
-                .quorum_size(55)
-                .quorum_threshold(0.6)
                 .build()
                 .unwrap(),
         ];

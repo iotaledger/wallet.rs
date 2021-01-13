@@ -1,21 +1,26 @@
+// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use iota_wallet::{
-    account_manager::AccountManager, client::ClientOptionsBuilder, message::MessageType,
+    account_manager::AccountManager, client::ClientOptionsBuilder, message::MessageType, signing::SignerType,
 };
 
 #[tokio::main]
 async fn main() -> iota_wallet::Result<()> {
-    let mut manager = AccountManager::new().unwrap();
-    manager.set_stronghold_password("password").unwrap();
+    let mut manager = AccountManager::builder().finish().await.unwrap();
+    manager.set_stronghold_password("password").await.unwrap();
+    manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
 
     // first we'll create an example account and store it
     let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")?.build();
-    let mut account = manager
+    let account = manager
         .create_account(client_options)
         .alias("alias")
-        .initialise()?;
+        .initialise()
+        .await?;
 
     // update alias
-    manager.set_alias(account.id().into(), "the new alias")?;
+    account.set_alias("the new alias").await;
     // list unspent addresses
     let _ = account.list_addresses(false);
     // list spent addresses
