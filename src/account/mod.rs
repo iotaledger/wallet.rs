@@ -156,7 +156,6 @@ impl AccountInitialiser {
         let mut digest = [0; 32];
         let raw = match address {
             iota::Address::Ed25519(a) => a.as_ref().to_vec(),
-            iota::Address::Wots(a) => a.as_ref().to_vec(),
             _ => unimplemented!(),
         };
         crypto::hashes::sha::SHA256(&raw, &mut digest);
