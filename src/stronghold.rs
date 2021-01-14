@@ -17,8 +17,7 @@ use once_cell::sync::{Lazy, OnceCell};
 use riker::actors::*;
 use tokio::{
     sync::Mutex,
-    task,
-    time::{delay_for, Duration},
+    time::{sleep, Duration},
 };
 
 use std::{
@@ -148,42 +147,40 @@ pub async fn set_password_clear_interval(interval: Duration) {
 
 fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, [u8; 32]>>> {
     thread::spawn(|| {
-        crate::enter(|| {
-            task::spawn(async {
-                loop {
-                    let interval = *PASSWORD_CLEAR_INTERVAL
-                        .get_or_init(|| Arc::new(Mutex::new(DEFAULT_PASSWORD_CLEAR_INTERVAL)))
-                        .lock()
-                        .await;
-                    delay_for(interval).await;
+        crate::spawn(async {
+            loop {
+                let interval = *PASSWORD_CLEAR_INTERVAL
+                    .get_or_init(|| Arc::new(Mutex::new(DEFAULT_PASSWORD_CLEAR_INTERVAL)))
+                    .lock()
+                    .await;
+                sleep(interval).await;
 
-                    if interval.as_nanos() == 0 {
-                        continue;
+                if interval.as_nanos() == 0 {
+                    continue;
+                }
+
+                let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
+                let mut access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
+                let mut remove_keys = Vec::new();
+                for (snapshot_path, _) in passwords.iter() {
+                    // if the stronghold access flag is false,
+                    if !*access_store.get(snapshot_path).unwrap_or(&true) {
+                        remove_keys.push(snapshot_path.clone());
                     }
+                    access_store.insert(snapshot_path.clone(), false);
+                }
 
-                    let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
-                    let mut access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
-                    let mut remove_keys = Vec::new();
-                    for (snapshot_path, _) in passwords.iter() {
-                        // if the stronghold access flag is false,
-                        if !*access_store.get(snapshot_path).unwrap_or(&true) {
-                            remove_keys.push(snapshot_path.clone());
-                        }
-                        access_store.insert(snapshot_path.clone(), false);
-                    }
-
-                    let current_snapshot_path = &*CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await;
-                    for remove_key in remove_keys {
-                        passwords.remove(&remove_key);
-                        if let Some(curr_snapshot_path) = current_snapshot_path {
-                            if &remove_key == curr_snapshot_path {
-                                let mut runtime = actor_runtime().lock().await;
-                                let _ = clear_stronghold_cache(&mut runtime, true);
-                            }
+                let current_snapshot_path = &*CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await;
+                for remove_key in remove_keys {
+                    passwords.remove(&remove_key);
+                    if let Some(curr_snapshot_path) = current_snapshot_path {
+                        if &remove_key == curr_snapshot_path {
+                            let mut runtime = actor_runtime().lock().await;
+                            let _ = clear_stronghold_cache(&mut runtime, true);
                         }
                     }
                 }
-            })
+            }
         })
     });
     Default::default()
@@ -622,7 +619,7 @@ mod tests {
     rusty_fork_test! {
         #[test]
         fn password_expires() {
-            let mut runtime = tokio::runtime::Runtime::new().unwrap();
+            let runtime = tokio::runtime::Runtime::new().unwrap();
             runtime.block_on(async {
                 let interval = 500;
                 super::set_password_clear_interval(Duration::from_millis(interval)).await;
@@ -646,7 +643,7 @@ mod tests {
     rusty_fork_test! {
         #[test]
         fn action_keeps_password() {
-            let mut runtime = tokio::runtime::Runtime::new().unwrap();
+            let runtime = tokio::runtime::Runtime::new().unwrap();
             runtime.block_on(async {
                 let interval = Duration::from_millis(500);
                 super::set_password_clear_interval(interval).await;
