@@ -10,11 +10,6 @@ default-theme = "IOTA"
 git-repository-url = "https://github.com/iotaledger/wallet.rs"
 git-repository-icon = "fa-github"
 
-# This is for another Sidebar
-additional-css = ["custom/custom.css"]
-# additional-css = ["custom/custom.css", "custom/sidebar.css"]
-# additional-js = ["custom/sidebar.js"]
-
 [output.html.playpen]
 editable = false
 
