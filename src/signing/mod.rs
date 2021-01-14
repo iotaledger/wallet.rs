@@ -55,7 +55,7 @@ pub trait Signer {
     async fn sign_message(
         &self,
         account: &Account,
-        essence: &iota::TransactionEssence,
+        essence: &iota::TransactionPayloadEssence,
         inputs: &mut Vec<TransactionInput>,
     ) -> crate::Result<Vec<iota::UnlockBlock>>;
 }
