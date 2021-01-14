@@ -184,7 +184,22 @@ pub enum Error {
         "storage adapter not set for path `{0}`; please use the method `with_storage` on the AccountManager builder"
     )]
     StorageAdapterNotSet(PathBuf),
-}
+    /// Ledger transport error
+    #[error("ledger transport error")]
+    LedgerMiscError,
+    /// Ledger not loaded error
+    #[error("ledger not loaded")]
+    LedgerNotLoaded,
+    /// Dongle Locked
+    #[error("ledger locked")]
+    LedgerDongleLocked,
+    /// Denied by User
+    #[error("denied by user")]
+    LedgerDeniedByUser,
+    /// Ledger Device not found
+    #[error("ledger device not found")]
+    LedgerDeviceNotFound,
+} 
 
 impl From<iota::message::Error> for Error {
     fn from(error: iota::message::Error) -> Self {

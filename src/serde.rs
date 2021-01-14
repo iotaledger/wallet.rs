@@ -116,6 +116,11 @@ impl serde::Serialize for crate::Error {
             Self::StorageAdapterNotDefined => serialize_variant(self, serializer, "StorageAdapterNotDefined"),
             Self::StorageExists => serialize_variant(self, serializer, "StorageExists"),
             Self::StorageAdapterNotSet(_) => serialize_variant(self, serializer, "StorageAdapterNotSet"),
+            Self::LedgerMiscError => serialize_variant(self, serializer, "LedgerMiscError"),
+            Self::LedgerNotLoaded => serialize_variant(self, serializer, "LedgerNotLoaded"),
+            Self::LedgerDongleLocked => serialize_variant(self, serializer, "LedgerDongleLocked"),
+            Self::LedgerDeniedByUser => serialize_variant(self, serializer, "LedgerDeniedByUser"),
+            Self::LedgerDeviceNotFound => serialize_variant(self, serializer, "LedgerDeviceNotFound"),
         }
     }
 }

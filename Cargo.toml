@@ -42,6 +42,10 @@ iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "
 riker = { version = "0.4", optional = true }
 riker-patterns = { version = "0.4", optional = true }
 
+# ledger
+ledger-iota = { git = "https://gitlab.com/ledger-iota-chrysalis/ledger-iota.rs" }
+#ledger-iota = { path = "../ledger-iota.rs" }
+ 
 [dev-dependencies]
 tokio = { version = "0.2", features = ["full"] }
 sled = "0.34"

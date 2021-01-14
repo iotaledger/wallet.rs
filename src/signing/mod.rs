@@ -15,9 +15,12 @@ use slip10::BIP32Path;
 use tokio::sync::Mutex;
 
 mod env_mnemonic;
+mod ledger;
+
 #[cfg(feature = "stronghold")]
 mod stronghold;
 use env_mnemonic::EnvMnemonicSigner;
+
 
 type SignerHandle = Arc<Mutex<Box<dyn Signer + Sync + Send>>>;
 type Signers = Arc<Mutex<HashMap<SignerType, SignerHandle>>>;
@@ -32,6 +35,8 @@ pub enum SignerType {
     Stronghold,
     /// Mnemonic through environment variable.
     EnvMnemonic,
+    /// Ledger Device
+    LedgerHardwareWalletSigner,
     /// Custom signer with its identifier.
     Custom(String),
 }
@@ -109,6 +114,13 @@ fn default_signers() -> Signers {
         SignerType::EnvMnemonic,
         Arc::new(Mutex::new(
             Box::new(EnvMnemonicSigner::default()) as Box<dyn Signer + Sync + Send>
+        )),
+    );
+
+    signers.insert(
+        SignerType::LedgerHardwareWalletSigner,
+        Arc::new(Mutex::new(
+            Box::new(ledger::LedgerHardwareWalletSigner::default()) as Box<dyn Signer + Sync + Send>
         )),
     );
 
