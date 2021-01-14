@@ -115,7 +115,8 @@ impl AccountInitialiser {
         self
     }
 
-    pub(crate) fn skip_persistance(mut self) -> Self {
+    /// Skips storing the account to the database.
+    pub fn skip_persistance(mut self) -> Self {
         self.skip_persistance = true;
         self
     }

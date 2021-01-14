@@ -343,7 +343,8 @@ impl AccountSynchronizer {
         self
     }
 
-    /// Skip write to the database.
+    /// Skip saving new messages and addresses on the account object.
+    /// The found data is returned on the `execute` call but won't be persisted on the database.
     pub fn skip_persistance(mut self) -> Self {
         self.skip_persistance = true;
         self
