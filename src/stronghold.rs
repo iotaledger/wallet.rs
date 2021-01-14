@@ -645,7 +645,7 @@ mod tests {
         fn action_keeps_password() {
             let runtime = tokio::runtime::Runtime::new().unwrap();
             runtime.block_on(async {
-                let interval = Duration::from_secs(1);
+                let interval = Duration::from_millis(900);
                 super::set_password_clear_interval(interval).await;
                 let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
                 std::fs::create_dir_all("./test-storage").unwrap();
@@ -653,6 +653,7 @@ mod tests {
                 super::load_snapshot(&snapshot_path, &[0; 32]).await.unwrap();
 
                 for i in 1..6 {
+                    let instant = std::time::Instant::now();
                     super::store_account(
                         &snapshot_path,
                         &AccountIdentifier::Id(format!("actionkeepspassword{}", i)),
@@ -660,7 +661,14 @@ mod tests {
                     )
                     .await
                     .unwrap();
-                    std::thread::sleep(interval / 4);
+
+                    if let Some(sleep_duration) = interval.checked_sub(instant.elapsed()) {
+                        std::thread::sleep(sleep_duration / 2);
+                    } else {
+                        // if the elapsed > interval, set the password again
+                        // this might happen if the test is stopped by another thread
+                        super::set_password(&snapshot_path, &[0; 32]).await;
+                    }
                 }
 
                 let id = AccountIdentifier::Id("actionkeepspassword1".to_string());
