@@ -11,7 +11,7 @@ export declare enum MessageType {
   Value = 5,
 }
 
-export declare interface TransactionEssence {
+export declare interface TransactionPayloadEssence {
   inputs: Input[];
   outputs: Output[];
   payload?: Payload[];
@@ -28,7 +28,7 @@ export declare interface Output {
 }
 
 export declare interface Transaction {
-  essence: TransactionEssence;
+  essence: TransactionPayloadEssence;
 }
 
 export declare type Payload = Transaction;

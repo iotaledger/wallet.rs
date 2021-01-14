@@ -48,7 +48,7 @@ impl super::Signer for StrongholdSigner {
     async fn sign_message(
         &self,
         account: &Account,
-        essence: &iota::TransactionEssence,
+        essence: &iota::TransactionPayloadEssence,
         inputs: &mut Vec<super::TransactionInput>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
         let serialized_essence = essence.pack_new();
