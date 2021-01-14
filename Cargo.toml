@@ -4,6 +4,11 @@ version = "0.1.0"
 authors = ["Lucas Nogueira <lucas.nogueira@iota.org>"]
 edition = "2018"
 
+[package.metadata.cargo-udeps.ignore]
+# ignore sled since it's enabled only when not(any(feature = "stronghold-storage", feature = "sqlite-storage"))
+# and we can't specify that on the dependency section
+development = ["sled"]
+
 [dependencies]
 thiserror = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
@@ -39,7 +44,6 @@ tiny-bip39 = "0.8"
 # stronghold
 iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "ad7980c273f14657ba310f66d50ebbc2320ae384", optional = true }
 riker = { version = "0.4", optional = true }
-riker-patterns = { version = "0.4", optional = true }
 
 [dependencies.iota-crypto]
 git = "https://github.com/iotaledger/crypto.rs"
@@ -54,6 +58,6 @@ anyhow = "1.0"
 
 [features]
 default = ["stronghold", "stronghold-storage"]
-stronghold = ["iota-stronghold", "riker", "riker-patterns"]
-stronghold-storage = ["iota-stronghold", "riker", "riker-patterns"]
+stronghold = ["iota-stronghold", "riker"]
+stronghold-storage = ["iota-stronghold", "riker"]
 sqlite-storage = ["rusqlite"]
