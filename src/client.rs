@@ -3,15 +3,18 @@
 
 use getset::Getters;
 pub use iota::client::builder::Network;
-use iota::client::{BrokerOptions, Client, ClientBuilder};
+use iota::client::{Client, ClientBuilder};
 use once_cell::sync::Lazy;
-use serde::{Deserialize, Serialize};
+use serde::{de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
 use tokio::sync::RwLock;
 use url::Url;
 
 use std::{
     collections::HashMap,
+    hash::{Hash, Hasher},
+    str::FromStr,
     sync::{Arc, Mutex},
+    time::Duration,
 };
 
 type ClientInstanceMap = Arc<Mutex<HashMap<ClientOptions, Arc<RwLock<Client>>>>>;
@@ -29,7 +32,13 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
 
     if !map.contains_key(&options) {
         let mut client_builder = ClientBuilder::new()
-            .with_mqtt_broker_options(BrokerOptions::new().automatic_disconnect(false))
+            .with_mqtt_broker_options(
+                options
+                    .mqtt_broker_options()
+                    .as_ref()
+                    .map(|options| options.clone().into())
+                    .unwrap_or_else(|| iota::BrokerOptions::new().automatic_disconnect(false)),
+            )
             .with_local_pow(*options.local_pow());
 
         // we validate the URL beforehand so it's safe to unwrap here
@@ -45,6 +54,22 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
             client_builder = client_builder.with_network(network.clone());
         }
 
+        if let Some(node_sync_interval) = options.node_sync_interval() {
+            client_builder = client_builder.with_node_sync_interval(node_sync_interval.clone());
+        }
+
+        if !options.node_sync_enabled() {
+            client_builder = client_builder.with_node_sync_disabled();
+        }
+
+        if let Some(request_timeout) = options.request_timeout() {
+            client_builder = client_builder.with_request_timeout(request_timeout.clone());
+        }
+
+        for (api, timeout) in options.api_timeout() {
+            client_builder = client_builder.with_api_timeout(api.clone().into(), timeout.clone());
+        }
+
         let client = client_builder.finish().expect("failed to initialise ClientBuilder");
 
         map.insert(options.clone(), Arc::new(RwLock::new(client)));
@@ -58,6 +83,11 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
 pub struct SingleNodeClientOptionsBuilder {
     node: Url,
     local_pow: bool,
+    mqtt_broker_options: Option<BrokerOptions>,
+    node_sync_interval: Option<Duration>,
+    node_sync_enabled: bool,
+    request_timeout: Option<Duration>,
+    api_timeout: HashMap<Api, Duration>,
 }
 
 impl SingleNodeClientOptionsBuilder {
@@ -65,14 +95,50 @@ impl SingleNodeClientOptionsBuilder {
         let node_url = Url::parse(node)?;
         let builder = Self {
             node: node_url,
+            mqtt_broker_options: None,
             local_pow: default_local_pow(),
+            node_sync_interval: None,
+            node_sync_enabled: default_node_sync_enabled(),
+            request_timeout: None,
+            api_timeout: Default::default(),
         };
         Ok(builder)
     }
 
-    /// Sets the pow option.
-    pub fn local_pow(mut self, local_pow: bool) -> Self {
-        self.local_pow = local_pow;
+    /// Set the node sync interval
+    pub fn with_node_sync_interval(mut self, node_sync_interval: Duration) -> Self {
+        self.node_sync_interval = Some(node_sync_interval);
+        self
+    }
+
+    /// Disables the node syncing process.
+    /// Every node will be considered healthy and ready to use.
+    pub fn with_node_sync_disabled(mut self) -> Self {
+        self.node_sync_enabled = false;
+        self
+    }
+
+    /// Sets the MQTT broker options.
+    pub fn with_mqtt_mqtt_broker_options(mut self, options: BrokerOptions) -> Self {
+        self.mqtt_broker_options = Some(options);
+        self
+    }
+
+    /// Sets whether the PoW should be done locally or remotely.
+    pub fn with_local_pow(mut self, local: bool) -> Self {
+        self.local_pow = local;
+        self
+    }
+
+    /// Sets the request timeout.
+    pub fn with_request_timeout(mut self, timeout: Duration) -> Self {
+        self.request_timeout = Some(timeout);
+        self
+    }
+
+    /// Sets the request timeout for a specific API usage.
+    pub fn with_api_timeout(mut self, api: Api, timeout: Duration) -> Self {
+        self.api_timeout.insert(api, timeout);
         self
     }
 
@@ -82,9 +148,12 @@ impl SingleNodeClientOptionsBuilder {
             node: Some(self.node),
             nodes: None,
             network: None,
-            quorum_size: None,
-            quorum_threshold: 0,
+            mqtt_broker_options: self.mqtt_broker_options,
             local_pow: self.local_pow,
+            node_sync_interval: self.node_sync_interval,
+            node_sync_enabled: self.node_sync_enabled,
+            request_timeout: self.request_timeout,
+            api_timeout: self.api_timeout,
         }
     }
 }
@@ -93,10 +162,12 @@ impl SingleNodeClientOptionsBuilder {
 pub struct MultiNodeClientOptionsBuilder {
     nodes: Option<Vec<Url>>,
     network: Option<Network>,
-    quorum_size: Option<u8>,
-    quorum_threshold: f32,
+    mqtt_broker_options: Option<BrokerOptions>,
     local_pow: bool,
-    // state_adapter:
+    node_sync_interval: Option<Duration>,
+    node_sync_enabled: bool,
+    request_timeout: Option<Duration>,
+    api_timeout: HashMap<Api, Duration>,
 }
 
 fn convert_urls(urls: &[&str]) -> crate::Result<Vec<Url>> {
@@ -124,9 +195,12 @@ impl Default for MultiNodeClientOptionsBuilder {
         Self {
             nodes: None,
             network: None,
-            quorum_size: None,
-            quorum_threshold: 0.5,
+            mqtt_broker_options: None,
             local_pow: default_local_pow(),
+            node_sync_interval: None,
+            node_sync_enabled: default_node_sync_enabled(),
+            request_timeout: None,
+            api_timeout: Default::default(),
         }
     }
 }
@@ -148,34 +222,40 @@ impl MultiNodeClientOptionsBuilder {
         }
     }
 
-    /// Sets the nodes.
-    pub fn nodes(mut self, nodes: &[&str]) -> crate::Result<Self> {
-        let nodes_urls = convert_urls(nodes)?;
-        self.nodes = Some(nodes_urls);
-        Ok(self)
-    }
-
-    /// Sets the IOTA network the nodes belong to.
-    pub fn network(mut self, network: Network) -> Self {
-        self.network = Some(network);
+    /// Set the node sync interval
+    pub fn with_node_sync_interval(mut self, node_sync_interval: Duration) -> Self {
+        self.node_sync_interval = Some(node_sync_interval);
         self
     }
 
-    /// Sets the quorum size.
-    pub fn quorum_size(mut self, quorum_size: u8) -> Self {
-        self.quorum_size = Some(quorum_size);
+    /// Disables the node syncing process.
+    /// Every node will be considered healthy and ready to use.
+    pub fn with_node_sync_disabled(mut self) -> Self {
+        self.node_sync_enabled = false;
         self
     }
 
-    /// Sets the quorum threshold.
-    pub fn quorum_threshold(mut self, quorum_threshold: f32) -> Self {
-        self.quorum_threshold = quorum_threshold;
+    /// Sets the MQTT broker options.
+    pub fn with_mqtt_mqtt_broker_options(mut self, options: BrokerOptions) -> Self {
+        self.mqtt_broker_options = Some(options);
         self
     }
 
-    /// Sets the pow option.
-    pub fn local_pow(mut self, local_pow: bool) -> Self {
-        self.local_pow = local_pow;
+    /// Sets whether the PoW should be done locally or remotely.
+    pub fn with_local_pow(mut self, local: bool) -> Self {
+        self.local_pow = local;
+        self
+    }
+
+    /// Sets the request timeout.
+    pub fn with_request_timeout(mut self, timeout: Duration) -> Self {
+        self.request_timeout = Some(timeout);
+        self
+    }
+
+    /// Sets the request timeout for a specific API usage.
+    pub fn with_api_timeout(mut self, api: Api, timeout: Duration) -> Self {
+        self.api_timeout.insert(api, timeout);
         self
     }
 
@@ -192,9 +272,12 @@ impl MultiNodeClientOptionsBuilder {
             node: None,
             nodes: self.nodes,
             network: self.network,
-            quorum_size: self.quorum_size,
-            quorum_threshold: (self.quorum_threshold * 100.0) as u8,
+            mqtt_broker_options: self.mqtt_broker_options,
             local_pow: self.local_pow,
+            node_sync_interval: self.node_sync_interval,
+            node_sync_enabled: self.node_sync_enabled,
+            request_timeout: self.request_timeout,
+            api_timeout: self.api_timeout,
         };
         Ok(options)
     }
@@ -243,21 +326,137 @@ impl ClientOptionsBuilder {
     }
 }
 
+/// Each of the node APIs the wallet uses.
+#[derive(Eq, PartialEq, Hash, Clone, Debug)]
+pub enum Api {
+    /// `get_tips` API
+    GetTips,
+    /// `post_message` API
+    PostMessage,
+    /// `get_output` API
+    GetOutput,
+}
+
+impl FromStr for Api {
+    type Err = String;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        let t = match s {
+            "GetTips" => Self::GetTips,
+            "PostMessage" => Self::PostMessage,
+            "GetOutput" => Self::GetOutput,
+            _ => return Err(format!("unknown api kind `{}`", s)),
+        };
+        Ok(t)
+    }
+}
+
+impl Serialize for Api {
+    fn serialize<S: Serializer>(&self, s: S) -> std::result::Result<S::Ok, S::Error> {
+        s.serialize_str(match self {
+            Self::GetTips => "GetTips",
+            Self::PostMessage => "PostMessage",
+            Self::GetOutput => "GetOutput",
+        })
+    }
+}
+
+impl<'de> Deserialize<'de> for Api {
+    fn deserialize<D>(deserializer: D) -> Result<Api, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct StringVisitor;
+        impl<'de> Visitor<'de> for StringVisitor {
+            type Value = Api;
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("a string representing an Api")
+            }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                let value = Api::from_str(v).map_err(|e| serde::de::Error::custom(e))?;
+                Ok(value)
+            }
+        }
+        deserializer.deserialize_str(StringVisitor)
+    }
+}
+
+impl Into<iota::Api> for Api {
+    fn into(self) -> iota::Api {
+        match self {
+            Api::GetTips => iota::Api::GetTips,
+            Api::PostMessage => iota::Api::PostMessage,
+            Api::GetOutput => iota::Api::GetOutput,
+        }
+    }
+}
+
+/// The MQTT broker options.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct BrokerOptions {
+    #[serde(rename = "automaticDisconnect")]
+    pub(crate) automatic_disconnect: Option<bool>,
+    pub(crate) timeout: Option<Duration>,
+    #[serde(rename = "useWebsockets")]
+    pub(crate) use_websockets: Option<bool>,
+}
+
+impl Into<iota::BrokerOptions> for BrokerOptions {
+    fn into(self) -> iota::BrokerOptions {
+        let mut options = iota::BrokerOptions::new();
+        if let Some(automatic_disconnect) = self.automatic_disconnect {
+            options = options.automatic_disconnect(automatic_disconnect);
+        }
+        if let Some(timeout) = self.timeout {
+            options = options.timeout(timeout);
+        }
+        if let Some(use_websockets) = self.use_websockets {
+            options = options.use_websockets(use_websockets);
+        }
+        options
+    }
+}
+
 /// The client options type.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Getters)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Getters)]
 #[getset(get = "pub(crate)")]
 pub struct ClientOptions {
     node: Option<Url>,
     nodes: Option<Vec<Url>>,
     network: Option<Network>,
-    #[serde(rename = "quorumSize")]
-    quorum_size: Option<u8>,
-    #[serde(rename = "quorumThreshold", default)]
-    quorum_threshold: u8,
+    #[serde(rename = "mqttBrokerOptions")]
+    mqtt_broker_options: Option<BrokerOptions>,
     #[serde(rename = "localPow", default = "default_local_pow")]
     local_pow: bool,
+    #[serde(rename = "nodeSyncInterval")]
+    node_sync_interval: Option<Duration>,
+    #[serde(rename = "nodeSyncEnabled", default = "default_node_sync_enabled")]
+    node_sync_enabled: bool,
+    #[serde(rename = "requestTimeout")]
+    request_timeout: Option<Duration>,
+    #[serde(rename = "apiTimeout", default)]
+    api_timeout: HashMap<Api, Duration>,
+}
+
+impl Hash for ClientOptions {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.node.hash(state);
+        self.nodes.hash(state);
+        self.network.hash(state);
+        self.mqtt_broker_options.hash(state);
+        self.local_pow.hash(state);
+        self.request_timeout.hash(state);
+    }
 }
 
 fn default_local_pow() -> bool {
+    true
+}
+
+fn default_node_sync_enabled() -> bool {
     true
 }

@@ -95,17 +95,32 @@ export declare class SyncedAccount {
 
 export declare enum Network {
   Mainnet,
-  Devnet,
-  Comnet
+  Testnet
 }
+
+export declare interface Duration {
+  secs: number;
+  nanos: number;
+}
+
+export declare interface BrokerOptions {
+  automaticDisconnect?: boolean;
+  timeout?: Duration;
+  useWebsockets?: boolean;
+}
+
+export declare type Api = 'GetTips' | 'PostMessage' | 'GetOutput';
 
 export declare interface ClientOptions {
   node?: string;
   nodes?: string[];
   network?: Network;
-  quorumSize?: number;
-  quorumThreshold?: number;
+  mqttBrokerOptions?: BrokerOptions;
   localPow?: boolean;
+  nodeSyncInterval?: Duration;
+  nodeSyncEnabled?: boolean;
+  requestTimeout?: Duration;
+  apiTimeout?: { [api in Api]: Duration };
 }
 
 export declare enum SignerType {
