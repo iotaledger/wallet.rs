@@ -115,7 +115,7 @@ impl super::Signer for LedgerHardwareWalletSigner {
         // pack essence into bytes
         let essence_bytes = essence.pack_new();
 
-        // prepare signing in single-signing mode (ssm will be the default when finished) 
+        // prepare signing 
         ledger.prepare_signing(
                 key_indices, 
                 essence_bytes, 

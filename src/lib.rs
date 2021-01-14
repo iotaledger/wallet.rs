@@ -187,9 +187,6 @@ pub enum Error {
     /// Ledger transport error
     #[error("ledger transport error")]
     LedgerMiscError,
-    /// Ledger not loaded error
-    #[error("ledger not loaded")]
-    LedgerNotLoaded,
     /// Dongle Locked
     #[error("ledger locked")]
     LedgerDongleLocked,
