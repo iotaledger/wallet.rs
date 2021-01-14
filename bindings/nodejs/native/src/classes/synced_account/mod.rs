@@ -5,7 +5,7 @@ use std::{num::NonZeroU64, str::FromStr};
 
 use iota_wallet::{
     address::parse as parse_address,
-    message::{Indexation, MessageId, RemainderValueStrategy, Transfer},
+    message::{IndexationPayload, MessageId, RemainderValueStrategy, Transfer},
 };
 use neon::prelude::*;
 use serde::Deserialize;
@@ -61,7 +61,7 @@ declare_types! {
             ).with_remainder_value_strategy(options.remainder_value_strategy);
             if let Some(indexation) = options.indexation {
                 transfer_builder = transfer_builder.with_indexation(
-                    Indexation::new(indexation.index, &indexation.data.unwrap_or_default()).expect("index can't be empty")
+                    IndexationPayload::new(indexation.index, &indexation.data.unwrap_or_default()).expect("index can't be empty")
                 );
             }
 
