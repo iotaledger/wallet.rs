@@ -10,8 +10,8 @@ use crate::{
 use getset::Getters;
 use iota::{
     message::prelude::{
-        Input, Message as IotaMessage, MessageBuilder, MessageId, Payload, SignatureLockedSingleOutput, Transaction,
-        TransactionEssence, UTXOInput,
+        Input, Message as IotaMessage, MessageBuilder, MessageId, Payload, SignatureLockedSingleOutput,
+        TransactionPayload, TransactionPayloadEssence, UTXOInput,
     },
     ClientMiner,
 };
@@ -613,7 +613,7 @@ impl SyncedAccount {
             utxos.extend(outputs.into_iter());
         }
 
-        let mut essence_builder = TransactionEssence::builder();
+        let mut essence_builder = TransactionPayloadEssence::builder();
         let mut current_output_sum = 0;
         let mut remainder_value = 0;
         for (utxo, address_index, address_internal, address_path) in utxos {
@@ -732,7 +732,7 @@ impl SyncedAccount {
             .sign_message(&account_, &essence, &mut transaction_inputs)
             .await?;
 
-        let mut tx_builder = Transaction::builder().with_essence(essence);
+        let mut tx_builder = TransactionPayload::builder().with_essence(essence);
         for unlock_block in unlock_blocks {
             tx_builder = tx_builder.add_unlock_block(unlock_block);
         }

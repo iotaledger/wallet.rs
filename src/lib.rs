@@ -289,7 +289,7 @@ mod test_utils {
         async fn sign_message(
             &self,
             _account: &crate::account::Account,
-            _essence: &iota::TransactionEssence,
+            _essence: &iota::TransactionPayloadEssence,
             _inputs: &mut Vec<crate::signing::TransactionInput>,
         ) -> crate::Result<Vec<iota::UnlockBlock>> {
             Ok(Vec::new())
