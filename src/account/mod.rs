@@ -325,14 +325,27 @@ impl AccountHandle {
             .collect()
     }
 
-    /// Bridge to [Account#list_addresses](struct.Account.html#method.list_addresses).
+    /// Bridge to [Account#list_spent_addresses](struct.Account.html#method.list_spent_addresses).
     /// This method clones the account's addresses so when querying a large list of addresses
     /// prefer using the `read` method to access the account instance.
-    pub async fn list_addresses(&self, unspent: bool) -> Vec<Address> {
+    pub async fn list_spent_addresses(&self) -> Vec<Address> {
         self.inner
             .read()
             .await
-            .list_addresses(unspent)
+            .list_spent_addresses()
+            .into_iter()
+            .cloned()
+            .collect()
+    }
+
+    /// Bridge to [Account#list_unspent_addresses](struct.Account.html#method.list_unspent_addresses).
+    /// This method clones the account's addresses so when querying a large list of addresses
+    /// prefer using the `read` method to access the account instance.
+    pub async fn list_unspent_addresses(&self) -> Vec<Address> {
+        self.inner
+            .read()
+            .await
+            .list_unspent_addresses()
             .into_iter()
             .cloned()
             .collect()
@@ -478,13 +491,19 @@ impl Account {
         }
     }
 
-    /// Gets the addresses linked to this account.
-    ///
-    /// * `unspent` - Whether it should get only unspent addresses or not.
-    pub fn list_addresses(&self, unspent: bool) -> Vec<&Address> {
+    /// Gets the spent addresses.
+    pub fn list_spent_addresses(&self) -> Vec<&Address> {
         self.addresses
             .iter()
-            .filter(|address| crate::address::is_unspent(&self, address.address()) == unspent)
+            .filter(|address| !crate::address::is_unspent(&self, address.address()))
+            .collect()
+    }
+
+    /// Gets the spent addresses.
+    pub fn list_unspent_addresses(&self) -> Vec<&Address> {
+        self.addresses
+            .iter()
+            .filter(|address| crate::address::is_unspent(&self, address.address()))
             .collect()
     }
 

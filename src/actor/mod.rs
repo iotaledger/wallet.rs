@@ -208,9 +208,16 @@ impl WalletMessageHandler {
                     .collect();
                 Ok(ResponseType::Messages(messages))
             }
-            AccountMethod::ListAddresses { unspent } => {
-                let account = account_handle.read().await;
-                let addresses = account.list_addresses(*unspent).into_iter().cloned().collect();
+            AccountMethod::ListAddresses => {
+                let addresses = account_handle.addresses().await;
+                Ok(ResponseType::Addresses(addresses))
+            }
+            AccountMethod::ListSpentAddresses => {
+                let addresses = account_handle.list_spent_addresses().await;
+                Ok(ResponseType::Addresses(addresses))
+            }
+            AccountMethod::ListUnspentAddresses => {
+                let addresses = account_handle.list_unspent_addresses().await;
                 Ok(ResponseType::Addresses(addresses))
             }
             AccountMethod::GetAvailableBalance => {

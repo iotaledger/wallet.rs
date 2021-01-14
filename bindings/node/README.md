@@ -305,14 +305,16 @@ Returns the account's messages.
 
 Message object: { confirmed: boolean, broadcasted: boolean, incoming: boolean, value: number }
 
-#### listAddresses([unspent])
+#### listAddresses()
 Returns the account's addresses.
 
-| Param     | Type                 | Default           | Description                 |
-| --------- | -------------------- | ----------------- | --------------------------- |
-| [unspent] | <code>boolean</code> | <code>null</code> | The `unspent` status filter |
-
 Address object: { address: string, balance: number, keyIndex: number }
+
+#### listSpentAddresses()
+Returns the account's spent addresses.
+
+#### listUnspentAddresses()
+Returns the account's unspent addresses.
 
 #### sync([options])
 
