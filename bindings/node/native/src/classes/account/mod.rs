@@ -120,17 +120,48 @@ declare_types! {
         }
 
         method listAddresses(mut cx) {
-            let unspent = match cx.argument_opt(0) {
-                Some(arg) => arg.downcast::<JsBoolean>().or_throw(&mut cx)?.value(),
-                None => false,
-            };
-
             let this = cx.this();
             let id = cx.borrow(&this, |r| r.0.clone());
             crate::block_on(async move {
                 let account_handle = crate::get_account(&id).await;
                 let account = account_handle.read().await;
-                let addresses = account.list_addresses(unspent);
+                let addresses = account.addresses();
+
+                let js_array = JsArray::new(&mut cx, addresses.len() as u32);
+                for (index, address) in addresses.iter().enumerate() {
+                    let value = neon_serde::to_value(&mut cx, &address)?;
+                    js_array.set(&mut cx, index as u32, value)?;
+                }
+
+                Ok(js_array.upcast())
+            })
+        }
+
+        method listSpentAddresses(mut cx) {
+            let this = cx.this();
+            let id = cx.borrow(&this, |r| r.0.clone());
+            crate::block_on(async move {
+                let account_handle = crate::get_account(&id).await;
+                let account = account_handle.read().await;
+                let addresses = account.list_spent_addresses();
+
+                let js_array = JsArray::new(&mut cx, addresses.len() as u32);
+                for (index, address) in addresses.iter().enumerate() {
+                    let value = neon_serde::to_value(&mut cx, &address)?;
+                    js_array.set(&mut cx, index as u32, value)?;
+                }
+
+                Ok(js_array.upcast())
+            })
+        }
+
+        method listUnspentAddresses(mut cx) {
+            let this = cx.this();
+            let id = cx.borrow(&this, |r| r.0.clone());
+            crate::block_on(async move {
+                let account_handle = crate::get_account(&id).await;
+                let account = account_handle.read().await;
+                let addresses = account.list_unspent_addresses();
 
                 let js_array = JsArray::new(&mut cx, addresses.len() as u32);
                 for (index, address) in addresses.iter().enumerate() {

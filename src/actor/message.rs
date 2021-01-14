@@ -52,11 +52,11 @@ pub enum AccountMethod {
         from: usize,
     },
     /// List addresses.
-    ListAddresses {
-        /// Address unspent filter.
-        #[serde(default)]
-        unspent: bool,
-    },
+    ListAddresses,
+    /// List spent addresses.
+    ListSpentAddresses,
+    /// List unspent addresses.
+    ListUnspentAddresses,
     /// Get available balance.
     GetAvailableBalance,
     /// Get total balance.
@@ -251,7 +251,7 @@ pub enum ResponseType {
     ReadAccounts(Vec<Account>),
     /// ListMessages response.
     Messages(Vec<WalletMessage>),
-    /// ListAddresses response.
+    /// ListAddresses/ListSpentAddresses/ListUnspentAddresses response.
     Addresses(Vec<Address>),
     /// GenerateAddress response.
     GeneratedAddress(Address),
