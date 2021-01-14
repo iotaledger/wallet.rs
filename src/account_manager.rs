@@ -35,7 +35,7 @@ use tokio::{
         broadcast::{channel as broadcast_channel, Receiver as BroadcastReceiver, Sender as BroadcastSender},
         Mutex, RwLock,
     },
-    time::{delay_for, Duration as AsyncDuration},
+    time::interval,
 };
 
 /// The default storage folder.
@@ -371,18 +371,18 @@ impl AccountManager {
         let accounts = self.accounts.clone();
         let storage_encryption_key = self.storage_encryption_key.clone();
 
-        let interval = AsyncDuration::from_millis(polling_interval.as_millis().try_into().unwrap());
-
         let handle = thread::spawn(move || {
-            let mut runtime = tokio::runtime::Builder::new()
-                .basic_scheduler()
+            let runtime = tokio::runtime::Builder::new_current_thread()
                 .enable_time()
                 .build()
                 .unwrap();
             runtime.block_on(async {
+                let mut interval = interval(polling_interval);
                 loop {
                     tokio::select! {
                         _ = async {
+                            interval.tick().await;
+
                             let storage_file_path_ = storage_file_path.clone();
 
                             if let Err(error) = AssertUnwindSafe(poll(accounts.clone(), storage_file_path_, is_monitoring_disabled))
@@ -409,8 +409,6 @@ impl AccountManager {
                                     let _ = account_handle.write().await.save(&encryption_key).await;
                                 }
                             }
-
-                            delay_for(interval).await;
                         } => {}
                         _ = stop.recv() => {
                             let encryption_key = &*storage_encryption_key.lock().await;
@@ -422,6 +420,7 @@ impl AccountManager {
                         }
                     }
                 }
+                println!("DONE");
             });
         });
         self.polling_handle = Some(handle);
