@@ -111,5 +111,12 @@ module.exports = {
   StorageType: {
     Sqlite: { type: 'Sqlite' },
     Stronghold: { type: 'Stronghold' }
+  },
+  MessageType: {
+    Received: 1,
+    Sent: 2,
+    Failed: 3,
+    Unconfirmed: 4,
+    Value: 5
   }
 }

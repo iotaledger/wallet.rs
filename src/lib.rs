@@ -242,9 +242,13 @@ pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
     runtime.lock().unwrap().block_on(cb)
 }
 
-pub(crate) fn enter<R, C: FnOnce() -> R>(cb: C) -> R {
+pub(crate) fn spawn<F>(future: F)
+where
+    F: futures::Future + Send + 'static,
+    F::Output: Send + 'static,
+{
     let runtime = RUNTIME.get_or_init(|| Mutex::new(Runtime::new().unwrap()));
-    runtime.lock().unwrap().enter(cb)
+    runtime.lock().unwrap().spawn(future);
 }
 
 /// Access the stronghold's actor system.
@@ -285,7 +289,7 @@ mod test_utils {
         async fn sign_message(
             &self,
             _account: &crate::account::Account,
-            _essence: &iota::TransactionEssence,
+            _essence: &iota::TransactionPayloadEssence,
             _inputs: &mut Vec<crate::signing::TransactionInput>,
         ) -> crate::Result<Vec<iota::UnlockBlock>> {
             Ok(Vec::new())
