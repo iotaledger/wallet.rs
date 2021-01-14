@@ -376,8 +376,8 @@ impl AccountManager {
                 .enable_time()
                 .build()
                 .unwrap();
-            let mut interval = interval(polling_interval);
             runtime.block_on(async {
+                let mut interval = interval(polling_interval);
                 loop {
                     tokio::select! {
                         _ = async {
@@ -420,6 +420,7 @@ impl AccountManager {
                         }
                     }
                 }
+                println!("DONE");
             });
         });
         self.polling_handle = Some(handle);
