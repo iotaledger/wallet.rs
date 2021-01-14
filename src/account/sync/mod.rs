@@ -19,7 +19,7 @@ use serde::{ser::Serializer, Serialize};
 use slip10::BIP32Path;
 use tokio::{
     sync::{mpsc::channel, MutexGuard},
-    time::delay_for,
+    time::sleep,
 };
 
 use std::{
@@ -524,7 +524,7 @@ impl SyncedAccount {
 
             let account_handle = self.account_handle.clone();
             thread::spawn(move || {
-                let mut tx = tx.lock().unwrap();
+                let tx = tx.lock().unwrap();
                 for _ in 1..30 {
                     thread::sleep(OUTPUT_LOCK_TIMEOUT / 30);
                     let account = crate::block_on(async { account_handle.read().await });
@@ -536,7 +536,8 @@ impl SyncedAccount {
                 }
             });
 
-            let mut delay = delay_for(Duration::from_millis(50));
+            let delay = sleep(Duration::from_millis(50));
+            tokio::pin!(delay);
             tokio::select! {
                 v = rx.recv() => {
                     if v.is_none() {

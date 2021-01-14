@@ -389,7 +389,7 @@ mod tests {
     fn spawn_actor() -> UnboundedSender<Message> {
         let (tx, rx) = unbounded_channel();
         std::thread::spawn(|| {
-            let mut runtime = tokio::runtime::Runtime::new().unwrap();
+            let runtime = tokio::runtime::Runtime::new().unwrap();
             runtime.block_on(async move {
                 let actor = WalletBuilder::new()
                     .rx(rx)
