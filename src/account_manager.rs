@@ -1189,7 +1189,14 @@ mod tests {
             not(feature = "sqlite-storage"),
             any(feature = "stronghold", feature = "stronghold-storage")
         ))]
-        std::fs::remove_file(manager.storage_path()).unwrap();
+        {
+            // wait for stronghold to finish pending operations and delete the storage file
+            crate::stronghold::unload_snapshot(manager.storage_path(), false)
+                .await
+                .unwrap();
+            let _ = crate::stronghold::actor_runtime().lock().await;
+            std::fs::remove_file(manager.storage_path()).unwrap();
+        }
 
         manager.set_storage_password("password").await.unwrap();
 
