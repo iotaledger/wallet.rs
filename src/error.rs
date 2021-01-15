@@ -133,6 +133,11 @@ pub enum Error {
     /// error encrypting stored account using provided encryptionKey
     #[error("failed to encrypt account: {0}")]
     AccountEncrypt(String),
+    /// Can't use AccountManager API because the storage is encrypted
+    #[error(
+        "can't perform operation while storage is encrypted; use AccountManager::set_storage_password to decrypt storage"
+    )]
+    StorageIsEncrypted,
 }
 
 impl Drop for Error {
@@ -210,6 +215,7 @@ impl serde::Serialize for Error {
             Self::StorageAdapterNotSet(_) => serialize_variant(self, serializer, "StorageAdapterNotSet"),
             Self::AccountDecrypt(_) => serialize_variant(self, serializer, "AccountDecrypt"),
             Self::AccountEncrypt(_) => serialize_variant(self, serializer, "AccountEncrypt"),
+            Self::StorageIsEncrypted => serialize_variant(self, serializer, "StorageIsEncrypted"),
         }
     }
 }

@@ -576,6 +576,7 @@ mod tests {
         let account_id = {
             let account_handle = manager
                 .create_account(client_options)
+                .unwrap()
                 .alias("alias")
                 .initialise()
                 .await
