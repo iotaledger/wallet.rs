@@ -24,6 +24,10 @@ pub struct SqliteStorageAdapter {
     connection: Arc<Mutex<Connection>>,
 }
 
+fn storage_err<E: ToString>(error: E) -> crate::Error {
+    crate::Error::Storage(error.to_string())
+}
+
 impl SqliteStorageAdapter {
     /// Initialises the storage adapter.
     pub fn new(path: impl AsRef<Path>, table_name: impl AsRef<str>) -> crate::Result<Self> {
@@ -31,7 +35,7 @@ impl SqliteStorageAdapter {
             fs::create_dir_all(&parent)?;
         }
 
-        let connection = Connection::open(path.as_ref())?;
+        let connection = Connection::open(path.as_ref()).map_err(storage_err)?;
 
         connection.execute(
             &format!(
@@ -43,7 +47,7 @@ impl SqliteStorageAdapter {
                 table_name.as_ref()
             ),
             NO_PARAMS,
-        )?;
+        ).map_err(storage_err)?;
 
         Ok(Self {
             table_name: table_name.as_ref().to_string(),
@@ -71,9 +75,9 @@ impl StorageAdapter for SqliteStorageAdapter {
         };
 
         let connection = self.connection.lock().expect("failed to get connection lock");
-        let mut query = connection.prepare(&sql)?;
+        let mut query = connection.prepare(&sql).map_err(storage_err)?;
         let results = query
-            .query_and_then(params, |row| row.get(0))?
+            .query_and_then(params, |row| row.get(0)).map_err(storage_err)?
             .collect::<Vec<rusqlite::Result<String>>>();
         let account = results
             .first()
@@ -84,9 +88,9 @@ impl StorageAdapter for SqliteStorageAdapter {
 
     async fn get_all(&self) -> crate::Result<std::vec::Vec<String>> {
         let connection = self.connection.lock().expect("failed to get connection lock");
-        let mut query = connection.prepare(&format!("SELECT value FROM {} ORDER BY created_at", self.table_name))?;
+        let mut query = connection.prepare(&format!("SELECT value FROM {} ORDER BY created_at", self.table_name)).map_err(storage_err)?;
         let accounts = query
-            .query_and_then(NO_PARAMS, |row| row.get(0))?
+            .query_and_then(NO_PARAMS, |row| row.get(0)).map_err(storage_err)?
             .map(|val| val.unwrap())
             .collect::<Vec<String>>();
         Ok(accounts)

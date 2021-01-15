@@ -318,7 +318,8 @@ impl AccountManager {
     /// Sets the password for the stored accounts.
     pub async fn set_storage_password<P: AsRef<str>>(&mut self, key: P) -> crate::Result<()> {
         let mut dk = [0; 64];
-        crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(key.as_ref().as_bytes(), b"wallet.rs::storage", 100, &mut dk)?;
+        // safe to unwrap because rounds > 0
+        crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(key.as_ref().as_bytes(), b"wallet.rs::storage", 100, &mut dk).unwrap();
         let key: [u8; 32] = dk[0..32][..].try_into().unwrap();
         *self.storage_encryption_key.lock().await = Some(key);
 
@@ -337,7 +338,8 @@ impl AccountManager {
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     pub async fn set_stronghold_password<P: AsRef<str>>(&mut self, password: P) -> crate::Result<()> {
         let mut dk = [0; 64];
-        crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_ref().as_bytes(), b"wallet.rs", 100, &mut dk)?;
+        // safe to unwrap because rounds > 0
+        crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_ref().as_bytes(), b"wallet.rs", 100, &mut dk).unwrap();
 
         let stronghold_path = if self.storage_path.extension().unwrap_or_default() == "stronghold" {
             self.storage_path.clone()
@@ -449,9 +451,9 @@ impl AccountManager {
     /// Generates a new mnemonic.
     pub fn generate_mnemonic(&mut self) -> crate::Result<String> {
         let mut entropy = [0u8; 32];
-        crypto::rand::fill(&mut entropy)?;
+        crypto::rand::fill(&mut entropy).map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
         let mnemonic = crypto::bip39::wordlist::encode(&entropy, &crypto::bip39::wordlist::ENGLISH)
-            .map_err(|_| crate::Error::MnemonicEncode)?;
+            .map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
         self.generated_mnemonic = Some(mnemonic.clone());
         Ok(mnemonic)
     }
@@ -490,7 +492,7 @@ impl AccountManager {
             let account = account_handle.read().await;
 
             if !(account.messages().is_empty() && account.total_balance() == 0) {
-                return Err(crate::Error::MessageNotEmpty);
+                return Err(crate::Error::AccountNotEmpty);
             }
         }
 
@@ -523,7 +525,7 @@ impl AccountManager {
             .read()
             .await
             .latest_address()
-            .ok_or(crate::Error::TransferDestinationEmpty)?
+            .ok_or(crate::Error::InternalTransferDestinationEmpty)?
             .clone();
 
         let from_synchronized = self.get_account(from_account_id).await?.sync().await.execute().await?;

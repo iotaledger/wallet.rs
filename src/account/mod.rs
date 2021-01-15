@@ -9,7 +9,7 @@ use crate::{
     signing::{GenerateAddressMetadata, SignerType},
 };
 
-use chrono::prelude::{DateTime, Utc};
+use chrono::prelude::{DateTime, Local, Utc};
 use getset::{Getters, Setters};
 use iota::message::prelude::MessageId;
 use serde::{Deserialize, Serialize};
@@ -56,7 +56,7 @@ pub struct AccountInitialiser {
     accounts: AccountStore,
     storage_path: PathBuf,
     alias: Option<String>,
-    created_at: Option<DateTime<Utc>>,
+    created_at: Option<DateTime<Local>>,
     messages: Vec<Message>,
     addresses: Vec<Address>,
     client_options: ClientOptions,
@@ -96,7 +96,7 @@ impl AccountInitialiser {
     }
 
     /// Time of account creation.
-    pub fn created_at(mut self, created_at: DateTime<Utc>) -> Self {
+    pub fn created_at(mut self, created_at: DateTime<Local>) -> Self {
         self.created_at = Some(created_at);
         self
     }
@@ -127,9 +127,9 @@ impl AccountInitialiser {
 
         let alias = self.alias.unwrap_or_else(|| format!("Account {}", accounts.len()));
         let signer_type = self.signer_type.ok_or(crate::Error::AccountInitialiseRequiredField(
-            crate::AccountInitialiseRequiredField::SignerType,
+            crate::error::AccountInitialiseRequiredField::SignerType,
         ))?;
-        let created_at = self.created_at.unwrap_or_else(chrono::Utc::now);
+        let created_at = self.created_at.unwrap_or_else(Local::now);
 
         if let Some(latest_account_handle) = accounts.values().last() {
             let latest_account = latest_account_handle.read().await;
@@ -191,7 +191,7 @@ pub struct Account {
     alias: String,
     /// Time of account creation.
     #[serde(rename = "createdAt")]
-    created_at: DateTime<Utc>,
+    created_at: DateTime<Local>,
     /// Messages associated with the seed.
     /// The account can be initialised with locally stored messages.
     #[getset(set = "pub")]
@@ -260,7 +260,7 @@ guard_field_getters!(
     #[doc = "Bridge to [Account#signer_type](struct.Account.html#method.signer_type)."] => signer_type => SignerType,
     #[doc = "Bridge to [Account#index](struct.Account.html#method.index)."] => index => usize,
     #[doc = "Bridge to [Account#alias](struct.Account.html#method.alias)."] => alias => String,
-    #[doc = "Bridge to [Account#created_at](struct.Account.html#method.created_at)."] => created_at => DateTime<Utc>,
+    #[doc = "Bridge to [Account#created_at](struct.Account.html#method.created_at)."] => created_at => DateTime<Local>,
     #[doc = "Bridge to [Account#messages](struct.Account.html#method.messages).
     This method clones the addresses so prefer the using the `read` method to access the account instance."] => messages => Vec<Message>,
     #[doc = "Bridge to [Account#addresses](struct.Account.html#method.addresses).
@@ -555,7 +555,7 @@ pub struct InitialisedAccount<'a> {
     /// Seed transaction history.
     transactions: Vec<Message>,
     /// Account creation time.
-    created_at: DateTime<Utc>,
+    created_at: DateTime<Local>,
     /// Time when the account was last synced with the tangle.
     last_synced_at: DateTime<Utc>,
 }

@@ -5,7 +5,7 @@ use crate::{
     account::AccountIdentifier,
     account_manager::AccountManager,
     message::{Message as WalletMessage, Transfer},
-    DateTime, Result, Utc,
+    Result,
 };
 use futures::{Future, FutureExt};
 use iota::message::prelude::MessageId;
@@ -271,7 +271,7 @@ impl WalletMessageHandler {
             builder = builder.alias(alias);
         }
         if let Some(created_at) = &account.created_at {
-            builder = builder.created_at(created_at.parse::<DateTime<Utc>>()?);
+            builder = builder.created_at(*created_at);
         }
         if account.skip_persistance {
             builder = builder.skip_persistance();
