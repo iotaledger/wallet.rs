@@ -129,22 +129,22 @@ Saves the mnemonic using the given signer provider.
 
 | Param      | Type                               | Default | Description                                       |
 | ---------- | ---------------------------------- | ------- | ------------------------------------------------- |
-| signerType | <code>number</code>                | null    | The signer type. 1 = Stronghold, 2 = EnvMnemonic  |
+| signerType | <code>number</code>                | null    | The signer type. 1 = Stronghold                   |
 | mnemonic   | <code>string        \| null</code> | null    | The mnemonic to save. If null, we'll generate one |
 
 #### createAccount(account): Account
 
 Creates a new account.
 
-| Param                     | Type                                         | Default                           | Description                                              |
-| ------------------------- | -------------------------------------------- | --------------------------------- | -------------------------------------------------------- |
-| account                   | <code>object</code>                          | <code>{}</code>                   | The account to be created                                |
-| account.clientOptions     | <code>[ClientOptions](#clientoptions)</code> | <code>undefined</code>            | The node configuration                                   |
-| [account.mnemonic]        | <code>string</code>                          | <code>undefined</code>            | The account BIP39 mnemonic                               |
-| [account.alias]           | <code>string</code>                          | <code>Account ${index + 1}</code> | The account alias                                        |
-| [account.createdAt]       | <code>string</code>                          | the current date and time         | The ISO 8601 date string of the account creation         |
-| [account.signerType]      | <code>number</code>                          | 1 = Stronghold                    | The account signer type. 1 = Stronghold, 2 = EnvMnemonic |
-| [account.skipPersistance] | <code>boolean</code>                         | false                             | Skip saving the account to the storage                   |
+| Param                     | Type                                         | Default                           | Description                                      |
+| ------------------------- | -------------------------------------------- | --------------------------------- | ------------------------------------------------ |
+| account                   | <code>object</code>                          | <code>{}</code>                   | The account to be created                        |
+| account.clientOptions     | <code>[ClientOptions](#clientoptions)</code> | <code>undefined</code>            | The node configuration                           |
+| [account.mnemonic]        | <code>string</code>                          | <code>undefined</code>            | The account BIP39 mnemonic                       |
+| [account.alias]           | <code>string</code>                          | <code>Account ${index + 1}</code> | The account alias                                |
+| [account.createdAt]       | <code>string</code>                          | the current date and time         | The ISO 8601 date string of the account creation |
+| [account.signerType]      | <code>number</code>                          | 1 = Stronghold                    | The account signer type. 1 = Stronghold          |
+| [account.skipPersistance] | <code>boolean</code>                         | false                             | Skip saving the account to the storage           |
 
 #### getAccount(accountId)
 
