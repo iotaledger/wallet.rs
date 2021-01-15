@@ -447,6 +447,7 @@ impl Account {
     ///
     ///     let account_handle = manager
     ///         .create_account(client_options)
+    ///         .unwrap()
     ///         .initialise()
     ///         .await
     ///         .expect("failed to add account");
