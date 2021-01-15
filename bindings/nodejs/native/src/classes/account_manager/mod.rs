@@ -41,6 +41,8 @@ pub struct AccountToCreate {
     pub created_at: Option<String>,
     #[serde(rename = "signerType", default)]
     pub signer_type: AccountSignerType,
+    #[serde(rename = "skipPersistance", default)]
+    pub skip_persistance: bool,
 }
 
 fn js_value_to_account_id(
@@ -191,6 +193,10 @@ declare_types! {
                         .expect("invalid account created at format"),
                     );
                 }
+                if account_to_create.skip_persistance {
+                    builder = builder.skip_persistance();
+                }
+
                 crate::block_on(builder.initialise()).expect("error creating account")
             };
 

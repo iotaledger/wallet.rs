@@ -34,4 +34,4 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: fmt
-        args: --manifest-path ./bindings/node/native/Cargo.toml --all -- --check
+        args: --manifest-path ./bindings/nodejs/native/Cargo.toml --all -- --check

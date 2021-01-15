@@ -13,7 +13,7 @@ Currently the package isn't published so you'd need to link it to your project u
 - Using NPM:
 ```
 $ git clone https://github.com/iotaledger/wallet.rs
-$ cd wallet.rs/bindings/node
+$ cd wallet.rs/bindings/nodejs
 $ npm link
 $ cd /path/to/nodejs/project/
 $ npm link iota-wallet
@@ -21,7 +21,7 @@ $ npm link iota-wallet
 - Using yarn: 
 ```
 $ git clone https://github.com/iotaledger/wallet.rs
-$ cd wallet.rs/bindings/node
+$ cd wallet.rs/bindings/nodejs
 $ yarn link
 $ cd /path/to/nodejs/project/
 $ yarn link iota-wallet
@@ -136,14 +136,15 @@ Saves the mnemonic using the given signer provider.
 
 Creates a new account.
 
-| Param                 | Type                                         | Default                           | Description                                              |
-| --------------------- | -------------------------------------------- | --------------------------------- | -------------------------------------------------------- |
-| account               | <code>object</code>                          | <code>{}</code>                   | The account to be created                                |
-| account.clientOptions | <code>[ClientOptions](#clientoptions)</code> | <code>undefined</code>            | The node configuration                                   |
-| [account.mnemonic]    | <code>string</code>                          | <code>undefined</code>            | The account BIP39 mnemonic                               |
-| [account.alias]       | <code>string</code>                          | <code>Account ${index + 1}</code> | The account alias                                        |
-| [account.createdAt]   | <code>string</code>                          | the current date and time         | The ISO 8601 date string of the account creation         |
-| [account.signerType]  | <code>number</code>                          | 1 = Stronghold                    | The account signer type. 1 = Stronghold, 2 = EnvMnemonic |
+| Param                     | Type                                         | Default                           | Description                                              |
+| ------------------------- | -------------------------------------------- | --------------------------------- | -------------------------------------------------------- |
+| account                   | <code>object</code>                          | <code>{}</code>                   | The account to be created                                |
+| account.clientOptions     | <code>[ClientOptions](#clientoptions)</code> | <code>undefined</code>            | The node configuration                                   |
+| [account.mnemonic]        | <code>string</code>                          | <code>undefined</code>            | The account BIP39 mnemonic                               |
+| [account.alias]           | <code>string</code>                          | <code>Account ${index + 1}</code> | The account alias                                        |
+| [account.createdAt]       | <code>string</code>                          | the current date and time         | The ISO 8601 date string of the account creation         |
+| [account.signerType]      | <code>number</code>                          | 1 = Stronghold                    | The account signer type. 1 = Stronghold, 2 = EnvMnemonic |
+| [account.skipPersistance] | <code>boolean</code>                         | false                             | Skip saving the account to the storage                   |
 
 #### getAccount(accountId)
 
@@ -305,14 +306,16 @@ Returns the account's messages.
 
 Message object: { confirmed: boolean, broadcasted: boolean, incoming: boolean, value: number }
 
-#### listAddresses([unspent])
+#### listAddresses()
 Returns the account's addresses.
 
-| Param     | Type                 | Default           | Description                 |
-| --------- | -------------------- | ----------------- | --------------------------- |
-| [unspent] | <code>boolean</code> | <code>null</code> | The `unspent` status filter |
-
 Address object: { address: string, balance: number, keyIndex: number }
+
+#### listSpentAddresses()
+Returns the account's spent addresses.
+
+#### listUnspentAddresses()
+Returns the account's unspent addresses.
 
 #### sync([options])
 

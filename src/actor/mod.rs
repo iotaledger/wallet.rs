@@ -208,9 +208,16 @@ impl WalletMessageHandler {
                     .collect();
                 Ok(ResponseType::Messages(messages))
             }
-            AccountMethod::ListAddresses { unspent } => {
-                let account = account_handle.read().await;
-                let addresses = account.list_addresses(*unspent).into_iter().cloned().collect();
+            AccountMethod::ListAddresses => {
+                let addresses = account_handle.addresses().await;
+                Ok(ResponseType::Addresses(addresses))
+            }
+            AccountMethod::ListSpentAddresses => {
+                let addresses = account_handle.list_spent_addresses().await;
+                Ok(ResponseType::Addresses(addresses))
+            }
+            AccountMethod::ListUnspentAddresses => {
+                let addresses = account_handle.list_unspent_addresses().await;
                 Ok(ResponseType::Addresses(addresses))
             }
             AccountMethod::GetAvailableBalance => {
@@ -389,7 +396,7 @@ mod tests {
     fn spawn_actor() -> UnboundedSender<Message> {
         let (tx, rx) = unbounded_channel();
         std::thread::spawn(|| {
-            let mut runtime = tokio::runtime::Runtime::new().unwrap();
+            let runtime = tokio::runtime::Runtime::new().unwrap();
             runtime.block_on(async move {
                 let actor = WalletBuilder::new()
                     .rx(rx)

@@ -49,7 +49,7 @@ impl super::Signer for StrongholdSigner {
     async fn sign_message<'a>(
         &self,
         account: &Account,
-        essence: &iota::TransactionEssence,
+        essence: &iota::TransactionPayloadEssence,
         inputs: &mut Vec<super::TransactionInput>,
         _: super::SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {

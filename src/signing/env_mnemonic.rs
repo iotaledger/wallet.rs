@@ -22,7 +22,7 @@ use bee_signing_ext::{
 
 const MNEMONIC_ENV_KEY: &str = "IOTA_WALLET_MNEMONIC";
 const MNEMONIC_PASSWORD_ENV_KEY: &str = "IOTA_WALLET_MNEMONIC_PASSWORD";
-const PBKDF2_ROUNDS: usize = 2048;
+const PBKDF2_ROUNDS: u32 = 2048;
 const PBKDF2_BYTES: usize = 32; // 64 for secp256k1 , 32 for ed25
 
 /// PBKDF2 helper, used to generate [`Seed`][Seed] from [`Mnemonic`][Mnemonic]
@@ -119,7 +119,7 @@ impl super::Signer for EnvMnemonicSigner {
     async fn sign_message<'a>(
         &self,
         _account: &Account,
-        essence: &iota::TransactionEssence,
+        essence: &iota::TransactionPayloadEssence,
         inputs: &mut Vec<super::TransactionInput>,
         _: super::SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {

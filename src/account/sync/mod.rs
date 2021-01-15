@@ -11,8 +11,8 @@ use crate::{
 use getset::Getters;
 use iota::{
     message::prelude::{
-        Input, Message as IotaMessage, MessageBuilder, MessageId, Payload, SignatureLockedSingleOutput, Transaction,
-        TransactionEssence, UTXOInput,
+        Input, Message as IotaMessage, MessageBuilder, MessageId, Payload, SignatureLockedSingleOutput,
+        TransactionPayload, TransactionPayloadEssence, UTXOInput,
     },
     ClientMiner,
 };
@@ -20,7 +20,7 @@ use serde::{ser::Serializer, Serialize};
 use slip10::BIP32Path;
 use tokio::{
     sync::{mpsc::channel, MutexGuard},
-    time::delay_for,
+    time::sleep,
 };
 
 use std::{
@@ -352,7 +352,8 @@ impl AccountSynchronizer {
         self
     }
 
-    /// Skip write to the database.
+    /// Skip saving new messages and addresses on the account object.
+    /// The found data is returned on the `execute` call but won't be persisted on the database.
     pub fn skip_persistance(mut self) -> Self {
         self.skip_persistance = true;
         self
@@ -533,7 +534,7 @@ impl SyncedAccount {
 
             let account_handle = self.account_handle.clone();
             thread::spawn(move || {
-                let mut tx = tx.lock().unwrap();
+                let tx = tx.lock().unwrap();
                 for _ in 1..30 {
                     thread::sleep(OUTPUT_LOCK_TIMEOUT / 30);
                     let account = crate::block_on(async { account_handle.read().await });
@@ -545,7 +546,8 @@ impl SyncedAccount {
                 }
             });
 
-            let mut delay = delay_for(Duration::from_millis(50));
+            let delay = sleep(Duration::from_millis(50));
+            tokio::pin!(delay);
             tokio::select! {
                 v = rx.recv() => {
                     if v.is_none() {
@@ -620,7 +622,7 @@ impl SyncedAccount {
             utxos.extend(outputs.into_iter());
         }
 
-        let mut essence_builder = TransactionEssence::builder();
+        let mut essence_builder = TransactionPayloadEssence::builder();
         let mut current_output_sum = 0;
         let mut remainder_value = 0;
         for (utxo, address_index, address_internal, address_path) in utxos {
@@ -763,7 +765,8 @@ impl SyncedAccount {
                 },
             )
             .await?;
-        let mut tx_builder = Transaction::builder().with_essence(essence);
+
+        let mut tx_builder = TransactionPayload::builder().with_essence(essence);
         for unlock_block in unlock_blocks {
             tx_builder = tx_builder.add_unlock_block(unlock_block);
         }
