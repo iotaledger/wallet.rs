@@ -33,6 +33,7 @@ log = "0.4"
 # stronghold
 iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "ad7980c273f14657ba310f66d50ebbc2320ae384", optional = true }
 riker = { version = "0.4", optional = true }
+blake2 = { version = "0.9", optional = true }
 
 [dependencies.iota-crypto]
 git = "https://github.com/iotaledger/crypto.rs"
@@ -47,6 +48,6 @@ anyhow = "1.0"
 
 [features]
 default = ["stronghold", "stronghold-storage"]
-stronghold = ["iota-stronghold", "riker"]
-stronghold-storage = ["iota-stronghold", "riker"]
+stronghold = ["iota-stronghold", "riker", "blake2"]
+stronghold-storage = ["iota-stronghold", "riker", "blake2"]
 sqlite-storage = ["rusqlite"]

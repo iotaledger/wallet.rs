@@ -14,7 +14,6 @@ use serde::{Deserialize, Serialize};
 use slip10::BIP32Path;
 use tokio::sync::Mutex;
 
-mod env_mnemonic;
 #[cfg(feature = "stronghold")]
 mod stronghold;
 
