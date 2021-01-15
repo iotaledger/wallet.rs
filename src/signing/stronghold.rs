@@ -34,6 +34,7 @@ impl super::Signer for StrongholdSigner {
         account: &Account,
         address_index: usize,
         internal: bool,
+        _: super::GenerateAddressMetadata,
     ) -> crate::Result<iota::Address> {
         let address = crate::stronghold::generate_address(
             &stronghold_path(account.storage_path()),
@@ -45,11 +46,12 @@ impl super::Signer for StrongholdSigner {
         Ok(address)
     }
 
-    async fn sign_message(
+    async fn sign_message<'a>(
         &self,
         account: &Account,
         essence: &iota::TransactionPayloadEssence,
         inputs: &mut Vec<super::TransactionInput>,
+        _: super::SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
         let serialized_essence = essence.pack_new();
 
