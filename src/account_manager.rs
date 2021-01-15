@@ -429,14 +429,6 @@ impl AccountManager {
     /// Stores a mnemonic for the given signer type.
     /// If the mnemonic is not provided, we'll generate one.
     pub async fn store_mnemonic(&mut self, signer_type: SignerType, mnemonic: Option<String>) -> crate::Result<()> {
-        let mut mnemonic = mnemonic;
-        if signer_type == SignerType::EnvMnemonic {
-            let _ = dotenv::dotenv();
-            if let Ok(m) = std::env::var("IOTA_WALLET_MNEMONIC") {
-                mnemonic = Some(m);
-            }
-        }
-
         let mnemonic = match mnemonic {
             Some(m) => {
                 self.verify_mnemonic(&m)?;

@@ -109,8 +109,7 @@ export declare interface ClientOptions {
 }
 
 export declare enum SignerType {
-  Stronghold = 1,
-  EnvMnemonic = 2
+  Stronghold = 1
 }
 
 export declare interface AccountToCreate {
