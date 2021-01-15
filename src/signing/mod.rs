@@ -14,10 +14,8 @@ use serde::{Deserialize, Serialize};
 use slip10::BIP32Path;
 use tokio::sync::Mutex;
 
-mod env_mnemonic;
 #[cfg(feature = "stronghold")]
 mod stronghold;
-use env_mnemonic::EnvMnemonicSigner;
 
 type SignerHandle = Arc<Mutex<Box<dyn Signer + Sync + Send>>>;
 type Signers = Arc<Mutex<HashMap<SignerType, SignerHandle>>>;
@@ -30,8 +28,6 @@ pub enum SignerType {
     /// Stronghold signer.
     #[cfg(feature = "stronghold")]
     Stronghold,
-    /// Mnemonic through environment variable.
-    EnvMnemonic,
     /// Custom signer with its identifier.
     Custom(String),
 }
@@ -104,13 +100,6 @@ fn default_signers() -> Signers {
             )),
         );
     }
-
-    signers.insert(
-        SignerType::EnvMnemonic,
-        Arc::new(Mutex::new(
-            Box::new(EnvMnemonicSigner::default()) as Box<dyn Signer + Sync + Send>
-        )),
-    );
 
     Arc::new(Mutex::new(signers))
 }

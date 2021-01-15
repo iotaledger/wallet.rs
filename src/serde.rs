@@ -106,7 +106,6 @@ impl serde::Serialize for crate::Error {
             Self::Hex(_) => serialize_variant(self, serializer, "Hex"),
             Self::BeeMessage(_) => serialize_variant(self, serializer, "BeeMessage"),
             Self::InvalidDerivationPath(_) => serialize_variant(self, serializer, "InvalidDerivationPath"),
-            Self::FailedToGeneratePrivateKey(_) => serialize_variant(self, serializer, "FailedToGeneratePrivateKey"),
             Self::ParseDate(_) => serialize_variant(self, serializer, "ParseDate"),
             Self::MnemonicEncode => serialize_variant(self, serializer, "MnemonicEncode"),
             Self::InvalidMnemonic(_) => serialize_variant(self, serializer, "InvalidMnemonic"),

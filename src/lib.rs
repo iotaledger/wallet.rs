@@ -151,9 +151,6 @@ pub enum Error {
     /// invalid BIP32 derivation path.
     #[error("invalid BIP32 derivation path: {0}")]
     InvalidDerivationPath(String),
-    /// Failed to generate private key from BIP32 path.
-    #[error("failed to generate private key from derivation path")]
-    FailedToGeneratePrivateKey(bee_signing_ext::binary::BIP32Path),
     /// Failed to parse date string.
     #[error("error parsing date: {0}")]
     ParseDate(#[from] chrono::ParseError),

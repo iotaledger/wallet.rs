@@ -23,7 +23,6 @@ mod sync;
 #[repr(u8)]
 pub enum AccountSignerType {
     Stronghold = 1,
-    EnvMnemonic = 2,
 }
 
 impl Default for AccountSignerType {
@@ -149,7 +148,6 @@ declare_types! {
             let signer_type: AccountSignerType = serde_json::from_str(&signer_type.to_string()).expect("invalid signer type");
             let signer_type = match signer_type {
                 AccountSignerType::Stronghold => SignerType::Stronghold,
-                AccountSignerType::EnvMnemonic => SignerType::EnvMnemonic,
             };
             let mnemonic = match cx.argument_opt(1) {
                 Some(arg) => Some(arg.downcast::<JsString>().or_throw(&mut cx)?.value()),
@@ -181,7 +179,6 @@ declare_types! {
                     .create_account(account_to_create.client_options)
                     .signer_type(match account_to_create.signer_type {
                         AccountSignerType::Stronghold => SignerType::Stronghold,
-                        AccountSignerType::EnvMnemonic => SignerType::EnvMnemonic,
                     });
                 if let Some(alias) = &account_to_create.alias {
                     builder = builder.alias(alias);
