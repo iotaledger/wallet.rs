@@ -188,7 +188,13 @@ fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, [u8; 32]>>> {
 
 pub async fn set_password<S: AsRef<Path>>(snapshot_path: S, password: &[u8; 32]) {
     let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
-    passwords.insert(snapshot_path.as_ref().to_path_buf(), *password);
+    let mut access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
+
+    let snapshot_path = snapshot_path.as_ref().to_path_buf();
+    // clear the access flag for the snapshot path
+    // this prevents the `default_password_store` thread to immediately clear the password
+    access_store.remove(&snapshot_path);
+    passwords.insert(snapshot_path, *password);
 }
 
 async fn get_password<P: AsRef<Path>>(snapshot_path: P) -> Result<[u8; 32]> {
