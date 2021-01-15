@@ -280,17 +280,19 @@ mod test_utils {
             _account: &crate::account::Account,
             _address_index: usize,
             _internal: bool,
+            _metadata: crate::signing::GenerateAddressMetadata,
         ) -> crate::Result<iota::Address> {
             let mut address = [0; iota::ED25519_ADDRESS_LENGTH];
             crypto::rand::fill(&mut address).unwrap();
             Ok(iota::Address::Ed25519(iota::Ed25519Address::new(address)))
         }
 
-        async fn sign_message(
+        async fn sign_message<'a>(
             &self,
             _account: &crate::account::Account,
             _essence: &iota::TransactionPayloadEssence,
             _inputs: &mut Vec<crate::signing::TransactionInput>,
+            _metadata: crate::signing::SignMessageMetadata<'a>,
         ) -> crate::Result<Vec<iota::UnlockBlock>> {
             Ok(Vec::new())
         }
