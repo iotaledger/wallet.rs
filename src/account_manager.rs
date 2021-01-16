@@ -175,7 +175,7 @@ impl AccountManagerBuilder {
                 return Err(crate::Error::StorageAdapterNotDefined);
             };
 
-        crate::storage::set(&storage_file_path, self.storage_encryption_key, storage);
+        crate::storage::set(&storage_file_path, self.storage_encryption_key, storage).await;
 
         // with one of the stronghold features, the accounts are loaded when the password is set
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
@@ -242,7 +242,12 @@ impl AccountManager {
         let mut encrypted_accounts = Vec::new();
         let mut parsed_accounts = HashMap::new();
 
-        let accounts = crate::storage::get(&storage_file_path)?.lock().await.get_all().await?;
+        let accounts = crate::storage::get(&storage_file_path)
+            .await?
+            .lock()
+            .await
+            .get_all()
+            .await?;
         for parsed_account in accounts {
             match parsed_account {
                 crate::storage::ParsedAccount::Account(account) => {
@@ -463,7 +468,8 @@ impl AccountManager {
 
         accounts.remove(account_id);
 
-        crate::storage::get(&self.storage_path)?
+        crate::storage::get(&self.storage_path)
+            .await?
             .lock()
             .await
             .remove(&account_id)
@@ -520,7 +526,7 @@ impl AccountManager {
             any(feature = "stronghold", feature = "stronghold-storage")
         ))]
         let (storage_path, backup_entire_directory) = {
-            let storage_id = crate::storage::get(&&self.storage_path)?.lock().await.id();
+            let storage_id = crate::storage::get(&&self.storage_path).await?.lock().await.id();
             // if we're actually using the SQLite storage adapter
             let storage_path = if storage_id == crate::storage::sqlite::STORAGE_ID {
                 // create a account manager to setup the stronghold storage for the backup
@@ -531,11 +537,17 @@ impl AccountManager {
                         None,
                     )
                     .unwrap() // safe to unwrap - password is None
-                    .with_storage_encryption_key(crate::storage::get(&self.storage_path)?.lock().await.encryption_key)
+                    .with_storage_encryption_key(
+                        crate::storage::get(&self.storage_path)
+                            .await?
+                            .lock()
+                            .await
+                            .encryption_key,
+                    )
                     .skip_polling()
                     .finish()
                     .await?;
-                let stronghold_storage = crate::storage::get(&self.storage_path)?;
+                let stronghold_storage = crate::storage::get(&self.storage_path).await?;
                 let stronghold_storage = stronghold_storage.lock().await;
 
                 for (account_id, account_handle) in &*self.accounts.read().await {
@@ -565,7 +577,7 @@ impl AccountManager {
                     any(feature = "stronghold", feature = "stronghold-storage")
                 ))]
                 {
-                    let storage_id = crate::storage::get(&self.storage_path)?.lock().await.id();
+                    let storage_id = crate::storage::get(&self.storage_path).await?.lock().await.id();
                     // if we're actually using the SQLite storage adapter
                     if storage_id == crate::storage::sqlite::STORAGE_ID {
                         let stronghold_storage = crate::storage::stronghold::StrongholdStorageAdapter::new(
@@ -605,7 +617,7 @@ impl AccountManager {
         #[cfg(feature = "stronghold-storage")]
         let storage_file_path = {
             let storage_file_path = self.storage_folder.join(STRONGHOLD_FILENAME);
-            let storage_id = crate::storage::get(&self.storage_path)?.lock().await.id();
+            let storage_id = crate::storage::get(&self.storage_path).await?.lock().await.id();
             if storage_id == crate::storage::stronghold::STORAGE_ID && storage_file_path.exists() {
                 return Err(crate::Error::StorageExists);
             }
@@ -628,7 +640,13 @@ impl AccountManager {
                 let mut stronghold_manager = Self::builder()
                     .with_storage(&source, ManagerStorage::Stronghold, None)
                     .unwrap() // safe to unwrap - password is None
-                    .with_storage_encryption_key(crate::storage::get(&self.storage_path)?.lock().await.encryption_key)
+                    .with_storage_encryption_key(
+                        crate::storage::get(&self.storage_path)
+                            .await?
+                            .lock()
+                            .await
+                            .encryption_key,
+                    )
                     .skip_polling()
                     .finish()
                     .await?;

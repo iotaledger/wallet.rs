@@ -12,13 +12,13 @@ pub mod stronghold;
 use crate::account::{Account, AccountIdentifier};
 use crypto::ciphers::chacha::xchacha20poly1305;
 use once_cell::sync::OnceCell;
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, RwLock};
 
 use std::{
     collections::HashMap,
     io::{Read, Write},
     path::{Path, PathBuf},
-    sync::{Arc, RwLock},
+    sync::Arc,
 };
 
 pub(crate) struct Storage {
@@ -72,12 +72,12 @@ type Storages = Arc<RwLock<HashMap<PathBuf, StorageHandle>>>;
 static INSTANCES: OnceCell<Storages> = OnceCell::new();
 
 /// Sets the storage adapter.
-pub fn set<P: AsRef<Path>>(
+pub async fn set<P: AsRef<Path>>(
     storage_path: P,
     encryption_key: Option<[u8; 32]>,
     storage: Box<dyn StorageAdapter + Send + Sync + 'static>,
 ) {
-    let mut instances = INSTANCES.get_or_init(Default::default).write().unwrap();
+    let mut instances = INSTANCES.get_or_init(Default::default).write().await;
     instances.insert(
         storage_path.as_ref().to_path_buf(),
         Arc::new(Mutex::new(Storage {
@@ -89,7 +89,7 @@ pub fn set<P: AsRef<Path>>(
 }
 
 pub(crate) async fn set_encryption_key(storage_path: &PathBuf, encryption_key: [u8; 32]) -> crate::Result<()> {
-    let instances = INSTANCES.get_or_init(Default::default).read().unwrap();
+    let instances = INSTANCES.get_or_init(Default::default).read().await;
     if let Some(instance) = instances.get(storage_path) {
         let mut storage = instance.lock().await;
         storage.encryption_key = Some(encryption_key);
@@ -100,8 +100,8 @@ pub(crate) async fn set_encryption_key(storage_path: &PathBuf, encryption_key: [
 }
 
 /// gets the storage adapter
-pub(crate) fn get(storage_path: &PathBuf) -> crate::Result<StorageHandle> {
-    let instances = INSTANCES.get_or_init(Default::default).read().unwrap();
+pub(crate) async fn get(storage_path: &PathBuf) -> crate::Result<StorageHandle> {
+    let instances = INSTANCES.get_or_init(Default::default).read().await;
     if let Some(instance) = instances.get(storage_path) {
         Ok(instance.clone())
     } else {

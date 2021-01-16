@@ -363,7 +363,8 @@ impl Account {
     pub(crate) async fn save(&mut self) -> crate::Result<()> {
         if !self.skip_persistance {
             let storage_path = self.storage_path.clone();
-            crate::storage::get(&storage_path)?
+            crate::storage::get(&storage_path)
+                .await?
                 .lock()
                 .await
                 .set(&self.id, serde_json::to_string(&self)?)
