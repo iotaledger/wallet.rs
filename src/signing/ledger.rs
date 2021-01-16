@@ -7,9 +7,6 @@ use iota::{common::packable::Packable, UnlockBlock};
 use std::{path::PathBuf};
 
 
-pub const ED25519_ADDRESS_LENGTH: usize = 32;
-
-
 const HARDENED : u32 = 0x80000000;
 
 #[derive(Default)]
@@ -44,7 +41,7 @@ fn ledger_map_err(err: errors::APIError) -> crate::Error {
 #[async_trait::async_trait]
 impl super::Signer for LedgerHardwareWalletSigner {
     async fn store_mnemonic(&self, _: &PathBuf, mnemonic: String) -> crate::Result<()> {
-        Ok(())        
+        Err(crate::Error::InvalidMnemonic(String::from("")))
     }
 
     async fn generate_address(
@@ -57,15 +54,18 @@ impl super::Signer for LedgerHardwareWalletSigner {
         // get ledger
         let ledger = ledger_iota::get_ledger(false, *account.index() as u32).map_err(|e| ledger_map_err(e))?;
 
+        // if the wallet is not generating addresses for syncing, we assume it's a new receiving address that 
+        // needs to be shown to the user
         let address_bytes = ledger.get_new_address(!meta.syncing, address_index as u32 | HARDENED)
             .map_err(|e| ledger_map_err(e))?;
+
         Ok(iota::Address::Ed25519(iota::Ed25519Address::new(address_bytes)))
     }
 
     async fn sign_message<'a>(
         &self,
         account: &Account,
-        essence: &iota::TransactionEssence,
+        essence: &iota::TransactionPayloadEssence,
         inputs: &mut Vec<super::TransactionInput>,
         meta: super::SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
@@ -78,38 +78,42 @@ impl super::Signer for LedgerHardwareWalletSigner {
         for input in inputs {
             key_indices.push(input.address_index as u32 | HARDENED);
         }
-
-        // figure out the remainder address and bip32 index
-        let (remainder_address, remainder_bip32) : (&iota::Address, u32) = match meta.remainder_deposit_address {
+ 
+        // figure out the remainder address and bip32 index (if there is one)
+        let (has_remainder, remainder_address, remainder_bip32) : (bool, Option<&iota::Address>, u32) = match meta.remainder_deposit_address {
             Some(a) => {
-                (a.address(), *a.key_index() as u32 | HARDENED)
+                (true, Some(a.address()), *a.key_index() as u32 | HARDENED)
             }
             None => {
-                return Err(crate::Error::LedgerMiscError);
+                (false, None, 0u32)
             }
         };
-        let remainder_bytes = remainder_address.pack_new();
 
-        // find the index in the essence
-        // it is verified on the ledger nano s/x in any case
-        let mut remainder_index = 0;
-        for output in essence.outputs().iter() {
-            match output {
-                iota::Output::SignatureLockedSingle(s) => {
-                    if *remainder_address == *s.address() {
-                        break;
+        let mut remainder_index = 0u16;
+        if has_remainder {
+            // find the index of the remainder in the essence
+            // this has to be done because outputs in essence are sorted
+            // lexically and therefore remainder not always is the last output
+            // The index within the essence and the bip32 index will be validated
+            // by the hardware wallet.
+            for output in essence.outputs().iter() {
+                match output {
+                    iota::Output::SignatureLockedSingle(s) => {
+                        if *remainder_address.unwrap() == *s.address() {
+                            break;
+                        }
+                    }
+                    _ => {
+                        return Err(crate::Error::LedgerMiscError);
                     }
                 }
-                _ => {
-                    return Err(crate::Error::LedgerMiscError);
-                }
+                remainder_index += 1; 
             }
-            remainder_index += 1; 
-        }
 
-        // was index found?
-        if remainder_index as usize == essence.outputs().len() {
-            return Err(crate::Error::LedgerMiscError);
+            // was index found?
+            if remainder_index as usize == essence.outputs().len() {
+                return Err(crate::Error::LedgerMiscError);
+            }
         }
     
         // pack essence into bytes
@@ -119,6 +123,7 @@ impl super::Signer for LedgerHardwareWalletSigner {
         ledger.prepare_signing(
                 key_indices, 
                 essence_bytes, 
+                has_remainder,
                 remainder_index, 
                 remainder_bip32)
             .map_err(|e| ledger_map_err(e))?;

@@ -72,7 +72,7 @@ impl serde::Serialize for crate::Error {
             Self::JsonError(_) => serialize_variant(self, serializer, "JsonError"),
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             Self::StrongholdError(_) => serialize_variant(self, serializer, "StrongholdError"),
-            Self::ClientError(error) => serialize_variant(self, serializer, "ClientError"),
+            Self::ClientError(_) => serialize_variant(self, serializer, "ClientError"),
             #[cfg(feature = "sqlite-storage")]
             Self::SqliteError(_) => serialize_variant(self, serializer, "SqliteError"),
             Self::UrlError(_) => serialize_variant(self, serializer, "UrlError"),
@@ -106,7 +106,6 @@ impl serde::Serialize for crate::Error {
             Self::Hex(_) => serialize_variant(self, serializer, "Hex"),
             Self::BeeMessage(_) => serialize_variant(self, serializer, "BeeMessage"),
             Self::InvalidDerivationPath(_) => serialize_variant(self, serializer, "InvalidDerivationPath"),
-            Self::FailedToGeneratePrivateKey(_) => serialize_variant(self, serializer, "FailedToGeneratePrivateKey"),
             Self::ParseDate(_) => serialize_variant(self, serializer, "ParseDate"),
             Self::MnemonicEncode => serialize_variant(self, serializer, "MnemonicEncode"),
             Self::InvalidMnemonic(_) => serialize_variant(self, serializer, "InvalidMnemonic"),
@@ -116,6 +115,7 @@ impl serde::Serialize for crate::Error {
             Self::StorageAdapterNotDefined => serialize_variant(self, serializer, "StorageAdapterNotDefined"),
             Self::StorageExists => serialize_variant(self, serializer, "StorageExists"),
             Self::StorageAdapterNotSet(_) => serialize_variant(self, serializer, "StorageAdapterNotSet"),
+            Self::AccountDecrypt => serialize_variant(self, serializer, "AccountDecrypt"),
             Self::LedgerMiscError => serialize_variant(self, serializer, "LedgerMiscError"),
             Self::LedgerDongleLocked => serialize_variant(self, serializer, "LedgerDongleLocked"),
             Self::LedgerDeniedByUser => serialize_variant(self, serializer, "LedgerDeniedByUser"),

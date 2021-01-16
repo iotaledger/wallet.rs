@@ -14,13 +14,10 @@ use serde::{Deserialize, Serialize};
 use slip10::BIP32Path;
 use tokio::sync::Mutex;
 
-mod env_mnemonic;
 mod ledger;
 
 #[cfg(feature = "stronghold")]
 mod stronghold;
-use env_mnemonic::EnvMnemonicSigner;
-
 
 type SignerHandle = Arc<Mutex<Box<dyn Signer + Sync + Send>>>;
 type Signers = Arc<Mutex<HashMap<SignerType, SignerHandle>>>;
@@ -33,8 +30,6 @@ pub enum SignerType {
     /// Stronghold signer.
     #[cfg(feature = "stronghold")]
     Stronghold,
-    /// Mnemonic through environment variable.
-    EnvMnemonic,
     /// Ledger Device
     LedgerHardwareWalletSigner,
     /// Custom signer with its identifier.
@@ -91,7 +86,7 @@ pub trait Signer {
     async fn sign_message<'a>(
         &self,
         account: &Account,
-        essence: &iota::TransactionEssence,
+        essence: &iota::TransactionPayloadEssence,
         inputs: &mut Vec<TransactionInput>,
         metadata: SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>>;
@@ -109,13 +104,6 @@ fn default_signers() -> Signers {
             )),
         );
     }
-
-    signers.insert(
-        SignerType::EnvMnemonic,
-        Arc::new(Mutex::new(
-            Box::new(EnvMnemonicSigner::default()) as Box<dyn Signer + Sync + Send>
-        )),
-    );
 
     signers.insert(
         SignerType::LedgerHardwareWalletSigner,

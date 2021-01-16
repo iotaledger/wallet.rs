@@ -115,7 +115,8 @@ impl AccountInitialiser {
         self
     }
 
-    pub(crate) fn skip_persistance(mut self) -> Self {
+    /// Skips storing the account to the database.
+    pub fn skip_persistance(mut self) -> Self {
         self.skip_persistance = true;
         self
     }
@@ -156,7 +157,6 @@ impl AccountInitialiser {
         let mut digest = [0; 32];
         let raw = match address {
             iota::Address::Ed25519(a) => a.as_ref().to_vec(),
-            iota::Address::Wots(a) => a.as_ref().to_vec(),
             _ => unimplemented!(),
         };
         crypto::hashes::sha::SHA256(&raw, &mut digest);
@@ -326,14 +326,27 @@ impl AccountHandle {
             .collect()
     }
 
-    /// Bridge to [Account#list_addresses](struct.Account.html#method.list_addresses).
+    /// Bridge to [Account#list_spent_addresses](struct.Account.html#method.list_spent_addresses).
     /// This method clones the account's addresses so when querying a large list of addresses
     /// prefer using the `read` method to access the account instance.
-    pub async fn list_addresses(&self, unspent: bool) -> Vec<Address> {
+    pub async fn list_spent_addresses(&self) -> Vec<Address> {
         self.inner
             .read()
             .await
-            .list_addresses(unspent)
+            .list_spent_addresses()
+            .into_iter()
+            .cloned()
+            .collect()
+    }
+
+    /// Bridge to [Account#list_unspent_addresses](struct.Account.html#method.list_unspent_addresses).
+    /// This method clones the account's addresses so when querying a large list of addresses
+    /// prefer using the `read` method to access the account instance.
+    pub async fn list_unspent_addresses(&self) -> Vec<Address> {
+        self.inner
+            .read()
+            .await
+            .list_unspent_addresses()
             .into_iter()
             .cloned()
             .collect()
@@ -346,16 +359,10 @@ impl AccountHandle {
 }
 
 impl Account {
-    pub(crate) async fn save(&mut self) -> crate::Result<()> {
+    pub(crate) async fn save(&mut self, encryption_key: &Option<[u8; 32]>) -> crate::Result<()> {
         if self.has_pending_changes && !self.skip_persistance {
             let storage_path = self.storage_path.clone();
-            let account_id = self.id().clone();
-            let data = serde_json::to_string(&self)?;
-            crate::storage::get(&storage_path)?
-                .lock()
-                .await
-                .set(&account_id, data)
-                .await?;
+            crate::storage::save_account(&storage_path, &self, encryption_key).await?;
             self.has_pending_changes = false;
         }
         Ok(())
@@ -485,13 +492,19 @@ impl Account {
         }
     }
 
-    /// Gets the addresses linked to this account.
-    ///
-    /// * `unspent` - Whether it should get only unspent addresses or not.
-    pub fn list_addresses(&self, unspent: bool) -> Vec<&Address> {
+    /// Gets the spent addresses.
+    pub fn list_spent_addresses(&self) -> Vec<&Address> {
         self.addresses
             .iter()
-            .filter(|address| crate::address::is_unspent(&self, address.address()) == unspent)
+            .filter(|address| !crate::address::is_unspent(&self, address.address()))
+            .collect()
+    }
+
+    /// Gets the spent addresses.
+    pub fn list_unspent_addresses(&self) -> Vec<&Address> {
+        self.addresses
+            .iter()
+            .filter(|address| crate::address::is_unspent(&self, address.address()))
             .collect()
     }
 

@@ -4,7 +4,7 @@
 use crate::address::{Address, IotaAddress};
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-pub use iota::{common::packable::Packable, Indexation, Message as IotaMessage, MessageId, Output, Payload};
+pub use iota::{common::packable::Packable, IndexationPayload, Message as IotaMessage, MessageId, Output, Payload};
 use serde::{de::Deserializer, Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
 use std::{
@@ -41,7 +41,7 @@ pub struct TransferBuilder {
     /// The transfer address.
     address: IotaAddress,
     /// (Optional) message indexation.
-    indexation: Option<Indexation>,
+    indexation: Option<IndexationPayload>,
     /// The strategy to use for the remainder value.
     remainder_value_strategy: RemainderValueStrategy,
 }
@@ -53,15 +53,15 @@ impl<'de> Deserialize<'de> for TransferBuilder {
     {
         /// The message's index builder.
         #[derive(Debug, Clone, Deserialize)]
-        struct IndexationBuilder {
+        struct IndexationPayloadBuilder {
             index: String,
             data: Option<Vec<u8>>,
         }
 
-        impl IndexationBuilder {
+        impl IndexationPayloadBuilder {
             /// Builds the indexation.
-            pub fn finish(self) -> crate::Result<Indexation> {
-                let indexation = Indexation::new(self.index, &self.data.unwrap_or_default())?;
+            pub fn finish(self) -> crate::Result<IndexationPayload> {
+                let indexation = IndexationPayload::new(self.index, &self.data.unwrap_or_default())?;
                 Ok(indexation)
             }
         }
@@ -74,7 +74,7 @@ impl<'de> Deserialize<'de> for TransferBuilder {
             #[serde(with = "crate::serde::iota_address_serde")]
             address: IotaAddress,
             /// (Optional) message indexation.
-            indexation: Option<IndexationBuilder>,
+            indexation: Option<IndexationPayloadBuilder>,
             /// The strategy to use for the remainder value.
             remainder_value_strategy: RemainderValueStrategy,
         }
@@ -111,7 +111,7 @@ impl TransferBuilder {
     }
 
     /// (Optional) message indexation.
-    pub fn with_indexation(mut self, indexation: Indexation) -> Self {
+    pub fn with_indexation(mut self, indexation: IndexationPayload) -> Self {
         self.indexation = Some(indexation);
         self
     }
@@ -136,7 +136,7 @@ pub struct Transfer {
     #[serde(with = "crate::serde::iota_address_serde")]
     pub(crate) address: IotaAddress,
     /// (Optional) message indexation.
-    pub(crate) indexation: Option<Indexation>,
+    pub(crate) indexation: Option<IndexationPayload>,
     /// The strategy to use for the remainder value.
     pub(crate) remainder_value_strategy: RemainderValueStrategy,
 }
@@ -299,13 +299,6 @@ impl Message {
         };
 
         Ok(message)
-    }
-
-    /// Check if attachment timestamp on transaction is above max depth (~11 minutes)
-    pub(crate) fn is_above_max_depth(&self) -> bool {
-        let current_timestamp = Utc::now().timestamp();
-        let attachment_timestamp = self.timestamp.timestamp();
-        attachment_timestamp < current_timestamp && current_timestamp - attachment_timestamp < 11 * 60 * 1000
     }
 
     /// The message's addresses.

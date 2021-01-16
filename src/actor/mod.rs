@@ -101,6 +101,9 @@ impl WalletMessageHandler {
             MessageType::RestoreBackup { backup_path } => {
                 convert_async_panics(|| async { self.restore_backup(backup_path).await }).await
             }
+            MessageType::SetStoragePassword(password) => {
+                convert_async_panics(|| async { self.set_storage_password(password).await }).await
+            }
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             MessageType::SetStrongholdPassword(password) => {
                 convert_async_panics(|| async { self.set_stronghold_password(password).await }).await
@@ -205,9 +208,16 @@ impl WalletMessageHandler {
                     .collect();
                 Ok(ResponseType::Messages(messages))
             }
-            AccountMethod::ListAddresses { unspent } => {
-                let account = account_handle.read().await;
-                let addresses = account.list_addresses(*unspent).into_iter().cloned().collect();
+            AccountMethod::ListAddresses => {
+                let addresses = account_handle.addresses().await;
+                Ok(ResponseType::Addresses(addresses))
+            }
+            AccountMethod::ListSpentAddresses => {
+                let addresses = account_handle.list_spent_addresses().await;
+                Ok(ResponseType::Addresses(addresses))
+            }
+            AccountMethod::ListUnspentAddresses => {
+                let addresses = account_handle.list_unspent_addresses().await;
                 Ok(ResponseType::Addresses(addresses))
             }
             AccountMethod::GetAvailableBalance => {
@@ -292,6 +302,11 @@ impl WalletMessageHandler {
             accounts_.push(account_handle.read().await.clone());
         }
         Ok(ResponseType::ReadAccounts(accounts_))
+    }
+
+    async fn set_storage_password(&mut self, password: &str) -> Result<ResponseType> {
+        self.account_manager.set_storage_password(password).await?;
+        Ok(ResponseType::StoragePasswordSet)
     }
 
     #[cfg(feature = "stronghold")]
@@ -381,7 +396,7 @@ mod tests {
     fn spawn_actor() -> UnboundedSender<Message> {
         let (tx, rx) = unbounded_channel();
         std::thread::spawn(|| {
-            let mut runtime = tokio::runtime::Runtime::new().unwrap();
+            let runtime = tokio::runtime::Runtime::new().unwrap();
             runtime.block_on(async move {
                 let actor = WalletBuilder::new()
                     .rx(rx)

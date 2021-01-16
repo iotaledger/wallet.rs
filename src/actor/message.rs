@@ -52,11 +52,11 @@ pub enum AccountMethod {
         from: usize,
     },
     /// List addresses.
-    ListAddresses {
-        /// Address unspent filter.
-        #[serde(default)]
-        unspent: bool,
-    },
+    ListAddresses,
+    /// List spent addresses.
+    ListSpentAddresses,
+    /// List unspent addresses.
+    ListUnspentAddresses,
     /// Get available balance.
     GetAvailableBalance,
     /// Get total balance.
@@ -121,6 +121,8 @@ pub enum MessageType {
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         password: String,
     },
+    /// Sets the password used to encrypt/decrypt the storage.
+    SetStoragePassword(String),
     /// Set stronghold snapshot password.
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     SetStrongholdPassword(String),
@@ -184,25 +186,28 @@ impl Serialize for MessageType {
                 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
                     password: _,
             } => serializer.serialize_unit_variant("MessageType", 8, "RestoreBackup"),
+            MessageType::SetStoragePassword(_) => {
+                serializer.serialize_unit_variant("MessageType", 9, "SetStoragePassword")
+            }
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             MessageType::SetStrongholdPassword(_) => {
-                serializer.serialize_unit_variant("MessageType", 9, "SetStrongholdPassword")
+                serializer.serialize_unit_variant("MessageType", 10, "SetStrongholdPassword")
             }
             MessageType::SendTransfer {
                 account_id: _,
                 transfer: _,
-            } => serializer.serialize_unit_variant("MessageType", 10, "SendTransfer"),
+            } => serializer.serialize_unit_variant("MessageType", 11, "SendTransfer"),
             MessageType::InternalTransfer {
                 from_account_id: _,
                 to_account_id: _,
                 amount: _,
-            } => serializer.serialize_unit_variant("MessageType", 11, "InternalTransfer"),
-            MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 12, "GenerateMnemonic"),
-            MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 13, "GenerateMnemonic"),
+            } => serializer.serialize_unit_variant("MessageType", 12, "InternalTransfer"),
+            MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 13, "GenerateMnemonic"),
+            MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 14, "VerifyMnemonic"),
             MessageType::StoreMnemonic {
                 signer_type: _,
                 mnemonic: _,
-            } => serializer.serialize_unit_variant("MessageType", 14, "StoreMnemonic"),
+            } => serializer.serialize_unit_variant("MessageType", 15, "StoreMnemonic"),
         }
     }
 }
@@ -246,7 +251,7 @@ pub enum ResponseType {
     ReadAccounts(Vec<Account>),
     /// ListMessages response.
     Messages(Vec<WalletMessage>),
-    /// ListAddresses response.
+    /// ListAddresses/ListSpentAddresses/ListUnspentAddresses response.
     Addresses(Vec<Address>),
     /// GenerateAddress response.
     GeneratedAddress(Address),
@@ -268,6 +273,8 @@ pub enum ResponseType {
     /// ImportAccounts response.
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
     BackupRestored,
+    /// SetStoragePassword response.
+    StoragePasswordSet,
     /// SetStrongholdPassword response.
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     StrongholdPasswordSet,

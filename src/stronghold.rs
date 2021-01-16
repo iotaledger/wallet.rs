@@ -17,8 +17,7 @@ use once_cell::sync::{Lazy, OnceCell};
 use riker::actors::*;
 use tokio::{
     sync::Mutex,
-    task,
-    time::{delay_for, Duration},
+    time::{sleep, Duration},
 };
 
 use std::{
@@ -37,7 +36,6 @@ static CURRENT_SNAPSHOT_PATH: OnceCell<Arc<Mutex<Option<PathBuf>>>> = OnceCell::
 static PASSWORD_CLEAR_INTERVAL: OnceCell<Arc<Mutex<Duration>>> = OnceCell::new();
 static PRIVATE_DATA_CLIENT_PATH: &[u8] = b"iota_seed";
 
-const TIMEOUT: Duration = Duration::from_millis(5000);
 #[cfg(test)]
 const DEFAULT_PASSWORD_CLEAR_INTERVAL: Duration = Duration::from_secs(0);
 #[cfg(not(test))]
@@ -149,42 +147,40 @@ pub async fn set_password_clear_interval(interval: Duration) {
 
 fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, [u8; 32]>>> {
     thread::spawn(|| {
-        crate::enter(|| {
-            task::spawn(async {
-                loop {
-                    let interval = *PASSWORD_CLEAR_INTERVAL
-                        .get_or_init(|| Arc::new(Mutex::new(DEFAULT_PASSWORD_CLEAR_INTERVAL)))
-                        .lock()
-                        .await;
-                    delay_for(interval).await;
+        crate::spawn(async {
+            loop {
+                let interval = *PASSWORD_CLEAR_INTERVAL
+                    .get_or_init(|| Arc::new(Mutex::new(DEFAULT_PASSWORD_CLEAR_INTERVAL)))
+                    .lock()
+                    .await;
+                sleep(interval).await;
 
-                    if interval.as_nanos() == 0 {
-                        continue;
+                if interval.as_nanos() == 0 {
+                    continue;
+                }
+
+                let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
+                let mut access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
+                let mut remove_keys = Vec::new();
+                for (snapshot_path, _) in passwords.iter() {
+                    // if the stronghold access flag is false,
+                    if !*access_store.get(snapshot_path).unwrap_or(&true) {
+                        remove_keys.push(snapshot_path.clone());
                     }
+                    access_store.insert(snapshot_path.clone(), false);
+                }
 
-                    let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
-                    let mut access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
-                    let mut remove_keys = Vec::new();
-                    for (snapshot_path, _) in passwords.iter() {
-                        // if the stronghold access flag is false,
-                        if !*access_store.get(snapshot_path).unwrap_or(&true) {
-                            remove_keys.push(snapshot_path.clone());
-                        }
-                        access_store.insert(snapshot_path.clone(), false);
-                    }
-
-                    let current_snapshot_path = &*CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await;
-                    for remove_key in remove_keys {
-                        passwords.remove(&remove_key);
-                        if let Some(curr_snapshot_path) = current_snapshot_path {
-                            if &remove_key == curr_snapshot_path {
-                                let mut runtime = actor_runtime().lock().await;
-                                let _ = clear_stronghold_cache(&mut runtime);
-                            }
+                let current_snapshot_path = &*CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await;
+                for remove_key in remove_keys {
+                    passwords.remove(&remove_key);
+                    if let Some(curr_snapshot_path) = current_snapshot_path {
+                        if &remove_key == curr_snapshot_path {
+                            let mut runtime = actor_runtime().lock().await;
+                            let _ = clear_stronghold_cache(&mut runtime, true);
                         }
                     }
                 }
-            })
+            }
         })
     });
     Default::default()
@@ -192,7 +188,13 @@ fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, [u8; 32]>>> {
 
 pub async fn set_password<S: AsRef<Path>>(snapshot_path: S, password: &[u8; 32]) {
     let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
-    passwords.insert(snapshot_path.as_ref().to_path_buf(), *password);
+    let mut access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
+
+    let snapshot_path = snapshot_path.as_ref().to_path_buf();
+    // clear the access flag for the snapshot path
+    // this prevents the `default_password_store` thread to immediately clear the password
+    access_store.remove(&snapshot_path);
+    passwords.insert(snapshot_path, *password);
 }
 
 async fn get_password<P: AsRef<Path>>(snapshot_path: P) -> Result<[u8; 32]> {
@@ -229,14 +231,6 @@ pub struct ActorRuntime {
     pub stronghold: Stronghold,
     spawned_client_paths: HashSet<Vec<u8>>,
     loaded_client_paths: HashSet<Vec<u8>>,
-}
-
-fn system_runtime() -> &'static Arc<Mutex<ActorSystem>> {
-    static SYSTEM: Lazy<Arc<Mutex<ActorSystem>>> = Lazy::new(|| {
-        let system = ActorSystem::new().unwrap();
-        Arc::new(Mutex::new(system))
-    });
-    &SYSTEM
 }
 
 pub fn actor_runtime() -> &'static Arc<Mutex<ActorRuntime>> {
@@ -277,6 +271,12 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf)
         if curr_snapshot_path != snapshot_path {
             switch_snapshot(&mut runtime, snapshot_path).await?;
         }
+    } else {
+        CURRENT_SNAPSHOT_PATH
+            .get_or_init(Default::default)
+            .lock()
+            .await
+            .replace(snapshot_path.clone());
     }
 
     Ok(())
@@ -296,14 +296,14 @@ async fn save_snapshot(runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> R
     )
 }
 
-async fn clear_stronghold_cache(mut runtime: &mut ActorRuntime) -> Result<()> {
+async fn clear_stronghold_cache(mut runtime: &mut ActorRuntime, persist: bool) -> Result<()> {
     if let Some(curr_snapshot_path) = CURRENT_SNAPSHOT_PATH
         .get_or_init(Default::default)
         .lock()
         .await
         .as_ref()
     {
-        if !runtime.spawned_client_paths.is_empty() {
+        if persist && !runtime.spawned_client_paths.is_empty() {
             save_snapshot(&mut runtime, &curr_snapshot_path).await?;
         }
         for path in &runtime.spawned_client_paths {
@@ -320,21 +320,35 @@ async fn clear_stronghold_cache(mut runtime: &mut ActorRuntime) -> Result<()> {
 }
 
 async fn switch_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> Result<()> {
-    clear_stronghold_cache(&mut runtime).await?;
+    clear_stronghold_cache(&mut runtime, true).await?;
 
-    let mut current_snapshot_path = CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await;
-    current_snapshot_path.replace(snapshot_path.clone());
+    CURRENT_SNAPSHOT_PATH
+        .get_or_init(Default::default)
+        .lock()
+        .await
+        .replace(snapshot_path.clone());
 
     // load all actors to prevent lost data on save
     load_private_data_actor(&mut runtime, snapshot_path).await?;
     let account_ids_location = Location::generic(ACCOUNT_METADATA_VAULT_PATH, ACCOUNT_IDS_RECORD_PATH);
-    let (data_opt, status) = runtime.stronghold.read_data(account_ids_location.clone()).await;
+    let (data, _) = runtime.stronghold.read_from_store(account_ids_location.clone()).await;
 
-    if let Some(data) = data_opt {
-        let account_ids = String::from_utf8_lossy(&data).to_string();
-        for account_id in account_ids.split(ACCOUNT_ID_SEPARATOR).filter(|id| !id.is_empty()) {
-            let id = AccountIdentifier::Id(account_id.to_string());
-            load_account_actor(&mut runtime, snapshot_path, &id).await?;
+    let account_ids = String::from_utf8_lossy(&data).to_string();
+    for account_id in account_ids.split(ACCOUNT_ID_SEPARATOR).filter(|id| !id.is_empty()) {
+        let id = AccountIdentifier::Id(account_id.to_string());
+        load_account_actor(&mut runtime, snapshot_path, &id).await?;
+    }
+
+    Ok(())
+}
+
+pub async fn unload_snapshot(storage_path: &PathBuf, persist: bool) -> Result<()> {
+    let current_snapshot_path = CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await.clone();
+    if let Some(current) = &current_snapshot_path {
+        if current == storage_path {
+            let mut runtime = actor_runtime().lock().await;
+            clear_stronghold_cache(&mut runtime, persist).await?;
+            CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await.take();
         }
     }
 
@@ -344,7 +358,7 @@ async fn switch_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf
 pub async fn load_snapshot(snapshot_path: &PathBuf, password: &[u8; 32]) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
     set_password(&snapshot_path, password).await;
-    switch_snapshot(&mut runtime, &snapshot_path).await
+    check_snapshot(&mut runtime, &snapshot_path).await
 }
 
 pub async fn store_mnemonic(snapshot_path: &PathBuf, mnemonic: String) -> Result<()> {
@@ -479,16 +493,14 @@ pub async fn get_accounts(snapshot_path: &PathBuf) -> Result<Vec<String>> {
     check_snapshot(&mut runtime, &snapshot_path).await?;
     load_private_data_actor(&mut runtime, snapshot_path).await?;
     let account_ids_location = Location::generic(ACCOUNT_METADATA_VAULT_PATH, ACCOUNT_IDS_RECORD_PATH);
-    let (data_opt, status) = runtime.stronghold.read_data(account_ids_location.clone()).await;
+    let (data, _) = runtime.stronghold.read_from_store(account_ids_location.clone()).await;
 
     let mut accounts = Vec::new();
-    if let Some(data) = data_opt {
-        let account_ids = String::from_utf8_lossy(&data).to_string();
-        for account_id in account_ids.split(ACCOUNT_ID_SEPARATOR).filter(|id| !id.is_empty()) {
-            let id = AccountIdentifier::Id(account_id.to_string());
-            let account = get_account_internal(&mut runtime, snapshot_path, &id).await?;
-            accounts.push(account);
-        }
+    let account_ids = String::from_utf8_lossy(&data).to_string();
+    for account_id in account_ids.split(ACCOUNT_ID_SEPARATOR).filter(|id| !id.is_empty()) {
+        let id = AccountIdentifier::Id(account_id.to_string());
+        let account = get_account_internal(&mut runtime, snapshot_path, &id).await?;
+        accounts.push(account);
     }
 
     Ok(accounts)
@@ -500,13 +512,12 @@ async fn get_account_internal(
     account_id: &AccountIdentifier,
 ) -> Result<String> {
     load_account_actor(&mut runtime, snapshot_path, account_id).await?;
-    let (data, _) = runtime
+    let (data, status) = runtime
         .stronghold
-        .read_data(Location::generic(ACCOUNT_VAULT_PATH, ACCOUNT_RECORD_PATH))
+        .read_from_store(Location::generic(ACCOUNT_VAULT_PATH, ACCOUNT_RECORD_PATH))
         .await;
-    data.filter(|data| !data.is_empty())
-        .map(|data| String::from_utf8_lossy(&data).to_string())
-        .ok_or(Error::AccountNotFound)
+    stronghold_response_to_result(status).map_err(|_| Error::AccountNotFound)?;
+    Ok(String::from_utf8_lossy(&data).to_string())
 }
 
 pub async fn get_account(snapshot_path: &PathBuf, account_id: &AccountIdentifier) -> Result<String> {
@@ -523,10 +534,8 @@ pub async fn store_account(snapshot_path: &PathBuf, account_id: &AccountIdentifi
     // the reference array holds all account ids so we can scan them on the `get_accounts` implementation
     load_private_data_actor(&mut runtime, snapshot_path).await?;
     let account_ids_location = Location::generic(ACCOUNT_METADATA_VAULT_PATH, ACCOUNT_IDS_RECORD_PATH);
-    let (data_opt, status) = runtime.stronghold.read_data(account_ids_location.clone()).await;
-    let mut account_ids = data_opt
-        .map(|d| String::from_utf8_lossy(&d).to_string())
-        .unwrap_or_else(String::new);
+    let (data, _) = runtime.stronghold.read_from_store(account_ids_location.clone()).await;
+    let mut account_ids = String::from_utf8_lossy(&data).to_string();
 
     let id = match account_id {
         AccountIdentifier::Id(id) => id,
@@ -534,28 +543,28 @@ pub async fn store_account(snapshot_path: &PathBuf, account_id: &AccountIdentifi
     };
     if !account_ids.contains(id.as_str()) {
         account_ids.push_str(id);
+        account_ids.push(ACCOUNT_ID_SEPARATOR);
         stronghold_response_to_result(
             runtime
                 .stronghold
-                .write_data(
-                    account_ids_location,
-                    account_ids.as_bytes().to_vec(),
-                    RecordHint::new("wallet.rs-account-ids").unwrap(),
-                    vec![],
-                )
+                .write_to_store(account_ids_location, account_ids.as_bytes().to_vec(), None)
                 .await,
         )?;
     }
+
+    // since we're creating a new account, we don't need to load it from the snapshot
+    runtime
+        .loaded_client_paths
+        .insert(account_id_to_client_path(account_id));
 
     load_account_actor(&mut runtime, snapshot_path, account_id).await?;
     stronghold_response_to_result(
         runtime
             .stronghold
-            .write_data(
+            .write_to_store(
                 Location::generic(ACCOUNT_VAULT_PATH, ACCOUNT_RECORD_PATH),
                 account.as_bytes().to_vec(),
-                RecordHint::new("wallet.rs-account").unwrap(),
-                vec![],
+                None,
             )
             .await,
     )?;
@@ -572,19 +581,24 @@ pub async fn remove_account(snapshot_path: &PathBuf, account_id: &AccountIdentif
     // first we delete the account id from the reference array
     load_private_data_actor(&mut runtime, snapshot_path).await?;
     let account_ids_location = Location::generic(ACCOUNT_METADATA_VAULT_PATH, ACCOUNT_IDS_RECORD_PATH);
-    let (data_opt, status) = runtime.stronghold.read_data(account_ids_location.clone()).await;
-    let account_ids = data_opt
-        .filter(|data| !data.is_empty())
-        .map(|data| String::from_utf8_lossy(&data).to_string())
-        .ok_or(Error::AccountNotFound)?;
+    let (data, status) = runtime.stronghold.read_from_store(account_ids_location.clone()).await;
+    stronghold_response_to_result(status).map_err(|_| Error::AccountNotFound)?;
+    let account_ids = String::from_utf8_lossy(&data).to_string();
+
+    let id = match account_id {
+        AccountIdentifier::Id(id) => id,
+        AccountIdentifier::Index(_) => unreachable!(),
+    };
     stronghold_response_to_result(
         runtime
             .stronghold
-            .write_data(
+            .write_to_store(
                 account_ids_location,
-                account_ids.as_bytes().to_vec(),
-                RecordHint::new("wallet.rs-account-ids").unwrap(),
-                vec![],
+                account_ids
+                    .replace(&format!("{}{}", id, ACCOUNT_ID_SEPARATOR), "")
+                    .as_bytes()
+                    .to_vec(),
+                None,
             )
             .await,
     )?;
@@ -593,7 +607,7 @@ pub async fn remove_account(snapshot_path: &PathBuf, account_id: &AccountIdentif
     stronghold_response_to_result(
         runtime
             .stronghold
-            .delete_data(Location::generic(ACCOUNT_VAULT_PATH, ACCOUNT_RECORD_PATH), true)
+            .delete_from_store(Location::generic(ACCOUNT_VAULT_PATH, ACCOUNT_RECORD_PATH))
             .await,
     )?;
 
@@ -611,7 +625,7 @@ mod tests {
     rusty_fork_test! {
         #[test]
         fn password_expires() {
-            let mut runtime = tokio::runtime::Runtime::new().unwrap();
+            let runtime = tokio::runtime::Runtime::new().unwrap();
             runtime.block_on(async {
                 let interval = 500;
                 super::set_password_clear_interval(Duration::from_millis(interval)).await;
@@ -635,16 +649,17 @@ mod tests {
     rusty_fork_test! {
         #[test]
         fn action_keeps_password() {
-            let mut runtime = tokio::runtime::Runtime::new().unwrap();
+            let runtime = tokio::runtime::Runtime::new().unwrap();
             runtime.block_on(async {
-                let interval = Duration::from_millis(500);
+                let interval = Duration::from_millis(900);
                 super::set_password_clear_interval(interval).await;
                 let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
                 std::fs::create_dir_all("./test-storage").unwrap();
                 let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
                 super::load_snapshot(&snapshot_path, &[0; 32]).await.unwrap();
 
-                for i in 1..5 {
+                for i in 1..6 {
+                    let instant = std::time::Instant::now();
                     super::store_account(
                         &snapshot_path,
                         &AccountIdentifier::Id(format!("actionkeepspassword{}", i)),
@@ -652,7 +667,14 @@ mod tests {
                     )
                     .await
                     .unwrap();
-                    std::thread::sleep(interval / 2);
+
+                    if let Some(sleep_duration) = interval.checked_sub(instant.elapsed()) {
+                        std::thread::sleep(sleep_duration / 2);
+                    } else {
+                        // if the elapsed > interval, set the password again
+                        // this might happen if the test is stopped by another thread
+                        super::set_password(&snapshot_path, &[0; 32]).await;
+                    }
                 }
 
                 let id = AccountIdentifier::Id("actionkeepspassword1".to_string());
@@ -682,7 +704,7 @@ mod tests {
         let data = "account data";
         super::store_account(&snapshot_path, &id, data.to_string()).await?;
         let mut r = super::actor_runtime().lock().await;
-        super::clear_stronghold_cache(&mut r).await?;
+        super::clear_stronghold_cache(&mut r, true).await?;
         drop(r);
         let stored_data = super::get_accounts(&snapshot_path).await?;
         assert_eq!(stored_data.len(), 1);
