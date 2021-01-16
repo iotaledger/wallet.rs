@@ -547,7 +547,7 @@ impl AccountManager {
                     .skip_polling()
                     .finish()
                     .await?;
-                let stronghold_storage = crate::storage::get(&self.storage_path).await?;
+                let stronghold_storage = crate::storage::get(&self.storage_folder.join(STRONGHOLD_FILENAME)).await?;
                 let stronghold_storage = stronghold_storage.lock().await;
 
                 for (account_id, account_handle) in &*self.accounts.read().await {
