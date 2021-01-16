@@ -12,7 +12,7 @@ pub mod stronghold;
 use crate::account::{Account, AccountIdentifier};
 use crypto::ciphers::chacha::xchacha20poly1305;
 use once_cell::sync::OnceCell;
-use tokio::sync::Mutex as AsyncMutex;
+use tokio::sync::Mutex;
 
 use std::{
     collections::HashMap,
@@ -21,21 +21,86 @@ use std::{
     sync::{Arc, RwLock},
 };
 
-type Storage = Arc<AsyncMutex<Box<dyn StorageAdapter + Sync + Send>>>;
-type Storages = Arc<RwLock<HashMap<PathBuf, Storage>>>;
+pub(crate) struct Storage {
+    storage_path: PathBuf,
+    inner: Box<dyn StorageAdapter + Sync + Send>,
+    pub(crate) encryption_key: Option<[u8; 32]>,
+}
+
+impl Storage {
+    pub fn id(&self) -> &'static str {
+        self.inner.id()
+    }
+
+    #[allow(dead_code)]
+    pub async fn get(&self, account_id: &AccountIdentifier) -> crate::Result<String> {
+        self.inner.get(account_id).await.and_then(|account| {
+            if let Some(key) = &self.encryption_key {
+                decrypt_account_json(&account, key)
+            } else {
+                Ok(account)
+            }
+        })
+    }
+
+    pub async fn get_all(&self) -> crate::Result<Vec<ParsedAccount>> {
+        parse_accounts(&self.storage_path, &self.inner.get_all().await?, &self.encryption_key)
+    }
+
+    pub async fn set(&self, account_id: &AccountIdentifier, account: String) -> crate::Result<()> {
+        self.inner
+            .set(
+                account_id,
+                if let Some(key) = &self.encryption_key {
+                    let mut output = Vec::new();
+                    encrypt_account_json(account.as_bytes(), key, &mut output)?;
+                    serde_json::to_string(&output)?
+                } else {
+                    account
+                },
+            )
+            .await
+    }
+
+    pub async fn remove(&self, account_id: &AccountIdentifier) -> crate::Result<()> {
+        self.inner.remove(account_id).await
+    }
+}
+
+type StorageHandle = Arc<Mutex<Storage>>;
+type Storages = Arc<RwLock<HashMap<PathBuf, StorageHandle>>>;
 static INSTANCES: OnceCell<Storages> = OnceCell::new();
 
 /// Sets the storage adapter.
-pub fn set_adapter<P: AsRef<Path>, S: StorageAdapter + Sync + Send + 'static>(storage_path: P, storage: S) {
+pub fn set<P: AsRef<Path>>(
+    storage_path: P,
+    encryption_key: Option<[u8; 32]>,
+    storage: Box<dyn StorageAdapter + Send + Sync + 'static>,
+) {
     let mut instances = INSTANCES.get_or_init(Default::default).write().unwrap();
     instances.insert(
         storage_path.as_ref().to_path_buf(),
-        Arc::new(AsyncMutex::new(Box::new(storage))),
+        Arc::new(Mutex::new(Storage {
+            storage_path: storage_path.as_ref().to_path_buf(),
+            inner: storage,
+            encryption_key,
+        })),
     );
 }
 
+pub(crate) async fn set_encryption_key(storage_path: &PathBuf, encryption_key: [u8; 32]) -> crate::Result<()> {
+    let instances = INSTANCES.get_or_init(Default::default).read().unwrap();
+    if let Some(instance) = instances.get(storage_path) {
+        let mut storage = instance.lock().await;
+        storage.encryption_key = Some(encryption_key);
+        Ok(())
+    } else {
+        Err(crate::Error::StorageAdapterNotSet(storage_path.clone()))
+    }
+}
+
 /// gets the storage adapter
-pub(crate) fn get(storage_path: &PathBuf) -> crate::Result<Storage> {
+pub(crate) fn get(storage_path: &PathBuf) -> crate::Result<StorageHandle> {
     let instances = INSTANCES.get_or_init(Default::default).read().unwrap();
     if let Some(instance) = instances.get(storage_path) {
         Ok(instance.clone())
@@ -100,35 +165,7 @@ pub(crate) enum ParsedAccount {
     EncryptedAccount(String),
 }
 
-pub(crate) fn get_account_string_to_save(
-    account: &Account,
-    encryption_key: &Option<[u8; 32]>,
-) -> crate::Result<String> {
-    let json = serde_json::to_string(&account)?;
-    let data = if let Some(key) = encryption_key {
-        let mut output = Vec::new();
-        encrypt_account_json(json.as_bytes(), key, &mut output)?;
-        serde_json::to_string(&output)?
-    } else {
-        json
-    };
-    Ok(data)
-}
-
-pub(crate) async fn save_account(
-    storage_path: &PathBuf,
-    account: &Account,
-    encryption_key: &Option<[u8; 32]>,
-) -> crate::Result<()> {
-    crate::storage::get(&storage_path)?
-        .lock()
-        .await
-        .set(account.id(), get_account_string_to_save(account, encryption_key)?)
-        .await?;
-    Ok(())
-}
-
-pub(crate) fn parse_accounts(
+fn parse_accounts(
     storage_path: &PathBuf,
     accounts: &[String],
     encryption_key: &Option<[u8; 32]>,

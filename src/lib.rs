@@ -257,7 +257,10 @@ pub async fn with_actor_system<F: FnOnce(&riker::actors::ActorSystem)>(cb: F) {
 
 #[cfg(test)]
 mod test_utils {
-    use super::{account_manager::AccountManager, signing::SignerType};
+    use super::{
+        account_manager::{AccountManager, ManagerStorage},
+        signing::SignerType,
+    };
     use iota::pow::providers::{Provider as PowProvider, ProviderBuilder as PowProviderBuilder};
     use rand::{distributions::Alphanumeric, thread_rng, Rng};
     use std::{path::PathBuf, time::Duration};
@@ -312,14 +315,20 @@ mod test_utils {
             }
         };
 
+        #[cfg(all(feature = "stronghold-storage", feature = "sqlite-storage"))]
+        let default_storage = ManagerStorage::Stronghold;
+        #[cfg(all(feature = "stronghold-storage", not(feature = "sqlite-storage")))]
+        let default_storage = ManagerStorage::Stronghold;
+        #[cfg(all(feature = "sqlite-storage", not(feature = "stronghold-storage")))]
+        let default_storage = ManagerStorage::Sqlite;
+
         let mut manager = AccountManager::builder()
-            .with_storage_path(storage_path)
+            .with_storage(storage_path, default_storage, Some("password"))
+            .unwrap()
             .with_polling_interval(POLLING_INTERVAL)
             .finish()
             .await
             .unwrap();
-
-        manager.set_storage_password("password").await.unwrap();
 
         #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
         crate::signing::set_signer(signer_type(), TestSigner {}).await;
