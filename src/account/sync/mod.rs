@@ -777,7 +777,7 @@ impl SyncedAccount {
             .with_parent2(parent2)
             .with_payload(Payload::Transaction(Box::new(transaction)))
             .with_network_id(client.get_network_id().await?)
-            .with_nonce_provider(client.get_pow_provider(), 4000f64)
+            .with_nonce_provider(client.get_pow_provider(), client.get_network_info().min_pow_score)
             .finish()?;
 
         log::debug!("[TRANSFER] submitting message {:#?}", message);
