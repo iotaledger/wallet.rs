@@ -6,7 +6,7 @@ use std::{num::NonZeroU64, path::PathBuf, sync::Arc};
 
 use iota_wallet::{
     account::AccountIdentifier,
-    account_manager::{AccountManager, DefaultStorage, DEFAULT_STORAGE_FOLDER},
+    account_manager::{AccountManager, ManagerStorage, DEFAULT_STORAGE_FOLDER},
     client::ClientOptions,
     signing::SignerType,
     DateTime, Utc,
@@ -71,7 +71,9 @@ struct ManagerOptions {
     #[serde(rename = "storagePath", default = "default_storage_path")]
     storage_path: PathBuf,
     #[serde(rename = "storageType")]
-    storage_type: Option<DefaultStorage>,
+    storage_type: Option<ManagerStorage>,
+    #[serde(rename = "storagePassword")]
+    storage_password: Option<String>,
 }
 
 declare_types! {
@@ -86,8 +88,12 @@ declare_types! {
             };
             let manager = crate::block_on(
                 AccountManager::builder()
-                .with_storage_path(&options.storage_path)
-                .with_storage(options.storage_type.unwrap_or(DefaultStorage::Stronghold))
+                .with_storage(
+                    &options.storage_path,
+                    options.storage_type.unwrap_or(ManagerStorage::Stronghold),
+                    options.storage_password.as_deref(),
+                )
+                .expect("failed to init storage")
                 .finish()
             ).expect("error initializing account manager");
             Ok(AccountManagerWrapper(Arc::new(RwLock::new(manager))))
