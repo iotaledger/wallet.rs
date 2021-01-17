@@ -258,8 +258,12 @@ pub async fn with_actor_system<F: FnOnce(&riker::actors::ActorSystem)>(cb: F) {
 #[cfg(test)]
 mod test_utils {
     use super::{
-        account::AccountHandle, account_manager::AccountManager, address::Address, client::ClientOptionsBuilder,
-        message::Message, signing::SignerType,
+        account::AccountHandle,
+        account_manager::AccountManager,
+        address::{Address, AddressBuilder},
+        client::ClientOptionsBuilder,
+        message::Message,
+        signing::SignerType,
     };
     use iota::{
         pow::providers::{Provider as PowProvider, ProviderBuilder as PowProviderBuilder},
@@ -389,45 +393,93 @@ mod test_utils {
         IotaAddress::Ed25519(Ed25519Address::new(rand::random::<[u8; 32]>()))
     }
 
-    pub fn generate_message(
+    macro_rules! builder_setters {
+    ($ty:ident, $($x:ident => $type:ty),*) => {
+        impl $ty {
+            $(
+                #[allow(dead_code)]
+                pub fn $x(mut self, value: $type) -> Self {
+                    self.$x = value;
+                    self
+                }
+            )*
+        }
+    }
+}
+
+    pub struct GenerateMessageBuilder {
         value: u64,
         address: Address,
         confirmed: bool,
         broadcasted: bool,
         incoming: bool,
-    ) -> Message {
-        Message {
-            id: MessageId::new([0; 32]),
-            version: 1,
-            parent1: MessageId::new([0; 32]),
-            parent2: MessageId::new([0; 32]),
-            payload_length: 0,
-            payload: Payload::Transaction(Box::new(
-                TransactionPayloadBuilder::new()
-                    .with_essence(
-                        TransactionPayloadEssence::builder()
-                            .add_output(
-                                SignatureLockedSingleOutput::new(address.address().clone(), value)
-                                    .unwrap()
-                                    .into(),
-                            )
-                            .add_input(UTXOInput::new(TransactionId::new([0; 32]), 0).unwrap().into())
-                            .finish()
-                            .unwrap(),
-                    )
-                    .add_unlock_block(UnlockBlock::Signature(SignatureUnlock::Ed25519(Ed25519Signature::new(
-                        [0; 32],
-                        Box::new([0]),
-                    ))))
-                    .finish()
+        input_transaction_id: TransactionId,
+    }
+
+    impl Default for GenerateMessageBuilder {
+        fn default() -> Self {
+            Self {
+                value: rand::thread_rng().gen_range(1, 50000),
+                address: AddressBuilder::new()
+                    .outputs(Vec::new())
+                    .key_index(0)
+                    .address(generate_random_iota_address())
+                    .balance(0)
+                    .build()
                     .unwrap(),
-            )),
-            timestamp: chrono::Utc::now(),
-            nonce: 0,
-            value,
-            confirmed: Some(confirmed),
-            broadcasted,
-            incoming,
+                confirmed: false,
+                broadcasted: false,
+                incoming: false,
+                input_transaction_id: TransactionId::new([0; 32]),
+            }
+        }
+    }
+
+    builder_setters!(
+        GenerateMessageBuilder,
+        value => u64,
+        address => Address,
+        confirmed => bool,
+        broadcasted => bool,
+        incoming => bool,
+        input_transaction_id => TransactionId
+    );
+
+    impl GenerateMessageBuilder {
+        pub fn build(self) -> Message {
+            Message {
+                id: MessageId::new([0; 32]),
+                version: 1,
+                parent1: MessageId::new([0; 32]),
+                parent2: MessageId::new([0; 32]),
+                payload_length: 0,
+                payload: Payload::Transaction(Box::new(
+                    TransactionPayloadBuilder::new()
+                        .with_essence(
+                            TransactionPayloadEssence::builder()
+                                .add_output(
+                                    SignatureLockedSingleOutput::new(self.address.address().clone(), self.value)
+                                        .unwrap()
+                                        .into(),
+                                )
+                                .add_input(UTXOInput::new(self.input_transaction_id, 0).unwrap().into())
+                                .finish()
+                                .unwrap(),
+                        )
+                        .add_unlock_block(UnlockBlock::Signature(SignatureUnlock::Ed25519(Ed25519Signature::new(
+                            [0; 32],
+                            Box::new([0]),
+                        ))))
+                        .finish()
+                        .unwrap(),
+                )),
+                timestamp: chrono::Utc::now(),
+                nonce: 0,
+                value: self.value,
+                confirmed: Some(self.confirmed),
+                broadcasted: self.broadcasted,
+                incoming: self.incoming,
+            }
         }
     }
 }

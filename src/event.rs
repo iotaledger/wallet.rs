@@ -283,19 +283,7 @@ mod tests {
     #[test]
     fn on_new_transaction_event() {
         let account_id: AccountIdentifier = "new-tx".to_string().into();
-        let message = crate::test_utils::generate_message(
-            1,
-            AddressBuilder::new()
-                .address(crate::test_utils::generate_random_iota_address())
-                .balance(0)
-                .outputs(Vec::new())
-                .key_index(0)
-                .build()
-                .unwrap(),
-            true,
-            true,
-            true,
-        );
+        let message = crate::test_utils::GenerateMessageBuilder::default().build();
         let account_id_ = account_id.clone();
         let message_ = message.clone();
 
@@ -310,19 +298,7 @@ mod tests {
     #[test]
     fn on_reattachment_event() {
         let account_id: AccountIdentifier = "reattachment".to_string().into();
-        let message = crate::test_utils::generate_message(
-            1,
-            AddressBuilder::new()
-                .address(crate::test_utils::generate_random_iota_address())
-                .balance(0)
-                .outputs(Vec::new())
-                .key_index(0)
-                .build()
-                .unwrap(),
-            true,
-            true,
-            true,
-        );
+        let message = crate::test_utils::GenerateMessageBuilder::default().build();
         let account_id_ = account_id.clone();
         let message_ = message.clone();
 
@@ -337,19 +313,7 @@ mod tests {
     #[test]
     fn on_broadcast_event() {
         let account_id: AccountIdentifier = "broadcast".to_string().into();
-        let message = crate::test_utils::generate_message(
-            1,
-            AddressBuilder::new()
-                .address(crate::test_utils::generate_random_iota_address())
-                .balance(0)
-                .outputs(Vec::new())
-                .key_index(0)
-                .build()
-                .unwrap(),
-            true,
-            true,
-            true,
-        );
+        let message = crate::test_utils::GenerateMessageBuilder::default().build();
         let account_id_ = account_id.clone();
         let message_ = message.clone();
 
@@ -364,19 +328,7 @@ mod tests {
     #[test]
     fn on_confirmation_state_change_event() {
         let account_id: AccountIdentifier = "confirm".to_string().into();
-        let message = crate::test_utils::generate_message(
-            1,
-            AddressBuilder::new()
-                .address(crate::test_utils::generate_random_iota_address())
-                .balance(0)
-                .outputs(Vec::new())
-                .key_index(0)
-                .build()
-                .unwrap(),
-            true,
-            true,
-            true,
-        );
+        let message = crate::test_utils::GenerateMessageBuilder::default().build();
         let account_id_ = account_id.clone();
         let message_ = message.clone();
         let confirmed = true;

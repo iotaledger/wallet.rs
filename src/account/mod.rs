@@ -569,10 +569,7 @@ mod tests {
         client::ClientOptionsBuilder,
         message::{Message, MessageType},
     };
-    use iota::{
-        Ed25519Signature, MessageId, Payload, SignatureUnlock, TransactionId, TransactionPayloadBuilder,
-        TransactionPayloadEssence, UTXOInput, UnlockBlock,
-    };
+    use iota::{MessageId, TransactionId};
 
     // asserts that the `set_alias` function updates the account alias in storage
     #[tokio::test]
@@ -648,29 +645,6 @@ mod tests {
         assert_eq!(account_handle.read().await.total_balance(), balance);
     }
 
-    fn _update_transaction_id(message: &mut Message, id: TransactionId) {
-        let output = match &message.payload {
-            Payload::Transaction(tx) => tx.essence().outputs().first().unwrap().clone(),
-            _ => panic!("invalid messaga"),
-        };
-        message.payload = iota::Payload::Transaction(Box::new(
-            TransactionPayloadBuilder::new()
-                .with_essence(
-                    TransactionPayloadEssence::builder()
-                        .add_output(output)
-                        .add_input(UTXOInput::new(id, 0).unwrap().into())
-                        .finish()
-                        .unwrap(),
-                )
-                .add_unlock_block(UnlockBlock::Signature(SignatureUnlock::Ed25519(Ed25519Signature::new(
-                    [0; 32],
-                    Box::new([0]),
-                ))))
-                .finish()
-                .unwrap(),
-        ));
-    }
-
     #[tokio::test]
     async fn available_balance() {
         let manager = crate::test_utils::get_account_manager().await;
@@ -693,11 +667,17 @@ mod tests {
             address.clone()
         };
 
-        let mut unconfirmed_message =
-            crate::test_utils::generate_message(15, first_address.clone(), false, false, true);
-        _update_transaction_id(&mut unconfirmed_message, first_address.outputs[0].transaction_id);
-        let mut confirmed_message = crate::test_utils::generate_message(10, second_address.clone(), true, true, true);
-        _update_transaction_id(&mut confirmed_message, second_address.outputs[0].transaction_id);
+        let unconfirmed_message = crate::test_utils::GenerateMessageBuilder::default()
+            .address(first_address.clone())
+            .value(15)
+            .input_transaction_id(first_address.outputs[0].transaction_id)
+            .build();
+        let confirmed_message = crate::test_utils::GenerateMessageBuilder::default()
+            .address(second_address.clone())
+            .value(10)
+            .input_transaction_id(second_address.outputs[0].transaction_id)
+            .confirmed(true)
+            .build();
 
         account_handle
             .write()
@@ -715,10 +695,21 @@ mod tests {
         let manager = crate::test_utils::get_account_manager().await;
         let (account_handle, _, _) = _generate_account(&manager, vec![]).await;
         let latest_address = account_handle.read().await.latest_address().unwrap().clone();
-        let received_message = crate::test_utils::generate_message(1, latest_address.clone(), true, true, true);
-        let failed_message = crate::test_utils::generate_message(2, latest_address.clone(), true, false, false);
-        let unconfirmed_message = crate::test_utils::generate_message(3, latest_address.clone(), false, true, false);
-        let value_message = crate::test_utils::generate_message(4, latest_address.clone(), true, true, false);
+        let received_message = crate::test_utils::GenerateMessageBuilder::default()
+            .address(latest_address.clone())
+            .incoming(true)
+            .build();
+        let failed_message = crate::test_utils::GenerateMessageBuilder::default()
+            .address(latest_address.clone())
+            .broadcasted(false)
+            .build();
+        let unconfirmed_message = crate::test_utils::GenerateMessageBuilder::default()
+            .address(latest_address.clone())
+            .confirmed(false)
+            .build();
+        let value_message = crate::test_utils::GenerateMessageBuilder::default()
+            .address(latest_address.clone())
+            .build();
         account_handle.write().await.append_messages(vec![
             received_message,
             failed_message,
@@ -744,11 +735,37 @@ mod tests {
             .unwrap();
         let latest_address = account_handle.read().await.latest_address().unwrap().clone();
 
-        let received_message = crate::test_utils::generate_message(1, latest_address.clone(), true, true, true);
-        let sent_message = crate::test_utils::generate_message(2, external_address.clone(), true, true, false);
-        let failed_message = crate::test_utils::generate_message(3, latest_address.clone(), true, false, false);
-        let unconfirmed_message = crate::test_utils::generate_message(4, latest_address.clone(), false, true, false);
-        let value_message = crate::test_utils::generate_message(5, latest_address.clone(), true, true, false);
+        let received_message = crate::test_utils::GenerateMessageBuilder::default()
+            .address(latest_address.clone())
+            .incoming(true)
+            .confirmed(true)
+            .broadcasted(true)
+            .build();
+        let sent_message = crate::test_utils::GenerateMessageBuilder::default()
+            .address(external_address.clone())
+            .incoming(false)
+            .confirmed(true)
+            .broadcasted(true)
+            .build();
+        let failed_message = crate::test_utils::GenerateMessageBuilder::default()
+            .address(latest_address.clone())
+            .incoming(false)
+            .confirmed(true)
+            .broadcasted(false)
+            .build();
+        let unconfirmed_message = crate::test_utils::GenerateMessageBuilder::default()
+            .address(latest_address.clone())
+            .incoming(false)
+            .confirmed(false)
+            .broadcasted(true)
+            .build();
+        let value_message = crate::test_utils::GenerateMessageBuilder::default()
+            .address(latest_address.clone())
+            .incoming(false)
+            .confirmed(true)
+            .broadcasted(true)
+            .build();
+
         account_handle.write().await.append_messages(vec![
             received_message.clone(),
             sent_message.clone(),
@@ -783,11 +800,9 @@ mod tests {
         let manager = crate::test_utils::get_account_manager().await;
         let (account_handle, _, _) = _generate_account(&manager, vec![]).await;
 
-        let latest_address = account_handle.read().await.latest_address().unwrap().clone();
-
-        let message = crate::test_utils::generate_message(1, latest_address.clone(), true, true, true);
+        let message = crate::test_utils::GenerateMessageBuilder::default().build();
         account_handle.write().await.append_messages(vec![
-            crate::test_utils::generate_message(10, latest_address.clone(), true, true, true),
+            crate::test_utils::GenerateMessageBuilder::default().build(),
             message.clone(),
         ]);
         assert_eq!(account_handle.read().await.get_message(message.id()).unwrap(), &message);

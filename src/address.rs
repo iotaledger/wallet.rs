@@ -300,7 +300,11 @@ mod tests {
         )
         .await
         .unwrap();
-        let spent_tx = crate::test_utils::generate_message(50, address.clone(), true, true, false);
+        let spent_tx = crate::test_utils::GenerateMessageBuilder::default()
+            .address(address.clone())
+            .incoming(false)
+            .build();
+
         account_handle.write().await.append_messages(vec![spent_tx]);
 
         let response = super::is_unspent(&*account_handle.read().await, address.address());
