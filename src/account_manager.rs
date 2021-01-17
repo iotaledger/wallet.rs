@@ -1038,7 +1038,7 @@ mod tests {
     #[tokio::test]
     async fn store_accounts() {
         let mut manager = crate::test_utils::get_account_manager().await;
-        let account_handle = crate::test_utils::create_account(&manager, vec![], vec![]).await;
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
         manager.stop_background_sync();
 
         manager
@@ -1132,7 +1132,7 @@ mod tests {
         std::fs::create_dir_all(backup_path).unwrap();
         let manager = crate::test_utils::get_account_manager().await;
 
-        let account_handle = crate::test_utils::create_account(&manager, vec![], vec![]).await;
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
 
         // backup the stored accounts to ./backup/happy-path/${backup_name}
         let backup_path = manager.backup(backup_path).await.unwrap();
@@ -1200,7 +1200,10 @@ mod tests {
             .outputs(vec![])
             .build()
             .unwrap();
-        crate::test_utils::create_account(&manager, vec![address], vec![]).await;
+        crate::test_utils::AccountCreator::new(&manager)
+            .addresses(vec![address])
+            .create()
+            .await;
 
         let backup_path = manager.backup(backup_path).await.unwrap();
         let backup_file_path = if backup_path.is_dir() {

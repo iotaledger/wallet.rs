@@ -293,7 +293,7 @@ mod tests {
     #[tokio::test]
     async fn is_unspent_false() {
         let manager = crate::test_utils::get_account_manager().await;
-        let account_handle = crate::test_utils::create_account(&manager, vec![], vec![]).await;
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
         let address = super::get_new_address(
             &*account_handle.read().await,
             super::GenerateAddressMetadata { syncing: false },
@@ -314,7 +314,7 @@ mod tests {
     #[tokio::test]
     async fn is_unspent_true() {
         let manager = crate::test_utils::get_account_manager().await;
-        let account_handle = crate::test_utils::create_account(&manager, vec![], vec![]).await;
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
         let address = crate::test_utils::generate_random_iota_address();
 
         let response = super::is_unspent(&*account_handle.read().await, &address);

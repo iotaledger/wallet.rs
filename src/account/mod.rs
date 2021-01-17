@@ -627,7 +627,11 @@ mod tests {
             .unwrap();
 
         let addresses = vec![second_address.clone(), first_address];
-        let account_handle = crate::test_utils::create_account(&manager, addresses, messages).await;
+        let account_handle = crate::test_utils::AccountCreator::new(&manager)
+            .addresses(addresses)
+            .messages(messages)
+            .create()
+            .await;
         (account_handle, second_address, balance)
     }
 
@@ -693,7 +697,10 @@ mod tests {
     #[tokio::test]
     async fn list_all_messages() {
         let manager = crate::test_utils::get_account_manager().await;
-        let (account_handle, _, _) = _generate_account(&manager, vec![]).await;
+        let account_handle = crate::test_utils::AccountCreator::new(&manager)
+            .addresses(vec![crate::test_utils::generate_random_address()])
+            .create()
+            .await;
         let latest_address = account_handle.read().await.latest_address().unwrap().clone();
         let received_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
@@ -724,15 +731,12 @@ mod tests {
     #[tokio::test]
     async fn list_messages_by_type() {
         let manager = crate::test_utils::get_account_manager().await;
-        let (account_handle, _, _) = _generate_account(&manager, vec![]).await;
+        let account_handle = crate::test_utils::AccountCreator::new(&manager)
+            .addresses(vec![crate::test_utils::generate_random_address()])
+            .create()
+            .await;
 
-        let external_address = AddressBuilder::new()
-            .address(crate::test_utils::generate_random_iota_address())
-            .key_index(0)
-            .balance(0)
-            .outputs(Vec::new())
-            .build()
-            .unwrap();
+        let external_address = crate::test_utils::generate_random_address();
         let latest_address = account_handle.read().await.latest_address().unwrap().clone();
 
         let received_message = crate::test_utils::GenerateMessageBuilder::default()
@@ -798,7 +802,7 @@ mod tests {
     #[tokio::test]
     async fn get_message_by_id() {
         let manager = crate::test_utils::get_account_manager().await;
-        let (account_handle, _, _) = _generate_account(&manager, vec![]).await;
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
 
         let message = crate::test_utils::GenerateMessageBuilder::default().build();
         account_handle.write().await.append_messages(vec![

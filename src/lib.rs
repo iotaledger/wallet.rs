@@ -370,42 +370,73 @@ mod test_utils {
         }
     }
 
-    pub async fn create_account(
-        manager: &AccountManager,
+    pub struct AccountCreator<'a> {
+        manager: &'a AccountManager,
         addresses: Vec<Address>,
         messages: Vec<Message>,
-    ) -> AccountHandle {
-        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-            .expect("invalid node URL")
-            .build();
+    }
 
-        manager
-            .create_account(client_options)
-            .alias("alias")
-            .messages(messages)
-            .addresses(addresses)
-            .initialise()
-            .await
-            .expect("failed to add account")
+    impl<'a> AccountCreator<'a> {
+        pub fn new(manager: &'a AccountManager) -> Self {
+            Self {
+                manager,
+                addresses: Vec::new(),
+                messages: Vec::new(),
+            }
+        }
+
+        pub fn addresses(mut self, addresses: Vec<Address>) -> Self {
+            self.addresses = addresses;
+            self
+        }
+
+        pub fn messages(mut self, messages: Vec<Message>) -> Self {
+            self.messages = messages;
+            self
+        }
+
+        pub async fn create(self) -> AccountHandle {
+            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+                .expect("invalid node URL")
+                .build();
+
+            self.manager
+                .create_account(client_options)
+                .alias("alias")
+                .messages(self.messages)
+                .addresses(self.addresses)
+                .initialise()
+                .await
+                .expect("failed to add account")
+        }
     }
 
     pub fn generate_random_iota_address() -> IotaAddress {
         IotaAddress::Ed25519(Ed25519Address::new(rand::random::<[u8; 32]>()))
     }
 
+    pub fn generate_random_address() -> Address {
+        AddressBuilder::new()
+            .key_index(0)
+            .address(generate_random_iota_address())
+            .balance(0)
+            .outputs(Vec::new())
+            .build()
+            .unwrap()
+    }
+
     macro_rules! builder_setters {
-    ($ty:ident, $($x:ident => $type:ty),*) => {
-        impl $ty {
-            $(
-                #[allow(dead_code)]
-                pub fn $x(mut self, value: $type) -> Self {
-                    self.$x = value;
-                    self
-                }
-            )*
+        ($ty:ident, $($x:ident => $type:ty),*) => {
+            impl $ty {
+                $(
+                    pub fn $x(mut self, value: $type) -> Self {
+                        self.$x = value;
+                        self
+                    }
+                )*
+            }
         }
     }
-}
 
     pub struct GenerateMessageBuilder {
         value: u64,
@@ -420,13 +451,7 @@ mod test_utils {
         fn default() -> Self {
             Self {
                 value: rand::thread_rng().gen_range(1, 50000),
-                address: AddressBuilder::new()
-                    .outputs(Vec::new())
-                    .key_index(0)
-                    .address(generate_random_iota_address())
-                    .balance(0)
-                    .build()
-                    .unwrap(),
+                address: generate_random_address(),
                 confirmed: false,
                 broadcasted: false,
                 incoming: false,
