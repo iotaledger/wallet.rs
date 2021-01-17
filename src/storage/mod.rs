@@ -63,11 +63,12 @@ pub trait StorageAdapter {
 
 fn encrypt_account_json<O: Write>(account: &[u8], key: &[u8; 32], output: &mut O) -> crate::Result<()> {
     let mut nonce = [0; xchacha20poly1305::XCHACHA20POLY1305_NONCE_SIZE];
-    crypto::rand::fill(&mut nonce)?;
+    crypto::rand::fill(&mut nonce).map_err(|e| crate::Error::AccountEncrypt(format!("{:?}", e)))?;
 
     let mut tag = [0; xchacha20poly1305::XCHACHA20POLY1305_TAG_SIZE];
     let mut ct = vec![0; account.len()];
-    xchacha20poly1305::encrypt(&mut ct, &mut tag, account, key, &nonce, &[])?;
+    xchacha20poly1305::encrypt(&mut ct, &mut tag, account, key, &nonce, &[])
+        .map_err(|e| crate::Error::AccountEncrypt(format!("{:?}", e)))?;
 
     output.write_all(&nonce)?;
     output.write_all(&tag)?;
@@ -90,7 +91,8 @@ pub(crate) fn decrypt_account_json(account: &str, key: &[u8; 32]) -> crate::Resu
     account.read_to_end(&mut ct)?;
 
     let mut pt = vec![0; ct.len()];
-    xchacha20poly1305::decrypt(&mut pt, &ct, key, &tag, &nonce, &[])?;
+    xchacha20poly1305::decrypt(&mut pt, &ct, key, &tag, &nonce, &[])
+        .map_err(|e| crate::Error::AccountDecrypt(format!("{:?}", e)))?;
 
     Ok(String::from_utf8_lossy(&pt).to_string())
 }
@@ -140,11 +142,12 @@ pub(crate) fn parse_accounts(
             let account_json = if account.starts_with('{') {
                 Some(account.to_string())
             } else if let Some(key) = encryption_key {
-                if let Ok(json) = decrypt_account_json(account, key) {
-                    Some(json)
-                } else {
-                    err = Some(crate::Error::AccountDecrypt);
-                    return None;
+                match decrypt_account_json(account, key) {
+                    Ok(json) => Some(json),
+                    Err(e) => {
+                        err = Some(e);
+                        None
+                    }
                 }
             } else {
                 None

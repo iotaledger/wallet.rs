@@ -14,7 +14,7 @@ async fn main() -> iota_wallet::Result<()> {
     // first we'll create an example account and store it
     let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")?.build();
     let account = manager
-        .create_account(client_options)
+        .create_account(client_options)?
         .alias("alias")
         .initialise()
         .await?;

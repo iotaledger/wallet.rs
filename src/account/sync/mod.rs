@@ -911,6 +911,7 @@ mod tests {
             .build();
         let _account = manager
             .create_account(client_options)
+            .unwrap()
             .alias("alias")
             .initialise()
             .await

@@ -5,7 +5,7 @@ use crate::{
     account::AccountIdentifier,
     account_manager::AccountManager,
     message::{Message as WalletMessage, Transfer},
-    DateTime, Result, Utc,
+    Result,
 };
 use futures::{Future, FutureExt};
 use iota::message::prelude::MessageId;
@@ -265,13 +265,13 @@ impl WalletMessageHandler {
 
     /// The create account message handler.
     async fn create_account(&self, account: &AccountToCreate) -> Result<ResponseType> {
-        let mut builder = self.account_manager.create_account(account.client_options.clone());
+        let mut builder = self.account_manager.create_account(account.client_options.clone())?;
 
         if let Some(alias) = &account.alias {
             builder = builder.alias(alias);
         }
         if let Some(created_at) = &account.created_at {
-            builder = builder.created_at(created_at.parse::<DateTime<Utc>>()?);
+            builder = builder.created_at(*created_at);
         }
         if account.skip_persistance {
             builder = builder.skip_persistance();
@@ -296,7 +296,7 @@ impl WalletMessageHandler {
     }
 
     async fn get_accounts(&self) -> Result<ResponseType> {
-        let accounts = self.account_manager.get_accounts().await;
+        let accounts = self.account_manager.get_accounts().await?;
         let mut accounts_ = Vec::new();
         for account_handle in accounts {
             accounts_.push(account_handle.read().await.clone());
