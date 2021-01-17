@@ -9,6 +9,7 @@ use crate::{
     signing::SignerType,
     Error,
 };
+use chrono::{DateTime, Local};
 use serde::{ser::Serializer, Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -24,7 +25,7 @@ pub struct AccountToCreate {
     pub alias: Option<String>,
     /// The account createdAt date string.
     #[serde(rename = "createdAt")]
-    pub created_at: Option<String>,
+    pub created_at: Option<DateTime<Local>>,
     /// Whether to skip saving the account to storage or not.
     #[serde(rename = "skipPersistance", default)]
     pub skip_persistance: bool,

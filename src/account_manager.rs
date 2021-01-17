@@ -276,6 +276,15 @@ impl AccountManager {
         Ok((Arc::new(RwLock::new(parsed_accounts)), encrypted_accounts))
     }
 
+    // error out if the storage is encrypted
+    fn check_storage_encryption(&self) -> crate::Result<()> {
+        if self.encrypted_accounts.is_empty() {
+            Ok(())
+        } else {
+            Err(crate::Error::StorageIsEncrypted)
+        }
+    }
+
     /// Starts monitoring the accounts with the node's mqtt topics.
     async fn start_monitoring(&self) -> crate::Result<()> {
         for account in self.accounts.read().await.values() {
@@ -318,7 +327,8 @@ impl AccountManager {
     /// Sets the password for the stored accounts.
     pub async fn set_storage_password<P: AsRef<str>>(&mut self, key: P) -> crate::Result<()> {
         let mut dk = [0; 64];
-        crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(key.as_ref().as_bytes(), b"wallet.rs::storage", 100, &mut dk)?;
+        // safe to unwrap because rounds > 0
+        crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(key.as_ref().as_bytes(), b"wallet.rs::storage", 100, &mut dk).unwrap();
         let key: [u8; 32] = dk[0..32][..].try_into().unwrap();
         *self.storage_encryption_key.lock().await = Some(key);
 
@@ -337,7 +347,8 @@ impl AccountManager {
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     pub async fn set_stronghold_password<P: AsRef<str>>(&mut self, password: P) -> crate::Result<()> {
         let mut dk = [0; 64];
-        crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_ref().as_bytes(), b"wallet.rs", 100, &mut dk)?;
+        // safe to unwrap because rounds > 0
+        crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_ref().as_bytes(), b"wallet.rs", 100, &mut dk).unwrap();
 
         let stronghold_path = if self.storage_path.extension().unwrap_or_default() == "stronghold" {
             self.storage_path.clone()
@@ -449,9 +460,9 @@ impl AccountManager {
     /// Generates a new mnemonic.
     pub fn generate_mnemonic(&mut self) -> crate::Result<String> {
         let mut entropy = [0u8; 32];
-        crypto::rand::fill(&mut entropy)?;
+        crypto::rand::fill(&mut entropy).map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
         let mnemonic = crypto::bip39::wordlist::encode(&entropy, &crypto::bip39::wordlist::ENGLISH)
-            .map_err(|_| crate::Error::MnemonicEncode)?;
+            .map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
         self.generated_mnemonic = Some(mnemonic.clone());
         Ok(mnemonic)
     }
@@ -477,12 +488,19 @@ impl AccountManager {
     }
 
     /// Adds a new account.
-    pub fn create_account(&self, client_options: ClientOptions) -> AccountInitialiser {
-        AccountInitialiser::new(client_options, self.accounts.clone(), self.storage_path.clone())
+    pub fn create_account(&self, client_options: ClientOptions) -> crate::Result<AccountInitialiser> {
+        self.check_storage_encryption()?;
+        Ok(AccountInitialiser::new(
+            client_options,
+            self.accounts.clone(),
+            self.storage_path.clone(),
+        ))
     }
 
     /// Deletes an account.
     pub async fn remove_account(&self, account_id: &AccountIdentifier) -> crate::Result<()> {
+        self.check_storage_encryption()?;
+
         let mut accounts = self.accounts.write().await;
 
         {
@@ -490,7 +508,7 @@ impl AccountManager {
             let account = account_handle.read().await;
 
             if !(account.messages().is_empty() && account.total_balance() == 0) {
-                return Err(crate::Error::MessageNotEmpty);
+                return Err(crate::Error::AccountNotEmpty);
             }
         }
 
@@ -507,6 +525,8 @@ impl AccountManager {
 
     /// Syncs all accounts.
     pub async fn sync_accounts(&self) -> crate::Result<Vec<SyncedAccount>> {
+        self.check_storage_encryption()?;
+
         sync_accounts(self.accounts.clone(), &self.storage_path, None).await
     }
 
@@ -517,13 +537,15 @@ impl AccountManager {
         to_account_id: &AccountIdentifier,
         amount: NonZeroU64,
     ) -> crate::Result<Message> {
+        self.check_storage_encryption()?;
+
         let to_address = self
             .get_account(to_account_id)
             .await?
             .read()
             .await
             .latest_address()
-            .ok_or(crate::Error::TransferDestinationEmpty)?
+            .ok_or(crate::Error::InternalTransferDestinationEmpty)?
             .clone();
 
         let from_synchronized = self.get_account(from_account_id).await?.sync().await.execute().await?;
@@ -704,12 +726,14 @@ impl AccountManager {
 
     /// Gets the account associated with the given identifier.
     pub async fn get_account(&self, account_id: &AccountIdentifier) -> crate::Result<AccountHandle> {
+        self.check_storage_encryption()?;
         let accounts = self.accounts.read().await;
         accounts.get(account_id).cloned().ok_or(crate::Error::AccountNotFound)
     }
 
     /// Gets the account associated with the given alias (case insensitive).
-    pub async fn get_account_by_alias<S: AsRef<str>>(&self, alias: S) -> Option<AccountHandle> {
+    pub async fn get_account_by_alias<S: AsRef<str>>(&self, alias: S) -> crate::Result<AccountHandle> {
+        self.check_storage_encryption()?;
         let alias = alias.as_ref().to_lowercase();
         for account_handle in self.accounts.read().await.values() {
             let account = account_handle.read().await;
@@ -720,16 +744,17 @@ impl AccountManager {
                 .zip(alias.chars())
                 .all(|(x, y)| x == y)
             {
-                return Some(account_handle.clone());
+                return Ok(account_handle.clone());
             }
         }
-        None
+        Err(crate::Error::AccountNotFound)
     }
 
     /// Gets all accounts from storage.
-    pub async fn get_accounts(&self) -> Vec<AccountHandle> {
+    pub async fn get_accounts(&self) -> crate::Result<Vec<AccountHandle>> {
+        self.check_storage_encryption()?;
         let accounts = self.accounts.read().await;
-        accounts.values().cloned().collect()
+        Ok(accounts.values().cloned().collect())
     }
 
     /// Reattaches an unconfirmed transaction.
@@ -1045,6 +1070,7 @@ mod tests {
 
         let account_handle = manager
             .create_account(client_options)
+            .unwrap()
             .alias("alias")
             .initialise()
             .await
@@ -1084,6 +1110,7 @@ mod tests {
 
         let account_handle = manager
             .create_account(client_options)
+            .unwrap()
             .messages(messages)
             .initialise()
             .await
@@ -1104,6 +1131,7 @@ mod tests {
 
         let account_handle = manager
             .create_account(client_options)
+            .unwrap()
             .addresses(vec![AddressBuilder::new()
                 .balance(5)
                 .key_index(0)
@@ -1130,12 +1158,13 @@ mod tests {
 
         manager
             .create_account(client_options.clone())
+            .unwrap()
             .alias("alias")
             .initialise()
             .await
             .expect("failed to add account");
 
-        let create_response = manager.create_account(client_options).initialise().await;
+        let create_response = manager.create_account(client_options).unwrap().initialise().await;
         assert!(create_response.is_err());
     }
 
@@ -1153,6 +1182,7 @@ mod tests {
 
         let account_handle = manager
             .create_account(client_options)
+            .unwrap()
             .alias("alias")
             .signer_type(crate::test_utils::signer_type())
             .initialise()

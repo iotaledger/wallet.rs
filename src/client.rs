@@ -181,13 +181,6 @@ impl MultiNodeClientOptionsBuilder {
 
     /// Builds the options.
     pub fn build(self) -> crate::Result<ClientOptions> {
-        let node_len = match &self.nodes {
-            Some(nodes) => nodes.len(),
-            None => 0,
-        };
-        if node_len == 0 {
-            return Err(crate::Error::EmptyNodeList);
-        }
         let options = ClientOptions {
             node: None,
             nodes: self.nodes,
