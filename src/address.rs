@@ -294,12 +294,7 @@ mod tests {
     async fn is_unspent_false() {
         let manager = crate::test_utils::get_account_manager().await;
         let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
-        let address = super::get_new_address(
-            &*account_handle.read().await,
-            super::GenerateAddressMetadata { syncing: false },
-        )
-        .await
-        .unwrap();
+        let address = crate::test_utils::generate_random_address();
         let spent_tx = crate::test_utils::GenerateMessageBuilder::default()
             .address(address.clone())
             .incoming(false)

@@ -871,5 +871,34 @@ mod tests {
         assert_eq!(account_handle.read().await.get_message(message.id()).unwrap(), &message);
     }
 
+    #[tokio::test]
+    async fn list_addresses() {
+        let manager = crate::test_utils::get_account_manager().await;
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+
+        let spent_address = account_handle.generate_address().await.unwrap();
+        let unspent_address1 = account_handle.generate_address().await.unwrap();
+        let unspent_address2 = account_handle.generate_address().await.unwrap();
+
+        let spent_tx = crate::test_utils::GenerateMessageBuilder::default()
+            .address(spent_address.clone())
+            .incoming(false)
+            .build();
+
+        account_handle.write().await.append_messages(vec![spent_tx]);
+
+        assert_eq!(
+            account_handle.read().await.list_unspent_addresses(),
+            vec![&unspent_address1, &unspent_address2]
+        );
+
+        assert_eq!(account_handle.read().await.list_spent_addresses(), vec![&spent_address]);
+
+        assert_eq!(
+            account_handle.read().await.addresses(),
+            &vec![spent_address, unspent_address1, unspent_address2]
+        );
+    }
+
     // TODO list_addresses tests
 }
