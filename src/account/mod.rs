@@ -636,6 +636,23 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn generate_address() {
+        let manager = crate::test_utils::get_account_manager().await;
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+
+        let account_next_address = crate::address::get_new_address(
+            &*account_handle.read().await,
+            crate::signing::GenerateAddressMetadata { syncing: false },
+        )
+        .await
+        .unwrap();
+        let generated_address = account_handle.generate_address().await.unwrap();
+
+        assert_eq!(generated_address, account_next_address);
+        assert_eq!(account_handle.latest_address().await.unwrap(), generated_address);
+    }
+
+    #[tokio::test]
     async fn latest_address() {
         let manager = crate::test_utils::get_account_manager().await;
         let (account_handle, latest_address, _) = _generate_account(&manager, vec![]).await;
