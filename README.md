@@ -85,7 +85,7 @@ async fn main() -> iota_wallet::Result<()> {
             .await?;
     let client_options = ClientOptionsBuilder::node("http://api.lb-0.testnet.chrysalis2.com")?.build();
     let account = manager
-        .create_account(client_options)
+        .create_account(client_options)?
         .initialise()
         .await?;
     Ok(())

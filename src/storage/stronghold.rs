@@ -30,6 +30,10 @@ impl StrongholdStorageAdapter {
     }
 }
 
+fn storage_err<E: ToString>(error: E) -> crate::Error {
+    crate::Error::Storage(error.to_string())
+}
+
 #[async_trait::async_trait]
 impl StorageAdapter for StrongholdStorageAdapter {
     fn id(&self) -> &'static str {
@@ -37,22 +41,28 @@ impl StorageAdapter for StrongholdStorageAdapter {
     }
 
     async fn get(&self, account_id: &AccountIdentifier) -> crate::Result<String> {
-        let account = crate::stronghold::get_account(&self.path, account_id).await?;
+        let account = crate::stronghold::get_account(&self.path, account_id)
+            .await
+            .map_err(storage_err)?;
         Ok(account)
     }
 
     async fn get_all(&self) -> crate::Result<std::vec::Vec<String>> {
-        let accounts = crate::stronghold::get_accounts(&self.path).await?;
+        let accounts = crate::stronghold::get_accounts(&self.path).await.map_err(storage_err)?;
         Ok(accounts)
     }
 
     async fn set(&self, account_id: &AccountIdentifier, account: String) -> crate::Result<()> {
-        crate::stronghold::store_account(&self.path, account_id, account).await?;
+        crate::stronghold::store_account(&self.path, account_id, account)
+            .await
+            .map_err(storage_err)?;
         Ok(())
     }
 
     async fn remove(&self, account_id: &AccountIdentifier) -> crate::Result<()> {
-        crate::stronghold::remove_account(&self.path, account_id).await?;
+        crate::stronghold::remove_account(&self.path, account_id)
+            .await
+            .map_err(storage_err)?;
         Ok(())
     }
 }

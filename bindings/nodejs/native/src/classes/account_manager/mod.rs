@@ -9,7 +9,7 @@ use iota_wallet::{
     account_manager::{AccountManager, ManagerStorage, DEFAULT_STORAGE_FOLDER},
     client::ClientOptions,
     signing::SignerType,
-    DateTime, Utc,
+    DateTime, Local,
 };
 use neon::prelude::*;
 use serde::Deserialize;
@@ -37,7 +37,7 @@ pub struct AccountToCreate {
     pub client_options: ClientOptions,
     pub alias: Option<String>,
     #[serde(rename = "createdAt")]
-    pub created_at: Option<String>,
+    pub created_at: Option<DateTime<Local>>,
     #[serde(rename = "signerType", default)]
     pub signer_type: AccountSignerType,
     #[serde(rename = "skipPersistance", default)]
@@ -183,6 +183,7 @@ declare_types! {
 
                 let mut builder = manager
                     .create_account(account_to_create.client_options)
+                    .expect("failed to create account")
                     .signer_type(match account_to_create.signer_type {
                         AccountSignerType::Stronghold => SignerType::Stronghold,
                     });
@@ -190,11 +191,7 @@ declare_types! {
                     builder = builder.alias(alias);
                 }
                 if let Some(created_at) = &account_to_create.created_at {
-                    builder = builder.created_at(
-                        created_at
-                        .parse::<DateTime<Utc>>()
-                        .expect("invalid account created at format"),
-                    );
+                    builder = builder.created_at(*created_at);
                 }
                 if account_to_create.skip_persistance {
                     builder = builder.skip_persistance();
@@ -243,12 +240,12 @@ declare_types! {
                 })
             };
             match account {
-                Some(account) => {
+                Ok(account) => {
                     let id = crate::block_on(crate::store_account(account));
                     let id = cx.string(serde_json::to_string(&id).unwrap());
                     Ok(JsAccount::new(&mut cx, vec![id])?.upcast())
                 },
-                None => Ok(cx.undefined().upcast())
+                Err(_) => Ok(cx.undefined().upcast())
             }
         }
 
@@ -259,7 +256,7 @@ declare_types! {
                 let ref_ = &this.borrow(&guard).0;
                 crate::block_on(async move {
                     let manager = ref_.read().await;
-                    manager.get_accounts().await
+                    manager.get_accounts().await.unwrap()
                 })
             };
 
