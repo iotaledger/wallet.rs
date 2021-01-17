@@ -1037,9 +1037,8 @@ mod tests {
 
     #[tokio::test]
     async fn store_accounts() {
-        let mut manager = crate::test_utils::get_account_manager().await;
+        let manager = crate::test_utils::get_account_manager().await;
         let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
-        manager.stop_background_sync();
 
         manager
             .remove_account(account_handle.read().await.id())
@@ -1123,6 +1122,29 @@ mod tests {
 
         let create_response = manager.create_account(client_options).initialise().await;
         assert!(create_response.is_err());
+    }
+
+    #[tokio::test]
+    async fn create_account_skip_persistance() {
+        let manager = crate::test_utils::get_account_manager().await;
+
+        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+            .expect("invalid node URL")
+            .build();
+
+        let account_handle = manager
+            .create_account(client_options.clone())
+            .skip_persistance()
+            .initialise()
+            .await
+            .expect("failed to add account");
+
+        let account_get_res = manager.get_account(account_handle.read().await.id()).await;
+        assert!(account_get_res.is_err(), true);
+        match account_get_res.unwrap_err() {
+            crate::Error::AccountNotFound => {}
+            _ => panic!("unexpected get_account response; expected AccountNotFound"),
+        }
     }
 
     #[tokio::test]
