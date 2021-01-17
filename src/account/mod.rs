@@ -611,6 +611,34 @@ mod tests {
         assert_eq!(account_in_storage.client_options().await, updated_client_options);
     }
 
+    #[tokio::test]
+    async fn account_handle_bridge_getters() {
+        let manager = crate::test_utils::get_account_manager().await;
+
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+
+        macro_rules! assert_bridge_method {
+            ($($x:ident),+) => {
+                $(
+                    let result = account_handle.$x().await;
+                    let expected = account_handle.read().await.$x().clone();
+                    assert_eq!(result, expected);
+                )*
+            };
+        }
+
+        assert_bridge_method!(
+            id,
+            signer_type,
+            index,
+            alias,
+            created_at,
+            messages,
+            addresses,
+            client_options
+        );
+    }
+
     fn _generate_address_output(value: u64) -> AddressOutput {
         let mut tx_id = [0; 32];
         crypto::rand::fill(&mut tx_id).unwrap();
@@ -843,5 +871,5 @@ mod tests {
         assert_eq!(account_handle.read().await.get_message(message.id()).unwrap(), &message);
     }
 
-    // TODO list_addresses, generate_addresses tests
+    // TODO list_addresses tests
 }
