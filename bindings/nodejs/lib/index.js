@@ -105,11 +105,17 @@ module.exports = {
   initLogger: config => initLogger(JSON.stringify(config)),
   RemainderValueStrategy,
   SignerType: {
-    Stronghold: 1,
-    EnvMnemonic: 2
+    Stronghold: 1
   },
   StorageType: {
     Sqlite: { type: 'Sqlite' },
     Stronghold: { type: 'Stronghold' }
+  },
+  MessageType: {
+    Received: 1,
+    Sent: 2,
+    Failed: 3,
+    Unconfirmed: 4,
+    Value: 5
   }
 }

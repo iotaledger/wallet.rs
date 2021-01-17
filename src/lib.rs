@@ -151,9 +151,6 @@ pub enum Error {
     /// invalid BIP32 derivation path.
     #[error("invalid BIP32 derivation path: {0}")]
     InvalidDerivationPath(String),
-    /// Failed to generate private key from BIP32 path.
-    #[error("failed to generate private key from derivation path")]
-    FailedToGeneratePrivateKey(bee_signing_ext::binary::BIP32Path),
     /// Failed to parse date string.
     #[error("error parsing date: {0}")]
     ParseDate(#[from] chrono::ParseError),
@@ -242,9 +239,13 @@ pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
     runtime.lock().unwrap().block_on(cb)
 }
 
-pub(crate) fn enter<R, C: FnOnce() -> R>(cb: C) -> R {
+pub(crate) fn spawn<F>(future: F)
+where
+    F: futures::Future + Send + 'static,
+    F::Output: Send + 'static,
+{
     let runtime = RUNTIME.get_or_init(|| Mutex::new(Runtime::new().unwrap()));
-    runtime.lock().unwrap().enter(cb)
+    runtime.lock().unwrap().spawn(future);
 }
 
 /// Access the stronghold's actor system.
@@ -263,7 +264,7 @@ mod test_utils {
     use iota::{
         pow::providers::{Provider as PowProvider, ProviderBuilder as PowProviderBuilder},
         Address as IotaAddress, Ed25519Address, Ed25519Signature, MessageId, Payload, SignatureLockedSingleOutput,
-        SignatureUnlock, TransactionBuilder, TransactionEssence, TransactionId, UTXOInput, UnlockBlock,
+        SignatureUnlock, TransactionId, TransactionPayloadBuilder, TransactionPayloadEssence, UTXOInput, UnlockBlock,
     };
     use rand::{distributions::Alphanumeric, thread_rng, Rng};
     use std::{path::PathBuf, time::Duration};
@@ -283,17 +284,19 @@ mod test_utils {
             _account: &crate::account::Account,
             _address_index: usize,
             _internal: bool,
+            _metadata: crate::signing::GenerateAddressMetadata,
         ) -> crate::Result<iota::Address> {
             let mut address = [0; iota::ED25519_ADDRESS_LENGTH];
             crypto::rand::fill(&mut address).unwrap();
             Ok(iota::Address::Ed25519(iota::Ed25519Address::new(address)))
         }
 
-        async fn sign_message(
+        async fn sign_message<'a>(
             &self,
             _account: &crate::account::Account,
-            _essence: &iota::TransactionEssence,
+            _essence: &iota::TransactionPayloadEssence,
             _inputs: &mut Vec<crate::signing::TransactionInput>,
+            _metadata: crate::signing::SignMessageMetadata<'a>,
         ) -> crate::Result<Vec<iota::UnlockBlock>> {
             Ok(Vec::new())
         }
@@ -400,9 +403,9 @@ mod test_utils {
             parent2: MessageId::new([0; 32]),
             payload_length: 0,
             payload: Payload::Transaction(Box::new(
-                TransactionBuilder::new()
+                TransactionPayloadBuilder::new()
                     .with_essence(
-                        TransactionEssence::builder()
+                        TransactionPayloadEssence::builder()
                             .add_output(
                                 SignatureLockedSingleOutput::new(address.address().clone(), value)
                                     .unwrap()

@@ -5,13 +5,14 @@ use crate::{
     account::{Account, AccountHandle},
     address::{Address, AddressBuilder, AddressOutput, IotaAddress},
     message::{Message, RemainderValueStrategy, Transfer},
+    signing::{GenerateAddressMetadata, SignMessageMetadata},
 };
 
 use getset::Getters;
 use iota::{
     message::prelude::{
-        Input, Message as IotaMessage, MessageBuilder, MessageId, Payload, SignatureLockedSingleOutput, Transaction,
-        TransactionEssence, UTXOInput,
+        Input, Message as IotaMessage, MessageBuilder, MessageId, Payload, SignatureLockedSingleOutput,
+        TransactionPayload, TransactionPayloadEssence, UTXOInput,
     },
     ClientMiner,
 };
@@ -19,7 +20,7 @@ use serde::{ser::Serializer, Serialize};
 use slip10::BIP32Path;
 use tokio::{
     sync::{mpsc::channel, MutexGuard},
-    time::delay_for,
+    time::sleep,
 };
 
 use std::{
@@ -62,8 +63,16 @@ async fn sync_addresses(
         let mut generated_iota_addresses = vec![]; // collection of (address_index, internal, address) pairs
         for i in address_index..(address_index + gap_limit) {
             // generate both `public` and `internal (change)` addresses
-            generated_iota_addresses.push((i, false, crate::address::get_iota_address(&account, i, false).await?));
-            generated_iota_addresses.push((i, true, crate::address::get_iota_address(&account, i, true).await?));
+            generated_iota_addresses.push((
+                i,
+                false,
+                crate::address::get_iota_address(&account, i, false, GenerateAddressMetadata { syncing: true }).await?,
+            ));
+            generated_iota_addresses.push((
+                i,
+                true,
+                crate::address::get_iota_address(&account, i, true, GenerateAddressMetadata { syncing: true }).await?,
+            ));
         }
 
         let mut curr_generated_addresses = vec![];
@@ -343,7 +352,8 @@ impl AccountSynchronizer {
         self
     }
 
-    /// Skip write to the database.
+    /// Skip saving new messages and addresses on the account object.
+    /// The found data is returned on the `execute` call but won't be persisted on the database.
     pub fn skip_persistance(mut self) -> Self {
         self.skip_persistance = true;
         self
@@ -524,7 +534,7 @@ impl SyncedAccount {
 
             let account_handle = self.account_handle.clone();
             thread::spawn(move || {
-                let mut tx = tx.lock().unwrap();
+                let tx = tx.lock().unwrap();
                 for _ in 1..30 {
                     thread::sleep(OUTPUT_LOCK_TIMEOUT / 30);
                     let account = crate::block_on(async { account_handle.read().await });
@@ -536,7 +546,8 @@ impl SyncedAccount {
                 }
             });
 
-            let mut delay = delay_for(Duration::from_millis(50));
+            let delay = sleep(Duration::from_millis(50));
+            tokio::pin!(delay);
             tokio::select! {
                 v = rx.recv() => {
                     if v.is_none() {
@@ -556,13 +567,13 @@ impl SyncedAccount {
         let client = crate::client::get_client(account_.client_options());
         let client = client.read().await;
 
-        if let RemainderValueStrategy::AccountAddress(ref remainder_target_address) =
+        if let RemainderValueStrategy::AccountAddress(ref remainder_deposit_address) =
             transfer_obj.remainder_value_strategy
         {
             if !account_
                 .addresses()
                 .iter()
-                .any(|addr| addr.address() == remainder_target_address)
+                .any(|addr| addr.address() == remainder_deposit_address)
             {
                 return Err(crate::Error::InvalidRemainderValueAddress);
             }
@@ -611,7 +622,7 @@ impl SyncedAccount {
             utxos.extend(outputs.into_iter());
         }
 
-        let mut essence_builder = TransactionEssence::builder();
+        let mut essence_builder = TransactionPayloadEssence::builder();
         let mut current_output_sum = 0;
         let mut remainder_value = 0;
         for (utxo, address_index, address_internal, address_path) in utxos {
@@ -666,8 +677,8 @@ impl SyncedAccount {
 
         // if there's remainder value, we check the strategy defined in the transfer
         let mut remainder_value_deposit_address = None;
-        if remainder_value > 0 {
-            let remainder_address = remainder_address.expect("remainder address not defined");
+        let remainder_deposit_address = if remainder_value > 0 {
+            let remainder_address = remainder_address.as_ref().expect("remainder address not defined");
             let remainder_address = account_
                 .addresses()
                 .iter()
@@ -676,7 +687,7 @@ impl SyncedAccount {
 
             log::debug!("[TRANSFER] remainder value is {}", remainder_value);
 
-            let remainder_target_address = match transfer_obj.remainder_value_strategy {
+            let remainder_deposit_address = match transfer_obj.remainder_value_strategy {
                 // use one of the account's addresses to send the remainder value
                 RemainderValueStrategy::AccountAddress(target_address) => {
                     log::debug!(
@@ -692,8 +703,12 @@ impl SyncedAccount {
                         log::debug!("[TRANSFER] the remainder address is internal, so using latest address as remainder target: {}", deposit_address.to_bech32());
                         deposit_address
                     } else {
-                        let change_address =
-                            crate::address::get_new_change_address(&account_, &remainder_address).await?;
+                        let change_address = crate::address::get_new_change_address(
+                            &account_,
+                            &remainder_address,
+                            GenerateAddressMetadata { syncing: false },
+                        )
+                        .await?;
                         let addr = change_address.address().clone();
                         log::debug!(
                             "[TRANSFER] generated new change address as remainder target: {}",
@@ -711,10 +726,14 @@ impl SyncedAccount {
                     address
                 }
             };
-            remainder_value_deposit_address = Some(remainder_target_address.clone());
-            essence_builder = essence_builder
-                .add_output(SignatureLockedSingleOutput::new(remainder_target_address, remainder_value)?.into());
-        }
+            remainder_value_deposit_address = Some(remainder_deposit_address.clone());
+            essence_builder = essence_builder.add_output(
+                SignatureLockedSingleOutput::new(remainder_deposit_address.clone(), remainder_value)?.into(),
+            );
+            Some(remainder_deposit_address)
+        } else {
+            None
+        };
 
         let (parent1, parent2) = client.get_tips().await?;
 
@@ -726,11 +745,28 @@ impl SyncedAccount {
 
         let signer = crate::signing::get_signer(account_.signer_type()).await;
         let signer = signer.lock().await;
+
         let unlock_blocks = signer
-            .sign_message(&account_, &essence, &mut transaction_inputs)
+            .sign_message(
+                &account_,
+                &essence,
+                &mut transaction_inputs,
+                SignMessageMetadata {
+                    remainder_address: remainder_address.map(|remainder| {
+                        account_
+                            .addresses()
+                            .iter()
+                            .find(|a| a.address() == &remainder.address)
+                            .unwrap()
+                    }),
+                    remainder_value,
+                    remainder_deposit_address: remainder_deposit_address
+                        .map(|address| account_.addresses().iter().find(|a| a.address() == &address).unwrap()),
+                },
+            )
             .await?;
 
-        let mut tx_builder = Transaction::builder().with_essence(essence);
+        let mut tx_builder = TransactionPayload::builder().with_essence(essence);
         for unlock_block in unlock_blocks {
             tx_builder = tx_builder.add_unlock_block(unlock_block);
         }
@@ -741,7 +777,7 @@ impl SyncedAccount {
             .with_parent2(parent2)
             .with_payload(Payload::Transaction(Box::new(transaction)))
             .with_network_id(client.get_network_id().await?)
-            .with_nonce_provider(client.get_pow_provider(), 4000f64)
+            .with_nonce_provider(client.get_pow_provider(), client.get_network_info().min_pow_score)
             .finish()?;
 
         log::debug!("[TRANSFER] submitting message {:#?}", message);
@@ -763,7 +799,7 @@ impl SyncedAccount {
                     "latest address equals the remainder value deposit address"
                 }
             );
-            let addr = crate::address::get_new_address(&account_).await?;
+            let addr = crate::address::get_new_address(&account_, GenerateAddressMetadata { syncing: false }).await?;
             addresses_to_watch.push(addr.address().clone());
             account_.append_addresses(vec![addr]);
         }

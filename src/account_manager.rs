@@ -35,7 +35,7 @@ use tokio::{
         broadcast::{channel as broadcast_channel, Receiver as BroadcastReceiver, Sender as BroadcastSender},
         Mutex, RwLock,
     },
-    time::{delay_for, Duration as AsyncDuration},
+    time::interval,
 };
 
 /// The default storage folder.
@@ -371,18 +371,18 @@ impl AccountManager {
         let accounts = self.accounts.clone();
         let storage_encryption_key = self.storage_encryption_key.clone();
 
-        let interval = AsyncDuration::from_millis(polling_interval.as_millis().try_into().unwrap());
-
         let handle = thread::spawn(move || {
-            let mut runtime = tokio::runtime::Builder::new()
-                .basic_scheduler()
+            let runtime = tokio::runtime::Builder::new_current_thread()
                 .enable_time()
                 .build()
                 .unwrap();
             runtime.block_on(async {
+                let mut interval = interval(polling_interval);
                 loop {
                     tokio::select! {
                         _ = async {
+                            interval.tick().await;
+
                             let storage_file_path_ = storage_file_path.clone();
 
                             if let Err(error) = AssertUnwindSafe(poll(accounts.clone(), storage_file_path_, is_monitoring_disabled))
@@ -409,8 +409,6 @@ impl AccountManager {
                                     let _ = account_handle.write().await.save(&encryption_key).await;
                                 }
                             }
-
-                            delay_for(interval).await;
                         } => {}
                         _ = stop.recv() => {
                             let encryption_key = &*storage_encryption_key.lock().await;
@@ -422,6 +420,7 @@ impl AccountManager {
                         }
                     }
                 }
+                println!("DONE");
             });
         });
         self.polling_handle = Some(handle);
@@ -430,14 +429,6 @@ impl AccountManager {
     /// Stores a mnemonic for the given signer type.
     /// If the mnemonic is not provided, we'll generate one.
     pub async fn store_mnemonic(&mut self, signer_type: SignerType, mnemonic: Option<String>) -> crate::Result<()> {
-        let mut mnemonic = mnemonic;
-        if signer_type == SignerType::EnvMnemonic {
-            let _ = dotenv::dotenv();
-            if let Ok(m) = std::env::var("IOTA_WALLET_MNEMONIC") {
-                mnemonic = Some(m);
-            }
-        }
-
         let mnemonic = match mnemonic {
             Some(m) => {
                 self.verify_mnemonic(&m)?;
@@ -1042,7 +1033,7 @@ mod tests {
         client::ClientOptionsBuilder,
         message::Message,
     };
-    use iota::{Ed25519Address, Indexation, MessageBuilder, MessageId, Payload};
+    use iota::{Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Payload};
 
     #[tokio::test]
     async fn store_accounts() {
@@ -1074,7 +1065,7 @@ mod tests {
                     .with_parent1(MessageId::new([0; 32]))
                     .with_parent2(MessageId::new([0; 32]))
                     .with_payload(Payload::Indexation(Box::new(
-                        Indexation::new("index".to_string(), &[0; 16]).unwrap(),
+                        IndexationPayload::new("index".to_string(), &[0; 16]).unwrap(),
                     )))
                     .with_network_id(0)
                     .finish()
@@ -1165,7 +1156,14 @@ mod tests {
             not(feature = "sqlite-storage"),
             any(feature = "stronghold", feature = "stronghold-storage")
         ))]
-        std::fs::remove_file(manager.storage_path()).unwrap();
+        {
+            // wait for stronghold to finish pending operations and delete the storage file
+            crate::stronghold::unload_snapshot(manager.storage_path(), false)
+                .await
+                .unwrap();
+            let _ = crate::stronghold::actor_runtime().lock().await;
+            std::fs::remove_file(manager.storage_path()).unwrap();
+        }
 
         manager.set_storage_password("password").await.unwrap();
 

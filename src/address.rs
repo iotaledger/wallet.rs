@@ -1,7 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{account::Account, message::MessageType};
+use crate::{account::Account, message::MessageType, signing::GenerateAddressMetadata};
 use bech32::FromBase32;
 use getset::{Getters, Setters};
 pub use iota::message::prelude::{Address as IotaAddress, Ed25519Address, Input, Payload, UTXOInput};
@@ -240,16 +240,19 @@ pub(crate) async fn get_iota_address(
     account: &Account,
     address_index: usize,
     internal: bool,
+    metadata: GenerateAddressMetadata,
 ) -> crate::Result<IotaAddress> {
     let signer = crate::signing::get_signer(account.signer_type()).await;
     let signer = signer.lock().await;
-    signer.generate_address(&account, address_index, internal).await
+    signer
+        .generate_address(&account, address_index, internal, metadata)
+        .await
 }
 
 /// Gets an unused public address for the given account.
-pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address> {
+pub(crate) async fn get_new_address(account: &Account, metadata: GenerateAddressMetadata) -> crate::Result<Address> {
     let key_index = account.addresses().iter().filter(|a| !a.internal()).count();
-    let iota_address = get_iota_address(&account, key_index, false).await?;
+    let iota_address = get_iota_address(&account, key_index, false, metadata).await?;
     let address = Address {
         address: iota_address,
         balance: 0,
@@ -261,9 +264,13 @@ pub(crate) async fn get_new_address(account: &Account) -> crate::Result<Address>
 }
 
 /// Gets an unused change address for the given account and address.
-pub(crate) async fn get_new_change_address(account: &Account, address: &Address) -> crate::Result<Address> {
+pub(crate) async fn get_new_change_address(
+    account: &Account,
+    address: &Address,
+    metadata: GenerateAddressMetadata,
+) -> crate::Result<Address> {
     let key_index = *address.key_index();
-    let iota_address = get_iota_address(&account, key_index, true).await?;
+    let iota_address = get_iota_address(&account, key_index, true, metadata).await?;
     let address = Address {
         address: iota_address,
         balance: 0,
@@ -287,7 +294,12 @@ mod tests {
     async fn is_unspent_false() {
         let manager = crate::test_utils::get_account_manager().await;
         let account_handle = crate::test_utils::create_account(&manager, vec![], vec![]).await;
-        let address = super::get_new_address(&*account_handle.read().await).await.unwrap();
+        let address = super::get_new_address(
+            &*account_handle.read().await,
+            super::GenerateAddressMetadata { syncing: false },
+        )
+        .await
+        .unwrap();
         let spent_tx = crate::test_utils::generate_message(50, address.clone(), true, true, false);
         account_handle.write().await.append_messages(vec![spent_tx]);
 

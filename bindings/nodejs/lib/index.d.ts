@@ -11,7 +11,7 @@ export declare enum MessageType {
   Value = 5,
 }
 
-export declare interface TransactionEssence {
+export declare interface TransactionPayloadEssence {
   inputs: Input[];
   outputs: Output[];
   payload?: Payload[];
@@ -28,7 +28,7 @@ export declare interface Output {
 }
 
 export declare interface Transaction {
-  essence: TransactionEssence;
+  essence: TransactionPayloadEssence;
 }
 
 export declare type Payload = Transaction;
@@ -109,8 +109,7 @@ export declare interface ClientOptions {
 }
 
 export declare enum SignerType {
-  Stronghold = 1,
-  EnvMnemonic = 2
+  Stronghold = 1
 }
 
 export declare interface AccountToCreate {
@@ -119,6 +118,7 @@ export declare interface AccountToCreate {
   alias?: string;
   createdAt?: string;
   signerType?: SignerType;
+  skipPersistance?: boolean;
 }
 
 export declare enum StorageType {

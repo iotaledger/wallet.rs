@@ -6,7 +6,7 @@ use crate::{
     address::{Address, IotaAddress},
     client::ClientOptions,
     message::{Message, MessageType},
-    signing::SignerType,
+    signing::{GenerateAddressMetadata, SignerType},
 };
 
 use chrono::prelude::{DateTime, Utc};
@@ -115,7 +115,8 @@ impl AccountInitialiser {
         self
     }
 
-    pub(crate) fn skip_persistance(mut self) -> Self {
+    /// Skips storing the account to the database.
+    pub fn skip_persistance(mut self) -> Self {
         self.skip_persistance = true;
         self
     }
@@ -151,11 +152,11 @@ impl AccountInitialiser {
             skip_persistance: self.skip_persistance,
         };
 
-        let address = crate::address::get_iota_address(&account, 0, false).await?;
+        let address =
+            crate::address::get_iota_address(&account, 0, false, GenerateAddressMetadata { syncing: false }).await?;
         let mut digest = [0; 32];
         let raw = match address {
             iota::Address::Ed25519(a) => a.as_ref().to_vec(),
-            iota::Address::Wots(a) => a.as_ref().to_vec(),
             _ => unimplemented!(),
         };
         crypto::hashes::sha::SHA256(&raw, &mut digest);
@@ -276,7 +277,7 @@ impl AccountHandle {
     /// Gets a new unused address and links it to this account.
     pub async fn generate_address(&self) -> crate::Result<Address> {
         let mut account = self.inner.write().await;
-        let address = crate::address::get_new_address(&account).await?;
+        let address = crate::address::get_new_address(&account, GenerateAddressMetadata { syncing: false }).await?;
 
         account.do_mut(|account| {
             account.addresses.push(address.clone());
@@ -325,14 +326,27 @@ impl AccountHandle {
             .collect()
     }
 
-    /// Bridge to [Account#list_addresses](struct.Account.html#method.list_addresses).
+    /// Bridge to [Account#list_spent_addresses](struct.Account.html#method.list_spent_addresses).
     /// This method clones the account's addresses so when querying a large list of addresses
     /// prefer using the `read` method to access the account instance.
-    pub async fn list_addresses(&self, unspent: bool) -> Vec<Address> {
+    pub async fn list_spent_addresses(&self) -> Vec<Address> {
         self.inner
             .read()
             .await
-            .list_addresses(unspent)
+            .list_spent_addresses()
+            .into_iter()
+            .cloned()
+            .collect()
+    }
+
+    /// Bridge to [Account#list_unspent_addresses](struct.Account.html#method.list_unspent_addresses).
+    /// This method clones the account's addresses so when querying a large list of addresses
+    /// prefer using the `read` method to access the account instance.
+    pub async fn list_unspent_addresses(&self) -> Vec<Address> {
+        self.inner
+            .read()
+            .await
+            .list_unspent_addresses()
             .into_iter()
             .cloned()
             .collect()
@@ -478,13 +492,19 @@ impl Account {
         }
     }
 
-    /// Gets the addresses linked to this account.
-    ///
-    /// * `unspent` - Whether it should get only unspent addresses or not.
-    pub fn list_addresses(&self, unspent: bool) -> Vec<&Address> {
+    /// Gets the spent addresses.
+    pub fn list_spent_addresses(&self) -> Vec<&Address> {
         self.addresses
             .iter()
-            .filter(|address| crate::address::is_unspent(&self, address.address()) == unspent)
+            .filter(|address| !crate::address::is_unspent(&self, address.address()))
+            .collect()
+    }
+
+    /// Gets the spent addresses.
+    pub fn list_unspent_addresses(&self) -> Vec<&Address> {
+        self.addresses
+            .iter()
+            .filter(|address| crate::address::is_unspent(&self, address.address()))
             .collect()
     }
 
@@ -550,8 +570,8 @@ mod tests {
         message::{Message, MessageType},
     };
     use iota::{
-        Ed25519Signature, MessageId, Payload, SignatureUnlock, TransactionBuilder, TransactionEssence, TransactionId,
-        UTXOInput, UnlockBlock,
+        Ed25519Signature, MessageId, Payload, SignatureUnlock, TransactionId, TransactionPayloadBuilder,
+        TransactionPayloadEssence, UTXOInput, UnlockBlock,
     };
 
     // asserts that the `set_alias` function updates the account alias in storage
@@ -634,9 +654,9 @@ mod tests {
             _ => panic!("invalid messaga"),
         };
         message.payload = iota::Payload::Transaction(Box::new(
-            TransactionBuilder::new()
+            TransactionPayloadBuilder::new()
                 .with_essence(
-                    TransactionEssence::builder()
+                    TransactionPayloadEssence::builder()
                         .add_output(output)
                         .add_input(UTXOInput::new(id, 0).unwrap().into())
                         .finish()

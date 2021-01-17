@@ -3,11 +3,11 @@ name: Udeps
 on:
   push:
     branches:
-      - dev
+      - develop
       - master
   pull_request:
     branches:
-      - dev
+      - develop
       - master
 
 jobs:
@@ -43,7 +43,7 @@ jobs:
     - name: Cache nodejs binding cargo target
       uses: actions/cache@v2
       with:
-        path: bindings/node/native/target
+        path: bindings/nodejs/native/target
         key: ubuntu-latest-nightly-cargo-build-node-target-${{ hashFiles('**/Cargo.toml') }}
 
     - uses: actions-rs/cargo@v1
@@ -59,4 +59,4 @@ jobs:
     - uses: actions-rs/cargo@v1
       with:
         command: udeps
-        args: --manifest-path ./bindings/node/native/Cargo.toml --all-targets
+        args: --manifest-path ./bindings/nodejs/native/Cargo.toml --all-targets
