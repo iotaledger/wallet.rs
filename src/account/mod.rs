@@ -576,17 +576,9 @@ mod tests {
     async fn set_alias() {
         let manager = crate::test_utils::get_account_manager().await;
 
-        let updated_alias = "updated alias";
-        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-            .expect("invalid node URL")
-            .build();
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
 
-        let account_handle = manager
-            .create_account(client_options)
-            .alias("alias")
-            .initialise()
-            .await
-            .expect("failed to add account");
+        let updated_alias = "updated alias";
 
         account_handle.set_alias(updated_alias).await;
 
@@ -595,6 +587,28 @@ mod tests {
             .await
             .expect("failed to get account from storage");
         assert_eq!(account_in_storage.alias().await, updated_alias.to_string());
+    }
+
+    // asserts that the `set_client_options` function updates the account client options in storage
+    #[tokio::test]
+    async fn set_client_options() {
+        let manager = crate::test_utils::get_account_manager().await;
+
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+
+        let updated_client_options =
+            ClientOptionsBuilder::nodes(&["http://test.wallet", "http://test.wallet/set-client-options"])
+                .unwrap()
+                .build()
+                .unwrap();
+
+        account_handle.set_client_options(updated_client_options.clone()).await;
+
+        let account_in_storage = manager
+            .get_account(account_handle.read().await.id())
+            .await
+            .expect("failed to get account from storage");
+        assert_eq!(account_in_storage.client_options().await, updated_client_options);
     }
 
     fn _generate_address_output(value: u64) -> AddressOutput {
