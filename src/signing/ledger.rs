@@ -9,6 +9,8 @@ use std::{path::PathBuf};
 
 const HARDENED : u32 = 0x80000000;
 
+const USE_SIMULATOR : bool = true;
+
 #[derive(Default)]
 pub struct LedgerHardwareWalletSigner;
 
@@ -52,7 +54,7 @@ impl super::Signer for LedgerHardwareWalletSigner {
         meta: super::GenerateAddressMetadata, 
     ) -> crate::Result<iota::Address> {
         // get ledger
-        let ledger = ledger_iota::get_ledger(false, *account.index() as u32).map_err(|e| ledger_map_err(e))?;
+        let ledger = ledger_iota::get_ledger(USE_SIMULATOR, *account.index() as u32).map_err(|e| ledger_map_err(e))?;
 
         // if the wallet is not generating addresses for syncing, we assume it's a new receiving address that 
         // needs to be shown to the user
@@ -70,7 +72,7 @@ impl super::Signer for LedgerHardwareWalletSigner {
         meta: super::SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
         // get ledger
-        let ledger = ledger_iota::get_ledger(false, *account.index() as u32).map_err(|e| ledger_map_err(e))?;
+        let ledger = ledger_iota::get_ledger(USE_SIMULATOR, *account.index() as u32).map_err(|e| ledger_map_err(e))?;
 
         // gather input indices into vec
         let mut key_indices : Vec<u32> = Vec::new();
