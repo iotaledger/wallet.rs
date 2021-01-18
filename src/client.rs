@@ -286,13 +286,13 @@ mod tests {
     #[test]
     fn multi_node_empty() {
         let builder_res = ClientOptionsBuilder::nodes(&[]).unwrap().build();
-        assert!(builder_res.is_err());
+        assert!(builder_res.is_ok());
     }
 
     #[test]
     fn network_node_empty() {
         let builder_res = ClientOptionsBuilder::network(Network::Testnet).build();
-        assert!(builder_res.is_err());
+        assert!(builder_res.is_ok());
     }
 
     #[test]
