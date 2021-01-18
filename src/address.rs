@@ -148,10 +148,9 @@ impl AddressBuilder {
 }
 
 /// An address and its network type.
-#[derive(Debug, Clone, PartialEq, Eq, Getters)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AddressWrapper {
     inner: IotaAddress,
-    #[getset(get = "pub(crate)")]
     hrp: String,
 }
 
@@ -254,6 +253,10 @@ impl Address {
             .iter()
             .fold(0, |acc, o| acc + *o.amount())
     }
+
+    pub(crate) fn set_bech32_hrp(&mut self, hrp: String) {
+        self.address.hrp = hrp;
+    }
 }
 
 /// Parses a bech32 address string.
@@ -290,7 +293,7 @@ pub(crate) async fn get_iota_address(
 pub(crate) async fn get_new_address(account: &Account, metadata: GenerateAddressMetadata) -> crate::Result<Address> {
     let key_index = account.addresses().iter().filter(|a| !a.internal()).count();
     let bech32_hrp = match account.addresses().first() {
-        Some(address) => address.address().hrp().to_string(),
+        Some(address) => address.address().hrp.to_string(),
         None => {
             crate::client::get_client(account.client_options())
                 .read()
@@ -317,8 +320,7 @@ pub(crate) async fn get_new_change_address(
     metadata: GenerateAddressMetadata,
 ) -> crate::Result<Address> {
     let key_index = *address.key_index();
-    let iota_address =
-        get_iota_address(&account, key_index, true, address.address().hrp().to_string(), metadata).await?;
+    let iota_address = get_iota_address(&account, key_index, true, address.address().hrp.to_string(), metadata).await?;
     let address = Address {
         address: iota_address,
         balance: 0,
