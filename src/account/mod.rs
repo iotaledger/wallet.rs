@@ -428,6 +428,16 @@ impl Account {
     /// Updates the account's client options.
     pub async fn set_client_options(&mut self, options: ClientOptions) -> crate::Result<()> {
         self.client_options = options;
+
+        let bech32_hrp = crate::client::get_client(&self.client_options)
+            .read()
+            .await
+            .get_network_info()
+            .bech32_hrp;
+        for address in &mut self.addresses {
+            address.set_bec32_hrp(bech32_hrp.to_string());
+        }
+
         self.save().await
     }
 
