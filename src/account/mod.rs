@@ -435,7 +435,7 @@ impl Account {
             .get_network_info()
             .bech32_hrp;
         for address in &mut self.addresses {
-            address.set_bec32_hrp(bech32_hrp.to_string());
+            address.set_bech32_hrp(bech32_hrp.to_string());
         }
 
         self.save().await

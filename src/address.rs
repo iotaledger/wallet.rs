@@ -254,7 +254,7 @@ impl Address {
             .fold(0, |acc, o| acc + *o.amount())
     }
 
-    pub(crate) fn set_bec32_hrp(&mut self, hrp: String) {
+    pub(crate) fn set_bech32_hrp(&mut self, hrp: String) {
         self.address.hrp = hrp;
     }
 }
