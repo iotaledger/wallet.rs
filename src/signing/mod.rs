@@ -27,6 +27,7 @@ static SIGNERS_INSTANCE: OnceCell<Signers> = OnceCell::new();
 pub enum SignerType {
     /// Stronghold signer.
     #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     Stronghold,
     /// Custom signer with its identifier.
     Custom(String),

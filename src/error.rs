@@ -47,6 +47,7 @@ pub enum Error {
     JsonError(#[from] serde_json::error::Error),
     /// stronghold client error.
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
     #[error("`{0}`")]
     StrongholdError(crate::stronghold::Error),
     /// iota.rs error.
