@@ -243,7 +243,7 @@ pub(crate) async fn get_iota_address(
     metadata: GenerateAddressMetadata,
 ) -> crate::Result<IotaAddress> {
     let signer = crate::signing::get_signer(account.signer_type()).await;
-    let signer = signer.lock().await;
+    let mut signer = signer.lock().await;
     signer
         .generate_address(&account, address_index, internal, metadata)
         .await

@@ -33,7 +33,7 @@ impl Storage {
     }
 
     #[allow(dead_code)]
-    pub async fn get(&self, account_id: &AccountIdentifier) -> crate::Result<String> {
+    pub async fn get(&mut self, account_id: &AccountIdentifier) -> crate::Result<String> {
         self.inner.get(account_id).await.and_then(|account| {
             if let Some(key) = &self.encryption_key {
                 decrypt_account_json(&account, key)
@@ -43,11 +43,11 @@ impl Storage {
         })
     }
 
-    pub async fn get_all(&self) -> crate::Result<Vec<ParsedAccount>> {
+    pub async fn get_all(&mut self) -> crate::Result<Vec<ParsedAccount>> {
         parse_accounts(&self.storage_path, &self.inner.get_all().await?, &self.encryption_key)
     }
 
-    pub async fn set(&self, account_id: &AccountIdentifier, account: String) -> crate::Result<()> {
+    pub async fn set(&mut self, account_id: &AccountIdentifier, account: String) -> crate::Result<()> {
         self.inner
             .set(
                 account_id,
@@ -62,7 +62,7 @@ impl Storage {
             .await
     }
 
-    pub async fn remove(&self, account_id: &AccountIdentifier) -> crate::Result<()> {
+    pub async fn remove(&mut self, account_id: &AccountIdentifier) -> crate::Result<()> {
         self.inner.remove(account_id).await
     }
 }
@@ -117,13 +117,13 @@ pub trait StorageAdapter {
         "custom-adapter"
     }
     /// Gets the account with the given id/alias from the storage.
-    async fn get(&self, account_id: &AccountIdentifier) -> crate::Result<String>;
+    async fn get(&mut self, account_id: &AccountIdentifier) -> crate::Result<String>;
     /// Gets all the accounts from the storage.
-    async fn get_all(&self) -> crate::Result<Vec<String>>;
+    async fn get_all(&mut self) -> crate::Result<Vec<String>>;
     /// Saves or updates an account on the storage.
-    async fn set(&self, account_id: &AccountIdentifier, account: String) -> crate::Result<()>;
+    async fn set(&mut self, account_id: &AccountIdentifier, account: String) -> crate::Result<()>;
     /// Removes an account from the storage.
-    async fn remove(&self, account_id: &AccountIdentifier) -> crate::Result<()>;
+    async fn remove(&mut self, account_id: &AccountIdentifier) -> crate::Result<()>;
 }
 
 fn encrypt_account_json<O: Write>(account: &[u8], key: &[u8; 32], output: &mut O) -> crate::Result<()> {

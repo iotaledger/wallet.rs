@@ -80,12 +80,12 @@ mod test_utils {
 
     #[async_trait::async_trait]
     impl crate::signing::Signer for TestSigner {
-        async fn store_mnemonic(&self, _: &PathBuf, _mnemonic: String) -> crate::Result<()> {
+        async fn store_mnemonic(&mut self, _: &PathBuf, _mnemonic: String) -> crate::Result<()> {
             Ok(())
         }
 
         async fn generate_address(
-            &self,
+            &mut self,
             _account: &crate::account::Account,
             _address_index: usize,
             _internal: bool,
@@ -97,7 +97,7 @@ mod test_utils {
         }
 
         async fn sign_message<'a>(
-            &self,
+            &mut self,
             _account: &crate::account::Account,
             _essence: &iota::TransactionPayloadEssence,
             _inputs: &mut Vec<crate::signing::TransactionInput>,
