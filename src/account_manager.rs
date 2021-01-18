@@ -421,7 +421,7 @@ impl AccountManager {
         };
 
         let signer = crate::signing::get_signer(&signer_type).await;
-        let signer = signer.lock().await;
+        let mut signer = signer.lock().await;
         signer.store_mnemonic(&self.storage_path, mnemonic).await?;
 
         self.generated_mnemonic = None;
@@ -570,7 +570,7 @@ impl AccountManager {
                     .finish()
                     .await?;
                 let stronghold_storage = crate::storage::get(&self.storage_folder.join(STRONGHOLD_FILENAME)).await?;
-                let stronghold_storage = stronghold_storage.lock().await;
+                let mut stronghold_storage = stronghold_storage.lock().await;
 
                 for (account_id, account_handle) in &*self.accounts.read().await {
                     stronghold_storage
@@ -602,7 +602,7 @@ impl AccountManager {
                     let storage_id = crate::storage::get(&self.storage_path).await?.lock().await.id();
                     // if we're actually using the SQLite storage adapter
                     if storage_id == crate::storage::sqlite::STORAGE_ID {
-                        let stronghold_storage = crate::storage::stronghold::StrongholdStorageAdapter::new(
+                        let mut stronghold_storage = crate::storage::stronghold::StrongholdStorageAdapter::new(
                             &self.storage_folder.join(STRONGHOLD_FILENAME),
                         )
                         .unwrap();
