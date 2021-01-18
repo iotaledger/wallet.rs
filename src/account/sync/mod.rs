@@ -3,7 +3,7 @@
 
 use crate::{
     account::{Account, AccountHandle},
-    address::{Address, AddressBuilder, AddressOutput, IotaAddress},
+    address::{Address, AddressBuilder, AddressOutput, AddressWrapper},
     message::{Message, RemainderValueStrategy, Transfer},
     signing::{GenerateAddressMetadata, SignMessageMetadata},
 };
@@ -59,6 +59,13 @@ async fn sync_addresses(
 
     let mut generated_addresses = vec![];
     let mut found_messages = vec![];
+
+    let bech32_hrp = crate::client::get_client(account.client_options())
+        .read()
+        .await
+        .get_network_info()
+        .bech32_hrp;
+
     loop {
         let mut generated_iota_addresses = vec![]; // collection of (address_index, internal, address) pairs
         for i in address_index..(address_index + gap_limit) {
@@ -66,12 +73,26 @@ async fn sync_addresses(
             generated_iota_addresses.push((
                 i,
                 false,
-                crate::address::get_iota_address(&account, i, false, GenerateAddressMetadata { syncing: true }).await?,
+                crate::address::get_iota_address(
+                    &account,
+                    i,
+                    false,
+                    bech32_hrp.to_string(),
+                    GenerateAddressMetadata { syncing: true },
+                )
+                .await?,
             ));
             generated_iota_addresses.push((
                 i,
                 true,
-                crate::address::get_iota_address(&account, i, true, GenerateAddressMetadata { syncing: true }).await?,
+                crate::address::get_iota_address(
+                    &account,
+                    i,
+                    true,
+                    bech32_hrp.to_string(),
+                    GenerateAddressMetadata { syncing: true },
+                )
+                .await?,
             ));
         }
 
@@ -471,10 +492,10 @@ impl SyncedAccount {
     /// needed.
     fn select_inputs<'a>(
         &self,
-        locked_addresses: &'a mut MutexGuard<'_, Vec<IotaAddress>>,
+        locked_addresses: &'a mut MutexGuard<'_, Vec<AddressWrapper>>,
         threshold: u64,
         account: &'a Account,
-        address: &'a IotaAddress,
+        address: &'a AddressWrapper,
     ) -> crate::Result<(Vec<input_selection::Input>, Option<input_selection::Input>)> {
         let mut available_addresses: Vec<input_selection::Input> = account
             .addresses()
@@ -493,7 +514,7 @@ impl SyncedAccount {
             addresses
                 .iter()
                 .map(|a| a.address.clone())
-                .collect::<Vec<IotaAddress>>(),
+                .collect::<Vec<AddressWrapper>>(),
         );
 
         let remainder = if addresses.iter().fold(0, |acc, a| acc + a.balance) > threshold {
@@ -652,8 +673,9 @@ impl SyncedAccount {
                 // remainder value. we add an Output for the missing value and collect the remainder
                 let missing_value = value - current_output_sum;
                 remainder_value += *utxo.amount() - missing_value;
-                essence_builder = essence_builder
-                    .add_output(SignatureLockedSingleOutput::new(transfer_obj.address.clone(), missing_value)?.into());
+                essence_builder = essence_builder.add_output(
+                    SignatureLockedSingleOutput::new(transfer_obj.address.as_ref().clone(), missing_value)?.into(),
+                );
                 current_output_sum += missing_value;
                 log::debug!(
                     "[TRANSFER] added output with the missing value {}, and the remainder is {}",
@@ -666,8 +688,9 @@ impl SyncedAccount {
                     utxo.amount(),
                     current_output_sum
                 );
-                essence_builder = essence_builder
-                    .add_output(SignatureLockedSingleOutput::new(transfer_obj.address.clone(), *utxo.amount())?.into());
+                essence_builder = essence_builder.add_output(
+                    SignatureLockedSingleOutput::new(transfer_obj.address.as_ref().clone(), *utxo.amount())?.into(),
+                );
                 current_output_sum += *utxo.amount();
             }
         }
@@ -728,7 +751,7 @@ impl SyncedAccount {
             };
             remainder_value_deposit_address = Some(remainder_deposit_address.clone());
             essence_builder = essence_builder.add_output(
-                SignatureLockedSingleOutput::new(remainder_deposit_address.clone(), remainder_value)?.into(),
+                SignatureLockedSingleOutput::new(remainder_deposit_address.as_ref().clone(), remainder_value)?.into(),
             );
             Some(remainder_deposit_address)
         } else {
@@ -811,7 +834,7 @@ impl SyncedAccount {
         for input_address in &input_addresses {
             let index = locked_addresses
                 .iter()
-                .position(|a| a == &input_address.address)
+                .position(|a| &input_address.address == a)
                 .unwrap();
             locked_addresses.remove(index);
         }

@@ -3,7 +3,7 @@
 
 use crate::{
     account_manager::AccountStore,
-    address::{Address, IotaAddress},
+    address::{Address, AddressWrapper},
     client::ClientOptions,
     message::{Message, MessageType},
     signing::{GenerateAddressMetadata, SignerType},
@@ -151,10 +151,22 @@ impl AccountInitialiser {
             skip_persistance: self.skip_persistance,
         };
 
-        let address =
-            crate::address::get_iota_address(&account, 0, false, GenerateAddressMetadata { syncing: false }).await?;
+        let bech32_hrp = crate::client::get_client(account.client_options())
+            .read()
+            .await
+            .get_network_info()
+            .bech32_hrp;
+
+        let address = crate::address::get_iota_address(
+            &account,
+            0,
+            false,
+            bech32_hrp,
+            GenerateAddressMetadata { syncing: false },
+        )
+        .await?;
         let mut digest = [0; 32];
-        let raw = match address {
+        let raw = match address.as_ref() {
             iota::Address::Ed25519(a) => a.as_ref().to_vec(),
             _ => unimplemented!(),
         };
@@ -214,11 +226,11 @@ pub struct Account {
 #[derive(Debug, Clone)]
 pub struct AccountHandle {
     inner: Arc<RwLock<Account>>,
-    locked_addresses: Arc<Mutex<Vec<IotaAddress>>>,
+    locked_addresses: Arc<Mutex<Vec<AddressWrapper>>>,
 }
 
 impl AccountHandle {
-    pub(crate) fn locked_addresses(&self) -> Arc<Mutex<Vec<IotaAddress>>> {
+    pub(crate) fn locked_addresses(&self) -> Arc<Mutex<Vec<AddressWrapper>>> {
         self.locked_addresses.clone()
     }
 }
