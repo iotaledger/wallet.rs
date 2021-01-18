@@ -24,13 +24,13 @@ fn stronghold_path(storage_path: &PathBuf) -> PathBuf {
 
 #[async_trait::async_trait]
 impl super::Signer for StrongholdSigner {
-    async fn store_mnemonic(&self, storage_path: &PathBuf, mnemonic: String) -> crate::Result<()> {
+    async fn store_mnemonic(&mut self, storage_path: &PathBuf, mnemonic: String) -> crate::Result<()> {
         crate::stronghold::store_mnemonic(&stronghold_path(storage_path), mnemonic).await?;
         Ok(())
     }
 
     async fn generate_address(
-        &self,
+        &mut self,
         account: &Account,
         address_index: usize,
         internal: bool,
@@ -47,7 +47,7 @@ impl super::Signer for StrongholdSigner {
     }
 
     async fn sign_message<'a>(
-        &self,
+        &mut self,
         account: &Account,
         essence: &iota::TransactionPayloadEssence,
         inputs: &mut Vec<super::TransactionInput>,
