@@ -4,11 +4,6 @@ version = "0.1.0"
 authors = ["Lucas Nogueira <lucas.nogueira@iota.org>"]
 edition = "2018"
 
-[package.metadata.cargo-udeps.ignore]
-# ignore sled since it's enabled only when not(any(feature = "stronghold-storage", feature = "sqlite-storage"))
-# and we can't specify that on the dependency section
-development = ["sled"]
-
 [dependencies]
 thiserror = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
