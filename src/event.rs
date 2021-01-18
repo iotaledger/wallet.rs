@@ -240,7 +240,7 @@ mod tests {
     use super::{emit_balance_change, on_balance_change, on_error};
     use crate::{
         account::AccountIdentifier,
-        address::{AddressBuilder, IotaAddress},
+        address::{AddressBuilder, AddressWrapper, IotaAddress},
     };
     use iota::message::prelude::Ed25519Address;
     use rusty_fork::rusty_fork_test;
@@ -270,7 +270,10 @@ mod tests {
         emit_balance_change(
             &AccountIdentifier::Id(hex::encode([1; 32])),
             &AddressBuilder::new()
-                .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
+                .address(AddressWrapper::new(
+                    IotaAddress::Ed25519(Ed25519Address::new([0; 32])),
+                    "iota".to_string(),
+                ))
                 .balance(0)
                 .key_index(0)
                 .outputs(vec![])

@@ -24,6 +24,10 @@ pub struct SqliteStorageAdapter {
     connection: Arc<Mutex<Connection>>,
 }
 
+fn storage_err<E: ToString>(error: E) -> crate::Error {
+    crate::Error::Storage(error.to_string())
+}
+
 impl SqliteStorageAdapter {
     /// Initialises the storage adapter.
     pub fn new(path: impl AsRef<Path>, table_name: impl AsRef<str>) -> crate::Result<Self> {
@@ -31,19 +35,21 @@ impl SqliteStorageAdapter {
             fs::create_dir_all(&parent)?;
         }
 
-        let connection = Connection::open(path.as_ref())?;
+        let connection = Connection::open(path.as_ref()).map_err(storage_err)?;
 
-        connection.execute(
-            &format!(
-                "CREATE TABLE IF NOT EXISTS {} (
+        connection
+            .execute(
+                &format!(
+                    "CREATE TABLE IF NOT EXISTS {} (
                     key TEXT NOT NULL UNIQUE,
                     value TEXT,
                     created_at INTEGER
                 )",
-                table_name.as_ref()
-            ),
-            NO_PARAMS,
-        )?;
+                    table_name.as_ref()
+                ),
+                NO_PARAMS,
+            )
+            .map_err(storage_err)?;
 
         Ok(Self {
             table_name: table_name.as_ref().to_string(),
@@ -58,7 +64,7 @@ impl StorageAdapter for SqliteStorageAdapter {
         STORAGE_ID
     }
 
-    async fn get(&self, account_id: &AccountIdentifier) -> crate::Result<String> {
+    async fn get(&mut self, account_id: &AccountIdentifier) -> crate::Result<String> {
         let (sql, params) = match account_id {
             AccountIdentifier::Id(id) => (
                 format!("SELECT value FROM {} WHERE key = ?1 LIMIT 1", self.table_name),
@@ -71,9 +77,10 @@ impl StorageAdapter for SqliteStorageAdapter {
         };
 
         let connection = self.connection.lock().expect("failed to get connection lock");
-        let mut query = connection.prepare(&sql)?;
+        let mut query = connection.prepare(&sql).map_err(storage_err)?;
         let results = query
-            .query_and_then(params, |row| row.get(0))?
+            .query_and_then(params, |row| row.get(0))
+            .map_err(storage_err)?
             .collect::<Vec<rusqlite::Result<String>>>();
         let account = results
             .first()
@@ -82,17 +89,20 @@ impl StorageAdapter for SqliteStorageAdapter {
         Ok(account)
     }
 
-    async fn get_all(&self) -> crate::Result<std::vec::Vec<String>> {
+    async fn get_all(&mut self) -> crate::Result<std::vec::Vec<String>> {
         let connection = self.connection.lock().expect("failed to get connection lock");
-        let mut query = connection.prepare(&format!("SELECT value FROM {} ORDER BY created_at", self.table_name))?;
+        let mut query = connection
+            .prepare(&format!("SELECT value FROM {} ORDER BY created_at", self.table_name))
+            .map_err(storage_err)?;
         let accounts = query
-            .query_and_then(NO_PARAMS, |row| row.get(0))?
+            .query_and_then(NO_PARAMS, |row| row.get(0))
+            .map_err(storage_err)?
             .map(|val| val.unwrap())
             .collect::<Vec<String>>();
         Ok(accounts)
     }
 
-    async fn set(&self, account_id: &AccountIdentifier, account: String) -> crate::Result<()> {
+    async fn set(&mut self, account_id: &AccountIdentifier, account: String) -> crate::Result<()> {
         let id = match account_id {
             AccountIdentifier::Id(id) => id,
             _ => return Err(crate::Error::Storage("only Id is supported".into())),
@@ -107,7 +117,7 @@ impl StorageAdapter for SqliteStorageAdapter {
         Ok(())
     }
 
-    async fn remove(&self, account_id: &AccountIdentifier) -> crate::Result<()> {
+    async fn remove(&mut self, account_id: &AccountIdentifier) -> crate::Result<()> {
         let (sql, params) = match account_id {
             AccountIdentifier::Id(id) => (
                 format!("DELETE FROM {} WHERE key = ?1", self.table_name),

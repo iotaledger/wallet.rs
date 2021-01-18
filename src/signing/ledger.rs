@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::account::{Account};
+use crate::address::AddressWrapper;
 
 use iota::{common::packable::Packable, UnlockBlock};
 use std::{path::PathBuf};
@@ -42,15 +43,15 @@ fn ledger_map_err(err: errors::APIError) -> crate::Error {
 
 #[async_trait::async_trait]
 impl super::Signer for LedgerHardwareWalletSigner {
-    async fn store_mnemonic(&self, _: &PathBuf, mnemonic: String) -> crate::Result<()> {
+    async fn store_mnemonic(&mut self, _: &PathBuf, _mnemonic: String) -> crate::Result<()> {
         Err(crate::Error::InvalidMnemonic(String::from("")))
     }
 
     async fn generate_address(
-        &self,
+        &mut self,
         account: &Account,
         address_index: usize,
-        internal: bool,
+        _internal: bool,
         meta: super::GenerateAddressMetadata, 
     ) -> crate::Result<iota::Address> {
         // get ledger
@@ -65,7 +66,7 @@ impl super::Signer for LedgerHardwareWalletSigner {
     }
 
     async fn sign_message<'a>(
-        &self,
+        &mut self,
         account: &Account,
         essence: &iota::TransactionPayloadEssence,
         inputs: &mut Vec<super::TransactionInput>,
@@ -82,7 +83,7 @@ impl super::Signer for LedgerHardwareWalletSigner {
         }
  
         // figure out the remainder address and bip32 index (if there is one)
-        let (has_remainder, remainder_address, remainder_bip32) : (bool, Option<&iota::Address>, u32) = match meta.remainder_deposit_address {
+        let (has_remainder, remainder_address, remainder_bip32) : (bool, Option<&AddressWrapper>, u32) = match meta.remainder_deposit_address {
             Some(a) => {
                 (true, Some(a.address()), *a.key_index() as u32 | HARDENED)
             }

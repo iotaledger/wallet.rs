@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{account::Account, message::MessageType, signing::GenerateAddressMetadata};
-use bech32::FromBase32;
 use getset::{Getters, Setters};
-pub use iota::message::prelude::{Address as IotaAddress, Ed25519Address, Input, Payload, UTXOInput};
+pub use iota::{client::builder::Network, Address as IotaAddress, Ed25519Address, Input, Payload, UTXOInput};
 use iota::{
     message::prelude::{MessageId, TransactionId},
     OutputMetadata,
@@ -14,6 +13,7 @@ use std::{
     cmp::Ordering,
     convert::{TryFrom, TryInto},
     hash::{Hash, Hasher},
+    str::FromStr,
 };
 
 /// An Address output.
@@ -81,8 +81,8 @@ impl TryFrom<OutputMetadata> for AddressOutput {
 
 /// The address builder.
 #[derive(Default)]
-pub struct AddressBuilder {
-    address: Option<IotaAddress>,
+pub(crate) struct AddressBuilder {
+    address: Option<AddressWrapper>,
     balance: Option<u64>,
     key_index: Option<usize>,
     internal: bool,
@@ -96,7 +96,7 @@ impl AddressBuilder {
     }
 
     /// Defines the address.
-    pub fn address(mut self, address: IotaAddress) -> Self {
+    pub fn address(mut self, address: AddressWrapper) -> Self {
         self.address = Some(address);
         self
     }
@@ -128,22 +128,53 @@ impl AddressBuilder {
     /// Builds the address.
     pub fn build(self) -> crate::Result<Address> {
         let iota_address = self.address.ok_or(crate::Error::AddressBuildRequiredField(
-            crate::AddressBuildRequiredField::Address,
+            crate::error::AddressBuildRequiredField::Address,
         ))?;
         let address = Address {
             address: iota_address,
             balance: self.balance.ok_or(crate::Error::AddressBuildRequiredField(
-                crate::AddressBuildRequiredField::Balance,
+                crate::error::AddressBuildRequiredField::Balance,
             ))?,
             key_index: self.key_index.ok_or(crate::Error::AddressBuildRequiredField(
-                crate::AddressBuildRequiredField::KeyIndex,
+                crate::error::AddressBuildRequiredField::KeyIndex,
             ))?,
             internal: self.internal,
             outputs: self.outputs.ok_or(crate::Error::AddressBuildRequiredField(
-                crate::AddressBuildRequiredField::Outputs,
+                crate::error::AddressBuildRequiredField::Outputs,
             ))?,
         };
         Ok(address)
+    }
+}
+
+/// An address and its network type.
+#[derive(Debug, Clone, PartialEq, Eq, Getters)]
+pub struct AddressWrapper {
+    inner: IotaAddress,
+    #[getset(get = "pub(crate)")]
+    hrp: String,
+}
+
+impl AsRef<IotaAddress> for AddressWrapper {
+    fn as_ref(&self) -> &IotaAddress {
+        &self.inner
+    }
+}
+
+impl AddressWrapper {
+    pub(crate) fn new(address: IotaAddress, hrp: String) -> Self {
+        Self { inner: address, hrp }
+    }
+
+    /// Encodes the address as bech32.
+    pub fn to_bech32(&self) -> String {
+        self.inner.to_bech32(&self.hrp)
+    }
+}
+
+impl PartialEq<IotaAddress> for AddressWrapper {
+    fn eq(&self, other: &iota::Address) -> bool {
+        self == other
     }
 }
 
@@ -153,7 +184,7 @@ impl AddressBuilder {
 pub struct Address {
     /// The address.
     #[serde(with = "crate::serde::iota_address_serde")]
-    address: IotaAddress,
+    address: AddressWrapper,
     /// The address balance.
     #[getset(set = "pub")]
     balance: u64,
@@ -226,33 +257,40 @@ impl Address {
 }
 
 /// Parses a bech32 address string.
-pub fn parse(address: String) -> crate::Result<IotaAddress> {
-    let address_ed25519 = Vec::from_base32(&bech32::decode(&address)?.1)?;
-    let iota_address = IotaAddress::Ed25519(Ed25519Address::new(
-        address_ed25519[1..]
-            .try_into()
-            .map_err(|_| crate::Error::InvalidAddressLength)?,
-    ));
-    Ok(iota_address)
+pub fn parse<A: AsRef<str>>(address: A) -> crate::Result<AddressWrapper> {
+    let address = address.as_ref();
+    let mut tokens = address.split('1');
+    let hrp = tokens.next().unwrap();
+    let address = iota::Address::try_from_bech32(address).or_else(|_| {
+        if let Ok(ed25519_address) = Ed25519Address::from_str(address) {
+            Ok(IotaAddress::Ed25519(ed25519_address))
+        } else {
+            Err(crate::Error::InvalidAddress)
+        }
+    });
+    Ok(AddressWrapper::new(address?, hrp.to_string()))
 }
 
 pub(crate) async fn get_iota_address(
     account: &Account,
     address_index: usize,
     internal: bool,
+    bech32_hrp: String,
     metadata: GenerateAddressMetadata,
-) -> crate::Result<IotaAddress> {
+) -> crate::Result<AddressWrapper> {
     let signer = crate::signing::get_signer(account.signer_type()).await;
-    let signer = signer.lock().await;
-    signer
+    let mut signer = signer.lock().await;
+    let address = signer
         .generate_address(&account, address_index, internal, metadata)
-        .await
+        .await?;
+    Ok(AddressWrapper::new(address, bech32_hrp))
 }
 
 /// Gets an unused public address for the given account.
 pub(crate) async fn get_new_address(account: &Account, metadata: GenerateAddressMetadata) -> crate::Result<Address> {
     let key_index = account.addresses().iter().filter(|a| !a.internal()).count();
-    let iota_address = get_iota_address(&account, key_index, false, metadata).await?;
+    let bech32_hrp = account.addresses().first().unwrap().address().hrp().to_string();
+    let iota_address = get_iota_address(&account, key_index, false, bech32_hrp, metadata).await?;
     let address = Address {
         address: iota_address,
         balance: 0,
@@ -270,7 +308,8 @@ pub(crate) async fn get_new_change_address(
     metadata: GenerateAddressMetadata,
 ) -> crate::Result<Address> {
     let key_index = *address.key_index();
-    let iota_address = get_iota_address(&account, key_index, true, metadata).await?;
+    let iota_address =
+        get_iota_address(&account, key_index, true, address.address().hrp().to_string(), metadata).await?;
     let address = Address {
         address: iota_address,
         balance: 0,
@@ -281,9 +320,9 @@ pub(crate) async fn get_new_change_address(
     Ok(address)
 }
 
-pub(crate) fn is_unspent(account: &Account, address: &IotaAddress) -> bool {
+pub(crate) fn is_unspent(account: &Account, address: &AddressWrapper) -> bool {
     !account
         .list_messages(0, 0, Some(MessageType::Sent))
         .iter()
-        .any(|message| message.addresses().contains(&address))
+        .any(|message| message.addresses().contains(&address.as_ref()))
 }
