@@ -1046,118 +1046,124 @@ mod tests {
 
     #[tokio::test]
     async fn store_accounts() {
-        let manager = crate::test_utils::get_account_manager().await;
-        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
 
-        manager
-            .remove_account(account_handle.read().await.id())
-            .await
-            .expect("failed to remove account");
+            manager
+                .remove_account(account_handle.read().await.id())
+                .await
+                .expect("failed to remove account");
+        })
+        .await;
     }
 
     #[tokio::test]
     async fn remove_account_with_message_history() {
-        let manager = crate::test_utils::get_account_manager().await;
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+                .expect("invalid node URL")
+                .build();
 
-        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-            .expect("invalid node URL")
-            .build();
+            let account_handle = manager
+                .create_account(client_options)
+                .unwrap()
+                .messages(vec![Message::from_iota_message(
+                    MessageId::new([0; 32]),
+                    &[],
+                    &MessageBuilder::new()
+                        .with_nonce_provider(crate::test_utils::NoopNonceProvider {}, 4000f64)
+                        .with_parent1(MessageId::new([0; 32]))
+                        .with_parent2(MessageId::new([0; 32]))
+                        .with_payload(Payload::Indexation(Box::new(
+                            IndexationPayload::new("index".to_string(), &[0; 16]).unwrap(),
+                        )))
+                        .with_network_id(0)
+                        .finish()
+                        .unwrap(),
+                    Some(true),
+                )
+                .unwrap()])
+                .initialise()
+                .await
+                .unwrap();
 
-        let account_handle = manager
-            .create_account(client_options)
-            .unwrap()
-            .messages(vec![Message::from_iota_message(
-                MessageId::new([0; 32]),
-                &[],
-                &MessageBuilder::new()
-                    .with_nonce_provider(crate::test_utils::NoopNonceProvider {}, 4000f64)
-                    .with_parent1(MessageId::new([0; 32]))
-                    .with_parent2(MessageId::new([0; 32]))
-                    .with_payload(Payload::Indexation(Box::new(
-                        IndexationPayload::new("index".to_string(), &[0; 16]).unwrap(),
-                    )))
-                    .with_network_id(0)
-                    .finish()
-                    .unwrap(),
-                Some(true),
-            )
-            .unwrap()])
-            .initialise()
-            .await
-            .unwrap();
-
-        let remove_response = manager.remove_account(account_handle.read().await.id()).await;
-        assert!(remove_response.is_err());
+            let remove_response = manager.remove_account(account_handle.read().await.id()).await;
+            assert!(remove_response.is_err());
+        })
+        .await;
     }
 
     #[tokio::test]
     async fn remove_account_with_balance() {
-        let manager = crate::test_utils::get_account_manager().await;
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+                .expect("invalid node URL")
+                .build();
 
-        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-            .expect("invalid node URL")
-            .build();
+            let account_handle = manager
+                .create_account(client_options)
+                .unwrap()
+                .addresses(vec![AddressBuilder::new()
+                    .balance(5)
+                    .key_index(0)
+                    .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
+                    .outputs(vec![])
+                    .build()
+                    .unwrap()])
+                .initialise()
+                .await
+                .unwrap();
 
-        let account_handle = manager
-            .create_account(client_options)
-            .unwrap()
-            .addresses(vec![AddressBuilder::new()
-                .balance(5)
-                .key_index(0)
-                .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
-                .outputs(vec![])
-                .build()
-                .unwrap()])
-            .initialise()
-            .await
-            .unwrap();
-
-        let remove_response = manager.remove_account(account_handle.read().await.id()).await;
-        assert!(remove_response.is_err());
+            let remove_response = manager.remove_account(account_handle.read().await.id()).await;
+            assert!(remove_response.is_err());
+        })
+        .await;
     }
 
     #[tokio::test]
     async fn create_account_with_latest_without_history() {
-        let manager = crate::test_utils::get_account_manager().await;
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+                .expect("invalid node URL")
+                .build();
 
-        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-            .expect("invalid node URL")
-            .build();
+            manager
+                .create_account(client_options.clone())
+                .unwrap()
+                .alias("alias")
+                .initialise()
+                .await
+                .expect("failed to add account");
 
-        manager
-            .create_account(client_options.clone())
-            .unwrap()
-            .alias("alias")
-            .initialise()
-            .await
-            .expect("failed to add account");
-
-        let create_response = manager.create_account(client_options).unwrap().initialise().await;
-        assert!(create_response.is_err());
+            let create_response = manager.create_account(client_options).unwrap().initialise().await;
+            assert!(create_response.is_err());
+        })
+        .await;
     }
 
     #[tokio::test]
     async fn create_account_skip_persistance() {
-        let manager = crate::test_utils::get_account_manager().await;
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+                .expect("invalid node URL")
+                .build();
 
-        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-            .expect("invalid node URL")
-            .build();
+            let account_handle = manager
+                .create_account(client_options.clone())
+                .unwrap()
+                .skip_persistance()
+                .initialise()
+                .await
+                .expect("failed to add account");
 
-        let account_handle = manager
-            .create_account(client_options.clone())
-            .unwrap()
-            .skip_persistance()
-            .initialise()
-            .await
-            .expect("failed to add account");
-
-        let account_get_res = manager.get_account(account_handle.read().await.id()).await;
-        assert!(account_get_res.is_err(), true);
-        match account_get_res.unwrap_err() {
-            crate::Error::AccountNotFound => {}
-            _ => panic!("unexpected get_account response; expected AccountNotFound"),
-        }
+            let account_get_res = manager.get_account(account_handle.read().await.id()).await;
+            assert!(account_get_res.is_err(), true);
+            match account_get_res.unwrap_err() {
+                crate::Error::AccountNotFound => {}
+                _ => panic!("unexpected get_account response; expected AccountNotFound"),
+            }
+        })
+        .await;
     }
 
     #[tokio::test]
@@ -1165,58 +1171,60 @@ mod tests {
         let backup_path = "./backup/happy-path";
         let _ = std::fs::remove_dir_all(backup_path);
         std::fs::create_dir_all(backup_path).unwrap();
-        let manager = crate::test_utils::get_account_manager().await;
 
-        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
 
-        // backup the stored accounts to ./backup/happy-path/${backup_name}
-        let backup_path = manager.backup(backup_path).await.unwrap();
-        let backup_file_path = if backup_path.is_dir() {
-            std::fs::read_dir(backup_path)
-                .unwrap()
-                .next()
-                .unwrap()
-                .unwrap()
-                .path()
-                .to_path_buf()
-        } else {
-            backup_path
-        };
+            // backup the stored accounts to ./backup/happy-path/${backup_name}
+            let backup_path = manager.backup(backup_path).await.unwrap();
+            let backup_file_path = if backup_path.is_dir() {
+                std::fs::read_dir(backup_path)
+                    .unwrap()
+                    .next()
+                    .unwrap()
+                    .unwrap()
+                    .path()
+                    .to_path_buf()
+            } else {
+                backup_path
+            };
 
-        // get another manager instance so we can import the accounts to a different storage
-        #[allow(unused_mut)]
-        let mut manager = crate::test_utils::get_account_manager().await;
+            // get another manager instance so we can import the accounts to a different storage
+            #[allow(unused_mut)]
+            let mut manager = crate::test_utils::get_account_manager().await;
 
-        #[cfg(all(
-            not(feature = "sqlite-storage"),
-            any(feature = "stronghold", feature = "stronghold-storage")
-        ))]
-        {
-            // wait for stronghold to finish pending operations and delete the storage file
-            crate::stronghold::unload_snapshot(manager.storage_path(), false)
+            #[cfg(all(
+                not(feature = "sqlite-storage"),
+                any(feature = "stronghold", feature = "stronghold-storage")
+            ))]
+            {
+                // wait for stronghold to finish pending operations and delete the storage file
+                crate::stronghold::unload_snapshot(manager.storage_path(), false)
+                    .await
+                    .unwrap();
+                let _ = crate::stronghold::actor_runtime().lock().await;
+                std::fs::remove_file(manager.storage_path()).unwrap();
+            }
+
+            manager.set_storage_password("password").await.unwrap();
+
+            // import the accounts from the backup and assert that it's the same
+
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            manager.import_accounts(backup_file_path, "password").await.unwrap();
+
+            #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
+            manager.import_accounts(backup_file_path).await.unwrap();
+
+            let imported_account = manager.get_account(account_handle.read().await.id()).await.unwrap();
+            // set the account storage path field so the assert works
+            account_handle
+                .write()
                 .await
-                .unwrap();
-            let _ = crate::stronghold::actor_runtime().lock().await;
-            std::fs::remove_file(manager.storage_path()).unwrap();
-        }
-
-        manager.set_storage_password("password").await.unwrap();
-
-        // import the accounts from the backup and assert that it's the same
-
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-        manager.import_accounts(backup_file_path, "password").await.unwrap();
-
-        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-        manager.import_accounts(backup_file_path).await.unwrap();
-
-        let imported_account = manager.get_account(account_handle.read().await.id()).await.unwrap();
-        // set the account storage path field so the assert works
-        account_handle
-            .write()
-            .await
-            .set_storage_path(manager.storage_path().clone());
-        assert_eq!(&*account_handle.read().await, &*imported_account.read().await);
+                .set_storage_path(manager.storage_path().clone());
+            assert_eq!(&*account_handle.read().await, &*imported_account.read().await);
+        })
+        .await;
     }
 
     #[tokio::test]
@@ -1224,40 +1232,41 @@ mod tests {
         let backup_path = "./backup/account-exists";
         let _ = std::fs::remove_dir_all(backup_path);
         std::fs::create_dir_all(backup_path).unwrap();
-        let mut manager = crate::test_utils::get_account_manager().await;
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |mut manager, _| async move {
+            // first we'll create an example account
+            let address = crate::test_utils::generate_random_iota_address();
+            let address = AddressBuilder::new()
+                .address(address.clone())
+                .key_index(0)
+                .balance(0)
+                .outputs(vec![])
+                .build()
+                .unwrap();
+            crate::test_utils::AccountCreator::new(&manager)
+                .addresses(vec![address])
+                .create()
+                .await;
 
-        // first we'll create an example account
-        let address = crate::test_utils::generate_random_iota_address();
-        let address = AddressBuilder::new()
-            .address(address.clone())
-            .key_index(0)
-            .balance(0)
-            .outputs(vec![])
-            .build()
-            .unwrap();
-        crate::test_utils::AccountCreator::new(&manager)
-            .addresses(vec![address])
-            .create()
-            .await;
+            let backup_path = manager.backup(backup_path).await.unwrap();
+            let backup_file_path = if backup_path.is_dir() {
+                std::fs::read_dir(backup_path).unwrap().next().unwrap().unwrap().path()
+            } else {
+                backup_path
+            };
 
-        let backup_path = manager.backup(backup_path).await.unwrap();
-        let backup_file_path = if backup_path.is_dir() {
-            std::fs::read_dir(backup_path).unwrap().next().unwrap().unwrap().path()
-        } else {
-            backup_path
-        };
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            let response = manager.import_accounts(backup_file_path, "password").await;
 
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-        let response = manager.import_accounts(backup_file_path, "password").await;
+            #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
+            let response = manager.import_accounts(backup_file_path).await;
 
-        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-        let response = manager.import_accounts(backup_file_path).await;
-
-        assert!(response.is_err());
-        let err = response.unwrap_err();
-        assert_eq!(
-            err.to_string(),
-            "failed to restore backup: storage file already exists".to_string()
-        );
+            assert!(response.is_err());
+            let err = response.unwrap_err();
+            assert_eq!(
+                err.to_string(),
+                "failed to restore backup: storage file already exists".to_string()
+            );
+        })
+        .await;
     }
 }

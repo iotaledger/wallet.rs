@@ -581,44 +581,46 @@ mod tests {
     // asserts that the `set_alias` function updates the account alias in storage
     #[tokio::test]
     async fn set_alias() {
-        let manager = crate::test_utils::get_account_manager().await;
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
 
-        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+            let updated_alias = "updated alias";
 
-        let updated_alias = "updated alias";
+            account_handle.set_alias(updated_alias).await.unwrap();
 
-        account_handle.set_alias(updated_alias).await.unwrap();
-
-        let account_in_storage = manager
-            .get_account(account_handle.read().await.id())
-            .await
-            .expect("failed to get account from storage");
-        assert_eq!(account_in_storage.alias().await, updated_alias.to_string());
+            let account_in_storage = manager
+                .get_account(account_handle.read().await.id())
+                .await
+                .expect("failed to get account from storage");
+            assert_eq!(account_in_storage.alias().await, updated_alias.to_string());
+        })
+        .await;
     }
 
     // asserts that the `set_client_options` function updates the account client options in storage
     #[tokio::test]
     async fn set_client_options() {
-        let manager = crate::test_utils::get_account_manager().await;
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
 
-        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+            let updated_client_options =
+                ClientOptionsBuilder::nodes(&["http://test.wallet", "http://test.wallet/set-client-options"])
+                    .unwrap()
+                    .build()
+                    .unwrap();
 
-        let updated_client_options =
-            ClientOptionsBuilder::nodes(&["http://test.wallet", "http://test.wallet/set-client-options"])
-                .unwrap()
-                .build()
+            account_handle
+                .set_client_options(updated_client_options.clone())
+                .await
                 .unwrap();
 
-        account_handle
-            .set_client_options(updated_client_options.clone())
-            .await
-            .unwrap();
-
-        let account_in_storage = manager
-            .get_account(account_handle.read().await.id())
-            .await
-            .expect("failed to get account from storage");
-        assert_eq!(account_in_storage.client_options().await, updated_client_options);
+            let account_in_storage = manager
+                .get_account(account_handle.read().await.id())
+                .await
+                .expect("failed to get account from storage");
+            assert_eq!(account_in_storage.client_options().await, updated_client_options);
+        })
+        .await;
     }
 
     #[tokio::test]
@@ -689,19 +691,27 @@ mod tests {
 
     #[tokio::test]
     async fn generate_address() {
-        let manager = crate::test_utils::get_account_manager().await;
-        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+        crate::test_utils::with_account_manager(
+            crate::test_utils::TestType::Signing,
+            |manager, signer_type| async move {
+                let account_handle = crate::test_utils::AccountCreator::new(&manager)
+                    .signer_type(signer_type)
+                    .create()
+                    .await;
 
-        let account_next_address = crate::address::get_new_address(
-            &*account_handle.read().await,
-            crate::signing::GenerateAddressMetadata { syncing: false },
+                let account_next_address = crate::address::get_new_address(
+                    &*account_handle.read().await,
+                    crate::signing::GenerateAddressMetadata { syncing: false },
+                )
+                .await
+                .unwrap();
+                let generated_address = account_handle.generate_address().await.unwrap();
+
+                assert_eq!(generated_address, account_next_address);
+                assert_eq!(account_handle.latest_address().await.unwrap(), generated_address);
+            },
         )
-        .await
-        .unwrap();
-        let generated_address = account_handle.generate_address().await.unwrap();
-
-        assert_eq!(generated_address, account_next_address);
-        assert_eq!(account_handle.latest_address().await.unwrap(), generated_address);
+        .await;
     }
 
     #[tokio::test]
@@ -883,31 +893,39 @@ mod tests {
 
     #[tokio::test]
     async fn list_addresses() {
-        let manager = crate::test_utils::get_account_manager().await;
-        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+        crate::test_utils::with_account_manager(
+            crate::test_utils::TestType::SigningAndStorage,
+            |manager, signer_type| async move {
+                let account_handle = crate::test_utils::AccountCreator::new(&manager)
+                    .signer_type(signer_type)
+                    .create()
+                    .await;
 
-        let spent_address = account_handle.generate_address().await.unwrap();
-        let unspent_address1 = account_handle.generate_address().await.unwrap();
-        let unspent_address2 = account_handle.generate_address().await.unwrap();
+                let spent_address = account_handle.generate_address().await.unwrap();
+                let unspent_address1 = account_handle.generate_address().await.unwrap();
+                let unspent_address2 = account_handle.generate_address().await.unwrap();
 
-        let spent_tx = crate::test_utils::GenerateMessageBuilder::default()
-            .address(spent_address.clone())
-            .incoming(false)
-            .build();
+                let spent_tx = crate::test_utils::GenerateMessageBuilder::default()
+                    .address(spent_address.clone())
+                    .incoming(false)
+                    .build();
 
-        account_handle.write().await.append_messages(vec![spent_tx]);
+                account_handle.write().await.append_messages(vec![spent_tx]);
 
-        assert_eq!(
-            account_handle.read().await.list_unspent_addresses(),
-            vec![&unspent_address1, &unspent_address2]
-        );
+                assert_eq!(
+                    account_handle.read().await.list_unspent_addresses(),
+                    vec![&unspent_address1, &unspent_address2]
+                );
 
-        assert_eq!(account_handle.read().await.list_spent_addresses(), vec![&spent_address]);
+                assert_eq!(account_handle.read().await.list_spent_addresses(), vec![&spent_address]);
 
-        assert_eq!(
-            account_handle.read().await.addresses(),
-            &vec![spent_address, unspent_address1, unspent_address2]
-        );
+                assert_eq!(
+                    account_handle.read().await.addresses(),
+                    &vec![spent_address, unspent_address1, unspent_address2]
+                );
+            },
+        )
+        .await;
     }
 
     // TODO list_addresses tests

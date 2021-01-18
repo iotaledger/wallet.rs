@@ -14,8 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
-      matrix:
-        storage: [sqlite, stronghold]
 
     steps:
     - uses: actions/checkout@v2
@@ -26,11 +24,11 @@ jobs:
           toolchain: stable
           override: true
 
-    - name: Run tests with ${{ matrix.storage }} storage
+    - name: Run tests
       uses: actions-rs/cargo@v1
       with:
         command: test
-        args: --no-default-features --features stronghold,${{ matrix.storage }}-storage --no-fail-fast
+        args: --all-features --no-fail-fast
       env:
         CARGO_INCREMENTAL: 0
         RUSTC_BOOTSTRAP: 1
@@ -46,16 +44,4 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         path-to-lcov: ${{ steps.coverage.outputs.report }}
-        flag-name: ${{ matrix.storage }}-storage
-        parallel: true
-  
-  finish:
-    needs: collect-coverage
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Finish uploading coverage data
-      uses: coverallsapp/github-action@v1.1.2
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        parallel-finished: true
+        flag-name: Unit

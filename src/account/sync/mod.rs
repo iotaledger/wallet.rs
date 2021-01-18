@@ -904,18 +904,19 @@ mod tests {
 
     #[tokio::test]
     async fn account_sync() {
-        let manager = crate::test_utils::get_account_manager().await;
-
-        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-            .unwrap()
-            .build();
-        let _account = manager
-            .create_account(client_options)
-            .unwrap()
-            .alias("alias")
-            .initialise()
-            .await
-            .unwrap();
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+                .unwrap()
+                .build();
+            let _account = manager
+                .create_account(client_options)
+                .unwrap()
+                .alias("alias")
+                .initialise()
+                .await
+                .unwrap();
+        })
+        .await;
 
         // let synced_accounts = account.sync().execute().await.unwrap();
         // TODO improve test when the node API is ready to use
