@@ -3,7 +3,7 @@
 
 use crate::{
     account::AccountHandle,
-    address::{AddressOutput, IotaAddress},
+    address::{AddressOutput, AddressWrapper},
     client::ClientOptions,
     message::{Message, MessageType},
 };
@@ -61,7 +61,7 @@ pub async fn monitor_account_addresses_balance(account_handle: AccountHandle) ->
 }
 
 /// Monitor address for balance changes.
-pub async fn monitor_address_balance(account_handle: AccountHandle, address: &IotaAddress) -> crate::Result<()> {
+pub async fn monitor_address_balance(account_handle: AccountHandle, address: &AddressWrapper) -> crate::Result<()> {
     let client_options = account_handle.client_options().await;
     let client_options_ = client_options.clone();
     let address = address.clone();
@@ -91,7 +91,7 @@ pub async fn monitor_address_balance(account_handle: AccountHandle, address: &Io
 async fn process_output(
     payload: String,
     account_handle: AccountHandle,
-    address: IotaAddress,
+    address: AddressWrapper,
     client_options: ClientOptions,
 ) -> crate::Result<()> {
     let output: AddressOutputPayload = serde_json::from_str(&payload)?;
@@ -101,7 +101,7 @@ async fn process_output(
         output_index: output.output_index,
         is_spent: output.is_spent,
         amount: output.output.amount,
-        address: address.clone(),
+        address: address.as_ref().clone(),
     };
     let address_output: AddressOutput = metadata.try_into()?;
 

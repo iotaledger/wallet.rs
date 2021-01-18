@@ -1038,7 +1038,7 @@ fn backup_filename(original: &str) -> String {
 #[cfg(test)]
 mod tests {
     use crate::{
-        address::{AddressBuilder, IotaAddress},
+        address::{AddressBuilder, AddressWrapper, IotaAddress},
         client::ClientOptionsBuilder,
         message::Message,
     };
@@ -1118,7 +1118,10 @@ mod tests {
             .addresses(vec![AddressBuilder::new()
                 .balance(5)
                 .key_index(0)
-                .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
+                .address(AddressWrapper::new(
+                    IotaAddress::Ed25519(Ed25519Address::new([0; 32])),
+                    "iota".to_string(),
+                ))
                 .outputs(vec![])
                 .build()
                 .unwrap()])
