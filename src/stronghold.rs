@@ -235,7 +235,10 @@ pub struct ActorRuntime {
 
 pub fn actor_runtime() -> &'static Arc<Mutex<ActorRuntime>> {
     static SYSTEM: Lazy<Arc<Mutex<ActorRuntime>>> = Lazy::new(|| {
-        let system = ActorSystem::new().unwrap();
+        let system = SystemBuilder::new()
+            .log(slog::Logger::root(slog::Discard, slog::o!()))
+            .create()
+            .unwrap();
         let stronghold = Stronghold::init_stronghold_system(
             system,
             PRIVATE_DATA_CLIENT_PATH.to_vec(),
