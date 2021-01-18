@@ -126,10 +126,13 @@ async fn process_output(
 
     match account.messages_mut().iter().position(|m| m.id() == &message_id_) {
         Some(message_index) => {
-            account.do_mut(|account| {
-                let message = &mut account.messages_mut()[message_index];
-                message.set_confirmed(Some(true));
-            });
+            account
+                .do_mut(|account| {
+                    let message = &mut account.messages_mut()[message_index];
+                    message.set_confirmed(Some(true));
+                    Ok(())
+                })
+                .await?;
         }
         None => {
             let message = Message::from_iota_message(message_id_, account.addresses(), &message, Some(true)).unwrap();
@@ -138,9 +141,12 @@ async fn process_output(
                 account.id(),
                 &message,
             );
-            account.do_mut(|account| {
-                account.messages_mut().push(message);
-            });
+            account
+                .do_mut(|account| {
+                    account.messages_mut().push(message);
+                    Ok(())
+                })
+                .await?;
         }
     }
     Ok(())
@@ -202,11 +208,14 @@ async fn process_metadata(
         if message.confirmed().is_none() || confirmed != message.confirmed().unwrap() {
             let mut account = account_handle.write().await;
 
-            account.do_mut(|account| {
-                let messages = account.messages_mut();
-                let account_message = messages.iter_mut().find(|m| m.id() == &message_id).unwrap();
-                account_message.set_confirmed(Some(confirmed));
-            });
+            account
+                .do_mut(|account| {
+                    let messages = account.messages_mut();
+                    let account_message = messages.iter_mut().find(|m| m.id() == &message_id).unwrap();
+                    account_message.set_confirmed(Some(confirmed));
+                    Ok(())
+                })
+                .await?;
 
             crate::event::emit_confirmation_state_change(account.id(), &message, confirmed);
         }

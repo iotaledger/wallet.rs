@@ -181,7 +181,7 @@ declare_types! {
                 let id = &this.borrow(&guard).0;
                 crate::block_on(async move {
                     let account_handle = crate::get_account(id).await;
-                    account_handle.set_alias(alias).await;
+                    account_handle.set_alias(alias).await.expect("failed to update account alias");
                 });
             }
             Ok(cx.undefined().upcast())
@@ -196,7 +196,7 @@ declare_types! {
                 let id = &this.borrow(&guard).0;
                 crate::block_on(async move {
                     let account_handle = crate::get_account(id).await;
-                    account_handle.set_client_options(client_options).await;
+                    account_handle.set_client_options(client_options).await.expect("failed to update client options");
                 });
             }
             Ok(cx.undefined().upcast())
