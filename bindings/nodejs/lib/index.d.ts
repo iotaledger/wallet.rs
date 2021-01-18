@@ -129,6 +129,7 @@ export declare enum StorageType {
 export declare interface ManagerOptions {
   storagePath?: string
   storageType?: StorageType
+  storagePassword?: string
 }
 
 export declare class AccountManager {

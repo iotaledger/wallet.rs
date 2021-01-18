@@ -9,7 +9,7 @@ use crate::{
     signing::{GenerateAddressMetadata, SignerType},
 };
 
-use chrono::prelude::{DateTime, Utc};
+use chrono::prelude::{DateTime, Local, Utc};
 use getset::{Getters, Setters};
 use iota::message::prelude::MessageId;
 use serde::{Deserialize, Serialize};
@@ -56,7 +56,7 @@ pub struct AccountInitialiser {
     accounts: AccountStore,
     storage_path: PathBuf,
     alias: Option<String>,
-    created_at: Option<DateTime<Utc>>,
+    created_at: Option<DateTime<Local>>,
     messages: Vec<Message>,
     addresses: Vec<Address>,
     client_options: ClientOptions,
@@ -96,7 +96,7 @@ impl AccountInitialiser {
     }
 
     /// Time of account creation.
-    pub fn created_at(mut self, created_at: DateTime<Utc>) -> Self {
+    pub fn created_at(mut self, created_at: DateTime<Local>) -> Self {
         self.created_at = Some(created_at);
         self
     }
@@ -127,9 +127,9 @@ impl AccountInitialiser {
 
         let alias = self.alias.unwrap_or_else(|| format!("Account {}", accounts.len()));
         let signer_type = self.signer_type.ok_or(crate::Error::AccountInitialiseRequiredField(
-            crate::AccountInitialiseRequiredField::SignerType,
+            crate::error::AccountInitialiseRequiredField::SignerType,
         ))?;
-        let created_at = self.created_at.unwrap_or_else(chrono::Utc::now);
+        let created_at = self.created_at.unwrap_or_else(Local::now);
 
         if let Some(latest_account_handle) = accounts.values().last() {
             let latest_account = latest_account_handle.read().await;
@@ -148,7 +148,6 @@ impl AccountInitialiser {
             addresses: self.addresses,
             client_options: self.client_options,
             storage_path: self.storage_path,
-            has_pending_changes: true,
             skip_persistance: self.skip_persistance,
         };
 
@@ -165,6 +164,7 @@ impl AccountInitialiser {
         let guard = if self.skip_persistance {
             account.into()
         } else {
+            account.save().await?;
             let account_id = account.id().clone();
             let guard: AccountHandle = account.into();
             drop(accounts);
@@ -191,7 +191,7 @@ pub struct Account {
     alias: String,
     /// Time of account creation.
     #[serde(rename = "createdAt")]
-    created_at: DateTime<Utc>,
+    created_at: DateTime<Local>,
     /// Messages associated with the seed.
     /// The account can be initialised with locally stored messages.
     #[getset(set = "pub")]
@@ -205,10 +205,8 @@ pub struct Account {
     client_options: ClientOptions,
     #[getset(set = "pub(crate)", get = "pub(crate)")]
     storage_path: PathBuf,
-    #[doc(hidden)]
-    #[serde(skip)]
-    has_pending_changes: bool,
     #[getset(set = "pub(crate)", get = "pub(crate)")]
+    #[serde(skip)]
     skip_persistance: bool,
 }
 
@@ -260,7 +258,7 @@ guard_field_getters!(
     #[doc = "Bridge to [Account#signer_type](struct.Account.html#method.signer_type)."] => signer_type => SignerType,
     #[doc = "Bridge to [Account#index](struct.Account.html#method.index)."] => index => usize,
     #[doc = "Bridge to [Account#alias](struct.Account.html#method.alias)."] => alias => String,
-    #[doc = "Bridge to [Account#created_at](struct.Account.html#method.created_at)."] => created_at => DateTime<Utc>,
+    #[doc = "Bridge to [Account#created_at](struct.Account.html#method.created_at)."] => created_at => DateTime<Local>,
     #[doc = "Bridge to [Account#messages](struct.Account.html#method.messages).
     This method clones the addresses so prefer the using the `read` method to access the account instance."] => messages => Vec<Message>,
     #[doc = "Bridge to [Account#addresses](struct.Account.html#method.addresses).
@@ -279,9 +277,12 @@ impl AccountHandle {
         let mut account = self.inner.write().await;
         let address = crate::address::get_new_address(&account, GenerateAddressMetadata { syncing: false }).await?;
 
-        account.do_mut(|account| {
-            account.addresses.push(address.clone());
-        });
+        account
+            .do_mut(|account| {
+                account.addresses.push(address.clone());
+                Ok(())
+            })
+            .await?;
 
         let _ = crate::monitor::monitor_address_balance(self.clone(), address.address());
 
@@ -304,13 +305,13 @@ impl AccountHandle {
     }
 
     /// Bridge to [Account#set_alias](struct.Account.html#method.set_alias).
-    pub async fn set_alias(&self, alias: impl AsRef<str>) {
-        self.inner.write().await.set_alias(alias);
+    pub async fn set_alias(&self, alias: impl AsRef<str>) -> crate::Result<()> {
+        self.inner.write().await.set_alias(alias).await
     }
 
     /// Bridge to [Account#set_client_options](struct.Account.html#method.set_client_options).
-    pub async fn set_client_options(&self, options: ClientOptions) {
-        self.inner.write().await.set_client_options(options);
+    pub async fn set_client_options(&self, options: ClientOptions) -> crate::Result<()> {
+        self.inner.write().await.set_client_options(options).await
     }
 
     /// Bridge to [Account#list_messages](struct.Account.html#method.list_messages).
@@ -359,19 +360,23 @@ impl AccountHandle {
 }
 
 impl Account {
-    pub(crate) async fn save(&mut self, encryption_key: &Option<[u8; 32]>) -> crate::Result<()> {
-        if self.has_pending_changes && !self.skip_persistance {
+    pub(crate) async fn save(&mut self) -> crate::Result<()> {
+        if !self.skip_persistance {
             let storage_path = self.storage_path.clone();
-            crate::storage::save_account(&storage_path, &self, encryption_key).await?;
-            self.has_pending_changes = false;
+            crate::storage::get(&storage_path)
+                .await?
+                .lock()
+                .await
+                .set(&self.id, serde_json::to_string(&self)?)
+                .await?;
         }
         Ok(())
     }
 
-    pub(crate) fn do_mut<R>(&mut self, f: impl FnOnce(&mut Self) -> R) -> R {
-        let res = f(self);
-        self.has_pending_changes = true;
-        res
+    pub(crate) async fn do_mut<R>(&mut self, f: impl FnOnce(&mut Self) -> crate::Result<R>) -> crate::Result<R> {
+        let res = f(self)?;
+        self.save().await?;
+        Ok(res)
     }
 
     /// Returns the most recent address of the account.
@@ -401,21 +406,17 @@ impl Account {
     }
 
     /// Updates the account alias.
-    pub fn set_alias(&mut self, alias: impl AsRef<str>) {
+    pub async fn set_alias(&mut self, alias: impl AsRef<str>) -> crate::Result<()> {
         let alias = alias.as_ref().to_string();
-        if !self.has_pending_changes {
-            self.has_pending_changes = alias != self.alias;
-        }
 
         self.alias = alias;
+        self.save().await
     }
 
     /// Updates the account's client options.
-    pub fn set_client_options(&mut self, options: ClientOptions) {
-        if !self.has_pending_changes {
-            self.has_pending_changes = options != self.client_options;
-        }
+    pub async fn set_client_options(&mut self, options: ClientOptions) -> crate::Result<()> {
         self.client_options = options;
+        self.save().await
     }
 
     /// Gets a list of transactions on this account.
@@ -441,12 +442,20 @@ impl Account {
     ///         .expect("invalid node URL")
     ///         .build();
     ///     let mut manager = AccountManager::builder().finish().await.unwrap();
-    ///     # let mut manager = AccountManager::builder().with_storage_path(storage_path).finish().await.unwrap();
+    ///     # use iota_wallet::account_manager::ManagerStorage;
+    ///     # #[cfg(all(feature = "stronghold-storage", feature = "sqlite-storage"))]
+    ///     # let default_storage = ManagerStorage::Stronghold;
+    ///     # #[cfg(all(feature = "stronghold-storage", not(feature = "sqlite-storage")))]
+    ///     # let default_storage = ManagerStorage::Stronghold;
+    ///     # #[cfg(all(feature = "sqlite-storage", not(feature = "stronghold-storage")))]
+    ///     # let default_storage = ManagerStorage::Sqlite;
+    ///     # let mut manager = AccountManager::builder().with_storage(storage_path, default_storage, None).unwrap().finish().await.unwrap();
     ///     manager.set_stronghold_password("password").await.unwrap();
     ///     manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
     ///
     ///     let account_handle = manager
     ///         .create_account(client_options)
+    ///         .unwrap()
     ///         .initialise()
     ///         .await
     ///         .expect("failed to add account");
@@ -511,7 +520,6 @@ impl Account {
     #[doc(hidden)]
     pub fn append_messages(&mut self, messages: Vec<Message>) {
         self.messages.extend(messages);
-        self.has_pending_changes = true;
     }
 
     pub(crate) fn append_addresses(&mut self, addresses: Vec<Address>) {
@@ -525,7 +533,6 @@ impl Account {
                     self.addresses.push(address);
                 }
             });
-        self.has_pending_changes = true;
     }
 
     pub(crate) fn addresses_mut(&mut self) -> &mut Vec<Address> {
@@ -555,7 +562,7 @@ pub struct InitialisedAccount<'a> {
     /// Seed message history.
     messages: Vec<Message>,
     /// Account creation time.
-    created_at: DateTime<Utc>,
+    created_at: DateTime<Local>,
     /// Time when the account was last synced with the tangle.
     last_synced_at: DateTime<Utc>,
 }
@@ -580,7 +587,7 @@ mod tests {
 
         let updated_alias = "updated alias";
 
-        account_handle.set_alias(updated_alias).await;
+        account_handle.set_alias(updated_alias).await.unwrap();
 
         let account_in_storage = manager
             .get_account(account_handle.read().await.id())
@@ -602,7 +609,10 @@ mod tests {
                 .build()
                 .unwrap();
 
-        account_handle.set_client_options(updated_client_options.clone()).await;
+        account_handle
+            .set_client_options(updated_client_options.clone())
+            .await
+            .unwrap();
 
         let account_in_storage = manager
             .get_account(account_handle.read().await.id())

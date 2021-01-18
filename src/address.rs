@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{account::Account, message::MessageType, signing::GenerateAddressMetadata};
-use bech32::FromBase32;
 use getset::{Getters, Setters};
 pub use iota::message::prelude::{Address as IotaAddress, Ed25519Address, Input, Payload, UTXOInput};
 use iota::{
@@ -14,6 +13,7 @@ use std::{
     cmp::Ordering,
     convert::{TryFrom, TryInto},
     hash::{Hash, Hasher},
+    str::FromStr,
 };
 
 /// An Address output.
@@ -128,19 +128,19 @@ impl AddressBuilder {
     /// Builds the address.
     pub fn build(self) -> crate::Result<Address> {
         let iota_address = self.address.ok_or(crate::Error::AddressBuildRequiredField(
-            crate::AddressBuildRequiredField::Address,
+            crate::error::AddressBuildRequiredField::Address,
         ))?;
         let address = Address {
             address: iota_address,
             balance: self.balance.ok_or(crate::Error::AddressBuildRequiredField(
-                crate::AddressBuildRequiredField::Balance,
+                crate::error::AddressBuildRequiredField::Balance,
             ))?,
             key_index: self.key_index.ok_or(crate::Error::AddressBuildRequiredField(
-                crate::AddressBuildRequiredField::KeyIndex,
+                crate::error::AddressBuildRequiredField::KeyIndex,
             ))?,
             internal: self.internal,
             outputs: self.outputs.ok_or(crate::Error::AddressBuildRequiredField(
-                crate::AddressBuildRequiredField::Outputs,
+                crate::error::AddressBuildRequiredField::Outputs,
             ))?,
         };
         Ok(address)
@@ -226,14 +226,14 @@ impl Address {
 }
 
 /// Parses a bech32 address string.
-pub fn parse(address: String) -> crate::Result<IotaAddress> {
-    let address_ed25519 = Vec::from_base32(&bech32::decode(&address)?.1)?;
-    let iota_address = IotaAddress::Ed25519(Ed25519Address::new(
-        address_ed25519[1..]
-            .try_into()
-            .map_err(|_| crate::Error::InvalidAddressLength)?,
-    ));
-    Ok(iota_address)
+pub fn parse<A: AsRef<str>>(address: A) -> crate::Result<IotaAddress> {
+    IotaAddress::try_from_bech32(address.as_ref()).or_else(|_| {
+        if let Ok(ed25519_address) = Ed25519Address::from_str(address.as_ref()) {
+            Ok(IotaAddress::Ed25519(ed25519_address))
+        } else {
+            Err(crate::Error::InvalidAddress)
+        }
+    })
 }
 
 pub(crate) async fn get_iota_address(
