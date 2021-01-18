@@ -138,10 +138,17 @@ impl AccountInitialiser {
             }
         }
 
+        let mut account_index = 0;
+        for account in accounts.values() {
+            if account.read().await.signer_type() == &signer_type {
+                account_index += 1;
+            }
+        }
+
         let mut account = Account {
-            id: AccountIdentifier::Index(accounts.len()),
+            id: AccountIdentifier::Index(account_index),
             signer_type: signer_type.clone(),
-            index: accounts.len(),
+            index: account_index,
             alias,
             created_at,
             messages: self.messages,
