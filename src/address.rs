@@ -292,7 +292,16 @@ pub(crate) async fn get_iota_address(
 /// Gets an unused public address for the given account.
 pub(crate) async fn get_new_address(account: &Account, metadata: GenerateAddressMetadata) -> crate::Result<Address> {
     let key_index = account.addresses().iter().filter(|a| !a.internal()).count();
-    let bech32_hrp = account.addresses().first().unwrap().address().hrp.to_string();
+    let bech32_hrp = match account.addresses().first() {
+        Some(address) => address.address().hrp.to_string(),
+        None => {
+            crate::client::get_client(account.client_options())
+                .read()
+                .await
+                .get_network_info()
+                .bech32_hrp
+        }
+    };
     let iota_address = get_iota_address(&account, key_index, false, bech32_hrp, metadata).await?;
     let address = Address {
         address: iota_address,
