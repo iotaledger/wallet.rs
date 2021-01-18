@@ -69,10 +69,10 @@ pub struct SignMessageMetadata<'a> {
 #[async_trait::async_trait]
 pub trait Signer {
     /// Initialises a mnemonic.
-    async fn store_mnemonic(&self, storage_path: &PathBuf, mnemonic: String) -> crate::Result<()>;
+    async fn store_mnemonic(&mut self, storage_path: &PathBuf, mnemonic: String) -> crate::Result<()>;
     /// Generates an address.
     async fn generate_address(
-        &self,
+        &mut self,
         account: &Account,
         index: usize,
         internal: bool,
@@ -80,7 +80,7 @@ pub trait Signer {
     ) -> crate::Result<IotaAddress>;
     /// Signs message.
     async fn sign_message<'a>(
-        &self,
+        &mut self,
         account: &Account,
         essence: &iota::TransactionPayloadEssence,
         inputs: &mut Vec<TransactionInput>,
