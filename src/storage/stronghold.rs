@@ -4,10 +4,7 @@
 use super::StorageAdapter;
 use crate::account::AccountIdentifier;
 
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 /// The storage id.
 pub const STORAGE_ID: &str = "STRONGHOLD";
@@ -20,10 +17,6 @@ pub struct StrongholdStorageAdapter {
 impl StrongholdStorageAdapter {
     /// Initialises the storage adapter.
     pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
-        if let Some(parent) = path.as_ref().parent() {
-            fs::create_dir_all(&parent)?;
-        }
-
         Ok(Self {
             path: path.as_ref().to_path_buf(),
         })

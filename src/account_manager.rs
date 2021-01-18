@@ -176,6 +176,10 @@ impl AccountManagerBuilder {
                 return Err(crate::Error::StorageAdapterNotDefined);
             };
 
+        if let Some(parent) = storage_file_path.parent() {
+            fs::create_dir_all(&parent)?;
+        }
+
         crate::storage::set(&storage_file_path, self.storage_encryption_key, storage).await;
 
         // with one of the stronghold features, the accounts are loaded when the password is set
