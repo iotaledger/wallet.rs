@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::account::{Account};
-use crate::address::AddressWrapper;
 
 use iota::{common::packable::Packable, UnlockBlock};
 use std::{path::PathBuf};
@@ -81,9 +80,9 @@ impl super::Signer for LedgerNanoSigner {
         }
  
         // figure out the remainder address and bip32 index (if there is one)
-        let (has_remainder, remainder_address, remainder_bip32) : (bool, Option<&AddressWrapper>, u32) = match meta.remainder_deposit_address {
+        let (has_remainder, remainder_address, remainder_bip32) : (bool, Option<&iota::Address>, u32) = match meta.remainder_deposit_address {
             Some(a) => {
-                (true, Some(a.address()), *a.key_index() as u32 | HARDENED)
+                (true, Some(a.address().as_ref()), *a.key_index() as u32 | HARDENED)
             }
             None => {
                 (false, None, 0u32)
