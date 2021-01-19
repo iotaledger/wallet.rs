@@ -86,7 +86,7 @@ Supported event names:
 Creates a new instance of the AccountManager.
 
 | Param             | Type                     | Default                             | Description                                      |
-| -------------     | ------------------------ | ----------------------------------- | ----------------------------------------------   |
+| ----------------- | ------------------------ | ----------------------------------- | ------------------------------------------------ |
 | [options]         | <code>object</code>      | <code>undefined</code>              | The options to configure the account manager     |
 | [storagePath]     | <code>string</code>      | <code>undefined</code>              | The path where the database file will be saved   |
 | [storageType]     | <code>StorageType</code> | <code>StorageType.Stronghold</code> | The storage implementation to use                |
@@ -151,19 +151,9 @@ Creates a new account.
 
 Gets the account with the given identifier or index.
 
-| Param     | Type                          | Default           | Description                             |
-| --------- | ----------------------------- | ----------------- | --------------------------------------- |
-| accountId | <code>string \| number</code> | <code>null</code> | The account identifier or account index |
-
-**Returns** the associated Account instance or undefined if the account wasn't found.
-
-#### getAccountByAlias(alias)
-
-Gets the account with the given alias (case insensitive).
-
-| Param | Type                | Default           | Description       |
-| ----- | ------------------- | ----------------- | ----------------- |
-| alias | <code>string</code> | <code>null</code> | The account alias |
+| Param     | Type                          | Default           | Description                                          |
+| --------- | ----------------------------- | ----------------- | ---------------------------------------------------- |
+| accountId | <code>string \| number</code> | <code>null</code> | The account id, alias, index or one of its addresses |
 
 **Returns** the associated Account instance or undefined if the account wasn't found.
 
@@ -177,9 +167,9 @@ Gets all stored accounts.
 
 Removes the account with the given identifier or index.
 
-| Param     | Type                          | Default           | Description                             |
-| --------- | ----------------------------- | ----------------- | --------------------------------------- |
-| accountId | <code>string \| number</code> | <code>null</code> | The account identifier or account index |
+| Param     | Type                          | Default           | Description                                          |
+| --------- | ----------------------------- | ----------------- | ---------------------------------------------------- |
+| accountId | <code>string \| number</code> | <code>null</code> | The account id, alias, index or one of its addresses |
 
 #### syncAccounts()
 
