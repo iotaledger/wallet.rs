@@ -4,6 +4,10 @@ version = "0.1.0"
 authors = ["Lucas Nogueira <lucas.nogueira@iota.org>"]
 edition = "2018"
 
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 [dependencies]
 thiserror = "1.0"
 chrono = { version = "0.4", features = ["serde"] }

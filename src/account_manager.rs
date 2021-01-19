@@ -40,11 +40,15 @@ use tokio::{
 
 /// The default storage folder.
 pub const DEFAULT_STORAGE_FOLDER: &str = "./storage";
+
 /// The default stronghold storage file name.
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
 pub const STRONGHOLD_FILENAME: &str = "wallet.stronghold";
+
 /// The default SQLite storage file name.
 #[cfg(feature = "sqlite-storage")]
+#[cfg_attr(docsrs, doc(cfg(feature = "sqlite-storage")))]
 pub const SQLITE_FILENAME: &str = "wallet.db";
 
 pub(crate) type AccountStore = Arc<RwLock<HashMap<AccountIdentifier, AccountHandle>>>;
@@ -55,9 +59,11 @@ pub(crate) type AccountStore = Arc<RwLock<HashMap<AccountIdentifier, AccountHand
 pub enum ManagerStorage {
     /// Stronghold storage.
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
     Stronghold,
     /// Sqlite storage.
     #[cfg(feature = "sqlite-storage")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "sqlite-storage")))]
     Sqlite,
     /// Custom storage.
     #[serde(skip)]
@@ -332,6 +338,7 @@ impl AccountManager {
 
     /// Sets the stronghold password.
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
     pub async fn set_stronghold_password<P: AsRef<str>>(&mut self, password: P) -> crate::Result<()> {
         let mut dk = [0; 64];
         // safe to unwrap because rounds > 0
@@ -529,6 +536,7 @@ impl AccountManager {
 
     /// Backups the storage to the given destination
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
     pub async fn backup<P: AsRef<Path>>(&self, destination: P) -> crate::Result<PathBuf> {
         let destination = destination.as_ref().to_path_buf();
         if !(destination.is_dir() && destination.exists()) {
@@ -625,6 +633,7 @@ impl AccountManager {
 
     /// Import backed up accounts.
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
     pub async fn import_accounts<S: AsRef<Path>>(
         &mut self,
         source: S,
