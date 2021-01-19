@@ -1336,17 +1336,24 @@ mod tests {
             #[allow(unused_mut)]
             let mut manager = crate::test_utils::get_account_manager().await;
 
-            #[cfg(all(
-                not(feature = "sqlite-storage"),
-                any(feature = "stronghold", feature = "stronghold-storage")
-            ))]
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             {
                 // wait for stronghold to finish pending operations and delete the storage file
                 crate::stronghold::unload_snapshot(manager.storage_path(), false)
                     .await
                     .unwrap();
                 let _ = crate::stronghold::actor_runtime().lock().await;
-                std::fs::remove_file(manager.storage_path()).unwrap();
+
+                if crate::storage::get(manager.storage_path())
+                    .await
+                    .unwrap()
+                    .lock()
+                    .await
+                    .id()
+                    == crate::storage::stronghold::STORAGE_ID
+                {
+                    let _ = std::fs::remove_file(manager.storage_path());
+                }
             }
 
             manager.set_storage_password("password").await.unwrap();
