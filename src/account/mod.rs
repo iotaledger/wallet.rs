@@ -510,7 +510,7 @@ impl Account {
     ///     let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
     ///         .expect("invalid node URL")
     ///         .build();
-    ///     let mut manager = AccountManager::builder().finish().await.unwrap();
+    ///     let mut manager = AccountManager::builder().with_storage("./test-storage", ManagerStorage::Stronghold, None).unwrap().finish().await.unwrap();
     ///     # use iota_wallet::account_manager::ManagerStorage;
     ///     # #[cfg(all(feature = "stronghold-storage", feature = "sqlite-storage"))]
     ///     # let default_storage = ManagerStorage::Stronghold;
