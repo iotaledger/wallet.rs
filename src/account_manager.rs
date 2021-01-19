@@ -167,12 +167,18 @@ impl AccountManagerBuilder {
                     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
                     ManagerStorage::Stronghold => {
                         let path = storage_file_path(&Some(ManagerStorage::Stronghold), &self.storage_path);
+                        if let Some(parent) = path.parent() {
+                            fs::create_dir_all(&parent)?;
+                        }
                         let storage = crate::storage::stronghold::StrongholdStorageAdapter::new(&path)?;
                         (Box::new(storage) as Box<dyn StorageAdapter + Send + Sync>, path)
                     }
                     #[cfg(feature = "sqlite-storage")]
                     ManagerStorage::Sqlite => {
                         let path = storage_file_path(&Some(ManagerStorage::Sqlite), &self.storage_path);
+                        if let Some(parent) = path.parent() {
+                            fs::create_dir_all(&parent)?;
+                        }
                         let storage = crate::storage::sqlite::SqliteStorageAdapter::new(&path, "accounts")?;
                         (Box::new(storage) as Box<dyn StorageAdapter + Send + Sync>, path)
                     }
