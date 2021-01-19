@@ -184,7 +184,7 @@ impl AccountManagerBuilder {
         #[cfg(not(feature = "stronghold-storage"))]
         let (accounts, encrypted_accounts) = AccountManager::load_accounts(&storage_file_path)
             .await
-            .unwrap_or_else(|_| (AccountsStore::default(), Vec::new()));
+            .unwrap_or_else(|_| (AccountStore::default(), Vec::new()));
 
         let mut instance = AccountManager {
             storage_folder: if self.storage_path.is_file() || self.storage_path.extension().is_some() {
