@@ -178,6 +178,13 @@ impl AccountInitialiser {
         ))?;
         let created_at = self.created_at.unwrap_or_else(Local::now);
 
+        for account_handle in accounts.values() {
+            let account = account_handle.read().await;
+            if account.alias() == &alias {
+                return Err(crate::Error::AccountAliasAlreadyExists);
+            }
+        }
+
         if let Some(latest_account_handle) = accounts.values().last() {
             let latest_account = latest_account_handle.read().await;
             if latest_account.messages().is_empty() && latest_account.total_balance() == 0 {
