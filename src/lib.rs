@@ -4,6 +4,7 @@
 //! The IOTA Wallet Library
 
 #![warn(missing_docs, rust_2018_idioms)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 /// The account module.
 pub mod account;
@@ -28,10 +29,13 @@ pub mod signing;
 /// The storage module.
 pub mod storage;
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
 pub(crate) mod stronghold;
 
 pub use error::Error;
 
+#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
 pub use stronghold::set_password_clear_interval as set_stronghold_password_clear_interval;
 
 /// The wallet Result type.
@@ -59,6 +63,7 @@ where
 
 /// Access the stronghold's actor system.
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
 pub async fn with_actor_system<F: FnOnce(&riker::actors::ActorSystem)>(cb: F) {
     let runtime = self::stronghold::actor_runtime().lock().await;
     cb(&runtime.stronghold.system)
@@ -67,9 +72,9 @@ pub async fn with_actor_system<F: FnOnce(&riker::actors::ActorSystem)>(cb: F) {
 #[cfg(test)]
 mod test_utils {
     use super::{
-        account::{AccountHandle, AccountIdentifier},
+        account::AccountHandle,
         account_manager::{AccountManager, ManagerStorage},
-        address::{Address, AddressBuilder},
+        address::{Address, AddressBuilder, AddressWrapper},
         client::ClientOptionsBuilder,
         message::Message,
         signing::SignerType,
@@ -86,7 +91,7 @@ mod test_utils {
 
     static POLLING_INTERVAL: Duration = Duration::from_secs(2);
 
-    type GeneratedAddressMap = HashMap<(AccountIdentifier, usize, bool), iota::Ed25519Address>;
+    type GeneratedAddressMap = HashMap<(String, usize, bool), iota::Ed25519Address>;
     static TEST_SIGNER_GENERATED_ADDRESSES: OnceCell<Mutex<GeneratedAddressMap>> = OnceCell::new();
 
     #[derive(Default)]
@@ -133,12 +138,12 @@ mod test_utils {
 
     #[derive(Default)]
     struct TestStorage {
-        cache: HashMap<AccountIdentifier, String>,
+        cache: HashMap<String, String>,
     }
 
     #[async_trait::async_trait]
     impl crate::storage::StorageAdapter for TestStorage {
-        async fn get(&mut self, account_id: &AccountIdentifier) -> crate::Result<String> {
+        async fn get(&mut self, account_id: &str) -> crate::Result<String> {
             match self.cache.get(account_id) {
                 Some(value) => Ok(value.to_string()),
                 None => Err(crate::Error::AccountNotFound),
@@ -149,12 +154,12 @@ mod test_utils {
             Ok(self.cache.values().cloned().collect())
         }
 
-        async fn set(&mut self, account_id: &AccountIdentifier, account: String) -> crate::Result<()> {
-            self.cache.insert(account_id.clone(), account);
+        async fn set(&mut self, account_id: &str, account: String) -> crate::Result<()> {
+            self.cache.insert(account_id.to_string(), account);
             Ok(())
         }
 
-        async fn remove(&mut self, account_id: &AccountIdentifier) -> crate::Result<()> {
+        async fn remove(&mut self, account_id: &str) -> crate::Result<()> {
             self.cache.remove(account_id).ok_or(crate::Error::AccountNotFound)?;
             Ok(())
         }
@@ -386,8 +391,11 @@ mod test_utils {
         }
     }
 
-    pub fn generate_random_iota_address() -> IotaAddress {
-        IotaAddress::Ed25519(Ed25519Address::new(rand::random::<[u8; 32]>()))
+    pub fn generate_random_iota_address() -> AddressWrapper {
+        AddressWrapper::new(
+            IotaAddress::Ed25519(Ed25519Address::new(rand::random::<[u8; 32]>())),
+            "iota".to_string(),
+        )
     }
 
     pub fn generate_random_address() -> Address {
@@ -458,9 +466,12 @@ mod test_utils {
                         .with_essence(
                             TransactionPayloadEssence::builder()
                                 .add_output(
-                                    SignatureLockedSingleOutput::new(self.address.address().clone(), self.value)
-                                        .unwrap()
-                                        .into(),
+                                    SignatureLockedSingleOutput::new(
+                                        self.address.address().as_ref().clone(),
+                                        self.value,
+                                    )
+                                    .unwrap()
+                                    .into(),
                                 )
                                 .add_input(UTXOInput::new(self.input_transaction_id, 0).unwrap().into())
                                 .finish()

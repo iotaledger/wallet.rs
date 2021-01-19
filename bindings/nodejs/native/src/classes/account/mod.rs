@@ -3,12 +3,12 @@
 
 use std::str::FromStr;
 
-use iota_wallet::{account::AccountIdentifier, message::MessageId};
+use iota_wallet::message::MessageId;
 use neon::prelude::*;
 
 mod sync;
 
-pub struct AccountWrapper(pub AccountIdentifier);
+pub struct AccountWrapper(pub String);
 
 declare_types! {
     pub class JsAccount for AccountWrapper {
@@ -25,10 +25,7 @@ declare_types! {
                 id.clone()
             };
 
-            match id {
-                AccountIdentifier::Id(id) => Ok(cx.string(id).upcast()),
-                AccountIdentifier::Index(index) => Ok(cx.number(index as f64).upcast())
-            }
+            Ok(cx.string(id).upcast())
         }
 
         method index(mut cx) {

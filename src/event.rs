@@ -1,7 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{account::AccountIdentifier, address::Address, message::Message};
+use crate::{address::Address, message::Message};
 
 use getset::Getters;
 use once_cell::sync::Lazy;
@@ -17,7 +17,7 @@ use std::{
 pub struct BalanceEvent<'a> {
     /// The associated account identifier.
     #[serde(rename = "accountId")]
-    account_id: &'a AccountIdentifier,
+    account_id: &'a str,
     /// The associated address.
     address: &'a Address,
     /// The new balance.
@@ -37,7 +37,7 @@ impl<'a> BalanceEvent<'a> {
 pub struct TransactionEvent<'a> {
     #[serde(rename = "accountId")]
     /// The associated account identifier.
-    account_id: &'a AccountIdentifier,
+    account_id: &'a str,
     /// The event message.
     message: &'a Message,
 }
@@ -55,7 +55,7 @@ impl<'a> TransactionEvent<'a> {
 pub struct TransactionConfirmationChangeEvent<'a> {
     #[serde(rename = "accountId")]
     /// The associated account identifier.
-    account_id: &'a AccountIdentifier,
+    account_id: &'a str,
     /// The event message.
     message: &'a Message,
     /// The confirmed state of the transaction.
@@ -135,7 +135,7 @@ pub fn on_balance_change<F: Fn(&BalanceEvent<'_>) + Send + 'static>(cb: F) {
 }
 
 /// Emits a balance change event.
-pub(crate) fn emit_balance_change(account_id: &AccountIdentifier, address: &Address, balance: u64) {
+pub(crate) fn emit_balance_change(account_id: &str, address: &Address, balance: u64) {
     let listeners = balance_listeners()
         .lock()
         .expect("Failed to lock balance_listeners: emit_balance_change()");
@@ -150,11 +150,7 @@ pub(crate) fn emit_balance_change(account_id: &AccountIdentifier, address: &Addr
 }
 
 /// Emits a transaction-related event.
-pub(crate) fn emit_transaction_event(
-    event_type: TransactionEventType,
-    account_id: &AccountIdentifier,
-    message: &Message,
-) {
+pub(crate) fn emit_transaction_event(event_type: TransactionEventType, account_id: &str, message: &Message) {
     let listeners = transaction_listeners()
         .lock()
         .expect("Failed to lock balance_listeners: emit_balance_change()");
@@ -170,7 +166,7 @@ pub(crate) fn emit_transaction_event(
 }
 
 /// Emits a transaction confirmation state change event.
-pub(crate) fn emit_confirmation_state_change(account_id: &AccountIdentifier, message: &Message, confirmed: bool) {
+pub(crate) fn emit_confirmation_state_change(account_id: &str, message: &Message, confirmed: bool) {
     let listeners = transaction_confirmation_change_listeners()
         .lock()
         .expect("Failed to lock transaction_confirmation_change_listeners: emit_confirmation_state_change()");
@@ -238,10 +234,7 @@ pub fn on_error<F: Fn(&crate::Error) + Send + 'static>(cb: F) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        account::AccountIdentifier,
-        address::{AddressBuilder, IotaAddress},
-    };
+    use crate::address::{AddressBuilder, AddressWrapper, IotaAddress};
     use iota::message::prelude::Ed25519Address;
     use rusty_fork::rusty_fork_test;
 
@@ -263,14 +256,17 @@ mod tests {
     #[test]
     fn balance_events() {
         on_balance_change(|event| {
-            assert!(event.account_id == &AccountIdentifier::Id(hex::encode([1; 32])));
+            assert!(event.account_id == hex::encode([1; 32]));
             assert!(event.balance == 0);
         });
 
         emit_balance_change(
-            &AccountIdentifier::Id(hex::encode([1; 32])),
+            &hex::encode([1; 32]),
             &AddressBuilder::new()
-                .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
+                .address(AddressWrapper::new(
+                    IotaAddress::Ed25519(Ed25519Address::new([0; 32])),
+                    "iota".to_string(),
+                ))
                 .balance(0)
                 .key_index(0)
                 .outputs(vec![])
@@ -282,63 +278,59 @@ mod tests {
 
     #[test]
     fn on_new_transaction_event() {
-        let account_id: AccountIdentifier = "new-tx".to_string().into();
+        let account_id = "new-tx";
         let message = crate::test_utils::GenerateMessageBuilder::default().build();
-        let account_id_ = account_id.clone();
         let message_ = message.clone();
 
         on_new_transaction(move |event| {
-            assert!(event.account_id == &account_id_);
+            assert!(event.account_id == account_id);
             assert!(event.message == &message_);
         });
 
-        emit_transaction_event(TransactionEventType::NewTransaction, &account_id, &message);
+        emit_transaction_event(TransactionEventType::NewTransaction, account_id, &message);
     }
 
     #[test]
     fn on_reattachment_event() {
-        let account_id: AccountIdentifier = "reattachment".to_string().into();
+        let account_id = "reattachment";
         let message = crate::test_utils::GenerateMessageBuilder::default().build();
-        let account_id_ = account_id.clone();
         let message_ = message.clone();
 
         on_reattachment(move |event| {
-            assert!(event.account_id == &account_id_);
+            assert!(event.account_id == account_id);
             assert!(event.message == &message_);
         });
 
-        emit_transaction_event(TransactionEventType::Reattachment, &account_id, &message);
+        emit_transaction_event(TransactionEventType::Reattachment, account_id, &message);
     }
 
     #[test]
     fn on_broadcast_event() {
-        let account_id: AccountIdentifier = "broadcast".to_string().into();
+        let account_id = "broadcast";
         let message = crate::test_utils::GenerateMessageBuilder::default().build();
-        let account_id_ = account_id.clone();
         let message_ = message.clone();
 
         on_broadcast(move |event| {
-            assert!(event.account_id == &account_id_);
+            assert!(event.account_id == account_id);
             assert!(event.message == &message_);
         });
 
-        emit_transaction_event(TransactionEventType::Broadcast, &account_id, &message);
+        emit_transaction_event(TransactionEventType::Broadcast, account_id, &message);
     }
 
     #[test]
     fn on_confirmation_state_change_event() {
-        let account_id: AccountIdentifier = "confirm".to_string().into();
+        let account_id = "confirm";
         let message = crate::test_utils::GenerateMessageBuilder::default().build();
-        let account_id_ = account_id.clone();
         let message_ = message.clone();
         let confirmed = true;
 
         on_confirmation_state_change(move |event| {
-            assert!(event.account_id == &account_id_);
+            assert!(event.account_id == account_id);
             assert!(event.message == &message_);
             assert!(event.confirmed == confirmed);
         });
 
-        emit_confirmation_state_change(&account_id, &message, confirmed);
+        emit_confirmation_state_change(account_id, &message, confirmed);
     }
 }

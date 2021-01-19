@@ -174,7 +174,9 @@ impl WalletMessageHandler {
                 .try_into()
                 .map_err(|_| crate::Error::InvalidMessageId)?,
         );
-        self.account_manager.reattach(account_id, &parsed_message_id).await?;
+        self.account_manager
+            .reattach(account_id.clone(), &parsed_message_id)
+            .await?;
         Ok(ResponseType::Reattached(message_id.to_string()))
     }
 
@@ -188,7 +190,7 @@ impl WalletMessageHandler {
         account_id: &AccountIdentifier,
         method: &AccountMethod,
     ) -> Result<ResponseType> {
-        let account_handle = self.account_manager.get_account(account_id).await?;
+        let account_handle = self.account_manager.get_account(account_id.clone()).await?;
 
         match method {
             AccountMethod::GenerateAddress => {
@@ -258,7 +260,7 @@ impl WalletMessageHandler {
     /// The remove account message handler.
     async fn remove_account(&self, account_id: &AccountIdentifier) -> Result<ResponseType> {
         self.account_manager
-            .remove_account(&account_id)
+            .remove_account(account_id.clone())
             .await
             .map(|_| ResponseType::RemovedAccount(account_id.clone()))
     }
@@ -290,7 +292,7 @@ impl WalletMessageHandler {
     }
 
     async fn get_account(&self, account_id: &AccountIdentifier) -> Result<ResponseType> {
-        let account_handle = self.account_manager.get_account(&account_id).await?;
+        let account_handle = self.account_manager.get_account(account_id.clone()).await?;
         let account = account_handle.read().await;
         Ok(ResponseType::ReadAccount(account.clone()))
     }
@@ -316,7 +318,7 @@ impl WalletMessageHandler {
     }
 
     async fn send_transfer(&self, account_id: &AccountIdentifier, transfer: Transfer) -> Result<ResponseType> {
-        let account = self.account_manager.get_account(account_id).await?;
+        let account = self.account_manager.get_account(account_id.clone()).await?;
         let synced = account.sync().await.execute().await?;
         let message = synced.transfer(transfer).await?;
         Ok(ResponseType::SentTransfer(message))
@@ -330,7 +332,7 @@ impl WalletMessageHandler {
     ) -> Result<ResponseType> {
         let message = self
             .account_manager
-            .internal_transfer(from_account_id, to_account_id, amount)
+            .internal_transfer(from_account_id.clone(), to_account_id.clone(), amount)
             .await?;
         Ok(ResponseType::SentTransfer(message))
     }
@@ -448,8 +450,9 @@ mod tests {
                         std::thread::spawn(move || {
                             std::thread::sleep(std::time::Duration::from_secs(6));
                             // remove the created account
-                            let response =
-                                crate::block_on(async move { send_message(&tx, MessageType::RemoveAccount(id)).await });
+                            let response = crate::block_on(async move {
+                                send_message(&tx, MessageType::RemoveAccount(id.into())).await
+                            });
                             assert!(matches!(response.response(), ResponseType::RemovedAccount(_)));
                         });
                     }

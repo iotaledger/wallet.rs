@@ -1,7 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::address::{Address, IotaAddress};
+use crate::address::{Address, AddressWrapper, IotaAddress};
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
 pub use iota::{common::packable::Packable, IndexationPayload, Message as IotaMessage, MessageId, Output, Payload};
@@ -24,7 +24,7 @@ pub enum RemainderValueStrategy {
     ChangeAddress,
     /// Move the remainder value to an address that must belong to the source account.
     #[serde(with = "crate::serde::iota_address_serde")]
-    AccountAddress(IotaAddress),
+    AccountAddress(AddressWrapper),
 }
 
 impl Default for RemainderValueStrategy {
@@ -39,7 +39,7 @@ pub struct TransferBuilder {
     /// The transfer value.
     amount: NonZeroU64,
     /// The transfer address.
-    address: IotaAddress,
+    address: AddressWrapper,
     /// (Optional) message indexation.
     indexation: Option<IndexationPayload>,
     /// The strategy to use for the remainder value.
@@ -72,7 +72,7 @@ impl<'de> Deserialize<'de> for TransferBuilder {
             amount: NonZeroU64,
             /// The transfer address.
             #[serde(with = "crate::serde::iota_address_serde")]
-            address: IotaAddress,
+            address: AddressWrapper,
             /// (Optional) message indexation.
             indexation: Option<IndexationPayloadBuilder>,
             /// The strategy to use for the remainder value.
@@ -95,7 +95,7 @@ impl<'de> Deserialize<'de> for TransferBuilder {
 
 impl TransferBuilder {
     /// Initialises a new transfer to the given address.
-    pub fn new(address: IotaAddress, amount: NonZeroU64) -> Self {
+    pub fn new(address: AddressWrapper, amount: NonZeroU64) -> Self {
         Self {
             address,
             amount,
@@ -134,7 +134,7 @@ pub struct Transfer {
     pub(crate) amount: NonZeroU64,
     /// The transfer address.
     #[serde(with = "crate::serde::iota_address_serde")]
-    pub(crate) address: IotaAddress,
+    pub(crate) address: AddressWrapper,
     /// (Optional) message indexation.
     pub(crate) indexation: Option<IndexationPayload>,
     /// The strategy to use for the remainder value.
@@ -143,7 +143,7 @@ pub struct Transfer {
 
 impl Transfer {
     /// Initialises the transfer builder.
-    pub fn builder(address: IotaAddress, amount: NonZeroU64) -> TransferBuilder {
+    pub fn builder(address: AddressWrapper, amount: NonZeroU64) -> TransferBuilder {
         TransferBuilder::new(address, amount)
     }
 }

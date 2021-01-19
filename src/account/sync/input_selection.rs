@@ -1,13 +1,13 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::address::IotaAddress;
+use crate::address::AddressWrapper;
 use rand::{prelude::SliceRandom, thread_rng};
 use std::convert::TryInto;
 
 #[derive(Debug, Clone)]
 pub struct Input {
-    pub address: IotaAddress,
+    pub address: AddressWrapper,
     pub balance: u64,
 }
 
@@ -108,7 +108,7 @@ fn branch_and_bound(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::address::{AddressBuilder, IotaAddress};
+    use crate::address::{AddressBuilder, AddressWrapper, IotaAddress};
     use iota::message::prelude::Ed25519Address;
     use rand::prelude::{Rng, SeedableRng, SliceRandom, StdRng};
 
@@ -116,7 +116,10 @@ mod tests {
         let mut available_utxos = Vec::new();
         for i in 0..utxos_number {
             let address = AddressBuilder::new()
-                .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
+                .address(AddressWrapper::new(
+                    IotaAddress::Ed25519(Ed25519Address::new([0; 32])),
+                    "iota".to_string(),
+                ))
                 .balance(rng.gen_range(0, 2000))
                 .key_index(i)
                 .outputs(vec![])

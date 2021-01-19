@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use super::StorageAdapter;
-use crate::account::AccountIdentifier;
 use chrono::prelude::*;
 use rusqlite::{
     params,
@@ -10,7 +9,6 @@ use rusqlite::{
     Connection, NO_PARAMS,
 };
 use std::{
-    fs,
     path::Path,
     sync::{Arc, Mutex},
 };
@@ -31,10 +29,6 @@ fn storage_err<E: ToString>(error: E) -> crate::Error {
 impl SqliteStorageAdapter {
     /// Initialises the storage adapter.
     pub fn new(path: impl AsRef<Path>, table_name: impl AsRef<str>) -> crate::Result<Self> {
-        if let Some(parent) = path.as_ref().parent() {
-            fs::create_dir_all(&parent)?;
-        }
-
         let connection = Connection::open(path.as_ref()).map_err(storage_err)?;
 
         connection
@@ -64,17 +58,9 @@ impl StorageAdapter for SqliteStorageAdapter {
         STORAGE_ID
     }
 
-    async fn get(&mut self, account_id: &AccountIdentifier) -> crate::Result<String> {
-        let (sql, params) = match account_id {
-            AccountIdentifier::Id(id) => (
-                format!("SELECT value FROM {} WHERE key = ?1 LIMIT 1", self.table_name),
-                vec![ToSqlOutput::Owned(Value::Text(id.clone()))],
-            ),
-            AccountIdentifier::Index(index) => (
-                format!("SELECT value FROM {} LIMIT 1 OFFSET {}", self.table_name, index),
-                vec![],
-            ),
-        };
+    async fn get(&mut self, account_id: &str) -> crate::Result<String> {
+        let sql = format!("SELECT value FROM {} WHERE key = ?1 LIMIT 1", self.table_name);
+        let params = vec![ToSqlOutput::Owned(Value::Text(account_id.to_string()))];
 
         let connection = self.connection.lock().expect("failed to get connection lock");
         let mut query = connection.prepare(&sql).map_err(storage_err)?;
@@ -102,36 +88,20 @@ impl StorageAdapter for SqliteStorageAdapter {
         Ok(accounts)
     }
 
-    async fn set(&mut self, account_id: &AccountIdentifier, account: String) -> crate::Result<()> {
-        let id = match account_id {
-            AccountIdentifier::Id(id) => id,
-            _ => return Err(crate::Error::Storage("only Id is supported".into())),
-        };
+    async fn set(&mut self, account_id: &str, account: String) -> crate::Result<()> {
         let connection = self.connection.lock().expect("failed to get connection lock");
         connection
             .execute(
                 &format!("INSERT OR REPLACE INTO {} VALUES (?1, ?2, ?3)", self.table_name),
-                params![id, account, Local::now().timestamp()],
+                params![account_id, account, Local::now().timestamp()],
             )
             .map_err(|_| crate::Error::Storage("failed to insert data".into()))?;
         Ok(())
     }
 
-    async fn remove(&mut self, account_id: &AccountIdentifier) -> crate::Result<()> {
-        let (sql, params) = match account_id {
-            AccountIdentifier::Id(id) => (
-                format!("DELETE FROM {} WHERE key = ?1", self.table_name),
-                vec![ToSqlOutput::Owned(Value::Text(id.clone()))],
-            ),
-            AccountIdentifier::Index(index) => (
-                format!(
-                    "DELETE FROM {table} WHERE key IN (SELECT key from {table} LIMIT 1 OFFSET {offset})",
-                    table = self.table_name,
-                    offset = index
-                ),
-                vec![],
-            ),
-        };
+    async fn remove(&mut self, account_id: &str) -> crate::Result<()> {
+        let sql = format!("DELETE FROM {} WHERE key = ?1", self.table_name);
+        let params = vec![ToSqlOutput::Owned(Value::Text(account_id.to_string()))];
 
         let connection = self.connection.lock().expect("failed to get connection lock");
         connection

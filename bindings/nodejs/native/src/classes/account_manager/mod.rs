@@ -215,28 +215,7 @@ declare_types! {
                 let ref_ = &this.borrow(&guard).0;
                 crate::block_on(async move {
                     let manager = ref_.read().await;
-                    manager.get_account(&id).await
-                })
-            };
-            match account {
-                Ok(account) => {
-                    let id = crate::block_on(crate::store_account(account));
-                    let id = cx.string(serde_json::to_string(&id).unwrap());
-                    Ok(JsAccount::new(&mut cx, vec![id])?.upcast())
-                },
-                Err(_) => Ok(cx.undefined().upcast())
-            }
-        }
-
-        method getAccountByAlias(mut cx) {
-            let alias = cx.argument::<JsString>(0)?.value();
-            let account = {
-                let this = cx.this();
-                let guard = cx.lock();
-                let ref_ = &this.borrow(&guard).0;
-                crate::block_on(async move {
-                    let manager = ref_.read().await;
-                    manager.get_account_by_alias(alias).await
+                    manager.get_account(id).await
                 })
             };
             match account {
@@ -280,7 +259,7 @@ declare_types! {
                 let ref_ = &this.borrow(&guard).0;
                 crate::block_on(async move {
                     let manager = ref_.read().await;
-                    manager.remove_account(&id).await
+                    manager.remove_account(id).await
                 }).expect("error removing account")
             };
             Ok(cx.undefined().upcast())

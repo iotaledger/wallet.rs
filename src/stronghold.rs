@@ -3,7 +3,6 @@
 
 //! Stronghold interface abstractions over an account
 
-use crate::account::AccountIdentifier;
 use blake2::{
     digest::{Update, VariableOutput},
     VarBlake2b,
@@ -49,11 +48,8 @@ const SECRET_VAULT_PATH: &str = "iota-wallet-secret";
 const SEED_RECORD_PATH: &str = "iota-wallet-seed";
 const DERIVE_OUTPUT_RECORD_PATH: &str = "iota-wallet-derived";
 
-fn account_id_to_client_path(id: &AccountIdentifier) -> Vec<u8> {
-    match id {
-        AccountIdentifier::Id(id) => format!("iota-wallet-account-{}", id).as_bytes().to_vec(),
-        _ => unreachable!(),
-    }
+fn account_id_to_client_path(id: &str) -> Vec<u8> {
+    format!("iota-wallet-account-{}", id).as_bytes().to_vec()
 }
 
 fn stronghold_response_to_result<T>(status: ResultMessage<T>) -> Result<T> {
@@ -109,11 +105,7 @@ async fn load_private_data_actor(runtime: &mut ActorRuntime, snapshot_path: &Pat
     .await
 }
 
-async fn load_account_actor(
-    runtime: &mut ActorRuntime,
-    snapshot_path: &PathBuf,
-    account_id: &AccountIdentifier,
-) -> Result<()> {
+async fn load_account_actor(runtime: &mut ActorRuntime, snapshot_path: &PathBuf, account_id: &str) -> Result<()> {
     load_actor(
         runtime,
         snapshot_path,
@@ -235,7 +227,10 @@ pub struct ActorRuntime {
 
 pub fn actor_runtime() -> &'static Arc<Mutex<ActorRuntime>> {
     static SYSTEM: Lazy<Arc<Mutex<ActorRuntime>>> = Lazy::new(|| {
-        let system = ActorSystem::new().unwrap();
+        let system = SystemBuilder::new()
+            .log(slog::Logger::root(slog::Discard, slog::o!()))
+            .create()
+            .unwrap();
         let stronghold = Stronghold::init_stronghold_system(
             system,
             PRIVATE_DATA_CLIENT_PATH.to_vec(),
@@ -335,8 +330,7 @@ async fn switch_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf
 
     let account_ids = String::from_utf8_lossy(&data).to_string();
     for account_id in account_ids.split(ACCOUNT_ID_SEPARATOR).filter(|id| !id.is_empty()) {
-        let id = AccountIdentifier::Id(account_id.to_string());
-        load_account_actor(&mut runtime, snapshot_path, &id).await?;
+        load_account_actor(&mut runtime, snapshot_path, account_id).await?;
     }
 
     Ok(())
@@ -498,8 +492,7 @@ pub async fn get_accounts(snapshot_path: &PathBuf) -> Result<Vec<String>> {
     let mut accounts = Vec::new();
     let account_ids = String::from_utf8_lossy(&data).to_string();
     for account_id in account_ids.split(ACCOUNT_ID_SEPARATOR).filter(|id| !id.is_empty()) {
-        let id = AccountIdentifier::Id(account_id.to_string());
-        let account = get_account_internal(&mut runtime, snapshot_path, &id).await?;
+        let account = get_account_internal(&mut runtime, snapshot_path, account_id).await?;
         accounts.push(account);
     }
 
@@ -509,7 +502,7 @@ pub async fn get_accounts(snapshot_path: &PathBuf) -> Result<Vec<String>> {
 async fn get_account_internal(
     mut runtime: &mut ActorRuntime,
     snapshot_path: &PathBuf,
-    account_id: &AccountIdentifier,
+    account_id: &str,
 ) -> Result<String> {
     load_account_actor(&mut runtime, snapshot_path, account_id).await?;
     let (data, status) = runtime
@@ -520,13 +513,13 @@ async fn get_account_internal(
     Ok(String::from_utf8_lossy(&data).to_string())
 }
 
-pub async fn get_account(snapshot_path: &PathBuf, account_id: &AccountIdentifier) -> Result<String> {
+pub async fn get_account(snapshot_path: &PathBuf, account_id: &str) -> Result<String> {
     let mut runtime = actor_runtime().lock().await;
     check_snapshot(&mut runtime, &snapshot_path).await?;
     get_account_internal(&mut runtime, snapshot_path, account_id).await
 }
 
-pub async fn store_account(snapshot_path: &PathBuf, account_id: &AccountIdentifier, account: String) -> Result<()> {
+pub async fn store_account(snapshot_path: &PathBuf, account_id: &str, account: String) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
     check_snapshot(&mut runtime, &snapshot_path).await?;
 
@@ -537,12 +530,8 @@ pub async fn store_account(snapshot_path: &PathBuf, account_id: &AccountIdentifi
     let (data, _) = runtime.stronghold.read_from_store(account_ids_location.clone()).await;
     let mut account_ids = String::from_utf8_lossy(&data).to_string();
 
-    let id = match account_id {
-        AccountIdentifier::Id(id) => id,
-        AccountIdentifier::Index(_) => unreachable!(),
-    };
-    if !account_ids.contains(id.as_str()) {
-        account_ids.push_str(id);
+    if !account_ids.contains(account_id) {
+        account_ids.push_str(account_id);
         account_ids.push(ACCOUNT_ID_SEPARATOR);
         stronghold_response_to_result(
             runtime
@@ -574,7 +563,7 @@ pub async fn store_account(snapshot_path: &PathBuf, account_id: &AccountIdentifi
     Ok(())
 }
 
-pub async fn remove_account(snapshot_path: &PathBuf, account_id: &AccountIdentifier) -> Result<()> {
+pub async fn remove_account(snapshot_path: &PathBuf, account_id: &str) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
     check_snapshot(&mut runtime, &snapshot_path).await?;
 
@@ -585,17 +574,13 @@ pub async fn remove_account(snapshot_path: &PathBuf, account_id: &AccountIdentif
     stronghold_response_to_result(status).map_err(|_| Error::AccountNotFound)?;
     let account_ids = String::from_utf8_lossy(&data).to_string();
 
-    let id = match account_id {
-        AccountIdentifier::Id(id) => id,
-        AccountIdentifier::Index(_) => unreachable!(),
-    };
     stronghold_response_to_result(
         runtime
             .stronghold
             .write_to_store(
                 account_ids_location,
                 account_ids
-                    .replace(&format!("{}{}", id, ACCOUNT_ID_SEPARATOR), "")
+                    .replace(&format!("{}{}", account_id, ACCOUNT_ID_SEPARATOR), "")
                     .as_bytes()
                     .to_vec(),
                 None,
@@ -616,7 +601,6 @@ pub async fn remove_account(snapshot_path: &PathBuf, account_id: &AccountIdentif
 
 #[cfg(test)]
 mod tests {
-    use crate::account::AccountIdentifier;
     use rand::{distributions::Alphanumeric, thread_rng, Rng};
     use rusty_fork::rusty_fork_test;
     use std::path::PathBuf;
@@ -635,7 +619,7 @@ mod tests {
                 super::load_snapshot(&snapshot_path, &[0; 32]).await.unwrap();
 
                 std::thread::sleep(Duration::from_millis(interval * 3));
-                let res = super::get_account(&snapshot_path, &AccountIdentifier::Id("passwordexpires".to_string())).await;
+                let res = super::get_account(&snapshot_path, "passwordexpires").await;
                 assert_eq!(res.is_err(), true);
                 let error = res.unwrap_err();
                 if let super::Error::PasswordNotSet = error {
@@ -662,7 +646,7 @@ mod tests {
                     let instant = std::time::Instant::now();
                     super::store_account(
                         &snapshot_path,
-                        &AccountIdentifier::Id(format!("actionkeepspassword{}", i)),
+                        &format!("actionkeepspassword{}", i),
                         "data".to_string(),
                     )
                     .await
@@ -677,7 +661,7 @@ mod tests {
                     }
                 }
 
-                let id = AccountIdentifier::Id("actionkeepspassword1".to_string());
+                let id = "actionkeepspassword1".to_string();
                 let res = super::get_account(&snapshot_path, &id).await;
                 assert_eq!(res.is_ok(), true);
 
@@ -700,7 +684,7 @@ mod tests {
         let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
         super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
-        let id = AccountIdentifier::Id("id".to_string());
+        let id = "id".to_string();
         let data = "account data";
         super::store_account(&snapshot_path, &id, data.to_string()).await?;
         let mut r = super::actor_runtime().lock().await;
@@ -720,7 +704,7 @@ mod tests {
         let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
         super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
-        let id = AccountIdentifier::Id("writeandreadtest".to_string());
+        let id = "writeandreadtest".to_string();
         let data = "account data";
         super::store_account(&snapshot_path, &id, data.to_string()).await?;
         let stored_data = super::get_account(&snapshot_path, &id).await?;
@@ -736,7 +720,7 @@ mod tests {
         let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
         super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
-        let id = AccountIdentifier::Id("writeanddeleteid".to_string());
+        let id = "writeanddeleteid".to_string();
         let data = "account data";
         super::store_account(&snapshot_path, &id, data.to_string()).await?;
         super::remove_account(&snapshot_path, &id).await?;
@@ -754,7 +738,7 @@ mod tests {
             let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
             super::load_snapshot(&snapshot_path, &[0; 32]).await?;
 
-            let id = AccountIdentifier::Id(format!("multiplesnapshots{}", i));
+            let id = format!("multiplesnapshots{}", i);
             let data: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
             super::store_account(&snapshot_path, &id, data.clone()).await?;
             snapshot_saves.push((snapshot_path, id, data));
