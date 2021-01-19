@@ -29,8 +29,8 @@ iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "
 riker = { version = "0.4", optional = true }
 blake2 = { version = "0.9", optional = true }
 
-# ledger
-ledger-iota = { git = "https://gitlab.com/ledger-iota-chrysalis/ledger-iota.rs" }
+# ledger hardware wallets
+ledger-iota = { git = "https://gitlab.com/ledger-iota-chrysalis/ledger-iota.rs", optional = true  }
 
 [dependencies.iota-crypto]
 git = "https://github.com/iotaledger/crypto.rs"

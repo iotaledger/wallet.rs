@@ -55,7 +55,7 @@ impl super::Signer for LedgerHardwareWalletSigner {
         meta: super::GenerateAddressMetadata, 
     ) -> crate::Result<iota::Address> {
         // get ledger
-        let ledger = ledger_iota::get_ledger(USE_SIMULATOR, *account.index() as u32).map_err(|e| ledger_map_err(e))?;
+        let ledger = ledger_iota::get_ledger(USE_SIMULATOR, *account.index() as u32 | HARDENED).map_err(|e| ledger_map_err(e))?;
 
         // if the wallet is not generating addresses for syncing, we assume it's a new receiving address that 
         // needs to be shown to the user
@@ -73,7 +73,7 @@ impl super::Signer for LedgerHardwareWalletSigner {
         meta: super::SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
         // get ledger
-        let ledger = ledger_iota::get_ledger(USE_SIMULATOR, *account.index() as u32).map_err(|e| ledger_map_err(e))?;
+        let ledger = ledger_iota::get_ledger(USE_SIMULATOR, *account.index() as u32 | HARDENED).map_err(|e| ledger_map_err(e))?;
 
         // gather input indices into vec
         let mut key_indices : Vec<u32> = Vec::new();
@@ -95,8 +95,8 @@ impl super::Signer for LedgerHardwareWalletSigner {
         let mut remainder_index = 0u16;
         if has_remainder {
             // find the index of the remainder in the essence
-            // this has to be done because outputs in essence are sorted
-            // lexically and therefore remainder not always is the last output
+            // this has to be done because outputs in essences are sorted
+            // lexically and therefore the remainder is not always the last output
             // The index within the essence and the bip32 index will be validated
             // by the hardware wallet.
             for output in essence.outputs().iter() {

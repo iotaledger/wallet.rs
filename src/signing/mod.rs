@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 use slip10::BIP32Path;
 use tokio::sync::Mutex;
 
+#[cfg(feature = "ledger-hardware-wallet")]
 mod ledger;
 
 #[cfg(feature = "stronghold")]
@@ -105,12 +106,15 @@ fn default_signers() -> Signers {
         );
     }
 
-    signers.insert(
-        SignerType::LedgerHardwareWalletSigner,
-        Arc::new(Mutex::new(
-            Box::new(ledger::LedgerHardwareWalletSigner::default()) as Box<dyn Signer + Sync + Send>
-        )),
-    );
+    #[cfg(feature = "ledger-hardware-wallet")]
+    {
+        signers.insert(
+            SignerType::LedgerHardwareWalletSigner,
+            Arc::new(Mutex::new(
+                Box::new(ledger::LedgerHardwareWalletSigner::default()) as Box<dyn Signer + Sync + Send>
+            )),
+        );
+    }
 
     Arc::new(Mutex::new(signers))
 }
