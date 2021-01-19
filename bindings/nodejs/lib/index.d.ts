@@ -140,7 +140,6 @@ export declare class AccountManager {
   storeMnemonic(signerType: SignerType, mnemonic?: string): void
   createAccount(account: AccountToCreate): Account
   getAccount(accountId: string | number): Account | undefined
-  getAccountByAlias(alias: string): Account | undefined
   getAccounts(): Account[]
   removeAccount(accountId: string | number): void
   syncAccounts(): Promise<SyncedAccount[]>

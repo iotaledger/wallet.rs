@@ -3,7 +3,6 @@
 
 /// ! An example of using a custom storage adapter (in this case, using sled).
 use iota_wallet::{
-    account::AccountIdentifier,
     account_manager::{AccountManager, ManagerStorage},
     client::ClientOptionsBuilder,
     signing::SignerType,
@@ -21,19 +20,10 @@ impl MyStorage {
     }
 }
 
-fn account_id_value(account_id: &AccountIdentifier) -> iota_wallet::Result<String> {
-    match account_id {
-        AccountIdentifier::Id(val) => Ok(val.to_string()),
-        _ => Err(iota_wallet::Error::Storage(
-            "Unexpected AccountIdentifier type".to_string(),
-        )),
-    }
-}
-
 #[async_trait::async_trait]
 impl StorageAdapter for MyStorage {
-    async fn get(&mut self, account_id: &AccountIdentifier) -> iota_wallet::Result<String> {
-        match self.db.get(account_id_value(account_id)?) {
+    async fn get(&mut self, account_id: &str) -> iota_wallet::Result<String> {
+        match self.db.get(account_id) {
             Ok(Some(value)) => Ok(String::from_utf8(value.to_vec()).unwrap()),
             Ok(None) => Err(iota_wallet::Error::AccountNotFound),
             Err(e) => Err(iota_wallet::Error::Storage(format!(
@@ -52,16 +42,16 @@ impl StorageAdapter for MyStorage {
         Ok(accounts)
     }
 
-    async fn set(&mut self, account_id: &AccountIdentifier, account: String) -> iota_wallet::Result<()> {
+    async fn set(&mut self, account_id: &str, account: String) -> iota_wallet::Result<()> {
         self.db
-            .insert(account_id_value(account_id)?, account.as_bytes())
+            .insert(account_id, account.as_bytes())
             .map_err(|e| iota_wallet::Error::Storage(e.to_string()))?;
         Ok(())
     }
 
-    async fn remove(&mut self, account_id: &AccountIdentifier) -> iota_wallet::Result<()> {
+    async fn remove(&mut self, account_id: &str) -> iota_wallet::Result<()> {
         self.db
-            .remove(account_id_value(account_id)?)
+            .remove(account_id)
             .map_err(|e| iota_wallet::Error::Storage(e.to_string()))?;
         Ok(())
     }

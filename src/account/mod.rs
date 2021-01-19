@@ -15,32 +15,79 @@ use iota::message::prelude::MessageId;
 use serde::{Deserialize, Serialize};
 use tokio::sync::{Mutex, RwLock};
 
-use std::{ops::Deref, path::PathBuf, sync::Arc};
+use std::{
+    hash::{Hash, Hasher},
+    ops::Deref,
+    path::PathBuf,
+    sync::Arc,
+};
 
 mod sync;
 pub(crate) use sync::{repost_message, RepostAction};
 pub use sync::{AccountSynchronizer, SyncedAccount};
 
+const ACCOUNT_ID_PREFIX: &str = "wallet-account://";
+
 /// The account identifier.
-#[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq)]
 #[serde(untagged)]
 pub enum AccountIdentifier {
+    /// An address identifier.
+    #[serde(with = "crate::serde::iota_address_serde")]
+    Address(AddressWrapper),
     /// A string identifier.
     Id(String),
+    /// Account alias as identifier.
+    Alias(String),
     /// An index identifier.
     Index(usize),
 }
 
+impl Hash for AccountIdentifier {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            Self::Address(address) => address.to_bech32().hash(state),
+            Self::Id(value) => value.hash(state),
+            Self::Alias(value) => value.hash(state),
+            Self::Index(i) => i.hash(state),
+        }
+    }
+}
+
+impl PartialEq for AccountIdentifier {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Address(address1), Self::Address(address2)) => address1 == address2,
+            (Self::Id(id1), Self::Id(id2)) => id1 == id2,
+            (Self::Alias(alias1), Self::Alias(alias2)) => alias1 == alias2,
+            (Self::Index(index1), Self::Index(index2)) => index1 == index2,
+            _ => false,
+        }
+    }
+}
+
 // When the identifier is a string id.
-impl From<&String> for AccountIdentifier {
-    fn from(value: &String) -> Self {
-        Self::Id(value.clone())
+impl From<&str> for AccountIdentifier {
+    fn from(value: &str) -> Self {
+        if let Ok(address) = crate::address::parse(value) {
+            Self::Address(address)
+        } else if value.starts_with(ACCOUNT_ID_PREFIX) {
+            Self::Id(value.to_string())
+        } else {
+            Self::Alias(value.to_string())
+        }
     }
 }
 
 impl From<String> for AccountIdentifier {
     fn from(value: String) -> Self {
-        Self::Id(value)
+        Self::from(value.as_str())
+    }
+}
+
+impl From<&String> for AccountIdentifier {
+    fn from(value: &String) -> Self {
+        Self::from(value.as_str())
     }
 }
 
@@ -139,7 +186,7 @@ impl AccountInitialiser {
         }
 
         let mut account = Account {
-            id: AccountIdentifier::Index(accounts.len()),
+            id: accounts.len().to_string(),
             signer_type: signer_type.clone(),
             index: accounts.len(),
             alias,
@@ -171,7 +218,7 @@ impl AccountInitialiser {
             _ => unimplemented!(),
         };
         crypto::hashes::sha::SHA256(&raw, &mut digest);
-        account.set_id(AccountIdentifier::Id(hex::encode(digest)));
+        account.set_id(format!("{}{}", ACCOUNT_ID_PREFIX, hex::encode(digest)));
 
         let guard = if self.skip_persistance {
             account.into()
@@ -194,7 +241,7 @@ impl AccountInitialiser {
 pub struct Account {
     /// The account identifier.
     #[getset(set = "pub(crate)")]
-    id: AccountIdentifier,
+    id: String,
     /// The account's signer type.
     signer_type: SignerType,
     /// The account index
@@ -266,7 +313,7 @@ macro_rules! guard_field_getters {
 
 guard_field_getters!(
     AccountHandle,
-    #[doc = "Bridge to [Account#id](struct.Account.html#method.id)."] => id => AccountIdentifier,
+    #[doc = "Bridge to [Account#id](struct.Account.html#method.id)."] => id => String,
     #[doc = "Bridge to [Account#signer_type](struct.Account.html#method.signer_type)."] => signer_type => SignerType,
     #[doc = "Bridge to [Account#index](struct.Account.html#method.index)."] => index => usize,
     #[doc = "Bridge to [Account#alias](struct.Account.html#method.alias)."] => alias => String,

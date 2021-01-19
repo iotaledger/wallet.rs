@@ -11,7 +11,7 @@ use std::{
 use futures::{Future, FutureExt};
 use iota::common::logger::{logger_init, LoggerConfigBuilder};
 use iota_wallet::{
-    account::{AccountHandle, AccountIdentifier, SyncedAccount},
+    account::{AccountHandle, SyncedAccount},
     Error,
 };
 use neon::prelude::*;
@@ -22,7 +22,7 @@ use tokio::{runtime::Runtime, sync::RwLock};
 mod classes;
 use classes::*;
 
-type AccountInstanceMap = Arc<RwLock<HashMap<AccountIdentifier, AccountHandle>>>;
+type AccountInstanceMap = Arc<RwLock<HashMap<String, AccountHandle>>>;
 type SyncedAccountHandle = Arc<RwLock<SyncedAccount>>;
 type SyncedAccountInstanceMap = Arc<RwLock<HashMap<String, SyncedAccountHandle>>>;
 
@@ -32,7 +32,7 @@ fn account_instances() -> &'static AccountInstanceMap {
     &INSTANCES
 }
 
-pub(crate) async fn get_account(id: &AccountIdentifier) -> AccountHandle {
+pub(crate) async fn get_account(id: &str) -> AccountHandle {
     account_instances()
         .read()
         .await
@@ -41,7 +41,7 @@ pub(crate) async fn get_account(id: &AccountIdentifier) -> AccountHandle {
         .clone()
 }
 
-pub(crate) async fn store_account(account_handle: AccountHandle) -> AccountIdentifier {
+pub(crate) async fn store_account(account_handle: AccountHandle) -> String {
     let handle = account_handle.clone();
     let id = handle.id().await;
 

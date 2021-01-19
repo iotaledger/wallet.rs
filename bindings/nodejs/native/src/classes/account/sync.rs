@@ -1,10 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_wallet::{
-    account::{AccountIdentifier, SyncedAccount},
-    Error,
-};
+use iota_wallet::{account::SyncedAccount, Error};
 use neon::prelude::*;
 use serde::Deserialize;
 
@@ -19,7 +16,7 @@ pub struct SyncOptions {
 }
 
 pub struct SyncTask {
-    pub account_id: AccountIdentifier,
+    pub account_id: String,
     pub options: SyncOptions,
 }
 
