@@ -3,14 +3,14 @@
 
 use std::{num::NonZeroU64, sync::Arc};
 
-use iota_wallet::{account::AccountIdentifier, account_manager::AccountManager, message::Message, Error};
+use iota_wallet::{account_manager::AccountManager, message::Message, Error};
 use neon::prelude::*;
 use tokio::sync::RwLock;
 
 pub struct InternalTransferTask {
     pub manager: Arc<RwLock<AccountManager>>,
-    pub from_account_id: AccountIdentifier,
-    pub to_account_id: AccountIdentifier,
+    pub from_account_id: String,
+    pub to_account_id: String,
     pub amount: NonZeroU64,
 }
 

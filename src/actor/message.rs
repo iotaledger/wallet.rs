@@ -111,21 +111,25 @@ pub enum MessageType {
     },
     /// Backup storage.
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))))]
     Backup(String),
     /// Import accounts from storage.
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))))]
     RestoreBackup {
         /// The path to the backed up storage.
         #[serde(rename = "backupPath")]
         backup_path: String,
         /// The backup stronghold password.
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
         password: String,
     },
     /// Sets the password used to encrypt/decrypt the storage.
     SetStoragePassword(String),
     /// Set stronghold snapshot password.
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
     SetStrongholdPassword(String),
     /// Send funds.
     SendTransfer {
@@ -270,14 +274,17 @@ pub enum ResponseType {
     Reattached(String),
     /// Backup response.
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))))]
     BackupSuccessful,
     /// ImportAccounts response.
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))))]
     BackupRestored,
     /// SetStoragePassword response.
     StoragePasswordSet,
     /// SetStrongholdPassword response.
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
     StrongholdPasswordSet,
     /// SendTransfer and InternalTransfer response.
     SentTransfer(WalletMessage),

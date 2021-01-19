@@ -3,7 +3,7 @@
 
 use crate::{
     account_manager::AccountStore,
-    address::{Address, IotaAddress},
+    address::{Address, AddressWrapper},
     client::ClientOptions,
     message::{Message, MessageType},
     signing::{GenerateAddressMetadata, SignerType},
@@ -15,32 +15,79 @@ use iota::message::prelude::MessageId;
 use serde::{Deserialize, Serialize};
 use tokio::sync::{Mutex, RwLock};
 
-use std::{ops::Deref, path::PathBuf, sync::Arc};
+use std::{
+    hash::{Hash, Hasher},
+    ops::Deref,
+    path::PathBuf,
+    sync::Arc,
+};
 
 mod sync;
 pub(crate) use sync::{repost_message, RepostAction};
 pub use sync::{AccountSynchronizer, SyncedAccount};
 
+const ACCOUNT_ID_PREFIX: &str = "wallet-account://";
+
 /// The account identifier.
-#[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq)]
 #[serde(untagged)]
 pub enum AccountIdentifier {
+    /// An address identifier.
+    #[serde(with = "crate::serde::iota_address_serde")]
+    Address(AddressWrapper),
     /// A string identifier.
     Id(String),
+    /// Account alias as identifier.
+    Alias(String),
     /// An index identifier.
     Index(usize),
 }
 
+impl Hash for AccountIdentifier {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            Self::Address(address) => address.to_bech32().hash(state),
+            Self::Id(value) => value.hash(state),
+            Self::Alias(value) => value.hash(state),
+            Self::Index(i) => i.hash(state),
+        }
+    }
+}
+
+impl PartialEq for AccountIdentifier {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Address(address1), Self::Address(address2)) => address1 == address2,
+            (Self::Id(id1), Self::Id(id2)) => id1 == id2,
+            (Self::Alias(alias1), Self::Alias(alias2)) => alias1 == alias2,
+            (Self::Index(index1), Self::Index(index2)) => index1 == index2,
+            _ => false,
+        }
+    }
+}
+
 // When the identifier is a string id.
-impl From<&String> for AccountIdentifier {
-    fn from(value: &String) -> Self {
-        Self::Id(value.clone())
+impl From<&str> for AccountIdentifier {
+    fn from(value: &str) -> Self {
+        if let Ok(address) = crate::address::parse(value) {
+            Self::Address(address)
+        } else if value.starts_with(ACCOUNT_ID_PREFIX) {
+            Self::Id(value.to_string())
+        } else {
+            Self::Alias(value.to_string())
+        }
     }
 }
 
 impl From<String> for AccountIdentifier {
     fn from(value: String) -> Self {
-        Self::Id(value)
+        Self::from(value.as_str())
+    }
+}
+
+impl From<&String> for AccountIdentifier {
+    fn from(value: &String) -> Self {
+        Self::from(value.as_str())
     }
 }
 
@@ -146,7 +193,7 @@ impl AccountInitialiser {
         }
 
         let mut account = Account {
-            id: AccountIdentifier::Index(account_index),
+            id: account_index.to_string(),
             signer_type: signer_type.clone(),
             index: account_index,
             alias,
@@ -158,15 +205,27 @@ impl AccountInitialiser {
             skip_persistance: self.skip_persistance,
         };
 
-        let address =
-            crate::address::get_iota_address(&account, 0, false, GenerateAddressMetadata { syncing: false }).await?;
+        let bech32_hrp = crate::client::get_client(account.client_options())
+            .read()
+            .await
+            .get_network_info()
+            .bech32_hrp;
+
+        let address = crate::address::get_iota_address(
+            &account,
+            0,
+            false,
+            bech32_hrp,
+            GenerateAddressMetadata { syncing: false },
+        )
+        .await?;
         let mut digest = [0; 32];
-        let raw = match address {
+        let raw = match address.as_ref() {
             iota::Address::Ed25519(a) => a.as_ref().to_vec(),
             _ => unimplemented!(),
         };
         crypto::hashes::sha::SHA256(&raw, &mut digest);
-        account.set_id(AccountIdentifier::Id(hex::encode(digest)));
+        account.set_id(format!("{}{}", ACCOUNT_ID_PREFIX, hex::encode(digest)));
 
         let guard = if self.skip_persistance {
             account.into()
@@ -189,7 +248,7 @@ impl AccountInitialiser {
 pub struct Account {
     /// The account identifier.
     #[getset(set = "pub(crate)")]
-    id: AccountIdentifier,
+    id: String,
     /// The account's signer type.
     signer_type: SignerType,
     /// The account index
@@ -221,11 +280,11 @@ pub struct Account {
 #[derive(Debug, Clone)]
 pub struct AccountHandle {
     inner: Arc<RwLock<Account>>,
-    locked_addresses: Arc<Mutex<Vec<IotaAddress>>>,
+    locked_addresses: Arc<Mutex<Vec<AddressWrapper>>>,
 }
 
 impl AccountHandle {
-    pub(crate) fn locked_addresses(&self) -> Arc<Mutex<Vec<IotaAddress>>> {
+    pub(crate) fn locked_addresses(&self) -> Arc<Mutex<Vec<AddressWrapper>>> {
         self.locked_addresses.clone()
     }
 }
@@ -261,7 +320,7 @@ macro_rules! guard_field_getters {
 
 guard_field_getters!(
     AccountHandle,
-    #[doc = "Bridge to [Account#id](struct.Account.html#method.id)."] => id => AccountIdentifier,
+    #[doc = "Bridge to [Account#id](struct.Account.html#method.id)."] => id => String,
     #[doc = "Bridge to [Account#signer_type](struct.Account.html#method.signer_type)."] => signer_type => SignerType,
     #[doc = "Bridge to [Account#index](struct.Account.html#method.index)."] => index => usize,
     #[doc = "Bridge to [Account#alias](struct.Account.html#method.alias)."] => alias => String,
@@ -423,6 +482,16 @@ impl Account {
     /// Updates the account's client options.
     pub async fn set_client_options(&mut self, options: ClientOptions) -> crate::Result<()> {
         self.client_options = options;
+
+        let bech32_hrp = crate::client::get_client(&self.client_options)
+            .read()
+            .await
+            .get_network_info()
+            .bech32_hrp;
+        for address in &mut self.addresses {
+            address.set_bech32_hrp(bech32_hrp.to_string());
+        }
+
         self.save().await
     }
 

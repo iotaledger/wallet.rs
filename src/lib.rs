@@ -4,6 +4,7 @@
 //! The IOTA Wallet Library
 
 #![warn(missing_docs, rust_2018_idioms)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 /// The account module.
 pub mod account;
@@ -28,10 +29,13 @@ pub mod signing;
 /// The storage module.
 pub mod storage;
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
 pub(crate) mod stronghold;
 
 pub use error::Error;
 
+#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
 pub use stronghold::set_password_clear_interval as set_stronghold_password_clear_interval;
 
 /// The wallet Result type.
@@ -59,6 +63,7 @@ where
 
 /// Access the stronghold's actor system.
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
 pub async fn with_actor_system<F: FnOnce(&riker::actors::ActorSystem)>(cb: F) {
     let runtime = self::stronghold::actor_runtime().lock().await;
     cb(&runtime.stronghold.system)

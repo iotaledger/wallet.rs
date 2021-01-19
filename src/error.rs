@@ -47,6 +47,7 @@ pub enum Error {
     JsonError(#[from] serde_json::error::Error),
     /// stronghold client error.
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
     #[error("`{0}`")]
     StrongholdError(crate::stronghold::Error),
     /// iota.rs error.
@@ -141,6 +142,10 @@ pub enum Error {
         "can't perform operation while storage is encrypted; use AccountManager::set_storage_password to decrypt storage"
     )]
     StorageIsEncrypted,
+    /// cannot use index to get account - multiple index sequences found (two or more different signer types stored on
+    /// accounts)
+    #[error("cannot use index identifier when two signer types are used")]
+    CannotUseIndexIdentifier,
 }
 
 impl Drop for Error {
@@ -219,6 +224,7 @@ impl serde::Serialize for Error {
             Self::AccountDecrypt(_) => serialize_variant(self, serializer, "AccountDecrypt"),
             Self::AccountEncrypt(_) => serialize_variant(self, serializer, "AccountEncrypt"),
             Self::StorageIsEncrypted => serialize_variant(self, serializer, "StorageIsEncrypted"),
+            Self::CannotUseIndexIdentifier => serialize_variant(self, serializer, "CannotUseIndexIdentifier"),
         }
     }
 }
