@@ -405,8 +405,13 @@ impl AccountSynchronizer {
             Ok(is_empty) => {
                 if !self.skip_persistance {
                     let mut account_ref = self.account_handle.write().await;
-                    account_ref.set_addresses(account_.addresses().to_vec());
-                    account_ref.set_messages(account_.messages().to_vec());
+                    account_ref
+                        .do_mut(|account| {
+                            account.set_addresses(account_.addresses().to_vec());
+                            account.set_messages(account_.messages().to_vec());
+                            Ok(())
+                        })
+                        .await?;
                 }
 
                 let account_ref = self.account_handle.read().await;

@@ -382,7 +382,7 @@ impl AccountManager {
 
         let handle = thread::spawn(move || {
             let runtime = tokio::runtime::Builder::new_current_thread()
-                .enable_time()
+                .enable_all()
                 .build()
                 .unwrap();
             runtime.block_on(async {

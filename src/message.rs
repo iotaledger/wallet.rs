@@ -329,7 +329,8 @@ impl Message {
                     .any(|address| address.outputs().iter().any(|o| o.message_id() == id));
                 tx.essence().outputs().iter().fold(0, |acc, output| {
                     if let Output::SignatureLockedSingle(x) = output {
-                        let address_belongs_to_account = account_addresses.iter().any(|a| a.address() == x.address());
+                        let address_belongs_to_account =
+                            account_addresses.iter().any(|a| a.address().as_ref() == x.address());
                         if sent {
                             if address_belongs_to_account {
                                 acc

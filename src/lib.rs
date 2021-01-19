@@ -268,7 +268,6 @@ mod test_utils {
                 let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
                 let storage_path = PathBuf::from(format!("./test-storage/{}", storage_path));
                 if !storage_path.exists() {
-                    std::fs::create_dir_all(&storage_path).unwrap();
                     break storage_path;
                 }
             };
