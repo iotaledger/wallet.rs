@@ -727,7 +727,7 @@ impl AccountManager {
                     let account = account_handle.read().await;
                     if account.index() == &index {
                         // if we already found an account with this index,
-                        // we error out since this is an incorret usage of the API
+                        // we error out since this is an incorrect usage of the API
                         // you can't use the index to get an account if you're using multiple signer types
                         // since there's multiple index sequences in that case
                         if associated_account.is_some() {
