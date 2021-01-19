@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #[cfg(feature = "sqlite-storage")]
+#[cfg_attr(docsrs, doc(cfg(feature = "sqlite-storage")))]
 /// Sqlite storage.
 pub mod sqlite;
 
 #[cfg(any(feature = "stronghold-storage", feature = "stronghold"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold-storage", feature = "stronghold"))))]
 /// Stronghold storage.
 pub mod stronghold;
 
