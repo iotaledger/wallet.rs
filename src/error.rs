@@ -146,6 +146,9 @@ pub enum Error {
     /// accounts)
     #[error("cannot use index identifier when two signer types are used")]
     CannotUseIndexIdentifier,
+    /// Account alias must be unique.
+    #[error("can't create account: account alias already exists")]
+    AccountAliasAlreadyExists,
 }
 
 impl Drop for Error {
@@ -225,6 +228,7 @@ impl serde::Serialize for Error {
             Self::AccountEncrypt(_) => serialize_variant(self, serializer, "AccountEncrypt"),
             Self::StorageIsEncrypted => serialize_variant(self, serializer, "StorageIsEncrypted"),
             Self::CannotUseIndexIdentifier => serialize_variant(self, serializer, "CannotUseIndexIdentifier"),
+            Self::AccountAliasAlreadyExists => serialize_variant(self, serializer, "AccountAliasAlreadyExists"),
         }
     }
 }
