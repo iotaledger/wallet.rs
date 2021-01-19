@@ -10,7 +10,6 @@ use rusqlite::{
     Connection, NO_PARAMS,
 };
 use std::{
-    fs,
     path::Path,
     sync::{Arc, Mutex},
 };
@@ -31,10 +30,6 @@ fn storage_err<E: ToString>(error: E) -> crate::Error {
 impl SqliteStorageAdapter {
     /// Initialises the storage adapter.
     pub fn new(path: impl AsRef<Path>, table_name: impl AsRef<str>) -> crate::Result<Self> {
-        if let Some(parent) = path.as_ref().parent() {
-            fs::create_dir_all(&parent)?;
-        }
-
         let connection = Connection::open(path.as_ref()).map_err(storage_err)?;
 
         connection
