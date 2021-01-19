@@ -189,12 +189,9 @@ mod test_utils {
             .await
             .unwrap();
 
-        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-        {
-            let signer_type = SignerType::Custom("".to_string());
-            crate::signing::set_signer(signer_type.clone(), TestSigner::default()).await;
-            manager.store_mnemonic(signer_type, None).await.unwrap();
-        }
+        let signer_type = SignerType::Custom("".to_string());
+        crate::signing::set_signer(signer_type.clone(), TestSigner::default()).await;
+        manager.store_mnemonic(signer_type, None).await.unwrap();
 
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         manager.set_stronghold_password("password").await.unwrap();
