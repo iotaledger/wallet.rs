@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use slip10::BIP32Path;
 use tokio::sync::Mutex;
 
-#[cfg(feature = "ledger-hardware-wallet")]
+#[cfg(any(feature = "ledger-nano", feature ="ledger-nano-simulator"))]
 mod ledger;
 
 #[cfg(feature = "stronghold")]
@@ -32,7 +32,9 @@ pub enum SignerType {
     #[cfg(feature = "stronghold")]
     Stronghold,
     /// Ledger Device
-    LedgerHardwareWalletSigner,
+    LedgerNanoSigner,
+    /// Ledger Speculos Simulator
+    LedgerNanoSimulatorSigner,
     /// Custom signer with its identifier.
     Custom(String),
 }
@@ -106,12 +108,22 @@ fn default_signers() -> Signers {
         );
     }
 
-    #[cfg(feature = "ledger-hardware-wallet")]
+    #[cfg(feature = "ledger-nano")]
     {
         signers.insert(
-            SignerType::LedgerHardwareWalletSigner,
+            SignerType::LedgerNanoSigner,
             Arc::new(Mutex::new(
-                Box::new(ledger::LedgerHardwareWalletSigner::default()) as Box<dyn Signer + Sync + Send>
+                Box::new(ledger::LedgerNanoSigner{is_simulator: false}) as Box<dyn Signer + Sync + Send>
+            )),
+        );
+    }
+
+    #[cfg(feature = "ledger-nano-simulator")]
+    {
+        signers.insert(
+            SignerType::LedgerNanoSimulatorSigner,
+            Arc::new(Mutex::new(
+                Box::new(ledger::LedgerNanoSigner{is_simulator: true}) as Box<dyn Signer + Sync + Send>
             )),
         );
     }

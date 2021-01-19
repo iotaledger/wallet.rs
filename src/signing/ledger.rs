@@ -7,13 +7,12 @@ use crate::address::AddressWrapper;
 use iota::{common::packable::Packable, UnlockBlock};
 use std::{path::PathBuf};
 
-
 const HARDENED : u32 = 0x80000000;
 
-const USE_SIMULATOR : bool = true;
-
 #[derive(Default)]
-pub struct LedgerHardwareWalletSigner;
+pub struct LedgerNanoSigner {
+    pub is_simulator: bool,
+}
 
 use ledger_iota::api::errors;
 
@@ -24,7 +23,6 @@ use ledger_iota::api::errors;
 // LedgerDeviceNotFound: No usable Ledger device was found
 // LedgerMiscError: Everything else.
 fn ledger_map_err(err: errors::APIError) -> crate::Error {
-    println!("error: {}", err);
     match err {
         errors::APIError::SecurityStatusNotSatisfied => {
             crate::Error::LedgerDongleLocked
@@ -42,7 +40,7 @@ fn ledger_map_err(err: errors::APIError) -> crate::Error {
 }
 
 #[async_trait::async_trait]
-impl super::Signer for LedgerHardwareWalletSigner {
+impl super::Signer for LedgerNanoSigner {
     async fn store_mnemonic(&mut self, _: &PathBuf, _mnemonic: String) -> crate::Result<()> {
         Err(crate::Error::InvalidMnemonic(String::from("")))
     }
@@ -55,7 +53,7 @@ impl super::Signer for LedgerHardwareWalletSigner {
         meta: super::GenerateAddressMetadata, 
     ) -> crate::Result<iota::Address> {
         // get ledger
-        let ledger = ledger_iota::get_ledger(USE_SIMULATOR, *account.index() as u32 | HARDENED).map_err(|e| ledger_map_err(e))?;
+        let ledger = ledger_iota::get_ledger(self.is_simulator, *account.index() as u32 | HARDENED).map_err(|e| ledger_map_err(e))?;
 
         // if the wallet is not generating addresses for syncing, we assume it's a new receiving address that 
         // needs to be shown to the user
@@ -73,7 +71,7 @@ impl super::Signer for LedgerHardwareWalletSigner {
         meta: super::SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
         // get ledger
-        let ledger = ledger_iota::get_ledger(USE_SIMULATOR, *account.index() as u32 | HARDENED).map_err(|e| ledger_map_err(e))?;
+        let ledger = ledger_iota::get_ledger(self.is_simulator, *account.index() as u32 | HARDENED).map_err(|e| ledger_map_err(e))?;
 
         // gather input indices into vec
         let mut key_indices : Vec<u32> = Vec::new();
