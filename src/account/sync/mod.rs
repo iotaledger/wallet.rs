@@ -409,6 +409,7 @@ impl AccountSynchronizer {
                         .do_mut(|account| {
                             account.set_addresses(account_.addresses().to_vec());
                             account.set_messages(account_.messages().to_vec());
+                            account.set_last_synced_at(Some(chrono::Local::now()));
                             Ok(())
                         })
                         .await?;
