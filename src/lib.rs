@@ -190,10 +190,17 @@ mod test_utils {
             .unwrap();
 
         #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-        crate::signing::set_signer(signer_type(), TestSigner::default()).await;
+        {
+            let signer_type = SignerType::Custom("".to_string());
+            crate::signing::set_signer(signer_type.clone(), TestSigner::default()).await;
+            manager.store_mnemonic(signer_type, None).await.unwrap();
+        }
 
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         manager.set_stronghold_password("password").await.unwrap();
+
+        #[cfg(feature = "stronghold")]
+        manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
 
         manager
     }
@@ -232,15 +239,17 @@ mod test_utils {
         if test_type == TestType::Storage || test_type == TestType::SigningAndStorage {
             // ---- Stronghold storage ----
             #[cfg(feature = "stronghold-storage")]
-            test_cases.push(ManagerTestCase::Storage(StorageTestCase {
-                storage_password: None,
-                storage: ManagerStorage::Stronghold,
-            }));
+            {
+                test_cases.push(ManagerTestCase::Storage(StorageTestCase {
+                    storage_password: None,
+                    storage: ManagerStorage::Stronghold,
+                }));
 
-            test_cases.push(ManagerTestCase::Storage(StorageTestCase {
-                storage_password: Some("password".to_string()),
-                storage: ManagerStorage::Stronghold,
-            }));
+                test_cases.push(ManagerTestCase::Storage(StorageTestCase {
+                    storage_password: Some("password".to_string()),
+                    storage: ManagerStorage::Stronghold,
+                }));
+            }
 
             // ---- SQLite storage ----
             #[cfg(feature = "sqlite-storage")]
