@@ -44,8 +44,8 @@ impl super::Signer for LedgerNanoSigner {
         meta: super::GenerateAddressMetadata,
     ) -> crate::Result<iota::Address> {
         // get ledger
-        let ledger = ledger_iota::get_ledger(self.is_simulator, *account.index() as u32 | HARDENED)
-            .map_err(ledger_map_err)?;
+        let ledger =
+            ledger_iota::get_ledger(self.is_simulator, *account.index() as u32 | HARDENED).map_err(ledger_map_err)?;
 
         // if the wallet is not generating addresses for syncing, we assume it's a new receiving address that
         // needs to be shown to the user
@@ -64,8 +64,8 @@ impl super::Signer for LedgerNanoSigner {
         meta: super::SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
         // get ledger
-        let ledger = ledger_iota::get_ledger(self.is_simulator, *account.index() as u32 | HARDENED)
-            .map_err(ledger_map_err)?;
+        let ledger =
+            ledger_iota::get_ledger(self.is_simulator, *account.index() as u32 | HARDENED).map_err(ledger_map_err)?;
 
         // gather input indices into vec
         let mut key_indices: Vec<u32> = Vec::new();
