@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use getset::Getters;
-pub use iota::client::builder::Network;
 use iota::client::{BrokerOptions, Client, ClientBuilder};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
@@ -42,7 +41,7 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
         }
 
         if let Some(network) = options.network() {
-            client_builder = client_builder.with_network(network.clone());
+            client_builder = client_builder.with_network(network);
         }
 
         let client = client_builder.finish().expect("failed to initialise ClientBuilder");
@@ -92,7 +91,7 @@ impl SingleNodeClientOptionsBuilder {
 /// The options builder for a client connected to multiple nodes.
 pub struct MultiNodeClientOptionsBuilder {
     nodes: Option<Vec<Url>>,
-    network: Option<Network>,
+    network: Option<String>,
     quorum_size: Option<u8>,
     quorum_threshold: f32,
     local_pow: bool,
@@ -141,9 +140,9 @@ impl MultiNodeClientOptionsBuilder {
         Ok(builder)
     }
 
-    fn with_network(network: Network) -> Self {
+    fn with_network<N: Into<String>>(network: N) -> Self {
         Self {
-            network: Some(network),
+            network: Some(network.into()),
             ..Default::default()
         }
     }
@@ -156,8 +155,8 @@ impl MultiNodeClientOptionsBuilder {
     }
 
     /// Sets the IOTA network the nodes belong to.
-    pub fn network(mut self, network: Network) -> Self {
-        self.network = Some(network);
+    pub fn network<N: Into<String>>(mut self, network: N) -> Self {
+        self.network = Some(network.into());
         self
     }
 
@@ -230,10 +229,10 @@ impl ClientOptionsBuilder {
     ///
     /// # Examples
     /// ```
-    /// use iota_wallet::client::{ClientOptionsBuilder, Network};
-    /// let client_options = ClientOptionsBuilder::network(Network::Testnet).build();
+    /// use iota_wallet::client::ClientOptionsBuilder;
+    /// let client_options = ClientOptionsBuilder::network("testnet2").build();
     /// ```
-    pub fn network(network: Network) -> MultiNodeClientOptionsBuilder {
+    pub fn network(network: &str) -> MultiNodeClientOptionsBuilder {
         MultiNodeClientOptionsBuilder::with_network(network)
     }
 }
@@ -244,7 +243,7 @@ impl ClientOptionsBuilder {
 pub struct ClientOptions {
     node: Option<Url>,
     nodes: Option<Vec<Url>>,
-    network: Option<Network>,
+    network: Option<String>,
     #[serde(rename = "quorumSize")]
     quorum_size: Option<u8>,
     #[serde(rename = "quorumThreshold", default)]
@@ -259,7 +258,7 @@ fn default_local_pow() -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{ClientOptionsBuilder, Network};
+    use super::ClientOptionsBuilder;
 
     #[test]
     fn single_node_valid_url() {
@@ -293,7 +292,7 @@ mod tests {
 
     #[test]
     fn network_node_empty() {
-        let builder_res = ClientOptionsBuilder::network(Network::Testnet).build();
+        let builder_res = ClientOptionsBuilder::network("testnet2").build();
         assert!(builder_res.is_ok());
     }
 
@@ -330,10 +329,10 @@ mod tests {
     #[test]
     fn network_constructor() {
         let nodes = ["https://api.lb-0.testnet.chrysalis2.com"];
-        let network = Network::Testnet;
+        let network = "testnet";
         let quorum_size = 50;
         let quorum_threshold = 0.9;
-        let client = ClientOptionsBuilder::network(network.clone())
+        let client = ClientOptionsBuilder::network(network)
             .quorum_size(quorum_size)
             .quorum_threshold(quorum_threshold)
             .nodes(&nodes)
@@ -342,7 +341,7 @@ mod tests {
             .unwrap();
         assert!(client.node().is_none());
         assert_eq!(client.nodes(), &Some(super::convert_urls(&nodes).unwrap()));
-        assert_eq!(*client.network(), Some(network));
+        assert_eq!(client.network(), &Some(network.to_string()));
         assert_eq!(*client.quorum_size(), Some(quorum_size));
         assert!((*client.quorum_threshold() as f32 / 100.0 - quorum_threshold).abs() < f32::EPSILON);
     }
@@ -379,17 +378,17 @@ mod tests {
                 .unwrap()
                 .quorum_size(55)
                 .quorum_threshold(0.6)
-                .network(Network::Mainnet)
+                .network("mainnet")
                 .build()
                 .unwrap(),
             ClientOptionsBuilder::nodes(&["https://api.lb-0.testnet.chrysalis2.com"])
                 .unwrap()
                 .quorum_size(55)
                 .quorum_threshold(0.6)
-                .network(Network::Testnet)
+                .network("testnet2")
                 .build()
                 .unwrap(),
-            ClientOptionsBuilder::network(Network::Testnet)
+            ClientOptionsBuilder::network("testnet2")
                 .nodes(&["https://api.hornet-2.testnet.chrysalis2.com/"])
                 .unwrap()
                 .build()

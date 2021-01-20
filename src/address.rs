@@ -3,11 +3,11 @@
 
 use crate::{account::Account, message::MessageType, signing::GenerateAddressMetadata};
 use getset::{Getters, Setters};
-pub use iota::{client::builder::Network, Address as IotaAddress, Ed25519Address, Input, Payload, UTXOInput};
 use iota::{
     message::prelude::{MessageId, TransactionId},
     OutputMetadata,
 };
+pub use iota::{Address as IotaAddress, Ed25519Address, Input, Payload, UTXOInput};
 use serde::{Deserialize, Serialize};
 use std::{
     cmp::Ordering,
