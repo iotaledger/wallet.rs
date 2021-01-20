@@ -227,7 +227,7 @@ impl ClientOptionsBuilder {
     ///
     /// # Examples
     /// ```
-    /// use iota_wallet::client::{ClientOptionsBuilder, Network};
+    /// use iota_wallet::client::ClientOptionsBuilder;
     /// let client_options = ClientOptionsBuilder::network("testnet2").build();
     /// ```
     pub fn network(network: &str) -> MultiNodeClientOptionsBuilder {
