@@ -476,7 +476,7 @@ impl Account {
     /// It's read directly from the storage. To read the latest account balance, you should `sync` first.
     ///
     /// The available balance is the balance users are allowed to spend.
-    /// For example, if a user with 50i total account balance has made a transaction spending 20i,
+    /// For example, if a user with 50i total account balance has made a message spending 20i,
     /// the available balance should be (50i-30i) = 20i.
     pub fn available_balance(&self) -> u64 {
         self.addresses()
@@ -512,7 +512,7 @@ impl Account {
     /// It's fetched from the storage. To ensure the database is updated with the latest transactions,
     /// `sync` should be called first.
     ///
-    /// * `count` - Number of (most recent) transactions to fetch.
+    /// * `count` - Number of (most recent) messages to fetch.
     /// * `from` - Starting point of the subset to fetch.
     /// * `message_type` - Optional message type filter.
     ///
@@ -527,10 +527,10 @@ impl Account {
     ///     # let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
     ///     # let storage_path = std::path::PathBuf::from(format!("./test-storage/{}", storage_path));
     ///     // gets 10 received messages, skipping the first 5 most recent messages.
-    ///     let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+    ///     let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
     ///         .expect("invalid node URL")
     ///         .build();
-    ///     let mut manager = AccountManager::builder().finish().await.unwrap();
+    ///     let mut manager = AccountManager::builder().with_storage("./test-storage", ManagerStorage::Stronghold, None).unwrap().finish().await.unwrap();
     ///     # use iota_wallet::account_manager::ManagerStorage;
     ///     # #[cfg(all(feature = "stronghold-storage", feature = "sqlite-storage"))]
     ///     # let default_storage = ManagerStorage::Stronghold;
@@ -640,35 +640,362 @@ impl Account {
 
 #[cfg(test)]
 mod tests {
-    use crate::client::ClientOptionsBuilder;
+    use super::AccountHandle;
+    use crate::{
+        account_manager::AccountManager,
+        address::{Address, AddressBuilder, AddressOutput},
+        client::ClientOptionsBuilder,
+        message::{Message, MessageType},
+    };
+    use iota::{MessageId, TransactionId};
 
+    // asserts that the `set_alias` function updates the account alias in storage
     #[tokio::test]
     async fn set_alias() {
-        let manager = crate::test_utils::get_account_manager().await;
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
 
-        let updated_alias = "updated alias";
-        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-            .expect("invalid node URL")
-            .build();
-
-        let account_id = {
-            let account_handle = manager
-                .create_account(client_options)
-                .unwrap()
-                .alias("alias")
-                .initialise()
-                .await
-                .expect("failed to add account");
+            let updated_alias = "updated alias";
 
             account_handle.set_alias(updated_alias).await.unwrap();
-            account_handle.id().await
+
+            let account_in_storage = manager
+                .get_account(account_handle.read().await.id())
+                .await
+                .expect("failed to get account from storage");
+            assert_eq!(account_in_storage.alias().await, updated_alias.to_string());
+        })
+        .await;
+    }
+
+    // asserts that the `set_client_options` function updates the account client options in storage
+    #[tokio::test]
+    async fn set_client_options() {
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+
+            let updated_client_options =
+                ClientOptionsBuilder::nodes(&["http://test.wallet", "http://test.wallet/set-client-options"])
+                    .unwrap()
+                    .build()
+                    .unwrap();
+
+            account_handle
+                .set_client_options(updated_client_options.clone())
+                .await
+                .unwrap();
+
+            let account_in_storage = manager
+                .get_account(account_handle.read().await.id())
+                .await
+                .expect("failed to get account from storage");
+            assert_eq!(account_in_storage.client_options().await, updated_client_options);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn account_handle_bridge_getters() {
+        let manager = crate::test_utils::get_account_manager().await;
+
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+
+        macro_rules! assert_bridge_method {
+            ($($x:ident),+) => {
+                $(
+                    let result = account_handle.$x().await;
+                    let expected = account_handle.read().await.$x().clone();
+                    assert_eq!(result, expected);
+                )*
+            };
+        }
+
+        assert_bridge_method!(
+            id,
+            signer_type,
+            index,
+            alias,
+            created_at,
+            messages,
+            addresses,
+            client_options
+        );
+    }
+
+    fn _generate_address_output(value: u64) -> AddressOutput {
+        let mut tx_id = [0; 32];
+        crypto::rand::fill(&mut tx_id).unwrap();
+        AddressOutput {
+            transaction_id: TransactionId::new(tx_id),
+            message_id: MessageId::new([0; 32]),
+            index: 0,
+            amount: value,
+            is_spent: false,
+        }
+    }
+
+    async fn _generate_account(manager: &AccountManager, messages: Vec<Message>) -> (AccountHandle, Address, u64) {
+        let balance = 30;
+        let first_address = AddressBuilder::new()
+            .address(crate::test_utils::generate_random_iota_address())
+            .key_index(0)
+            .balance(balance / 2_u64)
+            .outputs(vec![_generate_address_output(balance / 2_u64)])
+            .build()
+            .unwrap();
+        let second_address = AddressBuilder::new()
+            .address(crate::test_utils::generate_random_iota_address())
+            .key_index(1)
+            .balance(balance / 2_u64)
+            .outputs(vec![_generate_address_output(balance / 2_u64)])
+            .build()
+            .unwrap();
+
+        let addresses = vec![second_address.clone(), first_address];
+        let account_handle = crate::test_utils::AccountCreator::new(&manager)
+            .addresses(addresses)
+            .messages(messages)
+            .create()
+            .await;
+        (account_handle, second_address, balance)
+    }
+
+    #[tokio::test]
+    async fn generate_address() {
+        crate::test_utils::with_account_manager(
+            crate::test_utils::TestType::Signing,
+            |manager, signer_type| async move {
+                let account_handle = crate::test_utils::AccountCreator::new(&manager)
+                    .signer_type(signer_type)
+                    .create()
+                    .await;
+
+                let account_next_address = crate::address::get_new_address(
+                    &*account_handle.read().await,
+                    crate::signing::GenerateAddressMetadata { syncing: false },
+                )
+                .await
+                .unwrap();
+                let generated_address = account_handle.generate_address().await.unwrap();
+
+                assert_eq!(generated_address, account_next_address);
+                assert_eq!(account_handle.latest_address().await.unwrap(), generated_address);
+            },
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn latest_address() {
+        let manager = crate::test_utils::get_account_manager().await;
+        let (account_handle, latest_address, _) = _generate_account(&manager, vec![]).await;
+        assert_eq!(account_handle.read().await.latest_address(), Some(&latest_address));
+    }
+
+    #[tokio::test]
+    async fn total_balance() {
+        let manager = crate::test_utils::get_account_manager().await;
+        let (account_handle, _, balance) = _generate_account(&manager, vec![]).await;
+        assert_eq!(account_handle.read().await.total_balance(), balance);
+    }
+
+    #[tokio::test]
+    async fn available_balance() {
+        let manager = crate::test_utils::get_account_manager().await;
+        let (account_handle, _, balance) = _generate_account(&manager, vec![]).await;
+        assert_eq!(account_handle.read().await.available_balance(), balance);
+
+        let first_address = {
+            let mut account = account_handle.write().await;
+            let address = account.addresses_mut().iter_mut().next().unwrap();
+            address.outputs = vec![_generate_address_output(15)];
+            address.clone()
+        };
+        let second_address = {
+            let mut account = account_handle.write().await;
+            let addresses = account.addresses_mut();
+            let mut iter = addresses.iter_mut();
+            iter.next();
+            let address = iter.next().unwrap();
+            address.outputs = vec![_generate_address_output(15)];
+            address.clone()
         };
 
-        let account_in_storage = manager
-            .get_account(&account_id)
+        let unconfirmed_message = crate::test_utils::GenerateMessageBuilder::default()
+            .address(first_address.clone())
+            .value(15)
+            .input_transaction_id(first_address.outputs[0].transaction_id)
+            .build();
+        let confirmed_message = crate::test_utils::GenerateMessageBuilder::default()
+            .address(second_address.clone())
+            .value(10)
+            .input_transaction_id(second_address.outputs[0].transaction_id)
+            .confirmed(true)
+            .build();
+
+        account_handle
+            .write()
             .await
-            .expect("failed to get account from storage");
-        let account_in_storage = account_in_storage.read().await;
-        assert_eq!(account_in_storage.alias().to_string(), updated_alias.to_string());
+            .append_messages(vec![unconfirmed_message.clone(), confirmed_message]);
+
+        assert_eq!(
+            account_handle.read().await.available_balance(),
+            balance - *unconfirmed_message.value()
+        );
+    }
+
+    #[tokio::test]
+    async fn list_all_messages() {
+        let manager = crate::test_utils::get_account_manager().await;
+        let account_handle = crate::test_utils::AccountCreator::new(&manager)
+            .addresses(vec![crate::test_utils::generate_random_address()])
+            .create()
+            .await;
+        let latest_address = account_handle.read().await.latest_address().unwrap().clone();
+        let received_message = crate::test_utils::GenerateMessageBuilder::default()
+            .address(latest_address.clone())
+            .incoming(true)
+            .build();
+        let failed_message = crate::test_utils::GenerateMessageBuilder::default()
+            .address(latest_address.clone())
+            .broadcasted(false)
+            .build();
+        let unconfirmed_message = crate::test_utils::GenerateMessageBuilder::default()
+            .address(latest_address.clone())
+            .confirmed(false)
+            .build();
+        let value_message = crate::test_utils::GenerateMessageBuilder::default()
+            .address(latest_address.clone())
+            .build();
+        account_handle.write().await.append_messages(vec![
+            received_message,
+            failed_message,
+            unconfirmed_message,
+            value_message,
+        ]);
+
+        let txs = account_handle.list_messages(4, 0, None).await;
+        assert_eq!(txs.len(), 4);
+    }
+
+    #[tokio::test]
+    async fn list_messages_by_type() {
+        let manager = crate::test_utils::get_account_manager().await;
+        let account_handle = crate::test_utils::AccountCreator::new(&manager)
+            .addresses(vec![crate::test_utils::generate_random_address()])
+            .create()
+            .await;
+
+        let external_address = crate::test_utils::generate_random_address();
+        let latest_address = account_handle.read().await.latest_address().unwrap().clone();
+
+        let received_message = crate::test_utils::GenerateMessageBuilder::default()
+            .address(latest_address.clone())
+            .incoming(true)
+            .confirmed(true)
+            .broadcasted(true)
+            .build();
+        let sent_message = crate::test_utils::GenerateMessageBuilder::default()
+            .address(external_address.clone())
+            .incoming(false)
+            .confirmed(true)
+            .broadcasted(true)
+            .build();
+        let failed_message = crate::test_utils::GenerateMessageBuilder::default()
+            .address(latest_address.clone())
+            .incoming(false)
+            .confirmed(true)
+            .broadcasted(false)
+            .build();
+        let unconfirmed_message = crate::test_utils::GenerateMessageBuilder::default()
+            .address(latest_address.clone())
+            .incoming(false)
+            .confirmed(false)
+            .broadcasted(true)
+            .build();
+        let value_message = crate::test_utils::GenerateMessageBuilder::default()
+            .address(latest_address.clone())
+            .incoming(false)
+            .confirmed(true)
+            .broadcasted(true)
+            .build();
+
+        account_handle.write().await.append_messages(vec![
+            received_message.clone(),
+            sent_message.clone(),
+            failed_message.clone(),
+            unconfirmed_message.clone(),
+            value_message.clone(),
+        ]);
+
+        let cases = vec![
+            (MessageType::Failed, &failed_message),
+            (MessageType::Received, &received_message),
+            (MessageType::Sent, &sent_message),
+            (MessageType::Unconfirmed, &unconfirmed_message),
+            (MessageType::Value, &value_message),
+        ];
+        for (tx_type, expected) in cases {
+            let failed_messages = account_handle.list_messages(0, 0, Some(tx_type.clone())).await;
+            assert_eq!(
+                failed_messages.len(),
+                match tx_type {
+                    MessageType::Sent => 4,
+                    MessageType::Value => 5,
+                    _ => 1,
+                }
+            );
+            assert_eq!(failed_messages.first().unwrap(), expected);
+        }
+    }
+
+    #[tokio::test]
+    async fn get_message_by_id() {
+        let manager = crate::test_utils::get_account_manager().await;
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+
+        let message = crate::test_utils::GenerateMessageBuilder::default().build();
+        account_handle.write().await.append_messages(vec![
+            crate::test_utils::GenerateMessageBuilder::default().build(),
+            message.clone(),
+        ]);
+        assert_eq!(account_handle.read().await.get_message(message.id()).unwrap(), &message);
+    }
+
+    #[tokio::test]
+    async fn list_addresses() {
+        crate::test_utils::with_account_manager(
+            crate::test_utils::TestType::SigningAndStorage,
+            |manager, signer_type| async move {
+                let account_handle = crate::test_utils::AccountCreator::new(&manager)
+                    .signer_type(signer_type)
+                    .create()
+                    .await;
+
+                let spent_address = account_handle.generate_address().await.unwrap();
+                let unspent_address1 = account_handle.generate_address().await.unwrap();
+                let unspent_address2 = account_handle.generate_address().await.unwrap();
+
+                let spent_tx = crate::test_utils::GenerateMessageBuilder::default()
+                    .address(spent_address.clone())
+                    .incoming(false)
+                    .build();
+
+                account_handle.write().await.append_messages(vec![spent_tx]);
+
+                assert_eq!(
+                    account_handle.read().await.list_unspent_addresses(),
+                    vec![&unspent_address1, &unspent_address2]
+                );
+
+                assert_eq!(account_handle.read().await.list_spent_addresses(), vec![&spent_address]);
+
+                assert_eq!(
+                    account_handle.read().await.addresses(),
+                    &vec![spent_address, unspent_address1, unspent_address2]
+                );
+            },
+        )
+        .await;
     }
 }
