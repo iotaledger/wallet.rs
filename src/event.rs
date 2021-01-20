@@ -233,7 +233,7 @@ pub fn on_error<F: Fn(&crate::Error) + Send + 'static>(cb: F) {
 
 #[cfg(test)]
 mod tests {
-    use super::{emit_balance_change, on_balance_change, on_error};
+    use super::*;
     use crate::address::{AddressBuilder, AddressWrapper, IotaAddress};
     use iota::message::prelude::Ed25519Address;
     use rusty_fork::rusty_fork_test;
@@ -274,5 +274,63 @@ mod tests {
                 .expect("failed to build address"),
             0,
         );
+    }
+
+    #[test]
+    fn on_new_transaction_event() {
+        let account_id = "new-tx";
+        let message = crate::test_utils::GenerateMessageBuilder::default().build();
+        let message_ = message.clone();
+
+        on_new_transaction(move |event| {
+            assert!(event.account_id == account_id);
+            assert!(event.message == &message_);
+        });
+
+        emit_transaction_event(TransactionEventType::NewTransaction, account_id, &message);
+    }
+
+    #[test]
+    fn on_reattachment_event() {
+        let account_id = "reattachment";
+        let message = crate::test_utils::GenerateMessageBuilder::default().build();
+        let message_ = message.clone();
+
+        on_reattachment(move |event| {
+            assert!(event.account_id == account_id);
+            assert!(event.message == &message_);
+        });
+
+        emit_transaction_event(TransactionEventType::Reattachment, account_id, &message);
+    }
+
+    #[test]
+    fn on_broadcast_event() {
+        let account_id = "broadcast";
+        let message = crate::test_utils::GenerateMessageBuilder::default().build();
+        let message_ = message.clone();
+
+        on_broadcast(move |event| {
+            assert!(event.account_id == account_id);
+            assert!(event.message == &message_);
+        });
+
+        emit_transaction_event(TransactionEventType::Broadcast, account_id, &message);
+    }
+
+    #[test]
+    fn on_confirmation_state_change_event() {
+        let account_id = "confirm";
+        let message = crate::test_utils::GenerateMessageBuilder::default().build();
+        let message_ = message.clone();
+        let confirmed = true;
+
+        on_confirmation_state_change(move |event| {
+            assert!(event.account_id == account_id);
+            assert!(event.message == &message_);
+            assert!(event.confirmed == confirmed);
+        });
+
+        emit_confirmation_state_change(account_id, &message, confirmed);
     }
 }

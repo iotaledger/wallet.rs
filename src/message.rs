@@ -354,7 +354,7 @@ impl Message {
 }
 
 /// Message type.
-#[derive(Debug, Clone, Deserialize_repr)]
+#[derive(Debug, Clone, Deserialize_repr, PartialEq)]
 #[repr(u8)]
 pub enum MessageType {
     /// Message received.
