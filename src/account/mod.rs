@@ -527,7 +527,7 @@ impl Account {
     ///     # let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
     ///     # let storage_path = std::path::PathBuf::from(format!("./test-storage/{}", storage_path));
     ///     // gets 10 received messages, skipping the first 5 most recent messages.
-    ///     let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+    ///     let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
     ///         .expect("invalid node URL")
     ///         .build();
     ///     let mut manager = AccountManager::builder().with_storage("./test-storage", ManagerStorage::Stronghold, None).unwrap().finish().await.unwrap();
@@ -998,6 +998,4 @@ mod tests {
         )
         .await;
     }
-
-    // TODO list_addresses tests
 }

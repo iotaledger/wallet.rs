@@ -202,7 +202,7 @@ impl ClientOptionsBuilder {
     /// # Examples
     /// ```
     /// use iota_wallet::client::ClientOptionsBuilder;
-    /// let client_options = ClientOptionsBuilder::node("https://tangle.iotaqubic.us:14267")
+    /// let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
     ///     .expect("invalid node URL")
     ///     .build();
     /// ```
@@ -215,10 +215,12 @@ impl ClientOptionsBuilder {
     /// # Examples
     /// ```
     /// use iota_wallet::client::ClientOptionsBuilder;
-    /// let client_options =
-    ///     ClientOptionsBuilder::nodes(&["https://tangle.iotaqubic.us:14267", "https://gewirr.com:14267/"])
-    ///         .expect("invalid nodes URLs")
-    ///         .build();
+    /// let client_options = ClientOptionsBuilder::nodes(&[
+    ///     "https://api.lb-0.testnet.chrysalis2.com",
+    ///     "https://api.hornet-1.testnet.chrysalis2.com/",
+    /// ])
+    /// .expect("invalid nodes URLs")
+    /// .build();
     /// ```
     pub fn nodes(nodes: &[&str]) -> crate::Result<MultiNodeClientOptionsBuilder> {
         MultiNodeClientOptionsBuilder::with_nodes(nodes)
@@ -261,7 +263,7 @@ mod tests {
 
     #[test]
     fn single_node_valid_url() {
-        let builder_res = ClientOptionsBuilder::node("https://tangle.iotaqubic.us:14267");
+        let builder_res = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com");
         assert!(builder_res.is_ok());
     }
 
@@ -273,7 +275,7 @@ mod tests {
 
     #[test]
     fn multi_node_valid_url() {
-        let builder_res = ClientOptionsBuilder::nodes(&["https://tangle.iotaqubic.us:14267"]);
+        let builder_res = ClientOptionsBuilder::nodes(&["https://api.lb-0.testnet.chrysalis2.com"]);
         assert!(builder_res.is_ok());
     }
 
@@ -297,7 +299,7 @@ mod tests {
 
     #[test]
     fn single_node_constructor() {
-        let node = "https://tangle.iotaqubic.us:14267";
+        let node = "https://api.lb-0.testnet.chrysalis2.com";
         let node_url: url::Url = url::Url::parse(node).unwrap();
         let client = ClientOptionsBuilder::node(node).unwrap().build();
         assert_eq!(client.node(), &Some(node_url));
@@ -309,7 +311,7 @@ mod tests {
 
     #[test]
     fn multi_node_constructor() {
-        let nodes = ["https://tangle.iotaqubic.us:14267"];
+        let nodes = ["https://api.lb-0.testnet.chrysalis2.com"];
         let quorum_size = 5;
         let quorum_threshold = 0.5;
         let client = ClientOptionsBuilder::nodes(&nodes)
@@ -327,7 +329,7 @@ mod tests {
 
     #[test]
     fn network_constructor() {
-        let nodes = ["https://tangle.iotaqubic.us:14267"];
+        let nodes = ["https://api.lb-0.testnet.chrysalis2.com"];
         let network = Network::Testnet;
         let quorum_size = 50;
         let quorum_threshold = 0.9;
@@ -348,39 +350,39 @@ mod tests {
     #[test]
     fn get_client() {
         let test_cases = vec![
-            ClientOptionsBuilder::node("https://tangle.iotaqubic.us:14267")
+            ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
                 .unwrap()
                 .build(),
-            ClientOptionsBuilder::node("https://nodes.iota.cafe:443")
+            ClientOptionsBuilder::node("https://api.hornet-1.testnet.chrysalis2.com/")
                 .unwrap()
                 .build(),
-            ClientOptionsBuilder::nodes(&["https://tangle.iotaqubic.us:14267"])
+            ClientOptionsBuilder::nodes(&["https://api.lb-0.testnet.chrysalis2.com"])
                 .unwrap()
                 .build()
                 .unwrap(),
-            ClientOptionsBuilder::nodes(&["https://nodes.iota.cafe:443"])
+            ClientOptionsBuilder::nodes(&["https://api.hornet-1.testnet.chrysalis2.com/"])
                 .unwrap()
                 .build()
                 .unwrap(),
-            ClientOptionsBuilder::nodes(&["https://tangle.iotaqubic.us:14267"])
+            ClientOptionsBuilder::nodes(&["https://api.lb-0.testnet.chrysalis2.com"])
                 .unwrap()
                 .quorum_size(55)
                 .build()
                 .unwrap(),
-            ClientOptionsBuilder::nodes(&["https://tangle.iotaqubic.us:14267"])
+            ClientOptionsBuilder::nodes(&["https://api.lb-0.testnet.chrysalis2.com"])
                 .unwrap()
                 .quorum_size(55)
                 .quorum_threshold(0.6)
                 .build()
                 .unwrap(),
-            ClientOptionsBuilder::nodes(&["https://tangle.iotaqubic.us:14267"])
+            ClientOptionsBuilder::nodes(&["https://api.lb-0.testnet.chrysalis2.com"])
                 .unwrap()
                 .quorum_size(55)
                 .quorum_threshold(0.6)
                 .network(Network::Mainnet)
                 .build()
                 .unwrap(),
-            ClientOptionsBuilder::nodes(&["https://tangle.iotaqubic.us:14267"])
+            ClientOptionsBuilder::nodes(&["https://api.lb-0.testnet.chrysalis2.com"])
                 .unwrap()
                 .quorum_size(55)
                 .quorum_threshold(0.6)
@@ -388,7 +390,7 @@ mod tests {
                 .build()
                 .unwrap(),
             ClientOptionsBuilder::network(Network::Testnet)
-                .nodes(&["https://node.deviceproof.org:443"])
+                .nodes(&["https://api.hornet-2.testnet.chrysalis2.com/"])
                 .unwrap()
                 .build()
                 .unwrap(),

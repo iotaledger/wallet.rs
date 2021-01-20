@@ -1119,7 +1119,7 @@ mod tests {
     async fn duplicated_alias() {
         let manager = crate::test_utils::get_account_manager().await;
 
-        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+        let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
             .expect("invalid node URL")
             .build();
         let alias = "alias";
@@ -1149,7 +1149,7 @@ mod tests {
     async fn get_account() {
         let manager = crate::test_utils::get_account_manager().await;
 
-        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+        let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
             .expect("invalid node URL")
             .build();
 
@@ -1229,7 +1229,7 @@ mod tests {
     #[tokio::test]
     async fn remove_account_with_message_history() {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
-            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+            let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
                 .expect("invalid node URL")
                 .build();
 
@@ -1265,7 +1265,7 @@ mod tests {
     #[tokio::test]
     async fn remove_account_with_balance() {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
-            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+            let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
                 .expect("invalid node URL")
                 .build();
 
@@ -1296,7 +1296,7 @@ mod tests {
     #[tokio::test]
     async fn create_account_with_latest_without_history() {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
-            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+            let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
                 .expect("invalid node URL")
                 .build();
 
@@ -1317,7 +1317,7 @@ mod tests {
     #[tokio::test]
     async fn create_account_skip_persistance() {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
-            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+            let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
                 .expect("invalid node URL")
                 .build();
 

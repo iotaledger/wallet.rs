@@ -934,7 +934,7 @@ mod tests {
     #[tokio::test]
     async fn account_sync() {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
-            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+            let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
                 .unwrap()
                 .build();
             let _account = manager

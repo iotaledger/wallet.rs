@@ -379,7 +379,7 @@ mod test_utils {
         }
 
         pub async fn create(self) -> AccountHandle {
-            let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+            let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
                 .expect("invalid node URL")
                 .build();
 

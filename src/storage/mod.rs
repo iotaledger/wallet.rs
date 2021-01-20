@@ -257,7 +257,7 @@ mod tests {
     async fn _create_account() -> (std::path::PathBuf, crate::account::AccountHandle) {
         let manager = crate::test_utils::get_account_manager().await;
 
-        let client_options = crate::client::ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+        let client_options = crate::client::ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
             .unwrap()
             .build();
         let account_handle = manager
