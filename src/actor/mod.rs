@@ -64,9 +64,8 @@ impl WalletMessageHandler {
     }
 
     /// Creates a new instance of the message handler with the specified account manager.
-    pub fn with_manager(account_manager: AccountManager) -> Result<Self> {
-        let instance = Self { account_manager };
-        Ok(instance)
+    pub fn with_manager(account_manager: AccountManager) -> Self {
+        Self { account_manager }
     }
 
     /// Handles a message.
@@ -402,9 +401,9 @@ mod tests {
             runtime.block_on(async move {
                 let actor = WalletBuilder::new()
                     .rx(rx)
-                    .message_handler(
-                        WalletMessageHandler::with_manager(crate::test_utils::get_account_manager().await).unwrap(),
-                    )
+                    .message_handler(WalletMessageHandler::with_manager(
+                        crate::test_utils::get_account_manager().await,
+                    ))
                     .build()
                     .await;
                 actor.run().await
