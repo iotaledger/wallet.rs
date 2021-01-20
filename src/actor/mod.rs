@@ -64,9 +64,8 @@ impl WalletMessageHandler {
     }
 
     /// Creates a new instance of the message handler with the specified account manager.
-    pub fn with_manager(account_manager: AccountManager) -> Result<Self> {
-        let instance = Self { account_manager };
-        Ok(instance)
+    pub fn with_manager(account_manager: AccountManager) -> Self {
+        Self { account_manager }
     }
 
     /// Handles a message.
