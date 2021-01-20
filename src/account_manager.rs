@@ -239,6 +239,22 @@ pub struct AccountManager {
     encrypted_accounts: Vec<String>,
 }
 
+impl Clone for AccountManager {
+    /// Note that when cloning an AccountManager, the original reference's Drop will stop the background sync.
+    /// When the cloned reference is dropped, the background sync system won't be stopped.
+    fn clone(&self) -> Self {
+        Self {
+            storage_folder: self.storage_folder.clone(),
+            storage_path: self.storage_path.clone(),
+            accounts: self.accounts.clone(),
+            stop_polling_sender: self.stop_polling_sender.clone(),
+            polling_handle: None,
+            generated_mnemonic: self.generated_mnemonic.clone(),
+            encrypted_accounts: self.encrypted_accounts.clone(),
+        }
+    }
+}
+
 impl Drop for AccountManager {
     fn drop(&mut self) {
         self.stop_background_sync();
@@ -303,13 +319,13 @@ impl AccountManager {
 
     /// Stops the background polling and MQTT monitoring.
     pub fn stop_background_sync(&mut self) {
-        if let Some(stop_polling_sender) = self.stop_polling_sender.take() {
-            stop_polling_sender.send(()).expect("failed to stop polling process");
-            self.polling_handle
+        if let Some(polling_handle) = self.polling_handle.take() {
+            self.stop_polling_sender
                 .take()
                 .unwrap()
-                .join()
-                .expect("failed to join polling thread");
+                .send(())
+                .expect("failed to stop polling process");
+            polling_handle.join().expect("failed to join polling thread");
             let accounts = self.accounts.clone();
             thread::spawn(move || {
                 crate::block_on(async move {
