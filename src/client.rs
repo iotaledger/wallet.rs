@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use getset::Getters;
-pub use iota::client::builder::Network;
 use iota::client::{BrokerOptions, Client, ClientBuilder};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
@@ -42,7 +41,7 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
         }
 
         if let Some(network) = options.network() {
-            client_builder = client_builder.with_network(network.clone());
+            client_builder = client_builder.with_network(network);
         }
 
         let client = client_builder.finish().expect("failed to initialise ClientBuilder");
@@ -92,7 +91,7 @@ impl SingleNodeClientOptionsBuilder {
 /// The options builder for a client connected to multiple nodes.
 pub struct MultiNodeClientOptionsBuilder {
     nodes: Option<Vec<Url>>,
-    network: Option<Network>,
+    network: Option<String>,
     quorum_size: Option<u8>,
     quorum_threshold: f32,
     local_pow: bool,
@@ -141,9 +140,9 @@ impl MultiNodeClientOptionsBuilder {
         Ok(builder)
     }
 
-    fn with_network(network: Network) -> Self {
+    fn with_network<N: Into<String>>(network: N) -> Self {
         Self {
-            network: Some(network),
+            network: Some(network.into()),
             ..Default::default()
         }
     }
@@ -156,8 +155,8 @@ impl MultiNodeClientOptionsBuilder {
     }
 
     /// Sets the IOTA network the nodes belong to.
-    pub fn network(mut self, network: Network) -> Self {
-        self.network = Some(network);
+    pub fn network<N: Into<String>>(mut self, network: N) -> Self {
+        self.network = Some(network.into());
         self
     }
 
@@ -228,10 +227,10 @@ impl ClientOptionsBuilder {
     ///
     /// # Examples
     /// ```
-    /// use iota_wallet::client::{ClientOptionsBuilder, Network};
-    /// let client_options = ClientOptionsBuilder::network(Network::Testnet).build();
+    /// use iota_wallet::client::ClientOptionsBuilder;
+    /// let client_options = ClientOptionsBuilder::network("testnet2").build();
     /// ```
-    pub fn network(network: Network) -> MultiNodeClientOptionsBuilder {
+    pub fn network(network: &str) -> MultiNodeClientOptionsBuilder {
         MultiNodeClientOptionsBuilder::with_network(network)
     }
 }
@@ -242,7 +241,7 @@ impl ClientOptionsBuilder {
 pub struct ClientOptions {
     node: Option<Url>,
     nodes: Option<Vec<Url>>,
-    network: Option<Network>,
+    network: Option<String>,
     #[serde(rename = "quorumSize")]
     quorum_size: Option<u8>,
     #[serde(rename = "quorumThreshold", default)]
