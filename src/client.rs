@@ -349,39 +349,39 @@ mod tests {
     #[test]
     fn get_client() {
         let test_cases = vec![
-            ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
+            ClientOptionsBuilder::node("https://api.lb-1.testnet.chrysalis2.com")
                 .unwrap()
                 .build(),
-            ClientOptionsBuilder::node("https://api.hornet-1.testnet.chrysalis2.com/")
+            ClientOptionsBuilder::node("https://api.hornet-2.testnet.chrysalis2.com/")
                 .unwrap()
                 .build(),
-            ClientOptionsBuilder::nodes(&["https://api.lb-0.testnet.chrysalis2.com"])
+            ClientOptionsBuilder::nodes(&["https://api.lb-1.testnet.chrysalis2.com"])
                 .unwrap()
                 .build()
                 .unwrap(),
-            ClientOptionsBuilder::nodes(&["https://api.hornet-1.testnet.chrysalis2.com/"])
+            ClientOptionsBuilder::nodes(&["https://api.hornet-2.testnet.chrysalis2.com/"])
                 .unwrap()
                 .build()
                 .unwrap(),
-            ClientOptionsBuilder::nodes(&["https://api.lb-0.testnet.chrysalis2.com"])
+            ClientOptionsBuilder::nodes(&["https://api.lb-1.testnet.chrysalis2.com"])
                 .unwrap()
                 .quorum_size(55)
                 .build()
                 .unwrap(),
-            ClientOptionsBuilder::nodes(&["https://api.lb-0.testnet.chrysalis2.com"])
+            ClientOptionsBuilder::nodes(&["https://api.lb-1.testnet.chrysalis2.com"])
                 .unwrap()
                 .quorum_size(55)
                 .quorum_threshold(0.6)
                 .build()
                 .unwrap(),
-            ClientOptionsBuilder::nodes(&["https://api.lb-0.testnet.chrysalis2.com"])
+            ClientOptionsBuilder::nodes(&["https://api.lb-1.testnet.chrysalis2.com"])
                 .unwrap()
                 .quorum_size(55)
                 .quorum_threshold(0.6)
                 .network("mainnet")
                 .build()
                 .unwrap(),
-            ClientOptionsBuilder::nodes(&["https://api.lb-0.testnet.chrysalis2.com"])
+            ClientOptionsBuilder::nodes(&["https://api.lb-1.testnet.chrysalis2.com"])
                 .unwrap()
                 .quorum_size(55)
                 .quorum_threshold(0.6)
@@ -389,7 +389,7 @@ mod tests {
                 .build()
                 .unwrap(),
             ClientOptionsBuilder::network("testnet2")
-                .nodes(&["https://api.hornet-2.testnet.chrysalis2.com/"])
+                .nodes(&["https://api.hornet-3.testnet.chrysalis2.com/"])
                 .unwrap()
                 .build()
                 .unwrap(),
