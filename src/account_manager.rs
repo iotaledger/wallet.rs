@@ -382,7 +382,7 @@ impl AccountManager {
 
         let handle = thread::spawn(move || {
             let runtime = tokio::runtime::Builder::new_current_thread()
-                .enable_time()
+                .enable_all()
                 .build()
                 .unwrap();
             runtime.block_on(async {
@@ -1122,6 +1122,36 @@ mod tests {
             .remove_account(account_handle.read().await.id())
             .await
             .expect("failed to remove account");
+    }
+
+    #[tokio::test]
+    async fn duplicated_alias() {
+        let manager = crate::test_utils::get_account_manager().await;
+
+        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+            .expect("invalid node URL")
+            .build();
+        let alias = "alias";
+
+        manager
+            .create_account(client_options.clone())
+            .unwrap()
+            .alias(alias)
+            .initialise()
+            .await
+            .expect("failed to add account");
+
+        let second_create_response = manager
+            .create_account(client_options)
+            .unwrap()
+            .alias(alias)
+            .initialise()
+            .await;
+        assert_eq!(second_create_response.is_err(), true);
+        match second_create_response.unwrap_err() {
+            crate::Error::AccountAliasAlreadyExists => {}
+            _ => panic!("unexpected create account response; expected AccountAliasAlreadyExists"),
+        }
     }
 
     #[tokio::test]

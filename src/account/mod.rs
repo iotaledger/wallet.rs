@@ -9,7 +9,7 @@ use crate::{
     signing::{GenerateAddressMetadata, SignerType},
 };
 
-use chrono::prelude::{DateTime, Local, Utc};
+use chrono::prelude::{DateTime, Local};
 use getset::{Getters, Setters};
 use iota::message::prelude::MessageId;
 use serde::{Deserialize, Serialize};
@@ -178,6 +178,13 @@ impl AccountInitialiser {
         ))?;
         let created_at = self.created_at.unwrap_or_else(Local::now);
 
+        for account_handle in accounts.values() {
+            let account = account_handle.read().await;
+            if account.alias() == &alias {
+                return Err(crate::Error::AccountAliasAlreadyExists);
+            }
+        }
+
         if let Some(latest_account_handle) = accounts.values().last() {
             let latest_account = latest_account_handle.read().await;
             if latest_account.messages().is_empty() && latest_account.total_balance() == 0 {
@@ -198,6 +205,7 @@ impl AccountInitialiser {
             index: account_index,
             alias,
             created_at,
+            last_synced_at: None,
             messages: self.messages,
             addresses: self.addresses,
             client_options: self.client_options,
@@ -258,6 +266,10 @@ pub struct Account {
     /// Time of account creation.
     #[serde(rename = "createdAt")]
     created_at: DateTime<Local>,
+    /// Time the account was last synced with the Tangle.
+    #[serde(rename = "lastSyncedAt")]
+    #[getset(set = "pub(crate)")]
+    last_synced_at: Option<DateTime<Local>>,
     /// Messages associated with the seed.
     /// The account can be initialised with locally stored messages.
     #[getset(set = "pub")]
@@ -325,6 +337,7 @@ guard_field_getters!(
     #[doc = "Bridge to [Account#index](struct.Account.html#method.index)."] => index => usize,
     #[doc = "Bridge to [Account#alias](struct.Account.html#method.alias)."] => alias => String,
     #[doc = "Bridge to [Account#created_at](struct.Account.html#method.created_at)."] => created_at => DateTime<Local>,
+    #[doc = "Bridge to [Account#last_synced_at](struct.Account.html#method.last_synced_at)."] => last_synced_at => Option<DateTime<Local>>,
     #[doc = "Bridge to [Account#messages](struct.Account.html#method.messages).
     This method clones the addresses so prefer the using the `read` method to access the account instance."] => messages => Vec<Message>,
     #[doc = "Bridge to [Account#addresses](struct.Account.html#method.addresses).
@@ -623,24 +636,6 @@ impl Account {
     pub fn get_message(&self, message_id: &MessageId) -> Option<&Message> {
         self.messages.iter().find(|tx| tx.id() == message_id)
     }
-}
-
-/// Data returned from the account initialisation.
-#[derive(Getters)]
-#[getset(get = "pub")]
-pub struct InitialisedAccount<'a> {
-    /// The account identifier.
-    id: &'a str,
-    /// The account alias.
-    alias: &'a str,
-    /// Seed address history.
-    addresses: Vec<Address>,
-    /// Seed transaction history.
-    transactions: Vec<Message>,
-    /// Account creation time.
-    created_at: DateTime<Local>,
-    /// Time when the account was last synced with the tangle.
-    last_synced_at: DateTime<Utc>,
 }
 
 #[cfg(test)]

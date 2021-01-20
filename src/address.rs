@@ -171,12 +171,6 @@ impl AddressWrapper {
     }
 }
 
-impl PartialEq<IotaAddress> for AddressWrapper {
-    fn eq(&self, other: &iota::Address) -> bool {
-        self == other
-    }
-}
-
 /// An address.
 #[derive(Debug, Getters, Setters, Clone, Eq, Serialize, Deserialize)]
 #[getset(get = "pub")]

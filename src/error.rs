@@ -158,6 +158,9 @@ pub enum Error {
     /// Ledger Device not found
     #[error("ledger device not found")]
     LedgerDeviceNotFound,
+    /// Account alias must be unique.
+    #[error("can't create account: account alias already exists")]
+    AccountAliasAlreadyExists,
 }
 
 impl Drop for Error {
@@ -241,6 +244,7 @@ impl serde::Serialize for Error {
             Self::LedgerDongleLocked => serialize_variant(self, serializer, "LedgerDongleLocked"),
             Self::LedgerDeniedByUser => serialize_variant(self, serializer, "LedgerDeniedByUser"),
             Self::LedgerDeviceNotFound => serialize_variant(self, serializer, "LedgerDeviceNotFound"),
+            Self::AccountAliasAlreadyExists => serialize_variant(self, serializer, "AccountAliasAlreadyExists"),
         }
     }
 }
