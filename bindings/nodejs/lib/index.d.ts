@@ -93,16 +93,10 @@ export declare class SyncedAccount {
   promote(messageId: string): Promise<Message>
 }
 
-export declare enum Network {
-  Mainnet,
-  Devnet,
-  Comnet
-}
-
 export declare interface ClientOptions {
   node?: string;
   nodes?: string[];
-  network?: Network;
+  network?: string;
   quorumSize?: number;
   quorumThreshold?: number;
   localPow?: boolean;
