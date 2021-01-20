@@ -1,12 +1,12 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::{Account};
+use crate::account::Account;
 
 use iota::{common::packable::Packable, UnlockBlock};
-use std::{path::PathBuf};
+use std::path::PathBuf;
 
-const HARDENED : u32 = 0x80000000;
+const HARDENED: u32 = 0x80000000;
 
 #[derive(Default)]
 pub struct LedgerNanoSigner {
@@ -23,18 +23,10 @@ use ledger_iota::api::errors;
 // LedgerMiscError: Everything else.
 fn ledger_map_err(err: errors::APIError) -> crate::Error {
     match err {
-        errors::APIError::SecurityStatusNotSatisfied => {
-            crate::Error::LedgerDongleLocked
-        }
-        errors::APIError::ConditionsOfUseNotSatisfied => {
-            crate::Error::LedgerDeniedByUser
-        }
-        errors::APIError::TransportError => {
-            crate::Error::LedgerDeviceNotFound
-        }
-        _ => {
-            crate::Error::LedgerMiscError 
-        }
+        errors::APIError::SecurityStatusNotSatisfied => crate::Error::LedgerDongleLocked,
+        errors::APIError::ConditionsOfUseNotSatisfied => crate::Error::LedgerDeniedByUser,
+        errors::APIError::TransportError => crate::Error::LedgerDeviceNotFound,
+        _ => crate::Error::LedgerMiscError,
     }
 }
 
@@ -49,14 +41,16 @@ impl super::Signer for LedgerNanoSigner {
         account: &Account,
         address_index: usize,
         _internal: bool,
-        meta: super::GenerateAddressMetadata, 
+        meta: super::GenerateAddressMetadata,
     ) -> crate::Result<iota::Address> {
         // get ledger
-        let ledger = ledger_iota::get_ledger(self.is_simulator, *account.index() as u32 | HARDENED).map_err(|e| ledger_map_err(e))?;
+        let ledger = ledger_iota::get_ledger(self.is_simulator, *account.index() as u32 | HARDENED)
+            .map_err(|e| ledger_map_err(e))?;
 
-        // if the wallet is not generating addresses for syncing, we assume it's a new receiving address that 
+        // if the wallet is not generating addresses for syncing, we assume it's a new receiving address that
         // needs to be shown to the user
-        let address_bytes = ledger.get_new_address(!meta.syncing, address_index as u32 | HARDENED)
+        let address_bytes = ledger
+            .get_new_address(!meta.syncing, address_index as u32 | HARDENED)
             .map_err(|e| ledger_map_err(e))?;
 
         Ok(iota::Address::Ed25519(iota::Ed25519Address::new(address_bytes)))
@@ -70,24 +64,22 @@ impl super::Signer for LedgerNanoSigner {
         meta: super::SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
         // get ledger
-        let ledger = ledger_iota::get_ledger(self.is_simulator, *account.index() as u32 | HARDENED).map_err(|e| ledger_map_err(e))?;
+        let ledger = ledger_iota::get_ledger(self.is_simulator, *account.index() as u32 | HARDENED)
+            .map_err(|e| ledger_map_err(e))?;
 
         // gather input indices into vec
-        let mut key_indices : Vec<u32> = Vec::new();
+        let mut key_indices: Vec<u32> = Vec::new();
         let input_len = inputs.len();
         for input in inputs {
             key_indices.push(input.address_index as u32 | HARDENED);
         }
- 
+
         // figure out the remainder address and bip32 index (if there is one)
-        let (has_remainder, remainder_address, remainder_bip32) : (bool, Option<&iota::Address>, u32) = match meta.remainder_deposit_address {
-            Some(a) => {
-                (true, Some(a.address().as_ref()), *a.key_index() as u32 | HARDENED)
-            }
-            None => {
-                (false, None, 0u32)
-            }
-        };
+        let (has_remainder, remainder_address, remainder_bip32): (bool, Option<&iota::Address>, u32) =
+            match meta.remainder_deposit_address {
+                Some(a) => (true, Some(a.address().as_ref()), *a.key_index() as u32 | HARDENED),
+                None => (false, None, 0u32),
+            };
 
         let mut remainder_index = 0u16;
         if has_remainder {
@@ -107,7 +99,7 @@ impl super::Signer for LedgerNanoSigner {
                         return Err(crate::Error::LedgerMiscError);
                     }
                 }
-                remainder_index += 1; 
+                remainder_index += 1;
             }
 
             // was index found?
@@ -115,33 +107,31 @@ impl super::Signer for LedgerNanoSigner {
                 return Err(crate::Error::LedgerMiscError);
             }
         }
-    
+
         // pack essence into bytes
         let essence_bytes = essence.pack_new();
 
-        // prepare signing 
-        ledger.prepare_signing(
-                key_indices, 
-                essence_bytes, 
+        // prepare signing
+        ledger
+            .prepare_signing(
+                key_indices,
+                essence_bytes,
                 has_remainder,
-                remainder_index, 
-                remainder_bip32)
+                remainder_index,
+                remainder_bip32,
+            )
             .map_err(|e| ledger_map_err(e))?;
 
         // show essence to user
         // if denied by user, it returns with `DeniedByUser` Error
-        ledger.user_confirm()
-            .map_err(|e| ledger_map_err(e))?;
-
+        ledger.user_confirm().map_err(|e| ledger_map_err(e))?;
 
         // sign
-        let signature_bytes = ledger.sign(input_len as u16)
-            .map_err(|e| ledger_map_err(e))?;
-        
+        let signature_bytes = ledger.sign(input_len as u16).map_err(|e| ledger_map_err(e))?;
 
         // unpack signature to unlockblocks
         let mut unlock_blocks = Vec::new();
-        for _ in 0..input_len { 
+        for _ in 0..input_len {
             unlock_blocks.push(UnlockBlock::unpack(&mut &signature_bytes[..])?);
         }
         Ok(unlock_blocks)
