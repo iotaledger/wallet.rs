@@ -45,13 +45,13 @@ impl super::Signer for LedgerNanoSigner {
     ) -> crate::Result<iota::Address> {
         // get ledger
         let ledger = ledger_iota::get_ledger(self.is_simulator, *account.index() as u32 | HARDENED)
-            .map_err(|e| ledger_map_err(e))?;
+            .map_err(ledger_map_err)?;
 
         // if the wallet is not generating addresses for syncing, we assume it's a new receiving address that
         // needs to be shown to the user
         let address_bytes = ledger
             .get_new_address(!meta.syncing, address_index as u32 | HARDENED)
-            .map_err(|e| ledger_map_err(e))?;
+            .map_err(ledger_map_err)?;
 
         Ok(iota::Address::Ed25519(iota::Ed25519Address::new(address_bytes)))
     }
@@ -65,7 +65,7 @@ impl super::Signer for LedgerNanoSigner {
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
         // get ledger
         let ledger = ledger_iota::get_ledger(self.is_simulator, *account.index() as u32 | HARDENED)
-            .map_err(|e| ledger_map_err(e))?;
+            .map_err(ledger_map_err)?;
 
         // gather input indices into vec
         let mut key_indices: Vec<u32> = Vec::new();
@@ -120,14 +120,14 @@ impl super::Signer for LedgerNanoSigner {
                 remainder_index,
                 remainder_bip32,
             )
-            .map_err(|e| ledger_map_err(e))?;
+            .map_err(ledger_map_err)?;
 
         // show essence to user
         // if denied by user, it returns with `DeniedByUser` Error
-        ledger.user_confirm().map_err(|e| ledger_map_err(e))?;
+        ledger.user_confirm().map_err(ledger_map_err)?;
 
         // sign
-        let signature_bytes = ledger.sign(input_len as u16).map_err(|e| ledger_map_err(e))?;
+        let signature_bytes = ledger.sign(input_len as u16).map_err(ledger_map_err)?;
 
         // unpack signature to unlockblocks
         let mut unlock_blocks = Vec::new();
