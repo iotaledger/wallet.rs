@@ -16,7 +16,7 @@ use iota::{
     },
     ClientMiner,
 };
-use serde::{ser::Serializer, Serialize};
+use serde::Serialize;
 use slip10::BIP32Path;
 use tokio::{
     sync::{mpsc::channel, MutexGuard},
@@ -419,6 +419,7 @@ impl AccountSynchronizer {
                 let account_ref = self.account_handle.read().await;
 
                 let synced_account = SyncedAccount {
+                    account_id: account_ref.id().to_string(),
                     account_handle: self.account_handle.clone(),
                     deposit_address: account_ref.latest_address().unwrap().clone(),
                     is_empty,
@@ -451,21 +452,14 @@ impl AccountSynchronizer {
     }
 }
 
-fn serialize_as_id<S>(x: &AccountHandle, s: S) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-{
-    crate::block_on(async move {
-        let account = x.read().await;
-        account.id().serialize(s)
-    })
-}
-
 /// Data returned from account synchronization.
 #[derive(Debug, Clone, Getters, Serialize)]
 pub struct SyncedAccount {
-    /// The associated account identifier.
-    #[serde(rename = "accountId", serialize_with = "serialize_as_id")]
+    /// The account identifier.
+    #[serde(rename = "accountId")]
+    account_id: String,
+    /// The associated account handle.
+    #[serde(skip)]
     #[getset(get = "pub")]
     account_handle: AccountHandle,
     /// The account's deposit address.
@@ -948,7 +942,6 @@ mod tests {
         })
         .await;
 
-        // let synced_accounts = account.sync().execute().await.unwrap();
         // TODO improve test when the node API is ready to use
     }
 }
