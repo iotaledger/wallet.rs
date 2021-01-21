@@ -797,10 +797,10 @@ impl SyncedAccount {
 
         let essence = essence_builder.finish()?;
 
-        let signer = crate::signing::get_signer(account_.signer_type()).await;
-        let mut signer = signer.lock().await;
-
-        let unlock_blocks = signer
+        let unlock_blocks = crate::signing::get_signer(account_.signer_type())
+            .await
+            .lock()
+            .await
             .sign_message(
                 &account_,
                 &essence,
