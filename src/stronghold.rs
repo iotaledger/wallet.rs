@@ -14,6 +14,7 @@ use iota_stronghold::{
 };
 use once_cell::sync::{Lazy, OnceCell};
 use riker::actors::*;
+use serde::Serialize;
 use tokio::{
     sync::Mutex,
     time::{sleep, Duration},
@@ -26,11 +27,12 @@ use std::{
     path::{Path, PathBuf},
     sync::Arc,
     thread,
+    time::Instant,
 };
 
 type SnapshotToPasswordMap = HashMap<PathBuf, [u8; 32]>;
 static PASSWORD_STORE: OnceCell<Arc<Mutex<SnapshotToPasswordMap>>> = OnceCell::new();
-static STRONGHOLD_ACCESS_STORE: OnceCell<Arc<Mutex<HashMap<PathBuf, bool>>>> = OnceCell::new();
+static STRONGHOLD_ACCESS_STORE: OnceCell<Arc<Mutex<HashMap<PathBuf, Instant>>>> = OnceCell::new();
 static CURRENT_SNAPSHOT_PATH: OnceCell<Arc<Mutex<Option<PathBuf>>>> = OnceCell::new();
 static PASSWORD_CLEAR_INTERVAL: OnceCell<Arc<Mutex<Duration>>> = OnceCell::new();
 static PRIVATE_DATA_CLIENT_PATH: &[u8] = b"iota_seed";
@@ -116,13 +118,12 @@ async fn load_account_actor(runtime: &mut ActorRuntime, snapshot_path: &PathBuf,
 }
 
 async fn on_stronghold_access<S: AsRef<Path>>(snapshot_path: S) -> Result<()> {
-    let mut store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
-    store.insert(snapshot_path.as_ref().to_path_buf(), true);
-
     let passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
     if !passwords.contains_key(&snapshot_path.as_ref().to_path_buf()) {
         Err(Error::PasswordNotSet)
     } else {
+        let mut store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
+        store.insert(snapshot_path.as_ref().to_path_buf(), Instant::now());
         Ok(())
     }
 }
@@ -135,6 +136,43 @@ pub async fn set_password_clear_interval(interval: Duration) {
         .lock()
         .await;
     *clear_interval = interval;
+}
+
+/// Snapshot status.
+#[derive(Debug, Serialize)]
+pub enum SnapshotStatus {
+    /// Snapshot is locked. This means that the password must be set again.
+    Locked,
+    /// Snapshot is unlocked. The duration is the amount of time left before it locks again.
+    Unlocked(Duration),
+}
+
+#[derive(Debug, Serialize)]
+pub struct Status {
+    snapshot: SnapshotStatus,
+}
+
+/// Gets the stronghold status for the given snapshot.
+pub async fn get_status(snapshot_path: &PathBuf) -> Status {
+    let password_clear_interval = *PASSWORD_CLEAR_INTERVAL
+        .get_or_init(|| Arc::new(Mutex::new(DEFAULT_PASSWORD_CLEAR_INTERVAL)))
+        .lock()
+        .await;
+    let access_interval = STRONGHOLD_ACCESS_STORE
+        .get_or_init(Default::default)
+        .lock()
+        .await
+        .get(snapshot_path)
+        .cloned()
+        .unwrap_or_else(Instant::now);
+    let locked = password_clear_interval.as_millis() > 0 && access_interval.elapsed() >= password_clear_interval;
+    Status {
+        snapshot: if locked {
+            SnapshotStatus::Locked
+        } else {
+            SnapshotStatus::Unlocked(password_clear_interval - access_interval.elapsed())
+        },
+    }
 }
 
 fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, [u8; 32]>>> {
@@ -152,14 +190,15 @@ fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, [u8; 32]>>> {
                 }
 
                 let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
-                let mut access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
+                let access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
                 let mut remove_keys = Vec::new();
                 for (snapshot_path, _) in passwords.iter() {
-                    // if the stronghold access flag is false,
-                    if !*access_store.get(snapshot_path).unwrap_or(&true) {
-                        remove_keys.push(snapshot_path.clone());
+                    // if the stronghold was accessed `interval` ago, we clear the password
+                    if let Some(access_interval) = access_store.get(snapshot_path) {
+                        if access_interval.elapsed() > interval {
+                            remove_keys.push(snapshot_path.clone());
+                        }
                     }
-                    access_store.insert(snapshot_path.clone(), false);
                 }
 
                 let current_snapshot_path = &*CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await;
@@ -183,9 +222,7 @@ pub async fn set_password<S: AsRef<Path>>(snapshot_path: S, password: &[u8; 32])
     let mut access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
 
     let snapshot_path = snapshot_path.as_ref().to_path_buf();
-    // clear the access flag for the snapshot path
-    // this prevents the `default_password_store` thread to immediately clear the password
-    access_store.remove(&snapshot_path);
+    access_store.insert(snapshot_path.clone(), Instant::now());
     passwords.insert(snapshot_path, *password);
 }
 
@@ -623,6 +660,10 @@ mod tests {
                 assert_eq!(res.is_err(), true);
                 let error = res.unwrap_err();
                 if let super::Error::PasswordNotSet = error {
+                    let status = super::get_status(&snapshot_path).await;
+                    if let super::SnapshotStatus::Unlocked(_) = status.snapshot {
+                        panic!("unexpected snapshot status");
+                    }
                 } else {
                     panic!("unexpected error: {:?}", error);
                 }
@@ -652,6 +693,11 @@ mod tests {
                     .await
                     .unwrap();
 
+                    let status = super::get_status(&snapshot_path).await;
+                    if let super::SnapshotStatus::Locked = status.snapshot {
+                        panic!("unexpected snapshot status");
+                    }
+
                     if let Some(sleep_duration) = interval.checked_sub(instant.elapsed()) {
                         std::thread::sleep(sleep_duration / 2);
                     } else {
@@ -670,6 +716,10 @@ mod tests {
                 let res = super::get_account(&snapshot_path, &id).await;
                 assert_eq!(res.is_err(), true);
                 if let super::Error::PasswordNotSet = res.unwrap_err() {
+                    let status = super::get_status(&snapshot_path).await;
+                    if let super::SnapshotStatus::Unlocked(_) = status.snapshot {
+                        panic!("unexpected snapshot status");
+                    }
                 } else {
                     panic!("unexpected error");
                 }
