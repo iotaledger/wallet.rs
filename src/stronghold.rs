@@ -159,20 +159,24 @@ pub async fn get_status(snapshot_path: &PathBuf) -> Status {
         .get_or_init(|| Arc::new(Mutex::new(DEFAULT_PASSWORD_CLEAR_INTERVAL)))
         .lock()
         .await;
-    let access_interval = STRONGHOLD_ACCESS_STORE
+    if let Some(access_instant) = STRONGHOLD_ACCESS_STORE
         .get_or_init(Default::default)
         .lock()
         .await
         .get(snapshot_path)
-        .cloned()
-        .unwrap_or_else(Instant::now);
-    let locked = password_clear_interval.as_millis() > 0 && access_interval.elapsed() >= password_clear_interval;
-    Status {
-        snapshot: if locked {
-            SnapshotStatus::Locked
-        } else {
-            SnapshotStatus::Unlocked(password_clear_interval - access_interval.elapsed())
-        },
+    {
+        let locked = password_clear_interval.as_millis() > 0 && access_instant.elapsed() >= password_clear_interval;
+        Status {
+            snapshot: if locked {
+                SnapshotStatus::Locked
+            } else {
+                SnapshotStatus::Unlocked(password_clear_interval - access_instant.elapsed())
+            },
+        }
+    } else {
+        Status {
+            snapshot: SnapshotStatus::Locked,
+        }
     }
 }
 
@@ -195,8 +199,8 @@ fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, [u8; 32]>>> {
                 let mut remove_keys = Vec::new();
                 for (snapshot_path, _) in passwords.iter() {
                     // if the stronghold was accessed `interval` ago, we clear the password
-                    if let Some(access_interval) = access_store.get(snapshot_path) {
-                        if access_interval.elapsed() > interval {
+                    if let Some(access_instant) = access_store.get(snapshot_path) {
+                        if access_instant.elapsed() > interval {
                             remove_keys.push(snapshot_path.clone());
                         }
                     }
