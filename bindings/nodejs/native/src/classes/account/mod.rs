@@ -3,12 +3,12 @@
 
 use std::str::FromStr;
 
-use iota_wallet::{account::AccountIdentifier, message::MessageId};
+use iota_wallet::message::MessageId;
 use neon::prelude::*;
 
 mod sync;
 
-pub struct AccountWrapper(pub AccountIdentifier);
+pub struct AccountWrapper(pub String);
 
 declare_types! {
     pub class JsAccount for AccountWrapper {
@@ -25,10 +25,7 @@ declare_types! {
                 id.clone()
             };
 
-            match id {
-                AccountIdentifier::Id(id) => Ok(cx.string(id).upcast()),
-                AccountIdentifier::Index(index) => Ok(cx.number(index as f64).upcast())
-            }
+            Ok(cx.string(id).upcast())
         }
 
         method index(mut cx) {
@@ -36,8 +33,10 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let id = &this.borrow(&guard).0;
-                let account_handle = crate::get_account(id);
-                crate::block_on(async move { account_handle.index().await })
+                crate::block_on(async move {
+                    let account_handle = crate::get_account(id).await;
+                    account_handle.index().await
+                })
             };
 
             Ok(cx.number(index as f64).upcast())
@@ -48,8 +47,10 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let id = &this.borrow(&guard).0;
-                let account_handle = crate::get_account(id);
-                crate::block_on(async move { account_handle.alias().await })
+                crate::block_on(async move {
+                    let account_handle = crate::get_account(id).await;
+                    account_handle.alias().await
+                })
             };
 
             Ok(cx.string(alias).upcast())
@@ -60,8 +61,10 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let id = &this.borrow(&guard).0;
-                let account_handle = crate::get_account(id);
-                crate::block_on(async move { account_handle.available_balance().await })
+                crate::block_on(async move {
+                    let account_handle = crate::get_account(id).await;
+                    account_handle.available_balance().await
+                })
             };
             Ok(cx.number(balance as f64).upcast())
         }
@@ -71,8 +74,10 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let id = &this.borrow(&guard).0;
-                let account_handle = crate::get_account(id);
-                crate::block_on(async move { account_handle.total_balance().await })
+                crate::block_on(async move {
+                    let account_handle = crate::get_account(id).await;
+                    account_handle.total_balance().await
+                })
             };
             Ok(cx.number(balance as f64).upcast())
         }
@@ -96,8 +101,8 @@ declare_types! {
 
             let this = cx.this();
             let id = cx.borrow(&this, |r| r.0.clone());
-            let account_handle = crate::get_account(&id);
             crate::block_on(async move {
+                let account_handle = crate::get_account(&id).await;
                 let account = account_handle.read().await;
                 let messages = account.list_messages(count, from, filter);
 
@@ -112,17 +117,48 @@ declare_types! {
         }
 
         method listAddresses(mut cx) {
-            let unspent = match cx.argument_opt(0) {
-                Some(arg) => arg.downcast::<JsBoolean>().or_throw(&mut cx)?.value(),
-                None => false,
-            };
-
             let this = cx.this();
             let id = cx.borrow(&this, |r| r.0.clone());
-            let account_handle = crate::get_account(&id);
             crate::block_on(async move {
+                let account_handle = crate::get_account(&id).await;
                 let account = account_handle.read().await;
-                let addresses = account.list_addresses(unspent);
+                let addresses = account.addresses();
+
+                let js_array = JsArray::new(&mut cx, addresses.len() as u32);
+                for (index, address) in addresses.iter().enumerate() {
+                    let value = neon_serde::to_value(&mut cx, &address)?;
+                    js_array.set(&mut cx, index as u32, value)?;
+                }
+
+                Ok(js_array.upcast())
+            })
+        }
+
+        method listSpentAddresses(mut cx) {
+            let this = cx.this();
+            let id = cx.borrow(&this, |r| r.0.clone());
+            crate::block_on(async move {
+                let account_handle = crate::get_account(&id).await;
+                let account = account_handle.read().await;
+                let addresses = account.list_spent_addresses();
+
+                let js_array = JsArray::new(&mut cx, addresses.len() as u32);
+                for (index, address) in addresses.iter().enumerate() {
+                    let value = neon_serde::to_value(&mut cx, &address)?;
+                    js_array.set(&mut cx, index as u32, value)?;
+                }
+
+                Ok(js_array.upcast())
+            })
+        }
+
+        method listUnspentAddresses(mut cx) {
+            let this = cx.this();
+            let id = cx.borrow(&this, |r| r.0.clone());
+            crate::block_on(async move {
+                let account_handle = crate::get_account(&id).await;
+                let account = account_handle.read().await;
+                let addresses = account.list_unspent_addresses();
 
                 let js_array = JsArray::new(&mut cx, addresses.len() as u32);
                 for (index, address) in addresses.iter().enumerate() {
@@ -140,8 +176,10 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let id = &this.borrow(&guard).0;
-                let account_handle = crate::get_account(id);
-                crate::block_on(async move { account_handle.set_alias(alias).await; });
+                crate::block_on(async move {
+                    let account_handle = crate::get_account(id).await;
+                    account_handle.set_alias(alias).await.expect("failed to update account alias");
+                });
             }
             Ok(cx.undefined().upcast())
         }
@@ -153,8 +191,10 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let id = &this.borrow(&guard).0;
-                let account_handle = crate::get_account(id);
-                crate::block_on(async move { account_handle.set_client_options(client_options).await; });
+                crate::block_on(async move {
+                    let account_handle = crate::get_account(id).await;
+                    account_handle.set_client_options(client_options).await.expect("failed to update client options");
+                });
             }
             Ok(cx.undefined().upcast())
         }
@@ -164,7 +204,7 @@ declare_types! {
             let this = cx.this();
             let id = cx.borrow(&this, |r| r.0.clone());
             crate::block_on(async move {
-                let account_handle = crate::get_account(&id);
+                let account_handle = crate::get_account(&id).await;
                 let account = account_handle.read().await;
                 let message = account.get_message(&message_id);
                 match message {
@@ -180,7 +220,7 @@ declare_types! {
                 let guard = cx.lock();
                 let id = &this.borrow(&guard).0;
                 crate::block_on(async move {
-                    let account_handle = crate::get_account(id);
+                    let account_handle = crate::get_account(id).await;
                     account_handle.generate_address().await.expect("error generating address")
                 })
             };
@@ -191,7 +231,7 @@ declare_types! {
             let this = cx.this();
             let id = cx.borrow(&this, |r| r.0.clone());
             crate::block_on(async move {
-                let account_handle = crate::get_account(&id);
+                let account_handle = crate::get_account(&id).await;
                 let account = account_handle.read().await;
                 let address = account.latest_address();
                 match address {

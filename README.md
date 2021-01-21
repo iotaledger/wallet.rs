@@ -5,13 +5,11 @@
 ## Introduction
 
 The wallet library is a stateful package with a standardised interface for developers to build applications involving IOTA value transactions.
-It offers abstractions to handle IOTA payments and can optionally interact with [IOTA Stronghold](https://github.com/iotaledger/stronghold.rs/) for seed handling, seed storage and state backup. Alternatively you can use the EnvMnemonic SignerType and a SQLite database. See the full specification [here](https://github.com/iotaledger/wallet.rs/blob/master/specs/wallet-ENGINEERING-SPEC-0000.md).
+It offers abstractions to handle IOTA payments and can optionally interact with [IOTA Stronghold](https://github.com/iotaledger/stronghold.rs/) for seed handling, seed storage and state backup. Alternatively you can use a SQLite database. See the full specification [here](https://github.com/iotaledger/wallet.rs/blob/master/specs/wallet-ENGINEERING-SPEC-0000.md).
 
 ## Warning
 
 This library is in active development. The library targets the Chrysalis testnet and does not work with current IOTA mainnet.
-
-The Stronghold integration is not complete. We recommend you use SQLite and the EnvMnemonic SignerType (allowing you to store your mnemonic as an environment variable).
 
 ## Prerequisites
 
@@ -42,8 +40,8 @@ $ set VCPKGRS_DYNAMIC=1
 
 ```
 $ choco install openssl
-# you may need to set the OPENSSL_ROOT_DIR environment variable
-$ set OPENSSL_ROOT_DIR="C:\Program Files\OpenSSL-Win64"
+# you may need to set the OPENSSL_DIR environment variable
+$ set OPENSSL_DIR="C:\Program Files\OpenSSL-Win64"
 ```
 
 ### macOS
@@ -51,10 +49,7 @@ $ set OPENSSL_ROOT_DIR="C:\Program Files\OpenSSL-Win64"
 `cmake` and `openssl` can be installed with `Homebrew`:
 
 ```
-$ brew install cmake
-$ brew install openssl@1.1
-# you may want to add this to your .zshrc or .bashrc since you'll need it to compile the crate
-$ OPENSSL_ROOT_DIR=$(brew --prefix openssl@1.1)
+$ brew install cmake openssl@1.1
 ```
 
 ### Linux
@@ -77,7 +72,6 @@ In order to use the library you first need to create an `AccountManager`:
 ```rust
 use iota_wallet::{
     account_manager::AccountManager, client::ClientOptionsBuilder, signing::SignerType,
-    storage::sqlite::SqliteStorageAdapter,
 };
 use std::path::PathBuf;
 
@@ -86,13 +80,12 @@ async fn main() -> iota_wallet::Result<()> {
     let storage_folder: PathBuf = "./my-db".into();
     let manager =
         AccountManager::builder()
-            .with_storage(&storage_folder, SqliteStorageAdapter::new(&storage_folder, "accounts")?)
+            .with_storage_path(&storage_folder)
             .finish()
             .await?;
     let client_options = ClientOptionsBuilder::node("http://api.lb-0.testnet.chrysalis2.com")?.build();
     let account = manager
-        .create_account(client_options)
-        .signer_type(SignerType::EnvMnemonic)
+        .create_account(client_options)?
         .initialise()
         .await?;
     Ok(())
@@ -104,7 +97,7 @@ async fn main() -> iota_wallet::Result<()> {
 If you'd like to explore the implementation in more depth, the following command generates docs for the whole crate:
 
 ```
-cargo doc --document-private-items --no-deps --open
+RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc --all-features --document-private-items --no-deps --open
 ```
 
 ## Other Examples

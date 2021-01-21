@@ -11,7 +11,7 @@ export declare enum MessageType {
   Value = 5,
 }
 
-export declare interface TransactionEssence {
+export declare interface TransactionPayloadEssence {
   inputs: Input[];
   outputs: Output[];
   payload?: Payload[];
@@ -28,7 +28,7 @@ export declare interface Output {
 }
 
 export declare interface Transaction {
-  essence: TransactionEssence;
+  essence: TransactionPayloadEssence;
 }
 
 export declare type Payload = Transaction;
@@ -93,24 +93,17 @@ export declare class SyncedAccount {
   promote(messageId: string): Promise<Message>
 }
 
-export declare enum Network {
-  Mainnet,
-  Devnet,
-  Comnet
-}
-
 export declare interface ClientOptions {
   node?: string;
   nodes?: string[];
-  network?: Network;
+  network?: string;
   quorumSize?: number;
   quorumThreshold?: number;
   localPow?: boolean;
 }
 
 export declare enum SignerType {
-  Stronghold = 1,
-  EnvMnemonic = 2
+  Stronghold = 1
 }
 
 export declare interface AccountToCreate {
@@ -119,24 +112,28 @@ export declare interface AccountToCreate {
   alias?: string;
   createdAt?: string;
   signerType?: SignerType;
+  skipPersistance?: boolean;
 }
 
 export declare enum StorageType {
-  Stronghold = 1,
-  Sqlite = 2
+  Sqlite,
+  Stronghold
 }
 
 export declare interface ManagerOptions {
   storagePath?: string
   storageType?: StorageType
+  storagePassword?: string
 }
 
 export declare class AccountManager {
-  constructor(storagePath?: string)
+  constructor(options: ManagerOptions)
+  setStoragePassword(password: string): void
   setStrongholdPassword(password: string): void
+  generateMnemonic(): string
+  storeMnemonic(signerType: SignerType, mnemonic?: string): void
   createAccount(account: AccountToCreate): Account
   getAccount(accountId: string | number): Account | undefined
-  getAccountByAlias(alias: string): Account | undefined
   getAccounts(): Account[]
   removeAccount(accountId: string | number): void
   syncAccounts(): Promise<SyncedAccount[]>
@@ -154,7 +151,7 @@ export declare type Event = 'ErrorThrown' |
 
 export interface LoggerOutput {
   name?: string
-  level_filter: 'off' | 'error' | 'warn' | 'info' | 'debug' | 'trace' = 'info'
+  level_filter: 'off' | 'error' | 'warn' | 'info' | 'debug' | 'trace'
   target_filters?: string[]
 }
 

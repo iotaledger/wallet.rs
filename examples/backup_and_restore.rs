@@ -1,24 +1,25 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_wallet::{account_manager::AccountManager, client::ClientOptionsBuilder};
+use iota_wallet::{account_manager::AccountManager, client::ClientOptionsBuilder, signing::SignerType};
 
 #[tokio::main]
 async fn main() -> iota_wallet::Result<()> {
     let mut manager = AccountManager::builder().finish().await.unwrap();
     manager.set_stronghold_password("password").await.unwrap();
+    manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
 
     // first we'll create an example account
-    let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")?.build();
+    let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")?.build();
     let account_handle = manager
-        .create_account(client_options)
+        .create_account(client_options)?
         .alias("alias")
         .initialise()
         .await?;
     let id = account_handle.id().await;
 
     // backup the stored accounts to ./backup/${backup_name}
-    let backup_path = manager.backup("./backup")?;
+    let backup_path = manager.backup("./backup").await?;
 
     // delete the account on the current storage
     manager.remove_account(&id).await?;

@@ -1,11 +1,11 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::address::{Address, IotaAddress};
+use crate::address::{Address, AddressWrapper, IotaAddress};
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-pub use iota::{common::packable::Packable, Indexation, Message as IotaMessage, MessageId, Output, Payload};
-use serde::{Deserialize, Serialize};
+pub use iota::{common::packable::Packable, IndexationPayload, Message as IotaMessage, MessageId, Output, Payload};
+use serde::{de::Deserializer, Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
 use std::{
     cmp::Ordering,
@@ -24,7 +24,7 @@ pub enum RemainderValueStrategy {
     ChangeAddress,
     /// Move the remainder value to an address that must belong to the source account.
     #[serde(with = "crate::serde::iota_address_serde")]
-    AccountAddress(IotaAddress),
+    AccountAddress(AddressWrapper),
 }
 
 impl Default for RemainderValueStrategy {
@@ -34,22 +34,68 @@ impl Default for RemainderValueStrategy {
 }
 
 /// A transfer to make a transaction.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct TransferBuilder {
     /// The transfer value.
     amount: NonZeroU64,
     /// The transfer address.
-    #[serde(with = "crate::serde::iota_address_serde")]
-    address: IotaAddress,
+    address: AddressWrapper,
     /// (Optional) message indexation.
-    indexation: Option<Indexation>,
+    indexation: Option<IndexationPayload>,
     /// The strategy to use for the remainder value.
     remainder_value_strategy: RemainderValueStrategy,
 }
 
+impl<'de> Deserialize<'de> for TransferBuilder {
+    fn deserialize<D>(deserializer: D) -> Result<TransferBuilder, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        /// The message's index builder.
+        #[derive(Debug, Clone, Deserialize)]
+        struct IndexationPayloadBuilder {
+            index: String,
+            data: Option<Vec<u8>>,
+        }
+
+        impl IndexationPayloadBuilder {
+            /// Builds the indexation.
+            pub fn finish(self) -> crate::Result<IndexationPayload> {
+                let indexation = IndexationPayload::new(self.index, &self.data.unwrap_or_default())?;
+                Ok(indexation)
+            }
+        }
+
+        #[derive(Debug, Clone, Deserialize)]
+        pub struct TransferBuilderWrapper {
+            /// The transfer value.
+            amount: NonZeroU64,
+            /// The transfer address.
+            #[serde(with = "crate::serde::iota_address_serde")]
+            address: AddressWrapper,
+            /// (Optional) message indexation.
+            indexation: Option<IndexationPayloadBuilder>,
+            /// The strategy to use for the remainder value.
+            remainder_value_strategy: RemainderValueStrategy,
+        }
+
+        TransferBuilderWrapper::deserialize(deserializer).and_then(|builder| {
+            Ok(TransferBuilder {
+                amount: builder.amount,
+                address: builder.address,
+                indexation: match builder.indexation {
+                    Some(i) => Some(i.finish().map_err(serde::de::Error::custom)?),
+                    None => None,
+                },
+                remainder_value_strategy: builder.remainder_value_strategy,
+            })
+        })
+    }
+}
+
 impl TransferBuilder {
     /// Initialises a new transfer to the given address.
-    pub fn new(address: IotaAddress, amount: NonZeroU64) -> Self {
+    pub fn new(address: AddressWrapper, amount: NonZeroU64) -> Self {
         Self {
             address,
             amount,
@@ -65,7 +111,7 @@ impl TransferBuilder {
     }
 
     /// (Optional) message indexation.
-    pub fn with_indexation(mut self, indexation: Indexation) -> Self {
+    pub fn with_indexation(mut self, indexation: IndexationPayload) -> Self {
         self.indexation = Some(indexation);
         self
     }
@@ -88,16 +134,16 @@ pub struct Transfer {
     pub(crate) amount: NonZeroU64,
     /// The transfer address.
     #[serde(with = "crate::serde::iota_address_serde")]
-    pub(crate) address: IotaAddress,
+    pub(crate) address: AddressWrapper,
     /// (Optional) message indexation.
-    pub(crate) indexation: Option<Indexation>,
+    pub(crate) indexation: Option<IndexationPayload>,
     /// The strategy to use for the remainder value.
     pub(crate) remainder_value_strategy: RemainderValueStrategy,
 }
 
 impl Transfer {
     /// Initialises the transfer builder.
-    pub fn builder(address: IotaAddress, amount: NonZeroU64) -> TransferBuilder {
+    pub fn builder(address: AddressWrapper, amount: NonZeroU64) -> TransferBuilder {
         TransferBuilder::new(address, amount)
     }
 }
@@ -255,13 +301,6 @@ impl Message {
         Ok(message)
     }
 
-    /// Check if attachment timestamp on transaction is above max depth (~11 minutes)
-    pub(crate) fn is_above_max_depth(&self) -> bool {
-        let current_timestamp = Utc::now().timestamp();
-        let attachment_timestamp = self.timestamp.timestamp();
-        attachment_timestamp < current_timestamp && current_timestamp - attachment_timestamp < 11 * 60 * 1000
-    }
-
     /// The message's addresses.
     pub fn addresses(&self) -> Vec<&IotaAddress> {
         match &self.payload {
@@ -290,15 +329,16 @@ impl Message {
                     .any(|address| address.outputs().iter().any(|o| o.message_id() == id));
                 tx.essence().outputs().iter().fold(0, |acc, output| {
                     if let Output::SignatureLockedSingle(x) = output {
-                        let address_belongs_to_account = account_addresses.iter().any(|a| a.address() == x.address());
+                        let address_belongs_to_account =
+                            account_addresses.iter().any(|a| a.address().as_ref() == x.address());
                         if sent {
                             if address_belongs_to_account {
                                 acc
                             } else {
-                                acc + x.amount().get()
+                                acc + x.amount()
                             }
                         } else if address_belongs_to_account {
-                            acc + x.amount().get()
+                            acc + x.amount()
                         } else {
                             acc
                         }
@@ -314,7 +354,7 @@ impl Message {
 }
 
 /// Message type.
-#[derive(Debug, Clone, Deserialize_repr)]
+#[derive(Debug, Clone, Deserialize_repr, PartialEq)]
 #[repr(u8)]
 pub enum MessageType {
     /// Message received.

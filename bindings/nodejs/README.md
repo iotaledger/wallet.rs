@@ -13,7 +13,7 @@ Currently the package isn't published so you'd need to link it to your project u
 - Using NPM:
 ```
 $ git clone https://github.com/iotaledger/wallet.rs
-$ cd wallet.rs/bindings/node
+$ cd wallet.rs/bindings/nodejs
 $ npm link
 $ cd /path/to/nodejs/project/
 $ npm link iota-wallet
@@ -21,7 +21,7 @@ $ npm link iota-wallet
 - Using yarn: 
 ```
 $ git clone https://github.com/iotaledger/wallet.rs
-$ cd wallet.rs/bindings/node
+$ cd wallet.rs/bindings/nodejs
 $ yarn link
 $ cd /path/to/nodejs/project/
 $ yarn link iota-wallet
@@ -31,20 +31,18 @@ $ yarn link iota-wallet
 
 After you linked the library, you can create an `AccountManager` instance and interface with it.
 
-While Stronghold is not ready, we recommend using the Sqlite StorageType and `EnvMnemonic` SignerType (this simply means you store your mnemonic as an environment variable).
-
 ### Example 
 
 ```javascript
-const { AccountManager, StorageType, SignerType } = require('iota-wallet')
+const { AccountManager, SignerType } = require('iota-wallet')
 const manager = new AccountManager({
-    storagePath: './storage',
-    storageType: StorageType.Sqlite
+    storagePath: './storage'
 })
+manager.setStrongholdPassword('password')
+manager.storeMnemonic(SignerType.Stronghold, manager.generateMnemonic())
 const account = await manager.createAccount({
   alias: 'Account1',
-  clientOptions: { node: 'http://api.lb-0.testnet.chrysalis2.com', localPow: false },
-  signerType: SignerType.EnvMnemonic
+  clientOptions: { node: 'http://api.lb-0.testnet.chrysalis2.com', localPow: false }
 })
 account.sync()
 ```
@@ -87,50 +85,75 @@ Supported event names:
 
 Creates a new instance of the AccountManager.
 
-| Param         | Type                | Default                | Description                                           |
-| ------------- | ------------------- | ---------------------- | ----------------------------------------------------- |
-| [options]     | <code>object</code> | <code>undefined</code> | The options to configure the account manager          |
-| [storagePath] | <code>string</code> | <code>undefined</code> | The path where the database file will be saved        |
-| [storageType] | <code>number</code> | <code>undefined</code> | The type of the database.  Stronghold = 1, Sqlite = 2 |
+| Param             | Type                     | Default                             | Description                                      |
+| ----------------- | ------------------------ | ----------------------------------- | ------------------------------------------------ |
+| [options]         | <code>object</code>      | <code>undefined</code>              | The options to configure the account manager     |
+| [storagePath]     | <code>string</code>      | <code>undefined</code>              | The path where the database file will be saved   |
+| [storageType]     | <code>StorageType</code> | <code>StorageType.Stronghold</code> | The storage implementation to use                |
+| [storagePassword] | <code>string</code>      | <code>undefined</code>              | The storage password to encrypt/decrypt accounts |
+
+- StorageType
+  
+One of the default storage implementations provided by the wallet library.
+
+| Param      | Description                     |
+| ---------- | ------------------------------- |
+| Sqlite     | Storage using a SQLite database |
+| Stronghold | Storage using Stronghold        |
+
+
+#### setStoragePassword(password): void
+
+Sets the password used for encrypting the storage.
+
+| Param    | Type                | Default                | Description          |
+| -------- | ------------------- | ---------------------- | -------------------- |
+| password | <code>string</code> | <code>undefined</code> | The storage password |
 
 #### setStrongholdPassword(password): void
 
 Sets the stronghold password and initialises it.
 
-| Param    | Type                | Default                | Description                      |
-| -------- | ------------------- | ---------------------- | -------------------------------- |
-| password | <code>string</code> | <code>undefined</code> | The stronghold snapshot password |
+| Param    | Type                | Default                | Description             |
+| -------- | ------------------- | ---------------------- | ----------------------- |
+| password | <code>string</code> | <code>undefined</code> | The stronghold password |
+
+#### generateMnemonic(): string
+
+Generates a new mnemonic phrase.
+
+**Returns** the generated mnemonic string.
+
+#### storeMnemonic(signerType[, mnemonic])
+
+Saves the mnemonic using the given signer provider.
+
+| Param      | Type                               | Default | Description                                       |
+| ---------- | ---------------------------------- | ------- | ------------------------------------------------- |
+| signerType | <code>number</code>                | null    | The signer type. 1 = Stronghold                   |
+| mnemonic   | <code>string        \| null</code> | null    | The mnemonic to save. If null, we'll generate one |
 
 #### createAccount(account): Account
 
 Creates a new account.
 
-| Param                 | Type                                         | Default                           | Description                                              |
-| --------------------- | -------------------------------------------- | --------------------------------- | -------------------------------------------------------- |
-| account               | <code>object</code>                          | <code>{}</code>                   | The account to be created                                |
-| account.clientOptions | <code>[ClientOptions](#clientoptions)</code> | <code>undefined</code>            | The node configuration                                   |
-| [account.mnemonic]    | <code>string</code>                          | <code>undefined</code>            | The account BIP39 mnemonic                               |
-| [account.alias]       | <code>string</code>                          | <code>Account ${index + 1}</code> | The account alias                                        |
-| [account.createdAt]   | <code>string</code>                          | the current date and time         | The ISO 8601 date string of the account creation         |
-| [account.signerType]  | <code>number</code>                          | 1 = Stronghold                    | The account signer type. 1 = Stronghold, 2 = EnvMnemonic |
+| Param                     | Type                                         | Default                           | Description                                      |
+| ------------------------- | -------------------------------------------- | --------------------------------- | ------------------------------------------------ |
+| account                   | <code>object</code>                          | <code>{}</code>                   | The account to be created                        |
+| account.clientOptions     | <code>[ClientOptions](#clientoptions)</code> | <code>undefined</code>            | The node configuration                           |
+| [account.mnemonic]        | <code>string</code>                          | <code>undefined</code>            | The account BIP39 mnemonic                       |
+| [account.alias]           | <code>string</code>                          | <code>Account ${index + 1}</code> | The account alias                                |
+| [account.createdAt]       | <code>string</code>                          | the current date and time         | The ISO 8601 date string of the account creation |
+| [account.signerType]      | <code>number</code>                          | 1 = Stronghold                    | The account signer type. 1 = Stronghold          |
+| [account.skipPersistance] | <code>boolean</code>                         | false                             | Skip saving the account to the storage           |
 
 #### getAccount(accountId)
 
 Gets the account with the given identifier or index.
 
-| Param     | Type                          | Default           | Description                             |
-| --------- | ----------------------------- | ----------------- | --------------------------------------- |
-| accountId | <code>string \| number</code> | <code>null</code> | The account identifier or account index |
-
-**Returns** the associated Account instance or undefined if the account wasn't found.
-
-#### getAccountByAlias(alias)
-
-Gets the account with the given alias (case insensitive).
-
-| Param | Type                | Default           | Description       |
-| ----- | ------------------- | ----------------- | ----------------- |
-| alias | <code>string</code> | <code>null</code> | The account alias |
+| Param     | Type                          | Default           | Description                                          |
+| --------- | ----------------------------- | ----------------- | ---------------------------------------------------- |
+| accountId | <code>string \| number</code> | <code>null</code> | The account id, alias, index or one of its addresses |
 
 **Returns** the associated Account instance or undefined if the account wasn't found.
 
@@ -144,9 +167,9 @@ Gets all stored accounts.
 
 Removes the account with the given identifier or index.
 
-| Param     | Type                          | Default           | Description                             |
-| --------- | ----------------------------- | ----------------- | --------------------------------------- |
-| accountId | <code>string \| number</code> | <code>null</code> | The account identifier or account index |
+| Param     | Type                          | Default           | Description                                          |
+| --------- | ----------------------------- | ----------------- | ---------------------------------------------------- |
+| accountId | <code>string \| number</code> | <code>null</code> | The account id, alias, index or one of its addresses |
 
 #### syncAccounts()
 
@@ -180,10 +203,10 @@ Backups the database.
 
 Imports a database file.
 
-| Param    | Type                | Default                  | Description                    |
-| ------   | ------------------- | ----------------------   | ---------------------------    |
-| source   | <code>string</code> | <code>undefined</code>   | The path to the backup file    |
-| password | <code>string</code> | <code>undefined</code>   | The backup stronghold password |
+| Param    | Type                | Default                | Description                    |
+| -------- | ------------------- | ---------------------- | ------------------------------ |
+| source   | <code>string</code> | <code>undefined</code> | The path to the backup file    |
+| password | <code>string</code> | <code>undefined</code> | The backup stronghold password |
 
 ### SyncedAccount
 
@@ -274,14 +297,16 @@ Returns the account's messages.
 
 Message object: { confirmed: boolean, broadcasted: boolean, incoming: boolean, value: number }
 
-#### listAddresses([unspent])
+#### listAddresses()
 Returns the account's addresses.
 
-| Param     | Type                 | Default           | Description                 |
-| --------- | -------------------- | ----------------- | --------------------------- |
-| [unspent] | <code>boolean</code> | <code>null</code> | The `unspent` status filter |
-
 Address object: { address: string, balance: number, keyIndex: number }
+
+#### listSpentAddresses()
+Returns the account's spent addresses.
+
+#### listUnspentAddresses()
+Returns the account's unspent addresses.
 
 #### sync([options])
 

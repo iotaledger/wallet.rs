@@ -1,6 +1,7 @@
 /target
 Cargo.lock
-/example-database
+/test-storage
+/storage
 backup
 .DS_Store
 book
