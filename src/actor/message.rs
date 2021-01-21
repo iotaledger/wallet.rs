@@ -13,7 +13,7 @@ use chrono::{DateTime, Local};
 use serde::{ser::Serializer, Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
 
-use std::num::NonZeroU64;
+use std::{num::NonZeroU64, time::Duration};
 
 /// An account to create.
 #[derive(Clone, Debug, Deserialize)]
@@ -131,6 +131,14 @@ pub enum MessageType {
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
     SetStrongholdPassword(String),
+    /// Sets the password clear interval.
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    SetStrongholdPasswordClearInterval(Duration),
+    /// Get stronghold status.
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    GetStrongholdStatus,
     /// Send funds.
     SendTransfer {
         /// The account identifier.
@@ -198,21 +206,29 @@ impl Serialize for MessageType {
             MessageType::SetStrongholdPassword(_) => {
                 serializer.serialize_unit_variant("MessageType", 10, "SetStrongholdPassword")
             }
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            MessageType::SetStrongholdPasswordClearInterval(_) => {
+                serializer.serialize_unit_variant("MessageType", 11, "SetStrongholdPasswordClearInterval")
+            }
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            MessageType::GetStrongholdStatus => {
+                serializer.serialize_unit_variant("MessageType", 12, "GetStrongholdStatus")
+            }
             MessageType::SendTransfer {
                 account_id: _,
                 transfer: _,
-            } => serializer.serialize_unit_variant("MessageType", 11, "SendTransfer"),
+            } => serializer.serialize_unit_variant("MessageType", 13, "SendTransfer"),
             MessageType::InternalTransfer {
                 from_account_id: _,
                 to_account_id: _,
                 amount: _,
-            } => serializer.serialize_unit_variant("MessageType", 12, "InternalTransfer"),
-            MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 13, "GenerateMnemonic"),
-            MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 14, "VerifyMnemonic"),
+            } => serializer.serialize_unit_variant("MessageType", 14, "InternalTransfer"),
+            MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 15, "GenerateMnemonic"),
+            MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 16, "VerifyMnemonic"),
             MessageType::StoreMnemonic {
                 signer_type: _,
                 mnemonic: _,
-            } => serializer.serialize_unit_variant("MessageType", 15, "StoreMnemonic"),
+            } => serializer.serialize_unit_variant("MessageType", 17, "StoreMnemonic"),
         }
     }
 }
@@ -286,6 +302,14 @@ pub enum ResponseType {
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
     StrongholdPasswordSet,
+    /// SetStrongholdPasswordClearInterval response.
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    StrongholdPasswordClearIntervalSet,
+    /// GetStrongholdStatus response.
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    StrongholdStatus(crate::stronghold::Status),
     /// SendTransfer and InternalTransfer response.
     SentTransfer(WalletMessage),
     /// An error occurred.
