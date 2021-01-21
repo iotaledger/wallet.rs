@@ -3,11 +3,11 @@
 
 use crate::{account::Account, message::MessageType, signing::GenerateAddressMetadata};
 use getset::{Getters, Setters};
-pub use iota::{client::builder::Network, Address as IotaAddress, Ed25519Address, Input, Payload, UTXOInput};
 use iota::{
     message::prelude::{MessageId, TransactionId},
     OutputMetadata,
 };
+pub use iota::{Address as IotaAddress, Ed25519Address, Input, Payload, UTXOInput};
 use serde::{Deserialize, Serialize};
 use std::{
     cmp::Ordering,
@@ -21,22 +21,22 @@ use std::{
 #[getset(get = "pub")]
 pub struct AddressOutput {
     /// Transaction ID of the output
-    transaction_id: TransactionId,
+    pub(crate) transaction_id: TransactionId,
     /// Message ID of the output
-    message_id: MessageId,
+    pub(crate) message_id: MessageId,
     /// Output index.
-    index: u16,
+    pub(crate) index: u16,
     /// Output amount.
-    amount: u64,
+    pub(crate) amount: u64,
     /// Spend status of the output,
-    is_spent: bool,
+    pub(crate) is_spent: bool,
 }
 
 impl AddressOutput {
     /// Checks if the output is referenced on a pending message or a confirmed message
     pub(crate) fn is_used(&self, account: &Account) -> bool {
         let output_id = UTXOInput::new(self.transaction_id, self.index).unwrap();
-        account.list_messages(0, 0, None).iter().any(|m| {
+        account.list_messages(0, 0, Some(MessageType::Sent)).iter().any(|m| {
             // message is pending or confirmed
             if m.confirmed().unwrap_or(true) {
                 match m.payload() {
@@ -330,4 +330,33 @@ pub(crate) fn is_unspent(account: &Account, address: &AddressWrapper) -> bool {
         .list_messages(0, 0, Some(MessageType::Sent))
         .iter()
         .any(|message| message.addresses().contains(&address.as_ref()))
+}
+
+#[cfg(test)]
+mod tests {
+    #[tokio::test]
+    async fn is_unspent_false() {
+        let manager = crate::test_utils::get_account_manager().await;
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+        let address = crate::test_utils::generate_random_address();
+        let spent_tx = crate::test_utils::GenerateMessageBuilder::default()
+            .address(address.clone())
+            .incoming(false)
+            .build();
+
+        account_handle.write().await.append_messages(vec![spent_tx]);
+
+        let response = super::is_unspent(&*account_handle.read().await, address.address());
+        assert_eq!(response, false);
+    }
+
+    #[tokio::test]
+    async fn is_unspent_true() {
+        let manager = crate::test_utils::get_account_manager().await;
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+        let address = crate::test_utils::generate_random_iota_address();
+
+        let response = super::is_unspent(&*account_handle.read().await, &address);
+        assert_eq!(response, true);
+    }
 }

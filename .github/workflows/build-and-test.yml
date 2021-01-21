@@ -91,17 +91,11 @@ jobs:
         command: build
         args: --all-features --release
 
-    - name: Run tests with the stronghold storage
+    - name: Run tests
       uses: actions-rs/cargo@v1
       with:
         command: test
-        args: --no-default-features --features stronghold,stronghold-storage --release
-
-    - name: Run tests with the sqlite storage
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --no-default-features --features stronghold,sqlite-storage --release
+        args: --all-features --release
 
     - name: Build nodejs binding
       run: yarn

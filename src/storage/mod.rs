@@ -215,3 +215,75 @@ fn parse_accounts(
         Ok(accounts)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::StorageAdapter;
+    use std::path::PathBuf;
+
+    #[tokio::test]
+    // asserts that the adapter defined by `set` is globally available with `get`
+    async fn set_adapter() {
+        struct MyAdapter;
+        #[async_trait::async_trait]
+        impl StorageAdapter for MyAdapter {
+            async fn get(&mut self, _key: &str) -> crate::Result<String> {
+                Ok("MY_ADAPTER_GET_RESPONSE".to_string())
+            }
+            async fn get_all(&mut self) -> crate::Result<Vec<String>> {
+                Ok(vec![])
+            }
+            async fn set(&mut self, _key: &str, _account: String) -> crate::Result<()> {
+                Ok(())
+            }
+            async fn remove(&mut self, _key: &str) -> crate::Result<()> {
+                Ok(())
+            }
+        }
+
+        let path = "./the-storage-path";
+        super::set(path, None, Box::new(MyAdapter {})).await;
+        let adapter = super::get(&std::path::PathBuf::from(path)).await.unwrap();
+        let mut adapter = adapter.lock().await;
+        assert_eq!(adapter.get("").await.unwrap(), "MY_ADAPTER_GET_RESPONSE".to_string());
+    }
+
+    #[test]
+    fn parse_accounts_invalid() {
+        let response = super::parse_accounts(&PathBuf::new(), &["{}".to_string()], &None);
+        assert!(response.is_err());
+    }
+
+    async fn _create_account() -> (std::path::PathBuf, crate::account::AccountHandle) {
+        let manager = crate::test_utils::get_account_manager().await;
+
+        let client_options = crate::client::ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
+            .unwrap()
+            .build();
+        let account_handle = manager
+            .create_account(client_options)
+            .unwrap()
+            .alias("alias")
+            .initialise()
+            .await
+            .unwrap();
+        (manager.storage_path().clone(), account_handle)
+    }
+
+    #[tokio::test]
+    async fn parse_accounts_valid() {
+        let (storage_path, account_handle) = _create_account().await;
+        let response = super::parse_accounts(
+            &storage_path,
+            &[serde_json::to_string(&*account_handle.read().await).unwrap()],
+            &None,
+        );
+        assert!(response.is_ok());
+        let parsed_accounts = response.unwrap();
+        let parsed_account = parsed_accounts.first().unwrap();
+        match parsed_account {
+            super::ParsedAccount::Account(parsed) => assert_eq!(parsed, &*account_handle.read().await),
+            _ => panic!("invalid parsed account format"),
+        }
+    }
+}

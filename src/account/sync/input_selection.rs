@@ -157,6 +157,18 @@ mod tests {
     }
 
     #[test]
+    fn non_exact_match() {
+        let seed: [u8; 32] = [1; 32];
+        let mut rng: StdRng = SeedableRng::from_seed(seed);
+        for _i in 0..20 {
+            let mut available_utxos = generate_random_utxos(&mut rng, 5);
+            let target = available_utxos.iter().fold(0, |acc, address| acc + address.balance) - 1;
+            let selected = select_input(target, &mut available_utxos).unwrap();
+            assert!(selected.into_iter().fold(0, |acc, address| acc + address.balance) >= target);
+        }
+    }
+
+    #[test]
     fn insufficient_funds() {
         let seed: [u8; 32] = [1; 32];
         let mut rng: StdRng = SeedableRng::from_seed(seed);

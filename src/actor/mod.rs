@@ -64,9 +64,8 @@ impl WalletMessageHandler {
     }
 
     /// Creates a new instance of the message handler with the specified account manager.
-    pub fn with_manager(account_manager: AccountManager) -> Result<Self> {
-        let instance = Self { account_manager };
-        Ok(instance)
+    pub fn with_manager(account_manager: AccountManager) -> Self {
+        Self { account_manager }
     }
 
     /// Handles a message.
@@ -341,7 +340,7 @@ impl WalletMessageHandler {
 #[cfg(test)]
 mod tests {
     use super::{AccountToCreate, Message, MessageType, Response, ResponseType, WalletMessageHandler};
-    use crate::client::ClientOptionsBuilder;
+    use crate::{account_manager::AccountManager, client::ClientOptionsBuilder};
     use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
     /// The wallet actor builder.
@@ -395,16 +394,14 @@ mod tests {
         }
     }
 
-    fn spawn_actor() -> UnboundedSender<Message> {
+    fn spawn_actor(manager: AccountManager) -> UnboundedSender<Message> {
         let (tx, rx) = unbounded_channel();
         std::thread::spawn(|| {
             let runtime = tokio::runtime::Runtime::new().unwrap();
             runtime.block_on(async move {
                 let actor = WalletBuilder::new()
                     .rx(rx)
-                    .message_handler(
-                        WalletMessageHandler::with_manager(crate::test_utils::get_account_manager().await).unwrap(),
-                    )
+                    .message_handler(WalletMessageHandler::with_manager(manager))
                     .build()
                     .await;
                 actor.run().await
@@ -422,41 +419,46 @@ mod tests {
 
     #[tokio::test]
     async fn create_and_remove_account() {
-        let tx = spawn_actor();
+        crate::test_utils::with_account_manager(
+            crate::test_utils::TestType::SigningAndStorage,
+            |manager, signer_type| async move {
+                let tx = spawn_actor(manager);
 
-        let signer_type = crate::test_utils::signer_type();
-
-        // create an account
-        let account = AccountToCreate {
-            client_options: ClientOptionsBuilder::node("http://node.iota").unwrap().build(),
-            alias: None,
-            created_at: None,
-            skip_persistance: false,
-            signer_type: Some(signer_type.clone()),
-        };
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-        send_message(&tx, MessageType::SetStrongholdPassword("password".to_string())).await;
-        send_message(
-            &tx,
-            MessageType::StoreMnemonic {
-                signer_type,
-                mnemonic: None,
+                // create an account
+                let account = AccountToCreate {
+                    client_options: ClientOptionsBuilder::node("http://node.iota").unwrap().build(),
+                    alias: None,
+                    created_at: None,
+                    skip_persistance: false,
+                    signer_type: Some(signer_type.clone()),
+                };
+                #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+                send_message(&tx, MessageType::SetStrongholdPassword("password".to_string())).await;
+                send_message(
+                    &tx,
+                    MessageType::StoreMnemonic {
+                        signer_type,
+                        mnemonic: None,
+                    },
+                )
+                .await;
+                let response = send_message(&tx, MessageType::CreateAccount(account)).await;
+                match response.response() {
+                    ResponseType::CreatedAccount(created_account) => {
+                        let id = created_account.id().clone();
+                        std::thread::spawn(move || {
+                            std::thread::sleep(std::time::Duration::from_secs(6));
+                            // remove the created account
+                            let response = crate::block_on(async move {
+                                send_message(&tx, MessageType::RemoveAccount(id.into())).await
+                            });
+                            assert!(matches!(response.response(), ResponseType::RemovedAccount(_)));
+                        });
+                    }
+                    _ => panic!("unexpected response {:?}", response),
+                }
             },
         )
         .await;
-        let response = send_message(&tx, MessageType::CreateAccount(account)).await;
-        match response.response() {
-            ResponseType::CreatedAccount(created_account) => {
-                let id = created_account.id().clone();
-                std::thread::spawn(move || {
-                    std::thread::sleep(std::time::Duration::from_secs(6));
-                    // remove the created account
-                    let response =
-                        crate::block_on(async move { send_message(&tx, MessageType::RemoveAccount(id.into())).await });
-                    assert!(matches!(response.response(), ResponseType::RemovedAccount(_)));
-                });
-            }
-            _ => panic!("unexpected response {:?}", response),
-        }
     }
 }
