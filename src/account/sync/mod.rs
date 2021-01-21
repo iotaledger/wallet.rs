@@ -455,7 +455,7 @@ fn serialize_as_id<S>(x: &AccountHandle, s: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
-    crate::block_on(async move {
+    futures::executor::block_on(async move {
         let account = x.read().await;
         account.id().serialize(s)
     })
