@@ -13,6 +13,15 @@ pub struct LedgerNanoSigner {
     pub is_simulator: bool,
 }
 
+/// A record matching an Input with its address.
+#[derive(Debug)]
+struct AddressIndexRecorder {
+    /// the input
+    pub input: iota::Input,
+    /// bip32 index
+    pub bip32_index: u32,
+}
+
 use ledger_iota::api::errors;
 
 // map most errors to a single error but there are some errors that
@@ -67,11 +76,27 @@ impl super::Signer for LedgerNanoSigner {
         let ledger =
             ledger_iota::get_ledger(self.is_simulator, *account.index() as u32 | HARDENED).map_err(ledger_map_err)?;
 
-        // gather input indices into vec
-        let mut key_indices: Vec<u32> = Vec::new();
         let input_len = inputs.len();
+
+        // gather input indices into vec
+        let mut address_index_recorders: Vec<AddressIndexRecorder> = Vec::new();
+
+        // on essence finalization, inputs are sorted lexically before they are packed into bytes
+        // we need the correct order of the bip32 indices before we can call PrepareSigning, but
+        // because we can't just get the inputs after sorting (because the fields are private),
+        // we need to sort it on our own too.
         for input in inputs {
-            key_indices.push(input.address_index as u32 | HARDENED);
+            address_index_recorders.push(AddressIndexRecorder {
+                input: input.input.clone(),
+                bip32_index: input.address_index as u32,
+            });
+        }
+        address_index_recorders.sort_by(|a, b| a.input.cmp(&b.input));
+
+        // now extract the bip32 indices in the right order
+        let mut key_indices: Vec<u32> = Vec::new();
+        for recorder in address_index_recorders {
+            key_indices.push(recorder.bip32_index as u32 | HARDENED);
         }
 
         // figure out the remainder address and bip32 index (if there is one)
