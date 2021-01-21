@@ -409,6 +409,9 @@ impl AccountSynchronizer {
         self
     }
 
+    /// Sets the steps to run on the sync process.
+    /// By default it runs all steps (sync_addresses and sync_messages),
+    /// but the library can pick what to run here.
     pub(crate) fn steps(mut self, steps: Vec<AccountSynchronizeStep>) -> Self {
         self.steps = steps;
         self
