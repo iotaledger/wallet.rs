@@ -34,10 +34,10 @@ pub enum SignerType {
     Stronghold,
     /// Ledger Device
     #[cfg(feature = "ledger-nano")]
-    LedgerNanoSigner,
+    LedgerNano,
     /// Ledger Speculos Simulator
     #[cfg(feature = "ledger-nano-simulator")]
-    LedgerNanoSimulatorSigner,
+    LedgerNanoSimulator,
     /// Custom signer with its identifier.
     Custom(String),
 }
@@ -114,7 +114,7 @@ fn default_signers() -> Signers {
     #[cfg(feature = "ledger-nano")]
     {
         signers.insert(
-            SignerType::LedgerNanoSigner,
+            SignerType::LedgerNano,
             Arc::new(Mutex::new(
                 Box::new(ledger::LedgerNanoSigner { is_simulator: false }) as Box<dyn Signer + Sync + Send>
             )),
@@ -124,7 +124,7 @@ fn default_signers() -> Signers {
     #[cfg(feature = "ledger-nano-simulator")]
     {
         signers.insert(
-            SignerType::LedgerNanoSimulatorSigner,
+            SignerType::LedgerNanoSimulator,
             Arc::new(Mutex::new(
                 Box::new(ledger::LedgerNanoSigner { is_simulator: true }) as Box<dyn Signer + Sync + Send>
             )),
