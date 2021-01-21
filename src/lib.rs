@@ -38,6 +38,10 @@ pub use error::Error;
 #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
 pub use stronghold::set_password_clear_interval as set_stronghold_password_clear_interval;
 
+#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+pub use stronghold::get_status as get_stronghold_status;
+
 /// The wallet Result type.
 pub type Result<T> = std::result::Result<T, Error>;
 pub use chrono::prelude::{DateTime, Local, Utc};

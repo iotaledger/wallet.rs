@@ -107,6 +107,22 @@ impl WalletMessageHandler {
             MessageType::SetStrongholdPassword(password) => {
                 convert_async_panics(|| async { self.set_stronghold_password(password).await }).await
             }
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            MessageType::SetStrongholdPasswordClearInterval(interval) => {
+                convert_async_panics(|| async {
+                    crate::set_stronghold_password_clear_interval(*interval).await;
+                    Ok(ResponseType::StrongholdPasswordClearIntervalSet)
+                })
+                .await
+            }
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            MessageType::GetStrongholdStatus => {
+                convert_async_panics(|| async {
+                    let status = crate::stronghold::get_status(self.account_manager.storage_path()).await;
+                    Ok(ResponseType::StrongholdStatus(status))
+                })
+                .await
+            }
             MessageType::GenerateMnemonic => convert_panics(|| {
                 self.account_manager
                     .generate_mnemonic()
