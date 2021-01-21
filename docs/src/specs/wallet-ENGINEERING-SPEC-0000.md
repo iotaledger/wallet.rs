@@ -1224,9 +1224,9 @@ The following should be considered when implementing this method:
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#get_address_balances">get_address_balances()</a></li>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#find_messages">find_messages()</a></li>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#find_outputs">find_outputs()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#get_address_balances">get_address_balances()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages">find_messages()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_outputs">find_outputs()</a></li>
       </ul>
     </td>
   </tr>
@@ -1290,7 +1290,7 @@ The following should be considered when implementing this method:
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#find_messages">find_messages()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages">find_messages()</a></li>
       </ul>
     </td>
   </tr>
@@ -1433,8 +1433,8 @@ The process for sending a value transaction:
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#find_messages">find_messages()</a></li>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#send">send()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages">find_messages()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#send">send()</a></li>
       </ul>
     </td>
   </tr>
@@ -1500,7 +1500,7 @@ The process for retrying a failed message:
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#post_message">post_message()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#post_message">post_message()</a></li>
       </ul>
     </td>
   </tr>
@@ -1580,8 +1580,8 @@ The process for account syncing:_
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#find_messages">find_messages()</a></li>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#get_address_balances">get_address_balances()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages">find_messages()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#get_address_balances">get_address_balances()</a></li>
       </ul>
     </td>
   </tr>
@@ -1645,7 +1645,7 @@ The following should be considered when implementing this method:
     <td>Required client library methods</td>
     <td colspan="3">
       <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md.md#reattach">reattach()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#reattach">reattach()</a></li>
       </ul>
     </td>
   </tr>
