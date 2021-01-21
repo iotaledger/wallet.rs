@@ -140,6 +140,7 @@ pub async fn set_password_clear_interval(interval: Duration) {
 
 /// Snapshot status.
 #[derive(Debug, Serialize)]
+#[serde(tag = "status", content = "data")]
 pub enum SnapshotStatus {
     /// Snapshot is locked. This means that the password must be set again.
     Locked,
