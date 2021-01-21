@@ -214,7 +214,7 @@ async fn sync_messages(
     let futures_ = account
         .addresses_mut()
         .iter_mut()
-        .take(stop_at_address_index)
+        .filter(|address| *address.key_index() < stop_at_address_index)
         .map(|address| {
             let client_options = client_options.clone();
             let messages_with_known_confirmation = messages_with_known_confirmation.clone();
@@ -243,24 +243,25 @@ async fn sync_messages(
                 for output in address_outputs.iter() {
                     let output = client.get_output(output).await?;
                     let output: AddressOutput = output.try_into()?;
+                    let output_message_id = *output.message_id();
+
+                    outputs.push(output);
 
                     // if we already have the message stored
                     // and the confirmation state is known
                     // we skip the `get_message` call
-                    if messages_with_known_confirmation.contains(output.message_id()) {
+                    if messages_with_known_confirmation.contains(&output_message_id) {
                         continue;
                     }
 
-                    if let Ok(message) = client.get_message().data(output.message_id()).await {
-                        let metadata = client.get_message().metadata(output.message_id()).await?;
+                    if let Ok(message) = client.get_message().data(&output_message_id).await {
+                        let metadata = client.get_message().metadata(&output_message_id).await?;
                         messages.push((
-                            *output.message_id(),
+                            output_message_id,
                             metadata.ledger_inclusion_state.map(|l| l == "included"),
                             message,
                         ));
                     }
-
-                    outputs.push(output);
                 }
 
                 address.set_outputs(outputs);
