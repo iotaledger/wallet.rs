@@ -278,13 +278,22 @@ async fn sync_messages(
     Ok(messages)
 }
 
-async fn perform_sync(mut account: &mut Account, address_index: usize, gap_limit: usize) -> crate::Result<bool> {
+async fn perform_sync(
+    mut account: &mut Account,
+    address_index: usize,
+    gap_limit: usize,
+    steps: Vec<AccountSynchronizeStep>,
+) -> crate::Result<bool> {
     log::debug!(
         "[SYNC] syncing with address_index = {}, gap_limit = {}",
         address_index,
         gap_limit
     );
-    let (found_addresses, found_messages) = sync_addresses(&account, address_index, gap_limit).await?;
+    let (found_addresses, found_messages) = if steps.contains(&AccountSynchronizeStep::SyncAddresses) {
+        sync_addresses(&account, address_index, gap_limit).await?
+    } else {
+        (Vec::new(), Vec::new())
+    };
 
     let mut new_messages = vec![];
     for (found_message_id, confirmed, found_message) in found_messages {
@@ -297,8 +306,10 @@ async fn perform_sync(mut account: &mut Account, address_index: usize, gap_limit
         }
     }
 
-    let synced_messages = sync_messages(&mut account, address_index).await?;
-    new_messages.extend(synced_messages.into_iter());
+    if steps.contains(&AccountSynchronizeStep::SyncMessages) {
+        let synced_messages = sync_messages(&mut account, address_index).await?;
+        new_messages.extend(synced_messages.into_iter());
+    }
 
     let mut addresses_to_save = vec![];
     let mut ignored_addresses = vec![];
@@ -347,12 +358,19 @@ async fn perform_sync(mut account: &mut Account, address_index: usize, gap_limit
     Ok(is_empty)
 }
 
+#[derive(PartialEq)]
+pub(crate) enum AccountSynchronizeStep {
+    SyncAddresses,
+    SyncMessages,
+}
+
 /// Account sync helper.
 pub struct AccountSynchronizer {
     account_handle: AccountHandle,
     address_index: usize,
     gap_limit: usize,
     skip_persistance: bool,
+    steps: Vec<AccountSynchronizeStep>,
 }
 
 impl AccountSynchronizer {
@@ -365,6 +383,10 @@ impl AccountSynchronizer {
             address_index: if address_index == 0 { 0 } else { address_index - 1 },
             gap_limit: if address_index == 0 { 10 } else { 1 },
             skip_persistance: false,
+            steps: vec![
+                AccountSynchronizeStep::SyncAddresses,
+                AccountSynchronizeStep::SyncMessages,
+            ],
         }
     }
 
@@ -387,6 +409,14 @@ impl AccountSynchronizer {
         self
     }
 
+    /// Sets the steps to run on the sync process.
+    /// By default it runs all steps (sync_addresses and sync_messages),
+    /// but the library can pick what to run here.
+    pub(crate) fn steps(mut self, steps: Vec<AccountSynchronizeStep>) -> Self {
+        self.steps = steps;
+        self
+    }
+
     /// Syncs account with the tangle.
     /// The account syncing process ensures that the latest metadata (balance, transactions)
     /// associated with an account is fetched from the tangle and is stored locally.
@@ -402,7 +432,7 @@ impl AccountSynchronizer {
         let message_ids_before_sync: Vec<MessageId> = account_.messages().iter().map(|m| *m.id()).collect();
         let addresses_before_sync: Vec<String> = account_.addresses().iter().map(|a| a.address().to_bech32()).collect();
 
-        let return_value = match perform_sync(&mut account_, self.address_index, self.gap_limit).await {
+        let return_value = match perform_sync(&mut account_, self.address_index, self.gap_limit, self.steps).await {
             Ok(is_empty) => {
                 if !self.skip_persistance {
                     let mut account_ref = self.account_handle.write().await;
