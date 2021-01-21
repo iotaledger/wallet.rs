@@ -26,6 +26,12 @@ jobs:
           toolchain: stable
           override: true
           components: clippy
+    
+    - name: Install required packages
+      run: |
+        sudo apt-get update
+        sudo apt-get install libudev-dev libusb-1.0-0-dev
+
     - uses: actions-rs/clippy-check@v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}

@@ -146,6 +146,18 @@ pub enum Error {
     /// accounts)
     #[error("cannot use index identifier when two signer types are used")]
     CannotUseIndexIdentifier,
+    /// Ledger transport error
+    #[error("ledger transport error")]
+    LedgerMiscError,
+    /// Dongle Locked
+    #[error("ledger locked")]
+    LedgerDongleLocked,
+    /// Denied by User
+    #[error("denied by user")]
+    LedgerDeniedByUser,
+    /// Ledger Device not found
+    #[error("ledger device not found")]
+    LedgerDeviceNotFound,
     /// Account alias must be unique.
     #[error("can't create account: account alias already exists")]
     AccountAliasAlreadyExists,
@@ -228,6 +240,10 @@ impl serde::Serialize for Error {
             Self::AccountEncrypt(_) => serialize_variant(self, serializer, "AccountEncrypt"),
             Self::StorageIsEncrypted => serialize_variant(self, serializer, "StorageIsEncrypted"),
             Self::CannotUseIndexIdentifier => serialize_variant(self, serializer, "CannotUseIndexIdentifier"),
+            Self::LedgerMiscError => serialize_variant(self, serializer, "LedgerMiscError"),
+            Self::LedgerDongleLocked => serialize_variant(self, serializer, "LedgerDongleLocked"),
+            Self::LedgerDeniedByUser => serialize_variant(self, serializer, "LedgerDeniedByUser"),
+            Self::LedgerDeviceNotFound => serialize_variant(self, serializer, "LedgerDeviceNotFound"),
             Self::AccountAliasAlreadyExists => serialize_variant(self, serializer, "AccountAliasAlreadyExists"),
         }
     }
