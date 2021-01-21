@@ -23,7 +23,7 @@ use std::{
 };
 
 mod sync;
-pub(crate) use sync::{repost_message, RepostAction};
+pub(crate) use sync::{repost_message, AccountSynchronizeStep, RepostAction};
 pub use sync::{AccountSynchronizer, SyncedAccount};
 
 const ACCOUNT_ID_PREFIX: &str = "wallet-account://";
@@ -366,6 +366,18 @@ impl AccountHandle {
         let _ = crate::monitor::monitor_address_balance(self.clone(), address.address());
 
         Ok(address)
+    }
+
+    /// Synchronizes the account addresses with the Tangle and returns the latest address in the account,
+    /// Which is guaranteed to be an unused address.
+    pub async fn get_unused_address(&self) -> crate::Result<Address> {
+        self.sync()
+            .await
+            .steps(vec![AccountSynchronizeStep::SyncAddresses])
+            .execute()
+            .await?;
+        // safe to clone since the `sync` guarantees a latest unused address
+        Ok(self.latest_address().await.unwrap())
     }
 
     /// Bridge to [Account#latest_address](struct.Account.html#method.latest_address).
