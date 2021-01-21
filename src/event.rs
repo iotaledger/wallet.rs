@@ -97,10 +97,17 @@ struct TransactionConfirmationChangeEventHandler {
     on_event: Box<dyn Fn(&TransactionConfirmationChangeEvent<'_>) + Send>,
 }
 
+#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+struct StrongholdStatusChangeEventHandler {
+    on_event: Box<dyn Fn(&crate::StrongholdStatus) + Send>,
+}
+
 type BalanceListeners = Arc<Mutex<Vec<BalanceEventHandler>>>;
 type TransactionListeners = Arc<Mutex<Vec<TransactionEventHandler>>>;
 type TransactionConfirmationChangeListeners = Arc<Mutex<Vec<TransactionConfirmationChangeEventHandler>>>;
 type ErrorListeners = Arc<Mutex<Vec<ErrorHandler>>>;
+#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+type StrongholdStatusChangeListeners = Arc<Mutex<Vec<StrongholdStatusChangeEventHandler>>>;
 
 /// Gets the balance change listeners array.
 fn balance_listeners() -> &'static BalanceListeners {
@@ -123,6 +130,13 @@ fn transaction_confirmation_change_listeners() -> &'static TransactionConfirmati
 /// Gets the balance change listeners array.
 fn error_listeners() -> &'static ErrorListeners {
     static LISTENERS: Lazy<ErrorListeners> = Lazy::new(Default::default);
+    &LISTENERS
+}
+
+/// Gets the stronghold status change listeners array.
+#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+fn stronghold_status_change_listeners() -> &'static StrongholdStatusChangeListeners {
+    static LISTENERS: Lazy<StrongholdStatusChangeListeners> = Lazy::new(Default::default);
     &LISTENERS
 }
 
@@ -229,6 +243,26 @@ pub fn on_error<F: Fn(&crate::Error) + Send + 'static>(cb: F) {
         .lock()
         .expect("Failed to lock error_listeners: on_error()");
     l.push(ErrorHandler { on_error: Box::new(cb) })
+}
+
+#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+pub(crate) fn emit_stronghold_status_change(status: &crate::StrongholdStatus) {
+    let listeners = stronghold_status_change_listeners()
+        .lock()
+        .expect("Failed to lock stronghold_status_change_listeners: emit_stronghold_status_change()");
+    for listener in listeners.deref() {
+        (listener.on_event)(&status)
+    }
+}
+
+/// Listen to stronghold status change events.
+#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+pub fn on_stronghold_status_change<F: Fn(&crate::StrongholdStatus) + Send + 'static>(cb: F) {
+    let mut l = stronghold_status_change_listeners()
+        .lock()
+        .expect("Failed to lock stronghold_status_change_listeners: on_stronghold_status_change()");
+    l.push(StrongholdStatusChangeEventHandler { on_event: Box::new(cb) })
 }
 
 #[cfg(test)]

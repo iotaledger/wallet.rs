@@ -149,6 +149,7 @@ pub enum SnapshotStatus {
 }
 
 #[derive(Debug, Serialize)]
+/// Stronghold status.
 pub struct Status {
     snapshot: SnapshotStatus,
 }
@@ -170,7 +171,11 @@ pub async fn get_status(snapshot_path: &PathBuf) -> Status {
             snapshot: if locked {
                 SnapshotStatus::Locked
             } else {
-                SnapshotStatus::Unlocked(password_clear_interval - access_instant.elapsed())
+                SnapshotStatus::Unlocked(if password_clear_interval.as_millis() == 0 {
+                    password_clear_interval
+                } else {
+                    password_clear_interval - access_instant.elapsed()
+                })
             },
         }
     } else {
@@ -196,25 +201,28 @@ fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, [u8; 32]>>> {
 
                 let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
                 let access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
-                let mut remove_keys = Vec::new();
+                let mut snapshots_paths_to_clear = Vec::new();
                 for (snapshot_path, _) in passwords.iter() {
                     // if the stronghold was accessed `interval` ago, we clear the password
                     if let Some(access_instant) = access_store.get(snapshot_path) {
                         if access_instant.elapsed() > interval {
-                            remove_keys.push(snapshot_path.clone());
+                            snapshots_paths_to_clear.push(snapshot_path.clone());
                         }
                     }
                 }
 
                 let current_snapshot_path = &*CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await;
-                for remove_key in remove_keys {
-                    passwords.remove(&remove_key);
+                for snapshot_path in snapshots_paths_to_clear {
+                    passwords.remove(&snapshot_path);
                     if let Some(curr_snapshot_path) = current_snapshot_path {
-                        if &remove_key == curr_snapshot_path {
+                        if &snapshot_path == curr_snapshot_path {
                             let mut runtime = actor_runtime().lock().await;
                             let _ = clear_stronghold_cache(&mut runtime, true);
                         }
                     }
+                    crate::event::emit_stronghold_status_change(&Status {
+                        snapshot: SnapshotStatus::Locked,
+                    });
                 }
             }
         })
@@ -314,6 +322,7 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf)
             .lock()
             .await
             .replace(snapshot_path.clone());
+        load_actors(&mut runtime, snapshot_path).await?;
     }
 
     Ok(())
@@ -356,15 +365,7 @@ async fn clear_stronghold_cache(mut runtime: &mut ActorRuntime, persist: bool) -
     Ok(())
 }
 
-async fn switch_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> Result<()> {
-    clear_stronghold_cache(&mut runtime, true).await?;
-
-    CURRENT_SNAPSHOT_PATH
-        .get_or_init(Default::default)
-        .lock()
-        .await
-        .replace(snapshot_path.clone());
-
+async fn load_actors(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> Result<()> {
     // load all actors to prevent lost data on save
     load_private_data_actor(&mut runtime, snapshot_path).await?;
     let account_ids_location = Location::generic(ACCOUNT_METADATA_VAULT_PATH, ACCOUNT_IDS_RECORD_PATH);
@@ -374,6 +375,20 @@ async fn switch_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf
     for account_id in account_ids.split(ACCOUNT_ID_SEPARATOR).filter(|id| !id.is_empty()) {
         load_account_actor(&mut runtime, snapshot_path, account_id).await?;
     }
+
+    Ok(())
+}
+
+async fn switch_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> Result<()> {
+    clear_stronghold_cache(&mut runtime, true).await?;
+
+    CURRENT_SNAPSHOT_PATH
+        .get_or_init(Default::default)
+        .lock()
+        .await
+        .replace(snapshot_path.clone());
+
+    load_actors(&mut runtime, snapshot_path).await?;
 
     Ok(())
 }
@@ -394,7 +409,9 @@ pub async fn unload_snapshot(storage_path: &PathBuf, persist: bool) -> Result<()
 pub async fn load_snapshot(snapshot_path: &PathBuf, password: &[u8; 32]) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
     set_password(&snapshot_path, password).await;
-    check_snapshot(&mut runtime, &snapshot_path).await
+    check_snapshot(&mut runtime, &snapshot_path).await?;
+    crate::event::emit_stronghold_status_change(&get_status(snapshot_path).await);
+    Ok(())
 }
 
 pub async fn store_mnemonic(snapshot_path: &PathBuf, mnemonic: String) -> Result<()> {

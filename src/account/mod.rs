@@ -369,7 +369,7 @@ impl AccountHandle {
     }
 
     /// Synchronizes the account addresses with the Tangle and returns the latest address in the account,
-    ///which is an address without balance.
+    /// which is an address without balance.
     pub async fn get_unused_address(&self) -> crate::Result<Address> {
         self.sync()
             .await
