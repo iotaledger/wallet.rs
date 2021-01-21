@@ -6,8 +6,7 @@ use crate::account::Account;
 use iota::{common::packable::Packable, UnlockBlock};
 use std::path::PathBuf;
 
-use ledger_iota::api::errors;
-use ledger_iota::LedgerBIP32Index;
+use ledger_iota::{api::errors, LedgerBIP32Index};
 
 const HARDENED: u32 = 0x80000000;
 

@@ -24,6 +24,11 @@ jobs:
           toolchain: stable
           override: true
 
+    - name: Install required packages (Ubuntu)
+      run: |
+        sudo apt-get update
+        sudo apt-get install libudev-dev libusb-1.0-0-dev
+
     - name: Run tests
       uses: actions-rs/cargo@v1
       with:
