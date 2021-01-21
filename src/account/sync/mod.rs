@@ -681,7 +681,7 @@ impl SyncedAccount {
                 let missing_value = value - current_output_sum;
                 remainder_value += *utxo.amount() - missing_value;
                 essence_builder = essence_builder.add_output(
-                    SignatureLockedSingleOutput::new(transfer_obj.address.as_ref().clone(), missing_value)?.into(),
+                    SignatureLockedSingleOutput::new(*transfer_obj.address.as_ref(), missing_value)?.into(),
                 );
                 current_output_sum += missing_value;
                 log::debug!(
@@ -696,7 +696,7 @@ impl SyncedAccount {
                     current_output_sum
                 );
                 essence_builder = essence_builder.add_output(
-                    SignatureLockedSingleOutput::new(transfer_obj.address.as_ref().clone(), *utxo.amount())?.into(),
+                    SignatureLockedSingleOutput::new(*transfer_obj.address.as_ref(), *utxo.amount())?.into(),
                 );
                 current_output_sum += *utxo.amount();
             }
@@ -758,7 +758,7 @@ impl SyncedAccount {
             };
             remainder_value_deposit_address = Some(remainder_deposit_address.clone());
             essence_builder = essence_builder.add_output(
-                SignatureLockedSingleOutput::new(remainder_deposit_address.as_ref().clone(), remainder_value)?.into(),
+                SignatureLockedSingleOutput::new(*remainder_deposit_address.as_ref(), remainder_value)?.into(),
             );
             Some(remainder_deposit_address)
         } else {

@@ -115,12 +115,12 @@ mod test_utils {
             let mut generated_addresses = generated_addresses.lock().await;
             let key = (account.id().clone(), address_index, internal);
             if let Some(address) = generated_addresses.get(&key) {
-                Ok(iota::Address::Ed25519(address.clone()))
+                Ok(iota::Address::Ed25519(*address))
             } else {
                 let mut address = [0; iota::ED25519_ADDRESS_LENGTH];
                 crypto::rand::fill(&mut address).unwrap();
                 let address = iota::Ed25519Address::new(address);
-                generated_addresses.insert(key, address.clone());
+                generated_addresses.insert(key, address);
                 Ok(iota::Address::Ed25519(address))
             }
         }
@@ -472,12 +472,9 @@ mod test_utils {
                         .with_essence(
                             TransactionPayloadEssence::builder()
                                 .add_output(
-                                    SignatureLockedSingleOutput::new(
-                                        self.address.address().as_ref().clone(),
-                                        self.value,
-                                    )
-                                    .unwrap()
-                                    .into(),
+                                    SignatureLockedSingleOutput::new(*self.address.address().as_ref(), self.value)
+                                        .unwrap()
+                                        .into(),
                                 )
                                 .add_input(UTXOInput::new(self.input_transaction_id, 0).unwrap().into())
                                 .finish()

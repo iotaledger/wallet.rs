@@ -101,7 +101,7 @@ async fn process_output(
         output_index: output.output_index,
         is_spent: output.is_spent,
         amount: output.output.amount,
-        address: address.as_ref().clone(),
+        address: *address.as_ref(),
     };
     let address_output: AddressOutput = metadata.try_into()?;
 
