@@ -569,7 +569,6 @@ impl SyncedAccount {
 
         // prepare the transfer getting some needed objects and values
         let value = transfer_obj.amount.get();
-        let mut addresses_to_watch = vec![];
 
         if value > account_.total_balance() {
             return Err(crate::Error::InsufficientFunds);
@@ -616,9 +615,6 @@ impl SyncedAccount {
 
         let account_ = self.account_handle.read().await;
 
-        let client = crate::client::get_client(account_.client_options());
-        let client = client.read().await;
-
         if let RemainderValueStrategy::AccountAddress(ref remainder_deposit_address) =
             transfer_obj.remainder_value_strategy
         {
@@ -635,231 +631,23 @@ impl SyncedAccount {
         let (input_addresses, remainder_address) =
             self.select_inputs(&mut locked_addresses, value, &account_, &transfer_obj.address)?;
 
+        // unlock the transfer process since we already selected the input addresses and locked them
+        drop(locked_addresses);
+        drop(account_);
+
         log::debug!(
             "[TRANSFER] inputs: {:#?} - remainder address: {:?}",
             input_addresses,
             remainder_address
         );
 
-        // unlock the transfer process since we already selected the input addresses and locked them
-        drop(locked_addresses);
-
-        let mut utxos = vec![];
-        let mut transaction_inputs = vec![];
-
-        for input_address in &input_addresses {
-            let account_address = account_
-                .addresses()
-                .iter()
-                .find(|a| a.address() == &input_address.address)
-                .unwrap();
-
-            let mut outputs = vec![];
-            let address_path = BIP32Path::from_str(&format!(
-                "m/44H/4218H/{}H/{}H/{}H",
-                *account_.index(),
-                *account_address.internal() as u32,
-                *account_address.key_index()
-            ))
-            .unwrap();
-
-            for address_output in account_address.available_outputs(&account_) {
-                outputs.push((
-                    (*address_output).clone(),
-                    *account_address.key_index(),
-                    *account_address.internal(),
-                    address_path.clone(),
-                ));
-            }
-            utxos.extend(outputs.into_iter());
-        }
-
-        let mut essence_builder = TransactionPayloadEssence::builder();
-        let mut current_output_sum = 0;
-        let mut remainder_value = 0;
-        for (utxo, address_index, address_internal, address_path) in utxos {
-            let input: Input = UTXOInput::new(*utxo.transaction_id(), *utxo.index())?.into();
-            essence_builder = essence_builder.add_input(input.clone());
-            transaction_inputs.push(crate::signing::TransactionInput {
-                input,
-                address_index,
-                address_path,
-                address_internal,
-            });
-            if current_output_sum == value {
-                log::debug!(
-                    "[TRANSFER] current output sum matches the transfer value, adding {} to the remainder value (currently at {})",
-                    utxo.amount(),
-                    remainder_value
-                );
-                // already filled the transfer value; just collect the output value as remainder
-                remainder_value += *utxo.amount();
-            } else if current_output_sum + *utxo.amount() > value {
-                log::debug!(
-                    "[TRANSFER] current output sum ({}) would exceed the transfer value if added to the output amount ({})",
-                    current_output_sum,
-                    utxo.amount()
-                );
-                // if the used UTXO amount is greater than the transfer value, this is the last iteration and we'll have
-                // remainder value. we add an Output for the missing value and collect the remainder
-                let missing_value = value - current_output_sum;
-                remainder_value += *utxo.amount() - missing_value;
-                essence_builder = essence_builder.add_output(
-                    SignatureLockedSingleOutput::new(*transfer_obj.address.as_ref(), missing_value)?.into(),
-                );
-                current_output_sum += missing_value;
-                log::debug!(
-                    "[TRANSFER] added output with the missing value {}, and the remainder is {}",
-                    missing_value,
-                    remainder_value
-                );
-            } else {
-                log::debug!(
-                    "[TRANSFER] adding output amount {}, current sum {}",
-                    utxo.amount(),
-                    current_output_sum
-                );
-                essence_builder = essence_builder.add_output(
-                    SignatureLockedSingleOutput::new(*transfer_obj.address.as_ref(), *utxo.amount())?.into(),
-                );
-                current_output_sum += *utxo.amount();
-            }
-        }
-
-        drop(account_);
-        let mut account_ = self.account_handle.write().await;
-
-        // if there's remainder value, we check the strategy defined in the transfer
-        let mut remainder_value_deposit_address = None;
-        let remainder_deposit_address = if remainder_value > 0 {
-            let remainder_address = remainder_address.as_ref().expect("remainder address not defined");
-            let remainder_address = account_
-                .addresses()
-                .iter()
-                .find(|a| a.address() == &remainder_address.address)
-                .unwrap();
-
-            log::debug!("[TRANSFER] remainder value is {}", remainder_value);
-
-            let remainder_deposit_address = match transfer_obj.remainder_value_strategy {
-                // use one of the account's addresses to send the remainder value
-                RemainderValueStrategy::AccountAddress(target_address) => {
-                    log::debug!(
-                        "[TARGET] using user defined account address as remainder target: {}",
-                        target_address.to_bech32()
-                    );
-                    target_address
-                }
-                // generate a new change address to send the remainder value
-                RemainderValueStrategy::ChangeAddress => {
-                    if *remainder_address.internal() {
-                        let deposit_address = account_.latest_address().unwrap().address().clone();
-                        log::debug!("[TRANSFER] the remainder address is internal, so using latest address as remainder target: {}", deposit_address.to_bech32());
-                        deposit_address
-                    } else {
-                        let change_address = crate::address::get_new_change_address(
-                            &account_,
-                            &remainder_address,
-                            GenerateAddressMetadata { syncing: false },
-                        )
-                        .await?;
-                        let addr = change_address.address().clone();
-                        log::debug!(
-                            "[TRANSFER] generated new change address as remainder target: {}",
-                            addr.to_bech32()
-                        );
-                        account_.append_addresses(vec![change_address]);
-                        addresses_to_watch.push(addr.clone());
-                        addr
-                    }
-                }
-                // keep the remainder value on the address
-                RemainderValueStrategy::ReuseAddress => {
-                    let address = remainder_address.address().clone();
-                    log::debug!("[TRANSFER] reusing address as remainder target {}", address.to_bech32());
-                    address
-                }
-            };
-            remainder_value_deposit_address = Some(remainder_deposit_address.clone());
-            essence_builder = essence_builder.add_output(
-                SignatureLockedSingleOutput::new(*remainder_deposit_address.as_ref(), remainder_value)?.into(),
-            );
-            Some(remainder_deposit_address)
-        } else {
-            None
-        };
-
-        let (parent1, parent2) = client.get_tips().await?;
-
-        if let Some(indexation) = transfer_obj.indexation {
-            essence_builder = essence_builder.with_payload(Payload::Indexation(Box::new(indexation)));
-        }
-
-        let essence = essence_builder.finish()?;
-
-        let unlock_blocks = crate::signing::get_signer(account_.signer_type())
-            .await
-            .lock()
-            .await
-            .sign_message(
-                &account_,
-                &essence,
-                &mut transaction_inputs,
-                SignMessageMetadata {
-                    remainder_address: remainder_address.map(|remainder| {
-                        account_
-                            .addresses()
-                            .iter()
-                            .find(|a| a.address() == &remainder.address)
-                            .unwrap()
-                    }),
-                    remainder_value,
-                    remainder_deposit_address: remainder_deposit_address
-                        .map(|address| account_.addresses().iter().find(|a| a.address() == &address).unwrap()),
-                },
-            )
-            .await?;
-
-        let mut tx_builder = TransactionPayload::builder().with_essence(essence);
-        for unlock_block in unlock_blocks {
-            tx_builder = tx_builder.add_unlock_block(unlock_block);
-        }
-        let transaction = tx_builder.finish()?;
-
-        let message = MessageBuilder::<ClientMiner>::new()
-            .with_parent1(parent1)
-            .with_parent2(parent2)
-            .with_payload(Payload::Transaction(Box::new(transaction)))
-            .with_network_id(client.get_network_id().await?)
-            .with_nonce_provider(client.get_pow_provider(), client.get_network_info().min_pow_score)
-            .finish()?;
-
-        log::debug!("[TRANSFER] submitting message {:#?}", message);
-
-        let message_id = client.post_message(&message).await?;
-
-        // if this is a transfer to the account's latest address or we used the latest as deposit of the remainder
-        // value, we generate a new one to keep the latest address unused
-        let latest_address = account_.latest_address().unwrap().address();
-        if latest_address == &transfer_obj.address
-            || (remainder_value_deposit_address.is_some()
-                && &remainder_value_deposit_address.unwrap() == latest_address)
-        {
-            log::debug!(
-                "[TRANSFER] generating new address since {}",
-                if latest_address == &transfer_obj.address {
-                    "latest address equals the transfer address"
-                } else {
-                    "latest address equals the remainder value deposit address"
-                }
-            );
-            let addr = crate::address::get_new_address(&account_, GenerateAddressMetadata { syncing: false }).await?;
-            addresses_to_watch.push(addr.address().clone());
-            account_.append_addresses(vec![addr]);
-        }
-
-        let message = Message::from_iota_message(message_id, account_.addresses(), &message, None)?;
-        account_.append_messages(vec![message.clone()]);
+        let res = perform_transfer(
+            transfer_obj,
+            &input_addresses,
+            self.account_handle.clone(),
+            remainder_address,
+        )
+        .await;
 
         let mut locked_addresses = account_address_locker.lock().await;
         for input_address in &input_addresses {
@@ -870,23 +658,7 @@ impl SyncedAccount {
             locked_addresses.remove(index);
         }
 
-        // drop the client and account_ refs so it doesn't lock the monitor system
-        drop(account_);
-        drop(client);
-
-        for address in addresses_to_watch {
-            // ignore errors because we fallback to the polling system
-            let _ = crate::monitor::monitor_address_balance(self.account_handle.clone(), &address);
-        }
-
-        // ignore errors because we fallback to the polling system
-        if let Err(e) =
-            crate::monitor::monitor_confirmation_state_change(self.account_handle.clone(), &message_id).await
-        {
-            log::error!("[MQTT] error monitoring for confirmation change: {:?}", e);
-        }
-
-        Ok(message)
+        res
     }
 
     /// Retry message.
@@ -903,6 +675,252 @@ impl SyncedAccount {
     pub async fn reattach(&self, message_id: &MessageId) -> crate::Result<Message> {
         repost_message(self.account_handle.clone(), message_id, RepostAction::Reattach).await
     }
+}
+
+async fn perform_transfer(
+    transfer_obj: Transfer,
+    input_addresses: &[input_selection::Input],
+    account_handle: AccountHandle,
+    remainder_address: Option<input_selection::Input>,
+) -> crate::Result<Message> {
+    let mut utxos = vec![];
+    let mut transaction_inputs = vec![];
+
+    let account_ = account_handle.read().await;
+
+    for input_address in input_addresses {
+        let account_address = account_
+            .addresses()
+            .iter()
+            .find(|a| a.address() == &input_address.address)
+            .unwrap();
+
+        let mut outputs = vec![];
+        let address_path = BIP32Path::from_str(&format!(
+            "m/44H/4218H/{}H/{}H/{}H",
+            *account_.index(),
+            *account_address.internal() as u32,
+            *account_address.key_index()
+        ))
+        .unwrap();
+
+        for address_output in account_address.available_outputs(&account_) {
+            outputs.push((
+                (*address_output).clone(),
+                *account_address.key_index(),
+                *account_address.internal(),
+                address_path.clone(),
+            ));
+        }
+        utxos.extend(outputs.into_iter());
+    }
+
+    let mut essence_builder = TransactionPayloadEssence::builder();
+    let mut current_output_sum = 0;
+    let mut remainder_value = 0;
+    for (utxo, address_index, address_internal, address_path) in utxos {
+        let input: Input = UTXOInput::new(*utxo.transaction_id(), *utxo.index())?.into();
+        essence_builder = essence_builder.add_input(input.clone());
+        transaction_inputs.push(crate::signing::TransactionInput {
+            input,
+            address_index,
+            address_path,
+            address_internal,
+        });
+        if current_output_sum == transfer_obj.amount.get() {
+            log::debug!(
+                    "[TRANSFER] current output sum matches the transfer value, adding {} to the remainder value (currently at {})",
+                    utxo.amount(),
+                    remainder_value
+                );
+            // already filled the transfer value; just collect the output value as remainder
+            remainder_value += *utxo.amount();
+        } else if current_output_sum + *utxo.amount() > transfer_obj.amount.get() {
+            log::debug!(
+                "[TRANSFER] current output sum ({}) would exceed the transfer value if added to the output amount ({})",
+                current_output_sum,
+                utxo.amount()
+            );
+            // if the used UTXO amount is greater than the transfer value, this is the last iteration and we'll have
+            // remainder value. we add an Output for the missing value and collect the remainder
+            let missing_value = transfer_obj.amount.get() - current_output_sum;
+            remainder_value += *utxo.amount() - missing_value;
+            essence_builder = essence_builder
+                .add_output(SignatureLockedSingleOutput::new(*transfer_obj.address.as_ref(), missing_value)?.into());
+            current_output_sum += missing_value;
+            log::debug!(
+                "[TRANSFER] added output with the missing value {}, and the remainder is {}",
+                missing_value,
+                remainder_value
+            );
+        } else {
+            log::debug!(
+                "[TRANSFER] adding output amount {}, current sum {}",
+                utxo.amount(),
+                current_output_sum
+            );
+            essence_builder = essence_builder
+                .add_output(SignatureLockedSingleOutput::new(*transfer_obj.address.as_ref(), *utxo.amount())?.into());
+            current_output_sum += *utxo.amount();
+        }
+    }
+
+    drop(account_);
+    let mut account_ = account_handle.write().await;
+
+    let mut addresses_to_watch = vec![];
+
+    // if there's remainder value, we check the strategy defined in the transfer
+    let mut remainder_value_deposit_address = None;
+    let remainder_deposit_address = if remainder_value > 0 {
+        let remainder_address = remainder_address.as_ref().expect("remainder address not defined");
+        let remainder_address = account_
+            .addresses()
+            .iter()
+            .find(|a| a.address() == &remainder_address.address)
+            .unwrap();
+
+        log::debug!("[TRANSFER] remainder value is {}", remainder_value);
+
+        let remainder_deposit_address = match transfer_obj.remainder_value_strategy {
+            // use one of the account's addresses to send the remainder value
+            RemainderValueStrategy::AccountAddress(target_address) => {
+                log::debug!(
+                    "[TARGET] using user defined account address as remainder target: {}",
+                    target_address.to_bech32()
+                );
+                target_address
+            }
+            // generate a new change address to send the remainder value
+            RemainderValueStrategy::ChangeAddress => {
+                if *remainder_address.internal() {
+                    let deposit_address = account_.latest_address().unwrap().address().clone();
+                    log::debug!(
+                        "[TRANSFER] the remainder address is internal, so using latest address as remainder target: {}",
+                        deposit_address.to_bech32()
+                    );
+                    deposit_address
+                } else {
+                    let change_address = crate::address::get_new_change_address(
+                        &account_,
+                        &remainder_address,
+                        GenerateAddressMetadata { syncing: false },
+                    )
+                    .await?;
+                    let addr = change_address.address().clone();
+                    log::debug!(
+                        "[TRANSFER] generated new change address as remainder target: {}",
+                        addr.to_bech32()
+                    );
+                    account_.append_addresses(vec![change_address]);
+                    addresses_to_watch.push(addr.clone());
+                    addr
+                }
+            }
+            // keep the remainder value on the address
+            RemainderValueStrategy::ReuseAddress => {
+                let address = remainder_address.address().clone();
+                log::debug!("[TRANSFER] reusing address as remainder target {}", address.to_bech32());
+                address
+            }
+        };
+        remainder_value_deposit_address = Some(remainder_deposit_address.clone());
+        essence_builder = essence_builder
+            .add_output(SignatureLockedSingleOutput::new(*remainder_deposit_address.as_ref(), remainder_value)?.into());
+        Some(remainder_deposit_address)
+    } else {
+        None
+    };
+
+    let client = crate::client::get_client(account_.client_options());
+    let client = client.read().await;
+
+    let (parent1, parent2) = client.get_tips().await?;
+
+    if let Some(indexation) = transfer_obj.indexation {
+        essence_builder = essence_builder.with_payload(Payload::Indexation(Box::new(indexation)));
+    }
+
+    let essence = essence_builder.finish()?;
+
+    let unlock_blocks = crate::signing::get_signer(account_.signer_type())
+        .await
+        .lock()
+        .await
+        .sign_message(
+            &account_,
+            &essence,
+            &mut transaction_inputs,
+            SignMessageMetadata {
+                remainder_address: remainder_address.map(|remainder| {
+                    account_
+                        .addresses()
+                        .iter()
+                        .find(|a| a.address() == &remainder.address)
+                        .unwrap()
+                }),
+                remainder_value,
+                remainder_deposit_address: remainder_deposit_address
+                    .map(|address| account_.addresses().iter().find(|a| a.address() == &address).unwrap()),
+            },
+        )
+        .await?;
+
+    let mut tx_builder = TransactionPayload::builder().with_essence(essence);
+    for unlock_block in unlock_blocks {
+        tx_builder = tx_builder.add_unlock_block(unlock_block);
+    }
+    let transaction = tx_builder.finish()?;
+
+    let message = MessageBuilder::<ClientMiner>::new()
+        .with_parent1(parent1)
+        .with_parent2(parent2)
+        .with_payload(Payload::Transaction(Box::new(transaction)))
+        .with_network_id(client.get_network_id().await?)
+        .with_nonce_provider(client.get_pow_provider(), client.get_network_info().min_pow_score)
+        .finish()?;
+
+    log::debug!("[TRANSFER] submitting message {:#?}", message);
+
+    let message_id = client.post_message(&message).await?;
+
+    // if this is a transfer to the account's latest address or we used the latest as deposit of the remainder
+    // value, we generate a new one to keep the latest address unused
+    let latest_address = account_.latest_address().unwrap().address();
+    if latest_address == &transfer_obj.address
+        || (remainder_value_deposit_address.is_some() && &remainder_value_deposit_address.unwrap() == latest_address)
+    {
+        log::debug!(
+            "[TRANSFER] generating new address since {}",
+            if latest_address == &transfer_obj.address {
+                "latest address equals the transfer address"
+            } else {
+                "latest address equals the remainder value deposit address"
+            }
+        );
+        let addr = crate::address::get_new_address(&account_, GenerateAddressMetadata { syncing: false }).await?;
+        addresses_to_watch.push(addr.address().clone());
+        account_.append_addresses(vec![addr]);
+    }
+
+    let message = Message::from_iota_message(message_id, account_.addresses(), &message, None)?;
+    account_.append_messages(vec![message.clone()]);
+
+    // drop the client and account_ refs so it doesn't lock the monitor system
+    drop(account_);
+    drop(client);
+
+    for address in addresses_to_watch {
+        // ignore errors because we fallback to the polling system
+        let _ = crate::monitor::monitor_address_balance(account_handle.clone(), &address);
+    }
+
+    // ignore errors because we fallback to the polling system
+    if let Err(e) = crate::monitor::monitor_confirmation_state_change(account_handle.clone(), &message_id).await {
+        log::error!("[MQTT] error monitoring for confirmation change: {:?}", e);
+    }
+
+    Ok(message)
 }
 
 pub(crate) enum RepostAction {
