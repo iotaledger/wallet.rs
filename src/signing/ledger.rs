@@ -33,7 +33,7 @@ struct AddressIndexRecorder {
 // LedgerDeviceNotFound: No usable Ledger device was found
 // LedgerMiscError: Everything else.
 fn ledger_map_err(err: errors::APIError) -> crate::Error {
-    //println!("{}", err);
+    // println!("{}", err);
     match err {
         errors::APIError::SecurityStatusNotSatisfied => crate::Error::LedgerDongleLocked,
         errors::APIError::ConditionsOfUseNotSatisfied => crate::Error::LedgerDeniedByUser,
