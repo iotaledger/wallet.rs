@@ -11,7 +11,7 @@ pub use iota::{Address as IotaAddress, Ed25519Address, Input, Payload, UTXOInput
 use serde::{Deserialize, Serialize};
 use std::{
     cmp::Ordering,
-    convert::{TryFrom, TryInto},
+    convert::TryInto,
     hash::{Hash, Hasher},
     str::FromStr,
 };
@@ -30,6 +30,9 @@ pub struct AddressOutput {
     pub(crate) amount: u64,
     /// Spend status of the output,
     pub(crate) is_spent: bool,
+    /// Associated address.
+    #[serde(with = "crate::serde::iota_address_serde")]
+    pub(crate) address: AddressWrapper,
 }
 
 impl AddressOutput {
@@ -54,26 +57,23 @@ impl AddressOutput {
             }
         })
     }
-}
 
-impl TryFrom<OutputMetadata> for AddressOutput {
-    type Error = crate::Error;
-
-    fn try_from(output: OutputMetadata) -> crate::Result<Self> {
+    pub(crate) fn from_output_metadata(metadata: OutputMetadata, bech32_hrp: String) -> crate::Result<Self> {
         let output = Self {
             transaction_id: TransactionId::new(
-                output.transaction_id[..]
+                metadata.transaction_id[..]
                     .try_into()
                     .map_err(|_| crate::Error::InvalidTransactionId)?,
             ),
             message_id: MessageId::new(
-                output.message_id[..]
+                metadata.message_id[..]
                     .try_into()
                     .map_err(|_| crate::Error::InvalidMessageId)?,
             ),
-            index: output.output_index,
-            amount: output.amount,
-            is_spent: output.is_spent,
+            index: metadata.output_index,
+            amount: metadata.amount,
+            is_spent: metadata.is_spent,
+            address: AddressWrapper::new(metadata.address, bech32_hrp),
         };
         Ok(output)
     }
@@ -151,7 +151,7 @@ impl AddressBuilder {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AddressWrapper {
     inner: IotaAddress,
-    hrp: String,
+    bech32_hrp: String,
 }
 
 impl AsRef<IotaAddress> for AddressWrapper {
@@ -161,13 +161,20 @@ impl AsRef<IotaAddress> for AddressWrapper {
 }
 
 impl AddressWrapper {
-    pub(crate) fn new(address: IotaAddress, hrp: String) -> Self {
-        Self { inner: address, hrp }
+    pub(crate) fn new(address: IotaAddress, bech32_hrp: String) -> Self {
+        Self {
+            inner: address,
+            bech32_hrp,
+        }
     }
 
     /// Encodes the address as bech32.
     pub fn to_bech32(&self) -> String {
-        self.inner.to_bech32(&self.hrp)
+        self.inner.to_bech32(&self.bech32_hrp)
+    }
+
+    pub(crate) fn bech32_hrp(&self) -> &str {
+        &self.bech32_hrp
     }
 }
 
@@ -249,7 +256,10 @@ impl Address {
     }
 
     pub(crate) fn set_bech32_hrp(&mut self, hrp: String) {
-        self.address.hrp = hrp;
+        self.address.bech32_hrp = hrp.to_string();
+        for output in self.outputs.iter_mut() {
+            output.address.bech32_hrp = hrp.to_string();
+        }
     }
 }
 
@@ -287,7 +297,7 @@ pub(crate) async fn get_iota_address(
 pub(crate) async fn get_new_address(account: &Account, metadata: GenerateAddressMetadata) -> crate::Result<Address> {
     let key_index = account.addresses().iter().filter(|a| !a.internal()).count();
     let bech32_hrp = match account.addresses().first() {
-        Some(address) => address.address().hrp.to_string(),
+        Some(address) => address.address().bech32_hrp().to_string(),
         None => {
             crate::client::get_client(account.client_options())
                 .read()
@@ -314,7 +324,14 @@ pub(crate) async fn get_new_change_address(
     metadata: GenerateAddressMetadata,
 ) -> crate::Result<Address> {
     let key_index = *address.key_index();
-    let iota_address = get_iota_address(&account, key_index, true, address.address().hrp.to_string(), metadata).await?;
+    let iota_address = get_iota_address(
+        &account,
+        key_index,
+        true,
+        address.address().bech32_hrp().to_string(),
+        metadata,
+    )
+    .await?;
     let address = Address {
         address: iota_address,
         balance: 0,

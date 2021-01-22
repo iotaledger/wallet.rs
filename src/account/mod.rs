@@ -743,6 +743,7 @@ mod tests {
             index: 0,
             amount: value,
             is_spent: false,
+            address: crate::test_utils::generate_random_iota_address(),
         }
     }
 
