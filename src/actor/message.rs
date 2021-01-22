@@ -40,6 +40,8 @@ pub struct AccountToCreate {
 pub enum AccountMethod {
     /// Generate a new unused address.
     GenerateAddress,
+    /// Get a unused address.
+    GetUnusedAddress,
     /// List messages.
     ListMessages {
         /// Message type filter.
@@ -276,6 +278,8 @@ pub enum ResponseType {
     Addresses(Vec<Address>),
     /// GenerateAddress response.
     GeneratedAddress(Address),
+    /// GetUnusedAddress response.
+    UnusedAddress(Address),
     /// GetLatestAddress response.
     LatestAddress(Option<Address>),
     /// GetAvailableBalance response.
