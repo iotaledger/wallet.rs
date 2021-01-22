@@ -101,6 +101,7 @@ async fn sync_addresses(
 
         let mut futures_ = vec![];
         for (iota_address_index, iota_address_internal, iota_address) in &generated_iota_addresses {
+            let bech32_hrp_ = bech32_hrp.clone();
             futures_.push(async move {
                 let client = crate::client::get_client(account.client_options());
                 let client = client.read().await;
@@ -124,7 +125,7 @@ async fn sync_addresses(
                             .try_into()
                             .map_err(|_| crate::Error::InvalidMessageIdLength)?,
                     );
-                    curr_found_outputs.push(output.try_into()?);
+                    curr_found_outputs.push(AddressOutput::from_output_metadata(output, bech32_hrp_.to_string())?);
 
                     // if we already have the message stored
                     // and the confirmation state is known
@@ -242,7 +243,8 @@ async fn sync_messages(
                 let mut messages = vec![];
                 for output in address_outputs.iter() {
                     let output = client.get_output(output).await?;
-                    let output: AddressOutput = output.try_into()?;
+                    let output =
+                        AddressOutput::from_output_metadata(output, address.address().bech32_hrp().to_string())?;
                     let output_message_id = *output.message_id();
 
                     outputs.push(output);

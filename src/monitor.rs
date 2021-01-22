@@ -11,8 +11,6 @@ use crate::{
 use iota::{message::prelude::MessageId, MessageMetadata, OutputMetadata, Topic, TopicEvent};
 use serde::Deserialize;
 
-use std::convert::TryInto;
-
 #[derive(Deserialize)]
 struct AddressOutputPayload {
     #[serde(rename = "messageId")]
@@ -103,7 +101,14 @@ async fn process_output(
         amount: output.output.amount,
         address: *address.as_ref(),
     };
-    let address_output: AddressOutput = metadata.try_into()?;
+
+    let mut account = account_handle.write().await;
+    let account_id = account.id().clone();
+    let addresses = account.addresses_mut();
+    let address_to_update = addresses.iter_mut().find(|a| a.address() == &address).unwrap();
+
+    let address_output =
+        AddressOutput::from_output_metadata(metadata, address_to_update.address().bech32_hrp().to_string())?;
 
     let client_options_ = client_options.clone();
     let message_id = address_output.message_id();
@@ -115,12 +120,8 @@ async fn process_output(
         client.get_message().data(&message_id_).await?
     };
 
-    let mut account = account_handle.write().await;
-    let account_id = account.id().clone();
     let message_id_ = *message_id;
 
-    let addresses = account.addresses_mut();
-    let address_to_update = addresses.iter_mut().find(|a| a.address() == &address).unwrap();
     address_to_update.handle_new_output(address_output);
     crate::event::emit_balance_change(&account_id, &address_to_update, *address_to_update.balance());
 
