@@ -212,6 +212,10 @@ impl WalletMessageHandler {
                 let address = account_handle.generate_address().await?;
                 Ok(ResponseType::GeneratedAddress(address))
             }
+            AccountMethod::GetUnusedAddress => {
+                let address = account_handle.get_unused_address().await?;
+                Ok(ResponseType::UnusedAddress(address))
+            }
             AccountMethod::ListMessages {
                 count,
                 from,
