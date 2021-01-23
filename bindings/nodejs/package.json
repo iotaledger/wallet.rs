@@ -10,7 +10,6 @@
   "author": "Lucas Nogueira <lucas.nogueira@iota.org>",
   "license": "MIT",
   "dependencies": {
-    "crypto": "^1.0.1",
     "mkdirp-classic": "^0.5.3",
     "neon-cli": "^0.4.0",
     "pump": "^3.0.0",
