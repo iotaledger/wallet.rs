@@ -12,6 +12,7 @@
   "dependencies": {
     "mkdirp-classic": "^0.5.3",
     "neon-cli": "^0.4.0",
+    "node-abi": "^2.19.3",
     "pump": "^3.0.0",
     "simple-get": "^4.0.0"
   },
