@@ -1,0 +1,84 @@
+<svg host="65bd71144e" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="541px" height="161px" viewBox="-0.5 -0.5 541 161" content="&lt;mxfile host=&quot;fd4900e3-e09c-4e54-bb01-b512fe995e12&quot; modified=&quot;2021-01-10T23:08:29.807Z&quot; agent=&quot;5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.52.1 Chrome/83.0.4103.122 Electron/9.3.5 Safari/537.36&quot; etag=&quot;GV4ZdW0hY15tnddHhhEH&quot; version=&quot;13.10.0&quot; type=&quot;embed&quot;&gt;&lt;diagram id=&quot;ugxspn-s8cplhAjjX-Ly&quot; name=&quot;Page-1&quot;&gt;xZVRT4MwEMc/DYm+mNEubL6Kc774hInPFSo0KT0sZTA/va0cY6RoNM75Qq7/a+n9fz1KQOOy22pWFQ+QcRmQRdYF9DYgZE1D+3TCvheW6+teyLXIeikchUS8cRQXqDYi4/VkogGQRlRTMQWleGomGtMa2um0F5DTXSuWc09IUiZ99UlkpkBbZDXq91zkxbBzGKG/kg2T0UldsAzaI4luAhprANNHZRdz6dgNXPp1d59kD4Vprsx3FmDFOyYb9PbIVG59kkUMZdkokTIjQGG1Zj8gqFtRSqbs6MbfE8vYcW14dyRhDVsOJTd6b6dgdok49sM547gd6ZJBK47JRigyPNH88OrRtA3Q9zwD4jEQYNiVrj3TGhqVcbcstL7bQhieVCx12dY2utUKU0pM+1hWv8QS+VRCMkPlFFDWHpTEgHbfxd92wqH4L1qBzpk+SStQz3VtNKi8cDcEiaTd6+ZZ2yh30YXmqf1IuOuJy1M3y/rH5KbgVmdslqWP7VVavzPIoHLXCZP/zytcnQ2YHY5X+kfu6L9IN+8=&lt;/diagram&gt;&lt;/mxfile&gt;">
+    <defs/>
+    <g>
+        <path d="M 0 23 L 0 0 L 200 0 L 200 23" fill="#ffffff" stroke="#000000" stroke-miterlimit="10" pointer-events="all"/>
+        <path d="M 0 23 L 0 160 L 200 160 L 200 23" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 0 23 L 200 23" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <g fill="#000000" font-family="Helvetica" font-weight="bold" pointer-events="none" text-anchor="middle" font-size="12px">
+            <text x="99.5" y="16">
+                Tangle Communication
+            </text>
+        </g>
+        <rect x="40" y="60" width="120" height="60" rx="9" ry="9" fill="#ffffff" stroke="#000000" pointer-events="none"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject style="overflow: visible; text-align: left;" pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 118px; height: 1px; padding-top: 90px; margin-left: 41px;">
+                        <div style="box-sizing: border-box; font-size: 0; text-align: center; ">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: #000000; line-height: 1.2; pointer-events: none; white-space: normal; word-wrap: normal; ">
+                                iota.rs
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="100" y="94" fill="#000000" font-family="Helvetica" font-size="12px" text-anchor="middle">
+                    iota.rs
+                </text>
+            </switch>
+        </g>
+        <path d="M 220 23 L 220 0 L 540 0 L 540 23" fill="#ffffff" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 220 23 L 220 160 L 540 160 L 540 23" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 220 23 L 540 23" fill="none" stroke="#000000" stroke-miterlimit="10" pointer-events="none"/>
+        <g fill="#000000" font-family="Helvetica" font-weight="bold" pointer-events="none" text-anchor="middle" font-size="12px">
+            <text x="379.5" y="16">
+                Storage
+            </text>
+        </g>
+        <rect x="240" y="70" width="120" height="60" rx="9" ry="9" fill="#ffffff" stroke="#000000" pointer-events="none"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject style="overflow: visible; text-align: left;" pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 118px; height: 1px; padding-top: 100px; margin-left: 241px;">
+                        <div style="box-sizing: border-box; font-size: 0; text-align: center; ">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: #000000; line-height: 1.2; pointer-events: none; white-space: normal; word-wrap: normal; ">
+                                stronghold
+                                <br/>
+                                (recommended)
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="300" y="104" fill="#000000" font-family="Helvetica" font-size="12px" text-anchor="middle">
+                    stronghold...
+                </text>
+            </switch>
+        </g>
+        <rect x="390" y="70" width="120" height="60" rx="9" ry="9" fill="#ffffff" stroke="#000000" pointer-events="none"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject style="overflow: visible; text-align: left;" pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 118px; height: 1px; padding-top: 100px; margin-left: 391px;">
+                        <div style="box-sizing: border-box; font-size: 0; text-align: center; ">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: #000000; line-height: 1.2; pointer-events: none; white-space: normal; word-wrap: normal; ">
+                                sqlite
+                                <br/>
+                                (optional)
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="450" y="104" fill="#000000" font-family="Helvetica" font-size="12px" text-anchor="middle">
+                    sqlite...
+                </text>
+            </switch>
+        </g>
+    </g>
+    <switch>
+        <g requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"/>
+        <a transform="translate(0,-5)" xlink:href="https://desk.draw.io/support/solutions/articles/16000042487" target="_blank">
+            <text text-anchor="middle" font-size="10px" x="50%" y="100%">
+                Viewer does not support full SVG 1.1
+            </text>
+        </a>
+    </switch>
+</svg>

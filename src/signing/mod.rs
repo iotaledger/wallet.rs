@@ -1,24 +1,27 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{
-    collections::HashMap,
-    sync::{Arc, RwLock},
-};
+use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
-use crate::account::Account;
+use crate::{
+    account::Account,
+    address::{Address, IotaAddress},
+};
+use getset::Getters;
 use iota::Input;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 use slip10::BIP32Path;
+use tokio::sync::Mutex;
 
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+mod ledger;
+
+#[cfg(feature = "stronghold")]
 mod stronghold;
-use self::stronghold::StrongholdSigner;
-mod env_mnemonic;
-use env_mnemonic::EnvMnemonicSigner;
 
-type BoxedSigner = Box<dyn Signer + Sync + Send>;
-type Signers = Arc<RwLock<HashMap<SignerType, BoxedSigner>>>;
+type SignerHandle = Arc<Mutex<Box<dyn Signer + Sync + Send>>>;
+type Signers = Arc<Mutex<HashMap<SignerType, SignerHandle>>>;
 static SIGNERS_INSTANCE: OnceCell<Signers> = OnceCell::new();
 
 /// The signer types.
@@ -27,9 +30,14 @@ static SIGNERS_INSTANCE: OnceCell<Signers> = OnceCell::new();
 pub enum SignerType {
     /// Stronghold signer.
     #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     Stronghold,
-    /// Mnemonic through environment variable.
-    EnvMnemonic,
+    /// Ledger Device
+    #[cfg(feature = "ledger-nano")]
+    LedgerNano,
+    /// Ledger Speculos Simulator
+    #[cfg(feature = "ledger-nano-simulator")]
+    LedgerNanoSimulator,
     /// Custom signer with its identifier.
     Custom(String),
 }
@@ -42,20 +50,51 @@ pub struct TransactionInput {
     pub address_index: usize,
     /// Input's address BIP32 derivation path.
     pub address_path: BIP32Path,
+    /// Whether the input address is a change address or a public address.
+    pub address_internal: bool,
+}
+
+/// Metadata provided to [generate_address](trait.Signer.html#method.generate_address).
+#[derive(Getters, Clone)]
+#[getset(get = "pub")]
+pub struct GenerateAddressMetadata {
+    /// Indicates that the address is being generated as part of the account syncing process.
+    /// This means that the account might not be saved.
+    pub(crate) syncing: bool,
+}
+
+/// Metadata provided to [sign_message](trait.Signer.html#method.sign_message).
+#[derive(Getters)]
+#[getset(get = "pub")]
+pub struct SignMessageMetadata<'a> {
+    /// The transfer's address that has remainder value if any.
+    pub(crate) remainder_address: Option<&'a Address>,
+    /// The transfer's remainder value.
+    pub(crate) remainder_value: u64,
+    /// The transfer's deposit address for the remainder value if any.
+    pub(crate) remainder_deposit_address: Option<&'a Address>,
 }
 
 /// Signer interface.
+#[async_trait::async_trait]
 pub trait Signer {
-    /// Initialises an account.
-    fn init_account(&self, account: &Account, mnemonic: Option<String>) -> crate::Result<String>;
+    /// Initialises a mnemonic.
+    async fn store_mnemonic(&mut self, storage_path: &PathBuf, mnemonic: String) -> crate::Result<()>;
     /// Generates an address.
-    fn generate_address(&self, account: &Account, index: usize, internal: bool) -> crate::Result<iota::Address>;
-    /// Signs message.
-    fn sign_message(
-        &self,
+    async fn generate_address(
+        &mut self,
         account: &Account,
-        essence: &iota::TransactionEssence,
+        index: usize,
+        internal: bool,
+        metadata: GenerateAddressMetadata,
+    ) -> crate::Result<IotaAddress>;
+    /// Signs message.
+    async fn sign_message<'a>(
+        &mut self,
+        account: &Account,
+        essence: &iota::TransactionPayloadEssence,
         inputs: &mut Vec<TransactionInput>,
+        metadata: SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>>;
 }
 
@@ -66,30 +105,51 @@ fn default_signers() -> Signers {
     {
         signers.insert(
             SignerType::Stronghold,
-            Box::new(StrongholdSigner::default()) as Box<dyn Signer + Sync + Send>,
+            Arc::new(Mutex::new(
+                Box::new(self::stronghold::StrongholdSigner::default()) as Box<dyn Signer + Sync + Send>
+            )),
         );
     }
 
-    signers.insert(
-        SignerType::EnvMnemonic,
-        Box::new(EnvMnemonicSigner::default()) as Box<dyn Signer + Sync + Send>,
-    );
+    #[cfg(feature = "ledger-nano")]
+    {
+        signers.insert(
+            SignerType::LedgerNano,
+            Arc::new(Mutex::new(
+                Box::new(ledger::LedgerNanoSigner { is_simulator: false }) as Box<dyn Signer + Sync + Send>
+            )),
+        );
+    }
 
-    Arc::new(RwLock::new(signers))
+    #[cfg(feature = "ledger-nano-simulator")]
+    {
+        signers.insert(
+            SignerType::LedgerNanoSimulator,
+            Arc::new(Mutex::new(
+                Box::new(ledger::LedgerNanoSigner { is_simulator: true }) as Box<dyn Signer + Sync + Send>
+            )),
+        );
+    }
+
+    Arc::new(Mutex::new(signers))
 }
 
 /// Sets the signer interface for the given type.
-pub fn set_signer<S: Signer + Sync + Send + 'static>(signer_type: SignerType, signer: S) {
-    let mut instances = SIGNERS_INSTANCE.get_or_init(default_signers).write().unwrap();
-    instances.insert(signer_type, Box::new(signer));
+pub async fn set_signer<S: Signer + Sync + Send + 'static>(signer_type: SignerType, signer: S) {
+    SIGNERS_INSTANCE
+        .get_or_init(default_signers)
+        .lock()
+        .await
+        .insert(signer_type, Arc::new(Mutex::new(Box::new(signer))));
 }
 
 /// Gets the signer interface.
-pub(crate) fn with_signer<T, F: FnOnce(&BoxedSigner) -> T>(signer_type: &SignerType, cb: F) -> T {
-    let instances = SIGNERS_INSTANCE.get_or_init(default_signers).read().unwrap();
-    if let Some(instance) = instances.get(signer_type) {
-        cb(instance)
-    } else {
-        panic!(format!("signer not initialized for type {:?}", signer_type))
-    }
+pub(crate) async fn get_signer(signer_type: &SignerType) -> SignerHandle {
+    SIGNERS_INSTANCE
+        .get_or_init(default_signers)
+        .lock()
+        .await
+        .get(signer_type)
+        .cloned()
+        .unwrap_or_else(|| panic!("signer not initialized for type {:?}", signer_type))
 }
