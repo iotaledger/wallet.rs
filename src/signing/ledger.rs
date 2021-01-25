@@ -57,8 +57,8 @@ impl LedgerNanoSigner {
         }
     }
 
-    /// Init the ledger object or get it. The `account` is set only once at init, that means generating addresses for different
-    /// accounts with a single signer object instance is intentionally not allowed.
+    /// Init the ledger object or get it. The `account` is set only once at init, that means generating addresses for 
+    /// different accounts with a single signer object instance is intentionally not allowed.
     fn get_or_init(&mut self, account: u32) -> crate::Result<&mut LedgerHardwareWallet> {
         match &self.ledger {
             None => {
