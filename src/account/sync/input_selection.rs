@@ -3,11 +3,12 @@
 
 use crate::address::AddressWrapper;
 use rand::{prelude::SliceRandom, thread_rng};
-use std::convert::TryInto;
+use std::{cmp::Ordering, convert::TryInto};
 
 #[derive(Debug, Clone)]
 pub struct Input {
     pub address: AddressWrapper,
+    pub internal: bool,
     pub balance: u64,
 }
 
@@ -16,7 +17,12 @@ pub fn select_input(target: u64, available_utxos: &mut [Input]) -> crate::Result
         return Err(crate::Error::InsufficientFunds);
     }
 
-    available_utxos.sort_by(|a, b| b.balance.cmp(&a.balance));
+    available_utxos.sort_by(|a, b| match b.balance.cmp(&a.balance) {
+        // if the balances are equal, we prioritise change addresses
+        Ordering::Equal => b.internal.cmp(&a.internal),
+        Ordering::Greater => Ordering::Greater,
+        Ordering::Less => Ordering::Less,
+    });
     let mut selected_coins = Vec::new();
     let result = branch_and_bound(
         target,

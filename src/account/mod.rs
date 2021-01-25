@@ -13,7 +13,7 @@ use chrono::prelude::{DateTime, Local};
 use getset::{Getters, Setters};
 use iota::message::prelude::MessageId;
 use serde::{Deserialize, Serialize};
-use tokio::sync::{Mutex, RwLock};
+use tokio::sync::{Mutex, RwLock, RwLockWriteGuard};
 
 use std::{
     hash::{Hash, Hasher},
@@ -366,6 +366,14 @@ impl AccountHandle {
     /// Gets a new unused address and links it to this account.
     pub async fn generate_address(&self) -> crate::Result<Address> {
         let mut account = self.inner.write().await;
+        self.generate_address_internal(&mut account).await
+    }
+
+    /// Generates an address without locking the account.
+    pub(crate) async fn generate_address_internal(
+        &self,
+        account: &mut RwLockWriteGuard<'_, Account>,
+    ) -> crate::Result<Address> {
         let address = crate::address::get_new_address(&account, GenerateAddressMetadata { syncing: false }).await?;
 
         account
