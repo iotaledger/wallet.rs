@@ -208,13 +208,11 @@ Returns the account's index.
 
 Returns the account's alias.
 
-#### availableBalance()
+#### balance(): AccountBalance
 
-Returns the account's available balance.
+Returns the account's balance information object.
 
-#### totalBalance()
-
-Returns the account's total balance.
+Balance object: { total: number, available: number, incoming: number, outgoing: number }
 
 #### listMessages([count, from, type])
 

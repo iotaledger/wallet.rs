@@ -22,7 +22,7 @@ async function run() {
     })
 
     console.log('alias', account.alias())
-    console.log('balance', account.availableBalance())
+    console.log('balance', account.balance())
     
     console.log('syncing account now')
 

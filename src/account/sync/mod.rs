@@ -603,11 +603,13 @@ impl SyncedAccount {
         // prepare the transfer getting some needed objects and values
         let value = transfer_obj.amount.get();
 
-        if value > account_.total_balance() {
+        let balance = account_.balance();
+
+        if value > balance.total {
             return Err(crate::Error::InsufficientFunds);
         }
 
-        let available_balance = account_.available_balance();
+        let available_balance = balance.available;
         drop(account_);
 
         // if the transfer value exceeds the account's available balance,
@@ -623,7 +625,7 @@ impl SyncedAccount {
                     thread::sleep(OUTPUT_LOCK_TIMEOUT / 30);
                     let account = crate::block_on(async { account_handle.read().await });
                     // the account received an update and now the balance is sufficient
-                    if value <= account.available_balance() {
+                    if value <= account.balance().available {
                         let _ = tx.send(());
                         break;
                     }
