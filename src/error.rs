@@ -93,9 +93,6 @@ pub enum Error {
     /// Panic error.
     #[error("a panic happened: {0}")]
     Panic(String),
-    /// Error on `internal_transfer` when the destination account address list is empty
-    #[error("destination account has no addresses")]
-    InternalTransferDestinationEmpty,
     /// Invalid message identifier.
     #[error("invalid message id received by node")]
     InvalidMessageId,
@@ -226,9 +223,6 @@ impl serde::Serialize for Error {
             Self::InvalidRemainderValueAddress => serialize_variant(self, serializer, "InvalidRemainderValueAddress"),
             Self::Storage(_) => serialize_variant(self, serializer, "Storage"),
             Self::Panic(_) => serialize_variant(self, serializer, "Panic"),
-            Self::InternalTransferDestinationEmpty => {
-                serialize_variant(self, serializer, "InternalTransferDestinationEmpty")
-            }
             Self::InvalidMessageId => serialize_variant(self, serializer, "InvalidMessageId"),
             Self::InvalidTransactionId => serialize_variant(self, serializer, "InvalidTransactionId"),
             Self::AddressBuildRequiredField(_) => serialize_variant(self, serializer, "AddressBuildRequiredField"),

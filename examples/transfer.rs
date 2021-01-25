@@ -27,7 +27,7 @@ async fn main() -> iota_wallet::Result<()> {
     sync_account
         .transfer(
             Transfer::builder(
-                account.latest_address().await.unwrap().address().clone(),
+                account.latest_address().await.address().clone(),
                 NonZeroU64::new(150).unwrap(),
             )
             .finish(),
