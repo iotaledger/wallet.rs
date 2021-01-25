@@ -93,7 +93,7 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: build
-        args: --all-features --release
+        args: --all-features --release --locked
 
     - name: Run tests
       uses: actions-rs/cargo@v1

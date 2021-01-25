@@ -1991,16 +1991,17 @@ checksum = "830d08ce1d1d941e6b30645f1a0eb5643013d835ce3779a5fc208261dbe10f55"
 [[package]]
 name = "ledger-apdu"
 version = "0.7.0"
-source = "git+https://gitlab.com/ledger-iota-chrysalis/ledger-rs#98354fc888209ac397a145008a1491d8eb8d5dac"
+source = "git+https://gitlab.com/ledger-iota-chrysalis/ledger-rs#f1ce23e084a074ebd215c68b7ba511fbcd332c53"
 
 [[package]]
 name = "ledger-iota"
 version = "0.1.0"
-source = "git+https://gitlab.com/ledger-iota-chrysalis/ledger-iota.rs#6583ddfbc68f793be772cab0f19f7c5e7f131d90"
+source = "git+https://gitlab.com/ledger-iota-chrysalis/ledger-iota.rs#0dddaf00efcabedd7310a5e0ded408cb991021cf"
 dependencies = [
  "bech32",
  "enum-iterator",
  "futures",
+ "lazy_static",
  "ledger-apdu",
  "ledger-transport",
  "ledger-transport-hid",
@@ -2014,7 +2015,7 @@ dependencies = [
 [[package]]
 name = "ledger-transport"
 version = "0.7.0"
-source = "git+https://gitlab.com/ledger-iota-chrysalis/ledger-rs#98354fc888209ac397a145008a1491d8eb8d5dac"
+source = "git+https://gitlab.com/ledger-iota-chrysalis/ledger-rs#f1ce23e084a074ebd215c68b7ba511fbcd332c53"
 dependencies = [
  "byteorder",
  "futures",
@@ -2033,7 +2034,7 @@ dependencies = [
 [[package]]
 name = "ledger-transport-hid"
 version = "0.7.0"
-source = "git+https://gitlab.com/ledger-iota-chrysalis/ledger-rs#98354fc888209ac397a145008a1491d8eb8d5dac"
+source = "git+https://gitlab.com/ledger-iota-chrysalis/ledger-rs#f1ce23e084a074ebd215c68b7ba511fbcd332c53"
 dependencies = [
  "byteorder",
  "cfg-if 0.1.10",
@@ -2050,7 +2051,7 @@ dependencies = [
 [[package]]
 name = "ledger-transport-tcp"
 version = "0.0.1"
-source = "git+https://gitlab.com/ledger-iota-chrysalis/ledger-rs#98354fc888209ac397a145008a1491d8eb8d5dac"
+source = "git+https://gitlab.com/ledger-iota-chrysalis/ledger-rs#f1ce23e084a074ebd215c68b7ba511fbcd332c53"
 dependencies = [
  "hex",
  "ledger-apdu",
