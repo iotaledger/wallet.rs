@@ -39,7 +39,7 @@ fn ledger_map_err(err: errors::APIError) -> crate::Error {
         errors::APIError::SecurityStatusNotSatisfied => crate::Error::LedgerDongleLocked,
         errors::APIError::ConditionsOfUseNotSatisfied => crate::Error::LedgerDeniedByUser,
         errors::APIError::TransportError => crate::Error::LedgerDeviceNotFound,
-        errors::APIError::EssenceTooLarge => crate::Error::EssenceTooLarge,
+        errors::APIError::EssenceTooLarge => crate::Error::LedgerEssenceTooLarge,
         _ => crate::Error::LedgerMiscError,
     }
 }
