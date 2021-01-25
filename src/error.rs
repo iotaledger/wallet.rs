@@ -65,6 +65,9 @@ pub enum Error {
     /// failed to parse address.
     #[error("invalid address")]
     InvalidAddress,
+    /// Address length response invalid.
+    #[error("invalid address length")]
+    InvalidAddressLength,
     /// Tried to backup but storage file doesn't exist.
     #[error("storage file doesn't exist")]
     StorageDoesntExist,
@@ -211,6 +214,7 @@ impl serde::Serialize for Error {
             Self::MessageNotFound => serialize_variant(self, serializer, "MessageNotFound"),
             Self::InvalidMessageIdLength => serialize_variant(self, serializer, "InvalidMessageIdLength"),
             Self::InvalidAddress => serialize_variant(self, serializer, "InvalidAddress"),
+            Self::InvalidAddressLength => serialize_variant(self, serializer, "InvalidAddressLength"),
             Self::StorageDoesntExist => serialize_variant(self, serializer, "StorageDoesntExist"),
             Self::InsufficientFunds => serialize_variant(self, serializer, "InsufficientFunds"),
             Self::AccountNotEmpty => serialize_variant(self, serializer, "AccountNotEmpty"),

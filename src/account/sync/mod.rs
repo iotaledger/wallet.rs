@@ -8,6 +8,7 @@ use crate::{
     signing::{GenerateAddressMetadata, SignMessageMetadata},
 };
 
+use bee_rest_api::handlers::message_metadata::LedgerInclusionStateDto;
 use getset::Getters;
 use iota::{
     message::prelude::{
@@ -107,7 +108,11 @@ async fn sync_addresses(
                 let client = client.read().await;
 
                 let address_outputs = client.get_address().outputs(&iota_address.to_bech32().into()).await?;
-                let balance = client.get_address().balance(&iota_address.to_bech32().into()).await?;
+                let balance = client
+                    .get_address()
+                    .balance(&iota_address.to_bech32().into())
+                    .await?
+                    .balance;
                 let mut curr_found_messages = vec![];
 
                 log::debug!(
@@ -121,11 +126,11 @@ async fn sync_addresses(
                 for output in address_outputs.iter() {
                     let output = client.get_output(output).await?;
                     let message_id = MessageId::new(
-                        output.message_id[..]
+                        hex::decode(&output.message_id).map_err(|_| crate::Error::InvalidMessageId)?[..]
                             .try_into()
                             .map_err(|_| crate::Error::InvalidMessageIdLength)?,
                     );
-                    curr_found_outputs.push(AddressOutput::from_output_metadata(output, bech32_hrp_.to_string())?);
+                    curr_found_outputs.push(AddressOutput::from_output_response(output, bech32_hrp_.to_string())?);
 
                     // if we already have the message stored
                     // and the confirmation state is known
@@ -142,7 +147,9 @@ async fn sync_addresses(
                         let metadata = client.get_message().metadata(&message_id).await?;
                         curr_found_messages.push((
                             message_id,
-                            metadata.ledger_inclusion_state.map(|l| l == "included"),
+                            metadata
+                                .ledger_inclusion_state
+                                .map(|l| l == LedgerInclusionStateDto::Included),
                             message,
                         ));
                     }
@@ -230,7 +237,8 @@ async fn sync_messages(
                 let balance = client
                     .get_address()
                     .balance(&address.address().to_bech32().into())
-                    .await?;
+                    .await?
+                    .balance;
 
                 log::debug!(
                     "[SYNC] syncing messages and outputs for address {}, got {} outputs and balance {}",
@@ -244,7 +252,7 @@ async fn sync_messages(
                 for output in address_outputs.iter() {
                     let output = client.get_output(output).await?;
                     let output =
-                        AddressOutput::from_output_metadata(output, address.address().bech32_hrp().to_string())?;
+                        AddressOutput::from_output_response(output, address.address().bech32_hrp().to_string())?;
                     let output_message_id = *output.message_id();
 
                     outputs.push(output);
@@ -260,7 +268,9 @@ async fn sync_messages(
                         let metadata = client.get_message().metadata(&output_message_id).await?;
                         messages.push((
                             output_message_id,
-                            metadata.ledger_inclusion_state.map(|l| l == "included"),
+                            metadata
+                                .ledger_inclusion_state
+                                .map(|l| l == LedgerInclusionStateDto::Included),
                             message,
                         ));
                     }
