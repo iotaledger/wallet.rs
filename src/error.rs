@@ -158,6 +158,9 @@ pub enum Error {
     /// Ledger Device not found
     #[error("ledger device not found")]
     LedgerDeviceNotFound,
+    /// Ledger Essence Too Large
+    #[error("ledger essence too large")]
+    LedgerEssenceTooLarge,
     /// Account alias must be unique.
     #[error("can't create account: account alias already exists")]
     AccountAliasAlreadyExists,
@@ -244,6 +247,7 @@ impl serde::Serialize for Error {
             Self::LedgerDongleLocked => serialize_variant(self, serializer, "LedgerDongleLocked"),
             Self::LedgerDeniedByUser => serialize_variant(self, serializer, "LedgerDeniedByUser"),
             Self::LedgerDeviceNotFound => serialize_variant(self, serializer, "LedgerDeviceNotFound"),
+            Self::LedgerEssenceTooLarge => serialize_variant(self, serializer, "LedgerEssenceTooLarge"),
             Self::AccountAliasAlreadyExists => serialize_variant(self, serializer, "AccountAliasAlreadyExists"),
         }
     }
