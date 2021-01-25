@@ -17,6 +17,7 @@ use serde_repr::Deserialize_repr;
 use tokio::sync::RwLock;
 
 mod internal_transfer;
+mod is_latest_address_unused;
 mod sync;
 
 #[derive(Deserialize_repr)]
@@ -331,6 +332,18 @@ declare_types! {
                     manager.import_accounts(source, password).await
                 }).expect("error importing accounts");
             };
+            Ok(cx.undefined().upcast())
+        }
+
+        method isLatestAddressUnused(mut cx) {
+            let cb = cx.argument::<JsFunction>(0)?;
+
+            let this = cx.this();
+            let manager = cx.borrow(&this, |r| r.0.clone());
+            let task = is_latest_address_unused::IsLatestAddressUnusedTask {
+                manager,
+            };
+            task.schedule(cb);
             Ok(cx.undefined().upcast())
         }
     }

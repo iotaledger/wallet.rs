@@ -3,7 +3,7 @@
 
 use crate::{
     account_manager::AccountStore,
-    address::{Address, AddressWrapper},
+    address::{Address, AddressBuilder, AddressWrapper},
     client::ClientOptions,
     message::{Message, MessageType},
     signing::{GenerateAddressMetadata, SignerType},
@@ -227,6 +227,18 @@ impl AccountInitialiser {
             GenerateAddressMetadata { syncing: false },
         )
         .await?;
+
+        account.addresses.push(
+            AddressBuilder::new()
+                .address(address.clone())
+                .key_index(0)
+                .internal(false)
+                .outputs(Vec::new())
+                .balance(0)
+                .build()
+                .unwrap(), // safe to unwrap since we provide all required fields
+        );
+
         let mut digest = [0; 32];
         let raw = match address.as_ref() {
             iota::Address::Ed25519(a) => a.as_ref().to_vec(),
@@ -377,12 +389,23 @@ impl AccountHandle {
             .execute()
             .await?;
         // safe to clone since the `sync` guarantees a latest unused address
-        Ok(self.latest_address().await.unwrap())
+        Ok(self.latest_address().await)
+    }
+
+    /// Syncs the latest address with the Tangle and determines whether it's unused or not.
+    /// An unused address is an address without balance and associated message history.
+    /// Note that such address might have been used in the past, because the message history might have been pruned by
+    /// the node.
+    pub async fn is_latest_address_unused(&self) -> crate::Result<bool> {
+        let mut latest_address = self.latest_address().await;
+        let bech32_hrp = latest_address.address().bech32_hrp().to_string();
+        sync::sync_address(&*self.inner.read().await, &mut latest_address, bech32_hrp).await?;
+        Ok(*latest_address.balance() == 0 && latest_address.outputs().is_empty())
     }
 
     /// Bridge to [Account#latest_address](struct.Account.html#method.latest_address).
-    pub async fn latest_address(&self) -> Option<Address> {
-        self.inner.read().await.latest_address().cloned()
+    pub async fn latest_address(&self) -> Address {
+        self.inner.read().await.latest_address().clone()
     }
 
     /// Bridge to [Account#total_balance](struct.Account.html#method.total_balance).
@@ -471,11 +494,13 @@ impl Account {
     }
 
     /// Returns the most recent address of the account.
-    pub fn latest_address(&self) -> Option<&Address> {
+    pub fn latest_address(&self) -> &Address {
+        // the addresses list is never empty because we generate an address on the accout creation
         self.addresses
             .iter()
             .filter(|a| !a.internal())
             .max_by_key(|a| a.key_index())
+            .unwrap()
     }
 
     /// Gets the account's total balance.
@@ -792,7 +817,7 @@ mod tests {
                 let generated_address = account_handle.generate_address().await.unwrap();
 
                 assert_eq!(generated_address, account_next_address);
-                assert_eq!(account_handle.latest_address().await.unwrap(), generated_address);
+                assert_eq!(account_handle.latest_address().await, generated_address);
             },
         )
         .await;
@@ -802,7 +827,7 @@ mod tests {
     async fn latest_address() {
         let manager = crate::test_utils::get_account_manager().await;
         let (account_handle, latest_address, _) = _generate_account(&manager, vec![]).await;
-        assert_eq!(account_handle.read().await.latest_address(), Some(&latest_address));
+        assert_eq!(account_handle.read().await.latest_address(), &latest_address);
     }
 
     #[tokio::test]
@@ -864,7 +889,7 @@ mod tests {
             .addresses(vec![crate::test_utils::generate_random_address()])
             .create()
             .await;
-        let latest_address = account_handle.read().await.latest_address().unwrap().clone();
+        let latest_address = account_handle.read().await.latest_address().clone();
         let received_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
             .incoming(true)
@@ -900,7 +925,7 @@ mod tests {
             .await;
 
         let external_address = crate::test_utils::generate_random_address();
-        let latest_address = account_handle.read().await.latest_address().unwrap().clone();
+        let latest_address = account_handle.read().await.latest_address().clone();
 
         let received_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
@@ -985,7 +1010,7 @@ mod tests {
                     .create()
                     .await;
 
-                let spent_address = account_handle.generate_address().await.unwrap();
+                let spent_address = account_handle.latest_address().await;
                 let unspent_address1 = account_handle.generate_address().await.unwrap();
                 let unspent_address2 = account_handle.generate_address().await.unwrap();
 
