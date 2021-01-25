@@ -6,13 +6,16 @@ use crate::account::Account;
 use iota::{common::packable::Packable, UnlockBlock};
 use std::path::PathBuf;
 
+use ledger_iota::LedgerHardwareWallet;
+
 use ledger_iota::{api::errors, LedgerBIP32Index};
 
 const HARDENED: u32 = 0x80000000;
 
-#[derive(Default)]
 pub struct LedgerNanoSigner {
     pub id: u64,
+    pub account: u32,
+    pub ledger: Option<Box<LedgerHardwareWallet>>,
     pub is_simulator: bool,
 }
 
@@ -34,13 +37,43 @@ struct AddressIndexRecorder {
 // LedgerMiscError: Everything else.
 // LedgerEssenceTooLarge: Essence with bip32 input indices need more space then the internal buffer is big
 fn ledger_map_err(err: errors::APIError) -> crate::Error {
-    // println!("{}", err);
+    log::info!("ledger error: {}", err);
     match err {
         errors::APIError::SecurityStatusNotSatisfied => crate::Error::LedgerDongleLocked,
         errors::APIError::ConditionsOfUseNotSatisfied => crate::Error::LedgerDeniedByUser,
         errors::APIError::TransportError => crate::Error::LedgerDeviceNotFound,
         errors::APIError::EssenceTooLarge => crate::Error::LedgerEssenceTooLarge,
         _ => crate::Error::LedgerMiscError,
+    }
+}
+
+impl LedgerNanoSigner {
+    pub fn new(id: u64, is_simulator: bool) -> Self {
+        LedgerNanoSigner {
+            account: 0u32,
+            id,
+            is_simulator,
+            ledger: None,
+        }
+    }
+
+    /// Init the ledger object or get it. The `account` is set only once at init, that means generating addresses for different
+    /// accounts with a single signer object instance is intentionally not allowed.
+    fn get_or_init(&mut self, account: u32) -> crate::Result<&mut LedgerHardwareWallet> {
+        match &self.ledger {
+            None => {
+                self.ledger =
+                    Some(ledger_iota::get_ledger(self.id, self.is_simulator, account).map_err(ledger_map_err)?);
+                self.account = account;
+            }
+            _ => {
+                if account != self.account {
+                    log::error!("account index changed from {} to {}!", self.account, account);
+                    return Err(crate::Error::LedgerMiscError);
+                }
+            }
+        };
+        Ok(self.ledger.as_mut().unwrap())
     }
 }
 
@@ -57,9 +90,7 @@ impl super::Signer for LedgerNanoSigner {
         internal: bool,
         meta: super::GenerateAddressMetadata,
     ) -> crate::Result<iota::Address> {
-        // get ledger
-        let mut ledger = ledger_iota::get_ledger(self.id, self.is_simulator, *account.index() as u32 | HARDENED)
-            .map_err(ledger_map_err)?;
+        let ledger = self.get_or_init(*account.index() as u32 | HARDENED)?;
 
         let bip32 = ledger_iota::LedgerBIP32Index {
             bip32_index: address_index as u32 | HARDENED,
@@ -80,9 +111,7 @@ impl super::Signer for LedgerNanoSigner {
         inputs: &mut Vec<super::TransactionInput>,
         meta: super::SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
-        // get ledger
-        let ledger = ledger_iota::get_ledger(self.id, self.is_simulator, *account.index() as u32 | HARDENED)
-            .map_err(ledger_map_err)?;
+        let ledger = self.get_or_init(*account.index() as u32 | HARDENED)?;
 
         let input_len = inputs.len();
 
