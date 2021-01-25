@@ -80,6 +80,10 @@ pub enum AccountMethod {
     },
     /// Checks if the account's latest address is unused after syncing with the Tangle.
     IsLatestAddressUnused,
+    /// Updates the account alias.
+    SetAlias(String),
+    /// Updates the account client options.
+    SetClientOptions(ClientOptions),
 }
 
 /// The messages that can be sent to the actor.
@@ -335,6 +339,10 @@ pub enum ResponseType {
     StoredMnemonic,
     /// IsLatestAddressUnused response.
     IsLatestAddressUnused(bool),
+    /// SetAlias response.
+    UpdatedAlias,
+    /// SetClientOptions response.
+    UpdatedClientOptions,
 }
 
 /// The message type.
