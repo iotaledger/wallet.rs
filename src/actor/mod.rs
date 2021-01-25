@@ -230,8 +230,9 @@ impl WalletMessageHandler {
                 from,
                 message_type,
             } => {
-                let account = account_handle.read().await;
-                let messages: Vec<WalletMessage> = account
+                let messages: Vec<WalletMessage> = account_handle
+                    .read()
+                    .await
                     .list_messages(*count, *from, message_type.clone())
                     .into_iter()
                     .cloned()
@@ -250,18 +251,15 @@ impl WalletMessageHandler {
                 let addresses = account_handle.list_unspent_addresses().await;
                 Ok(ResponseType::Addresses(addresses))
             }
-            AccountMethod::GetAvailableBalance => {
-                let account = account_handle.read().await;
-                Ok(ResponseType::AvailableBalance(account.available_balance()))
-            }
+            AccountMethod::GetAvailableBalance => Ok(ResponseType::AvailableBalance(
+                account_handle.read().await.available_balance(),
+            )),
             AccountMethod::GetTotalBalance => {
-                let account = account_handle.read().await;
-                Ok(ResponseType::TotalBalance(account.total_balance()))
+                Ok(ResponseType::TotalBalance(account_handle.read().await.total_balance()))
             }
-            AccountMethod::GetLatestAddress => {
-                let account = account_handle.read().await;
-                Ok(ResponseType::LatestAddress(account.latest_address().clone()))
-            }
+            AccountMethod::GetLatestAddress => Ok(ResponseType::LatestAddress(
+                account_handle.read().await.latest_address().clone(),
+            )),
             AccountMethod::SyncAccount {
                 address_index,
                 gap_limit,
@@ -285,6 +283,14 @@ impl WalletMessageHandler {
             AccountMethod::IsLatestAddressUnused => Ok(ResponseType::IsLatestAddressUnused(
                 account_handle.is_latest_address_unused().await?,
             )),
+            AccountMethod::SetAlias(alias) => {
+                account_handle.set_alias(alias).await?;
+                Ok(ResponseType::UpdatedAlias)
+            }
+            AccountMethod::SetClientOptions(options) => {
+                account_handle.set_client_options(options.clone()).await?;
+                Ok(ResponseType::UpdatedClientOptions)
+            }
         }
     }
 
