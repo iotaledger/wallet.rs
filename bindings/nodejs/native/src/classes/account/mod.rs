@@ -6,6 +6,7 @@ use std::str::FromStr;
 use iota_wallet::message::MessageId;
 use neon::prelude::*;
 
+mod is_latest_address_unused;
 mod sync;
 
 pub struct AccountWrapper(pub String);
@@ -234,10 +235,7 @@ declare_types! {
                 let account_handle = crate::get_account(&id).await;
                 let account = account_handle.read().await;
                 let address = account.latest_address();
-                match address {
-                    Some(a) => Ok(neon_serde::to_value(&mut cx, &a)?),
-                    None => Ok(cx.undefined().upcast())
-                }
+                Ok(neon_serde::to_value(&mut cx, &address)?)
             })
         }
 
@@ -257,6 +255,18 @@ declare_types! {
             let task = sync::SyncTask {
                 account_id,
                 options,
+            };
+            task.schedule(cb);
+            Ok(cx.undefined().upcast())
+        }
+
+        method isLatestAddressUnused(mut cx) {
+            let cb = cx.argument::<JsFunction>(0)?;
+
+            let this = cx.this();
+            let account_id = cx.borrow(&this, |r| r.0.clone());
+            let task = is_latest_address_unused::IsLatestAddressUnusedTask {
+                account_id,
             };
             task.schedule(cb);
             Ok(cx.undefined().upcast())
