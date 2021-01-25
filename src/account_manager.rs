@@ -386,6 +386,17 @@ impl AccountManager {
         Ok(())
     }
 
+    /// Determines whether all accounts has the latest address unused.
+    pub async fn is_latest_address_unused(&self) -> crate::Result<bool> {
+        self.check_storage_encryption()?;
+        for account_handle in self.accounts.read().await.values() {
+            if !account_handle.is_latest_address_unused().await? {
+                return Ok(false);
+            }
+        }
+        Ok(true)
+    }
+
     /// Starts the polling mechanism.
     fn start_polling(
         &mut self,
@@ -547,7 +558,6 @@ impl AccountManager {
             .read()
             .await
             .latest_address()
-            .ok_or(crate::Error::InternalTransferDestinationEmpty)?
             .clone();
 
         let from_synchronized = self.get_account(from_account_id).await?.sync().await.execute().await?;

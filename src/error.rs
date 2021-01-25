@@ -65,6 +65,9 @@ pub enum Error {
     /// failed to parse address.
     #[error("invalid address")]
     InvalidAddress,
+    /// Address length response invalid.
+    #[error("invalid address length")]
+    InvalidAddressLength,
     /// Tried to backup but storage file doesn't exist.
     #[error("storage file doesn't exist")]
     StorageDoesntExist,
@@ -90,9 +93,6 @@ pub enum Error {
     /// Panic error.
     #[error("a panic happened: {0}")]
     Panic(String),
-    /// Error on `internal_transfer` when the destination account address list is empty
-    #[error("destination account has no addresses")]
-    InternalTransferDestinationEmpty,
     /// Invalid message identifier.
     #[error("invalid message id received by node")]
     InvalidMessageId,
@@ -158,6 +158,9 @@ pub enum Error {
     /// Ledger Device not found
     #[error("ledger device not found")]
     LedgerDeviceNotFound,
+    /// Ledger Essence Too Large
+    #[error("ledger essence too large")]
+    LedgerEssenceTooLarge,
     /// Account alias must be unique.
     #[error("can't create account: account alias already exists")]
     AccountAliasAlreadyExists,
@@ -211,6 +214,7 @@ impl serde::Serialize for Error {
             Self::MessageNotFound => serialize_variant(self, serializer, "MessageNotFound"),
             Self::InvalidMessageIdLength => serialize_variant(self, serializer, "InvalidMessageIdLength"),
             Self::InvalidAddress => serialize_variant(self, serializer, "InvalidAddress"),
+            Self::InvalidAddressLength => serialize_variant(self, serializer, "InvalidAddressLength"),
             Self::StorageDoesntExist => serialize_variant(self, serializer, "StorageDoesntExist"),
             Self::InsufficientFunds => serialize_variant(self, serializer, "InsufficientFunds"),
             Self::AccountNotEmpty => serialize_variant(self, serializer, "AccountNotEmpty"),
@@ -219,9 +223,6 @@ impl serde::Serialize for Error {
             Self::InvalidRemainderValueAddress => serialize_variant(self, serializer, "InvalidRemainderValueAddress"),
             Self::Storage(_) => serialize_variant(self, serializer, "Storage"),
             Self::Panic(_) => serialize_variant(self, serializer, "Panic"),
-            Self::InternalTransferDestinationEmpty => {
-                serialize_variant(self, serializer, "InternalTransferDestinationEmpty")
-            }
             Self::InvalidMessageId => serialize_variant(self, serializer, "InvalidMessageId"),
             Self::InvalidTransactionId => serialize_variant(self, serializer, "InvalidTransactionId"),
             Self::AddressBuildRequiredField(_) => serialize_variant(self, serializer, "AddressBuildRequiredField"),
@@ -244,6 +245,7 @@ impl serde::Serialize for Error {
             Self::LedgerDongleLocked => serialize_variant(self, serializer, "LedgerDongleLocked"),
             Self::LedgerDeniedByUser => serialize_variant(self, serializer, "LedgerDeniedByUser"),
             Self::LedgerDeviceNotFound => serialize_variant(self, serializer, "LedgerDeviceNotFound"),
+            Self::LedgerEssenceTooLarge => serialize_variant(self, serializer, "LedgerEssenceTooLarge"),
             Self::AccountAliasAlreadyExists => serialize_variant(self, serializer, "AccountAliasAlreadyExists"),
         }
     }

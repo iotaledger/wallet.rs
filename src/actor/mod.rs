@@ -142,6 +142,15 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            MessageType::IsLatestAddressUnused => {
+                convert_async_panics(|| async {
+                    self.account_manager
+                        .is_latest_address_unused()
+                        .await
+                        .map(ResponseType::IsLatestAddressUnused)
+                })
+                .await
+            }
             MessageType::SendTransfer { account_id, transfer } => {
                 convert_async_panics(|| async { self.send_transfer(account_id, transfer.clone().finish()).await }).await
             }
@@ -251,7 +260,7 @@ impl WalletMessageHandler {
             }
             AccountMethod::GetLatestAddress => {
                 let account = account_handle.read().await;
-                Ok(ResponseType::LatestAddress(account.latest_address().cloned()))
+                Ok(ResponseType::LatestAddress(account.latest_address().clone()))
             }
             AccountMethod::SyncAccount {
                 address_index,
@@ -273,6 +282,9 @@ impl WalletMessageHandler {
                 let synced = synchronizer.execute().await?;
                 Ok(ResponseType::SyncedAccount(synced))
             }
+            AccountMethod::IsLatestAddressUnused => Ok(ResponseType::IsLatestAddressUnused(
+                account_handle.is_latest_address_unused().await?,
+            )),
         }
     }
 
