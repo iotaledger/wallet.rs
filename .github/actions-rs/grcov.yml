@@ -6,3 +6,7 @@ ignore:
   - "/*"
   - "C:/*"
   - "../*"
+excl-line: "#\\[derive\\("
+excl-start: "mod tests \\{"
+excl-br-line: "#\\[derive\\("
+excl-br-start: "mod tests \\{"
