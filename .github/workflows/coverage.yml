@@ -41,12 +41,27 @@ jobs:
         RUSTDOCFLAGS: "-Cpanic=abort"
 
     - name: Collect test coverage data
-      uses: actions-rs/grcov@v0.1
+      uses: actions-rs/grcov@d7fbf3f
       id: coverage
+      with:
+        args: >
+          .
+          -t lcov
+          --llvm
+          --branch
+          --ignore-not-existing
+          --ignore "/*"
+          --ignore "C:/*"
+          --ignore "../*"
+          -o ./target/lcov.info
+          --excl-line "#\[derive\("
+          --excl-start "mod tests \{"
+          --excl-br-line "#\[derive\("
+          --excl-br-start "mod tests \{"
     
     - name: Upload coverage data to Coveralls
       uses: coverallsapp/github-action@v1.1.2
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ${{ steps.coverage.outputs.report }}
+        path-to-lcov: ./target/lcov.info
         flag-name: Unit
