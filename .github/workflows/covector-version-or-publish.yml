@@ -48,7 +48,7 @@ jobs:
           labels: "version updates"
           body: ${{ steps.covector.outputs.change }}
 
-  build_native:
+  prebuild:
     runs-on: ${{ matrix.platform }}
     needs: version-or-publish
     if: needs.version-or-publish.outputs.successfulPublish == 'true'
@@ -56,7 +56,6 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        node: [10, 12, 14]
 
     steps:
       - uses: actions/checkout@v2
@@ -66,7 +65,7 @@ jobs:
       # Install nodejs/rust
       - uses: actions/setup-node@v1
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 14
           registry-url: 'https://registry.npmjs.org'
       - name: Install Rust stable toolchain
         uses: actions-rs/toolchain@v1
@@ -74,19 +73,15 @@ jobs:
           toolchain: stable
           override: true
 
-      # Install binding dependencies and run build scripts
+      # Install binding dependencies and run prebuild script
       - name: Install nodejs binding dependencies
         working-directory: bindings/node
         run: yarn
-      - name: Build native for node runtime
-        working-directory: bindings/node
-        run: node scripts/build-and-pack.js
-      - name: Build native for electron runtime
-        working-directory: bindings/node
-        run: electron-build-env -- node scripts/build-and-pack.js
+      - name: Prebuild
+        run: yarn prebuild:node && yarn prebuild:electron
 
-      # Upload /builds folder to the release created by covector
-      - name: Upload native assets
+      # Upload /prebuilds folder to the release created by covector
+      - name: Upload prebuild assets
         uses: actions/github-script@v2
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
@@ -97,11 +92,11 @@ jobs:
 
             const release = await github.repos.getLatestRelease()
         
-            for (let file of await fs.readdir('./bindings/node/builds')) {
-              const filePath = path.join('./bindings/node/builds', file)
+            for (let file of await fs.readdir('./bindings/node/prebuilds')) {
+              const filePath = path.join('./bindings/node/prebuilds', file)
               await github.repos.uploadReleaseAsset({
                 headers: {
-                  'content-type': 'application/octet-stream',
+                  'content-type': 'application/zip',
                   'content-length': fs.statSync(filePath).size
                 },
                 owner,

@@ -5,4 +5,5 @@ native/artifacts.json
 **/node_modules
 **/.DS_Store
 test-database/
-builds/
+build/
+prebuilds/
