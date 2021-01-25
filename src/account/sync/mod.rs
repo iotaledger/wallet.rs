@@ -118,7 +118,7 @@ async fn get_address_for_sync(
         crate::address::get_iota_address(
             &account,
             index,
-            false,
+            internal,
             bech32_hrp,
             GenerateAddressMetadata { syncing: true },
         )
@@ -569,6 +569,7 @@ impl SyncedAccount {
             })
             .map(|a| input_selection::Input {
                 address: a.address().clone(),
+                internal: *a.internal(),
                 balance: a.available_balance(&account),
             })
             .collect();
@@ -748,9 +749,12 @@ async fn perform_transfer(
         utxos.extend(outputs.into_iter());
     }
 
-    let mut essence_builder = TransactionPayloadEssence::builder();
+    let mut essence_builder = TransactionPayloadEssence::builder().add_output(
+        SignatureLockedSingleOutput::new(*transfer_obj.address.as_ref(), transfer_obj.amount.get())?.into(),
+    );
     let mut current_output_sum = 0;
     let mut remainder_value = 0;
+
     for (utxo, address_index, address_internal, address_path) in utxos {
         let input: Input = UTXOInput::new(*utxo.transaction_id(), *utxo.index())?.into();
         essence_builder = essence_builder.add_input(input.clone());
@@ -774,12 +778,10 @@ async fn perform_transfer(
                 current_output_sum,
                 utxo.amount()
             );
-            // if the used UTXO amount is greater than the transfer value, this is the last iteration and we'll have
-            // remainder value. we add an Output for the missing value and collect the remainder
+            // if the used UTXO amount is greater than the transfer value,
+            // this is the last iteration and we'll have remainder value
             let missing_value = transfer_obj.amount.get() - current_output_sum;
             remainder_value += *utxo.amount() - missing_value;
-            essence_builder = essence_builder
-                .add_output(SignatureLockedSingleOutput::new(*transfer_obj.address.as_ref(), missing_value)?.into());
             current_output_sum += missing_value;
             log::debug!(
                 "[TRANSFER] added output with the missing value {}, and the remainder is {}",
@@ -792,8 +794,6 @@ async fn perform_transfer(
                 utxo.amount(),
                 current_output_sum
             );
-            essence_builder = essence_builder
-                .add_output(SignatureLockedSingleOutput::new(*transfer_obj.address.as_ref(), *utxo.amount())?.into());
             current_output_sum += *utxo.amount();
         }
     }
@@ -827,7 +827,12 @@ async fn perform_transfer(
             // generate a new change address to send the remainder value
             RemainderValueStrategy::ChangeAddress => {
                 if *remainder_address.internal() {
-                    let deposit_address = account_.latest_address().address().clone();
+                    let mut deposit_address = account_.latest_address().address().clone();
+                    // if the latest address is the transfer's address, we'll generate a new one as remainder deposit
+                    if deposit_address == transfer_obj.address {
+                        account_handle.generate_address_internal(&mut account_).await?;
+                        deposit_address = account_.latest_address().address().clone();
+                    }
                     log::debug!(
                         "[TRANSFER] the remainder address is internal, so using latest address as remainder target: {}",
                         deposit_address.to_bech32()
