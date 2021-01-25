@@ -1010,7 +1010,7 @@ mod tests {
                     .create()
                     .await;
 
-                let spent_address = account_handle.generate_address().await.unwrap();
+                let spent_address = account_handle.latest_address().await;
                 let unspent_address1 = account_handle.generate_address().await.unwrap();
                 let unspent_address2 = account_handle.generate_address().await.unwrap();
 
