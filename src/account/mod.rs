@@ -187,7 +187,7 @@ impl AccountInitialiser {
 
         if let Some(latest_account_handle) = accounts.values().last() {
             let latest_account = latest_account_handle.read().await;
-            if latest_account.messages().is_empty() && latest_account.total_balance() == 0 {
+            if latest_account.messages().is_empty() && latest_account.balance().total == 0 {
                 return Err(crate::Error::LatestAccountIsEmpty);
             }
         }
@@ -416,14 +416,9 @@ impl AccountHandle {
         self.inner.read().await.latest_address().clone()
     }
 
-    /// Bridge to [Account#total_balance](struct.Account.html#method.total_balance).
-    pub async fn total_balance(&self) -> u64 {
-        self.inner.read().await.total_balance()
-    }
-
-    /// Bridge to [Account#available_balance](struct.Account.html#method.available_balance).
-    pub async fn available_balance(&self) -> u64 {
-        self.inner.read().await.available_balance()
+    /// Bridge to [Account#balance](struct.Account.html#method.balance).
+    pub async fn balance(&self) -> AccountBalance {
+        self.inner.read().await.balance()
     }
 
     /// Bridge to [Account#set_alias](struct.Account.html#method.set_alias).
@@ -481,6 +476,23 @@ impl AccountHandle {
     }
 }
 
+/// Account balance information.
+#[derive(Debug, Serialize)]
+pub struct AccountBalance {
+    /// Account's total balance.
+    pub total: u64,
+    // The available balance is the balance users are allowed to spend.
+    /// For example, if a user with 50i total account balance has made a message spending 20i,
+    /// the available balance should be (50i-30i) = 20i.
+    pub available: u64,
+    /// Balances from message with `incoming: true`.
+    /// Note that this may not be accurate since the node prunes the messags.
+    pub incoming: u64,
+    /// Balances from message with `incoming: false`.
+    /// Note that this may not be accurate since the node prunes the messags.
+    pub outgoing: u64,
+}
+
 impl Account {
     pub(crate) async fn save(&mut self) -> crate::Result<()> {
         if !self.skip_persistance {
@@ -511,22 +523,27 @@ impl Account {
             .unwrap()
     }
 
-    /// Gets the account's total balance.
-    /// It's read directly from the storage. To read the latest account balance, you should `sync` first.
-    pub fn total_balance(&self) -> u64 {
-        self.addresses.iter().fold(0, |acc, address| acc + address.balance())
-    }
-
-    /// Gets the account's available balance.
-    /// It's read directly from the storage. To read the latest account balance, you should `sync` first.
-    ///
-    /// The available balance is the balance users are allowed to spend.
-    /// For example, if a user with 50i total account balance has made a message spending 20i,
-    /// the available balance should be (50i-30i) = 20i.
-    pub fn available_balance(&self) -> u64 {
-        self.addresses()
-            .iter()
-            .fold(0, |acc, addr| acc + addr.available_balance(&self))
+    /// Gets the account balance information.
+    pub fn balance(&self) -> AccountBalance {
+        let (incoming, outgoing) =
+            self.list_messages(0, 0, None)
+                .iter()
+                .fold((0, 0), |(incoming, outgoing), message| {
+                    if *message.incoming() {
+                        (incoming + *message.value(), outgoing)
+                    } else {
+                        (incoming, outgoing + *message.value())
+                    }
+                });
+        AccountBalance {
+            total: self.addresses.iter().fold(0, |acc, address| acc + address.balance()),
+            available: self
+                .addresses()
+                .iter()
+                .fold(0, |acc, addr| acc + addr.available_balance(&self)),
+            incoming,
+            outgoing,
+        }
     }
 
     /// Updates the account alias.
@@ -842,14 +859,14 @@ mod tests {
     async fn total_balance() {
         let manager = crate::test_utils::get_account_manager().await;
         let (account_handle, _, balance) = _generate_account(&manager, vec![]).await;
-        assert_eq!(account_handle.read().await.total_balance(), balance);
+        assert_eq!(account_handle.read().await.balance().total, balance);
     }
 
     #[tokio::test]
     async fn available_balance() {
         let manager = crate::test_utils::get_account_manager().await;
         let (account_handle, _, balance) = _generate_account(&manager, vec![]).await;
-        assert_eq!(account_handle.read().await.available_balance(), balance);
+        assert_eq!(account_handle.read().await.balance().available, balance);
 
         let first_address = {
             let mut account = account_handle.write().await;
@@ -885,7 +902,7 @@ mod tests {
             .append_messages(vec![unconfirmed_message.clone(), confirmed_message]);
 
         assert_eq!(
-            account_handle.read().await.available_balance(),
+            account_handle.read().await.balance().available,
             balance - *unconfirmed_message.value()
         );
     }

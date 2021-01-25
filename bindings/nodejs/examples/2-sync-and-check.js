@@ -12,7 +12,7 @@ async function run() {
     const account = manager.getAccountByAlias('Test')
 
     console.log('alias', account.alias())
-    console.log('available balance', account.availableBalance())
+    console.log('available balance', account.balance().available)
     console.log('syncing...')
     
     const synced = await account.sync()
