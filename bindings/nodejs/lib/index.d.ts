@@ -72,7 +72,8 @@ export declare class Account {
   setClientOptions(options: ClientOptions): void
   getMessage(id: string): Message | undefined
   generateAddress(): Address
-  latestAddress(): Address | undefined
+  latestAddress(): Address
+  isLatestAddressUnused(): Promise<bool>
 }
 
 export declare class RemainderValueStrategy {

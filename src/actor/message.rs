@@ -78,6 +78,8 @@ pub enum AccountMethod {
         #[serde(rename = "skipPersistance")]
         skip_persistance: Option<bool>,
     },
+    /// Checks if the account's latest address is unused after syncing with the Tangle.
+    IsLatestAddressUnused,
 }
 
 /// The messages that can be sent to the actor.
@@ -172,6 +174,8 @@ pub enum MessageType {
         /// The mnemonic. If empty, we'll generate one.
         mnemonic: Option<String>,
     },
+    /// Checks if all accounts has unused latest address after syncing with the Tangle.
+    IsLatestAddressUnused,
 }
 
 impl Serialize for MessageType {
@@ -231,6 +235,9 @@ impl Serialize for MessageType {
                 signer_type: _,
                 mnemonic: _,
             } => serializer.serialize_unit_variant("MessageType", 17, "StoreMnemonic"),
+            MessageType::IsLatestAddressUnused => {
+                serializer.serialize_unit_variant("MessageType", 17, "IsLatestAddressUnused")
+            }
         }
     }
 }
@@ -281,7 +288,7 @@ pub enum ResponseType {
     /// GetUnusedAddress response.
     UnusedAddress(Address),
     /// GetLatestAddress response.
-    LatestAddress(Option<Address>),
+    LatestAddress(Address),
     /// GetAvailableBalance response.
     AvailableBalance(u64),
     /// GetTotalBalance response.
@@ -326,6 +333,8 @@ pub enum ResponseType {
     VerifiedMnemonic,
     /// StoreMnemonic response.
     StoredMnemonic,
+    /// IsLatestAddressUnused response.
+    IsLatestAddressUnused(bool),
 }
 
 /// The message type.

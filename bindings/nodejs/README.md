@@ -208,6 +208,12 @@ Imports a database file.
 | source   | <code>string</code> | <code>undefined</code> | The path to the backup file    |
 | password | <code>string</code> | <code>undefined</code> | The backup stronghold password |
 
+#### isLatestAddressUnused()
+
+Determines whether all accounts has unused latest address after syncing with the Tangle.
+
+**Returns** A promise resolving to the boolean value.
+
 ### SyncedAccount
 
 #### send(address, amount[, options])
@@ -321,6 +327,12 @@ Synchronizes the account with the Tangle.
 
 **Returns** a [SyncedAccount](#syncedaccount) instance.
 
+#### isLatestAddressUnused()
+
+Determines whether the account has unused latest address after syncing with the Tangle.
+
+**Returns** A promise resolving to the boolean value.
+
 #### setAlias(alias)
 
 Updates the account alias.
@@ -351,7 +363,7 @@ Generates a new unused address and returns it.
 
 #### latestAddress()
 
-Returns the latest address (the one with the biggest keyIndex) or undefined if the account address list is empty.
+Returns the latest address (the one with the biggest keyIndex).
 
 ### ClientOptions
 

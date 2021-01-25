@@ -8,6 +8,7 @@ use crate::{
     signing::{GenerateAddressMetadata, SignMessageMetadata},
 };
 
+use bee_rest_api::handlers::message_metadata::LedgerInclusionStateDto;
 use getset::Getters;
 use iota::{
     message::prelude::{
@@ -34,6 +35,97 @@ mod input_selection;
 
 const OUTPUT_LOCK_TIMEOUT: Duration = Duration::from_secs(30);
 
+pub(crate) async fn sync_address(
+    account: &Account,
+    address: &mut Address,
+    bech32_hrp: String,
+) -> crate::Result<Vec<(MessageId, Option<bool>, IotaMessage)>> {
+    let client = crate::client::get_client(account.client_options());
+    let client = client.read().await;
+
+    let iota_address = address.address();
+
+    let address_outputs = client.get_address().outputs(&iota_address.to_bech32().into()).await?;
+    let balance = client
+        .get_address()
+        .balance(&iota_address.to_bech32().into())
+        .await?
+        .balance;
+    let mut found_messages = vec![];
+
+    log::debug!(
+        "[SYNC] syncing address {}, got {} outputs and balance {}",
+        iota_address.to_bech32(),
+        address_outputs.len(),
+        balance
+    );
+
+    let mut found_outputs: Vec<AddressOutput> = vec![];
+    for output in address_outputs.iter() {
+        let output = client.get_output(output).await?;
+        let message_id = MessageId::new(
+            hex::decode(&output.message_id).map_err(|_| crate::Error::InvalidMessageId)?[..]
+                .try_into()
+                .map_err(|_| crate::Error::InvalidMessageIdLength)?,
+        );
+        found_outputs.push(AddressOutput::from_output_response(output, bech32_hrp.to_string())?);
+
+        // if we already have the message stored
+        // and the confirmation state is known
+        // we skip the `get_message` call
+        if account
+            .messages()
+            .iter()
+            .any(|m| m.id() == &message_id && m.confirmed().is_some())
+        {
+            continue;
+        }
+
+        if let Ok(message) = client.get_message().data(&message_id).await {
+            let metadata = client.get_message().metadata(&message_id).await?;
+            found_messages.push((
+                message_id,
+                metadata
+                    .ledger_inclusion_state
+                    .map(|l| l == LedgerInclusionStateDto::Included),
+                message,
+            ));
+        }
+    }
+
+    address.set_balance(balance);
+    address.set_outputs(found_outputs);
+
+    crate::Result::Ok(found_messages)
+}
+
+// Gets an address for the sync process.
+// If the account already has the address with the given index + internal flag, we'll use it
+// otherwise we'll generate a new one.
+async fn get_address_for_sync(
+    account: &Account,
+    bech32_hrp: String,
+    index: usize,
+    internal: bool,
+) -> crate::Result<AddressWrapper> {
+    if let Some(address) = account
+        .addresses()
+        .iter()
+        .find(|a| *a.key_index() == index && *a.internal() == internal)
+    {
+        Ok(address.address().clone())
+    } else {
+        crate::address::get_iota_address(
+            &account,
+            index,
+            false,
+            bech32_hrp,
+            GenerateAddressMetadata { syncing: true },
+        )
+        .await
+    }
+}
+
 /// Syncs addresses with the tangle.
 /// The method ensures that the wallet local state has all used addresses plus an unused address.
 ///
@@ -51,7 +143,7 @@ const OUTPUT_LOCK_TIMEOUT: Duration = Duration::from_secs(30);
 /// Returns a (addresses, messages) tuples representing the address history up to latest unused address,
 /// and the messages associated with the addresses.
 async fn sync_addresses(
-    account: &'_ Account,
+    account: &Account,
     address_index: usize,
     gap_limit: usize,
 ) -> crate::Result<(Vec<Address>, Vec<(MessageId, Option<bool>, IotaMessage)>)> {
@@ -73,103 +165,39 @@ async fn sync_addresses(
             generated_iota_addresses.push((
                 i,
                 false,
-                crate::address::get_iota_address(
-                    &account,
-                    i,
-                    false,
-                    bech32_hrp.to_string(),
-                    GenerateAddressMetadata { syncing: true },
-                )
-                .await?,
+                get_address_for_sync(&account, bech32_hrp.to_string(), i, false).await?,
             ));
             generated_iota_addresses.push((
                 i,
                 true,
-                crate::address::get_iota_address(
-                    &account,
-                    i,
-                    true,
-                    bech32_hrp.to_string(),
-                    GenerateAddressMetadata { syncing: true },
-                )
-                .await?,
+                get_address_for_sync(&account, bech32_hrp.to_string(), i, true).await?,
             ));
         }
 
         let mut curr_generated_addresses = vec![];
         let mut curr_found_messages = vec![];
 
-        let mut futures_ = vec![];
+        let mut futures_ = Vec::new();
         for (iota_address_index, iota_address_internal, iota_address) in &generated_iota_addresses {
             let bech32_hrp_ = bech32_hrp.clone();
             futures_.push(async move {
-                let client = crate::client::get_client(account.client_options());
-                let client = client.read().await;
-
-                let address_outputs = client.get_address().outputs(&iota_address.to_bech32().into()).await?;
-                let balance = client.get_address().balance(&iota_address.to_bech32().into()).await?;
-                let mut curr_found_messages = vec![];
-
-                log::debug!(
-                    "[SYNC] syncing address {}, got {} outputs and balance {}",
-                    iota_address.to_bech32(),
-                    address_outputs.len(),
-                    balance
-                );
-
-                let mut curr_found_outputs: Vec<AddressOutput> = vec![];
-                for output in address_outputs.iter() {
-                    let output = client.get_output(output).await?;
-                    let message_id = MessageId::new(
-                        output.message_id[..]
-                            .try_into()
-                            .map_err(|_| crate::Error::InvalidMessageIdLength)?,
-                    );
-                    curr_found_outputs.push(AddressOutput::from_output_metadata(output, bech32_hrp_.to_string())?);
-
-                    // if we already have the message stored
-                    // and the confirmation state is known
-                    // we skip the `get_message` call
-                    if account
-                        .messages()
-                        .iter()
-                        .any(|m| m.id() == &message_id && m.confirmed().is_some())
-                    {
-                        continue;
-                    }
-
-                    if let Ok(message) = client.get_message().data(&message_id).await {
-                        let metadata = client.get_message().metadata(&message_id).await?;
-                        curr_found_messages.push((
-                            message_id,
-                            metadata.ledger_inclusion_state.map(|l| l == "included"),
-                            message,
-                        ));
-                    }
-                }
-
-                // ignore unused change addresses
-                if *iota_address_internal && curr_found_outputs.is_empty() {
-                    log::debug!("[SYNC] ignoring address because it's internal and the output list is empty");
-                    return crate::Result::Ok((curr_found_messages, None));
-                }
-
-                let address = AddressBuilder::new()
+                let mut address = AddressBuilder::new()
                     .address(iota_address.clone())
                     .key_index(*iota_address_index)
-                    .balance(balance)
-                    .outputs(curr_found_outputs)
+                    .balance(0)
+                    .outputs(Vec::new())
                     .internal(*iota_address_internal)
                     .build()?;
-
-                crate::Result::Ok((curr_found_messages, Some(address)))
+                let messages = sync_address(&account, &mut address, bech32_hrp_).await?;
+                crate::Result::Ok((messages, address))
             });
         }
 
         let results = futures::future::join_all(futures_).await;
         for result in results {
-            let (found_messages, address_opt) = result?;
-            if let Some(address) = address_opt {
+            let (found_messages, address) = result?;
+            // if the address is a change address and has no outputs, we ignore it
+            if !(*address.internal() && address.outputs().is_empty()) {
                 curr_generated_addresses.push(address);
             }
             curr_found_messages.extend(found_messages);
@@ -230,7 +258,8 @@ async fn sync_messages(
                 let balance = client
                     .get_address()
                     .balance(&address.address().to_bech32().into())
-                    .await?;
+                    .await?
+                    .balance;
 
                 log::debug!(
                     "[SYNC] syncing messages and outputs for address {}, got {} outputs and balance {}",
@@ -244,7 +273,7 @@ async fn sync_messages(
                 for output in address_outputs.iter() {
                     let output = client.get_output(output).await?;
                     let output =
-                        AddressOutput::from_output_metadata(output, address.address().bech32_hrp().to_string())?;
+                        AddressOutput::from_output_response(output, address.address().bech32_hrp().to_string())?;
                     let output_message_id = *output.message_id();
 
                     outputs.push(output);
@@ -260,7 +289,9 @@ async fn sync_messages(
                         let metadata = client.get_message().metadata(&output_message_id).await?;
                         messages.push((
                             output_message_id,
-                            metadata.ledger_inclusion_state.map(|l| l == "included"),
+                            metadata
+                                .ledger_inclusion_state
+                                .map(|l| l == LedgerInclusionStateDto::Included),
                             message,
                         ));
                     }
@@ -453,7 +484,7 @@ impl AccountSynchronizer {
                 let synced_account = SyncedAccount {
                     account_id: account_ref.id().to_string(),
                     account_handle: self.account_handle.clone(),
-                    deposit_address: account_ref.latest_address().unwrap().clone(),
+                    deposit_address: account_ref.latest_address().clone(),
                     is_empty,
                     addresses: account_ref
                         .addresses()
@@ -796,7 +827,7 @@ async fn perform_transfer(
             // generate a new change address to send the remainder value
             RemainderValueStrategy::ChangeAddress => {
                 if *remainder_address.internal() {
-                    let deposit_address = account_.latest_address().unwrap().address().clone();
+                    let deposit_address = account_.latest_address().address().clone();
                     log::debug!(
                         "[TRANSFER] the remainder address is internal, so using latest address as remainder target: {}",
                         deposit_address.to_bech32()
@@ -888,7 +919,7 @@ async fn perform_transfer(
 
     // if this is a transfer to the account's latest address or we used the latest as deposit of the remainder
     // value, we generate a new one to keep the latest address unused
-    let latest_address = account_.latest_address().unwrap().address();
+    let latest_address = account_.latest_address().address();
     if latest_address == &transfer_obj.address
         || (remainder_value_deposit_address.is_some() && &remainder_value_deposit_address.unwrap() == latest_address)
     {
