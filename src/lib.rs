@@ -493,6 +493,7 @@ mod test_utils {
                 timestamp: chrono::Utc::now(),
                 nonce: 0,
                 value: self.value,
+                remainder_value: 0,
                 confirmed: Some(self.confirmed),
                 broadcasted: self.broadcasted,
                 incoming: self.incoming,

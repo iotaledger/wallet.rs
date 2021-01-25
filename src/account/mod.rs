@@ -517,13 +517,16 @@ impl Account {
 
     /// Gets the account balance information.
     pub fn balance(&self) -> AccountBalance {
-        let (incoming, outgoing) = self.messages.iter().fold((0, 0), |(incoming, outgoing), message| {
-            if *message.incoming() {
-                (incoming + *message.value(), outgoing)
-            } else {
-                (incoming, outgoing + *message.value())
-            }
-        });
+        let (incoming, outgoing) =
+            self.list_messages(0, 0, None)
+                .iter()
+                .fold((0, 0), |(incoming, outgoing), message| {
+                    if *message.incoming() {
+                        (incoming + *message.value(), outgoing)
+                    } else {
+                        (incoming + *message.remainder_value(), outgoing + *message.value())
+                    }
+                });
         AccountBalance {
             total: self.addresses.iter().fold(0, |acc, address| acc + address.balance()),
             available: self
