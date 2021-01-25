@@ -32,12 +32,14 @@ struct AddressIndexRecorder {
 // LedgerDeniedByUser: The user denied a signing
 // LedgerDeviceNotFound: No usable Ledger device was found
 // LedgerMiscError: Everything else.
+// LedgerEssenceTooLarge: Essence with bip32 input indices need more space then the internal buffer is big
 fn ledger_map_err(err: errors::APIError) -> crate::Error {
     // println!("{}", err);
     match err {
         errors::APIError::SecurityStatusNotSatisfied => crate::Error::LedgerDongleLocked,
         errors::APIError::ConditionsOfUseNotSatisfied => crate::Error::LedgerDeniedByUser,
         errors::APIError::TransportError => crate::Error::LedgerDeviceNotFound,
+        errors::APIError::EssenceTooLarge => crate::Error::EssenceTooLarge,
         _ => crate::Error::LedgerMiscError,
     }
 }
