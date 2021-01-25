@@ -134,6 +134,7 @@ mod tests {
             available_utxos.push(super::Input {
                 address: address.address().clone(),
                 balance: *address.balance(),
+                internal: false,
             });
         }
         available_utxos
