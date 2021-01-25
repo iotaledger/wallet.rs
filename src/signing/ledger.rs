@@ -12,7 +12,7 @@ const HARDENED: u32 = 0x80000000;
 
 #[derive(Default)]
 pub struct LedgerNanoSigner {
-    pub id : u64,
+    pub id: u64,
     pub is_simulator: bool,
 }
 
@@ -56,16 +56,17 @@ impl super::Signer for LedgerNanoSigner {
         meta: super::GenerateAddressMetadata,
     ) -> crate::Result<iota::Address> {
         // get ledger
-        let mut ledger =
-            ledger_iota::get_ledger(self.id, self.is_simulator, *account.index() as u32 | HARDENED).map_err(ledger_map_err)?;
+        let mut ledger = ledger_iota::get_ledger(self.id, self.is_simulator, *account.index() as u32 | HARDENED)
+            .map_err(ledger_map_err)?;
 
-        let bip32 = ledger_iota::LedgerBIP32Index{bip32_index: address_index as u32 | HARDENED, bip32_change: if internal { 1 } else { 0 } | HARDENED};
+        let bip32 = ledger_iota::LedgerBIP32Index {
+            bip32_index: address_index as u32 | HARDENED,
+            bip32_change: if internal { 1 } else { 0 } | HARDENED,
+        };
 
         // if the wallet is not generating addresses for syncing, we assume it's a new receiving address that
         // needs to be shown to the user
-        let address_bytes = ledger
-            .get_new_address(!meta.syncing, bip32)
-            .map_err(ledger_map_err)?;
+        let address_bytes = ledger.get_new_address(!meta.syncing, bip32).map_err(ledger_map_err)?;
 
         Ok(iota::Address::Ed25519(iota::Ed25519Address::new(address_bytes)))
     }
@@ -78,8 +79,8 @@ impl super::Signer for LedgerNanoSigner {
         meta: super::SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
         // get ledger
-        let ledger =
-            ledger_iota::get_ledger(self.id, self.is_simulator, *account.index() as u32 | HARDENED).map_err(ledger_map_err)?;
+        let ledger = ledger_iota::get_ledger(self.id, self.is_simulator, *account.index() as u32 | HARDENED)
+            .map_err(ledger_map_err)?;
 
         let input_len = inputs.len();
 
