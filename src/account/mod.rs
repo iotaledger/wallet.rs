@@ -524,7 +524,7 @@ impl Account {
                     if *message.incoming() {
                         (incoming + *message.value(), outgoing)
                     } else {
-                        (incoming + *message.remainder_value(), outgoing + *message.value())
+                        (incoming, outgoing + *message.value())
                     }
                 });
         AccountBalance {
