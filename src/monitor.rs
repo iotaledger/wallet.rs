@@ -88,21 +88,12 @@ async fn process_output(
         AddressOutput::from_output_response(output, address_to_update.address().bech32_hrp().to_string())?;
 
     let client_options_ = client_options.clone();
-    let message_id = address_output.message_id();
-    let message_id_ = *message_id;
-
-    let message = {
-        let client = crate::client::get_client(&client_options_);
-        let client = client.read().await;
-        client.get_message().data(&message_id_).await?
-    };
-
-    let message_id_ = *message_id;
+    let message_id = *address_output.message_id();
 
     address_to_update.handle_new_output(address_output);
     crate::event::emit_balance_change(&account_id, &address_to_update, *address_to_update.balance());
 
-    match account.messages_mut().iter().position(|m| m.id() == &message_id_) {
+    match account.messages_mut().iter().position(|m| m.id() == &message_id) {
         Some(message_index) => {
             account
                 .do_mut(|account| {
@@ -113,18 +104,27 @@ async fn process_output(
                 .await?;
         }
         None => {
-            let message = Message::from_iota_message(message_id_, account.addresses(), &message, Some(true)).unwrap();
-            crate::event::emit_transaction_event(
-                crate::event::TransactionEventType::NewTransaction,
-                account.id(),
-                &message,
-            );
-            account
-                .do_mut(|account| {
-                    account.messages_mut().push(message);
-                    Ok(())
-                })
-                .await?;
+            if let Ok(message) = crate::client::get_client(&client_options_)
+                .read()
+                .await
+                .get_message()
+                .data(&message_id)
+                .await
+            {
+                let message =
+                    Message::from_iota_message(message_id, account.addresses(), &message, Some(true)).unwrap();
+                crate::event::emit_transaction_event(
+                    crate::event::TransactionEventType::NewTransaction,
+                    account.id(),
+                    &message,
+                );
+                account
+                    .do_mut(|account| {
+                        account.messages_mut().push(message);
+                        Ok(())
+                    })
+                    .await?;
+            }
         }
     }
     Ok(())

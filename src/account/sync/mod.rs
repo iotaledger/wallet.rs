@@ -82,14 +82,15 @@ pub(crate) async fn sync_address(
         }
 
         if let Ok(message) = client.get_message().data(&message_id).await {
-            let metadata = client.get_message().metadata(&message_id).await?;
-            found_messages.push((
-                message_id,
-                metadata
-                    .ledger_inclusion_state
-                    .map(|l| l == LedgerInclusionStateDto::Included),
-                message,
-            ));
+            if let Ok(metadata) = client.get_message().metadata(&message_id).await {
+                found_messages.push((
+                    message_id,
+                    metadata
+                        .ledger_inclusion_state
+                        .map(|l| l == LedgerInclusionStateDto::Included),
+                    message,
+                ));
+            }
         }
     }
 
@@ -286,14 +287,15 @@ async fn sync_messages(
                     }
 
                     if let Ok(message) = client.get_message().data(&output_message_id).await {
-                        let metadata = client.get_message().metadata(&output_message_id).await?;
-                        messages.push((
-                            output_message_id,
-                            metadata
-                                .ledger_inclusion_state
-                                .map(|l| l == LedgerInclusionStateDto::Included),
-                            message,
-                        ));
+                        if let Ok(metadata) = client.get_message().metadata(&output_message_id).await {
+                            messages.push((
+                                output_message_id,
+                                metadata
+                                    .ledger_inclusion_state
+                                    .map(|l| l == LedgerInclusionStateDto::Included),
+                                message,
+                            ));
+                        }
                     }
                 }
 
