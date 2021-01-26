@@ -147,7 +147,7 @@ impl WalletMessageHandler {
                     self.account_manager
                         .is_latest_address_unused()
                         .await
-                        .map(ResponseType::IsLatestAddressUnused)
+                        .map(ResponseType::AreAllLatestAddressesUnused)
                 })
                 .await
             }
