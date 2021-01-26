@@ -58,11 +58,10 @@ impl super::Signer for StrongholdSigner {
         let serialized_essence = essence.pack_new();
 
         let mut unlock_blocks = vec![];
-        let mut current_block_index: usize = 0;
         let mut signature_indexes = HashMap::<usize, usize>::new();
         inputs.sort_by(|a, b| a.input.cmp(&b.input));
 
-        for recorder in inputs.iter() {
+        for (current_block_index, recorder) in inputs.iter().enumerate() {
             // Check if current path is same as previous path
             // If so, add a reference unlock block
             if let Some(block_index) = signature_indexes.get(&recorder.address_index) {
@@ -79,9 +78,6 @@ impl super::Signer for StrongholdSigner {
                 .await?;
                 unlock_blocks.push(UnlockBlock::Signature(signature.into()));
                 signature_indexes.insert(recorder.address_index, current_block_index);
-
-                // Update current block index
-                current_block_index += 1;
             }
         }
         Ok(unlock_blocks)
