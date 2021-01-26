@@ -462,8 +462,13 @@ impl AccountSynchronizer {
             let account_ref = self.account_handle.read().await;
             account_ref.clone()
         };
-        let message_ids_before_sync: Vec<MessageId> = account_.messages().iter().map(|m| *m.id()).collect();
-        let addresses_before_sync: Vec<String> = account_.addresses().iter().map(|a| a.address().to_bech32()).collect();
+        let messages_before_sync: Vec<(MessageId, Option<bool>)> =
+            account_.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
+        let addresses_before_sync: Vec<(String, u64, Vec<AddressOutput>)> = account_
+            .addresses()
+            .iter()
+            .map(|a| (a.address().to_bech32(), *a.balance(), a.outputs().to_vec()))
+            .collect();
 
         let return_value = match perform_sync(&mut account_, self.address_index, self.gap_limit, self.steps).await {
             Ok(is_empty) => {
@@ -490,16 +495,24 @@ impl AccountSynchronizer {
                         .addresses()
                         .iter()
                         .filter(|a| {
-                            !addresses_before_sync
+                            match addresses_before_sync
                                 .iter()
-                                .any(|addr| addr == &a.address().to_bech32())
+                                .find(|(addr, _, _)| addr == &a.address().to_bech32())
+                            {
+                                Some((_, balance, outputs)) => balance != a.balance() || outputs != a.outputs(),
+                                None => true,
+                            }
                         })
                         .cloned()
                         .collect(),
                     messages: account_ref
                         .messages()
                         .iter()
-                        .filter(|m| !message_ids_before_sync.iter().any(|id| id == m.id()))
+                        .filter(|m| {
+                            !messages_before_sync
+                                .iter()
+                                .any(|(id, confirmed)| id == m.id() && confirmed == m.confirmed())
+                        })
                         .cloned()
                         .collect(),
                 };
@@ -533,10 +546,10 @@ pub struct SyncedAccount {
     #[serde(rename = "isEmpty")]
     #[getset(get = "pub(crate)")]
     is_empty: bool,
-    /// The account messages.
+    /// The newly found and updated account messages.
     #[getset(get = "pub")]
     messages: Vec<Message>,
-    /// The account addresses.
+    /// The newly generated and updated account addresses.
     #[getset(get = "pub")]
     addresses: Vec<Address>,
 }
