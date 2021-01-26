@@ -467,13 +467,7 @@ impl AccountSynchronizer {
         let addresses_before_sync: Vec<(String, u64, Vec<AddressOutput>)> = account_
             .addresses()
             .iter()
-            .map(|a| {
-                (
-                    a.address().to_bech32(),
-                    *a.balance(),
-                    a.outputs().iter().cloned().collect(),
-                )
-            })
+            .map(|a| (a.address().to_bech32(), *a.balance(), a.outputs().to_vec()))
             .collect();
 
         let return_value = match perform_sync(&mut account_, self.address_index, self.gap_limit, self.steps).await {
