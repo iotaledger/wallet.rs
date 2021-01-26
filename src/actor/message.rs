@@ -333,8 +333,10 @@ pub enum ResponseType {
     VerifiedMnemonic,
     /// StoreMnemonic response.
     StoredMnemonic,
-    /// IsLatestAddressUnused response.
+    /// AccountMethod's IsLatestAddressUnused response.
     IsLatestAddressUnused(bool),
+    /// IsLatestAddressUnused response.
+    AreAllLatestAddressesUnused(bool),
     /// SetAlias response.
     UpdatedAlias,
     /// SetClientOptions response.
