@@ -141,6 +141,8 @@ impl super::Signer for LedgerNanoSigner {
             for key in addr_pool.keys() {
                 log::debug!("{}", key);
             }
+        } else {
+            log::info!("Got {} from pool", pool_key);
         }
         Ok(iota::Address::Ed25519(iota::Ed25519Address::new(addr_pool[&pool_key])))
     }
