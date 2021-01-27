@@ -116,8 +116,8 @@ fn default_signers() -> Signers {
         signers.insert(
             SignerType::LedgerNano,
             Arc::new(Mutex::new(Box::new(ledger::LedgerNanoSigner {
-                id: 0u64,
                 is_simulator: false,
+                ..Default::default()
             }) as Box<dyn Signer + Sync + Send>)),
         );
     }
@@ -127,8 +127,8 @@ fn default_signers() -> Signers {
         signers.insert(
             SignerType::LedgerNanoSimulator,
             Arc::new(Mutex::new(Box::new(ledger::LedgerNanoSigner {
-                id: 1u64,
                 is_simulator: true,
+                ..Default::default()
             }) as Box<dyn Signer + Sync + Send>)),
         );
     }
