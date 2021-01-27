@@ -118,7 +118,8 @@ impl WalletMessageHandler {
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             MessageType::GetStrongholdStatus => {
                 convert_async_panics(|| async {
-                    let status = crate::stronghold::get_status(self.account_manager.storage_path()).await;
+                    let status =
+                        crate::stronghold::get_status(&self.account_manager.stronghold_snapshot_path().await?).await;
                     Ok(ResponseType::StrongholdStatus(status))
                 })
                 .await
@@ -147,7 +148,7 @@ impl WalletMessageHandler {
                     self.account_manager
                         .is_latest_address_unused()
                         .await
-                        .map(ResponseType::IsLatestAddressUnused)
+                        .map(ResponseType::AreAllLatestAddressesUnused)
                 })
                 .await
             }
@@ -251,12 +252,7 @@ impl WalletMessageHandler {
                 let addresses = account_handle.list_unspent_addresses().await;
                 Ok(ResponseType::Addresses(addresses))
             }
-            AccountMethod::GetAvailableBalance => Ok(ResponseType::AvailableBalance(
-                account_handle.read().await.available_balance(),
-            )),
-            AccountMethod::GetTotalBalance => {
-                Ok(ResponseType::TotalBalance(account_handle.read().await.total_balance()))
-            }
+            AccountMethod::GetBalance => Ok(ResponseType::Balance(account_handle.read().await.balance())),
             AccountMethod::GetLatestAddress => Ok(ResponseType::LatestAddress(
                 account_handle.read().await.latest_address().clone(),
             )),

@@ -82,14 +82,15 @@ pub(crate) async fn sync_address(
         }
 
         if let Ok(message) = client.get_message().data(&message_id).await {
-            let metadata = client.get_message().metadata(&message_id).await?;
-            found_messages.push((
-                message_id,
-                metadata
-                    .ledger_inclusion_state
-                    .map(|l| l == LedgerInclusionStateDto::Included),
-                message,
-            ));
+            if let Ok(metadata) = client.get_message().metadata(&message_id).await {
+                found_messages.push((
+                    message_id,
+                    metadata
+                        .ledger_inclusion_state
+                        .map(|l| l == LedgerInclusionStateDto::Included),
+                    message,
+                ));
+            }
         }
     }
 
@@ -118,7 +119,7 @@ async fn get_address_for_sync(
         crate::address::get_iota_address(
             &account,
             index,
-            false,
+            internal,
             bech32_hrp,
             GenerateAddressMetadata { syncing: true },
         )
@@ -286,14 +287,15 @@ async fn sync_messages(
                     }
 
                     if let Ok(message) = client.get_message().data(&output_message_id).await {
-                        let metadata = client.get_message().metadata(&output_message_id).await?;
-                        messages.push((
-                            output_message_id,
-                            metadata
-                                .ledger_inclusion_state
-                                .map(|l| l == LedgerInclusionStateDto::Included),
-                            message,
-                        ));
+                        if let Ok(metadata) = client.get_message().metadata(&output_message_id).await {
+                            messages.push((
+                                output_message_id,
+                                metadata
+                                    .ledger_inclusion_state
+                                    .map(|l| l == LedgerInclusionStateDto::Included),
+                                message,
+                            ));
+                        }
                     }
                 }
 
@@ -462,8 +464,13 @@ impl AccountSynchronizer {
             let account_ref = self.account_handle.read().await;
             account_ref.clone()
         };
-        let message_ids_before_sync: Vec<MessageId> = account_.messages().iter().map(|m| *m.id()).collect();
-        let addresses_before_sync: Vec<String> = account_.addresses().iter().map(|a| a.address().to_bech32()).collect();
+        let messages_before_sync: Vec<(MessageId, Option<bool>)> =
+            account_.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
+        let addresses_before_sync: Vec<(String, u64, Vec<AddressOutput>)> = account_
+            .addresses()
+            .iter()
+            .map(|a| (a.address().to_bech32(), *a.balance(), a.outputs().to_vec()))
+            .collect();
 
         let return_value = match perform_sync(&mut account_, self.address_index, self.gap_limit, self.steps).await {
             Ok(is_empty) => {
@@ -490,16 +497,24 @@ impl AccountSynchronizer {
                         .addresses()
                         .iter()
                         .filter(|a| {
-                            !addresses_before_sync
+                            match addresses_before_sync
                                 .iter()
-                                .any(|addr| addr == &a.address().to_bech32())
+                                .find(|(addr, _, _)| addr == &a.address().to_bech32())
+                            {
+                                Some((_, balance, outputs)) => balance != a.balance() || outputs != a.outputs(),
+                                None => true,
+                            }
                         })
                         .cloned()
                         .collect(),
                     messages: account_ref
                         .messages()
                         .iter()
-                        .filter(|m| !message_ids_before_sync.iter().any(|id| id == m.id()))
+                        .filter(|m| {
+                            !messages_before_sync
+                                .iter()
+                                .any(|(id, confirmed)| id == m.id() && confirmed == m.confirmed())
+                        })
                         .cloned()
                         .collect(),
                 };
@@ -533,10 +548,10 @@ pub struct SyncedAccount {
     #[serde(rename = "isEmpty")]
     #[getset(get = "pub(crate)")]
     is_empty: bool,
-    /// The account messages.
+    /// The newly found and updated account messages.
     #[getset(get = "pub")]
     messages: Vec<Message>,
-    /// The account addresses.
+    /// The newly generated and updated account addresses.
     #[getset(get = "pub")]
     addresses: Vec<Address>,
 }
@@ -569,6 +584,7 @@ impl SyncedAccount {
             })
             .map(|a| input_selection::Input {
                 address: a.address().clone(),
+                internal: *a.internal(),
                 balance: a.available_balance(&account),
             })
             .collect();
@@ -603,11 +619,13 @@ impl SyncedAccount {
         // prepare the transfer getting some needed objects and values
         let value = transfer_obj.amount.get();
 
-        if value > account_.total_balance() {
+        let balance = account_.balance();
+
+        if value > balance.total {
             return Err(crate::Error::InsufficientFunds);
         }
 
-        let available_balance = account_.available_balance();
+        let available_balance = balance.available;
         drop(account_);
 
         // if the transfer value exceeds the account's available balance,
@@ -623,7 +641,7 @@ impl SyncedAccount {
                     thread::sleep(OUTPUT_LOCK_TIMEOUT / 30);
                     let account = crate::block_on(async { account_handle.read().await });
                     // the account received an update and now the balance is sufficient
-                    if value <= account.available_balance() {
+                    if value <= account.balance().available {
                         let _ = tx.send(());
                         break;
                     }
@@ -748,9 +766,12 @@ async fn perform_transfer(
         utxos.extend(outputs.into_iter());
     }
 
-    let mut essence_builder = TransactionPayloadEssence::builder();
+    let mut essence_builder = TransactionPayloadEssence::builder().add_output(
+        SignatureLockedSingleOutput::new(*transfer_obj.address.as_ref(), transfer_obj.amount.get())?.into(),
+    );
     let mut current_output_sum = 0;
     let mut remainder_value = 0;
+
     for (utxo, address_index, address_internal, address_path) in utxos {
         let input: Input = UTXOInput::new(*utxo.transaction_id(), *utxo.index())?.into();
         essence_builder = essence_builder.add_input(input.clone());
@@ -774,12 +795,10 @@ async fn perform_transfer(
                 current_output_sum,
                 utxo.amount()
             );
-            // if the used UTXO amount is greater than the transfer value, this is the last iteration and we'll have
-            // remainder value. we add an Output for the missing value and collect the remainder
+            // if the used UTXO amount is greater than the transfer value,
+            // this is the last iteration and we'll have remainder value
             let missing_value = transfer_obj.amount.get() - current_output_sum;
             remainder_value += *utxo.amount() - missing_value;
-            essence_builder = essence_builder
-                .add_output(SignatureLockedSingleOutput::new(*transfer_obj.address.as_ref(), missing_value)?.into());
             current_output_sum += missing_value;
             log::debug!(
                 "[TRANSFER] added output with the missing value {}, and the remainder is {}",
@@ -792,8 +811,6 @@ async fn perform_transfer(
                 utxo.amount(),
                 current_output_sum
             );
-            essence_builder = essence_builder
-                .add_output(SignatureLockedSingleOutput::new(*transfer_obj.address.as_ref(), *utxo.amount())?.into());
             current_output_sum += *utxo.amount();
         }
     }
@@ -827,7 +844,12 @@ async fn perform_transfer(
             // generate a new change address to send the remainder value
             RemainderValueStrategy::ChangeAddress => {
                 if *remainder_address.internal() {
-                    let deposit_address = account_.latest_address().address().clone();
+                    let mut deposit_address = account_.latest_address().address().clone();
+                    // if the latest address is the transfer's address, we'll generate a new one as remainder deposit
+                    if deposit_address == transfer_obj.address {
+                        account_handle.generate_address_internal(&mut account_).await?;
+                        deposit_address = account_.latest_address().address().clone();
+                    }
                     log::debug!(
                         "[TRANSFER] the remainder address is internal, so using latest address as remainder target: {}",
                         deposit_address.to_bech32()

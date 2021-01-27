@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    account::{Account, AccountIdentifier, SyncedAccount},
+    account::{Account, AccountBalance, AccountIdentifier, SyncedAccount},
     address::Address,
     client::ClientOptions,
     message::{Message as WalletMessage, MessageType as WalletMessageType, TransferBuilder},
@@ -60,10 +60,8 @@ pub enum AccountMethod {
     ListSpentAddresses,
     /// List unspent addresses.
     ListUnspentAddresses,
-    /// Get available balance.
-    GetAvailableBalance,
-    /// Get total balance.
-    GetTotalBalance,
+    /// Get account balance information.
+    GetBalance,
     /// Get latest address.
     GetLatestAddress,
     /// Sync the account.
@@ -293,10 +291,8 @@ pub enum ResponseType {
     UnusedAddress(Address),
     /// GetLatestAddress response.
     LatestAddress(Address),
-    /// GetAvailableBalance response.
-    AvailableBalance(u64),
-    /// GetTotalBalance response.
-    TotalBalance(u64),
+    /// GetBalance response.
+    Balance(AccountBalance),
     /// SyncAccounts response.
     SyncedAccounts(Vec<SyncedAccount>),
     /// SyncAccount response.
@@ -337,8 +333,10 @@ pub enum ResponseType {
     VerifiedMnemonic,
     /// StoreMnemonic response.
     StoredMnemonic,
-    /// IsLatestAddressUnused response.
+    /// AccountMethod's IsLatestAddressUnused response.
     IsLatestAddressUnused(bool),
+    /// IsLatestAddressUnused response.
+    AreAllLatestAddressesUnused(bool),
     /// SetAlias response.
     UpdatedAlias,
     /// SetClientOptions response.

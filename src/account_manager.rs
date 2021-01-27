@@ -291,6 +291,17 @@ impl AccountManager {
         Ok((Arc::new(RwLock::new(parsed_accounts)), encrypted_accounts))
     }
 
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    pub(crate) async fn stronghold_snapshot_path(&self) -> crate::Result<PathBuf> {
+        let storage_id = crate::storage::get(&self.storage_path).await?.lock().await.id();
+        let stronghold_snapshot_path = if storage_id == crate::storage::stronghold::STORAGE_ID {
+            self.storage_path.clone()
+        } else {
+            self.storage_folder.join(STRONGHOLD_FILENAME)
+        };
+        Ok(stronghold_snapshot_path)
+    }
+
     // error out if the storage is encrypted
     fn check_storage_encryption(&self) -> crate::Result<()> {
         if self.encrypted_accounts.is_empty() {
@@ -517,7 +528,7 @@ impl AccountManager {
             let account_handle = self.get_account(account_id).await?;
             let account = account_handle.read().await;
 
-            if !(account.messages().is_empty() && account.total_balance() == 0) {
+            if !(account.messages().is_empty() && account.balance().total == 0) {
                 return Err(crate::Error::AccountNotEmpty);
             }
 
@@ -588,7 +599,7 @@ impl AccountManager {
             any(feature = "stronghold", feature = "stronghold-storage")
         ))]
         let (storage_path, backup_entire_directory) = {
-            let storage_id = crate::storage::get(&&self.storage_path).await?.lock().await.id();
+            let storage_id = crate::storage::get(&self.storage_path).await?.lock().await.id();
             // if we're actually using the SQLite storage adapter
             let storage_path = if storage_id == crate::storage::sqlite::STORAGE_ID {
                 // create a account manager to setup the stronghold storage for the backup
@@ -1395,7 +1406,7 @@ mod tests {
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             {
                 // wait for stronghold to finish pending operations and delete the storage file
-                crate::stronghold::unload_snapshot(manager.storage_path(), false)
+                crate::stronghold::unload_snapshot(&manager.stronghold_snapshot_path().await.unwrap(), false)
                     .await
                     .unwrap();
                 let _ = crate::stronghold::actor_runtime().lock().await;

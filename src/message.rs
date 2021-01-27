@@ -12,6 +12,7 @@ use std::{
     fmt,
     hash::{Hash, Hasher},
     num::NonZeroU64,
+    unimplemented,
 };
 
 /// The strategy to use for the remainder value management when sending funds.
@@ -245,6 +246,8 @@ pub struct Message {
     pub(crate) incoming: bool,
     /// The message's value.
     pub(crate) value: u64,
+    /// The message's remainder value sum.
+    pub(crate) remainder_value: u64,
 }
 
 impl Hash for Message {
@@ -281,6 +284,18 @@ impl Message {
         let mut packed_payload = Vec::new();
         let _ = message.payload().pack(&mut packed_payload);
 
+        let total_value = match message.payload().as_ref() {
+            Some(Payload::Transaction(tx)) => tx.essence().outputs().iter().fold(0, |acc, output| {
+                acc + match output {
+                    Output::SignatureLockedDustAllowance(o) => o.amount(),
+                    Output::SignatureLockedSingle(o) => o.amount(),
+                    _ => 0,
+                }
+            }),
+            _ => 0,
+        };
+        let value = Self::compute_value(&message, &id, &account_addresses).without_denomination();
+
         let message = Self {
             id,
             version: 1,
@@ -295,7 +310,8 @@ impl Message {
             incoming: account_addresses
                 .iter()
                 .any(|address| address.outputs().iter().any(|o| o.message_id() == &id)),
-            value: Self::compute_value(&message, &id, &account_addresses).without_denomination(),
+            value,
+            remainder_value: total_value - value,
         };
 
         Ok(message)
@@ -308,12 +324,10 @@ impl Message {
                 .essence()
                 .outputs()
                 .iter()
-                .map(|output| {
-                    if let Output::SignatureLockedSingle(x) = output {
-                        x.address()
-                    } else {
-                        unimplemented!()
-                    }
+                .map(|output| match output {
+                    Output::SignatureLockedDustAllowance(o) => o.address(),
+                    Output::SignatureLockedSingle(o) => o.address(),
+                    _ => unimplemented!(),
                 })
                 .collect(),
             _ => vec![],
@@ -328,20 +342,20 @@ impl Message {
                     .iter()
                     .any(|address| address.outputs().iter().any(|o| o.message_id() == id));
                 tx.essence().outputs().iter().fold(0, |acc, output| {
-                    if let Output::SignatureLockedSingle(x) = output {
-                        let address_belongs_to_account =
-                            account_addresses.iter().any(|a| a.address().as_ref() == x.address());
-                        if sent {
-                            if address_belongs_to_account {
-                                acc
-                            } else {
-                                acc + x.amount()
-                            }
-                        } else if address_belongs_to_account {
-                            acc + x.amount()
-                        } else {
+                    let (address, amount) = match output {
+                        Output::SignatureLockedDustAllowance(o) => (o.address(), o.amount()),
+                        Output::SignatureLockedSingle(o) => (o.address(), o.amount()),
+                        _ => unimplemented!(),
+                    };
+                    let address_belongs_to_account = account_addresses.iter().any(|a| a.address().as_ref() == address);
+                    if sent {
+                        if address_belongs_to_account {
                             acc
+                        } else {
+                            acc + amount
                         }
+                    } else if address_belongs_to_account {
+                        acc + amount
                     } else {
                         acc
                     }

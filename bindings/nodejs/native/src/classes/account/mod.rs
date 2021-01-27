@@ -57,30 +57,17 @@ declare_types! {
             Ok(cx.string(alias).upcast())
         }
 
-        method availableBalance(mut cx) {
+        method balance(mut cx) {
             let balance = {
                 let this = cx.this();
                 let guard = cx.lock();
                 let id = &this.borrow(&guard).0;
                 crate::block_on(async move {
                     let account_handle = crate::get_account(id).await;
-                    account_handle.available_balance().await
+                    account_handle.balance().await
                 })
             };
-            Ok(cx.number(balance as f64).upcast())
-        }
-
-        method totalBalance(mut cx) {
-            let balance = {
-                let this = cx.this();
-                let guard = cx.lock();
-                let id = &this.borrow(&guard).0;
-                crate::block_on(async move {
-                    let account_handle = crate::get_account(id).await;
-                    account_handle.total_balance().await
-                })
-            };
-            Ok(cx.number(balance as f64).upcast())
+            Ok(neon_serde::to_value(&mut cx, &balance)?.upcast())
         }
 
         method listMessages(mut cx) {
