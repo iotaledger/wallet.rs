@@ -6,16 +6,14 @@ use crate::account::Account;
 use iota::{common::packable::Packable, UnlockBlock};
 use std::path::PathBuf;
 
-use ledger_iota::LedgerHardwareWallet;
-
 use ledger_iota::{api::errors, LedgerBIP32Index};
+use std::collections::HashMap;
+use std::fmt;
+use std::sync::Mutex;
 
 const HARDENED: u32 = 0x80000000;
 
 pub struct LedgerNanoSigner {
-    pub id: u64,
-    pub account: u32,
-    pub ledger: Option<Box<LedgerHardwareWallet>>,
     pub is_simulator: bool,
 }
 
@@ -27,6 +25,28 @@ struct AddressIndexRecorder {
 
     /// bip32 index
     pub bip32: LedgerBIP32Index,
+}
+
+use once_cell::sync::Lazy;
+
+static ADDR_POOL: Lazy<Mutex<HashMap<AddressPoolEntry, [u8; 32]>>> = Lazy::new(|| Mutex::new(HashMap::new()));
+static MUTEX: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
+
+#[derive(Hash, Eq, PartialEq)]
+struct AddressPoolEntry {
+    bip32_account: u32,
+    bip32_index: u32,
+    bip32_change: u32,
+}
+
+impl fmt::Display for AddressPoolEntry {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{:08x}:{:08x}:{:08x}",
+            self.bip32_account, self.bip32_change, self.bip32_index
+        )
+    }
 }
 
 // map most errors to a single error but there are some errors that
@@ -47,36 +67,6 @@ fn ledger_map_err(err: errors::APIError) -> crate::Error {
     }
 }
 
-impl LedgerNanoSigner {
-    pub fn new(id: u64, is_simulator: bool) -> Self {
-        LedgerNanoSigner {
-            account: 0u32,
-            id,
-            is_simulator,
-            ledger: None,
-        }
-    }
-
-    /// Init the ledger object or get it. The `account` is set only once at init, that means generating addresses for
-    /// different accounts with a single signer object instance is intentionally not allowed.
-    fn get_or_init(&mut self, account: u32) -> crate::Result<&mut LedgerHardwareWallet> {
-        match &self.ledger {
-            None => {
-                self.ledger =
-                    Some(ledger_iota::get_ledger(self.id, self.is_simulator, account).map_err(ledger_map_err)?);
-                self.account = account;
-            }
-            _ => {
-                if account != self.account {
-                    log::error!("account index changed from {} to {}!", self.account, account);
-                    return Err(crate::Error::LedgerMiscError);
-                }
-            }
-        };
-        Ok(self.ledger.as_mut().unwrap())
-    }
-}
-
 #[async_trait::async_trait]
 impl super::Signer for LedgerNanoSigner {
     async fn store_mnemonic(&mut self, _: &PathBuf, _mnemonic: String) -> crate::Result<()> {
@@ -90,18 +80,69 @@ impl super::Signer for LedgerNanoSigner {
         internal: bool,
         meta: super::GenerateAddressMetadata,
     ) -> crate::Result<iota::Address> {
-        let ledger = self.get_or_init(*account.index() as u32 | HARDENED)?;
+        // lock the mutex
+        let _lock = MUTEX.lock().map_err(|_| crate::Error::LedgerMiscError)?;
+
+        let bip32_account = *account.index() as u32 | HARDENED;
 
         let bip32 = ledger_iota::LedgerBIP32Index {
             bip32_index: address_index as u32 | HARDENED,
             bip32_change: if internal { 1 } else { 0 } | HARDENED,
         };
 
-        // if the wallet is not generating addresses for syncing, we assume it's a new receiving address that
-        // needs to be shown to the user
-        let address_bytes = ledger.get_new_address(!meta.syncing, bip32).map_err(ledger_map_err)?;
+        // if it's not for syncing, then it's a new receiving / remainder address
+        // that needs shown to the user
+        if !meta.syncing {
+            log::info!("Interactive address display - not using address pool");
 
-        Ok(iota::Address::Ed25519(iota::Ed25519Address::new(address_bytes)))
+            // get ledger
+            let ledger = ledger_iota::get_ledger(bip32_account, self.is_simulator).map_err(ledger_map_err)?;
+
+            // and generate a single address that is shown to the user
+            let addr = ledger.get_addresses(true, bip32, 1).map_err(ledger_map_err)?;
+            return Ok(iota::Address::Ed25519(iota::Ed25519Address::new(
+                *addr.first().unwrap(),
+            )));
+        }
+
+        let pool_key = AddressPoolEntry {
+            bip32_account,
+            bip32_index: bip32.bip32_index,
+            bip32_change: bip32.bip32_change,
+        };
+
+        let mut addr_pool = ADDR_POOL.lock().unwrap();
+        if !addr_pool.contains_key(&pool_key) {
+            log::info!("Adress {} not found in address pool", pool_key);
+            // if not, we add new entries to the pool but limit the pool size
+            if addr_pool.len() > 10000 {
+                log::error!("address pool has too many entries");
+                return Err(crate::Error::LedgerMiscError);
+            }
+
+            let count = 15;
+            let ledger = ledger_iota::get_ledger(bip32_account, self.is_simulator).map_err(ledger_map_err)?;
+            let addresses = ledger.get_addresses(false, bip32, count).map_err(ledger_map_err)?;
+
+            // now put all addresses into the pool
+            for i in 0..count {
+                addr_pool.insert(
+                    AddressPoolEntry {
+                        bip32_account,
+                        bip32_index: bip32.bip32_index + i as u32,
+                        bip32_change: bip32.bip32_change,
+                    },
+                    *addresses.get(i).unwrap(),
+                );
+            }
+            log::info!("New address pool size is {}", addr_pool.len());
+
+            log::debug!("addresses in pool:");
+            for key in addr_pool.keys() {
+                log::debug!("{}", key);
+            }
+        }
+        Ok(iota::Address::Ed25519(iota::Ed25519Address::new(addr_pool[&pool_key])))
     }
 
     async fn sign_message<'a>(
@@ -111,7 +152,11 @@ impl super::Signer for LedgerNanoSigner {
         inputs: &mut Vec<super::TransactionInput>,
         meta: super::SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
-        let ledger = self.get_or_init(*account.index() as u32 | HARDENED)?;
+        // lock the mutex
+        let _lock = MUTEX.lock().map_err(|_| crate::Error::LedgerMiscError)?;
+
+        let bip32_account = *account.index() as u32 | HARDENED;
+        let ledger = ledger_iota::get_ledger(bip32_account, self.is_simulator).map_err(ledger_map_err)?;
 
         let input_len = inputs.len();
 
