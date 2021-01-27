@@ -72,6 +72,17 @@ impl AddressOutput {
                 };
                 (address, output.amount)
             }
+            OutputDto::SignatureLockedDustAllowance(output) => {
+                let address = match output.address {
+                    AddressDto::Ed25519(ed25519_address) => IotaAddress::Ed25519(Ed25519Address::new(
+                        hex::decode(ed25519_address.address)
+                            .map_err(|_| crate::Error::InvalidAddress)?
+                            .try_into()
+                            .map_err(|_| crate::Error::InvalidAddressLength)?,
+                    )),
+                };
+                (address, output.amount)
+            }
         };
         let output = Self {
             transaction_id: TransactionId::new(

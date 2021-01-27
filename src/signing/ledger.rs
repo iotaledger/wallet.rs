@@ -3,18 +3,19 @@
 
 use crate::account::Account;
 
-use iota::{common::packable::Packable, UnlockBlock};
-use std::path::PathBuf;
+use std::{collections::HashMap, fmt, path::PathBuf};
 
+use iota::{common::packable::Packable, UnlockBlock};
 use ledger_iota::{api::errors, LedgerBIP32Index};
-use std::collections::HashMap;
-use std::fmt;
-use std::sync::Mutex;
+use tokio::sync::Mutex;
 
 const HARDENED: u32 = 0x80000000;
 
+#[derive(Default)]
 pub struct LedgerNanoSigner {
     pub is_simulator: bool,
+    pub address_poll: Mutex<HashMap<AddressPoolEntry, [u8; 32]>>,
+    pub mutex: Mutex<()>,
 }
 
 /// A record matching an Input with its address.
@@ -27,13 +28,8 @@ struct AddressIndexRecorder {
     pub bip32: LedgerBIP32Index,
 }
 
-use once_cell::sync::Lazy;
-
-static ADDR_POOL: Lazy<Mutex<HashMap<AddressPoolEntry, [u8; 32]>>> = Lazy::new(|| Mutex::new(HashMap::new()));
-static MUTEX: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
-
 #[derive(Hash, Eq, PartialEq)]
-struct AddressPoolEntry {
+pub struct AddressPoolEntry {
     bip32_account: u32,
     bip32_index: u32,
     bip32_change: u32,
@@ -81,7 +77,7 @@ impl super::Signer for LedgerNanoSigner {
         meta: super::GenerateAddressMetadata,
     ) -> crate::Result<iota::Address> {
         // lock the mutex
-        let _lock = MUTEX.lock().map_err(|_| crate::Error::LedgerMiscError)?;
+        let _lock = self.mutex.lock().await;
 
         let bip32_account = *account.index() as u32 | HARDENED;
 
@@ -111,7 +107,7 @@ impl super::Signer for LedgerNanoSigner {
             bip32_change: bip32.bip32_change,
         };
 
-        let mut addr_pool = ADDR_POOL.lock().unwrap();
+        let mut addr_pool = self.address_poll.lock().await;
         if !addr_pool.contains_key(&pool_key) {
             log::info!("Adress {} not found in address pool", pool_key);
             // if not, we add new entries to the pool but limit the pool size
@@ -155,7 +151,7 @@ impl super::Signer for LedgerNanoSigner {
         meta: super::SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
         // lock the mutex
-        let _lock = MUTEX.lock().map_err(|_| crate::Error::LedgerMiscError)?;
+        let _lock = self.mutex.lock().await;
 
         let bip32_account = *account.index() as u32 | HARDENED;
         let ledger = ledger_iota::get_ledger(bip32_account, self.is_simulator).map_err(ledger_map_err)?;
