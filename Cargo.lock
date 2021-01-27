@@ -329,7 +329,7 @@ dependencies = [
 [[package]]
 name = "bee-ledger"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#81ea8cc7856f23ff2e85d9e0dc10a9b610fb8787"
+source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#5169b610b7220badb90003322e7cc434f999cb7b"
 dependencies = [
  "async-trait",
  "bee-common",
@@ -355,7 +355,7 @@ dependencies = [
 [[package]]
 name = "bee-message"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#81ea8cc7856f23ff2e85d9e0dc10a9b610fb8787"
+source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#5169b610b7220badb90003322e7cc434f999cb7b"
 dependencies = [
  "bech32",
  "bee-common",
@@ -372,7 +372,7 @@ dependencies = [
 [[package]]
 name = "bee-network"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#81ea8cc7856f23ff2e85d9e0dc10a9b610fb8787"
+source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#5169b610b7220badb90003322e7cc434f999cb7b"
 dependencies = [
  "async-trait",
  "bee-common",
@@ -392,7 +392,7 @@ dependencies = [
 [[package]]
 name = "bee-pow"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#81ea8cc7856f23ff2e85d9e0dc10a9b610fb8787"
+source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#5169b610b7220badb90003322e7cc434f999cb7b"
 dependencies = [
  "bee-crypto",
  "bee-ternary",
@@ -403,7 +403,7 @@ dependencies = [
 [[package]]
 name = "bee-protocol"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#81ea8cc7856f23ff2e85d9e0dc10a9b610fb8787"
+source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#5169b610b7220badb90003322e7cc434f999cb7b"
 dependencies = [
  "async-channel",
  "async-trait",
@@ -438,7 +438,7 @@ dependencies = [
 [[package]]
 name = "bee-rest-api"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#81ea8cc7856f23ff2e85d9e0dc10a9b610fb8787"
+source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#5169b610b7220badb90003322e7cc434f999cb7b"
 dependencies = [
  "async-trait",
  "bech32",
@@ -509,7 +509,7 @@ dependencies = [
 [[package]]
 name = "bee-snapshot"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#81ea8cc7856f23ff2e85d9e0dc10a9b610fb8787"
+source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#5169b610b7220badb90003322e7cc434f999cb7b"
 dependencies = [
  "async-trait",
  "bee-common",
@@ -540,7 +540,7 @@ dependencies = [
 [[package]]
 name = "bee-tangle"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#81ea8cc7856f23ff2e85d9e0dc10a9b610fb8787"
+source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#5169b610b7220badb90003322e7cc434f999cb7b"
 dependencies = [
  "async-rwlock",
  "async-trait",
@@ -1832,7 +1832,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?branch=dev#00312522d685698dfaf72c6b78a9365928b4a21b"
+source = "git+https://github.com/iotaledger/iota.rs?branch=dev#5ba54bd7125c56dbb5052c2be31a4a3d6da42326"
 dependencies = [
  "bee-common",
  "bee-crypto",
@@ -1857,7 +1857,7 @@ dependencies = [
 [[package]]
 name = "iota-core"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?branch=dev#00312522d685698dfaf72c6b78a9365928b4a21b"
+source = "git+https://github.com/iotaledger/iota.rs?branch=dev#5ba54bd7125c56dbb5052c2be31a4a3d6da42326"
 dependencies = [
  "bee-common",
  "bee-message",
@@ -2015,7 +2015,7 @@ source = "git+https://gitlab.com/ledger-iota-chrysalis/ledger-rs#f1ce23e084a074e
 [[package]]
 name = "ledger-iota"
 version = "0.1.0"
-source = "git+https://gitlab.com/ledger-iota-chrysalis/ledger-iota.rs#19517357ede7d7d7247736ee12282703660fb39f"
+source = "git+https://gitlab.com/ledger-iota-chrysalis/ledger-iota.rs#8c242f3adcbadbec31f3620d999752c8640998bd"
 dependencies = [
  "bech32",
  "enum-iterator",
@@ -2330,11 +2330,11 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.13"
+version = "0.4.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fcf3805d4480bb5b86070dcfeb9e2cb2ebc148adb753c5cca5f884d1d65a42b2"
+checksum = "51b9bbe6c47d51fc3e1a9b945965946b4c44142ab8792c50835a980d362c2710"
 dependencies = [
- "cfg-if 0.1.10",
+ "cfg-if 1.0.0",
  "serde 1.0.123",
 ]
 
