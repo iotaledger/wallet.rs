@@ -2015,7 +2015,7 @@ source = "git+https://gitlab.com/ledger-iota-chrysalis/ledger-rs#f1ce23e084a074e
 [[package]]
 name = "ledger-iota"
 version = "0.1.0"
-source = "git+https://gitlab.com/ledger-iota-chrysalis/ledger-iota.rs#a9a66ae3818527c5d55a7aa1e3d590c0dd012e2c"
+source = "git+https://gitlab.com/ledger-iota-chrysalis/ledger-iota.rs#2a125cd25aca8de915b92865f9231b8ecf90d65d"
 dependencies = [
  "bech32",
  "enum-iterator",
