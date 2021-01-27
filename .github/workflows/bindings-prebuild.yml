@@ -89,5 +89,5 @@ jobs:
       working-directory: bindings/nodejs
     
     - name: Upload prebuilds to GitHub release
-      run: yarn prebuild --upload-all -u ${{ secrets.GITHUB_TOKEN }} --tag-prefix nodejs-binding-v
+      run: yarn prebuild --upload-all ${{ secrets.GITHUB_TOKEN }} --tag-prefix nodejs-binding-v
       working-directory: bindings/nodejs
