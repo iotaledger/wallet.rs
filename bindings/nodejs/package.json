@@ -1,5 +1,5 @@
 {
-  "name": "iota-wallet",
+  "name": "@iota/wallet",
   "version": "0.0.1-test",
   "description": "Node.js binding to the wallet library",
   "main": "lib/index.js",

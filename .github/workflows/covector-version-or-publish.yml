@@ -33,7 +33,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           command: 'version-or-publish'
-          createRelease: true
+          draftRelease: true
       - name: Create Pull Request With Versions Bumped
         if: steps.covector.outputs.commandRan == 'version'
         uses: tauri-apps/create-pull-request@v3.4.1
@@ -45,7 +45,7 @@ jobs:
           labels: "version updates"
           body: ${{ steps.covector.outputs.change }}
 
-  prebuild:
+  nodejs-binding-prebuild:
     runs-on: ${{ matrix.os }}
     needs: version-or-publish
     if: needs.version-or-publish.outputs.successfulPublish == 'true'
@@ -57,7 +57,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install toolchain
+      - name: Set up Node.js 14.x
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+
+      - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable

@@ -8,63 +8,14 @@
   },
   "packages": {
     "nodejs-binding": {
-      "path": "./bindings/node",
+      "path": "./bindings/nodejs",
       "manager": "javascript",
-      "preversion": ["yarn", "yarn build"],
       "getPublishedVersion": "npm view ${ pkgFile.pkg.name } version",
-      "prepublish": [
-        {
-          "command": "yarn",
-          "dryRunCommand": true
-        },
-        {
-          "command": "echo \"# Yarn Audit\n\"",
-          "dryRunCommand": true,
-          "pipe": true
-        },
-        {
-          "command": "echo \"<details>\n<summary>click to view</summary>\n\n\\`\\`\\`\"",
-          "dryRunCommand": true,
-          "pipe": true
-        },
-        {
-          "command": "yarn audit",
-          "dryRunCommand": true,
-          "runFromRoot": true,
-          "pipe": true
-        },
-        {
-          "command": "echo \"\\`\\`\\`\n\n</details>\n\"",
-          "dryRunCommand": true,
-          "pipe": true
-        }
-      ],
       "publish": [
         {
-          "command": "echo \"# Yarn Package Publish\"",
-          "dryRunCommand": true,
-          "pipe": true
-        },
-        {
-          "command": "echo \"\\`\\`\\`\"",
-          "dryRunCommand": true,
-          "pipe": true
-        },
-        {
           "command": "yarn publish --access public --loglevel silly",
-          "dryRunCommand": "npm publish --dry-run --access public",
-          "pipe": true
-        },
-        {
-          "command": "echo \"\\`\\`\\`\"",
-          "dryRunCommand": true,
-          "pipe": true
+          "dryRunCommand": true
         }
-      ],
-      "postpublish": [
-        "git tag ${ pkg.pkg }-v${ pkgFile.versionMajor } -f",
-        "git tag ${ pkg.pkg }-v${ pkgFile.versionMajor }.${ pkgFile.versionMinor } -f",
-        "git push --tags -f"
       ]
     }
   }
