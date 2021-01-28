@@ -460,7 +460,11 @@ mod tests {
 
                 // create an account
                 let account = AccountToCreate {
-                    client_options: ClientOptionsBuilder::node("http://node.iota").unwrap().build(),
+                    client_options: ClientOptionsBuilder::new()
+                        .with_node("http://node.iota")
+                        .unwrap()
+                        .build()
+                        .unwrap(),
                     alias: None,
                     created_at: None,
                     skip_persistance: false,

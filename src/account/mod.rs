@@ -589,9 +589,11 @@ impl Account {
     ///     # let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
     ///     # let storage_path = std::path::PathBuf::from(format!("./test-storage/{}", storage_path));
     ///     // gets 10 received messages, skipping the first 5 most recent messages.
-    ///     let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
+    ///     let client_options = ClientOptionsBuilder::new()
+    ///         .with_node("https://api.lb-0.testnet.chrysalis2.com")
     ///         .expect("invalid node URL")
-    ///         .build();
+    ///         .build()
+    ///         .unwrap();
     ///     let mut manager = AccountManager::builder().with_storage("./test-storage", ManagerStorage::Stronghold, None).unwrap().finish().await.unwrap();
     ///     # use iota_wallet::account_manager::ManagerStorage;
     ///     # #[cfg(all(feature = "stronghold-storage", feature = "sqlite-storage"))]
@@ -736,11 +738,11 @@ mod tests {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
             let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
 
-            let updated_client_options =
-                ClientOptionsBuilder::nodes(&["http://test.wallet", "http://test.wallet/set-client-options"])
-                    .unwrap()
-                    .build()
-                    .unwrap();
+            let updated_client_options = ClientOptionsBuilder::new()
+                .with_nodes(&["http://test.wallet", "http://test.wallet/set-client-options"])
+                .unwrap()
+                .build()
+                .unwrap();
 
             account_handle
                 .set_client_options(updated_client_options.clone())

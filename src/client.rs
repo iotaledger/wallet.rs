@@ -41,9 +41,7 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
             .with_local_pow(*options.local_pow());
 
         // we validate the URL beforehand so it's safe to unwrap here
-        if let Some(node) = options.node() {
-            client_builder = client_builder.with_node(node.as_str()).unwrap();
-        } else if let Some(nodes) = options.nodes() {
+        if let Some(nodes) = options.nodes() {
             client_builder = client_builder
                 .with_nodes(&nodes.iter().map(|url| url.as_str()).collect::<Vec<&str>>()[..])
                 .unwrap();
@@ -54,7 +52,7 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
         }
 
         if let Some(node_sync_interval) = options.node_sync_interval() {
-            client_builder = client_builder.with_node_sync_interval(node_sync_interval.clone());
+            client_builder = client_builder.with_node_sync_interval(*node_sync_interval);
         }
 
         if !options.node_sync_enabled() {
@@ -62,11 +60,11 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
         }
 
         if let Some(request_timeout) = options.request_timeout() {
-            client_builder = client_builder.with_request_timeout(request_timeout.clone());
+            client_builder = client_builder.with_request_timeout(*request_timeout);
         }
 
         for (api, timeout) in options.api_timeout() {
-            client_builder = client_builder.with_api_timeout(api.clone().into(), timeout.clone());
+            client_builder = client_builder.with_api_timeout(api.clone().into(), *timeout);
         }
 
         let client = client_builder.finish().expect("failed to initialise ClientBuilder");
@@ -78,87 +76,8 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
     client.clone()
 }
 
-/// The options builder for a client connected to a single node.
-pub struct SingleNodeClientOptionsBuilder {
-    node: Url,
-    local_pow: bool,
-    mqtt_broker_options: Option<BrokerOptions>,
-    node_sync_interval: Option<Duration>,
-    node_sync_enabled: bool,
-    request_timeout: Option<Duration>,
-    api_timeout: HashMap<Api, Duration>,
-}
-
-impl SingleNodeClientOptionsBuilder {
-    fn new(node: &str) -> crate::Result<Self> {
-        let node_url = Url::parse(node)?;
-        let builder = Self {
-            node: node_url,
-            mqtt_broker_options: None,
-            local_pow: default_local_pow(),
-            node_sync_interval: None,
-            node_sync_enabled: default_node_sync_enabled(),
-            request_timeout: None,
-            api_timeout: Default::default(),
-        };
-        Ok(builder)
-    }
-
-    /// Set the node sync interval
-    pub fn with_node_sync_interval(mut self, node_sync_interval: Duration) -> Self {
-        self.node_sync_interval = Some(node_sync_interval);
-        self
-    }
-
-    /// Disables the node syncing process.
-    /// Every node will be considered healthy and ready to use.
-    pub fn with_node_sync_disabled(mut self) -> Self {
-        self.node_sync_enabled = false;
-        self
-    }
-
-    /// Sets the MQTT broker options.
-    pub fn with_mqtt_mqtt_broker_options(mut self, options: BrokerOptions) -> Self {
-        self.mqtt_broker_options = Some(options);
-        self
-    }
-
-    /// Sets whether the PoW should be done locally or remotely.
-    pub fn with_local_pow(mut self, local: bool) -> Self {
-        self.local_pow = local;
-        self
-    }
-
-    /// Sets the request timeout.
-    pub fn with_request_timeout(mut self, timeout: Duration) -> Self {
-        self.request_timeout = Some(timeout);
-        self
-    }
-
-    /// Sets the request timeout for a specific API usage.
-    pub fn with_api_timeout(mut self, api: Api, timeout: Duration) -> Self {
-        self.api_timeout.insert(api, timeout);
-        self
-    }
-
-    /// Builds the options.
-    pub fn build(self) -> ClientOptions {
-        ClientOptions {
-            node: Some(self.node),
-            nodes: None,
-            network: None,
-            mqtt_broker_options: self.mqtt_broker_options,
-            local_pow: self.local_pow,
-            node_sync_interval: self.node_sync_interval,
-            node_sync_enabled: self.node_sync_enabled,
-            request_timeout: self.request_timeout,
-            api_timeout: self.api_timeout,
-        }
-    }
-}
-
 /// The options builder for a client connected to multiple nodes.
-pub struct MultiNodeClientOptionsBuilder {
+pub struct ClientOptionsBuilder {
     nodes: Option<Vec<Url>>,
     network: Option<String>,
     mqtt_broker_options: Option<BrokerOptions>,
@@ -189,7 +108,7 @@ fn convert_urls(urls: &[&str]) -> crate::Result<Vec<Url>> {
     }
 }
 
-impl Default for MultiNodeClientOptionsBuilder {
+impl Default for ClientOptionsBuilder {
     fn default() -> Self {
         Self {
             nodes: None,
@@ -204,21 +123,55 @@ impl Default for MultiNodeClientOptionsBuilder {
     }
 }
 
-impl MultiNodeClientOptionsBuilder {
-    fn with_nodes(nodes: &[&str]) -> crate::Result<Self> {
-        let nodes_urls = convert_urls(nodes)?;
-        let builder = Self {
-            nodes: Some(nodes_urls),
-            ..Default::default()
-        };
-        Ok(builder)
+impl ClientOptionsBuilder {
+    /// Initialises a new instance of the builder.
+    pub fn new() -> Self {
+        Self::default()
     }
 
-    fn with_network<N: Into<String>>(network: N) -> Self {
-        Self {
-            network: Some(network.into()),
-            ..Default::default()
+    /// ClientOptions connected to a list of nodes.
+    ///
+    /// # Examples
+    /// ```
+    /// use iota_wallet::client::ClientOptionsBuilder;
+    /// let client_options = ClientOptionsBuilder::new()
+    ///     .with_nodes(&[
+    ///         "https://api.lb-0.testnet.chrysalis2.com",
+    ///         "https://api.hornet-1.testnet.chrysalis2.com/",
+    ///     ])
+    ///     .expect("invalid nodes URLs")
+    ///     .build();
+    /// ```
+    pub fn with_nodes(mut self, nodes: &[&str]) -> crate::Result<Self> {
+        let nodes_urls = convert_urls(nodes)?;
+        self.nodes = Some(nodes_urls);
+        Ok(self)
+    }
+
+    /// Adds a node to the node list.
+    pub fn with_node(mut self, node: &str) -> crate::Result<Self> {
+        match self.nodes {
+            Some(ref mut nodes) => {
+                nodes.push(Url::parse(node)?);
+            }
+            None => {
+                let nodes = vec![Url::parse(node)?];
+                self.nodes = Some(nodes);
+            }
         }
+        Ok(self)
+    }
+
+    /// ClientOptions connected to the default Network pool.
+    ///
+    /// # Examples
+    /// ```
+    /// use iota_wallet::client::ClientOptionsBuilder;
+    /// let client_options = ClientOptionsBuilder::new().with_network("testnet2").build();
+    /// ```
+    pub fn with_network<N: Into<String>>(mut self, network: N) -> Self {
+        self.network = Some(network.into());
+        self
     }
 
     /// Set the node sync interval
@@ -261,7 +214,6 @@ impl MultiNodeClientOptionsBuilder {
     /// Builds the options.
     pub fn build(self) -> crate::Result<ClientOptions> {
         let options = ClientOptions {
-            node: None,
             nodes: self.nodes,
             network: self.network,
             mqtt_broker_options: self.mqtt_broker_options,
@@ -272,51 +224,6 @@ impl MultiNodeClientOptionsBuilder {
             api_timeout: self.api_timeout,
         };
         Ok(options)
-    }
-}
-
-/// The ClientOptions builder.
-pub struct ClientOptionsBuilder;
-
-impl ClientOptionsBuilder {
-    /// Client connected to a single node.
-    ///
-    /// # Examples
-    /// ```
-    /// use iota_wallet::client::ClientOptionsBuilder;
-    /// let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
-    ///     .expect("invalid node URL")
-    ///     .build();
-    /// ```
-    pub fn node(node: &str) -> crate::Result<SingleNodeClientOptionsBuilder> {
-        SingleNodeClientOptionsBuilder::new(node)
-    }
-
-    /// ClientOptions connected to a list of nodes.
-    ///
-    /// # Examples
-    /// ```
-    /// use iota_wallet::client::ClientOptionsBuilder;
-    /// let client_options = ClientOptionsBuilder::nodes(&[
-    ///     "https://api.lb-0.testnet.chrysalis2.com",
-    ///     "https://api.hornet-1.testnet.chrysalis2.com/",
-    /// ])
-    /// .expect("invalid nodes URLs")
-    /// .build();
-    /// ```
-    pub fn nodes(nodes: &[&str]) -> crate::Result<MultiNodeClientOptionsBuilder> {
-        MultiNodeClientOptionsBuilder::with_nodes(nodes)
-    }
-
-    /// ClientOptions connected to the default Network pool.
-    ///
-    /// # Examples
-    /// ```
-    /// use iota_wallet::client::ClientOptionsBuilder;
-    /// let client_options = ClientOptionsBuilder::network("testnet2").build();
-    /// ```
-    pub fn network(network: &str) -> MultiNodeClientOptionsBuilder {
-        MultiNodeClientOptionsBuilder::with_network(network)
     }
 }
 
@@ -371,7 +278,7 @@ impl<'de> Deserialize<'de> for Api {
             where
                 E: serde::de::Error,
             {
-                let value = Api::from_str(v).map_err(|e| serde::de::Error::custom(e))?;
+                let value = Api::from_str(v).map_err(serde::de::Error::custom)?;
                 Ok(value)
             }
         }
@@ -416,10 +323,9 @@ impl Into<iota::BrokerOptions> for BrokerOptions {
 }
 
 /// The client options type.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Getters)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, Getters)]
 #[getset(get = "pub(crate)")]
 pub struct ClientOptions {
-    node: Option<Url>,
     nodes: Option<Vec<Url>>,
     network: Option<String>,
     #[serde(rename = "mqttBrokerOptions")]
@@ -438,12 +344,21 @@ pub struct ClientOptions {
 
 impl Hash for ClientOptions {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.node.hash(state);
         self.nodes.hash(state);
         self.network.hash(state);
         self.mqtt_broker_options.hash(state);
         self.local_pow.hash(state);
         self.request_timeout.hash(state);
+    }
+}
+
+impl PartialEq for ClientOptions {
+    fn eq(&self, other: &Self) -> bool {
+        self.nodes == other.nodes
+            && self.network == other.network
+            && self.mqtt_broker_options == other.mqtt_broker_options
+            && self.local_pow == other.local_pow
+            && self.request_timeout == other.request_timeout
     }
 }
 
@@ -461,134 +376,98 @@ mod tests {
 
     #[test]
     fn single_node_valid_url() {
-        let builder_res = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com");
+        let builder_res = ClientOptionsBuilder::new().with_node("https://api.lb-0.testnet.chrysalis2.com");
         assert!(builder_res.is_ok());
     }
 
     #[test]
     fn single_node_invalid_url() {
-        let builder_res = ClientOptionsBuilder::node("some.invalid url");
+        let builder_res = ClientOptionsBuilder::new().with_node("some.invalid url");
         assert!(builder_res.is_err());
     }
 
     #[test]
     fn multi_node_valid_url() {
-        let builder_res = ClientOptionsBuilder::nodes(&["https://api.lb-0.testnet.chrysalis2.com"]);
+        let builder_res = ClientOptionsBuilder::new().with_nodes(&["https://api.lb-0.testnet.chrysalis2.com"]);
         assert!(builder_res.is_ok());
     }
 
     #[test]
     fn multi_node_invalid_url() {
-        let builder_res = ClientOptionsBuilder::nodes(&["some.invalid url"]);
+        let builder_res = ClientOptionsBuilder::new().with_nodes(&["some.invalid url"]);
         assert!(builder_res.is_err());
     }
 
     #[test]
     fn multi_node_empty() {
-        let builder_res = ClientOptionsBuilder::nodes(&[]).unwrap().build();
+        let builder_res = ClientOptionsBuilder::new().with_nodes(&[]).unwrap().build();
         assert!(builder_res.is_ok());
     }
 
     #[test]
     fn network_node_empty() {
-        let builder_res = ClientOptionsBuilder::network("testnet2").build();
+        let builder_res = ClientOptionsBuilder::new().with_network("testnet2").build();
         assert!(builder_res.is_ok());
     }
 
     #[test]
-    fn single_node_constructor() {
+    fn single_node() {
         let node = "https://api.lb-0.testnet.chrysalis2.com";
-        let node_url: url::Url = url::Url::parse(node).unwrap();
-        let client = ClientOptionsBuilder::node(node).unwrap().build();
-        assert_eq!(client.node(), &Some(node_url));
-        assert!(client.nodes().is_none());
+        let client = ClientOptionsBuilder::new().with_node(node).unwrap().build().unwrap();
+        assert_eq!(client.nodes(), &Some(super::convert_urls(&[node]).unwrap()));
         assert!(client.network().is_none());
-        assert!(client.quorum_size().is_none());
-        assert_eq!(*client.quorum_threshold(), 0);
     }
 
     #[test]
-    fn multi_node_constructor() {
+    fn multi_node() {
         let nodes = ["https://api.lb-0.testnet.chrysalis2.com"];
-        let quorum_size = 5;
-        let quorum_threshold = 0.5;
-        let client = ClientOptionsBuilder::nodes(&nodes)
-            .unwrap()
-            .quorum_size(quorum_size)
-            .quorum_threshold(quorum_threshold)
-            .build()
-            .unwrap();
-        assert!(client.node().is_none());
+        let client = ClientOptionsBuilder::new().with_nodes(&nodes).unwrap().build().unwrap();
         assert_eq!(client.nodes(), &Some(super::convert_urls(&nodes).unwrap()));
         assert!(client.network().is_none());
-        assert_eq!(*client.quorum_size(), Some(quorum_size));
-        assert!((*client.quorum_threshold() as f32 / 100.0 - quorum_threshold).abs() < f32::EPSILON);
     }
 
     #[test]
-    fn network_constructor() {
+    fn network() {
         let nodes = ["https://api.lb-0.testnet.chrysalis2.com"];
         let network = "testnet";
-        let quorum_size = 50;
-        let quorum_threshold = 0.9;
-        let client = ClientOptionsBuilder::network(network)
-            .quorum_size(quorum_size)
-            .quorum_threshold(quorum_threshold)
-            .nodes(&nodes)
+        let client = ClientOptionsBuilder::new()
+            .with_network(network)
+            .with_nodes(&nodes)
             .unwrap()
             .build()
             .unwrap();
-        assert!(client.node().is_none());
         assert_eq!(client.nodes(), &Some(super::convert_urls(&nodes).unwrap()));
         assert_eq!(client.network(), &Some(network.to_string()));
-        assert_eq!(*client.quorum_size(), Some(quorum_size));
-        assert!((*client.quorum_threshold() as f32 / 100.0 - quorum_threshold).abs() < f32::EPSILON);
     }
 
     #[test]
     fn get_client() {
         let test_cases = vec![
-            ClientOptionsBuilder::node("https://api.lb-1.testnet.chrysalis2.com")
-                .unwrap()
-                .build(),
-            ClientOptionsBuilder::node("https://api.hornet-2.testnet.chrysalis2.com/")
-                .unwrap()
-                .build(),
-            ClientOptionsBuilder::nodes(&["https://api.lb-1.testnet.chrysalis2.com"])
+            ClientOptionsBuilder::new()
+                .with_node("https://api.lb-1.testnet.chrysalis2.com")
                 .unwrap()
                 .build()
                 .unwrap(),
-            ClientOptionsBuilder::nodes(&["https://api.hornet-2.testnet.chrysalis2.com/"])
+            ClientOptionsBuilder::new()
+                .with_node("https://api.hornet-2.testnet.chrysalis2.com/")
                 .unwrap()
                 .build()
                 .unwrap(),
-            ClientOptionsBuilder::nodes(&["https://api.lb-1.testnet.chrysalis2.com"])
+            ClientOptionsBuilder::new()
+                .with_nodes(&["https://api.lb-1.testnet.chrysalis2.com"])
                 .unwrap()
-                .quorum_size(55)
+                .with_network("mainnet")
                 .build()
                 .unwrap(),
-            ClientOptionsBuilder::nodes(&["https://api.lb-1.testnet.chrysalis2.com"])
+            ClientOptionsBuilder::new()
+                .with_nodes(&["https://api.lb-1.testnet.chrysalis2.com"])
                 .unwrap()
-                .quorum_size(55)
-                .quorum_threshold(0.6)
+                .with_network("testnet2")
                 .build()
                 .unwrap(),
-            ClientOptionsBuilder::nodes(&["https://api.lb-1.testnet.chrysalis2.com"])
-                .unwrap()
-                .quorum_size(55)
-                .quorum_threshold(0.6)
-                .network("mainnet")
-                .build()
-                .unwrap(),
-            ClientOptionsBuilder::nodes(&["https://api.lb-1.testnet.chrysalis2.com"])
-                .unwrap()
-                .quorum_size(55)
-                .quorum_threshold(0.6)
-                .network("testnet2")
-                .build()
-                .unwrap(),
-            ClientOptionsBuilder::network("testnet2")
-                .nodes(&["https://api.hornet-3.testnet.chrysalis2.com/"])
+            ClientOptionsBuilder::new()
+                .with_network("testnet2")
+                .with_nodes(&["https://api.hornet-3.testnet.chrysalis2.com/"])
                 .unwrap()
                 .build()
                 .unwrap(),
