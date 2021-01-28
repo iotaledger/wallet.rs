@@ -351,6 +351,13 @@ pub struct ClientOptions {
     api_timeout: HashMap<Api, Duration>,
 }
 
+impl ClientOptions {
+    /// Gets a new client options builder instance.
+    pub fn builder() -> ClientOptionsBuilder {
+        ClientOptionsBuilder::new()
+    }
+}
+
 impl Hash for ClientOptions {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.nodes.hash(state);
