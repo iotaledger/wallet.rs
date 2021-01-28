@@ -244,6 +244,7 @@ impl Serialize for MessageType {
             MessageType::IsLatestAddressUnused => {
                 serializer.serialize_unit_variant("MessageType", 17, "IsLatestAddressUnused")
             }
+            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
             MessageType::OpenLedgerApp(_) => serializer.serialize_unit_variant("MessageType", 18, "OpenLedgerApp"),
         }
     }

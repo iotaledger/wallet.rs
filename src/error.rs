@@ -267,10 +267,15 @@ impl serde::Serialize for Error {
             Self::AccountEncrypt(_) => serialize_variant(self, serializer, "AccountEncrypt"),
             Self::StorageIsEncrypted => serialize_variant(self, serializer, "StorageIsEncrypted"),
             Self::CannotUseIndexIdentifier => serialize_variant(self, serializer, "CannotUseIndexIdentifier"),
+            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
             Self::LedgerMiscError => serialize_variant(self, serializer, "LedgerMiscError"),
+            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
             Self::LedgerDongleLocked => serialize_variant(self, serializer, "LedgerDongleLocked"),
+            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
             Self::LedgerDeniedByUser => serialize_variant(self, serializer, "LedgerDeniedByUser"),
+            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
             Self::LedgerDeviceNotFound => serialize_variant(self, serializer, "LedgerDeviceNotFound"),
+            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
             Self::LedgerEssenceTooLarge => serialize_variant(self, serializer, "LedgerEssenceTooLarge"),
             Self::AccountAliasAlreadyExists => serialize_variant(self, serializer, "AccountAliasAlreadyExists"),
         }
