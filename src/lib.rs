@@ -72,6 +72,14 @@ pub async fn with_actor_system<F: FnOnce(&riker::actors::ActorSystem)>(cb: F) {
     cb(&runtime.stronghold.system)
 }
 
+/// Opens the IOTA app on Ledger (Nano S/X or Speculos simulator).
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
+pub fn open_ledger_app(is_simulator: bool) -> crate::Result<()> {
+    ledger_iota::get_ledger(signing::ledger::HARDENED, is_simulator)?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod test_utils {
     use super::{

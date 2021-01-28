@@ -152,6 +152,10 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+            MessageType::OpenLedgerApp(is_simulator) => {
+                convert_panics(|| crate::open_ledger_app(*is_simulator).map(|_| ResponseType::OpenedLedgerApp))
+            }
             MessageType::SendTransfer { account_id, transfer } => {
                 convert_async_panics(|| async { self.send_transfer(account_id, transfer.clone().finish()).await }).await
             }
