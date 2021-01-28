@@ -72,7 +72,7 @@ async fn main() {
         },
     )
     .await;
-    let response = send_message(&tx, MessageType::CreateAccount(account)).await;
+    let response = send_message(&tx, MessageType::CreateAccount(Box::new(account))).await;
 
     match response.response() {
         ResponseType::CreatedAccount(created_account) => {

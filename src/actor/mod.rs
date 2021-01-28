@@ -284,7 +284,7 @@ impl WalletMessageHandler {
                 Ok(ResponseType::UpdatedAlias)
             }
             AccountMethod::SetClientOptions(options) => {
-                account_handle.set_client_options(options.clone()).await?;
+                account_handle.set_client_options(*options.clone()).await?;
                 Ok(ResponseType::UpdatedClientOptions)
             }
         }
@@ -480,7 +480,7 @@ mod tests {
                     },
                 )
                 .await;
-                let response = send_message(&tx, MessageType::CreateAccount(account)).await;
+                let response = send_message(&tx, MessageType::CreateAccount(Box::new(account))).await;
                 match response.response() {
                     ResponseType::CreatedAccount(created_account) => {
                         let id = created_account.id().clone();

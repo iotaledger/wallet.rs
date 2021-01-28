@@ -81,7 +81,7 @@ pub enum AccountMethod {
     /// Updates the account alias.
     SetAlias(String),
     /// Updates the account client options.
-    SetClientOptions(ClientOptions),
+    SetClientOptions(Box<ClientOptions>),
 }
 
 /// The messages that can be sent to the actor.
@@ -91,7 +91,7 @@ pub enum MessageType {
     /// Remove the account related to the specified `account_id`.
     RemoveAccount(AccountIdentifier),
     /// Creates an account.
-    CreateAccount(AccountToCreate),
+    CreateAccount(Box<AccountToCreate>),
     /// Read account.
     GetAccount(AccountIdentifier),
     /// Read accounts.

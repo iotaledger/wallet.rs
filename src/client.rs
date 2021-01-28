@@ -38,14 +38,18 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
                     .map(|options| options.clone().into())
                     .unwrap_or_else(|| iota::BrokerOptions::new().automatic_disconnect(false)),
             )
-            .with_local_pow(*options.local_pow());
-
-        // we validate the URL beforehand so it's safe to unwrap here
-        if let Some(nodes) = options.nodes() {
-            client_builder = client_builder
-                .with_nodes(&nodes.iter().map(|url| url.as_str()).collect::<Vec<&str>>()[..])
-                .unwrap();
-        }
+            .with_local_pow(*options.local_pow())
+            // we validate the URL beforehand so it's safe to unwrap here
+            .with_nodes(&options.nodes().iter().map(|url| url.as_str()).collect::<Vec<&str>>()[..])
+            .unwrap()
+            .with_node_pool_urls(
+                &options
+                    .node_pool_urls()
+                    .iter()
+                    .map(|url| url.to_string())
+                    .collect::<Vec<String>>()[..],
+            )
+            .unwrap();
 
         if let Some(network) = options.network() {
             client_builder = client_builder.with_network(network);
@@ -78,7 +82,8 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
 
 /// The options builder for a client connected to multiple nodes.
 pub struct ClientOptionsBuilder {
-    nodes: Option<Vec<Url>>,
+    nodes: Vec<Url>,
+    node_pool_urls: Vec<Url>,
     network: Option<String>,
     mqtt_broker_options: Option<BrokerOptions>,
     local_pow: bool,
@@ -111,7 +116,8 @@ fn convert_urls(urls: &[&str]) -> crate::Result<Vec<Url>> {
 impl Default for ClientOptionsBuilder {
     fn default() -> Self {
         Self {
-            nodes: None,
+            nodes: Vec::new(),
+            node_pool_urls: Vec::new(),
             network: None,
             mqtt_broker_options: None,
             local_pow: default_local_pow(),
@@ -144,21 +150,20 @@ impl ClientOptionsBuilder {
     /// ```
     pub fn with_nodes(mut self, nodes: &[&str]) -> crate::Result<Self> {
         let nodes_urls = convert_urls(nodes)?;
-        self.nodes = Some(nodes_urls);
+        self.nodes.extend(nodes_urls);
         Ok(self)
     }
 
     /// Adds a node to the node list.
     pub fn with_node(mut self, node: &str) -> crate::Result<Self> {
-        match self.nodes {
-            Some(ref mut nodes) => {
-                nodes.push(Url::parse(node)?);
-            }
-            None => {
-                let nodes = vec![Url::parse(node)?];
-                self.nodes = Some(nodes);
-            }
-        }
+        self.nodes.push(Url::parse(node)?);
+        Ok(self)
+    }
+
+    /// Get node list from the node_pool_urls
+    pub fn with_node_pool_urls(mut self, node_pool_urls: &[&str]) -> crate::Result<Self> {
+        let nodes_urls = convert_urls(node_pool_urls)?;
+        self.node_pool_urls.extend(nodes_urls);
         Ok(self)
     }
 
@@ -215,6 +220,7 @@ impl ClientOptionsBuilder {
     pub fn build(self) -> crate::Result<ClientOptions> {
         let options = ClientOptions {
             nodes: self.nodes,
+            node_pool_urls: self.node_pool_urls,
             network: self.network,
             mqtt_broker_options: self.mqtt_broker_options,
             local_pow: self.local_pow,
@@ -326,7 +332,10 @@ impl Into<iota::BrokerOptions> for BrokerOptions {
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, Getters)]
 #[getset(get = "pub(crate)")]
 pub struct ClientOptions {
-    nodes: Option<Vec<Url>>,
+    #[serde(default)]
+    nodes: Vec<Url>,
+    #[serde(rename = "nodePoolUrls", default)]
+    node_pool_urls: Vec<Url>,
     network: Option<String>,
     #[serde(rename = "mqttBrokerOptions")]
     mqtt_broker_options: Option<BrokerOptions>,
@@ -345,6 +354,7 @@ pub struct ClientOptions {
 impl Hash for ClientOptions {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.nodes.hash(state);
+        self.node_pool_urls.hash(state);
         self.network.hash(state);
         self.mqtt_broker_options.hash(state);
         self.local_pow.hash(state);
@@ -355,6 +365,7 @@ impl Hash for ClientOptions {
 impl PartialEq for ClientOptions {
     fn eq(&self, other: &Self) -> bool {
         self.nodes == other.nodes
+            && self.node_pool_urls == other.node_pool_urls
             && self.network == other.network
             && self.mqtt_broker_options == other.mqtt_broker_options
             && self.local_pow == other.local_pow
@@ -414,7 +425,7 @@ mod tests {
     fn single_node() {
         let node = "https://api.lb-0.testnet.chrysalis2.com";
         let client = ClientOptionsBuilder::new().with_node(node).unwrap().build().unwrap();
-        assert_eq!(client.nodes(), &Some(super::convert_urls(&[node]).unwrap()));
+        assert_eq!(client.nodes(), &super::convert_urls(&[node]).unwrap());
         assert!(client.network().is_none());
     }
 
@@ -422,7 +433,7 @@ mod tests {
     fn multi_node() {
         let nodes = ["https://api.lb-0.testnet.chrysalis2.com"];
         let client = ClientOptionsBuilder::new().with_nodes(&nodes).unwrap().build().unwrap();
-        assert_eq!(client.nodes(), &Some(super::convert_urls(&nodes).unwrap()));
+        assert_eq!(client.nodes(), &super::convert_urls(&nodes).unwrap());
         assert!(client.network().is_none());
     }
 
@@ -436,7 +447,7 @@ mod tests {
             .unwrap()
             .build()
             .unwrap();
-        assert_eq!(client.nodes(), &Some(super::convert_urls(&nodes).unwrap()));
+        assert_eq!(client.nodes(), &super::convert_urls(&nodes).unwrap());
         assert_eq!(client.network(), &Some(network.to_string()));
     }
 
