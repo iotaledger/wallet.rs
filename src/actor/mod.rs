@@ -284,7 +284,7 @@ impl WalletMessageHandler {
                 Ok(ResponseType::UpdatedAlias)
             }
             AccountMethod::SetClientOptions(options) => {
-                account_handle.set_client_options(options.clone()).await?;
+                account_handle.set_client_options(*options.clone()).await?;
                 Ok(ResponseType::UpdatedClientOptions)
             }
         }
@@ -460,7 +460,11 @@ mod tests {
 
                 // create an account
                 let account = AccountToCreate {
-                    client_options: ClientOptionsBuilder::node("http://node.iota").unwrap().build(),
+                    client_options: ClientOptionsBuilder::new()
+                        .with_node("http://node.iota")
+                        .unwrap()
+                        .build()
+                        .unwrap(),
                     alias: None,
                     created_at: None,
                     skip_persistance: false,
@@ -476,7 +480,7 @@ mod tests {
                     },
                 )
                 .await;
-                let response = send_message(&tx, MessageType::CreateAccount(account)).await;
+                let response = send_message(&tx, MessageType::CreateAccount(Box::new(account))).await;
                 match response.response() {
                     ResponseType::CreatedAccount(created_account) => {
                         let id = created_account.id().clone();

@@ -382,9 +382,11 @@ mod test_utils {
         }
 
         pub async fn create(self) -> AccountHandle {
-            let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
+            let client_options = ClientOptionsBuilder::new()
+                .with_node("https://api.lb-0.testnet.chrysalis2.com")
                 .expect("invalid node URL")
-                .build();
+                .build()
+                .unwrap();
 
             let mut account_initialiser = self.manager.create_account(client_options).unwrap();
             if let Some(signer_type) = self.signer_type {
