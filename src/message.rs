@@ -1,10 +1,10 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::address::{Address, IotaAddress};
+use crate::address::{Address, AddressWrapper, IotaAddress};
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-pub use iota::{common::packable::Packable, Indexation, Message as IotaMessage, MessageId, Output, Payload};
+pub use iota::{common::packable::Packable, IndexationPayload, Message as IotaMessage, MessageId, Output, Payload};
 use serde::{de::Deserializer, Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
 use std::{
@@ -12,6 +12,7 @@ use std::{
     fmt,
     hash::{Hash, Hasher},
     num::NonZeroU64,
+    unimplemented,
 };
 
 /// The strategy to use for the remainder value management when sending funds.
@@ -24,7 +25,7 @@ pub enum RemainderValueStrategy {
     ChangeAddress,
     /// Move the remainder value to an address that must belong to the source account.
     #[serde(with = "crate::serde::iota_address_serde")]
-    AccountAddress(IotaAddress),
+    AccountAddress(AddressWrapper),
 }
 
 impl Default for RemainderValueStrategy {
@@ -39,9 +40,9 @@ pub struct TransferBuilder {
     /// The transfer value.
     amount: NonZeroU64,
     /// The transfer address.
-    address: IotaAddress,
+    address: AddressWrapper,
     /// (Optional) message indexation.
-    indexation: Option<Indexation>,
+    indexation: Option<IndexationPayload>,
     /// The strategy to use for the remainder value.
     remainder_value_strategy: RemainderValueStrategy,
 }
@@ -53,15 +54,15 @@ impl<'de> Deserialize<'de> for TransferBuilder {
     {
         /// The message's index builder.
         #[derive(Debug, Clone, Deserialize)]
-        struct IndexationBuilder {
+        struct IndexationPayloadBuilder {
             index: String,
             data: Option<Vec<u8>>,
         }
 
-        impl IndexationBuilder {
+        impl IndexationPayloadBuilder {
             /// Builds the indexation.
-            pub fn finish(self) -> crate::Result<Indexation> {
-                let indexation = Indexation::new(self.index, &self.data.unwrap_or_default())?;
+            pub fn finish(self) -> crate::Result<IndexationPayload> {
+                let indexation = IndexationPayload::new(self.index, &self.data.unwrap_or_default())?;
                 Ok(indexation)
             }
         }
@@ -72,9 +73,9 @@ impl<'de> Deserialize<'de> for TransferBuilder {
             amount: NonZeroU64,
             /// The transfer address.
             #[serde(with = "crate::serde::iota_address_serde")]
-            address: IotaAddress,
+            address: AddressWrapper,
             /// (Optional) message indexation.
-            indexation: Option<IndexationBuilder>,
+            indexation: Option<IndexationPayloadBuilder>,
             /// The strategy to use for the remainder value.
             remainder_value_strategy: RemainderValueStrategy,
         }
@@ -95,7 +96,7 @@ impl<'de> Deserialize<'de> for TransferBuilder {
 
 impl TransferBuilder {
     /// Initialises a new transfer to the given address.
-    pub fn new(address: IotaAddress, amount: NonZeroU64) -> Self {
+    pub fn new(address: AddressWrapper, amount: NonZeroU64) -> Self {
         Self {
             address,
             amount,
@@ -111,7 +112,7 @@ impl TransferBuilder {
     }
 
     /// (Optional) message indexation.
-    pub fn with_indexation(mut self, indexation: Indexation) -> Self {
+    pub fn with_indexation(mut self, indexation: IndexationPayload) -> Self {
         self.indexation = Some(indexation);
         self
     }
@@ -134,16 +135,16 @@ pub struct Transfer {
     pub(crate) amount: NonZeroU64,
     /// The transfer address.
     #[serde(with = "crate::serde::iota_address_serde")]
-    pub(crate) address: IotaAddress,
+    pub(crate) address: AddressWrapper,
     /// (Optional) message indexation.
-    pub(crate) indexation: Option<Indexation>,
+    pub(crate) indexation: Option<IndexationPayload>,
     /// The strategy to use for the remainder value.
     pub(crate) remainder_value_strategy: RemainderValueStrategy,
 }
 
 impl Transfer {
     /// Initialises the transfer builder.
-    pub fn builder(address: IotaAddress, amount: NonZeroU64) -> TransferBuilder {
+    pub fn builder(address: AddressWrapper, amount: NonZeroU64) -> TransferBuilder {
         TransferBuilder::new(address, amount)
     }
 }
@@ -245,6 +246,8 @@ pub struct Message {
     pub(crate) incoming: bool,
     /// The message's value.
     pub(crate) value: u64,
+    /// The message's remainder value sum.
+    pub(crate) remainder_value: u64,
 }
 
 impl Hash for Message {
@@ -281,6 +284,18 @@ impl Message {
         let mut packed_payload = Vec::new();
         let _ = message.payload().pack(&mut packed_payload);
 
+        let total_value = match message.payload().as_ref() {
+            Some(Payload::Transaction(tx)) => tx.essence().outputs().iter().fold(0, |acc, output| {
+                acc + match output {
+                    Output::SignatureLockedDustAllowance(o) => o.amount(),
+                    Output::SignatureLockedSingle(o) => o.amount(),
+                    _ => 0,
+                }
+            }),
+            _ => 0,
+        };
+        let value = Self::compute_value(&message, &id, &account_addresses).without_denomination();
+
         let message = Self {
             id,
             version: 1,
@@ -295,7 +310,8 @@ impl Message {
             incoming: account_addresses
                 .iter()
                 .any(|address| address.outputs().iter().any(|o| o.message_id() == &id)),
-            value: Self::compute_value(&message, &id, &account_addresses).without_denomination(),
+            value,
+            remainder_value: total_value - value,
         };
 
         Ok(message)
@@ -308,12 +324,10 @@ impl Message {
                 .essence()
                 .outputs()
                 .iter()
-                .map(|output| {
-                    if let Output::SignatureLockedSingle(x) = output {
-                        x.address()
-                    } else {
-                        unimplemented!()
-                    }
+                .map(|output| match output {
+                    Output::SignatureLockedDustAllowance(o) => o.address(),
+                    Output::SignatureLockedSingle(o) => o.address(),
+                    _ => unimplemented!(),
                 })
                 .collect(),
             _ => vec![],
@@ -328,19 +342,20 @@ impl Message {
                     .iter()
                     .any(|address| address.outputs().iter().any(|o| o.message_id() == id));
                 tx.essence().outputs().iter().fold(0, |acc, output| {
-                    if let Output::SignatureLockedSingle(x) = output {
-                        let address_belongs_to_account = account_addresses.iter().any(|a| a.address() == x.address());
-                        if sent {
-                            if address_belongs_to_account {
-                                acc
-                            } else {
-                                acc + x.amount()
-                            }
-                        } else if address_belongs_to_account {
-                            acc + x.amount()
-                        } else {
+                    let (address, amount) = match output {
+                        Output::SignatureLockedDustAllowance(o) => (o.address(), o.amount()),
+                        Output::SignatureLockedSingle(o) => (o.address(), o.amount()),
+                        _ => unimplemented!(),
+                    };
+                    let address_belongs_to_account = account_addresses.iter().any(|a| a.address().as_ref() == address);
+                    if sent {
+                        if address_belongs_to_account {
                             acc
+                        } else {
+                            acc + amount
                         }
+                    } else if address_belongs_to_account {
+                        acc + amount
                     } else {
                         acc
                     }
@@ -353,7 +368,7 @@ impl Message {
 }
 
 /// Message type.
-#[derive(Debug, Clone, Deserialize_repr)]
+#[derive(Debug, Clone, Deserialize_repr, PartialEq)]
 #[repr(u8)]
 pub enum MessageType {
     /// Message received.

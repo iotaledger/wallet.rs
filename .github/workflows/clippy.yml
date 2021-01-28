@@ -26,6 +26,12 @@ jobs:
           toolchain: stable
           override: true
           components: clippy
+    
+    - name: Install required packages
+      run: |
+        sudo apt-get update
+        sudo apt-get install libudev-dev libusb-1.0-0-dev
+
     - uses: actions-rs/clippy-check@v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
@@ -35,5 +41,5 @@ jobs:
       uses: actions-rs/clippy-check@v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        args: --manifest-path ./bindings/node/native/Cargo.toml --all-features --all-targets -- -D warnings
+        args: --manifest-path ./bindings/nodejs/native/Cargo.toml --all-features --all-targets -- -D warnings
         name: nodejs-binding

@@ -2,17 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    account::{Account, AccountIdentifier, SyncedAccount},
+    account::{Account, AccountBalance, AccountIdentifier, SyncedAccount},
     address::Address,
     client::ClientOptions,
     message::{Message as WalletMessage, MessageType as WalletMessageType, TransferBuilder},
     signing::SignerType,
     Error,
 };
+use chrono::{DateTime, Local};
 use serde::{ser::Serializer, Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
 
-use std::num::NonZeroU64;
+use std::{num::NonZeroU64, time::Duration};
 
 /// An account to create.
 #[derive(Clone, Debug, Deserialize)]
@@ -24,7 +25,7 @@ pub struct AccountToCreate {
     pub alias: Option<String>,
     /// The account createdAt date string.
     #[serde(rename = "createdAt")]
-    pub created_at: Option<String>,
+    pub created_at: Option<DateTime<Local>>,
     /// Whether to skip saving the account to storage or not.
     #[serde(rename = "skipPersistance", default)]
     pub skip_persistance: bool,
@@ -39,6 +40,8 @@ pub struct AccountToCreate {
 pub enum AccountMethod {
     /// Generate a new unused address.
     GenerateAddress,
+    /// Get a unused address.
+    GetUnusedAddress,
     /// List messages.
     ListMessages {
         /// Message type filter.
@@ -57,10 +60,8 @@ pub enum AccountMethod {
     ListSpentAddresses,
     /// List unspent addresses.
     ListUnspentAddresses,
-    /// Get available balance.
-    GetAvailableBalance,
-    /// Get total balance.
-    GetTotalBalance,
+    /// Get account balance information.
+    GetBalance,
     /// Get latest address.
     GetLatestAddress,
     /// Sync the account.
@@ -75,6 +76,12 @@ pub enum AccountMethod {
         #[serde(rename = "skipPersistance")]
         skip_persistance: Option<bool>,
     },
+    /// Checks if the account's latest address is unused after syncing with the Tangle.
+    IsLatestAddressUnused,
+    /// Updates the account alias.
+    SetAlias(String),
+    /// Updates the account client options.
+    SetClientOptions(ClientOptions),
 }
 
 /// The messages that can be sent to the actor.
@@ -110,22 +117,34 @@ pub enum MessageType {
     },
     /// Backup storage.
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))))]
     Backup(String),
     /// Import accounts from storage.
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))))]
     RestoreBackup {
         /// The path to the backed up storage.
         #[serde(rename = "backupPath")]
         backup_path: String,
         /// The backup stronghold password.
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
         password: String,
     },
     /// Sets the password used to encrypt/decrypt the storage.
     SetStoragePassword(String),
     /// Set stronghold snapshot password.
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
     SetStrongholdPassword(String),
+    /// Sets the password clear interval.
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    SetStrongholdPasswordClearInterval(Duration),
+    /// Get stronghold status.
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    GetStrongholdStatus,
     /// Send funds.
     SendTransfer {
         /// The account identifier.
@@ -157,6 +176,8 @@ pub enum MessageType {
         /// The mnemonic. If empty, we'll generate one.
         mnemonic: Option<String>,
     },
+    /// Checks if all accounts has unused latest address after syncing with the Tangle.
+    IsLatestAddressUnused,
 }
 
 impl Serialize for MessageType {
@@ -193,21 +214,32 @@ impl Serialize for MessageType {
             MessageType::SetStrongholdPassword(_) => {
                 serializer.serialize_unit_variant("MessageType", 10, "SetStrongholdPassword")
             }
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            MessageType::SetStrongholdPasswordClearInterval(_) => {
+                serializer.serialize_unit_variant("MessageType", 11, "SetStrongholdPasswordClearInterval")
+            }
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            MessageType::GetStrongholdStatus => {
+                serializer.serialize_unit_variant("MessageType", 12, "GetStrongholdStatus")
+            }
             MessageType::SendTransfer {
                 account_id: _,
                 transfer: _,
-            } => serializer.serialize_unit_variant("MessageType", 11, "SendTransfer"),
+            } => serializer.serialize_unit_variant("MessageType", 13, "SendTransfer"),
             MessageType::InternalTransfer {
                 from_account_id: _,
                 to_account_id: _,
                 amount: _,
-            } => serializer.serialize_unit_variant("MessageType", 12, "InternalTransfer"),
-            MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 13, "GenerateMnemonic"),
-            MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 14, "VerifyMnemonic"),
+            } => serializer.serialize_unit_variant("MessageType", 14, "InternalTransfer"),
+            MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 15, "GenerateMnemonic"),
+            MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 16, "VerifyMnemonic"),
             MessageType::StoreMnemonic {
                 signer_type: _,
                 mnemonic: _,
-            } => serializer.serialize_unit_variant("MessageType", 15, "StoreMnemonic"),
+            } => serializer.serialize_unit_variant("MessageType", 17, "StoreMnemonic"),
+            MessageType::IsLatestAddressUnused => {
+                serializer.serialize_unit_variant("MessageType", 17, "IsLatestAddressUnused")
+            }
         }
     }
 }
@@ -255,12 +287,12 @@ pub enum ResponseType {
     Addresses(Vec<Address>),
     /// GenerateAddress response.
     GeneratedAddress(Address),
+    /// GetUnusedAddress response.
+    UnusedAddress(Address),
     /// GetLatestAddress response.
-    LatestAddress(Option<Address>),
-    /// GetAvailableBalance response.
-    AvailableBalance(u64),
-    /// GetTotalBalance response.
-    TotalBalance(u64),
+    LatestAddress(Address),
+    /// GetBalance response.
+    Balance(AccountBalance),
     /// SyncAccounts response.
     SyncedAccounts(Vec<SyncedAccount>),
     /// SyncAccount response.
@@ -269,15 +301,26 @@ pub enum ResponseType {
     Reattached(String),
     /// Backup response.
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))))]
     BackupSuccessful,
     /// ImportAccounts response.
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))))]
     BackupRestored,
     /// SetStoragePassword response.
     StoragePasswordSet,
     /// SetStrongholdPassword response.
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
     StrongholdPasswordSet,
+    /// SetStrongholdPasswordClearInterval response.
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    StrongholdPasswordClearIntervalSet,
+    /// GetStrongholdStatus response.
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    StrongholdStatus(crate::stronghold::Status),
     /// SendTransfer and InternalTransfer response.
     SentTransfer(WalletMessage),
     /// An error occurred.
@@ -290,6 +333,14 @@ pub enum ResponseType {
     VerifiedMnemonic,
     /// StoreMnemonic response.
     StoredMnemonic,
+    /// AccountMethod's IsLatestAddressUnused response.
+    IsLatestAddressUnused(bool),
+    /// IsLatestAddressUnused response.
+    AreAllLatestAddressesUnused(bool),
+    /// SetAlias response.
+    UpdatedAlias,
+    /// SetClientOptions response.
+    UpdatedClientOptions,
 }
 
 /// The message type.

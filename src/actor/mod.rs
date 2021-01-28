@@ -5,7 +5,7 @@ use crate::{
     account::AccountIdentifier,
     account_manager::AccountManager,
     message::{Message as WalletMessage, Transfer},
-    DateTime, Result, Utc,
+    Result,
 };
 use futures::{Future, FutureExt};
 use iota::message::prelude::MessageId;
@@ -64,9 +64,8 @@ impl WalletMessageHandler {
     }
 
     /// Creates a new instance of the message handler with the specified account manager.
-    pub fn with_manager(account_manager: AccountManager) -> Result<Self> {
-        let instance = Self { account_manager };
-        Ok(instance)
+    pub fn with_manager(account_manager: AccountManager) -> Self {
+        Self { account_manager }
     }
 
     /// Handles a message.
@@ -108,6 +107,23 @@ impl WalletMessageHandler {
             MessageType::SetStrongholdPassword(password) => {
                 convert_async_panics(|| async { self.set_stronghold_password(password).await }).await
             }
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            MessageType::SetStrongholdPasswordClearInterval(interval) => {
+                convert_async_panics(|| async {
+                    crate::set_stronghold_password_clear_interval(*interval).await;
+                    Ok(ResponseType::StrongholdPasswordClearIntervalSet)
+                })
+                .await
+            }
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            MessageType::GetStrongholdStatus => {
+                convert_async_panics(|| async {
+                    let status =
+                        crate::stronghold::get_status(&self.account_manager.stronghold_snapshot_path().await?).await;
+                    Ok(ResponseType::StrongholdStatus(status))
+                })
+                .await
+            }
             MessageType::GenerateMnemonic => convert_panics(|| {
                 self.account_manager
                     .generate_mnemonic()
@@ -124,6 +140,15 @@ impl WalletMessageHandler {
                         .store_mnemonic(signer_type.clone(), mnemonic.clone())
                         .await
                         .map(|_| ResponseType::StoredMnemonic)
+                })
+                .await
+            }
+            MessageType::IsLatestAddressUnused => {
+                convert_async_panics(|| async {
+                    self.account_manager
+                        .is_latest_address_unused()
+                        .await
+                        .map(ResponseType::AreAllLatestAddressesUnused)
                 })
                 .await
             }
@@ -174,7 +199,9 @@ impl WalletMessageHandler {
                 .try_into()
                 .map_err(|_| crate::Error::InvalidMessageId)?,
         );
-        self.account_manager.reattach(account_id, &parsed_message_id).await?;
+        self.account_manager
+            .reattach(account_id.clone(), &parsed_message_id)
+            .await?;
         Ok(ResponseType::Reattached(message_id.to_string()))
     }
 
@@ -188,20 +215,25 @@ impl WalletMessageHandler {
         account_id: &AccountIdentifier,
         method: &AccountMethod,
     ) -> Result<ResponseType> {
-        let account_handle = self.account_manager.get_account(account_id).await?;
+        let account_handle = self.account_manager.get_account(account_id.clone()).await?;
 
         match method {
             AccountMethod::GenerateAddress => {
                 let address = account_handle.generate_address().await?;
                 Ok(ResponseType::GeneratedAddress(address))
             }
+            AccountMethod::GetUnusedAddress => {
+                let address = account_handle.get_unused_address().await?;
+                Ok(ResponseType::UnusedAddress(address))
+            }
             AccountMethod::ListMessages {
                 count,
                 from,
                 message_type,
             } => {
-                let account = account_handle.read().await;
-                let messages: Vec<WalletMessage> = account
+                let messages: Vec<WalletMessage> = account_handle
+                    .read()
+                    .await
                     .list_messages(*count, *from, message_type.clone())
                     .into_iter()
                     .cloned()
@@ -220,18 +252,10 @@ impl WalletMessageHandler {
                 let addresses = account_handle.list_unspent_addresses().await;
                 Ok(ResponseType::Addresses(addresses))
             }
-            AccountMethod::GetAvailableBalance => {
-                let account = account_handle.read().await;
-                Ok(ResponseType::AvailableBalance(account.available_balance()))
-            }
-            AccountMethod::GetTotalBalance => {
-                let account = account_handle.read().await;
-                Ok(ResponseType::TotalBalance(account.total_balance()))
-            }
-            AccountMethod::GetLatestAddress => {
-                let account = account_handle.read().await;
-                Ok(ResponseType::LatestAddress(account.latest_address().cloned()))
-            }
+            AccountMethod::GetBalance => Ok(ResponseType::Balance(account_handle.read().await.balance())),
+            AccountMethod::GetLatestAddress => Ok(ResponseType::LatestAddress(
+                account_handle.read().await.latest_address().clone(),
+            )),
             AccountMethod::SyncAccount {
                 address_index,
                 gap_limit,
@@ -252,26 +276,37 @@ impl WalletMessageHandler {
                 let synced = synchronizer.execute().await?;
                 Ok(ResponseType::SyncedAccount(synced))
             }
+            AccountMethod::IsLatestAddressUnused => Ok(ResponseType::IsLatestAddressUnused(
+                account_handle.is_latest_address_unused().await?,
+            )),
+            AccountMethod::SetAlias(alias) => {
+                account_handle.set_alias(alias).await?;
+                Ok(ResponseType::UpdatedAlias)
+            }
+            AccountMethod::SetClientOptions(options) => {
+                account_handle.set_client_options(options.clone()).await?;
+                Ok(ResponseType::UpdatedClientOptions)
+            }
         }
     }
 
     /// The remove account message handler.
     async fn remove_account(&self, account_id: &AccountIdentifier) -> Result<ResponseType> {
         self.account_manager
-            .remove_account(&account_id)
+            .remove_account(account_id.clone())
             .await
             .map(|_| ResponseType::RemovedAccount(account_id.clone()))
     }
 
     /// The create account message handler.
     async fn create_account(&self, account: &AccountToCreate) -> Result<ResponseType> {
-        let mut builder = self.account_manager.create_account(account.client_options.clone());
+        let mut builder = self.account_manager.create_account(account.client_options.clone())?;
 
         if let Some(alias) = &account.alias {
             builder = builder.alias(alias);
         }
         if let Some(created_at) = &account.created_at {
-            builder = builder.created_at(created_at.parse::<DateTime<Utc>>()?);
+            builder = builder.created_at(*created_at);
         }
         if account.skip_persistance {
             builder = builder.skip_persistance();
@@ -290,13 +325,13 @@ impl WalletMessageHandler {
     }
 
     async fn get_account(&self, account_id: &AccountIdentifier) -> Result<ResponseType> {
-        let account_handle = self.account_manager.get_account(&account_id).await?;
+        let account_handle = self.account_manager.get_account(account_id.clone()).await?;
         let account = account_handle.read().await;
         Ok(ResponseType::ReadAccount(account.clone()))
     }
 
     async fn get_accounts(&self) -> Result<ResponseType> {
-        let accounts = self.account_manager.get_accounts().await;
+        let accounts = self.account_manager.get_accounts().await?;
         let mut accounts_ = Vec::new();
         for account_handle in accounts {
             accounts_.push(account_handle.read().await.clone());
@@ -316,7 +351,7 @@ impl WalletMessageHandler {
     }
 
     async fn send_transfer(&self, account_id: &AccountIdentifier, transfer: Transfer) -> Result<ResponseType> {
-        let account = self.account_manager.get_account(account_id).await?;
+        let account = self.account_manager.get_account(account_id.clone()).await?;
         let synced = account.sync().await.execute().await?;
         let message = synced.transfer(transfer).await?;
         Ok(ResponseType::SentTransfer(message))
@@ -330,7 +365,7 @@ impl WalletMessageHandler {
     ) -> Result<ResponseType> {
         let message = self
             .account_manager
-            .internal_transfer(from_account_id, to_account_id, amount)
+            .internal_transfer(from_account_id.clone(), to_account_id.clone(), amount)
             .await?;
         Ok(ResponseType::SentTransfer(message))
     }
@@ -339,7 +374,7 @@ impl WalletMessageHandler {
 #[cfg(test)]
 mod tests {
     use super::{AccountToCreate, Message, MessageType, Response, ResponseType, WalletMessageHandler};
-    use crate::client::ClientOptionsBuilder;
+    use crate::{account_manager::AccountManager, client::ClientOptionsBuilder};
     use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
     /// The wallet actor builder.
@@ -393,16 +428,14 @@ mod tests {
         }
     }
 
-    fn spawn_actor() -> UnboundedSender<Message> {
+    fn spawn_actor(manager: AccountManager) -> UnboundedSender<Message> {
         let (tx, rx) = unbounded_channel();
         std::thread::spawn(|| {
             let runtime = tokio::runtime::Runtime::new().unwrap();
             runtime.block_on(async move {
                 let actor = WalletBuilder::new()
                     .rx(rx)
-                    .message_handler(
-                        WalletMessageHandler::with_manager(crate::test_utils::get_account_manager().await).unwrap(),
-                    )
+                    .message_handler(WalletMessageHandler::with_manager(manager))
                     .build()
                     .await;
                 actor.run().await
@@ -420,41 +453,46 @@ mod tests {
 
     #[tokio::test]
     async fn create_and_remove_account() {
-        let tx = spawn_actor();
+        crate::test_utils::with_account_manager(
+            crate::test_utils::TestType::SigningAndStorage,
+            |manager, signer_type| async move {
+                let tx = spawn_actor(manager);
 
-        let signer_type = crate::test_utils::signer_type();
-
-        // create an account
-        let account = AccountToCreate {
-            client_options: ClientOptionsBuilder::node("http://node.iota").unwrap().build(),
-            alias: None,
-            created_at: None,
-            skip_persistance: false,
-            signer_type: Some(signer_type.clone()),
-        };
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-        send_message(&tx, MessageType::SetStrongholdPassword("password".to_string())).await;
-        send_message(
-            &tx,
-            MessageType::StoreMnemonic {
-                signer_type,
-                mnemonic: None,
+                // create an account
+                let account = AccountToCreate {
+                    client_options: ClientOptionsBuilder::node("http://node.iota").unwrap().build(),
+                    alias: None,
+                    created_at: None,
+                    skip_persistance: false,
+                    signer_type: Some(signer_type.clone()),
+                };
+                #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+                send_message(&tx, MessageType::SetStrongholdPassword("password".to_string())).await;
+                send_message(
+                    &tx,
+                    MessageType::StoreMnemonic {
+                        signer_type,
+                        mnemonic: None,
+                    },
+                )
+                .await;
+                let response = send_message(&tx, MessageType::CreateAccount(account)).await;
+                match response.response() {
+                    ResponseType::CreatedAccount(created_account) => {
+                        let id = created_account.id().clone();
+                        std::thread::spawn(move || {
+                            std::thread::sleep(std::time::Duration::from_secs(6));
+                            // remove the created account
+                            let response = crate::block_on(async move {
+                                send_message(&tx, MessageType::RemoveAccount(id.into())).await
+                            });
+                            assert!(matches!(response.response(), ResponseType::RemovedAccount(_)));
+                        });
+                    }
+                    _ => panic!("unexpected response {:?}", response),
+                }
             },
         )
         .await;
-        let response = send_message(&tx, MessageType::CreateAccount(account)).await;
-        match response.response() {
-            ResponseType::CreatedAccount(created_account) => {
-                let id = created_account.id().clone();
-                std::thread::spawn(move || {
-                    std::thread::sleep(std::time::Duration::from_secs(6));
-                    // remove the created account
-                    let response =
-                        crate::block_on(async move { send_message(&tx, MessageType::RemoveAccount(id)).await });
-                    assert!(matches!(response.response(), ResponseType::RemovedAccount(_)));
-                });
-            }
-            _ => panic!("unexpected response {:?}", response),
-        }
     }
 }

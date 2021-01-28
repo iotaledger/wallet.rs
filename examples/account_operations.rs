@@ -12,15 +12,15 @@ async fn main() -> iota_wallet::Result<()> {
     manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
 
     // first we'll create an example account and store it
-    let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")?.build();
+    let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")?.build();
     let account = manager
-        .create_account(client_options)
+        .create_account(client_options)?
         .alias("alias")
         .initialise()
         .await?;
 
     // update alias
-    account.set_alias("the new alias").await;
+    account.set_alias("the new alias").await?;
     // get unspent addresses
     let _ = account.list_unspent_addresses();
     // get spent addresses

@@ -1,13 +1,14 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::address::IotaAddress;
+use crate::address::AddressWrapper;
 use rand::{prelude::SliceRandom, thread_rng};
-use std::convert::TryInto;
+use std::{cmp::Ordering, convert::TryInto};
 
 #[derive(Debug, Clone)]
 pub struct Input {
-    pub address: IotaAddress,
+    pub address: AddressWrapper,
+    pub internal: bool,
     pub balance: u64,
 }
 
@@ -16,7 +17,12 @@ pub fn select_input(target: u64, available_utxos: &mut [Input]) -> crate::Result
         return Err(crate::Error::InsufficientFunds);
     }
 
-    available_utxos.sort_by(|a, b| b.balance.cmp(&a.balance));
+    available_utxos.sort_by(|a, b| match b.balance.cmp(&a.balance) {
+        // if the balances are equal, we prioritise change addresses
+        Ordering::Equal => b.internal.cmp(&a.internal),
+        Ordering::Greater => Ordering::Greater,
+        Ordering::Less => Ordering::Less,
+    });
     let mut selected_coins = Vec::new();
     let result = branch_and_bound(
         target,
@@ -108,7 +114,7 @@ fn branch_and_bound(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::address::{AddressBuilder, IotaAddress};
+    use crate::address::{AddressBuilder, AddressWrapper, IotaAddress};
     use iota::message::prelude::Ed25519Address;
     use rand::prelude::{Rng, SeedableRng, SliceRandom, StdRng};
 
@@ -116,7 +122,10 @@ mod tests {
         let mut available_utxos = Vec::new();
         for i in 0..utxos_number {
             let address = AddressBuilder::new()
-                .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
+                .address(AddressWrapper::new(
+                    IotaAddress::Ed25519(Ed25519Address::new([0; 32])),
+                    "iota".to_string(),
+                ))
                 .balance(rng.gen_range(0, 2000))
                 .key_index(i)
                 .outputs(vec![])
@@ -125,6 +134,7 @@ mod tests {
             available_utxos.push(super::Input {
                 address: address.address().clone(),
                 balance: *address.balance(),
+                internal: false,
             });
         }
         available_utxos
@@ -150,6 +160,18 @@ mod tests {
                 selected.iter().fold(0, |acc, address| { acc + address.balance }),
                 sum_utxos_picked
             );
+        }
+    }
+
+    #[test]
+    fn non_exact_match() {
+        let seed: [u8; 32] = [1; 32];
+        let mut rng: StdRng = SeedableRng::from_seed(seed);
+        for _i in 0..20 {
+            let mut available_utxos = generate_random_utxos(&mut rng, 5);
+            let target = available_utxos.iter().fold(0, |acc, address| acc + address.balance) - 1;
+            let selected = select_input(target, &mut available_utxos).unwrap();
+            assert!(selected.into_iter().fold(0, |acc, address| acc + address.balance) >= target);
         }
     }
 

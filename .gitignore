@@ -1,6 +1,6 @@
 /target
-Cargo.lock
 /test-storage
 /storage
 backup
 .DS_Store
+book

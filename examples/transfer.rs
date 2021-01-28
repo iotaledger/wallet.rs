@@ -13,9 +13,9 @@ async fn main() -> iota_wallet::Result<()> {
     manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
 
     // first we'll create an example account and store it
-    let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")?.build();
+    let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")?.build();
     let account = manager
-        .create_account(client_options)
+        .create_account(client_options)?
         .alias("alias")
         .initialise()
         .await?;
@@ -27,7 +27,7 @@ async fn main() -> iota_wallet::Result<()> {
     sync_account
         .transfer(
             Transfer::builder(
-                account.latest_address().await.unwrap().address().clone(),
+                account.latest_address().await.address().clone(),
                 NonZeroU64::new(150).unwrap(),
             )
             .finish(),

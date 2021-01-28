@@ -3,33 +3,16 @@
 
 use crate::{
     account::AccountHandle,
-    address::{AddressOutput, IotaAddress},
+    address::{AddressOutput, AddressWrapper},
     client::ClientOptions,
     message::{Message, MessageType},
 };
 
-use iota::{message::prelude::MessageId, MessageMetadata, OutputMetadata, Topic, TopicEvent};
-use serde::Deserialize;
-
-use std::convert::TryInto;
-
-#[derive(Deserialize)]
-struct AddressOutputPayload {
-    #[serde(rename = "messageId")]
-    message_id: String,
-    #[serde(rename = "transactionId")]
-    transaction_id: String,
-    #[serde(rename = "outputIndex")]
-    output_index: u16,
-    #[serde(rename = "isSpent")]
-    is_spent: bool,
-    output: AddressOutputPayloadOutput,
-}
-
-#[derive(Deserialize)]
-struct AddressOutputPayloadOutput {
-    amount: u64,
-}
+use bee_rest_api::handlers::{
+    message_metadata::{LedgerInclusionStateDto, MessageMetadataResponse},
+    output::OutputResponse,
+};
+use iota::{message::prelude::MessageId, Topic, TopicEvent};
 
 /// Unsubscribe from all topics associated with the account.
 pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
@@ -61,7 +44,7 @@ pub async fn monitor_account_addresses_balance(account_handle: AccountHandle) ->
 }
 
 /// Monitor address for balance changes.
-pub async fn monitor_address_balance(account_handle: AccountHandle, address: &IotaAddress) -> crate::Result<()> {
+pub async fn monitor_address_balance(account_handle: AccountHandle, address: &AddressWrapper) -> crate::Result<()> {
     let client_options = account_handle.client_options().await;
     let client_options_ = client_options.clone();
     let address = address.clone();
@@ -91,56 +74,57 @@ pub async fn monitor_address_balance(account_handle: AccountHandle, address: &Io
 async fn process_output(
     payload: String,
     account_handle: AccountHandle,
-    address: IotaAddress,
+    address: AddressWrapper,
     client_options: ClientOptions,
 ) -> crate::Result<()> {
-    let output: AddressOutputPayload = serde_json::from_str(&payload)?;
-    let metadata = OutputMetadata {
-        message_id: hex::decode(output.message_id)?,
-        transaction_id: hex::decode(output.transaction_id)?,
-        output_index: output.output_index,
-        is_spent: output.is_spent,
-        amount: output.output.amount,
-        address: address.clone(),
-    };
-    let address_output: AddressOutput = metadata.try_into()?;
-
-    let client_options_ = client_options.clone();
-    let message_id = address_output.message_id();
-    let message_id_ = *message_id;
-
-    let message = {
-        let client = crate::client::get_client(&client_options_);
-        let client = client.read().await;
-        client.get_message().data(&message_id_).await?
-    };
+    let output: OutputResponse = serde_json::from_str(&payload)?;
 
     let mut account = account_handle.write().await;
     let account_id = account.id().clone();
-    let message_id_ = *message_id;
-
     let addresses = account.addresses_mut();
     let address_to_update = addresses.iter_mut().find(|a| a.address() == &address).unwrap();
+
+    let address_output =
+        AddressOutput::from_output_response(output, address_to_update.address().bech32_hrp().to_string())?;
+
+    let client_options_ = client_options.clone();
+    let message_id = *address_output.message_id();
+
     address_to_update.handle_new_output(address_output);
     crate::event::emit_balance_change(&account_id, &address_to_update, *address_to_update.balance());
 
-    match account.messages_mut().iter().position(|m| m.id() == &message_id_) {
+    match account.messages_mut().iter().position(|m| m.id() == &message_id) {
         Some(message_index) => {
-            account.do_mut(|account| {
-                let message = &mut account.messages_mut()[message_index];
-                message.set_confirmed(Some(true));
-            });
+            account
+                .do_mut(|account| {
+                    let message = &mut account.messages_mut()[message_index];
+                    message.set_confirmed(Some(true));
+                    Ok(())
+                })
+                .await?;
         }
         None => {
-            let message = Message::from_iota_message(message_id_, account.addresses(), &message, Some(true)).unwrap();
-            crate::event::emit_transaction_event(
-                crate::event::TransactionEventType::NewTransaction,
-                account.id(),
-                &message,
-            );
-            account.do_mut(|account| {
-                account.messages_mut().push(message);
-            });
+            if let Ok(message) = crate::client::get_client(&client_options_)
+                .read()
+                .await
+                .get_message()
+                .data(&message_id)
+                .await
+            {
+                let message =
+                    Message::from_iota_message(message_id, account.addresses(), &message, Some(true)).unwrap();
+                crate::event::emit_transaction_event(
+                    crate::event::TransactionEventType::NewTransaction,
+                    account.id(),
+                    &message,
+                );
+                account
+                    .do_mut(|account| {
+                        account.messages_mut().push(message);
+                        Ok(())
+                    })
+                    .await?;
+            }
         }
     }
     Ok(())
@@ -195,18 +179,21 @@ async fn process_metadata(
     message_id: MessageId,
     message: &Message,
 ) -> crate::Result<()> {
-    let metadata: MessageMetadata = serde_json::from_str(&payload)?;
+    let metadata: MessageMetadataResponse = serde_json::from_str(&payload)?;
 
     if let Some(inclusion_state) = metadata.ledger_inclusion_state {
-        let confirmed = inclusion_state == "included";
+        let confirmed = inclusion_state == LedgerInclusionStateDto::Included;
         if message.confirmed().is_none() || confirmed != message.confirmed().unwrap() {
             let mut account = account_handle.write().await;
 
-            account.do_mut(|account| {
-                let messages = account.messages_mut();
-                let account_message = messages.iter_mut().find(|m| m.id() == &message_id).unwrap();
-                account_message.set_confirmed(Some(confirmed));
-            });
+            account
+                .do_mut(|account| {
+                    let messages = account.messages_mut();
+                    let account_message = messages.iter_mut().find(|m| m.id() == &message_id).unwrap();
+                    account_message.set_confirmed(Some(confirmed));
+                    Ok(())
+                })
+                .await?;
 
             crate::event::emit_confirmation_state_change(account.id(), &message, confirmed);
         }

@@ -1,7 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{account::AccountIdentifier, address::Address, message::Message};
+use crate::{address::Address, message::Message};
 
 use getset::Getters;
 use once_cell::sync::Lazy;
@@ -17,7 +17,7 @@ use std::{
 pub struct BalanceEvent<'a> {
     /// The associated account identifier.
     #[serde(rename = "accountId")]
-    account_id: &'a AccountIdentifier,
+    account_id: &'a str,
     /// The associated address.
     address: &'a Address,
     /// The new balance.
@@ -37,7 +37,7 @@ impl<'a> BalanceEvent<'a> {
 pub struct TransactionEvent<'a> {
     #[serde(rename = "accountId")]
     /// The associated account identifier.
-    account_id: &'a AccountIdentifier,
+    account_id: &'a str,
     /// The event message.
     message: &'a Message,
 }
@@ -55,7 +55,7 @@ impl<'a> TransactionEvent<'a> {
 pub struct TransactionConfirmationChangeEvent<'a> {
     #[serde(rename = "accountId")]
     /// The associated account identifier.
-    account_id: &'a AccountIdentifier,
+    account_id: &'a str,
     /// The event message.
     message: &'a Message,
     /// The confirmed state of the transaction.
@@ -97,10 +97,17 @@ struct TransactionConfirmationChangeEventHandler {
     on_event: Box<dyn Fn(&TransactionConfirmationChangeEvent<'_>) + Send>,
 }
 
+#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+struct StrongholdStatusChangeEventHandler {
+    on_event: Box<dyn Fn(&crate::StrongholdStatus) + Send>,
+}
+
 type BalanceListeners = Arc<Mutex<Vec<BalanceEventHandler>>>;
 type TransactionListeners = Arc<Mutex<Vec<TransactionEventHandler>>>;
 type TransactionConfirmationChangeListeners = Arc<Mutex<Vec<TransactionConfirmationChangeEventHandler>>>;
 type ErrorListeners = Arc<Mutex<Vec<ErrorHandler>>>;
+#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+type StrongholdStatusChangeListeners = Arc<Mutex<Vec<StrongholdStatusChangeEventHandler>>>;
 
 /// Gets the balance change listeners array.
 fn balance_listeners() -> &'static BalanceListeners {
@@ -126,6 +133,13 @@ fn error_listeners() -> &'static ErrorListeners {
     &LISTENERS
 }
 
+/// Gets the stronghold status change listeners array.
+#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+fn stronghold_status_change_listeners() -> &'static StrongholdStatusChangeListeners {
+    static LISTENERS: Lazy<StrongholdStatusChangeListeners> = Lazy::new(Default::default);
+    &LISTENERS
+}
+
 /// Listen to balance changes.
 pub fn on_balance_change<F: Fn(&BalanceEvent<'_>) + Send + 'static>(cb: F) {
     let mut l = balance_listeners()
@@ -135,7 +149,7 @@ pub fn on_balance_change<F: Fn(&BalanceEvent<'_>) + Send + 'static>(cb: F) {
 }
 
 /// Emits a balance change event.
-pub(crate) fn emit_balance_change(account_id: &AccountIdentifier, address: &Address, balance: u64) {
+pub(crate) fn emit_balance_change(account_id: &str, address: &Address, balance: u64) {
     let listeners = balance_listeners()
         .lock()
         .expect("Failed to lock balance_listeners: emit_balance_change()");
@@ -150,11 +164,7 @@ pub(crate) fn emit_balance_change(account_id: &AccountIdentifier, address: &Addr
 }
 
 /// Emits a transaction-related event.
-pub(crate) fn emit_transaction_event(
-    event_type: TransactionEventType,
-    account_id: &AccountIdentifier,
-    message: &Message,
-) {
+pub(crate) fn emit_transaction_event(event_type: TransactionEventType, account_id: &str, message: &Message) {
     let listeners = transaction_listeners()
         .lock()
         .expect("Failed to lock balance_listeners: emit_balance_change()");
@@ -170,7 +180,7 @@ pub(crate) fn emit_transaction_event(
 }
 
 /// Emits a transaction confirmation state change event.
-pub(crate) fn emit_confirmation_state_change(account_id: &AccountIdentifier, message: &Message, confirmed: bool) {
+pub(crate) fn emit_confirmation_state_change(account_id: &str, message: &Message, confirmed: bool) {
     let listeners = transaction_confirmation_change_listeners()
         .lock()
         .expect("Failed to lock transaction_confirmation_change_listeners: emit_confirmation_state_change()");
@@ -235,13 +245,30 @@ pub fn on_error<F: Fn(&crate::Error) + Send + 'static>(cb: F) {
     l.push(ErrorHandler { on_error: Box::new(cb) })
 }
 
+#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+pub(crate) fn emit_stronghold_status_change(status: &crate::StrongholdStatus) {
+    let listeners = stronghold_status_change_listeners()
+        .lock()
+        .expect("Failed to lock stronghold_status_change_listeners: emit_stronghold_status_change()");
+    for listener in listeners.deref() {
+        (listener.on_event)(&status)
+    }
+}
+
+/// Listen to stronghold status change events.
+#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+pub fn on_stronghold_status_change<F: Fn(&crate::StrongholdStatus) + Send + 'static>(cb: F) {
+    let mut l = stronghold_status_change_listeners()
+        .lock()
+        .expect("Failed to lock stronghold_status_change_listeners: on_stronghold_status_change()");
+    l.push(StrongholdStatusChangeEventHandler { on_event: Box::new(cb) })
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{emit_balance_change, on_balance_change, on_error};
-    use crate::{
-        account::AccountIdentifier,
-        address::{AddressBuilder, IotaAddress},
-    };
+    use super::*;
+    use crate::address::{AddressBuilder, AddressWrapper, IotaAddress};
     use iota::message::prelude::Ed25519Address;
     use rusty_fork::rusty_fork_test;
 
@@ -263,14 +290,17 @@ mod tests {
     #[test]
     fn balance_events() {
         on_balance_change(|event| {
-            assert!(event.account_id == &AccountIdentifier::Id(hex::encode([1; 32])));
+            assert!(event.account_id == hex::encode([1; 32]));
             assert!(event.balance == 0);
         });
 
         emit_balance_change(
-            &AccountIdentifier::Id(hex::encode([1; 32])),
+            &hex::encode([1; 32]),
             &AddressBuilder::new()
-                .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
+                .address(AddressWrapper::new(
+                    IotaAddress::Ed25519(Ed25519Address::new([0; 32])),
+                    "iota".to_string(),
+                ))
                 .balance(0)
                 .key_index(0)
                 .outputs(vec![])
@@ -278,5 +308,63 @@ mod tests {
                 .expect("failed to build address"),
             0,
         );
+    }
+
+    #[test]
+    fn on_new_transaction_event() {
+        let account_id = "new-tx";
+        let message = crate::test_utils::GenerateMessageBuilder::default().build();
+        let message_ = message.clone();
+
+        on_new_transaction(move |event| {
+            assert!(event.account_id == account_id);
+            assert!(event.message == &message_);
+        });
+
+        emit_transaction_event(TransactionEventType::NewTransaction, account_id, &message);
+    }
+
+    #[test]
+    fn on_reattachment_event() {
+        let account_id = "reattachment";
+        let message = crate::test_utils::GenerateMessageBuilder::default().build();
+        let message_ = message.clone();
+
+        on_reattachment(move |event| {
+            assert!(event.account_id == account_id);
+            assert!(event.message == &message_);
+        });
+
+        emit_transaction_event(TransactionEventType::Reattachment, account_id, &message);
+    }
+
+    #[test]
+    fn on_broadcast_event() {
+        let account_id = "broadcast";
+        let message = crate::test_utils::GenerateMessageBuilder::default().build();
+        let message_ = message.clone();
+
+        on_broadcast(move |event| {
+            assert!(event.account_id == account_id);
+            assert!(event.message == &message_);
+        });
+
+        emit_transaction_event(TransactionEventType::Broadcast, account_id, &message);
+    }
+
+    #[test]
+    fn on_confirmation_state_change_event() {
+        let account_id = "confirm";
+        let message = crate::test_utils::GenerateMessageBuilder::default().build();
+        let message_ = message.clone();
+        let confirmed = true;
+
+        on_confirmation_state_change(move |event| {
+            assert!(event.account_id == account_id);
+            assert!(event.message == &message_);
+            assert!(event.confirmed == confirmed);
+        });
+
+        emit_confirmation_state_change(account_id, &message, confirmed);
     }
 }

@@ -73,7 +73,7 @@ async fn main() {
     match response.response() {
         ResponseType::CreatedAccount(created_account) => {
             // remove the created account
-            let response = send_message(&tx, MessageType::RemoveAccount(created_account.id().clone())).await;
+            let response = send_message(&tx, MessageType::RemoveAccount(created_account.id().into())).await;
             assert!(matches!(response.response(), ResponseType::RemovedAccount(_)));
         }
         _ => panic!("unexpected response"),

@@ -3,17 +3,22 @@
 
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
-use crate::account::Account;
+use crate::{
+    account::Account,
+    address::{Address, IotaAddress},
+};
+use getset::Getters;
 use iota::Input;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 use slip10::BIP32Path;
 use tokio::sync::Mutex;
 
-mod env_mnemonic;
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+mod ledger;
+
 #[cfg(feature = "stronghold")]
 mod stronghold;
-use env_mnemonic::EnvMnemonicSigner;
 
 type SignerHandle = Arc<Mutex<Box<dyn Signer + Sync + Send>>>;
 type Signers = Arc<Mutex<HashMap<SignerType, SignerHandle>>>;
@@ -25,9 +30,14 @@ static SIGNERS_INSTANCE: OnceCell<Signers> = OnceCell::new();
 pub enum SignerType {
     /// Stronghold signer.
     #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     Stronghold,
-    /// Mnemonic through environment variable.
-    EnvMnemonic,
+    /// Ledger Device
+    #[cfg(feature = "ledger-nano")]
+    LedgerNano,
+    /// Ledger Speculos Simulator
+    #[cfg(feature = "ledger-nano-simulator")]
+    LedgerNanoSimulator,
     /// Custom signer with its identifier.
     Custom(String),
 }
@@ -44,19 +54,47 @@ pub struct TransactionInput {
     pub address_internal: bool,
 }
 
+/// Metadata provided to [generate_address](trait.Signer.html#method.generate_address).
+#[derive(Getters, Clone)]
+#[getset(get = "pub")]
+pub struct GenerateAddressMetadata {
+    /// Indicates that the address is being generated as part of the account syncing process.
+    /// This means that the account might not be saved.
+    pub(crate) syncing: bool,
+}
+
+/// Metadata provided to [sign_message](trait.Signer.html#method.sign_message).
+#[derive(Getters)]
+#[getset(get = "pub")]
+pub struct SignMessageMetadata<'a> {
+    /// The transfer's address that has remainder value if any.
+    pub(crate) remainder_address: Option<&'a Address>,
+    /// The transfer's remainder value.
+    pub(crate) remainder_value: u64,
+    /// The transfer's deposit address for the remainder value if any.
+    pub(crate) remainder_deposit_address: Option<&'a Address>,
+}
+
 /// Signer interface.
 #[async_trait::async_trait]
 pub trait Signer {
     /// Initialises a mnemonic.
-    async fn store_mnemonic(&self, storage_path: &PathBuf, mnemonic: String) -> crate::Result<()>;
+    async fn store_mnemonic(&mut self, storage_path: &PathBuf, mnemonic: String) -> crate::Result<()>;
     /// Generates an address.
-    async fn generate_address(&self, account: &Account, index: usize, internal: bool) -> crate::Result<iota::Address>;
-    /// Signs message.
-    async fn sign_message(
-        &self,
+    async fn generate_address(
+        &mut self,
         account: &Account,
-        essence: &iota::TransactionEssence,
+        index: usize,
+        internal: bool,
+        metadata: GenerateAddressMetadata,
+    ) -> crate::Result<IotaAddress>;
+    /// Signs message.
+    async fn sign_message<'a>(
+        &mut self,
+        account: &Account,
+        essence: &iota::TransactionPayloadEssence,
         inputs: &mut Vec<TransactionInput>,
+        metadata: SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>>;
 }
 
@@ -73,12 +111,27 @@ fn default_signers() -> Signers {
         );
     }
 
-    signers.insert(
-        SignerType::EnvMnemonic,
-        Arc::new(Mutex::new(
-            Box::new(EnvMnemonicSigner::default()) as Box<dyn Signer + Sync + Send>
-        )),
-    );
+    #[cfg(feature = "ledger-nano")]
+    {
+        signers.insert(
+            SignerType::LedgerNano,
+            Arc::new(Mutex::new(Box::new(ledger::LedgerNanoSigner {
+                is_simulator: false,
+                ..Default::default()
+            }) as Box<dyn Signer + Sync + Send>)),
+        );
+    }
+
+    #[cfg(feature = "ledger-nano-simulator")]
+    {
+        signers.insert(
+            SignerType::LedgerNanoSimulator,
+            Arc::new(Mutex::new(Box::new(ledger::LedgerNanoSigner {
+                is_simulator: true,
+                ..Default::default()
+            }) as Box<dyn Signer + Sync + Send>)),
+        );
+    }
 
     Arc::new(Mutex::new(signers))
 }

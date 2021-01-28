@@ -33,76 +33,89 @@ use serde::Deserialize;
 use tokio::{
     sync::{
         broadcast::{channel as broadcast_channel, Receiver as BroadcastReceiver, Sender as BroadcastSender},
-        Mutex, RwLock,
+        RwLock,
     },
     time::interval,
 };
 
 /// The default storage folder.
 pub const DEFAULT_STORAGE_FOLDER: &str = "./storage";
+
 /// The default stronghold storage file name.
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
 pub const STRONGHOLD_FILENAME: &str = "wallet.stronghold";
+
 /// The default SQLite storage file name.
 #[cfg(feature = "sqlite-storage")]
+#[cfg_attr(docsrs, doc(cfg(feature = "sqlite-storage")))]
 pub const SQLITE_FILENAME: &str = "wallet.db";
 
-pub(crate) type AccountStore = Arc<RwLock<HashMap<AccountIdentifier, AccountHandle>>>;
+pub(crate) type AccountStore = Arc<RwLock<HashMap<String, AccountHandle>>>;
 
-/// The storages used by default.
-#[derive(Deserialize, PartialEq)]
+/// The storage used by the manager.
+#[derive(Deserialize)]
 #[serde(tag = "type", content = "data")]
-pub enum DefaultStorage {
+pub enum ManagerStorage {
     /// Stronghold storage.
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
     Stronghold,
     /// Sqlite storage.
     #[cfg(feature = "sqlite-storage")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "sqlite-storage")))]
     Sqlite,
+    /// Custom storage.
+    #[serde(skip)]
+    Custom(Box<dyn StorageAdapter + Send + Sync + 'static>),
 }
 
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage", feature = "sqlite-storage"))]
-fn storage_file_path(storage: &Option<DefaultStorage>, storage_path: &PathBuf) -> PathBuf {
+fn storage_file_path(storage: &Option<ManagerStorage>, storage_path: &PathBuf) -> PathBuf {
     if storage_path.is_file() || storage_path.extension().is_some() || storage.is_none() {
         storage_path.clone()
     } else {
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-        if storage == &Some(DefaultStorage::Stronghold) {
-            return storage_path.join(STRONGHOLD_FILENAME);
+        match storage {
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            Some(ManagerStorage::Stronghold) => storage_path.join(STRONGHOLD_FILENAME),
+            #[cfg(feature = "sqlite-storage")]
+            Some(ManagerStorage::Sqlite) => storage_path.join(SQLITE_FILENAME),
+            _ => storage_path.clone(),
         }
-        #[cfg(feature = "sqlite-storage")]
-        if storage == &Some(DefaultStorage::Sqlite) {
-            return storage_path.join(SQLITE_FILENAME);
-        }
-        storage_path.clone()
     }
+}
+
+fn storage_password_to_encryption_key(password: &str) -> [u8; 32] {
+    let mut dk = [0; 64];
+    // safe to unwrap (rounds > 0)
+    crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_bytes(), b"wallet.rs::storage", 100, &mut dk).unwrap();
+    let key: [u8; 32] = dk[0..32][..].try_into().unwrap();
+    key
 }
 
 /// Account manager builder.
 pub struct AccountManagerBuilder {
     storage_path: PathBuf,
-    initialised_storage: bool,
+    storage: Option<ManagerStorage>,
     polling_interval: Duration,
     skip_polling: bool,
-    default_storage: Option<DefaultStorage>,
     storage_encryption_key: Option<[u8; 32]>,
 }
 
 impl Default for AccountManagerBuilder {
     fn default() -> Self {
         #[allow(unused_variables)]
-        let default_storage: Option<DefaultStorage> = None;
+        let default_storage: Option<ManagerStorage> = None;
         #[cfg(all(feature = "stronghold-storage", not(feature = "sqlite-storage")))]
-        let default_storage = Some(DefaultStorage::Stronghold);
+        let default_storage = Some(ManagerStorage::Stronghold);
         #[cfg(all(feature = "sqlite-storage", not(feature = "stronghold-storage")))]
-        let default_storage = Some(DefaultStorage::Sqlite);
+        let default_storage = Some(ManagerStorage::Sqlite);
 
         Self {
             storage_path: PathBuf::from(DEFAULT_STORAGE_FOLDER),
-            initialised_storage: false,
+            storage: default_storage,
             polling_interval: Duration::from_millis(30_000),
             skip_polling: false,
-            default_storage,
             storage_encryption_key: None,
         }
     }
@@ -114,30 +127,24 @@ impl AccountManagerBuilder {
         Default::default()
     }
 
-    /// Use the specified storage folder when initialising the default storage adapter.
-    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    pub fn with_storage_path(mut self, storage_path: impl AsRef<Path>) -> Self {
-        self.storage_path = storage_path.as_ref().to_path_buf();
-        self
-    }
-
-    /// Sets the default storage to be used.
-    #[cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))]
-    pub fn with_storage(mut self, storage: DefaultStorage) -> Self {
-        self.default_storage = Some(storage);
-        self
-    }
-
-    /// Sets a custom storage adapter to be used.
-    #[cfg(not(any(feature = "sqlite-storage", feature = "stronghold-storage")))]
-    pub fn with_storage<S: StorageAdapter + Sync + Send + 'static>(
+    /// Sets the storage to be used.
+    pub fn with_storage(
         mut self,
         storage_path: impl AsRef<Path>,
-        adapter: S,
-    ) -> Self {
-        crate::storage::set_adapter(&storage_path, adapter);
+        storage: ManagerStorage,
+        password: Option<&str>,
+    ) -> crate::Result<Self> {
         self.storage_path = storage_path.as_ref().to_path_buf();
-        self.initialised_storage = true;
+        self.storage = Some(storage);
+        self.storage_encryption_key = match password {
+            Some(p) => Some(storage_password_to_encryption_key(p)),
+            None => None,
+        };
+        Ok(self)
+    }
+
+    pub(crate) fn with_storage_encryption_key(mut self, key: Option<[u8; 32]>) -> Self {
+        self.storage_encryption_key = key;
         self
     }
 
@@ -152,51 +159,44 @@ impl AccountManagerBuilder {
         self
     }
 
-    pub(crate) fn with_storage_encryption_key(mut self, key: Option<[u8; 32]>) -> Self {
-        self.storage_encryption_key = key;
-        self
-    }
-
     /// Builds the manager.
     pub async fn finish(self) -> crate::Result<AccountManager> {
-        if !self.initialised_storage {
-            #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-            {
-                match &self.default_storage {
-                    Some(storage) => match storage {
-                        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-                        DefaultStorage::Stronghold => {
-                            let path = storage_file_path(&self.default_storage, &self.storage_path);
-                            let storage = crate::storage::stronghold::StrongholdStorageAdapter::new(&path)?;
-                            crate::storage::set_adapter(&path, storage);
+        let (storage, storage_file_path): (Box<dyn StorageAdapter + Send + Sync>, PathBuf) =
+            if let Some(storage) = self.storage {
+                match storage {
+                    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+                    ManagerStorage::Stronghold => {
+                        let path = storage_file_path(&Some(ManagerStorage::Stronghold), &self.storage_path);
+                        if let Some(parent) = path.parent() {
+                            fs::create_dir_all(&parent)?;
                         }
-                        #[cfg(feature = "sqlite-storage")]
-                        DefaultStorage::Sqlite => {
-                            let path = storage_file_path(&self.default_storage, &self.storage_path);
-                            let storage = crate::storage::sqlite::SqliteStorageAdapter::new(&path, "accounts")?;
-                            crate::storage::set_adapter(&path, storage);
-                        }
-                    },
-                    None => {
-                        return Err(crate::Error::StorageAdapterNotDefined);
+                        let storage = crate::storage::stronghold::StrongholdStorageAdapter::new(&path)?;
+                        (Box::new(storage) as Box<dyn StorageAdapter + Send + Sync>, path)
                     }
-                };
-            }
-            #[cfg(not(any(feature = "stronghold-storage", feature = "sqlite-storage")))]
-            {
+                    #[cfg(feature = "sqlite-storage")]
+                    ManagerStorage::Sqlite => {
+                        let path = storage_file_path(&Some(ManagerStorage::Sqlite), &self.storage_path);
+                        if let Some(parent) = path.parent() {
+                            fs::create_dir_all(&parent)?;
+                        }
+                        let storage = crate::storage::sqlite::SqliteStorageAdapter::new(&path, "accounts")?;
+                        (Box::new(storage) as Box<dyn StorageAdapter + Send + Sync>, path)
+                    }
+                    ManagerStorage::Custom(storage) => (storage, self.storage_path.clone()),
+                }
+            } else {
                 return Err(crate::Error::StorageAdapterNotDefined);
-            }
-        }
+            };
 
-        let storage_file_path = storage_file_path(&self.default_storage, &self.storage_path);
+        crate::storage::set(&storage_file_path, self.storage_encryption_key, storage).await;
 
-        // with one of the stronghold features, the accounts are loaded when the password is set
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-        let accounts: AccountStore = Default::default();
-        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-        let accounts = AccountManager::load_accounts(&storage_file_path)
+        // with the stronghold storage feature, the accounts are loaded when the password is set
+        #[cfg(feature = "stronghold-storage")]
+        let (accounts, encrypted_accounts) = (Default::default(), Vec::new());
+        #[cfg(not(feature = "stronghold-storage"))]
+        let (accounts, encrypted_accounts) = AccountManager::load_accounts(&storage_file_path)
             .await
-            .unwrap_or_else(|_| Default::default());
+            .unwrap_or_else(|_| (AccountStore::default(), Vec::new()));
 
         let mut instance = AccountManager {
             storage_folder: if self.storage_path.is_file() || self.storage_path.extension().is_some() {
@@ -212,8 +212,7 @@ impl AccountManagerBuilder {
             stop_polling_sender: None,
             polling_handle: None,
             generated_mnemonic: None,
-            storage_encryption_key: Arc::new(Mutex::new(self.storage_encryption_key)),
-            encrypted_accounts: Vec::new(),
+            encrypted_accounts,
         };
 
         if !self.skip_polling {
@@ -237,8 +236,23 @@ pub struct AccountManager {
     stop_polling_sender: Option<BroadcastSender<()>>,
     polling_handle: Option<thread::JoinHandle<()>>,
     generated_mnemonic: Option<String>,
-    storage_encryption_key: Arc<Mutex<Option<[u8; 32]>>>,
     encrypted_accounts: Vec<String>,
+}
+
+impl Clone for AccountManager {
+    /// Note that when cloning an AccountManager, the original reference's Drop will stop the background sync.
+    /// When the cloned reference is dropped, the background sync system won't be stopped.
+    fn clone(&self) -> Self {
+        Self {
+            storage_folder: self.storage_folder.clone(),
+            storage_path: self.storage_path.clone(),
+            accounts: self.accounts.clone(),
+            stop_polling_sender: self.stop_polling_sender.clone(),
+            polling_handle: None,
+            generated_mnemonic: self.generated_mnemonic.clone(),
+            encrypted_accounts: self.encrypted_accounts.clone(),
+        }
+    }
 }
 
 impl Drop for AccountManager {
@@ -253,15 +267,16 @@ impl AccountManager {
         AccountManagerBuilder::new()
     }
 
-    async fn load_accounts(
-        storage_file_path: &PathBuf,
-        encryption_key: &Option<[u8; 32]>,
-    ) -> crate::Result<(AccountStore, Vec<String>)> {
+    async fn load_accounts(storage_file_path: &PathBuf) -> crate::Result<(AccountStore, Vec<String>)> {
         let mut encrypted_accounts = Vec::new();
         let mut parsed_accounts = HashMap::new();
 
-        let accounts = crate::storage::get(&storage_file_path)?.lock().await.get_all().await?;
-        let accounts = crate::storage::parse_accounts(&storage_file_path, &accounts, encryption_key)?;
+        let accounts = crate::storage::get(&storage_file_path)
+            .await?
+            .lock()
+            .await
+            .get_all()
+            .await?;
         for parsed_account in accounts {
             match parsed_account {
                 crate::storage::ParsedAccount::Account(account) => {
@@ -274,6 +289,26 @@ impl AccountManager {
         }
 
         Ok((Arc::new(RwLock::new(parsed_accounts)), encrypted_accounts))
+    }
+
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    pub(crate) async fn stronghold_snapshot_path(&self) -> crate::Result<PathBuf> {
+        let storage_id = crate::storage::get(&self.storage_path).await?.lock().await.id();
+        let stronghold_snapshot_path = if storage_id == crate::storage::stronghold::STORAGE_ID {
+            self.storage_path.clone()
+        } else {
+            self.storage_folder.join(STRONGHOLD_FILENAME)
+        };
+        Ok(stronghold_snapshot_path)
+    }
+
+    // error out if the storage is encrypted
+    fn check_storage_encryption(&self) -> crate::Result<()> {
+        if self.encrypted_accounts.is_empty() {
+            Ok(())
+        } else {
+            Err(crate::Error::StorageIsEncrypted)
+        }
     }
 
     /// Starts monitoring the accounts with the node's mqtt topics.
@@ -295,13 +330,13 @@ impl AccountManager {
 
     /// Stops the background polling and MQTT monitoring.
     pub fn stop_background_sync(&mut self) {
-        if let Some(stop_polling_sender) = self.stop_polling_sender.take() {
-            stop_polling_sender.send(()).expect("failed to stop polling process");
-            self.polling_handle
+        if let Some(polling_handle) = self.polling_handle.take() {
+            self.stop_polling_sender
                 .take()
                 .unwrap()
-                .join()
-                .expect("failed to join polling thread");
+                .send(())
+                .expect("failed to stop polling process");
+            polling_handle.join().expect("failed to join polling thread");
             let accounts = self.accounts.clone();
             thread::spawn(move || {
                 crate::block_on(async move {
@@ -316,17 +351,18 @@ impl AccountManager {
     }
 
     /// Sets the password for the stored accounts.
-    pub async fn set_storage_password<P: AsRef<str>>(&mut self, key: P) -> crate::Result<()> {
-        let mut dk = [0; 64];
-        crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(key.as_ref().as_bytes(), b"wallet.rs::storage", 100, &mut dk)?;
-        let key: [u8; 32] = dk[0..32][..].try_into().unwrap();
-        *self.storage_encryption_key.lock().await = Some(key);
+    pub async fn set_storage_password<P: AsRef<str>>(&mut self, password: P) -> crate::Result<()> {
+        let key = storage_password_to_encryption_key(password.as_ref());
+        // safe to unwrap because the storage is always defined at this point
+        crate::storage::set_encryption_key(&self.storage_path, key)
+            .await
+            .unwrap();
 
         let mut accounts = self.accounts.write().await;
         for encrypted_account in &self.encrypted_accounts {
             let decrypted = crate::storage::decrypt_account_json(encrypted_account, &key)?;
             let account = serde_json::from_str::<Account>(&decrypted)?;
-            accounts.insert(account.id().clone(), account.into());
+            accounts.insert(account.id().into(), account.into());
         }
         self.encrypted_accounts.clear();
 
@@ -335,9 +371,11 @@ impl AccountManager {
 
     /// Sets the stronghold password.
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
     pub async fn set_stronghold_password<P: AsRef<str>>(&mut self, password: P) -> crate::Result<()> {
         let mut dk = [0; 64];
-        crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_ref().as_bytes(), b"wallet.rs", 100, &mut dk)?;
+        // safe to unwrap because rounds > 0
+        crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_ref().as_bytes(), b"wallet.rs", 100, &mut dk).unwrap();
 
         let stronghold_path = if self.storage_path.extension().unwrap_or_default() == "stronghold" {
             self.storage_path.clone()
@@ -348,8 +386,7 @@ impl AccountManager {
 
         // let is_empty = self.accounts.read().await.is_empty();
         if self.accounts.read().await.is_empty() {
-            let (accounts, encrypted_accounts) =
-                Self::load_accounts(&self.storage_path, &*self.storage_encryption_key.lock().await).await?;
+            let (accounts, encrypted_accounts) = Self::load_accounts(&self.storage_path).await?;
             self.encrypted_accounts = encrypted_accounts;
             let mut accounts_store = self.accounts.write().await;
             for (id, account) in &*accounts.read().await {
@@ -358,6 +395,17 @@ impl AccountManager {
         }
 
         Ok(())
+    }
+
+    /// Determines whether all accounts has the latest address unused.
+    pub async fn is_latest_address_unused(&self) -> crate::Result<bool> {
+        self.check_storage_encryption()?;
+        for account_handle in self.accounts.read().await.values() {
+            if !account_handle.is_latest_address_unused().await? {
+                return Ok(false);
+            }
+        }
+        Ok(true)
     }
 
     /// Starts the polling mechanism.
@@ -369,11 +417,10 @@ impl AccountManager {
     ) {
         let storage_file_path = self.storage_path.clone();
         let accounts = self.accounts.clone();
-        let storage_encryption_key = self.storage_encryption_key.clone();
 
         let handle = thread::spawn(move || {
             let runtime = tokio::runtime::Builder::new_current_thread()
-                .enable_time()
+                .enable_all()
                 .build()
                 .unwrap();
             runtime.block_on(async {
@@ -402,25 +449,12 @@ impl AccountManager {
                                     // when the error is dropped, the on_error event will be triggered
                                 }
                             }
-
-                            {
-                                let encryption_key = &*storage_encryption_key.lock().await;
-                                for account_handle in accounts.read().await.values() {
-                                    let _ = account_handle.write().await.save(&encryption_key).await;
-                                }
-                            }
                         } => {}
                         _ = stop.recv() => {
-                            let encryption_key = &*storage_encryption_key.lock().await;
-                            // before stopping the polling loop, we save the accounts
-                            for account_handle in accounts.read().await.values() {
-                                let _ = account_handle.write().await.save(&encryption_key).await;
-                            }
                             break;
                         }
                     }
                 }
-                println!("DONE");
             });
         });
         self.polling_handle = Some(handle);
@@ -429,14 +463,6 @@ impl AccountManager {
     /// Stores a mnemonic for the given signer type.
     /// If the mnemonic is not provided, we'll generate one.
     pub async fn store_mnemonic(&mut self, signer_type: SignerType, mnemonic: Option<String>) -> crate::Result<()> {
-        let mut mnemonic = mnemonic;
-        if signer_type == SignerType::EnvMnemonic {
-            let _ = dotenv::dotenv();
-            if let Ok(m) = std::env::var("IOTA_WALLET_MNEMONIC") {
-                mnemonic = Some(m);
-            }
-        }
-
         let mnemonic = match mnemonic {
             Some(m) => {
                 self.verify_mnemonic(&m)?;
@@ -446,7 +472,7 @@ impl AccountManager {
         };
 
         let signer = crate::signing::get_signer(&signer_type).await;
-        let signer = signer.lock().await;
+        let mut signer = signer.lock().await;
         signer.store_mnemonic(&self.storage_path, mnemonic).await?;
 
         self.generated_mnemonic = None;
@@ -457,9 +483,9 @@ impl AccountManager {
     /// Generates a new mnemonic.
     pub fn generate_mnemonic(&mut self) -> crate::Result<String> {
         let mut entropy = [0u8; 32];
-        crypto::rand::fill(&mut entropy)?;
+        crypto::rand::fill(&mut entropy).map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
         let mnemonic = crypto::bip39::wordlist::encode(&entropy, &crypto::bip39::wordlist::ENGLISH)
-            .map_err(|_| crate::Error::MnemonicEncode)?;
+            .map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
         self.generated_mnemonic = Some(mnemonic.clone());
         Ok(mnemonic)
     }
@@ -485,26 +511,34 @@ impl AccountManager {
     }
 
     /// Adds a new account.
-    pub fn create_account(&self, client_options: ClientOptions) -> AccountInitialiser {
-        AccountInitialiser::new(client_options, self.accounts.clone(), self.storage_path.clone())
+    pub fn create_account(&self, client_options: ClientOptions) -> crate::Result<AccountInitialiser> {
+        self.check_storage_encryption()?;
+        Ok(AccountInitialiser::new(
+            client_options,
+            self.accounts.clone(),
+            self.storage_path.clone(),
+        ))
     }
 
     /// Deletes an account.
-    pub async fn remove_account(&self, account_id: &AccountIdentifier) -> crate::Result<()> {
-        let mut accounts = self.accounts.write().await;
+    pub async fn remove_account<I: Into<AccountIdentifier>>(&self, account_id: I) -> crate::Result<()> {
+        self.check_storage_encryption()?;
 
-        {
-            let account_handle = accounts.get(&account_id).ok_or(crate::Error::AccountNotFound)?;
+        let account_id = {
+            let account_handle = self.get_account(account_id).await?;
             let account = account_handle.read().await;
 
-            if !(account.messages().is_empty() && account.total_balance() == 0) {
-                return Err(crate::Error::MessageNotEmpty);
+            if !(account.messages().is_empty() && account.balance().total == 0) {
+                return Err(crate::Error::AccountNotEmpty);
             }
-        }
 
-        accounts.remove(account_id);
+            account.id().to_string()
+        };
 
-        crate::storage::get(&self.storage_path)?
+        self.accounts.write().await.remove(&account_id);
+
+        crate::storage::get(&self.storage_path)
+            .await?
             .lock()
             .await
             .remove(&account_id)
@@ -515,23 +549,26 @@ impl AccountManager {
 
     /// Syncs all accounts.
     pub async fn sync_accounts(&self) -> crate::Result<Vec<SyncedAccount>> {
+        self.check_storage_encryption()?;
+
         sync_accounts(self.accounts.clone(), &self.storage_path, None).await
     }
 
     /// Transfers an amount from an account to another.
-    pub async fn internal_transfer(
+    pub async fn internal_transfer<F: Into<AccountIdentifier>, T: Into<AccountIdentifier>>(
         &self,
-        from_account_id: &AccountIdentifier,
-        to_account_id: &AccountIdentifier,
+        from_account_id: F,
+        to_account_id: T,
         amount: NonZeroU64,
     ) -> crate::Result<Message> {
+        self.check_storage_encryption()?;
+
         let to_address = self
             .get_account(to_account_id)
             .await?
             .read()
             .await
             .latest_address()
-            .ok_or(crate::Error::TransferDestinationEmpty)?
             .clone();
 
         let from_synchronized = self.get_account(from_account_id).await?.sync().await.execute().await?;
@@ -542,17 +579,11 @@ impl AccountManager {
 
     /// Backups the storage to the given destination
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
     pub async fn backup<P: AsRef<Path>>(&self, destination: P) -> crate::Result<PathBuf> {
         let destination = destination.as_ref().to_path_buf();
         if !(destination.is_dir() && destination.exists()) {
             return Err(crate::Error::InvalidBackupDestination);
-        }
-
-        {
-            let encryption_key = &*self.storage_encryption_key.lock().await;
-            for account_handle in self.accounts.read().await.values() {
-                account_handle.write().await.save(&encryption_key).await?;
-            }
         }
 
         #[allow(unused_variables)]
@@ -568,20 +599,35 @@ impl AccountManager {
             any(feature = "stronghold", feature = "stronghold-storage")
         ))]
         let (storage_path, backup_entire_directory) = {
-            let storage_id = crate::storage::get(&&self.storage_path)?.lock().await.id();
+            let storage_id = crate::storage::get(&self.storage_path).await?.lock().await.id();
             // if we're actually using the SQLite storage adapter
             let storage_path = if storage_id == crate::storage::sqlite::STORAGE_ID {
-                let stronghold_storage = crate::storage::stronghold::StrongholdStorageAdapter::new(
-                    &self.storage_folder.join(STRONGHOLD_FILENAME),
-                )
-                .unwrap();
+                // create a account manager to setup the stronghold storage for the backup
+                let _ = Self::builder()
+                    .with_storage(
+                        &self.storage_folder.join(STRONGHOLD_FILENAME),
+                        ManagerStorage::Stronghold,
+                        None,
+                    )
+                    .unwrap() // safe to unwrap - password is None
+                    .with_storage_encryption_key(
+                        crate::storage::get(&self.storage_path)
+                            .await?
+                            .lock()
+                            .await
+                            .encryption_key,
+                    )
+                    .skip_polling()
+                    .finish()
+                    .await?;
+                let stronghold_storage = crate::storage::get(&self.storage_folder.join(STRONGHOLD_FILENAME)).await?;
+                let mut stronghold_storage = stronghold_storage.lock().await;
 
-                let encryption_key = &*self.storage_encryption_key.lock().await;
-                for (account_id, account_handle) in &*self.accounts.read().await {
+                for account_handle in self.accounts.read().await.values() {
                     stronghold_storage
                         .set(
-                            account_id,
-                            crate::storage::get_account_string_to_save(&*account_handle.read().await, &encryption_key)?,
+                            &account_handle.read().await.id(),
+                            serde_json::to_string(&*account_handle.read().await)?,
                         )
                         .await?;
                 }
@@ -607,15 +653,15 @@ impl AccountManager {
                     any(feature = "stronghold", feature = "stronghold-storage")
                 ))]
                 {
-                    let storage_id = crate::storage::get(&self.storage_path)?.lock().await.id();
+                    let storage_id = crate::storage::get(&self.storage_path).await?.lock().await.id();
                     // if we're actually using the SQLite storage adapter
                     if storage_id == crate::storage::sqlite::STORAGE_ID {
-                        let stronghold_storage = crate::storage::stronghold::StrongholdStorageAdapter::new(
+                        let mut stronghold_storage = crate::storage::stronghold::StrongholdStorageAdapter::new(
                             &self.storage_folder.join(STRONGHOLD_FILENAME),
                         )
                         .unwrap();
-                        for account_id in self.accounts.read().await.keys() {
-                            stronghold_storage.remove(account_id).await?;
+                        for account_handle in self.accounts.read().await.values() {
+                            stronghold_storage.remove(&account_handle.read().await.id()).await?;
                         }
                     }
                 }
@@ -633,6 +679,7 @@ impl AccountManager {
 
     /// Import backed up accounts.
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
     pub async fn import_accounts<S: AsRef<Path>>(
         &mut self,
         source: S,
@@ -647,7 +694,7 @@ impl AccountManager {
         #[cfg(feature = "stronghold-storage")]
         let storage_file_path = {
             let storage_file_path = self.storage_folder.join(STRONGHOLD_FILENAME);
-            let storage_id = crate::storage::get(&self.storage_path)?.lock().await.id();
+            let storage_id = crate::storage::get(&self.storage_path).await?.lock().await.id();
             if storage_id == crate::storage::stronghold::STORAGE_ID && storage_file_path.exists() {
                 return Err(crate::Error::StorageExists);
             }
@@ -668,9 +715,15 @@ impl AccountManager {
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             {
                 let mut stronghold_manager = Self::builder()
-                    .with_storage_path(&source)
-                    .with_storage(DefaultStorage::Stronghold)
-                    .with_storage_encryption_key(*self.storage_encryption_key.lock().await)
+                    .with_storage(&source, ManagerStorage::Stronghold, None)
+                    .unwrap() // safe to unwrap - password is None
+                    .with_storage_encryption_key(
+                        crate::storage::get(&self.storage_path)
+                            .await?
+                            .lock()
+                            .await
+                            .encryption_key,
+                    )
                     .skip_polling()
                     .finish()
                     .await?;
@@ -694,7 +747,9 @@ impl AccountManager {
         // the accounts map isn't empty when restoring SQLite from a stronghold snapshot
         #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
         if self.accounts.read().await.is_empty() {
-            self.accounts = Self::load_accounts(&self.storage_path).await?;
+            let (accounts, encrypted_accounts) = Self::load_accounts(&self.storage_path).await?;
+            self.accounts = accounts;
+            self.encrypted_accounts = encrypted_accounts;
         }
 
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
@@ -711,49 +766,90 @@ impl AccountManager {
     }
 
     /// Gets the account associated with the given identifier.
-    pub async fn get_account(&self, account_id: &AccountIdentifier) -> crate::Result<AccountHandle> {
+    pub async fn get_account<I: Into<AccountIdentifier>>(&self, account_id: I) -> crate::Result<AccountHandle> {
+        self.check_storage_encryption()?;
+        let account_id = account_id.into();
         let accounts = self.accounts.read().await;
-        accounts.get(account_id).cloned().ok_or(crate::Error::AccountNotFound)
-    }
 
-    /// Gets the account associated with the given alias (case insensitive).
-    pub async fn get_account_by_alias<S: AsRef<str>>(&self, alias: S) -> Option<AccountHandle> {
-        let alias = alias.as_ref().to_lowercase();
-        for account_handle in self.accounts.read().await.values() {
-            let account = account_handle.read().await;
-            if account
-                .alias()
-                .to_lowercase()
-                .chars()
-                .zip(alias.chars())
-                .all(|(x, y)| x == y)
-            {
-                return Some(account_handle.clone());
+        let account = match account_id {
+            AccountIdentifier::Id(id) => accounts.get(&id),
+            AccountIdentifier::Index(index) => {
+                let mut associated_account = None;
+                for account_handle in accounts.values() {
+                    let account = account_handle.read().await;
+                    if account.index() == &index {
+                        // if we already found an account with this index,
+                        // we error out since this is an incorrect usage of the API
+                        // you can't use the index to get an account if you're using multiple signer types
+                        // since there's multiple index sequences in that case
+                        if associated_account.is_some() {
+                            return Err(crate::Error::CannotUseIndexIdentifier);
+                        }
+                        associated_account = Some(account_handle);
+                    }
+                }
+                associated_account
             }
-        }
-        None
+            AccountIdentifier::Alias(alias) => {
+                let mut associated_account = None;
+                for account_handle in accounts.values() {
+                    let account = account_handle.read().await;
+                    if account.alias() == &alias {
+                        associated_account = Some(account_handle);
+                        break;
+                    }
+                }
+                associated_account
+            }
+            AccountIdentifier::Address(address) => {
+                let mut associated_account = None;
+                for account_handle in accounts.values() {
+                    let account = account_handle.read().await;
+                    if account.addresses().iter().any(|a| a.address() == &address) {
+                        associated_account = Some(account_handle);
+                        break;
+                    }
+                }
+                associated_account
+            }
+        };
+
+        account.cloned().ok_or(crate::Error::AccountNotFound)
     }
 
     /// Gets all accounts from storage.
-    pub async fn get_accounts(&self) -> Vec<AccountHandle> {
+    pub async fn get_accounts(&self) -> crate::Result<Vec<AccountHandle>> {
+        self.check_storage_encryption()?;
         let accounts = self.accounts.read().await;
-        accounts.values().cloned().collect()
+        Ok(accounts.values().cloned().collect())
     }
 
     /// Reattaches an unconfirmed transaction.
-    pub async fn reattach(&self, account_id: &AccountIdentifier, message_id: &MessageId) -> crate::Result<Message> {
+    pub async fn reattach<I: Into<AccountIdentifier>>(
+        &self,
+        account_id: I,
+        message_id: &MessageId,
+    ) -> crate::Result<Message> {
         let account = self.get_account(account_id).await?;
         account.sync().await.execute().await?.reattach(message_id).await
     }
 
     /// Promotes an unconfirmed transaction.
-    pub async fn promote(&self, account_id: &AccountIdentifier, message_id: &MessageId) -> crate::Result<Message> {
+    pub async fn promote<I: Into<AccountIdentifier>>(
+        &self,
+        account_id: I,
+        message_id: &MessageId,
+    ) -> crate::Result<Message> {
         let account = self.get_account(account_id).await?;
         account.sync().await.execute().await?.promote(message_id).await
     }
 
     /// Retries an unconfirmed transaction.
-    pub async fn retry(&self, account_id: &AccountIdentifier, message_id: &MessageId) -> crate::Result<Message> {
+    pub async fn retry<I: Into<AccountIdentifier>>(
+        &self,
+        account_id: I,
+        message_id: &MessageId,
+    ) -> crate::Result<Message> {
         let account = self.get_account(account_id).await?;
         account.sync().await.execute().await?.retry(message_id).await
     }
@@ -824,7 +920,7 @@ async fn poll(accounts: AccountStore, storage_file_path: PathBuf, syncing: bool)
         log::info!("[POLLING] skipping syncing process because MQTT is running");
         let mut retried_messages = vec![];
         for account_handle in accounts.read().await.values() {
-            let (account_id, unconfirmed_messages): (AccountIdentifier, Vec<(MessageId, Payload)>) = {
+            let (account_id, unconfirmed_messages): (String, Vec<(MessageId, Payload)>) = {
                 let account = account_handle.read().await;
                 let account_id = account.id().clone();
                 let unconfirmed_messages = account
@@ -955,7 +1051,7 @@ struct RetriedData {
     #[allow(dead_code)]
     promoted: Vec<Message>,
     reattached: Vec<Message>,
-    account_id: AccountIdentifier,
+    account_id: String,
 }
 
 async fn retry_unconfirmed_transactions(synced_accounts: Vec<SyncedAccount>) -> crate::Result<Vec<RetriedData>> {
@@ -1037,114 +1133,247 @@ fn backup_filename(original: &str) -> String {
 #[cfg(test)]
 mod tests {
     use crate::{
-        address::{AddressBuilder, IotaAddress},
+        address::{AddressBuilder, AddressWrapper, IotaAddress},
         client::ClientOptionsBuilder,
         message::Message,
     };
-    use iota::{Ed25519Address, Indexation, MessageBuilder, MessageId, Payload};
+    use iota::{Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Payload};
 
     #[tokio::test]
     async fn store_accounts() {
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+
+            manager
+                .remove_account(account_handle.read().await.id())
+                .await
+                .expect("failed to remove account");
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn duplicated_alias() {
         let manager = crate::test_utils::get_account_manager().await;
 
-        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
+        let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
+            .expect("invalid node URL")
+            .build();
+        let alias = "alias";
+
+        manager
+            .create_account(client_options.clone())
+            .unwrap()
+            .alias(alias)
+            .initialise()
+            .await
+            .expect("failed to add account");
+
+        let second_create_response = manager
+            .create_account(client_options)
+            .unwrap()
+            .alias(alias)
+            .initialise()
+            .await;
+        assert_eq!(second_create_response.is_err(), true);
+        match second_create_response.unwrap_err() {
+            crate::Error::AccountAliasAlreadyExists => {}
+            _ => panic!("unexpected create account response; expected AccountAliasAlreadyExists"),
+        }
+    }
+
+    #[tokio::test]
+    async fn get_account() {
+        let manager = crate::test_utils::get_account_manager().await;
+
+        let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
             .expect("invalid node URL")
             .build();
 
-        let account_handle = manager
-            .create_account(client_options)
+        let account_handle1 = manager
+            .create_account(client_options.clone())
+            .unwrap()
             .alias("alias")
             .initialise()
             .await
             .expect("failed to add account");
-        account_handle.write().await.save(&None).await.unwrap();
+        account_handle1.generate_address().await.unwrap();
+        {
+            // update address balance so we can create the next account
+            let mut account = account_handle1.write().await;
+            for address in account.addresses_mut() {
+                address.set_balance(5);
+            }
+        }
 
-        manager
-            .remove_account(account_handle.read().await.id())
+        let account_handle2 = manager
+            .create_account(client_options)
+            .unwrap()
+            .alias("alias2")
+            .initialise()
             .await
-            .expect("failed to remove account");
+            .expect("failed to add account");
+        account_handle2.generate_address().await.unwrap();
+
+        let account1 = &*account_handle1.read().await;
+        let account2 = &*account_handle2.read().await;
+
+        assert_eq!(
+            account1,
+            &*manager.get_account(*account1.index()).await.unwrap().read().await
+        );
+        assert_eq!(
+            account1,
+            &*manager.get_account(account1.alias()).await.unwrap().read().await
+        );
+        assert_eq!(
+            account1,
+            &*manager.get_account(account1.id()).await.unwrap().read().await
+        );
+        assert_eq!(
+            account1,
+            &*manager
+                .get_account(account1.addresses().first().unwrap().address().to_bech32())
+                .await
+                .unwrap()
+                .read()
+                .await
+        );
+
+        assert_eq!(
+            account2,
+            &*manager.get_account(*account2.index()).await.unwrap().read().await
+        );
+        assert_eq!(
+            account2,
+            &*manager.get_account(account2.alias()).await.unwrap().read().await
+        );
+        assert_eq!(
+            account2,
+            &*manager.get_account(account2.id()).await.unwrap().read().await
+        );
+        assert_eq!(
+            account2,
+            &*manager
+                .get_account(account2.addresses().first().unwrap().address().to_bech32())
+                .await
+                .unwrap()
+                .read()
+                .await
+        );
     }
 
     #[tokio::test]
     async fn remove_account_with_message_history() {
-        let manager = crate::test_utils::get_account_manager().await;
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
+                .expect("invalid node URL")
+                .build();
 
-        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-            .expect("invalid node URL")
-            .build();
+            let account_handle = manager
+                .create_account(client_options)
+                .unwrap()
+                .messages(vec![Message::from_iota_message(
+                    MessageId::new([0; 32]),
+                    &[],
+                    &MessageBuilder::new()
+                        .with_nonce_provider(crate::test_utils::NoopNonceProvider {}, 4000f64)
+                        .with_parent1(MessageId::new([0; 32]))
+                        .with_parent2(MessageId::new([0; 32]))
+                        .with_payload(Payload::Indexation(Box::new(
+                            IndexationPayload::new("index".to_string(), &[0; 16]).unwrap(),
+                        )))
+                        .with_network_id(0)
+                        .finish()
+                        .unwrap(),
+                    Some(true),
+                )
+                .unwrap()])
+                .initialise()
+                .await
+                .unwrap();
 
-        let messages = vec![Message::from_iota_message(
-            MessageId::new([0; 32]),
-            &[],
-            &MessageBuilder::<crate::test_utils::NoopNonceProvider>::new()
-                .with_parent1(MessageId::new([0; 32]))
-                .with_parent2(MessageId::new([0; 32]))
-                .with_payload(Payload::Indexation(Box::new(
-                    Indexation::new("index".to_string(), &[0; 16]).unwrap(),
-                )))
-                .with_network_id(0)
-                .with_nonce_provider(crate::test_utils::NoopNonceProvider {}, 0f64)
-                .finish()
-                .unwrap(),
-            None,
-        )
-        .unwrap()];
-
-        let account_handle = manager
-            .create_account(client_options)
-            .messages(messages)
-            .initialise()
-            .await
-            .unwrap();
-
-        let account = account_handle.read().await;
-        let remove_response = manager.remove_account(account.id()).await;
-        assert!(remove_response.is_err());
+            let remove_response = manager.remove_account(account_handle.read().await.id()).await;
+            assert!(remove_response.is_err());
+        })
+        .await;
     }
 
     #[tokio::test]
     async fn remove_account_with_balance() {
-        let manager = crate::test_utils::get_account_manager().await;
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
+                .expect("invalid node URL")
+                .build();
 
-        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-            .expect("invalid node URL")
-            .build();
+            let account_handle = manager
+                .create_account(client_options)
+                .unwrap()
+                .addresses(vec![AddressBuilder::new()
+                    .balance(5)
+                    .key_index(0)
+                    .address(AddressWrapper::new(
+                        IotaAddress::Ed25519(Ed25519Address::new([0; 32])),
+                        "iota".to_string(),
+                    ))
+                    .outputs(vec![])
+                    .build()
+                    .unwrap()])
+                .initialise()
+                .await
+                .unwrap();
+            let account = account_handle.read().await;
 
-        let account_handle = manager
-            .create_account(client_options)
-            .addresses(vec![AddressBuilder::new()
-                .balance(5)
-                .key_index(0)
-                .address(IotaAddress::Ed25519(Ed25519Address::new([0; 32])))
-                .outputs(vec![])
-                .build()
-                .unwrap()])
-            .initialise()
-            .await
-            .unwrap();
-        let account = account_handle.read().await;
-
-        let remove_response = manager.remove_account(account.id()).await;
-        assert!(remove_response.is_err());
+            let remove_response = manager.remove_account(account.id()).await;
+            assert!(remove_response.is_err());
+        })
+        .await;
     }
 
     #[tokio::test]
     async fn create_account_with_latest_without_history() {
-        let manager = crate::test_utils::get_account_manager().await;
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
+                .expect("invalid node URL")
+                .build();
 
-        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-            .expect("invalid node URL")
-            .build();
+            manager
+                .create_account(client_options.clone())
+                .unwrap()
+                .alias("alias")
+                .initialise()
+                .await
+                .expect("failed to add account");
 
-        manager
-            .create_account(client_options.clone())
-            .alias("alias")
-            .initialise()
-            .await
-            .expect("failed to add account");
+            let create_response = manager.create_account(client_options).unwrap().initialise().await;
+            assert!(create_response.is_err());
+        })
+        .await;
+    }
 
-        let create_response = manager.create_account(client_options).initialise().await;
-        assert!(create_response.is_err());
+    #[tokio::test]
+    async fn create_account_skip_persistance() {
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
+                .expect("invalid node URL")
+                .build();
+
+            let account_handle = manager
+                .create_account(client_options.clone())
+                .unwrap()
+                .skip_persistance()
+                .initialise()
+                .await
+                .expect("failed to add account");
+
+            let account_get_res = manager.get_account(account_handle.read().await.id()).await;
+            assert!(account_get_res.is_err(), true);
+            match account_get_res.unwrap_err() {
+                crate::Error::AccountNotFound => {}
+                _ => panic!("unexpected get_account response; expected AccountNotFound"),
+            }
+        })
+        .await;
     }
 
     #[tokio::test]
@@ -1153,60 +1382,108 @@ mod tests {
         let _ = std::fs::remove_dir_all(backup_path);
         std::fs::create_dir_all(backup_path).unwrap();
 
-        let manager = crate::test_utils::get_account_manager().await;
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
 
-        let client_options = ClientOptionsBuilder::node("https://nodes.devnet.iota.org:443")
-            .expect("invalid node URL")
-            .build();
+            // backup the stored accounts to ./backup/happy-path/${backup_name}
+            let backup_path = manager.backup(backup_path).await.unwrap();
+            let backup_file_path = if backup_path.is_dir() {
+                std::fs::read_dir(backup_path)
+                    .unwrap()
+                    .next()
+                    .unwrap()
+                    .unwrap()
+                    .path()
+                    .to_path_buf()
+            } else {
+                backup_path
+            };
 
-        let account_handle = manager
-            .create_account(client_options)
-            .alias("alias")
-            .signer_type(crate::test_utils::signer_type())
-            .initialise()
-            .await
-            .expect("failed to add account");
+            // get another manager instance so we can import the accounts to a different storage
+            #[allow(unused_mut)]
+            let mut manager = crate::test_utils::get_account_manager().await;
 
-        // backup the stored accounts to ./backup/happy-path/${backup_name}
-        let backup_path = manager.backup(backup_path).await.unwrap();
-        let backup_file_path = if backup_path.is_dir() {
-            std::fs::read_dir(backup_path)
-                .unwrap()
-                .next()
-                .unwrap()
-                .unwrap()
-                .path()
-                .to_path_buf()
-        } else {
-            backup_path
-        };
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            {
+                // wait for stronghold to finish pending operations and delete the storage file
+                crate::stronghold::unload_snapshot(&manager.stronghold_snapshot_path().await.unwrap(), false)
+                    .await
+                    .unwrap();
+                let _ = crate::stronghold::actor_runtime().lock().await;
 
-        // get another manager instance so we can import the accounts to a different storage
-        #[allow(unused_mut)]
-        let mut manager = crate::test_utils::get_account_manager().await;
+                if crate::storage::get(manager.storage_path())
+                    .await
+                    .unwrap()
+                    .lock()
+                    .await
+                    .id()
+                    == crate::storage::stronghold::STORAGE_ID
+                {
+                    let _ = std::fs::remove_file(manager.storage_path());
+                }
+            }
 
-        #[cfg(all(
-            not(feature = "sqlite-storage"),
-            any(feature = "stronghold", feature = "stronghold-storage")
-        ))]
-        std::fs::remove_file(manager.storage_path()).unwrap();
+            manager.set_storage_password("password").await.unwrap();
 
-        manager.set_storage_password("password").await.unwrap();
+            // import the accounts from the backup and assert that it's the same
 
-        // import the accounts from the backup and assert that it's the same
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            manager.import_accounts(backup_file_path, "password").await.unwrap();
 
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-        manager.import_accounts(backup_file_path, "password").await.unwrap();
+            #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
+            manager.import_accounts(backup_file_path).await.unwrap();
 
-        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-        manager.import_accounts(backup_file_path).await.unwrap();
+            let imported_account = manager.get_account(account_handle.read().await.id()).await.unwrap();
+            // set the account storage path field so the assert works
+            account_handle
+                .write()
+                .await
+                .set_storage_path(manager.storage_path().clone());
+            assert_eq!(&*account_handle.read().await, &*imported_account.read().await);
+        })
+        .await;
+    }
 
-        let imported_account = manager.get_account(account_handle.read().await.id()).await.unwrap();
-        // set the account storage path field so the assert works
-        account_handle
-            .write()
-            .await
-            .set_storage_path(manager.storage_path().clone());
-        assert_eq!(&*account_handle.read().await, &*imported_account.read().await);
+    #[tokio::test]
+    async fn backup_and_restore_storage_already_exists() {
+        let backup_path = "./backup/account-exists";
+        let _ = std::fs::remove_dir_all(backup_path);
+        std::fs::create_dir_all(backup_path).unwrap();
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |mut manager, _| async move {
+            // first we'll create an example account
+            let address = crate::test_utils::generate_random_iota_address();
+            let address = AddressBuilder::new()
+                .address(address.clone())
+                .key_index(0)
+                .balance(0)
+                .outputs(vec![])
+                .build()
+                .unwrap();
+            crate::test_utils::AccountCreator::new(&manager)
+                .addresses(vec![address])
+                .create()
+                .await;
+
+            let backup_path = manager.backup(backup_path).await.unwrap();
+            let backup_file_path = if backup_path.is_dir() {
+                std::fs::read_dir(backup_path).unwrap().next().unwrap().unwrap().path()
+            } else {
+                backup_path
+            };
+
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            let response = manager.import_accounts(backup_file_path, "password").await;
+
+            #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
+            let response = manager.import_accounts(backup_file_path).await;
+
+            assert!(response.is_err());
+            let err = response.unwrap_err();
+            assert_eq!(
+                err.to_string(),
+                "failed to restore backup: storage file already exists".to_string()
+            );
+        })
+        .await;
     }
 }
