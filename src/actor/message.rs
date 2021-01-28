@@ -178,6 +178,10 @@ pub enum MessageType {
     },
     /// Checks if all accounts has unused latest address after syncing with the Tangle.
     IsLatestAddressUnused,
+    /// Open the iota ledger app on Ledger Nano or Speculos simulator.
+    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
+    OpenLedgerApp(bool),
 }
 
 impl Serialize for MessageType {
@@ -240,6 +244,7 @@ impl Serialize for MessageType {
             MessageType::IsLatestAddressUnused => {
                 serializer.serialize_unit_variant("MessageType", 17, "IsLatestAddressUnused")
             }
+            MessageType::OpenLedgerApp(_) => serializer.serialize_unit_variant("MessageType", 18, "OpenLedgerApp"),
         }
     }
 }
@@ -341,6 +346,10 @@ pub enum ResponseType {
     UpdatedAlias,
     /// SetClientOptions response.
     UpdatedClientOptions,
+    /// OpenLedgerApp response.
+    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
+    OpenedLedgerApp,
 }
 
 /// The message type.
