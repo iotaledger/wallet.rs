@@ -76,7 +76,7 @@ pub async fn with_actor_system<F: FnOnce(&riker::actors::ActorSystem)>(cb: F) {
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
 pub fn open_ledger_app(is_simulator: bool) -> crate::Result<()> {
-    ledger_iota::get_ledger(0, is_simulator)?;
+    ledger_iota::get_ledger(signing::ledger::HARDENED, is_simulator)?;
     Ok(())
 }
 

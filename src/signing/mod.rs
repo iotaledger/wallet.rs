@@ -15,7 +15,7 @@ use slip10::BIP32Path;
 use tokio::sync::Mutex;
 
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-mod ledger;
+pub(crate) mod ledger;
 
 #[cfg(feature = "stronghold")]
 mod stronghold;

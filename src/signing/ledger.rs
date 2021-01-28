@@ -9,7 +9,7 @@ use iota::{common::packable::Packable, UnlockBlock};
 use ledger_iota::LedgerBIP32Index;
 use tokio::sync::Mutex;
 
-const HARDENED: u32 = 0x80000000;
+pub const HARDENED: u32 = 0x80000000;
 
 #[derive(Default)]
 pub struct LedgerNanoSigner {
