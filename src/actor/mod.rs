@@ -119,8 +119,17 @@ impl WalletMessageHandler {
             MessageType::GetStrongholdStatus => {
                 convert_async_panics(|| async {
                     let status =
-                        crate::stronghold::get_status(&self.account_manager.stronghold_snapshot_path().await?).await;
+                        crate::get_stronghold_status(&self.account_manager.stronghold_snapshot_path().await?).await;
                     Ok(ResponseType::StrongholdStatus(status))
+                })
+                .await
+            }
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            MessageType::LockStronghold => {
+                convert_async_panics(|| async {
+                    crate::lock_stronghold(&self.account_manager.stronghold_snapshot_path().await?, true)
+                        .await?;
+                    Ok(ResponseType::LockedStronghold)
                 })
                 .await
             }

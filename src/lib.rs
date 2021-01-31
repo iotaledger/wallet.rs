@@ -39,6 +39,7 @@ pub use error::Error;
 pub use stronghold::{
     get_status as get_stronghold_status, set_password_clear_interval as set_stronghold_password_clear_interval,
     SnapshotStatus as StrongholdSnapshotStatus, Status as StrongholdStatus,
+    unload_snapshot as lock_stronghold,
 };
 
 /// The wallet Result type.

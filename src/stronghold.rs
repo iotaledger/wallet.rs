@@ -151,6 +151,8 @@ pub enum SnapshotStatus {
 #[derive(Debug, Serialize)]
 /// Stronghold status.
 pub struct Status {
+    #[serde(rename = "snapshotPath")]
+    snapshot_path: PathBuf,
     snapshot: SnapshotStatus,
 }
 
@@ -168,6 +170,7 @@ pub async fn get_status(snapshot_path: &PathBuf) -> Status {
     {
         let locked = password_clear_interval.as_millis() > 0 && access_instant.elapsed() >= password_clear_interval;
         Status {
+            snapshot_path: snapshot_path.clone(),
             snapshot: if locked {
                 SnapshotStatus::Locked
             } else {
@@ -180,6 +183,7 @@ pub async fn get_status(snapshot_path: &PathBuf) -> Status {
         }
     } else {
         Status {
+            snapshot_path: snapshot_path.clone(),
             snapshot: SnapshotStatus::Locked,
         }
     }
@@ -221,6 +225,7 @@ fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, [u8; 32]>>> {
                         }
                     }
                     crate::event::emit_stronghold_status_change(&Status {
+                        snapshot_path: snapshot_path.clone(),
                         snapshot: SnapshotStatus::Locked,
                     });
                 }
@@ -401,7 +406,14 @@ pub async fn unload_snapshot(storage_path: &PathBuf, persist: bool) -> Result<()
             clear_stronghold_cache(&mut runtime, persist).await?;
             CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await.take();
         }
+    } else {
+        let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
+        let mut access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
+        access_store.remove(storage_path);
+        passwords.remove(storage_path);
     }
+
+    crate::event::emit_stronghold_status_change(&get_status(storage_path).await);
 
     Ok(())
 }
