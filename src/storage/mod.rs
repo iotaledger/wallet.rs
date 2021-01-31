@@ -90,6 +90,12 @@ pub async fn set<P: AsRef<Path>>(
     );
 }
 
+pub async fn remove(storage_path: &PathBuf) -> String {
+    let mut instances = INSTANCES.get_or_init(Default::default).write().await;
+    let storage = instances.remove(storage_path);
+    storage.unwrap().lock().await.id().to_string()
+}
+
 pub(crate) async fn set_encryption_key(storage_path: &PathBuf, encryption_key: [u8; 32]) -> crate::Result<()> {
     let instances = INSTANCES.get_or_init(Default::default).read().await;
     if let Some(instance) = instances.get(storage_path) {
