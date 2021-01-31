@@ -407,7 +407,9 @@ pub async fn unload_snapshot(storage_path: &PathBuf, persist: bool) -> Result<()
             clear_stronghold_cache(&mut runtime, persist).await?;
             CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await.take();
         }
-    } else {
+    }
+
+    {
         let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
         let mut access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
         access_store.remove(storage_path);
