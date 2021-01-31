@@ -280,7 +280,7 @@ impl Message {
         account_addresses: &[Address],
         message: &IotaMessage,
         confirmed: Option<bool>,
-    ) -> crate::Result<Self> {
+    ) -> Self {
         let mut packed_payload = Vec::new();
         let _ = message.payload().pack(&mut packed_payload);
 
@@ -314,7 +314,7 @@ impl Message {
             remainder_value: total_value - value,
         };
 
-        Ok(message)
+        message
     }
 
     /// The message's addresses.

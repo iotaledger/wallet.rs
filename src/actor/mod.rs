@@ -25,7 +25,7 @@ pub struct WalletMessageHandler {
     account_manager: AccountManager,
 }
 
-fn panic_to_response_message(panic: Box<dyn Any>) -> Result<ResponseType> {
+fn panic_to_response_message(panic: Box<dyn Any>) -> ResponseType {
     let msg = if let Some(message) = panic.downcast_ref::<String>() {
         format!("Internal error: {}", message)
     } else if let Some(message) = panic.downcast_ref::<&str>() {
@@ -34,13 +34,13 @@ fn panic_to_response_message(panic: Box<dyn Any>) -> Result<ResponseType> {
         "Internal error".to_string()
     };
     let current_backtrace = backtrace::Backtrace::new();
-    Ok(ResponseType::Panic(format!("{}\n\n{:?}", msg, current_backtrace)))
+    ResponseType::Panic(format!("{}\n\n{:?}", msg, current_backtrace))
 }
 
 fn convert_panics<F: FnOnce() -> Result<ResponseType>>(f: F) -> Result<ResponseType> {
     match catch_unwind(AssertUnwindSafe(|| f())) {
         Ok(result) => result,
-        Err(panic) => panic_to_response_message(panic),
+        Err(panic) => Ok(panic_to_response_message(panic)),
     }
 }
 
@@ -50,7 +50,7 @@ where
 {
     match AssertUnwindSafe(f()).catch_unwind().await {
         Ok(result) => result,
-        Err(panic) => panic_to_response_message(panic),
+        Err(panic) => Ok(panic_to_response_message(panic)),
     }
 }
 
@@ -127,8 +127,7 @@ impl WalletMessageHandler {
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             MessageType::LockStronghold => {
                 convert_async_panics(|| async {
-                    crate::lock_stronghold(&self.account_manager.stronghold_snapshot_path().await?, true)
-                        .await?;
+                    crate::lock_stronghold(&self.account_manager.stronghold_snapshot_path().await?, true).await?;
                     Ok(ResponseType::LockedStronghold)
                 })
                 .await

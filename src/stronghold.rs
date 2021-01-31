@@ -398,6 +398,7 @@ async fn switch_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf
     Ok(())
 }
 
+/// Removes the snapshot from memory and clears the password.
 pub async fn unload_snapshot(storage_path: &PathBuf, persist: bool) -> Result<()> {
     let current_snapshot_path = CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await.clone();
     if let Some(current) = &current_snapshot_path {
