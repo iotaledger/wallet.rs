@@ -74,7 +74,7 @@ type Storages = Arc<RwLock<HashMap<PathBuf, StorageHandle>>>;
 static INSTANCES: OnceCell<Storages> = OnceCell::new();
 
 /// Sets the storage adapter.
-pub async fn set<P: AsRef<Path>>(
+pub(crate) async fn set<P: AsRef<Path>>(
     storage_path: P,
     encryption_key: Option<[u8; 32]>,
     storage: Box<dyn StorageAdapter + Send + Sync + 'static>,
@@ -90,7 +90,7 @@ pub async fn set<P: AsRef<Path>>(
     );
 }
 
-pub async fn remove(storage_path: &PathBuf) -> String {
+pub(crate) async fn remove(storage_path: &PathBuf) -> String {
     let mut instances = INSTANCES.get_or_init(Default::default).write().await;
     let storage = instances.remove(storage_path);
     storage.unwrap().lock().await.id().to_string()
