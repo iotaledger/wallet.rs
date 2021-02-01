@@ -186,6 +186,8 @@ pub enum MessageType {
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
     OpenLedgerApp(bool),
+    /// Deletes the storage.
+    DeleteStorage,
 }
 
 impl Serialize for MessageType {
@@ -252,6 +254,7 @@ impl Serialize for MessageType {
             }
             #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
             MessageType::OpenLedgerApp(_) => serializer.serialize_unit_variant("MessageType", 20, "OpenLedgerApp"),
+            MessageType::DeleteStorage => serializer.serialize_unit_variant("MessageType", 21, "DeleteStorage"),
         }
     }
 }
@@ -361,6 +364,8 @@ pub enum ResponseType {
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
     OpenedLedgerApp,
+    /// DeleteStorage response.
+    DeletedStorage,
 }
 
 /// The message type.

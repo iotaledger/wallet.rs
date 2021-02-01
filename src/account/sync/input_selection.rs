@@ -24,9 +24,9 @@ pub fn select_input(target: u64, mut available_utxos: Vec<Input>) -> crate::Resu
         Ordering::Less => Ordering::Less,
     });
     let mut selected_coins = Vec::new();
-    let tries = 2i128
+    let tries = 2i64
         .checked_pow(available_utxos.len().try_into().unwrap())
-        .unwrap_or(i128::max_value());
+        .unwrap_or(i64::max_value());
     let result = branch_and_bound(target, &mut available_utxos, 0, &mut selected_coins, 0, tries);
 
     if result {
@@ -58,7 +58,7 @@ fn branch_and_bound(
     depth: usize,
     current_selection: &mut Vec<Input>,
     effective_value: u64,
-    mut tries: i128,
+    mut tries: i64,
 ) -> bool {
     if effective_value > target {
         return false;

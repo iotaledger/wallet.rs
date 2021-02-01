@@ -164,6 +164,13 @@ impl WalletMessageHandler {
             MessageType::OpenLedgerApp(is_simulator) => {
                 convert_panics(|| crate::open_ledger_app(*is_simulator).map(|_| ResponseType::OpenedLedgerApp))
             }
+            MessageType::DeleteStorage => {
+                convert_async_panics(|| async move {
+                    self.account_manager.delete_internal().await?;
+                    Ok(ResponseType::DeletedStorage)
+                })
+                .await
+            }
             MessageType::SendTransfer { account_id, transfer } => {
                 convert_async_panics(|| async { self.send_transfer(account_id, transfer.clone().finish()).await }).await
             }
