@@ -30,9 +30,8 @@ pub fn select_input(target: u64, available_utxos: &mut [Input]) -> crate::Result
         0,
         &mut selected_coins,
         0,
-        2i128
-            .checked_pow(available_utxos.len().try_into().unwrap())
-            .unwrap_or(i128::max_value()),
+        2i64.checked_pow(available_utxos.len().try_into().unwrap())
+            .unwrap_or(i64::max_value()),
     );
 
     if result {
@@ -67,7 +66,7 @@ fn branch_and_bound(
     depth: usize,
     current_selection: &mut Vec<Input>,
     effective_value: u64,
-    mut tries: i128,
+    mut tries: i64,
 ) -> bool {
     if effective_value > target {
         return false;

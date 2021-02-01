@@ -291,9 +291,35 @@ impl AccountManager {
         Ok((Arc::new(RwLock::new(parsed_accounts)), encrypted_accounts))
     }
 
+    /// Deletes the storage.
+    pub async fn delete(self) -> Result<(), (crate::Error, Self)> {
+        self.delete_internal().await.map_err(|e| (e, self))
+    }
+
+    pub(crate) async fn delete_internal(&self) -> crate::Result<()> {
+        let storage_id = crate::storage::remove(&self.storage_path).await;
+
+        if self.storage_path.exists() {
+            std::fs::remove_file(&self.storage_path)?;
+        }
+
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        {
+            crate::stronghold::unload_snapshot(&self.storage_path, false).await?;
+            let _ = std::fs::remove_file(self.stronghold_snapshot_path_internal(&storage_id).await?);
+        }
+
+        Ok(())
+    }
+
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     pub(crate) async fn stronghold_snapshot_path(&self) -> crate::Result<PathBuf> {
         let storage_id = crate::storage::get(&self.storage_path).await?.lock().await.id();
+        self.stronghold_snapshot_path_internal(storage_id).await
+    }
+
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    pub(crate) async fn stronghold_snapshot_path_internal(&self, storage_id: &str) -> crate::Result<PathBuf> {
         let stronghold_snapshot_path = if storage_id == crate::storage::stronghold::STORAGE_ID {
             self.storage_path.clone()
         } else {
@@ -1148,6 +1174,19 @@ mod tests {
                 .remove_account(account_handle.read().await.id())
                 .await
                 .expect("failed to remove account");
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn delete_storage() {
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            crate::test_utils::AccountCreator::new(&manager).create().await;
+            manager
+                .delete()
+                .await
+                .map_err(|(e, _)| e)
+                .expect("failed to delete storage");
         })
         .await;
     }
