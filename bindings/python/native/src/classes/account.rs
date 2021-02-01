@@ -72,7 +72,7 @@ impl Transfer {
             builder = builder.with_indexation(indexation.try_into()?);
         }
         Ok(Transfer {
-            transfer: builder.finish().into(),
+            transfer: builder.finish(),
         })
     }
 }
@@ -82,41 +82,37 @@ impl SyncedAccount {
     /// Send messages.
     fn transfer(&self, transfer_obj: Transfer) -> Result<WalletMessage> {
         let rt = tokio::runtime::Runtime::new()?;
-        Ok(rt
-            .block_on(async { self.synced_account.transfer(transfer_obj.transfer).await })?
-            .try_into()?)
+        rt.block_on(async { self.synced_account.transfer(transfer_obj.transfer).await })?
+            .try_into()
     }
 
     /// Retry message.
     fn retry(&self, message_id: &str) -> Result<WalletMessage> {
         let rt = tokio::runtime::Runtime::new()?;
-        Ok(rt
-            .block_on(async { self.synced_account.retry(&RustMessageId::from_str(&message_id)?).await })?
-            .try_into()?)
+        rt.block_on(async { self.synced_account.retry(&RustMessageId::from_str(&message_id)?).await })?
+            .try_into()
     }
 
     /// Promote message.
     fn promote(&self, message_id: &str) -> Result<WalletMessage> {
         let rt = tokio::runtime::Runtime::new()?;
-        Ok(rt
-            .block_on(async {
-                self.synced_account
-                    .promote(&RustMessageId::from_str(&message_id)?)
-                    .await
-            })?
-            .try_into()?)
+        rt.block_on(async {
+            self.synced_account
+                .promote(&RustMessageId::from_str(&message_id)?)
+                .await
+        })?
+        .try_into()
     }
 
     /// Reattach message.
     fn reattach(&self, message_id: &str) -> Result<WalletMessage> {
         let rt = tokio::runtime::Runtime::new()?;
-        Ok(rt
-            .block_on(async {
-                self.synced_account
-                    .reattach(&RustMessageId::from_str(&message_id)?)
-                    .await
-            })?
-            .try_into()?)
+        rt.block_on(async {
+            self.synced_account
+                .reattach(&RustMessageId::from_str(&message_id)?)
+                .await
+        })?
+        .try_into()
     }
 }
 
@@ -154,9 +150,7 @@ impl AccountHandle {
     /// the node.
     fn is_latest_address_unused(&self) -> Result<bool> {
         let rt = tokio::runtime::Runtime::new()?;
-        Ok(rt
-            .block_on(async { self.account_handle.is_latest_address_unused().await })?
-            .into())
+        Ok(rt.block_on(async { self.account_handle.is_latest_address_unused().await })?)
     }
 
     /// Bridge to [Account#latest_address](struct.Account.html#method.latest_address).
@@ -302,8 +296,6 @@ impl AccountInitialiser {
     fn initialise(&mut self) -> Result<AccountHandle> {
         let rt = tokio::runtime::Runtime::new()?;
         let account_handle = rt.block_on(async { self.account_initialiser.take().unwrap().initialise().await })?;
-        Ok(AccountHandle {
-            account_handle: account_handle,
-        })
+        Ok(AccountHandle { account_handle })
     }
 }

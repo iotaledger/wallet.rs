@@ -97,11 +97,7 @@ impl From<RustWalletAddress> for Address {
             balance: *wallet_address.balance(),
             key_index: *wallet_address.key_index(),
             internal: *wallet_address.internal(),
-            outputs: wallet_address
-                .outputs()
-                .into_iter()
-                .map(|output| output.into())
-                .collect(),
+            outputs: wallet_address.outputs().iter().map(|output| output.into()).collect(),
         }
     }
 }

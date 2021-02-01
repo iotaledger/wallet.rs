@@ -110,7 +110,7 @@ impl TryFrom<RustWalletMessage> for WalletMessage {
             parent1: msg.parent1().to_string(),
             parent2: msg.parent2().to_string(),
             payload_length: *msg.payload_length(),
-            payload: payload,
+            payload,
             timestamp: msg.timestamp().timestamp(),
             nonce: *msg.nonce(),
             confirmed: *msg.confirmed(),
@@ -399,10 +399,7 @@ impl TryFrom<Payload> for RustPayload {
 impl TryFrom<Indexation> for RustIndexationPayload {
     type Error = Error;
     fn try_from(indexation: Indexation) -> Result<Self> {
-        Ok(RustIndexationPayload::new(
-            indexation.index.clone().to_owned(),
-            &indexation.data,
-        )?)
+        Ok(RustIndexationPayload::new(indexation.index, &indexation.data)?)
     }
 }
 

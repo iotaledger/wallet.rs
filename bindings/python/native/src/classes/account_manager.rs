@@ -171,9 +171,7 @@ impl AccountManager {
     fn get_account(&self, account_id: &str) -> Result<AccountHandle> {
         let rt = tokio::runtime::Runtime::new()?;
         let account_handle = rt.block_on(async { self.account_manager.get_account(account_id).await })?;
-        Ok(AccountHandle {
-            account_handle: account_handle,
-        })
+        Ok(AccountHandle { account_handle })
     }
 
     /// Gets the account associated with the given identifier.
