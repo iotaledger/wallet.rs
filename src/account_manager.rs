@@ -846,8 +846,13 @@ impl AccountManager {
     /// Gets all accounts from storage.
     pub async fn get_accounts(&self) -> crate::Result<Vec<AccountHandle>> {
         self.check_storage_encryption()?;
-        let accounts = self.accounts.read().await;
-        Ok(accounts.values().cloned().collect())
+        let mut accounts = Vec::new();
+        for account in self.accounts.read().await.values() {
+            let index = account.index().await;
+            accounts.push((index, account.clone()));
+        }
+        accounts.sort_by(|a, b| a.0.cmp(&b.0));
+        Ok(accounts.into_iter().map(|(_, account)| account).collect())
     }
 
     /// Reattaches an unconfirmed transaction.
