@@ -193,7 +193,7 @@ pub fn on_balance_change<F: Fn(&BalanceEvent<'_>) + Send + 'static>(cb: F) -> Ev
         .expect("Failed to lock balance_listeners: on_balance_change()");
     let id = generate_event_id();
     l.push(BalanceEventHandler {
-        id: id.clone(),
+        id,
         on_event: Box::new(cb),
     });
     id
@@ -260,7 +260,7 @@ fn add_transaction_listener<F: Fn(&TransactionEvent<'_>) + Send + 'static>(
         .expect("Failed to lock transaction_listeners: add_transaction_listener()");
     let id = generate_event_id();
     l.push(TransactionEventHandler {
-        id: id.clone(),
+        id,
         event_type,
         on_event: Box::new(cb),
     });
@@ -284,7 +284,7 @@ pub fn on_confirmation_state_change<F: Fn(&TransactionConfirmationChangeEvent<'_
         .expect("Failed to lock transaction_confirmation_change_listeners: on_confirmation_state_change()");
     let id = generate_event_id();
     l.push(TransactionConfirmationChangeEventHandler {
-        id: id.clone(),
+        id,
         on_event: Box::new(cb),
     });
     id
@@ -331,7 +331,7 @@ pub fn on_error<F: Fn(&crate::Error) + Send + 'static>(cb: F) -> EventId {
         .expect("Failed to lock error_listeners: on_error()");
     let id = generate_event_id();
     l.push(ErrorHandler {
-        id: id.clone(),
+        id,
         on_error: Box::new(cb),
     });
     id
@@ -361,7 +361,7 @@ pub fn on_stronghold_status_change<F: Fn(&crate::StrongholdStatus) + Send + 'sta
         .expect("Failed to lock stronghold_status_change_listeners: on_stronghold_status_change()");
     let id = generate_event_id();
     l.push(StrongholdStatusChangeEventHandler {
-        id: id.clone(),
+        id,
         on_event: Box::new(cb),
     });
     id
