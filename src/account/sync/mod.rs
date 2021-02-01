@@ -489,7 +489,8 @@ impl AccountSynchronizer {
                 let account_ref = self.account_handle.read().await;
 
                 let synced_account = SyncedAccount {
-                    account_id: account_ref.id().to_string(),
+                    id: account_ref.id().to_string(),
+                    index: *account_ref.index(),
                     account_handle: self.account_handle.clone(),
                     deposit_address: account_ref.latest_address().clone(),
                     is_empty,
@@ -534,8 +535,9 @@ impl AccountSynchronizer {
 #[derive(Debug, Clone, Getters, Serialize)]
 pub struct SyncedAccount {
     /// The account identifier.
-    #[serde(rename = "accountId")]
-    account_id: String,
+    id: String,
+    /// The account index.
+    index: usize,
     /// The associated account handle.
     #[serde(skip)]
     #[getset(get = "pub")]
