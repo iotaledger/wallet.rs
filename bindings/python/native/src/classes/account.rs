@@ -159,6 +159,13 @@ impl AccountHandle {
         Ok(rt.block_on(async { self.account_handle.latest_address().await }).into())
     }
 
+    /// Bridge to [Account#addresses](struct.Account.html#method.addresses).
+    fn addresses(&self) -> Result<Vec<Address>> {
+        let rt = tokio::runtime::Runtime::new()?;
+        let addresses = rt.block_on(async { self.account_handle.addresses().await });
+        Ok(addresses.into_iter().map(|address| address.into()).collect())
+    }
+
     /// Bridge to [Account#balance](struct.Account.html#method.balance).
     fn balance(&self) -> Result<AccountBalance> {
         let rt = tokio::runtime::Runtime::new()?;
