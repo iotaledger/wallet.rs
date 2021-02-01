@@ -247,6 +247,7 @@ pub struct Message {
     /// The message's value.
     pub(crate) value: u64,
     /// The message's remainder value sum.
+    #[serde(rename = "remainderValue")]
     pub(crate) remainder_value: u64,
 }
 

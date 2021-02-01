@@ -22,14 +22,17 @@ use std::{
 #[getset(get = "pub")]
 pub struct AddressOutput {
     /// Transaction ID of the output
+    #[serde(rename = "transactionId")]
     pub(crate) transaction_id: TransactionId,
     /// Message ID of the output
+    #[serde(rename = "messageId")]
     pub(crate) message_id: MessageId,
     /// Output index.
     pub(crate) index: u16,
     /// Output amount.
     pub(crate) amount: u64,
     /// Spend status of the output,
+    #[serde(rename = "isSpent")]
     pub(crate) is_spent: bool,
     /// Associated address.
     #[serde(with = "crate::serde::iota_address_serde")]
