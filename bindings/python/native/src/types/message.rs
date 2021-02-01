@@ -2,18 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use super::error::{Error, Result};
-use chrono::prelude::{DateTime, NaiveDateTime, Utc};
+// use chrono::prelude::{DateTime, NaiveDateTime, Utc};
 use core::convert::TryFrom;
 use dict_derive::{FromPyObject as DeriveFromPyObject, IntoPyObject as DeriveIntoPyObject};
 use iota::{
     Address as RustAddress, Ed25519Address as RustEd25519Address, Ed25519Signature as RustEd25519Signature,
-    IndexationPayload as RustIndexationPayload, Input as RustInput, MessageId as RustMessageId,
+    IndexationPayload as RustIndexationPayload, Input as RustInput,
     MilestonePayloadEssence as RustMilestonePayloadEssence, Output as RustOutput, Payload as RustPayload,
     ReferenceUnlock as RustReferenceUnlock, SignatureLockedSingleOutput as RustSignatureLockedSingleOutput,
     SignatureUnlock as RustSignatureUnlock, TransactionId as RustTransationId,
     TransactionPayload as RustTransactionPayload, TransactionPayloadEssence as RustTransactionPayloadEssence,
     UTXOInput as RustUTXOInput, UnlockBlock as RustUnlockBlock,
 };
+// use iota::MessageId as RustMessageId,
 use iota_wallet::message::Message as RustWalletMessage;
 use std::{
     convert::{From, Into, TryInto},
@@ -235,24 +236,26 @@ impl TryFrom<RustUnlockBlock> for UnlockBlock {
     }
 }
 
+// Note: This conversion be binded only if all fields of the `RustWalletMessage` can be set publically.
 impl TryFrom<WalletMessage> for RustWalletMessage {
     type Error = Error;
-    fn try_from(msg: WalletMessage) -> Result<Self> {
-        Ok(Self {
-            id: RustMessageId::from_str(&msg.id)?,
-            version: msg.version,
-            parent1: RustMessageId::from_str(&msg.parent1)?,
-            parent2: RustMessageId::from_str(&msg.parent2)?,
-            payload_length: msg.payload_length,
-            payload: msg.payload.try_into()?,
-            timestamp: DateTime::from_utc(NaiveDateTime::from_timestamp(msg.timestamp, 0), Utc),
-            nonce: msg.nonce,
-            confirmed: msg.confirmed,
-            broadcasted: msg.broadcasted,
-            incoming: msg.incoming,
-            value: msg.value,
-            remainder_value: msg.remainder_value,
-        })
+    fn try_from(_msg: WalletMessage) -> Result<Self> {
+        // Ok(Self {
+        //     id: RustMessageId::from_str(&msg.id)?,
+        //     version: msg.version,
+        //     parent1: RustMessageId::from_str(&msg.parent1)?,
+        //     parent2: RustMessageId::from_str(&msg.parent2)?,
+        //     payload_length: msg.payload_length,
+        //     payload: msg.payload.try_into()?,
+        //     timestamp: DateTime::from_utc(NaiveDateTime::from_timestamp(msg.timestamp, 0), Utc),
+        //     nonce: msg.nonce,
+        //     confirmed: msg.confirmed,
+        //     broadcasted: msg.broadcasted,
+        //     incoming: msg.incoming,
+        //     value: msg.value,
+        //     remainder_value: msg.remainder_value,
+        // })
+        todo!();
     }
 }
 

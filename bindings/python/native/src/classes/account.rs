@@ -270,18 +270,20 @@ impl AccountInitialiser {
 
     /// Messages associated with the seed.
     /// The account can be initialised with locally stored messages.
-    fn messages(&mut self, messages: Vec<WalletMessage>) {
-        self.account_initialiser = Some(
-            self.account_initialiser.take().unwrap().messages(
-                messages
-                    .into_iter()
-                    .map(|msg| {
-                        msg.try_into()
-                            .unwrap_or_else(|msg| panic!("AccountInitialiser: Message {:?} is invalid", msg))
-                    })
-                    .collect(),
-            ),
-        );
+    /// TODO: We can bind this only if the message can be constructed by other crates.
+    fn messages(&mut self, _messages: Vec<WalletMessage>) {
+        // self.account_initialiser = Some(
+        //     self.account_initialiser.take().unwrap().messages(
+        //         messages
+        //             .into_iter()
+        //             .map(|msg| {
+        //                 msg.try_into()
+        //                     .unwrap_or_else(|msg| panic!("AccountInitialiser: Message {:?} is invalid", msg))
+        //             })
+        //             .collect(),
+        //     ),
+        // );
+        // Note that we
     }
 
     /// Address history associated with the seed.
