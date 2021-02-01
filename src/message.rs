@@ -217,7 +217,6 @@ impl Value {
 /// A message definition.
 #[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize, Eq)]
 #[getset(get = "pub", set = "pub(crate)")]
-// Need to use pub to initilize the Message structure
 pub struct Message {
     /// The message identifier.
     pub(crate) id: MessageId,
