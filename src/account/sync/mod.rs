@@ -381,9 +381,7 @@ async fn perform_sync(
 
     let parsed_messages = new_messages
         .iter()
-        .map(|(id, confirmed, message)| {
-            Message::from_iota_message(*id, account.addresses(), &message, *confirmed).unwrap()
-        })
+        .map(|(id, confirmed, message)| Message::from_iota_message(*id, account.addresses(), &message, *confirmed))
         .collect();
     log::debug!("[SYNC] new messages: {:#?}", parsed_messages);
     account.append_messages(parsed_messages);
@@ -576,7 +574,7 @@ impl SyncedAccount {
         account: &'a Account,
         address: &'a AddressWrapper,
     ) -> crate::Result<(Vec<input_selection::Input>, Option<input_selection::Input>)> {
-        let mut available_addresses: Vec<input_selection::Input> = account
+        let available_addresses: Vec<input_selection::Input> = account
             .addresses()
             .iter()
             .filter(|a| {
@@ -588,7 +586,7 @@ impl SyncedAccount {
                 balance: a.available_balance(&account),
             })
             .collect();
-        let addresses = input_selection::select_input(threshold, &mut available_addresses)?;
+        let addresses = input_selection::select_input(threshold, available_addresses)?;
 
         locked_addresses.extend(
             addresses
@@ -958,7 +956,7 @@ async fn perform_transfer(
         account_.append_addresses(vec![addr]);
     }
 
-    let message = Message::from_iota_message(message_id, account_.addresses(), &message, None)?;
+    let message = Message::from_iota_message(message_id, account_.addresses(), &message, None);
     account_.append_messages(vec![message.clone()]);
 
     account_.save().await?;
@@ -1015,7 +1013,7 @@ pub(crate) async fn repost_message(
                 RepostAction::Reattach => client.reattach(message_id).await?,
                 RepostAction::Retry => client.retry(message_id).await?,
             };
-            let message = Message::from_iota_message(id, account.addresses(), &message, None)?;
+            let message = Message::from_iota_message(id, account.addresses(), &message, None);
 
             account.append_messages(vec![message.clone()]);
 

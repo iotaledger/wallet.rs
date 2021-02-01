@@ -1332,8 +1332,7 @@ mod tests {
                         .finish()
                         .unwrap(),
                     Some(true),
-                )
-                .unwrap()])
+                )])
                 .initialise()
                 .await
                 .unwrap();
