@@ -709,7 +709,7 @@ mod tests {
     use super::AccountHandle;
     use crate::{
         account_manager::AccountManager,
-        address::{Address, AddressBuilder, AddressOutput},
+        address::{Address, AddressBuilder, AddressOutput, OutputKind},
         client::ClientOptionsBuilder,
         message::{Message, MessageType},
     };
@@ -798,6 +798,7 @@ mod tests {
             amount: value,
             is_spent: false,
             address: crate::test_utils::generate_random_iota_address(),
+            kind: OutputKind::SignatureLockedSingle,
         }
     }
 
