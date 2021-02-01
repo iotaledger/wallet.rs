@@ -74,7 +74,7 @@ type Storages = Arc<RwLock<HashMap<PathBuf, StorageHandle>>>;
 static INSTANCES: OnceCell<Storages> = OnceCell::new();
 
 /// Sets the storage adapter.
-pub async fn set<P: AsRef<Path>>(
+pub(crate) async fn set<P: AsRef<Path>>(
     storage_path: P,
     encryption_key: Option<[u8; 32]>,
     storage: Box<dyn StorageAdapter + Send + Sync + 'static>,
@@ -88,6 +88,12 @@ pub async fn set<P: AsRef<Path>>(
             encryption_key,
         })),
     );
+}
+
+pub(crate) async fn remove(storage_path: &PathBuf) -> String {
+    let mut instances = INSTANCES.get_or_init(Default::default).write().await;
+    let storage = instances.remove(storage_path);
+    storage.unwrap().lock().await.id().to_string()
 }
 
 pub(crate) async fn set_encryption_key(storage_path: &PathBuf, encryption_key: [u8; 32]) -> crate::Result<()> {
@@ -257,9 +263,11 @@ mod tests {
     async fn _create_account() -> (std::path::PathBuf, crate::account::AccountHandle) {
         let manager = crate::test_utils::get_account_manager().await;
 
-        let client_options = crate::client::ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
+        let client_options = crate::client::ClientOptionsBuilder::new()
+            .with_node("https://api.lb-0.testnet.chrysalis2.com")
             .unwrap()
-            .build();
+            .build()
+            .unwrap();
         let account_handle = manager
             .create_account(client_options)
             .unwrap()

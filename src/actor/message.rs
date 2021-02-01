@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    account::{Account, AccountIdentifier, SyncedAccount},
+    account::{Account, AccountBalance, AccountIdentifier, SyncedAccount},
     address::Address,
     client::ClientOptions,
     message::{Message as WalletMessage, MessageType as WalletMessageType, TransferBuilder},
@@ -60,10 +60,8 @@ pub enum AccountMethod {
     ListSpentAddresses,
     /// List unspent addresses.
     ListUnspentAddresses,
-    /// Get available balance.
-    GetAvailableBalance,
-    /// Get total balance.
-    GetTotalBalance,
+    /// Get account balance information.
+    GetBalance,
     /// Get latest address.
     GetLatestAddress,
     /// Sync the account.
@@ -78,6 +76,12 @@ pub enum AccountMethod {
         #[serde(rename = "skipPersistance")]
         skip_persistance: Option<bool>,
     },
+    /// Checks if the account's latest address is unused after syncing with the Tangle.
+    IsLatestAddressUnused,
+    /// Updates the account alias.
+    SetAlias(String),
+    /// Updates the account client options.
+    SetClientOptions(Box<ClientOptions>),
 }
 
 /// The messages that can be sent to the actor.
@@ -87,7 +91,7 @@ pub enum MessageType {
     /// Remove the account related to the specified `account_id`.
     RemoveAccount(AccountIdentifier),
     /// Creates an account.
-    CreateAccount(AccountToCreate),
+    CreateAccount(Box<AccountToCreate>),
     /// Read account.
     GetAccount(AccountIdentifier),
     /// Read accounts.
@@ -141,6 +145,10 @@ pub enum MessageType {
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
     GetStrongholdStatus,
+    /// Lock the stronghold snapshot (clears password and unload snapshot from memory).
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    LockStronghold,
     /// Send funds.
     SendTransfer {
         /// The account identifier.
@@ -172,6 +180,14 @@ pub enum MessageType {
         /// The mnemonic. If empty, we'll generate one.
         mnemonic: Option<String>,
     },
+    /// Checks if all accounts has unused latest address after syncing with the Tangle.
+    IsLatestAddressUnused,
+    /// Open the iota ledger app on Ledger Nano or Speculos simulator.
+    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
+    OpenLedgerApp(bool),
+    /// Deletes the storage.
+    DeleteStorage,
 }
 
 impl Serialize for MessageType {
@@ -216,21 +232,29 @@ impl Serialize for MessageType {
             MessageType::GetStrongholdStatus => {
                 serializer.serialize_unit_variant("MessageType", 12, "GetStrongholdStatus")
             }
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            MessageType::LockStronghold => serializer.serialize_unit_variant("MessageType", 13, "LockStronghold"),
             MessageType::SendTransfer {
                 account_id: _,
                 transfer: _,
-            } => serializer.serialize_unit_variant("MessageType", 13, "SendTransfer"),
+            } => serializer.serialize_unit_variant("MessageType", 14, "SendTransfer"),
             MessageType::InternalTransfer {
                 from_account_id: _,
                 to_account_id: _,
                 amount: _,
-            } => serializer.serialize_unit_variant("MessageType", 14, "InternalTransfer"),
-            MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 15, "GenerateMnemonic"),
-            MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 16, "VerifyMnemonic"),
+            } => serializer.serialize_unit_variant("MessageType", 15, "InternalTransfer"),
+            MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 16, "GenerateMnemonic"),
+            MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 17, "VerifyMnemonic"),
             MessageType::StoreMnemonic {
                 signer_type: _,
                 mnemonic: _,
-            } => serializer.serialize_unit_variant("MessageType", 17, "StoreMnemonic"),
+            } => serializer.serialize_unit_variant("MessageType", 18, "StoreMnemonic"),
+            MessageType::IsLatestAddressUnused => {
+                serializer.serialize_unit_variant("MessageType", 19, "IsLatestAddressUnused")
+            }
+            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+            MessageType::OpenLedgerApp(_) => serializer.serialize_unit_variant("MessageType", 20, "OpenLedgerApp"),
+            MessageType::DeleteStorage => serializer.serialize_unit_variant("MessageType", 21, "DeleteStorage"),
         }
     }
 }
@@ -281,11 +305,9 @@ pub enum ResponseType {
     /// GetUnusedAddress response.
     UnusedAddress(Address),
     /// GetLatestAddress response.
-    LatestAddress(Option<Address>),
-    /// GetAvailableBalance response.
-    AvailableBalance(u64),
-    /// GetTotalBalance response.
-    TotalBalance(u64),
+    LatestAddress(Address),
+    /// GetBalance response.
+    Balance(AccountBalance),
     /// SyncAccounts response.
     SyncedAccounts(Vec<SyncedAccount>),
     /// SyncAccount response.
@@ -314,6 +336,10 @@ pub enum ResponseType {
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
     StrongholdStatus(crate::stronghold::Status),
+    /// LockStronghold response.
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    LockedStronghold,
     /// SendTransfer and InternalTransfer response.
     SentTransfer(WalletMessage),
     /// An error occurred.
@@ -326,6 +352,20 @@ pub enum ResponseType {
     VerifiedMnemonic,
     /// StoreMnemonic response.
     StoredMnemonic,
+    /// AccountMethod's IsLatestAddressUnused response.
+    IsLatestAddressUnused(bool),
+    /// IsLatestAddressUnused response.
+    AreAllLatestAddressesUnused(bool),
+    /// SetAlias response.
+    UpdatedAlias,
+    /// SetClientOptions response.
+    UpdatedClientOptions,
+    /// OpenLedgerApp response.
+    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
+    OpenedLedgerApp,
+    /// DeleteStorage response.
+    DeletedStorage,
 }
 
 /// The message type.

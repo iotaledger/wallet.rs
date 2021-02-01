@@ -59,12 +59,18 @@ export declare interface SyncOptions {
   skipPersistance?: boolean
 }
 
+export declare interface AccountBalance {
+  total: number
+  available: number
+  incoming: number
+  outgoing: number
+}
+
 export declare class Account {
   id(): string;
   index(): number;
   alias(): string;
-  availableBalance(): number;
-  totalBalance(): number;
+  balance(): AccountBalance;
   listMessages(count?: number, from?: number, messageType?: MessageType): Message[]
   listAddresses(unspent?: boolean): Address[]
   sync(options?: SyncOptions): Promise<SyncedAccount>
@@ -72,7 +78,8 @@ export declare class Account {
   setClientOptions(options: ClientOptions): void
   getMessage(id: string): Message | undefined
   generateAddress(): Address
-  latestAddress(): Address | undefined
+  latestAddress(): Address
+  isLatestAddressUnused(): Promise<bool>
 }
 
 export declare class RemainderValueStrategy {

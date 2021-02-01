@@ -10,8 +10,9 @@ use std::{collections::HashMap, path::PathBuf};
 #[derive(Default)]
 pub struct StrongholdSigner;
 
-fn stronghold_path(storage_path: &PathBuf) -> PathBuf {
-    if storage_path.extension().unwrap_or_default() == "stronghold" {
+async fn stronghold_path(storage_path: &PathBuf) -> crate::Result<PathBuf> {
+    let storage_id = crate::storage::get(&storage_path).await?.lock().await.id();
+    let path = if storage_id == crate::storage::stronghold::STORAGE_ID {
         storage_path.clone()
     } else if storage_path.is_dir() {
         storage_path.join(crate::account_manager::STRONGHOLD_FILENAME)
@@ -19,13 +20,14 @@ fn stronghold_path(storage_path: &PathBuf) -> PathBuf {
         parent.join(crate::account_manager::STRONGHOLD_FILENAME)
     } else {
         storage_path.clone()
-    }
+    };
+    Ok(path)
 }
 
 #[async_trait::async_trait]
 impl super::Signer for StrongholdSigner {
     async fn store_mnemonic(&mut self, storage_path: &PathBuf, mnemonic: String) -> crate::Result<()> {
-        crate::stronghold::store_mnemonic(&stronghold_path(storage_path), mnemonic).await?;
+        crate::stronghold::store_mnemonic(&stronghold_path(storage_path).await?, mnemonic).await?;
         Ok(())
     }
 
@@ -37,7 +39,7 @@ impl super::Signer for StrongholdSigner {
         _: super::GenerateAddressMetadata,
     ) -> crate::Result<iota::Address> {
         let address = crate::stronghold::generate_address(
-            &stronghold_path(account.storage_path()),
+            &stronghold_path(account.storage_path()).await?,
             *account.index(),
             address_index,
             internal,
@@ -56,11 +58,10 @@ impl super::Signer for StrongholdSigner {
         let serialized_essence = essence.pack_new();
 
         let mut unlock_blocks = vec![];
-        let mut current_block_index: usize = 0;
         let mut signature_indexes = HashMap::<usize, usize>::new();
         inputs.sort_by(|a, b| a.input.cmp(&b.input));
 
-        for recorder in inputs.iter() {
+        for (current_block_index, recorder) in inputs.iter().enumerate() {
             // Check if current path is same as previous path
             // If so, add a reference unlock block
             if let Some(block_index) = signature_indexes.get(&recorder.address_index) {
@@ -68,7 +69,7 @@ impl super::Signer for StrongholdSigner {
             } else {
                 // If not, we should create a signature unlock block
                 let signature = crate::stronghold::sign_essence(
-                    &stronghold_path(account.storage_path()),
+                    &stronghold_path(account.storage_path()).await?,
                     serialized_essence.clone(),
                     *account.index(),
                     recorder.address_index,
@@ -77,9 +78,6 @@ impl super::Signer for StrongholdSigner {
                 .await?;
                 unlock_blocks.push(UnlockBlock::Signature(signature.into()));
                 signature_indexes.insert(recorder.address_index, current_block_index);
-
-                // Update current block index
-                current_block_index += 1;
             }
         }
         Ok(unlock_blocks)

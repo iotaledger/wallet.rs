@@ -65,6 +65,9 @@ pub enum Error {
     /// failed to parse address.
     #[error("invalid address")]
     InvalidAddress,
+    /// Address length response invalid.
+    #[error("invalid address length")]
+    InvalidAddressLength,
     /// Tried to backup but storage file doesn't exist.
     #[error("storage file doesn't exist")]
     StorageDoesntExist,
@@ -90,9 +93,6 @@ pub enum Error {
     /// Panic error.
     #[error("a panic happened: {0}")]
     Panic(String),
-    /// Error on `internal_transfer` when the destination account address list is empty
-    #[error("destination account has no addresses")]
-    InternalTransferDestinationEmpty,
     /// Invalid message identifier.
     #[error("invalid message id received by node")]
     InvalidMessageId,
@@ -147,18 +147,23 @@ pub enum Error {
     #[error("cannot use index identifier when two signer types are used")]
     CannotUseIndexIdentifier,
     /// Ledger transport error
+    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[error("ledger transport error")]
     LedgerMiscError,
     /// Dongle Locked
+    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[error("ledger locked")]
     LedgerDongleLocked,
     /// Denied by User
+    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[error("denied by user")]
     LedgerDeniedByUser,
     /// Ledger Device not found
+    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[error("ledger device not found")]
     LedgerDeviceNotFound,
     /// Ledger Essence Too Large
+    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[error("ledger essence too large")]
     LedgerEssenceTooLarge,
     /// Account alias must be unique.
@@ -184,6 +189,27 @@ impl From<crate::stronghold::Error> for Error {
         match error {
             crate::stronghold::Error::AccountNotFound => Self::AccountNotFound,
             _ => Self::StrongholdError(error),
+        }
+    }
+}
+
+// map most errors to a single error but there are some errors that
+// need special care.
+// LedgerDongleLocked: Ask the user to unlock the dongle
+// LedgerDeniedByUser: The user denied a signing
+// LedgerDeviceNotFound: No usable Ledger device was found
+// LedgerMiscError: Everything else.
+// LedgerEssenceTooLarge: Essence with bip32 input indices need more space then the internal buffer is big
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+impl From<ledger_iota::api::errors::APIError> for Error {
+    fn from(error: ledger_iota::api::errors::APIError) -> Self {
+        log::info!("ledger error: {}", error);
+        match error {
+            ledger_iota::api::errors::APIError::SecurityStatusNotSatisfied => Error::LedgerDongleLocked,
+            ledger_iota::api::errors::APIError::ConditionsOfUseNotSatisfied => Error::LedgerDeniedByUser,
+            ledger_iota::api::errors::APIError::TransportError => Error::LedgerDeviceNotFound,
+            ledger_iota::api::errors::APIError::EssenceTooLarge => Error::LedgerEssenceTooLarge,
+            _ => Error::LedgerMiscError,
         }
     }
 }
@@ -214,6 +240,7 @@ impl serde::Serialize for Error {
             Self::MessageNotFound => serialize_variant(self, serializer, "MessageNotFound"),
             Self::InvalidMessageIdLength => serialize_variant(self, serializer, "InvalidMessageIdLength"),
             Self::InvalidAddress => serialize_variant(self, serializer, "InvalidAddress"),
+            Self::InvalidAddressLength => serialize_variant(self, serializer, "InvalidAddressLength"),
             Self::StorageDoesntExist => serialize_variant(self, serializer, "StorageDoesntExist"),
             Self::InsufficientFunds => serialize_variant(self, serializer, "InsufficientFunds"),
             Self::AccountNotEmpty => serialize_variant(self, serializer, "AccountNotEmpty"),
@@ -222,9 +249,6 @@ impl serde::Serialize for Error {
             Self::InvalidRemainderValueAddress => serialize_variant(self, serializer, "InvalidRemainderValueAddress"),
             Self::Storage(_) => serialize_variant(self, serializer, "Storage"),
             Self::Panic(_) => serialize_variant(self, serializer, "Panic"),
-            Self::InternalTransferDestinationEmpty => {
-                serialize_variant(self, serializer, "InternalTransferDestinationEmpty")
-            }
             Self::InvalidMessageId => serialize_variant(self, serializer, "InvalidMessageId"),
             Self::InvalidTransactionId => serialize_variant(self, serializer, "InvalidTransactionId"),
             Self::AddressBuildRequiredField(_) => serialize_variant(self, serializer, "AddressBuildRequiredField"),
@@ -243,10 +267,15 @@ impl serde::Serialize for Error {
             Self::AccountEncrypt(_) => serialize_variant(self, serializer, "AccountEncrypt"),
             Self::StorageIsEncrypted => serialize_variant(self, serializer, "StorageIsEncrypted"),
             Self::CannotUseIndexIdentifier => serialize_variant(self, serializer, "CannotUseIndexIdentifier"),
+            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
             Self::LedgerMiscError => serialize_variant(self, serializer, "LedgerMiscError"),
+            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
             Self::LedgerDongleLocked => serialize_variant(self, serializer, "LedgerDongleLocked"),
+            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
             Self::LedgerDeniedByUser => serialize_variant(self, serializer, "LedgerDeniedByUser"),
+            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
             Self::LedgerDeviceNotFound => serialize_variant(self, serializer, "LedgerDeviceNotFound"),
+            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
             Self::LedgerEssenceTooLarge => serialize_variant(self, serializer, "LedgerEssenceTooLarge"),
             Self::AccountAliasAlreadyExists => serialize_variant(self, serializer, "AccountAliasAlreadyExists"),
         }

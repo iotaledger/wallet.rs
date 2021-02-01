@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{account::Account, message::MessageType, signing::GenerateAddressMetadata};
-use getset::{Getters, Setters};
-use iota::{
-    message::prelude::{MessageId, TransactionId},
-    OutputMetadata,
+use bee_rest_api::{
+    handlers::output::OutputResponse,
+    types::{AddressDto, OutputDto},
 };
+use getset::{Getters, Setters};
+use iota::message::prelude::{MessageId, TransactionId};
 pub use iota::{Address as IotaAddress, Ed25519Address, Input, Payload, UTXOInput};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -21,14 +22,17 @@ use std::{
 #[getset(get = "pub")]
 pub struct AddressOutput {
     /// Transaction ID of the output
+    #[serde(rename = "transactionId")]
     pub(crate) transaction_id: TransactionId,
     /// Message ID of the output
+    #[serde(rename = "messageId")]
     pub(crate) message_id: MessageId,
     /// Output index.
     pub(crate) index: u16,
     /// Output amount.
     pub(crate) amount: u64,
     /// Spend status of the output,
+    #[serde(rename = "isSpent")]
     pub(crate) is_spent: bool,
     /// Associated address.
     #[serde(with = "crate::serde::iota_address_serde")]
@@ -58,22 +62,46 @@ impl AddressOutput {
         })
     }
 
-    pub(crate) fn from_output_metadata(metadata: OutputMetadata, bech32_hrp: String) -> crate::Result<Self> {
+    pub(crate) fn from_output_response(output: OutputResponse, bech32_hrp: String) -> crate::Result<Self> {
+        let (address, amount) = match output.output {
+            OutputDto::SignatureLockedSingle(output) => {
+                let address = match output.address {
+                    AddressDto::Ed25519(ed25519_address) => IotaAddress::Ed25519(Ed25519Address::new(
+                        hex::decode(ed25519_address.address)
+                            .map_err(|_| crate::Error::InvalidAddress)?
+                            .try_into()
+                            .map_err(|_| crate::Error::InvalidAddressLength)?,
+                    )),
+                };
+                (address, output.amount)
+            }
+            OutputDto::SignatureLockedDustAllowance(output) => {
+                let address = match output.address {
+                    AddressDto::Ed25519(ed25519_address) => IotaAddress::Ed25519(Ed25519Address::new(
+                        hex::decode(ed25519_address.address)
+                            .map_err(|_| crate::Error::InvalidAddress)?
+                            .try_into()
+                            .map_err(|_| crate::Error::InvalidAddressLength)?,
+                    )),
+                };
+                (address, output.amount)
+            }
+        };
         let output = Self {
             transaction_id: TransactionId::new(
-                metadata.transaction_id[..]
+                hex::decode(output.transaction_id).map_err(|_| crate::Error::InvalidTransactionId)?[..]
                     .try_into()
                     .map_err(|_| crate::Error::InvalidTransactionId)?,
             ),
             message_id: MessageId::new(
-                metadata.message_id[..]
+                hex::decode(output.message_id).map_err(|_| crate::Error::InvalidMessageId)?[..]
                     .try_into()
                     .map_err(|_| crate::Error::InvalidMessageId)?,
             ),
-            index: metadata.output_index,
-            amount: metadata.amount,
-            is_spent: metadata.is_spent,
-            address: AddressWrapper::new(metadata.address, bech32_hrp),
+            index: output.output_index,
+            amount,
+            is_spent: output.is_spent,
+            address: AddressWrapper::new(address, bech32_hrp),
         };
         Ok(output)
     }

@@ -6,6 +6,7 @@ use std::str::FromStr;
 use iota_wallet::message::MessageId;
 use neon::prelude::*;
 
+mod is_latest_address_unused;
 mod sync;
 
 pub struct AccountWrapper(pub String);
@@ -56,30 +57,17 @@ declare_types! {
             Ok(cx.string(alias).upcast())
         }
 
-        method availableBalance(mut cx) {
+        method balance(mut cx) {
             let balance = {
                 let this = cx.this();
                 let guard = cx.lock();
                 let id = &this.borrow(&guard).0;
                 crate::block_on(async move {
                     let account_handle = crate::get_account(id).await;
-                    account_handle.available_balance().await
+                    account_handle.balance().await
                 })
             };
-            Ok(cx.number(balance as f64).upcast())
-        }
-
-        method totalBalance(mut cx) {
-            let balance = {
-                let this = cx.this();
-                let guard = cx.lock();
-                let id = &this.borrow(&guard).0;
-                crate::block_on(async move {
-                    let account_handle = crate::get_account(id).await;
-                    account_handle.total_balance().await
-                })
-            };
-            Ok(cx.number(balance as f64).upcast())
+            Ok(neon_serde::to_value(&mut cx, &balance)?.upcast())
         }
 
         method listMessages(mut cx) {
@@ -234,10 +222,7 @@ declare_types! {
                 let account_handle = crate::get_account(&id).await;
                 let account = account_handle.read().await;
                 let address = account.latest_address();
-                match address {
-                    Some(a) => Ok(neon_serde::to_value(&mut cx, &a)?),
-                    None => Ok(cx.undefined().upcast())
-                }
+                Ok(neon_serde::to_value(&mut cx, &address)?)
             })
         }
 
@@ -257,6 +242,18 @@ declare_types! {
             let task = sync::SyncTask {
                 account_id,
                 options,
+            };
+            task.schedule(cb);
+            Ok(cx.undefined().upcast())
+        }
+
+        method isLatestAddressUnused(mut cx) {
+            let cb = cx.argument::<JsFunction>(0)?;
+
+            let this = cx.this();
+            let account_id = cx.borrow(&this, |r| r.0.clone());
+            let task = is_latest_address_unused::IsLatestAddressUnusedTask {
+                account_id,
             };
             task.schedule(cb);
             Ok(cx.undefined().upcast())

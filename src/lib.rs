@@ -38,7 +38,7 @@ pub use error::Error;
 #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
 pub use stronghold::{
     get_status as get_stronghold_status, set_password_clear_interval as set_stronghold_password_clear_interval,
-    SnapshotStatus as StrongholdSnapshotStatus, Status as StrongholdStatus,
+    unload_snapshot as lock_stronghold, SnapshotStatus as StrongholdSnapshotStatus, Status as StrongholdStatus,
 };
 
 /// The wallet Result type.
@@ -70,6 +70,14 @@ where
 pub async fn with_actor_system<F: FnOnce(&riker::actors::ActorSystem)>(cb: F) {
     let runtime = self::stronghold::actor_runtime().lock().await;
     cb(&runtime.stronghold.system)
+}
+
+/// Opens the IOTA app on Ledger (Nano S/X or Speculos simulator).
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
+pub fn open_ledger_app(is_simulator: bool) -> crate::Result<()> {
+    ledger_iota::get_ledger(signing::ledger::HARDENED, is_simulator)?;
+    Ok(())
 }
 
 #[cfg(test)]
@@ -382,9 +390,11 @@ mod test_utils {
         }
 
         pub async fn create(self) -> AccountHandle {
-            let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
+            let client_options = ClientOptionsBuilder::new()
+                .with_node("https://api.lb-0.testnet.chrysalis2.com")
                 .expect("invalid node URL")
-                .build();
+                .build()
+                .unwrap();
 
             let mut account_initialiser = self.manager.create_account(client_options).unwrap();
             if let Some(signer_type) = self.signer_type {
@@ -493,6 +503,7 @@ mod test_utils {
                 timestamp: chrono::Utc::now(),
                 nonce: 0,
                 value: self.value,
+                remainder_value: 0,
                 confirmed: Some(self.confirmed),
                 broadcasted: self.broadcasted,
                 incoming: self.incoming,

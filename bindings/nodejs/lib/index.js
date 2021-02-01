@@ -54,6 +54,8 @@ class RemainderValueStrategy {
 }
 
 Account.prototype.sync = promisify(Account.prototype.sync)
+Account.prototype.isLatestAddressUnused = promisify(Account.prototype.isLatestAddressUnused)
+
 const send = SyncedAccount.prototype.send
 SyncedAccount.prototype.send = function (address, amount, options) {
   if (options && (typeof options === 'object') && options.indexation && options.indexation.data) {
@@ -68,6 +70,7 @@ SyncedAccount.prototype.send = function (address, amount, options) {
     return promisify(send).apply(this, options ? [address, amount, options] : [address, amount])
   }
 }
+
 SyncedAccount.prototype.retry = promisify(SyncedAccount.prototype.retry)
 SyncedAccount.prototype.reattach = promisify(SyncedAccount.prototype.reattach)
 SyncedAccount.prototype.promote = promisify(SyncedAccount.prototype.promote)
@@ -98,6 +101,7 @@ AccountManager = function () {
 AccountManager.prototype = managerClass.prototype
 AccountManager.prototype.syncAccounts = promisify(AccountManager.prototype.syncAccounts)
 AccountManager.prototype.internalTransfer = promisify(AccountManager.prototype.internalTransfer)
+AccountManager.prototype.isLatestAddressUnused = promisify(AccountManager.prototype.isLatestAddressUnused)
 
 module.exports = {
   AccountManager,

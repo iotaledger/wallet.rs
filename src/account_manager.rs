@@ -291,6 +291,43 @@ impl AccountManager {
         Ok((Arc::new(RwLock::new(parsed_accounts)), encrypted_accounts))
     }
 
+    /// Deletes the storage.
+    pub async fn delete(self) -> Result<(), (crate::Error, Self)> {
+        self.delete_internal().await.map_err(|e| (e, self))
+    }
+
+    pub(crate) async fn delete_internal(&self) -> crate::Result<()> {
+        let storage_id = crate::storage::remove(&self.storage_path).await;
+
+        if self.storage_path.exists() {
+            std::fs::remove_file(&self.storage_path)?;
+        }
+
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        {
+            crate::stronghold::unload_snapshot(&self.storage_path, false).await?;
+            let _ = std::fs::remove_file(self.stronghold_snapshot_path_internal(&storage_id).await?);
+        }
+
+        Ok(())
+    }
+
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    pub(crate) async fn stronghold_snapshot_path(&self) -> crate::Result<PathBuf> {
+        let storage_id = crate::storage::get(&self.storage_path).await?.lock().await.id();
+        self.stronghold_snapshot_path_internal(storage_id).await
+    }
+
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    pub(crate) async fn stronghold_snapshot_path_internal(&self, storage_id: &str) -> crate::Result<PathBuf> {
+        let stronghold_snapshot_path = if storage_id == crate::storage::stronghold::STORAGE_ID {
+            self.storage_path.clone()
+        } else {
+            self.storage_folder.join(STRONGHOLD_FILENAME)
+        };
+        Ok(stronghold_snapshot_path)
+    }
+
     // error out if the storage is encrypted
     fn check_storage_encryption(&self) -> crate::Result<()> {
         if self.encrypted_accounts.is_empty() {
@@ -384,6 +421,17 @@ impl AccountManager {
         }
 
         Ok(())
+    }
+
+    /// Determines whether all accounts has the latest address unused.
+    pub async fn is_latest_address_unused(&self) -> crate::Result<bool> {
+        self.check_storage_encryption()?;
+        for account_handle in self.accounts.read().await.values() {
+            if !account_handle.is_latest_address_unused().await? {
+                return Ok(false);
+            }
+        }
+        Ok(true)
     }
 
     /// Starts the polling mechanism.
@@ -506,7 +554,7 @@ impl AccountManager {
             let account_handle = self.get_account(account_id).await?;
             let account = account_handle.read().await;
 
-            if !(account.messages().is_empty() && account.total_balance() == 0) {
+            if !(account.messages().is_empty() && account.balance().total == 0) {
                 return Err(crate::Error::AccountNotEmpty);
             }
 
@@ -547,7 +595,6 @@ impl AccountManager {
             .read()
             .await
             .latest_address()
-            .ok_or(crate::Error::InternalTransferDestinationEmpty)?
             .clone();
 
         let from_synchronized = self.get_account(from_account_id).await?.sync().await.execute().await?;
@@ -578,7 +625,7 @@ impl AccountManager {
             any(feature = "stronghold", feature = "stronghold-storage")
         ))]
         let (storage_path, backup_entire_directory) = {
-            let storage_id = crate::storage::get(&&self.storage_path).await?.lock().await.id();
+            let storage_id = crate::storage::get(&self.storage_path).await?.lock().await.id();
             // if we're actually using the SQLite storage adapter
             let storage_path = if storage_id == crate::storage::sqlite::STORAGE_ID {
                 // create a account manager to setup the stronghold storage for the backup
@@ -799,8 +846,13 @@ impl AccountManager {
     /// Gets all accounts from storage.
     pub async fn get_accounts(&self) -> crate::Result<Vec<AccountHandle>> {
         self.check_storage_encryption()?;
-        let accounts = self.accounts.read().await;
-        Ok(accounts.values().cloned().collect())
+        let mut accounts = Vec::new();
+        for account in self.accounts.read().await.values() {
+            let index = account.index().await;
+            accounts.push((index, account.clone()));
+        }
+        accounts.sort_by(|a, b| a.0.cmp(&b.0));
+        Ok(accounts.into_iter().map(|(_, account)| account).collect())
     }
 
     /// Reattaches an unconfirmed transaction.
@@ -1132,12 +1184,27 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn delete_storage() {
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            crate::test_utils::AccountCreator::new(&manager).create().await;
+            manager
+                .delete()
+                .await
+                .map_err(|(e, _)| e)
+                .expect("failed to delete storage");
+        })
+        .await;
+    }
+
+    #[tokio::test]
     async fn duplicated_alias() {
         let manager = crate::test_utils::get_account_manager().await;
 
-        let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
+        let client_options = ClientOptionsBuilder::new()
+            .with_node("https://api.lb-0.testnet.chrysalis2.com")
             .expect("invalid node URL")
-            .build();
+            .build()
+            .unwrap();
         let alias = "alias";
 
         manager
@@ -1165,9 +1232,11 @@ mod tests {
     async fn get_account() {
         let manager = crate::test_utils::get_account_manager().await;
 
-        let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
+        let client_options = ClientOptionsBuilder::new()
+            .with_node("https://api.lb-0.testnet.chrysalis2.com")
             .expect("invalid node URL")
-            .build();
+            .build()
+            .unwrap();
 
         let account_handle1 = manager
             .create_account(client_options.clone())
@@ -1245,9 +1314,11 @@ mod tests {
     #[tokio::test]
     async fn remove_account_with_message_history() {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
-            let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
+            let client_options = ClientOptionsBuilder::new()
+                .with_node("https://api.lb-0.testnet.chrysalis2.com")
                 .expect("invalid node URL")
-                .build();
+                .build()
+                .unwrap();
 
             let account_handle = manager
                 .create_account(client_options)
@@ -1266,8 +1337,7 @@ mod tests {
                         .finish()
                         .unwrap(),
                     Some(true),
-                )
-                .unwrap()])
+                )])
                 .initialise()
                 .await
                 .unwrap();
@@ -1281,9 +1351,11 @@ mod tests {
     #[tokio::test]
     async fn remove_account_with_balance() {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
-            let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
+            let client_options = ClientOptionsBuilder::new()
+                .with_node("https://api.lb-0.testnet.chrysalis2.com")
                 .expect("invalid node URL")
-                .build();
+                .build()
+                .unwrap();
 
             let account_handle = manager
                 .create_account(client_options)
@@ -1312,9 +1384,11 @@ mod tests {
     #[tokio::test]
     async fn create_account_with_latest_without_history() {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
-            let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
+            let client_options = ClientOptionsBuilder::new()
+                .with_node("https://api.lb-0.testnet.chrysalis2.com")
                 .expect("invalid node URL")
-                .build();
+                .build()
+                .unwrap();
 
             manager
                 .create_account(client_options.clone())
@@ -1333,9 +1407,11 @@ mod tests {
     #[tokio::test]
     async fn create_account_skip_persistance() {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
-            let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")
+            let client_options = ClientOptionsBuilder::new()
+                .with_node("https://api.lb-0.testnet.chrysalis2.com")
                 .expect("invalid node URL")
-                .build();
+                .build()
+                .unwrap();
 
             let account_handle = manager
                 .create_account(client_options.clone())
@@ -1385,7 +1461,7 @@ mod tests {
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             {
                 // wait for stronghold to finish pending operations and delete the storage file
-                crate::stronghold::unload_snapshot(manager.storage_path(), false)
+                crate::stronghold::unload_snapshot(&manager.stronghold_snapshot_path().await.unwrap(), false)
                     .await
                     .unwrap();
                 let _ = crate::stronghold::actor_runtime().lock().await;

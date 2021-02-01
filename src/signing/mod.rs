@@ -15,7 +15,7 @@ use slip10::BIP32Path;
 use tokio::sync::Mutex;
 
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-mod ledger;
+pub(crate) mod ledger;
 
 #[cfg(feature = "stronghold")]
 mod stronghold;
@@ -116,8 +116,8 @@ fn default_signers() -> Signers {
         signers.insert(
             SignerType::LedgerNano,
             Arc::new(Mutex::new(Box::new(ledger::LedgerNanoSigner {
-                id: 0u64,
                 is_simulator: false,
+                ..Default::default()
             }) as Box<dyn Signer + Sync + Send>)),
         );
     }
@@ -127,8 +127,8 @@ fn default_signers() -> Signers {
         signers.insert(
             SignerType::LedgerNanoSimulator,
             Arc::new(Mutex::new(Box::new(ledger::LedgerNanoSigner {
-                id: 1u64,
                 is_simulator: true,
+                ..Default::default()
             }) as Box<dyn Signer + Sync + Send>)),
         );
     }
