@@ -307,9 +307,12 @@ impl Into<iota::Api> for Api {
 pub struct BrokerOptions {
     // We need to use `pub` here or these is no way to let the user create BrokerOptions
     #[serde(rename = "automaticDisconnect")]
+    /// automatic disconnect.
     pub automatic_disconnect: Option<bool>,
+    /// timeout of the mqtt broker.
     pub timeout: Option<Duration>,
     #[serde(rename = "useWebsockets")]
+    /// use websockets or not.
     pub use_websockets: Option<bool>,
 }
 

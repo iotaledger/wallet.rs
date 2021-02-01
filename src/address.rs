@@ -186,6 +186,7 @@ impl AsRef<IotaAddress> for AddressWrapper {
 }
 
 impl AddressWrapper {
+    /// Create a new address wrapper.
     pub fn new(address: IotaAddress, bech32_hrp: String) -> Self {
         Self {
             inner: address,
