@@ -961,6 +961,8 @@ async fn perform_transfer(
     let message = Message::from_iota_message(message_id, account_.addresses(), &message, None)?;
     account_.append_messages(vec![message.clone()]);
 
+    account_.save().await?;
+
     // drop the client and account_ refs so it doesn't lock the monitor system
     drop(account_);
     drop(client);
