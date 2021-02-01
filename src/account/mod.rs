@@ -270,6 +270,7 @@ pub struct Account {
     #[getset(set = "pub(crate)")]
     id: String,
     /// The account's signer type.
+    #[serde(rename = "signerType")]
     signer_type: SignerType,
     /// The account index
     index: usize,
@@ -294,6 +295,7 @@ pub struct Account {
     #[serde(rename = "clientOptions")]
     client_options: ClientOptions,
     #[getset(set = "pub(crate)", get = "pub(crate)")]
+    #[serde(rename = "storagePath")]
     storage_path: PathBuf,
     #[getset(set = "pub(crate)", get = "pub(crate)")]
     #[serde(skip)]
