@@ -11,6 +11,7 @@ use std::{
 
 use iota_wallet::event::{
     on_balance_change, on_broadcast, on_confirmation_state_change, on_error, on_new_transaction, on_reattachment,
+    EventId,
 };
 use neon::prelude::*;
 
@@ -40,7 +41,7 @@ impl TryFrom<&str> for EventType {
     }
 }
 
-fn listen(event_type: EventType, sender: Sender<String>) {
+fn listen(event_type: EventType, sender: Sender<String>) -> EventId {
     match event_type {
         EventType::ErrorThrown => on_error(move |error| {
             let _ = sender.send(serde_json::to_string(&error).unwrap());

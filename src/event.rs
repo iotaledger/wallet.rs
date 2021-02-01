@@ -11,6 +11,9 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+/// The event identifier type.
+pub type EventId = [u8; 32];
+
 /// The balance change event data.
 #[derive(Getters, Serialize)]
 #[getset(get = "pub")]
@@ -69,15 +72,35 @@ impl<'a> TransactionConfirmationChangeEvent<'a> {
     }
 }
 
+trait EventHandler {
+    fn id(&self) -> &EventId;
+}
+
+macro_rules! event_handler_impl {
+    ($ty:ident) => {
+        impl EventHandler for $ty {
+            fn id(&self) -> &EventId {
+                &self.id
+            }
+        }
+    };
+}
+
 struct BalanceEventHandler {
+    id: EventId,
     /// The on event callback.
     on_event: Box<dyn Fn(&BalanceEvent<'_>) + Send>,
 }
 
+event_handler_impl!(BalanceEventHandler);
+
 struct ErrorHandler {
+    id: EventId,
     /// The on error callback.
     on_error: Box<dyn Fn(&crate::Error) + Send>,
 }
+
+event_handler_impl!(ErrorHandler);
 
 #[derive(PartialEq)]
 pub(crate) enum TransactionEventType {
@@ -87,20 +110,30 @@ pub(crate) enum TransactionEventType {
 }
 
 struct TransactionEventHandler {
+    id: EventId,
     event_type: TransactionEventType,
     /// The on event callback.
     on_event: Box<dyn Fn(&TransactionEvent<'_>) + Send>,
 }
 
+event_handler_impl!(TransactionEventHandler);
+
 struct TransactionConfirmationChangeEventHandler {
+    id: EventId,
     /// The on event callback.
     on_event: Box<dyn Fn(&TransactionConfirmationChangeEvent<'_>) + Send>,
 }
 
+event_handler_impl!(TransactionConfirmationChangeEventHandler);
+
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
 struct StrongholdStatusChangeEventHandler {
+    id: EventId,
     on_event: Box<dyn Fn(&crate::StrongholdStatus) + Send>,
 }
+
+#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+event_handler_impl!(StrongholdStatusChangeEventHandler);
 
 type BalanceListeners = Arc<Mutex<Vec<BalanceEventHandler>>>;
 type TransactionListeners = Arc<Mutex<Vec<TransactionEventHandler>>>;
@@ -108,6 +141,19 @@ type TransactionConfirmationChangeListeners = Arc<Mutex<Vec<TransactionConfirmat
 type ErrorListeners = Arc<Mutex<Vec<ErrorHandler>>>;
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
 type StrongholdStatusChangeListeners = Arc<Mutex<Vec<StrongholdStatusChangeEventHandler>>>;
+
+fn generate_event_id() -> EventId {
+    let mut id = [0; 32];
+    crypto::rand::fill(&mut id).unwrap();
+    id
+}
+
+fn remove_event_listener<T: EventHandler>(id: &EventId, listeners: &Arc<Mutex<Vec<T>>>) {
+    let mut listeners = listeners.lock().unwrap();
+    if let Some(position) = listeners.iter().position(|e| e.id() == id) {
+        listeners.remove(position);
+    }
+}
 
 /// Gets the balance change listeners array.
 fn balance_listeners() -> &'static BalanceListeners {
@@ -141,11 +187,21 @@ fn stronghold_status_change_listeners() -> &'static StrongholdStatusChangeListen
 }
 
 /// Listen to balance changes.
-pub fn on_balance_change<F: Fn(&BalanceEvent<'_>) + Send + 'static>(cb: F) {
+pub fn on_balance_change<F: Fn(&BalanceEvent<'_>) + Send + 'static>(cb: F) -> EventId {
     let mut l = balance_listeners()
         .lock()
         .expect("Failed to lock balance_listeners: on_balance_change()");
-    l.push(BalanceEventHandler { on_event: Box::new(cb) })
+    let id = generate_event_id();
+    l.push(BalanceEventHandler {
+        id,
+        on_event: Box::new(cb),
+    });
+    id
+}
+
+/// Removes the balance change listener associated with the given identifier.
+pub fn remove_balance_change_listener(id: &EventId) {
+    remove_event_listener(id, balance_listeners());
 }
 
 /// Emits a balance change event.
@@ -195,37 +251,68 @@ pub(crate) fn emit_confirmation_state_change(account_id: &str, message: &Message
 }
 
 /// Adds a transaction-related event listener.
-fn add_transaction_listener<F: Fn(&TransactionEvent<'_>) + Send + 'static>(event_type: TransactionEventType, cb: F) {
+fn add_transaction_listener<F: Fn(&TransactionEvent<'_>) + Send + 'static>(
+    event_type: TransactionEventType,
+    cb: F,
+) -> EventId {
     let mut l = transaction_listeners()
         .lock()
         .expect("Failed to lock transaction_listeners: add_transaction_listener()");
+    let id = generate_event_id();
     l.push(TransactionEventHandler {
+        id,
         event_type,
         on_event: Box::new(cb),
-    })
+    });
+    id
 }
 
 /// Listen to new messages.
-pub fn on_new_transaction<F: Fn(&TransactionEvent<'_>) + Send + 'static>(cb: F) {
-    add_transaction_listener(TransactionEventType::NewTransaction, cb);
+pub fn on_new_transaction<F: Fn(&TransactionEvent<'_>) + Send + 'static>(cb: F) -> EventId {
+    add_transaction_listener(TransactionEventType::NewTransaction, cb)
+}
+
+/// Removes the new transaction listener associated with the given identifier.
+pub fn remove_new_transaction_listener(id: &EventId) {
+    remove_event_listener(id, transaction_listeners());
 }
 
 /// Listen to transaction confirmation state change.
-pub fn on_confirmation_state_change<F: Fn(&TransactionConfirmationChangeEvent<'_>) + Send + 'static>(cb: F) {
+pub fn on_confirmation_state_change<F: Fn(&TransactionConfirmationChangeEvent<'_>) + Send + 'static>(cb: F) -> EventId {
     let mut l = transaction_confirmation_change_listeners()
         .lock()
         .expect("Failed to lock transaction_confirmation_change_listeners: on_confirmation_state_change()");
-    l.push(TransactionConfirmationChangeEventHandler { on_event: Box::new(cb) })
+    let id = generate_event_id();
+    l.push(TransactionConfirmationChangeEventHandler {
+        id,
+        on_event: Box::new(cb),
+    });
+    id
+}
+
+/// Removes the new confirmation state change listener associated with the given identifier.
+pub fn remove_confirmation_state_change_listener(id: &EventId) {
+    remove_event_listener(id, transaction_confirmation_change_listeners());
 }
 
 /// Listen to transaction reattachment.
-pub fn on_reattachment<F: Fn(&TransactionEvent<'_>) + Send + 'static>(cb: F) {
-    add_transaction_listener(TransactionEventType::Reattachment, cb);
+pub fn on_reattachment<F: Fn(&TransactionEvent<'_>) + Send + 'static>(cb: F) -> EventId {
+    add_transaction_listener(TransactionEventType::Reattachment, cb)
+}
+
+/// Removes the reattachment listener associated with the given identifier.
+pub fn remove_reattachment_listener(id: &EventId) {
+    remove_event_listener(id, transaction_listeners());
 }
 
 /// Listen to transaction broadcast.
-pub fn on_broadcast<F: Fn(&TransactionEvent<'_>) + Send + 'static>(cb: F) {
-    add_transaction_listener(TransactionEventType::Broadcast, cb);
+pub fn on_broadcast<F: Fn(&TransactionEvent<'_>) + Send + 'static>(cb: F) -> EventId {
+    add_transaction_listener(TransactionEventType::Broadcast, cb)
+}
+
+/// Removes the broadcast listener associated with the given identifier.
+pub fn remove_broadcast_listener(id: &EventId) {
+    remove_event_listener(id, transaction_listeners());
 }
 
 pub(crate) fn emit_error(error: &crate::Error) {
@@ -238,11 +325,21 @@ pub(crate) fn emit_error(error: &crate::Error) {
 }
 
 /// Listen to errors.
-pub fn on_error<F: Fn(&crate::Error) + Send + 'static>(cb: F) {
+pub fn on_error<F: Fn(&crate::Error) + Send + 'static>(cb: F) -> EventId {
     let mut l = error_listeners()
         .lock()
         .expect("Failed to lock error_listeners: on_error()");
-    l.push(ErrorHandler { on_error: Box::new(cb) })
+    let id = generate_event_id();
+    l.push(ErrorHandler {
+        id,
+        on_error: Box::new(cb),
+    });
+    id
+}
+
+/// Removes the error listener associated with the given identifier.
+pub fn remove_error_listener(id: &EventId) {
+    remove_event_listener(id, error_listeners());
 }
 
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
@@ -258,11 +355,23 @@ pub(crate) fn emit_stronghold_status_change(status: &crate::StrongholdStatus) {
 /// Listen to stronghold status change events.
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
 #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
-pub fn on_stronghold_status_change<F: Fn(&crate::StrongholdStatus) + Send + 'static>(cb: F) {
+pub fn on_stronghold_status_change<F: Fn(&crate::StrongholdStatus) + Send + 'static>(cb: F) -> EventId {
     let mut l = stronghold_status_change_listeners()
         .lock()
         .expect("Failed to lock stronghold_status_change_listeners: on_stronghold_status_change()");
-    l.push(StrongholdStatusChangeEventHandler { on_event: Box::new(cb) })
+    let id = generate_event_id();
+    l.push(StrongholdStatusChangeEventHandler {
+        id,
+        on_event: Box::new(cb),
+    });
+    id
+}
+
+/// Removes the stronghold status change listener associated with the given identifier.
+#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+pub fn remove_stronghold_status_change_listener(id: &EventId) {
+    remove_event_listener(id, stronghold_status_change_listeners());
 }
 
 #[cfg(test)]
