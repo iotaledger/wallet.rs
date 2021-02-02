@@ -118,6 +118,15 @@ Sets the stronghold password and initialises it.
 | -------- | ------------------- | ---------------------- | ----------------------- |
 | password | <code>string</code> | <code>undefined</code> | The stronghold password |
 
+#### changeStrongholdPassword(currentPassword, newPassword): void
+
+Changes the stronghold password.
+
+| Param           | Type                | Default                | Description                     |
+| --------------- | ------------------- | ---------------------- | ------------------------------- |
+| currentPassword | <code>string</code> | <code>undefined</code> | The current stronghold password |
+| newPassword     | <code>string</code> | <code>undefined</code> | The new stronghold password     |
+
 #### generateMnemonic(): string
 
 Generates a new mnemonic phrase.
