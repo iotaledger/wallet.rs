@@ -884,29 +884,27 @@ async fn perform_transfer(
                         deposit_address.to_bech32()
                     );
                     deposit_address
+                } else if let Some(address) = account_
+                    .addresses()
+                    .iter()
+                    .find(|a| *a.internal() && a.key_index() == remainder_address.key_index())
+                {
+                    address.address().clone()
                 } else {
-                    if let Some(address) = account_
-                        .addresses()
-                        .iter()
-                        .find(|a| *a.internal() && a.key_index() == remainder_address.key_index())
-                    {
-                        address.address().clone()
-                    } else {
-                        let change_address = crate::address::get_new_change_address(
-                            &account_,
-                            &remainder_address,
-                            GenerateAddressMetadata { syncing: false },
-                        )
-                        .await?;
-                        let addr = change_address.address().clone();
-                        log::debug!(
-                            "[TRANSFER] generated new change address as remainder target: {}",
-                            addr.to_bech32()
-                        );
-                        account_.append_addresses(vec![change_address]);
-                        addresses_to_watch.push(addr.clone());
-                        addr
-                    }
+                    let change_address = crate::address::get_new_change_address(
+                        &account_,
+                        &remainder_address,
+                        GenerateAddressMetadata { syncing: false },
+                    )
+                    .await?;
+                    let addr = change_address.address().clone();
+                    log::debug!(
+                        "[TRANSFER] generated new change address as remainder target: {}",
+                        addr.to_bech32()
+                    );
+                    account_.append_addresses(vec![change_address]);
+                    addresses_to_watch.push(addr.clone());
+                    addr
                 }
             }
             // keep the remainder value on the address
@@ -939,7 +937,7 @@ async fn perform_transfer(
     for address in single_addresses {
         let created_or_consumed_outputs: Vec<(u64, bool)> = dust_and_allowance_recorders
             .iter()
-            .filter(|d| d.1 == address.to_string())
+            .filter(|d| d.1 == address)
             .map(|(amount, _, flag)| (*amount, *flag))
             .collect();
         is_dust_allowed(&client, address, created_or_consumed_outputs).await?;
@@ -1167,6 +1165,7 @@ mod tests {
 
     // this needs a proper client mock to run on CI
     // #[tokio::test]
+    #[allow(dead_code)]
     async fn dust_transfer() {
         let manager = crate::test_utils::get_account_manager().await;
 
@@ -1190,9 +1189,11 @@ mod tests {
             .addresses(vec![address1, address2.clone()])
             .create()
             .await;
+        let id = account_handle.id().await;
+        let index = account_handle.index().await;
         let synced = super::SyncedAccount {
-            id: account_handle.id().await,
-            index: account_handle.index().await,
+            id,
+            index,
             account_handle,
             deposit_address: crate::test_utils::generate_random_address(),
             is_empty: false,
