@@ -940,7 +940,7 @@ async fn perform_transfer(
             .filter(|d| d.1 == address)
             .map(|(amount, _, flag)| (*amount, *flag))
             .collect();
-        is_dust_allowed(&client, address, created_or_consumed_outputs).await?;
+        is_dust_allowed(&account_, &client, address, created_or_consumed_outputs).await?;
     }
 
     let (parent1, parent2) = client.get_tips().await?;
@@ -1036,7 +1036,12 @@ async fn perform_transfer(
 // Calculate the outputs on this address after the transaction gets confirmed so we know if we can send dust or
 // dust allowance outputs (as input). the bool in the outputs defines if we consume this output (false) or create a new
 // one (true)
-async fn is_dust_allowed(client: &iota::Client, address: String, outputs: Vec<(u64, bool)>) -> crate::Result<()> {
+async fn is_dust_allowed(
+    account: &Account,
+    client: &iota::Client,
+    address: String,
+    outputs: Vec<(u64, bool)>,
+) -> crate::Result<()> {
     // balance of all dust allowance outputs
     let mut dust_allowance_balance: i64 = 0;
     // Amount of dust outputs
@@ -1065,14 +1070,29 @@ async fn is_dust_allowed(client: &iota::Client, address: String, outputs: Vec<(u
     }
 
     // Get outputs from address and apply values
-    let address_outputs_metadata = client.find_outputs(&[], &[address.to_string().into()]).await?;
-    for output_metadata in address_outputs_metadata {
-        match output_metadata.output {
-            iota::OutputDto::SignatureLockedDustAllowance(d_a_o) => {
-                dust_allowance_balance += d_a_o.amount as i64;
+    let address_outputs = if let Some(address) = account.addresses().iter().find(|a| a.address().to_bech32() == address)
+    {
+        address
+            .outputs()
+            .iter()
+            .map(|output| (output.amount, output.kind.clone()))
+            .collect()
+    } else {
+        let outputs = client.find_outputs(&[], &[address.to_string().into()]).await?;
+        let mut address_outputs = Vec::new();
+        for output in outputs {
+            let output = AddressOutput::from_output_response(output, "".to_string())?;
+            address_outputs.push((output.amount, output.kind));
+        }
+        address_outputs
+    };
+    for (amount, kind) in address_outputs {
+        match kind {
+            OutputKind::SignatureLockedDustAllowance => {
+                dust_allowance_balance += amount as i64;
             }
-            iota::OutputDto::SignatureLockedSingle(s_o) => {
-                if s_o.amount < DUST_ALLOWANCE_VALUE {
+            OutputKind::SignatureLockedSingle => {
+                if amount < DUST_ALLOWANCE_VALUE {
                     dust_outputs_amount += 1;
                 }
             }
@@ -1177,7 +1197,7 @@ mod tests {
             index: 0,
             amount: 10000000,
             is_spent: false,
-            address: crate::test_utils::generate_random_iota_address(),
+            address: address1.address().clone(),
             kind: crate::address::OutputKind::SignatureLockedSingle,
         });
         address1.set_balance(10000000);
@@ -1185,8 +1205,28 @@ mod tests {
         // then we create an address without balance - the deposit address
         let address2 = crate::test_utils::generate_random_address();
 
+        let mut address3 = crate::test_utils::generate_random_address();
+        address3.set_key_index(0);
+        address3.set_internal(true);
+        address3.outputs.push(crate::address::AddressOutput {
+            transaction_id: iota::TransactionId::from([0; 32]),
+            message_id: iota::MessageId::from([0; 32]),
+            index: 0,
+            amount: 10000000,
+            is_spent: false,
+            address: address3.address().clone(),
+            kind: crate::address::OutputKind::SignatureLockedDustAllowance,
+        });
+
+        println!(
+            "{}\n{}\n{}",
+            address1.address().to_bech32(),
+            address2.address().to_bech32(),
+            address3.address().to_bech32()
+        );
+
         let account_handle = crate::test_utils::AccountCreator::new(&manager)
-            .addresses(vec![address1, address2.clone()])
+            .addresses(vec![address1, address2.clone(), address3])
             .create()
             .await;
         let id = account_handle.id().await;
