@@ -9,6 +9,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Install rust-docs with nightly toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+            profile: minimal
+            toolchain: nightly
+            override: true
+            components: rust-docs
+          
       - name: Setup mdBook
         uses: peaceiris/actions-mdbook@v1
         with:
