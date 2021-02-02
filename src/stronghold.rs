@@ -423,9 +423,38 @@ pub async fn unload_snapshot(storage_path: &PathBuf, persist: bool) -> Result<()
 
 pub async fn load_snapshot(snapshot_path: &PathBuf, password: &[u8; 32]) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
+    load_snapshot_internal(&mut runtime, snapshot_path, password).await
+}
+
+async fn load_snapshot_internal(
+    mut runtime: &mut ActorRuntime,
+    snapshot_path: &PathBuf,
+    password: &[u8; 32],
+) -> Result<()> {
     set_password(&snapshot_path, password).await;
     check_snapshot(&mut runtime, &snapshot_path).await?;
     crate::event::emit_stronghold_status_change(&get_status(snapshot_path).await);
+    Ok(())
+}
+
+/// Changes the snapshot password.
+pub async fn change_password(
+    snapshot_path: &PathBuf,
+    current_password: &[u8; 32],
+    new_password: &[u8; 32],
+) -> Result<()> {
+    let mut runtime = actor_runtime().lock().await;
+    load_snapshot_internal(&mut runtime, snapshot_path, current_password).await?;
+
+    stronghold_response_to_result(
+        runtime
+            .stronghold
+            .write_all_to_snapshot(new_password.to_vec(), None, Some(snapshot_path.to_path_buf()))
+            .await,
+    )?;
+
+    set_password(snapshot_path, new_password).await;
+
     Ok(())
 }
 
@@ -835,6 +864,25 @@ mod tests {
             let stored_data = super::get_account(&snapshot_path, &account_id).await?;
             assert_eq!(stored_data, data);
         }
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn change_password() -> super::Result<()> {
+        let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
+        std::fs::create_dir_all("./test-storage").unwrap();
+        let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
+        let old_password = &[5; 32];
+        super::load_snapshot(&snapshot_path, old_password).await?;
+        let id = "writeanddeleteid".to_string();
+        let data = "account data";
+        super::store_account(&snapshot_path, &id, data.to_string()).await?;
+
+        let new_password = &[6; 32];
+        super::change_password(&snapshot_path, old_password, &new_password).await?;
+
+        super::load_snapshot(&snapshot_path, &new_password).await?;
 
         Ok(())
     }

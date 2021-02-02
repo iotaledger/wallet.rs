@@ -1737,6 +1737,31 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
+source = "git+https://github.com/iotaledger/iota.rs?rev=e7b731ac3f204df615aa195111425b5127845287#e7b731ac3f204df615aa195111425b5127845287"
+dependencies = [
+ "bee-common",
+ "bee-crypto",
+ "bee-message",
+ "bee-pow",
+ "bee-rest-api",
+ "bee-signing",
+ "bee-signing-ext",
+ "blake2",
+ "chrono",
+ "hex",
+ "num_cpus",
+ "paho-mqtt",
+ "regex",
+ "reqwest",
+ "serde 1.0.123",
+ "serde_json",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
+name = "iota-client"
+version = "0.5.0-alpha.3"
 source = "git+https://github.com/iotaledger/iota.rs?branch=dev#4e494c35cbec935d8276e6d04989bc536f18ab95"
 dependencies = [
  "bee-common",
@@ -1762,13 +1787,25 @@ dependencies = [
 [[package]]
 name = "iota-core"
 version = "0.2.0-alpha.3"
+source = "git+https://github.com/iotaledger/iota.rs?rev=e7b731ac3f204df615aa195111425b5127845287#e7b731ac3f204df615aa195111425b5127845287"
+dependencies = [
+ "bee-common",
+ "bee-message",
+ "bee-pow",
+ "bee-signing-ext",
+ "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=e7b731ac3f204df615aa195111425b5127845287)",
+]
+
+[[package]]
+name = "iota-core"
+version = "0.2.0-alpha.3"
 source = "git+https://github.com/iotaledger/iota.rs?branch=dev#4e494c35cbec935d8276e6d04989bc536f18ab95"
 dependencies = [
  "bee-common",
  "bee-message",
  "bee-pow",
  "bee-signing-ext",
- "iota-client",
+ "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?branch=dev)",
 ]
 
 [[package]]
@@ -1839,7 +1876,7 @@ dependencies = [
  "futures",
  "getset",
  "hex",
- "iota-core",
+ "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=e7b731ac3f204df615aa195111425b5127845287)",
  "iota-crypto 0.2.0 (git+https://github.com/iotaledger/crypto.rs?rev=c2514969c3f6693b86425ec84bada84b3ebea645)",
  "iota-stronghold",
  "log",
@@ -1864,7 +1901,7 @@ dependencies = [
  "backtrace",
  "futures",
  "hex",
- "iota-core",
+ "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?branch=dev)",
  "iota-wallet",
  "neon",
  "neon-build",
