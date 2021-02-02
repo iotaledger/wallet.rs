@@ -17,6 +17,15 @@ use std::{
     str::FromStr,
 };
 
+/// The address output kind.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum OutputKind {
+    /// SignatureLockedSingle output.
+    SignatureLockedSingle,
+    /// Dust allowance output.
+    SignatureLockedDustAllowance,
+}
+
 /// An Address output.
 #[derive(Debug, Getters, Setters, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[getset(get = "pub")]
@@ -37,6 +46,8 @@ pub struct AddressOutput {
     /// Associated address.
     #[serde(with = "crate::serde::iota_address_serde")]
     pub(crate) address: AddressWrapper,
+    /// Output kind.
+    pub(crate) kind: OutputKind,
 }
 
 impl AddressOutput {
@@ -63,7 +74,7 @@ impl AddressOutput {
     }
 
     pub(crate) fn from_output_response(output: OutputResponse, bech32_hrp: String) -> crate::Result<Self> {
-        let (address, amount) = match output.output {
+        let (address, amount, kind) = match output.output {
             OutputDto::SignatureLockedSingle(output) => {
                 let address = match output.address {
                     AddressDto::Ed25519(ed25519_address) => IotaAddress::Ed25519(Ed25519Address::new(
@@ -73,7 +84,7 @@ impl AddressOutput {
                             .map_err(|_| crate::Error::InvalidAddressLength)?,
                     )),
                 };
-                (address, output.amount)
+                (address, output.amount, OutputKind::SignatureLockedSingle)
             }
             OutputDto::SignatureLockedDustAllowance(output) => {
                 let address = match output.address {
@@ -84,7 +95,7 @@ impl AddressOutput {
                             .map_err(|_| crate::Error::InvalidAddressLength)?,
                     )),
                 };
-                (address, output.amount)
+                (address, output.amount, OutputKind::SignatureLockedDustAllowance)
             }
         };
         let output = Self {
@@ -102,6 +113,7 @@ impl AddressOutput {
             amount,
             is_spent: output.is_spent,
             address: AddressWrapper::new(address, bech32_hrp),
+            kind,
         };
         Ok(output)
     }
@@ -218,8 +230,10 @@ pub struct Address {
     balance: u64,
     /// The address key index.
     #[serde(rename = "keyIndex")]
+    #[getset(set = "pub(crate)")]
     key_index: usize,
     /// Determines if an address is a public or an internal (change) address.
+    #[getset(set = "pub(crate)")]
     internal: bool,
     /// The address outputs.
     #[getset(set = "pub(crate)")]

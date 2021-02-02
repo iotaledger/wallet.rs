@@ -289,7 +289,7 @@ dependencies = [
 [[package]]
 name = "bee-ledger"
 version = "0.1.0-alpha"
-source = "git+https://github.com/thibault-martinez/bee.git?branch=8-parents#62c41a74909d8662f76307a0c08800c9bbd8c024"
+source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#0f27af192252921be73d75934f5b2e10b2c7a5ae"
 dependencies = [
  "async-trait",
  "bee-common",
@@ -314,7 +314,7 @@ dependencies = [
 [[package]]
 name = "bee-message"
 version = "0.1.0-alpha"
-source = "git+https://github.com/thibault-martinez/bee.git?branch=8-parents#62c41a74909d8662f76307a0c08800c9bbd8c024"
+source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#0f27af192252921be73d75934f5b2e10b2c7a5ae"
 dependencies = [
  "bech32",
  "bee-common",
@@ -330,7 +330,7 @@ dependencies = [
 [[package]]
 name = "bee-network"
 version = "0.1.0-alpha"
-source = "git+https://github.com/thibault-martinez/bee.git?branch=8-parents#62c41a74909d8662f76307a0c08800c9bbd8c024"
+source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#0f27af192252921be73d75934f5b2e10b2c7a5ae"
 dependencies = [
  "async-trait",
  "bee-runtime",
@@ -349,7 +349,7 @@ dependencies = [
 [[package]]
 name = "bee-pow"
 version = "0.1.0-alpha"
-source = "git+https://github.com/thibault-martinez/bee.git?branch=8-parents#62c41a74909d8662f76307a0c08800c9bbd8c024"
+source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#0f27af192252921be73d75934f5b2e10b2c7a5ae"
 dependencies = [
  "bee-crypto",
  "bee-ternary",
@@ -360,7 +360,7 @@ dependencies = [
 [[package]]
 name = "bee-protocol"
 version = "0.1.0-alpha"
-source = "git+https://github.com/thibault-martinez/bee.git?branch=8-parents#62c41a74909d8662f76307a0c08800c9bbd8c024"
+source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#0f27af192252921be73d75934f5b2e10b2c7a5ae"
 dependencies = [
  "async-channel",
  "async-trait",
@@ -395,7 +395,7 @@ dependencies = [
 [[package]]
 name = "bee-rest-api"
 version = "0.1.0-alpha"
-source = "git+https://github.com/thibault-martinez/bee.git?branch=8-parents#62c41a74909d8662f76307a0c08800c9bbd8c024"
+source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#0f27af192252921be73d75934f5b2e10b2c7a5ae"
 dependencies = [
  "async-trait",
  "bech32",
@@ -466,7 +466,7 @@ dependencies = [
 [[package]]
 name = "bee-snapshot"
 version = "0.1.0-alpha"
-source = "git+https://github.com/thibault-martinez/bee.git?branch=8-parents#62c41a74909d8662f76307a0c08800c9bbd8c024"
+source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#0f27af192252921be73d75934f5b2e10b2c7a5ae"
 dependencies = [
  "async-trait",
  "bee-common",
@@ -496,7 +496,7 @@ dependencies = [
 [[package]]
 name = "bee-tangle"
 version = "0.1.0-alpha"
-source = "git+https://github.com/thibault-martinez/bee.git?branch=8-parents#62c41a74909d8662f76307a0c08800c9bbd8c024"
+source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#0f27af192252921be73d75934f5b2e10b2c7a5ae"
 dependencies = [
  "async-trait",
  "bee-common",
@@ -1781,7 +1781,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?branch=8-parents#f2e0bd7c7281cbf080246c5207e568680693197b"
+source = "git+https://github.com/iotaledger/iota.rs?rev=e7b731ac3f204df615aa195111425b5127845287#e7b731ac3f204df615aa195111425b5127845287"
 dependencies = [
  "bee-common",
  "bee-crypto",
@@ -1806,7 +1806,7 @@ dependencies = [
 [[package]]
 name = "iota-core"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?branch=8-parents#f2e0bd7c7281cbf080246c5207e568680693197b"
+source = "git+https://github.com/iotaledger/iota.rs?rev=e7b731ac3f204df615aa195111425b5127845287#e7b731ac3f204df615aa195111425b5127845287"
 dependencies = [
  "bee-common",
  "bee-message",
@@ -3212,9 +3212,9 @@ dependencies = [
 
 [[package]]
 name = "ring"
-version = "0.16.19"
+version = "0.16.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "024a1e66fea74c66c66624ee5622a7ff0e4b73a13b4f5c326ddb50c708944226"
+checksum = "3053cf52e236a3ed746dfc745aa9cacf1b791d846bdaf412f60a8d7d6e17c8fc"
 dependencies = [
  "cc",
  "libc",
