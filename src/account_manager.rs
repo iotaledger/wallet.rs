@@ -261,6 +261,14 @@ impl Drop for AccountManager {
     }
 }
 
+#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+fn stronghold_password<P: AsRef<str>>(password: P) -> [u8; 32] {
+    let mut dk = [0; 64];
+    // safe to unwrap because rounds > 0
+    crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_ref().as_bytes(), b"wallet.rs", 100, &mut dk).unwrap();
+    dk[0..32][..].try_into().unwrap()
+}
+
 impl AccountManager {
     /// Initialises the account manager builder.
     pub fn builder() -> AccountManagerBuilder {
@@ -399,16 +407,12 @@ impl AccountManager {
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
     pub async fn set_stronghold_password<P: AsRef<str>>(&mut self, password: P) -> crate::Result<()> {
-        let mut dk = [0; 64];
-        // safe to unwrap because rounds > 0
-        crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_ref().as_bytes(), b"wallet.rs", 100, &mut dk).unwrap();
-
         let stronghold_path = if self.storage_path.extension().unwrap_or_default() == "stronghold" {
             self.storage_path.clone()
         } else {
             self.storage_folder.join(STRONGHOLD_FILENAME)
         };
-        crate::stronghold::load_snapshot(&stronghold_path, &dk[0..32][..].try_into().unwrap()).await?;
+        crate::stronghold::load_snapshot(&stronghold_path, &stronghold_password(password)).await?;
 
         // let is_empty = self.accounts.read().await.is_empty();
         if self.accounts.read().await.is_empty() {
@@ -421,6 +425,23 @@ impl AccountManager {
         }
 
         Ok(())
+    }
+
+    /// Sets the stronghold password.
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
+    pub async fn change_stronghold_password<C: AsRef<str>, N: AsRef<str>>(
+        &self,
+        current_password: C,
+        new_password: N,
+    ) -> crate::Result<()> {
+        crate::stronghold::change_password(
+            &self.stronghold_snapshot_path().await?,
+            &stronghold_password(current_password),
+            &stronghold_password(new_password),
+        )
+        .await
+        .map_err(|e| e.into())
     }
 
     /// Determines whether all accounts has the latest address unused.

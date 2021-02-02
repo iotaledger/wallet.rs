@@ -137,6 +137,7 @@ export declare class AccountManager {
   constructor(options: ManagerOptions)
   setStoragePassword(password: string): void
   setStrongholdPassword(password: string): void
+  changeStrongholdPassword(currentPassword: string, newPassword: string): void
   generateMnemonic(): string
   storeMnemonic(signerType: SignerType, mnemonic?: string): void
   createAccount(account: AccountToCreate): Account

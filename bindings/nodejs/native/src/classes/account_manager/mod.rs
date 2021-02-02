@@ -139,6 +139,21 @@ declare_types! {
             Ok(cx.undefined().upcast())
         }
 
+        method changeStrongholdPassword(mut cx) {
+            let current_password = cx.argument::<JsString>(0)?.value();
+            let new_password = cx.argument::<JsString>(1)?.value();
+            {
+                let this = cx.this();
+                let guard = cx.lock();
+                let ref_ = &this.borrow(&guard).0;
+                crate::block_on(async move {
+                    let manager = ref_.write().await;
+                    manager.change_stronghold_password(current_password, new_password).await
+                }).expect("error changing stronghold password");
+            }
+            Ok(cx.undefined().upcast())
+        }
+
         method generateMnemonic(mut cx) {
             let mnemonic = {
                 let this = cx.this();
