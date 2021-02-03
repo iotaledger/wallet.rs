@@ -322,12 +322,12 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf)
             switch_snapshot(&mut runtime, snapshot_path).await?;
         }
     } else {
+        load_actors(&mut runtime, snapshot_path).await?;
         CURRENT_SNAPSHOT_PATH
             .get_or_init(Default::default)
             .lock()
             .await
             .replace(snapshot_path.clone());
-        load_actors(&mut runtime, snapshot_path).await?;
     }
 
     Ok(())
@@ -386,14 +386,13 @@ async fn load_actors(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf) ->
 
 async fn switch_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> Result<()> {
     clear_stronghold_cache(&mut runtime, true).await?;
+    load_actors(&mut runtime, snapshot_path).await?;
 
     CURRENT_SNAPSHOT_PATH
         .get_or_init(Default::default)
         .lock()
         .await
         .replace(snapshot_path.clone());
-
-    load_actors(&mut runtime, snapshot_path).await?;
 
     Ok(())
 }
