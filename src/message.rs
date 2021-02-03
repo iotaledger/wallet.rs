@@ -222,10 +222,8 @@ pub struct Message {
     pub(crate) id: MessageId,
     /// The message version.
     pub(crate) version: u64,
-    /// Message id of the first message this message refers to.
-    pub(crate) parent1: MessageId,
-    /// Message id of the second message this message refers to.
-    pub(crate) parent2: MessageId,
+    /// Message ids this message refers to.
+    pub(crate) parents: Vec<MessageId>,
     /// Length of the payload.
     #[serde(rename = "payloadLength")]
     pub(crate) payload_length: usize,
@@ -279,7 +277,7 @@ impl Message {
     pub(crate) fn from_iota_message(
         id: MessageId,
         account_addresses: &[Address],
-        message: &IotaMessage,
+        message: IotaMessage,
         confirmed: Option<bool>,
     ) -> Self {
         let mut packed_payload = Vec::new();
@@ -300,8 +298,7 @@ impl Message {
         let message = Self {
             id,
             version: 1,
-            parent1: *message.parent1(),
-            parent2: *message.parent2(),
+            parents: message.parents().to_vec(),
             payload_length: packed_payload.len(),
             payload: message.payload().as_ref().unwrap().clone(),
             timestamp: Utc::now(),

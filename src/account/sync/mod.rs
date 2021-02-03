@@ -382,8 +382,8 @@ async fn perform_sync(
     account.append_addresses(addresses_to_save);
 
     let parsed_messages = new_messages
-        .iter()
-        .map(|(id, confirmed, message)| Message::from_iota_message(*id, account.addresses(), &message, *confirmed))
+        .into_iter()
+        .map(|(id, confirmed, message)| Message::from_iota_message(id, account.addresses(), message, confirmed))
         .collect();
     log::debug!("[SYNC] new messages: {:#?}", parsed_messages);
     account.append_messages(parsed_messages);
@@ -943,7 +943,7 @@ async fn perform_transfer(
         is_dust_allowed(&account_, &client, address, created_or_consumed_outputs).await?;
     }
 
-    let (parent1, parent2) = client.get_tips().await?;
+    let parents = client.get_tips().await?;
 
     if let Some(indexation) = transfer_obj.indexation {
         essence_builder = essence_builder.with_payload(Payload::Indexation(Box::new(indexation)));
@@ -981,8 +981,7 @@ async fn perform_transfer(
     let transaction = tx_builder.finish()?;
 
     let message = MessageBuilder::<ClientMiner>::new()
-        .with_parent1(parent1)
-        .with_parent2(parent2)
+        .with_parents(parents)
         .with_payload(Payload::Transaction(Box::new(transaction)))
         .with_network_id(client.get_network_id().await?)
         .with_nonce_provider(client.get_pow_provider(), client.get_network_info().min_pow_score)
@@ -1011,7 +1010,7 @@ async fn perform_transfer(
         account_.append_addresses(vec![addr]);
     }
 
-    let message = Message::from_iota_message(message_id, account_.addresses(), &message, None);
+    let message = Message::from_iota_message(message_id, account_.addresses(), message, None);
     account_.append_messages(vec![message.clone()]);
 
     account_.save().await?;
@@ -1146,7 +1145,7 @@ pub(crate) async fn repost_message(
                 RepostAction::Reattach => client.reattach(message_id).await?,
                 RepostAction::Retry => client.retry(message_id).await?,
             };
-            let message = Message::from_iota_message(id, account.addresses(), &message, None);
+            let message = Message::from_iota_message(id, account.addresses(), message, None);
 
             account.append_messages(vec![message.clone()]);
 
