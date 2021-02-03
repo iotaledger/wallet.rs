@@ -23,6 +23,10 @@ jobs:
           mdbook-version: 'latest'
 
       - run: mdbook build
+      - name: Install required packages (Ubuntu)
+        run: |
+          sudo apt-get update
+          sudo apt-get install libudev-dev libusb-1.0-0-dev
       - run: DOCFLAGS="--cfg docsrs" cargo +nightly doc --all-features --document-private-items --no-deps --release
       - run: cp -r target/doc book/docs
       
