@@ -19,7 +19,19 @@ pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
     let account = account_handle.read().await;
     let client = crate::client::get_client(account.client_options());
     let mut client = client.write().await;
-    client.subscriber().unsubscribe()?;
+
+    let mut topics = Vec::new();
+    for address in account.addresses() {
+        topics.push(Topic::new(format!(
+            "addresses/{}/outputs",
+            address.address().to_bech32()
+        ))?);
+    }
+    for message in account.list_messages(0, 0, Some(MessageType::Unconfirmed)) {
+        topics.push(Topic::new(format!("messages/{}/metadata", message.id().to_string()))?);
+    }
+
+    client.subscriber().with_topics(topics).unsubscribe()?;
     Ok(())
 }
 
