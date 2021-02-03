@@ -8,6 +8,9 @@ edition = "2018"
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
+[patch.'crates-io']
+lexical-core = { git = "https://github.com/Gelbpunkt/rust-lexical", branch = "fix-warnings-and-update-deps" }
+
 [dependencies]
 thiserror = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
