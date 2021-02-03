@@ -14,10 +14,7 @@ cargo install mdbook
 
 ### Run it
 
-be sure, you're in the right directory.
-
 ```bash
-cd docs
 mdbook serve
 ```
 
