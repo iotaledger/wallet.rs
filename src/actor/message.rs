@@ -188,6 +188,17 @@ pub enum MessageType {
     OpenLedgerApp(bool),
     /// Deletes the storage.
     DeleteStorage,
+    /// Changes stronghold snapshot password.
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    ChangeStrongholdPassword {
+        /// The current stronghold password.
+        #[serde(rename = "currentPassword")]
+        current_password: String,
+        /// The new stronghold password.
+        #[serde(rename = "newPassword")]
+        new_password: String,
+    },
 }
 
 impl Serialize for MessageType {
@@ -255,6 +266,11 @@ impl Serialize for MessageType {
             #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
             MessageType::OpenLedgerApp(_) => serializer.serialize_unit_variant("MessageType", 20, "OpenLedgerApp"),
             MessageType::DeleteStorage => serializer.serialize_unit_variant("MessageType", 21, "DeleteStorage"),
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            MessageType::ChangeStrongholdPassword {
+                current_password: _,
+                new_password: _,
+            } => serializer.serialize_unit_variant("MessageType", 22, "ChangeStrongholdPassword"),
         }
     }
 }
@@ -366,6 +382,10 @@ pub enum ResponseType {
     OpenedLedgerApp,
     /// DeleteStorage response.
     DeletedStorage,
+    /// ChangeStrongholdPassword response.
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    StrongholdPasswordChanged,
 }
 
 /// The message type.

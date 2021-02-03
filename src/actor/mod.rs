@@ -182,6 +182,19 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async { self.internal_transfer(from_account_id, to_account_id, *amount).await })
                     .await
             }
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            MessageType::ChangeStrongholdPassword {
+                current_password,
+                new_password,
+            } => {
+                convert_async_panics(|| async {
+                    self.account_manager
+                        .change_stronghold_password(current_password, new_password)
+                        .await?;
+                    Ok(ResponseType::StrongholdPasswordChanged)
+                })
+                .await
+            }
         };
 
         let response = match response {
