@@ -107,13 +107,8 @@ async fn process_output(
 
     match account.messages_mut().iter().position(|m| m.id() == &message_id) {
         Some(message_index) => {
-            account
-                .do_mut(|account| {
-                    let message = &mut account.messages_mut()[message_index];
-                    message.set_confirmed(Some(true));
-                    Ok(())
-                })
-                .await?;
+            let message = &mut account.messages_mut()[message_index];
+            message.set_confirmed(Some(true));
         }
         None => {
             if let Ok(message) = crate::client::get_client(&client_options_)
@@ -129,15 +124,13 @@ async fn process_output(
                     account.id(),
                     &message,
                 );
-                account
-                    .do_mut(|account| {
-                        account.messages_mut().push(message);
-                        Ok(())
-                    })
-                    .await?;
+                account.messages_mut().push(message);
             }
         }
     }
+
+    account.save().await?;
+
     Ok(())
 }
 
