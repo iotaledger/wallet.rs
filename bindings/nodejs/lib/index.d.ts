@@ -35,8 +35,7 @@ export declare type Payload = Transaction;
 
 export declare interface Message {
   version: number;
-  parent1: string;
-  parent2: string;
+  parents: string[];
   payloadLength: number;
   payload: Payload;
   timestamp: string;

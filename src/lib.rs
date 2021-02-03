@@ -477,8 +477,7 @@ mod test_utils {
             Message {
                 id: MessageId::new([0; 32]),
                 version: 1,
-                parent1: MessageId::new([0; 32]),
-                parent2: MessageId::new([0; 32]),
+                parents: vec![MessageId::new([0; 32])],
                 payload_length: 0,
                 payload: Payload::Transaction(Box::new(
                     TransactionPayloadBuilder::new()
