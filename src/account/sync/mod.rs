@@ -524,8 +524,18 @@ impl AccountSynchronizer {
             Err(e) => Err(e),
         };
 
-        let _ = crate::monitor::monitor_account_addresses_balance(self.account_handle.clone());
-        let _ = crate::monitor::monitor_unconfirmed_messages(self.account_handle.clone());
+        if let Err(e) = crate::monitor::monitor_account_addresses_balance(self.account_handle.clone()).await {
+            log::error!(
+                "[MQTT] error resubscribing to addresses balances after syncing: {:?}",
+                e
+            );
+        }
+        if let Err(e) = crate::monitor::monitor_unconfirmed_messages(self.account_handle.clone()).await {
+            log::error!(
+                "[MQTT] error resubscribing to unconfirmed messages after syncing: {:?}",
+                e
+            );
+        }
 
         return_value
     }

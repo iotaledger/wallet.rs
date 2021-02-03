@@ -255,6 +255,7 @@ impl AccountInitialiser {
             let guard: AccountHandle = account.into();
             drop(accounts);
             self.accounts.write().await.insert(account_id, guard.clone());
+            let _ = crate::monitor::monitor_account_addresses_balance(guard.clone()).await;
             guard
         };
 
