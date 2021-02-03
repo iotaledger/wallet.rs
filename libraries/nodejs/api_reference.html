@@ -1,0 +1,437 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js iota">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>API Reference - IOTA Wallet Library</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../../favicon.png">
+        
+        <link rel="stylesheet" href="../../css/variables.css">
+        <link rel="stylesheet" href="../../css/general.css">
+        <link rel="stylesheet" href="../../css/chrome.css">
+        
+        <link rel="stylesheet" href="../../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../../highlight.css">
+        <link rel="stylesheet" href="../../tomorrow-night.css">
+        <link rel="stylesheet" href="../../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "iota";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('iota')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../../welcome.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded "><a href="../../overview/index.html"><strong aria-hidden="true">2.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../../libraries/index.html"><strong aria-hidden="true">3.</strong> Libraries</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../libraries/rust/index.html"><strong aria-hidden="true">3.1.</strong> Rust</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../libraries/rust/getting_started.html"><strong aria-hidden="true">3.1.1.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../../libraries/rust/examles.html"><strong aria-hidden="true">3.1.2.</strong> Examples</a></li><li class="chapter-item expanded "><a href="../../libraries/rust/api_reference.html"><strong aria-hidden="true">3.1.3.</strong> API Reference</a></li><li class="chapter-item expanded "><a href="../../libraries/rust/troubleshooting.html"><strong aria-hidden="true">3.1.4.</strong> Troubleshooting</a></li></ol></li><li class="chapter-item expanded "><a href="../../libraries/nodejs/index.html"><strong aria-hidden="true">3.2.</strong> Node.js</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../libraries/nodejs/getting_started.html"><strong aria-hidden="true">3.2.1.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../../libraries/nodejs/examles.html"><strong aria-hidden="true">3.2.2.</strong> Examples</a></li><li class="chapter-item expanded "><a href="../../libraries/nodejs/api_reference.html" class="active"><strong aria-hidden="true">3.2.3.</strong> API Reference</a></li><li class="chapter-item expanded "><a href="../../libraries/nodejs/troubleshooting.html"><strong aria-hidden="true">3.2.4.</strong> Troubleshooting</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../../specs/index.html"><strong aria-hidden="true">4.</strong> Specification</a></li><li class="chapter-item expanded "><a href="../../contribute.html"><strong aria-hidden="true">5.</strong> Contribute</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">IOTA Wallet Library</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/iotaledger/wallet.rs" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#api-reference" id="api-reference">API Reference</a></h1>
+<h3><a class="header" href="#initloggerconfig-logoptions" id="initloggerconfig-logoptions">initLogger(config: LogOptions)</a></h3>
+<p>Initializes the logging system.</p>
+<h4><a class="header" href="#logoptions" id="logoptions">LogOptions</a></h4>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>color_enabled</td><td><code>boolean</code></td><td><code>undefined</code></td><td>Whether to enable colored output or not</td></tr>
+<tr><td>outputs</td><td><code>LogOutput[]</code></td><td><code>undefined</code></td><td>The log outputs</td></tr>
+</tbody></table>
+<h4><a class="header" href="#logoutput" id="logoutput">LogOutput</a></h4>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>name</td><td><code>string</code></td><td><code>undefined</code></td><td>'stdout' or a path to a file</td></tr>
+<tr><td>level_filter</td><td><code>string</code></td><td><code>'info'</code></td><td>The maximum log level that this output accepts</td></tr>
+<tr><td>target_filters</td><td><code>string[]</code></td><td><code>[]</code></td><td>Filters on the log target (library and module names)</td></tr>
+</tbody></table>
+<h3><a class="header" href="#addeventlistenerevent-cb" id="addeventlistenerevent-cb">addEventListener(event, cb)</a></h3>
+<p>Adds a new event listener with a callback in the form of <code>(err, data) =&gt; {}</code>.
+Supported event names:</p>
+<ul>
+<li>ErrorThrown</li>
+<li>BalanceChange</li>
+<li>NewTransaction</li>
+<li>ConfirmationStateChange</li>
+<li>Reattachment</li>
+<li>Broadcast</li>
+</ul>
+<h3><a class="header" href="#accountmanager" id="accountmanager">AccountManager</a></h3>
+<h4><a class="header" href="#constructoroptions" id="constructoroptions">constructor([options])</a></h4>
+<p>Creates a new instance of the AccountManager.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[options]</td><td><code>object</code></td><td><code>undefined</code></td><td>The options to configure the account manager</td></tr>
+<tr><td>[storagePath]</td><td><code>string</code></td><td><code>undefined</code></td><td>The path where the database file will be saved</td></tr>
+<tr><td>[storageType]</td><td><code>number</code></td><td><code>undefined</code></td><td>The type of the database.  Stronghold = 1, Sqlite = 2</td></tr>
+</tbody></table>
+<h4><a class="header" href="#setstrongholdpasswordpassword-void" id="setstrongholdpasswordpassword-void">setStrongholdPassword(password): void</a></h4>
+<p>Sets the stronghold password and initialises it.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>password</td><td><code>string</code></td><td><code>undefined</code></td><td>The stronghold snapshot password</td></tr>
+</tbody></table>
+<h4><a class="header" href="#changestrongholdpasswordcurrentpassword-newpassword-void" id="changestrongholdpasswordcurrentpassword-newpassword-void">changeStrongholdPassword(currentPassword, newPassword): void</a></h4>
+<p>Changes the stronghold password.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>currentPassword</td><td><code>string</code></td><td><code>undefined</code></td><td>The current stronghold password</td></tr>
+<tr><td>newPassword</td><td><code>string</code></td><td><code>undefined</code></td><td>The new stronghold password</td></tr>
+</tbody></table>
+<h4><a class="header" href="#createaccountaccount-account" id="createaccountaccount-account">createAccount(account): Account</a></h4>
+<p>Creates a new account.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>account</td><td><code>object</code></td><td><code>{}</code></td><td>The account to be created</td></tr>
+<tr><td>account.clientOptions</td><td><code><a href="#clientoptions">ClientOptions</a></code></td><td><code>undefined</code></td><td>The node configuration</td></tr>
+<tr><td>[account.mnemonic]</td><td><code>string</code></td><td><code>undefined</code></td><td>The account BIP39 mnemonic</td></tr>
+<tr><td>[account.alias]</td><td><code>string</code></td><td><code>Account ${index + 1}</code></td><td>The account alias</td></tr>
+<tr><td>[account.createdAt]</td><td><code>string</code></td><td>the current date and time</td><td>The ISO 8601 date string of the account creation</td></tr>
+<tr><td>[account.signerType]</td><td><code>number</code></td><td>1 = Stronghold</td><td>The account signer type. 1 = Stronghold, 2 = EnvMnemonic</td></tr>
+</tbody></table>
+<h4><a class="header" href="#getaccountaccountid" id="getaccountaccountid">getAccount(accountId)</a></h4>
+<p>Gets the account with the given identifier or index.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>accountId</td><td><code>string | number</code></td><td><code>null</code></td><td>The account identifier or account index</td></tr>
+</tbody></table>
+<p><strong>Returns</strong> the associated Account instance or undefined if the account wasn't found.</p>
+<h4><a class="header" href="#getaccountbyaliasalias" id="getaccountbyaliasalias">getAccountByAlias(alias)</a></h4>
+<p>Gets the account with the given alias (case insensitive).</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>alias</td><td><code>string</code></td><td><code>null</code></td><td>The account alias</td></tr>
+</tbody></table>
+<p><strong>Returns</strong> the associated Account instance or undefined if the account wasn't found.</p>
+<h4><a class="header" href="#getaccounts" id="getaccounts">getAccounts()</a></h4>
+<p>Gets all stored accounts.</p>
+<p><strong>Returns</strong> an array of <a href="#account">Account objects</a>.</p>
+<h4><a class="header" href="#removeaccountaccountid" id="removeaccountaccountid">removeAccount(accountId)</a></h4>
+<p>Removes the account with the given identifier or index.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>accountId</td><td><code>string | number</code></td><td><code>null</code></td><td>The account identifier or account index</td></tr>
+</tbody></table>
+<h4><a class="header" href="#syncaccounts" id="syncaccounts">syncAccounts()</a></h4>
+<p>Synchronize all stored accounts with the Tangle.</p>
+<p><strong>Returns</strong> A promise resolving to an array of <a href="#syncedaccount">SyncedAccount</a>.</p>
+<h4><a class="header" href="#internaltransferfromaccount-toaccount-amount" id="internaltransferfromaccount-toaccount-amount">internalTransfer(fromAccount, toAccount, amount)</a></h4>
+<p>Transfers an amount from one subaccount to another.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>fromAccount</td><td><code><a href="#account">Account</a></code></td><td><code>null</code></td><td>The source account</td></tr>
+<tr><td>toAccount</td><td><code><a href="#account">Account</a></code></td><td><code>null</code></td><td>The destination account</td></tr>
+<tr><td>amount</td><td><code>number</code></td><td><code>undefined</code></td><td>The transfer amount</td></tr>
+</tbody></table>
+<p><strong>Returns</strong> A promise resolving to the transfer's Message.</p>
+<h4><a class="header" href="#backupdestination" id="backupdestination">backup(destination)</a></h4>
+<p>Backups the database.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>destination</td><td><code>string</code></td><td><code>undefined</code></td><td>The path to the backup file</td></tr>
+</tbody></table>
+<p><strong>Returns</strong> The full path to the backup file.</p>
+<h4><a class="header" href="#importaccountssource" id="importaccountssource">importAccounts(source)</a></h4>
+<p>Imports a database file.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>source</td><td><code>string</code></td><td><code>undefined</code></td><td>The path to the backup file</td></tr>
+<tr><td>password</td><td><code>string</code></td><td><code>undefined</code></td><td>The backup stronghold password</td></tr>
+</tbody></table>
+<h4><a class="header" href="#islatestaddressunused" id="islatestaddressunused">isLatestAddressUnused()</a></h4>
+<p>Determines whether all accounts has unused latest address after syncing with the Tangle.</p>
+<p><strong>Returns</strong> A promise resolving to the boolean value.</p>
+<h3><a class="header" href="#syncedaccount" id="syncedaccount">SyncedAccount</a></h3>
+<h4><a class="header" href="#sendaddress-amount-options" id="sendaddress-amount-options">send(address, amount[, options])</a></h4>
+<p>Send funds to the given address.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>address</td><td><code>string</code></td><td><code>null</code></td><td>The bech32 string of the transfer address</td></tr>
+<tr><td>amount</td><td><code>number</code></td><td><code>undefined</code></td><td>The transfer amount</td></tr>
+<tr><td>options</td><td><code>TransferOptions</code></td><td><code>undefined</code></td><td>The transfer options</td></tr>
+</tbody></table>
+<h5><a class="header" href="#transferoptions" id="transferoptions">TransferOptions</a></h5>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>remainderValueStrategy</td><td><code>RemainderValueStrategy</code></td><td><code>null</code></td><td>The strategy to use for the remainder value if any</td></tr>
+<tr><td>indexation</td><td><code>{ index: string, data?: Uint8Array }</code></td><td><code>null</code></td><td>Message indexation</td></tr>
+</tbody></table>
+<h5><a class="header" href="#remaindervaluestrategy" id="remaindervaluestrategy">RemainderValueStrategy</a></h5>
+<h6><a class="header" href="#changeaddress" id="changeaddress">changeAddress()</a></h6>
+<p>Send the remainder value to an internal address.</p>
+<h6><a class="header" href="#reuseaddress" id="reuseaddress">reuseAddress()</a></h6>
+<p>Send the remainder value to its original address.</p>
+<h6><a class="header" href="#accountaddressaddress-string" id="accountaddressaddress-string">accountAddress(address: string)</a></h6>
+<p>Send the remainder value to a specific address that must belong to the account.</p>
+<h4><a class="header" href="#retrymessageid" id="retrymessageid">retry(messageId)</a></h4>
+<p>Retries (promotes or reattaches) the given message.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
+</tbody></table>
+<h4><a class="header" href="#reattachmessageid" id="reattachmessageid">reattach(messageId)</a></h4>
+<p>Reattach the given message.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
+</tbody></table>
+<h4><a class="header" href="#promotemessageid" id="promotemessageid">promote(messageId)</a></h4>
+<p>Promote the given message.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
+</tbody></table>
+<h3><a class="header" href="#account" id="account">Account</a></h3>
+<h4><a class="header" href="#id" id="id">id()</a></h4>
+<p>Returns the account's identifier.</p>
+<h4><a class="header" href="#index" id="index">index()</a></h4>
+<p>Returns the account's index.</p>
+<h4><a class="header" href="#alias" id="alias">alias()</a></h4>
+<p>Returns the account's alias.</p>
+<h4><a class="header" href="#balance-accountbalance" id="balance-accountbalance">balance(): AccountBalance</a></h4>
+<p>Returns the account's balance information object.</p>
+<p>Balance object: { total: number, available: number, incoming: number, outgoing: number }</p>
+<h4><a class="header" href="#listmessagescount-from-type" id="listmessagescount-from-type">listMessages([count, from, type])</a></h4>
+<p>Returns the account's messages.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[count]</td><td><code>number</code></td><td><code>0</code></td><td>The number of messages to return (<code>0</code> to return all)</td></tr>
+<tr><td>[skip]</td><td><code>number</code></td><td><code>0</code></td><td>The number of messages to skip</td></tr>
+<tr><td>[type]</td><td><code>number</code></td><td><code>null</code></td><td>The message type filter (Received = 1, Sent = 2, Failed = 3, Unconfirmed = 4, Value = 5)</td></tr>
+</tbody></table>
+<p>Message object: { confirmed: boolean, broadcasted: boolean, incoming: boolean, value: number }</p>
+<h4><a class="header" href="#listaddressesunspent" id="listaddressesunspent">listAddresses([unspent])</a></h4>
+<p>Returns the account's addresses.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[unspent]</td><td><code>boolean</code></td><td><code>null</code></td><td>The <code>unspent</code> status filter</td></tr>
+</tbody></table>
+<p>Address object: { address: string, balance: number, keyIndex: number }</p>
+<h4><a class="header" href="#syncoptions" id="syncoptions">sync([options])</a></h4>
+<p>Synchronizes the account with the Tangle.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[options]</td><td><code>object</code></td><td><code>{}</code></td><td>The sync options</td></tr>
+<tr><td>[options.addressIndex]</td><td><code>number</code></td><td><code>latest address index</code></td><td>The index of the first address to sync</td></tr>
+<tr><td>[options.gapLimit]</td><td><code>number</code></td><td><code>10</code></td><td>The number of addresses to check</td></tr>
+<tr><td>[options.skipPersistance]</td><td><code>boolean</code></td><td><code>false</code></td><td>Skip updating the account in storage</td></tr>
+</tbody></table>
+<p><strong>Returns</strong> a <a href="#syncedaccount">SyncedAccount</a> instance.</p>
+<h4><a class="header" href="#islatestaddressunused-1" id="islatestaddressunused-1">isLatestAddressUnused()</a></h4>
+<p>Determines whether the account has unused latest address after syncing with the Tangle.</p>
+<p><strong>Returns</strong> A promise resolving to the boolean value.</p>
+<h4><a class="header" href="#setaliasalias" id="setaliasalias">setAlias(alias)</a></h4>
+<p>Updates the account alias.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>alias</td><td><code>string</code></td><td><code>null</code></td><td>The new account alias</td></tr>
+</tbody></table>
+<h4><a class="header" href="#setclientoptionsoptions" id="setclientoptionsoptions">setClientOptions(options)</a></h4>
+<p>Updates the account client options.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>options</td><td><code><a href="#clientoptions">ClientOptions</a></code></td><td><code>null</code></td><td>The new account client options</td></tr>
+</tbody></table>
+<h4><a class="header" href="#getmessagemessageid" id="getmessagemessageid">getMessage(messageId)</a></h4>
+<p>Gets the message associated with the given identifier.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
+</tbody></table>
+<h4><a class="header" href="#generateaddress" id="generateaddress">generateAddress()</a></h4>
+<p>Generates a new unused address and returns it.</p>
+<h4><a class="header" href="#latestaddress" id="latestaddress">latestAddress()</a></h4>
+<p>Returns the latest address (the one with the biggest keyIndex).</p>
+<h3><a class="header" href="#clientoptions" id="clientoptions">ClientOptions</a></h3>
+<table><thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[network]</td><td><code>number</code></td><td><code>undefined</code></td><td>The tangle network to connect to (Mainnet = 1, Devnet = 1, Comnet = 3)</td></tr>
+<tr><td>[node]</td><td><code>string</code></td><td><code>undefined</code></td><td>A node URL to connect to</td></tr>
+<tr><td>[nodes]</td><td><code>string[]</code></td><td><code>undefined</code></td><td>A list node URL to connect to</td></tr>
+<tr><td>[quorumSize]</td><td><code>number</code></td><td><code>undefined</code></td><td>If multiple nodes are provided, quorum size determines the number of nodes to query to check for quorum.</td></tr>
+<tr><td>[quorumThreshold]</td><td><code>number</code></td><td><code>undefined</code></td><td>Minimum number of nodes from the quorum pool that need to agree to consider a result true.</td></tr>
+<tr><td>[localPow]</td><td><code>boolean</code></td><td><code>true</code></td><td>Whether to use local or remote PoW.</td></tr>
+</tbody></table>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../../libraries/nodejs/examles.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../../libraries/nodejs/troubleshooting.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../../libraries/nodejs/examles.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../../libraries/nodejs/troubleshooting.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

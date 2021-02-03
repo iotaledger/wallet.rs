@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["AccountMethod","Each public account method."],["MessageType","The messages that can be sent to the actor."],["ResponseType","The response message."]],"struct":[["AccountToCreate","An account to create."],["Message","The message type."],["Response","The actor response type."]]});

@@ -1,0 +1,3463 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js iota">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>IOTA Wallet Library</title>
+        
+        <meta name="robots" content="noindex" />
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="favicon.png">
+        
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        
+        <link rel="stylesheet" href="css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "iota";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('iota')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="welcome.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded "><a href="overview/index.html"><strong aria-hidden="true">2.</strong> Overview</a></li><li class="chapter-item expanded "><a href="libraries/index.html"><strong aria-hidden="true">3.</strong> Libraries</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="libraries/rust/index.html"><strong aria-hidden="true">3.1.</strong> Rust</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="libraries/rust/getting_started.html"><strong aria-hidden="true">3.1.1.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="libraries/rust/examles.html"><strong aria-hidden="true">3.1.2.</strong> Examples</a></li><li class="chapter-item expanded "><a href="libraries/rust/api_reference.html"><strong aria-hidden="true">3.1.3.</strong> API Reference</a></li><li class="chapter-item expanded "><a href="libraries/rust/troubleshooting.html"><strong aria-hidden="true">3.1.4.</strong> Troubleshooting</a></li></ol></li><li class="chapter-item expanded "><a href="libraries/nodejs/index.html"><strong aria-hidden="true">3.2.</strong> Node.js</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="libraries/nodejs/getting_started.html"><strong aria-hidden="true">3.2.1.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="libraries/nodejs/examles.html"><strong aria-hidden="true">3.2.2.</strong> Examples</a></li><li class="chapter-item expanded "><a href="libraries/nodejs/api_reference.html"><strong aria-hidden="true">3.2.3.</strong> API Reference</a></li><li class="chapter-item expanded "><a href="libraries/nodejs/troubleshooting.html"><strong aria-hidden="true">3.2.4.</strong> Troubleshooting</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="specs/index.html"><strong aria-hidden="true">4.</strong> Specification</a></li><li class="chapter-item expanded "><a href="contribute.html"><strong aria-hidden="true">5.</strong> Contribute</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">IOTA Wallet Library</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/iotaledger/wallet.rs" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#welcome" id="welcome">Welcome</a></h1>
+<p>This is the documentation for the official IOTA Wallet Library Software. It can be used to easily intgrate an IOTA Wallet into your application. </p>
+<h2><a class="header" href="#warning" id="warning">Warning</a></h2>
+<p>This library is in active development. The library targets the Chrysalis testnet and does not work with current IOTA mainnet.</p>
+<h2><a class="header" href="#chrysalis-testnet" id="chrysalis-testnet">Chrysalis Testnet</a></h2>
+<p>To join the Chrysalis public testnet checkout <a href="https://blog.iota.org/chrysalis-phase-2-testnet-out-now/">this link</a>.</p>
+<h2><a class="header" href="#joining-the-discussion" id="joining-the-discussion">Joining the discussion</a></h2>
+<p>If you want to get involved in discussions about this library, or you're looking for support, go to the #clients-discussion channel on <a href="https://discord.iota.org">Discord</a>.</p>
+<h2><a class="header" href="#what-you-will-find-here" id="what-you-will-find-here">What you will find here</a></h2>
+<p>This documentation has five paths. </p>
+<ol>
+<li>The Overview, an detailed overview of the wallet library. </li>
+<li>Libraries, all avaiable programming languages and their resources.</li>
+<li>The Specification, detailed explaination requirements and functionality.</li>
+<li>Contribute, how you can work on the wallet software.</li>
+<li>Get in touch, join the community and become part of the X-Team!</li>
+</ol>
+<h1><a class="header" href="#overview" id="overview">Overview</a></h1>
+<p>The wallet library is a stateful package with a standardised interface for developers to build applications involving IOTA value transactions.
+It offers abstractions to handle IOTA payments and can optionally interact with <a href="https://github.com/iotaledger/stronghold.rs/">IOTA Stronghold</a> for seed handling, seed storage and state backup. Alternatively you can use the EnvMnemonic SignerType and a SQLite database. See the full specification <a href="https://github.com/iotaledger/wallet.rs/blob/master/specs/wallet-ENGINEERING-SPEC-0000.md">here</a>.</p>
+<p><img src="overview/overview.drawio.svg" alt="wallet.rs overview" /></p>
+<h1><a class="header" href="#iota-wallet-libraries" id="iota-wallet-libraries">IOTA Wallet libraries</a></h1>
+<p>We currently support the following libraries:</p>
+<ul>
+<li><a href="libraries/./rust/">Rust</a> </li>
+<li><a href="libraries/./nodejs/">Node.js</a> </li>
+</ul>
+<h1><a class="header" href="#iota-wallet-rust-library" id="iota-wallet-rust-library">IOTA Wallet Rust Library</a></h1>
+<p><a href="https://github.com/iotaledger/wallet.rs"><img src="https://img.shields.io/badge/Status-Alpha-yellow.svg" alt="status" /></a></p>
+<h2><a class="header" href="#warning-1" id="warning-1">Warning</a></h2>
+<p>This library is in active development. The library targets the Chrysalis testnet and does not work with current IOTA mainnet.</p>
+<h2><a class="header" href="#joining-the-discussion-1" id="joining-the-discussion-1">Joining the discussion</a></h2>
+<p>If you want to get involved in discussions about this library, or you're looking for support, go to the #clients-discussion channel on <a href="https://discord.iota.org">Discord</a>.</p>
+<h2><a class="header" href="#overview-1" id="overview-1">Overview</a></h2>
+<ul>
+<li><a href="libraries/rust/">Getting Started with wallet.rs</a></li>
+<li><a href="libraries/rust/">Examples</a></li>
+<li><a href="libraries/rust/">API Reference</a></li>
+<li><a href="libraries/rust/">Troubleshooting</a></li>
+</ul>
+<h1><a class="header" href="#getting-started-with-rust" id="getting-started-with-rust">Getting Started with Rust</a></h1>
+<h2><a class="header" href="#prerequisites" id="prerequisites">Prerequisites</a></h2>
+<p><code>Rust</code> and <code>Cargo</code> are required. Install them <a href="https://doc.rust-lang.org/cargo/getting-started/installation.html">here</a>.</p>
+<p>We recommend you update Rust to the latest stable version <a href="https://github.com/rust-lang/rustup.rs#keeping-rust-up-to-date"><code>rustup update stable</code></a>. Nightly should be fine but there's a chance some changes are not compatible.</p>
+<p><code>no_std</code> is not supported currently, but we are working on it, and will provide it as a feature once the new implementation is ready.</p>
+<h3><a class="header" href="#dependencies" id="dependencies">Dependencies</a></h3>
+<p><code>cmake</code> and <code>openssl</code> are required. In order to run the build process succesfully using Cargo you might need install additional build tools on your system. </p>
+<h3><a class="header" href="#windows" id="windows">Windows</a></h3>
+<p><code>cmake</code> can be downloaded on the <a href="https://cmake.org/download/">official website</a> and <code>openssl</code> can be installed with <a href="https://github.com/microsoft/vcpkg">vcpkg</a> or <a href="https://chocolatey.org/">chocolatey</a>.</p>
+<ul>
+<li>Installing <code>openssl</code> with <code>vcpkg</code>:</li>
+</ul>
+<pre><code>$ ./vcpkg.exe install openssl:x64-windows
+$ ./vcpkg.exe integrate install
+# you may want to add this to the system environment variables since you'll need it to compile the crate
+$ set VCPKGRS_DYNAMIC=1
+</code></pre>
+<ul>
+<li>Installing <code>openssl</code> with <code>chocolatey</code>:</li>
+</ul>
+<pre><code>$ choco install openssl
+# you may need to set the OPENSSL_ROOT_DIR environment variable
+$ set OPENSSL_ROOT_DIR=&quot;C:\Program Files\OpenSSL-Win64&quot;
+</code></pre>
+<h3><a class="header" href="#macos" id="macos">macOS</a></h3>
+<p><code>cmake</code> and <code>openssl</code> can be installed with <code>Homebrew</code>:</p>
+<pre><code>$ brew install cmake
+$ brew install openssl@1.1
+# you may want to add this to your .zshrc or .bashrc since you'll need it to compile the crate
+$ OPENSSL_ROOT_DIR=$(brew --prefix openssl@1.1)
+</code></pre>
+<h3><a class="header" href="#linux" id="linux">Linux</a></h3>
+<p>Install <code>cmake</code> and <code>openssl</code> with your distro's package manager or download from their websites. On Debian and Ubuntu you will also need <code>build-essential</code>.</p>
+<h2><a class="header" href="#usage" id="usage">Usage</a></h2>
+<p>To use the library, add this to your <code>Cargo.toml</code>:</p>
+<pre><code>[dependencies]
+iota-wallet = { git = &quot;https://github.com/iotaledger/wallet.rs&quot; }
+</code></pre>
+<h3><a class="header" href="#initialisation" id="initialisation">Initialisation</a></h3>
+<p>In order to use the library you first need to create an <code>AccountManager</code>:</p>
+<pre><pre class="playground"><code class="language-rust">use iota_wallet::{
+    account_manager::AccountManager, client::ClientOptionsBuilder, signing::SignerType,
+    storage::sqlite::SqliteStorageAdapter,
+};
+use std::path::PathBuf;
+
+#[tokio::main]
+async fn main() -&gt; iota_wallet::Result&lt;()&gt; {
+    let storage_folder: PathBuf = &quot;./my-db&quot;.into();
+    let manager =
+        AccountManager::builder()
+            .with_storage(&amp;storage_folder, SqliteStorageAdapter::new(&amp;storage_folder, &quot;accounts&quot;)?)
+            .finish()
+            .await?;
+    let client_options = ClientOptionsBuilder::new().with_node(&quot;http://api.lb-0.testnet.chrysalis2.com&quot;)?.build();
+    let account = manager
+        .create_account(client_options)
+        .signer_type(SignerType::EnvMnemonic)
+        .initialise()
+        .await?;
+    Ok(())
+}
+</code></pre></pre>
+<h1><a class="header" href="#examples" id="examples">Examples</a></h1>
+<p>You can see the examples in the <a href="libraries/rust/examples/">examples</a> directory and try them with:</p>
+<pre><code>cargo run --example # lists the available examples
+cargo run --example transfer # execute the `transfer` example
+</code></pre>
+<h1><a class="header" href="#api-reference" id="api-reference">API Reference</a></h1>
+<p>Link to hosted api documentation: TODO</p>
+<p>If you'd like to explore the implementation in more depth, the following command generates docs for the whole crate:</p>
+<pre><code>cargo doc --document-private-items --no-deps --open
+</code></pre>
+<h1><a class="header" href="#troubleshooting" id="troubleshooting">Troubleshooting</a></h1>
+<h2><a class="header" href="#stackexchange" id="stackexchange">StackExchange</a></h2>
+<blockquote>
+<p><a href="https://iota.stackexchange.com/">https://iota.stackexchange.com</a></p>
+</blockquote>
+<p>The IOTA StackExchange a a nice Tool for developers to find  Answers for a problem. Just search your problem and find your answer! If there is no one, submit your question and share it in the discussion channel below.</p>
+<h2><a class="header" href="#joining-the-discussion-2" id="joining-the-discussion-2">Joining the discussion</a></h2>
+<p>If you want to get involved in discussions about this library, or you're looking for support, go to the #clients-discussion channel on <a href="https://discord.iota.org">Discord</a>.</p>
+<h1><a class="header" href="#iota-wallet-nodejs-library" id="iota-wallet-nodejs-library">IOTA Wallet Node.js Library</a></h1>
+<p><a href="https://github.com/iotaledger/wallet.rs"><img src="https://img.shields.io/badge/Status-Alpha-yellow.svg" alt="status" /></a></p>
+<h2><a class="header" href="#warning-2" id="warning-2">Warning</a></h2>
+<p>This library is in active development. The library targets the Chrysalis testnet and does not work with current IOTA mainnet.</p>
+<h2><a class="header" href="#joining-the-discussion-3" id="joining-the-discussion-3">Joining the discussion</a></h2>
+<p>If you want to get involved in discussions about this library, or you're looking for support, go to the #clients-discussion channel on <a href="https://discord.iota.org">Discord</a>.</p>
+<h2><a class="header" href="#overview-2" id="overview-2">Overview</a></h2>
+<ul>
+<li><a href="libraries/nodejs/">Getting Started with wallet and node.js</a></li>
+<li><a href="libraries/nodejs/">Examples</a></li>
+<li><a href="libraries/nodejs/">API Reference</a></li>
+<li><a href="libraries/nodejs/">Troubleshooting</a></li>
+</ul>
+<h1><a class="header" href="#getting-started-with-nodejs" id="getting-started-with-nodejs">Getting Started with Node.js</a></h1>
+<h2><a class="header" href="#requirements" id="requirements">Requirements</a></h2>
+<p>Ensure you have first installed the required dependencies for the library <a href="https://github.com/iotaledger/wallet.rs/blob/develop/README.md">here</a>.</p>
+<h2><a class="header" href="#installation" id="installation">Installation</a></h2>
+<p>Currently the package isn't published so you'd need to link it to your project using <code>npm</code> or <code>yarn</code>.</p>
+<ul>
+<li>Using NPM:</li>
+</ul>
+<pre><code>$ git clone https://github.com/iotaledger/wallet.rs
+$ cd wallet.rs/bindings/node
+$ npm link
+$ cd /path/to/nodejs/project/
+$ npm link iota-wallet
+</code></pre>
+<ul>
+<li>Using yarn: </li>
+</ul>
+<pre><code>$ git clone https://github.com/iotaledger/wallet.rs
+$ cd wallet.rs/bindings/node
+$ yarn link
+$ cd /path/to/nodejs/project/
+$ yarn link iota-wallet
+</code></pre>
+<h2><a class="header" href="#setup-your-project" id="setup-your-project">Setup your project</a></h2>
+<p>npm install iota-wallet</p>
+<h2><a class="header" href="#example" id="example">Example</a></h2>
+<pre><code class="language-javascript">const { AccountManager, StorageType, SignerType } = require('iota-wallet')
+const manager = new AccountManager({
+    storagePath: './storage',
+    storageType: StorageType.Sqlite
+})
+const account = await manager.createAccount({
+  alias: 'Account1',
+  clientOptions: { node: 'http://api.lb-0.testnet.chrysalis2.com', localPow: false },
+  signerType: SignerType.EnvMnemonic
+})
+account.sync()
+</code></pre>
+<h1><a class="header" href="#examples-1" id="examples-1">Examples</a></h1>
+<p>There are several examples to show the usage of the library.</p>
+<h2><a class="header" href="#setup" id="setup">Setup</a></h2>
+<p>First, setup the example environment.</p>
+<pre><code>cd bindings/node/examples
+npm install
+copy .env.example .env
+</code></pre>
+<p>Add your mnemonic to the <code>.env</code> file.</p>
+<p>Make sure you generate a 24-word BIP39 mnemonic in your .env file and define a node; see
+<code>.env.example</code> for a boilerplate. To generate a mnemonic you can utilize the BIP39 standard
+for that; We encourage you to generate this offline with trusted tools but if you need a 
+quick mnemonic for testing only you can use something like https://github.com/iancoleman/bip39</p>
+<h2><a class="header" href="#1-example-create-an-account" id="1-example-create-an-account">1. Example: Create an Account</a></h2>
+<p>This example creates a new database and account. Please make sure you have the .env variables configured</p>
+<p>Run the example:</p>
+<pre><code>node 1-create-account.js
+</code></pre>
+<h2><a class="header" href="#2-example-create-syncronize" id="2-example-create-syncronize">2. Example: Create Syncronize</a></h2>
+<p>Get some test tokens from the <a href="https://faucet.testnet.chrysalis2.com/">IOTA faucet</a> and sync your account.</p>
+<pre><code>node 2-sync-and-check.js
+</code></pre>
+<h2><a class="header" href="#2-example-send-iota-tokens" id="2-example-send-iota-tokens">2. Example: Send IOTA Tokens.</a></h2>
+<p>Now you can send the test tokens to an address! </p>
+<pre><code>node 3-send.js
+</code></pre>
+<h1><a class="header" href="#api-reference-1" id="api-reference-1">API Reference</a></h1>
+<h3><a class="header" href="#initloggerconfig-logoptions" id="initloggerconfig-logoptions">initLogger(config: LogOptions)</a></h3>
+<p>Initializes the logging system.</p>
+<h4><a class="header" href="#logoptions" id="logoptions">LogOptions</a></h4>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>color_enabled</td><td><code>boolean</code></td><td><code>undefined</code></td><td>Whether to enable colored output or not</td></tr>
+<tr><td>outputs</td><td><code>LogOutput[]</code></td><td><code>undefined</code></td><td>The log outputs</td></tr>
+</tbody></table>
+<h4><a class="header" href="#logoutput" id="logoutput">LogOutput</a></h4>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>name</td><td><code>string</code></td><td><code>undefined</code></td><td>'stdout' or a path to a file</td></tr>
+<tr><td>level_filter</td><td><code>string</code></td><td><code>'info'</code></td><td>The maximum log level that this output accepts</td></tr>
+<tr><td>target_filters</td><td><code>string[]</code></td><td><code>[]</code></td><td>Filters on the log target (library and module names)</td></tr>
+</tbody></table>
+<h3><a class="header" href="#addeventlistenerevent-cb" id="addeventlistenerevent-cb">addEventListener(event, cb)</a></h3>
+<p>Adds a new event listener with a callback in the form of <code>(err, data) =&gt; {}</code>.
+Supported event names:</p>
+<ul>
+<li>ErrorThrown</li>
+<li>BalanceChange</li>
+<li>NewTransaction</li>
+<li>ConfirmationStateChange</li>
+<li>Reattachment</li>
+<li>Broadcast</li>
+</ul>
+<h3><a class="header" href="#accountmanager" id="accountmanager">AccountManager</a></h3>
+<h4><a class="header" href="#constructoroptions" id="constructoroptions">constructor([options])</a></h4>
+<p>Creates a new instance of the AccountManager.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[options]</td><td><code>object</code></td><td><code>undefined</code></td><td>The options to configure the account manager</td></tr>
+<tr><td>[storagePath]</td><td><code>string</code></td><td><code>undefined</code></td><td>The path where the database file will be saved</td></tr>
+<tr><td>[storageType]</td><td><code>number</code></td><td><code>undefined</code></td><td>The type of the database.  Stronghold = 1, Sqlite = 2</td></tr>
+</tbody></table>
+<h4><a class="header" href="#setstrongholdpasswordpassword-void" id="setstrongholdpasswordpassword-void">setStrongholdPassword(password): void</a></h4>
+<p>Sets the stronghold password and initialises it.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>password</td><td><code>string</code></td><td><code>undefined</code></td><td>The stronghold snapshot password</td></tr>
+</tbody></table>
+<h4><a class="header" href="#changestrongholdpasswordcurrentpassword-newpassword-void" id="changestrongholdpasswordcurrentpassword-newpassword-void">changeStrongholdPassword(currentPassword, newPassword): void</a></h4>
+<p>Changes the stronghold password.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>currentPassword</td><td><code>string</code></td><td><code>undefined</code></td><td>The current stronghold password</td></tr>
+<tr><td>newPassword</td><td><code>string</code></td><td><code>undefined</code></td><td>The new stronghold password</td></tr>
+</tbody></table>
+<h4><a class="header" href="#createaccountaccount-account" id="createaccountaccount-account">createAccount(account): Account</a></h4>
+<p>Creates a new account.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>account</td><td><code>object</code></td><td><code>{}</code></td><td>The account to be created</td></tr>
+<tr><td>account.clientOptions</td><td><code><a href="libraries/nodejs/api_reference.html#clientoptions">ClientOptions</a></code></td><td><code>undefined</code></td><td>The node configuration</td></tr>
+<tr><td>[account.mnemonic]</td><td><code>string</code></td><td><code>undefined</code></td><td>The account BIP39 mnemonic</td></tr>
+<tr><td>[account.alias]</td><td><code>string</code></td><td><code>Account ${index + 1}</code></td><td>The account alias</td></tr>
+<tr><td>[account.createdAt]</td><td><code>string</code></td><td>the current date and time</td><td>The ISO 8601 date string of the account creation</td></tr>
+<tr><td>[account.signerType]</td><td><code>number</code></td><td>1 = Stronghold</td><td>The account signer type. 1 = Stronghold, 2 = EnvMnemonic</td></tr>
+</tbody></table>
+<h4><a class="header" href="#getaccountaccountid" id="getaccountaccountid">getAccount(accountId)</a></h4>
+<p>Gets the account with the given identifier or index.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>accountId</td><td><code>string | number</code></td><td><code>null</code></td><td>The account identifier or account index</td></tr>
+</tbody></table>
+<p><strong>Returns</strong> the associated Account instance or undefined if the account wasn't found.</p>
+<h4><a class="header" href="#getaccountbyaliasalias" id="getaccountbyaliasalias">getAccountByAlias(alias)</a></h4>
+<p>Gets the account with the given alias (case insensitive).</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>alias</td><td><code>string</code></td><td><code>null</code></td><td>The account alias</td></tr>
+</tbody></table>
+<p><strong>Returns</strong> the associated Account instance or undefined if the account wasn't found.</p>
+<h4><a class="header" href="#getaccounts" id="getaccounts">getAccounts()</a></h4>
+<p>Gets all stored accounts.</p>
+<p><strong>Returns</strong> an array of <a href="libraries/nodejs/api_reference.html#account">Account objects</a>.</p>
+<h4><a class="header" href="#removeaccountaccountid" id="removeaccountaccountid">removeAccount(accountId)</a></h4>
+<p>Removes the account with the given identifier or index.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>accountId</td><td><code>string | number</code></td><td><code>null</code></td><td>The account identifier or account index</td></tr>
+</tbody></table>
+<h4><a class="header" href="#syncaccounts" id="syncaccounts">syncAccounts()</a></h4>
+<p>Synchronize all stored accounts with the Tangle.</p>
+<p><strong>Returns</strong> A promise resolving to an array of <a href="libraries/nodejs/api_reference.html#syncedaccount">SyncedAccount</a>.</p>
+<h4><a class="header" href="#internaltransferfromaccount-toaccount-amount" id="internaltransferfromaccount-toaccount-amount">internalTransfer(fromAccount, toAccount, amount)</a></h4>
+<p>Transfers an amount from one subaccount to another.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>fromAccount</td><td><code><a href="libraries/nodejs/api_reference.html#account">Account</a></code></td><td><code>null</code></td><td>The source account</td></tr>
+<tr><td>toAccount</td><td><code><a href="libraries/nodejs/api_reference.html#account">Account</a></code></td><td><code>null</code></td><td>The destination account</td></tr>
+<tr><td>amount</td><td><code>number</code></td><td><code>undefined</code></td><td>The transfer amount</td></tr>
+</tbody></table>
+<p><strong>Returns</strong> A promise resolving to the transfer's Message.</p>
+<h4><a class="header" href="#backupdestination" id="backupdestination">backup(destination)</a></h4>
+<p>Backups the database.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>destination</td><td><code>string</code></td><td><code>undefined</code></td><td>The path to the backup file</td></tr>
+</tbody></table>
+<p><strong>Returns</strong> The full path to the backup file.</p>
+<h4><a class="header" href="#importaccountssource" id="importaccountssource">importAccounts(source)</a></h4>
+<p>Imports a database file.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>source</td><td><code>string</code></td><td><code>undefined</code></td><td>The path to the backup file</td></tr>
+<tr><td>password</td><td><code>string</code></td><td><code>undefined</code></td><td>The backup stronghold password</td></tr>
+</tbody></table>
+<h4><a class="header" href="#islatestaddressunused" id="islatestaddressunused">isLatestAddressUnused()</a></h4>
+<p>Determines whether all accounts has unused latest address after syncing with the Tangle.</p>
+<p><strong>Returns</strong> A promise resolving to the boolean value.</p>
+<h3><a class="header" href="#syncedaccount" id="syncedaccount">SyncedAccount</a></h3>
+<h4><a class="header" href="#sendaddress-amount-options" id="sendaddress-amount-options">send(address, amount[, options])</a></h4>
+<p>Send funds to the given address.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>address</td><td><code>string</code></td><td><code>null</code></td><td>The bech32 string of the transfer address</td></tr>
+<tr><td>amount</td><td><code>number</code></td><td><code>undefined</code></td><td>The transfer amount</td></tr>
+<tr><td>options</td><td><code>TransferOptions</code></td><td><code>undefined</code></td><td>The transfer options</td></tr>
+</tbody></table>
+<h5><a class="header" href="#transferoptions" id="transferoptions">TransferOptions</a></h5>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>remainderValueStrategy</td><td><code>RemainderValueStrategy</code></td><td><code>null</code></td><td>The strategy to use for the remainder value if any</td></tr>
+<tr><td>indexation</td><td><code>{ index: string, data?: Uint8Array }</code></td><td><code>null</code></td><td>Message indexation</td></tr>
+</tbody></table>
+<h5><a class="header" href="#remaindervaluestrategy" id="remaindervaluestrategy">RemainderValueStrategy</a></h5>
+<h6><a class="header" href="#changeaddress" id="changeaddress">changeAddress()</a></h6>
+<p>Send the remainder value to an internal address.</p>
+<h6><a class="header" href="#reuseaddress" id="reuseaddress">reuseAddress()</a></h6>
+<p>Send the remainder value to its original address.</p>
+<h6><a class="header" href="#accountaddressaddress-string" id="accountaddressaddress-string">accountAddress(address: string)</a></h6>
+<p>Send the remainder value to a specific address that must belong to the account.</p>
+<h4><a class="header" href="#retrymessageid" id="retrymessageid">retry(messageId)</a></h4>
+<p>Retries (promotes or reattaches) the given message.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
+</tbody></table>
+<h4><a class="header" href="#reattachmessageid" id="reattachmessageid">reattach(messageId)</a></h4>
+<p>Reattach the given message.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
+</tbody></table>
+<h4><a class="header" href="#promotemessageid" id="promotemessageid">promote(messageId)</a></h4>
+<p>Promote the given message.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
+</tbody></table>
+<h3><a class="header" href="#account" id="account">Account</a></h3>
+<h4><a class="header" href="#id" id="id">id()</a></h4>
+<p>Returns the account's identifier.</p>
+<h4><a class="header" href="#index" id="index">index()</a></h4>
+<p>Returns the account's index.</p>
+<h4><a class="header" href="#alias" id="alias">alias()</a></h4>
+<p>Returns the account's alias.</p>
+<h4><a class="header" href="#balance-accountbalance" id="balance-accountbalance">balance(): AccountBalance</a></h4>
+<p>Returns the account's balance information object.</p>
+<p>Balance object: { total: number, available: number, incoming: number, outgoing: number }</p>
+<h4><a class="header" href="#listmessagescount-from-type" id="listmessagescount-from-type">listMessages([count, from, type])</a></h4>
+<p>Returns the account's messages.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[count]</td><td><code>number</code></td><td><code>0</code></td><td>The number of messages to return (<code>0</code> to return all)</td></tr>
+<tr><td>[skip]</td><td><code>number</code></td><td><code>0</code></td><td>The number of messages to skip</td></tr>
+<tr><td>[type]</td><td><code>number</code></td><td><code>null</code></td><td>The message type filter (Received = 1, Sent = 2, Failed = 3, Unconfirmed = 4, Value = 5)</td></tr>
+</tbody></table>
+<p>Message object: { confirmed: boolean, broadcasted: boolean, incoming: boolean, value: number }</p>
+<h4><a class="header" href="#listaddressesunspent" id="listaddressesunspent">listAddresses([unspent])</a></h4>
+<p>Returns the account's addresses.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[unspent]</td><td><code>boolean</code></td><td><code>null</code></td><td>The <code>unspent</code> status filter</td></tr>
+</tbody></table>
+<p>Address object: { address: string, balance: number, keyIndex: number }</p>
+<h4><a class="header" href="#syncoptions" id="syncoptions">sync([options])</a></h4>
+<p>Synchronizes the account with the Tangle.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[options]</td><td><code>object</code></td><td><code>{}</code></td><td>The sync options</td></tr>
+<tr><td>[options.addressIndex]</td><td><code>number</code></td><td><code>latest address index</code></td><td>The index of the first address to sync</td></tr>
+<tr><td>[options.gapLimit]</td><td><code>number</code></td><td><code>10</code></td><td>The number of addresses to check</td></tr>
+<tr><td>[options.skipPersistance]</td><td><code>boolean</code></td><td><code>false</code></td><td>Skip updating the account in storage</td></tr>
+</tbody></table>
+<p><strong>Returns</strong> a <a href="libraries/nodejs/api_reference.html#syncedaccount">SyncedAccount</a> instance.</p>
+<h4><a class="header" href="#islatestaddressunused-1" id="islatestaddressunused-1">isLatestAddressUnused()</a></h4>
+<p>Determines whether the account has unused latest address after syncing with the Tangle.</p>
+<p><strong>Returns</strong> A promise resolving to the boolean value.</p>
+<h4><a class="header" href="#setaliasalias" id="setaliasalias">setAlias(alias)</a></h4>
+<p>Updates the account alias.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>alias</td><td><code>string</code></td><td><code>null</code></td><td>The new account alias</td></tr>
+</tbody></table>
+<h4><a class="header" href="#setclientoptionsoptions" id="setclientoptionsoptions">setClientOptions(options)</a></h4>
+<p>Updates the account client options.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>options</td><td><code><a href="libraries/nodejs/api_reference.html#clientoptions">ClientOptions</a></code></td><td><code>null</code></td><td>The new account client options</td></tr>
+</tbody></table>
+<h4><a class="header" href="#getmessagemessageid" id="getmessagemessageid">getMessage(messageId)</a></h4>
+<p>Gets the message associated with the given identifier.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
+</tbody></table>
+<h4><a class="header" href="#generateaddress" id="generateaddress">generateAddress()</a></h4>
+<p>Generates a new unused address and returns it.</p>
+<h4><a class="header" href="#latestaddress" id="latestaddress">latestAddress()</a></h4>
+<p>Returns the latest address (the one with the biggest keyIndex).</p>
+<h3><a class="header" href="#clientoptions" id="clientoptions">ClientOptions</a></h3>
+<table><thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[network]</td><td><code>number</code></td><td><code>undefined</code></td><td>The tangle network to connect to (Mainnet = 1, Devnet = 1, Comnet = 3)</td></tr>
+<tr><td>[node]</td><td><code>string</code></td><td><code>undefined</code></td><td>A node URL to connect to</td></tr>
+<tr><td>[nodes]</td><td><code>string[]</code></td><td><code>undefined</code></td><td>A list node URL to connect to</td></tr>
+<tr><td>[quorumSize]</td><td><code>number</code></td><td><code>undefined</code></td><td>If multiple nodes are provided, quorum size determines the number of nodes to query to check for quorum.</td></tr>
+<tr><td>[quorumThreshold]</td><td><code>number</code></td><td><code>undefined</code></td><td>Minimum number of nodes from the quorum pool that need to agree to consider a result true.</td></tr>
+<tr><td>[localPow]</td><td><code>boolean</code></td><td><code>true</code></td><td>Whether to use local or remote PoW.</td></tr>
+</tbody></table>
+<h1><a class="header" href="#troubleshooting-1" id="troubleshooting-1">Troubleshooting</a></h1>
+<h2><a class="header" href="#stackexchange-1" id="stackexchange-1">StackExchange</a></h2>
+<blockquote>
+<p><a href="https://iota.stackexchange.com/">https://iota.stackexchange.com</a></p>
+</blockquote>
+<p>The IOTA StackExchange a a nice Tool for developers to find  Answers for a problem. Just search your problem and find your answer! If there is no one, submit your question and share it in the discussion channel below.</p>
+<h2><a class="header" href="#joining-the-discussion-4" id="joining-the-discussion-4">Joining the discussion</a></h2>
+<p>If you want to get involved in discussions about this library, or you're looking for support, go to the #clients-discussion channel on <a href="https://discord.iota.org">Discord</a>.</p>
+<h1><a class="header" href="#wallet-library-spec" id="wallet-library-spec">Wallet Library Spec</a></h1>
+<h2><a class="header" href="#table-of-contents----omit-in-toc---" id="table-of-contents----omit-in-toc---">Table of Contents <!-- omit in toc --></a></h2>
+<ul>
+<li><a href="specs/index.html#wallet-library-spec">Wallet Library Spec</a>
+<ul>
+<li><a href="specs/index.html#introduction">Introduction</a></li>
+<li><a href="specs/index.html#considerations">Considerations</a></li>
+<li><a href="specs/index.html#naming-conventions">Naming Conventions</a></li>
+<li><a href="specs/index.html#interfaces">Interfaces</a>
+<ul>
+<li><a href="specs/index.html#accountconfiguration">AccountConfiguration</a></li>
+<li><a href="specs/index.html#accountobject">AccountObject</a></li>
+<li><a href="specs/index.html#syncedaccountobject">SyncedAccountObject</a></li>
+<li><a href="specs/index.html#accountmanagerobject">AccountManagerObject</a></li>
+<li><a href="specs/index.html#address">Address</a></li>
+<li><a href="specs/index.html#node">Node</a></li>
+<li><a href="specs/index.html#timestamp">Timestamp</a></li>
+<li><a href="specs/index.html#transfer">Transfer</a></li>
+<li><a href="specs/index.html#value">Value</a></li>
+<li><a href="specs/index.html#input">Input</a></li>
+<li><a href="specs/index.html#outputaddress">OutputAddress</a></li>
+<li><a href="specs/index.html#output">Output</a></li>
+<li><a href="specs/index.html#unsigneddatapayload">UnsignedDataPayload</a></li>
+<li><a href="specs/index.html#signeddatapayload">SignedDataPayload</a></li>
+<li><a href="specs/index.html#indexationpayload">IndexationPayload</a></li>
+<li><a href="specs/index.html#unsignedtransaction">UnsignedTransaction</a></li>
+<li><a href="specs/index.html#wotssignature">WOTSSignature</a></li>
+<li><a href="specs/index.html#ed25519signature">Ed25519Signature</a></li>
+<li><a href="specs/index.html#signatureunblockblock">SignatureUnblockBlock</a></li>
+<li><a href="specs/index.html#referenceunblockblock">ReferenceUnblockBlock</a></li>
+<li><a href="specs/index.html#signedtransactionpayload">SignedTransactionPayload</a></li>
+<li><a href="specs/index.html#message">Message</a></li>
+<li><a href="specs/index.html#storageadapter">StorageAdapter</a></li>
+</ul>
+</li>
+<li><a href="specs/index.html#storage">Storage</a></li>
+<li><a href="specs/index.html#storage-adapter">Storage Adapter</a></li>
+<li><a href="specs/index.html#account">Account</a>
+<ul>
+<li><a href="specs/index.html#api">API</a>
+<ul>
+<li><a href="specs/index.html#initialisation">Initialisation</a></li>
+<li><a href="specs/index.html#sync_addresses">sync_addresses()</a></li>
+<li><a href="specs/index.html#sync_messages">sync_messages()</a></li>
+<li><a href="specs/index.html#select_inputs">select_inputs()</a></li>
+<li><a href="specs/index.html#send">send()</a></li>
+<li><a href="specs/index.html#retry">retry()</a></li>
+<li><a href="specs/index.html#sync">sync()</a></li>
+<li><a href="specs/index.html#reattach">reattach()</a></li>
+<li><a href="specs/index.html#total_balance">total_balance()</a></li>
+<li><a href="specs/index.html#available_balance">available_balance()</a></li>
+<li><a href="specs/index.html#set_alias">set_alias()</a></li>
+<li><a href="specs/index.html#list_messages">list_messages()</a></li>
+<li><a href="specs/index.html#list_received_messages">list_received_messages()</a></li>
+<li><a href="specs/index.html#list_sent_messages">list_sent_messages()</a></li>
+<li><a href="specs/index.html#list_failed_messages">list_failed_messages()</a></li>
+<li><a href="specs/index.html#list_unconfirmed_messages">list_unconfirmed_messages()</a></li>
+<li><a href="specs/index.html#get_message">get_message()</a></li>
+<li><a href="specs/index.html#list_addresses">list_addresses()</a></li>
+<li><a href="specs/index.html#list_unspent_addresses">list_unspent_addresses()</a></li>
+<li><a href="specs/index.html#generate_address">generate_address()</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="specs/index.html#account-manager">Account Manager</a>
+<ul>
+<li><a href="specs/index.html#api-1">API</a>
+<ul>
+<li><a href="specs/index.html#initialisation-1">Initialisation</a></li>
+<li><a href="specs/index.html#add_account">add_account()</a></li>
+<li><a href="specs/index.html#remove_account">remove_account()</a></li>
+<li><a href="specs/index.html#sync_accounts">sync_accounts()</a></li>
+<li><a href="specs/index.html#move">move()</a></li>
+<li><a href="specs/index.html#backup">backup()</a></li>
+<li><a href="specs/index.html#import_accounts">import_accounts</a></li>
+<li><a href="specs/index.html#get_account">get_account()</a></li>
+<li><a href="specs/index.html#reattach-1">reattach()</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="specs/index.html#events">Events</a>
+<ul>
+<li><a href="specs/index.html#category-1-events">Category 1 events</a>
+<ul>
+<li><a href="specs/index.html#monitor-address-for-balance-changes">Monitor address for balance changes</a></li>
+<li><a href="specs/index.html#monitor-address-for-new-messages">Monitor address for new messages</a></li>
+<li><a href="specs/index.html#monitor-message-for-confirmation-state">Monitor message for confirmation state</a></li>
+</ul>
+</li>
+<li><a href="specs/index.html#category-2-events">Category 2 events</a>
+<ul>
+<li><a href="specs/index.html#monitor-for-balance-changes">Monitor for balance changes</a></li>
+<li><a href="specs/index.html#monitor-for-new-messages">Monitor for new messages</a></li>
+<li><a href="specs/index.html#monitor-for-confirmation-state">Monitor for confirmation state</a></li>
+<li><a href="specs/index.html#monitor-for-reattachments">Monitor for reattachments</a></li>
+<li><a href="specs/index.html#monitor-for-broadcasts">Monitor for broadcasts</a></li>
+<li><a href="specs/index.html#monitor-for-errors">Monitor for errors</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="specs/index.html#privacy">Privacy</a></li>
+<li><a href="specs/index.html#input-selection">Input Selection</a></li>
+<li><a href="specs/index.html#account-syncing-process">Account Syncing Process</a></li>
+<li><a href="specs/index.html#polling">Polling</a></li>
+</ul>
+</li>
+</ul>
+<h2><a class="header" href="#introduction" id="introduction">Introduction</a></h2>
+<p>The wallet library is a stateful package with a standardised interface to build applications with IOTA value transactions. The package will be compatible with different platforms such as web, desktop and mobile. </p>
+<p>The package introduces the concept of an <em>account</em>. An account is a reference or a label to a <a href="https://docs.iota.org/docs/getting-started/0.1/clients/seeds">seed</a>. An account has certain properties such as <a href="https://github.com/Wollac/protocol-rfcs/blob/bech32-address-format/text/0020-bech32-address-format/0020-bech32-address-format.md">addresses</a> and <a href="https://github.com/GalRogozinski/protocol-rfcs/blob/message/text/0017-message/0017-message.md">messages</a>. An account has various possible behaviours, including moving funds, looking for new messages, and making copies of message histories. An account should also be able to provide a degree of financial privacy and this should not incur any overhead. </p>
+<p>A similar <a href="https://docs.iota.org/docs/client-libraries/0.1/account-module/introduction/overview">package</a> was previously developed but this becomes obsolete with the introduction of Ed25519 signatures. The previous account package was limited to a single account. As an improvement, the (new) package will be able to manage multiple accounts. </p>
+<p>To summarize, the main motivation behind this package is to offer a simplified (stateful) approach to handle IOTA payments.</p>
+<h2><a class="header" href="#considerations" id="considerations">Considerations</a></h2>
+<ul>
+<li>Seeds should be stored and managed separately in a secure enclave and should never leave the secure environment. Secure enclaves include software enclaves such as IOTA’s Rust-based Stronghold library or hardware enclaves such as a Ledger Nano;</li>
+<li>The secure enclave should have the ability to generate addresses and sign messages upon receipt of a message, and return the output in a message. If the secure enclave is initialised with a pre-generated seed, the sender process should immediately remove the seed traces from memory. </li>
+</ul>
+<h2><a class="header" href="#naming-conventions" id="naming-conventions">Naming Conventions</a></h2>
+<p>The primary language is <a href="https://github.com/rust-lang/rust">Rust</a>. Therefore, standard Rust naming <a href="https://doc.rust-lang.org/1.0.0/style/style/naming/README.html">conventions</a> are followed. All interfaces (types) use <em>CamelCase</em> while all function and variable names use <em>snake_case</em>.</p>
+<h2><a class="header" href="#interfaces" id="interfaces">Interfaces</a></h2>
+<h4><a class="header" href="#accountconfiguration" id="accountconfiguration">AccountConfiguration</a></h4>
+<p>Account configuration or initialization object. It should support parameters accepted by high level <a href="https://github.com/iotaledger/iota.rs">client</a> libraries.</p>
+<table>
+  <tr>
+    <td>
+      <strong>Property</strong>
+    </td>
+    <td>
+      <strong>Required</strong>
+    </td>
+    <td>
+      <strong>Type</strong>
+    </td>
+    <td>
+      <strong>Description</strong>
+    </td>
+  </tr>
+  <tr>
+    <td>seed</td>
+    <td>&#10008;</td>
+    <td>string</td>
+    <td>BIP-39 mnemonic. When importing an account from Stronghold backup, the seed will not be required.</td>
+  </tr>
+  <tr>
+    <td>id</td>
+    <td>&#10008;</td>
+    <td>string</td>
+    <td>SHA-256 hash of the first address on the seed (m/44'/0'/0'/0'/0'). Required for referencing a seed in Stronghold. The id should be provided by Stronghold.</td>
+  </tr>
+  <tr>
+    <td>index</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Account index in <a href="https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki">BIP-44</a> derivation path.</td>
+  </tr>
+  <tr>
+    <td>alias</td>
+    <td>&#10008;</td>
+    <td>string</td>
+    <td>Account name. If not provided, <code>Account + ${index}</code> should be used. When importing an account from Stronghold backup, the alias will be required from Stronghold.</td>
+  </tr>
+  <tr>
+    <td>pow</td>
+    <td>&#10008;</td>
+    <td>‘local’ | ‘remote’</td>
+    <td>
+    Proof of work settings. Defaults to ‘local’. 
+      <ul>
+        <li>‘local’: Should be performed on device;</li>
+        <li>‘remote’: Should be performed on the node.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td>nodes</td>
+    <td>&#10004;</td>
+    <td><a href="specs/index.html#node">node</a>[]</td>
+    <td>A list of nodes to connect to.</td>
+  </tr>
+  <tr>
+    <td>quorum_size</td>
+    <td>&#10008;</td>
+    <td>number</td>
+    <td>If multiple nodes are provided, quorum size determines the number of nodes to query to check for quorum.</td>
+  </tr>
+  <tr>
+    <td>quorum_threshold</td>
+    <td>&#10008;</td>
+    <td>number</td>
+    <td>Minimum number of nodes from the quorum pool that need to agree to consider a result true.</td>
+  </tr>
+  <tr>
+    <td>network</td>
+    <td>&#10008;</td>
+    <td>‘mainnet’ | ‘devnet’ | ‘comnet’</td>
+    <td>IOTA public network.</td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>&#10008;</td>
+    <td>‘default’ | ‘ledger’</td>
+    <td>Account type. Required for differentiating ledger vs non-ledger accounts.</td>
+  </tr>
+  <tr>
+    <td>provider</td>
+    <td>&#10008;</td>
+    <td>string</td>
+    <td>Node URL.</td>
+  </tr>
+  <tr>
+    <td>created_at</td>
+    <td>&#10008;</td>
+    <td>Date</td>
+    <td>Time of account creation.</td>
+  </tr>
+  <tr>
+    <td>messages</td>
+    <td>&#10008;</td>
+    <td><a href="specs/index.html#message">Message</a>[]</td>
+    <td>Messages associated with account. Accounts can be initialised with locally stored messages.</td>
+  </tr>
+  <tr>
+    <td>addresses</td>
+    <td>&#10008;</td>
+    <td><a href="specs/index.html#address">Address</a>[]</td>
+    <td>Address history associated with the account. Accounts can be initialised with locally stored address history.</td>
+  </tr>
+</table>
+<h4><a class="header" href="#accountobject" id="accountobject">AccountObject</a></h4>
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>id</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>SHA-256 hash of the first address on the seed (m/44'/0'/0'/0/0). Required for referencing a seed in Stronghold.</td>
+  </tr>
+  <tr>
+    <td>alias</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Account name.</td>
+  </tr>
+  <tr>
+    <td>created_at</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Account creation time.</td>
+  </tr>
+  <tr>
+    <td>last_synced_at</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Time the account was last synced with the Tangle.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#sync">sync()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Syncs account with the Tangle.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#reattach">reattach()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Reattaches unconfirmed transaction to the Tangle.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#totalbalance">total_balance()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Gets total account balance.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#availablebalance">available_balance()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Gets available account balance.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#setalias">set_alias()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Updates account name.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#listmessages">list_messages()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Gets messages.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#listreceivedmessages">list_received_messages()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Gets all received messages.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#listsentmessages">list_sent_messages()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Gets all sent messages.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#listfailedmessages">list_failed_messages()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Gets all failed messages.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#listunconfirmedmessages">list_unconfirmed_messages()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Gets all unconfirmed messages.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#getmessage">get_message()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Gets message for provided id.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#listaddresses">list_addresses()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Gets all addresses.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#listunspent">list_unspent_addresses()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Gets all unspent input addresses.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#generateaddress">generate_address()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Gets the latest unused address.</td>
+  </tr>
+</table>
+<h4><a class="header" href="#syncedaccountobject" id="syncedaccountobject">SyncedAccountObject</a></h4>
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>deposit_address</td>
+    <td>&#10004;</td>
+    <td><a href="specs/index.html#address">Address</a></td>
+    <td>Deposit address. Only exposed on successful completion of account syncing process.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#send">send()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Send transaction method. Only exposed on successful completion of account syncing process.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#retry">retry()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Rebroadcasts failed transaction. Only exposed on successful completion of account syncing process.</td>
+  </tr>
+</table>
+<h4><a class="header" href="#accountmanagerobject" id="accountmanagerobject">AccountManagerObject</a></h4>
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>accounts</td>
+    <td>&#10004;</td>
+    <td><a href="specs/index.html#account">Account</a>[]</td>
+    <td>Account objects.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#addaccount">add_account()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Adds a new account.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#removeaccount">remove_account()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Removes an account.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#syncaccounts">sync_accounts()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Syncs all stored accounts with the Tangle.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#move">move()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Inititates an internal transaction between accounts.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#backup">backup()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Creates a backup to a provided destination.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#importaccounts">import_accounts()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Imports backed up accounts.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#getaccount">get_account()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Returns the account associated with the provided address.</td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#reattach">reattach()</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Reattaches an unconfirmed transaction.</td>
+  </tr>
+</table>
+<h4><a class="header" href="#address" id="address">Address</a></h4>
+<p>Useful <a href="https://medium.com/@harshagoli/hd-wallets-explained-from-high-level-to-nuts-and-bolts-9a41545f5b0">reference</a> for address management in Hierarchical Deterministic (HD) wallets.</p>
+<p>Note: The library only supports Ed25519 addresses. Therefore a <code>type</code> property for distinguishing between WOTS and Ed25519 addresses is unncecessary.</p>
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>address</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Address <a href="https://github.com/Wollac/protocol-rfcs/blob/bech32-address-format/text/0020-bech32-address-format/0020-bech32-address-format.md">(Bech32)</a> string.</td>
+  </tr>
+  <tr>
+    <td>balance</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Address balance.</td>
+  </tr>
+  <tr>
+    <td>index</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Address index.</td>
+  </tr>
+  <tr>
+    <td>internal</td>
+    <td>&#10004;</td>
+    <td>boolean</td>
+    <td>Determines if an address is a public or an internal (change) address. See the concept of <a href="https://medium.com/@harshagoli/hd-wallets-explained-from-high-level-to-nuts-and-bolts-9a41545f5b0">chain node</a> for more details.</td>
+  </tr>
+  <tr>
+    <td>checksum</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Address checksum.</td>
+  </tr>
+</table>
+<h4><a class="header" href="#node" id="node">Node</a></h4>
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>url</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Node URL.</td>
+  </tr>
+  <tr>
+    <td>pow</td>
+    <td>&#10004;</td>
+    <td>boolean</td>
+    <td>Determines if the node accepts proof of work.</td>
+  </tr>
+  <tr>
+    <td>username</td>
+    <td>&#10008;</td>
+    <td>string</td>
+    <td>Node username. Only required if node requires authorisation.</td>
+  </tr>
+  <tr>
+    <td>password</td>
+    <td>&#10008;</td>
+    <td>string</td>
+    <td>Node password. Only required if node requires authorisation.</td>
+  </tr>
+  <tr>
+    <td>network</td>
+    <td>&#10004;</td>
+    <td>‘mainnet’ | ‘devnet’ | ‘comnet’</td>
+    <td>IOTA public network name.</td>
+  </tr>
+</table>
+<h4><a class="header" href="#timestamp" id="timestamp">Timestamp</a></h4>
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>format(type: string):string</td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Transaction timestamp in various formats. For example: MM-DD-YYYY, DD MM YYYY hh:mm:ss.</td>
+  </tr>
+</table>
+<h4><a class="header" href="#transfer" id="transfer">Transfer</a></h4>
+<p>Transfer object required for creating a transaction. It allows end-users to specify the transaction amount and recipient address.</p>
+<p>Note: Currently, it is not possible to send multiple payloads as part of the message. That is why tag property is omitted from this interface. See <a href="https://github.com/iotaledger/protocol-rfcs/pull/18#discussion_r468432794">this</a> for details.</p>
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>amount</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Transfer amount.</td>
+  </tr>
+  <tr>
+    <td>address</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Transfer address.</td>
+  </tr>
+  <tr>
+    <td>indexation_key</td>
+    <td>&#10008;</td>
+    <td><a href="specs/index.html#indexationpayload">Indexation Payload</a></td>
+    <td>(Optional) Indexation payload.</td>
+  </tr>
+</table>
+<h4><a class="header" href="#value" id="value">Value</a></h4>
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>with_denomination():string</td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Transaction amount with unit.</td>
+  </tr>
+  <tr>
+    <td>without_denomination():number</td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Transaction amount without unit.</td>
+  </tr>
+</table>
+<h4><a class="header" href="#input" id="input">Input</a></h4>
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Input type. Defaults to <code>0</code>.</td>
+  </tr>
+  <tr>
+    <td>id</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>BLAKE2b-256 hash of the transaction.</td>
+  </tr>
+  <tr>
+    <td>output_index</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Index of the output on the referenced transaction.</td>
+  </tr>
+</table>
+<h4><a class="header" href="#outputaddress" id="outputaddress">OutputAddress</a></h4>
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Set to value <code>0</code> to denote a WOTS Address and <code>1</code> to denote an Ed25519 address.</td>
+  </tr>
+  <tr>
+    <td>address</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>If type is set to <code>0</code>, this should contain a WOTS address. Otherwise (if type is set to <code>1</code>), it should contain an Ed25519 address.</td>
+  </tr>
+</table>
+<h4><a class="header" href="#output" id="output">Output</a></h4>
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Output type. Defaults to <code>0</code>.</td>
+  </tr>
+  <tr>
+    <td>address</td>
+    <td>&#10004;</td>
+    <td><a href="specs/index.html#outputaddress">OutputAddress</a></td>
+    <td>Output address.</td>
+  </tr>
+  <tr>
+    <td>amount</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Amount of tokens to deposit.</td>
+  </tr>
+</table>
+<h4><a class="header" href="#unsigneddatapayload" id="unsigneddatapayload">UnsignedDataPayload</a></h4>
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Set to <code>2</code> to denote a unsigned data payload.</td>
+  </tr>
+  <tr>
+    <td>data</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Data of unsigned payload.</td>
+  </tr>
+</table>
+<h4><a class="header" href="#signeddatapayload" id="signeddatapayload">SignedDataPayload</a></h4>
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Set to <code>3</code> to denote a signed data payload.</td>
+  </tr>
+  <tr>
+    <td>data</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Data of signed data payload.</td>
+  </tr>
+  <tr>
+    <td>public_key</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Ed25519 public key used to verify the signature.</td>
+  </tr>
+  <tr>
+    <td>signature</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Signature of signing data.</td>
+  </tr>
+</table>
+<h4><a class="header" href="#indexationpayload" id="indexationpayload">IndexationPayload</a></h4>
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>index</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Indexation key.</td>
+  </tr>
+  <tr>
+    <td>data</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Indexation data.</td>
+  </tr>
+</table>
+<h4><a class="header" href="#unsignedtransaction" id="unsignedtransaction">UnsignedTransaction</a></h4>
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Transaction type. Defaults to <code>0</code>.</td>
+  </tr>
+  <tr>
+    <td>inputs_count</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Amount of inputs proceeding.</td>
+  </tr>
+  <tr>
+    <td>inputs</td>
+    <td>&#10004;</td>
+    <td><a href="specs/index.html#input">Input</a>[]</td>
+    <td>Transaction inputs.</td>
+  </tr>
+  <tr>
+    <td>outputs_count</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Amount of outputs proceeding.</td>
+  </tr>
+  <tr>
+    <td>outputs</td>
+    <td>&#10004;</td>
+    <td><a href="specs/index.html#outputs">Output</a>[]</td>
+    <td>Output address.</td>
+  </tr>
+  <tr>
+    <td>payload_length</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Length of optional payload.</td>
+  </tr>
+  <tr>
+    <td>payload</td>
+    <td>&#10004;</td>
+    <td>
+    <a href="specs/index.html#unsigneddatapayload">UnsignedDataPayload</a> | 
+    <a href="specs/index.html#signeddatapayload">SignedDataPayload</a> |
+    <a href="specs/index.html#indexationpayload">IndexationPayload</a>
+    </td>
+    <td>Payload containing data. As multiple payloads are not yet supported, only <a href="specs/index.html#unsigneddatapayload">unsigned data payload</a> should be used.</td>
+  </tr>
+</table>
+<h4><a class="header" href="#wotssignature" id="wotssignature">WOTSSignature</a></h4>
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Set to value <code>0</code> to denote a WOTS Signature.</td>
+  </tr>
+  <tr>
+    <td>signature</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Signature signing the serialized unsigned transaction.</td>
+  </tr>
+</table>
+<h4><a class="header" href="#ed25519signature" id="ed25519signature">Ed25519Signature</a></h4>
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Set to value <code>1</code> to denote an Ed25519 signature.</td>
+  </tr>
+  <tr>
+    <td>public_key</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Public key of the Ed25519 keypair which is used to verify the signature.</td>
+  </tr>
+  <tr>
+    <td>signature</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Signature signing the serialized unsigned transaction.</td>
+  </tr>
+</table>
+<h4><a class="header" href="#signatureunblockblock" id="signatureunblockblock">SignatureUnblockBlock</a></h4>
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Set to value <code>0</code> to denote a signature unlock block.</td>
+  </tr>
+  <tr>
+    <td>signature</td>
+    <td>&#10004;</td>
+    <td>
+        <a href="specs/index.html#wotssignature">WOTSSignature</a> |
+        <a href="specs/index.html#ed25519signature">Ed25519Signature</a>
+    </td>
+    <td>An unlock block containing signature(s) unlocking input(s).</td>
+  </tr>
+</table>
+<h4><a class="header" href="#referenceunblockblock" id="referenceunblockblock">ReferenceUnblockBlock</a></h4>
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Set to value <code>1</code> to denote a reference unlock block.</td>
+  </tr>
+  <tr>
+    <td>reference</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Index of a previous unlock block.</td>
+  </tr>
+</table>
+<h4><a class="header" href="#signedtransactionpayload" id="signedtransactionpayload">SignedTransactionPayload</a></h4>
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>type</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Payload type. Defaults to `0`.</td>
+  </tr>
+  <tr>
+    <td>transaction</td>
+    <td>&#10004;</td>
+    <td><a href="specs/index.html#unsignedtransaction">UnsignedTransaction</a></td>
+    <td>Essence data making up a transaction by defining its inputs and outputs and an optional payload.</td>
+  </tr>
+  <tr>
+    <td>unblock_blocks_count</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Number of inputs specifed.</td>
+  </tr>
+  <tr>
+    <td>unblock_blocks</td>
+    <td>&#10004;</td>
+    <td>
+        <a href="specs/index.html#signatureunblockblock">SignatureUnblockBlock</a> |
+        <a href="specs/index.html#referenceunblockblock">ReferenceUnblockBlock</a>
+    </td>
+    <td>Holds the unlock blocks unlocking inputs within an Unsigned Transaction</td>
+  </tr>
+</table>
+<h4><a class="header" href="#message" id="message">Message</a></h4>
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>version</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Message version. Defaults to `1`.</td>
+  </tr>
+  <tr>
+    <td>parents</td>
+    <td>&#10004;</td>
+    <td>string[]</td>
+    <td>Message ids this message references.</td>
+  </tr>
+  <tr>
+    <td>payload_length</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Length of the payload.</td>
+  </tr>
+  <tr>
+    <td>payload</td>
+    <td>&#10004;</td>
+    <td>
+        <a href="specs/index.html#signedtransactionpayload">SignedTransactionPayload</a> |
+        <a href="specs/index.html#unsigneddatapayload">UnsignedDataPayload</a> |
+        <a href="specs/index.html#signeddatapayload">SignedDataPayload</a>
+    </td>
+    <td>Transaction amount (exposed as a custom type with additional methods).</td>
+  </tr>
+  <tr>
+    <td>timestamp</td>
+    <td>&#10004;</td>
+    <td><a href="specs/index.html#timestamp">Timestamp</a></td>
+    <td>Transaction timestamp (exposed as a custom type with additional methods).</td>
+  </tr>
+  <tr>
+    <td>nonce</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Transaction nonce.</td>
+  </tr>
+  <tr>
+    <td>confirmed</td>
+    <td>&#10004;</td>
+    <td>boolean</td>
+    <td>Determines if the transaction is confirmed.</td>
+  </tr>
+  <tr>
+    <td>broadcasted</td>
+    <td>&#10004;</td>
+    <td>boolean</td>
+    <td>
+      Determines if the transaction was broadcasted to the network. Will be true in the following scenarios:
+      <ul>
+        <li>If the transaction was fetched from the network;</li>
+        <li>If the transaction was successfully broadcasted from the client itself.</li>
+      </ul>
+      Note: This property may only be required for clients with persistent storage.
+    </td>
+  </tr>
+  <tr>
+    <td>incoming</td>
+    <td>&#10004;</td>
+    <td>boolean</td>
+    <td>Determines if the message is an incoming transaction or not.</td>
+  </tr>
+  <tr>
+    <td>value</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Message transfer value.</td>
+  </tr>
+</table>
+<h4><a class="header" href="#storageadapter" id="storageadapter">StorageAdapter</a></h4>
+<table>
+  <tr>
+    <td><strong>Property</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>get(key: string):<a href="specs/index.html#account">Account</a></td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Gets the account object for provided account name or id.</td>
+  </tr>
+  <tr>
+    <td>getAll(): <a href="specs/index.html#account">Account</a>[]</td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Gets all account objects from storage.</td>
+  </tr>
+  <tr>
+    <td>set(key: string, payload: string):void</td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Stores account in storage.</td>
+  </tr>
+  <tr>
+    <td>remove(key: string): void</td>
+    <td>&#10004;</td>
+    <td>function</td>
+    <td>Removes account from storage.</td>
+  </tr>
+</table>
+<h2><a class="header" href="#storage" id="storage">Storage</a></h2>
+<p><em>Note: Using Stronghold for storage is currently under research/development.</em></p>
+<p>Multiple storage options should be considered for managing data that requires persistence. For wallet basic metadata, such as user settings or theming options, a simple key-value <a href="https://capacitor.ionicframework.com/docs/apis/storage/">storage</a> could be leveraged. For transactions and address data management a relational database such as <a href="https://github.com/jepiqueau/capacitor-sqlite">SQLite</a> can be used. What follows is an Entity Relationship (ERD) diagram that shows the logical representation of the data. An <em>account</em> is the basic entity in this database design. It has a one-to-many relationship with <em>addresses</em> i.e. an account could have multiple <em>addresses</em> but also an <em>address</em> can only belong to a single <em>account</em>. An <em>account</em> has a many-to-many relationship with <em>transactions</em> i.e. an <em>account</em> could have multiple <em>transactions</em> but it’s possible that a <em>transaction</em> belongs to multiple <em>accounts</em>. To accommodate for that, an additional table is added that stores account ids against transaction ids (hashes).</p>
+<p>A storage adapter is required by the Rust layer because the storage operations (read/write) will be (mostly) done from that layer. A generic storage adapter is defined <a href="specs/index.html#storageadapter">here</a>.</p>
+<p><img src="specs/erd.jpg" alt="Entity Relationship Diagram" /></p>
+<h2><a class="header" href="#storage-adapter" id="storage-adapter">Storage Adapter</a></h2>
+<p>The package should have a default opinionated storage mechanism but should also provide the ability for users to override the storage by specifying an adapter. As a default option, a relational database such as <a href="https://www.sqlite.org/index.html">SQLite</a> can be used.</p>
+<p>See <a href="specs/index.html#storageAdapter">storage adapter</a> for adapter interface.</p>
+<h2><a class="header" href="#account-1" id="account-1">Account</a></h2>
+<h3><a class="header" href="#api" id="api">API</a></h3>
+<h4><a class="header" href="#initialisation-1" id="initialisation-1">Initialisation</a></h4>
+<p>Initialises account
+There are several scenarios in which an account can be initialised:</p>
+<ul>
+<li><em>Seed generated outside the Stronghold</em>:  In this case, the account should be initialised with a seed. It should communicate with the Stronghold using its “importAccount” method and should expect an “id” as a response; </li>
+<li><em>Seed generated inside the Stronghold</em>: In this case, the account should be initialised without a seed. It should communicate with the Stronghold using its “createAccount” method and should expect an “id” in response;</li>
+<li><em>Importing accounts from Stronghold backup</em>: In this case, the account should receive all initialisation properties from the Stronghold. Note that during backup, these configuration settings should be passed to the Stronghold. See <a href="specs/index.html#import_accounts">import_accounts()</a>.</li>
+</ul>
+<p>The following should be considered when initialising an account:</p>
+<ul>
+<li>An account should never be initialised directly. The only way an account can be initialized is through the <a href="specs/index.html#add_account">add_account()</a> method;</li>
+<li>An account should always be initialised after a successful response from the Stronghold. If the Stronghold fails to create an account, the account initialisation should error out. If the Stronghold successfully creates an account, the account should be stored in the persistent storage. Upon a successful store operation, the user should be returned an account object;</li>
+<li>If a <code>provider</code> property is not passed, a random node should be selected from the <code>nodes</code> property;</li>
+<li>If a <code>type</code> property is not passed, <code>&quot;default”</code> should be used as an account type;</li>
+<li><code>quorum_size</code> and <code>quorum_threshold</code> should be validated. For example, <code>quorum_size</code> should not be greater than the number of nodes provided by the user.</li>
+<li>The <code>nodes</code> property should validate and remove duplicate node URLs;</li>
+<li>All the properties of the returned account object should be read-only. It should not be possible to manipulate them directly.</li>
+</ul>
+<table>
+  <tr>
+    <td colspan="4"><strong>Parameters</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>config</td>
+    <td>&#10004;</td>
+    <td><a href="specs/index.html#accountconfiguration">AccountConfig</a></td>
+    <td>Initialisation method receives a configuration object.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>account</td>
+    <td><a href="specs/index.html#accountobject">Account</a></td>
+    <td colspan="3">Account instance.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
+</table>
+<h4><a class="header" href="#sync_addresses" id="sync_addresses">sync_addresses()</a></h4>
+<p>Syncs addresses with the Tangle. The method should ensure that the wallet's local state contains all used addresses and an unused address. </p>
+<p>The following should be considered when implementing this method:</p>
+<ul>
+<li>The updated address history should not be written down in the database/persistent storage. Instead the method should only return the updated address history (with transaction hashes).  This will ensure that there are no partial writes to the database;</li>
+<li>To sync addresses for an account from scratch, index = 0 and gap_limit = 10 should be provided;</li>
+<li>To sync addresses from the latest address, index = latest address index and gap_limit = 1 should be provided. </li>
+</ul>
+<table>
+  <tr>
+    <td colspan="4"><strong>Parameters</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>index</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Address index. By default the length of addresses stored for this account should be used as an index.</td>
+  </tr>
+  <tr>
+    <td>gap_limit</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Number of address indexes that are generated.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>addresses</td>
+    <td><a href="specs/index.html#address">Address</a>[]</td>
+    <td colspan="3">Address history upto latest unused address.</td>
+  </tr>
+  <tr>
+    <td>ids</td>
+    <td>string[]</td>
+    <td colspan="3">Message ids associated with the addresses.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Private</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">
+      <ul>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#get_address_balances">get_address_balances()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages">find_messages()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_outputs">find_outputs()</a></li>
+      </ul>
+    </td>
+  </tr>
+</table>
+<h4><a class="header" href="#sync_messages" id="sync_messages">sync_messages()</a></h4>
+<p>Syncs messages with the Tangle. The method should ensure that the wallet's local state has all messages associated with the address history. </p>
+<p>The following should be considered when implementing this method:</p>
+<ul>
+<li>The updated message history should not be written down in the database/persistent storage. Instead the method should only return the updated message history (with message ids);</li>
+<li>This method should check if there are any local messages (with “broadcasted: false”) matching the messages fetched from the network. If there are such messages, their “broadcasted” property should be set to true;</li>
+<li>For newly-confirmed messages, the method should ensure that it updates the “confirmed” property of all its reattachments.</li>
+</ul>
+<table>
+  <tr>
+    <td colspan="4"><strong>Parameters</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>ids</td>
+    <td>&#10004;</td>
+    <td>string[]</td>
+    <td>Message ids. New message ids should be calculated by running a difference of local message ids with latest message ids on the Tangle.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>messages</td>
+    <td><a href="specs/index.html#message">Message</a>[]</td>
+    <td colspan="3">Message history</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Private</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">
+      <ul>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages">find_messages()</a></li>
+      </ul>
+    </td>
+  </tr>
+</table>
+<h4><a class="header" href="#select_inputs" id="select_inputs">select_inputs()</a></h4>
+<p>Selects input addresses for funds transfer.</p>
+<p>Note: This method should only be used internally by <a href="specs/index.html#send">send()</a>. Also, the input selection method should ensure that the recipient address doesn’t match any of the selected inputs or the remainder address. </p>
+<p>See <a href="specs/index.html#input-selection">Input Selection Process</a> for implementation details.</p>
+<table>
+  <tr>
+    <td colspan="4"><strong>Parameters</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>threshold</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Amount user wants to spend.</td>
+  </tr>
+  <tr>
+    <td>address</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Recipient address.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>inputs</td>
+    <td><a href="specs/index.html#address">Address</a>[]</td>
+    <td colspan="3">Selected Inputs</td>
+  </tr>
+  <tr>
+    <td>remainder</td>
+    <td><a href="specs/index.html#address">Address</a></td>
+    <td colspan="3">Remainder address object. Empty or null if there’s no need for a remainder</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Private</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
+</table>
+<h4><a class="header" href="#send" id="send">send()</a></h4>
+<p>Sends a message to the Tangle.</p>
+<p>Note: This method should only be exposed as a successful response from <a href="specs/index.html#sync">sync()</a>. </p>
+<p>Currently, it is not possible to send multiple payloads. </p>
+<p>The process for sending a value transaction:</p>
+<ul>
+<li>Ensure <code>amount</code> is not set to zero;</li>
+<li>Ensure <code>amount</code> does not exceed the total balance;</li>
+<li>Ensure recipient address has correct checksum;</li>
+<li>Validate <code>data</code> property semantics and size;</li>
+<li>Select inputs by using <a href="specs/index.html#selectinputs">select_inputs()</a>;</li>
+<li>Pass the seralized <a href="specs/index.html#unsignedtransaction">unsigned transaction</a> to the Stronghold for signing with its “signTransaction” method;</li>
+<li>Perform proof-of-work. <code>pow</code> property in the account object should determine if the proof of work should be offloaded;</li>
+<li>Once proof-of-work is successfully performed, the message should be validated and stored in the persistent storage;</li>
+<li>After persisting the transaction, it should be broadcasted to the network;</li>
+<li>In the event of a broadcast error, there should be (three) attempts for automatic rebroadcasting. If all attempts fail, the send process should terminate and it should be left to the user to retry the failed message. For failed messages, the “broadcasted” property in the transaction objects should be set to false. </li>
+</ul>
+<table>
+  <tr>
+    <td colspan="4"><strong>Parameters</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>transfer</td>
+    <td>&#10004;</td>
+    <td><a href="specs/index.html#transfer">Transfer</a></td>
+    <td>Transfer object.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>message</td>
+    <td><a href="specs/index.html#message">Message</a></td>
+    <td colspan="3">Newly made message.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Private</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">
+      <ul>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages">find_messages()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#send">send()</a></li>
+      </ul>
+    </td>
+  </tr>
+</table>
+<h4><a class="header" href="#retry" id="retry">retry()</a></h4>
+<p>Rebroadcasts failed message.</p>
+<p>Note: This method should only be exposed as a successful response from <a href="specs/index.html#sync">sync()</a>. </p>
+<p>The process for retrying a failed message:</p>
+<ul>
+<li>Get message by using <a href="specs/index.html#getmessage">get_message()</a>;</li>
+<li>Rebroadcast message;</li>
+<li>Update account in persistent storage.</li>
+</ul>
+<table>
+  <tr>
+    <td colspan="4"><strong>Parameters</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>id</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Message id</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>message</td>
+    <td><a href="specs/index.html#message">Message</a></td>
+    <td colspan="3">Newly made message.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Private</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">
+      <ul>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#post_message">post_message()</a></li>
+      </ul>
+    </td>
+  </tr>
+</table>
+<h4><a class="header" href="#sync" id="sync">sync()</a></h4>
+<p>Syncs account with the Tangle. The account syncing process should ensure that the latest metadata (balance, messages) associated with an account is fetched from the Tangle and stored locally.<br />
+Note that it is a proposed design decision to enforce account syncing before every send. An alternative way would be to have the <em>send</em> method always exposed and internally ensuring that the account is synced before every message. </p>
+<p>The process for account syncing:_</p>
+<ul>
+<li>Sync addresses using <a href="specs/index.html#syncaddresses">sync_addresses()</a>;</li>
+<li>Sync messages using <a href="specs/index.html#syncmessages">sync_messages()</a>;</li>
+<li>Store updated addresses and messages information in persistent storage (if not explicitly set otherwise by the user). </li>
+</ul>
+<table>
+  <tr>
+    <td colspan="4"><strong>Parameters</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>index</td>
+    <td>&#10008;</td>
+    <td>number</td>
+    <td>Address index. By default the number of addresses stored for this account should be used as an index.</td>
+  </tr>
+  <tr>
+    <td>gap_limit</td>
+    <td>&#10008;</td>
+    <td>number</td>
+    <td>Number of address indexes that are generated.</td>
+  </tr>
+  <tr>
+    <td>skip_persistence</td>
+    <td>&#10008;</td>
+    <td>boolean</td>
+    <td>
+      Skips write to the database. This will be useful if a user wants to scan the Tangle for further addresses to find balance. See the
+      <a href="https://docs.iota.org/docs/wallets/0.1/trinity/how-to-guides/perform-a-snapshot-transition">snapshot transition</a> feature provided by Trinity.
+    </td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>account</td>
+    <td><a href="specs/index.html#syncedaccountobject">SyncedAccount</a></td>
+    <td colspan="3">Synced account object.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">
+      <ul>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages">find_messages()</a></li>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#get_address_balances">get_address_balances()</a></li>
+      </ul>
+    </td>
+  </tr>
+</table>
+<h4><a class="header" href="#reattach" id="reattach">reattach()</a></h4>
+<p>Reattaches unconfirmed message to the Tangle. 
+The following should be considered when implementing this method:</p>
+<ul>
+<li>Only an unconfirmed message can be reattached. The method should validate the confirmation state of the provided transaction. If a confirmed message id is provided, the method should error out;</li>
+<li>The method should also validate if reattachment is necessary, by checking if the message falls below max depth. The criteria for whether the message has fallen below max depth is determined through its timestamp. If 11 minutes have passed since the timestamp of the most recent (reattachment), the message can be be reattached. See <a href="https://github.com/iotaledger/trinity-wallet/blob/3fab4f671c97e805a2b0ade99b4abb8b508c2842/src/shared/libs/iota/transfers.js#L141">this</a> implementation for reference;</li>
+<li>Once reattached, the message should be stored in the persistent storage;</li>
+<li>If the message was reattached via polling, a <a href="specs/index.html#monitor-for-reattachments">reattachment</a> event should be emitted to notify all subscribers. </li>
+</ul>
+<table>
+  <tr>
+    <td colspan="4"><strong>Parameters</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>id</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Message id.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>message</td>
+    <td><a href="specs/index.html#message">Message</a></td>
+    <td colspan="3">Newly reattached message.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">
+      <ul>
+        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#reattach">reattach()</a></li>
+      </ul>
+    </td>
+  </tr>
+</table>
+<h4><a class="header" href="#total_balance" id="total_balance">total_balance()</a></h4>
+<p>Gets total account balance.</p>
+<p>Total balance should be read directly from the local storage. To read the latest account balance from the network, <a href="specs/index.html#sync">sync()</a> should be used first. </p>
+<table>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#value">Value</a></td>
+    <td>Account total balance.</td>
+  </tr>
+  <tr>
+    <td colspan="3"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
+</table>
+<h4><a class="header" href="#available_balance" id="available_balance">available_balance()</a></h4>
+<p>Gets available account balance. Available account balance is the amount users are allowed to spend. It should subtract the pending balance from the total balance. </p>
+<p>For example, if a user with <em>50i</em> total account balance has made a transaction spending <em>30i</em>, the available balance should be <em>20i</em> (i.e. 50i - 30i).</p>
+<p>Available balance should be read directly from the local storage. To read the latest account balance from the network, <a href="specs/index.html#sync">sync()</a> should be used first.</p>
+<table>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td><a href="specs/index.html#value">Value</a></td>
+    <td>Account available balance.</td>
+  </tr>
+  <tr>
+    <td colspan="3"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
+</table>
+<h4><a class="header" href="#set_alias" id="set_alias">set_alias()</a></h4>
+<p>Updates account name</p>
+<table>
+  <tr>
+    <td colspan="4"><strong>Parameters</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>alias</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>New account name.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
+</table>
+<h4><a class="header" href="#list_messages" id="list_messages">list_messages()</a></h4>
+<p>Gets messages. Messages should be read directly from the local storage. To ensure the local database is updated with the latest messages, <a href="specs/index.html#sync">sync()</a> should be used first.</p>
+<table>
+  <tr>
+    <td colspan="4"><strong>Parameters</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>count</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Number of (most recent) messages.</td>
+  </tr>
+  <tr>
+    <td>from</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Subset of messages. For example: count = 10, from = 5, it should return ten messages skipping the most recent five messages.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>messages</td>
+    <td><a href="specs/index.html#message">Message</a>[]</td>
+    <td colspan="3">All messages.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
+</table>
+<h4><a class="header" href="#list_received_messages" id="list_received_messages">list_received_messages()</a></h4>
+<p>Gets all received messages.</p>
+<p>Messages should be read directly from the local storage. To ensure the local database is updated with the latest messages, <a href="specs/index.html#sync">sync()</a> should be used first. </p>
+<table>
+  <tr>
+    <td colspan="4"><strong>Parameters</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>count</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Number of (most recent) received messages.</td>
+  </tr>
+  <tr>
+    <td>from</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Subset of received messages.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>messages</td>
+    <td><a href="specs/index.html#message">Message</a>[]</td>
+    <td colspan="3">All received messages.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
+</table>
+<h4><a class="header" href="#list_sent_messages" id="list_sent_messages">list_sent_messages()</a></h4>
+<p>Gets all sent messages.</p>
+<p>Messages should be directly read from the local storage. To ensure the local database is updated with the latest messages, <a href="specs/index.html#sync">sync()</a> should be used first.</p>
+<table>
+  <tr>
+    <td colspan="4"><strong>Parameters</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>count</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Number of (most recent) sent messages.</td>
+  </tr>
+  <tr>
+    <td>from</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Subset of sent messages.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>messages</td>
+    <td><a href="specs/index.html#message">Message</a>[]</td>
+    <td colspan="3">All sent messages.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
+</table>
+<h4><a class="header" href="#list_failed_messages" id="list_failed_messages">list_failed_messages()</a></h4>
+<p>Gets all failed (broadcasted = false) messages. Messages should be read directly from the local storage.</p>
+<table>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>count</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Number of (most recent) failed messages.</td>
+  </tr>
+  <tr>
+    <td>from</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Subset of failed messages.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td>messages</td>
+    <td><a href="specs/index.html#message">Message</a>[]</td>
+    <td colspan="3">All failed messages.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
+</table>
+<h4><a class="header" href="#list_unconfirmed_messages" id="list_unconfirmed_messages">list_unconfirmed_messages()</a></h4>
+<p>Gets all unconfirmed (confirmed = false) messages. Messages should be read directly from the local storage.</p>
+<table>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>count</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Number of (most recent) unconfirmed messages.</td>
+  </tr>
+  <tr>
+    <td>from</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Subset of unconfirmed messages.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>messages</td>
+    <td><a href="specs/index.html#message">Message</a>[]</td>
+    <td colspan="3">All unconfirmed messages.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
+</table>
+<h4><a class="header" href="#get_message" id="get_message">get_message()</a></h4>
+<p>Gets message for provided id.</p>
+<p>Messages should be read directly from the local storage. To ensure the local database is updated with the latest messages, <a href="specs/index.html#sync">sync()</a> should be used first. </p>
+<table>
+  <tr>
+    <td colspan="4"><strong>Parameters</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>id</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Message id.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>message</td>
+    <td><a href="specs/index.html#message">Message</a></td>
+    <td colspan="3">Message object.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
+</table>
+<h4><a class="header" href="#list_addresses" id="list_addresses">list_addresses()</a></h4>
+<p>Gets all addresses.</p>
+<table>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>addresses</td>
+    <td><a href="specs/index.html#address">Address</a>[]</td>
+    <td>All addresses.</td>
+  </tr>
+  <tr>
+    <td colspan="3"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
+</table>
+<h4><a class="header" href="#list_unspent_addresses" id="list_unspent_addresses">list_unspent_addresses()</a></h4>
+<p>Gets all unspent input addresses</p>
+<table>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td>Name</td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>addresses</td>
+    <td><a href="specs/index.html#address">Address</a>[]</td>
+    <td>All unspent input addresses.</td>
+  </tr>
+  <tr>
+    <td colspan="3"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
+</table>
+<h4><a class="header" href="#generate_address" id="generate_address">generate_address()</a></h4>
+<p>Gets the latest unused address.</p>
+<table>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>address</td>
+    <td><a href="specs/index.html#address">Address</a></td>
+    <td>A new address object.</td>
+  </tr>
+  <tr>
+    <td colspan="3"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
+</table>
+<h2><a class="header" href="#account-manager" id="account-manager">Account Manager</a></h2>
+<p>An account manager class should be publicly available for users. With the account manager, the user can create, update, delete or manage multiple accounts. The implementation details of a specific account should be abstracted away using this account manager wrapper. </p>
+<h3><a class="header" href="#api-1" id="api-1">API</a></h3>
+<h4><a class="header" href="#initialisation-2" id="initialisation-2">Initialisation</a></h4>
+<p>Initialises the account manager. Account manager initialisation should validate the adapter object semantics and should return an instance of the account manager.</p>
+<table>
+  <tr>
+    <td colspan="4"><strong>Parameters</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>adapter</td>
+    <td>&#10008;</td>
+    <td><a href="specs/index.html#storageadapter">Adapter</a></td>
+    <td>Initialisation method receives an optional storage adapter.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>manager</td>
+    <td><a href="specs/index.html#accountsmanagerobject">AccountManager</a></td>
+    <td colspan="3">Account manager instance.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
+</table>
+<h4><a class="header" href="#add_account" id="add_account">add_account()</a></h4>
+<p>Adds new account</p>
+<p>See account <a href="specs/index.html#initialisation">initialisation</a> for detailed implementation guidelines.</p>
+<table>
+  <tr>
+    <td colspan="4"><strong>Parameters</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>config</td>
+    <td>&#10004;</td>
+    <td>
+      <a href="specs/index.html#accountconfiguration">AccountConfig</a>
+    </td>
+    <td>Account configuration object.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>accounts</td>
+    <td>
+      <a href="specs/index.html#account">Account</a>
+    </td>
+    <td colspan="3">Newly created account.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
+</table>
+<h4><a class="header" href="#remove_account" id="remove_account">remove_account()</a></h4>
+<p>Removes an account.</p>
+<p>The following should be considered when removing an account:</p>
+<ul>
+<li>An account should first be removed from the Stronghold using its “removeAccount” method;</li>
+<li>Once the account references have been removed from the Stronghold, the account should be deleted from the persistent storage.</li>
+</ul>
+<table>
+  <tr>
+    <td colspan="4"><strong>Parameters</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>identifier</td>
+    <td>&#10004;</td>
+    <td>
+      { address: &lt;string> } | { alias: &lt;string> } |
+      <p>
+        { id: &lt;number> } |
+      </p>
+      <p>
+        { index: &lt;number }
+      </p>
+    </td>
+    <td>Identifier. Could be one of address, alias, id or index.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
+</table>
+<h4><a class="header" href="#sync_accounts" id="sync_accounts">sync_accounts()</a></h4>
+<p>Syncs all stored accounts with the Tangle. Syncing should get the latest balance for all accounts and should find any new messages associated with the stored account.</p>
+<p>See <a href="specs/index.html#accounts-syncing-process">Accounts Syncing Process</a>.</p>
+<table>
+  <tr>
+    <td colspan="3"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>account</td>
+    <td><a href="specs/index.html#syncedaccountobject">SyncedAccount</a>[]</td>
+    <td>Synced accounts.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">
+    <ul>
+      <li><a href="specs/sync">sync()</a></li>
+    </ul>
+    </td>
+  </tr>
+</table>
+<h4><a class="header" href="#move" id="move">move()</a></h4>
+<p>Moves funds from one account to another. This method should leverage the <a href="specs/index.html#send">send()</a> method from the sender account and should initiate a message to the receiver account.</p>
+<table>
+  <tr>
+    <td colspan="4"><strong>Parameters</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>from</td>
+    <td>&#10004;</td>
+    <td>
+      { address: &lt;string> } | \ { alias: &lt;string> } |
+      <p>
+        { id: &lt;number> } |
+      </p>
+      <p>
+        { index: &lt;number }
+      </p>
+    </td>
+    <td>Identifier. Could be one of address, alias, id or index.</td>
+  </tr>
+  <tr>
+    <td>to</td>
+    <td>&#10004;</td>
+    <td>
+      { address: &lt;string> } | \ { alias: &lt;string> } |
+      <p>
+        { id: &lt;number> } |
+      </p>
+      <p>
+        { index: &lt;number }
+      </p>
+    </td>
+    <td>Identifier. Could be one of address, alias, id or index.</td>
+  </tr>
+  <tr>
+    <td>amount</td>
+    <td>&#10004;</td>
+    <td>number</td>
+    <td>Transaction amount.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
+</table>
+<h4><a class="header" href="#backup" id="backup">backup()</a></h4>
+<p>Safely creates a backup of the accounts to a destination. The file could simply be JSON containing the address &amp; transaction histories for accounts.</p>
+<p>This method should provide the Stronghold instance with the metadata of all accounts. </p>
+<table>
+  <tr>
+    <td colspan="4"><strong>Parameters</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>destination</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Path where the backup should be stored.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
+</table>
+<h4><a class="header" href="#import_accounts" id="import_accounts">import_accounts</a></h4>
+<p>Import (backed up) accounts.</p>
+<p><strong>Implementation details are not finalised.</strong></p>
+<table>
+  <tr>
+   <td colspan="4"><strong>Parameters</strong></td>
+  </tr>
+  <tr>
+   <td><strong>Name</strong></td>
+   <td><strong>Required</strong></td>
+   <td><strong>Type</strong></td>
+   <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+   <td>accounts</td>
+   <td>&#10004;</td>
+<td><a href="specs/index.html#account">Account</a>[]
+   </td>
+   <td>Account object.</td>
+  </tr>
+  <tr>
+<td colspan="4"><strong>Additional Information</strong></td>
+</tr>
+<tr>
+<td><strong>Name</strong></td>
+<td><strong>Description</strong></td>
+</tr>
+<tr>
+<td>Access modifiers</td>
+<td colspan="3">Public</td>
+</tr>
+<tr>
+<td>Errors</td>
+<td colspan="3">List of error messages [TBD]</td>
+</tr>
+<tr>
+<td>Required client library methods</td>
+<td colspan="3">None</td>
+</tr>
+</table>
+<h4><a class="header" href="#get_account" id="get_account">get_account()</a></h4>
+<p>Returns the account associated with the provided identifier.</p>
+<table>
+  <tr>
+   <td colspan="4"><strong>Parameters</strong>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Name</strong></td>
+   <td><strong>Required</strong></td>
+   <td><strong>Type</strong></td>
+   <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+   <td>identifier</td>
+   <td>&#10004;</td>
+   <td>{ address: &lt;string> } |  \
+{ alias: &lt;string>  } |
+<p>
+{ id: &lt;number> } |
+<p>
+{ index: &lt;number }
+   </td>
+   <td>Identifier. Could be one of address, alias, id or index. 
+   </td>
+  </tr>
+  <tr>
+   <td colspan="4"><strong>Returns</strong>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Name</strong>
+   </td>
+   <td><strong>Type</strong>
+   </td>
+   <td colspan="3"><strong>Description</strong>
+   </td>
+  </tr>
+  <tr>
+   <td>account</td>
+   <td>
+<a href="specs/index.html#account">Account</a>
+   </td>
+   <td colspan="3">Account associated with identifier.</td>
+  </tr>
+  <tr>
+<td colspan="4"><strong>Additional Information</strong></td>
+</tr>
+<tr>
+<td><strong>Name</strong></td>
+<td colspan="3"><strong>Description</strong></td>
+</tr>
+<tr>
+<td>Access modifiers</td>
+<td colspan="3">Public</td>
+</tr>
+<tr>
+<td>Errors</td>
+<td colspan="3">List of error messages [TBD]</td>
+</tr>
+<tr>
+<td>Required client library methods</td>
+<td colspan="3">None</td>
+</tr>
+</table>
+<h4><a class="header" href="#reattach-1" id="reattach-1">reattach()</a></h4>
+<p>Reattaches an unconfirmed message.</p>
+<p>See <a href="specs/index.html#reattach">reattach()</a> method for implementation details. This method is a wrapper method provided for convenience. A user could directly access the <a href="specs/index.html#reattach">reattach()</a> method on an account object. </p>
+<table>
+  <tr>
+    <td colspan="4"><strong>Parameters</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>identifier</td>
+    <td>&#10004;</td>
+    <td>
+      { address: &lt;string> } | \ { alias: &lt;string> } |
+      <p>
+        { id: &lt;number> } |
+      </p>
+      <p>
+        { index: &lt;number }
+      </p>
+    </td>
+    <td>Identifier. Could be one of address, alias, id or index.</td>
+  </tr>
+  <tr>
+    <td>id</td>
+    <td>&#10004;</td>
+    <td>string</td>
+    <td>Message id.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>message</td>
+    <td><a href="specs/index.html#message">Message</a></td>
+    <td colspan="3">Newly reattached message.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
+</table>
+<h2><a class="header" href="#events" id="events">Events</a></h2>
+<p>Events are categorised as the following:</p>
+<ol>
+<li>
+<p>Reactive messages emitted from the node software whenever the state on the node changes. For example, emitting new messages received by the node. Clients (Wallet) can subscribe to these events to get notified if any relevant change occurs on the node. See <a href="https://github.com/iotaledger/wallet-spec/tree/events">example</a>.</p>
+</li>
+<li>
+<p>Messages emitted from the wallet library whenever there are any important state changes. Note that in cases where a user triggered action leads to a state change, the messages would not be emitted. For example, if a user explicitly triggers a <a href="specs/index.html#sync">sync()</a> action leading to a state change, an explicit event is not necessary.</p>
+</li>
+</ol>
+<h3><a class="header" href="#category-1-events" id="category-1-events">Category 1 events</a></h3>
+<p>On every update sent from the node software via an event, the wallet library should update internal (persistent) storage and should also emit events via <strong>category 2</strong>. </p>
+<h4><a class="header" href="#monitor-address-for-balance-changes" id="monitor-address-for-balance-changes">Monitor address for balance changes</a></h4>
+<table>
+  <tr>
+   <td colspan="3"><strong>Event</strong>
+   </td>
+   <td><strong>Returned Data</strong></td>
+  </tr>
+  <tr>
+   <td colspan="3" >&lt;Address : Balance></td>
+   <td>
+    <ul>
+      <li>Index 1: Address</li>
+      <li>Index 2: New balance on the address</li>
+    </ul>
+   </td>
+  </tr>
+</table>
+<h4><a class="header" href="#monitor-address-for-new-messages" id="monitor-address-for-new-messages">Monitor address for new messages</a></h4>
+<table>
+  <tr>
+   <td colspan="3"><strong>Event</strong>
+   </td>
+   <td><strong>Returned Data</strong></td>
+  </tr>
+  <tr>
+   <td colspan="3">&lt;Address : Message></td>
+   <td>
+   <ul>
+      <li>Index 1: Address</li>
+      <li>Index 2: Id of the new message</li>
+    </ul>
+   </td>
+  </tr>
+</table>
+<h4><a class="header" href="#monitor-message-for-confirmation-state" id="monitor-message-for-confirmation-state">Monitor message for confirmation state</a></h4>
+<table>
+  <tr>
+   <td colspan="3" ><strong>Event</strong>
+   </td>
+   <td><strong>Returned Data</strong>
+   </td>
+  </tr>
+  <tr>
+   <td colspan="3">&lt;MessageId>
+   </td>
+   <td>
+    <ul>
+      <li>Index 1: Message Id</li>
+      <li>Index 2: Confirmation state</li>
+    </ul>
+   </td>
+  </tr>
+</table>
+<h3><a class="header" href="#category-2-events" id="category-2-events">Category 2 events</a></h3>
+<p>They could be triggered via events from <strong>category 1</strong> or through <a href="specs/index.html#polling">polling</a>. </p>
+<h4><a class="header" href="#monitor-for-balance-changes" id="monitor-for-balance-changes">Monitor for balance changes</a></h4>
+<table>
+  <tr>
+   <td colspan="3"><strong>Event</strong>
+   </td>
+   <td><strong>Returned Data</strong></td>
+  </tr>
+  <tr>
+   <td colspan="3">balances
+   </td>
+   <td>[{ accountId, address, balance }]</td>
+  </tr>
+</table>
+<h4><a class="header" href="#monitor-for-new-messages" id="monitor-for-new-messages">Monitor for new messages</a></h4>
+<table>
+  <tr>
+   <td colspan="3"><strong>Event</strong>
+   </td>
+   <td><strong>Returned Data</strong></td>
+  </tr>
+  <tr>
+   <td colspan="3">messages</td>
+   <td>[{ accountId, messages }]</td>
+  </tr>
+</table>
+<h4><a class="header" href="#monitor-for-confirmation-state" id="monitor-for-confirmation-state">Monitor for confirmation state</a></h4>
+<table>
+  <tr>
+   <td colspan="3"><strong>Event</strong></td>
+   <td><strong>Returned Data</strong></td>
+  </tr>
+  <tr>
+   <td colspan="3">confirmations</td>
+   <td>[{ accountId, messages  }]</td>
+  </tr>
+</table>
+<h4><a class="header" href="#monitor-for-reattachments" id="monitor-for-reattachments">Monitor for reattachments</a></h4>
+<table>
+  <tr>
+   <td colspan="3"><strong>Event</strong></td>
+   <td><strong>Returned Data</strong></td>
+  </tr>
+  <tr>
+   <td colspan="3">reattachments</td>
+   <td>[{ accountId, messages  }]</td>
+  </tr>
+</table>
+<h4><a class="header" href="#monitor-for-broadcasts" id="monitor-for-broadcasts">Monitor for broadcasts</a></h4>
+<table>
+  <tr>
+   <td colspan="3" ><strong>Event</strong>
+   </td>
+   <td><strong>Returned Data</strong></td>
+  </tr>
+  <tr>
+   <td colspan="3">broadcasts</td>
+   <td>[{ accountId, messages  }]</td>
+  </tr>
+</table>
+<h4><a class="header" href="#monitor-for-errors" id="monitor-for-errors">Monitor for errors</a></h4>
+<table>
+  <tr>
+   <td colspan="3" ><strong>Event</strong></td>
+   <td><strong>Returned Data</strong></td>
+  </tr>
+  <tr>
+   <td colspan="3">error</td>
+   <td>{ type, error  }</td>
+  </tr>
+</table>
+<h2><a class="header" href="#privacy" id="privacy">Privacy</a></h2>
+<p>To maintain the financial privacy of wallet users, the application/wallet should enforce strategies that will guarantee a certain level of anonymity. These strategies should be followed:</p>
+<ul>
+  <li>The wallet should only use a single address per message i.e. if an address is already used in a message, it should not be used as a deposit address and instead a new address should be generated;</li>
+  <li>The input selection strategy should expose as little information as possible. See input selection for details.</li>
+</ul>
+<p>Some other privacy enhancing techniques can be found <a href="https://docs.google.com/document/d/1frk4r1Eq4hnGGOiKWkDiGTK5QQxKbfrvl7Iol7OZ-dc/edit#">here</a>. </p>
+<h2><a class="header" href="#input-selection" id="input-selection">Input Selection</a></h2>
+<p>The goal of input selection is to avoid remainder addresses. The remainder output leaves a clue to the user's future spends. There should be a standardised input selection strategy used by the wallet. The steps for input selection are as follows:</p>
+<ol>
+<li>Try to select an input with an exact match. For example, if a user intends to spend <em>X</em> iotas, the wallet should try to find an address that has <em>X</em> iotas as available balance;</li>
+<li>If the previous step fails, try to select a combination of inputs that satisfy the amount leaving no change. For example, consider a scenario where the wallet with account name <em>Foo</em> has three addresses <em>A</em>, <em>B</em> and <em>C</em> with <em>10</em>, <em>20</em> and <em>50</em> IOTA respectively. If a user intends to spend <em>X = 30</em> IOTA, the application should search for an exact match (step no. 1). Clearly, in this case, no address balance matches <em>X</em>, therefore, the wallet should search for a subset of addresses with an accumulated balance of <em>X</em>. In this scenario, <em>A</em> and <em>B</em>;</li>
+<li>If both the previous steps fail, the wallet should select a combination of inputs that produce the minimum remainder. </li>
+</ol>
+<p>A reference implementation of different input selection algorithms for Bitcoin can be found <a href="https://github.com/bitcoinjs/coinselect">here</a>.</p>
+<p>Also, the implementation of step no. 2 is quite similar to the <a href="https://en.wikipedia.org/wiki/Subset_sum_problem">subset sum problem</a>. Given a <em>total</em> and a set of non-negative numbers (<em>inputs</em>), we need to determine if there is a subset which adds up to the <em>total</em>.</p>
+<h2><a class="header" href="#account-syncing-process" id="account-syncing-process">Account Syncing Process</a></h2>
+<p>The account syncing process should detect all (used) accounts on a seed with their corresponding address and message history. Once, all accounts and histories are detected, the wallet should accumulate total balance. The syncing process should work as follows: </p>
+<ol>
+<li>Start with the account at index 0, generate <a href="https://blog.blockonomics.co/bitcoin-what-is-this-gap-limit-4f098e52d7e1">gap limit</a> number of addresses, default to 20;</li>
+<li>Check for messages and balances on the generated addresses;</li>
+<li>If there are no messages and balances of 0 on all addresses, the process for generating addresses and finding messages and balances should be stopped; </li>
+<li>If any address has balance or associated messages, generate gap limit number of addresses from the index of the last address with messages or balance; </li>
+<li>Steps (1-4) should also be peformed for account at index 1. The general idea is that <em>n + 1</em> accounts should be checked if account <em>n</em> has any messages or balance.</li>
+</ol>
+<p>Treat accounts like addresses. Only allow 1 latest unused account.</p>
+<p><em>Scenario 1</em>: Wallet message and address history stored in Stronghold backup</p>
+<ul>
+<li>Start syncing from the latest address index stored in the Stronghold backup</li>
+<li>Also provide a “Full sync” function to resync from index 0 across all accounts</li>
+<li>Also provide “Find more history” function to sync a further 50 addresses</li>
+</ul>
+<p><em>Scenario 2</em>: User has no backup file</p>
+<ul>
+<li>Start syncing from account 0 address 0</li>
+</ul>
+<h2><a class="header" href="#polling" id="polling">Polling</a></h2>
+<p>A background process that automatically performs several tasks periodically should be part of the wallet library. The goal of the background process is to perform the following tasks:</p>
+<ul>
+<li><em>Sync accounts</em>: The background process should sync all accounts with the network. This should be done using the <a href="specs/index.html#syncaccounts">sync_accounts()</a> method. If new messages are detected, a <a href="specs/index.html#monitor-for-new-messages">messages</a> event should be used to notify all subscribers. If new balances are detected, a <a href="specs/index.html#monitor-for-balance-changes">balances</a> event should be used to notify all subscribers. If new confirmations are detected, a <a href="specs/index.html#monitor-for-confirmation-state">confirmations</a> event should be used to notify all subscribers; </li>
+</ul>
+<p>Note that if there are multiple failed messages, priority should be given to the old ones. </p>
+<ul>
+<li><em>Reattach</em>: The background process should check if there are any (unconfirmed) messages that require reattachments. The detailed implementation flow for reattachment can be found <a href="specs/index.html#reattach">here</a>. </li>
+</ul>
+<p>The following should be considered for implementation:</p>
+<ul>
+<li>Invoking a task explicitly that is already being performed through polling should lead to an error. For example, if the polling process is already syncing accounts and a user explicitly calls <a href="specs/index.html#sync">sync()</a>, it should throw an error;</li>
+<li>Errors during the polling process should be communicated to subscribers via error events.</li>
+</ul>
+<p>The background process should have a recurring checker that sequentially performs all the above tasks. The implementation should ensure that future tasks can easily be added to the background process. For reference, see Trinity’s <a href="https://github.com/iotaledger/trinity-wallet/blob/develop/src/mobile/src/ui/components/Poll.js">implementation</a> of the poll component. </p>
+<h1><a class="header" href="#contribute-to-the-project" id="contribute-to-the-project">Contribute to the project</a></h1>
+<p><strong>Thanks for thinking about contributing to the project! We have the following ways that you can contribute.</strong></p>
+<h2><a class="header" href="#join-the-iota-libraries-initiative" id="join-the-iota-libraries-initiative">Join the IOTA Libraries Initiative</a></h2>
+<p>The <a href="https://github.com/iota-community/X-Team_IOTA_Libraries">IOTA Libraries Initiative</a> is a collaborative effort to help improve the developer experience.</p>
+<ul>
+<li>Quality assurance and review</li>
+<li>Documentation</li>
+<li>Code samples</li>
+</ul>
+<p>If you'd like to get involved, join the #experience channel on <a href="https://discord.iota.org">Discord</a>.</p>
+<h2><a class="header" href="#contribute-to-the-projects-github-repository" id="contribute-to-the-projects-github-repository">Contribute to the project's GitHub repository</a></h2>
+<p>All the code is open source and hosted on <a href="https://github.com/iotaledger/wallet.rs">GitHub</a> where you can do the following:</p>
+<ul>
+<li>Report a bug</li>
+<li>Suggest a new feature</li>
+<li>Contribute to the documentation</li>
+</ul>
+<h2><a class="header" href="#contribute-to-the-documentation" id="contribute-to-the-documentation">Contribute to the documentation</a></h2>
+<p>This documentation is also open source and hosted on GitHub.</p>
+<p>If you want to contribute new documentation or fix an error, see the <a href="https://github.com/iotaledger/documentation/blob/develop/.github/CONTRIBUTING.md">contribution guidelines</a>.</p>
+<h2><a class="header" href="#share-your-knowledge" id="share-your-knowledge">Share your knowledge</a></h2>
+<p>Helping others is an important part of any open source ecosystem.</p>
+<p>By sharing your knowledge with others, you can provide a lot of value to the community and maybe inspire someone else to learn and contribute.</p>
+<p>Take a look at what discussions are going on in the #clients-discussion channel on <a href="https://discord.iota.org">Discord</a>.</p>
+<p>Thanks :heart:</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+        
+        <script type="text/javascript">
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+        
+        
+
+    </body>
+</html>

@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["HARDENED",""]],"struct":[["AddressIndexRecorder","A record matching an Input with its address."],["AddressPoolEntry",""],["LedgerNanoSigner",""]]});
