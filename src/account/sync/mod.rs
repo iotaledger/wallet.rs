@@ -42,7 +42,7 @@ pub(crate) async fn sync_address(
     address: &mut Address,
     bech32_hrp: String,
 ) -> crate::Result<Vec<(MessageId, Option<bool>, IotaMessage)>> {
-    let client = crate::client::get_client(account.client_options());
+    let client = crate::client::get_client(account.client_options()).await;
     let client = client.read().await;
 
     let iota_address = address.address();
@@ -156,6 +156,7 @@ async fn sync_addresses(
     let mut found_messages = vec![];
 
     let bech32_hrp = crate::client::get_client(account.client_options())
+        .await
         .read()
         .await
         .get_network_info()
@@ -251,7 +252,7 @@ async fn sync_messages(
             let client_options = client_options.clone();
             let messages_with_known_confirmation = messages_with_known_confirmation.clone();
             async move {
-                let client = crate::client::get_client(&client_options);
+                let client = crate::client::get_client(&client_options).await;
                 let client = client.read().await;
 
                 let address_outputs = client
@@ -936,7 +937,7 @@ async fn perform_transfer(
         dust_and_allowance_recorders.push((remainder_value, remainder_deposit_address.to_bech32(), true));
     }
 
-    let client = crate::client::get_client(account_.client_options());
+    let client = crate::client::get_client(account_.client_options()).await;
     let client = client.read().await;
 
     // Check if we would let dust on an address behind or send new dust, which would make the tx unconfirmable
@@ -1147,7 +1148,7 @@ pub(crate) async fn repost_message(
                 )));
             }
 
-            let client = crate::client::get_client(account.client_options());
+            let client = crate::client::get_client(account.client_options()).await;
             let client = client.read().await;
 
             let (id, message) = match action {
