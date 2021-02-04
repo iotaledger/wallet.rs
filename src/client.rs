@@ -5,14 +5,14 @@ use getset::Getters;
 use iota::client::{Client, ClientBuilder};
 use once_cell::sync::Lazy;
 use serde::{de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex, RwLock};
 use url::Url;
 
 use std::{
     collections::HashMap,
     hash::{Hash, Hasher},
     str::FromStr,
-    sync::{Arc, Mutex},
+    sync::Arc,
     time::Duration,
 };
 
@@ -24,10 +24,8 @@ fn instances() -> &'static ClientInstanceMap {
     &INSTANCES
 }
 
-pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
-    let mut map = instances()
-        .lock()
-        .expect("failed to lock client instances: get_client()");
+pub(crate) async fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
+    let mut map = instances().lock().await;
 
     if !map.contains_key(&options) {
         let mut client_builder = ClientBuilder::new()
@@ -49,6 +47,7 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
                     .map(|url| url.to_string())
                     .collect::<Vec<String>>()[..],
             )
+            .await
             .unwrap();
 
         if let Some(network) = options.network() {
@@ -71,7 +70,10 @@ pub(crate) fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
             client_builder = client_builder.with_api_timeout(api.clone().into(), *timeout);
         }
 
-        let client = client_builder.finish().expect("failed to initialise ClientBuilder");
+        let client = client_builder
+            .finish()
+            .await
+            .expect("failed to initialise ClientBuilder");
 
         map.insert(options.clone(), Arc::new(RwLock::new(client)));
     }
@@ -458,8 +460,8 @@ mod tests {
         assert_eq!(client.network(), &Some(network.to_string()));
     }
 
-    #[test]
-    fn get_client() {
+    #[tokio::test]
+    async fn get_client() {
         let test_cases = vec![
             ClientOptionsBuilder::new()
                 .with_node("https://api.lb-1.testnet.chrysalis2.com")
@@ -493,16 +495,16 @@ mod tests {
 
         // assert that each different client_options create a new client instance
         for case in &test_cases {
-            let len = super::instances().lock().unwrap().len();
-            super::get_client(&case);
-            assert_eq!(super::instances().lock().unwrap().len() - len, 1);
+            let len = super::instances().lock().await.len();
+            super::get_client(&case).await;
+            assert_eq!(super::instances().lock().await.len() - len, 1);
         }
 
         // assert that subsequent calls with options already initialized doesn't create new clients
-        let len = super::instances().lock().unwrap().len();
+        let len = super::instances().lock().await.len();
         for case in &test_cases {
-            super::get_client(&case);
-            assert_eq!(super::instances().lock().unwrap().len(), len);
+            super::get_client(&case).await;
+            assert_eq!(super::instances().lock().await.len(), len);
         }
     }
 }

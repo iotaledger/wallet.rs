@@ -214,6 +214,7 @@ impl AccountInitialiser {
         };
 
         let bech32_hrp = crate::client::get_client(account.client_options())
+            .await
             .read()
             .await
             .get_network_info()
@@ -562,6 +563,7 @@ impl Account {
         self.client_options = options;
 
         let bech32_hrp = crate::client::get_client(&self.client_options)
+            .await
             .read()
             .await
             .get_network_info()
