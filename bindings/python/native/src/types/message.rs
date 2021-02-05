@@ -34,10 +34,8 @@ pub struct WalletMessage {
     pub id: String,
     /// The message version.
     pub version: u64,
-    /// Message id of the first message this message refers to.
-    pub parent1: String,
-    /// Message id of the second message this message refers to.
-    pub parent2: String,
+    /// Message ids this message refers to.
+    pub parents: Vec<String>,
     /// Length of the payload.
     pub payload_length: usize,
     /// Message payload.
@@ -107,8 +105,7 @@ impl TryFrom<RustWalletMessage> for WalletMessage {
         Ok(Self {
             id: msg.id().to_string(),
             version: *msg.version(),
-            parent1: msg.parent1().to_string(),
-            parent2: msg.parent2().to_string(),
+            parents: msg.parents().iter().map(|parent| parent.to_string()).collect(),
             payload_length: *msg.payload_length(),
             payload,
             timestamp: msg.timestamp().timestamp(),
@@ -188,8 +185,7 @@ impl TryFrom<RustMilestonePayloadEssence> for MilestonePayloadEssence {
         Ok(MilestonePayloadEssence {
             index: essence.index(),
             timestamp: essence.timestamp(),
-            parent1: essence.parent1().to_string(),
-            parent2: essence.parent2().to_string(),
+            parents: essence.parents().iter().map(|parent| parent.to_string()).collect(),
             merkle_proof: essence.merkle_proof().try_into()?,
             public_keys: essence
                 .public_keys()
@@ -408,8 +404,7 @@ impl TryFrom<Indexation> for RustIndexationPayload {
 pub struct Message {
     pub message_id: String,
     pub network_id: u64,
-    pub parent1: String,
-    pub parent2: String,
+    pub parents: Vec<String>,
     pub payload: Option<Payload>,
     pub nonce: u64,
 }
@@ -437,8 +432,7 @@ pub struct Milestone {
 pub struct MilestonePayloadEssence {
     pub index: u32,
     pub timestamp: u64,
-    pub parent1: String,
-    pub parent2: String,
+    pub parents: Vec<String>,
     pub merkle_proof: [u8; MILESTONE_MERKLE_PROOF_LENGTH],
     pub public_keys: Vec<[u8; MILESTONE_PUBLIC_KEY_LENGTH]>,
 }
