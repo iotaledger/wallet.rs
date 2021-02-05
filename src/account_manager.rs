@@ -28,6 +28,7 @@ use std::{
     time::Duration,
 };
 
+use bee_rest_api::handlers::message_metadata::LedgerInclusionStateDto;
 use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
@@ -998,44 +999,69 @@ async fn poll(accounts: AccountStore, storage_file_path: PathBuf, is_mqtt_monito
         log::info!("[POLLING] skipping syncing process because MQTT is running");
         let mut retried_messages = vec![];
         for account_handle in accounts.read().await.values() {
-            let (account_id, unconfirmed_messages): (String, Vec<(MessageId, Payload)>) = {
+            let (account_handle, unconfirmed_messages): (AccountHandle, Vec<(MessageId, Payload)>) = {
                 let account = account_handle.read().await;
-                let account_id = account.id().clone();
                 let unconfirmed_messages = account
                     .list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed))
                     .iter()
                     .map(|m| (*m.id(), m.payload().clone()))
                     .collect();
-                (account_id, unconfirmed_messages)
+                (account_handle.clone(), unconfirmed_messages)
             };
 
-            let mut promotions = vec![];
-            let mut reattachments = vec![];
+            let mut reattachments = Vec::new();
+            let mut promotions = Vec::new();
+            let mut no_need_promote_or_reattach = Vec::new();
             for (message_id, payload) in unconfirmed_messages {
-                let new_message = repost_message(account_handle.clone(), &message_id, RepostAction::Retry).await?;
-                if new_message.payload() == &payload {
-                    reattachments.push(new_message);
-                } else {
-                    log::info!("[POLLING] promoted and new message is {:?}", new_message.id());
-                    promotions.push(new_message);
+                match repost_message(account_handle.clone(), &message_id, RepostAction::Retry).await {
+                    Ok(new_message) => {
+                        if new_message.payload() == &payload {
+                            reattachments.push(new_message);
+                        } else {
+                            log::info!("[POLLING] promoted and new message is {:?}", new_message.id());
+                            promotions.push(new_message);
+                        }
+                    }
+                    Err(crate::Error::ClientError(iota::client::Error::NoNeedPromoteOrReattach(_))) => {
+                        no_need_promote_or_reattach.push(message_id);
+                    }
+                    _ => {}
                 }
             }
 
             retried_messages.push(RetriedData {
                 promoted: promotions,
                 reattached: reattachments,
-                account_id,
+                no_need_promote_or_reattach,
+                account_handle,
             });
         }
 
         retried_messages
     };
 
-    retried.iter().for_each(|retried_data| {
-        retried_data.reattached.iter().for_each(|message| {
-            emit_transaction_event(TransactionEventType::Reattachment, &retried_data.account_id, &message);
-        });
-    });
+    for retried_data in retried {
+        let mut account = retried_data.account_handle.write().await;
+        let client = crate::client::get_client(account.client_options()).await;
+        let account_id = account.id();
+
+        for message in &retried_data.reattached {
+            emit_transaction_event(TransactionEventType::Reattachment, &account_id, &message);
+        }
+
+        account.append_messages(retried_data.reattached);
+        account.append_messages(retried_data.promoted);
+
+        for message_id in retried_data.no_need_promote_or_reattach {
+            let message = account.get_message_mut(&message_id).unwrap();
+            if let Ok(metadata) = client.read().await.get_message().metadata(&message_id).await {
+                message.set_confirmed(Some(
+                    metadata.ledger_inclusion_state == Some(LedgerInclusionStateDto::Included),
+                ));
+            }
+        }
+        account.save().await?;
+    }
     Ok(())
 }
 
@@ -1129,33 +1155,48 @@ struct RetriedData {
     #[allow(dead_code)]
     promoted: Vec<Message>,
     reattached: Vec<Message>,
-    account_id: String,
+    no_need_promote_or_reattach: Vec<MessageId>,
+    account_handle: AccountHandle,
 }
 
 async fn retry_unconfirmed_transactions(synced_accounts: Vec<SyncedAccount>) -> crate::Result<Vec<RetriedData>> {
     let mut retried_messages = vec![];
     for synced in synced_accounts {
-        let account = synced.account_handle().read().await;
-
-        let unconfirmed_messages = account.list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed));
-        let mut reattachments = vec![];
-        let mut promotions = vec![];
-        for message in unconfirmed_messages {
-            log::debug!("[POLLING] retrying {:?}", message);
-            let new_message = synced.retry(message.id()).await?;
-            // if the payload is the same, it was reattached; otherwise it was promoted
-            if new_message.payload() == message.payload() {
-                log::debug!("[POLLING] rettached and new message is {:?}", new_message);
-                reattachments.push(new_message);
-            } else {
-                log::debug!("[POLLING] promoted and new message is {:?}", new_message);
-                promotions.push(new_message);
+        let unconfirmed_messages: Vec<(MessageId, Payload)> = synced
+            .account_handle()
+            .read()
+            .await
+            .list_messages(0, 0, Some(MessageType::Unconfirmed))
+            .iter()
+            .map(|message| (*message.id(), message.payload().clone()))
+            .collect();
+        let mut reattachments = Vec::new();
+        let mut promotions = Vec::new();
+        let mut no_need_promote_or_reattach = Vec::new();
+        for (message_id, message_payload) in unconfirmed_messages {
+            log::debug!("[POLLING] retrying {:?}", message_id);
+            match synced.retry(&message_id).await {
+                Ok(new_message) => {
+                    // if the payload is the same, it was reattached; otherwise it was promoted
+                    if new_message.payload() == &message_payload {
+                        log::debug!("[POLLING] rettached and new message is {:?}", new_message);
+                        reattachments.push(new_message);
+                    } else {
+                        log::debug!("[POLLING] promoted and new message is {:?}", new_message);
+                        promotions.push(new_message);
+                    }
+                }
+                Err(crate::Error::ClientError(iota::client::Error::NoNeedPromoteOrReattach(_))) => {
+                    no_need_promote_or_reattach.push(message_id);
+                }
+                _ => {}
             }
         }
         retried_messages.push(RetriedData {
             promoted: promotions,
             reattached: reattachments,
-            account_id: account.id().clone(),
+            no_need_promote_or_reattach,
+            account_handle: synced.account_handle().clone(),
         });
     }
     Ok(retried_messages)

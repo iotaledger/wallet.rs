@@ -641,7 +641,7 @@ impl Account {
                     MessageType::Received => *message.incoming(),
                     MessageType::Sent => !message.incoming(),
                     MessageType::Failed => !message.broadcasted(),
-                    MessageType::Unconfirmed => !message.confirmed().unwrap_or(false),
+                    MessageType::Unconfirmed => message.confirmed().is_none(),
                     MessageType::Value => *message.value() > 0,
                 }
             } else {
@@ -704,6 +704,11 @@ impl Account {
     /// Gets a message with the given id associated with this account.
     pub fn get_message(&self, message_id: &MessageId) -> Option<&Message> {
         self.messages.iter().find(|tx| tx.id() == message_id)
+    }
+
+    /// Gets a message with the given id associated with this account.
+    pub(crate) fn get_message_mut(&mut self, message_id: &MessageId) -> Option<&mut Message> {
+        self.messages.iter_mut().find(|tx| tx.id() == message_id)
     }
 }
 
