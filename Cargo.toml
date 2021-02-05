@@ -39,7 +39,7 @@ blake2 = { version = "0.9", optional = true }
 slog = { version = "2.7", optional = true }
 
 # ledger hardware wallets
-ledger-iota = { git = "https://gitlab.com/ledger-iota-chrysalis/ledger-iota.rs", optional = true  }
+iota-ledger = { git = "https://github.com/iotaledger/ledger.rs", branch = "develop", optional = true  }
 
 [dependencies.iota-crypto]
 git = "https://github.com/iotaledger/crypto.rs"
@@ -57,5 +57,5 @@ default = ["stronghold", "stronghold-storage"]
 stronghold = ["iota-stronghold", "riker", "blake2", "slog"]
 stronghold-storage = ["iota-stronghold", "riker", "blake2", "slog"]
 sqlite-storage = ["rusqlite"]
-ledger-nano = ["ledger-iota"]
-ledger-nano-simulator = ["ledger-iota"]
+ledger-nano = ["iota-ledger"]
+ledger-nano-simulator = ["iota-ledger"]
