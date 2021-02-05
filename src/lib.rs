@@ -38,7 +38,7 @@ pub use error::Error;
 #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
 pub use stronghold::{
     get_status as get_stronghold_status, set_password_clear_interval as set_stronghold_password_clear_interval,
-    SnapshotStatus as StrongholdSnapshotStatus, Status as StrongholdStatus,
+    unload_snapshot as lock_stronghold, SnapshotStatus as StrongholdSnapshotStatus, Status as StrongholdStatus,
 };
 
 /// The wallet Result type.
@@ -477,8 +477,7 @@ mod test_utils {
             Message {
                 id: MessageId::new([0; 32]),
                 version: 1,
-                parent1: MessageId::new([0; 32]),
-                parent2: MessageId::new([0; 32]),
+                parents: vec![MessageId::new([0; 32])],
                 payload_length: 0,
                 payload: Payload::Transaction(Box::new(
                     TransactionPayloadBuilder::new()

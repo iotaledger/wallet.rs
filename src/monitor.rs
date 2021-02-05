@@ -17,9 +17,21 @@ use iota::{message::prelude::MessageId, Topic, TopicEvent};
 /// Unsubscribe from all topics associated with the account.
 pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
     let account = account_handle.read().await;
-    let client = crate::client::get_client(account.client_options());
+    let client = crate::client::get_client(account.client_options()).await;
     let mut client = client.write().await;
-    client.subscriber().unsubscribe()?;
+
+    let mut topics = Vec::new();
+    for address in account.addresses() {
+        topics.push(Topic::new(format!(
+            "addresses/{}/outputs",
+            address.address().to_bech32()
+        ))?);
+    }
+    for message in account.list_messages(0, 0, Some(MessageType::Unconfirmed)) {
+        topics.push(Topic::new(format!("messages/{}/metadata", message.id().to_string()))?);
+    }
+
+    client.subscriber().with_topics(topics).unsubscribe()?;
     Ok(())
 }
 
@@ -28,7 +40,7 @@ async fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
     topic: String,
     handler: C,
 ) -> crate::Result<()> {
-    let client = crate::client::get_client(&client_options);
+    let client = crate::client::get_client(&client_options).await;
     let mut client = client.write().await;
     client.subscriber().with_topic(Topic::new(topic)?).subscribe(handler)?;
     Ok(())
@@ -95,38 +107,31 @@ async fn process_output(
 
     match account.messages_mut().iter().position(|m| m.id() == &message_id) {
         Some(message_index) => {
-            account
-                .do_mut(|account| {
-                    let message = &mut account.messages_mut()[message_index];
-                    message.set_confirmed(Some(true));
-                    Ok(())
-                })
-                .await?;
+            let message = &mut account.messages_mut()[message_index];
+            message.set_confirmed(Some(true));
         }
         None => {
             if let Ok(message) = crate::client::get_client(&client_options_)
+                .await
                 .read()
                 .await
                 .get_message()
                 .data(&message_id)
                 .await
             {
-                let message =
-                    Message::from_iota_message(message_id, account.addresses(), &message, Some(true)).unwrap();
+                let message = Message::from_iota_message(message_id, account.addresses(), message, Some(true));
                 crate::event::emit_transaction_event(
                     crate::event::TransactionEventType::NewTransaction,
                     account.id(),
                     &message,
                 );
-                account
-                    .do_mut(|account| {
-                        account.messages_mut().push(message);
-                        Ok(())
-                    })
-                    .await?;
+                account.messages_mut().push(message);
             }
         }
     }
+
+    account.save().await?;
+
     Ok(())
 }
 

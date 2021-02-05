@@ -25,7 +25,7 @@ pub struct WalletMessageHandler {
     account_manager: AccountManager,
 }
 
-fn panic_to_response_message(panic: Box<dyn Any>) -> Result<ResponseType> {
+fn panic_to_response_message(panic: Box<dyn Any>) -> ResponseType {
     let msg = if let Some(message) = panic.downcast_ref::<String>() {
         format!("Internal error: {}", message)
     } else if let Some(message) = panic.downcast_ref::<&str>() {
@@ -34,13 +34,13 @@ fn panic_to_response_message(panic: Box<dyn Any>) -> Result<ResponseType> {
         "Internal error".to_string()
     };
     let current_backtrace = backtrace::Backtrace::new();
-    Ok(ResponseType::Panic(format!("{}\n\n{:?}", msg, current_backtrace)))
+    ResponseType::Panic(format!("{}\n\n{:?}", msg, current_backtrace))
 }
 
 fn convert_panics<F: FnOnce() -> Result<ResponseType>>(f: F) -> Result<ResponseType> {
     match catch_unwind(AssertUnwindSafe(|| f())) {
         Ok(result) => result,
-        Err(panic) => panic_to_response_message(panic),
+        Err(panic) => Ok(panic_to_response_message(panic)),
     }
 }
 
@@ -50,7 +50,7 @@ where
 {
     match AssertUnwindSafe(f()).catch_unwind().await {
         Ok(result) => result,
-        Err(panic) => panic_to_response_message(panic),
+        Err(panic) => Ok(panic_to_response_message(panic)),
     }
 }
 
@@ -119,8 +119,16 @@ impl WalletMessageHandler {
             MessageType::GetStrongholdStatus => {
                 convert_async_panics(|| async {
                     let status =
-                        crate::stronghold::get_status(&self.account_manager.stronghold_snapshot_path().await?).await;
+                        crate::get_stronghold_status(&self.account_manager.stronghold_snapshot_path().await?).await;
                     Ok(ResponseType::StrongholdStatus(status))
+                })
+                .await
+            }
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            MessageType::LockStronghold => {
+                convert_async_panics(|| async {
+                    crate::lock_stronghold(&self.account_manager.stronghold_snapshot_path().await?, true).await?;
+                    Ok(ResponseType::LockedStronghold)
                 })
                 .await
             }
@@ -156,6 +164,13 @@ impl WalletMessageHandler {
             MessageType::OpenLedgerApp(is_simulator) => {
                 convert_panics(|| crate::open_ledger_app(*is_simulator).map(|_| ResponseType::OpenedLedgerApp))
             }
+            MessageType::DeleteStorage => {
+                convert_async_panics(|| async move {
+                    self.account_manager.delete_internal().await?;
+                    Ok(ResponseType::DeletedStorage)
+                })
+                .await
+            }
             MessageType::SendTransfer { account_id, transfer } => {
                 convert_async_panics(|| async { self.send_transfer(account_id, transfer.clone().finish()).await }).await
             }
@@ -166,6 +181,19 @@ impl WalletMessageHandler {
             } => {
                 convert_async_panics(|| async { self.internal_transfer(from_account_id, to_account_id, *amount).await })
                     .await
+            }
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            MessageType::ChangeStrongholdPassword {
+                current_password,
+                new_password,
+            } => {
+                convert_async_panics(|| async {
+                    self.account_manager
+                        .change_stronghold_password(current_password, new_password)
+                        .await?;
+                    Ok(ResponseType::StrongholdPasswordChanged)
+                })
+                .await
             }
         };
 

@@ -214,6 +214,7 @@ impl AccountInitialiser {
         };
 
         let bech32_hrp = crate::client::get_client(account.client_options())
+            .await
             .read()
             .await
             .get_network_info()
@@ -255,6 +256,7 @@ impl AccountInitialiser {
             let guard: AccountHandle = account.into();
             drop(accounts);
             self.accounts.write().await.insert(account_id, guard.clone());
+            let _ = crate::monitor::monitor_account_addresses_balance(guard.clone()).await;
             guard
         };
 
@@ -270,6 +272,7 @@ pub struct Account {
     #[getset(set = "pub(crate)")]
     id: String,
     /// The account's signer type.
+    #[serde(rename = "signerType")]
     signer_type: SignerType,
     /// The account index
     index: usize,
@@ -294,6 +297,7 @@ pub struct Account {
     #[serde(rename = "clientOptions")]
     client_options: ClientOptions,
     #[getset(set = "pub(crate)", get = "pub(crate)")]
+    #[serde(rename = "storagePath")]
     storage_path: PathBuf,
     #[getset(set = "pub(crate)", get = "pub(crate)")]
     #[serde(skip)]
@@ -559,6 +563,7 @@ impl Account {
         self.client_options = options;
 
         let bech32_hrp = crate::client::get_client(&self.client_options)
+            .await
             .read()
             .await
             .get_network_info()
@@ -707,7 +712,7 @@ mod tests {
     use super::AccountHandle;
     use crate::{
         account_manager::AccountManager,
-        address::{Address, AddressBuilder, AddressOutput},
+        address::{Address, AddressBuilder, AddressOutput, OutputKind},
         client::ClientOptionsBuilder,
         message::{Message, MessageType},
     };
@@ -796,6 +801,7 @@ mod tests {
             amount: value,
             is_spent: false,
             address: crate::test_utils::generate_random_iota_address(),
+            kind: OutputKind::SignatureLockedSingle,
         }
     }
 

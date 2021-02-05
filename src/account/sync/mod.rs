@@ -3,7 +3,7 @@
 
 use crate::{
     account::{Account, AccountHandle},
-    address::{Address, AddressBuilder, AddressOutput, AddressWrapper},
+    address::{Address, AddressBuilder, AddressOutput, AddressWrapper, OutputKind},
     message::{Message, RemainderValueStrategy, Transfer},
     signing::{GenerateAddressMetadata, SignMessageMetadata},
 };
@@ -25,6 +25,7 @@ use tokio::{
 };
 
 use std::{
+    collections::HashSet,
     convert::TryInto,
     sync::{Arc, Mutex},
     thread,
@@ -34,13 +35,14 @@ use std::{
 mod input_selection;
 
 const OUTPUT_LOCK_TIMEOUT: Duration = Duration::from_secs(30);
+const DUST_ALLOWANCE_VALUE: u64 = 1_000_000;
 
 pub(crate) async fn sync_address(
     account: &Account,
     address: &mut Address,
     bech32_hrp: String,
 ) -> crate::Result<Vec<(MessageId, Option<bool>, IotaMessage)>> {
-    let client = crate::client::get_client(account.client_options());
+    let client = crate::client::get_client(account.client_options()).await;
     let client = client.read().await;
 
     let iota_address = address.address();
@@ -154,6 +156,7 @@ async fn sync_addresses(
     let mut found_messages = vec![];
 
     let bech32_hrp = crate::client::get_client(account.client_options())
+        .await
         .read()
         .await
         .get_network_info()
@@ -249,7 +252,7 @@ async fn sync_messages(
             let client_options = client_options.clone();
             let messages_with_known_confirmation = messages_with_known_confirmation.clone();
             async move {
-                let client = crate::client::get_client(&client_options);
+                let client = crate::client::get_client(&client_options).await;
                 let client = client.read().await;
 
                 let address_outputs = client
@@ -380,10 +383,8 @@ async fn perform_sync(
     account.append_addresses(addresses_to_save);
 
     let parsed_messages = new_messages
-        .iter()
-        .map(|(id, confirmed, message)| {
-            Message::from_iota_message(*id, account.addresses(), &message, *confirmed).unwrap()
-        })
+        .into_iter()
+        .map(|(id, confirmed, message)| Message::from_iota_message(id, account.addresses(), message, confirmed))
         .collect();
     log::debug!("[SYNC] new messages: {:#?}", parsed_messages);
     account.append_messages(parsed_messages);
@@ -489,7 +490,8 @@ impl AccountSynchronizer {
                 let account_ref = self.account_handle.read().await;
 
                 let synced_account = SyncedAccount {
-                    account_id: account_ref.id().to_string(),
+                    id: account_ref.id().to_string(),
+                    index: *account_ref.index(),
                     account_handle: self.account_handle.clone(),
                     deposit_address: account_ref.latest_address().clone(),
                     is_empty,
@@ -523,8 +525,18 @@ impl AccountSynchronizer {
             Err(e) => Err(e),
         };
 
-        let _ = crate::monitor::monitor_account_addresses_balance(self.account_handle.clone());
-        let _ = crate::monitor::monitor_unconfirmed_messages(self.account_handle.clone());
+        if let Err(e) = crate::monitor::monitor_account_addresses_balance(self.account_handle.clone()).await {
+            log::error!(
+                "[MQTT] error resubscribing to addresses balances after syncing: {:?}",
+                e
+            );
+        }
+        if let Err(e) = crate::monitor::monitor_unconfirmed_messages(self.account_handle.clone()).await {
+            log::error!(
+                "[MQTT] error resubscribing to unconfirmed messages after syncing: {:?}",
+                e
+            );
+        }
 
         return_value
     }
@@ -534,8 +546,9 @@ impl AccountSynchronizer {
 #[derive(Debug, Clone, Getters, Serialize)]
 pub struct SyncedAccount {
     /// The account identifier.
-    #[serde(rename = "accountId")]
-    account_id: String,
+    id: String,
+    /// The account index.
+    index: usize,
     /// The associated account handle.
     #[serde(skip)]
     #[getset(get = "pub")]
@@ -576,7 +589,7 @@ impl SyncedAccount {
         account: &'a Account,
         address: &'a AddressWrapper,
     ) -> crate::Result<(Vec<input_selection::Input>, Option<input_selection::Input>)> {
-        let mut available_addresses: Vec<input_selection::Input> = account
+        let available_addresses: Vec<input_selection::Input> = account
             .addresses()
             .iter()
             .filter(|a| {
@@ -588,7 +601,7 @@ impl SyncedAccount {
                 balance: a.available_balance(&account),
             })
             .collect();
-        let addresses = input_selection::select_input(threshold, &mut available_addresses)?;
+        let addresses = input_selection::select_input(threshold, available_addresses)?;
 
         locked_addresses.extend(
             addresses
@@ -736,6 +749,12 @@ async fn perform_transfer(
 ) -> crate::Result<Message> {
     let mut utxos = vec![];
     let mut transaction_inputs = vec![];
+    // store (amount, address, new_created) to check later if dust is allowed
+    let mut dust_and_allowance_recorders = Vec::new();
+
+    if transfer_obj.amount.get() < DUST_ALLOWANCE_VALUE {
+        dust_and_allowance_recorders.push((transfer_obj.amount.get(), transfer_obj.address.to_bech32(), true));
+    }
 
     let account_ = account_handle.read().await;
 
@@ -773,6 +792,17 @@ async fn perform_transfer(
     let mut remainder_value = 0;
 
     for (utxo, address_index, address_internal, address_path) in utxos {
+        match utxo.kind {
+            OutputKind::SignatureLockedSingle => {
+                if utxo.amount < DUST_ALLOWANCE_VALUE {
+                    dust_and_allowance_recorders.push((utxo.amount, utxo.address.to_bech32(), false));
+                }
+            }
+            OutputKind::SignatureLockedDustAllowance => {
+                dust_and_allowance_recorders.push((utxo.amount, utxo.address.to_bech32(), false));
+            }
+        }
+
         let input: Input = UTXOInput::new(*utxo.transaction_id(), *utxo.index())?.into();
         essence_builder = essence_builder.add_input(input.clone());
         transaction_inputs.push(crate::signing::TransactionInput {
@@ -805,6 +835,11 @@ async fn perform_transfer(
                 missing_value,
                 remainder_value
             );
+
+            let remaining_balance_on_source = current_output_sum - transfer_obj.amount.get();
+            if remaining_balance_on_source < DUST_ALLOWANCE_VALUE {
+                dust_and_allowance_recorders.push((remaining_balance_on_source, utxo.address().to_bech32(), true));
+            }
         } else {
             log::debug!(
                 "[TRANSFER] adding output amount {}, current sum {}",
@@ -812,6 +847,11 @@ async fn perform_transfer(
                 current_output_sum
             );
             current_output_sum += *utxo.amount();
+
+            let remaining_balance_on_source = current_output_sum - transfer_obj.amount.get();
+            if remaining_balance_on_source < DUST_ALLOWANCE_VALUE {
+                dust_and_allowance_recorders.push((remaining_balance_on_source, utxo.address().to_bech32(), true));
+            }
         }
     }
 
@@ -855,6 +895,12 @@ async fn perform_transfer(
                         deposit_address.to_bech32()
                     );
                     deposit_address
+                } else if let Some(address) = account_
+                    .addresses()
+                    .iter()
+                    .find(|a| *a.internal() && a.key_index() == remainder_address.key_index())
+                {
+                    address.address().clone()
                 } else {
                     let change_address = crate::address::get_new_change_address(
                         &account_,
@@ -887,10 +933,28 @@ async fn perform_transfer(
         None
     };
 
-    let client = crate::client::get_client(account_.client_options());
+    if let Some(remainder_deposit_address) = &remainder_deposit_address {
+        dust_and_allowance_recorders.push((remainder_value, remainder_deposit_address.to_bech32(), true));
+    }
+
+    let client = crate::client::get_client(account_.client_options()).await;
     let client = client.read().await;
 
-    let (parent1, parent2) = client.get_tips().await?;
+    // Check if we would let dust on an address behind or send new dust, which would make the tx unconfirmable
+    let mut single_addresses = HashSet::new();
+    for dust_or_allowance in &dust_and_allowance_recorders {
+        single_addresses.insert(dust_or_allowance.1.to_string());
+    }
+    for address in single_addresses {
+        let created_or_consumed_outputs: Vec<(u64, bool)> = dust_and_allowance_recorders
+            .iter()
+            .filter(|d| d.1 == address)
+            .map(|(amount, _, flag)| (*amount, *flag))
+            .collect();
+        is_dust_allowed(&account_, &client, address, created_or_consumed_outputs).await?;
+    }
+
+    let parents = client.get_tips().await?;
 
     if let Some(indexation) = transfer_obj.indexation {
         essence_builder = essence_builder.with_payload(Payload::Indexation(Box::new(indexation)));
@@ -928,8 +992,7 @@ async fn perform_transfer(
     let transaction = tx_builder.finish()?;
 
     let message = MessageBuilder::<ClientMiner>::new()
-        .with_parent1(parent1)
-        .with_parent2(parent2)
+        .with_parents(parents)
         .with_payload(Payload::Transaction(Box::new(transaction)))
         .with_network_id(client.get_network_id().await?)
         .with_nonce_provider(client.get_pow_provider(), client.get_network_info().min_pow_score)
@@ -958,7 +1021,7 @@ async fn perform_transfer(
         account_.append_addresses(vec![addr]);
     }
 
-    let message = Message::from_iota_message(message_id, account_.addresses(), &message, None)?;
+    let message = Message::from_iota_message(message_id, account_.addresses(), message, None);
     account_.append_messages(vec![message.clone()]);
 
     account_.save().await?;
@@ -978,6 +1041,84 @@ async fn perform_transfer(
     }
 
     Ok(message)
+}
+
+// Calculate the outputs on this address after the transaction gets confirmed so we know if we can send dust or
+// dust allowance outputs (as input). the bool in the outputs defines if we consume this output (false) or create a new
+// one (true)
+async fn is_dust_allowed(
+    account: &Account,
+    client: &iota::Client,
+    address: String,
+    outputs: Vec<(u64, bool)>,
+) -> crate::Result<()> {
+    // balance of all dust allowance outputs
+    let mut dust_allowance_balance: i64 = 0;
+    // Amount of dust outputs
+    let mut dust_outputs_amount: i64 = 0;
+
+    // Add outputs from this transaction
+    for output in outputs {
+        match output.1 {
+            // add newly created outputs
+            true => {
+                if output.0 >= DUST_ALLOWANCE_VALUE {
+                    dust_allowance_balance += output.0 as i64;
+                } else {
+                    dust_outputs_amount += 1
+                }
+            }
+            // remove consumed outputs
+            false => {
+                if output.0 >= DUST_ALLOWANCE_VALUE {
+                    dust_allowance_balance -= output.0 as i64;
+                } else {
+                    dust_outputs_amount -= 1;
+                }
+            }
+        }
+    }
+
+    // Get outputs from address and apply values
+    let address_outputs = if let Some(address) = account.addresses().iter().find(|a| a.address().to_bech32() == address)
+    {
+        address
+            .outputs()
+            .iter()
+            .map(|output| (output.amount, output.kind.clone()))
+            .collect()
+    } else {
+        let outputs = client.find_outputs(&[], &[address.to_string().into()]).await?;
+        let mut address_outputs = Vec::new();
+        for output in outputs {
+            let output = AddressOutput::from_output_response(output, "".to_string())?;
+            address_outputs.push((output.amount, output.kind));
+        }
+        address_outputs
+    };
+    for (amount, kind) in address_outputs {
+        match kind {
+            OutputKind::SignatureLockedDustAllowance => {
+                dust_allowance_balance += amount as i64;
+            }
+            OutputKind::SignatureLockedSingle => {
+                if amount < DUST_ALLOWANCE_VALUE {
+                    dust_outputs_amount += 1;
+                }
+            }
+        }
+    }
+
+    // Here dust_allowance_balance and dust_outputs_amount should be as if this transaction gets confirmed
+    // Max allowed dust outputs is 100
+    let allowed_dust_amount = std::cmp::min(dust_allowance_balance / 100_000, 100);
+    if dust_outputs_amount > allowed_dust_amount {
+        return Err(crate::Error::DustError(format!(
+            "No dust output allowed on address {}",
+            address
+        )));
+    }
+    Ok(())
 }
 
 pub(crate) enum RepostAction {
@@ -1007,7 +1148,7 @@ pub(crate) async fn repost_message(
                 )));
             }
 
-            let client = crate::client::get_client(account.client_options());
+            let client = crate::client::get_client(account.client_options()).await;
             let client = client.read().await;
 
             let (id, message) = match action {
@@ -1015,7 +1156,7 @@ pub(crate) async fn repost_message(
                 RepostAction::Reattach => client.reattach(message_id).await?,
                 RepostAction::Retry => client.retry(message_id).await?,
             };
-            let message = Message::from_iota_message(id, account.addresses(), &message, None)?;
+            let message = Message::from_iota_message(id, account.addresses(), message, None);
 
             account.append_messages(vec![message.clone()]);
 
@@ -1050,5 +1191,75 @@ mod tests {
         .await;
 
         // TODO improve test when the node API is ready to use
+    }
+
+    // this needs a proper client mock to run on CI
+    // #[tokio::test]
+    #[allow(dead_code)]
+    async fn dust_transfer() {
+        let manager = crate::test_utils::get_account_manager().await;
+
+        // first we create an address with balance - the source address
+        let mut address1 = crate::test_utils::generate_random_address();
+        address1.outputs.push(crate::address::AddressOutput {
+            transaction_id: iota::TransactionId::from([0; 32]),
+            message_id: iota::MessageId::from([0; 32]),
+            index: 0,
+            amount: 10000000,
+            is_spent: false,
+            address: address1.address().clone(),
+            kind: crate::address::OutputKind::SignatureLockedSingle,
+        });
+        address1.set_balance(10000000);
+
+        // then we create an address without balance - the deposit address
+        let address2 = crate::test_utils::generate_random_address();
+
+        let mut address3 = crate::test_utils::generate_random_address();
+        address3.set_key_index(0);
+        address3.set_internal(true);
+        address3.outputs.push(crate::address::AddressOutput {
+            transaction_id: iota::TransactionId::from([0; 32]),
+            message_id: iota::MessageId::from([0; 32]),
+            index: 0,
+            amount: 10000000,
+            is_spent: false,
+            address: address3.address().clone(),
+            kind: crate::address::OutputKind::SignatureLockedDustAllowance,
+        });
+
+        println!(
+            "{}\n{}\n{}",
+            address1.address().to_bech32(),
+            address2.address().to_bech32(),
+            address3.address().to_bech32()
+        );
+
+        let account_handle = crate::test_utils::AccountCreator::new(&manager)
+            .addresses(vec![address1, address2.clone(), address3])
+            .create()
+            .await;
+        let id = account_handle.id().await;
+        let index = account_handle.index().await;
+        let synced = super::SyncedAccount {
+            id,
+            index,
+            account_handle,
+            deposit_address: crate::test_utils::generate_random_address(),
+            is_empty: false,
+            messages: Vec::new(),
+            addresses: Vec::new(),
+        };
+        let res = synced
+            .transfer(
+                super::Transfer::builder(address2.address().clone(), std::num::NonZeroU64::new(9999500).unwrap())
+                    .finish(),
+            )
+            .await;
+        assert_eq!(res.is_err(), true);
+        match res.unwrap_err() {
+            crate::Error::DustError(_) => {}
+            _ => panic!("unexpected response"),
+        }
     }
 }

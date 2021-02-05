@@ -169,6 +169,9 @@ pub enum Error {
     /// Account alias must be unique.
     #[error("can't create account: account alias already exists")]
     AccountAliasAlreadyExists,
+    /// Dust error, for example not enough balance on an address.
+    #[error("Dust error: {0}")]
+    DustError(String),
 }
 
 impl Drop for Error {
@@ -278,6 +281,7 @@ impl serde::Serialize for Error {
             #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
             Self::LedgerEssenceTooLarge => serialize_variant(self, serializer, "LedgerEssenceTooLarge"),
             Self::AccountAliasAlreadyExists => serialize_variant(self, serializer, "AccountAliasAlreadyExists"),
+            Self::DustError(_) => serialize_variant(self, serializer, "DustError"),
         }
     }
 }

@@ -20,7 +20,10 @@ use std::{
     num::NonZeroU64,
     panic::AssertUnwindSafe,
     path::{Path, PathBuf},
-    sync::Arc,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
     thread,
     time::Duration,
 };
@@ -211,6 +214,7 @@ impl AccountManagerBuilder {
             accounts,
             stop_polling_sender: None,
             polling_handle: None,
+            is_monitoring: Arc::new(AtomicBool::new(false)),
             generated_mnemonic: None,
             encrypted_accounts,
         };
@@ -235,6 +239,7 @@ pub struct AccountManager {
     accounts: AccountStore,
     stop_polling_sender: Option<BroadcastSender<()>>,
     polling_handle: Option<thread::JoinHandle<()>>,
+    is_monitoring: Arc<AtomicBool>,
     generated_mnemonic: Option<String>,
     encrypted_accounts: Vec<String>,
 }
@@ -249,6 +254,7 @@ impl Clone for AccountManager {
             accounts: self.accounts.clone(),
             stop_polling_sender: self.stop_polling_sender.clone(),
             polling_handle: None,
+            is_monitoring: self.is_monitoring.clone(),
             generated_mnemonic: self.generated_mnemonic.clone(),
             encrypted_accounts: self.encrypted_accounts.clone(),
         }
@@ -259,6 +265,14 @@ impl Drop for AccountManager {
     fn drop(&mut self) {
         self.stop_background_sync();
     }
+}
+
+#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+fn stronghold_password<P: AsRef<str>>(password: P) -> [u8; 32] {
+    let mut dk = [0; 64];
+    // safe to unwrap because rounds > 0
+    crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_ref().as_bytes(), b"wallet.rs", 100, &mut dk).unwrap();
+    dk[0..32][..].try_into().unwrap()
 }
 
 impl AccountManager {
@@ -291,9 +305,35 @@ impl AccountManager {
         Ok((Arc::new(RwLock::new(parsed_accounts)), encrypted_accounts))
     }
 
+    /// Deletes the storage.
+    pub async fn delete(self) -> Result<(), (crate::Error, Self)> {
+        self.delete_internal().await.map_err(|e| (e, self))
+    }
+
+    pub(crate) async fn delete_internal(&self) -> crate::Result<()> {
+        let storage_id = crate::storage::remove(&self.storage_path).await;
+
+        if self.storage_path.exists() {
+            std::fs::remove_file(&self.storage_path)?;
+        }
+
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        {
+            crate::stronghold::unload_snapshot(&self.storage_path, false).await?;
+            let _ = std::fs::remove_file(self.stronghold_snapshot_path_internal(&storage_id).await?);
+        }
+
+        Ok(())
+    }
+
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     pub(crate) async fn stronghold_snapshot_path(&self) -> crate::Result<PathBuf> {
         let storage_id = crate::storage::get(&self.storage_path).await?.lock().await.id();
+        self.stronghold_snapshot_path_internal(storage_id).await
+    }
+
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    pub(crate) async fn stronghold_snapshot_path_internal(&self, storage_id: &str) -> crate::Result<PathBuf> {
         let stronghold_snapshot_path = if storage_id == crate::storage::stronghold::STORAGE_ID {
             self.storage_path.clone()
         } else {
@@ -312,8 +352,12 @@ impl AccountManager {
     }
 
     /// Starts monitoring the accounts with the node's mqtt topics.
-    async fn start_monitoring(&self) -> crate::Result<()> {
-        for account in self.accounts.read().await.values() {
+    async fn start_monitoring(accounts: AccountStore, is_monitoring: Arc<AtomicBool>) {
+        is_monitoring.store(Self::_start_monitoring(accounts).await.is_ok(), Ordering::Relaxed);
+    }
+
+    async fn _start_monitoring(accounts: AccountStore) -> crate::Result<()> {
+        for account in accounts.read().await.values() {
             crate::monitor::monitor_account_addresses_balance(account.clone()).await?;
             crate::monitor::monitor_unconfirmed_messages(account.clone()).await?;
         }
@@ -322,9 +366,9 @@ impl AccountManager {
 
     /// Initialises the background polling and MQTT monitoring.
     async fn start_background_sync(&mut self, polling_interval: Duration) {
-        let monitoring_disabled = self.start_monitoring().await.is_err();
+        Self::start_monitoring(self.accounts.clone(), self.is_monitoring.clone()).await;
         let (stop_polling_sender, stop_polling_receiver) = broadcast_channel(1);
-        self.start_polling(polling_interval, monitoring_disabled, stop_polling_receiver);
+        self.start_polling(polling_interval, stop_polling_receiver);
         self.stop_polling_sender = Some(stop_polling_sender);
     }
 
@@ -359,12 +403,20 @@ impl AccountManager {
             .unwrap();
 
         let mut accounts = self.accounts.write().await;
+        for account_handle in accounts.values() {
+            let _ = crate::monitor::unsubscribe(account_handle.clone());
+        }
         for encrypted_account in &self.encrypted_accounts {
             let decrypted = crate::storage::decrypt_account_json(encrypted_account, &key)?;
             let account = serde_json::from_str::<Account>(&decrypted)?;
             accounts.insert(account.id().into(), account.into());
         }
         self.encrypted_accounts.clear();
+
+        crate::spawn(Self::start_monitoring(
+            self.accounts.clone(),
+            self.is_monitoring.clone(),
+        ));
 
         Ok(())
     }
@@ -373,28 +425,45 @@ impl AccountManager {
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
     pub async fn set_stronghold_password<P: AsRef<str>>(&mut self, password: P) -> crate::Result<()> {
-        let mut dk = [0; 64];
-        // safe to unwrap because rounds > 0
-        crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_ref().as_bytes(), b"wallet.rs", 100, &mut dk).unwrap();
-
         let stronghold_path = if self.storage_path.extension().unwrap_or_default() == "stronghold" {
             self.storage_path.clone()
         } else {
             self.storage_folder.join(STRONGHOLD_FILENAME)
         };
-        crate::stronghold::load_snapshot(&stronghold_path, &dk[0..32][..].try_into().unwrap()).await?;
+        crate::stronghold::load_snapshot(&stronghold_path, &stronghold_password(password)).await?;
 
         // let is_empty = self.accounts.read().await.is_empty();
         if self.accounts.read().await.is_empty() {
             let (accounts, encrypted_accounts) = Self::load_accounts(&self.storage_path).await?;
-            self.encrypted_accounts = encrypted_accounts;
             let mut accounts_store = self.accounts.write().await;
             for (id, account) in &*accounts.read().await {
                 accounts_store.insert(id.clone(), account.clone());
             }
+            self.encrypted_accounts = encrypted_accounts;
+            crate::spawn(Self::start_monitoring(
+                self.accounts.clone(),
+                self.is_monitoring.clone(),
+            ));
         }
 
         Ok(())
+    }
+
+    /// Sets the stronghold password.
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
+    pub async fn change_stronghold_password<C: AsRef<str>, N: AsRef<str>>(
+        &self,
+        current_password: C,
+        new_password: N,
+    ) -> crate::Result<()> {
+        crate::stronghold::change_password(
+            &self.stronghold_snapshot_path().await?,
+            &stronghold_password(current_password),
+            &stronghold_password(new_password),
+        )
+        .await
+        .map_err(|e| e.into())
     }
 
     /// Determines whether all accounts has the latest address unused.
@@ -409,14 +478,10 @@ impl AccountManager {
     }
 
     /// Starts the polling mechanism.
-    fn start_polling(
-        &mut self,
-        polling_interval: Duration,
-        is_monitoring_disabled: bool,
-        mut stop: BroadcastReceiver<()>,
-    ) {
+    fn start_polling(&mut self, polling_interval: Duration, mut stop: BroadcastReceiver<()>) {
         let storage_file_path = self.storage_path.clone();
         let accounts = self.accounts.clone();
+        let is_monitoring = self.is_monitoring.clone();
 
         let handle = thread::spawn(move || {
             let runtime = tokio::runtime::Builder::new_current_thread()
@@ -432,7 +497,7 @@ impl AccountManager {
 
                             let storage_file_path_ = storage_file_path.clone();
 
-                            if let Err(error) = AssertUnwindSafe(poll(accounts.clone(), storage_file_path_, is_monitoring_disabled))
+                            if let Err(error) = AssertUnwindSafe(poll(accounts.clone(), storage_file_path_, is_monitoring.load(Ordering::Relaxed)))
                                 .catch_unwind()
                                 .await {
                                     // if the error isn't a crate::Error type
@@ -748,8 +813,16 @@ impl AccountManager {
         #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
         if self.accounts.read().await.is_empty() {
             let (accounts, encrypted_accounts) = Self::load_accounts(&self.storage_path).await?;
-            self.accounts = accounts;
+            let mut accounts_store = self.accounts.write().await;
+            for (id, account) in &*accounts.read().await {
+                accounts_store.insert(id.clone(), account.clone());
+            }
             self.encrypted_accounts = encrypted_accounts;
+
+            crate::spawn(Self::start_monitoring(
+                self.accounts.clone(),
+                self.is_monitoring.clone(),
+            ));
         }
 
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
@@ -820,8 +893,13 @@ impl AccountManager {
     /// Gets all accounts from storage.
     pub async fn get_accounts(&self) -> crate::Result<Vec<AccountHandle>> {
         self.check_storage_encryption()?;
-        let accounts = self.accounts.read().await;
-        Ok(accounts.values().cloned().collect())
+        let mut accounts = Vec::new();
+        for account in self.accounts.read().await.values() {
+            let index = account.index().await;
+            accounts.push((index, account.clone()));
+        }
+        accounts.sort_by(|a, b| a.0.cmp(&b.0));
+        Ok(accounts.into_iter().map(|(_, account)| account).collect())
     }
 
     /// Reattaches an unconfirmed transaction.
@@ -855,8 +933,8 @@ impl AccountManager {
     }
 }
 
-async fn poll(accounts: AccountStore, storage_file_path: PathBuf, syncing: bool) -> crate::Result<()> {
-    let retried = if syncing {
+async fn poll(accounts: AccountStore, storage_file_path: PathBuf, is_mqtt_monitoring: bool) -> crate::Result<()> {
+    let retried = if !is_mqtt_monitoring {
         let mut accounts_before_sync = Vec::new();
         for account_handle in accounts.read().await.values() {
             accounts_before_sync.push(account_handle.read().await.clone());
@@ -1153,6 +1231,19 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn delete_storage() {
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            crate::test_utils::AccountCreator::new(&manager).create().await;
+            manager
+                .delete()
+                .await
+                .map_err(|(e, _)| e)
+                .expect("failed to delete storage");
+        })
+        .await;
+    }
+
+    #[tokio::test]
     async fn duplicated_alias() {
         let manager = crate::test_utils::get_account_manager().await;
 
@@ -1282,10 +1373,9 @@ mod tests {
                 .messages(vec![Message::from_iota_message(
                     MessageId::new([0; 32]),
                     &[],
-                    &MessageBuilder::new()
+                    MessageBuilder::new()
                         .with_nonce_provider(crate::test_utils::NoopNonceProvider {}, 4000f64)
-                        .with_parent1(MessageId::new([0; 32]))
-                        .with_parent2(MessageId::new([0; 32]))
+                        .with_parents(vec![MessageId::new([0; 32])])
                         .with_payload(Payload::Indexation(Box::new(
                             IndexationPayload::new("index".to_string(), &[0; 16]).unwrap(),
                         )))
@@ -1293,8 +1383,7 @@ mod tests {
                         .finish()
                         .unwrap(),
                     Some(true),
-                )
-                .unwrap()])
+                )])
                 .initialise()
                 .await
                 .unwrap();

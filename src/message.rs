@@ -222,10 +222,8 @@ pub struct Message {
     pub(crate) id: MessageId,
     /// The message version.
     pub(crate) version: u64,
-    /// Message id of the first message this message refers to.
-    pub(crate) parent1: MessageId,
-    /// Message id of the second message this message refers to.
-    pub(crate) parent2: MessageId,
+    /// Message ids this message refers to.
+    pub(crate) parents: Vec<MessageId>,
     /// Length of the payload.
     #[serde(rename = "payloadLength")]
     pub(crate) payload_length: usize,
@@ -247,6 +245,7 @@ pub struct Message {
     /// The message's value.
     pub(crate) value: u64,
     /// The message's remainder value sum.
+    #[serde(rename = "remainderValue")]
     pub(crate) remainder_value: u64,
 }
 
@@ -278,9 +277,9 @@ impl Message {
     pub(crate) fn from_iota_message(
         id: MessageId,
         account_addresses: &[Address],
-        message: &IotaMessage,
+        message: IotaMessage,
         confirmed: Option<bool>,
-    ) -> crate::Result<Self> {
+    ) -> Self {
         let mut packed_payload = Vec::new();
         let _ = message.payload().pack(&mut packed_payload);
 
@@ -299,8 +298,7 @@ impl Message {
         let message = Self {
             id,
             version: 1,
-            parent1: *message.parent1(),
-            parent2: *message.parent2(),
+            parents: message.parents().to_vec(),
             payload_length: packed_payload.len(),
             payload: message.payload().as_ref().unwrap().clone(),
             timestamp: Utc::now(),
@@ -314,7 +312,7 @@ impl Message {
             remainder_value: total_value - value,
         };
 
-        Ok(message)
+        message
     }
 
     /// The message's addresses.

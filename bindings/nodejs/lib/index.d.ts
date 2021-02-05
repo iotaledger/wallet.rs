@@ -35,8 +35,7 @@ export declare type Payload = Transaction;
 
 export declare interface Message {
   version: number;
-  parent1: string;
-  parent2: string;
+  parents: string[];
   payloadLength: number;
   payload: Payload;
   timestamp: string;
@@ -137,6 +136,7 @@ export declare class AccountManager {
   constructor(options: ManagerOptions)
   setStoragePassword(password: string): void
   setStrongholdPassword(password: string): void
+  changeStrongholdPassword(currentPassword: string, newPassword: string): void
   generateMnemonic(): string
   storeMnemonic(signerType: SignerType, mnemonic?: string): void
   createAccount(account: AccountToCreate): Account
