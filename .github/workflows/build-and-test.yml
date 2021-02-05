@@ -237,7 +237,7 @@ jobs:
 
       - name: Install OpenSSL (macos)
         if: matrix.os == 'macos-latest'
-        run: sudo /opt/local/bin/port -N install openssl +universal
+        run: brew install openssl
 
       - name: Build python binding
         run: cargo build --release
