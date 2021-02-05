@@ -11,6 +11,9 @@ edition = "2018"
 name = "iota_wallet"
 crate-type = ["cdylib"]
 
+[patch.'crates-io']
+lexical-core = { git = "https://github.com/Gelbpunkt/rust-lexical", branch = "fix-warnings-and-update-deps" }
+
 [dependencies]
 iota-wallet = { path = "../../../", version = "0.1.0", features = ["stronghold", "stronghold-storage", "sqlite-storage", "ledger-nano", "ledger-nano-simulator"] }
 iota-core = { git = "https://github.com/iotaledger/iota.rs", branch = "dev" }
