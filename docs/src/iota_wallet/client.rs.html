@@ -511,6 +511,17 @@
 <span id="508">508</span>
 <span id="509">509</span>
 <span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -562,10 +573,16 @@
                     .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>()[..],
             )
             .<span class="kw">await</span>
+            <span class="comment">// safe to unwrap since we&#39;re sure we have valid URLs</span>
             .<span class="ident">unwrap</span>();
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">network</span>) <span class="op">=</span> <span class="ident">options</span>.<span class="ident">network</span>() {
             <span class="ident">client_builder</span> <span class="op">=</span> <span class="ident">client_builder</span>.<span class="ident">with_network</span>(<span class="ident">network</span>);
+        }
+
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">node</span>) <span class="op">=</span> <span class="ident">options</span>.<span class="ident">node</span>() {
+            <span class="comment">// safe to unwrap since we&#39;re sure we have valid URLs</span>
+            <span class="ident">client_builder</span> <span class="op">=</span> <span class="ident">client_builder</span>.<span class="ident">with_node</span>(<span class="ident">node</span>.<span class="ident">as_str</span>()).<span class="ident">unwrap</span>();
         }
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">node_sync_interval</span>) <span class="op">=</span> <span class="ident">options</span>.<span class="ident">node_sync_interval</span>() {
@@ -735,6 +752,7 @@
     <span class="doccomment">/// Builds the options.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ClientOptions</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">ClientOptions</span> {
+            <span class="ident">node</span>: <span class="prelude-val">None</span>,
             <span class="ident">nodes</span>: <span class="self">self</span>.<span class="ident">nodes</span>,
             <span class="ident">node_pool_urls</span>: <span class="self">self</span>.<span class="ident">node_pool_urls</span>,
             <span class="ident">network</span>: <span class="self">self</span>.<span class="ident">network</span>,
@@ -848,6 +866,8 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">Getters</span>)]</span>
 <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">get</span> <span class="op">=</span> <span class="string">&quot;pub(crate)&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ClientOptions</span> {
+    <span class="doccomment">/// this option is here just to simplify usage from consumers using the deserialization</span>
+    <span class="ident">node</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Url</span><span class="op">&gt;</span>,
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">default</span>)]</span>
     <span class="ident">nodes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Url</span><span class="op">&gt;</span>,
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;nodePoolUrls&quot;</span>, <span class="ident">default</span>)]</span>
@@ -876,6 +896,7 @@
 
 <span class="kw">impl</span> <span class="ident">Hash</span> <span class="kw">for</span> <span class="ident">ClientOptions</span> {
     <span class="kw">fn</span> <span class="ident">hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hasher</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">H</span>) {
+        <span class="self">self</span>.<span class="ident">node</span>.<span class="ident">hash</span>(<span class="ident">state</span>);
         <span class="self">self</span>.<span class="ident">nodes</span>.<span class="ident">hash</span>(<span class="ident">state</span>);
         <span class="self">self</span>.<span class="ident">node_pool_urls</span>.<span class="ident">hash</span>(<span class="ident">state</span>);
         <span class="self">self</span>.<span class="ident">network</span>.<span class="ident">hash</span>(<span class="ident">state</span>);
@@ -887,7 +908,8 @@
 
 <span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">ClientOptions</span> {
     <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">nodes</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">nodes</span>
+        <span class="self">self</span>.<span class="ident">node</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">node</span>
+            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">nodes</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">nodes</span>
             <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">node_pool_urls</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">node_pool_urls</span>
             <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">network</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">network</span>
             <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">mqtt_broker_options</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">mqtt_broker_options</span>
