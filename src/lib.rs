@@ -443,7 +443,7 @@ mod test_utils {
     pub struct GenerateMessageBuilder {
         value: u64,
         address: Address,
-        confirmed: bool,
+        confirmed: Option<bool>,
         broadcasted: bool,
         incoming: bool,
         input_transaction_id: TransactionId,
@@ -454,7 +454,7 @@ mod test_utils {
             Self {
                 value: rand::thread_rng().gen_range(1, 50000),
                 address: generate_random_address(),
-                confirmed: false,
+                confirmed: Some(false),
                 broadcasted: false,
                 incoming: false,
                 input_transaction_id: TransactionId::new([0; 32]),
@@ -466,7 +466,7 @@ mod test_utils {
         GenerateMessageBuilder,
         value => u64,
         address => Address,
-        confirmed => bool,
+        confirmed => Option<bool>,
         broadcasted => bool,
         incoming => bool,
         input_transaction_id => TransactionId
@@ -503,7 +503,7 @@ mod test_utils {
                 nonce: 0,
                 value: self.value,
                 remainder_value: 0,
-                confirmed: Some(self.confirmed),
+                confirmed: self.confirmed,
                 broadcasted: self.broadcasted,
                 incoming: self.incoming,
             }

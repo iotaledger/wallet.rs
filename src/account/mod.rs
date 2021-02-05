@@ -906,7 +906,7 @@ mod tests {
             .address(second_address.clone())
             .value(10)
             .input_transaction_id(second_address.outputs[0].transaction_id)
-            .confirmed(true)
+            .confirmed(Some(true))
             .build();
 
         account_handle
@@ -938,7 +938,7 @@ mod tests {
             .build();
         let unconfirmed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
-            .confirmed(false)
+            .confirmed(None)
             .build();
         let value_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
@@ -968,31 +968,31 @@ mod tests {
         let received_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
             .incoming(true)
-            .confirmed(true)
+            .confirmed(Some(true))
             .broadcasted(true)
             .build();
         let sent_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(external_address.clone())
             .incoming(false)
-            .confirmed(true)
+            .confirmed(Some(true))
             .broadcasted(true)
             .build();
         let failed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
             .incoming(false)
-            .confirmed(true)
+            .confirmed(Some(true))
             .broadcasted(false)
             .build();
         let unconfirmed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
             .incoming(false)
-            .confirmed(false)
+            .confirmed(None)
             .broadcasted(true)
             .build();
         let value_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
             .incoming(false)
-            .confirmed(true)
+            .confirmed(Some(true))
             .broadcasted(true)
             .build();
 
