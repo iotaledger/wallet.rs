@@ -212,7 +212,7 @@ async fn sync_addresses(
         let is_empty = curr_found_messages.is_empty()
             && curr_generated_addresses
                 .iter()
-                .all(|address| !address.outputs().iter().any(|output| *output.is_spent()));
+                .all(|address| address.outputs().is_empty());
 
         found_messages.extend(curr_found_messages.into_iter());
         generated_addresses.extend(curr_generated_addresses.into_iter());
