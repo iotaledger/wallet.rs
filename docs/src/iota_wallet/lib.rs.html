@@ -592,7 +592,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))))]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">open_ledger_app</span>(<span class="ident">is_simulator</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="ident">ledger_iota</span>::<span class="ident">get_ledger</span>(<span class="ident">signing</span>::<span class="ident">ledger</span>::<span class="ident">HARDENED</span>, <span class="ident">is_simulator</span>)<span class="question-mark">?</span>;
+    <span class="ident">iota_ledger</span>::<span class="ident">get_ledger</span>(<span class="ident">signing</span>::<span class="ident">ledger</span>::<span class="ident">HARDENED</span>, <span class="ident">is_simulator</span>)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
 

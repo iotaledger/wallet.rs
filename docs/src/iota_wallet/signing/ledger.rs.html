@@ -244,7 +244,7 @@
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections</span>::<span class="ident">HashMap</span>, <span class="ident">fmt</span>, <span class="ident">path</span>::<span class="ident">PathBuf</span>};
 
 <span class="kw">use</span> <span class="ident">iota</span>::{<span class="ident">common</span>::<span class="ident">packable</span>::<span class="ident">Packable</span>, <span class="ident">UnlockBlock</span>};
-<span class="kw">use</span> <span class="ident">ledger_iota</span>::<span class="ident">LedgerBIP32Index</span>;
+<span class="kw">use</span> <span class="ident">iota_ledger</span>::<span class="ident">LedgerBIP32Index</span>;
 <span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">sync</span>::<span class="ident">Mutex</span>;
 
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">HARDENED</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0x80000000</span>;
@@ -252,7 +252,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LedgerNanoSigner</span> {
     <span class="kw">pub</span> <span class="ident">is_simulator</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">address_poll</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">AddressPoolEntry</span>, [<span class="ident">u8</span>; <span class="number">32</span>]<span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">address_pool</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">AddressPoolEntry</span>, [<span class="ident">u8</span>; <span class="number">32</span>]<span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">mutex</span>: <span class="ident">Mutex</span><span class="op">&lt;</span>()<span class="op">&gt;</span>,
 }
 
@@ -301,7 +301,7 @@
 
         <span class="kw">let</span> <span class="ident">bip32_account</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">account</span>.<span class="ident">index</span>() <span class="kw">as</span> <span class="ident">u32</span> <span class="op">|</span> <span class="ident">HARDENED</span>;
 
-        <span class="kw">let</span> <span class="ident">bip32</span> <span class="op">=</span> <span class="ident">ledger_iota</span>::<span class="ident">LedgerBIP32Index</span> {
+        <span class="kw">let</span> <span class="ident">bip32</span> <span class="op">=</span> <span class="ident">iota_ledger</span>::<span class="ident">LedgerBIP32Index</span> {
             <span class="ident">bip32_index</span>: <span class="ident">address_index</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">|</span> <span class="ident">HARDENED</span>,
             <span class="ident">bip32_change</span>: <span class="kw">if</span> <span class="ident">internal</span> { <span class="number">1</span> } <span class="kw">else</span> { <span class="number">0</span> } <span class="op">|</span> <span class="ident">HARDENED</span>,
         };
@@ -312,7 +312,7 @@
             <span class="ident">log</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Interactive address display - not using address pool&quot;</span>);
 
             <span class="comment">// get ledger</span>
-            <span class="kw">let</span> <span class="ident">ledger</span> <span class="op">=</span> <span class="ident">ledger_iota</span>::<span class="ident">get_ledger</span>(<span class="ident">bip32_account</span>, <span class="self">self</span>.<span class="ident">is_simulator</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">ledger</span> <span class="op">=</span> <span class="ident">iota_ledger</span>::<span class="ident">get_ledger</span>(<span class="ident">bip32_account</span>, <span class="self">self</span>.<span class="ident">is_simulator</span>)<span class="question-mark">?</span>;
 
             <span class="comment">// and generate a single address that is shown to the user</span>
             <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">ledger</span>.<span class="ident">get_addresses</span>(<span class="bool-val">true</span>, <span class="ident">bip32</span>, <span class="number">1</span>)<span class="question-mark">?</span>;
@@ -327,7 +327,7 @@
             <span class="ident">bip32_change</span>: <span class="ident">bip32</span>.<span class="ident">bip32_change</span>,
         };
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addr_pool</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">address_poll</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addr_pool</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">address_pool</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
         <span class="kw">if</span> <span class="op">!</span><span class="ident">addr_pool</span>.<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">pool_key</span>) {
             <span class="ident">log</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Adress {} not found in address pool&quot;</span>, <span class="ident">pool_key</span>);
             <span class="comment">// if not, we add new entries to the pool but limit the pool size</span>
@@ -337,7 +337,7 @@
             }
 
             <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="number">15</span>;
-            <span class="kw">let</span> <span class="ident">ledger</span> <span class="op">=</span> <span class="ident">ledger_iota</span>::<span class="ident">get_ledger</span>(<span class="ident">bip32_account</span>, <span class="self">self</span>.<span class="ident">is_simulator</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">ledger</span> <span class="op">=</span> <span class="ident">iota_ledger</span>::<span class="ident">get_ledger</span>(<span class="ident">bip32_account</span>, <span class="self">self</span>.<span class="ident">is_simulator</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">addresses</span> <span class="op">=</span> <span class="ident">ledger</span>.<span class="ident">get_addresses</span>(<span class="bool-val">false</span>, <span class="ident">bip32</span>, <span class="ident">count</span>)<span class="question-mark">?</span>;
 
             <span class="comment">// now put all addresses into the pool</span>
@@ -374,7 +374,7 @@
         <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">mutex</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
 
         <span class="kw">let</span> <span class="ident">bip32_account</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">account</span>.<span class="ident">index</span>() <span class="kw">as</span> <span class="ident">u32</span> <span class="op">|</span> <span class="ident">HARDENED</span>;
-        <span class="kw">let</span> <span class="ident">ledger</span> <span class="op">=</span> <span class="ident">ledger_iota</span>::<span class="ident">get_ledger</span>(<span class="ident">bip32_account</span>, <span class="self">self</span>.<span class="ident">is_simulator</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">ledger</span> <span class="op">=</span> <span class="ident">iota_ledger</span>::<span class="ident">get_ledger</span>(<span class="ident">bip32_account</span>, <span class="self">self</span>.<span class="ident">is_simulator</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">input_len</span> <span class="op">=</span> <span class="ident">inputs</span>.<span class="ident">len</span>();
 
