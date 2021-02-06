@@ -42,6 +42,7 @@ jobs:
         sudo apt-get install libudev-dev libusb-1.0-0-dev
 
     - name: Cache cargo registry
+      if: matrix.os != 'macos-latest'
       uses: actions/cache@v2.1.4
       with:
         path: ~/.cargo/registry
@@ -52,6 +53,7 @@ jobs:
           ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
           ${{ matrix.os }}-stable-cargo-registry-
     - name: Cache cargo index
+      if: matrix.os != 'macos-latest'
       uses: actions/cache@v2.1.4
       with:
         path: ~/.cargo/git
@@ -62,6 +64,7 @@ jobs:
           ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}
           ${{ matrix.os }}-stable-cargo-index-
     - name: Cache cargo target
+      if: matrix.os != 'macos-latest'
       uses: actions/cache@v2.1.4
       with:
         path: target
@@ -122,6 +125,7 @@ jobs:
           sudo apt-get install libudev-dev libusb-1.0-0-dev
 
       - name: Cache cargo registry
+        if: matrix.os != 'macos-latest'
         uses: actions/cache@v2.1.4
         with:
           path: ~/.cargo/registry
@@ -133,6 +137,7 @@ jobs:
             ${{ matrix.os }}-stable-cargo-registry-
 
       - name: Cache cargo index
+        if: matrix.os != 'macos-latest'
         uses: actions/cache@v2.1.4
         with:
           path: ~/.cargo/git
@@ -144,6 +149,7 @@ jobs:
             ${{ matrix.os }}-stable-cargo-index-
      
       - name: Cache nodejs binding cargo target
+        if: matrix.os != 'macos-latest'
         uses: actions/cache@v2.1.4
         with:
           path: bindings/nodejs/native/target
