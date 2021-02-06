@@ -837,7 +837,7 @@ async fn perform_transfer(
             );
 
             let remaining_balance_on_source = current_output_sum - transfer_obj.amount.get();
-            if remaining_balance_on_source < DUST_ALLOWANCE_VALUE {
+            if remaining_balance_on_source < DUST_ALLOWANCE_VALUE && remaining_balance_on_source != 0 {
                 dust_and_allowance_recorders.push((remaining_balance_on_source, utxo.address().to_bech32(), true));
             }
         } else {
@@ -849,7 +849,7 @@ async fn perform_transfer(
             current_output_sum += *utxo.amount();
 
             let remaining_balance_on_source = current_output_sum - transfer_obj.amount.get();
-            if remaining_balance_on_source < DUST_ALLOWANCE_VALUE {
+            if remaining_balance_on_source < DUST_ALLOWANCE_VALUE && remaining_balance_on_source != 0 {
                 dust_and_allowance_recorders.push((remaining_balance_on_source, utxo.address().to_bech32(), true));
             }
         }
