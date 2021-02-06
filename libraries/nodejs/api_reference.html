@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../../welcome.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded "><a href="../../overview/index.html"><strong aria-hidden="true">2.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../../libraries/index.html"><strong aria-hidden="true">3.</strong> Libraries</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../libraries/rust/index.html"><strong aria-hidden="true">3.1.</strong> Rust</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../libraries/rust/getting_started.html"><strong aria-hidden="true">3.1.1.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../../libraries/rust/examles.html"><strong aria-hidden="true">3.1.2.</strong> Examples</a></li><li class="chapter-item expanded "><a href="../../libraries/rust/api_reference.html"><strong aria-hidden="true">3.1.3.</strong> API Reference</a></li><li class="chapter-item expanded "><a href="../../libraries/rust/troubleshooting.html"><strong aria-hidden="true">3.1.4.</strong> Troubleshooting</a></li></ol></li><li class="chapter-item expanded "><a href="../../libraries/nodejs/index.html"><strong aria-hidden="true">3.2.</strong> Node.js</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../libraries/nodejs/getting_started.html"><strong aria-hidden="true">3.2.1.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../../libraries/nodejs/examles.html"><strong aria-hidden="true">3.2.2.</strong> Examples</a></li><li class="chapter-item expanded "><a href="../../libraries/nodejs/api_reference.html" class="active"><strong aria-hidden="true">3.2.3.</strong> API Reference</a></li><li class="chapter-item expanded "><a href="../../libraries/nodejs/troubleshooting.html"><strong aria-hidden="true">3.2.4.</strong> Troubleshooting</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../../specs/index.html"><strong aria-hidden="true">4.</strong> Specification</a></li><li class="chapter-item expanded "><a href="../../contribute.html"><strong aria-hidden="true">5.</strong> Contribute</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../../welcome.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded "><a href="../../overview/index.html"><strong aria-hidden="true">2.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../../libraries/index.html"><strong aria-hidden="true">3.</strong> Libraries</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../libraries/rust/index.html"><strong aria-hidden="true">3.1.</strong> Rust</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../libraries/rust/getting_started.html"><strong aria-hidden="true">3.1.1.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../../libraries/rust/examples.html"><strong aria-hidden="true">3.1.2.</strong> Examples</a></li><li class="chapter-item expanded "><a href="../../libraries/rust/api_reference.html"><strong aria-hidden="true">3.1.3.</strong> API Reference</a></li><li class="chapter-item expanded "><a href="../../libraries/rust/troubleshooting.html"><strong aria-hidden="true">3.1.4.</strong> Troubleshooting</a></li></ol></li><li class="chapter-item expanded "><a href="../../libraries/nodejs/index.html"><strong aria-hidden="true">3.2.</strong> Node.js</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../libraries/nodejs/getting_started.html"><strong aria-hidden="true">3.2.1.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../../libraries/nodejs/examples.html"><strong aria-hidden="true">3.2.2.</strong> Examples</a></li><li class="chapter-item expanded "><a href="../../libraries/nodejs/api_reference.html" class="active"><strong aria-hidden="true">3.2.3.</strong> API Reference</a></li><li class="chapter-item expanded "><a href="../../libraries/nodejs/troubleshooting.html"><strong aria-hidden="true">3.2.4.</strong> Troubleshooting</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../../specs/index.html"><strong aria-hidden="true">4.</strong> Specification</a></li><li class="chapter-item expanded "><a href="../../contribute.html"><strong aria-hidden="true">5.</strong> Contribute</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -267,6 +267,11 @@ Supported event names:</p>
 <h4><a class="header" href="#islatestaddressunused" id="islatestaddressunused">isLatestAddressUnused()</a></h4>
 <p>Determines whether all accounts has unused latest address after syncing with the Tangle.</p>
 <p><strong>Returns</strong> A promise resolving to the boolean value.</p>
+<h4><a class="header" href="#setclientoptionsoptions" id="setclientoptionsoptions">setClientOptions(options)</a></h4>
+<p>Updates the client options for all accounts.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>options</td><td><code><a href="#clientoptions">ClientOptions</a></code></td><td><code>null</code></td><td>The new account client options</td></tr>
+</tbody></table>
 <h3><a class="header" href="#syncedaccount" id="syncedaccount">SyncedAccount</a></h3>
 <h4><a class="header" href="#sendaddress-amount-options" id="sendaddress-amount-options">send(address, amount[, options])</a></h4>
 <p>Send funds to the given address.</p>
@@ -343,7 +348,7 @@ Supported event names:</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>alias</td><td><code>string</code></td><td><code>null</code></td><td>The new account alias</td></tr>
 </tbody></table>
-<h4><a class="header" href="#setclientoptionsoptions" id="setclientoptionsoptions">setClientOptions(options)</a></h4>
+<h4><a class="header" href="#setclientoptionsoptions-1" id="setclientoptionsoptions-1">setClientOptions(options)</a></h4>
 <p>Updates the account client options.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>options</td><td><code><a href="#clientoptions">ClientOptions</a></code></td><td><code>null</code></td><td>The new account client options</td></tr>
@@ -372,7 +377,7 @@ Supported event names:</p>
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-                            <a rel="prev" href="../../libraries/nodejs/examles.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../../libraries/nodejs/examples.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         
@@ -390,7 +395,7 @@ Supported event names:</p>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-                    <a rel="prev" href="../../libraries/nodejs/examles.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../../libraries/nodejs/examples.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 

@@ -424,6 +424,13 @@
 <span id="421">421</span>
 <span id="422">422</span>
 <span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -626,6 +633,8 @@
         <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;newPassword&quot;</span>)]</span>
         <span class="ident">new_password</span>: <span class="ident">String</span>,
     },
+    <span class="doccomment">/// Updates the client options for all accounts.</span>
+    <span class="ident">SetClientOptions</span>(<span class="ident">Box</span><span class="op">&lt;</span><span class="ident">ClientOptions</span><span class="op">&gt;</span>),
 }
 
 <span class="kw">impl</span> <span class="ident">Serialize</span> <span class="kw">for</span> <span class="ident">MessageType</span> {
@@ -698,6 +707,9 @@
                 <span class="ident">current_password</span>: <span class="kw">_</span>,
                 <span class="ident">new_password</span>: <span class="kw">_</span>,
             } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">22</span>, <span class="string">&quot;ChangeStrongholdPassword&quot;</span>),
+            <span class="ident">MessageType</span>::<span class="ident">SetClientOptions</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">23</span>, <span class="string">&quot;SetClientOptions&quot;</span>)
+            }
         }
     }
 }
@@ -801,7 +813,7 @@
     <span class="ident">AreAllLatestAddressesUnused</span>(<span class="ident">bool</span>),
     <span class="doccomment">/// SetAlias response.</span>
     <span class="ident">UpdatedAlias</span>,
-    <span class="doccomment">/// SetClientOptions response.</span>
+    <span class="doccomment">/// Account method SetClientOptions response.</span>
     <span class="ident">UpdatedClientOptions</span>,
     <span class="doccomment">/// OpenLedgerApp response.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
@@ -813,6 +825,8 @@
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>))]</span>
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>))))]</span>
     <span class="ident">StrongholdPasswordChanged</span>,
+    <span class="doccomment">/// SetClientOptions response.</span>
+    <span class="ident">UpdatedAllClientOptions</span>,
 }
 
 <span class="doccomment">/// The message type.</span>

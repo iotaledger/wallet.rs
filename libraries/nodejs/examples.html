@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../../welcome.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded "><a href="../../overview/index.html"><strong aria-hidden="true">2.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../../libraries/index.html"><strong aria-hidden="true">3.</strong> Libraries</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../libraries/rust/index.html"><strong aria-hidden="true">3.1.</strong> Rust</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../libraries/rust/getting_started.html"><strong aria-hidden="true">3.1.1.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../../libraries/rust/examles.html" class="active"><strong aria-hidden="true">3.1.2.</strong> Examples</a></li><li class="chapter-item expanded "><a href="../../libraries/rust/api_reference.html"><strong aria-hidden="true">3.1.3.</strong> API Reference</a></li><li class="chapter-item expanded "><a href="../../libraries/rust/troubleshooting.html"><strong aria-hidden="true">3.1.4.</strong> Troubleshooting</a></li></ol></li><li class="chapter-item expanded "><a href="../../libraries/nodejs/index.html"><strong aria-hidden="true">3.2.</strong> Node.js</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../libraries/nodejs/getting_started.html"><strong aria-hidden="true">3.2.1.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../../libraries/nodejs/examles.html"><strong aria-hidden="true">3.2.2.</strong> Examples</a></li><li class="chapter-item expanded "><a href="../../libraries/nodejs/api_reference.html"><strong aria-hidden="true">3.2.3.</strong> API Reference</a></li><li class="chapter-item expanded "><a href="../../libraries/nodejs/troubleshooting.html"><strong aria-hidden="true">3.2.4.</strong> Troubleshooting</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../../specs/index.html"><strong aria-hidden="true">4.</strong> Specification</a></li><li class="chapter-item expanded "><a href="../../contribute.html"><strong aria-hidden="true">5.</strong> Contribute</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../../welcome.html"><strong aria-hidden="true">1.</strong> Welcome</a></li><li class="chapter-item expanded "><a href="../../overview/index.html"><strong aria-hidden="true">2.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../../libraries/index.html"><strong aria-hidden="true">3.</strong> Libraries</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../libraries/rust/index.html"><strong aria-hidden="true">3.1.</strong> Rust</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../libraries/rust/getting_started.html"><strong aria-hidden="true">3.1.1.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../../libraries/rust/examples.html"><strong aria-hidden="true">3.1.2.</strong> Examples</a></li><li class="chapter-item expanded "><a href="../../libraries/rust/api_reference.html"><strong aria-hidden="true">3.1.3.</strong> API Reference</a></li><li class="chapter-item expanded "><a href="../../libraries/rust/troubleshooting.html"><strong aria-hidden="true">3.1.4.</strong> Troubleshooting</a></li></ol></li><li class="chapter-item expanded "><a href="../../libraries/nodejs/index.html"><strong aria-hidden="true">3.2.</strong> Node.js</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../libraries/nodejs/getting_started.html"><strong aria-hidden="true">3.2.1.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../../libraries/nodejs/examples.html" class="active"><strong aria-hidden="true">3.2.2.</strong> Examples</a></li><li class="chapter-item expanded "><a href="../../libraries/nodejs/api_reference.html"><strong aria-hidden="true">3.2.3.</strong> API Reference</a></li><li class="chapter-item expanded "><a href="../../libraries/nodejs/troubleshooting.html"><strong aria-hidden="true">3.2.4.</strong> Troubleshooting</a></li></ol></li></ol></li><li class="chapter-item expanded "><a href="../../specs/index.html"><strong aria-hidden="true">4.</strong> Specification</a></li><li class="chapter-item expanded "><a href="../../contribute.html"><strong aria-hidden="true">5.</strong> Contribute</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -168,9 +168,30 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#examples" id="examples">Examples</a></h1>
-<p>You can see the examples in the <a href="examples/">examples</a> directory and try them with:</p>
-<pre><code>cargo run --example # lists the available examples
-cargo run --example transfer # execute the `transfer` example
+<p>There are several examples to show the usage of the library.</p>
+<h2><a class="header" href="#setup" id="setup">Setup</a></h2>
+<p>First, setup the example environment.</p>
+<pre><code>cd bindings/node/examples
+npm install
+copy .env.example .env
+</code></pre>
+<p>Add your mnemonic to the <code>.env</code> file.</p>
+<p>Make sure you generate a 24-word BIP39 mnemonic in your .env file and define a node; see
+<code>.env.example</code> for a boilerplate. To generate a mnemonic you can utilize the BIP39 standard
+for that; We encourage you to generate this offline with trusted tools but if you need a 
+quick mnemonic for testing only you can use something like https://github.com/iancoleman/bip39</p>
+<h2><a class="header" href="#1-example-create-an-account" id="1-example-create-an-account">1. Example: Create an Account</a></h2>
+<p>This example creates a new database and account. Please make sure you have the .env variables configured</p>
+<p>Run the example:</p>
+<pre><code>node 1-create-account.js
+</code></pre>
+<h2><a class="header" href="#2-example-create-syncronize" id="2-example-create-syncronize">2. Example: Create Syncronize</a></h2>
+<p>Get some test tokens from the <a href="https://faucet.testnet.chrysalis2.com/">IOTA faucet</a> and sync your account.</p>
+<pre><code>node 2-sync-and-check.js
+</code></pre>
+<h2><a class="header" href="#2-example-send-iota-tokens" id="2-example-send-iota-tokens">2. Example: Send IOTA Tokens.</a></h2>
+<p>Now you can send the test tokens to an address! </p>
+<pre><code>node 3-send.js
 </code></pre>
 
                     </main>
@@ -178,13 +199,13 @@ cargo run --example transfer # execute the `transfer` example
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-                            <a rel="prev" href="../../libraries/rust/getting_started.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../../libraries/nodejs/getting_started.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         
 
                         
-                            <a rel="next" href="../../libraries/rust/api_reference.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../../libraries/nodejs/api_reference.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -196,13 +217,13 @@ cargo run --example transfer # execute the `transfer` example
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-                    <a rel="prev" href="../../libraries/rust/getting_started.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../../libraries/nodejs/getting_started.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 
 
                 
-                    <a rel="next" href="../../libraries/rust/api_reference.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="../../libraries/nodejs/api_reference.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 
