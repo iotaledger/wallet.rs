@@ -148,6 +148,14 @@ Determines whether all accounts has unused latest address after syncing with the
 
 **Returns** A promise resolving to the boolean value.
 
+#### setClientOptions(options)
+
+Updates the client options for all accounts.
+
+| Param   | Type                                         | Default           | Description                    |
+| ------- | -------------------------------------------- | ----------------- | ------------------------------ |
+| options | <code>[ClientOptions](#clientoptions)</code> | <code>null</code> | The new account client options |
+
 ### SyncedAccount
 
 #### send(address, amount[, options])
