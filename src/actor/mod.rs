@@ -198,7 +198,7 @@ impl WalletMessageHandler {
             MessageType::SetClientOptions(options) => {
                 convert_async_panics(|| async {
                     self.account_manager.set_client_options(*options.clone()).await?;
-                    Ok(ResponseType::StrongholdPasswordChanged)
+                    Ok(ResponseType::UpdatedAllClientOptions)
                 })
                 .await
             }
