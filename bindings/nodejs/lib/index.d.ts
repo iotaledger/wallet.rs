@@ -78,7 +78,7 @@ export declare class Account {
   getMessage(id: string): Message | undefined
   generateAddress(): Address
   latestAddress(): Address
-  isLatestAddressUnused(): Promise<bool>
+  isLatestAddressUnused(): Promise<boolean>
 }
 
 export declare class RemainderValueStrategy {
@@ -147,6 +147,8 @@ export declare class AccountManager {
   internalTransfer(fromAccount: Account, toAccount: Account, amount: number): Promise<Message>
   backup(destination: string): string
   importAccounts(source: string, password: string): void
+  isLatestAddressUnused(): Promise<boolean>
+  setClientOptions(options: ClientOptions): void
 }
 
 export declare type Event = 'ErrorThrown' |

@@ -477,6 +477,14 @@ impl AccountManager {
         Ok(true)
     }
 
+    /// Sets the client options for all accounts.
+    pub async fn set_client_options(&self, options: ClientOptions) -> crate::Result<()> {
+        for account in self.accounts.read().await.values() {
+            account.set_client_options(options.clone()).await?;
+        }
+        Ok(())
+    }
+
     /// Starts the polling mechanism.
     fn start_polling(&mut self, polling_interval: Duration, mut stop: BroadcastReceiver<()>) {
         let storage_file_path = self.storage_path.clone();
