@@ -934,7 +934,9 @@ async fn perform_transfer(
     };
 
     if let Some(remainder_deposit_address) = &remainder_deposit_address {
-        dust_and_allowance_recorders.push((remainder_value, remainder_deposit_address.to_bech32(), true));
+        if remainder_value < DUST_ALLOWANCE_VALUE {
+            dust_and_allowance_recorders.push((remainder_value, remainder_deposit_address.to_bech32(), true));
+        }
     }
 
     let client = crate::client::get_client(account_.client_options()).await;
