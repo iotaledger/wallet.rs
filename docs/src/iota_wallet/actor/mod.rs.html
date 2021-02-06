@@ -743,7 +743,7 @@
             <span class="ident">MessageType</span>::<span class="ident">SetClientOptions</span>(<span class="ident">options</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> {
                     <span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">set_client_options</span>(<span class="kw-2">*</span><span class="ident">options</span>.<span class="ident">clone</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
-                    <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">StrongholdPasswordChanged</span>)
+                    <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">UpdatedAllClientOptions</span>)
                 })
                 .<span class="kw">await</span>
             }
