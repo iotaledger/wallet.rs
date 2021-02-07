@@ -101,11 +101,8 @@ mod test_utils {
         collections::HashMap,
         path::PathBuf,
         sync::{atomic::AtomicBool, Arc},
-        time::Duration,
     };
     use tokio::sync::Mutex;
-
-    static POLLING_INTERVAL: Duration = Duration::from_secs(2);
 
     type GeneratedAddressMap = HashMap<(String, usize, bool), iota::Ed25519Address>;
     static TEST_SIGNER_GENERATED_ADDRESSES: OnceCell<Mutex<GeneratedAddressMap>> = OnceCell::new();
@@ -200,7 +197,7 @@ mod test_utils {
         let mut manager = AccountManager::builder()
             .with_storage(storage_path, default_storage, Some("password"))
             .unwrap()
-            .with_polling_interval(POLLING_INTERVAL)
+            .skip_polling()
             .finish()
             .await
             .unwrap();
@@ -320,7 +317,7 @@ mod test_utils {
             };
 
             let mut manager = manager_builder
-                .with_polling_interval(POLLING_INTERVAL)
+                .skip_polling()
                 .finish()
                 .await
                 .unwrap();
