@@ -402,21 +402,28 @@ impl AccountManager {
             .await
             .unwrap();
 
-        let mut accounts = self.accounts.write().await;
-        for account_handle in accounts.values() {
-            let _ = crate::monitor::unsubscribe(account_handle.clone());
+        // save the accounts again to reencrypt with the new key
+        for account_handle in self.accounts.read().await.values() {
+            account_handle.write().await.save().await?;
         }
-        for encrypted_account in &self.encrypted_accounts {
-            let decrypted = crate::storage::decrypt_account_json(encrypted_account, &key)?;
-            let account = serde_json::from_str::<Account>(&decrypted)?;
-            accounts.insert(account.id().into(), account.into());
-        }
-        self.encrypted_accounts.clear();
 
-        crate::spawn(Self::start_monitoring(
-            self.accounts.clone(),
-            self.is_monitoring.clone(),
-        ));
+        if !self.encrypted_accounts.is_empty() {
+            let mut accounts = self.accounts.write().await;
+            for account_handle in accounts.values() {
+                let _ = crate::monitor::unsubscribe(account_handle.clone());
+            }
+            for encrypted_account in &self.encrypted_accounts {
+                let decrypted = crate::storage::decrypt_account_json(encrypted_account, &key)?;
+                let account = serde_json::from_str::<Account>(&decrypted)?;
+                accounts.insert(account.id().into(), account.into());
+            }
+            self.encrypted_accounts.clear();
+
+            crate::spawn(Self::start_monitoring(
+                self.accounts.clone(),
+                self.is_monitoring.clone(),
+            ));
+        }
 
         Ok(())
     }
@@ -1382,7 +1389,7 @@ mod tests {
                     MessageId::new([0; 32]),
                     &[],
                     MessageBuilder::new()
-                        .with_nonce_provider(crate::test_utils::NoopNonceProvider {}, 4000f64)
+                        .with_nonce_provider(crate::test_utils::NoopNonceProvider {}, 4000f64, None)
                         .with_parents(vec![MessageId::new([0; 32])])
                         .with_payload(Payload::Indexation(Box::new(
                             IndexationPayload::new("index".to_string(), &[0; 16]).unwrap(),
@@ -1592,6 +1599,20 @@ mod tests {
                 err.to_string(),
                 "failed to restore backup: storage file already exists".to_string()
             );
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn storage_password_reencrypt() {
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |mut manager, _| async move {
+            crate::test_utils::AccountCreator::new(&manager).create().await;
+            manager.set_storage_password("new-password").await.unwrap();
+            let (account_store, encrypted) = super::AccountManager::load_accounts(manager.storage_path())
+                .await
+                .unwrap();
+            assert_eq!(account_store.read().await.len(), 1);
+            assert_eq!(encrypted.len(), 0);
         })
         .await;
     }

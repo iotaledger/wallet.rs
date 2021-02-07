@@ -97,7 +97,12 @@ mod test_utils {
     };
     use once_cell::sync::OnceCell;
     use rand::{distributions::Alphanumeric, thread_rng, Rng};
-    use std::{collections::HashMap, path::PathBuf, time::Duration};
+    use std::{
+        collections::HashMap,
+        path::PathBuf,
+        sync::{atomic::AtomicBool, Arc},
+        time::Duration,
+    };
     use tokio::sync::Mutex;
 
     static POLLING_INTERVAL: Duration = Duration::from_secs(2);
@@ -352,7 +357,12 @@ mod test_utils {
         type Builder = NoopNonceProviderBuilder;
         type Error = crate::Error;
 
-        fn nonce(&self, _bytes: &[u8], _target_score: f64) -> std::result::Result<u64, Self::Error> {
+        fn nonce(
+            &self,
+            _bytes: &[u8],
+            _target_score: f64,
+            _done: Option<Arc<AtomicBool>>,
+        ) -> std::result::Result<u64, Self::Error> {
             Ok(0)
         }
     }

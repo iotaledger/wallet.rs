@@ -801,6 +801,7 @@ async fn perform_transfer(
             OutputKind::SignatureLockedDustAllowance => {
                 dust_and_allowance_recorders.push((utxo.amount, utxo.address.to_bech32(), false));
             }
+            OutputKind::Treasury => {}
         }
 
         let input: Input = UTXOInput::new(*utxo.transaction_id(), *utxo.index())?.into();
@@ -997,7 +998,7 @@ async fn perform_transfer(
         .with_parents(parents)
         .with_payload(Payload::Transaction(Box::new(transaction)))
         .with_network_id(client.get_network_id().await?)
-        .with_nonce_provider(client.get_pow_provider(), client.get_network_info().min_pow_score)
+        .with_nonce_provider(client.get_pow_provider(), client.get_network_info().min_pow_score, None)
         .finish()?;
 
     log::debug!("[TRANSFER] submitting message {:#?}", message);
@@ -1108,6 +1109,7 @@ async fn is_dust_allowed(
                     dust_outputs_amount += 1;
                 }
             }
+            OutputKind::Treasury => {}
         }
     }
 
