@@ -48,10 +48,16 @@ pub(crate) async fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
                     .collect::<Vec<String>>()[..],
             )
             .await
+            // safe to unwrap since we're sure we have valid URLs
             .unwrap();
 
         if let Some(network) = options.network() {
             client_builder = client_builder.with_network(network);
+        }
+
+        if let Some(node) = options.node() {
+            // safe to unwrap since we're sure we have valid URLs
+            client_builder = client_builder.with_node(node.as_str()).unwrap();
         }
 
         if let Some(node_sync_interval) = options.node_sync_interval() {
@@ -221,6 +227,7 @@ impl ClientOptionsBuilder {
     /// Builds the options.
     pub fn build(self) -> crate::Result<ClientOptions> {
         let options = ClientOptions {
+            node: None,
             nodes: self.nodes,
             node_pool_urls: self.node_pool_urls,
             network: self.network,
@@ -334,6 +341,8 @@ impl Into<iota::BrokerOptions> for BrokerOptions {
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, Getters)]
 #[getset(get = "pub(crate)")]
 pub struct ClientOptions {
+    /// this option is here just to simplify usage from consumers using the deserialization
+    node: Option<Url>,
     #[serde(default)]
     nodes: Vec<Url>,
     #[serde(rename = "nodePoolUrls", default)]
@@ -362,6 +371,7 @@ impl ClientOptions {
 
 impl Hash for ClientOptions {
     fn hash<H: Hasher>(&self, state: &mut H) {
+        self.node.hash(state);
         self.nodes.hash(state);
         self.node_pool_urls.hash(state);
         self.network.hash(state);
@@ -373,7 +383,8 @@ impl Hash for ClientOptions {
 
 impl PartialEq for ClientOptions {
     fn eq(&self, other: &Self) -> bool {
-        self.nodes == other.nodes
+        self.node == other.node
+            && self.nodes == other.nodes
             && self.node_pool_urls == other.node_pool_urls
             && self.network == other.network
             && self.mqtt_broker_options == other.mqtt_broker_options

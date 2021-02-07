@@ -6,7 +6,7 @@ use crate::account::Account;
 use std::{collections::HashMap, fmt, path::PathBuf};
 
 use iota::{common::packable::Packable, UnlockBlock};
-use ledger_iota::LedgerBIP32Index;
+use iota_ledger::LedgerBIP32Index;
 use tokio::sync::Mutex;
 
 pub const HARDENED: u32 = 0x80000000;
@@ -14,7 +14,7 @@ pub const HARDENED: u32 = 0x80000000;
 #[derive(Default)]
 pub struct LedgerNanoSigner {
     pub is_simulator: bool,
-    pub address_poll: Mutex<HashMap<AddressPoolEntry, [u8; 32]>>,
+    pub address_pool: Mutex<HashMap<AddressPoolEntry, [u8; 32]>>,
     pub mutex: Mutex<()>,
 }
 
@@ -63,7 +63,7 @@ impl super::Signer for LedgerNanoSigner {
 
         let bip32_account = *account.index() as u32 | HARDENED;
 
-        let bip32 = ledger_iota::LedgerBIP32Index {
+        let bip32 = iota_ledger::LedgerBIP32Index {
             bip32_index: address_index as u32 | HARDENED,
             bip32_change: if internal { 1 } else { 0 } | HARDENED,
         };
@@ -74,7 +74,7 @@ impl super::Signer for LedgerNanoSigner {
             log::info!("Interactive address display - not using address pool");
 
             // get ledger
-            let ledger = ledger_iota::get_ledger(bip32_account, self.is_simulator)?;
+            let ledger = iota_ledger::get_ledger(bip32_account, self.is_simulator)?;
 
             // and generate a single address that is shown to the user
             let addr = ledger.get_addresses(true, bip32, 1)?;
@@ -89,7 +89,7 @@ impl super::Signer for LedgerNanoSigner {
             bip32_change: bip32.bip32_change,
         };
 
-        let mut addr_pool = self.address_poll.lock().await;
+        let mut addr_pool = self.address_pool.lock().await;
         if !addr_pool.contains_key(&pool_key) {
             log::info!("Adress {} not found in address pool", pool_key);
             // if not, we add new entries to the pool but limit the pool size
@@ -99,7 +99,7 @@ impl super::Signer for LedgerNanoSigner {
             }
 
             let count = 15;
-            let ledger = ledger_iota::get_ledger(bip32_account, self.is_simulator)?;
+            let ledger = iota_ledger::get_ledger(bip32_account, self.is_simulator)?;
             let addresses = ledger.get_addresses(false, bip32, count)?;
 
             // now put all addresses into the pool
@@ -136,7 +136,7 @@ impl super::Signer for LedgerNanoSigner {
         let _lock = self.mutex.lock().await;
 
         let bip32_account = *account.index() as u32 | HARDENED;
-        let ledger = ledger_iota::get_ledger(bip32_account, self.is_simulator)?;
+        let ledger = iota_ledger::get_ledger(bip32_account, self.is_simulator)?;
 
         let input_len = inputs.len();
 

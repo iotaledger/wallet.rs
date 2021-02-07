@@ -212,7 +212,7 @@ async fn sync_addresses(
         let is_empty = curr_found_messages.is_empty()
             && curr_generated_addresses
                 .iter()
-                .all(|address| !address.outputs().iter().any(|output| *output.is_spent()));
+                .all(|address| address.outputs().is_empty());
 
         found_messages.extend(curr_found_messages.into_iter());
         generated_addresses.extend(curr_generated_addresses.into_iter());
@@ -801,6 +801,7 @@ async fn perform_transfer(
             OutputKind::SignatureLockedDustAllowance => {
                 dust_and_allowance_recorders.push((utxo.amount, utxo.address.to_bech32(), false));
             }
+            OutputKind::Treasury => {}
         }
 
         let input: Input = UTXOInput::new(*utxo.transaction_id(), *utxo.index())?.into();
@@ -837,7 +838,7 @@ async fn perform_transfer(
             );
 
             let remaining_balance_on_source = current_output_sum - transfer_obj.amount.get();
-            if remaining_balance_on_source < DUST_ALLOWANCE_VALUE {
+            if remaining_balance_on_source < DUST_ALLOWANCE_VALUE && remaining_balance_on_source != 0 {
                 dust_and_allowance_recorders.push((remaining_balance_on_source, utxo.address().to_bech32(), true));
             }
         } else {
@@ -849,7 +850,7 @@ async fn perform_transfer(
             current_output_sum += *utxo.amount();
 
             let remaining_balance_on_source = current_output_sum - transfer_obj.amount.get();
-            if remaining_balance_on_source < DUST_ALLOWANCE_VALUE {
+            if remaining_balance_on_source < DUST_ALLOWANCE_VALUE && remaining_balance_on_source != 0 {
                 dust_and_allowance_recorders.push((remaining_balance_on_source, utxo.address().to_bech32(), true));
             }
         }
@@ -934,7 +935,9 @@ async fn perform_transfer(
     };
 
     if let Some(remainder_deposit_address) = &remainder_deposit_address {
-        dust_and_allowance_recorders.push((remainder_value, remainder_deposit_address.to_bech32(), true));
+        if remainder_value < DUST_ALLOWANCE_VALUE {
+            dust_and_allowance_recorders.push((remainder_value, remainder_deposit_address.to_bech32(), true));
+        }
     }
 
     let client = crate::client::get_client(account_.client_options()).await;
@@ -995,7 +998,7 @@ async fn perform_transfer(
         .with_parents(parents)
         .with_payload(Payload::Transaction(Box::new(transaction)))
         .with_network_id(client.get_network_id().await?)
-        .with_nonce_provider(client.get_pow_provider(), client.get_network_info().min_pow_score)
+        .with_nonce_provider(client.get_pow_provider(), client.get_network_info().min_pow_score, None)
         .finish()?;
 
     log::debug!("[TRANSFER] submitting message {:#?}", message);
@@ -1106,6 +1109,7 @@ async fn is_dust_allowed(
                     dust_outputs_amount += 1;
                 }
             }
+            OutputKind::Treasury => {}
         }
     }
 
