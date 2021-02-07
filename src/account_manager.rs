@@ -1535,7 +1535,6 @@ mod tests {
 
     #[tokio::test]
     async fn backup_and_restore_happy_path() {
-        simple_logging::log_to_stderr(log::LevelFilter::Info);
         let backup_path = "./backup/happy-path";
         let _ = std::fs::remove_dir_all(backup_path);
         std::fs::create_dir_all(backup_path).unwrap();

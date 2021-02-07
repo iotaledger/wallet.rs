@@ -51,7 +51,6 @@ tokio = { version = "1.0", features = ["full"] }
 sled = "0.34"
 rusty-fork = "0.3"
 anyhow = "1.0"
-simple-logging = "2.0"
 
 [features]
 default = ["stronghold", "stronghold-storage"]
