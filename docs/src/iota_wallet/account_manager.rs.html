@@ -1599,6 +1599,27 @@
 <span id="1596">1596</span>
 <span id="1597">1597</span>
 <span id="1598">1598</span>
+<span id="1599">1599</span>
+<span id="1600">1600</span>
+<span id="1601">1601</span>
+<span id="1602">1602</span>
+<span id="1603">1603</span>
+<span id="1604">1604</span>
+<span id="1605">1605</span>
+<span id="1606">1606</span>
+<span id="1607">1607</span>
+<span id="1608">1608</span>
+<span id="1609">1609</span>
+<span id="1610">1610</span>
+<span id="1611">1611</span>
+<span id="1612">1612</span>
+<span id="1613">1613</span>
+<span id="1614">1614</span>
+<span id="1615">1615</span>
+<span id="1616">1616</span>
+<span id="1617">1617</span>
+<span id="1618">1618</span>
+<span id="1619">1619</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2004,21 +2025,28 @@
             .<span class="kw">await</span>
             .<span class="ident">unwrap</span>();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">accounts</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">write</span>().<span class="kw">await</span>;
-        <span class="kw">for</span> <span class="ident">account_handle</span> <span class="kw">in</span> <span class="ident">accounts</span>.<span class="ident">values</span>() {
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">monitor</span>::<span class="ident">unsubscribe</span>(<span class="ident">account_handle</span>.<span class="ident">clone</span>());
+        <span class="comment">// save the accounts again to reencrypt with the new key</span>
+        <span class="kw">for</span> <span class="ident">account_handle</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">values</span>() {
+            <span class="ident">account_handle</span>.<span class="ident">write</span>().<span class="kw">await</span>.<span class="ident">save</span>().<span class="kw">await</span><span class="question-mark">?</span>;
         }
-        <span class="kw">for</span> <span class="ident">encrypted_account</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">encrypted_accounts</span> {
-            <span class="kw">let</span> <span class="ident">decrypted</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">storage</span>::<span class="ident">decrypt_account_json</span>(<span class="ident">encrypted_account</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>)<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">from_str</span>::<span class="op">&lt;</span><span class="ident">Account</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">decrypted</span>)<span class="question-mark">?</span>;
-            <span class="ident">accounts</span>.<span class="ident">insert</span>(<span class="ident">account</span>.<span class="ident">id</span>().<span class="ident">into</span>(), <span class="ident">account</span>.<span class="ident">into</span>());
-        }
-        <span class="self">self</span>.<span class="ident">encrypted_accounts</span>.<span class="ident">clear</span>();
 
-        <span class="kw">crate</span>::<span class="ident">spawn</span>(<span class="self">Self</span>::<span class="ident">start_monitoring</span>(
-            <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>(),
-            <span class="self">self</span>.<span class="ident">is_monitoring</span>.<span class="ident">clone</span>(),
-        ));
+        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">encrypted_accounts</span>.<span class="ident">is_empty</span>() {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">accounts</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">write</span>().<span class="kw">await</span>;
+            <span class="kw">for</span> <span class="ident">account_handle</span> <span class="kw">in</span> <span class="ident">accounts</span>.<span class="ident">values</span>() {
+                <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">monitor</span>::<span class="ident">unsubscribe</span>(<span class="ident">account_handle</span>.<span class="ident">clone</span>());
+            }
+            <span class="kw">for</span> <span class="ident">encrypted_account</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">encrypted_accounts</span> {
+                <span class="kw">let</span> <span class="ident">decrypted</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">storage</span>::<span class="ident">decrypt_account_json</span>(<span class="ident">encrypted_account</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>)<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">from_str</span>::<span class="op">&lt;</span><span class="ident">Account</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">decrypted</span>)<span class="question-mark">?</span>;
+                <span class="ident">accounts</span>.<span class="ident">insert</span>(<span class="ident">account</span>.<span class="ident">id</span>().<span class="ident">into</span>(), <span class="ident">account</span>.<span class="ident">into</span>());
+            }
+            <span class="self">self</span>.<span class="ident">encrypted_accounts</span>.<span class="ident">clear</span>();
+
+            <span class="kw">crate</span>::<span class="ident">spawn</span>(<span class="self">Self</span>::<span class="ident">start_monitoring</span>(
+                <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>(),
+                <span class="self">self</span>.<span class="ident">is_monitoring</span>.<span class="ident">clone</span>(),
+            ));
+        }
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -2984,7 +3012,7 @@
                     <span class="ident">MessageId</span>::<span class="ident">new</span>([<span class="number">0</span>; <span class="number">32</span>]),
                     <span class="kw-2">&amp;</span>[],
                     <span class="ident">MessageBuilder</span>::<span class="ident">new</span>()
-                        .<span class="ident">with_nonce_provider</span>(<span class="kw">crate</span>::<span class="ident">test_utils</span>::<span class="ident">NoopNonceProvider</span> {}, <span class="number">4000f64</span>)
+                        .<span class="ident">with_nonce_provider</span>(<span class="kw">crate</span>::<span class="ident">test_utils</span>::<span class="ident">NoopNonceProvider</span> {}, <span class="number">4000f64</span>, <span class="prelude-val">None</span>)
                         .<span class="ident">with_parents</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">MessageId</span>::<span class="ident">new</span>([<span class="number">0</span>; <span class="number">32</span>])])
                         .<span class="ident">with_payload</span>(<span class="ident">Payload</span>::<span class="ident">Indexation</span>(<span class="ident">Box</span>::<span class="ident">new</span>(
                             <span class="ident">IndexationPayload</span>::<span class="ident">new</span>(<span class="string">&quot;index&quot;</span>.<span class="ident">to_string</span>(), <span class="kw-2">&amp;</span>[<span class="number">0</span>; <span class="number">16</span>]).<span class="ident">unwrap</span>(),
@@ -3194,6 +3222,20 @@
                 <span class="ident">err</span>.<span class="ident">to_string</span>(),
                 <span class="string">&quot;failed to restore backup: storage file already exists&quot;</span>.<span class="ident">to_string</span>()
             );
+        })
+        .<span class="kw">await</span>;
+    }
+
+    <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">storage_password_reencrypt</span>() {
+        <span class="kw">crate</span>::<span class="ident">test_utils</span>::<span class="ident">with_account_manager</span>(<span class="kw">crate</span>::<span class="ident">test_utils</span>::<span class="ident">TestType</span>::<span class="ident">Storage</span>, <span class="op">|</span><span class="kw-2">mut</span> <span class="ident">manager</span>, <span class="kw">_</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
+            <span class="kw">crate</span>::<span class="ident">test_utils</span>::<span class="ident">AccountCreator</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">manager</span>).<span class="ident">create</span>().<span class="kw">await</span>;
+            <span class="ident">manager</span>.<span class="ident">set_storage_password</span>(<span class="string">&quot;new-password&quot;</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            <span class="kw">let</span> (<span class="ident">account_store</span>, <span class="ident">encrypted</span>) <span class="op">=</span> <span class="kw">super</span>::<span class="ident">AccountManager</span>::<span class="ident">load_accounts</span>(<span class="ident">manager</span>.<span class="ident">storage_path</span>())
+                .<span class="kw">await</span>
+                .<span class="ident">unwrap</span>();
+            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">account_store</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">len</span>(), <span class="number">1</span>);
+            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">encrypted</span>.<span class="ident">len</span>(), <span class="number">0</span>);
         })
         .<span class="kw">await</span>;
     }

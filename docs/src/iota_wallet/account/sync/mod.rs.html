@@ -1268,6 +1268,8 @@
 <span id="1265">1265</span>
 <span id="1266">1266</span>
 <span id="1267">1267</span>
+<span id="1268">1268</span>
+<span id="1269">1269</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2072,6 +2074,7 @@
             <span class="ident">OutputKind</span>::<span class="ident">SignatureLockedDustAllowance</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">dust_and_allowance_recorders</span>.<span class="ident">push</span>((<span class="ident">utxo</span>.<span class="ident">amount</span>, <span class="ident">utxo</span>.<span class="ident">address</span>.<span class="ident">to_bech32</span>(), <span class="bool-val">false</span>));
             }
+            <span class="ident">OutputKind</span>::<span class="ident">Treasury</span> <span class="op">=</span><span class="op">&gt;</span> {}
         }
 
         <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">Input</span> <span class="op">=</span> <span class="ident">UTXOInput</span>::<span class="ident">new</span>(<span class="kw-2">*</span><span class="ident">utxo</span>.<span class="ident">transaction_id</span>(), <span class="kw-2">*</span><span class="ident">utxo</span>.<span class="ident">index</span>())<span class="question-mark">?</span>.<span class="ident">into</span>();
@@ -2268,7 +2271,7 @@
         .<span class="ident">with_parents</span>(<span class="ident">parents</span>)
         .<span class="ident">with_payload</span>(<span class="ident">Payload</span>::<span class="ident">Transaction</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">transaction</span>)))
         .<span class="ident">with_network_id</span>(<span class="ident">client</span>.<span class="ident">get_network_id</span>().<span class="kw">await</span><span class="question-mark">?</span>)
-        .<span class="ident">with_nonce_provider</span>(<span class="ident">client</span>.<span class="ident">get_pow_provider</span>(), <span class="ident">client</span>.<span class="ident">get_network_info</span>().<span class="ident">min_pow_score</span>)
+        .<span class="ident">with_nonce_provider</span>(<span class="ident">client</span>.<span class="ident">get_pow_provider</span>(), <span class="ident">client</span>.<span class="ident">get_network_info</span>().<span class="ident">min_pow_score</span>, <span class="prelude-val">None</span>)
         .<span class="ident">finish</span>()<span class="question-mark">?</span>;
 
     <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;[TRANSFER] submitting message {:#?}&quot;</span>, <span class="ident">message</span>);
@@ -2379,6 +2382,7 @@
                     <span class="ident">dust_outputs_amount</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
                 }
             }
+            <span class="ident">OutputKind</span>::<span class="ident">Treasury</span> <span class="op">=</span><span class="op">&gt;</span> {}
         }
     }
 
