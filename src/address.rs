@@ -24,6 +24,8 @@ pub enum OutputKind {
     SignatureLockedSingle,
     /// Dust allowance output.
     SignatureLockedDustAllowance,
+    /// Treasury output.
+    Treasury,
 }
 
 /// An Address output.
@@ -97,6 +99,12 @@ impl AddressOutput {
                 };
                 (address, output.amount, OutputKind::SignatureLockedDustAllowance)
             }
+            OutputDto::Treasury(output) => (
+                // dummy address
+                IotaAddress::Ed25519(Ed25519Address::new([0; 32])),
+                output.amount,
+                OutputKind::Treasury,
+            ),
         };
         let output = Self {
             transaction_id: TransactionId::new(
