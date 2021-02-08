@@ -316,11 +316,7 @@ mod test_utils {
                 }
             };
 
-            let mut manager = manager_builder
-                .skip_polling()
-                .finish()
-                .await
-                .unwrap();
+            let mut manager = manager_builder.skip_polling().finish().await.unwrap();
 
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             manager.set_stronghold_password("password").await.unwrap();
