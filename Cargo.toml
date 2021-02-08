@@ -33,7 +33,7 @@ async-trait = "0.1"
 log = "0.4"
 
 # stronghold
-iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "6fca456a80993a99f38949f1cd3137a4a265a2e6", optional = true }
+iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "175d33562081dc26bd0b4b5cce624759606161d7", optional = true }
 riker = { version = "0.4", optional = true }
 blake2 = { version = "0.9", optional = true }
 slog = { version = "2.7", optional = true }
