@@ -516,13 +516,6 @@
 <span id="513">513</span>
 <span id="514">514</span>
 <span id="515">515</span>
-<span id="516">516</span>
-<span id="517">517</span>
-<span id="518">518</span>
-<span id="519">519</span>
-<span id="520">520</span>
-<span id="521">521</span>
-<span id="522">522</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -627,11 +620,8 @@
         <span class="ident">collections</span>::<span class="ident">HashMap</span>,
         <span class="ident">path</span>::<span class="ident">PathBuf</span>,
         <span class="ident">sync</span>::{<span class="ident">atomic</span>::<span class="ident">AtomicBool</span>, <span class="ident">Arc</span>},
-        <span class="ident">time</span>::<span class="ident">Duration</span>,
     };
     <span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">sync</span>::<span class="ident">Mutex</span>;
-
-    <span class="kw">static</span> <span class="ident">POLLING_INTERVAL</span>: <span class="ident">Duration</span> <span class="op">=</span> <span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="number">2</span>);
 
     <span class="kw">type</span> <span class="ident">GeneratedAddressMap</span> <span class="op">=</span> <span class="ident">HashMap</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">usize</span>, <span class="ident">bool</span>), <span class="ident">iota</span>::<span class="ident">Ed25519Address</span><span class="op">&gt;</span>;
     <span class="kw">static</span> <span class="ident">TEST_SIGNER_GENERATED_ADDRESSES</span>: <span class="ident">OnceCell</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">GeneratedAddressMap</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">OnceCell</span>::<span class="ident">new</span>();
@@ -726,7 +716,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">manager</span> <span class="op">=</span> <span class="ident">AccountManager</span>::<span class="ident">builder</span>()
             .<span class="ident">with_storage</span>(<span class="ident">storage_path</span>, <span class="ident">default_storage</span>, <span class="prelude-val">Some</span>(<span class="string">&quot;password&quot;</span>))
             .<span class="ident">unwrap</span>()
-            .<span class="ident">with_polling_interval</span>(<span class="ident">POLLING_INTERVAL</span>)
+            .<span class="ident">skip_polling</span>()
             .<span class="ident">finish</span>()
             .<span class="kw">await</span>
             .<span class="ident">unwrap</span>();
@@ -845,11 +835,7 @@
                 }
             };
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">manager</span> <span class="op">=</span> <span class="ident">manager_builder</span>
-                .<span class="ident">with_polling_interval</span>(<span class="ident">POLLING_INTERVAL</span>)
-                .<span class="ident">finish</span>()
-                .<span class="kw">await</span>
-                .<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">manager</span> <span class="op">=</span> <span class="ident">manager_builder</span>.<span class="ident">skip_polling</span>().<span class="ident">finish</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
 
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>))]</span>
             <span class="ident">manager</span>.<span class="ident">set_stronghold_password</span>(<span class="string">&quot;password&quot;</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
@@ -979,7 +965,7 @@
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GenerateMessageBuilder</span> {
         <span class="ident">value</span>: <span class="ident">u64</span>,
         <span class="ident">address</span>: <span class="ident">Address</span>,
-        <span class="ident">confirmed</span>: <span class="ident">bool</span>,
+        <span class="ident">confirmed</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
         <span class="ident">broadcasted</span>: <span class="ident">bool</span>,
         <span class="ident">incoming</span>: <span class="ident">bool</span>,
         <span class="ident">input_transaction_id</span>: <span class="ident">TransactionId</span>,
@@ -990,7 +976,7 @@
             <span class="self">Self</span> {
                 <span class="ident">value</span>: <span class="ident">rand</span>::<span class="ident">thread_rng</span>().<span class="ident">gen_range</span>(<span class="number">1</span>, <span class="number">50000</span>),
                 <span class="ident">address</span>: <span class="ident">generate_random_address</span>(),
-                <span class="ident">confirmed</span>: <span class="bool-val">false</span>,
+                <span class="ident">confirmed</span>: <span class="prelude-val">Some</span>(<span class="bool-val">false</span>),
                 <span class="ident">broadcasted</span>: <span class="bool-val">false</span>,
                 <span class="ident">incoming</span>: <span class="bool-val">false</span>,
                 <span class="ident">input_transaction_id</span>: <span class="ident">TransactionId</span>::<span class="ident">new</span>([<span class="number">0</span>; <span class="number">32</span>]),
@@ -1002,7 +988,7 @@
         <span class="ident">GenerateMessageBuilder</span>,
         <span class="ident">value</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u64</span>,
         <span class="ident">address</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Address</span>,
-        <span class="ident">confirmed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bool</span>,
+        <span class="ident">confirmed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
         <span class="ident">broadcasted</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bool</span>,
         <span class="ident">incoming</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bool</span>,
         <span class="ident">input_transaction_id</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">TransactionId</span>
@@ -1039,7 +1025,7 @@
                 <span class="ident">nonce</span>: <span class="number">0</span>,
                 <span class="ident">value</span>: <span class="self">self</span>.<span class="ident">value</span>,
                 <span class="ident">remainder_value</span>: <span class="number">0</span>,
-                <span class="ident">confirmed</span>: <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">confirmed</span>),
+                <span class="ident">confirmed</span>: <span class="self">self</span>.<span class="ident">confirmed</span>,
                 <span class="ident">broadcasted</span>: <span class="self">self</span>.<span class="ident">broadcasted</span>,
                 <span class="ident">incoming</span>: <span class="self">self</span>.<span class="ident">incoming</span>,
             }
