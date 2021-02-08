@@ -1689,7 +1689,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?branch=dev#4128f82765892b7aa3f1ad9b3de24a5d23ec5dca"
+source = "git+https://github.com/iotaledger/iota.rs?branch=dev#b939969fcb2a93a70e0743961d666fd982a40526"
 dependencies = [
  "bee-common",
  "bee-common-derive",
@@ -1700,7 +1700,7 @@ dependencies = [
  "blake2",
  "chrono",
  "hex",
- "iota-crypto 0.1.0",
+ "iota-crypto 0.2.0 (git+https://github.com/iotaledger/crypto.rs?rev=6e67b652dd55df05877f575b9a09ccb5a7006694)",
  "num_cpus",
  "paho-mqtt",
  "regex",
@@ -1715,21 +1715,12 @@ dependencies = [
 [[package]]
 name = "iota-core"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?branch=dev#4128f82765892b7aa3f1ad9b3de24a5d23ec5dca"
+source = "git+https://github.com/iotaledger/iota.rs?branch=dev#b939969fcb2a93a70e0743961d666fd982a40526"
 dependencies = [
  "bee-common",
  "bee-message",
  "bee-pow",
  "iota-client",
-]
-
-[[package]]
-name = "iota-crypto"
-version = "0.1.0"
-source = "git+https://github.com/iotaledger/crypto.rs.git?rev=9259a0617ca3b72e2bb2f63d5b7197247f85061c#9259a0617ca3b72e2bb2f63d5b7197247f85061c"
-dependencies = [
- "ed25519-zebra",
- "getrandom 0.2.2",
 ]
 
 [[package]]
