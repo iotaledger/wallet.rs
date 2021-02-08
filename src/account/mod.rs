@@ -641,7 +641,7 @@ impl Account {
                     MessageType::Received => *message.incoming(),
                     MessageType::Sent => !message.incoming(),
                     MessageType::Failed => !message.broadcasted(),
-                    MessageType::Unconfirmed => !message.confirmed().unwrap_or(false),
+                    MessageType::Unconfirmed => message.confirmed().is_none(),
                     MessageType::Value => *message.value() > 0,
                 }
             } else {
@@ -704,6 +704,11 @@ impl Account {
     /// Gets a message with the given id associated with this account.
     pub fn get_message(&self, message_id: &MessageId) -> Option<&Message> {
         self.messages.iter().find(|tx| tx.id() == message_id)
+    }
+
+    /// Gets a message with the given id associated with this account.
+    pub(crate) fn get_message_mut(&mut self, message_id: &MessageId) -> Option<&mut Message> {
+        self.messages.iter_mut().find(|tx| tx.id() == message_id)
     }
 }
 
@@ -901,7 +906,7 @@ mod tests {
             .address(second_address.clone())
             .value(10)
             .input_transaction_id(second_address.outputs[0].transaction_id)
-            .confirmed(true)
+            .confirmed(Some(true))
             .build();
 
         account_handle
@@ -933,7 +938,7 @@ mod tests {
             .build();
         let unconfirmed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
-            .confirmed(false)
+            .confirmed(None)
             .build();
         let value_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
@@ -963,31 +968,31 @@ mod tests {
         let received_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
             .incoming(true)
-            .confirmed(true)
+            .confirmed(Some(true))
             .broadcasted(true)
             .build();
         let sent_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(external_address.clone())
             .incoming(false)
-            .confirmed(true)
+            .confirmed(Some(true))
             .broadcasted(true)
             .build();
         let failed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
             .incoming(false)
-            .confirmed(true)
+            .confirmed(Some(true))
             .broadcasted(false)
             .build();
         let unconfirmed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
             .incoming(false)
-            .confirmed(false)
+            .confirmed(None)
             .broadcasted(true)
             .build();
         let value_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
             .incoming(false)
-            .confirmed(true)
+            .confirmed(Some(true))
             .broadcasted(true)
             .build();
 

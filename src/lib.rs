@@ -101,11 +101,8 @@ mod test_utils {
         collections::HashMap,
         path::PathBuf,
         sync::{atomic::AtomicBool, Arc},
-        time::Duration,
     };
     use tokio::sync::Mutex;
-
-    static POLLING_INTERVAL: Duration = Duration::from_secs(2);
 
     type GeneratedAddressMap = HashMap<(String, usize, bool), iota::Ed25519Address>;
     static TEST_SIGNER_GENERATED_ADDRESSES: OnceCell<Mutex<GeneratedAddressMap>> = OnceCell::new();
@@ -200,7 +197,7 @@ mod test_utils {
         let mut manager = AccountManager::builder()
             .with_storage(storage_path, default_storage, Some("password"))
             .unwrap()
-            .with_polling_interval(POLLING_INTERVAL)
+            .skip_polling()
             .finish()
             .await
             .unwrap();
@@ -319,11 +316,7 @@ mod test_utils {
                 }
             };
 
-            let mut manager = manager_builder
-                .with_polling_interval(POLLING_INTERVAL)
-                .finish()
-                .await
-                .unwrap();
+            let mut manager = manager_builder.skip_polling().finish().await.unwrap();
 
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             manager.set_stronghold_password("password").await.unwrap();
@@ -453,7 +446,7 @@ mod test_utils {
     pub struct GenerateMessageBuilder {
         value: u64,
         address: Address,
-        confirmed: bool,
+        confirmed: Option<bool>,
         broadcasted: bool,
         incoming: bool,
         input_transaction_id: TransactionId,
@@ -464,7 +457,7 @@ mod test_utils {
             Self {
                 value: rand::thread_rng().gen_range(1, 50000),
                 address: generate_random_address(),
-                confirmed: false,
+                confirmed: Some(false),
                 broadcasted: false,
                 incoming: false,
                 input_transaction_id: TransactionId::new([0; 32]),
@@ -476,7 +469,7 @@ mod test_utils {
         GenerateMessageBuilder,
         value => u64,
         address => Address,
-        confirmed => bool,
+        confirmed => Option<bool>,
         broadcasted => bool,
         incoming => bool,
         input_transaction_id => TransactionId
@@ -513,7 +506,7 @@ mod test_utils {
                 nonce: 0,
                 value: self.value,
                 remainder_value: 0,
-                confirmed: Some(self.confirmed),
+                confirmed: self.confirmed,
                 broadcasted: self.broadcasted,
                 incoming: self.incoming,
             }
