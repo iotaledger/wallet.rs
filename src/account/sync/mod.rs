@@ -11,11 +11,11 @@ use crate::{
 use bee_rest_api::handlers::message_metadata::LedgerInclusionStateDto;
 use getset::Getters;
 use iota::{
+    client::api::finish_pow,
     message::prelude::{
-        Input, Message as IotaMessage, MessageBuilder, MessageId, Payload, SignatureLockedSingleOutput,
-        TransactionPayload, TransactionPayloadEssence, UTXOInput,
+        Input, Message as IotaMessage, MessageId, Payload, SignatureLockedSingleOutput, TransactionPayload,
+        TransactionPayloadEssence, UTXOInput,
     },
-    ClientMiner,
 };
 use serde::Serialize;
 use slip10::BIP32Path;
@@ -957,8 +957,6 @@ async fn perform_transfer(
         is_dust_allowed(&account_, &client, address, created_or_consumed_outputs).await?;
     }
 
-    let parents = client.get_tips().await?;
-
     if let Some(indexation) = transfer_obj.indexation {
         essence_builder = essence_builder.with_payload(Payload::Indexation(Box::new(indexation)));
     }
@@ -994,12 +992,12 @@ async fn perform_transfer(
     }
     let transaction = tx_builder.finish()?;
 
-    let message = MessageBuilder::<ClientMiner>::new()
-        .with_parents(parents)
-        .with_payload(Payload::Transaction(Box::new(transaction)))
-        .with_network_id(client.get_network_id().await?)
-        .with_nonce_provider(client.get_pow_provider(), client.get_network_info().min_pow_score, None)
-        .finish()?;
+    let message = finish_pow(
+        &client,
+        client.get_network_id().await?,
+        Some(Payload::Transaction(Box::new(transaction))),
+    )
+    .await?;
 
     log::debug!("[TRANSFER] submitting message {:#?}", message);
 
