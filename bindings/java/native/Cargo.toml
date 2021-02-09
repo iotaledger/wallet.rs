@@ -1,0 +1,12 @@
+[package]
+name = "iota-wallet-java"
+version = "0.1.0"
+authors = ["Brord van Wierst <brord@iota.org>"]
+edition = "2018"
+
+[dependencies]
+jni = { version = "0.19" }
+iota-wallet = { path = "../../../" }
+
+[lib]
+crate_type = ["cdylib"]

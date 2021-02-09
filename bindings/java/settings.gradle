@@ -1,0 +1,3 @@
+rootProject.name = 'wallet'
+
+include "lib", "examples:basic-app"

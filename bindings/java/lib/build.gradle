@@ -1,0 +1,35 @@
+plugins {
+    // Apply the java plugin to add support for Java
+    id 'java-library'
+}
+
+repositories {
+    // Use jcenter for resolving dependencies.
+    // You can declare any Maven/Ivy/file repository here.
+    jcenter()
+}
+
+dependencies {
+    // Use JUnit test framework
+    testImplementation 'junit:junit:4.13'
+}
+
+tasks.withType(Test) {
+    systemProperties System.properties
+}
+
+test {
+    systemProperty "java.library.path", file("../native/target/debug")
+}
+
+test.outputs.upToDateWhen { false }
+
+task cargoBuild(type: Exec) {
+    doFirst {
+        workingDir "${rootDir}/native"
+        commandLine 'cargo', 'build'
+    }
+}
+compileJava {
+    dependsOn cargoBuild
+}
