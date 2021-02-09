@@ -228,7 +228,7 @@ pub struct Message {
     #[serde(rename = "payloadLength")]
     pub(crate) payload_length: usize,
     /// Message payload.
-    pub(crate) payload: Payload,
+    pub(crate) payload: Option<Payload>,
     /// The transaction timestamp.
     pub(crate) timestamp: DateTime<Utc>,
     /// Transaction nonce.
@@ -273,69 +273,39 @@ impl PartialOrd for Message {
     }
 }
 
-impl Message {
-    pub(crate) fn from_iota_message(
-        id: MessageId,
-        account_addresses: &[Address],
-        message: IotaMessage,
-        confirmed: Option<bool>,
-    ) -> Self {
-        let mut packed_payload = Vec::new();
-        let _ = message.payload().pack(&mut packed_payload);
+pub(crate) struct MessageBuilder<'a> {
+    id: MessageId,
+    iota_message: IotaMessage,
+    account_addresses: &'a [Address],
+    confirmed: Option<bool>,
+    value: Option<(u64, u64)>,
+}
 
-        let total_value = match message.payload().as_ref() {
-            Some(Payload::Transaction(tx)) => tx.essence().outputs().iter().fold(0, |acc, output| {
-                acc + match output {
-                    Output::SignatureLockedDustAllowance(o) => o.amount(),
-                    Output::SignatureLockedSingle(o) => o.amount(),
-                    _ => 0,
-                }
-            }),
-            _ => 0,
-        };
-        let value = Self::compute_value(&message, &id, &account_addresses).without_denomination();
-
-        let message = Self {
+impl<'a> MessageBuilder<'a> {
+    pub fn new(id: MessageId, iota_message: IotaMessage, account_addresses: &'a [Address]) -> Self {
+        Self {
             id,
-            version: 1,
-            parents: message.parents().to_vec(),
-            payload_length: packed_payload.len(),
-            payload: message.payload().as_ref().unwrap().clone(),
-            timestamp: Utc::now(),
-            nonce: message.nonce(),
-            confirmed,
-            broadcasted: true,
-            incoming: account_addresses
-                .iter()
-                .any(|address| address.outputs().iter().any(|o| o.message_id() == &id)),
-            value,
-            remainder_value: total_value - value,
-        };
-
-        message
+            iota_message,
+            account_addresses,
+            confirmed: None,
+            value: None,
+        }
     }
 
-    /// The message's addresses.
-    pub fn addresses(&self) -> Vec<&IotaAddress> {
-        match &self.payload {
-            Payload::Transaction(tx) => tx
-                .essence()
-                .outputs()
-                .iter()
-                .map(|output| match output {
-                    Output::SignatureLockedDustAllowance(o) => o.address(),
-                    Output::SignatureLockedSingle(o) => o.address(),
-                    _ => unimplemented!(),
-                })
-                .collect(),
-            _ => vec![],
-        }
+    pub fn with_confirmed(mut self, confirmed: Option<bool>) -> Self {
+        self.confirmed = confirmed;
+        self
+    }
+
+    pub fn with_value(mut self, value: u64, remainder: u64) -> Self {
+        self.value.replace((value, remainder));
+        self
     }
 
     /// Gets the absolute value of the transaction.
     pub fn compute_value(iota_message: &IotaMessage, id: &MessageId, account_addresses: &[Address]) -> Value {
-        let amount = match iota_message.payload().as_ref().unwrap() {
-            Payload::Transaction(tx) => {
+        let amount = match iota_message.payload().as_ref() {
+            Some(Payload::Transaction(tx)) => {
                 let sent = !account_addresses
                     .iter()
                     .any(|address| address.outputs().iter().any(|o| o.message_id() == id));
@@ -362,6 +332,75 @@ impl Message {
             _ => 0,
         };
         Value::new(amount, ValueUnit::I)
+    }
+
+    pub fn finish(self) -> Message {
+        let mut packed_payload = Vec::new();
+        let _ = self.iota_message.payload().pack(&mut packed_payload);
+
+        let (value, remainder_value) = match self.value {
+            Some((value, remainder)) => (value, remainder),
+            None => {
+                let total_value = match self.iota_message.payload().as_ref() {
+                    Some(Payload::Transaction(tx)) => tx.essence().outputs().iter().fold(0, |acc, output| {
+                        acc + match output {
+                            Output::SignatureLockedDustAllowance(o) => o.amount(),
+                            Output::SignatureLockedSingle(o) => o.amount(),
+                            _ => 0,
+                        }
+                    }),
+                    _ => 0,
+                };
+                let value =
+                    Self::compute_value(&self.iota_message, &self.id, &self.account_addresses).without_denomination();
+                (value, total_value - value)
+            }
+        };
+
+        Message {
+            id: self.id,
+            version: 1,
+            parents: self.iota_message.parents().to_vec(),
+            payload_length: packed_payload.len(),
+            payload: self.iota_message.payload().clone(),
+            timestamp: Utc::now(),
+            nonce: self.iota_message.nonce(),
+            confirmed: self.confirmed,
+            broadcasted: true,
+            incoming: self
+                .account_addresses
+                .iter()
+                .any(|address| address.outputs().iter().any(|o| o.message_id() == &self.id)),
+            value,
+            remainder_value,
+        }
+    }
+}
+
+impl Message {
+    pub(crate) fn from_iota_message(
+        id: MessageId,
+        iota_message: IotaMessage,
+        account_addresses: &'_ [Address],
+    ) -> MessageBuilder<'_> {
+        MessageBuilder::new(id, iota_message, account_addresses)
+    }
+
+    /// The message's addresses.
+    pub fn addresses(&self) -> Vec<&IotaAddress> {
+        match &self.payload {
+            Some(Payload::Transaction(tx)) => tx
+                .essence()
+                .outputs()
+                .iter()
+                .map(|output| match output {
+                    Output::SignatureLockedDustAllowance(o) => o.address(),
+                    Output::SignatureLockedSingle(o) => o.address(),
+                    _ => unimplemented!(),
+                })
+                .collect(),
+            _ => vec![],
+        }
     }
 }
 

@@ -384,7 +384,11 @@ async fn perform_sync(
 
     let parsed_messages = new_messages
         .into_iter()
-        .map(|(id, confirmed, message)| Message::from_iota_message(id, account.addresses(), message, confirmed))
+        .map(|(id, confirmed, message)| {
+            Message::from_iota_message(id, message, account.addresses())
+                .with_confirmed(confirmed)
+                .finish()
+        })
         .collect();
     log::debug!("[SYNC] new messages: {:#?}", parsed_messages);
     account.append_messages(parsed_messages);
@@ -1024,7 +1028,9 @@ async fn perform_transfer(
         account_.append_addresses(vec![addr]);
     }
 
-    let message = Message::from_iota_message(message_id, account_.addresses(), message, None);
+    let message = Message::from_iota_message(message_id, message, account_.addresses())
+        .with_value(transfer_obj.amount.get(), remainder_value)
+        .finish();
     account_.append_messages(vec![message.clone()]);
 
     account_.save().await?;
@@ -1160,7 +1166,7 @@ pub(crate) async fn repost_message(
                 RepostAction::Reattach => client.reattach(message_id).await?,
                 RepostAction::Retry => client.retry(message_id).await?,
             };
-            let message = Message::from_iota_message(id, account.addresses(), message, None);
+            let message = Message::from_iota_message(id, message, account.addresses()).finish();
 
             account.append_messages(vec![message.clone()]);
 
