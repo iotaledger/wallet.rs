@@ -482,7 +482,7 @@ mod test_utils {
                 version: 1,
                 parents: vec![MessageId::new([0; 32])],
                 payload_length: 0,
-                payload: Payload::Transaction(Box::new(
+                payload: Some(Payload::Transaction(Box::new(
                     TransactionPayloadBuilder::new()
                         .with_essence(
                             TransactionPayloadEssence::builder()
@@ -501,7 +501,7 @@ mod test_utils {
                         ))))
                         .finish()
                         .unwrap(),
-                )),
+                ))),
                 timestamp: chrono::Utc::now(),
                 nonce: 0,
                 value: self.value,

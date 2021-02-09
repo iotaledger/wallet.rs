@@ -1014,7 +1014,7 @@ async fn poll(accounts: AccountStore, storage_file_path: PathBuf, is_mqtt_monito
         log::info!("[POLLING] skipping syncing process because MQTT is running");
         let mut retried_messages = vec![];
         for account_handle in accounts.read().await.values() {
-            let (account_handle, unconfirmed_messages): (AccountHandle, Vec<(MessageId, Payload)>) = {
+            let (account_handle, unconfirmed_messages): (AccountHandle, Vec<(MessageId, Option<Payload>)>) = {
                 let account = account_handle.read().await;
                 let unconfirmed_messages = account
                     .list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed))
@@ -1177,7 +1177,7 @@ struct RetriedData {
 async fn retry_unconfirmed_transactions(synced_accounts: Vec<SyncedAccount>) -> crate::Result<Vec<RetriedData>> {
     let mut retried_messages = vec![];
     for synced in synced_accounts {
-        let unconfirmed_messages: Vec<(MessageId, Payload)> = synced
+        let unconfirmed_messages: Vec<(MessageId, Option<Payload>)> = synced
             .account_handle()
             .read()
             .await
@@ -1428,7 +1428,6 @@ mod tests {
                 .unwrap()
                 .messages(vec![Message::from_iota_message(
                     MessageId::new([0; 32]),
-                    &[],
                     MessageBuilder::new()
                         .with_nonce_provider(crate::test_utils::NoopNonceProvider {}, 4000f64, None)
                         .with_parents(vec![MessageId::new([0; 32])])
@@ -1438,8 +1437,10 @@ mod tests {
                         .with_network_id(0)
                         .finish()
                         .unwrap(),
-                    Some(true),
-                )])
+                    &[],
+                )
+                .with_confirmed(Some(true))
+                .finish()])
                 .initialise()
                 .await
                 .unwrap();

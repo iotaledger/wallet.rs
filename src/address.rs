@@ -60,7 +60,7 @@ impl AddressOutput {
             // message is pending or confirmed
             if m.confirmed().unwrap_or(true) {
                 match m.payload() {
-                    Payload::Transaction(tx) => tx.essence().inputs().iter().any(|input| {
+                    Some(Payload::Transaction(tx)) => tx.essence().inputs().iter().any(|input| {
                         if let Input::UTXO(x) = input {
                             x == &output_id
                         } else {
