@@ -992,11 +992,7 @@ async fn perform_transfer(
     }
     let transaction = tx_builder.finish()?;
 
-    let message = finish_pow(
-        &client,
-        Some(Payload::Transaction(Box::new(transaction))),
-    )
-    .await?;
+    let message = finish_pow(&client, Some(Payload::Transaction(Box::new(transaction)))).await?;
 
     log::debug!("[TRANSFER] submitting message {:#?}", message);
 
