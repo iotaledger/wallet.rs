@@ -278,7 +278,6 @@ pub(crate) struct MessageBuilder<'a> {
     iota_message: IotaMessage,
     account_addresses: &'a [Address],
     confirmed: Option<bool>,
-    value: Option<(u64, u64)>,
 }
 
 impl<'a> MessageBuilder<'a> {
@@ -288,7 +287,6 @@ impl<'a> MessageBuilder<'a> {
             iota_message,
             account_addresses,
             confirmed: None,
-            value: None,
         }
     }
 
@@ -297,37 +295,72 @@ impl<'a> MessageBuilder<'a> {
         self
     }
 
-    pub fn with_value(mut self, value: u64, remainder: u64) -> Self {
-        self.value.replace((value, remainder));
-        self
-    }
-
     /// Gets the absolute value of the transaction.
     pub fn compute_value(iota_message: &IotaMessage, id: &MessageId, account_addresses: &[Address]) -> Value {
         let amount = match iota_message.payload().as_ref() {
             Some(Payload::Transaction(tx)) => {
-                let sent = !account_addresses
+                let essence = tx.essence();
+                let outputs = essence.outputs();
+                let outputs: Vec<(&IotaAddress, u64)> = outputs
                     .iter()
-                    .any(|address| address.outputs().iter().any(|o| o.message_id() == id));
-                tx.essence().outputs().iter().fold(0, |acc, output| {
-                    let (address, amount) = match output {
+                    .map(|output| match output {
                         Output::SignatureLockedDustAllowance(o) => (o.address(), o.amount()),
                         Output::SignatureLockedSingle(o) => (o.address(), o.amount()),
                         _ => unimplemented!(),
-                    };
-                    let address_belongs_to_account = account_addresses.iter().any(|a| a.address().as_ref() == address);
-                    if sent {
-                        if address_belongs_to_account {
-                            acc
-                        } else {
-                            acc + amount
+                    })
+                    .collect();
+                // if all outputs belongs to the account, we can't determine whether this transfer is incoming or
+                // outgoing; so we assume that the highest address index holds the remainder, and the rest is the
+                // transfer outputs
+                let all_outputs_belongs_to_account = outputs.iter().all(|(address, _)| {
+                    let address_belongs_to_account = account_addresses.iter().any(|a| &a.address().as_ref() == address);
+                    address_belongs_to_account
+                });
+                if all_outputs_belongs_to_account {
+                    let mut remainder = (None, 0); // (address_index, amount)
+                    let mut total = 0;
+                    for (address, amount) in outputs {
+                        total += amount;
+                        let account_address = account_addresses
+                            .iter()
+                            .find(|a| a.address().as_ref() == address)
+                            .unwrap(); // safe to unwrap since we already asserted that the address belongs to the account
+                        match remainder.0 {
+                            Some(index) => {
+                                let address_index = *account_address.key_index();
+                                // if the address index is the highest or it's the same as the previous one and this is
+                                // a change address, we assume that it holds the
+                                // remainder value
+                                if address_index > index || (address_index == index && *account_address.internal()) {
+                                    remainder = (Some(*account_address.key_index()), amount);
+                                }
+                            }
+                            None => {
+                                remainder = (Some(*account_address.key_index()), amount);
+                            }
                         }
-                    } else if address_belongs_to_account {
-                        acc + amount
-                    } else {
-                        acc
                     }
-                })
+                    total - remainder.1
+                } else {
+                    let sent = !account_addresses
+                        .iter()
+                        .any(|address| address.outputs().iter().any(|o| o.message_id() == id));
+                    outputs.iter().fold(0, |acc, (address, amount)| {
+                        let address_belongs_to_account =
+                            account_addresses.iter().any(|a| &a.address().as_ref() == address);
+                        if sent {
+                            if address_belongs_to_account {
+                                acc
+                            } else {
+                                acc + amount
+                            }
+                        } else if address_belongs_to_account {
+                            acc + amount
+                        } else {
+                            acc
+                        }
+                    })
+                }
             }
             _ => 0,
         };
@@ -338,23 +371,20 @@ impl<'a> MessageBuilder<'a> {
         let mut packed_payload = Vec::new();
         let _ = self.iota_message.payload().pack(&mut packed_payload);
 
-        let (value, remainder_value) = match self.value {
-            Some((value, remainder)) => (value, remainder),
-            None => {
-                let total_value = match self.iota_message.payload().as_ref() {
-                    Some(Payload::Transaction(tx)) => tx.essence().outputs().iter().fold(0, |acc, output| {
-                        acc + match output {
-                            Output::SignatureLockedDustAllowance(o) => o.amount(),
-                            Output::SignatureLockedSingle(o) => o.amount(),
-                            _ => 0,
-                        }
-                    }),
-                    _ => 0,
-                };
-                let value =
-                    Self::compute_value(&self.iota_message, &self.id, &self.account_addresses).without_denomination();
-                (value, total_value - value)
-            }
+        let (value, remainder_value) = {
+            let total_value = match self.iota_message.payload().as_ref() {
+                Some(Payload::Transaction(tx)) => tx.essence().outputs().iter().fold(0, |acc, output| {
+                    acc + match output {
+                        Output::SignatureLockedDustAllowance(o) => o.amount(),
+                        Output::SignatureLockedSingle(o) => o.amount(),
+                        _ => 0,
+                    }
+                }),
+                _ => 0,
+            };
+            let value =
+                Self::compute_value(&self.iota_message, &self.id, &self.account_addresses).without_denomination();
+            (value, total_value - value)
         };
 
         Message {
