@@ -994,7 +994,6 @@ async fn perform_transfer(
 
     let message = finish_pow(
         &client,
-        client.get_network_id().await?,
         Some(Payload::Transaction(Box::new(transaction))),
     )
     .await?;
