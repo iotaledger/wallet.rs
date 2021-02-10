@@ -41,6 +41,7 @@ use tokio::{
     },
     time::interval,
 };
+use zeroize::Zeroize;
 
 /// The default storage folder.
 pub const DEFAULT_STORAGE_FOLDER: &str = "./storage";
@@ -269,11 +270,13 @@ impl Drop for AccountManager {
 }
 
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-fn stronghold_password<P: AsRef<str>>(password: P) -> [u8; 32] {
+fn stronghold_password<P: Into<String>>(password: P) -> Vec<u8> {
+    let mut password = password.into();
     let mut dk = [0; 64];
     // safe to unwrap because rounds > 0
-    crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_ref().as_bytes(), b"wallet.rs", 100, &mut dk).unwrap();
-    dk[0..32][..].try_into().unwrap()
+    crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_bytes(), b"wallet.rs", 100, &mut dk).unwrap();
+    password.zeroize();
+    dk.to_vec()
 }
 
 impl AccountManager {
@@ -432,13 +435,13 @@ impl AccountManager {
     /// Sets the stronghold password.
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
-    pub async fn set_stronghold_password<P: AsRef<str>>(&mut self, password: P) -> crate::Result<()> {
+    pub async fn set_stronghold_password<P: Into<String>>(&mut self, password: P) -> crate::Result<()> {
         let stronghold_path = if self.storage_path.extension().unwrap_or_default() == "stronghold" {
             self.storage_path.clone()
         } else {
             self.storage_folder.join(STRONGHOLD_FILENAME)
         };
-        crate::stronghold::load_snapshot(&stronghold_path, &stronghold_password(password)).await?;
+        crate::stronghold::load_snapshot(&stronghold_path, stronghold_password(password)).await?;
 
         // let is_empty = self.accounts.read().await.is_empty();
         if self.accounts.read().await.is_empty() {
@@ -460,15 +463,15 @@ impl AccountManager {
     /// Sets the stronghold password.
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
-    pub async fn change_stronghold_password<C: AsRef<str>, N: AsRef<str>>(
+    pub async fn change_stronghold_password<C: Into<String>, N: Into<String>>(
         &self,
         current_password: C,
         new_password: N,
     ) -> crate::Result<()> {
         crate::stronghold::change_password(
             &self.stronghold_snapshot_path().await?,
-            &stronghold_password(current_password),
-            &stronghold_password(new_password),
+            stronghold_password(current_password),
+            stronghold_password(new_password),
         )
         .await
         .map_err(|e| e.into())
@@ -764,7 +767,7 @@ impl AccountManager {
     pub async fn import_accounts<S: AsRef<Path>>(
         &mut self,
         source: S,
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))] stronghold_password: impl AsRef<str>,
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))] stronghold_password: String,
     ) -> crate::Result<()> {
         let source = source.as_ref();
         if source.is_dir() || !source.exists() {
@@ -808,7 +811,9 @@ impl AccountManager {
                     .skip_polling()
                     .finish()
                     .await?;
-                stronghold_manager.set_stronghold_password(&stronghold_password).await?;
+                stronghold_manager
+                    .set_stronghold_password(stronghold_password.clone())
+                    .await?;
                 for account_handle in stronghold_manager.accounts.read().await.values() {
                     account_handle.write().await.set_storage_path(self.storage_path.clone());
                 }
@@ -1586,7 +1591,10 @@ mod tests {
             // import the accounts from the backup and assert that it's the same
 
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-            manager.import_accounts(backup_file_path, "password").await.unwrap();
+            manager
+                .import_accounts(backup_file_path, "password".to_string())
+                .await
+                .unwrap();
 
             #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
             manager.import_accounts(backup_file_path).await.unwrap();
@@ -1630,7 +1638,7 @@ mod tests {
             };
 
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-            let response = manager.import_accounts(backup_file_path, "password").await;
+            let response = manager.import_accounts(backup_file_path, "password".to_string()).await;
 
             #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
             let response = manager.import_accounts(backup_file_path).await;

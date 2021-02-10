@@ -926,7 +926,7 @@ checksum = "7a81dae078cea95a014a339291cec439d2f232ebe854a9d672b796c6afafa9b7"
 [[package]]
 name = "crypto"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=175d33562081dc26bd0b4b5cce624759606161d7#175d33562081dc26bd0b4b5cce624759606161d7"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7#87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7"
 dependencies = [
  "anyhow",
  "primitives",
@@ -1835,7 +1835,7 @@ dependencies = [
 [[package]]
 name = "iota-stronghold"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=175d33562081dc26bd0b4b5cce624759606161d7#175d33562081dc26bd0b4b5cce624759606161d7"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7#87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7"
 dependencies = [
  "anyhow",
  "bincode",
@@ -1882,6 +1882,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "url",
+ "zeroize",
 ]
 
 [[package]]
@@ -2810,7 +2811,7 @@ checksum = "ac74c624d6b2d21f425f752262f42188365d7b8ff1aff74c82e45136510a4857"
 [[package]]
 name = "primitives"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=175d33562081dc26bd0b4b5cce624759606161d7#175d33562081dc26bd0b4b5cce624759606161d7"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7#87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7"
 
 [[package]]
 name = "proc-macro-crate"
@@ -3034,7 +3035,7 @@ dependencies = [
 [[package]]
 name = "random"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=175d33562081dc26bd0b4b5cce624759606161d7#175d33562081dc26bd0b4b5cce624759606161d7"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7#87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7"
 dependencies = [
  "cc",
  "primitives",
@@ -3581,7 +3582,7 @@ checksum = "fe0f37c9e8f3c5a4a66ad655a93c74daac4ad00c441533bf5c6e7990bb42604e"
 [[package]]
 name = "snapshot"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=175d33562081dc26bd0b4b5cce624759606161d7#175d33562081dc26bd0b4b5cce624759606161d7"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7#87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7"
 dependencies = [
  "dirs-next",
  "hex",
@@ -3648,7 +3649,7 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 [[package]]
 name = "store"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=175d33562081dc26bd0b4b5cce624759606161d7#175d33562081dc26bd0b4b5cce624759606161d7"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7#87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7"
 dependencies = [
  "once_cell",
  "paste",
@@ -3668,7 +3669,7 @@ dependencies = [
 [[package]]
 name = "stronghold-engine"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=175d33562081dc26bd0b4b5cce624759606161d7#175d33562081dc26bd0b4b5cce624759606161d7"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7#87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7"
 dependencies = [
  "crypto",
  "primitives",
@@ -3681,7 +3682,7 @@ dependencies = [
 [[package]]
 name = "stronghold-runtime"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=175d33562081dc26bd0b4b5cce624759606161d7#175d33562081dc26bd0b4b5cce624759606161d7"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7#87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7"
 dependencies = [
  "bindgen",
  "lazy_static",
@@ -4150,7 +4151,7 @@ dependencies = [
 [[package]]
 name = "vault"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=175d33562081dc26bd0b4b5cce624759606161d7#175d33562081dc26bd0b4b5cce624759606161d7"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7#87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7"
 dependencies = [
  "anyhow",
  "serde 1.0.123",
