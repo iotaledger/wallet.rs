@@ -276,7 +276,8 @@ fn stronghold_password<P: Into<String>>(password: P) -> Vec<u8> {
     // safe to unwrap because rounds > 0
     crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_bytes(), b"wallet.rs", 100, &mut dk).unwrap();
     password.zeroize();
-    dk.to_vec()
+    let password: [u8; 32] = dk[0..32][..].try_into().unwrap();
+    password.to_vec()
 }
 
 impl AccountManager {
