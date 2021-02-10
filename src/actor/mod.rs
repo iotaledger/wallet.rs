@@ -9,6 +9,7 @@ use crate::{
 };
 use futures::{Future, FutureExt};
 use iota::message::prelude::MessageId;
+use zeroize::Zeroize;
 
 use std::{
     any::Any,
@@ -69,8 +70,8 @@ impl WalletMessageHandler {
     }
 
     /// Handles a message.
-    pub async fn handle(&mut self, message: Message) {
-        let response: Result<ResponseType> = match message.message_type() {
+    pub async fn handle(&mut self, mut message: Message) {
+        let response: Result<ResponseType> = match message.message_type_mut() {
             MessageType::RemoveAccount(account_id) => {
                 convert_async_panics(|| async { self.remove_account(account_id).await }).await
             }
@@ -94,7 +95,11 @@ impl WalletMessageHandler {
             }
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             MessageType::RestoreBackup { backup_path, password } => {
-                convert_async_panics(|| async { self.restore_backup(backup_path, password).await }).await
+                let res =
+                    convert_async_panics(|| async { self.restore_backup(backup_path, password.to_string()).await })
+                        .await;
+                password.zeroize();
+                res
             }
             #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
             MessageType::RestoreBackup { backup_path } => {
@@ -189,8 +194,10 @@ impl WalletMessageHandler {
             } => {
                 convert_async_panics(|| async {
                     self.account_manager
-                        .change_stronghold_password(current_password, new_password)
+                        .change_stronghold_password(current_password.to_string(), new_password.to_string())
                         .await?;
+                    current_password.zeroize();
+                    new_password.zeroize();
                     Ok(ResponseType::StrongholdPasswordChanged)
                 })
                 .await
@@ -223,7 +230,7 @@ impl WalletMessageHandler {
     async fn restore_backup(
         &mut self,
         backup_path: &str,
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))] password: &str,
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))] password: String,
     ) -> Result<ResponseType> {
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         self.account_manager.import_accounts(backup_path, password).await?;
