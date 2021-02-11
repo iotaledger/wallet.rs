@@ -9,6 +9,7 @@ on:
       - develop
     paths-ignore:
       - 'specs/**'
+      - 'docs/**'
 
 jobs:
   crate:
