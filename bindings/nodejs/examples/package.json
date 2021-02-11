@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@iota/wallet": "0.0.2",
     "dotenv": "^8.2.0"
   }
 }
