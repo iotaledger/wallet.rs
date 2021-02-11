@@ -1671,6 +1671,11 @@
 <span id="1668">1668</span>
 <span id="1669">1669</span>
 <span id="1670">1670</span>
+<span id="1671">1671</span>
+<span id="1672">1672</span>
+<span id="1673">1673</span>
+<span id="1674">1674</span>
+<span id="1675">1675</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1923,6 +1928,9 @@
 <span class="kw">impl</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">AccountManager</span> {
     <span class="doccomment">/// Note that when cloning an AccountManager, the original reference&#39;s Drop will stop the background sync.</span>
     <span class="doccomment">/// When the cloned reference is dropped, the background sync system won&#39;t be stopped.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Additionally, the generated mnemonic isn&#39;t cloned for security reasons,</span>
+    <span class="doccomment">/// so you should store it before cloning.</span>
     <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">storage_folder</span>: <span class="self">self</span>.<span class="ident">storage_folder</span>.<span class="ident">clone</span>(),
@@ -1931,7 +1939,7 @@
             <span class="ident">stop_polling_sender</span>: <span class="self">self</span>.<span class="ident">stop_polling_sender</span>.<span class="ident">clone</span>(),
             <span class="ident">polling_handle</span>: <span class="prelude-val">None</span>,
             <span class="ident">is_monitoring</span>: <span class="self">self</span>.<span class="ident">is_monitoring</span>.<span class="ident">clone</span>(),
-            <span class="ident">generated_mnemonic</span>: <span class="self">self</span>.<span class="ident">generated_mnemonic</span>.<span class="ident">clone</span>(),
+            <span class="ident">generated_mnemonic</span>: <span class="prelude-val">None</span>,
             <span class="ident">encrypted_accounts</span>: <span class="self">self</span>.<span class="ident">encrypted_accounts</span>.<span class="ident">clone</span>(),
         }
     }
@@ -2234,7 +2242,9 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">signer</span> <span class="op">=</span> <span class="ident">signer</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
         <span class="ident">signer</span>.<span class="ident">store_mnemonic</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>, <span class="ident">mnemonic</span>).<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="self">self</span>.<span class="ident">generated_mnemonic</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">mnemonic</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">generated_mnemonic</span>.<span class="ident">take</span>() {
+            <span class="ident">mnemonic</span>.<span class="ident">zeroize</span>();
+        }
 
         <span class="prelude-val">Ok</span>(())
     }
