@@ -249,6 +249,9 @@ pub struct AccountManager {
 impl Clone for AccountManager {
     /// Note that when cloning an AccountManager, the original reference's Drop will stop the background sync.
     /// When the cloned reference is dropped, the background sync system won't be stopped.
+    ///
+    /// Additionally, the generated mnemonic isn't cloned for security reasons,
+    /// so you should store it before cloning.
     fn clone(&self) -> Self {
         Self {
             storage_folder: self.storage_folder.clone(),
@@ -257,7 +260,7 @@ impl Clone for AccountManager {
             stop_polling_sender: self.stop_polling_sender.clone(),
             polling_handle: None,
             is_monitoring: self.is_monitoring.clone(),
-            generated_mnemonic: self.generated_mnemonic.clone(),
+            generated_mnemonic: None,
             encrypted_accounts: self.encrypted_accounts.clone(),
         }
     }
@@ -560,7 +563,9 @@ impl AccountManager {
         let mut signer = signer.lock().await;
         signer.store_mnemonic(&self.storage_path, mnemonic).await?;
 
-        self.generated_mnemonic = None;
+        if let Some(mut mnemonic) = self.generated_mnemonic.take() {
+            mnemonic.zeroize();
+        }
 
         Ok(())
     }
