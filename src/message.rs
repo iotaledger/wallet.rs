@@ -228,7 +228,7 @@ pub struct Message {
     #[serde(rename = "payloadLength")]
     pub(crate) payload_length: usize,
     /// Message payload.
-    pub(crate) payload: Payload,
+    pub(crate) payload: Option<Payload>,
     /// The transaction timestamp.
     pub(crate) timestamp: DateTime<Utc>,
     /// Transaction nonce.
@@ -273,52 +273,153 @@ impl PartialOrd for Message {
     }
 }
 
+pub(crate) struct MessageBuilder<'a> {
+    id: MessageId,
+    iota_message: IotaMessage,
+    account_addresses: &'a [Address],
+    confirmed: Option<bool>,
+}
+
+impl<'a> MessageBuilder<'a> {
+    pub fn new(id: MessageId, iota_message: IotaMessage, account_addresses: &'a [Address]) -> Self {
+        Self {
+            id,
+            iota_message,
+            account_addresses,
+            confirmed: None,
+        }
+    }
+
+    pub fn with_confirmed(mut self, confirmed: Option<bool>) -> Self {
+        self.confirmed = confirmed;
+        self
+    }
+
+    /// Gets the absolute value of the transaction.
+    pub fn compute_value(iota_message: &IotaMessage, id: &MessageId, account_addresses: &[Address]) -> Value {
+        let amount = match iota_message.payload().as_ref() {
+            Some(Payload::Transaction(tx)) => {
+                let essence = tx.essence();
+                let outputs = essence.outputs();
+                let outputs: Vec<(&IotaAddress, u64)> = outputs
+                    .iter()
+                    .map(|output| match output {
+                        Output::SignatureLockedDustAllowance(o) => (o.address(), o.amount()),
+                        Output::SignatureLockedSingle(o) => (o.address(), o.amount()),
+                        _ => unimplemented!(),
+                    })
+                    .collect();
+                // if all outputs belongs to the account, we can't determine whether this transfer is incoming or
+                // outgoing; so we assume that the highest address index holds the remainder, and the rest is the
+                // transfer outputs
+                let all_outputs_belongs_to_account = outputs.iter().all(|(address, _)| {
+                    let address_belongs_to_account = account_addresses.iter().any(|a| &a.address().as_ref() == address);
+                    address_belongs_to_account
+                });
+                if all_outputs_belongs_to_account {
+                    let mut remainder = (None, 0); // (address_index, amount)
+                    let mut total = 0;
+                    for (address, amount) in outputs {
+                        total += amount;
+                        let account_address = account_addresses
+                            .iter()
+                            .find(|a| a.address().as_ref() == address)
+                            .unwrap(); // safe to unwrap since we already asserted that the address belongs to the account
+                        match remainder.0 {
+                            Some(index) => {
+                                let address_index = *account_address.key_index();
+                                // if the address index is the highest or it's the same as the previous one and this is
+                                // a change address, we assume that it holds the
+                                // remainder value
+                                if address_index > index || (address_index == index && *account_address.internal()) {
+                                    remainder = (Some(*account_address.key_index()), amount);
+                                }
+                            }
+                            None => {
+                                remainder = (Some(*account_address.key_index()), amount);
+                            }
+                        }
+                    }
+                    total - remainder.1
+                } else {
+                    let sent = !account_addresses
+                        .iter()
+                        .any(|address| address.outputs().iter().any(|o| o.message_id() == id));
+                    outputs.iter().fold(0, |acc, (address, amount)| {
+                        let address_belongs_to_account =
+                            account_addresses.iter().any(|a| &a.address().as_ref() == address);
+                        if sent {
+                            if address_belongs_to_account {
+                                acc
+                            } else {
+                                acc + amount
+                            }
+                        } else if address_belongs_to_account {
+                            acc + amount
+                        } else {
+                            acc
+                        }
+                    })
+                }
+            }
+            _ => 0,
+        };
+        Value::new(amount, ValueUnit::I)
+    }
+
+    pub fn finish(self) -> Message {
+        let mut packed_payload = Vec::new();
+        let _ = self.iota_message.payload().pack(&mut packed_payload);
+
+        let (value, remainder_value) = {
+            let total_value = match self.iota_message.payload().as_ref() {
+                Some(Payload::Transaction(tx)) => tx.essence().outputs().iter().fold(0, |acc, output| {
+                    acc + match output {
+                        Output::SignatureLockedDustAllowance(o) => o.amount(),
+                        Output::SignatureLockedSingle(o) => o.amount(),
+                        _ => 0,
+                    }
+                }),
+                _ => 0,
+            };
+            let value =
+                Self::compute_value(&self.iota_message, &self.id, &self.account_addresses).without_denomination();
+            (value, total_value - value)
+        };
+
+        Message {
+            id: self.id,
+            version: 1,
+            parents: self.iota_message.parents().to_vec(),
+            payload_length: packed_payload.len(),
+            payload: self.iota_message.payload().clone(),
+            timestamp: Utc::now(),
+            nonce: self.iota_message.nonce(),
+            confirmed: self.confirmed,
+            broadcasted: true,
+            incoming: self
+                .account_addresses
+                .iter()
+                .any(|address| address.outputs().iter().any(|o| o.message_id() == &self.id)),
+            value,
+            remainder_value,
+        }
+    }
+}
+
 impl Message {
     pub(crate) fn from_iota_message(
         id: MessageId,
-        account_addresses: &[Address],
-        message: IotaMessage,
-        confirmed: Option<bool>,
-    ) -> Self {
-        let mut packed_payload = Vec::new();
-        let _ = message.payload().pack(&mut packed_payload);
-
-        let total_value = match message.payload().as_ref() {
-            Some(Payload::Transaction(tx)) => tx.essence().outputs().iter().fold(0, |acc, output| {
-                acc + match output {
-                    Output::SignatureLockedDustAllowance(o) => o.amount(),
-                    Output::SignatureLockedSingle(o) => o.amount(),
-                    _ => 0,
-                }
-            }),
-            _ => 0,
-        };
-        let value = Self::compute_value(&message, &id, &account_addresses).without_denomination();
-
-        let message = Self {
-            id,
-            version: 1,
-            parents: message.parents().to_vec(),
-            payload_length: packed_payload.len(),
-            payload: message.payload().as_ref().unwrap().clone(),
-            timestamp: Utc::now(),
-            nonce: message.nonce(),
-            confirmed,
-            broadcasted: true,
-            incoming: account_addresses
-                .iter()
-                .any(|address| address.outputs().iter().any(|o| o.message_id() == &id)),
-            value,
-            remainder_value: total_value - value,
-        };
-
-        message
+        iota_message: IotaMessage,
+        account_addresses: &'_ [Address],
+    ) -> MessageBuilder<'_> {
+        MessageBuilder::new(id, iota_message, account_addresses)
     }
 
     /// The message's addresses.
     pub fn addresses(&self) -> Vec<&IotaAddress> {
         match &self.payload {
-            Payload::Transaction(tx) => tx
+            Some(Payload::Transaction(tx)) => tx
                 .essence()
                 .outputs()
                 .iter()
@@ -330,38 +431,6 @@ impl Message {
                 .collect(),
             _ => vec![],
         }
-    }
-
-    /// Gets the absolute value of the transaction.
-    pub fn compute_value(iota_message: &IotaMessage, id: &MessageId, account_addresses: &[Address]) -> Value {
-        let amount = match iota_message.payload().as_ref().unwrap() {
-            Payload::Transaction(tx) => {
-                let sent = !account_addresses
-                    .iter()
-                    .any(|address| address.outputs().iter().any(|o| o.message_id() == id));
-                tx.essence().outputs().iter().fold(0, |acc, output| {
-                    let (address, amount) = match output {
-                        Output::SignatureLockedDustAllowance(o) => (o.address(), o.amount()),
-                        Output::SignatureLockedSingle(o) => (o.address(), o.amount()),
-                        _ => unimplemented!(),
-                    };
-                    let address_belongs_to_account = account_addresses.iter().any(|a| a.address().as_ref() == address);
-                    if sent {
-                        if address_belongs_to_account {
-                            acc
-                        } else {
-                            acc + amount
-                        }
-                    } else if address_belongs_to_account {
-                        acc + amount
-                    } else {
-                        acc
-                    }
-                })
-            }
-            _ => 0,
-        };
-        Value::new(amount, ValueUnit::I)
     }
 }
 

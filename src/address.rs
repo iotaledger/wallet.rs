@@ -24,6 +24,8 @@ pub enum OutputKind {
     SignatureLockedSingle,
     /// Dust allowance output.
     SignatureLockedDustAllowance,
+    /// Treasury output.
+    Treasury,
 }
 
 /// An Address output.
@@ -58,7 +60,7 @@ impl AddressOutput {
             // message is pending or confirmed
             if m.confirmed().unwrap_or(true) {
                 match m.payload() {
-                    Payload::Transaction(tx) => tx.essence().inputs().iter().any(|input| {
+                    Some(Payload::Transaction(tx)) => tx.essence().inputs().iter().any(|input| {
                         if let Input::UTXO(x) = input {
                             x == &output_id
                         } else {
@@ -97,6 +99,12 @@ impl AddressOutput {
                 };
                 (address, output.amount, OutputKind::SignatureLockedDustAllowance)
             }
+            OutputDto::Treasury(output) => (
+                // dummy address
+                IotaAddress::Ed25519(Ed25519Address::new([0; 32])),
+                output.amount,
+                OutputKind::Treasury,
+            ),
         };
         let output = Self {
             transaction_id: TransactionId::new(

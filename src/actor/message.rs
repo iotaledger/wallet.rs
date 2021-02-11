@@ -199,6 +199,8 @@ pub enum MessageType {
         #[serde(rename = "newPassword")]
         new_password: String,
     },
+    /// Updates the client options for all accounts.
+    SetClientOptions(Box<ClientOptions>),
 }
 
 impl Serialize for MessageType {
@@ -271,6 +273,9 @@ impl Serialize for MessageType {
                 current_password: _,
                 new_password: _,
             } => serializer.serialize_unit_variant("MessageType", 22, "ChangeStrongholdPassword"),
+            MessageType::SetClientOptions(_) => {
+                serializer.serialize_unit_variant("MessageType", 23, "SetClientOptions")
+            }
         }
     }
 }
@@ -374,7 +379,7 @@ pub enum ResponseType {
     AreAllLatestAddressesUnused(bool),
     /// SetAlias response.
     UpdatedAlias,
-    /// SetClientOptions response.
+    /// Account method SetClientOptions response.
     UpdatedClientOptions,
     /// OpenLedgerApp response.
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
@@ -386,6 +391,8 @@ pub enum ResponseType {
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
     StrongholdPasswordChanged,
+    /// SetClientOptions response.
+    UpdatedAllClientOptions,
 }
 
 /// The message type.
@@ -409,6 +416,11 @@ impl Message {
     /// The message type.
     pub fn message_type(&self) -> &MessageType {
         &self.message_type
+    }
+
+    /// The message type.
+    pub(crate) fn message_type_mut(&mut self) -> &mut MessageType {
+        &mut self.message_type
     }
 
     /// The response sender.

@@ -204,14 +204,14 @@ impl From<crate::stronghold::Error> for Error {
 // LedgerMiscError: Everything else.
 // LedgerEssenceTooLarge: Essence with bip32 input indices need more space then the internal buffer is big
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-impl From<ledger_iota::api::errors::APIError> for Error {
-    fn from(error: ledger_iota::api::errors::APIError) -> Self {
+impl From<iota_ledger::api::errors::APIError> for Error {
+    fn from(error: iota_ledger::api::errors::APIError) -> Self {
         log::info!("ledger error: {}", error);
         match error {
-            ledger_iota::api::errors::APIError::SecurityStatusNotSatisfied => Error::LedgerDongleLocked,
-            ledger_iota::api::errors::APIError::ConditionsOfUseNotSatisfied => Error::LedgerDeniedByUser,
-            ledger_iota::api::errors::APIError::TransportError => Error::LedgerDeviceNotFound,
-            ledger_iota::api::errors::APIError::EssenceTooLarge => Error::LedgerEssenceTooLarge,
+            iota_ledger::api::errors::APIError::SecurityStatusNotSatisfied => Error::LedgerDongleLocked,
+            iota_ledger::api::errors::APIError::ConditionsOfUseNotSatisfied => Error::LedgerDeniedByUser,
+            iota_ledger::api::errors::APIError::TransportError => Error::LedgerDeviceNotFound,
+            iota_ledger::api::errors::APIError::EssenceTooLarge => Error::LedgerEssenceTooLarge,
             _ => Error::LedgerMiscError,
         }
     }
