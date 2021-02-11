@@ -9,7 +9,7 @@ async function run() {
         storagePath: './alice-database',
     })
     manager.setStrongholdPassword("your_password")
-    manager.storeMnemonic(SignerType.Stronghold, manager.generateMnemonic())
+    manager.storeMnemonic(SignerType.Stronghold)
 
     const account = await manager.createAccount({
         clientOptions: { node: "https://api.lb-0.testnet.chrysalis2.com", localPow: true },
@@ -17,6 +17,7 @@ async function run() {
     })
 
     console.log('Account created:', account.alias())
+      
 }
 
 run()
