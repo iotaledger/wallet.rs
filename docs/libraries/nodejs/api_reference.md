@@ -49,6 +49,15 @@ Sets the stronghold password and initialises it.
 | -------- | ------------------- | ---------------------- | -------------------------------- |
 | password | <code>string</code> | <code>undefined</code> | The stronghold snapshot password |
 
+#### changeStrongholdPassword(currentPassword, newPassword): void
+
+Changes the stronghold password.
+
+| Param           | Type                | Default                | Description                     |
+| --------------- | ------------------- | ---------------------- | ------------------------------- |
+| currentPassword | <code>string</code> | <code>undefined</code> | The current stronghold password |
+| newPassword     | <code>string</code> | <code>undefined</code> | The new stronghold password     |
+
 #### createAccount(account): Account
 
 Creates a new account.
@@ -139,6 +148,14 @@ Determines whether all accounts has unused latest address after syncing with the
 
 **Returns** A promise resolving to the boolean value.
 
+#### setClientOptions(options)
+
+Updates the client options for all accounts.
+
+| Param   | Type                                         | Default           | Description                    |
+| ------- | -------------------------------------------- | ----------------- | ------------------------------ |
+| options | <code>[ClientOptions](#clientoptions)</code> | <code>null</code> | The new account client options |
+
 ### SyncedAccount
 
 #### send(address, amount[, options])
@@ -208,13 +225,11 @@ Returns the account's index.
 
 Returns the account's alias.
 
-#### availableBalance()
+#### balance(): AccountBalance
 
-Returns the account's available balance.
+Returns the account's balance information object.
 
-#### totalBalance()
-
-Returns the account's total balance.
+Balance object: { total: number, available: number, incoming: number, outgoing: number }
 
 #### listMessages([count, from, type])
 

@@ -1,0 +1,39 @@
+name: github pages
+
+on:
+  push:
+    branches:
+      - develop
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install rust-docs with nightly toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+            profile: minimal
+            toolchain: nightly
+            override: true
+            components: rust-docs
+          
+      - name: Setup mdBook
+        uses: peaceiris/actions-mdbook@v1
+        with:
+          mdbook-version: 'latest'
+
+      - run: mdbook build
+      - name: Install required packages (Ubuntu)
+        run: |
+          sudo apt-get update
+          sudo apt-get install libudev-dev libusb-1.0-0-dev
+      - run: DOCFLAGS="--cfg docsrs" cargo +nightly doc --all-features --document-private-items --no-deps --release
+      - run: cp -r target/doc book/docs
+      
+      - name: Deploy
+        uses: iotaledger/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./book
+          cname: wallet-lib.docs.iota.org

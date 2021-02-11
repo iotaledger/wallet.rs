@@ -13,26 +13,37 @@ async fn main() -> iota_wallet::Result<()> {
     manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
 
     // first we'll create an example account and store it
-    let client_options = ClientOptionsBuilder::node("https://api.lb-0.testnet.chrysalis2.com")?.build();
+    let client_options = ClientOptionsBuilder::new()
+        .with_node("https://api.lb-0.testnet.chrysalis2.com")?
+        .build()
+        .unwrap();
     let account = manager
         .create_account(client_options)?
         .alias("alias")
         .initialise()
         .await?;
 
+    let address = account.generate_address().await?;
+    println!(
+        "Send iotas from the faucet to {} and press enter after the transaction got confirmed",
+        address.address().to_bech32()
+    );
+    let mut message = String::new();
+    std::io::stdin().read_line(&mut message).unwrap();
+    println!("Sending transfer...");
     // we need to synchronize with the Tangle first
     let sync_accounts = manager.sync_accounts().await?;
     let sync_account = sync_accounts.first().unwrap();
-
-    sync_account
+    let message = sync_account
         .transfer(
             Transfer::builder(
                 account.latest_address().await.address().clone(),
-                NonZeroU64::new(150).unwrap(),
+                NonZeroU64::new(1500000).unwrap(),
             )
             .finish(),
         )
         .await?;
+    println!("Message sent: {}", message.id());
 
     Ok(())
 }

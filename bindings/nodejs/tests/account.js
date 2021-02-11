@@ -17,7 +17,19 @@ async function run() {
   manager.storeMnemonic(SignerType.Stronghold)
 
   const account = manager.createAccount({
-    clientOptions: { node: 'http://localhost:14265' }
+    clientOptions: {
+      node: 'http://localhost:14265',
+      requestTimeout: {
+        secs: 5000,
+        nanos: 0
+      },
+      apiTimeout: {
+        PostMessage: {
+          secs: 6000,
+          nanos: 0
+        }
+      }
+    }
   })
   console.log('messages', account.listMessages(0, 0, MessageType.Failed))
   account.setAlias('new alias')

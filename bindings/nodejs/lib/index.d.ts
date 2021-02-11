@@ -35,8 +35,7 @@ export declare type Payload = Transaction;
 
 export declare interface Message {
   version: number;
-  parent1: string;
-  parent2: string;
+  parents: string[];
   payloadLength: number;
   payload: Payload;
   timestamp: string;
@@ -59,12 +58,18 @@ export declare interface SyncOptions {
   skipPersistance?: boolean
 }
 
+export declare interface AccountBalance {
+  total: number
+  available: number
+  incoming: number
+  outgoing: number
+}
+
 export declare class Account {
   id(): string;
   index(): number;
   alias(): string;
-  availableBalance(): number;
-  totalBalance(): number;
+  balance(): AccountBalance;
   listMessages(count?: number, from?: number, messageType?: MessageType): Message[]
   listAddresses(unspent?: boolean): Address[]
   sync(options?: SyncOptions): Promise<SyncedAccount>
@@ -73,7 +78,7 @@ export declare class Account {
   getMessage(id: string): Message | undefined
   generateAddress(): Address
   latestAddress(): Address
-  isLatestAddressUnused(): Promise<bool>
+  isLatestAddressUnused(): Promise<boolean>
 }
 
 export declare class RemainderValueStrategy {
@@ -131,6 +136,7 @@ export declare class AccountManager {
   constructor(options: ManagerOptions)
   setStoragePassword(password: string): void
   setStrongholdPassword(password: string): void
+  changeStrongholdPassword(currentPassword: string, newPassword: string): void
   generateMnemonic(): string
   storeMnemonic(signerType: SignerType, mnemonic?: string): void
   createAccount(account: AccountToCreate): Account
@@ -141,6 +147,8 @@ export declare class AccountManager {
   internalTransfer(fromAccount: Account, toAccount: Account, amount: number): Promise<Message>
   backup(destination: string): string
   importAccounts(source: string, password: string): void
+  isLatestAddressUnused(): Promise<boolean>
+  setClientOptions(options: ClientOptions): void
 }
 
 export declare type Event = 'ErrorThrown' |

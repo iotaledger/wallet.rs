@@ -14,6 +14,9 @@ crate-type = ["cdylib"]
 [build-dependencies]
 neon-build = "0.4.0"
 
+[patch.'crates-io']
+lexical-core = { git = "https://github.com/Gelbpunkt/rust-lexical", branch = "fix-warnings-and-update-deps" }
+
 [dependencies]
 neon = "0.4.0"
 iota-wallet = { path = "../../../", version = "0.1.0", features = ["stronghold", "stronghold-storage", "sqlite-storage"] }

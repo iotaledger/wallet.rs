@@ -3,17 +3,19 @@
 
 use crate::account::Account;
 
+use std::{collections::HashMap, fmt, path::PathBuf};
+
 use iota::{common::packable::Packable, UnlockBlock};
-use std::path::PathBuf;
+use iota_ledger::LedgerBIP32Index;
+use tokio::sync::Mutex;
 
-use ledger_iota::{api::errors, LedgerBIP32Index};
-
-const HARDENED: u32 = 0x80000000;
+pub const HARDENED: u32 = 0x80000000;
 
 #[derive(Default)]
 pub struct LedgerNanoSigner {
-    pub id: u64,
     pub is_simulator: bool,
+    pub address_pool: Mutex<HashMap<AddressPoolEntry, [u8; 32]>>,
+    pub mutex: Mutex<()>,
 }
 
 /// A record matching an Input with its address.
@@ -26,21 +28,20 @@ struct AddressIndexRecorder {
     pub bip32: LedgerBIP32Index,
 }
 
-// map most errors to a single error but there are some errors that
-// need special care.
-// LedgerDongleLocked: Ask the user to unlock the dongle
-// LedgerDeniedByUser: The user denied a signing
-// LedgerDeviceNotFound: No usable Ledger device was found
-// LedgerMiscError: Everything else.
-// LedgerEssenceTooLarge: Essence with bip32 input indices need more space then the internal buffer is big
-fn ledger_map_err(err: errors::APIError) -> crate::Error {
-    // println!("{}", err);
-    match err {
-        errors::APIError::SecurityStatusNotSatisfied => crate::Error::LedgerDongleLocked,
-        errors::APIError::ConditionsOfUseNotSatisfied => crate::Error::LedgerDeniedByUser,
-        errors::APIError::TransportError => crate::Error::LedgerDeviceNotFound,
-        errors::APIError::EssenceTooLarge => crate::Error::LedgerEssenceTooLarge,
-        _ => crate::Error::LedgerMiscError,
+#[derive(Hash, Eq, PartialEq)]
+pub struct AddressPoolEntry {
+    bip32_account: u32,
+    bip32_index: u32,
+    bip32_change: u32,
+}
+
+impl fmt::Display for AddressPoolEntry {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{:08x}:{:08x}:{:08x}",
+            self.bip32_account, self.bip32_change, self.bip32_index
+        )
     }
 }
 
@@ -57,20 +58,71 @@ impl super::Signer for LedgerNanoSigner {
         internal: bool,
         meta: super::GenerateAddressMetadata,
     ) -> crate::Result<iota::Address> {
-        // get ledger
-        let mut ledger = ledger_iota::get_ledger(self.id, self.is_simulator, *account.index() as u32 | HARDENED)
-            .map_err(ledger_map_err)?;
+        // lock the mutex
+        let _lock = self.mutex.lock().await;
 
-        let bip32 = ledger_iota::LedgerBIP32Index {
+        let bip32_account = *account.index() as u32 | HARDENED;
+
+        let bip32 = iota_ledger::LedgerBIP32Index {
             bip32_index: address_index as u32 | HARDENED,
             bip32_change: if internal { 1 } else { 0 } | HARDENED,
         };
 
-        // if the wallet is not generating addresses for syncing, we assume it's a new receiving address that
-        // needs to be shown to the user
-        let address_bytes = ledger.get_new_address(!meta.syncing, bip32).map_err(ledger_map_err)?;
+        // if it's not for syncing, then it's a new receiving / remainder address
+        // that needs shown to the user
+        if !meta.syncing {
+            log::info!("Interactive address display - not using address pool");
 
-        Ok(iota::Address::Ed25519(iota::Ed25519Address::new(address_bytes)))
+            // get ledger
+            let ledger = iota_ledger::get_ledger(bip32_account, self.is_simulator)?;
+
+            // and generate a single address that is shown to the user
+            let addr = ledger.get_addresses(true, bip32, 1)?;
+            return Ok(iota::Address::Ed25519(iota::Ed25519Address::new(
+                *addr.first().unwrap(),
+            )));
+        }
+
+        let pool_key = AddressPoolEntry {
+            bip32_account,
+            bip32_index: bip32.bip32_index,
+            bip32_change: bip32.bip32_change,
+        };
+
+        let mut addr_pool = self.address_pool.lock().await;
+        if !addr_pool.contains_key(&pool_key) {
+            log::info!("Adress {} not found in address pool", pool_key);
+            // if not, we add new entries to the pool but limit the pool size
+            if addr_pool.len() > 10000 {
+                log::error!("address pool has too many entries");
+                return Err(crate::Error::LedgerMiscError);
+            }
+
+            let count = 15;
+            let ledger = iota_ledger::get_ledger(bip32_account, self.is_simulator)?;
+            let addresses = ledger.get_addresses(false, bip32, count)?;
+
+            // now put all addresses into the pool
+            for i in 0..count {
+                addr_pool.insert(
+                    AddressPoolEntry {
+                        bip32_account,
+                        bip32_index: bip32.bip32_index + i as u32,
+                        bip32_change: bip32.bip32_change,
+                    },
+                    *addresses.get(i).unwrap(),
+                );
+            }
+            log::info!("New address pool size is {}", addr_pool.len());
+
+            log::debug!("addresses in pool:");
+            for key in addr_pool.keys() {
+                log::debug!("{}", key);
+            }
+        } else {
+            log::info!("Got {} from pool", pool_key);
+        }
+        Ok(iota::Address::Ed25519(iota::Ed25519Address::new(addr_pool[&pool_key])))
     }
 
     async fn sign_message<'a>(
@@ -80,9 +132,11 @@ impl super::Signer for LedgerNanoSigner {
         inputs: &mut Vec<super::TransactionInput>,
         meta: super::SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
-        // get ledger
-        let ledger = ledger_iota::get_ledger(self.id, self.is_simulator, *account.index() as u32 | HARDENED)
-            .map_err(ledger_map_err)?;
+        // lock the mutex
+        let _lock = self.mutex.lock().await;
+
+        let bip32_account = *account.index() as u32 | HARDENED;
+        let ledger = iota_ledger::get_ledger(bip32_account, self.is_simulator)?;
 
         let input_len = inputs.len();
 
@@ -154,22 +208,20 @@ impl super::Signer for LedgerNanoSigner {
         let essence_bytes = essence.pack_new();
 
         // prepare signing
-        ledger
-            .prepare_signing(
-                input_bip32_indices,
-                essence_bytes,
-                has_remainder,
-                remainder_index,
-                remainder_bip32,
-            )
-            .map_err(ledger_map_err)?;
+        ledger.prepare_signing(
+            input_bip32_indices,
+            essence_bytes,
+            has_remainder,
+            remainder_index,
+            remainder_bip32,
+        )?;
 
         // show essence to user
         // if denied by user, it returns with `DeniedByUser` Error
-        ledger.user_confirm().map_err(ledger_map_err)?;
+        ledger.user_confirm()?;
 
         // sign
-        let signature_bytes = ledger.sign(input_len as u16).map_err(ledger_map_err)?;
+        let signature_bytes = ledger.sign(input_len as u16)?;
         let mut readable = &mut &*signature_bytes;
         // unpack signature to unlockblocks
         let mut unlock_blocks = Vec::new();
