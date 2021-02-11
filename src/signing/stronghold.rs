@@ -4,6 +4,10 @@
 use crate::account::Account;
 
 use iota::{common::packable::Packable, ReferenceUnlock, UnlockBlock};
+use blake2::{
+    digest::{Update, VariableOutput},
+    VarBlake2b,
+};
 
 use std::{collections::HashMap, path::PathBuf};
 
@@ -57,6 +61,13 @@ impl super::Signer for StrongholdSigner {
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
         let serialized_essence = essence.pack_new();
 
+        let mut hasher = VarBlake2b::new(32).unwrap();
+        hasher.update(serialized_essence);
+        let mut hashed_essence: [u8; 32] = [0; 32];
+        hasher.finalize_variable(|res| {
+            hashed_essence[..32].clone_from_slice(&res[..32]);
+        });
+
         let mut unlock_blocks = vec![];
         let mut signature_indexes = HashMap::<usize, usize>::new();
         inputs.sort_by(|a, b| a.input.cmp(&b.input));
@@ -68,9 +79,9 @@ impl super::Signer for StrongholdSigner {
                 unlock_blocks.push(UnlockBlock::Reference(ReferenceUnlock::new(*block_index as u16)?));
             } else {
                 // If not, we should create a signature unlock block
-                let signature = crate::stronghold::sign_essence(
+                let signature = crate::stronghold::sign_transaction(
                     &stronghold_path(account.storage_path()).await?,
-                    serialized_essence.clone(),
+                    &hashed_essence,
                     *account.index(),
                     recorder.address_index,
                     recorder.address_internal,

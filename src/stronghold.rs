@@ -540,9 +540,9 @@ pub async fn generate_address(
     Ok(address)
 }
 
-pub async fn sign_essence(
+pub async fn sign_transaction(
     snapshot_path: &PathBuf,
-    transaction_essence: Vec<u8>,
+    transaction_essence_hash: &[u8; 32],
     account_index: usize,
     address_index: usize,
     internal: bool,
@@ -566,7 +566,7 @@ pub async fn sign_essence(
         .stronghold
         .runtime_exec(Procedure::Ed25519Sign {
             private_key: derived_location,
-            msg: transaction_essence,
+            msg: transaction_essence_hash.to_vec(),
         })
         .await;
     if let ProcResult::Ed25519Sign(response) = res {
