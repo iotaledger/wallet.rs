@@ -3,11 +3,11 @@
 
 use crate::account::Account;
 
-use iota::{common::packable::Packable, ReferenceUnlock, UnlockBlock};
 use blake2::{
     digest::{Update, VariableOutput},
     VarBlake2b,
 };
+use iota::{common::packable::Packable, ReferenceUnlock, UnlockBlock};
 
 use std::{collections::HashMap, path::PathBuf};
 
