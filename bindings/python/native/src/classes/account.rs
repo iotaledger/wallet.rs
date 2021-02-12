@@ -133,11 +133,11 @@ impl SyncedAccount {
 #[pymethods]
 impl AccountHandle {
     /// Returns the builder to setup the process to synchronize this account with the Tangle.
-    fn sync(&self) -> Result<AccountSynchronizer> {
+    fn sync(&self) -> AccountSynchronizer {
         let account_synchronizer = crate::block_on(async { self.account_handle.sync().await });
-        Ok(AccountSynchronizer {
+        AccountSynchronizer {
             account_synchronizer: Some(account_synchronizer),
-        })
+        }
     }
 
     /// Gets a new unused address and links it to this account.
@@ -162,19 +162,19 @@ impl AccountHandle {
     }
 
     /// Bridge to [Account#latest_address](struct.Account.html#method.latest_address).
-    fn latest_address(&self) -> Result<Address> {
-        Ok(crate::block_on(async { self.account_handle.latest_address().await }).into())
+    fn latest_address(&self) -> Address {
+        crate::block_on(async { self.account_handle.latest_address().await }).into()
     }
 
     /// Bridge to [Account#addresses](struct.Account.html#method.addresses).
-    fn addresses(&self) -> Result<Vec<Address>> {
+    fn addresses(&self) -> Vec<Address> {
         let addresses = crate::block_on(async { self.account_handle.addresses().await });
-        Ok(addresses.into_iter().map(|address| address.into()).collect())
+        addresses.into_iter().map(|address| address.into()).collect()
     }
 
     /// Bridge to [Account#balance](struct.Account.html#method.balance).
-    fn balance(&self) -> Result<AccountBalance> {
-        Ok(crate::block_on(async { self.account_handle.balance().await }).into())
+    fn balance(&self) -> AccountBalance {
+        crate::block_on(async { self.account_handle.balance().await }).into()
     }
 
     /// Bridge to [Account#set_alias](struct.Account.html#method.set_alias).
@@ -220,17 +220,17 @@ impl AccountHandle {
     /// Bridge to [Account#list_spent_addresses](struct.Account.html#method.list_spent_addresses).
     /// This method clones the account's addresses so when querying a large list of addresses
     /// prefer using the `read` method to access the account instance.
-    fn list_spent_addresses(&self) -> Result<Vec<Address>> {
+    fn list_spent_addresses(&self) -> Vec<Address> {
         let addresses = crate::block_on(async { self.account_handle.list_spent_addresses().await });
-        Ok(addresses.into_iter().map(|addr| addr.into()).collect())
+        addresses.into_iter().map(|addr| addr.into()).collect()
     }
 
     /// Bridge to [Account#list_unspent_addresses](struct.Account.html#method.list_unspent_addresses).
     /// This method clones the account's addresses so when querying a large list of addresses
     /// prefer using the `read` method to access the account instance.
-    fn list_unspent_addresses(&self) -> Result<Vec<Address>> {
+    fn list_unspent_addresses(&self) -> Vec<Address> {
         let addresses = crate::block_on(async { self.account_handle.list_unspent_addresses().await });
-        Ok(addresses.into_iter().map(|addr| addr.into()).collect())
+        addresses.into_iter().map(|addr| addr.into()).collect()
     }
 
     /// Bridge to [Account#get_message](struct.Account.html#method.get_message).
