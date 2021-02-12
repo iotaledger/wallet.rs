@@ -11,7 +11,10 @@ First, setup your environment as follows:
 git clone https://github.com/iotaledger/wallet.rs
 cd bindings/node/examples
 npm install
+cp .env.example .env
 ```
+
+Add your custom password to the `.env` file.
 
 ## 1. Example: Create an Account
 
