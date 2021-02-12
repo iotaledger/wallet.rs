@@ -2,7 +2,7 @@
 
 There are several examples to show the usage of the library.
 
-> All examples can be found in [/bindings/nodejs/examples](../../../bindings/nodejs/examples/)
+> All examples can be found in [/bindings/nodejs/examples](https://github.com/iotaledger/wallet.rs/bindings/nodejs/examples/)
 
 ## Setup
 First, setup your environment as follows:
