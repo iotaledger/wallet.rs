@@ -2,41 +2,84 @@
 
 There are several examples to show the usage of the library.
 
+> All examples can be found in [/bindings/nodejs/examples](../../../bindings/nodejs/examples/)
+
 ## Setup
-First, setup the example environment.
+First, setup your environment as follows:
 
 ```
+git clone https://github.com/iotaledger/wallet.rs
 cd bindings/node/examples
 npm install
-copy .env.example .env
 ```
-
-Add your mnemonic to the `.env` file.
-
-Make sure you generate a 24-word BIP39 mnemonic in your .env file and define a node; see
-`.env.example` for a boilerplate. To generate a mnemonic you can utilize the BIP39 standard
-for that; We encourage you to generate this offline with trusted tools but if you need a 
-quick mnemonic for testing only you can use something like https://github.com/iancoleman/bip39
 
 ## 1. Example: Create an Account
 
-This example creates a new database and account. Please make sure you have the .env variables configured
-
-Run the example:
-
+Run:
 ```
 node 1-create-account.js
 ```
 
-## 2. Example: Create Syncronize
-Get some test tokens from the [IOTA faucet](https://faucet.testnet.chrysalis2.com/) and sync your account.
-
-```
-node 2-sync-and-check.js
+Code:
+```javascript
+{{ #include ../../../bindings/nodejs/examples/1-create-account.js }}
 ```
 
-## 2. Example: Send IOTA Tokens.
+## 2. Generate Address
+Run:
+```
+node 2-generate-address.js
+```
+
+Code:
+```javascript
+{{ #include ../../../bindings/nodejs/examples/2-generate-address.js }}
+```
+
+## 3. Example: Check Balance
+Run:
+```
+node 3-check_balance
+```
+
+Code:
+```javascript
+{{ #include ../../../bindings/nodejs/examples/3-check_balance.js }}
+```
+
+## 4. Example: Check Balance
 Now you can send the test tokens to an address! 
+
+Run
 ```
-node 3-send.js
+node 4-send.js
+```
+
+Code:
+```javascript
+{{ #include ../../../bindings/nodejs/examples/4-send.js }}
+```
+
+## 5. Backup
+
+Run
+```
+node 5-backup.js
+```
+
+Code:
+```javascript
+{{ #include ../../../bindings/nodejs/examples/5-backup.js }}
+```
+
+## 6. Restore
+
+Run
+```
+node 6-restore.js
+```
+
+Code:
+```javascript
+{{ #include ../../../bindings/nodejs/examples/6-restore.js }}
 ```
