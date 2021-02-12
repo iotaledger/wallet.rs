@@ -288,6 +288,10 @@
 <span id="285">285</span>
 <span id="286">286</span>
 <span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -463,6 +467,9 @@
     <span class="doccomment">/// Dust error, for example not enough balance on an address.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Dust error: {0}&quot;</span>)]</span>
     <span class="ident">DustError</span>(<span class="ident">String</span>),
+    <span class="doccomment">/// Invalid output kind.</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;invalid output kind: {0}&quot;</span>)]</span>
+    <span class="ident">InvalidOutputKind</span>(<span class="ident">String</span>),
 }
 
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Error</span> {
@@ -573,6 +580,7 @@
             <span class="self">Self</span>::<span class="ident">LedgerEssenceTooLarge</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;LedgerEssenceTooLarge&quot;</span>),
             <span class="self">Self</span>::<span class="ident">AccountAliasAlreadyExists</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;AccountAliasAlreadyExists&quot;</span>),
             <span class="self">Self</span>::<span class="ident">DustError</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;DustError&quot;</span>),
+            <span class="self">Self</span>::<span class="ident">InvalidOutputKind</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;InvalidOutputKind&quot;</span>),
         }
     }
 }

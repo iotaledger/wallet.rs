@@ -674,34 +674,34 @@
 <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">get</span> <span class="op">=</span> <span class="string">&quot;pub&quot;</span>, <span class="ident">set</span> <span class="op">=</span> <span class="string">&quot;pub(crate)&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Message</span> {
     <span class="doccomment">/// The message identifier.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">id</span>: <span class="ident">MessageId</span>,
+    <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">MessageId</span>,
     <span class="doccomment">/// The message version.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">version</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span> <span class="ident">version</span>: <span class="ident">u64</span>,
     <span class="doccomment">/// Message ids this message refers to.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">parents</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MessageId</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">parents</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MessageId</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Length of the payload.</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;payloadLength&quot;</span>)]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">payload_length</span>: <span class="ident">usize</span>,
+    <span class="kw">pub</span> <span class="ident">payload_length</span>: <span class="ident">usize</span>,
     <span class="doccomment">/// Message payload.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">payload</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Payload</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">payload</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Payload</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The transaction timestamp.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">timestamp</span>: <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">timestamp</span>: <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Transaction nonce.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">nonce</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span> <span class="ident">nonce</span>: <span class="ident">u64</span>,
     <span class="doccomment">/// Whether the transaction is confirmed or not.</span>
     <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">set</span> <span class="op">=</span> <span class="string">&quot;pub&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">skip_serializing_if</span> <span class="op">=</span> <span class="string">&quot;Option::is_none&quot;</span>)]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">confirmed</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">confirmed</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Whether the transaction is broadcasted or not.</span>
     <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">set</span> <span class="op">=</span> <span class="string">&quot;pub&quot;</span>)]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">broadcasted</span>: <span class="ident">bool</span>,
+    <span class="kw">pub</span> <span class="ident">broadcasted</span>: <span class="ident">bool</span>,
     <span class="doccomment">/// Whether the message represents an incoming transaction or not.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">incoming</span>: <span class="ident">bool</span>,
+    <span class="kw">pub</span> <span class="ident">incoming</span>: <span class="ident">bool</span>,
     <span class="doccomment">/// The message&#39;s value.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">value</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span> <span class="ident">value</span>: <span class="ident">u64</span>,
     <span class="doccomment">/// The message&#39;s remainder value sum.</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;remainderValue&quot;</span>)]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">remainder_value</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span> <span class="ident">remainder_value</span>: <span class="ident">u64</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Hash</span> <span class="kw">for</span> <span class="ident">Message</span> {

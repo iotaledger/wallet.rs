@@ -935,7 +935,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">generate_random_iota_address</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AddressWrapper</span> {
         <span class="ident">AddressWrapper</span>::<span class="ident">new</span>(
             <span class="ident">IotaAddress</span>::<span class="ident">Ed25519</span>(<span class="ident">Ed25519Address</span>::<span class="ident">new</span>(<span class="ident">rand</span>::<span class="ident">random</span>::<span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">32</span>]<span class="op">&gt;</span>())),
-            <span class="string">&quot;iota&quot;</span>.<span class="ident">to_string</span>(),
+            <span class="string">&quot;atoi&quot;</span>.<span class="ident">to_string</span>(),
         )
     }
 
