@@ -482,7 +482,7 @@ wallet_address_output = {
     'index': int,
     'amount': int,
     'is_spent': bool,
-    'address': AddressWrapper,
+    'address': str,
     'kind': str,
 }
 }
