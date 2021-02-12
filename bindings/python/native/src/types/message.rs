@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use super::error::{Error, Result};
-// use chrono::prelude::{DateTime, NaiveDateTime, Utc};
+use chrono::prelude::{DateTime, NaiveDateTime, Utc};
 use core::convert::TryFrom;
 use dict_derive::{FromPyObject as DeriveFromPyObject, IntoPyObject as DeriveIntoPyObject};
 use iota::{
@@ -15,7 +15,14 @@ use iota::{
     UTXOInput as RustUTXOInput, UnlockBlock as RustUnlockBlock,
 };
 // use iota::MessageId as RustMessageId,
-use iota_wallet::message::Message as RustWalletMessage;
+use iota::{Address as IotaAddress, MessageId, TransactionId};
+use iota_wallet::{
+    address::{
+        Address as RustWalletAddress, AddressOutput as RustWalletAddressOutput, AddressWrapper as RustAddressWrapper,
+        OutputKind as RustOutputKind,
+    },
+    message::Message as RustWalletMessage,
+};
 use std::{
     convert::{From, Into, TryInto},
     str::FromStr,
@@ -23,9 +30,66 @@ use std::{
 
 pub const MILESTONE_MERKLE_PROOF_LENGTH: usize = 32;
 pub const MILESTONE_PUBLIC_KEY_LENGTH: usize = 32;
-// Note that we need a mechanism to update this constant as iota.rs, currently it is set as a
-// constant for ease of python user to view the address with a constant prefix.
-pub static mut BECH32_HRP: &str = "atoi1";
+
+type Bech32HRP = String;
+
+#[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
+pub struct WalletAddressOutput {
+    pub transaction_id: String,
+    pub message_id: String,
+    pub index: u16,
+    pub amount: u64,
+    pub is_spent: bool,
+    pub address: String,
+    pub kind: String,
+}
+
+impl TryFrom<WalletAddressOutput> for RustWalletAddressOutput {
+    type Error = Error;
+    fn try_from(output: WalletAddressOutput) -> Result<Self> {
+        Ok(RustWalletAddressOutput {
+            transaction_id: TransactionId::new(hex::decode(output.transaction_id)?[..].try_into()?),
+            message_id: MessageId::new(hex::decode(output.message_id)?[..].try_into()?),
+            index: output.index,
+            amount: output.amount,
+            is_spent: output.is_spent,
+            // we use an empty bech32 HRP here because we update it later on wallet.rs
+            address: RustAddressWrapper::new(IotaAddress::try_from_bech32(&output.address)?, "".to_string()),
+            kind: RustOutputKind::from_str(&output.kind)?,
+        })
+    }
+}
+
+#[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
+pub struct WalletAddress {
+    pub address: String,
+    pub balance: u64,
+    pub key_index: usize,
+    pub internal: bool,
+    pub outputs: Vec<WalletAddressOutput>,
+}
+
+impl TryFrom<WalletAddress> for RustWalletAddress {
+    type Error = Error;
+    fn try_from(address: WalletAddress) -> Result<Self> {
+        let mut outputs = Vec::new();
+        for output in address.outputs {
+            outputs.push(output.try_into()?);
+        }
+        let address = RustWalletAddress::builder()
+            // we use an empty bech32 HRP here because we update it later on wallet.rs
+            .address(RustAddressWrapper::new(
+                IotaAddress::try_from_bech32(&address.address)?,
+                "".to_string(),
+            ))
+            .balance(address.balance)
+            .key_index(address.key_index)
+            .internal(address.internal)
+            .outputs(outputs)
+            .build()?;
+        Ok(address)
+    }
+}
 
 #[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
 /// Message Type Wrapper for `Message` in wallet.rs
@@ -39,7 +103,7 @@ pub struct WalletMessage {
     /// Length of the payload.
     pub payload_length: usize,
     /// Message payload.
-    pub payload: Payload,
+    pub payload: Option<Payload>,
     /// The transaction timestamp.
     pub timestamp: i64,
     /// Transaction nonce.
@@ -56,13 +120,13 @@ pub struct WalletMessage {
     pub remainder_value: u64,
 }
 
-impl TryFrom<RustWalletMessage> for WalletMessage {
+impl TryFrom<(RustWalletMessage, Bech32HRP)> for WalletMessage {
     type Error = Error;
-    fn try_from(msg: RustWalletMessage) -> Result<Self> {
+    fn try_from((msg, bech32_hrp): (RustWalletMessage, Bech32HRP)) -> Result<Self> {
         let payload = match msg.payload() {
-            RustPayload::Transaction(payload) => Payload {
+            Some(RustPayload::Transaction(payload)) => Some(Payload {
                 transaction: Some(vec![Transaction {
-                    essence: payload.essence().to_owned().try_into()?,
+                    essence: (payload.essence().to_owned(), bech32_hrp).try_into()?,
                     unlock_blocks: payload
                         .unlock_blocks()
                         .iter()
@@ -72,8 +136,8 @@ impl TryFrom<RustWalletMessage> for WalletMessage {
                 }]),
                 milestone: None,
                 indexation: None,
-            },
-            RustPayload::Indexation(payload) => Payload {
+            }),
+            Some(RustPayload::Indexation(payload)) => Some(Payload {
                 transaction: None,
                 milestone: None,
                 indexation: Some(vec![Indexation {
@@ -86,8 +150,8 @@ impl TryFrom<RustWalletMessage> for WalletMessage {
                         )
                     }),
                 }]),
-            },
-            RustPayload::Milestone(payload) => Payload {
+            }),
+            Some(RustPayload::Milestone(payload)) => Some(Payload {
                 transaction: None,
                 milestone: Some(vec![Milestone {
                     essence: payload.essence().to_owned().try_into()?,
@@ -98,8 +162,9 @@ impl TryFrom<RustWalletMessage> for WalletMessage {
                         .collect(),
                 }]),
                 indexation: None,
-            },
-            _ => unreachable!(),
+            }),
+            Some(_) => unimplemented!(),
+            None => None,
         };
 
         Ok(Self {
@@ -119,9 +184,9 @@ impl TryFrom<RustWalletMessage> for WalletMessage {
     }
 }
 
-impl TryFrom<RustTransactionPayloadEssence> for TransactionPayloadEssence {
+impl TryFrom<(RustTransactionPayloadEssence, Bech32HRP)> for TransactionPayloadEssence {
     type Error = Error;
-    fn try_from(essence: RustTransactionPayloadEssence) -> Result<Self> {
+    fn try_from((essence, bech32_hrp): (RustTransactionPayloadEssence, Bech32HRP)) -> Result<Self> {
         Ok(TransactionPayloadEssence {
             inputs: essence
                 .inputs()
@@ -145,7 +210,7 @@ impl TryFrom<RustTransactionPayloadEssence> for TransactionPayloadEssence {
                 .map(|output| {
                     if let RustOutput::SignatureLockedSingle(output) = output {
                         Output {
-                            address: unsafe { output.address().to_bech32(BECH32_HRP) },
+                            address: output.address().to_bech32(&bech32_hrp),
                             amount: output.amount(),
                         }
                     } else {
@@ -232,26 +297,30 @@ impl TryFrom<RustUnlockBlock> for UnlockBlock {
     }
 }
 
-// Note: This conversion be binded only if all fields of the `RustWalletMessage` can be set publically.
 impl TryFrom<WalletMessage> for RustWalletMessage {
     type Error = Error;
-    fn try_from(_msg: WalletMessage) -> Result<Self> {
-        // Ok(Self {
-        //     id: RustMessageId::from_str(&msg.id)?,
-        //     version: msg.version,
-        //     parent1: RustMessageId::from_str(&msg.parent1)?,
-        //     parent2: RustMessageId::from_str(&msg.parent2)?,
-        //     payload_length: msg.payload_length,
-        //     payload: msg.payload.try_into()?,
-        //     timestamp: DateTime::from_utc(NaiveDateTime::from_timestamp(msg.timestamp, 0), Utc),
-        //     nonce: msg.nonce,
-        //     confirmed: msg.confirmed,
-        //     broadcasted: msg.broadcasted,
-        //     incoming: msg.incoming,
-        //     value: msg.value,
-        //     remainder_value: msg.remainder_value,
-        // })
-        todo!();
+    fn try_from(msg: WalletMessage) -> Result<Self> {
+        let mut parents = Vec::new();
+        for parent in msg.parents {
+            parents.push(MessageId::from_str(&parent)?);
+        }
+        Ok(Self {
+            id: MessageId::from_str(&msg.id)?,
+            version: msg.version,
+            parents,
+            payload_length: msg.payload_length,
+            payload: match msg.payload {
+                Some(payload) => Some(payload.try_into()?),
+                None => None,
+            },
+            timestamp: DateTime::from_utc(NaiveDateTime::from_timestamp(msg.timestamp, 0), Utc),
+            nonce: msg.nonce,
+            confirmed: msg.confirmed,
+            broadcasted: msg.broadcasted,
+            incoming: msg.incoming,
+            value: msg.value,
+            remainder_value: msg.remainder_value,
+        })
     }
 }
 

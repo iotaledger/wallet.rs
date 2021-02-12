@@ -7,7 +7,8 @@ use iota::{Address as IotaAddress, MessageId as RustMessageId};
 use iota_wallet::{
     address::AddressWrapper as RustAddressWrapper,
     message::{
-        MessageType as RustMessageType, RemainderValueStrategy as RustRemainderValueStrategy, Transfer as RustTransfer,
+        Message as RustWalletMessage, MessageType as RustMessageType,
+        RemainderValueStrategy as RustRemainderValueStrategy, Transfer as RustTransfer,
     },
     signing::SignerType as RustSingerType,
 };
@@ -56,7 +57,6 @@ impl Transfer {
         indexation: Option<Indexation>,
         remainder_value_strategy: &str,
     ) -> Result<Self> {
-        // Note: new() method should be public function
         let address_wrapper = RustAddressWrapper::new(IotaAddress::try_from_bech32(address)?, bench32_hrp.to_string());
         let mut builder = RustTransfer::builder(address_wrapper, NonZeroU64::new(amount).unwrap());
         let strategy = match remainder_value_strategy {
@@ -82,37 +82,56 @@ impl SyncedAccount {
     /// Send messages.
     fn transfer(&self, transfer_obj: Transfer) -> Result<WalletMessage> {
         let rt = tokio::runtime::Runtime::new()?;
-        rt.block_on(async { self.synced_account.transfer(transfer_obj.transfer).await })?
-            .try_into()
+        let res: Result<(RustWalletMessage, String)> = rt.block_on(async {
+            let bech32_hrp = self.synced_account.account_handle().bech32_hrp().await;
+            Ok((self.synced_account.transfer(transfer_obj.transfer).await?, bech32_hrp))
+        });
+        res?.try_into()
     }
 
     /// Retry message.
     fn retry(&self, message_id: &str) -> Result<WalletMessage> {
         let rt = tokio::runtime::Runtime::new()?;
-        rt.block_on(async { self.synced_account.retry(&RustMessageId::from_str(&message_id)?).await })?
-            .try_into()
+        let res: Result<(RustWalletMessage, String)> = rt.block_on(async {
+            let bech32_hrp = self.synced_account.account_handle().bech32_hrp().await;
+            Ok((
+                self.synced_account
+                    .retry(&RustMessageId::from_str(&message_id)?)
+                    .await?,
+                bech32_hrp,
+            ))
+        });
+        res?.try_into()
     }
 
     /// Promote message.
     fn promote(&self, message_id: &str) -> Result<WalletMessage> {
         let rt = tokio::runtime::Runtime::new()?;
-        rt.block_on(async {
-            self.synced_account
-                .promote(&RustMessageId::from_str(&message_id)?)
-                .await
-        })?
-        .try_into()
+        let res: Result<(RustWalletMessage, String)> = rt.block_on(async {
+            let bech32_hrp = self.synced_account.account_handle().bech32_hrp().await;
+            Ok((
+                self.synced_account
+                    .promote(&RustMessageId::from_str(&message_id)?)
+                    .await?,
+                bech32_hrp,
+            ))
+        });
+        res?.try_into()
     }
 
     /// Reattach message.
     fn reattach(&self, message_id: &str) -> Result<WalletMessage> {
         let rt = tokio::runtime::Runtime::new()?;
-        rt.block_on(async {
-            self.synced_account
-                .reattach(&RustMessageId::from_str(&message_id)?)
-                .await
-        })?
-        .try_into()
+        let res: Result<(RustWalletMessage, String)> = rt.block_on(async {
+            let bech32_hrp = self.synced_account.account_handle().bech32_hrp().await;
+            Ok((
+                self.synced_account
+                    .reattach(&RustMessageId::from_str(&message_id)?)
+                    .await?,
+                bech32_hrp,
+            ))
+        });
+        res?.try_into()
     }
 }
 
@@ -197,14 +216,20 @@ impl AccountHandle {
             _ => None,
         };
         let rt = tokio::runtime::Runtime::new()?;
-        let messages = rt.block_on(async { self.account_handle.list_messages(count, from, message_type).await });
-        Ok(messages
-            .into_iter()
-            .map(|msg| {
-                msg.try_into()
-                    .unwrap_or_else(|msg| panic!("AccountHandle.list_messages(): Message {:?} is invalid", msg))
-            })
-            .collect())
+        let (messages, bech32_hrp) = rt.block_on(async {
+            let bech32_hrp = self.account_handle.bech32_hrp().await;
+            (
+                self.account_handle.list_messages(count, from, message_type).await,
+                bech32_hrp,
+            )
+        });
+
+        let mut parsed_messages = Vec::new();
+        for message in messages {
+            parsed_messages.push((message, bech32_hrp.to_string()).try_into()?);
+        }
+
+        Ok(parsed_messages)
     }
 
     /// Bridge to [Account#list_spent_addresses](struct.Account.html#method.list_spent_addresses).
@@ -228,13 +253,18 @@ impl AccountHandle {
     /// Bridge to [Account#get_message](struct.Account.html#method.get_message).
     fn get_message(&self, message_id: &str) -> Result<Option<WalletMessage>> {
         let rt = tokio::runtime::Runtime::new()?;
-        let message = rt.block_on(async {
-            self.account_handle
-                .get_message(&RustMessageId::from_str(&message_id).ok()?)
-                .await
+        let res: Result<(Option<RustWalletMessage>, String)> = rt.block_on(async {
+            let bech32_hrp = self.account_handle.bech32_hrp().await;
+            Ok((
+                self.account_handle
+                    .get_message(&RustMessageId::from_str(&message_id)?)
+                    .await,
+                bech32_hrp,
+            ))
         });
+        let (message, bech32_hrp) = res?;
         if let Some(message) = message {
-            Ok(Some(message.try_into()?))
+            Ok(Some((message, bech32_hrp).try_into()?))
         } else {
             Ok(None)
         }
@@ -271,27 +301,35 @@ impl AccountInitialiser {
 
     /// Messages associated with the seed.
     /// The account can be initialised with locally stored messages.
-    /// TODO: We can bind this only if the message can be constructed by other crates.
-    fn messages(&mut self, _messages: Vec<WalletMessage>) {
-        // self.account_initialiser = Some(
-        //     self.account_initialiser.take().unwrap().messages(
-        //         messages
-        //             .into_iter()
-        //             .map(|msg| {
-        //                 msg.try_into()
-        //                     .unwrap_or_else(|msg| panic!("AccountInitialiser: Message {:?} is invalid", msg))
-        //             })
-        //             .collect(),
-        //     ),
-        // );
-        // Note that we
+    fn messages(&mut self, messages: Vec<WalletMessage>) {
+        self.account_initialiser = Some(
+            self.account_initialiser.take().unwrap().messages(
+                messages
+                    .into_iter()
+                    .map(|msg| {
+                        msg.try_into()
+                            .unwrap_or_else(|msg| panic!("AccountInitialiser: Message {:?} is invalid", msg))
+                    })
+                    .collect(),
+            ),
+        );
     }
 
     /// Address history associated with the seed.
     /// The account can be initialised with locally stored address history.
-    /// TODO: Bind this if we want to let the end-user modify the addresses.
-    fn addresses(&mut self, _addresses: Vec<String>) {
-        todo!();
+    fn addresses(&mut self, addresses: Vec<WalletAddress>) {
+        self.account_initialiser = Some(
+            self.account_initialiser.take().unwrap().addresses(
+                addresses
+                    .into_iter()
+                    .map(|address| {
+                        address
+                            .try_into()
+                            .unwrap_or_else(|msg| panic!("AccountInitialiser: Address {:?} is invalid", msg))
+                    })
+                    .collect(),
+            ),
+        );
     }
 
     /// Skips storing the account to the database.

@@ -5,6 +5,7 @@ use crate::types::*;
 use iota::MessageId as RustMessageId;
 use iota_wallet::{
     account_manager::{AccountManager as RustAccountManager, ManagerStorage as RustManagerStorage},
+    message::Message as RustWalletMessage,
     signing::SignerType as RustSingerType,
 };
 use pyo3::{exceptions, prelude::*};
@@ -134,16 +135,26 @@ impl AccountManager {
     /// Transfers an amount from an account to another.
     fn internal_transfer(&self, from_account_id: &str, to_account_id: &str, amount: u64) -> Result<WalletMessage> {
         let rt = tokio::runtime::Runtime::new()?;
-        rt.block_on(async {
-            self.account_manager
-                .internal_transfer(
-                    from_account_id,
-                    to_account_id,
-                    NonZeroU64::new(amount).unwrap_or_else(|| panic!("invalid internal transfer amount: {}", amount)),
-                )
-                .await
-        })?
-        .try_into()
+        let res: Result<(RustWalletMessage, String)> = rt.block_on(async {
+            let bech32_hrp = self
+                .account_manager
+                .get_account(from_account_id)
+                .await?
+                .bech32_hrp()
+                .await;
+            Ok((
+                self.account_manager
+                    .internal_transfer(
+                        from_account_id,
+                        to_account_id,
+                        NonZeroU64::new(amount)
+                            .unwrap_or_else(|| panic!("invalid internal transfer amount: {}", amount)),
+                    )
+                    .await?,
+                bech32_hrp,
+            ))
+        });
+        res?.try_into()
     }
 
     /// Backups the storage to the given destination
@@ -164,7 +175,11 @@ impl AccountManager {
     /// Import backed up accounts.
     fn import_accounts(&mut self, source: &str, stronghold_password: &str) -> Result<()> {
         let rt = tokio::runtime::Runtime::new()?;
-        Ok(rt.block_on(async { self.account_manager.import_accounts(source, stronghold_password).await })?)
+        Ok(rt.block_on(async {
+            self.account_manager
+                .import_accounts(source, stronghold_password.to_string())
+                .await
+        })?)
     }
 
     /// Gets the account associated with the given identifier.
@@ -187,33 +202,45 @@ impl AccountManager {
     /// Reattaches an unconfirmed transaction.
     fn reattach(&self, account_id: &str, message_id: &str) -> Result<WalletMessage> {
         let rt = tokio::runtime::Runtime::new()?;
-        rt.block_on(async {
-            self.account_manager
-                .reattach(account_id, &RustMessageId::from_str(&message_id)?)
-                .await
-        })?
-        .try_into()
+        let res: Result<(RustWalletMessage, String)> = rt.block_on(async {
+            let bech32_hrp = self.account_manager.get_account(account_id).await?.bech32_hrp().await;
+            Ok((
+                self.account_manager
+                    .reattach(account_id, &RustMessageId::from_str(&message_id)?)
+                    .await?,
+                bech32_hrp,
+            ))
+        });
+        res?.try_into()
     }
 
     /// Promotes an unconfirmed transaction.
     fn promote(&self, account_id: &str, message_id: &str) -> Result<WalletMessage> {
         let rt = tokio::runtime::Runtime::new()?;
-        rt.block_on(async {
-            self.account_manager
-                .promote(account_id, &RustMessageId::from_str(&message_id)?)
-                .await
-        })?
-        .try_into()
+        let res: Result<(RustWalletMessage, String)> = rt.block_on(async {
+            let bech32_hrp = self.account_manager.get_account(account_id).await?.bech32_hrp().await;
+            Ok((
+                self.account_manager
+                    .promote(account_id, &RustMessageId::from_str(&message_id)?)
+                    .await?,
+                bech32_hrp,
+            ))
+        });
+        res?.try_into()
     }
 
     /// Retries an unconfirmed transaction.
     fn retry(&self, account_id: &str, message_id: &str) -> Result<WalletMessage> {
         let rt = tokio::runtime::Runtime::new()?;
-        rt.block_on(async {
-            self.account_manager
-                .retry(account_id, &RustMessageId::from_str(&message_id)?)
-                .await
-        })?
-        .try_into()
+        let res: Result<(RustWalletMessage, String)> = rt.block_on(async {
+            let bech32_hrp = self.account_manager.get_account(account_id).await?.bech32_hrp().await;
+            Ok((
+                self.account_manager
+                    .retry(account_id, &RustMessageId::from_str(&message_id)?)
+                    .await?,
+                bech32_hrp,
+            ))
+        });
+        res?.try_into()
     }
 }
