@@ -76,6 +76,8 @@ SyncedAccount.prototype.reattach = promisify(SyncedAccount.prototype.reattach)
 SyncedAccount.prototype.promote = promisify(SyncedAccount.prototype.promote)
 
 const managerClass = AccountManager
+
+/** This is a description of AccountManagern. */
 AccountManager = function () {
   const instance = new managerClass(arguments[0])
 
