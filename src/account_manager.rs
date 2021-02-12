@@ -28,6 +28,7 @@ use std::{
     time::Duration,
 };
 
+use bee_rest_api::handlers::message_metadata::LedgerInclusionStateDto;
 use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
@@ -40,6 +41,7 @@ use tokio::{
     },
     time::interval,
 };
+use zeroize::Zeroize;
 
 /// The default storage folder.
 pub const DEFAULT_STORAGE_FOLDER: &str = "./storage";
@@ -247,6 +249,9 @@ pub struct AccountManager {
 impl Clone for AccountManager {
     /// Note that when cloning an AccountManager, the original reference's Drop will stop the background sync.
     /// When the cloned reference is dropped, the background sync system won't be stopped.
+    ///
+    /// Additionally, the generated mnemonic isn't cloned for security reasons,
+    /// so you should store it before cloning.
     fn clone(&self) -> Self {
         Self {
             storage_folder: self.storage_folder.clone(),
@@ -255,7 +260,7 @@ impl Clone for AccountManager {
             stop_polling_sender: self.stop_polling_sender.clone(),
             polling_handle: None,
             is_monitoring: self.is_monitoring.clone(),
-            generated_mnemonic: self.generated_mnemonic.clone(),
+            generated_mnemonic: None,
             encrypted_accounts: self.encrypted_accounts.clone(),
         }
     }
@@ -268,11 +273,14 @@ impl Drop for AccountManager {
 }
 
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-fn stronghold_password<P: AsRef<str>>(password: P) -> [u8; 32] {
+fn stronghold_password<P: Into<String>>(password: P) -> Vec<u8> {
+    let mut password = password.into();
     let mut dk = [0; 64];
     // safe to unwrap because rounds > 0
-    crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_ref().as_bytes(), b"wallet.rs", 100, &mut dk).unwrap();
-    dk[0..32][..].try_into().unwrap()
+    crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_bytes(), b"wallet.rs", 100, &mut dk).unwrap();
+    password.zeroize();
+    let password: [u8; 32] = dk[0..32][..].try_into().unwrap();
+    password.to_vec()
 }
 
 impl AccountManager {
@@ -402,21 +410,28 @@ impl AccountManager {
             .await
             .unwrap();
 
-        let mut accounts = self.accounts.write().await;
-        for account_handle in accounts.values() {
-            let _ = crate::monitor::unsubscribe(account_handle.clone());
+        // save the accounts again to reencrypt with the new key
+        for account_handle in self.accounts.read().await.values() {
+            account_handle.write().await.save().await?;
         }
-        for encrypted_account in &self.encrypted_accounts {
-            let decrypted = crate::storage::decrypt_account_json(encrypted_account, &key)?;
-            let account = serde_json::from_str::<Account>(&decrypted)?;
-            accounts.insert(account.id().into(), account.into());
-        }
-        self.encrypted_accounts.clear();
 
-        crate::spawn(Self::start_monitoring(
-            self.accounts.clone(),
-            self.is_monitoring.clone(),
-        ));
+        if !self.encrypted_accounts.is_empty() {
+            let mut accounts = self.accounts.write().await;
+            for account_handle in accounts.values() {
+                let _ = crate::monitor::unsubscribe(account_handle.clone());
+            }
+            for encrypted_account in &self.encrypted_accounts {
+                let decrypted = crate::storage::decrypt_account_json(encrypted_account, &key)?;
+                let account = serde_json::from_str::<Account>(&decrypted)?;
+                accounts.insert(account.id().into(), account.into());
+            }
+            self.encrypted_accounts.clear();
+
+            crate::spawn(Self::start_monitoring(
+                self.accounts.clone(),
+                self.is_monitoring.clone(),
+            ));
+        }
 
         Ok(())
     }
@@ -424,13 +439,13 @@ impl AccountManager {
     /// Sets the stronghold password.
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
-    pub async fn set_stronghold_password<P: AsRef<str>>(&mut self, password: P) -> crate::Result<()> {
+    pub async fn set_stronghold_password<P: Into<String>>(&mut self, password: P) -> crate::Result<()> {
         let stronghold_path = if self.storage_path.extension().unwrap_or_default() == "stronghold" {
             self.storage_path.clone()
         } else {
             self.storage_folder.join(STRONGHOLD_FILENAME)
         };
-        crate::stronghold::load_snapshot(&stronghold_path, &stronghold_password(password)).await?;
+        crate::stronghold::load_snapshot(&stronghold_path, stronghold_password(password)).await?;
 
         // let is_empty = self.accounts.read().await.is_empty();
         if self.accounts.read().await.is_empty() {
@@ -452,15 +467,15 @@ impl AccountManager {
     /// Sets the stronghold password.
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
-    pub async fn change_stronghold_password<C: AsRef<str>, N: AsRef<str>>(
+    pub async fn change_stronghold_password<C: Into<String>, N: Into<String>>(
         &self,
         current_password: C,
         new_password: N,
     ) -> crate::Result<()> {
         crate::stronghold::change_password(
             &self.stronghold_snapshot_path().await?,
-            &stronghold_password(current_password),
-            &stronghold_password(new_password),
+            stronghold_password(current_password),
+            stronghold_password(new_password),
         )
         .await
         .map_err(|e| e.into())
@@ -475,6 +490,14 @@ impl AccountManager {
             }
         }
         Ok(true)
+    }
+
+    /// Sets the client options for all accounts.
+    pub async fn set_client_options(&self, options: ClientOptions) -> crate::Result<()> {
+        for account in self.accounts.read().await.values() {
+            account.set_client_options(options.clone()).await?;
+        }
+        Ok(())
     }
 
     /// Starts the polling mechanism.
@@ -540,7 +563,9 @@ impl AccountManager {
         let mut signer = signer.lock().await;
         signer.store_mnemonic(&self.storage_path, mnemonic).await?;
 
-        self.generated_mnemonic = None;
+        if let Some(mut mnemonic) = self.generated_mnemonic.take() {
+            mnemonic.zeroize();
+        }
 
         Ok(())
     }
@@ -748,7 +773,7 @@ impl AccountManager {
     pub async fn import_accounts<S: AsRef<Path>>(
         &mut self,
         source: S,
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))] stronghold_password: impl AsRef<str>,
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))] stronghold_password: String,
     ) -> crate::Result<()> {
         let source = source.as_ref();
         if source.is_dir() || !source.exists() {
@@ -792,7 +817,9 @@ impl AccountManager {
                     .skip_polling()
                     .finish()
                     .await?;
-                stronghold_manager.set_stronghold_password(&stronghold_password).await?;
+                stronghold_manager
+                    .set_stronghold_password(stronghold_password.clone())
+                    .await?;
                 for account_handle in stronghold_manager.accounts.read().await.values() {
                     account_handle.write().await.set_storage_path(self.storage_path.clone());
                 }
@@ -998,44 +1025,69 @@ async fn poll(accounts: AccountStore, storage_file_path: PathBuf, is_mqtt_monito
         log::info!("[POLLING] skipping syncing process because MQTT is running");
         let mut retried_messages = vec![];
         for account_handle in accounts.read().await.values() {
-            let (account_id, unconfirmed_messages): (String, Vec<(MessageId, Payload)>) = {
+            let (account_handle, unconfirmed_messages): (AccountHandle, Vec<(MessageId, Option<Payload>)>) = {
                 let account = account_handle.read().await;
-                let account_id = account.id().clone();
                 let unconfirmed_messages = account
                     .list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed))
                     .iter()
                     .map(|m| (*m.id(), m.payload().clone()))
                     .collect();
-                (account_id, unconfirmed_messages)
+                (account_handle.clone(), unconfirmed_messages)
             };
 
-            let mut promotions = vec![];
-            let mut reattachments = vec![];
+            let mut reattachments = Vec::new();
+            let mut promotions = Vec::new();
+            let mut no_need_promote_or_reattach = Vec::new();
             for (message_id, payload) in unconfirmed_messages {
-                let new_message = repost_message(account_handle.clone(), &message_id, RepostAction::Retry).await?;
-                if new_message.payload() == &payload {
-                    reattachments.push(new_message);
-                } else {
-                    log::info!("[POLLING] promoted and new message is {:?}", new_message.id());
-                    promotions.push(new_message);
+                match repost_message(account_handle.clone(), &message_id, RepostAction::Retry).await {
+                    Ok(new_message) => {
+                        if new_message.payload() == &payload {
+                            reattachments.push(new_message);
+                        } else {
+                            log::info!("[POLLING] promoted and new message is {:?}", new_message.id());
+                            promotions.push(new_message);
+                        }
+                    }
+                    Err(crate::Error::ClientError(iota::client::Error::NoNeedPromoteOrReattach(_))) => {
+                        no_need_promote_or_reattach.push(message_id);
+                    }
+                    _ => {}
                 }
             }
 
             retried_messages.push(RetriedData {
                 promoted: promotions,
                 reattached: reattachments,
-                account_id,
+                no_need_promote_or_reattach,
+                account_handle,
             });
         }
 
         retried_messages
     };
 
-    retried.iter().for_each(|retried_data| {
-        retried_data.reattached.iter().for_each(|message| {
-            emit_transaction_event(TransactionEventType::Reattachment, &retried_data.account_id, &message);
-        });
-    });
+    for retried_data in retried {
+        let mut account = retried_data.account_handle.write().await;
+        let client = crate::client::get_client(account.client_options()).await;
+        let account_id = account.id();
+
+        for message in &retried_data.reattached {
+            emit_transaction_event(TransactionEventType::Reattachment, &account_id, &message);
+        }
+
+        account.append_messages(retried_data.reattached);
+        account.append_messages(retried_data.promoted);
+
+        for message_id in retried_data.no_need_promote_or_reattach {
+            let message = account.get_message_mut(&message_id).unwrap();
+            if let Ok(metadata) = client.read().await.get_message().metadata(&message_id).await {
+                message.set_confirmed(Some(
+                    metadata.ledger_inclusion_state == Some(LedgerInclusionStateDto::Included),
+                ));
+            }
+        }
+        account.save().await?;
+    }
     Ok(())
 }
 
@@ -1129,33 +1181,48 @@ struct RetriedData {
     #[allow(dead_code)]
     promoted: Vec<Message>,
     reattached: Vec<Message>,
-    account_id: String,
+    no_need_promote_or_reattach: Vec<MessageId>,
+    account_handle: AccountHandle,
 }
 
 async fn retry_unconfirmed_transactions(synced_accounts: Vec<SyncedAccount>) -> crate::Result<Vec<RetriedData>> {
     let mut retried_messages = vec![];
     for synced in synced_accounts {
-        let account = synced.account_handle().read().await;
-
-        let unconfirmed_messages = account.list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed));
-        let mut reattachments = vec![];
-        let mut promotions = vec![];
-        for message in unconfirmed_messages {
-            log::debug!("[POLLING] retrying {:?}", message);
-            let new_message = synced.retry(message.id()).await?;
-            // if the payload is the same, it was reattached; otherwise it was promoted
-            if new_message.payload() == message.payload() {
-                log::debug!("[POLLING] rettached and new message is {:?}", new_message);
-                reattachments.push(new_message);
-            } else {
-                log::debug!("[POLLING] promoted and new message is {:?}", new_message);
-                promotions.push(new_message);
+        let unconfirmed_messages: Vec<(MessageId, Option<Payload>)> = synced
+            .account_handle()
+            .read()
+            .await
+            .list_messages(0, 0, Some(MessageType::Unconfirmed))
+            .iter()
+            .map(|message| (*message.id(), message.payload().clone()))
+            .collect();
+        let mut reattachments = Vec::new();
+        let mut promotions = Vec::new();
+        let mut no_need_promote_or_reattach = Vec::new();
+        for (message_id, message_payload) in unconfirmed_messages {
+            log::debug!("[POLLING] retrying {:?}", message_id);
+            match synced.retry(&message_id).await {
+                Ok(new_message) => {
+                    // if the payload is the same, it was reattached; otherwise it was promoted
+                    if new_message.payload() == &message_payload {
+                        log::debug!("[POLLING] rettached and new message is {:?}", new_message);
+                        reattachments.push(new_message);
+                    } else {
+                        log::debug!("[POLLING] promoted and new message is {:?}", new_message);
+                        promotions.push(new_message);
+                    }
+                }
+                Err(crate::Error::ClientError(iota::client::Error::NoNeedPromoteOrReattach(_))) => {
+                    no_need_promote_or_reattach.push(message_id);
+                }
+                _ => {}
             }
         }
         retried_messages.push(RetriedData {
             promoted: promotions,
             reattached: reattachments,
-            account_id: account.id().clone(),
+            no_need_promote_or_reattach,
+            account_handle: synced.account_handle().clone(),
         });
     }
     Ok(retried_messages)
@@ -1372,9 +1439,8 @@ mod tests {
                 .unwrap()
                 .messages(vec![Message::from_iota_message(
                     MessageId::new([0; 32]),
-                    &[],
                     MessageBuilder::new()
-                        .with_nonce_provider(crate::test_utils::NoopNonceProvider {}, 4000f64)
+                        .with_nonce_provider(crate::test_utils::NoopNonceProvider {}, 4000f64, None)
                         .with_parents(vec![MessageId::new([0; 32])])
                         .with_payload(Payload::Indexation(Box::new(
                             IndexationPayload::new("index".to_string(), &[0; 16]).unwrap(),
@@ -1382,8 +1448,10 @@ mod tests {
                         .with_network_id(0)
                         .finish()
                         .unwrap(),
-                    Some(true),
-                )])
+                    &[],
+                )
+                .with_confirmed(Some(true))
+                .finish()])
                 .initialise()
                 .await
                 .unwrap();
@@ -1529,7 +1597,10 @@ mod tests {
             // import the accounts from the backup and assert that it's the same
 
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-            manager.import_accounts(backup_file_path, "password").await.unwrap();
+            manager
+                .import_accounts(backup_file_path, "password".to_string())
+                .await
+                .unwrap();
 
             #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
             manager.import_accounts(backup_file_path).await.unwrap();
@@ -1573,7 +1644,7 @@ mod tests {
             };
 
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-            let response = manager.import_accounts(backup_file_path, "password").await;
+            let response = manager.import_accounts(backup_file_path, "password".to_string()).await;
 
             #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
             let response = manager.import_accounts(backup_file_path).await;
@@ -1584,6 +1655,20 @@ mod tests {
                 err.to_string(),
                 "failed to restore backup: storage file already exists".to_string()
             );
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn storage_password_reencrypt() {
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |mut manager, _| async move {
+            crate::test_utils::AccountCreator::new(&manager).create().await;
+            manager.set_storage_password("new-password").await.unwrap();
+            let (account_store, encrypted) = super::AccountManager::load_accounts(manager.storage_path())
+                .await
+                .unwrap();
+            assert_eq!(account_store.read().await.len(), 1);
+            assert_eq!(encrypted.len(), 0);
         })
         .await;
     }

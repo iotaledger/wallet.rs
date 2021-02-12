@@ -33,17 +33,18 @@ async-trait = "0.1"
 log = "0.4"
 
 # stronghold
-iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "ad7980c273f14657ba310f66d50ebbc2320ae384", optional = true }
+iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7", optional = true }
 riker = { version = "0.4", optional = true }
 blake2 = { version = "0.9", optional = true }
 slog = { version = "2.7", optional = true }
+zeroize = { version = "1.2", features = ["zeroize_derive"], optional = true }
 
 # ledger hardware wallets
 iota-ledger = { git = "https://github.com/iotaledger/ledger.rs", branch = "develop", optional = true  }
 
 [dependencies.iota-crypto]
 git = "https://github.com/iotaledger/crypto.rs"
-rev = "c2514969c3f6693b86425ec84bada84b3ebea645"
+rev = "6e67b652dd55df05877f575b9a09ccb5a7006694"
 features = ["random", "sha", "pbkdf", "hmac", "bip39", "bip39-en", "chacha"]
 
 [dev-dependencies]
@@ -54,8 +55,8 @@ anyhow = "1.0"
 
 [features]
 default = ["stronghold", "stronghold-storage"]
-stronghold = ["iota-stronghold", "riker", "blake2", "slog"]
-stronghold-storage = ["iota-stronghold", "riker", "blake2", "slog"]
+stronghold = ["iota-stronghold", "riker", "blake2", "slog", "zeroize"]
+stronghold-storage = ["iota-stronghold", "riker", "blake2", "slog", "zeroize"]
 sqlite-storage = ["rusqlite"]
 ledger-nano = ["iota-ledger"]
 ledger-nano-simulator = ["iota-ledger"]
