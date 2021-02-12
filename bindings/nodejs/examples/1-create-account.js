@@ -1,6 +1,5 @@
 /**
  * This example creates a new database and account
- * Please make sure you have the .env variables configured
  */
 
 async function run() {
