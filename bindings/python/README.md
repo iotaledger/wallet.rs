@@ -139,9 +139,9 @@ Checks is the mnemonic is valid. If a mnemonic was generated with `generate_mnem
 | -------- | ---------------- | ---------------------- | --------------------- |
 | mnemonic | <code>str</code> | <code>undefined</code> | The provided mnemonic |
 
-#### create_account(client_options): AccountInitialiser
+#### create_account(client_options): [AccountInitialiser](#accountinitialiser)
 
-Checks is the mnemonic is valid. If a mnemonic was generated with `generate_mnemonic()`, the mnemonic here should match the generated.
+Creat a new account.
 
 | Param          | Type                                         | Default                | Description        |
 | -------------- | -------------------------------------------- | ---------------------- | ------------------ |
@@ -425,6 +425,26 @@ Time of account creation.
 | ---------- | ---------------- | ---------------------- | ------------------------- |
 | created_at | <code>u64</code> | <code>undefined</code> | The account creation time |
 
+
+#### messages(messages): void
+
+Messages associated with the seed.
+The account can be initialised with locally stored messages.
+
+| Param    | Type                                               | Default                | Description                 |
+| -------- | -------------------------------------------------- | ---------------------- | --------------------------- |
+| messages | <code>list([WalletMessage](#walletmessage))</code> | <code>undefined</code> | The locally stored messages |
+
+#### addresses(addresses): list([WalletAddress](#walletaddress))
+
+Address history associated with the seed.
+The account can be initialised with locally stored address history.
+
+| Param     | Type                                               | Default                | Description              |
+| --------- | -------------------------------------------------- | ---------------------- | ------------------------ |
+| addresses | <code>list([WalletAddress](#walletaddress))</code> | <code>undefined</code> | The historical addresses |
+
+
 #### skip_persistance(): void
 
 Skips storing the account to the database.
@@ -435,12 +455,45 @@ Initialises the account.
 
 **Returns** the initilized [AccountHandle](#accounthandle)
 
+### WalletAddress
+
+A dict with the following key/value pairs.
+
+```python
+wallet_address = {
+    'address': str,
+    'balance': int,
+    'key_index': int,
+    'internal': bool,
+    'outputs': list[WalletAddressOutput],
+}
+```
+
+Please refer to [WalletAddressOutput](#walletaddressoutput) for the details of this type.
+
+### WalletAddressOutput
+
+A dict with the following key/value pairs.
+
+```python
+wallet_address_output = {
+    'transaction_id': str,
+    'message_id': str,
+    'index': int,
+    'amount': int,
+    'is_spent': bool,
+    'address': AddressWrapper,
+    'kind': str,
+}
+}
+```
+
 ### Address
 
 A dict with the following key/value pairs.
 
 ```python
-account_balance = {
+address = {
     'address': AddressWrapper,
     'balance': int,
     'key_index': int,
@@ -466,7 +519,7 @@ address_wrapper = {
 A dict with the following key/value pairs.
 
 ```python
-account_balance = {
+address_output = {
     'transaction_id': str,
     'message_id': str,
     'index': int,
