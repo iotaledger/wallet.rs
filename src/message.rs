@@ -219,34 +219,34 @@ impl Value {
 #[getset(get = "pub", set = "pub(crate)")]
 pub struct Message {
     /// The message identifier.
-    pub(crate) id: MessageId,
+    pub id: MessageId,
     /// The message version.
-    pub(crate) version: u64,
+    pub version: u64,
     /// Message ids this message refers to.
-    pub(crate) parents: Vec<MessageId>,
+    pub parents: Vec<MessageId>,
     /// Length of the payload.
     #[serde(rename = "payloadLength")]
-    pub(crate) payload_length: usize,
+    pub payload_length: usize,
     /// Message payload.
-    pub(crate) payload: Option<Payload>,
+    pub payload: Option<Payload>,
     /// The transaction timestamp.
-    pub(crate) timestamp: DateTime<Utc>,
+    pub timestamp: DateTime<Utc>,
     /// Transaction nonce.
-    pub(crate) nonce: u64,
+    pub nonce: u64,
     /// Whether the transaction is confirmed or not.
     #[getset(set = "pub")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) confirmed: Option<bool>,
+    pub confirmed: Option<bool>,
     /// Whether the transaction is broadcasted or not.
     #[getset(set = "pub")]
-    pub(crate) broadcasted: bool,
+    pub broadcasted: bool,
     /// Whether the message represents an incoming transaction or not.
-    pub(crate) incoming: bool,
+    pub incoming: bool,
     /// The message's value.
-    pub(crate) value: u64,
+    pub value: u64,
     /// The message's remainder value sum.
     #[serde(rename = "remainderValue")]
-    pub(crate) remainder_value: u64,
+    pub remainder_value: u64,
 }
 
 impl Hash for Message {

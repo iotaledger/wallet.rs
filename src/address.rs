@@ -28,28 +28,42 @@ pub enum OutputKind {
     Treasury,
 }
 
+impl FromStr for OutputKind {
+    type Err = crate::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let kind = match s {
+            "SignatureLockedSingle" => Self::SignatureLockedSingle,
+            "SignatureLockedDustAllowance" => Self::SignatureLockedDustAllowance,
+            "Treasury" => Self::Treasury,
+            _ => return Err(crate::Error::InvalidOutputKind(s.to_string())),
+        };
+        Ok(kind)
+    }
+}
+
 /// An Address output.
 #[derive(Debug, Getters, Setters, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct AddressOutput {
     /// Transaction ID of the output
     #[serde(rename = "transactionId")]
-    pub(crate) transaction_id: TransactionId,
+    pub transaction_id: TransactionId,
     /// Message ID of the output
     #[serde(rename = "messageId")]
-    pub(crate) message_id: MessageId,
+    pub message_id: MessageId,
     /// Output index.
-    pub(crate) index: u16,
+    pub index: u16,
     /// Output amount.
-    pub(crate) amount: u64,
+    pub amount: u64,
     /// Spend status of the output,
     #[serde(rename = "isSpent")]
-    pub(crate) is_spent: bool,
+    pub is_spent: bool,
     /// Associated address.
     #[serde(with = "crate::serde::iota_address_serde")]
-    pub(crate) address: AddressWrapper,
+    pub address: AddressWrapper,
     /// Output kind.
-    pub(crate) kind: OutputKind,
+    pub kind: OutputKind,
 }
 
 impl AddressOutput {
@@ -129,7 +143,7 @@ impl AddressOutput {
 
 /// The address builder.
 #[derive(Default)]
-pub(crate) struct AddressBuilder {
+pub struct AddressBuilder {
     address: Option<AddressWrapper>,
     balance: Option<u64>,
     key_index: Option<usize>,
@@ -209,7 +223,8 @@ impl AsRef<IotaAddress> for AddressWrapper {
 }
 
 impl AddressWrapper {
-    pub(crate) fn new(address: IotaAddress, bech32_hrp: String) -> Self {
+    /// Create a new address wrapper.
+    pub fn new(address: IotaAddress, bech32_hrp: String) -> Self {
         Self {
             inner: address,
             bech32_hrp,
@@ -273,6 +288,12 @@ impl PartialEq for Address {
 }
 
 impl Address {
+    /// Gets a new instance of the address builder.
+    #[doc(hidden)]
+    pub fn builder() -> AddressBuilder {
+        AddressBuilder::new()
+    }
+
     pub(crate) fn handle_new_output(&mut self, output: AddressOutput) {
         if !self.outputs.iter().any(|o| o == &output) {
             let spent_existing_output = self.outputs.iter().position(|o| {
@@ -305,7 +326,9 @@ impl Address {
             .fold(0, |acc, o| acc + *o.amount())
     }
 
-    pub(crate) fn set_bech32_hrp(&mut self, hrp: String) {
+    /// Updates the Bech32 human readable part.
+    #[doc(hidden)]
+    pub fn set_bech32_hrp(&mut self, hrp: String) {
         self.address.bech32_hrp = hrp.to_string();
         for output in self.outputs.iter_mut() {
             output.address.bech32_hrp = hrp.to_string();

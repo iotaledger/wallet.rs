@@ -172,6 +172,9 @@ pub enum Error {
     /// Dust error, for example not enough balance on an address.
     #[error("Dust error: {0}")]
     DustError(String),
+    /// Invalid output kind.
+    #[error("invalid output kind: {0}")]
+    InvalidOutputKind(String),
 }
 
 impl Drop for Error {
@@ -282,6 +285,7 @@ impl serde::Serialize for Error {
             Self::LedgerEssenceTooLarge => serialize_variant(self, serializer, "LedgerEssenceTooLarge"),
             Self::AccountAliasAlreadyExists => serialize_variant(self, serializer, "AccountAliasAlreadyExists"),
             Self::DustError(_) => serialize_variant(self, serializer, "DustError"),
+            Self::InvalidOutputKind(_) => serialize_variant(self, serializer, "InvalidOutputKind"),
         }
     }
 }

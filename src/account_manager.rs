@@ -1479,7 +1479,7 @@ mod tests {
                     .key_index(0)
                     .address(AddressWrapper::new(
                         IotaAddress::Ed25519(Ed25519Address::new([0; 32])),
-                        "iota".to_string(),
+                        "atoi".to_string(),
                     ))
                     .outputs(vec![])
                     .build()

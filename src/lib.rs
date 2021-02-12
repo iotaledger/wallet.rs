@@ -416,7 +416,7 @@ mod test_utils {
     pub fn generate_random_iota_address() -> AddressWrapper {
         AddressWrapper::new(
             IotaAddress::Ed25519(Ed25519Address::new(rand::random::<[u8; 32]>())),
-            "iota".to_string(),
+            "atoi".to_string(),
         )
     }
 
