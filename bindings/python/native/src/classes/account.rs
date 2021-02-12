@@ -41,8 +41,7 @@ impl AccountSynchronizer {
     /// The account syncing process ensures that the latest metadata (balance, transactions)
     /// associated with an account is fetched from the tangle and is stored locally.
     fn execute(&mut self) -> Result<SyncedAccount> {
-        let rt = tokio::runtime::Runtime::new()?;
-        let synced_account = rt.block_on(async { self.account_synchronizer.take().unwrap().execute().await })?;
+        let synced_account = crate::block_on(async { self.account_synchronizer.take().unwrap().execute().await })?;
         Ok(SyncedAccount { synced_account })
     }
 }
@@ -81,8 +80,7 @@ impl Transfer {
 impl SyncedAccount {
     /// Send messages.
     fn transfer(&self, transfer_obj: Transfer) -> Result<WalletMessage> {
-        let rt = tokio::runtime::Runtime::new()?;
-        let res: Result<(RustWalletMessage, String)> = rt.block_on(async {
+        let res: Result<(RustWalletMessage, String)> = crate::block_on(async {
             let bech32_hrp = self.synced_account.account_handle().bech32_hrp().await;
             Ok((self.synced_account.transfer(transfer_obj.transfer).await?, bech32_hrp))
         });
@@ -91,8 +89,7 @@ impl SyncedAccount {
 
     /// Retry message.
     fn retry(&self, message_id: &str) -> Result<WalletMessage> {
-        let rt = tokio::runtime::Runtime::new()?;
-        let res: Result<(RustWalletMessage, String)> = rt.block_on(async {
+        let res: Result<(RustWalletMessage, String)> = crate::block_on(async {
             let bech32_hrp = self.synced_account.account_handle().bech32_hrp().await;
             Ok((
                 self.synced_account
@@ -106,8 +103,7 @@ impl SyncedAccount {
 
     /// Promote message.
     fn promote(&self, message_id: &str) -> Result<WalletMessage> {
-        let rt = tokio::runtime::Runtime::new()?;
-        let res: Result<(RustWalletMessage, String)> = rt.block_on(async {
+        let res: Result<(RustWalletMessage, String)> = crate::block_on(async {
             let bech32_hrp = self.synced_account.account_handle().bech32_hrp().await;
             Ok((
                 self.synced_account
@@ -121,8 +117,7 @@ impl SyncedAccount {
 
     /// Reattach message.
     fn reattach(&self, message_id: &str) -> Result<WalletMessage> {
-        let rt = tokio::runtime::Runtime::new()?;
-        let res: Result<(RustWalletMessage, String)> = rt.block_on(async {
+        let res: Result<(RustWalletMessage, String)> = crate::block_on(async {
             let bech32_hrp = self.synced_account.account_handle().bech32_hrp().await;
             Ok((
                 self.synced_account
@@ -139,8 +134,7 @@ impl SyncedAccount {
 impl AccountHandle {
     /// Returns the builder to setup the process to synchronize this account with the Tangle.
     fn sync(&self) -> Result<AccountSynchronizer> {
-        let rt = tokio::runtime::Runtime::new()?;
-        let account_synchronizer = rt.block_on(async { self.account_handle.sync().await });
+        let account_synchronizer = crate::block_on(async { self.account_handle.sync().await });
         Ok(AccountSynchronizer {
             account_synchronizer: Some(account_synchronizer),
         })
@@ -148,19 +142,13 @@ impl AccountHandle {
 
     /// Gets a new unused address and links it to this account.
     fn generate_address(&self) -> Result<Address> {
-        let rt = tokio::runtime::Runtime::new()?;
-        Ok(rt
-            .block_on(async { self.account_handle.generate_address().await })?
-            .into())
+        Ok(crate::block_on(async { self.account_handle.generate_address().await })?.into())
     }
 
     /// Synchronizes the account addresses with the Tangle and returns the latest address in the account,
     /// which is an address without balance.
     fn get_unused_address(&self) -> Result<Address> {
-        let rt = tokio::runtime::Runtime::new()?;
-        Ok(rt
-            .block_on(async { self.account_handle.get_unused_address().await })?
-            .into())
+        Ok(crate::block_on(async { self.account_handle.get_unused_address().await })?.into())
     }
 
     /// Syncs the latest address with the Tangle and determines whether it's unused or not.
@@ -168,39 +156,37 @@ impl AccountHandle {
     /// Note that such address might have been used in the past, because the message history might have been pruned by
     /// the node.
     fn is_latest_address_unused(&self) -> Result<bool> {
-        let rt = tokio::runtime::Runtime::new()?;
-        Ok(rt.block_on(async { self.account_handle.is_latest_address_unused().await })?)
+        Ok(crate::block_on(async {
+            self.account_handle.is_latest_address_unused().await
+        })?)
     }
 
     /// Bridge to [Account#latest_address](struct.Account.html#method.latest_address).
     fn latest_address(&self) -> Result<Address> {
-        let rt = tokio::runtime::Runtime::new()?;
-        Ok(rt.block_on(async { self.account_handle.latest_address().await }).into())
+        Ok(crate::block_on(async { self.account_handle.latest_address().await }).into())
     }
 
     /// Bridge to [Account#addresses](struct.Account.html#method.addresses).
     fn addresses(&self) -> Result<Vec<Address>> {
-        let rt = tokio::runtime::Runtime::new()?;
-        let addresses = rt.block_on(async { self.account_handle.addresses().await });
+        let addresses = crate::block_on(async { self.account_handle.addresses().await });
         Ok(addresses.into_iter().map(|address| address.into()).collect())
     }
 
     /// Bridge to [Account#balance](struct.Account.html#method.balance).
     fn balance(&self) -> Result<AccountBalance> {
-        let rt = tokio::runtime::Runtime::new()?;
-        Ok(rt.block_on(async { self.account_handle.balance().await }).into())
+        Ok(crate::block_on(async { self.account_handle.balance().await }).into())
     }
 
     /// Bridge to [Account#set_alias](struct.Account.html#method.set_alias).
     fn set_alias(&self, alias: &str) -> Result<()> {
-        let rt = tokio::runtime::Runtime::new()?;
-        Ok(rt.block_on(async { self.account_handle.set_alias(alias).await })?)
+        Ok(crate::block_on(async { self.account_handle.set_alias(alias).await })?)
     }
 
     /// Bridge to [Account#set_client_options](struct.Account.html#method.set_client_options).
     fn set_client_options(&self, options: ClientOptions) -> Result<()> {
-        let rt = tokio::runtime::Runtime::new()?;
-        Ok(rt.block_on(async { self.account_handle.set_client_options(options.into()).await })?)
+        Ok(crate::block_on(async {
+            self.account_handle.set_client_options(options.into()).await
+        })?)
     }
 
     /// Bridge to [Account#list_messages](struct.Account.html#method.list_messages).
@@ -215,8 +201,7 @@ impl AccountHandle {
             Some("Value") => Some(RustMessageType::Value),
             _ => None,
         };
-        let rt = tokio::runtime::Runtime::new()?;
-        let (messages, bech32_hrp) = rt.block_on(async {
+        let (messages, bech32_hrp) = crate::block_on(async {
             let bech32_hrp = self.account_handle.bech32_hrp().await;
             (
                 self.account_handle.list_messages(count, from, message_type).await,
@@ -236,8 +221,7 @@ impl AccountHandle {
     /// This method clones the account's addresses so when querying a large list of addresses
     /// prefer using the `read` method to access the account instance.
     fn list_spent_addresses(&self) -> Result<Vec<Address>> {
-        let rt = tokio::runtime::Runtime::new()?;
-        let addresses = rt.block_on(async { self.account_handle.list_spent_addresses().await });
+        let addresses = crate::block_on(async { self.account_handle.list_spent_addresses().await });
         Ok(addresses.into_iter().map(|addr| addr.into()).collect())
     }
 
@@ -245,15 +229,13 @@ impl AccountHandle {
     /// This method clones the account's addresses so when querying a large list of addresses
     /// prefer using the `read` method to access the account instance.
     fn list_unspent_addresses(&self) -> Result<Vec<Address>> {
-        let rt = tokio::runtime::Runtime::new()?;
-        let addresses = rt.block_on(async { self.account_handle.list_unspent_addresses().await });
+        let addresses = crate::block_on(async { self.account_handle.list_unspent_addresses().await });
         Ok(addresses.into_iter().map(|addr| addr.into()).collect())
     }
 
     /// Bridge to [Account#get_message](struct.Account.html#method.get_message).
     fn get_message(&self, message_id: &str) -> Result<Option<WalletMessage>> {
-        let rt = tokio::runtime::Runtime::new()?;
-        let res: Result<(Option<RustWalletMessage>, String)> = rt.block_on(async {
+        let res: Result<(Option<RustWalletMessage>, String)> = crate::block_on(async {
             let bech32_hrp = self.account_handle.bech32_hrp().await;
             Ok((
                 self.account_handle
@@ -339,8 +321,7 @@ impl AccountInitialiser {
 
     /// Initialises the account.
     fn initialise(&mut self) -> Result<AccountHandle> {
-        let rt = tokio::runtime::Runtime::new()?;
-        let account_handle = rt.block_on(async { self.account_initialiser.take().unwrap().initialise().await })?;
+        let account_handle = crate::block_on(async { self.account_initialiser.take().unwrap().initialise().await })?;
         Ok(AccountHandle { account_handle })
     }
 }

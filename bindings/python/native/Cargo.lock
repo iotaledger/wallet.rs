@@ -445,37 +445,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bee-signing"
-version = "0.1.1-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#7f24cbf38d5091d373eba8477ef3ccab16d74906"
-dependencies = [
- "bee-common-derive",
- "bee-crypto",
- "bee-ternary",
- "rand 0.8.3",
- "sha3",
- "thiserror",
- "zeroize",
-]
-
-[[package]]
-name = "bee-signing-ext"
-version = "0.1.0-alpha"
-source = "git+https://github.com/wusyong/bee-p.git?branch=sign-ext#390a7bcfcc524fd8e37c29617c60d2712c3adb67"
-dependencies = [
- "bee-common-derive",
- "bee-crypto",
- "bee-signing",
- "bee-ternary",
- "ed25519-dalek",
- "rand 0.7.3",
- "serde 1.0.123",
- "signature",
- "slip10",
- "zeroize",
-]
-
-[[package]]
 name = "bee-snapshot"
 version = "0.1.0-alpha"
 source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#42eff7852b6a4168e2d9c2b2f529bfb3099bb036"
@@ -536,7 +505,6 @@ source = "git+https://github.com/iotaledger/bee.git?branch=dev#7f24cbf38d5091d37
 dependencies = [
  "autocfg",
  "num-traits 0.2.14",
- "serde 1.0.123",
 ]
 
 [[package]]
@@ -607,7 +575,7 @@ version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c0940dc441f31689269e10ac70eb1002a3a1d3ad1390e030043662eb7fe4688b"
 dependencies = [
- "block-padding 0.1.5",
+ "block-padding",
  "byte-tools",
  "byteorder",
  "generic-array 0.12.3",
@@ -619,7 +587,6 @@ version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4152116fd6e9dadb291ae18fc1ec3575ed6d84c29642d97890f4b4a3417297e4"
 dependencies = [
- "block-padding 0.2.1",
  "generic-array 0.14.4",
 ]
 
@@ -640,12 +607,6 @@ checksum = "fa79dedbb091f449f1f39e53edf88d5dbe95f895dae6135a8d7b881fb5af73f5"
 dependencies = [
  "byte-tools",
 ]
-
-[[package]]
-name = "block-padding"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
 
 [[package]]
 name = "bs58"
@@ -925,7 +886,7 @@ checksum = "7a81dae078cea95a014a339291cec439d2f232ebe854a9d672b796c6afafa9b7"
 [[package]]
 name = "crypto"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=ad7980c273f14657ba310f66d50ebbc2320ae384#ad7980c273f14657ba310f66d50ebbc2320ae384"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7#87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7"
 dependencies = [
  "anyhow",
  "primitives",
@@ -1078,7 +1039,6 @@ version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "37c66a534cbb46ab4ea03477eae19d5c22c01da8258030280b7bd9d8433fb6ef"
 dependencies = [
- "serde 1.0.123",
  "signature",
 ]
 
@@ -1092,7 +1052,6 @@ dependencies = [
  "ed25519",
  "rand 0.7.3",
  "serde 1.0.123",
- "serde_bytes",
  "sha2 0.9.3",
  "zeroize",
 ]
@@ -1844,8 +1803,8 @@ dependencies = [
 
 [[package]]
 name = "iota-crypto"
-version = "0.1.0"
-source = "git+https://github.com/iotaledger/crypto.rs?rev=9259a0617ca3b72e2bb2f63d5b7197247f85061c#9259a0617ca3b72e2bb2f63d5b7197247f85061c"
+version = "0.2.0"
+source = "git+https://github.com/iotaledger/crypto.rs?rev=6e67b652dd55df05877f575b9a09ccb5a7006694#6e67b652dd55df05877f575b9a09ccb5a7006694"
 dependencies = [
  "blake2b_simd",
  "chacha20poly1305 0.7.1",
@@ -1855,28 +1814,7 @@ dependencies = [
  "pbkdf2",
  "sha2 0.9.3",
  "unicode-normalization",
-]
-
-[[package]]
-name = "iota-crypto"
-version = "0.2.0"
-source = "git+https://github.com/iotaledger/crypto.rs?rev=6e67b652dd55df05877f575b9a09ccb5a7006694#6e67b652dd55df05877f575b9a09ccb5a7006694"
-dependencies = [
- "ed25519-zebra",
- "getrandom 0.2.2",
-]
-
-[[package]]
-name = "iota-crypto"
-version = "0.2.0"
-source = "git+https://github.com/iotaledger/crypto.rs?rev=c2514969c3f6693b86425ec84bada84b3ebea645#c2514969c3f6693b86425ec84bada84b3ebea645"
-dependencies = [
- "chacha20poly1305 0.7.1",
- "getrandom 0.2.2",
- "hmac 0.10.1",
- "pbkdf2",
- "sha2 0.9.3",
- "unicode-normalization",
+ "x25519-dalek",
 ]
 
 [[package]]
@@ -1910,13 +1848,12 @@ dependencies = [
 [[package]]
 name = "iota-stronghold"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=ad7980c273f14657ba310f66d50ebbc2320ae384#ad7980c273f14657ba310f66d50ebbc2320ae384"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7#87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7"
 dependencies = [
  "anyhow",
- "bee-signing-ext",
  "bincode",
  "futures",
- "iota-crypto 0.1.0",
+ "iota-crypto 0.2.0 (git+https://github.com/iotaledger/crypto.rs?rev=6e67b652dd55df05877f575b9a09ccb5a7006694)",
  "riker",
  "serde 1.0.123",
  "stronghold-engine",
@@ -1939,7 +1876,7 @@ dependencies = [
  "getset",
  "hex",
  "iota-core",
- "iota-crypto 0.2.0 (git+https://github.com/iotaledger/crypto.rs?rev=c2514969c3f6693b86425ec84bada84b3ebea645)",
+ "iota-crypto 0.2.0 (git+https://github.com/iotaledger/crypto.rs?rev=6e67b652dd55df05877f575b9a09ccb5a7006694)",
  "iota-ledger",
  "iota-stronghold",
  "log",
@@ -1955,6 +1892,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "url",
+ "zeroize",
 ]
 
 [[package]]
@@ -1963,9 +1901,11 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "dict_derive",
+ "futures",
  "hex",
  "iota-core",
  "iota-wallet",
+ "once_cell",
  "pyo3",
  "tokio",
 ]
@@ -1999,12 +1939,6 @@ checksum = "5cfb73131c35423a367daf8cbd24100af0d077668c8c2943f0e7dd775fef0f65"
 dependencies = [
  "wasm-bindgen",
 ]
-
-[[package]]
-name = "keccak"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "67c21572b4949434e4fc1e1978b99c5f77064153c59d998bf13ecd96fb5ecba7"
 
 [[package]]
 name = "lazy_static"
@@ -2902,7 +2836,7 @@ checksum = "ac74c624d6b2d21f425f752262f42188365d7b8ff1aff74c82e45136510a4857"
 [[package]]
 name = "primitives"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=ad7980c273f14657ba310f66d50ebbc2320ae384#ad7980c273f14657ba310f66d50ebbc2320ae384"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7#87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7"
 
 [[package]]
 name = "proc-macro-crate"
@@ -3165,7 +3099,7 @@ dependencies = [
 [[package]]
 name = "random"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=ad7980c273f14657ba310f66d50ebbc2320ae384#ad7980c273f14657ba310f66d50ebbc2320ae384"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7#87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7"
 dependencies = [
  "cc",
  "primitives",
@@ -3506,15 +3440,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "serde_bytes"
-version = "0.11.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "16ae07dd2f88a366f15bd0632ba725227018c69a1c8550a927324f8eb8368bb9"
-dependencies = [
- "serde 1.0.123",
-]
-
-[[package]]
 name = "serde_derive"
 version = "1.0.123"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3619,18 +3544,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sha3"
-version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f81199417d4e5de3f04b1e871023acea7389672c4135918f05aa9cbf2f2fa809"
-dependencies = [
- "block-buffer 0.9.0",
- "digest 0.9.0",
- "keccak",
- "opaque-debug 0.3.0",
-]
-
-[[package]]
 name = "shlex"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3696,11 +3609,11 @@ checksum = "fe0f37c9e8f3c5a4a66ad655a93c74daac4ad00c441533bf5c6e7990bb42604e"
 [[package]]
 name = "snapshot"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=ad7980c273f14657ba310f66d50ebbc2320ae384#ad7980c273f14657ba310f66d50ebbc2320ae384"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7#87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7"
 dependencies = [
  "dirs-next",
  "hex",
- "iota-crypto 0.1.0",
+ "iota-crypto 0.2.0 (git+https://github.com/iotaledger/crypto.rs?rev=6e67b652dd55df05877f575b9a09ccb5a7006694)",
  "thiserror",
 ]
 
@@ -3763,7 +3676,7 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 [[package]]
 name = "store"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=ad7980c273f14657ba310f66d50ebbc2320ae384#ad7980c273f14657ba310f66d50ebbc2320ae384"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7#87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7"
 dependencies = [
  "once_cell",
  "paste",
@@ -3783,7 +3696,7 @@ dependencies = [
 [[package]]
 name = "stronghold-engine"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=ad7980c273f14657ba310f66d50ebbc2320ae384#ad7980c273f14657ba310f66d50ebbc2320ae384"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7#87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7"
 dependencies = [
  "crypto",
  "primitives",
@@ -3796,7 +3709,7 @@ dependencies = [
 [[package]]
 name = "stronghold-runtime"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=ad7980c273f14657ba310f66d50ebbc2320ae384#ad7980c273f14657ba310f66d50ebbc2320ae384"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7#87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7"
 dependencies = [
  "bindgen",
  "lazy_static",
@@ -4267,7 +4180,7 @@ dependencies = [
 [[package]]
 name = "vault"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=ad7980c273f14657ba310f66d50ebbc2320ae384#ad7980c273f14657ba310f66d50ebbc2320ae384"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7#87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7"
 dependencies = [
  "anyhow",
  "serde 1.0.123",

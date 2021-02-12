@@ -53,8 +53,7 @@ impl AccountManager {
         if let Some(polling_interval) = polling_interval {
             account_manager = account_manager.with_polling_interval(Duration::from_millis(polling_interval));
         }
-        let rt = tokio::runtime::Runtime::new()?;
-        let account_manager = rt.block_on(async { account_manager.finish().await })?;
+        let account_manager = crate::block_on(async { account_manager.finish().await })?;
         Ok(AccountManager { account_manager })
     }
 
@@ -65,22 +64,21 @@ impl AccountManager {
 
     /// Sets the password for the stored accounts.
     fn set_storage_password(&mut self, password: &str) -> Result<()> {
-        let rt = tokio::runtime::Runtime::new()?;
-        rt.block_on(async { self.account_manager.set_storage_password(password).await })?;
+        crate::block_on(async { self.account_manager.set_storage_password(password).await })?;
         Ok(())
     }
 
     /// Sets the stronghold password.
     fn set_stronghold_password(&mut self, password: &str) -> Result<()> {
-        let rt = tokio::runtime::Runtime::new()?;
-        rt.block_on(async { self.account_manager.set_stronghold_password(password).await })?;
+        crate::block_on(async { self.account_manager.set_stronghold_password(password).await })?;
         Ok(())
     }
 
     /// Determines whether all accounts has the latest address unused.
     fn is_latest_address_unused(&self) -> Result<bool> {
-        let rt = tokio::runtime::Runtime::new()?;
-        Ok(rt.block_on(async { self.account_manager.is_latest_address_unused().await })?)
+        Ok(crate::block_on(async {
+            self.account_manager.is_latest_address_unused().await
+        })?)
     }
 
     /// Stores a mnemonic for the given signer type.
@@ -92,8 +90,9 @@ impl AccountManager {
             "LedgerNanoSimulator" => RustSingerType::LedgerNanoSimulator,
             _ => RustSingerType::Custom(signer_type.to_string()),
         };
-        let rt = tokio::runtime::Runtime::new()?;
-        Ok(rt.block_on(async { self.account_manager.store_mnemonic(signer_type, mnemonic).await })?)
+        Ok(crate::block_on(async {
+            self.account_manager.store_mnemonic(signer_type, mnemonic).await
+        })?)
     }
 
     /// Generates a new mnemonic.
@@ -116,14 +115,14 @@ impl AccountManager {
 
     /// Deletes an account.
     fn remove_account(&self, account_id: &str) -> Result<()> {
-        let rt = tokio::runtime::Runtime::new()?;
-        Ok(rt.block_on(async { self.account_manager.remove_account(account_id).await })?)
+        Ok(crate::block_on(async {
+            self.account_manager.remove_account(account_id).await
+        })?)
     }
 
     /// Syncs all accounts.
     fn sync_accounts(&self) -> Result<Vec<SyncedAccount>> {
-        let rt = tokio::runtime::Runtime::new()?;
-        let synced_accounts = rt.block_on(async { self.account_manager.sync_accounts().await })?;
+        let synced_accounts = crate::block_on(async { self.account_manager.sync_accounts().await })?;
         Ok(synced_accounts
             .into_iter()
             .map(|account| SyncedAccount {
@@ -134,8 +133,7 @@ impl AccountManager {
 
     /// Transfers an amount from an account to another.
     fn internal_transfer(&self, from_account_id: &str, to_account_id: &str, amount: u64) -> Result<WalletMessage> {
-        let rt = tokio::runtime::Runtime::new()?;
-        let res: Result<(RustWalletMessage, String)> = rt.block_on(async {
+        let res: Result<(RustWalletMessage, String)> = crate::block_on(async {
             let bech32_hrp = self
                 .account_manager
                 .get_account(from_account_id)
@@ -159,23 +157,22 @@ impl AccountManager {
 
     /// Backups the storage to the given destination
     fn backup(&self, destination: &str) -> Result<String> {
-        let rt = tokio::runtime::Runtime::new()?;
-        Ok(rt
-            .block_on(async { self.account_manager.backup(destination).await })?
-            .into_os_string()
-            .into_string()
-            .unwrap_or_else(|os_string| {
-                panic!(
-                    "invalid backup result {:?} with destination: {:?}",
-                    os_string, destination
-                )
-            }))
+        Ok(
+            crate::block_on(async { self.account_manager.backup(destination).await })?
+                .into_os_string()
+                .into_string()
+                .unwrap_or_else(|os_string| {
+                    panic!(
+                        "invalid backup result {:?} with destination: {:?}",
+                        os_string, destination
+                    )
+                }),
+        )
     }
 
     /// Import backed up accounts.
     fn import_accounts(&mut self, source: &str, stronghold_password: &str) -> Result<()> {
-        let rt = tokio::runtime::Runtime::new()?;
-        Ok(rt.block_on(async {
+        Ok(crate::block_on(async {
             self.account_manager
                 .import_accounts(source, stronghold_password.to_string())
                 .await
@@ -184,15 +181,13 @@ impl AccountManager {
 
     /// Gets the account associated with the given identifier.
     fn get_account(&self, account_id: &str) -> Result<AccountHandle> {
-        let rt = tokio::runtime::Runtime::new()?;
-        let account_handle = rt.block_on(async { self.account_manager.get_account(account_id).await })?;
+        let account_handle = crate::block_on(async { self.account_manager.get_account(account_id).await })?;
         Ok(AccountHandle { account_handle })
     }
 
     /// Gets the account associated with the given identifier.
     fn get_accounts(&self) -> Result<Vec<AccountHandle>> {
-        let rt = tokio::runtime::Runtime::new()?;
-        let account_handles = rt.block_on(async { self.account_manager.get_accounts().await })?;
+        let account_handles = crate::block_on(async { self.account_manager.get_accounts().await })?;
         Ok(account_handles
             .into_iter()
             .map(|handle| AccountHandle { account_handle: handle })
@@ -201,8 +196,7 @@ impl AccountManager {
 
     /// Reattaches an unconfirmed transaction.
     fn reattach(&self, account_id: &str, message_id: &str) -> Result<WalletMessage> {
-        let rt = tokio::runtime::Runtime::new()?;
-        let res: Result<(RustWalletMessage, String)> = rt.block_on(async {
+        let res: Result<(RustWalletMessage, String)> = crate::block_on(async {
             let bech32_hrp = self.account_manager.get_account(account_id).await?.bech32_hrp().await;
             Ok((
                 self.account_manager
@@ -216,8 +210,7 @@ impl AccountManager {
 
     /// Promotes an unconfirmed transaction.
     fn promote(&self, account_id: &str, message_id: &str) -> Result<WalletMessage> {
-        let rt = tokio::runtime::Runtime::new()?;
-        let res: Result<(RustWalletMessage, String)> = rt.block_on(async {
+        let res: Result<(RustWalletMessage, String)> = crate::block_on(async {
             let bech32_hrp = self.account_manager.get_account(account_id).await?.bech32_hrp().await;
             Ok((
                 self.account_manager
@@ -231,8 +224,7 @@ impl AccountManager {
 
     /// Retries an unconfirmed transaction.
     fn retry(&self, account_id: &str, message_id: &str) -> Result<WalletMessage> {
-        let rt = tokio::runtime::Runtime::new()?;
-        let res: Result<(RustWalletMessage, String)> = rt.block_on(async {
+        let res: Result<(RustWalletMessage, String)> = crate::block_on(async {
             let bech32_hrp = self.account_manager.get_account(account_id).await?.bech32_hrp().await;
             Ok((
                 self.account_manager
