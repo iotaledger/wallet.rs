@@ -1,3 +1,9 @@
+/**
+ * This example creates a new database and account
+ */
+
+require('dotenv').config()
+
 async function run() {
 	const { AccountManager, StorageType } = require('@iota/wallet')
     const manager = new AccountManager({
@@ -5,7 +11,7 @@ async function run() {
         storageType: StorageType.Stronghold
     })
 
-    manager.setStrongholdPassword('your_password')
+    manager.setStrongholdPassword(process.env.SH_PASSWORD)
 
     const account = manager.getAccount('Alice')
     

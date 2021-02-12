@@ -2,6 +2,8 @@
  * This example restores a secured backup file. 
  */
 
+require('dotenv').config();
+
 async function run() {
 
     const { AccountManager, StorageType } = require('@iota/wallet')
@@ -10,12 +12,11 @@ async function run() {
         storageType: StorageType.Stronghold
     })
 
-    // Add the path from example 5-backup.js
+    // Add the path to the file from example 5-backup.js
     // for example: ./backup/2021-02-12T01-23-11-iota-wallet-backup-wallet.stronghold
-    let backup_path = "input your backup path"
-    let password = "your_password"
+    let backup_path = "input your backup file"
 
-    await manager.importAccounts(backup_path, password)
+    await manager.importAccounts(backup_path, process.env.SH_PASSWORD)
     const account = manager.getAccount('Alice')
     console.log('Account:', account.alias())
 }

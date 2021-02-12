@@ -3,6 +3,8 @@
  * You can move this file to another app or device and restore it.
  */
 
+require('dotenv').config();
+
 async function run() {
 
     const { AccountManager, StorageType } = require('@iota/wallet')
@@ -11,7 +13,7 @@ async function run() {
         storageType: StorageType.Stronghold
     })
 
-    manager.setStrongholdPassword('your_password')
+    manager.setStrongholdPassword(process.env.SH_PASSWORD)
 
     let backup_path = await manager.backup("./backup")
     

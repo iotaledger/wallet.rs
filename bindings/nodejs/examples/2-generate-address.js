@@ -1,3 +1,9 @@
+/**
+ * This example genrates a new address.
+ */
+
+require('dotenv').config()
+
 async function run() {
 	const { AccountManager, StorageType } = require('@iota/wallet')
     const manager = new AccountManager({
@@ -5,7 +11,7 @@ async function run() {
         storageType: StorageType.Stronghold
     })
 
-    manager.setStrongholdPassword('your_password')
+    manager.setStrongholdPassword(process.env.SH_PASSWORD)
 
     const account = manager.getAccount('Alice')
     console.log('Account:', account.alias())
@@ -18,12 +24,7 @@ async function run() {
     // get latest address
     let addressObject = account.latestAddress()
 
-    console.log("a2", addressObject.address)
-
-    // console.log(account.listMessages())
-    // if (account.isLatestAddressUnused()) {
-    //     account.generateAddress()
-    // }
+    console.log("Address:", addressObject.address)
     
     // Use the Chrysalis Faucet to send testnet tokens to your address:
     console.log("Fill your address with the Faucet: https://faucet.testnet.chrysalis2.com/")

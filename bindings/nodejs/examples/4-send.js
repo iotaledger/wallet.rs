@@ -1,32 +1,35 @@
-require('dotenv').config();
+/**
+ * This example sends IOTA Toens to an address.
+ */
+
+ require('dotenv').config();
 
 async function run() {
-	const { AccountManager, StorageType, RemainderValueStrategy } = require('iota-wallet')
+	const { AccountManager, StorageType } = require('@iota/wallet')
     const manager = new AccountManager({
-        storagePath: './test-database',
-        storageType: StorageType.Sqlite
+        storagePath: './alice-database',
+        storageType: StorageType.Stronghold
     })
 
+    manager.setStrongholdPassword(process.env.SH_PASSWORD)
 
-    console.log(manager.getAccounts())
-    const account = manager.getAccountByAlias('Test')
-
-    console.log('alias', account.alias())
-    console.log('available balance', account.balance().available)
-    console.log('syncing...')
+    const account = manager.getAccount('Alice')
     
+    console.log('alias', account.alias())
+    console.log('syncing...')
     const synced = await account.sync()
+    console.log('available balance', account.balance().available)
     
     //TODO: Replace with the address of your choice!
-	const addr = 'iot1qym3fgn88ry3ekshh67rr6kky88augzvu9x2j5m0cflwmqmel4phwmfh6qs'
-	const amount = 1
+	const addr = 'atoi1qykf7rrdjzhgynfkw6z7360avhaaywf5a4vtyvvk6a06gcv5y7sksu7n5cs'
+	const amount = 10000000
 
-	const node_res = await synced.send(
+	const node_response = await synced.send(
 		addr,
 		amount
     ) 
 
-	console.log(node_res)
+	console.log("Check your message on https://explorer.iota.org/crysalis/message/", node_response.id)
 }
 
 run()

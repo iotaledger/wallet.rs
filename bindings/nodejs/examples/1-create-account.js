@@ -2,12 +2,14 @@
  * This example creates a new database and account
  */
 
+require('dotenv').config()
+
 async function run() {
     const { AccountManager, SignerType } = require('@iota/wallet')
     const manager = new AccountManager({
         storagePath: './alice-database',
     })
-    manager.setStrongholdPassword("your_password")
+    manager.setStrongholdPassword(process.env.SH_PASSWORD)
     manager.storeMnemonic(SignerType.Stronghold)
 
     const account = await manager.createAccount({
