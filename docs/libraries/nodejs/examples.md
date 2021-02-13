@@ -86,3 +86,16 @@ Code:
 ```javascript
 {{ #include ../../../bindings/nodejs/examples/6-restore.js }}
 ```
+
+
+## 7. Events
+
+Run
+```
+node 7-events.js
+```
+
+Code:
+```javascript
+{{ #include ../../../bindings/nodejs/examples/7-eveents.js }}
+```
