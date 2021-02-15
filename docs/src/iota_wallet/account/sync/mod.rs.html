@@ -1269,6 +1269,10 @@
 <span id="1266">1266</span>
 <span id="1267">1267</span>
 <span id="1268">1268</span>
+<span id="1269">1269</span>
+<span id="1270">1270</span>
+<span id="1271">1271</span>
+<span id="1272">1272</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1688,12 +1692,16 @@
 <span class="kw">impl</span> <span class="ident">AccountSynchronizer</span> {
     <span class="doccomment">/// Initialises a new instance of the sync helper.</span>
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">account_handle</span>: <span class="ident">AccountHandle</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">address_index</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">addresses</span>().<span class="ident">len</span>();
+        <span class="kw">let</span> <span class="ident">latest_address_index</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">latest_address</span>().<span class="ident">key_index</span>();
         <span class="self">Self</span> {
             <span class="ident">account_handle</span>,
             <span class="comment">// by default we synchronize from the latest address (supposedly unspent)</span>
-            <span class="ident">address_index</span>: <span class="kw">if</span> <span class="ident">address_index</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> { <span class="number">0</span> } <span class="kw">else</span> { <span class="ident">address_index</span> <span class="op">-</span> <span class="number">1</span> },
-            <span class="ident">gap_limit</span>: <span class="kw">if</span> <span class="ident">address_index</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> { <span class="number">10</span> } <span class="kw">else</span> { <span class="number">1</span> },
+            <span class="ident">address_index</span>: <span class="kw">if</span> <span class="ident">latest_address_index</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+                <span class="number">0</span>
+            } <span class="kw">else</span> {
+                <span class="ident">latest_address_index</span> <span class="op">-</span> <span class="number">1</span>
+            },
+            <span class="ident">gap_limit</span>: <span class="kw">if</span> <span class="ident">latest_address_index</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> { <span class="number">10</span> } <span class="kw">else</span> { <span class="number">1</span> },
             <span class="ident">skip_persistance</span>: <span class="bool-val">false</span>,
             <span class="ident">steps</span>: <span class="macro">vec</span><span class="macro">!</span>[
                 <span class="ident">AccountSynchronizeStep</span>::<span class="ident">SyncAddresses</span>,
