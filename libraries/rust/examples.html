@@ -172,6 +172,59 @@
 <pre><code>cargo run --example # lists the available examples
 cargo run --example transfer # execute the `transfer` example
 </code></pre>
+<h2><a class="header" href="#backup-and-restore-example" id="backup-and-restore-example">Backup and restore example</a></h2>
+<p>Create an account manager and set an password:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut manager = AccountManager::builder().finish().await.unwrap();
+
+manager.set_stronghold_password(&quot;password&quot;).await.unwrap();
+manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
+
+<span class="boring">}
+</span></code></pre></pre>
+<p>Create your account:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let client_options = ClientOptionsBuilder::new()
+    .with_node(&quot;https://api.lb-0.testnet.chrysalis2.com&quot;)?
+    .build()
+    .unwrap();
+let account_handle = manager
+    .create_account(client_options)?
+    .alias(&quot;alias&quot;)
+    .initialise()
+    .await?;
+let id = account_handle.id().await;
+
+<span class="boring">}
+</span></code></pre></pre>
+<p>Now you can secure your account in a backup file:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// backup the stored accounts to ./backup/${backup_name}
+let backup_path = manager.backup(&quot;./backup&quot;).await?;
+
+<span class="boring">}
+</span></code></pre></pre>
+<p>You can import the backup later or by another application like here:</p>
+<pre><pre class="playground"><code class="language-rust">
+<span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>manager.import_accounts(backup_path, &quot;password&quot;).await?;
+
+let imported_account_handle = manager.get_account(&amp;id).await?;
+
+let account = account_handle.read().await;
+let imported_account = imported_account_handle.read().await;
+
+<span class="boring">}
+</span></code></pre></pre>
+<p>That's it! Now you know, how do backup and restore your account!</p>
+<p>See the full example <a href="https://github.com/iotaledger/wallet.rs/blob/develop/examples/backup_and_restore.rs">here</a></p>
 
                     </main>
 

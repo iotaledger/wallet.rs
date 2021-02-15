@@ -169,29 +169,226 @@
                     <main>
                         <h1><a class="header" href="#examples" id="examples">Examples</a></h1>
 <p>There are several examples to show the usage of the library.</p>
+<blockquote>
+<p>All examples can be found in <a href="https://github.com/iotaledger/wallet.rs/bindings/nodejs/examples/">/bindings/nodejs/examples</a></p>
+</blockquote>
 <h2><a class="header" href="#setup" id="setup">Setup</a></h2>
-<p>First, setup the example environment.</p>
-<pre><code>cd bindings/node/examples
-npm install
-copy .env.example .env
+<p>First, setup your environment as follows:</p>
+<pre><code>git clone https://github.com/iotaledger/wallet.rs
+cd bindings/node/examples
+npm install # or `yarn`
+cp .env.example .env
 </code></pre>
-<p>Add your mnemonic to the <code>.env</code> file.</p>
-<p>Make sure you generate a 24-word BIP39 mnemonic in your .env file and define a node; see
-<code>.env.example</code> for a boilerplate. To generate a mnemonic you can utilize the BIP39 standard
-for that; We encourage you to generate this offline with trusted tools but if you need a 
-quick mnemonic for testing only you can use something like https://github.com/iancoleman/bip39</p>
+<p>Add your custom password to the <code>.env</code> file.</p>
 <h2><a class="header" href="#1-example-create-an-account" id="1-example-create-an-account">1. Example: Create an Account</a></h2>
-<p>This example creates a new database and account. Please make sure you have the .env variables configured</p>
-<p>Run the example:</p>
+<p>Run:</p>
 <pre><code>node 1-create-account.js
 </code></pre>
-<h2><a class="header" href="#2-example-create-syncronize" id="2-example-create-syncronize">2. Example: Create Syncronize</a></h2>
-<p>Get some test tokens from the <a href="https://faucet.testnet.chrysalis2.com/">IOTA faucet</a> and sync your account.</p>
-<pre><code>node 2-sync-and-check.js
+<p>Code:</p>
+<pre><code class="language-javascript">/**
+ * This example creates a new database and account
+ */
+
+require('dotenv').config()
+
+async function run() {
+    const { AccountManager, SignerType } = require('@iota/wallet')
+    const manager = new AccountManager({
+        storagePath: './alice-database',
+    })
+    manager.setStrongholdPassword(process.env.SH_PASSWORD)
+    manager.storeMnemonic(SignerType.Stronghold)
+
+    const account = await manager.createAccount({
+        clientOptions: { node: &quot;https://api.lb-0.testnet.chrysalis2.com&quot;, localPow: true },
+        alias: 'Alice',
+    })
+
+    console.log('Account created:', account.alias())
+      
+}
+
+run()
 </code></pre>
-<h2><a class="header" href="#2-example-send-iota-tokens" id="2-example-send-iota-tokens">2. Example: Send IOTA Tokens.</a></h2>
+<h2><a class="header" href="#2-generate-address" id="2-generate-address">2. Generate Address</a></h2>
+<p>Run:</p>
+<pre><code>node 2-generate-address.js
+</code></pre>
+<p>Code:</p>
+<pre><code class="language-javascript">/**
+ * This example genrates a new address.
+ */
+
+require('dotenv').config()
+
+async function run() {
+	const { AccountManager, StorageType } = require('@iota/wallet')
+    const manager = new AccountManager({
+        storagePath: './alice-database',
+        storageType: StorageType.Stronghold
+    })
+
+    manager.setStrongholdPassword(process.env.SH_PASSWORD)
+
+    const account = manager.getAccount('Alice')
+    console.log('Account:', account.alias())
+
+    // Always sync before doing anything with the account
+    const synced = await account.sync()
+    console.log('Syncing...')
+    // let address = account.generateAddress()
+    
+    // get latest address
+    let addressObject = account.latestAddress()
+
+    console.log(&quot;Address:&quot;, addressObject.address)
+    
+    // Use the Chrysalis Faucet to send testnet tokens to your address:
+    console.log(&quot;Fill your address with the Faucet: https://faucet.testnet.chrysalis2.com/&quot;)
+}
+
+run()
+</code></pre>
+<h2><a class="header" href="#3-example-check-balance" id="3-example-check-balance">3. Example: Check Balance</a></h2>
+<p>Run:</p>
+<pre><code>node 3-check_balance
+</code></pre>
+<p>Code:</p>
+<pre><code class="language-javascript">/**
+ * This example creates a new database and account
+ */
+
+require('dotenv').config()
+
+async function run() {
+	const { AccountManager, StorageType } = require('@iota/wallet')
+    const manager = new AccountManager({
+        storagePath: './alice-database',
+        storageType: StorageType.Stronghold
+    })
+
+    manager.setStrongholdPassword(process.env.SH_PASSWORD)
+
+    const account = manager.getAccount('Alice')
+    
+    console.log('Account:', account.alias())
+    
+    // Always sync before doing anything with the account
+    const synced = await account.sync()
+    console.log('Syncing...')
+
+    console.log('Available balance', account.balance().available)
+}
+
+run()
+</code></pre>
+<h2><a class="header" href="#4-example-check-balance" id="4-example-check-balance">4. Example: Check Balance</a></h2>
 <p>Now you can send the test tokens to an address! </p>
-<pre><code>node 3-send.js
+<p>Run</p>
+<pre><code>node 4-send.js
+</code></pre>
+<p>Code:</p>
+<pre><code class="language-javascript">/**
+ * This example sends IOTA Toens to an address.
+ */
+
+ require('dotenv').config();
+
+async function run() {
+	const { AccountManager, StorageType } = require('@iota/wallet')
+    const manager = new AccountManager({
+        storagePath: './alice-database',
+        storageType: StorageType.Stronghold
+    })
+
+    manager.setStrongholdPassword(process.env.SH_PASSWORD)
+
+    const account = manager.getAccount('Alice')
+    
+    console.log('alias', account.alias())
+    console.log('syncing...')
+    const synced = await account.sync()
+    console.log('available balance', account.balance().available)
+    
+    //TODO: Replace with the address of your choice!
+	const addr = 'atoi1qykf7rrdjzhgynfkw6z7360avhaaywf5a4vtyvvk6a06gcv5y7sksu7n5cs'
+	const amount = 10000000
+
+	const node_response = await synced.send(
+		addr,
+		amount
+    ) 
+
+	console.log(&quot;Check your message on https://explorer.iota.org/crysalis/message/&quot;, node_response.id)
+}
+
+run()
+</code></pre>
+<h2><a class="header" href="#5-backup" id="5-backup">5. Backup</a></h2>
+<p>Run</p>
+<pre><code>node 5-backup.js
+</code></pre>
+<p>Code:</p>
+<pre><code class="language-javascript">/**
+ * This example backups your data in a secure file. 
+ * You can move this file to another app or device and restore it.
+ */
+
+require('dotenv').config();
+
+async function run() {
+
+    const { AccountManager, StorageType } = require('@iota/wallet')
+    const manager = new AccountManager({
+        storagePath: './alice-database',
+        storageType: StorageType.Stronghold
+    })
+
+    manager.setStrongholdPassword(process.env.SH_PASSWORD)
+
+    let backup_path = await manager.backup(&quot;./backup&quot;)
+    
+    console.log('Backup path:', backup_path)
+}
+
+run()
+</code></pre>
+<h2><a class="header" href="#6-restore" id="6-restore">6. Restore</a></h2>
+<p>Run</p>
+<pre><code>node 6-restore.js
+</code></pre>
+<p>Code:</p>
+<pre><code class="language-javascript">/**
+ * This example restores a secured backup file. 
+ */
+
+require('dotenv').config();
+
+async function run() {
+
+    const { AccountManager, StorageType } = require('@iota/wallet')
+    const manager = new AccountManager({
+        storagePath: './alice-database',
+        storageType: StorageType.Stronghold
+    })
+
+    // Add the path to the file from example 5-backup.js
+    // for example: ./backup/2021-02-12T01-23-11-iota-wallet-backup-wallet.stronghold
+    let backup_path = &quot;input your backup file&quot;
+
+    await manager.importAccounts(backup_path, process.env.SH_PASSWORD)
+    const account = manager.getAccount('Alice')
+    console.log('Account:', account.alias())
+}
+
+run()
+</code></pre>
+<h2><a class="header" href="#7-events" id="7-events">7. Events</a></h2>
+<p>Run</p>
+<pre><code>node 7-events.js
+</code></pre>
+<p>Code:</p>
+<pre><code class="language-javascript">{{ #include ../../../bindings/nodejs/examples/7-eveents.js }}
 </code></pre>
 
                     </main>

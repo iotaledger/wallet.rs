@@ -168,42 +168,44 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#getting-started-with-nodejs" id="getting-started-with-nodejs">Getting Started with Node.js</a></h1>
-<h2><a class="header" href="#requirements" id="requirements">Requirements</a></h2>
-<p>Ensure you have first installed the required dependencies for the library <a href="https://github.com/iotaledger/wallet.rs/blob/develop/README.md">here</a>.</p>
+<p>The <a href="https://www.npmjs.com/package/@iota/wallet">IOTA Wallet Node.js binding</a> is published on npmjs.org.</p>
 <h2><a class="header" href="#installation" id="installation">Installation</a></h2>
 <p>Currently the package isn't published so you'd need to link it to your project using <code>npm</code> or <code>yarn</code>.</p>
 <ul>
 <li>Using NPM:</li>
 </ul>
-<pre><code>$ git clone https://github.com/iotaledger/wallet.rs
-$ cd wallet.rs/bindings/node
-$ npm link
-$ cd /path/to/nodejs/project/
-$ npm link iota-wallet
+<pre><code>$ npm install @iota/wallet
 </code></pre>
 <ul>
 <li>Using yarn: </li>
 </ul>
-<pre><code>$ git clone https://github.com/iotaledger/wallet.rs
-$ cd wallet.rs/bindings/node
-$ yarn link
-$ cd /path/to/nodejs/project/
-$ yarn link iota-wallet
+<pre><code>$ yarn install @iota/wallet
 </code></pre>
-<h2><a class="header" href="#setup-your-project" id="setup-your-project">Setup your project</a></h2>
-<p>npm install iota-wallet</p>
-<h2><a class="header" href="#example" id="example">Example</a></h2>
-<pre><code class="language-javascript">const { AccountManager, StorageType, SignerType } = require('iota-wallet')
-const manager = new AccountManager({
-    storagePath: './storage',
-    storageType: StorageType.Sqlite
-})
-const account = await manager.createAccount({
-  alias: 'Account1',
-  clientOptions: { node: 'http://api.lb-0.testnet.chrysalis2.com', localPow: false },
-  signerType: SignerType.EnvMnemonic
-})
-account.sync()
+<h2><a class="header" href="#usage" id="usage">Usage</a></h2>
+<pre><code class="language-javascript">/**
+ * This example creates a new database and account
+ */
+
+require('dotenv').config()
+
+async function run() {
+    const { AccountManager, SignerType } = require('@iota/wallet')
+    const manager = new AccountManager({
+        storagePath: './alice-database',
+    })
+    manager.setStrongholdPassword(process.env.SH_PASSWORD)
+    manager.storeMnemonic(SignerType.Stronghold)
+
+    const account = await manager.createAccount({
+        clientOptions: { node: &quot;https://api.lb-0.testnet.chrysalis2.com&quot;, localPow: true },
+        alias: 'Alice',
+    })
+
+    console.log('Account created:', account.alias())
+      
+}
+
+run()
 </code></pre>
 
                     </main>
