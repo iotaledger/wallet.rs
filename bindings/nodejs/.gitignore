@@ -8,3 +8,4 @@ test-database/
 build/
 prebuilds/
 .env
+out
