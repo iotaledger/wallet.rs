@@ -416,12 +416,16 @@ pub struct AccountSynchronizer {
 impl AccountSynchronizer {
     /// Initialises a new instance of the sync helper.
     pub(super) async fn new(account_handle: AccountHandle) -> Self {
-        let address_index = account_handle.read().await.addresses().len();
+        let latest_address_index = *account_handle.read().await.latest_address().key_index();
         Self {
             account_handle,
             // by default we synchronize from the latest address (supposedly unspent)
-            address_index: if address_index == 0 { 0 } else { address_index - 1 },
-            gap_limit: if address_index == 0 { 10 } else { 1 },
+            address_index: if latest_address_index == 0 {
+                0
+            } else {
+                latest_address_index - 1
+            },
+            gap_limit: if latest_address_index == 0 { 10 } else { 1 },
             skip_persistance: false,
             steps: vec![
                 AccountSynchronizeStep::SyncAddresses,
