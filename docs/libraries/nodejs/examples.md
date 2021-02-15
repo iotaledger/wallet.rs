@@ -10,7 +10,7 @@ First, setup your environment as follows:
 ```
 git clone https://github.com/iotaledger/wallet.rs
 cd bindings/node/examples
-npm install
+npm install # or `yarn`
 cp .env.example .env
 ```
 
