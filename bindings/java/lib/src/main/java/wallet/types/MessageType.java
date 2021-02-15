@@ -1,0 +1,3 @@
+public enum MessageType {
+    FAILED
+}
