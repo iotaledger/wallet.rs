@@ -34,7 +34,7 @@ pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
         topics.push(Topic::new(format!("messages/{}/metadata", message.id().to_string()))?);
     }
 
-    client.subscriber().with_topics(topics).unsubscribe()?;
+    client.subscriber().with_topics(topics).unsubscribe().await?;
     Ok(())
 }
 
@@ -45,7 +45,11 @@ async fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
 ) -> crate::Result<()> {
     let client = crate::client::get_client(&client_options).await;
     let mut client = client.write().await;
-    client.subscriber().with_topic(Topic::new(topic)?).subscribe(handler)?;
+    client
+        .subscriber()
+        .with_topic(Topic::new(topic)?)
+        .subscribe(handler)
+        .await?;
     Ok(())
 }
 

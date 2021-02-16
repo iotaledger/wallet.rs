@@ -421,11 +421,7 @@ impl AccountSynchronizer {
         Self {
             account_handle,
             // by default we synchronize from the latest address (supposedly unspent)
-            address_index: if latest_address_index == 0 {
-                0
-            } else {
-                latest_address_index - 1
-            },
+            address_index: latest_address_index,
             gap_limit: if latest_address_index == 0 { 10 } else { 1 },
             skip_persistance: false,
             steps: vec![
