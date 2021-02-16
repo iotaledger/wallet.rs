@@ -5,7 +5,8 @@ use crate::account::Account;
 
 use std::{collections::HashMap, fmt, path::PathBuf};
 
-use iota::{common::packable::Packable, UnlockBlock};
+use bee_common::packable::Packable;
+use iota::UnlockBlock;
 use iota_ledger::LedgerBIP32Index;
 use tokio::sync::Mutex;
 
@@ -128,7 +129,7 @@ impl super::Signer for LedgerNanoSigner {
     async fn sign_message<'a>(
         &mut self,
         account: &Account,
-        essence: &iota::TransactionPayloadEssence,
+        essence: &iota::Essence,
         inputs: &mut Vec<super::TransactionInput>,
         meta: super::SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
@@ -177,30 +178,35 @@ impl super::Signer for LedgerNanoSigner {
 
         let mut remainder_index = 0u16;
         if has_remainder {
-            // find the index of the remainder in the essence
-            // this has to be done because outputs in essences are sorted
-            // lexically and therefore the remainder is not always the last output.
-            // The index within the essence and the bip32 index will be validated
-            // by the hardware wallet.
-            // The outputs in the essence already are sorted (done by `essence_builder.finish`)
-            // at this place, so we can rely on their order and don't have to sort it again.
-            for output in essence.outputs().iter() {
-                match output {
-                    iota::Output::SignatureLockedSingle(s) => {
-                        if *remainder_address.unwrap() == *s.address() {
-                            break;
+            match essence {
+                iota::Essence::Regular(essence) => {
+                    // find the index of the remainder in the essence
+                    // this has to be done because outputs in essences are sorted
+                    // lexically and therefore the remainder is not always the last output.
+                    // The index within the essence and the bip32 index will be validated
+                    // by the hardware wallet.
+                    // The outputs in the essence already are sorted (done by `essence_builder.finish`)
+                    // at this place, so we can rely on their order and don't have to sort it again.
+                    for output in essence.outputs().iter() {
+                        match output {
+                            iota::Output::SignatureLockedSingle(s) => {
+                                if *remainder_address.unwrap() == *s.address() {
+                                    break;
+                                }
+                            }
+                            _ => {
+                                return Err(crate::Error::LedgerMiscError);
+                            }
                         }
+                        remainder_index += 1;
                     }
-                    _ => {
+
+                    // was index found?
+                    if remainder_index as usize == essence.outputs().len() {
                         return Err(crate::Error::LedgerMiscError);
                     }
                 }
-                remainder_index += 1;
-            }
-
-            // was index found?
-            if remainder_index as usize == essence.outputs().len() {
-                return Err(crate::Error::LedgerMiscError);
+                _ => unimplemented!(),
             }
         }
 

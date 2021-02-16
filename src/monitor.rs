@@ -8,11 +8,14 @@ use crate::{
     message::{Message, MessageType},
 };
 
-use bee_rest_api::handlers::{
-    message_metadata::{LedgerInclusionStateDto, MessageMetadataResponse},
-    output::OutputResponse,
+use iota::{
+    bee_rest_api::handlers::{
+        message_metadata::{LedgerInclusionStateDto, MessageMetadataResponse},
+        output::OutputResponse,
+    },
+    message::prelude::MessageId,
+    Topic, TopicEvent,
 };
-use iota::{message::prelude::MessageId, Topic, TopicEvent};
 
 /// Unsubscribe from all topics associated with the account.
 pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {

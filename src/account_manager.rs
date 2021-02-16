@@ -28,11 +28,10 @@ use std::{
     time::Duration,
 };
 
-use bee_rest_api::handlers::message_metadata::LedgerInclusionStateDto;
 use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
-use iota::{MessageId, Payload};
+use iota::{bee_rest_api::handlers::message_metadata::LedgerInclusionStateDto, MessageId, Payload};
 use serde::Deserialize;
 use tokio::{
     sync::{

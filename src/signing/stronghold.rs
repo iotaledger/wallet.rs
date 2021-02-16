@@ -3,11 +3,12 @@
 
 use crate::account::Account;
 
+use bee_common::packable::Packable;
 use blake2::{
     digest::{Update, VariableOutput},
     VarBlake2b,
 };
-use iota::{common::packable::Packable, ReferenceUnlock, UnlockBlock};
+use iota::{ReferenceUnlock, UnlockBlock};
 
 use std::{collections::HashMap, path::PathBuf};
 
@@ -55,7 +56,7 @@ impl super::Signer for StrongholdSigner {
     async fn sign_message<'a>(
         &mut self,
         account: &Account,
-        essence: &iota::TransactionPayloadEssence,
+        essence: &iota::Essence,
         inputs: &mut Vec<super::TransactionInput>,
         _: super::SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {

@@ -220,6 +220,7 @@ impl AccountInitialiser {
             .read()
             .await
             .get_network_info()
+            .await?
             .bech32_hrp;
 
         for address in account.addresses.iter_mut() {
@@ -585,6 +586,7 @@ impl Account {
             .read()
             .await
             .get_network_info()
+            .await?
             .bech32_hrp;
         for address in &mut self.addresses {
             address.set_bech32_hrp(bech32_hrp.to_string());
