@@ -92,8 +92,8 @@ mod test_utils {
     };
     use iota::{
         pow::providers::{Provider as PowProvider, ProviderBuilder as PowProviderBuilder},
-        Address as IotaAddress, Ed25519Address, Ed25519Signature, MessageId, Payload, SignatureLockedSingleOutput,
-        SignatureUnlock, TransactionId, TransactionPayloadBuilder, TransactionPayloadEssence, UTXOInput, UnlockBlock,
+        Address as IotaAddress, Ed25519Address, Ed25519Signature, Essence, MessageId, Payload,
+        SignatureLockedSingleOutput, SignatureUnlock, TransactionId, TransactionPayloadBuilder, UTXOInput, UnlockBlock,
     };
     use once_cell::sync::OnceCell;
     use rand::{distributions::Alphanumeric, thread_rng, Rng};
@@ -141,7 +141,7 @@ mod test_utils {
         async fn sign_message<'a>(
             &mut self,
             _account: &crate::account::Account,
-            _essence: &iota::TransactionPayloadEssence,
+            _essence: &iota::Essence,
             _inputs: &mut Vec<crate::signing::TransactionInput>,
             _metadata: crate::signing::SignMessageMetadata<'a>,
         ) -> crate::Result<Vec<iota::UnlockBlock>> {
@@ -484,8 +484,8 @@ mod test_utils {
                 payload_length: 0,
                 payload: Some(Payload::Transaction(Box::new(
                     TransactionPayloadBuilder::new()
-                        .with_essence(
-                            TransactionPayloadEssence::builder()
+                        .with_essence(Essence::Regular(
+                            iota::RegularEssence::builder()
                                 .add_output(
                                     SignatureLockedSingleOutput::new(*self.address.address().as_ref(), self.value)
                                         .unwrap()
@@ -494,7 +494,7 @@ mod test_utils {
                                 .add_input(UTXOInput::new(self.input_transaction_id, 0).unwrap().into())
                                 .finish()
                                 .unwrap(),
-                        )
+                        ))
                         .add_unlock_block(UnlockBlock::Signature(SignatureUnlock::Ed25519(Ed25519Signature::new(
                             [0; 32],
                             Box::new([0]),

@@ -623,12 +623,14 @@ A dict with the following key/value pairs.
 
 ```python
 transaction = {
-    'essence': TransactionPayloadEssence,
+    'essence': {
+        regular: RegularEssence
+    },
     'unlock_blocks': list[UnlockBlock],
 }
 ```
 
-Please refer to [TransactionPayloadEssence](#transactionpayloadessence) and [UnlockBlock](#unlockblock) for the details of these types.
+Please refer to [RegularEssence](#regularessence) and [UnlockBlock](#unlockblock) for the details of these types.
 
 ### Milestone
 
@@ -668,12 +670,12 @@ indexation = {
 }
 ```
 
-### TransactionPayloadEssence
+### RegularEssenceEssence
 
 A dict with the following key/value pairs.
 
 ```python
-transaction_payload_essence = {
+transaction_regular_essence = {
     'inputs': list[Input],
     'outputs': list[Output],
     'payload': Payload (optional),

@@ -11,10 +11,15 @@ export declare enum MessageType {
   Value = 5,
 }
 
-export declare interface TransactionPayloadEssence {
+export declare interface RegularEssence {
   inputs: Input[];
   outputs: Output[];
   payload?: Payload[];
+}
+
+export declare type Essence = {
+  type: 'Regular',
+  data: RegularEssence
 }
 
 export declare interface Input {
@@ -28,7 +33,7 @@ export declare interface Output {
 }
 
 export declare interface Transaction {
-  essence: TransactionPayloadEssence;
+  essence: Essence;
 }
 
 export declare type Payload = Transaction;
