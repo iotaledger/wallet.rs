@@ -78,7 +78,7 @@ pub async fn monitor_address_balance(account_handle: AccountHandle, address: &Ad
             let client_options = client_options.clone();
             let account_handle = account_handle.clone();
 
-            crate::block_on(async {
+            crate::spawn(async move {
                 if let Err(e) =
                     process_output(topic_event.payload.clone(), account_handle, address, client_options).await
                 {
@@ -174,8 +174,10 @@ pub async fn monitor_confirmation_state_change(
         &client_options,
         format!("messages/{}/metadata", message_id.to_string()),
         move |topic_event| {
+            let topic_event = topic_event.clone();
+            let message = message.clone();
             let account_handle = account_handle.clone();
-            crate::block_on(async {
+            crate::spawn(async move {
                 if let Err(e) =
                     process_metadata(topic_event.payload.clone(), account_handle, message_id, &message).await
                 {
