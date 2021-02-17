@@ -814,6 +814,9 @@ Supported event names:</p>
 <p>Generates a new unused address and returns it.</p>
 <h4><a class="header" href="#latestaddress" id="latestaddress">latestAddress()</a></h4>
 <p>Returns the latest address (the one with the biggest keyIndex).</p>
+<h4><a class="header" href="#getunusedaddress" id="getunusedaddress">getUnusedAddress()</a></h4>
+<p>Synchronizes the account addresses with the Tangle and returns the latest address in the account,
+which is an address without balance.</p>
 <h3><a class="header" href="#clientoptions" id="clientoptions">ClientOptions</a></h3>
 <table><thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>[network]</td><td><code>number</code></td><td><code>undefined</code></td><td>The tangle network to connect to (Mainnet = 1, Devnet = 1, Comnet = 3)</td></tr>
