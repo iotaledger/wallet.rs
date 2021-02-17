@@ -461,7 +461,6 @@
 <span id="458">458</span>
 <span id="459">459</span>
 <span id="460">460</span>
-<span id="461">461</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -837,8 +836,7 @@
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finish</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Message</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">packed_payload</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">iota_message</span>.<span class="ident">payload</span>().<span class="ident">pack</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">packed_payload</span>);
+        <span class="kw">let</span> <span class="ident">packed_payload</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">iota_message</span>.<span class="ident">payload</span>().<span class="ident">pack_new</span>();
 
         <span class="kw">let</span> (<span class="ident">value</span>, <span class="ident">remainder_value</span>) <span class="op">=</span> {
             <span class="kw">let</span> <span class="ident">total_value</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">iota_message</span>.<span class="ident">payload</span>().<span class="ident">as_ref</span>() {
