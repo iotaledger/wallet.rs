@@ -3,7 +3,6 @@
 
 use crate::account::Account;
 
-use bee_common::packable::Packable;
 use iota::{ReferenceUnlock, UnlockBlock};
 
 use std::{collections::HashMap, path::PathBuf};

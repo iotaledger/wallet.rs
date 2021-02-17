@@ -372,8 +372,7 @@ impl<'a> MessageBuilder<'a> {
     }
 
     pub fn finish(self) -> Message {
-        let mut packed_payload = Vec::new();
-        let _ = self.iota_message.payload().pack(&mut packed_payload);
+        let packed_payload = self.iota_message.payload().pack_new();
 
         let (value, remainder_value) = {
             let total_value = match self.iota_message.payload().as_ref() {
