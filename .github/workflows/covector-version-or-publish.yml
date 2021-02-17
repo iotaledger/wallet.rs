@@ -138,8 +138,10 @@ jobs:
         run: yarn prebuild --upload-all ${{ secrets.GITHUB_TOKEN }} --tag-prefix nodejs-binding-v
         working-directory: bindings/nodejs
   
-  electron:
+  electron-binding-prebuild:
     runs-on: ${{ matrix.os }}
+    needs: version-or-publish
+    if: needs.version-or-publish.outputs.successfulPublish == 'true'
     strategy:
       fail-fast: false
       matrix:
