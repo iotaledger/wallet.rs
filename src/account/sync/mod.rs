@@ -8,13 +8,13 @@ use crate::{
     signing::{GenerateAddressMetadata, SignMessageMetadata},
 };
 
-use bee_rest_api::handlers::message_metadata::LedgerInclusionStateDto;
 use getset::Getters;
 use iota::{
+    bee_rest_api::handlers::message_metadata::LedgerInclusionStateDto,
     client::api::finish_pow,
     message::prelude::{
-        Input, Message as IotaMessage, MessageId, Payload, SignatureLockedSingleOutput, TransactionPayload,
-        TransactionPayloadEssence, UTXOInput,
+        Essence, Input, Message as IotaMessage, MessageId, Payload, RegularEssence, SignatureLockedSingleOutput,
+        TransactionPayload, UTXOInput,
     },
 };
 use serde::Serialize;
@@ -160,6 +160,7 @@ async fn sync_addresses(
         .read()
         .await
         .get_network_info()
+        .await?
         .bech32_hrp;
 
     loop {
@@ -420,11 +421,7 @@ impl AccountSynchronizer {
         Self {
             account_handle,
             // by default we synchronize from the latest address (supposedly unspent)
-            address_index: if latest_address_index == 0 {
-                0
-            } else {
-                latest_address_index - 1
-            },
+            address_index: latest_address_index,
             gap_limit: if latest_address_index == 0 { 10 } else { 1 },
             skip_persistance: false,
             steps: vec![
@@ -793,7 +790,7 @@ async fn perform_transfer(
         utxos.extend(outputs.into_iter());
     }
 
-    let mut essence_builder = TransactionPayloadEssence::builder().add_output(
+    let mut essence_builder = RegularEssence::builder().add_output(
         SignatureLockedSingleOutput::new(*transfer_obj.address.as_ref(), transfer_obj.amount.get())?.into(),
     );
     let mut current_output_sum = 0;
@@ -972,6 +969,7 @@ async fn perform_transfer(
     }
 
     let essence = essence_builder.finish()?;
+    let essence = Essence::Regular(essence);
 
     let unlock_blocks = crate::signing::get_signer(account_.signer_type())
         .await

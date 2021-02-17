@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::address::{Address, AddressWrapper, IotaAddress};
+use bee_common::packable::Packable;
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-pub use iota::{common::packable::Packable, IndexationPayload, Message as IotaMessage, MessageId, Output, Payload};
+pub use iota::{Essence, IndexationPayload, Message as IotaMessage, MessageId, Output, Payload};
 use serde::{de::Deserializer, Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
 use std::{
@@ -300,7 +301,10 @@ impl<'a> MessageBuilder<'a> {
         let amount = match iota_message.payload().as_ref() {
             Some(Payload::Transaction(tx)) => {
                 let essence = tx.essence();
-                let outputs = essence.outputs();
+                let outputs = match essence {
+                    Essence::Regular(essence) => essence.outputs(),
+                    _ => unimplemented!(),
+                };
                 let outputs: Vec<(&IotaAddress, u64)> = outputs
                     .iter()
                     .map(|output| match output {
@@ -373,13 +377,16 @@ impl<'a> MessageBuilder<'a> {
 
         let (value, remainder_value) = {
             let total_value = match self.iota_message.payload().as_ref() {
-                Some(Payload::Transaction(tx)) => tx.essence().outputs().iter().fold(0, |acc, output| {
-                    acc + match output {
-                        Output::SignatureLockedDustAllowance(o) => o.amount(),
-                        Output::SignatureLockedSingle(o) => o.amount(),
-                        _ => 0,
-                    }
-                }),
+                Some(Payload::Transaction(tx)) => match tx.essence() {
+                    Essence::Regular(essence) => essence.outputs().iter().fold(0, |acc, output| {
+                        acc + match output {
+                            Output::SignatureLockedDustAllowance(o) => o.amount(),
+                            Output::SignatureLockedSingle(o) => o.amount(),
+                            _ => 0,
+                        }
+                    }),
+                    _ => unimplemented!(),
+                },
                 _ => 0,
             };
             let value =
@@ -419,16 +426,19 @@ impl Message {
     /// The message's addresses.
     pub fn addresses(&self) -> Vec<&IotaAddress> {
         match &self.payload {
-            Some(Payload::Transaction(tx)) => tx
-                .essence()
-                .outputs()
-                .iter()
-                .map(|output| match output {
-                    Output::SignatureLockedDustAllowance(o) => o.address(),
-                    Output::SignatureLockedSingle(o) => o.address(),
-                    _ => unimplemented!(),
-                })
-                .collect(),
+            Some(Payload::Transaction(tx)) => match tx.essence() {
+                Essence::Regular(essence) => essence
+                    .outputs()
+                    .iter()
+                    .map(|output| match output {
+                        Output::SignatureLockedDustAllowance(o) => o.address(),
+                        Output::SignatureLockedSingle(o) => o.address(),
+                        _ => unimplemented!(),
+                    })
+                    .collect(),
+                _ => unimplemented!(),
+            },
+
             _ => vec![],
         }
     }

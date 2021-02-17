@@ -2,12 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{account::Account, message::MessageType, signing::GenerateAddressMetadata};
-use bee_rest_api::{
-    handlers::output::OutputResponse,
-    types::{AddressDto, OutputDto},
-};
 use getset::{Getters, Setters};
-use iota::message::prelude::{MessageId, TransactionId};
+use iota::{
+    bee_rest_api::{
+        handlers::output::OutputResponse,
+        types::{AddressDto, OutputDto},
+    },
+    Essence, MessageId, TransactionId,
+};
 pub use iota::{Address as IotaAddress, Ed25519Address, Input, Payload, UTXOInput};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -74,13 +76,16 @@ impl AddressOutput {
             // message is pending or confirmed
             if m.confirmed().unwrap_or(true) {
                 match m.payload() {
-                    Some(Payload::Transaction(tx)) => tx.essence().inputs().iter().any(|input| {
-                        if let Input::UTXO(x) = input {
-                            x == &output_id
-                        } else {
-                            false
-                        }
-                    }),
+                    Some(Payload::Transaction(tx)) => match tx.essence() {
+                        Essence::Regular(essence) => essence.inputs().iter().any(|input| {
+                            if let Input::UTXO(x) = input {
+                                x == &output_id
+                            } else {
+                                false
+                            }
+                        }),
+                        _ => unimplemented!(),
+                    },
                     _ => false,
                 }
             } else {
@@ -377,6 +382,7 @@ pub(crate) async fn get_new_address(account: &Account, metadata: GenerateAddress
                 .read()
                 .await
                 .get_network_info()
+                .await?
                 .bech32_hrp
         }
     };

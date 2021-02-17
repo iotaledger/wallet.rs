@@ -220,6 +220,7 @@ impl AccountInitialiser {
             .read()
             .await
             .get_network_info()
+            .await?
             .bech32_hrp;
 
         for address in account.addresses.iter_mut() {
@@ -585,6 +586,7 @@ impl Account {
             .read()
             .await
             .get_network_info()
+            .await?
             .bech32_hrp;
         for address in &mut self.addresses {
             address.set_bech32_hrp(bech32_hrp.to_string());
@@ -767,7 +769,10 @@ mod tests {
             let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
 
             let updated_client_options = ClientOptionsBuilder::new()
-                .with_nodes(&["http://test.wallet", "http://test.wallet/set-client-options"])
+                .with_nodes(&[
+                    "http://api.hornet-1.testnet.chrysalis2.com",
+                    "http://api.hornet-2.testnet.chrysalis2.com",
+                ])
                 .unwrap()
                 .build()
                 .unwrap();

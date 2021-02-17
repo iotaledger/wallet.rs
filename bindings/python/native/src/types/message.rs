@@ -7,12 +7,12 @@ use core::convert::TryFrom;
 use dict_derive::{FromPyObject as DeriveFromPyObject, IntoPyObject as DeriveIntoPyObject};
 use iota::{
     Address as RustAddress, Ed25519Address as RustEd25519Address, Ed25519Signature as RustEd25519Signature,
-    IndexationPayload as RustIndexationPayload, Input as RustInput,
+    Essence as RustEssence, IndexationPayload as RustIndexationPayload, Input as RustInput,
     MilestonePayloadEssence as RustMilestonePayloadEssence, Output as RustOutput, Payload as RustPayload,
-    ReferenceUnlock as RustReferenceUnlock, SignatureLockedSingleOutput as RustSignatureLockedSingleOutput,
-    SignatureUnlock as RustSignatureUnlock, TransactionId as RustTransationId,
-    TransactionPayload as RustTransactionPayload, TransactionPayloadEssence as RustTransactionPayloadEssence,
-    UTXOInput as RustUTXOInput, UnlockBlock as RustUnlockBlock,
+    ReferenceUnlock as RustReferenceUnlock, RegularEssence as RustRegularEssence,
+    SignatureLockedSingleOutput as RustSignatureLockedSingleOutput, SignatureUnlock as RustSignatureUnlock,
+    TransactionId as RustTransationId, TransactionPayload as RustTransactionPayload, UTXOInput as RustUTXOInput,
+    UnlockBlock as RustUnlockBlock,
 };
 // use iota::MessageId as RustMessageId,
 use iota::{Address as IotaAddress, MessageId, TransactionId};
@@ -184,63 +184,68 @@ impl TryFrom<(RustWalletMessage, Bech32HRP)> for WalletMessage {
     }
 }
 
-impl TryFrom<(RustTransactionPayloadEssence, Bech32HRP)> for TransactionPayloadEssence {
+impl TryFrom<(RustEssence, Bech32HRP)> for Essence {
     type Error = Error;
-    fn try_from((essence, bech32_hrp): (RustTransactionPayloadEssence, Bech32HRP)) -> Result<Self> {
-        Ok(TransactionPayloadEssence {
-            inputs: essence
-                .inputs()
-                .iter()
-                .cloned()
-                .map(|input| {
-                    if let RustInput::UTXO(input) = input {
-                        Input {
-                            transaction_id: input.output_id().transaction_id().to_string(),
-                            index: input.output_id().index(),
+    fn try_from((essence, bech32_hrp): (RustEssence, Bech32HRP)) -> Result<Self> {
+        let essence = match essence {
+            RustEssence::Regular(essence) => RegularEssence {
+                inputs: essence
+                    .inputs()
+                    .iter()
+                    .cloned()
+                    .map(|input| {
+                        if let RustInput::UTXO(input) = input {
+                            Input {
+                                transaction_id: input.output_id().transaction_id().to_string(),
+                                index: input.output_id().index(),
+                            }
+                        } else {
+                            unreachable!()
                         }
-                    } else {
-                        unreachable!()
-                    }
-                })
-                .collect(),
-            outputs: essence
-                .outputs()
-                .iter()
-                .cloned()
-                .map(|output| {
-                    if let RustOutput::SignatureLockedSingle(output) = output {
-                        Output {
-                            address: output.address().to_bech32(&bech32_hrp),
-                            amount: output.amount(),
-                        }
-                    } else {
-                        unreachable!()
-                    }
-                })
-                .collect(),
-            payload: if essence.payload().is_some() {
-                if let Some(RustPayload::Indexation(payload)) = essence.payload() {
-                    Some(Payload {
-                        transaction: None,
-                        milestone: None,
-                        indexation: Some(vec![Indexation {
-                            index: payload.index().to_string(),
-                            data: payload.data().try_into().unwrap_or_else(|_| {
-                                panic!(
-                                    "invalid Indexation Payload {:?} with data: {:?}",
-                                    essence,
-                                    payload.data()
-                                )
-                            }),
-                        }]),
                     })
+                    .collect(),
+                outputs: essence
+                    .outputs()
+                    .iter()
+                    .cloned()
+                    .map(|output| {
+                        if let RustOutput::SignatureLockedSingle(output) = output {
+                            Output {
+                                address: output.address().to_bech32(&bech32_hrp),
+                                amount: output.amount(),
+                            }
+                        } else {
+                            unreachable!()
+                        }
+                    })
+                    .collect(),
+                payload: if essence.payload().is_some() {
+                    if let Some(RustPayload::Indexation(payload)) = essence.payload() {
+                        Some(Payload {
+                            transaction: None,
+                            milestone: None,
+                            indexation: Some(vec![Indexation {
+                                index: payload.index().to_string(),
+                                data: payload.data().try_into().unwrap_or_else(|_| {
+                                    panic!(
+                                        "invalid Indexation Payload {:?} with data: {:?}",
+                                        essence,
+                                        payload.data()
+                                    )
+                                }),
+                            }]),
+                        })
+                    } else {
+                        unreachable!()
+                    }
                 } else {
-                    unreachable!()
-                }
-            } else {
-                None
-            },
-        })
+                    None
+                },
+            }
+            .into(),
+            _ => unimplemented!(),
+        };
+        Ok(essence)
     }
 }
 
@@ -324,80 +329,84 @@ impl TryFrom<WalletMessage> for RustWalletMessage {
     }
 }
 
-impl TryFrom<TransactionPayloadEssence> for RustTransactionPayloadEssence {
+impl TryFrom<Essence> for RustEssence {
     type Error = Error;
-    fn try_from(essence: TransactionPayloadEssence) -> Result<Self> {
-        let mut builder = RustTransactionPayloadEssence::builder();
-        let inputs: Vec<RustInput> = essence
-            .inputs
-            .iter()
-            .map(|input| {
-                RustUTXOInput::new(
-                    RustTransationId::from_str(&input.transaction_id[..]).unwrap_or_else(|_| {
+    fn try_from(essence: Essence) -> Result<Self> {
+        if let Some(essence) = essence.regular {
+            let mut builder = RustRegularEssence::builder();
+            let inputs: Vec<RustInput> = essence
+                .inputs
+                .iter()
+                .map(|input| {
+                    RustUTXOInput::new(
+                        RustTransationId::from_str(&input.transaction_id[..]).unwrap_or_else(|_| {
+                            panic!(
+                                "invalid UTXOInput transaction_id: {} with input index {}",
+                                input.transaction_id, input.index
+                            )
+                        }),
+                        input.index,
+                    )
+                    .unwrap_or_else(|_| {
                         panic!(
                             "invalid UTXOInput transaction_id: {} with input index {}",
                             input.transaction_id, input.index
                         )
-                    }),
-                    input.index,
-                )
-                .unwrap_or_else(|_| {
-                    panic!(
-                        "invalid UTXOInput transaction_id: {} with input index {}",
-                        input.transaction_id, input.index
-                    )
+                    })
+                    .into()
                 })
-                .into()
-            })
-            .collect();
-        for input in inputs {
-            builder = builder.add_input(input);
-        }
+                .collect();
+            for input in inputs {
+                builder = builder.add_input(input);
+            }
 
-        let outputs: Vec<RustOutput> = essence
-            .outputs
-            .iter()
-            .map(|output| {
-                RustSignatureLockedSingleOutput::new(
-                    RustAddress::from(RustEd25519Address::from_str(&output.address[..]).unwrap_or_else(|_| {
+            let outputs: Vec<RustOutput> = essence
+                .outputs
+                .iter()
+                .map(|output| {
+                    RustSignatureLockedSingleOutput::new(
+                        RustAddress::from(RustEd25519Address::from_str(&output.address[..]).unwrap_or_else(|_| {
+                            panic!(
+                                "invalid SignatureLockedSingleOutput with output address: {}",
+                                output.address
+                            )
+                        })),
+                        output.amount,
+                    )
+                    .unwrap_or_else(|_| {
                         panic!(
                             "invalid SignatureLockedSingleOutput with output address: {}",
                             output.address
                         )
-                    })),
-                    output.amount,
-                )
-                .unwrap_or_else(|_| {
-                    panic!(
-                        "invalid SignatureLockedSingleOutput with output address: {}",
-                        output.address
-                    )
+                    })
+                    .into()
                 })
-                .into()
-            })
-            .collect();
-        for output in outputs {
-            builder = builder.add_output(output);
+                .collect();
+            for output in outputs {
+                builder = builder.add_output(output);
+            }
+            if let Some(indexation_payload) = &essence.payload {
+                let index = RustIndexationPayload::new(
+                    indexation_payload
+                        .indexation
+                        .as_ref()
+                        .unwrap_or_else(|| panic!("Invalid IndexationPayload: {:?}", indexation_payload))[0]
+                        .index
+                        .clone(),
+                    &(indexation_payload
+                        .indexation
+                        .as_ref()
+                        .unwrap_or_else(|| panic!("Invalid IndexationPayload: {:?}", indexation_payload))[0]
+                        .data)
+                        .clone(),
+                )
+                .unwrap();
+                builder = builder.with_payload(RustPayload::from(index));
+            }
+            Ok(RustEssence::Regular(builder.finish()?))
+        } else {
+            unimplemented!()
         }
-        if let Some(indexation_payload) = &essence.payload {
-            let index = RustIndexationPayload::new(
-                indexation_payload
-                    .indexation
-                    .as_ref()
-                    .unwrap_or_else(|| panic!("Invalid IndexationPayload: {:?}", indexation_payload))[0]
-                    .index
-                    .clone(),
-                &(indexation_payload
-                    .indexation
-                    .as_ref()
-                    .unwrap_or_else(|| panic!("Invalid IndexationPayload: {:?}", indexation_payload))[0]
-                    .data)
-                    .clone(),
-            )
-            .unwrap();
-            builder = builder.with_payload(RustPayload::from(index));
-        }
-        Ok(builder.finish()?)
     }
 }
 
@@ -487,7 +496,7 @@ pub struct Payload {
 
 #[derive(Debug, Clone, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct Transaction {
-    pub essence: TransactionPayloadEssence,
+    pub essence: Essence,
     pub unlock_blocks: Vec<UnlockBlock>,
 }
 
@@ -513,10 +522,21 @@ pub struct Indexation {
 }
 
 #[derive(Debug, Clone, DeriveFromPyObject, DeriveIntoPyObject)]
-pub struct TransactionPayloadEssence {
+pub struct Essence {
+    regular: Option<RegularEssence>,
+}
+
+#[derive(Debug, Clone, DeriveFromPyObject, DeriveIntoPyObject)]
+pub struct RegularEssence {
     pub inputs: Vec<Input>,
     pub outputs: Vec<Output>,
     pub payload: Option<Payload>,
+}
+
+impl From<RegularEssence> for Essence {
+    fn from(essence: RegularEssence) -> Self {
+        Self { regular: Some(essence) }
+    }
 }
 
 #[derive(Debug, Clone, DeriveFromPyObject, DeriveIntoPyObject)]
