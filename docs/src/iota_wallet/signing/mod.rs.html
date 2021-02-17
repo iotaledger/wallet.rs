@@ -253,7 +253,7 @@
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">sign_message</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Account</span>,
-        <span class="ident">essence</span>: <span class="kw-2">&amp;</span><span class="ident">iota</span>::<span class="ident">TransactionPayloadEssence</span>,
+        <span class="ident">essence</span>: <span class="kw-2">&amp;</span><span class="ident">iota</span>::<span class="ident">Essence</span>,
         <span class="ident">inputs</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TransactionInput</span><span class="op">&gt;</span>,
         <span class="ident">metadata</span>: <span class="ident">SignMessageMetadata</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">iota</span>::<span class="ident">UnlockBlock</span><span class="op">&gt;</span><span class="op">&gt;</span>;

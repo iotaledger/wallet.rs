@@ -210,6 +210,13 @@
 <span id="207">207</span>
 <span id="208">208</span>
 <span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -221,11 +228,14 @@
     <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessageType</span>},
 };
 
-<span class="kw">use</span> <span class="ident">bee_rest_api</span>::<span class="ident">handlers</span>::{
-    <span class="ident">message_metadata</span>::{<span class="ident">LedgerInclusionStateDto</span>, <span class="ident">MessageMetadataResponse</span>},
-    <span class="ident">output</span>::<span class="ident">OutputResponse</span>,
+<span class="kw">use</span> <span class="ident">iota</span>::{
+    <span class="ident">bee_rest_api</span>::<span class="ident">handlers</span>::{
+        <span class="ident">message_metadata</span>::{<span class="ident">LedgerInclusionStateDto</span>, <span class="ident">MessageMetadataResponse</span>},
+        <span class="ident">output</span>::<span class="ident">OutputResponse</span>,
+    },
+    <span class="ident">message</span>::<span class="ident">prelude</span>::<span class="ident">MessageId</span>,
+    <span class="ident">Topic</span>, <span class="ident">TopicEvent</span>,
 };
-<span class="kw">use</span> <span class="ident">iota</span>::{<span class="ident">message</span>::<span class="ident">prelude</span>::<span class="ident">MessageId</span>, <span class="ident">Topic</span>, <span class="ident">TopicEvent</span>};
 
 <span class="doccomment">/// Unsubscribe from all topics associated with the account.</span>
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">unsubscribe</span>(<span class="ident">account_handle</span>: <span class="ident">AccountHandle</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
@@ -244,7 +254,7 @@
         <span class="ident">topics</span>.<span class="ident">push</span>(<span class="ident">Topic</span>::<span class="ident">new</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;messages/{}/metadata&quot;</span>, <span class="ident">message</span>.<span class="ident">id</span>().<span class="ident">to_string</span>()))<span class="question-mark">?</span>);
     }
 
-    <span class="ident">client</span>.<span class="ident">subscriber</span>().<span class="ident">with_topics</span>(<span class="ident">topics</span>).<span class="ident">unsubscribe</span>()<span class="question-mark">?</span>;
+    <span class="ident">client</span>.<span class="ident">subscriber</span>().<span class="ident">with_topics</span>(<span class="ident">topics</span>).<span class="ident">unsubscribe</span>().<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
@@ -255,7 +265,11 @@
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">client</span>::<span class="ident">get_client</span>(<span class="kw-2">&amp;</span><span class="ident">client_options</span>).<span class="kw">await</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">write</span>().<span class="kw">await</span>;
-    <span class="ident">client</span>.<span class="ident">subscriber</span>().<span class="ident">with_topic</span>(<span class="ident">Topic</span>::<span class="ident">new</span>(<span class="ident">topic</span>)<span class="question-mark">?</span>).<span class="ident">subscribe</span>(<span class="ident">handler</span>)<span class="question-mark">?</span>;
+    <span class="ident">client</span>
+        .<span class="ident">subscriber</span>()
+        .<span class="ident">with_topic</span>(<span class="ident">Topic</span>::<span class="ident">new</span>(<span class="ident">topic</span>)<span class="question-mark">?</span>)
+        .<span class="ident">subscribe</span>(<span class="ident">handler</span>)
+        .<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
 

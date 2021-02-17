@@ -1675,7 +1675,6 @@
 <span id="1672">1672</span>
 <span id="1673">1673</span>
 <span id="1674">1674</span>
-<span id="1675">1675</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1707,11 +1706,10 @@
     <span class="ident">time</span>::<span class="ident">Duration</span>,
 };
 
-<span class="kw">use</span> <span class="ident">bee_rest_api</span>::<span class="ident">handlers</span>::<span class="ident">message_metadata</span>::<span class="ident">LedgerInclusionStateDto</span>;
 <span class="kw">use</span> <span class="ident">chrono</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">FutureExt</span>;
 <span class="kw">use</span> <span class="ident">getset</span>::<span class="ident">Getters</span>;
-<span class="kw">use</span> <span class="ident">iota</span>::{<span class="ident">MessageId</span>, <span class="ident">Payload</span>};
+<span class="kw">use</span> <span class="ident">iota</span>::{<span class="ident">bee_rest_api</span>::<span class="ident">handlers</span>::<span class="ident">message_metadata</span>::<span class="ident">LedgerInclusionStateDto</span>, <span class="ident">MessageId</span>, <span class="ident">Payload</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::<span class="ident">Deserialize</span>;
 <span class="kw">use</span> <span class="ident">tokio</span>::{
     <span class="ident">sync</span>::{

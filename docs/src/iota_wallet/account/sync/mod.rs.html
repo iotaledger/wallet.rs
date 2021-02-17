@@ -1271,8 +1271,6 @@
 <span id="1268">1268</span>
 <span id="1269">1269</span>
 <span id="1270">1270</span>
-<span id="1271">1271</span>
-<span id="1272">1272</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1284,13 +1282,13 @@
     <span class="ident">signing</span>::{<span class="ident">GenerateAddressMetadata</span>, <span class="ident">SignMessageMetadata</span>},
 };
 
-<span class="kw">use</span> <span class="ident">bee_rest_api</span>::<span class="ident">handlers</span>::<span class="ident">message_metadata</span>::<span class="ident">LedgerInclusionStateDto</span>;
 <span class="kw">use</span> <span class="ident">getset</span>::<span class="ident">Getters</span>;
 <span class="kw">use</span> <span class="ident">iota</span>::{
+    <span class="ident">bee_rest_api</span>::<span class="ident">handlers</span>::<span class="ident">message_metadata</span>::<span class="ident">LedgerInclusionStateDto</span>,
     <span class="ident">client</span>::<span class="ident">api</span>::<span class="ident">finish_pow</span>,
     <span class="ident">message</span>::<span class="ident">prelude</span>::{
-        <span class="ident">Input</span>, <span class="ident">Message</span> <span class="kw">as</span> <span class="ident">IotaMessage</span>, <span class="ident">MessageId</span>, <span class="ident">Payload</span>, <span class="ident">SignatureLockedSingleOutput</span>, <span class="ident">TransactionPayload</span>,
-        <span class="ident">TransactionPayloadEssence</span>, <span class="ident">UTXOInput</span>,
+        <span class="ident">Essence</span>, <span class="ident">Input</span>, <span class="ident">Message</span> <span class="kw">as</span> <span class="ident">IotaMessage</span>, <span class="ident">MessageId</span>, <span class="ident">Payload</span>, <span class="ident">RegularEssence</span>, <span class="ident">SignatureLockedSingleOutput</span>,
+        <span class="ident">TransactionPayload</span>, <span class="ident">UTXOInput</span>,
     },
 };
 <span class="kw">use</span> <span class="ident">serde</span>::<span class="ident">Serialize</span>;
@@ -1436,6 +1434,7 @@
         .<span class="ident">read</span>()
         .<span class="kw">await</span>
         .<span class="ident">get_network_info</span>()
+        .<span class="kw">await</span><span class="question-mark">?</span>
         .<span class="ident">bech32_hrp</span>;
 
     <span class="kw">loop</span> {
@@ -1696,11 +1695,7 @@
         <span class="self">Self</span> {
             <span class="ident">account_handle</span>,
             <span class="comment">// by default we synchronize from the latest address (supposedly unspent)</span>
-            <span class="ident">address_index</span>: <span class="kw">if</span> <span class="ident">latest_address_index</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="number">0</span>
-            } <span class="kw">else</span> {
-                <span class="ident">latest_address_index</span> <span class="op">-</span> <span class="number">1</span>
-            },
+            <span class="ident">address_index</span>: <span class="ident">latest_address_index</span>,
             <span class="ident">gap_limit</span>: <span class="kw">if</span> <span class="ident">latest_address_index</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> { <span class="number">10</span> } <span class="kw">else</span> { <span class="number">1</span> },
             <span class="ident">skip_persistance</span>: <span class="bool-val">false</span>,
             <span class="ident">steps</span>: <span class="macro">vec</span><span class="macro">!</span>[
@@ -2069,7 +2064,7 @@
         <span class="ident">utxos</span>.<span class="ident">extend</span>(<span class="ident">outputs</span>.<span class="ident">into_iter</span>());
     }
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">essence_builder</span> <span class="op">=</span> <span class="ident">TransactionPayloadEssence</span>::<span class="ident">builder</span>().<span class="ident">add_output</span>(
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">essence_builder</span> <span class="op">=</span> <span class="ident">RegularEssence</span>::<span class="ident">builder</span>().<span class="ident">add_output</span>(
         <span class="ident">SignatureLockedSingleOutput</span>::<span class="ident">new</span>(<span class="kw-2">*</span><span class="ident">transfer_obj</span>.<span class="ident">address</span>.<span class="ident">as_ref</span>(), <span class="ident">transfer_obj</span>.<span class="ident">amount</span>.<span class="ident">get</span>())<span class="question-mark">?</span>.<span class="ident">into</span>(),
     );
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current_output_sum</span> <span class="op">=</span> <span class="number">0</span>;
@@ -2248,6 +2243,7 @@
     }
 
     <span class="kw">let</span> <span class="ident">essence</span> <span class="op">=</span> <span class="ident">essence_builder</span>.<span class="ident">finish</span>()<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">essence</span> <span class="op">=</span> <span class="ident">Essence</span>::<span class="ident">Regular</span>(<span class="ident">essence</span>);
 
     <span class="kw">let</span> <span class="ident">unlock_blocks</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">signing</span>::<span class="ident">get_signer</span>(<span class="ident">account_</span>.<span class="ident">signer_type</span>())
         .<span class="kw">await</span>
