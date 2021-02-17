@@ -147,11 +147,6 @@ impl AccountManagerBuilder {
         Ok(self)
     }
 
-    pub(crate) fn with_storage_encryption_key(mut self, key: Option<[u8; 32]>) -> Self {
-        self.storage_encryption_key = key;
-        self
-    }
-
     /// Sets the polling interval.
     pub fn with_polling_interval(mut self, polling_interval: Duration) -> Self {
         self.polling_interval = polling_interval;
@@ -699,13 +694,6 @@ impl AccountManager {
                         None,
                     )
                     .unwrap() // safe to unwrap - password is None
-                    .with_storage_encryption_key(
-                        crate::storage::get(&self.storage_path)
-                            .await?
-                            .lock()
-                            .await
-                            .encryption_key,
-                    )
                     .skip_polling()
                     .finish()
                     .await?;
@@ -806,13 +794,6 @@ impl AccountManager {
                 let mut stronghold_manager = Self::builder()
                     .with_storage(&source, ManagerStorage::Stronghold, None)
                     .unwrap() // safe to unwrap - password is None
-                    .with_storage_encryption_key(
-                        crate::storage::get(&self.storage_path)
-                            .await?
-                            .lock()
-                            .await
-                            .encryption_key,
-                    )
                     .skip_polling()
                     .finish()
                     .await?;
