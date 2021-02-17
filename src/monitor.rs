@@ -99,6 +99,7 @@ async fn process_output(
     let output: OutputResponse = serde_json::from_str(&payload)?;
 
     let mut account = account_handle.write().await;
+    let latest_address = account.latest_address().address().clone();
     let account_id = account.id().clone();
     let addresses = account.addresses_mut();
     let address_to_update = addresses.iter_mut().find(|a| a.address() == &address).unwrap();
@@ -111,6 +112,10 @@ async fn process_output(
 
     address_to_update.handle_new_output(address_output);
     crate::event::emit_balance_change(&account_id, &address_to_update, *address_to_update.balance());
+
+    if address_to_update.address() == &latest_address {
+        account_handle.generate_address_internal(&mut account).await?;
+    }
 
     match account.messages_mut().iter().position(|m| m.id() == &message_id) {
         Some(message_index) => {
