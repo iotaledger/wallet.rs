@@ -1,37 +1,46 @@
+package wallet.accountmanager;
+
+import java.nio.file.Path;
+import java.util.Optional;
+
+import wallet.types.*;
+import wallet.account.Account;
+
 public class AccountManager {
 
-    private String storagePath;
+    private Path storagePath;
 
     private AccountManager(AccountManager.Builder builder){
         storagePath = builder.path;
     }
 
-    public setStrongholdPassword(String password){
+    public void setStrongholdPassword(String password){
 
     }
 
-    public storeMnemonic(SignerType type, Optional<String> mnemonic){
+    public void storeMnemonic(SignerType type, Optional<String> mnemonic){
 
     }
 
-    public createAccount(ClientOptions options){
-
+    public Account createAccount(ClientOptions options){
+        return new Account();
     }
     
-    public class Builder {
+    public static class Builder {
 
-        private String path;
+        private Path path;
 
         public Builder(){
 
         }
 
-        public Builder withStoragePath(String path){
+        public Builder withStoragePath(Path path){
             this.path = path;
+            return this;
         }
 
         public AccountManager finish(){
-            return new AccountManager();
+            return new AccountManager(this);
         }
     }
 }

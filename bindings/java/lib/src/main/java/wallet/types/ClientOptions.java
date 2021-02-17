@@ -1,3 +1,5 @@
+package wallet.types;
+
 public class ClientOptions {
 
     private String node;
@@ -6,7 +8,7 @@ public class ClientOptions {
         node = builder.node;
     }
     
-    public class Builder {
+    public static class Builder {
 
         private String node;
 
@@ -14,12 +16,13 @@ public class ClientOptions {
 
         }
 
-        public Builder withnode(String node){
+        public Builder withNode(String node){
             this.node = node;
+            return this;
         }
 
         public ClientOptions build(){
-            return new ClientOptions();
+            return new ClientOptions(this);
         }
     }
 }

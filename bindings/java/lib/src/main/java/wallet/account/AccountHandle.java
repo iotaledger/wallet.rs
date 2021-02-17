@@ -1,8 +1,17 @@
-public class AccountHandle{
-    inner: Arc<RwLock<Account>>,
-    locked_addresses: Arc<Mutex<Vec<AddressWrapper>>>,
+package wallet.account;
+
+import java.util.List;
+
+import wallet.types.AddressWrapper;
+
+public class AccountHandle {
+    private Account inner;
+    private List<AddressWrapper> lockedAddresses;
+
+    private Object mutex;
 }
 
+/*
 /// Returns the builder to setup the process to synchronize this account with the Tangle.
     pub async fn sync(&self) -> AccountSynchronizer {
         AccountSynchronizer::new(self.clone()).await
@@ -119,3 +128,4 @@ public class AccountHandle{
     pub async fn get_message(&self, message_id: &MessageId) -> Option<Message> {
         self.inner.read().await.get_message(message_id).cloned()
     }
+*/
