@@ -598,7 +598,10 @@ impl SyncedAccount {
             .addresses()
             .iter()
             .filter(|a| {
-                a.address() != address && a.available_balance(&account) > 0 && !locked_addresses.contains(a.address())
+                // we allow an input equal to the deposit address only if it has more than one output
+                (a.address() != address || a.available_outputs(&account).len() > 1)
+                    && a.available_balance(&account) > 0
+                    && !locked_addresses.contains(a.address())
             })
             .map(|a| input_selection::Input {
                 address: a.address().clone(),
