@@ -3,11 +3,6 @@
 
 use crate::account::Account;
 
-use bee_common::packable::Packable;
-use blake2::{
-    digest::{Update, VariableOutput},
-    VarBlake2b,
-};
 use iota::{ReferenceUnlock, UnlockBlock};
 
 use std::{collections::HashMap, path::PathBuf};
@@ -60,14 +55,7 @@ impl super::Signer for StrongholdSigner {
         inputs: &mut Vec<super::TransactionInput>,
         _: super::SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
-        let serialized_essence = essence.pack_new();
-
-        let mut hasher = VarBlake2b::new(32).unwrap();
-        hasher.update(serialized_essence);
-        let mut hashed_essence: [u8; 32] = [0; 32];
-        hasher.finalize_variable(|res| {
-            hashed_essence[..32].clone_from_slice(&res[..32]);
-        });
+        let hashed_essence = essence.hash();
 
         let mut unlock_blocks = vec![];
         let mut signature_indexes = HashMap::<usize, usize>::new();
