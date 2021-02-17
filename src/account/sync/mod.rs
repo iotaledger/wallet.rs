@@ -484,8 +484,26 @@ impl AccountSynchronizer {
                     let mut account_ref = self.account_handle.write().await;
                     account_ref
                         .do_mut(|account| {
-                            account.set_addresses(account_.addresses().to_vec());
-                            account.set_messages(account_.messages().to_vec());
+                            for address in account_.addresses() {
+                                match account.addresses().iter().position(|a| a == address) {
+                                    Some(index) => {
+                                        account.addresses_mut()[index] = address.clone();
+                                    }
+                                    None => {
+                                        account.addresses_mut().push(address.clone());
+                                    }
+                                }
+                            }
+                            for message in account_.messages() {
+                                match account.messages().iter().position(|m| m == message) {
+                                    Some(index) => {
+                                        account.messages_mut()[index] = message.clone();
+                                    }
+                                    None => {
+                                        account.messages_mut().push(message.clone());
+                                    }
+                                }
+                            }
                             account.set_last_synced_at(Some(chrono::Local::now()));
                             Ok(())
                         })
