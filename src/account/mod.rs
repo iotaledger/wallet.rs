@@ -769,7 +769,10 @@ mod tests {
             let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
 
             let updated_client_options = ClientOptionsBuilder::new()
-                .with_nodes(&["http://test.wallet", "http://test.wallet/set-client-options"])
+                .with_nodes(&[
+                    "http://api.hornet-1.testnet.chrysalis2.com",
+                    "http://api.hornet-2.testnet.chrysalis2.com",
+                ])
                 .unwrap()
                 .build()
                 .unwrap();
