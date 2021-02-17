@@ -303,6 +303,11 @@ Generates a new unused address and returns it.
 
 Returns the latest address (the one with the biggest keyIndex).
 
+#### getUnusedAddress()
+
+Synchronizes the account addresses with the Tangle and returns the latest address in the account,
+which is an address without balance.
+
 ### ClientOptions
 
 | Field             | Type                  | Default                | Description                                                                                              |

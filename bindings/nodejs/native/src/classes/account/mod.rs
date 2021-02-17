@@ -226,6 +226,16 @@ declare_types! {
             })
         }
 
+        method getUnusedAddress(mut cx) {
+            let this = cx.this();
+            let id = cx.borrow(&this, |r| r.0.clone());
+            crate::block_on(async move {
+                let account_handle = crate::get_account(&id).await;
+                let address = account_handle.get_unused_address().await;
+                Ok(neon_serde::to_value(&mut cx, &address)?)
+            })
+        }
+
         method sync(mut cx) {
             let (options, cb) = match cx.argument_opt(1) {
                 Some(arg) => {

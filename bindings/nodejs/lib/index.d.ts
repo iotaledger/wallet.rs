@@ -83,6 +83,7 @@ export declare class Account {
   getMessage(id: string): Message | undefined
   generateAddress(): Address
   latestAddress(): Address
+  getUnusedAddress(): Address
   isLatestAddressUnused(): Promise<boolean>
 }
 
