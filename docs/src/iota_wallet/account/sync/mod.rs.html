@@ -1274,6 +1274,24 @@
 <span id="1271">1271</span>
 <span id="1272">1272</span>
 <span id="1273">1273</span>
+<span id="1274">1274</span>
+<span id="1275">1275</span>
+<span id="1276">1276</span>
+<span id="1277">1277</span>
+<span id="1278">1278</span>
+<span id="1279">1279</span>
+<span id="1280">1280</span>
+<span id="1281">1281</span>
+<span id="1282">1282</span>
+<span id="1283">1283</span>
+<span id="1284">1284</span>
+<span id="1285">1285</span>
+<span id="1286">1286</span>
+<span id="1287">1287</span>
+<span id="1288">1288</span>
+<span id="1289">1289</span>
+<span id="1290">1290</span>
+<span id="1291">1291</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1761,8 +1779,26 @@
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account_ref</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">write</span>().<span class="kw">await</span>;
                     <span class="ident">account_ref</span>
                         .<span class="ident">do_mut</span>(<span class="op">|</span><span class="ident">account</span><span class="op">|</span> {
-                            <span class="ident">account</span>.<span class="ident">set_addresses</span>(<span class="ident">account_</span>.<span class="ident">addresses</span>().<span class="ident">to_vec</span>());
-                            <span class="ident">account</span>.<span class="ident">set_messages</span>(<span class="ident">account_</span>.<span class="ident">messages</span>().<span class="ident">to_vec</span>());
+                            <span class="kw">for</span> <span class="ident">address</span> <span class="kw">in</span> <span class="ident">account_</span>.<span class="ident">addresses</span>() {
+                                <span class="kw">match</span> <span class="ident">account</span>.<span class="ident">addresses</span>().<span class="ident">iter</span>().<span class="ident">position</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span> <span class="op">=</span><span class="op">=</span> <span class="ident">address</span>) {
+                                    <span class="prelude-val">Some</span>(<span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                        <span class="ident">account</span>.<span class="ident">addresses_mut</span>()[<span class="ident">index</span>] <span class="op">=</span> <span class="ident">address</span>.<span class="ident">clone</span>();
+                                    }
+                                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                        <span class="ident">account</span>.<span class="ident">addresses_mut</span>().<span class="ident">push</span>(<span class="ident">address</span>.<span class="ident">clone</span>());
+                                    }
+                                }
+                            }
+                            <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="ident">account_</span>.<span class="ident">messages</span>() {
+                                <span class="kw">match</span> <span class="ident">account</span>.<span class="ident">messages</span>().<span class="ident">iter</span>().<span class="ident">position</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">m</span> <span class="op">=</span><span class="op">=</span> <span class="ident">message</span>) {
+                                    <span class="prelude-val">Some</span>(<span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                        <span class="ident">account</span>.<span class="ident">messages_mut</span>()[<span class="ident">index</span>] <span class="op">=</span> <span class="ident">message</span>.<span class="ident">clone</span>();
+                                    }
+                                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                        <span class="ident">account</span>.<span class="ident">messages_mut</span>().<span class="ident">push</span>(<span class="ident">message</span>.<span class="ident">clone</span>());
+                                    }
+                                }
+                            }
                             <span class="ident">account</span>.<span class="ident">set_last_synced_at</span>(<span class="prelude-val">Some</span>(<span class="ident">chrono</span>::<span class="ident">Local</span>::<span class="ident">now</span>()));
                             <span class="prelude-val">Ok</span>(())
                         })
