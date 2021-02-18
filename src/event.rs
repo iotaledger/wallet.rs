@@ -47,6 +47,7 @@ pub struct BalanceEvent<'a> {
     /// The associated address.
     address: &'a Address,
     /// The balance change data.
+    #[serde(rename = "balanceChange")]
     balance_change: BalanceChange,
 }
 
@@ -423,7 +424,8 @@ mod tests {
     fn balance_events() {
         on_balance_change(|event| {
             assert!(event.account_id == hex::encode([1; 32]));
-            assert!(event.balance == 0);
+            assert!(event.balance_change.spent == 5);
+            assert!(event.balance_change.received == 0);
         });
 
         emit_balance_change(
@@ -438,7 +440,7 @@ mod tests {
                 .outputs(vec![])
                 .build()
                 .expect("failed to build address"),
-            0,
+            BalanceChange::spent(5),
         );
     }
 
