@@ -1656,6 +1656,13 @@
 <span id="1653">1653</span>
 <span id="1654">1654</span>
 <span id="1655">1655</span>
+<span id="1656">1656</span>
+<span id="1657">1657</span>
+<span id="1658">1658</span>
+<span id="1659">1659</span>
+<span id="1660">1660</span>
+<span id="1661">1661</span>
+<span id="1662">1662</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1666,7 +1673,10 @@
         <span class="ident">repost_message</span>, <span class="ident">Account</span>, <span class="ident">AccountHandle</span>, <span class="ident">AccountIdentifier</span>, <span class="ident">AccountInitialiser</span>, <span class="ident">RepostAction</span>, <span class="ident">SyncedAccount</span>,
     },
     <span class="ident">client</span>::<span class="ident">ClientOptions</span>,
-    <span class="ident">event</span>::{<span class="ident">emit_balance_change</span>, <span class="ident">emit_confirmation_state_change</span>, <span class="ident">emit_transaction_event</span>, <span class="ident">TransactionEventType</span>},
+    <span class="ident">event</span>::{
+        <span class="ident">emit_balance_change</span>, <span class="ident">emit_confirmation_state_change</span>, <span class="ident">emit_transaction_event</span>, <span class="ident">BalanceChange</span>,
+        <span class="ident">TransactionEventType</span>,
+    },
     <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessageType</span>, <span class="ident">Transfer</span>},
     <span class="ident">signing</span>::<span class="ident">SignerType</span>,
     <span class="ident">storage</span>::<span class="ident">StorageAdapter</span>,
@@ -2632,7 +2642,11 @@
                     <span class="ident">emit_balance_change</span>(
                         <span class="ident">account_after_sync</span>.<span class="ident">id</span>(),
                         <span class="ident">address_after_sync</span>,
-                        <span class="kw-2">*</span><span class="ident">address_after_sync</span>.<span class="ident">balance</span>(),
+                        <span class="kw">if</span> <span class="ident">address_after_sync</span>.<span class="ident">balance</span>() <span class="op">&gt;</span> <span class="ident">address_before_sync</span>.<span class="ident">balance</span>() {
+                            <span class="ident">BalanceChange</span>::<span class="ident">received</span>(<span class="ident">address_after_sync</span>.<span class="ident">balance</span>() <span class="op">-</span> <span class="ident">address_before_sync</span>.<span class="ident">balance</span>())
+                        } <span class="kw">else</span> {
+                            <span class="ident">BalanceChange</span>::<span class="ident">spent</span>(<span class="ident">address_before_sync</span>.<span class="ident">balance</span>() <span class="op">-</span> <span class="ident">address_after_sync</span>.<span class="ident">balance</span>())
+                        },
                     );
                 }
             }
