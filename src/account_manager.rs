@@ -7,7 +7,10 @@ use crate::{
         repost_message, Account, AccountHandle, AccountIdentifier, AccountInitialiser, RepostAction, SyncedAccount,
     },
     client::ClientOptions,
-    event::{emit_balance_change, emit_confirmation_state_change, emit_transaction_event, TransactionEventType},
+    event::{
+        emit_balance_change, emit_confirmation_state_change, emit_transaction_event, BalanceChange,
+        TransactionEventType,
+    },
     message::{Message, MessageType, Transfer},
     signing::SignerType,
     storage::StorageAdapter,
@@ -973,7 +976,11 @@ async fn poll(accounts: AccountStore, storage_file_path: PathBuf, is_mqtt_monito
                     emit_balance_change(
                         account_after_sync.id(),
                         address_after_sync,
-                        *address_after_sync.balance(),
+                        if address_after_sync.balance() > address_before_sync.balance() {
+                            BalanceChange::received(address_after_sync.balance() - address_before_sync.balance())
+                        } else {
+                            BalanceChange::spent(address_before_sync.balance() - address_after_sync.balance())
+                        },
                     );
                 }
             }
