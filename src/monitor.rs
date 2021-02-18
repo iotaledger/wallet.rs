@@ -110,8 +110,18 @@ async fn process_output(
     let client_options_ = client_options.clone();
     let message_id = *address_output.message_id();
 
+    let old_balance = *address_to_update.balance();
     address_to_update.handle_new_output(address_output);
-    crate::event::emit_balance_change(&account_id, &address_to_update, *address_to_update.balance());
+    let new_balance = *address_to_update.balance();
+    crate::event::emit_balance_change(
+        &account_id,
+        &address_to_update,
+        if new_balance > old_balance {
+            crate::event::BalanceChange::received(new_balance - old_balance)
+        } else {
+            crate::event::BalanceChange::spent(old_balance - new_balance)
+        },
+    );
 
     if address_to_update.address() == &latest_address {
         account_handle.generate_address_internal(&mut account).await?;

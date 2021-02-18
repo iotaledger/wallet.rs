@@ -14,6 +14,29 @@ use std::{
 /// The event identifier type.
 pub type EventId = [u8; 32];
 
+/// The balance change event payload.
+#[derive(Getters, Serialize)]
+pub struct BalanceChange {
+    spent: u64,
+    received: u64,
+}
+
+impl BalanceChange {
+    pub(crate) fn spent(value: u64) -> Self {
+        Self {
+            spent: value,
+            received: 0,
+        }
+    }
+
+    pub(crate) fn received(value: u64) -> Self {
+        Self {
+            spent: 0,
+            received: value,
+        }
+    }
+}
+
 /// The balance change event data.
 #[derive(Getters, Serialize)]
 #[getset(get = "pub")]
@@ -23,8 +46,8 @@ pub struct BalanceEvent<'a> {
     account_id: &'a str,
     /// The associated address.
     address: &'a Address,
-    /// The new balance.
-    balance: u64,
+    /// The balance change data.
+    balance_change: BalanceChange,
 }
 
 impl<'a> BalanceEvent<'a> {
@@ -205,14 +228,14 @@ pub fn remove_balance_change_listener(id: &EventId) {
 }
 
 /// Emits a balance change event.
-pub(crate) fn emit_balance_change(account_id: &str, address: &Address, balance: u64) {
+pub(crate) fn emit_balance_change(account_id: &str, address: &Address, balance_change: BalanceChange) {
     let listeners = balance_listeners()
         .lock()
         .expect("Failed to lock balance_listeners: emit_balance_change()");
     let event = BalanceEvent {
         account_id,
         address: &address,
-        balance,
+        balance_change,
     };
     for listener in listeners.deref() {
         (listener.on_event)(&event);
