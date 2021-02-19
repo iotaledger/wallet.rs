@@ -295,6 +295,14 @@ Gets the message associated with the given identifier.
 | --------- | ------------------- | ----------------- | ------------------------ |
 | messageId | <code>string</code> | <code>null</code> | The message's identifier |
 
+#### getAddress(addressBech32)
+
+Gets the address object by its bech32 representation.
+
+| Param         | Type                | Default           | Description                       |
+| ------------- | ------------------- | ----------------- | --------------------------------- |
+| addressBech32 | <code>string</code> | <code>null</code> | The address bech32 representation |
+
 #### generateAddress()
 
 Generates a new unused address and returns it.
