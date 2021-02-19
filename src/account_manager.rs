@@ -1068,9 +1068,9 @@ async fn poll(accounts: AccountStore, storage_file_path: PathBuf, is_mqtt_monito
         for message_id in retried_data.no_need_promote_or_reattach {
             let message = account.get_message_mut(&message_id).unwrap();
             if let Ok(metadata) = client.read().await.get_message().metadata(&message_id).await {
-                message.set_confirmed(Some(
-                    metadata.ledger_inclusion_state == Some(LedgerInclusionStateDto::Included),
-                ));
+                if let Some(ledger_inclusion_state) = metadata.ledger_inclusion_state {
+                    message.set_confirmed(Some(ledger_inclusion_state == LedgerInclusionStateDto::Included));
+                }
             }
         }
         account.save().await?;
