@@ -54,7 +54,6 @@ declare_types! {
                 }
                 None => (TransferOptions::default(), cx.argument::<JsFunction>(2)?),
             };
-            println!("{:?}", options);
 
             let mut transfer_builder = Transfer::builder(
                 parse_address(address).expect("invalid address format"),
