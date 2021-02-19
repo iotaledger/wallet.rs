@@ -81,6 +81,7 @@ export declare class Account {
   setAlias(alias: string): void
   setClientOptions(options: ClientOptions): void
   getMessage(id: string): Message | undefined
+  getAddress(addressBech32: string): Address | undefined
   generateAddress(): Address
   latestAddress(): Address
   getUnusedAddress(): Address
