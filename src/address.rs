@@ -345,15 +345,9 @@ impl Address {
 pub fn parse<A: AsRef<str>>(address: A) -> crate::Result<AddressWrapper> {
     let address = address.as_ref();
     let mut tokens = address.split('1');
-    let hrp = tokens.next().unwrap();
-    let address = iota::Address::try_from_bech32(address).or_else(|_| {
-        if let Ok(ed25519_address) = Ed25519Address::from_str(address) {
-            Ok(IotaAddress::Ed25519(ed25519_address))
-        } else {
-            Err(crate::Error::InvalidAddress)
-        }
-    });
-    Ok(AddressWrapper::new(address?, hrp.to_string()))
+    let hrp = tokens.next().ok_or(crate::Error::InvalidAddress)?;
+    let address = iota::Address::try_from_bech32(address)?;
+    Ok(AddressWrapper::new(address, hrp.to_string()))
 }
 
 pub(crate) async fn get_iota_address(

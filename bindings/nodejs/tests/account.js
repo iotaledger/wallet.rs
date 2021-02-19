@@ -18,7 +18,7 @@ async function run() {
 
   const account = manager.createAccount({
     clientOptions: {
-      node: 'http://localhost:14265',
+      node: 'http://api.hornet-1.testnet.chrysalis2.com',
       requestTimeout: {
         secs: 5000,
         nanos: 0
