@@ -95,7 +95,7 @@ export declare class RemainderValueStrategy {
 
 export declare class TransferOptions {
   remainderValueStrategy?: RemainderValueStrategy
-  indexation?: { index: string, data?: Uint8Array }
+  indexation?: { index: string | number[] | Uint8Array, data?: string | number[] | Uint8Array }
 }
 
 export declare class SyncedAccount {

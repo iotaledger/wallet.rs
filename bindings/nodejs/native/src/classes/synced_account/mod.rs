@@ -24,7 +24,7 @@ impl Drop for SyncedAccountWrapper {
 
 #[derive(Deserialize)]
 struct IndexationDto {
-    index: String,
+    index: Vec<u8>,
     data: Option<Vec<u8>>,
 }
 
@@ -54,6 +54,7 @@ declare_types! {
                 }
                 None => (TransferOptions::default(), cx.argument::<JsFunction>(2)?),
             };
+            println!("{:?}", options);
 
             let mut transfer_builder = Transfer::builder(
                 parse_address(address).expect("invalid address format"),
@@ -61,7 +62,7 @@ declare_types! {
             ).with_remainder_value_strategy(options.remainder_value_strategy);
             if let Some(indexation) = options.indexation {
                 transfer_builder = transfer_builder.with_indexation(
-                    IndexationPayload::new(indexation.index, &indexation.data.unwrap_or_default()).expect("index can't be empty")
+                    IndexationPayload::new(&indexation.index, &indexation.data.unwrap_or_default()).expect("index can't be empty")
                 );
             }
 
