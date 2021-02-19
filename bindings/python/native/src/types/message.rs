@@ -141,7 +141,7 @@ impl TryFrom<(RustWalletMessage, Bech32HRP)> for WalletMessage {
                 transaction: None,
                 milestone: None,
                 indexation: Some(vec![Indexation {
-                    index: payload.index().to_string(),
+                    index: payload.index().to_vec(),
                     data: payload.data().try_into().unwrap_or_else(|_| {
                         panic!(
                             "invalid Indexation Payload {:?} with data: {:?}",
@@ -225,7 +225,7 @@ impl TryFrom<(RustEssence, Bech32HRP)> for Essence {
                             transaction: None,
                             milestone: None,
                             indexation: Some(vec![Indexation {
-                                index: payload.index().to_string(),
+                                index: payload.index().to_vec(),
                                 data: payload.data().try_into().unwrap_or_else(|_| {
                                     panic!(
                                         "invalid Indexation Payload {:?} with data: {:?}",
@@ -387,7 +387,7 @@ impl TryFrom<Essence> for RustEssence {
             }
             if let Some(indexation_payload) = &essence.payload {
                 let index = RustIndexationPayload::new(
-                    indexation_payload
+                    &indexation_payload
                         .indexation
                         .as_ref()
                         .unwrap_or_else(|| panic!("Invalid IndexationPayload: {:?}", indexation_payload))[0]
@@ -452,7 +452,7 @@ impl TryFrom<Payload> for RustPayload {
             Ok(RustPayload::Transaction(Box::new(transaction.finish()?)))
         } else {
             let indexation = RustIndexationPayload::new(
-                (&payload
+                &(&payload
                     .indexation
                     .as_ref()
                     .unwrap_or_else(|| panic!("Invalid Payload: {:?}", payload))[0]
@@ -473,7 +473,7 @@ impl TryFrom<Payload> for RustPayload {
 impl TryFrom<Indexation> for RustIndexationPayload {
     type Error = Error;
     fn try_from(indexation: Indexation) -> Result<Self> {
-        Ok(RustIndexationPayload::new(indexation.index, &indexation.data)?)
+        Ok(RustIndexationPayload::new(&indexation.index, &indexation.data)?)
     }
 }
 
@@ -517,7 +517,7 @@ pub struct MilestonePayloadEssence {
 
 #[derive(Debug, Clone, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct Indexation {
-    pub index: String,
+    pub index: Vec<u8>,
     pub data: Vec<u8>,
 }
 

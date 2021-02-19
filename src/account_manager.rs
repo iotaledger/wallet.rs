@@ -1430,7 +1430,7 @@ mod tests {
                         .with_nonce_provider(crate::test_utils::NoopNonceProvider {}, 4000f64, None)
                         .with_parents(vec![MessageId::new([0; 32])])
                         .with_payload(Payload::Indexation(Box::new(
-                            IndexationPayload::new("index".to_string(), &[0; 16]).unwrap(),
+                            IndexationPayload::new(b"index", &[0; 16]).unwrap(),
                         )))
                         .with_network_id(0)
                         .finish()

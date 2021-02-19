@@ -53,17 +53,29 @@ impl<'de> Deserialize<'de> for TransferBuilder {
     where
         D: Deserializer<'de>,
     {
+        #[derive(Debug, Clone, Deserialize)]
+        #[serde(untagged)]
+        enum TransactionIndexation {
+            String(String),
+            Raw(Vec<u8>),
+        }
         /// The message's index builder.
         #[derive(Debug, Clone, Deserialize)]
         struct IndexationPayloadBuilder {
-            index: String,
+            index: TransactionIndexation,
             data: Option<Vec<u8>>,
         }
 
         impl IndexationPayloadBuilder {
             /// Builds the indexation.
             pub fn finish(self) -> crate::Result<IndexationPayload> {
-                let indexation = IndexationPayload::new(self.index, &self.data.unwrap_or_default())?;
+                let indexation = IndexationPayload::new(
+                    &match self.index {
+                        TransactionIndexation::String(value) => value.as_bytes().to_vec(),
+                        TransactionIndexation::Raw(bytes) => bytes,
+                    },
+                    &self.data.unwrap_or_default(),
+                )?;
                 Ok(indexation)
             }
         }

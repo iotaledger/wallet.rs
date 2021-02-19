@@ -58,14 +58,19 @@ Account.prototype.isLatestAddressUnused = promisify(Account.prototype.isLatestAd
 
 const send = SyncedAccount.prototype.send
 SyncedAccount.prototype.send = function (address, amount, options) {
-  if (options && (typeof options === 'object') && options.indexation && options.indexation.data) {
-    return promisify(send).apply(this, [address, amount, {
-      remainderValueStrategy: options.remainderValueStrategy,
+  if (options && (typeof options === 'object') && options.indexation) {
+    let index = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.index) :  options.indexation.index
+    let data = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.data) :  options.indexation.data
+    const formattedOptions = {
       indexation: {
-        index: options.indexation.index,
-        data: Array.from(options.indexation.data),
+        index: Array.from(index),
+        data: data ? Array.from(data) : null,
       }
-    }])
+    }
+    if (options.remainderValueStrategy) {
+      formattedOptions.remainderValueStrategy = options.remainderValueStrategy
+    }
+    return promisify(send).apply(this, [address, amount, formattedOptions])
   } else {
     return promisify(send).apply(this, options ? [address, amount, options] : [address, amount])
   }
