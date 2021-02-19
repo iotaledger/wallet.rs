@@ -102,6 +102,7 @@ impl From<usize> for AccountIdentifier {
 pub struct AccountInitialiser {
     accounts: AccountStore,
     storage_path: PathBuf,
+    output_consolidation_threshold: usize,
     alias: Option<String>,
     created_at: Option<DateTime<Local>>,
     messages: Vec<Message>,
@@ -113,10 +114,16 @@ pub struct AccountInitialiser {
 
 impl AccountInitialiser {
     /// Initialises the account builder.
-    pub(crate) fn new(client_options: ClientOptions, accounts: AccountStore, storage_path: PathBuf) -> Self {
+    pub(crate) fn new(
+        client_options: ClientOptions,
+        accounts: AccountStore,
+        storage_path: PathBuf,
+        output_consolidation_threshold: usize,
+    ) -> Self {
         Self {
             accounts,
             storage_path,
+            output_consolidation_threshold,
             alias: None,
             created_at: None,
             messages: vec![],
@@ -262,11 +269,11 @@ impl AccountInitialiser {
         account.set_id(format!("{}{}", ACCOUNT_ID_PREFIX, hex::encode(digest)));
 
         let guard = if self.skip_persistance {
-            account.into()
+            AccountHandle::new(account, self.output_consolidation_threshold)
         } else {
             account.save().await?;
             let account_id = account.id().clone();
-            let guard: AccountHandle = account.into();
+            let guard = AccountHandle::new(account, self.output_consolidation_threshold);
             drop(accounts);
             self.accounts.write().await.insert(account_id, guard.clone());
             let _ = crate::monitor::monitor_account_addresses_balance(guard.clone()).await;
@@ -322,20 +329,20 @@ pub struct Account {
 pub struct AccountHandle {
     inner: Arc<RwLock<Account>>,
     locked_addresses: Arc<Mutex<Vec<AddressWrapper>>>,
+    pub(crate) output_consolidation_threshold: usize,
 }
 
 impl AccountHandle {
-    pub(crate) fn locked_addresses(&self) -> Arc<Mutex<Vec<AddressWrapper>>> {
-        self.locked_addresses.clone()
-    }
-}
-
-impl From<Account> for AccountHandle {
-    fn from(account: Account) -> Self {
+    pub(crate) fn new(account: Account, output_consolidation_threshold: usize) -> Self {
         Self {
             inner: Arc::new(RwLock::new(account)),
             locked_addresses: Default::default(),
+            output_consolidation_threshold,
         }
+    }
+
+    pub(crate) fn locked_addresses(&self) -> Arc<Mutex<Vec<AddressWrapper>>> {
+        self.locked_addresses.clone()
     }
 }
 

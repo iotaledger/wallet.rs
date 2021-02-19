@@ -46,6 +46,8 @@ pub struct TransferBuilder {
     indexation: Option<IndexationPayload>,
     /// The strategy to use for the remainder value.
     remainder_value_strategy: RemainderValueStrategy,
+    /// The input addresses to use (skips input selection)
+    input_addresses: Option<Vec<AddressWrapper>>,
 }
 
 impl<'de> Deserialize<'de> for TransferBuilder {
@@ -90,6 +92,7 @@ impl<'de> Deserialize<'de> for TransferBuilder {
                     None => None,
                 },
                 remainder_value_strategy: builder.remainder_value_strategy,
+                input_addresses: None,
             })
         })
     }
@@ -103,6 +106,7 @@ impl TransferBuilder {
             amount,
             indexation: None,
             remainder_value_strategy: RemainderValueStrategy::ChangeAddress,
+            input_addresses: None,
         }
     }
 
@@ -118,6 +122,12 @@ impl TransferBuilder {
         self
     }
 
+    /// Sets the addresses to use as input.
+    pub(crate) fn with_input_addresses(mut self, addresses: Vec<AddressWrapper>) -> Self {
+        self.input_addresses.replace(addresses);
+        self
+    }
+
     /// Builds the transfer.
     pub fn finish(self) -> Transfer {
         Transfer {
@@ -125,22 +135,24 @@ impl TransferBuilder {
             amount: self.amount,
             indexation: self.indexation,
             remainder_value_strategy: self.remainder_value_strategy,
+            input_addresses: self.input_addresses,
         }
     }
 }
 
 /// A transfer to make a transaction.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct Transfer {
     /// The transfer value.
     pub(crate) amount: NonZeroU64,
     /// The transfer address.
-    #[serde(with = "crate::serde::iota_address_serde")]
     pub(crate) address: AddressWrapper,
     /// (Optional) message indexation.
     pub(crate) indexation: Option<IndexationPayload>,
     /// The strategy to use for the remainder value.
     pub(crate) remainder_value_strategy: RemainderValueStrategy,
+    /// The addresses to use as input.
+    pub(crate) input_addresses: Option<Vec<AddressWrapper>>,
 }
 
 impl Transfer {

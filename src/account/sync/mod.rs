@@ -27,6 +27,7 @@ use tokio::{
 use std::{
     collections::HashSet,
     convert::TryInto,
+    num::NonZeroU64,
     sync::{Arc, Mutex},
     thread,
     time::Duration,
@@ -593,6 +594,23 @@ pub struct SyncedAccount {
 }
 
 impl SyncedAccount {
+    /// Emulates a synced account from an account handle.
+    /// Should only be used if sync is guaranteed (e.g. when using MQTT)
+    pub(crate) async fn from(account_handle: AccountHandle) -> Self {
+        let id = account_handle.id().await;
+        let index = account_handle.index().await;
+        let deposit_address = account_handle.latest_address().await;
+        Self {
+            id,
+            index,
+            deposit_address,
+            account_handle,
+            is_empty: false,
+            messages: Default::default(),
+            addresses: Default::default(),
+        }
+    }
+
     /// Selects input addresses for a value transaction.
     /// The method ensures that the recipient address doesn’t match any of the selected inputs or the remainder address.
     ///
@@ -610,10 +628,10 @@ impl SyncedAccount {
         locked_addresses: &'a mut MutexGuard<'_, Vec<AddressWrapper>>,
         threshold: u64,
         account: &'a Account,
+        addresses: &'a [&'a Address],
         address: &'a AddressWrapper,
     ) -> crate::Result<(Vec<input_selection::Input>, Option<input_selection::Input>)> {
-        let available_addresses: Vec<input_selection::Input> = account
-            .addresses()
+        let available_addresses: Vec<input_selection::Input> = addresses
             .iter()
             .filter(|a| {
                 // we allow an input equal to the deposit address only if it has more than one output
@@ -643,6 +661,43 @@ impl SyncedAccount {
         };
 
         Ok((addresses, remainder))
+    }
+
+    /// Consolidate account outputs.
+    pub async fn consolidate_outputs(&self) -> crate::Result<Vec<Message>> {
+        let mut transfers: Vec<Transfer> = Vec::new();
+        // collect the transactions we need to make
+        {
+            let account = self.account_handle.read().await;
+            for address in account.addresses() {
+                // the address outputs exceed the threshold, so we push a transfer to our vector
+                if address.available_outputs(&account).len() >= self.account_handle.output_consolidation_threshold {
+                    transfers.push(
+                        Transfer::builder(
+                            address.address().clone(),
+                            NonZeroU64::new(address.available_balance(&account)).unwrap(),
+                        )
+                        .with_input_addresses(vec![address.address().clone()])
+                        .finish(),
+                    );
+                }
+            }
+        }
+
+        let mut tasks = Vec::new();
+
+        // run the transfers in parallel
+        for transfer in transfers {
+            let task = self.transfer(transfer);
+            tasks.push(task);
+        }
+
+        let mut messages = Vec::new();
+        for response in futures::future::join_all(tasks).await {
+            messages.push(response?);
+        }
+
+        Ok(messages)
     }
 
     /// Send messages.
@@ -717,9 +772,30 @@ impl SyncedAccount {
             }
         }
 
+        let mut input_addresses = Vec::new();
+        match &transfer_obj.input_addresses {
+            Some(addresses) => {
+                for address in addresses {
+                    if let Some(address) = account_.addresses().iter().find(|a| a.address() == address) {
+                        input_addresses.push(address);
+                    }
+                }
+            }
+            None => {
+                for address in account_.addresses() {
+                    input_addresses.push(address);
+                }
+            }
+        }
+
         // select the input addresses and check if a remainder address is needed
-        let (input_addresses, remainder_address) =
-            self.select_inputs(&mut locked_addresses, value, &account_, &transfer_obj.address)?;
+        let (input_addresses, remainder_address) = self.select_inputs(
+            &mut locked_addresses,
+            value,
+            &account_,
+            &input_addresses,
+            &transfer_obj.address,
+        )?;
 
         // unlock the transfer process since we already selected the input addresses and locked them
         drop(locked_addresses);

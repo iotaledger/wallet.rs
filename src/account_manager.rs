@@ -48,6 +48,8 @@ use zeroize::Zeroize;
 /// The default storage folder.
 pub const DEFAULT_STORAGE_FOLDER: &str = "./storage";
 
+const DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD: usize = 500;
+
 /// The default stronghold storage file name.
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
 #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
@@ -107,6 +109,8 @@ pub struct AccountManagerBuilder {
     polling_interval: Duration,
     skip_polling: bool,
     storage_encryption_key: Option<[u8; 32]>,
+    output_consolidation_threshold: usize,
+    automatic_output_consolidation: bool,
 }
 
 impl Default for AccountManagerBuilder {
@@ -124,6 +128,8 @@ impl Default for AccountManagerBuilder {
             polling_interval: Duration::from_millis(30_000),
             skip_polling: false,
             storage_encryption_key: None,
+            output_consolidation_threshold: DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
+            automatic_output_consolidation: true,
         }
     }
 }
@@ -158,6 +164,19 @@ impl AccountManagerBuilder {
 
     pub(crate) fn skip_polling(mut self) -> Self {
         self.skip_polling = true;
+        self
+    }
+
+    /// Sets the number of outputs an address must have to trigger the automatic consolidation process.
+    pub fn with_output_consolidation_threshold(mut self, threshold: usize) -> Self {
+        self.output_consolidation_threshold = threshold;
+        self
+    }
+
+    /// Disables the automatic output consolidation process.
+    /// You must do a manual consolidation before the address output count reach 1000.
+    pub fn with_automatic_output_consolidation_disabled(mut self) -> Self {
+        self.automatic_output_consolidation = true;
         self
     }
 
@@ -196,9 +215,10 @@ impl AccountManagerBuilder {
         #[cfg(feature = "stronghold-storage")]
         let (accounts, encrypted_accounts) = (Default::default(), Vec::new());
         #[cfg(not(feature = "stronghold-storage"))]
-        let (accounts, encrypted_accounts) = AccountManager::load_accounts(&storage_file_path)
-            .await
-            .unwrap_or_else(|_| (AccountStore::default(), Vec::new()));
+        let (accounts, encrypted_accounts) =
+            AccountManager::load_accounts(&storage_file_path, self.output_consolidation_threshold)
+                .await
+                .unwrap_or_else(|_| (AccountStore::default(), Vec::new()));
 
         let mut instance = AccountManager {
             storage_folder: if self.storage_path.is_file() || self.storage_path.extension().is_some() {
@@ -216,10 +236,13 @@ impl AccountManagerBuilder {
             is_monitoring: Arc::new(AtomicBool::new(false)),
             generated_mnemonic: None,
             encrypted_accounts,
+            output_consolidation_threshold: self.output_consolidation_threshold,
         };
 
         if !self.skip_polling {
-            instance.start_background_sync(self.polling_interval).await;
+            instance
+                .start_background_sync(self.polling_interval, self.automatic_output_consolidation)
+                .await;
         }
 
         Ok(instance)
@@ -241,6 +264,7 @@ pub struct AccountManager {
     is_monitoring: Arc<AtomicBool>,
     generated_mnemonic: Option<String>,
     encrypted_accounts: Vec<String>,
+    output_consolidation_threshold: usize,
 }
 
 impl Clone for AccountManager {
@@ -259,6 +283,7 @@ impl Clone for AccountManager {
             is_monitoring: self.is_monitoring.clone(),
             generated_mnemonic: None,
             encrypted_accounts: self.encrypted_accounts.clone(),
+            output_consolidation_threshold: self.output_consolidation_threshold,
         }
     }
 }
@@ -286,7 +311,10 @@ impl AccountManager {
         AccountManagerBuilder::new()
     }
 
-    async fn load_accounts(storage_file_path: &PathBuf) -> crate::Result<(AccountStore, Vec<String>)> {
+    async fn load_accounts(
+        storage_file_path: &PathBuf,
+        output_consolidation_threshold: usize,
+    ) -> crate::Result<(AccountStore, Vec<String>)> {
         let mut encrypted_accounts = Vec::new();
         let mut parsed_accounts = HashMap::new();
 
@@ -299,7 +327,10 @@ impl AccountManager {
         for parsed_account in accounts {
             match parsed_account {
                 crate::storage::ParsedAccount::Account(account) => {
-                    parsed_accounts.insert(account.id().clone(), account.into());
+                    parsed_accounts.insert(
+                        account.id().clone(),
+                        AccountHandle::new(account, output_consolidation_threshold),
+                    );
                 }
                 crate::storage::ParsedAccount::EncryptedAccount(value) => {
                     encrypted_accounts.push(value);
@@ -370,10 +401,10 @@ impl AccountManager {
     }
 
     /// Initialises the background polling and MQTT monitoring.
-    async fn start_background_sync(&mut self, polling_interval: Duration) {
+    async fn start_background_sync(&mut self, polling_interval: Duration, automatic_output_consolidation: bool) {
         Self::start_monitoring(self.accounts.clone(), self.is_monitoring.clone()).await;
         let (stop_polling_sender, stop_polling_receiver) = broadcast_channel(1);
-        self.start_polling(polling_interval, stop_polling_receiver);
+        self.start_polling(polling_interval, stop_polling_receiver, automatic_output_consolidation);
         self.stop_polling_sender = Some(stop_polling_sender);
     }
 
@@ -420,7 +451,10 @@ impl AccountManager {
             for encrypted_account in &self.encrypted_accounts {
                 let decrypted = crate::storage::decrypt_account_json(encrypted_account, &key)?;
                 let account = serde_json::from_str::<Account>(&decrypted)?;
-                accounts.insert(account.id().into(), account.into());
+                accounts.insert(
+                    account.id().into(),
+                    AccountHandle::new(account, self.output_consolidation_threshold),
+                );
             }
             self.encrypted_accounts.clear();
 
@@ -446,7 +480,8 @@ impl AccountManager {
 
         // let is_empty = self.accounts.read().await.is_empty();
         if self.accounts.read().await.is_empty() {
-            let (accounts, encrypted_accounts) = Self::load_accounts(&self.storage_path).await?;
+            let (accounts, encrypted_accounts) =
+                Self::load_accounts(&self.storage_path, self.output_consolidation_threshold).await?;
             let mut accounts_store = self.accounts.write().await;
             for (id, account) in &*accounts.read().await {
                 accounts_store.insert(id.clone(), account.clone());
@@ -498,10 +533,16 @@ impl AccountManager {
     }
 
     /// Starts the polling mechanism.
-    fn start_polling(&mut self, polling_interval: Duration, mut stop: BroadcastReceiver<()>) {
+    fn start_polling(
+        &mut self,
+        polling_interval: Duration,
+        mut stop: BroadcastReceiver<()>,
+        automatic_output_consolidation: bool,
+    ) {
         let storage_file_path = self.storage_path.clone();
         let accounts = self.accounts.clone();
         let is_monitoring = self.is_monitoring.clone();
+        let output_consolidation_threshold = self.output_consolidation_threshold;
 
         let handle = thread::spawn(move || {
             let runtime = tokio::runtime::Builder::new_current_thread()
@@ -517,7 +558,7 @@ impl AccountManager {
 
                             let storage_file_path_ = storage_file_path.clone();
 
-                            if let Err(error) = AssertUnwindSafe(poll(accounts.clone(), storage_file_path_, is_monitoring.load(Ordering::Relaxed)))
+                            if let Err(error) = AssertUnwindSafe(poll(accounts.clone(), storage_file_path_, output_consolidation_threshold, is_monitoring.load(Ordering::Relaxed), automatic_output_consolidation))
                                 .catch_unwind()
                                 .await {
                                     // if the error isn't a crate::Error type
@@ -604,6 +645,7 @@ impl AccountManager {
             client_options,
             self.accounts.clone(),
             self.storage_path.clone(),
+            self.output_consolidation_threshold,
         ))
     }
 
@@ -638,7 +680,13 @@ impl AccountManager {
     pub async fn sync_accounts(&self) -> crate::Result<Vec<SyncedAccount>> {
         self.check_storage_encryption()?;
 
-        sync_accounts(self.accounts.clone(), &self.storage_path, None).await
+        sync_accounts(
+            self.accounts.clone(),
+            &self.storage_path,
+            self.output_consolidation_threshold,
+            None,
+        )
+        .await
     }
 
     /// Transfers an amount from an account to another.
@@ -822,7 +870,8 @@ impl AccountManager {
         // the accounts map isn't empty when restoring SQLite from a stronghold snapshot
         #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
         if self.accounts.read().await.is_empty() {
-            let (accounts, encrypted_accounts) = Self::load_accounts(&self.storage_path).await?;
+            let (accounts, encrypted_accounts) =
+                Self::load_accounts(&self.storage_path, self.output_consolidation_threshold).await?;
             let mut accounts_store = self.accounts.write().await;
             for (id, account) in &*accounts.read().await {
                 accounts_store.insert(id.clone(), account.clone());
@@ -943,13 +992,25 @@ impl AccountManager {
     }
 }
 
-async fn poll(accounts: AccountStore, storage_file_path: PathBuf, is_mqtt_monitoring: bool) -> crate::Result<()> {
+async fn poll(
+    accounts: AccountStore,
+    storage_file_path: PathBuf,
+    output_consolidation_threshold: usize,
+    is_mqtt_monitoring: bool,
+    automatic_output_consolidation: bool,
+) -> crate::Result<()> {
     let retried = if !is_mqtt_monitoring {
         let mut accounts_before_sync = Vec::new();
         for account_handle in accounts.read().await.values() {
             accounts_before_sync.push(account_handle.read().await.clone());
         }
-        let synced_accounts = sync_accounts(accounts.clone(), &storage_file_path, Some(0)).await?;
+        let synced_accounts = sync_accounts(
+            accounts.clone(),
+            &storage_file_path,
+            output_consolidation_threshold,
+            Some(0),
+        )
+        .await?;
         let accounts_after_sync = accounts.read().await;
 
         log::debug!("[POLLING] synced accounts");
@@ -1007,11 +1068,17 @@ async fn poll(accounts: AccountStore, storage_file_path: PathBuf, is_mqtt_monito
                 }
             }
         }
-        retry_unconfirmed_transactions(synced_accounts).await?
+        let retried_messages = retry_unconfirmed_transactions(&synced_accounts).await?;
+        if automatic_output_consolidation {
+            consolidate_outputs(&synced_accounts).await?;
+        }
+        retried_messages
     } else {
         log::info!("[POLLING] skipping syncing process because MQTT is running");
-        let mut retried_messages = vec![];
+        let mut retried_messages = Vec::new();
+        let mut synced_accounts = Vec::new();
         for account_handle in accounts.read().await.values() {
+            synced_accounts.push(SyncedAccount::from(account_handle.clone()).await);
             let (account_handle, unconfirmed_messages): (AccountHandle, Vec<(MessageId, Option<Payload>)>) = {
                 let account = account_handle.read().await;
                 let unconfirmed_messages = account
@@ -1050,6 +1117,10 @@ async fn poll(accounts: AccountStore, storage_file_path: PathBuf, is_mqtt_monito
             });
         }
 
+        if automatic_output_consolidation {
+            consolidate_outputs(&synced_accounts).await?;
+        }
+
         retried_messages
     };
 
@@ -1083,11 +1154,17 @@ async fn discover_accounts(
     storage_path: &PathBuf,
     client_options: &ClientOptions,
     signer_type: Option<SignerType>,
+    output_consolidation_threshold: usize,
 ) -> crate::Result<Vec<(AccountHandle, SyncedAccount)>> {
     let mut synced_accounts = vec![];
     loop {
-        let mut account_initialiser =
-            AccountInitialiser::new(client_options.clone(), accounts.clone(), storage_path.clone()).skip_persistance();
+        let mut account_initialiser = AccountInitialiser::new(
+            client_options.clone(),
+            accounts.clone(),
+            storage_path.clone(),
+            output_consolidation_threshold,
+        )
+        .skip_persistance();
         if let Some(signer_type) = &signer_type {
             account_initialiser = account_initialiser.signer_type(signer_type.clone());
         }
@@ -1112,6 +1189,7 @@ async fn discover_accounts(
 async fn sync_accounts<'a>(
     accounts: AccountStore,
     storage_file_path: &PathBuf,
+    output_consolidation_threshold: usize,
     address_index: Option<usize>,
 ) -> crate::Result<Vec<SyncedAccount>> {
     let mut synced_accounts = vec![];
@@ -1140,7 +1218,14 @@ async fn sync_accounts<'a>(
         Some((is_empty, client_options, signer_type)) => {
             if is_empty {
                 log::debug!("[SYNC] running account discovery because the latest account is empty");
-                discover_accounts(accounts.clone(), &storage_file_path, &client_options, Some(signer_type)).await
+                discover_accounts(
+                    accounts.clone(),
+                    &storage_file_path,
+                    &client_options,
+                    Some(signer_type),
+                    output_consolidation_threshold,
+                )
+                .await
             } else {
                 log::debug!("[SYNC] skipping account discovery because the latest account isn't empty");
                 Ok(vec![])
@@ -1172,7 +1257,14 @@ struct RetriedData {
     account_handle: AccountHandle,
 }
 
-async fn retry_unconfirmed_transactions(synced_accounts: Vec<SyncedAccount>) -> crate::Result<Vec<RetriedData>> {
+async fn consolidate_outputs(synced_accounts: &[SyncedAccount]) -> crate::Result<()> {
+    for synced in synced_accounts {
+        synced.consolidate_outputs().await?;
+    }
+    Ok(())
+}
+
+async fn retry_unconfirmed_transactions(synced_accounts: &[SyncedAccount]) -> crate::Result<Vec<RetriedData>> {
     let mut retried_messages = vec![];
     for synced in synced_accounts {
         let unconfirmed_messages: Vec<(MessageId, Option<Payload>)> = synced
@@ -1651,9 +1743,10 @@ mod tests {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |mut manager, _| async move {
             crate::test_utils::AccountCreator::new(&manager).create().await;
             manager.set_storage_password("new-password").await.unwrap();
-            let (account_store, encrypted) = super::AccountManager::load_accounts(manager.storage_path())
-                .await
-                .unwrap();
+            let (account_store, encrypted) =
+                super::AccountManager::load_accounts(manager.storage_path(), manager.output_consolidation_threshold)
+                    .await
+                    .unwrap();
             assert_eq!(account_store.read().await.len(), 1);
             assert_eq!(encrypted.len(), 0);
         })
