@@ -68,11 +68,11 @@ pub struct GenerateAddressMetadata {
 #[getset(get = "pub")]
 pub struct SignMessageMetadata<'a> {
     /// The transfer's address that has remainder value if any.
-    pub(crate) remainder_address: Option<&'a Address>,
+    pub remainder_address: Option<&'a Address>,
     /// The transfer's remainder value.
-    pub(crate) remainder_value: u64,
+    pub remainder_value: u64,
     /// The transfer's deposit address for the remainder value if any.
-    pub(crate) remainder_deposit_address: Option<&'a Address>,
+    pub remainder_deposit_address: Option<&'a Address>,
 }
 
 /// Signer interface.
@@ -146,7 +146,7 @@ pub async fn set_signer<S: Signer + Sync + Send + 'static>(signer_type: SignerTy
 }
 
 /// Gets the signer interface.
-pub(crate) async fn get_signer(signer_type: &SignerType) -> SignerHandle {
+pub async fn get_signer(signer_type: &SignerType) -> SignerHandle {
     SIGNERS_INSTANCE
         .get_or_init(default_signers)
         .lock()
