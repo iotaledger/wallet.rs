@@ -81,6 +81,7 @@ export declare class Account {
   setAlias(alias: string): void
   setClientOptions(options: ClientOptions): void
   getMessage(id: string): Message | undefined
+  getAddress(addressBech32: string): Address | undefined
   generateAddress(): Address
   latestAddress(): Address
   getUnusedAddress(): Address
@@ -95,7 +96,7 @@ export declare class RemainderValueStrategy {
 
 export declare class TransferOptions {
   remainderValueStrategy?: RemainderValueStrategy
-  indexation?: { index: string, data?: Uint8Array }
+  indexation?: { index: string | number[] | Uint8Array, data?: string | number[] | Uint8Array }
 }
 
 export declare class SyncedAccount {

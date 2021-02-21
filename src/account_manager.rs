@@ -1139,9 +1139,9 @@ async fn poll(
         for message_id in retried_data.no_need_promote_or_reattach {
             let message = account.get_message_mut(&message_id).unwrap();
             if let Ok(metadata) = client.read().await.get_message().metadata(&message_id).await {
-                message.set_confirmed(Some(
-                    metadata.ledger_inclusion_state == Some(LedgerInclusionStateDto::Included),
-                ));
+                if let Some(ledger_inclusion_state) = metadata.ledger_inclusion_state {
+                    message.set_confirmed(Some(ledger_inclusion_state == LedgerInclusionStateDto::Included));
+                }
             }
         }
         account.save().await?;
@@ -1522,7 +1522,7 @@ mod tests {
                         .with_nonce_provider(crate::test_utils::NoopNonceProvider {}, 4000f64, None)
                         .with_parents(vec![MessageId::new([0; 32])])
                         .with_payload(Payload::Indexation(Box::new(
-                            IndexationPayload::new("index".to_string(), &[0; 16]).unwrap(),
+                            IndexationPayload::new(b"index", &[0; 16]).unwrap(),
                         )))
                         .with_network_id(0)
                         .finish()

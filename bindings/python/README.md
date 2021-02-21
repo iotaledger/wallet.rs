@@ -665,7 +665,7 @@ A dict with the following key/value pairs.
 
 ```python
 indexation = {
-    'index': str,
+    'index': bytes,
     'data': bytes
 }
 ```

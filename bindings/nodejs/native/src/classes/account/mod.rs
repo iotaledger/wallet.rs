@@ -3,7 +3,7 @@
 
 use std::str::FromStr;
 
-use iota_wallet::message::MessageId;
+use iota_wallet::{address::parse as parse_address, message::MessageId};
 use neon::prelude::*;
 
 mod is_latest_address_unused;
@@ -197,6 +197,21 @@ declare_types! {
                 let message = account.get_message(&message_id);
                 match message {
                     Some(m) => Ok(neon_serde::to_value(&mut cx, &m)?),
+                    None => Ok(cx.undefined().upcast())
+                }
+            })
+        }
+
+        method getAddress(mut cx) {
+            let address = parse_address(cx.argument::<JsString>(0)?.value()).expect("invalid address");
+            let this = cx.this();
+            let id = cx.borrow(&this, |r| r.0.clone());
+            crate::block_on(async move {
+                let account_handle = crate::get_account(&id).await;
+                let account = account_handle.read().await;
+                let address = account.addresses().iter().find(|a| a.address() == &address);
+                match address {
+                    Some(a) => Ok(neon_serde::to_value(&mut cx, &a)?),
                     None => Ok(cx.undefined().upcast())
                 }
             })
