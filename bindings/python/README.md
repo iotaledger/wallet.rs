@@ -381,6 +381,10 @@ Updates the account's client options.
 | ------- | -------------------------------------------- | ---------------------- | ------------------------- |
 | options | <code>[ClientOptions](#clientoptions)</code> | <code>undefined</code> | The client options to set |
 
+#### message_count(): int
+
+Returns the number of messages associated with the account.
+
 #### list_messages(count, from, message_type (optional)): list([WalletMessage](#walletmessage))
 
 Get the list of messages of this account.

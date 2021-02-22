@@ -231,6 +231,10 @@ Returns the account's balance information object.
 
 Balance object: { total: number, available: number, incoming: number, outgoing: number }
 
+#### messageCount()
+
+Returns the number of messages associated with the account.
+
 #### listMessages([count, from, type])
 
 Returns the account's messages.
