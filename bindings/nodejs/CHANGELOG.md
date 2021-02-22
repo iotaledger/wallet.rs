@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.0.4]
+
+-   Fixes the message confirmation state update on the background sync system.
+    -   [a164f4d](https://github.com/iotaledger/wallet.rs/commit/a164f4d2c844f701744c129aaafb731703a2910f) fix(sync): do not set tx as unconfirmed when the inclusion state is null ([#338](https://github.com/iotaledger/wallet.rs/pull/338)) on 2021-02-19
+-   New method on the Account object to get an address by its bech32 representation.
+    -   [0652cd9](https://github.com/iotaledger/wallet.rs/commit/0652cd93c620323026720e43c0510791901ba35c) feat(nodejs): add API to get an address by bech32 string ([#336](https://github.com/iotaledger/wallet.rs/pull/336)) on 2021-02-19
+-   Adds a `messageCount` function on the Account class.
+    -   [ed74aaf](https://github.com/iotaledger/wallet.rs/commit/ed74aaf3a8ffe6737b17e86455326811c9e52f76) feat(bindings): add messageCount API ([#340](https://github.com/iotaledger/wallet.rs/pull/340)) on 2021-02-22
+
 ## [0.0.3]
 
 -   The balance change event now emits a `{ spent, received }` object with the changed amount instead of the new address balance.
