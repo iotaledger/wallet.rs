@@ -1255,10 +1255,10 @@ async fn is_dust_allowed(
     // Max allowed dust outputs is 100
     let allowed_dust_amount = std::cmp::min(dust_allowance_balance / 100_000, 100);
     if dust_outputs_amount > allowed_dust_amount {
-        /*return Err(crate::Error::DustError(format!(
+        return Err(crate::Error::DustError(format!(
             "No dust output allowed on address {}",
             address
-        )));*/
+        )));
     }
     Ok(())
 }
