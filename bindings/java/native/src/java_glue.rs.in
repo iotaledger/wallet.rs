@@ -1,0 +1,23 @@
+use std::{
+    path::{Path, PathBuf},
+    time::Duration,
+};
+
+use jni_sys::*;
+
+use crate::client_options::*;
+use crate::acc_manager::*;
+
+
+// ManagerStorage
+foreign_enum!(
+    enum ManagerStorage {
+        None = None,
+    }
+);
+
+foreign_class!(class AccountManager {
+    self_type AccountManager;
+    fn AccountManager::add_and1(&self, val: i32) -> i32;
+    fn AccountManager::greet(to: &str) -> String;
+});
