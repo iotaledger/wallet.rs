@@ -3,21 +3,53 @@ use std::{
     time::Duration,
 };
 
-use jni_sys::*;
+use crate::jni_c_header::*;
 
 use crate::client_options::*;
 use crate::acc_manager::*;
 
+use anyhow::Result as Result;
+
+use env_logger::*;
+
+foreign_class!(class RustLogging {
+    fn init() {
+        env_logger::init();
+    }
+});
 
 // ManagerStorage
 foreign_enum!(
     enum ManagerStorage {
-        None = None,
+        Stronghold = ManagerStorage::Stronghold,
+        Sqlite = ManagerStorage::Sqlite,
     }
 );
 
+foreign_enum!(
+    enum AccountSignerType {
+        Stronghold = AccountSignerType::Stronghold,
+        LedgerNano = AccountSignerType::LedgerNano,
+        LedgerNanoSimulator = AccountSignerType::LedgerNanoSimulator,
+    }
+);
+
+foreign_class!(class ManagerOptions {
+    self_type ManagerOptions;
+    constructor ManagerOptions::default() -> ManagerOptions;
+    fn ManagerOptions::setStoragePath(&mut self, storage_path: PathBuf);
+    fn ManagerOptions::setStorageType(&mut self, storage_type: ManagerStorage);
+    fn ManagerOptions::setStoragePassword(&mut self, storage_password: String);
+});
+
 foreign_class!(class AccountManager {
     self_type AccountManager;
-    fn AccountManager::add_and1(&self, val: i32) -> i32;
-    fn AccountManager::greet(to: &str) -> String;
+    constructor AccountManager::new(options: ManagerOptions) -> AccountManager;
+    fn AccountManager::stopBackgroundSync(&mut self,) -> Result<()>;
+    fn AccountManager::setStoragePassword(&mut self, password: &str) -> Result<()>;
+    fn AccountManager::setStrongholdPassword(&mut self, password: &str) -> Result<()>;
+    fn AccountManager::changeStrongholdPassword(&mut self, current_password: &str, new_password: &str) -> Result<()>;
+    fn AccountManager::generateMnemonic(&mut self) -> Result<String>;
+    fn AccountManager::storeMnemonic(&mut self, signer_type_enum: AccountSignerType, mnemonic: String) -> Result<()>;
+    fn AccountManager::verify_mnemonic(&mut self, mnemonic: String) -> Result<()>;
 });

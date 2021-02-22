@@ -129,21 +129,21 @@ impl AccountManager {
         Ok(())
     }
 
-    pub fn setStoragePassword(&mut self, password: &str) -> Result<()>  {
+    pub fn setStoragePassword(&mut self, password: &str) -> Result<()> {
         crate::block_on(async move {
             self.manager.set_storage_password(password).await
         }).expect("error setting storage password");
         Ok(())
     }
 
-    pub fn setStrongholdPassword(&mut self, password: &str) -> Result<()>{
+    pub fn setStrongholdPassword(&mut self, password: &str) -> Result<()> {
         crate::block_on(async move {
             self.manager.set_stronghold_password(password).await
         }).expect("error setting stronghold password");
         Ok(())
     }
 
-    pub fn changeStrongholdPassword(&mut self, current_password: &str, new_password: &str) -> Result<()>{
+    pub fn changeStrongholdPassword(&mut self, current_password: &str, new_password: &str) -> Result<()> {
         crate::block_on(async move {
             self.manager.change_stronghold_password(current_password, new_password).await
         }).expect("error changing stronghold password");
