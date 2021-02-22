@@ -1,7 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::address::{Address, AddressWrapper, IotaAddress};
+use crate::address::{Address, AddressOutput, AddressWrapper, IotaAddress};
 use bee_common::packable::Packable;
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
@@ -46,8 +46,8 @@ pub struct TransferBuilder {
     indexation: Option<IndexationPayload>,
     /// The strategy to use for the remainder value.
     remainder_value_strategy: RemainderValueStrategy,
-    /// The input addresses to use (skips input selection)
-    input_addresses: Option<Vec<AddressWrapper>>,
+    /// The input to use (skips input selection)
+    input: Option<(AddressWrapper, Vec<AddressOutput>)>,
 }
 
 impl<'de> Deserialize<'de> for TransferBuilder {
@@ -104,7 +104,7 @@ impl<'de> Deserialize<'de> for TransferBuilder {
                     None => None,
                 },
                 remainder_value_strategy: builder.remainder_value_strategy,
-                input_addresses: None,
+                input: None,
             })
         })
     }
@@ -118,7 +118,7 @@ impl TransferBuilder {
             amount,
             indexation: None,
             remainder_value_strategy: RemainderValueStrategy::ChangeAddress,
-            input_addresses: None,
+            input: None,
         }
     }
 
@@ -134,9 +134,9 @@ impl TransferBuilder {
         self
     }
 
-    /// Sets the addresses to use as input.
-    pub(crate) fn with_input_addresses(mut self, addresses: Vec<AddressWrapper>) -> Self {
-        self.input_addresses.replace(addresses);
+    /// Sets the addresses and utxo to use as transaction input.
+    pub(crate) fn with_input(mut self, address: AddressWrapper, inputs: Vec<AddressOutput>) -> Self {
+        self.input.replace((address, inputs));
         self
     }
 
@@ -147,7 +147,7 @@ impl TransferBuilder {
             amount: self.amount,
             indexation: self.indexation,
             remainder_value_strategy: self.remainder_value_strategy,
-            input_addresses: self.input_addresses,
+            input: self.input,
         }
     }
 }
@@ -164,7 +164,7 @@ pub struct Transfer {
     /// The strategy to use for the remainder value.
     pub(crate) remainder_value_strategy: RemainderValueStrategy,
     /// The addresses to use as input.
-    pub(crate) input_addresses: Option<Vec<AddressWrapper>>,
+    pub(crate) input: Option<(AddressWrapper, Vec<AddressOutput>)>,
 }
 
 impl Transfer {

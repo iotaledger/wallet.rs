@@ -60,7 +60,7 @@ pub struct TransactionInput {
 pub struct GenerateAddressMetadata {
     /// Indicates that the address is being generated as part of the account syncing process.
     /// This means that the account might not be saved.
-    pub(crate) syncing: bool,
+    pub syncing: bool,
 }
 
 /// Metadata provided to [sign_message](trait.Signer.html#method.sign_message).
@@ -146,7 +146,7 @@ pub async fn set_signer<S: Signer + Sync + Send + 'static>(signer_type: SignerTy
 }
 
 /// Gets the signer interface.
-pub async fn get_signer(signer_type: &SignerType) -> SignerHandle {
+pub(crate) async fn get_signer(signer_type: &SignerType) -> SignerHandle {
     SIGNERS_INSTANCE
         .get_or_init(default_signers)
         .lock()
