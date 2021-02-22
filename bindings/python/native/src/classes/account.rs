@@ -191,9 +191,7 @@ impl AccountHandle {
 
     /// The number of messages associated with the account.
     fn message_count(&self) -> usize {
-        crate::block_on(async {
-            self.account_handle.read().await.messages().len()
-        })
+        crate::block_on(async { self.account_handle.read().await.messages().len() })
     }
 
     /// Bridge to [Account#list_messages](struct.Account.html#method.list_messages).
