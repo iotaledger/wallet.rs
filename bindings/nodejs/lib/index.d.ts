@@ -75,6 +75,7 @@ export declare class Account {
   index(): number;
   alias(): string;
   balance(): AccountBalance;
+  messageCount(): number;
   listMessages(count?: number, from?: number, messageType?: MessageType): Message[]
   listAddresses(unspent?: boolean): Address[]
   sync(options?: SyncOptions): Promise<SyncedAccount>

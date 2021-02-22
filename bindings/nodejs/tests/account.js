@@ -32,6 +32,7 @@ async function run() {
     }
   })
   console.log('messages', account.listMessages(0, 0, MessageType.Failed))
+  console.log(account.messageCount())
   account.setAlias('new alias')
 
   const savedAccount = manager.getAccount('new alias')

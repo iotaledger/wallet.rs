@@ -189,6 +189,13 @@ impl AccountHandle {
         })?)
     }
 
+    /// The number of messages associated with the account.
+    fn message_count(&self) -> usize {
+        crate::block_on(async {
+            self.account_handle.read().await.messages().len()
+        })
+    }
+
     /// Bridge to [Account#list_messages](struct.Account.html#method.list_messages).
     /// This method clones the account's messages so when querying a large list of messages
     /// prefer using the `read` method to access the account instance.

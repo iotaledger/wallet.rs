@@ -70,6 +70,17 @@ declare_types! {
             Ok(neon_serde::to_value(&mut cx, &balance)?.upcast())
         }
 
+        method messageCount(mut cx) {
+            let this = cx.this();
+            let id = cx.borrow(&this, |r| r.0.clone());
+            crate::block_on(async move {
+                let account_handle = crate::get_account(&id).await;
+                let account = account_handle.read().await;
+                let count = account.messages().len();
+                Ok(cx.number(count as f64).upcast())
+            })
+        }
+
         method listMessages(mut cx) {
             let count = match cx.argument_opt(0) {
                 Some(arg) => arg.downcast::<JsNumber>().or_throw(&mut cx)?.value() as usize,
