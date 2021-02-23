@@ -182,10 +182,10 @@ pub enum MessageType {
     },
     /// Checks if all accounts has unused latest address after syncing with the Tangle.
     IsLatestAddressUnused,
-    /// Open the iota ledger app on Ledger Nano or Speculos simulator.
+    /// Get the Ledger Nano or Speculos simulator status.
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
-    OpenLedgerApp(bool),
+    GetLedgerStatus(bool),
     /// Deletes the storage.
     DeleteStorage,
     /// Changes stronghold snapshot password.
@@ -266,7 +266,7 @@ impl Serialize for MessageType {
                 serializer.serialize_unit_variant("MessageType", 19, "IsLatestAddressUnused")
             }
             #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-            MessageType::OpenLedgerApp(_) => serializer.serialize_unit_variant("MessageType", 20, "OpenLedgerApp"),
+            MessageType::GetLedgerStatus(_) => serializer.serialize_unit_variant("MessageType", 20, "GetLedgerStatus"),
             MessageType::DeleteStorage => serializer.serialize_unit_variant("MessageType", 21, "DeleteStorage"),
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             MessageType::ChangeStrongholdPassword {
@@ -381,10 +381,10 @@ pub enum ResponseType {
     UpdatedAlias,
     /// Account method SetClientOptions response.
     UpdatedClientOptions,
-    /// OpenLedgerApp response.
+    /// GetLedgerStatus response.
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
-    OpenedLedgerApp,
+    LedgerStatus(crate::LedgerStatus),
     /// DeleteStorage response.
     DeletedStorage,
     /// ChangeStrongholdPassword response.

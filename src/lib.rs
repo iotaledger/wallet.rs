@@ -72,12 +72,29 @@ pub async fn with_actor_system<F: FnOnce(&riker::actors::ActorSystem)>(cb: F) {
     cb(&runtime.stronghold.system)
 }
 
-/// Opens the IOTA app on Ledger (Nano S/X or Speculos simulator).
+/// The ledger status.
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
-pub fn open_ledger_app(is_simulator: bool) -> crate::Result<()> {
-    iota_ledger::get_ledger(signing::ledger::HARDENED, is_simulator)?;
-    Ok(())
+#[derive(Debug, ::serde::Serialize)]
+#[serde(tag = "type")]
+pub enum LedgerStatus {
+    /// Ledger is available and ready to be used.
+    Connected,
+    /// Ledger is disconnected.
+    Disconnected,
+    /// Ledger is locked.
+    Locked,
+}
+
+/// Gets the status of the Ledger device/simulator.
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
+pub fn get_ledger_status(is_simulator: bool) -> LedgerStatus {
+    match iota_ledger::get_ledger(signing::ledger::HARDENED, is_simulator).map_err(Into::into) {
+        Ok(_) => LedgerStatus::Connected,
+        Err(Error::LedgerDongleLocked) => LedgerStatus::Locked,
+        Err(_) => LedgerStatus::Disconnected,
+    }
 }
 
 #[cfg(test)]

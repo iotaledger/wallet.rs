@@ -166,8 +166,8 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-            MessageType::OpenLedgerApp(is_simulator) => {
-                convert_panics(|| crate::open_ledger_app(*is_simulator).map(|_| ResponseType::OpenedLedgerApp))
+            MessageType::GetLedgerStatus(is_simulator) => {
+                convert_panics(|| Ok(ResponseType::LedgerStatus(crate::get_ledger_status(*is_simulator))))
             }
             MessageType::DeleteStorage => {
                 convert_async_panics(|| async move {
