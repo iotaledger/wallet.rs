@@ -16,6 +16,30 @@ use std::{
 };
 
 #[pymethods]
+impl AccountsSynchronizer {
+    /// Number of address indexes that are generated on each account.
+    fn gap_limit(&mut self, limit: usize) {
+        self.accounts_synchronizer = Some(self.accounts_synchronizer.take().unwrap().gap_limit(limit));
+    }
+
+    /// Initial address index to start syncing on each account.
+    fn address_index(&mut self, address_index: usize) {
+        self.accounts_synchronizer = Some(self.accounts_synchronizer.take().unwrap().address_index(address_index));
+    }
+
+    /// Syncs the accounts with the tangle.
+    fn execute(&mut self) -> Result<Vec<SyncedAccount>> {
+        let synced_accounts = crate::block_on(async { self.accounts_synchronizer.take().unwrap().execute().await })?;
+        Ok(synced_accounts
+            .into_iter()
+            .map(|account| SyncedAccount {
+                synced_account: account,
+            })
+            .collect())
+    }
+}
+
+#[pymethods]
 impl AccountManager {
     #[new]
     /// The constructor of account manager.
@@ -120,14 +144,11 @@ impl AccountManager {
     }
 
     /// Syncs all accounts.
-    fn sync_accounts(&self) -> Result<Vec<SyncedAccount>> {
-        let synced_accounts = crate::block_on(async { self.account_manager.sync_accounts().await })?;
-        Ok(synced_accounts
-            .into_iter()
-            .map(|account| SyncedAccount {
-                synced_account: account,
-            })
-            .collect())
+    fn sync_accounts(&self) -> Result<AccountsSynchronizer> {
+        let accounts_synchronizer = self.account_manager.sync_accounts()?;
+        Ok(AccountsSynchronizer {
+            accounts_synchronizer: Some(accounts_synchronizer),
+        })
     }
 
     /// Transfers an amount from an account to another.

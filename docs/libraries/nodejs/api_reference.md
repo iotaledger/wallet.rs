@@ -105,9 +105,15 @@ Removes the account with the given identifier or index.
 | --------- | ----------------------------- | ----------------- | --------------------------------------- |
 | accountId | <code>string \| number</code> | <code>null</code> | The account identifier or account index |
 
-#### syncAccounts()
+#### syncAccounts([options])
 
 Synchronize all stored accounts with the Tangle.
+
+| Param                  | Type                | Default                           | Description                                           |
+| ---------------------- | ------------------- | --------------------------------- | ----------------------------------------------------- |
+| [options]              | <code>object</code> | <code>{}</code>                   | The sync options                                      |
+| [options.addressIndex] | <code>number</code> | <code>latest address index</code> | The index of the first account address to sync        |
+| [options.gapLimit]     | <code>number</code> | <code>10</code>                   | The number of addresses to check on each account sync |
 
 **Returns** A promise resolving to an array of [SyncedAccount](#syncedaccount).
 
@@ -260,12 +266,11 @@ Address object: { address: string, balance: number, keyIndex: number }
 
 Synchronizes the account with the Tangle.
 
-| Param                     | Type                 | Default                           | Description                            |
-| ------------------------- | -------------------- | --------------------------------- | -------------------------------------- |
-| [options]                 | <code>object</code>  | <code>{}</code>                   | The sync options                       |
-| [options.addressIndex]    | <code>number</code>  | <code>latest address index</code> | The index of the first address to sync |
-| [options.gapLimit]        | <code>number</code>  | <code>10</code>                   | The number of addresses to check       |
-| [options.skipPersistance] | <code>boolean</code> | <code>false</code>                | Skip updating the account in storage   |
+| Param                  | Type                | Default                           | Description                            |
+| ---------------------- | ------------------- | --------------------------------- | -------------------------------------- |
+| [options]              | <code>object</code> | <code>{}</code>                   | The sync options                       |
+| [options.addressIndex] | <code>number</code> | <code>latest address index</code> | The index of the first address to sync |
+| [options.gapLimit]     | <code>number</code> | <code>10</code>                   | The number of addresses to check       |
 
 **Returns** a [SyncedAccount](#syncedaccount) instance.
 

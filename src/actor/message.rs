@@ -105,7 +105,14 @@ pub enum MessageType {
         method: AccountMethod,
     },
     /// Sync accounts.
-    SyncAccounts,
+    SyncAccounts {
+        /// The first address index to sync.
+        #[serde(rename = "addressIndex")]
+        address_index: Option<usize>,
+        /// The gap limit.
+        #[serde(rename = "gapLimit")]
+        gap_limit: Option<usize>,
+    },
     /// Reattach message.
     Reattach {
         /// The account identifier.
@@ -217,7 +224,10 @@ impl Serialize for MessageType {
                 account_id: _,
                 method: _,
             } => serializer.serialize_unit_variant("MessageType", 4, "CallAccountMethod"),
-            MessageType::SyncAccounts => serializer.serialize_unit_variant("MessageType", 5, "SyncAccounts"),
+            MessageType::SyncAccounts {
+                address_index: _,
+                gap_limit: _,
+            } => serializer.serialize_unit_variant("MessageType", 5, "SyncAccounts"),
             MessageType::Reattach {
                 account_id: _,
                 message_id: _,
