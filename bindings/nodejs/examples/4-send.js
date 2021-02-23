@@ -29,7 +29,7 @@ async function run() {
 		amount
     ) 
 
-    console.log(`Check your message on https://explorer.iota.org/crysalis/message/${node_response.id}`)
+    console.log(`Check your message on https://explorer.iota.org/chrysalis/message/${node_response.id}`)
 }
 
 run()
