@@ -167,12 +167,12 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#examples" id="examples">Examples</a></h1>
+                        <h1 id="examples"><a class="header" href="#examples">Examples</a></h1>
 <p>There are several examples to show the usage of the library.</p>
 <blockquote>
 <p>All examples can be found in <a href="https://github.com/iotaledger/wallet.rs/bindings/nodejs/examples/">/bindings/nodejs/examples</a></p>
 </blockquote>
-<h2><a class="header" href="#setup" id="setup">Setup</a></h2>
+<h2 id="setup"><a class="header" href="#setup">Setup</a></h2>
 <p>First, setup your environment as follows:</p>
 <pre><code>git clone https://github.com/iotaledger/wallet.rs
 cd bindings/node/examples
@@ -180,7 +180,7 @@ npm install # or `yarn`
 cp .env.example .env
 </code></pre>
 <p>Add your custom password to the <code>.env</code> file.</p>
-<h2><a class="header" href="#1-example-create-an-account" id="1-example-create-an-account">1. Example: Create an Account</a></h2>
+<h2 id="1-example-create-an-account"><a class="header" href="#1-example-create-an-account">1. Example: Create an Account</a></h2>
 <p>Run:</p>
 <pre><code>node 1-create-account.js
 </code></pre>
@@ -210,7 +210,7 @@ async function run() {
 
 run()
 </code></pre>
-<h2><a class="header" href="#2-generate-address" id="2-generate-address">2. Generate Address</a></h2>
+<h2 id="2-generate-address"><a class="header" href="#2-generate-address">2. Generate Address</a></h2>
 <p>Run:</p>
 <pre><code>node 2-generate-address.js
 </code></pre>
@@ -249,7 +249,7 @@ async function run() {
 
 run()
 </code></pre>
-<h2><a class="header" href="#3-example-check-balance" id="3-example-check-balance">3. Example: Check Balance</a></h2>
+<h2 id="3-example-check-balance"><a class="header" href="#3-example-check-balance">3. Example: Check Balance</a></h2>
 <p>Run:</p>
 <pre><code>node 3-check_balance
 </code></pre>
@@ -282,7 +282,7 @@ async function run() {
 
 run()
 </code></pre>
-<h2><a class="header" href="#4-example-check-balance" id="4-example-check-balance">4. Example: Check Balance</a></h2>
+<h2 id="4-example-check-balance"><a class="header" href="#4-example-check-balance">4. Example: Check Balance</a></h2>
 <p>Now you can send the test tokens to an address! </p>
 <p>Run</p>
 <pre><code>node 4-send.js
@@ -319,12 +319,12 @@ async function run() {
 		amount
     ) 
 
-	console.log(&quot;Check your message on https://explorer.iota.org/crysalis/message/&quot;, node_response.id)
+    console.log(`Check your message on https://explorer.iota.org/chrysalis/message/${node_response.id}`)
 }
 
 run()
 </code></pre>
-<h2><a class="header" href="#5-backup" id="5-backup">5. Backup</a></h2>
+<h2 id="5-backup"><a class="header" href="#5-backup">5. Backup</a></h2>
 <p>Run</p>
 <pre><code>node 5-backup.js
 </code></pre>
@@ -353,7 +353,7 @@ async function run() {
 
 run()
 </code></pre>
-<h2><a class="header" href="#6-restore" id="6-restore">6. Restore</a></h2>
+<h2 id="6-restore"><a class="header" href="#6-restore">6. Restore</a></h2>
 <p>Run</p>
 <pre><code>node 6-restore.js
 </code></pre>
@@ -383,7 +383,7 @@ async function run() {
 
 run()
 </code></pre>
-<h2><a class="header" href="#7-events" id="7-events">7. Events</a></h2>
+<h2 id="7-events"><a class="header" href="#7-events">7. Events</a></h2>
 <p>Run</p>
 <pre><code>node 7-events.js
 </code></pre>

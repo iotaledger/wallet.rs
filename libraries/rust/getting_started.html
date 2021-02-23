@@ -167,14 +167,14 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#getting-started-with-rust" id="getting-started-with-rust">Getting Started with Rust</a></h1>
-<h2><a class="header" href="#prerequisites" id="prerequisites">Prerequisites</a></h2>
+                        <h1 id="getting-started-with-rust"><a class="header" href="#getting-started-with-rust">Getting Started with Rust</a></h1>
+<h2 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h2>
 <p><code>Rust</code> and <code>Cargo</code> are required. Install them <a href="https://doc.rust-lang.org/cargo/getting-started/installation.html">here</a>.</p>
 <p>We recommend you update Rust to the latest stable version <a href="https://github.com/rust-lang/rustup.rs#keeping-rust-up-to-date"><code>rustup update stable</code></a>. Nightly should be fine but there's a chance some changes are not compatible.</p>
 <p><code>no_std</code> is not supported currently, but we are working on it, and will provide it as a feature once the new implementation is ready.</p>
-<h3><a class="header" href="#dependencies" id="dependencies">Dependencies</a></h3>
+<h3 id="dependencies"><a class="header" href="#dependencies">Dependencies</a></h3>
 <p><code>cmake</code> and <code>openssl</code> are required. In order to run the build process succesfully using Cargo you might need install additional build tools on your system. </p>
-<h3><a class="header" href="#windows" id="windows">Windows</a></h3>
+<h3 id="windows"><a class="header" href="#windows">Windows</a></h3>
 <p><code>cmake</code> can be downloaded on the <a href="https://cmake.org/download/">official website</a> and <code>openssl</code> can be installed with <a href="https://github.com/microsoft/vcpkg">vcpkg</a> or <a href="https://chocolatey.org/">chocolatey</a>.</p>
 <ul>
 <li>Installing <code>openssl</code> with <code>vcpkg</code>:</li>
@@ -191,21 +191,21 @@ $ set VCPKGRS_DYNAMIC=1
 # you may need to set the OPENSSL_ROOT_DIR environment variable
 $ set OPENSSL_ROOT_DIR=&quot;C:\Program Files\OpenSSL-Win64&quot;
 </code></pre>
-<h3><a class="header" href="#macos" id="macos">macOS</a></h3>
+<h3 id="macos"><a class="header" href="#macos">macOS</a></h3>
 <p><code>cmake</code> and <code>openssl</code> can be installed with <code>Homebrew</code>:</p>
 <pre><code>$ brew install cmake
 $ brew install openssl@1.1
 # you may want to add this to your .zshrc or .bashrc since you'll need it to compile the crate
 $ OPENSSL_ROOT_DIR=$(brew --prefix openssl@1.1)
 </code></pre>
-<h3><a class="header" href="#linux" id="linux">Linux</a></h3>
+<h3 id="linux"><a class="header" href="#linux">Linux</a></h3>
 <p>Install <code>cmake</code> and <code>openssl</code> with your distro's package manager or download from their websites. On Debian and Ubuntu you will also need <code>build-essential</code>.</p>
-<h2><a class="header" href="#usage" id="usage">Usage</a></h2>
+<h2 id="usage"><a class="header" href="#usage">Usage</a></h2>
 <p>To use the library, add this to your <code>Cargo.toml</code>:</p>
 <pre><code>[dependencies]
 iota-wallet = { git = &quot;https://github.com/iotaledger/wallet.rs&quot; }
 </code></pre>
-<h3><a class="header" href="#initialisation" id="initialisation">Initialisation</a></h3>
+<h3 id="initialisation"><a class="header" href="#initialisation">Initialisation</a></h3>
 <p>In order to use the library you first need to create an <code>AccountManager</code>:</p>
 <pre><pre class="playground"><code class="language-rust">use iota_wallet::{
     account_manager::AccountManager, client::ClientOptionsBuilder, signing::SignerType,

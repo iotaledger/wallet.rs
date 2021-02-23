@@ -167,21 +167,21 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#api-reference" id="api-reference">API Reference</a></h1>
-<h3><a class="header" href="#initloggerconfig-logoptions" id="initloggerconfig-logoptions">initLogger(config: LogOptions)</a></h3>
+                        <h1 id="api-reference"><a class="header" href="#api-reference">API Reference</a></h1>
+<h3 id="initloggerconfig-logoptions"><a class="header" href="#initloggerconfig-logoptions">initLogger(config: LogOptions)</a></h3>
 <p>Initializes the logging system.</p>
-<h4><a class="header" href="#logoptions" id="logoptions">LogOptions</a></h4>
+<h4 id="logoptions"><a class="header" href="#logoptions">LogOptions</a></h4>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>color_enabled</td><td><code>boolean</code></td><td><code>undefined</code></td><td>Whether to enable colored output or not</td></tr>
 <tr><td>outputs</td><td><code>LogOutput[]</code></td><td><code>undefined</code></td><td>The log outputs</td></tr>
 </tbody></table>
-<h4><a class="header" href="#logoutput" id="logoutput">LogOutput</a></h4>
+<h4 id="logoutput"><a class="header" href="#logoutput">LogOutput</a></h4>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>name</td><td><code>string</code></td><td><code>undefined</code></td><td>'stdout' or a path to a file</td></tr>
 <tr><td>level_filter</td><td><code>string</code></td><td><code>'info'</code></td><td>The maximum log level that this output accepts</td></tr>
 <tr><td>target_filters</td><td><code>string[]</code></td><td><code>[]</code></td><td>Filters on the log target (library and module names)</td></tr>
 </tbody></table>
-<h3><a class="header" href="#addeventlistenerevent-cb" id="addeventlistenerevent-cb">addEventListener(event, cb)</a></h3>
+<h3 id="addeventlistenerevent-cb"><a class="header" href="#addeventlistenerevent-cb">addEventListener(event, cb)</a></h3>
 <p>Adds a new event listener with a callback in the form of <code>(err, data) =&gt; {}</code>.
 Supported event names:</p>
 <ul>
@@ -192,26 +192,26 @@ Supported event names:</p>
 <li>Reattachment</li>
 <li>Broadcast</li>
 </ul>
-<h3><a class="header" href="#accountmanager" id="accountmanager">AccountManager</a></h3>
-<h4><a class="header" href="#constructoroptions" id="constructoroptions">constructor([options])</a></h4>
+<h3 id="accountmanager"><a class="header" href="#accountmanager">AccountManager</a></h3>
+<h4 id="constructoroptions"><a class="header" href="#constructoroptions">constructor([options])</a></h4>
 <p>Creates a new instance of the AccountManager.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>[options]</td><td><code>object</code></td><td><code>undefined</code></td><td>The options to configure the account manager</td></tr>
 <tr><td>[storagePath]</td><td><code>string</code></td><td><code>undefined</code></td><td>The path where the database file will be saved</td></tr>
 <tr><td>[storageType]</td><td><code>number</code></td><td><code>undefined</code></td><td>The type of the database.  Stronghold = 1, Sqlite = 2</td></tr>
 </tbody></table>
-<h4><a class="header" href="#setstrongholdpasswordpassword-void" id="setstrongholdpasswordpassword-void">setStrongholdPassword(password): void</a></h4>
+<h4 id="setstrongholdpasswordpassword-void"><a class="header" href="#setstrongholdpasswordpassword-void">setStrongholdPassword(password): void</a></h4>
 <p>Sets the stronghold password and initialises it.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>password</td><td><code>string</code></td><td><code>undefined</code></td><td>The stronghold snapshot password</td></tr>
 </tbody></table>
-<h4><a class="header" href="#changestrongholdpasswordcurrentpassword-newpassword-void" id="changestrongholdpasswordcurrentpassword-newpassword-void">changeStrongholdPassword(currentPassword, newPassword): void</a></h4>
+<h4 id="changestrongholdpasswordcurrentpassword-newpassword-void"><a class="header" href="#changestrongholdpasswordcurrentpassword-newpassword-void">changeStrongholdPassword(currentPassword, newPassword): void</a></h4>
 <p>Changes the stronghold password.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>currentPassword</td><td><code>string</code></td><td><code>undefined</code></td><td>The current stronghold password</td></tr>
 <tr><td>newPassword</td><td><code>string</code></td><td><code>undefined</code></td><td>The new stronghold password</td></tr>
 </tbody></table>
-<h4><a class="header" href="#createaccountaccount-account" id="createaccountaccount-account">createAccount(account): Account</a></h4>
+<h4 id="createaccountaccount-account"><a class="header" href="#createaccountaccount-account">createAccount(account): Account</a></h4>
 <p>Creates a new account.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>account</td><td><code>object</code></td><td><code>{}</code></td><td>The account to be created</td></tr>
@@ -221,30 +221,30 @@ Supported event names:</p>
 <tr><td>[account.createdAt]</td><td><code>string</code></td><td>the current date and time</td><td>The ISO 8601 date string of the account creation</td></tr>
 <tr><td>[account.signerType]</td><td><code>number</code></td><td>1 = Stronghold</td><td>The account signer type. 1 = Stronghold, 2 = EnvMnemonic</td></tr>
 </tbody></table>
-<h4><a class="header" href="#getaccountaccountid" id="getaccountaccountid">getAccount(accountId)</a></h4>
+<h4 id="getaccountaccountid"><a class="header" href="#getaccountaccountid">getAccount(accountId)</a></h4>
 <p>Gets the account with the given identifier or index.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>accountId</td><td><code>string | number</code></td><td><code>null</code></td><td>The account identifier or account index</td></tr>
 </tbody></table>
 <p><strong>Returns</strong> the associated Account instance or undefined if the account wasn't found.</p>
-<h4><a class="header" href="#getaccountbyaliasalias" id="getaccountbyaliasalias">getAccountByAlias(alias)</a></h4>
+<h4 id="getaccountbyaliasalias"><a class="header" href="#getaccountbyaliasalias">getAccountByAlias(alias)</a></h4>
 <p>Gets the account with the given alias (case insensitive).</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>alias</td><td><code>string</code></td><td><code>null</code></td><td>The account alias</td></tr>
 </tbody></table>
 <p><strong>Returns</strong> the associated Account instance or undefined if the account wasn't found.</p>
-<h4><a class="header" href="#getaccounts" id="getaccounts">getAccounts()</a></h4>
+<h4 id="getaccounts"><a class="header" href="#getaccounts">getAccounts()</a></h4>
 <p>Gets all stored accounts.</p>
 <p><strong>Returns</strong> an array of <a href="#account">Account objects</a>.</p>
-<h4><a class="header" href="#removeaccountaccountid" id="removeaccountaccountid">removeAccount(accountId)</a></h4>
+<h4 id="removeaccountaccountid"><a class="header" href="#removeaccountaccountid">removeAccount(accountId)</a></h4>
 <p>Removes the account with the given identifier or index.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>accountId</td><td><code>string | number</code></td><td><code>null</code></td><td>The account identifier or account index</td></tr>
 </tbody></table>
-<h4><a class="header" href="#syncaccounts" id="syncaccounts">syncAccounts()</a></h4>
+<h4 id="syncaccounts"><a class="header" href="#syncaccounts">syncAccounts()</a></h4>
 <p>Synchronize all stored accounts with the Tangle.</p>
 <p><strong>Returns</strong> A promise resolving to an array of <a href="#syncedaccount">SyncedAccount</a>.</p>
-<h4><a class="header" href="#internaltransferfromaccount-toaccount-amount" id="internaltransferfromaccount-toaccount-amount">internalTransfer(fromAccount, toAccount, amount)</a></h4>
+<h4 id="internaltransferfromaccount-toaccount-amount"><a class="header" href="#internaltransferfromaccount-toaccount-amount">internalTransfer(fromAccount, toAccount, amount)</a></h4>
 <p>Transfers an amount from one subaccount to another.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>fromAccount</td><td><code><a href="#account">Account</a></code></td><td><code>null</code></td><td>The source account</td></tr>
@@ -252,74 +252,74 @@ Supported event names:</p>
 <tr><td>amount</td><td><code>number</code></td><td><code>undefined</code></td><td>The transfer amount</td></tr>
 </tbody></table>
 <p><strong>Returns</strong> A promise resolving to the transfer's Message.</p>
-<h4><a class="header" href="#backupdestination" id="backupdestination">backup(destination)</a></h4>
+<h4 id="backupdestination"><a class="header" href="#backupdestination">backup(destination)</a></h4>
 <p>Backups the database.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>destination</td><td><code>string</code></td><td><code>undefined</code></td><td>The path to the backup file</td></tr>
 </tbody></table>
 <p><strong>Returns</strong> The full path to the backup file.</p>
-<h4><a class="header" href="#importaccountssource" id="importaccountssource">importAccounts(source)</a></h4>
+<h4 id="importaccountssource"><a class="header" href="#importaccountssource">importAccounts(source)</a></h4>
 <p>Imports a database file.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>source</td><td><code>string</code></td><td><code>undefined</code></td><td>The path to the backup file</td></tr>
 <tr><td>password</td><td><code>string</code></td><td><code>undefined</code></td><td>The backup stronghold password</td></tr>
 </tbody></table>
-<h4><a class="header" href="#islatestaddressunused" id="islatestaddressunused">isLatestAddressUnused()</a></h4>
+<h4 id="islatestaddressunused"><a class="header" href="#islatestaddressunused">isLatestAddressUnused()</a></h4>
 <p>Determines whether all accounts has unused latest address after syncing with the Tangle.</p>
 <p><strong>Returns</strong> A promise resolving to the boolean value.</p>
-<h4><a class="header" href="#setclientoptionsoptions" id="setclientoptionsoptions">setClientOptions(options)</a></h4>
+<h4 id="setclientoptionsoptions"><a class="header" href="#setclientoptionsoptions">setClientOptions(options)</a></h4>
 <p>Updates the client options for all accounts.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>options</td><td><code><a href="#clientoptions">ClientOptions</a></code></td><td><code>null</code></td><td>The new account client options</td></tr>
 </tbody></table>
-<h3><a class="header" href="#syncedaccount" id="syncedaccount">SyncedAccount</a></h3>
-<h4><a class="header" href="#sendaddress-amount-options" id="sendaddress-amount-options">send(address, amount[, options])</a></h4>
+<h3 id="syncedaccount"><a class="header" href="#syncedaccount">SyncedAccount</a></h3>
+<h4 id="sendaddress-amount-options"><a class="header" href="#sendaddress-amount-options">send(address, amount[, options])</a></h4>
 <p>Send funds to the given address.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>address</td><td><code>string</code></td><td><code>null</code></td><td>The bech32 string of the transfer address</td></tr>
 <tr><td>amount</td><td><code>number</code></td><td><code>undefined</code></td><td>The transfer amount</td></tr>
 <tr><td>options</td><td><code>TransferOptions</code></td><td><code>undefined</code></td><td>The transfer options</td></tr>
 </tbody></table>
-<h5><a class="header" href="#transferoptions" id="transferoptions">TransferOptions</a></h5>
+<h5 id="transferoptions"><a class="header" href="#transferoptions">TransferOptions</a></h5>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>remainderValueStrategy</td><td><code>RemainderValueStrategy</code></td><td><code>null</code></td><td>The strategy to use for the remainder value if any</td></tr>
 <tr><td>indexation</td><td><code>{ index: string, data?: Uint8Array }</code></td><td><code>null</code></td><td>Message indexation</td></tr>
 </tbody></table>
-<h5><a class="header" href="#remaindervaluestrategy" id="remaindervaluestrategy">RemainderValueStrategy</a></h5>
-<h6><a class="header" href="#changeaddress" id="changeaddress">changeAddress()</a></h6>
+<h5 id="remaindervaluestrategy"><a class="header" href="#remaindervaluestrategy">RemainderValueStrategy</a></h5>
+<h6 id="changeaddress"><a class="header" href="#changeaddress">changeAddress()</a></h6>
 <p>Send the remainder value to an internal address.</p>
-<h6><a class="header" href="#reuseaddress" id="reuseaddress">reuseAddress()</a></h6>
+<h6 id="reuseaddress"><a class="header" href="#reuseaddress">reuseAddress()</a></h6>
 <p>Send the remainder value to its original address.</p>
-<h6><a class="header" href="#accountaddressaddress-string" id="accountaddressaddress-string">accountAddress(address: string)</a></h6>
+<h6 id="accountaddressaddress-string"><a class="header" href="#accountaddressaddress-string">accountAddress(address: string)</a></h6>
 <p>Send the remainder value to a specific address that must belong to the account.</p>
-<h4><a class="header" href="#retrymessageid" id="retrymessageid">retry(messageId)</a></h4>
+<h4 id="retrymessageid"><a class="header" href="#retrymessageid">retry(messageId)</a></h4>
 <p>Retries (promotes or reattaches) the given message.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
 </tbody></table>
-<h4><a class="header" href="#reattachmessageid" id="reattachmessageid">reattach(messageId)</a></h4>
+<h4 id="reattachmessageid"><a class="header" href="#reattachmessageid">reattach(messageId)</a></h4>
 <p>Reattach the given message.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
 </tbody></table>
-<h4><a class="header" href="#promotemessageid" id="promotemessageid">promote(messageId)</a></h4>
+<h4 id="promotemessageid"><a class="header" href="#promotemessageid">promote(messageId)</a></h4>
 <p>Promote the given message.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
 </tbody></table>
-<h3><a class="header" href="#account" id="account">Account</a></h3>
-<h4><a class="header" href="#id" id="id">id()</a></h4>
+<h3 id="account"><a class="header" href="#account">Account</a></h3>
+<h4 id="id"><a class="header" href="#id">id()</a></h4>
 <p>Returns the account's identifier.</p>
-<h4><a class="header" href="#index" id="index">index()</a></h4>
+<h4 id="index"><a class="header" href="#index">index()</a></h4>
 <p>Returns the account's index.</p>
-<h4><a class="header" href="#alias" id="alias">alias()</a></h4>
+<h4 id="alias"><a class="header" href="#alias">alias()</a></h4>
 <p>Returns the account's alias.</p>
-<h4><a class="header" href="#balance-accountbalance" id="balance-accountbalance">balance(): AccountBalance</a></h4>
+<h4 id="balance-accountbalance"><a class="header" href="#balance-accountbalance">balance(): AccountBalance</a></h4>
 <p>Returns the account's balance information object.</p>
 <p>Balance object: { total: number, available: number, incoming: number, outgoing: number }</p>
-<h4><a class="header" href="#messagecount" id="messagecount">messageCount()</a></h4>
+<h4 id="messagecount"><a class="header" href="#messagecount">messageCount()</a></h4>
 <p>Returns the number of messages associated with the account.</p>
-<h4><a class="header" href="#listmessagescount-from-type" id="listmessagescount-from-type">listMessages([count, from, type])</a></h4>
+<h4 id="listmessagescount-from-type"><a class="header" href="#listmessagescount-from-type">listMessages([count, from, type])</a></h4>
 <p>Returns the account's messages.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>[count]</td><td><code>number</code></td><td><code>0</code></td><td>The number of messages to return (<code>0</code> to return all)</td></tr>
@@ -327,13 +327,13 @@ Supported event names:</p>
 <tr><td>[type]</td><td><code>number</code></td><td><code>null</code></td><td>The message type filter (Received = 1, Sent = 2, Failed = 3, Unconfirmed = 4, Value = 5)</td></tr>
 </tbody></table>
 <p>Message object: { confirmed: boolean, broadcasted: boolean, incoming: boolean, value: number }</p>
-<h4><a class="header" href="#listaddressesunspent" id="listaddressesunspent">listAddresses([unspent])</a></h4>
+<h4 id="listaddressesunspent"><a class="header" href="#listaddressesunspent">listAddresses([unspent])</a></h4>
 <p>Returns the account's addresses.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>[unspent]</td><td><code>boolean</code></td><td><code>null</code></td><td>The <code>unspent</code> status filter</td></tr>
 </tbody></table>
 <p>Address object: { address: string, balance: number, keyIndex: number }</p>
-<h4><a class="header" href="#syncoptions" id="syncoptions">sync([options])</a></h4>
+<h4 id="syncoptions"><a class="header" href="#syncoptions">sync([options])</a></h4>
 <p>Synchronizes the account with the Tangle.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>[options]</td><td><code>object</code></td><td><code>{}</code></td><td>The sync options</td></tr>
@@ -342,37 +342,37 @@ Supported event names:</p>
 <tr><td>[options.skipPersistance]</td><td><code>boolean</code></td><td><code>false</code></td><td>Skip updating the account in storage</td></tr>
 </tbody></table>
 <p><strong>Returns</strong> a <a href="#syncedaccount">SyncedAccount</a> instance.</p>
-<h4><a class="header" href="#islatestaddressunused-1" id="islatestaddressunused-1">isLatestAddressUnused()</a></h4>
+<h4 id="islatestaddressunused-1"><a class="header" href="#islatestaddressunused-1">isLatestAddressUnused()</a></h4>
 <p>Determines whether the account has unused latest address after syncing with the Tangle.</p>
 <p><strong>Returns</strong> A promise resolving to the boolean value.</p>
-<h4><a class="header" href="#setaliasalias" id="setaliasalias">setAlias(alias)</a></h4>
+<h4 id="setaliasalias"><a class="header" href="#setaliasalias">setAlias(alias)</a></h4>
 <p>Updates the account alias.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>alias</td><td><code>string</code></td><td><code>null</code></td><td>The new account alias</td></tr>
 </tbody></table>
-<h4><a class="header" href="#setclientoptionsoptions-1" id="setclientoptionsoptions-1">setClientOptions(options)</a></h4>
+<h4 id="setclientoptionsoptions-1"><a class="header" href="#setclientoptionsoptions-1">setClientOptions(options)</a></h4>
 <p>Updates the account client options.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>options</td><td><code><a href="#clientoptions">ClientOptions</a></code></td><td><code>null</code></td><td>The new account client options</td></tr>
 </tbody></table>
-<h4><a class="header" href="#getmessagemessageid" id="getmessagemessageid">getMessage(messageId)</a></h4>
+<h4 id="getmessagemessageid"><a class="header" href="#getmessagemessageid">getMessage(messageId)</a></h4>
 <p>Gets the message associated with the given identifier.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
 </tbody></table>
-<h4><a class="header" href="#getaddressaddressbech32" id="getaddressaddressbech32">getAddress(addressBech32)</a></h4>
+<h4 id="getaddressaddressbech32"><a class="header" href="#getaddressaddressbech32">getAddress(addressBech32)</a></h4>
 <p>Gets the address object by its bech32 representation.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>addressBech32</td><td><code>string</code></td><td><code>null</code></td><td>The address bech32 representation</td></tr>
 </tbody></table>
-<h4><a class="header" href="#generateaddress" id="generateaddress">generateAddress()</a></h4>
+<h4 id="generateaddress"><a class="header" href="#generateaddress">generateAddress()</a></h4>
 <p>Generates a new unused address and returns it.</p>
-<h4><a class="header" href="#latestaddress" id="latestaddress">latestAddress()</a></h4>
+<h4 id="latestaddress"><a class="header" href="#latestaddress">latestAddress()</a></h4>
 <p>Returns the latest address (the one with the biggest keyIndex).</p>
-<h4><a class="header" href="#getunusedaddress" id="getunusedaddress">getUnusedAddress()</a></h4>
+<h4 id="getunusedaddress"><a class="header" href="#getunusedaddress">getUnusedAddress()</a></h4>
 <p>Synchronizes the account addresses with the Tangle and returns the latest address in the account,
 which is an address without balance.</p>
-<h3><a class="header" href="#clientoptions" id="clientoptions">ClientOptions</a></h3>
+<h3 id="clientoptions"><a class="header" href="#clientoptions">ClientOptions</a></h3>
 <table><thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>[network]</td><td><code>number</code></td><td><code>undefined</code></td><td>The tangle network to connect to (Mainnet = 1, Devnet = 1, Comnet = 3)</td></tr>
 <tr><td>[node]</td><td><code>string</code></td><td><code>undefined</code></td><td>A node URL to connect to</td></tr>

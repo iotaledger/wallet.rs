@@ -169,15 +169,15 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#welcome" id="welcome">Welcome</a></h1>
+                        <h1 id="welcome"><a class="header" href="#welcome">Welcome</a></h1>
 <p>This is the documentation for the official IOTA Wallet Library Software. It can be used to easily intgrate an IOTA Wallet into your application. </p>
-<h2><a class="header" href="#warning" id="warning">Warning</a></h2>
+<h2 id="warning"><a class="header" href="#warning">Warning</a></h2>
 <p>This library is in active development. The library targets the Chrysalis testnet and does not work with current IOTA mainnet.</p>
-<h2><a class="header" href="#chrysalis-testnet" id="chrysalis-testnet">Chrysalis Testnet</a></h2>
+<h2 id="chrysalis-testnet"><a class="header" href="#chrysalis-testnet">Chrysalis Testnet</a></h2>
 <p>To join the Chrysalis public testnet checkout <a href="https://blog.iota.org/chrysalis-phase-2-testnet-out-now/">this link</a>.</p>
-<h2><a class="header" href="#joining-the-discussion" id="joining-the-discussion">Joining the discussion</a></h2>
+<h2 id="joining-the-discussion"><a class="header" href="#joining-the-discussion">Joining the discussion</a></h2>
 <p>If you want to get involved in discussions about this library, or you're looking for support, go to the #clients-discussion channel on <a href="https://discord.iota.org">Discord</a>.</p>
-<h2><a class="header" href="#what-you-will-find-here" id="what-you-will-find-here">What you will find here</a></h2>
+<h2 id="what-you-will-find-here"><a class="header" href="#what-you-will-find-here">What you will find here</a></h2>
 <p>This documentation has five paths. </p>
 <ol>
 <li>The Overview, an detailed overview of the wallet library. </li>
@@ -186,37 +186,37 @@
 <li>Contribute, how you can work on the wallet software.</li>
 <li>Get in touch, join the community and become part of the X-Team!</li>
 </ol>
-<h1><a class="header" href="#overview" id="overview">Overview</a></h1>
+<h1 id="overview"><a class="header" href="#overview">Overview</a></h1>
 <p>The wallet library is a stateful package with a standardised interface for developers to build applications involving IOTA value transactions.
 It offers abstractions to handle IOTA payments and can optionally interact with <a href="https://github.com/iotaledger/stronghold.rs/">IOTA Stronghold</a> for seed handling, seed storage and state backup. Alternatively you can use the EnvMnemonic SignerType and a SQLite database. See the full specification <a href="https://github.com/iotaledger/wallet.rs/blob/master/specs/wallet-ENGINEERING-SPEC-0000.md">here</a>.</p>
 <p><img src="overview/overview.drawio.svg" alt="wallet.rs overview" /></p>
-<h1><a class="header" href="#iota-wallet-libraries" id="iota-wallet-libraries">IOTA Wallet libraries</a></h1>
+<h1 id="iota-wallet-libraries"><a class="header" href="#iota-wallet-libraries">IOTA Wallet libraries</a></h1>
 <p>We currently support the following libraries:</p>
 <ul>
 <li><a href="libraries/./rust/">Rust</a> </li>
 <li><a href="libraries/./nodejs/">Node.js</a> </li>
 </ul>
-<h1><a class="header" href="#iota-wallet-rust-library" id="iota-wallet-rust-library">IOTA Wallet Rust Library</a></h1>
+<h1 id="iota-wallet-rust-library"><a class="header" href="#iota-wallet-rust-library">IOTA Wallet Rust Library</a></h1>
 <p><a href="https://github.com/iotaledger/wallet.rs"><img src="https://img.shields.io/badge/Status-Alpha-yellow.svg" alt="status" /></a></p>
-<h2><a class="header" href="#warning-1" id="warning-1">Warning</a></h2>
+<h2 id="warning-1"><a class="header" href="#warning-1">Warning</a></h2>
 <p>This library is in active development. The library targets the Chrysalis testnet and does not work with current IOTA mainnet.</p>
-<h2><a class="header" href="#joining-the-discussion-1" id="joining-the-discussion-1">Joining the discussion</a></h2>
+<h2 id="joining-the-discussion-1"><a class="header" href="#joining-the-discussion-1">Joining the discussion</a></h2>
 <p>If you want to get involved in discussions about this library, or you're looking for support, go to the #clients-discussion channel on <a href="https://discord.iota.org">Discord</a>.</p>
-<h2><a class="header" href="#overview-1" id="overview-1">Overview</a></h2>
+<h2 id="overview-1"><a class="header" href="#overview-1">Overview</a></h2>
 <ul>
 <li><a href="libraries/rust/">Getting Started with wallet.rs</a></li>
 <li><a href="libraries/rust/">Examples</a></li>
 <li><a href="libraries/rust/">API Reference</a></li>
 <li><a href="libraries/rust/">Troubleshooting</a></li>
 </ul>
-<h1><a class="header" href="#getting-started-with-rust" id="getting-started-with-rust">Getting Started with Rust</a></h1>
-<h2><a class="header" href="#prerequisites" id="prerequisites">Prerequisites</a></h2>
+<h1 id="getting-started-with-rust"><a class="header" href="#getting-started-with-rust">Getting Started with Rust</a></h1>
+<h2 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h2>
 <p><code>Rust</code> and <code>Cargo</code> are required. Install them <a href="https://doc.rust-lang.org/cargo/getting-started/installation.html">here</a>.</p>
 <p>We recommend you update Rust to the latest stable version <a href="https://github.com/rust-lang/rustup.rs#keeping-rust-up-to-date"><code>rustup update stable</code></a>. Nightly should be fine but there's a chance some changes are not compatible.</p>
 <p><code>no_std</code> is not supported currently, but we are working on it, and will provide it as a feature once the new implementation is ready.</p>
-<h3><a class="header" href="#dependencies" id="dependencies">Dependencies</a></h3>
+<h3 id="dependencies"><a class="header" href="#dependencies">Dependencies</a></h3>
 <p><code>cmake</code> and <code>openssl</code> are required. In order to run the build process succesfully using Cargo you might need install additional build tools on your system. </p>
-<h3><a class="header" href="#windows" id="windows">Windows</a></h3>
+<h3 id="windows"><a class="header" href="#windows">Windows</a></h3>
 <p><code>cmake</code> can be downloaded on the <a href="https://cmake.org/download/">official website</a> and <code>openssl</code> can be installed with <a href="https://github.com/microsoft/vcpkg">vcpkg</a> or <a href="https://chocolatey.org/">chocolatey</a>.</p>
 <ul>
 <li>Installing <code>openssl</code> with <code>vcpkg</code>:</li>
@@ -233,21 +233,21 @@ $ set VCPKGRS_DYNAMIC=1
 # you may need to set the OPENSSL_ROOT_DIR environment variable
 $ set OPENSSL_ROOT_DIR=&quot;C:\Program Files\OpenSSL-Win64&quot;
 </code></pre>
-<h3><a class="header" href="#macos" id="macos">macOS</a></h3>
+<h3 id="macos"><a class="header" href="#macos">macOS</a></h3>
 <p><code>cmake</code> and <code>openssl</code> can be installed with <code>Homebrew</code>:</p>
 <pre><code>$ brew install cmake
 $ brew install openssl@1.1
 # you may want to add this to your .zshrc or .bashrc since you'll need it to compile the crate
 $ OPENSSL_ROOT_DIR=$(brew --prefix openssl@1.1)
 </code></pre>
-<h3><a class="header" href="#linux" id="linux">Linux</a></h3>
+<h3 id="linux"><a class="header" href="#linux">Linux</a></h3>
 <p>Install <code>cmake</code> and <code>openssl</code> with your distro's package manager or download from their websites. On Debian and Ubuntu you will also need <code>build-essential</code>.</p>
-<h2><a class="header" href="#usage" id="usage">Usage</a></h2>
+<h2 id="usage"><a class="header" href="#usage">Usage</a></h2>
 <p>To use the library, add this to your <code>Cargo.toml</code>:</p>
 <pre><code>[dependencies]
 iota-wallet = { git = &quot;https://github.com/iotaledger/wallet.rs&quot; }
 </code></pre>
-<h3><a class="header" href="#initialisation" id="initialisation">Initialisation</a></h3>
+<h3 id="initialisation"><a class="header" href="#initialisation">Initialisation</a></h3>
 <p>In order to use the library you first need to create an <code>AccountManager</code>:</p>
 <pre><pre class="playground"><code class="language-rust">use iota_wallet::{
     account_manager::AccountManager, client::ClientOptionsBuilder, signing::SignerType,
@@ -272,12 +272,12 @@ async fn main() -&gt; iota_wallet::Result&lt;()&gt; {
     Ok(())
 }
 </code></pre></pre>
-<h1><a class="header" href="#examples" id="examples">Examples</a></h1>
+<h1 id="examples"><a class="header" href="#examples">Examples</a></h1>
 <p>You can see the examples in the <a href="libraries/rust/examples/">examples</a> directory and try them with:</p>
 <pre><code>cargo run --example # lists the available examples
 cargo run --example transfer # execute the `transfer` example
 </code></pre>
-<h2><a class="header" href="#backup-and-restore-example" id="backup-and-restore-example">Backup and restore example</a></h2>
+<h2 id="backup-and-restore-example"><a class="header" href="#backup-and-restore-example">Backup and restore example</a></h2>
 <p>Create an account manager and set an password:</p>
 <pre><pre class="playground"><code class="language-rust">
 <span class="boring">#![allow(unused)]
@@ -330,35 +330,35 @@ let imported_account = imported_account_handle.read().await;
 </span></code></pre></pre>
 <p>That's it! Now you know, how do backup and restore your account!</p>
 <p>See the full example <a href="https://github.com/iotaledger/wallet.rs/blob/develop/examples/backup_and_restore.rs">here</a></p>
-<h1><a class="header" href="#api-reference" id="api-reference">API Reference</a></h1>
+<h1 id="api-reference"><a class="header" href="#api-reference">API Reference</a></h1>
 <p>Link to hosted api documentation: TODO</p>
 <p>If you'd like to explore the implementation in more depth, the following command generates docs for the whole crate:</p>
 <pre><code>cargo doc --document-private-items --no-deps --open
 </code></pre>
-<h1><a class="header" href="#troubleshooting" id="troubleshooting">Troubleshooting</a></h1>
-<h2><a class="header" href="#stackexchange" id="stackexchange">StackExchange</a></h2>
+<h1 id="troubleshooting"><a class="header" href="#troubleshooting">Troubleshooting</a></h1>
+<h2 id="stackexchange"><a class="header" href="#stackexchange">StackExchange</a></h2>
 <blockquote>
 <p><a href="https://iota.stackexchange.com/">https://iota.stackexchange.com</a></p>
 </blockquote>
 <p>The IOTA StackExchange a a nice Tool for developers to find  Answers for a problem. Just search your problem and find your answer! If there is no one, submit your question and share it in the discussion channel below.</p>
-<h2><a class="header" href="#joining-the-discussion-2" id="joining-the-discussion-2">Joining the discussion</a></h2>
+<h2 id="joining-the-discussion-2"><a class="header" href="#joining-the-discussion-2">Joining the discussion</a></h2>
 <p>If you want to get involved in discussions about this library, or you're looking for support, go to the #clients-discussion channel on <a href="https://discord.iota.org">Discord</a>.</p>
-<h1><a class="header" href="#iota-wallet-nodejs-library" id="iota-wallet-nodejs-library">IOTA Wallet Node.js Library</a></h1>
+<h1 id="iota-wallet-nodejs-library"><a class="header" href="#iota-wallet-nodejs-library">IOTA Wallet Node.js Library</a></h1>
 <p><a href="https://github.com/iotaledger/wallet.rs"><img src="https://img.shields.io/badge/Status-Alpha-yellow.svg" alt="status" /></a></p>
-<h2><a class="header" href="#warning-2" id="warning-2">Warning</a></h2>
+<h2 id="warning-2"><a class="header" href="#warning-2">Warning</a></h2>
 <p>This library is in active development. The library targets the Chrysalis testnet and does not work with current IOTA mainnet.</p>
-<h2><a class="header" href="#joining-the-discussion-3" id="joining-the-discussion-3">Joining the discussion</a></h2>
+<h2 id="joining-the-discussion-3"><a class="header" href="#joining-the-discussion-3">Joining the discussion</a></h2>
 <p>If you want to get involved in discussions about this library, or you're looking for support, go to the #clients-discussion channel on <a href="https://discord.iota.org">Discord</a>.</p>
-<h2><a class="header" href="#overview-2" id="overview-2">Overview</a></h2>
+<h2 id="overview-2"><a class="header" href="#overview-2">Overview</a></h2>
 <ul>
 <li><a href="libraries/nodejs/./getting_started.html">Getting Started with wallet and node.js</a></li>
 <li><a href="libraries/nodejs/./examples.html">Examples</a></li>
 <li><a href="libraries/nodejs/./api_reference.html">API Reference</a></li>
 <li><a href="libraries/nodejs/./troubleshooting.html">Troubleshooting</a></li>
 </ul>
-<h1><a class="header" href="#getting-started-with-nodejs" id="getting-started-with-nodejs">Getting Started with Node.js</a></h1>
+<h1 id="getting-started-with-nodejs"><a class="header" href="#getting-started-with-nodejs">Getting Started with Node.js</a></h1>
 <p>The <a href="https://www.npmjs.com/package/@iota/wallet">IOTA Wallet Node.js binding</a> is published on npmjs.org.</p>
-<h2><a class="header" href="#installation" id="installation">Installation</a></h2>
+<h2 id="installation"><a class="header" href="#installation">Installation</a></h2>
 <p>Currently the package isn't published so you'd need to link it to your project using <code>npm</code> or <code>yarn</code>.</p>
 <ul>
 <li>Using NPM:</li>
@@ -370,7 +370,7 @@ let imported_account = imported_account_handle.read().await;
 </ul>
 <pre><code>$ yarn install @iota/wallet
 </code></pre>
-<h2><a class="header" href="#usage-1" id="usage-1">Usage</a></h2>
+<h2 id="usage-1"><a class="header" href="#usage-1">Usage</a></h2>
 <pre><code class="language-javascript">/**
  * This example creates a new database and account
  */
@@ -396,12 +396,12 @@ async function run() {
 
 run()
 </code></pre>
-<h1><a class="header" href="#examples-1" id="examples-1">Examples</a></h1>
+<h1 id="examples-1"><a class="header" href="#examples-1">Examples</a></h1>
 <p>There are several examples to show the usage of the library.</p>
 <blockquote>
 <p>All examples can be found in <a href="https://github.com/iotaledger/wallet.rs/bindings/nodejs/examples/">/bindings/nodejs/examples</a></p>
 </blockquote>
-<h2><a class="header" href="#setup" id="setup">Setup</a></h2>
+<h2 id="setup"><a class="header" href="#setup">Setup</a></h2>
 <p>First, setup your environment as follows:</p>
 <pre><code>git clone https://github.com/iotaledger/wallet.rs
 cd bindings/node/examples
@@ -409,7 +409,7 @@ npm install # or `yarn`
 cp .env.example .env
 </code></pre>
 <p>Add your custom password to the <code>.env</code> file.</p>
-<h2><a class="header" href="#1-example-create-an-account" id="1-example-create-an-account">1. Example: Create an Account</a></h2>
+<h2 id="1-example-create-an-account"><a class="header" href="#1-example-create-an-account">1. Example: Create an Account</a></h2>
 <p>Run:</p>
 <pre><code>node 1-create-account.js
 </code></pre>
@@ -439,7 +439,7 @@ async function run() {
 
 run()
 </code></pre>
-<h2><a class="header" href="#2-generate-address" id="2-generate-address">2. Generate Address</a></h2>
+<h2 id="2-generate-address"><a class="header" href="#2-generate-address">2. Generate Address</a></h2>
 <p>Run:</p>
 <pre><code>node 2-generate-address.js
 </code></pre>
@@ -478,7 +478,7 @@ async function run() {
 
 run()
 </code></pre>
-<h2><a class="header" href="#3-example-check-balance" id="3-example-check-balance">3. Example: Check Balance</a></h2>
+<h2 id="3-example-check-balance"><a class="header" href="#3-example-check-balance">3. Example: Check Balance</a></h2>
 <p>Run:</p>
 <pre><code>node 3-check_balance
 </code></pre>
@@ -511,7 +511,7 @@ async function run() {
 
 run()
 </code></pre>
-<h2><a class="header" href="#4-example-check-balance" id="4-example-check-balance">4. Example: Check Balance</a></h2>
+<h2 id="4-example-check-balance"><a class="header" href="#4-example-check-balance">4. Example: Check Balance</a></h2>
 <p>Now you can send the test tokens to an address! </p>
 <p>Run</p>
 <pre><code>node 4-send.js
@@ -548,12 +548,12 @@ async function run() {
 		amount
     ) 
 
-	console.log(&quot;Check your message on https://explorer.iota.org/crysalis/message/&quot;, node_response.id)
+    console.log(`Check your message on https://explorer.iota.org/chrysalis/message/${node_response.id}`)
 }
 
 run()
 </code></pre>
-<h2><a class="header" href="#5-backup" id="5-backup">5. Backup</a></h2>
+<h2 id="5-backup"><a class="header" href="#5-backup">5. Backup</a></h2>
 <p>Run</p>
 <pre><code>node 5-backup.js
 </code></pre>
@@ -582,7 +582,7 @@ async function run() {
 
 run()
 </code></pre>
-<h2><a class="header" href="#6-restore" id="6-restore">6. Restore</a></h2>
+<h2 id="6-restore"><a class="header" href="#6-restore">6. Restore</a></h2>
 <p>Run</p>
 <pre><code>node 6-restore.js
 </code></pre>
@@ -612,28 +612,28 @@ async function run() {
 
 run()
 </code></pre>
-<h2><a class="header" href="#7-events" id="7-events">7. Events</a></h2>
+<h2 id="7-events"><a class="header" href="#7-events">7. Events</a></h2>
 <p>Run</p>
 <pre><code>node 7-events.js
 </code></pre>
 <p>Code:</p>
 <pre><code class="language-javascript">{{ #include ../../../bindings/nodejs/examples/7-eveents.js }}
 </code></pre>
-<h1><a class="header" href="#api-reference-1" id="api-reference-1">API Reference</a></h1>
-<h3><a class="header" href="#initloggerconfig-logoptions" id="initloggerconfig-logoptions">initLogger(config: LogOptions)</a></h3>
+<h1 id="api-reference-1"><a class="header" href="#api-reference-1">API Reference</a></h1>
+<h3 id="initloggerconfig-logoptions"><a class="header" href="#initloggerconfig-logoptions">initLogger(config: LogOptions)</a></h3>
 <p>Initializes the logging system.</p>
-<h4><a class="header" href="#logoptions" id="logoptions">LogOptions</a></h4>
+<h4 id="logoptions"><a class="header" href="#logoptions">LogOptions</a></h4>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>color_enabled</td><td><code>boolean</code></td><td><code>undefined</code></td><td>Whether to enable colored output or not</td></tr>
 <tr><td>outputs</td><td><code>LogOutput[]</code></td><td><code>undefined</code></td><td>The log outputs</td></tr>
 </tbody></table>
-<h4><a class="header" href="#logoutput" id="logoutput">LogOutput</a></h4>
+<h4 id="logoutput"><a class="header" href="#logoutput">LogOutput</a></h4>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>name</td><td><code>string</code></td><td><code>undefined</code></td><td>'stdout' or a path to a file</td></tr>
 <tr><td>level_filter</td><td><code>string</code></td><td><code>'info'</code></td><td>The maximum log level that this output accepts</td></tr>
 <tr><td>target_filters</td><td><code>string[]</code></td><td><code>[]</code></td><td>Filters on the log target (library and module names)</td></tr>
 </tbody></table>
-<h3><a class="header" href="#addeventlistenerevent-cb" id="addeventlistenerevent-cb">addEventListener(event, cb)</a></h3>
+<h3 id="addeventlistenerevent-cb"><a class="header" href="#addeventlistenerevent-cb">addEventListener(event, cb)</a></h3>
 <p>Adds a new event listener with a callback in the form of <code>(err, data) =&gt; {}</code>.
 Supported event names:</p>
 <ul>
@@ -644,26 +644,26 @@ Supported event names:</p>
 <li>Reattachment</li>
 <li>Broadcast</li>
 </ul>
-<h3><a class="header" href="#accountmanager" id="accountmanager">AccountManager</a></h3>
-<h4><a class="header" href="#constructoroptions" id="constructoroptions">constructor([options])</a></h4>
+<h3 id="accountmanager"><a class="header" href="#accountmanager">AccountManager</a></h3>
+<h4 id="constructoroptions"><a class="header" href="#constructoroptions">constructor([options])</a></h4>
 <p>Creates a new instance of the AccountManager.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>[options]</td><td><code>object</code></td><td><code>undefined</code></td><td>The options to configure the account manager</td></tr>
 <tr><td>[storagePath]</td><td><code>string</code></td><td><code>undefined</code></td><td>The path where the database file will be saved</td></tr>
 <tr><td>[storageType]</td><td><code>number</code></td><td><code>undefined</code></td><td>The type of the database.  Stronghold = 1, Sqlite = 2</td></tr>
 </tbody></table>
-<h4><a class="header" href="#setstrongholdpasswordpassword-void" id="setstrongholdpasswordpassword-void">setStrongholdPassword(password): void</a></h4>
+<h4 id="setstrongholdpasswordpassword-void"><a class="header" href="#setstrongholdpasswordpassword-void">setStrongholdPassword(password): void</a></h4>
 <p>Sets the stronghold password and initialises it.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>password</td><td><code>string</code></td><td><code>undefined</code></td><td>The stronghold snapshot password</td></tr>
 </tbody></table>
-<h4><a class="header" href="#changestrongholdpasswordcurrentpassword-newpassword-void" id="changestrongholdpasswordcurrentpassword-newpassword-void">changeStrongholdPassword(currentPassword, newPassword): void</a></h4>
+<h4 id="changestrongholdpasswordcurrentpassword-newpassword-void"><a class="header" href="#changestrongholdpasswordcurrentpassword-newpassword-void">changeStrongholdPassword(currentPassword, newPassword): void</a></h4>
 <p>Changes the stronghold password.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>currentPassword</td><td><code>string</code></td><td><code>undefined</code></td><td>The current stronghold password</td></tr>
 <tr><td>newPassword</td><td><code>string</code></td><td><code>undefined</code></td><td>The new stronghold password</td></tr>
 </tbody></table>
-<h4><a class="header" href="#createaccountaccount-account" id="createaccountaccount-account">createAccount(account): Account</a></h4>
+<h4 id="createaccountaccount-account"><a class="header" href="#createaccountaccount-account">createAccount(account): Account</a></h4>
 <p>Creates a new account.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>account</td><td><code>object</code></td><td><code>{}</code></td><td>The account to be created</td></tr>
@@ -673,30 +673,30 @@ Supported event names:</p>
 <tr><td>[account.createdAt]</td><td><code>string</code></td><td>the current date and time</td><td>The ISO 8601 date string of the account creation</td></tr>
 <tr><td>[account.signerType]</td><td><code>number</code></td><td>1 = Stronghold</td><td>The account signer type. 1 = Stronghold, 2 = EnvMnemonic</td></tr>
 </tbody></table>
-<h4><a class="header" href="#getaccountaccountid" id="getaccountaccountid">getAccount(accountId)</a></h4>
+<h4 id="getaccountaccountid"><a class="header" href="#getaccountaccountid">getAccount(accountId)</a></h4>
 <p>Gets the account with the given identifier or index.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>accountId</td><td><code>string | number</code></td><td><code>null</code></td><td>The account identifier or account index</td></tr>
 </tbody></table>
 <p><strong>Returns</strong> the associated Account instance or undefined if the account wasn't found.</p>
-<h4><a class="header" href="#getaccountbyaliasalias" id="getaccountbyaliasalias">getAccountByAlias(alias)</a></h4>
+<h4 id="getaccountbyaliasalias"><a class="header" href="#getaccountbyaliasalias">getAccountByAlias(alias)</a></h4>
 <p>Gets the account with the given alias (case insensitive).</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>alias</td><td><code>string</code></td><td><code>null</code></td><td>The account alias</td></tr>
 </tbody></table>
 <p><strong>Returns</strong> the associated Account instance or undefined if the account wasn't found.</p>
-<h4><a class="header" href="#getaccounts" id="getaccounts">getAccounts()</a></h4>
+<h4 id="getaccounts"><a class="header" href="#getaccounts">getAccounts()</a></h4>
 <p>Gets all stored accounts.</p>
 <p><strong>Returns</strong> an array of <a href="libraries/nodejs/api_reference.html#account">Account objects</a>.</p>
-<h4><a class="header" href="#removeaccountaccountid" id="removeaccountaccountid">removeAccount(accountId)</a></h4>
+<h4 id="removeaccountaccountid"><a class="header" href="#removeaccountaccountid">removeAccount(accountId)</a></h4>
 <p>Removes the account with the given identifier or index.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>accountId</td><td><code>string | number</code></td><td><code>null</code></td><td>The account identifier or account index</td></tr>
 </tbody></table>
-<h4><a class="header" href="#syncaccounts" id="syncaccounts">syncAccounts()</a></h4>
+<h4 id="syncaccounts"><a class="header" href="#syncaccounts">syncAccounts()</a></h4>
 <p>Synchronize all stored accounts with the Tangle.</p>
 <p><strong>Returns</strong> A promise resolving to an array of <a href="libraries/nodejs/api_reference.html#syncedaccount">SyncedAccount</a>.</p>
-<h4><a class="header" href="#internaltransferfromaccount-toaccount-amount" id="internaltransferfromaccount-toaccount-amount">internalTransfer(fromAccount, toAccount, amount)</a></h4>
+<h4 id="internaltransferfromaccount-toaccount-amount"><a class="header" href="#internaltransferfromaccount-toaccount-amount">internalTransfer(fromAccount, toAccount, amount)</a></h4>
 <p>Transfers an amount from one subaccount to another.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>fromAccount</td><td><code><a href="libraries/nodejs/api_reference.html#account">Account</a></code></td><td><code>null</code></td><td>The source account</td></tr>
@@ -704,74 +704,74 @@ Supported event names:</p>
 <tr><td>amount</td><td><code>number</code></td><td><code>undefined</code></td><td>The transfer amount</td></tr>
 </tbody></table>
 <p><strong>Returns</strong> A promise resolving to the transfer's Message.</p>
-<h4><a class="header" href="#backupdestination" id="backupdestination">backup(destination)</a></h4>
+<h4 id="backupdestination"><a class="header" href="#backupdestination">backup(destination)</a></h4>
 <p>Backups the database.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>destination</td><td><code>string</code></td><td><code>undefined</code></td><td>The path to the backup file</td></tr>
 </tbody></table>
 <p><strong>Returns</strong> The full path to the backup file.</p>
-<h4><a class="header" href="#importaccountssource" id="importaccountssource">importAccounts(source)</a></h4>
+<h4 id="importaccountssource"><a class="header" href="#importaccountssource">importAccounts(source)</a></h4>
 <p>Imports a database file.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>source</td><td><code>string</code></td><td><code>undefined</code></td><td>The path to the backup file</td></tr>
 <tr><td>password</td><td><code>string</code></td><td><code>undefined</code></td><td>The backup stronghold password</td></tr>
 </tbody></table>
-<h4><a class="header" href="#islatestaddressunused" id="islatestaddressunused">isLatestAddressUnused()</a></h4>
+<h4 id="islatestaddressunused"><a class="header" href="#islatestaddressunused">isLatestAddressUnused()</a></h4>
 <p>Determines whether all accounts has unused latest address after syncing with the Tangle.</p>
 <p><strong>Returns</strong> A promise resolving to the boolean value.</p>
-<h4><a class="header" href="#setclientoptionsoptions" id="setclientoptionsoptions">setClientOptions(options)</a></h4>
+<h4 id="setclientoptionsoptions"><a class="header" href="#setclientoptionsoptions">setClientOptions(options)</a></h4>
 <p>Updates the client options for all accounts.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>options</td><td><code><a href="libraries/nodejs/api_reference.html#clientoptions">ClientOptions</a></code></td><td><code>null</code></td><td>The new account client options</td></tr>
 </tbody></table>
-<h3><a class="header" href="#syncedaccount" id="syncedaccount">SyncedAccount</a></h3>
-<h4><a class="header" href="#sendaddress-amount-options" id="sendaddress-amount-options">send(address, amount[, options])</a></h4>
+<h3 id="syncedaccount"><a class="header" href="#syncedaccount">SyncedAccount</a></h3>
+<h4 id="sendaddress-amount-options"><a class="header" href="#sendaddress-amount-options">send(address, amount[, options])</a></h4>
 <p>Send funds to the given address.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>address</td><td><code>string</code></td><td><code>null</code></td><td>The bech32 string of the transfer address</td></tr>
 <tr><td>amount</td><td><code>number</code></td><td><code>undefined</code></td><td>The transfer amount</td></tr>
 <tr><td>options</td><td><code>TransferOptions</code></td><td><code>undefined</code></td><td>The transfer options</td></tr>
 </tbody></table>
-<h5><a class="header" href="#transferoptions" id="transferoptions">TransferOptions</a></h5>
+<h5 id="transferoptions"><a class="header" href="#transferoptions">TransferOptions</a></h5>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>remainderValueStrategy</td><td><code>RemainderValueStrategy</code></td><td><code>null</code></td><td>The strategy to use for the remainder value if any</td></tr>
 <tr><td>indexation</td><td><code>{ index: string, data?: Uint8Array }</code></td><td><code>null</code></td><td>Message indexation</td></tr>
 </tbody></table>
-<h5><a class="header" href="#remaindervaluestrategy" id="remaindervaluestrategy">RemainderValueStrategy</a></h5>
-<h6><a class="header" href="#changeaddress" id="changeaddress">changeAddress()</a></h6>
+<h5 id="remaindervaluestrategy"><a class="header" href="#remaindervaluestrategy">RemainderValueStrategy</a></h5>
+<h6 id="changeaddress"><a class="header" href="#changeaddress">changeAddress()</a></h6>
 <p>Send the remainder value to an internal address.</p>
-<h6><a class="header" href="#reuseaddress" id="reuseaddress">reuseAddress()</a></h6>
+<h6 id="reuseaddress"><a class="header" href="#reuseaddress">reuseAddress()</a></h6>
 <p>Send the remainder value to its original address.</p>
-<h6><a class="header" href="#accountaddressaddress-string" id="accountaddressaddress-string">accountAddress(address: string)</a></h6>
+<h6 id="accountaddressaddress-string"><a class="header" href="#accountaddressaddress-string">accountAddress(address: string)</a></h6>
 <p>Send the remainder value to a specific address that must belong to the account.</p>
-<h4><a class="header" href="#retrymessageid" id="retrymessageid">retry(messageId)</a></h4>
+<h4 id="retrymessageid"><a class="header" href="#retrymessageid">retry(messageId)</a></h4>
 <p>Retries (promotes or reattaches) the given message.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
 </tbody></table>
-<h4><a class="header" href="#reattachmessageid" id="reattachmessageid">reattach(messageId)</a></h4>
+<h4 id="reattachmessageid"><a class="header" href="#reattachmessageid">reattach(messageId)</a></h4>
 <p>Reattach the given message.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
 </tbody></table>
-<h4><a class="header" href="#promotemessageid" id="promotemessageid">promote(messageId)</a></h4>
+<h4 id="promotemessageid"><a class="header" href="#promotemessageid">promote(messageId)</a></h4>
 <p>Promote the given message.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
 </tbody></table>
-<h3><a class="header" href="#account" id="account">Account</a></h3>
-<h4><a class="header" href="#id" id="id">id()</a></h4>
+<h3 id="account"><a class="header" href="#account">Account</a></h3>
+<h4 id="id"><a class="header" href="#id">id()</a></h4>
 <p>Returns the account's identifier.</p>
-<h4><a class="header" href="#index" id="index">index()</a></h4>
+<h4 id="index"><a class="header" href="#index">index()</a></h4>
 <p>Returns the account's index.</p>
-<h4><a class="header" href="#alias" id="alias">alias()</a></h4>
+<h4 id="alias"><a class="header" href="#alias">alias()</a></h4>
 <p>Returns the account's alias.</p>
-<h4><a class="header" href="#balance-accountbalance" id="balance-accountbalance">balance(): AccountBalance</a></h4>
+<h4 id="balance-accountbalance"><a class="header" href="#balance-accountbalance">balance(): AccountBalance</a></h4>
 <p>Returns the account's balance information object.</p>
 <p>Balance object: { total: number, available: number, incoming: number, outgoing: number }</p>
-<h4><a class="header" href="#messagecount" id="messagecount">messageCount()</a></h4>
+<h4 id="messagecount"><a class="header" href="#messagecount">messageCount()</a></h4>
 <p>Returns the number of messages associated with the account.</p>
-<h4><a class="header" href="#listmessagescount-from-type" id="listmessagescount-from-type">listMessages([count, from, type])</a></h4>
+<h4 id="listmessagescount-from-type"><a class="header" href="#listmessagescount-from-type">listMessages([count, from, type])</a></h4>
 <p>Returns the account's messages.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>[count]</td><td><code>number</code></td><td><code>0</code></td><td>The number of messages to return (<code>0</code> to return all)</td></tr>
@@ -779,13 +779,13 @@ Supported event names:</p>
 <tr><td>[type]</td><td><code>number</code></td><td><code>null</code></td><td>The message type filter (Received = 1, Sent = 2, Failed = 3, Unconfirmed = 4, Value = 5)</td></tr>
 </tbody></table>
 <p>Message object: { confirmed: boolean, broadcasted: boolean, incoming: boolean, value: number }</p>
-<h4><a class="header" href="#listaddressesunspent" id="listaddressesunspent">listAddresses([unspent])</a></h4>
+<h4 id="listaddressesunspent"><a class="header" href="#listaddressesunspent">listAddresses([unspent])</a></h4>
 <p>Returns the account's addresses.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>[unspent]</td><td><code>boolean</code></td><td><code>null</code></td><td>The <code>unspent</code> status filter</td></tr>
 </tbody></table>
 <p>Address object: { address: string, balance: number, keyIndex: number }</p>
-<h4><a class="header" href="#syncoptions" id="syncoptions">sync([options])</a></h4>
+<h4 id="syncoptions"><a class="header" href="#syncoptions">sync([options])</a></h4>
 <p>Synchronizes the account with the Tangle.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>[options]</td><td><code>object</code></td><td><code>{}</code></td><td>The sync options</td></tr>
@@ -794,37 +794,37 @@ Supported event names:</p>
 <tr><td>[options.skipPersistance]</td><td><code>boolean</code></td><td><code>false</code></td><td>Skip updating the account in storage</td></tr>
 </tbody></table>
 <p><strong>Returns</strong> a <a href="libraries/nodejs/api_reference.html#syncedaccount">SyncedAccount</a> instance.</p>
-<h4><a class="header" href="#islatestaddressunused-1" id="islatestaddressunused-1">isLatestAddressUnused()</a></h4>
+<h4 id="islatestaddressunused-1"><a class="header" href="#islatestaddressunused-1">isLatestAddressUnused()</a></h4>
 <p>Determines whether the account has unused latest address after syncing with the Tangle.</p>
 <p><strong>Returns</strong> A promise resolving to the boolean value.</p>
-<h4><a class="header" href="#setaliasalias" id="setaliasalias">setAlias(alias)</a></h4>
+<h4 id="setaliasalias"><a class="header" href="#setaliasalias">setAlias(alias)</a></h4>
 <p>Updates the account alias.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>alias</td><td><code>string</code></td><td><code>null</code></td><td>The new account alias</td></tr>
 </tbody></table>
-<h4><a class="header" href="#setclientoptionsoptions-1" id="setclientoptionsoptions-1">setClientOptions(options)</a></h4>
+<h4 id="setclientoptionsoptions-1"><a class="header" href="#setclientoptionsoptions-1">setClientOptions(options)</a></h4>
 <p>Updates the account client options.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>options</td><td><code><a href="libraries/nodejs/api_reference.html#clientoptions">ClientOptions</a></code></td><td><code>null</code></td><td>The new account client options</td></tr>
 </tbody></table>
-<h4><a class="header" href="#getmessagemessageid" id="getmessagemessageid">getMessage(messageId)</a></h4>
+<h4 id="getmessagemessageid"><a class="header" href="#getmessagemessageid">getMessage(messageId)</a></h4>
 <p>Gets the message associated with the given identifier.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
 </tbody></table>
-<h4><a class="header" href="#getaddressaddressbech32" id="getaddressaddressbech32">getAddress(addressBech32)</a></h4>
+<h4 id="getaddressaddressbech32"><a class="header" href="#getaddressaddressbech32">getAddress(addressBech32)</a></h4>
 <p>Gets the address object by its bech32 representation.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>addressBech32</td><td><code>string</code></td><td><code>null</code></td><td>The address bech32 representation</td></tr>
 </tbody></table>
-<h4><a class="header" href="#generateaddress" id="generateaddress">generateAddress()</a></h4>
+<h4 id="generateaddress"><a class="header" href="#generateaddress">generateAddress()</a></h4>
 <p>Generates a new unused address and returns it.</p>
-<h4><a class="header" href="#latestaddress" id="latestaddress">latestAddress()</a></h4>
+<h4 id="latestaddress"><a class="header" href="#latestaddress">latestAddress()</a></h4>
 <p>Returns the latest address (the one with the biggest keyIndex).</p>
-<h4><a class="header" href="#getunusedaddress" id="getunusedaddress">getUnusedAddress()</a></h4>
+<h4 id="getunusedaddress"><a class="header" href="#getunusedaddress">getUnusedAddress()</a></h4>
 <p>Synchronizes the account addresses with the Tangle and returns the latest address in the account,
 which is an address without balance.</p>
-<h3><a class="header" href="#clientoptions" id="clientoptions">ClientOptions</a></h3>
+<h3 id="clientoptions"><a class="header" href="#clientoptions">ClientOptions</a></h3>
 <table><thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>[network]</td><td><code>number</code></td><td><code>undefined</code></td><td>The tangle network to connect to (Mainnet = 1, Devnet = 1, Comnet = 3)</td></tr>
 <tr><td>[node]</td><td><code>string</code></td><td><code>undefined</code></td><td>A node URL to connect to</td></tr>
@@ -833,16 +833,16 @@ which is an address without balance.</p>
 <tr><td>[quorumThreshold]</td><td><code>number</code></td><td><code>undefined</code></td><td>Minimum number of nodes from the quorum pool that need to agree to consider a result true.</td></tr>
 <tr><td>[localPow]</td><td><code>boolean</code></td><td><code>true</code></td><td>Whether to use local or remote PoW.</td></tr>
 </tbody></table>
-<h1><a class="header" href="#troubleshooting-1" id="troubleshooting-1">Troubleshooting</a></h1>
-<h2><a class="header" href="#stackexchange-1" id="stackexchange-1">StackExchange</a></h2>
+<h1 id="troubleshooting-1"><a class="header" href="#troubleshooting-1">Troubleshooting</a></h1>
+<h2 id="stackexchange-1"><a class="header" href="#stackexchange-1">StackExchange</a></h2>
 <blockquote>
 <p><a href="https://iota.stackexchange.com/">https://iota.stackexchange.com</a></p>
 </blockquote>
 <p>The IOTA StackExchange a a nice Tool for developers to find  Answers for a problem. Just search your problem and find your answer! If there is no one, submit your question and share it in the discussion channel below.</p>
-<h2><a class="header" href="#joining-the-discussion-4" id="joining-the-discussion-4">Joining the discussion</a></h2>
+<h2 id="joining-the-discussion-4"><a class="header" href="#joining-the-discussion-4">Joining the discussion</a></h2>
 <p>If you want to get involved in discussions about this library, or you're looking for support, go to the #clients-discussion channel on <a href="https://discord.iota.org">Discord</a>.</p>
-<h1><a class="header" href="#wallet-library-spec" id="wallet-library-spec">Wallet Library Spec</a></h1>
-<h2><a class="header" href="#table-of-contents----omit-in-toc---" id="table-of-contents----omit-in-toc---">Table of Contents <!-- omit in toc --></a></h2>
+<h1 id="wallet-library-spec"><a class="header" href="#wallet-library-spec">Wallet Library Spec</a></h1>
+<h2 id="table-of-contents----omit-in-toc---"><a class="header" href="#table-of-contents----omit-in-toc---">Table of Contents <!-- omit in toc --></a></h2>
 <ul>
 <li><a href="specs/index.html#wallet-library-spec">Wallet Library Spec</a>
 <ul>
@@ -951,20 +951,20 @@ which is an address without balance.</p>
 </ul>
 </li>
 </ul>
-<h2><a class="header" href="#introduction" id="introduction">Introduction</a></h2>
+<h2 id="introduction"><a class="header" href="#introduction">Introduction</a></h2>
 <p>The wallet library is a stateful package with a standardised interface to build applications with IOTA value transactions. The package will be compatible with different platforms such as web, desktop and mobile. </p>
 <p>The package introduces the concept of an <em>account</em>. An account is a reference or a label to a <a href="https://docs.iota.org/docs/getting-started/0.1/clients/seeds">seed</a>. An account has certain properties such as <a href="https://github.com/Wollac/protocol-rfcs/blob/bech32-address-format/text/0020-bech32-address-format/0020-bech32-address-format.md">addresses</a> and <a href="https://github.com/GalRogozinski/protocol-rfcs/blob/message/text/0017-message/0017-message.md">messages</a>. An account has various possible behaviours, including moving funds, looking for new messages, and making copies of message histories. An account should also be able to provide a degree of financial privacy and this should not incur any overhead. </p>
 <p>A similar <a href="https://docs.iota.org/docs/client-libraries/0.1/account-module/introduction/overview">package</a> was previously developed but this becomes obsolete with the introduction of Ed25519 signatures. The previous account package was limited to a single account. As an improvement, the (new) package will be able to manage multiple accounts. </p>
 <p>To summarize, the main motivation behind this package is to offer a simplified (stateful) approach to handle IOTA payments.</p>
-<h2><a class="header" href="#considerations" id="considerations">Considerations</a></h2>
+<h2 id="considerations"><a class="header" href="#considerations">Considerations</a></h2>
 <ul>
 <li>Seeds should be stored and managed separately in a secure enclave and should never leave the secure environment. Secure enclaves include software enclaves such as IOTA’s Rust-based Stronghold library or hardware enclaves such as a Ledger Nano;</li>
 <li>The secure enclave should have the ability to generate addresses and sign messages upon receipt of a message, and return the output in a message. If the secure enclave is initialised with a pre-generated seed, the sender process should immediately remove the seed traces from memory. </li>
 </ul>
-<h2><a class="header" href="#naming-conventions" id="naming-conventions">Naming Conventions</a></h2>
+<h2 id="naming-conventions"><a class="header" href="#naming-conventions">Naming Conventions</a></h2>
 <p>The primary language is <a href="https://github.com/rust-lang/rust">Rust</a>. Therefore, standard Rust naming <a href="https://doc.rust-lang.org/1.0.0/style/style/naming/README.html">conventions</a> are followed. All interfaces (types) use <em>CamelCase</em> while all function and variable names use <em>snake_case</em>.</p>
-<h2><a class="header" href="#interfaces" id="interfaces">Interfaces</a></h2>
-<h4><a class="header" href="#accountconfiguration" id="accountconfiguration">AccountConfiguration</a></h4>
+<h2 id="interfaces"><a class="header" href="#interfaces">Interfaces</a></h2>
+<h4 id="accountconfiguration"><a class="header" href="#accountconfiguration">AccountConfiguration</a></h4>
 <p>Account configuration or initialization object. It should support parameters accepted by high level <a href="https://github.com/iotaledger/iota.rs">client</a> libraries.</p>
 <table>
   <tr>
@@ -1072,7 +1072,7 @@ which is an address without balance.</p>
     <td>Address history associated with the account. Accounts can be initialised with locally stored address history.</td>
   </tr>
 </table>
-<h4><a class="header" href="#accountobject" id="accountobject">AccountObject</a></h4>
+<h4 id="accountobject"><a class="header" href="#accountobject">AccountObject</a></h4>
 <table>
   <tr>
     <td><strong>Property</strong></td>
@@ -1189,7 +1189,7 @@ which is an address without balance.</p>
     <td>Gets the latest unused address.</td>
   </tr>
 </table>
-<h4><a class="header" href="#syncedaccountobject" id="syncedaccountobject">SyncedAccountObject</a></h4>
+<h4 id="syncedaccountobject"><a class="header" href="#syncedaccountobject">SyncedAccountObject</a></h4>
 <table>
   <tr>
     <td><strong>Property</strong></td>
@@ -1216,7 +1216,7 @@ which is an address without balance.</p>
     <td>Rebroadcasts failed transaction. Only exposed on successful completion of account syncing process.</td>
   </tr>
 </table>
-<h4><a class="header" href="#accountmanagerobject" id="accountmanagerobject">AccountManagerObject</a></h4>
+<h4 id="accountmanagerobject"><a class="header" href="#accountmanagerobject">AccountManagerObject</a></h4>
 <table>
   <tr>
     <td><strong>Property</strong></td>
@@ -1279,7 +1279,7 @@ which is an address without balance.</p>
     <td>Reattaches an unconfirmed transaction.</td>
   </tr>
 </table>
-<h4><a class="header" href="#address" id="address">Address</a></h4>
+<h4 id="address"><a class="header" href="#address">Address</a></h4>
 <p>Useful <a href="https://medium.com/@harshagoli/hd-wallets-explained-from-high-level-to-nuts-and-bolts-9a41545f5b0">reference</a> for address management in Hierarchical Deterministic (HD) wallets.</p>
 <p>Note: The library only supports Ed25519 addresses. Therefore a <code>type</code> property for distinguishing between WOTS and Ed25519 addresses is unncecessary.</p>
 <table>
@@ -1320,7 +1320,7 @@ which is an address without balance.</p>
     <td>Address checksum.</td>
   </tr>
 </table>
-<h4><a class="header" href="#node" id="node">Node</a></h4>
+<h4 id="node"><a class="header" href="#node">Node</a></h4>
 <table>
   <tr>
     <td><strong>Property</strong></td>
@@ -1359,7 +1359,7 @@ which is an address without balance.</p>
     <td>IOTA public network name.</td>
   </tr>
 </table>
-<h4><a class="header" href="#timestamp" id="timestamp">Timestamp</a></h4>
+<h4 id="timestamp"><a class="header" href="#timestamp">Timestamp</a></h4>
 <table>
   <tr>
     <td><strong>Property</strong></td>
@@ -1374,7 +1374,7 @@ which is an address without balance.</p>
     <td>Transaction timestamp in various formats. For example: MM-DD-YYYY, DD MM YYYY hh:mm:ss.</td>
   </tr>
 </table>
-<h4><a class="header" href="#transfer" id="transfer">Transfer</a></h4>
+<h4 id="transfer"><a class="header" href="#transfer">Transfer</a></h4>
 <p>Transfer object required for creating a transaction. It allows end-users to specify the transaction amount and recipient address.</p>
 <p>Note: Currently, it is not possible to send multiple payloads as part of the message. That is why tag property is omitted from this interface. See <a href="https://github.com/iotaledger/protocol-rfcs/pull/18#discussion_r468432794">this</a> for details.</p>
 <table>
@@ -1403,7 +1403,7 @@ which is an address without balance.</p>
     <td>(Optional) Indexation payload.</td>
   </tr>
 </table>
-<h4><a class="header" href="#value" id="value">Value</a></h4>
+<h4 id="value"><a class="header" href="#value">Value</a></h4>
 <table>
   <tr>
     <td><strong>Property</strong></td>
@@ -1424,7 +1424,7 @@ which is an address without balance.</p>
     <td>Transaction amount without unit.</td>
   </tr>
 </table>
-<h4><a class="header" href="#input" id="input">Input</a></h4>
+<h4 id="input"><a class="header" href="#input">Input</a></h4>
 <table>
   <tr>
     <td><strong>Property</strong></td>
@@ -1451,7 +1451,7 @@ which is an address without balance.</p>
     <td>Index of the output on the referenced transaction.</td>
   </tr>
 </table>
-<h4><a class="header" href="#outputaddress" id="outputaddress">OutputAddress</a></h4>
+<h4 id="outputaddress"><a class="header" href="#outputaddress">OutputAddress</a></h4>
 <table>
   <tr>
     <td><strong>Property</strong></td>
@@ -1472,7 +1472,7 @@ which is an address without balance.</p>
     <td>If type is set to <code>0</code>, this should contain a WOTS address. Otherwise (if type is set to <code>1</code>), it should contain an Ed25519 address.</td>
   </tr>
 </table>
-<h4><a class="header" href="#output" id="output">Output</a></h4>
+<h4 id="output"><a class="header" href="#output">Output</a></h4>
 <table>
   <tr>
     <td><strong>Property</strong></td>
@@ -1499,7 +1499,7 @@ which is an address without balance.</p>
     <td>Amount of tokens to deposit.</td>
   </tr>
 </table>
-<h4><a class="header" href="#unsigneddatapayload" id="unsigneddatapayload">UnsignedDataPayload</a></h4>
+<h4 id="unsigneddatapayload"><a class="header" href="#unsigneddatapayload">UnsignedDataPayload</a></h4>
 <table>
   <tr>
     <td><strong>Property</strong></td>
@@ -1520,7 +1520,7 @@ which is an address without balance.</p>
     <td>Data of unsigned payload.</td>
   </tr>
 </table>
-<h4><a class="header" href="#signeddatapayload" id="signeddatapayload">SignedDataPayload</a></h4>
+<h4 id="signeddatapayload"><a class="header" href="#signeddatapayload">SignedDataPayload</a></h4>
 <table>
   <tr>
     <td><strong>Property</strong></td>
@@ -1553,7 +1553,7 @@ which is an address without balance.</p>
     <td>Signature of signing data.</td>
   </tr>
 </table>
-<h4><a class="header" href="#indexationpayload" id="indexationpayload">IndexationPayload</a></h4>
+<h4 id="indexationpayload"><a class="header" href="#indexationpayload">IndexationPayload</a></h4>
 <table>
   <tr>
     <td><strong>Property</strong></td>
@@ -1574,7 +1574,7 @@ which is an address without balance.</p>
     <td>Indexation data.</td>
   </tr>
 </table>
-<h4><a class="header" href="#unsignedtransaction" id="unsignedtransaction">UnsignedTransaction</a></h4>
+<h4 id="unsignedtransaction"><a class="header" href="#unsignedtransaction">UnsignedTransaction</a></h4>
 <table>
   <tr>
     <td><strong>Property</strong></td>
@@ -1629,7 +1629,7 @@ which is an address without balance.</p>
     <td>Payload containing data. As multiple payloads are not yet supported, only <a href="specs/index.html#unsigneddatapayload">unsigned data payload</a> should be used.</td>
   </tr>
 </table>
-<h4><a class="header" href="#wotssignature" id="wotssignature">WOTSSignature</a></h4>
+<h4 id="wotssignature"><a class="header" href="#wotssignature">WOTSSignature</a></h4>
 <table>
   <tr>
     <td><strong>Property</strong></td>
@@ -1650,7 +1650,7 @@ which is an address without balance.</p>
     <td>Signature signing the serialized unsigned transaction.</td>
   </tr>
 </table>
-<h4><a class="header" href="#ed25519signature" id="ed25519signature">Ed25519Signature</a></h4>
+<h4 id="ed25519signature"><a class="header" href="#ed25519signature">Ed25519Signature</a></h4>
 <table>
   <tr>
     <td><strong>Property</strong></td>
@@ -1677,7 +1677,7 @@ which is an address without balance.</p>
     <td>Signature signing the serialized unsigned transaction.</td>
   </tr>
 </table>
-<h4><a class="header" href="#signatureunblockblock" id="signatureunblockblock">SignatureUnblockBlock</a></h4>
+<h4 id="signatureunblockblock"><a class="header" href="#signatureunblockblock">SignatureUnblockBlock</a></h4>
 <table>
   <tr>
     <td><strong>Property</strong></td>
@@ -1701,7 +1701,7 @@ which is an address without balance.</p>
     <td>An unlock block containing signature(s) unlocking input(s).</td>
   </tr>
 </table>
-<h4><a class="header" href="#referenceunblockblock" id="referenceunblockblock">ReferenceUnblockBlock</a></h4>
+<h4 id="referenceunblockblock"><a class="header" href="#referenceunblockblock">ReferenceUnblockBlock</a></h4>
 <table>
   <tr>
     <td><strong>Property</strong></td>
@@ -1722,7 +1722,7 @@ which is an address without balance.</p>
     <td>Index of a previous unlock block.</td>
   </tr>
 </table>
-<h4><a class="header" href="#signedtransactionpayload" id="signedtransactionpayload">SignedTransactionPayload</a></h4>
+<h4 id="signedtransactionpayload"><a class="header" href="#signedtransactionpayload">SignedTransactionPayload</a></h4>
 <table>
   <tr>
     <td><strong>Property</strong></td>
@@ -1758,7 +1758,7 @@ which is an address without balance.</p>
     <td>Holds the unlock blocks unlocking inputs within an Unsigned Transaction</td>
   </tr>
 </table>
-<h4><a class="header" href="#message" id="message">Message</a></h4>
+<h4 id="message"><a class="header" href="#message">Message</a></h4>
 <table>
   <tr>
     <td><strong>Property</strong></td>
@@ -1838,7 +1838,7 @@ which is an address without balance.</p>
     <td>Message transfer value.</td>
   </tr>
 </table>
-<h4><a class="header" href="#storageadapter" id="storageadapter">StorageAdapter</a></h4>
+<h4 id="storageadapter"><a class="header" href="#storageadapter">StorageAdapter</a></h4>
 <table>
   <tr>
     <td><strong>Property</strong></td>
@@ -1871,17 +1871,17 @@ which is an address without balance.</p>
     <td>Removes account from storage.</td>
   </tr>
 </table>
-<h2><a class="header" href="#storage" id="storage">Storage</a></h2>
+<h2 id="storage"><a class="header" href="#storage">Storage</a></h2>
 <p><em>Note: Using Stronghold for storage is currently under research/development.</em></p>
 <p>Multiple storage options should be considered for managing data that requires persistence. For wallet basic metadata, such as user settings or theming options, a simple key-value <a href="https://capacitor.ionicframework.com/docs/apis/storage/">storage</a> could be leveraged. For transactions and address data management a relational database such as <a href="https://github.com/jepiqueau/capacitor-sqlite">SQLite</a> can be used. What follows is an Entity Relationship (ERD) diagram that shows the logical representation of the data. An <em>account</em> is the basic entity in this database design. It has a one-to-many relationship with <em>addresses</em> i.e. an account could have multiple <em>addresses</em> but also an <em>address</em> can only belong to a single <em>account</em>. An <em>account</em> has a many-to-many relationship with <em>transactions</em> i.e. an <em>account</em> could have multiple <em>transactions</em> but it’s possible that a <em>transaction</em> belongs to multiple <em>accounts</em>. To accommodate for that, an additional table is added that stores account ids against transaction ids (hashes).</p>
 <p>A storage adapter is required by the Rust layer because the storage operations (read/write) will be (mostly) done from that layer. A generic storage adapter is defined <a href="specs/index.html#storageadapter">here</a>.</p>
 <p><img src="specs/erd.jpg" alt="Entity Relationship Diagram" /></p>
-<h2><a class="header" href="#storage-adapter" id="storage-adapter">Storage Adapter</a></h2>
+<h2 id="storage-adapter"><a class="header" href="#storage-adapter">Storage Adapter</a></h2>
 <p>The package should have a default opinionated storage mechanism but should also provide the ability for users to override the storage by specifying an adapter. As a default option, a relational database such as <a href="https://www.sqlite.org/index.html">SQLite</a> can be used.</p>
 <p>See <a href="specs/index.html#storageAdapter">storage adapter</a> for adapter interface.</p>
-<h2><a class="header" href="#account-1" id="account-1">Account</a></h2>
-<h3><a class="header" href="#api" id="api">API</a></h3>
-<h4><a class="header" href="#initialisation-1" id="initialisation-1">Initialisation</a></h4>
+<h2 id="account-1"><a class="header" href="#account-1">Account</a></h2>
+<h3 id="api"><a class="header" href="#api">API</a></h3>
+<h4 id="initialisation-1"><a class="header" href="#initialisation-1">Initialisation</a></h4>
 <p>Initialises account
 There are several scenarios in which an account can be initialised:</p>
 <ul>
@@ -1948,7 +1948,7 @@ There are several scenarios in which an account can be initialised:</p>
     <td colspan="3">None</td>
   </tr>
 </table>
-<h4><a class="header" href="#sync_addresses" id="sync_addresses">sync_addresses()</a></h4>
+<h4 id="sync_addresses"><a class="header" href="#sync_addresses">sync_addresses()</a></h4>
 <p>Syncs addresses with the Tangle. The method should ensure that the wallet's local state contains all used addresses and an unused address. </p>
 <p>The following should be considered when implementing this method:</p>
 <ul>
@@ -2022,7 +2022,7 @@ There are several scenarios in which an account can be initialised:</p>
     </td>
   </tr>
 </table>
-<h4><a class="header" href="#sync_messages" id="sync_messages">sync_messages()</a></h4>
+<h4 id="sync_messages"><a class="header" href="#sync_messages">sync_messages()</a></h4>
 <p>Syncs messages with the Tangle. The method should ensure that the wallet's local state has all messages associated with the address history. </p>
 <p>The following should be considered when implementing this method:</p>
 <ul>
@@ -2083,7 +2083,7 @@ There are several scenarios in which an account can be initialised:</p>
     </td>
   </tr>
 </table>
-<h4><a class="header" href="#select_inputs" id="select_inputs">select_inputs()</a></h4>
+<h4 id="select_inputs"><a class="header" href="#select_inputs">select_inputs()</a></h4>
 <p>Selects input addresses for funds transfer.</p>
 <p>Note: This method should only be used internally by <a href="specs/index.html#send">send()</a>. Also, the input selection method should ensure that the recipient address doesn’t match any of the selected inputs or the remainder address. </p>
 <p>See <a href="specs/index.html#input-selection">Input Selection Process</a> for implementation details.</p>
@@ -2147,7 +2147,7 @@ There are several scenarios in which an account can be initialised:</p>
     <td colspan="3">None</td>
   </tr>
 </table>
-<h4><a class="header" href="#send" id="send">send()</a></h4>
+<h4 id="send"><a class="header" href="#send">send()</a></h4>
 <p>Sends a message to the Tangle.</p>
 <p>Note: This method should only be exposed as a successful response from <a href="specs/index.html#sync">sync()</a>. </p>
 <p>Currently, it is not possible to send multiple payloads. </p>
@@ -2218,7 +2218,7 @@ There are several scenarios in which an account can be initialised:</p>
     </td>
   </tr>
 </table>
-<h4><a class="header" href="#retry" id="retry">retry()</a></h4>
+<h4 id="retry"><a class="header" href="#retry">retry()</a></h4>
 <p>Rebroadcasts failed message.</p>
 <p>Note: This method should only be exposed as a successful response from <a href="specs/index.html#sync">sync()</a>. </p>
 <p>The process for retrying a failed message:</p>
@@ -2280,7 +2280,7 @@ There are several scenarios in which an account can be initialised:</p>
     </td>
   </tr>
 </table>
-<h4><a class="header" href="#sync" id="sync">sync()</a></h4>
+<h4 id="sync"><a class="header" href="#sync">sync()</a></h4>
 <p>Syncs account with the Tangle. The account syncing process should ensure that the latest metadata (balance, messages) associated with an account is fetched from the Tangle and stored locally.<br />
 Note that it is a proposed design decision to enforce account syncing before every send. An alternative way would be to have the <em>send</em> method always exposed and internally ensuring that the account is synced before every message. </p>
 <p>The process for account syncing:_</p>
@@ -2358,7 +2358,7 @@ Note that it is a proposed design decision to enforce account syncing before eve
     </td>
   </tr>
 </table>
-<h4><a class="header" href="#reattach" id="reattach">reattach()</a></h4>
+<h4 id="reattach"><a class="header" href="#reattach">reattach()</a></h4>
 <p>Reattaches unconfirmed message to the Tangle. 
 The following should be considered when implementing this method:</p>
 <ul>
@@ -2420,7 +2420,7 @@ The following should be considered when implementing this method:</p>
     </td>
   </tr>
 </table>
-<h4><a class="header" href="#total_balance" id="total_balance">total_balance()</a></h4>
+<h4 id="total_balance"><a class="header" href="#total_balance">total_balance()</a></h4>
 <p>Gets total account balance.</p>
 <p>Total balance should be read directly from the local storage. To read the latest account balance from the network, <a href="specs/index.html#sync">sync()</a> should be used first. </p>
 <table>
@@ -2455,7 +2455,7 @@ The following should be considered when implementing this method:</p>
     <td colspan="3">None</td>
   </tr>
 </table>
-<h4><a class="header" href="#available_balance" id="available_balance">available_balance()</a></h4>
+<h4 id="available_balance"><a class="header" href="#available_balance">available_balance()</a></h4>
 <p>Gets available account balance. Available account balance is the amount users are allowed to spend. It should subtract the pending balance from the total balance. </p>
 <p>For example, if a user with <em>50i</em> total account balance has made a transaction spending <em>30i</em>, the available balance should be <em>20i</em> (i.e. 50i - 30i).</p>
 <p>Available balance should be read directly from the local storage. To read the latest account balance from the network, <a href="specs/index.html#sync">sync()</a> should be used first.</p>
@@ -2491,7 +2491,7 @@ The following should be considered when implementing this method:</p>
     <td colspan="3">None</td>
   </tr>
 </table>
-<h4><a class="header" href="#set_alias" id="set_alias">set_alias()</a></h4>
+<h4 id="set_alias"><a class="header" href="#set_alias">set_alias()</a></h4>
 <p>Updates account name</p>
 <table>
   <tr>
@@ -2529,7 +2529,7 @@ The following should be considered when implementing this method:</p>
     <td colspan="3">None</td>
   </tr>
 </table>
-<h4><a class="header" href="#list_messages" id="list_messages">list_messages()</a></h4>
+<h4 id="list_messages"><a class="header" href="#list_messages">list_messages()</a></h4>
 <p>Gets messages. Messages should be read directly from the local storage. To ensure the local database is updated with the latest messages, <a href="specs/index.html#sync">sync()</a> should be used first.</p>
 <table>
   <tr>
@@ -2586,7 +2586,7 @@ The following should be considered when implementing this method:</p>
     <td colspan="3">None</td>
   </tr>
 </table>
-<h4><a class="header" href="#list_received_messages" id="list_received_messages">list_received_messages()</a></h4>
+<h4 id="list_received_messages"><a class="header" href="#list_received_messages">list_received_messages()</a></h4>
 <p>Gets all received messages.</p>
 <p>Messages should be read directly from the local storage. To ensure the local database is updated with the latest messages, <a href="specs/index.html#sync">sync()</a> should be used first. </p>
 <table>
@@ -2644,7 +2644,7 @@ The following should be considered when implementing this method:</p>
     <td colspan="3">None</td>
   </tr>
 </table>
-<h4><a class="header" href="#list_sent_messages" id="list_sent_messages">list_sent_messages()</a></h4>
+<h4 id="list_sent_messages"><a class="header" href="#list_sent_messages">list_sent_messages()</a></h4>
 <p>Gets all sent messages.</p>
 <p>Messages should be directly read from the local storage. To ensure the local database is updated with the latest messages, <a href="specs/index.html#sync">sync()</a> should be used first.</p>
 <table>
@@ -2702,7 +2702,7 @@ The following should be considered when implementing this method:</p>
     <td colspan="3">None</td>
   </tr>
 </table>
-<h4><a class="header" href="#list_failed_messages" id="list_failed_messages">list_failed_messages()</a></h4>
+<h4 id="list_failed_messages"><a class="header" href="#list_failed_messages">list_failed_messages()</a></h4>
 <p>Gets all failed (broadcasted = false) messages. Messages should be read directly from the local storage.</p>
 <table>
   <tr>
@@ -2759,7 +2759,7 @@ The following should be considered when implementing this method:</p>
     <td colspan="3">None</td>
   </tr>
 </table>
-<h4><a class="header" href="#list_unconfirmed_messages" id="list_unconfirmed_messages">list_unconfirmed_messages()</a></h4>
+<h4 id="list_unconfirmed_messages"><a class="header" href="#list_unconfirmed_messages">list_unconfirmed_messages()</a></h4>
 <p>Gets all unconfirmed (confirmed = false) messages. Messages should be read directly from the local storage.</p>
 <table>
   <tr>
@@ -2816,7 +2816,7 @@ The following should be considered when implementing this method:</p>
     <td colspan="3">None</td>
   </tr>
 </table>
-<h4><a class="header" href="#get_message" id="get_message">get_message()</a></h4>
+<h4 id="get_message"><a class="header" href="#get_message">get_message()</a></h4>
 <p>Gets message for provided id.</p>
 <p>Messages should be read directly from the local storage. To ensure the local database is updated with the latest messages, <a href="specs/index.html#sync">sync()</a> should be used first. </p>
 <table>
@@ -2868,7 +2868,7 @@ The following should be considered when implementing this method:</p>
     <td colspan="3">None</td>
   </tr>
 </table>
-<h4><a class="header" href="#list_addresses" id="list_addresses">list_addresses()</a></h4>
+<h4 id="list_addresses"><a class="header" href="#list_addresses">list_addresses()</a></h4>
 <p>Gets all addresses.</p>
 <table>
   <tr>
@@ -2904,7 +2904,7 @@ The following should be considered when implementing this method:</p>
     <td colspan="3">None</td>
   </tr>
 </table>
-<h4><a class="header" href="#list_unspent_addresses" id="list_unspent_addresses">list_unspent_addresses()</a></h4>
+<h4 id="list_unspent_addresses"><a class="header" href="#list_unspent_addresses">list_unspent_addresses()</a></h4>
 <p>Gets all unspent input addresses</p>
 <table>
   <tr>
@@ -2940,7 +2940,7 @@ The following should be considered when implementing this method:</p>
     <td colspan="3">None</td>
   </tr>
 </table>
-<h4><a class="header" href="#generate_address" id="generate_address">generate_address()</a></h4>
+<h4 id="generate_address"><a class="header" href="#generate_address">generate_address()</a></h4>
 <p>Gets the latest unused address.</p>
 <table>
   <tr>
@@ -2976,10 +2976,10 @@ The following should be considered when implementing this method:</p>
     <td colspan="3">None</td>
   </tr>
 </table>
-<h2><a class="header" href="#account-manager" id="account-manager">Account Manager</a></h2>
+<h2 id="account-manager"><a class="header" href="#account-manager">Account Manager</a></h2>
 <p>An account manager class should be publicly available for users. With the account manager, the user can create, update, delete or manage multiple accounts. The implementation details of a specific account should be abstracted away using this account manager wrapper. </p>
-<h3><a class="header" href="#api-1" id="api-1">API</a></h3>
-<h4><a class="header" href="#initialisation-2" id="initialisation-2">Initialisation</a></h4>
+<h3 id="api-1"><a class="header" href="#api-1">API</a></h3>
+<h4 id="initialisation-2"><a class="header" href="#initialisation-2">Initialisation</a></h4>
 <p>Initialises the account manager. Account manager initialisation should validate the adapter object semantics and should return an instance of the account manager.</p>
 <table>
   <tr>
@@ -3030,7 +3030,7 @@ The following should be considered when implementing this method:</p>
     <td colspan="3">None</td>
   </tr>
 </table>
-<h4><a class="header" href="#add_account" id="add_account">add_account()</a></h4>
+<h4 id="add_account"><a class="header" href="#add_account">add_account()</a></h4>
 <p>Adds new account</p>
 <p>See account <a href="specs/index.html#initialisation">initialisation</a> for detailed implementation guidelines.</p>
 <table>
@@ -3086,7 +3086,7 @@ The following should be considered when implementing this method:</p>
     <td colspan="3">None</td>
   </tr>
 </table>
-<h4><a class="header" href="#remove_account" id="remove_account">remove_account()</a></h4>
+<h4 id="remove_account"><a class="header" href="#remove_account">remove_account()</a></h4>
 <p>Removes an account.</p>
 <p>The following should be considered when removing an account:</p>
 <ul>
@@ -3137,7 +3137,7 @@ The following should be considered when implementing this method:</p>
     <td colspan="3">None</td>
   </tr>
 </table>
-<h4><a class="header" href="#sync_accounts" id="sync_accounts">sync_accounts()</a></h4>
+<h4 id="sync_accounts"><a class="header" href="#sync_accounts">sync_accounts()</a></h4>
 <p>Syncs all stored accounts with the Tangle. Syncing should get the latest balance for all accounts and should find any new messages associated with the stored account.</p>
 <p>See <a href="specs/index.html#accounts-syncing-process">Accounts Syncing Process</a>.</p>
 <table>
@@ -3178,7 +3178,7 @@ The following should be considered when implementing this method:</p>
     </td>
   </tr>
 </table>
-<h4><a class="header" href="#move" id="move">move()</a></h4>
+<h4 id="move"><a class="header" href="#move">move()</a></h4>
 <p>Moves funds from one account to another. This method should leverage the <a href="specs/index.html#send">send()</a> method from the sender account and should initiate a message to the receiver account.</p>
 <table>
   <tr>
@@ -3244,7 +3244,7 @@ The following should be considered when implementing this method:</p>
     <td colspan="3">None</td>
   </tr>
 </table>
-<h4><a class="header" href="#backup" id="backup">backup()</a></h4>
+<h4 id="backup"><a class="header" href="#backup">backup()</a></h4>
 <p>Safely creates a backup of the accounts to a destination. The file could simply be JSON containing the address &amp; transaction histories for accounts.</p>
 <p>This method should provide the Stronghold instance with the metadata of all accounts. </p>
 <table>
@@ -3283,7 +3283,7 @@ The following should be considered when implementing this method:</p>
     <td colspan="3">None</td>
   </tr>
 </table>
-<h4><a class="header" href="#import_accounts" id="import_accounts">import_accounts</a></h4>
+<h4 id="import_accounts"><a class="header" href="#import_accounts">import_accounts</a></h4>
 <p>Import (backed up) accounts.</p>
 <p><strong>Implementation details are not finalised.</strong></p>
 <table>
@@ -3323,7 +3323,7 @@ The following should be considered when implementing this method:</p>
 <td colspan="3">None</td>
 </tr>
 </table>
-<h4><a class="header" href="#get_account" id="get_account">get_account()</a></h4>
+<h4 id="get_account"><a class="header" href="#get_account">get_account()</a></h4>
 <p>Returns the account associated with the provided identifier.</p>
 <table>
   <tr>
@@ -3388,7 +3388,7 @@ The following should be considered when implementing this method:</p>
 <td colspan="3">None</td>
 </tr>
 </table>
-<h4><a class="header" href="#reattach-1" id="reattach-1">reattach()</a></h4>
+<h4 id="reattach-1"><a class="header" href="#reattach-1">reattach()</a></h4>
 <p>Reattaches an unconfirmed message.</p>
 <p>See <a href="specs/index.html#reattach">reattach()</a> method for implementation details. This method is a wrapper method provided for convenience. A user could directly access the <a href="specs/index.html#reattach">reattach()</a> method on an account object. </p>
 <table>
@@ -3454,7 +3454,7 @@ The following should be considered when implementing this method:</p>
     <td colspan="3">None</td>
   </tr>
 </table>
-<h2><a class="header" href="#events" id="events">Events</a></h2>
+<h2 id="events"><a class="header" href="#events">Events</a></h2>
 <p>Events are categorised as the following:</p>
 <ol>
 <li>
@@ -3464,9 +3464,9 @@ The following should be considered when implementing this method:</p>
 <p>Messages emitted from the wallet library whenever there are any important state changes. Note that in cases where a user triggered action leads to a state change, the messages would not be emitted. For example, if a user explicitly triggers a <a href="specs/index.html#sync">sync()</a> action leading to a state change, an explicit event is not necessary.</p>
 </li>
 </ol>
-<h3><a class="header" href="#category-1-events" id="category-1-events">Category 1 events</a></h3>
+<h3 id="category-1-events"><a class="header" href="#category-1-events">Category 1 events</a></h3>
 <p>On every update sent from the node software via an event, the wallet library should update internal (persistent) storage and should also emit events via <strong>category 2</strong>. </p>
-<h4><a class="header" href="#monitor-address-for-balance-changes" id="monitor-address-for-balance-changes">Monitor address for balance changes</a></h4>
+<h4 id="monitor-address-for-balance-changes"><a class="header" href="#monitor-address-for-balance-changes">Monitor address for balance changes</a></h4>
 <table>
   <tr>
    <td colspan="3"><strong>Event</strong>
@@ -3483,7 +3483,7 @@ The following should be considered when implementing this method:</p>
    </td>
   </tr>
 </table>
-<h4><a class="header" href="#monitor-address-for-new-messages" id="monitor-address-for-new-messages">Monitor address for new messages</a></h4>
+<h4 id="monitor-address-for-new-messages"><a class="header" href="#monitor-address-for-new-messages">Monitor address for new messages</a></h4>
 <table>
   <tr>
    <td colspan="3"><strong>Event</strong>
@@ -3500,7 +3500,7 @@ The following should be considered when implementing this method:</p>
    </td>
   </tr>
 </table>
-<h4><a class="header" href="#monitor-message-for-confirmation-state" id="monitor-message-for-confirmation-state">Monitor message for confirmation state</a></h4>
+<h4 id="monitor-message-for-confirmation-state"><a class="header" href="#monitor-message-for-confirmation-state">Monitor message for confirmation state</a></h4>
 <table>
   <tr>
    <td colspan="3" ><strong>Event</strong>
@@ -3519,9 +3519,9 @@ The following should be considered when implementing this method:</p>
    </td>
   </tr>
 </table>
-<h3><a class="header" href="#category-2-events" id="category-2-events">Category 2 events</a></h3>
+<h3 id="category-2-events"><a class="header" href="#category-2-events">Category 2 events</a></h3>
 <p>They could be triggered via events from <strong>category 1</strong> or through <a href="specs/index.html#polling">polling</a>. </p>
-<h4><a class="header" href="#monitor-for-balance-changes" id="monitor-for-balance-changes">Monitor for balance changes</a></h4>
+<h4 id="monitor-for-balance-changes"><a class="header" href="#monitor-for-balance-changes">Monitor for balance changes</a></h4>
 <table>
   <tr>
    <td colspan="3"><strong>Event</strong>
@@ -3534,7 +3534,7 @@ The following should be considered when implementing this method:</p>
    <td>[{ accountId, address, balance }]</td>
   </tr>
 </table>
-<h4><a class="header" href="#monitor-for-new-messages" id="monitor-for-new-messages">Monitor for new messages</a></h4>
+<h4 id="monitor-for-new-messages"><a class="header" href="#monitor-for-new-messages">Monitor for new messages</a></h4>
 <table>
   <tr>
    <td colspan="3"><strong>Event</strong>
@@ -3546,7 +3546,7 @@ The following should be considered when implementing this method:</p>
    <td>[{ accountId, messages }]</td>
   </tr>
 </table>
-<h4><a class="header" href="#monitor-for-confirmation-state" id="monitor-for-confirmation-state">Monitor for confirmation state</a></h4>
+<h4 id="monitor-for-confirmation-state"><a class="header" href="#monitor-for-confirmation-state">Monitor for confirmation state</a></h4>
 <table>
   <tr>
    <td colspan="3"><strong>Event</strong></td>
@@ -3557,7 +3557,7 @@ The following should be considered when implementing this method:</p>
    <td>[{ accountId, messages  }]</td>
   </tr>
 </table>
-<h4><a class="header" href="#monitor-for-reattachments" id="monitor-for-reattachments">Monitor for reattachments</a></h4>
+<h4 id="monitor-for-reattachments"><a class="header" href="#monitor-for-reattachments">Monitor for reattachments</a></h4>
 <table>
   <tr>
    <td colspan="3"><strong>Event</strong></td>
@@ -3568,7 +3568,7 @@ The following should be considered when implementing this method:</p>
    <td>[{ accountId, messages  }]</td>
   </tr>
 </table>
-<h4><a class="header" href="#monitor-for-broadcasts" id="monitor-for-broadcasts">Monitor for broadcasts</a></h4>
+<h4 id="monitor-for-broadcasts"><a class="header" href="#monitor-for-broadcasts">Monitor for broadcasts</a></h4>
 <table>
   <tr>
    <td colspan="3" ><strong>Event</strong>
@@ -3580,7 +3580,7 @@ The following should be considered when implementing this method:</p>
    <td>[{ accountId, messages  }]</td>
   </tr>
 </table>
-<h4><a class="header" href="#monitor-for-errors" id="monitor-for-errors">Monitor for errors</a></h4>
+<h4 id="monitor-for-errors"><a class="header" href="#monitor-for-errors">Monitor for errors</a></h4>
 <table>
   <tr>
    <td colspan="3" ><strong>Event</strong></td>
@@ -3591,14 +3591,14 @@ The following should be considered when implementing this method:</p>
    <td>{ type, error  }</td>
   </tr>
 </table>
-<h2><a class="header" href="#privacy" id="privacy">Privacy</a></h2>
+<h2 id="privacy"><a class="header" href="#privacy">Privacy</a></h2>
 <p>To maintain the financial privacy of wallet users, the application/wallet should enforce strategies that will guarantee a certain level of anonymity. These strategies should be followed:</p>
 <ul>
   <li>The wallet should only use a single address per message i.e. if an address is already used in a message, it should not be used as a deposit address and instead a new address should be generated;</li>
   <li>The input selection strategy should expose as little information as possible. See input selection for details.</li>
 </ul>
 <p>Some other privacy enhancing techniques can be found <a href="https://docs.google.com/document/d/1frk4r1Eq4hnGGOiKWkDiGTK5QQxKbfrvl7Iol7OZ-dc/edit#">here</a>. </p>
-<h2><a class="header" href="#input-selection" id="input-selection">Input Selection</a></h2>
+<h2 id="input-selection"><a class="header" href="#input-selection">Input Selection</a></h2>
 <p>The goal of input selection is to avoid remainder addresses. The remainder output leaves a clue to the user's future spends. There should be a standardised input selection strategy used by the wallet. The steps for input selection are as follows:</p>
 <ol>
 <li>Try to select an input with an exact match. For example, if a user intends to spend <em>X</em> iotas, the wallet should try to find an address that has <em>X</em> iotas as available balance;</li>
@@ -3607,7 +3607,7 @@ The following should be considered when implementing this method:</p>
 </ol>
 <p>A reference implementation of different input selection algorithms for Bitcoin can be found <a href="https://github.com/bitcoinjs/coinselect">here</a>.</p>
 <p>Also, the implementation of step no. 2 is quite similar to the <a href="https://en.wikipedia.org/wiki/Subset_sum_problem">subset sum problem</a>. Given a <em>total</em> and a set of non-negative numbers (<em>inputs</em>), we need to determine if there is a subset which adds up to the <em>total</em>.</p>
-<h2><a class="header" href="#account-syncing-process" id="account-syncing-process">Account Syncing Process</a></h2>
+<h2 id="account-syncing-process"><a class="header" href="#account-syncing-process">Account Syncing Process</a></h2>
 <p>The account syncing process should detect all (used) accounts on a seed with their corresponding address and message history. Once, all accounts and histories are detected, the wallet should accumulate total balance. The syncing process should work as follows: </p>
 <ol>
 <li>Start with the account at index 0, generate <a href="https://blog.blockonomics.co/bitcoin-what-is-this-gap-limit-4f098e52d7e1">gap limit</a> number of addresses, default to 20;</li>
@@ -3627,7 +3627,7 @@ The following should be considered when implementing this method:</p>
 <ul>
 <li>Start syncing from account 0 address 0</li>
 </ul>
-<h2><a class="header" href="#polling" id="polling">Polling</a></h2>
+<h2 id="polling"><a class="header" href="#polling">Polling</a></h2>
 <p>A background process that automatically performs several tasks periodically should be part of the wallet library. The goal of the background process is to perform the following tasks:</p>
 <ul>
 <li><em>Sync accounts</em>: The background process should sync all accounts with the network. This should be done using the <a href="specs/index.html#syncaccounts">sync_accounts()</a> method. If new messages are detected, a <a href="specs/index.html#monitor-for-new-messages">messages</a> event should be used to notify all subscribers. If new balances are detected, a <a href="specs/index.html#monitor-for-balance-changes">balances</a> event should be used to notify all subscribers. If new confirmations are detected, a <a href="specs/index.html#monitor-for-confirmation-state">confirmations</a> event should be used to notify all subscribers; </li>
@@ -3642,9 +3642,9 @@ The following should be considered when implementing this method:</p>
 <li>Errors during the polling process should be communicated to subscribers via error events.</li>
 </ul>
 <p>The background process should have a recurring checker that sequentially performs all the above tasks. The implementation should ensure that future tasks can easily be added to the background process. For reference, see Trinity’s <a href="https://github.com/iotaledger/trinity-wallet/blob/develop/src/mobile/src/ui/components/Poll.js">implementation</a> of the poll component. </p>
-<h1><a class="header" href="#contribute-to-the-project" id="contribute-to-the-project">Contribute to the project</a></h1>
+<h1 id="contribute-to-the-project"><a class="header" href="#contribute-to-the-project">Contribute to the project</a></h1>
 <p><strong>Thanks for thinking about contributing to the project! We have the following ways that you can contribute.</strong></p>
-<h2><a class="header" href="#join-the-iota-libraries-initiative" id="join-the-iota-libraries-initiative">Join the IOTA Libraries Initiative</a></h2>
+<h2 id="join-the-iota-libraries-initiative"><a class="header" href="#join-the-iota-libraries-initiative">Join the IOTA Libraries Initiative</a></h2>
 <p>The <a href="https://github.com/iota-community/X-Team_IOTA_Libraries">IOTA Libraries Initiative</a> is a collaborative effort to help improve the developer experience.</p>
 <ul>
 <li>Quality assurance and review</li>
@@ -3652,17 +3652,17 @@ The following should be considered when implementing this method:</p>
 <li>Code samples</li>
 </ul>
 <p>If you'd like to get involved, join the #experience channel on <a href="https://discord.iota.org">Discord</a>.</p>
-<h2><a class="header" href="#contribute-to-the-projects-github-repository" id="contribute-to-the-projects-github-repository">Contribute to the project's GitHub repository</a></h2>
+<h2 id="contribute-to-the-projects-github-repository"><a class="header" href="#contribute-to-the-projects-github-repository">Contribute to the project's GitHub repository</a></h2>
 <p>All the code is open source and hosted on <a href="https://github.com/iotaledger/wallet.rs">GitHub</a> where you can do the following:</p>
 <ul>
 <li>Report a bug</li>
 <li>Suggest a new feature</li>
 <li>Contribute to the documentation</li>
 </ul>
-<h2><a class="header" href="#contribute-to-the-documentation" id="contribute-to-the-documentation">Contribute to the documentation</a></h2>
+<h2 id="contribute-to-the-documentation"><a class="header" href="#contribute-to-the-documentation">Contribute to the documentation</a></h2>
 <p>This documentation is also open source and hosted on GitHub.</p>
 <p>If you want to contribute new documentation or fix an error, see the <a href="https://github.com/iotaledger/documentation/blob/develop/.github/CONTRIBUTING.md">contribution guidelines</a>.</p>
-<h2><a class="header" href="#share-your-knowledge" id="share-your-knowledge">Share your knowledge</a></h2>
+<h2 id="share-your-knowledge"><a class="header" href="#share-your-knowledge">Share your knowledge</a></h2>
 <p>Helping others is an important part of any open source ecosystem.</p>
 <p>By sharing your knowledge with others, you can provide a lot of value to the community and maybe inspire someone else to learn and contribute.</p>
 <p>Take a look at what discussions are going on in the #clients-discussion channel on <a href="https://discord.iota.org">Discord</a>.</p>
