@@ -477,6 +477,7 @@ mod test_utils {
 
     impl GenerateMessageBuilder {
         pub fn build(self) -> Message {
+            let bech32_hrp = self.address.address().bech32_hrp().to_string();
             Message {
                 id: MessageId::new([0; 32]),
                 version: 1,
@@ -503,7 +504,7 @@ mod test_utils {
                             .finish()
                             .unwrap(),
                     )),
-                    "iota".to_string(),
+                    bech32_hrp,
                 )),
                 timestamp: chrono::Utc::now(),
                 nonce: 0,
