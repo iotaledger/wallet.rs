@@ -245,6 +245,12 @@ Promote the given message.
 
 **Returns** the promoted [WalletMessage](#walletmessage).
 
+#### consolidate_outputs(): list[WalletMessage](#walletmessage)
+
+Consolidates the account addresses outputs.
+
+**Returns** the list of generated [WalletMessage](#walletmessage).
+
 ### AccountSynchronizer
 
 #### gap_limit(limit): void

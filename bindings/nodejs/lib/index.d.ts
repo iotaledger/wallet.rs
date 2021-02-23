@@ -104,6 +104,7 @@ export declare class SyncedAccount {
   retry(messageId: string): Promise<Message>
   reattach(messageId: string): Promise<Message>
   promote(messageId: string): Promise<Message>
+  consolidateOutputs(): Promise<Message[]>
 }
 
 export declare interface ClientOptions {

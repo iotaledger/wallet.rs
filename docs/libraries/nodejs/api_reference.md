@@ -213,6 +213,9 @@ Promote the given message.
 | --------- | ------------------- | ----------------- | ------------------------ |
 | messageId | <code>string</code> | <code>null</code> | The message's identifier |
 
+#### consolidateOutputs()
+
+Consolidate the outputs on all account addresses.
 
 ### Account
 
