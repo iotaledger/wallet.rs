@@ -80,53 +80,37 @@ impl Transfer {
 impl SyncedAccount {
     /// Send messages.
     fn transfer(&self, transfer_obj: Transfer) -> Result<WalletMessage> {
-        let res: Result<(RustWalletMessage, String)> = crate::block_on(async {
-            let bech32_hrp = self.synced_account.account_handle().bech32_hrp().await;
-            Ok((self.synced_account.transfer(transfer_obj.transfer).await?, bech32_hrp))
-        });
-        res?.try_into()
+        crate::block_on(async { self.synced_account.transfer(transfer_obj.transfer).await?.try_into() })
     }
 
     /// Retry message.
     fn retry(&self, message_id: &str) -> Result<WalletMessage> {
-        let res: Result<(RustWalletMessage, String)> = crate::block_on(async {
-            let bech32_hrp = self.synced_account.account_handle().bech32_hrp().await;
-            Ok((
-                self.synced_account
-                    .retry(&RustMessageId::from_str(&message_id)?)
-                    .await?,
-                bech32_hrp,
-            ))
-        });
-        res?.try_into()
+        crate::block_on(async {
+            self.synced_account
+                .retry(&RustMessageId::from_str(&message_id)?)
+                .await?
+                .try_into()
+        })
     }
 
     /// Promote message.
     fn promote(&self, message_id: &str) -> Result<WalletMessage> {
-        let res: Result<(RustWalletMessage, String)> = crate::block_on(async {
-            let bech32_hrp = self.synced_account.account_handle().bech32_hrp().await;
-            Ok((
-                self.synced_account
-                    .promote(&RustMessageId::from_str(&message_id)?)
-                    .await?,
-                bech32_hrp,
-            ))
-        });
-        res?.try_into()
+        crate::block_on(async {
+            self.synced_account
+                .promote(&RustMessageId::from_str(&message_id)?)
+                .await?
+                .try_into()
+        })
     }
 
     /// Reattach message.
     fn reattach(&self, message_id: &str) -> Result<WalletMessage> {
-        let res: Result<(RustWalletMessage, String)> = crate::block_on(async {
-            let bech32_hrp = self.synced_account.account_handle().bech32_hrp().await;
-            Ok((
-                self.synced_account
-                    .reattach(&RustMessageId::from_str(&message_id)?)
-                    .await?,
-                bech32_hrp,
-            ))
-        });
-        res?.try_into()
+        crate::block_on(async {
+            self.synced_account
+                .reattach(&RustMessageId::from_str(&message_id)?)
+                .await?
+                .try_into()
+        })
     }
 }
 
@@ -206,17 +190,11 @@ impl AccountHandle {
             Some("Value") => Some(RustMessageType::Value),
             _ => None,
         };
-        let (messages, bech32_hrp) = crate::block_on(async {
-            let bech32_hrp = self.account_handle.bech32_hrp().await;
-            (
-                self.account_handle.list_messages(count, from, message_type).await,
-                bech32_hrp,
-            )
-        });
+        let messages = crate::block_on(async { self.account_handle.list_messages(count, from, message_type).await });
 
         let mut parsed_messages = Vec::new();
         for message in messages {
-            parsed_messages.push((message, bech32_hrp.to_string()).try_into()?);
+            parsed_messages.push(message.try_into()?);
         }
 
         Ok(parsed_messages)
@@ -240,18 +218,14 @@ impl AccountHandle {
 
     /// Bridge to [Account#get_message](struct.Account.html#method.get_message).
     fn get_message(&self, message_id: &str) -> Result<Option<WalletMessage>> {
-        let res: Result<(Option<RustWalletMessage>, String)> = crate::block_on(async {
-            let bech32_hrp = self.account_handle.bech32_hrp().await;
-            Ok((
-                self.account_handle
-                    .get_message(&RustMessageId::from_str(&message_id)?)
-                    .await,
-                bech32_hrp,
-            ))
+        let res: Result<Option<RustWalletMessage>> = crate::block_on(async {
+            Ok(self
+                .account_handle
+                .get_message(&RustMessageId::from_str(&message_id)?)
+                .await)
         });
-        let (message, bech32_hrp) = res?;
-        if let Some(message) = message {
-            Ok(Some((message, bech32_hrp).try_into()?))
+        if let Some(message) = res? {
+            Ok(Some(message.try_into()?))
         } else {
             Ok(None)
         }
@@ -294,7 +268,8 @@ impl AccountInitialiser {
                 messages
                     .into_iter()
                     .map(|msg| {
-                        msg.try_into()
+                        // we use an empty bech32 HRP here because we update it later on wallet.rs
+                        to_rust_message(msg, "".to_string())
                             .unwrap_or_else(|msg| panic!("AccountInitialiser: Message {:?} is invalid", msg))
                     })
                     .collect(),
