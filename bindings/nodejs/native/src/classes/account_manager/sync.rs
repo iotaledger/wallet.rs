@@ -5,8 +5,8 @@ use std::sync::Arc;
 
 use iota_wallet::{account::SyncedAccount, account_manager::AccountManager, Error};
 use neon::prelude::*;
-use tokio::sync::RwLock;
 use serde::Deserialize;
+use tokio::sync::RwLock;
 
 #[derive(Deserialize, Default)]
 pub struct SyncOptions {
@@ -15,7 +15,6 @@ pub struct SyncOptions {
     #[serde(rename = "gapLimit")]
     gap_limit: Option<usize>,
 }
-
 
 pub struct SyncTask {
     pub manager: Arc<RwLock<AccountManager>>,
