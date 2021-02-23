@@ -454,20 +454,27 @@
 <span id="451">451</span>
 <span id="452">452</span>
 <span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">account</span>::<span class="ident">Account</span>, <span class="ident">message</span>::<span class="ident">MessageType</span>, <span class="ident">signing</span>::<span class="ident">GenerateAddressMetadata</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">account</span>::<span class="ident">Account</span>,
+    <span class="ident">message</span>::{<span class="ident">MessagePayload</span>, <span class="ident">MessageType</span>, <span class="ident">TransactionEssence</span>},
+    <span class="ident">signing</span>::<span class="ident">GenerateAddressMetadata</span>,
+};
 <span class="kw">use</span> <span class="ident">getset</span>::{<span class="ident">Getters</span>, <span class="ident">Setters</span>};
 <span class="kw">use</span> <span class="ident">iota</span>::{
     <span class="ident">bee_rest_api</span>::{
         <span class="ident">handlers</span>::<span class="ident">output</span>::<span class="ident">OutputResponse</span>,
         <span class="ident">types</span>::{<span class="ident">AddressDto</span>, <span class="ident">OutputDto</span>},
     },
-    <span class="ident">Essence</span>, <span class="ident">MessageId</span>, <span class="ident">TransactionId</span>,
+    <span class="ident">MessageId</span>, <span class="ident">TransactionId</span>,
 };
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">iota</span>::{<span class="ident">Address</span> <span class="kw">as</span> <span class="ident">IotaAddress</span>, <span class="ident">Ed25519Address</span>, <span class="ident">Input</span>, <span class="ident">Payload</span>, <span class="ident">UTXOInput</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">iota</span>::{<span class="ident">Address</span> <span class="kw">as</span> <span class="ident">IotaAddress</span>, <span class="ident">Ed25519Address</span>, <span class="ident">Input</span>, <span class="ident">UTXOInput</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">cmp</span>::<span class="ident">Ordering</span>,
@@ -533,15 +540,14 @@
             <span class="comment">// message is pending or confirmed</span>
             <span class="kw">if</span> <span class="ident">m</span>.<span class="ident">confirmed</span>().<span class="ident">unwrap_or</span>(<span class="bool-val">true</span>) {
                 <span class="kw">match</span> <span class="ident">m</span>.<span class="ident">payload</span>() {
-                    <span class="prelude-val">Some</span>(<span class="ident">Payload</span>::<span class="ident">Transaction</span>(<span class="ident">tx</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">tx</span>.<span class="ident">essence</span>() {
-                        <span class="ident">Essence</span>::<span class="ident">Regular</span>(<span class="ident">essence</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">essence</span>.<span class="ident">inputs</span>().<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">input</span><span class="op">|</span> {
+                    <span class="prelude-val">Some</span>(<span class="ident">MessagePayload</span>::<span class="ident">Transaction</span>(<span class="ident">tx</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">tx</span>.<span class="ident">essence</span>() {
+                        <span class="ident">TransactionEssence</span>::<span class="ident">Regular</span>(<span class="ident">essence</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">essence</span>.<span class="ident">inputs</span>().<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">input</span><span class="op">|</span> {
                             <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Input</span>::<span class="ident">UTXO</span>(<span class="ident">x</span>) <span class="op">=</span> <span class="ident">input</span> {
                                 <span class="ident">x</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">output_id</span>
                             } <span class="kw">else</span> {
                                 <span class="bool-val">false</span>
                             }
                         }),
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
                     },
                     <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
                 }
@@ -675,7 +681,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AddressWrapper</span> {
     <span class="ident">inner</span>: <span class="ident">IotaAddress</span>,
-    <span class="ident">bech32_hrp</span>: <span class="ident">String</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">bech32_hrp</span>: <span class="ident">String</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">IotaAddress</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">AddressWrapper</span> {
@@ -877,7 +883,7 @@
     <span class="op">!</span><span class="ident">account</span>
         .<span class="ident">list_messages</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="ident">MessageType</span>::<span class="ident">Sent</span>))
         .<span class="ident">iter</span>()
-        .<span class="ident">any</span>(<span class="op">|</span><span class="ident">message</span><span class="op">|</span> <span class="ident">message</span>.<span class="ident">addresses</span>().<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">address</span>.<span class="ident">as_ref</span>()))
+        .<span class="ident">any</span>(<span class="op">|</span><span class="ident">message</span><span class="op">|</span> <span class="ident">message</span>.<span class="ident">addresses</span>().<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">address</span>))
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>

@@ -1677,7 +1677,7 @@
         <span class="ident">emit_balance_change</span>, <span class="ident">emit_confirmation_state_change</span>, <span class="ident">emit_transaction_event</span>, <span class="ident">BalanceChange</span>,
         <span class="ident">TransactionEventType</span>,
     },
-    <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessageType</span>, <span class="ident">Transfer</span>},
+    <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessagePayload</span>, <span class="ident">MessageType</span>, <span class="ident">Transfer</span>},
     <span class="ident">signing</span>::<span class="ident">SignerType</span>,
     <span class="ident">storage</span>::<span class="ident">StorageAdapter</span>,
 };
@@ -1700,7 +1700,7 @@
 <span class="kw">use</span> <span class="ident">chrono</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">FutureExt</span>;
 <span class="kw">use</span> <span class="ident">getset</span>::<span class="ident">Getters</span>;
-<span class="kw">use</span> <span class="ident">iota</span>::{<span class="ident">bee_rest_api</span>::<span class="ident">handlers</span>::<span class="ident">message_metadata</span>::<span class="ident">LedgerInclusionStateDto</span>, <span class="ident">MessageId</span>, <span class="ident">Payload</span>};
+<span class="kw">use</span> <span class="ident">iota</span>::{<span class="ident">bee_rest_api</span>::<span class="ident">handlers</span>::<span class="ident">message_metadata</span>::<span class="ident">LedgerInclusionStateDto</span>, <span class="ident">MessageId</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::<span class="ident">Deserialize</span>;
 <span class="kw">use</span> <span class="ident">tokio</span>::{
     <span class="ident">sync</span>::{
@@ -2678,7 +2678,7 @@
         <span class="ident">log</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;[POLLING] skipping syncing process because MQTT is running&quot;</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">retried_messages</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
         <span class="kw">for</span> <span class="ident">account_handle</span> <span class="kw">in</span> <span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">values</span>() {
-            <span class="kw">let</span> (<span class="ident">account_handle</span>, <span class="ident">unconfirmed_messages</span>): (<span class="ident">AccountHandle</span>, <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">MessageId</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Payload</span><span class="op">&gt;</span>)<span class="op">&gt;</span>) <span class="op">=</span> {
+            <span class="kw">let</span> (<span class="ident">account_handle</span>, <span class="ident">unconfirmed_messages</span>): (<span class="ident">AccountHandle</span>, <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">MessageId</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MessagePayload</span><span class="op">&gt;</span>)<span class="op">&gt;</span>) <span class="op">=</span> {
                 <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>;
                 <span class="kw">let</span> <span class="ident">unconfirmed_messages</span> <span class="op">=</span> <span class="ident">account</span>
                     .<span class="ident">list_messages</span>(<span class="ident">account</span>.<span class="ident">messages</span>().<span class="ident">len</span>(), <span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="ident">MessageType</span>::<span class="ident">Unconfirmed</span>))
@@ -2841,7 +2841,7 @@
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">retry_unconfirmed_transactions</span>(<span class="ident">synced_accounts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SyncedAccount</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RetriedData</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">retried_messages</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
     <span class="kw">for</span> <span class="ident">synced</span> <span class="kw">in</span> <span class="ident">synced_accounts</span> {
-        <span class="kw">let</span> <span class="ident">unconfirmed_messages</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">MessageId</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Payload</span><span class="op">&gt;</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">synced</span>
+        <span class="kw">let</span> <span class="ident">unconfirmed_messages</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">MessageId</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MessagePayload</span><span class="op">&gt;</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">synced</span>
             .<span class="ident">account_handle</span>()
             .<span class="ident">read</span>()
             .<span class="kw">await</span>
@@ -3101,7 +3101,7 @@
                         .<span class="ident">with_network_id</span>(<span class="number">0</span>)
                         .<span class="ident">finish</span>()
                         .<span class="ident">unwrap</span>(),
-                    <span class="kw-2">&amp;</span>[],
+                    <span class="kw-2">&amp;</span>[<span class="kw">crate</span>::<span class="ident">test_utils</span>::<span class="ident">generate_random_address</span>()],
                 )
                 .<span class="ident">with_confirmed</span>(<span class="prelude-val">Some</span>(<span class="bool-val">true</span>))
                 .<span class="ident">finish</span>()])
