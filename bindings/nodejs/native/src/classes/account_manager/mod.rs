@@ -75,6 +75,17 @@ struct ManagerOptions {
     storage_type: Option<ManagerStorage>,
     #[serde(rename = "storagePassword")]
     storage_password: Option<String>,
+    #[serde(rename = "outputConsolidationThreshold")]
+    output_consolidation_threshold: Option<usize>,
+    #[serde(
+        rename = "automaticOutputConsolidation",
+        default = "default_automatic_output_consolidation"
+    )]
+    automatic_output_consolidation: bool,
+}
+
+fn default_automatic_output_consolidation() -> bool {
+    true
 }
 
 declare_types! {
@@ -87,16 +98,20 @@ declare_types! {
                 }
                 None => Default::default(),
             };
-            let manager = crate::block_on(
-                AccountManager::builder()
+            let mut manager = AccountManager::builder()
                 .with_storage(
                     &options.storage_path,
                     options.storage_type.unwrap_or(ManagerStorage::Stronghold),
                     options.storage_password.as_deref(),
                 )
-                .expect("failed to init storage")
-                .finish()
-            ).expect("error initializing account manager");
+                .expect("failed to init storage");
+            if !options.automatic_output_consolidation {
+                manager = manager.with_automatic_output_consolidation_disabled();
+            }
+            if let Some(threshold) = options.output_consolidation_threshold {
+                manager = manager.with_output_consolidation_threshold(threshold);
+            }
+            let manager = crate::block_on(manager.finish()).expect("error initializing account manager");
             Ok(AccountManagerWrapper(Arc::new(RwLock::new(manager))))
         }
 

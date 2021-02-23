@@ -137,6 +137,8 @@ export declare interface ManagerOptions {
   storagePath?: string
   storageType?: StorageType
   storagePassword?: string
+  outputConsolidationThreshold?: number
+  automaticOutputConsolidation?: boolean
 }
 
 export declare class AccountManager {

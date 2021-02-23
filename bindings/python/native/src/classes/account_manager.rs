@@ -23,8 +23,10 @@ impl AccountManager {
     fn new(
         storage_path: Option<&str>,
         storage: Option<&str>, // 'Stronghold' or 'Sqlite'
-        password: Option<&str>,
+        storage_password: Option<&str>,
         polling_interval: Option<u64>,
+        automatic_output_consolidation: Option<bool>,
+        output_consolidation_threshold: Option<usize>,
     ) -> Result<Self> {
         let mut account_manager = RustAccountManager::builder();
         if storage_path.is_some() & storage.is_some() {
@@ -33,14 +35,14 @@ impl AccountManager {
                     account_manager = account_manager.with_storage(
                         storage_path.unwrap_or_else(|| panic!("invalid Stronghold storage path: {:?}", storage_path)),
                         RustManagerStorage::Stronghold,
-                        password,
+                        storage_password,
                     )?
                 }
                 Some("Sqlite") => {
                     account_manager = account_manager.with_storage(
                         storage_path.unwrap_or_else(|| panic!("invalid Sqlite storage path: {:?}", storage_path)),
                         RustManagerStorage::Sqlite,
-                        password,
+                        storage_password,
                     )?
                 }
                 _ => {
@@ -49,6 +51,12 @@ impl AccountManager {
                     })
                 }
             }
+        }
+        if !automatic_output_consolidation.unwrap_or(true) {
+            account_manager = account_manager.with_automatic_output_consolidation_disabled();
+        }
+        if let Some(threshold) = output_consolidation_threshold {
+            account_manager = account_manager.with_output_consolidation_threshold(threshold);
         }
         if let Some(polling_interval) = polling_interval {
             account_manager = account_manager.with_polling_interval(Duration::from_millis(polling_interval));
