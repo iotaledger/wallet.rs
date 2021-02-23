@@ -11,7 +11,7 @@ use crate::{
         emit_balance_change, emit_confirmation_state_change, emit_transaction_event, BalanceChange,
         TransactionEventType,
     },
-    message::{Message, MessageType, Transfer},
+    message::{Message, MessagePayload, MessageType, Transfer},
     signing::SignerType,
     storage::StorageAdapter,
 };
@@ -34,7 +34,7 @@ use std::{
 use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
-use iota::{bee_rest_api::handlers::message_metadata::LedgerInclusionStateDto, MessageId, Payload};
+use iota::{bee_rest_api::handlers::message_metadata::LedgerInclusionStateDto, MessageId};
 use serde::Deserialize;
 use tokio::{
     sync::{
@@ -1012,7 +1012,7 @@ async fn poll(accounts: AccountStore, storage_file_path: PathBuf, is_mqtt_monito
         log::info!("[POLLING] skipping syncing process because MQTT is running");
         let mut retried_messages = vec![];
         for account_handle in accounts.read().await.values() {
-            let (account_handle, unconfirmed_messages): (AccountHandle, Vec<(MessageId, Option<Payload>)>) = {
+            let (account_handle, unconfirmed_messages): (AccountHandle, Vec<(MessageId, Option<MessagePayload>)>) = {
                 let account = account_handle.read().await;
                 let unconfirmed_messages = account
                     .list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed))
@@ -1175,7 +1175,7 @@ struct RetriedData {
 async fn retry_unconfirmed_transactions(synced_accounts: Vec<SyncedAccount>) -> crate::Result<Vec<RetriedData>> {
     let mut retried_messages = vec![];
     for synced in synced_accounts {
-        let unconfirmed_messages: Vec<(MessageId, Option<Payload>)> = synced
+        let unconfirmed_messages: Vec<(MessageId, Option<MessagePayload>)> = synced
             .account_handle()
             .read()
             .await
@@ -1435,7 +1435,7 @@ mod tests {
                         .with_network_id(0)
                         .finish()
                         .unwrap(),
-                    &[],
+                    &[crate::test_utils::generate_random_address()],
                 )
                 .with_confirmed(Some(true))
                 .finish()])

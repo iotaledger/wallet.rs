@@ -87,7 +87,7 @@ mod test_utils {
         account_manager::{AccountManager, ManagerStorage},
         address::{Address, AddressBuilder, AddressWrapper},
         client::ClientOptionsBuilder,
-        message::Message,
+        message::{Message, MessagePayload},
         signing::SignerType,
     };
     use iota::{
@@ -482,26 +482,29 @@ mod test_utils {
                 version: 1,
                 parents: vec![MessageId::new([0; 32])],
                 payload_length: 0,
-                payload: Some(Payload::Transaction(Box::new(
-                    TransactionPayloadBuilder::new()
-                        .with_essence(Essence::Regular(
-                            iota::RegularEssence::builder()
-                                .add_output(
-                                    SignatureLockedSingleOutput::new(*self.address.address().as_ref(), self.value)
-                                        .unwrap()
-                                        .into(),
-                                )
-                                .add_input(UTXOInput::new(self.input_transaction_id, 0).unwrap().into())
-                                .finish()
-                                .unwrap(),
-                        ))
-                        .add_unlock_block(UnlockBlock::Signature(SignatureUnlock::Ed25519(Ed25519Signature::new(
-                            [0; 32],
-                            Box::new([0]),
-                        ))))
-                        .finish()
-                        .unwrap(),
-                ))),
+                payload: Some(MessagePayload::new(
+                    Payload::Transaction(Box::new(
+                        TransactionPayloadBuilder::new()
+                            .with_essence(Essence::Regular(
+                                iota::RegularEssence::builder()
+                                    .add_output(
+                                        SignatureLockedSingleOutput::new(*self.address.address().as_ref(), self.value)
+                                            .unwrap()
+                                            .into(),
+                                    )
+                                    .add_input(UTXOInput::new(self.input_transaction_id, 0).unwrap().into())
+                                    .finish()
+                                    .unwrap(),
+                            ))
+                            .add_unlock_block(UnlockBlock::Signature(SignatureUnlock::Ed25519(Ed25519Signature::new(
+                                [0; 32],
+                                Box::new([0]),
+                            ))))
+                            .finish()
+                            .unwrap(),
+                    )),
+                    "iota".to_string(),
+                )),
                 timestamp: chrono::Utc::now(),
                 nonce: 0,
                 value: self.value,

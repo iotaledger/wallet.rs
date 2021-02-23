@@ -21,7 +21,11 @@ use iota_wallet::{
         Address as RustWalletAddress, AddressOutput as RustWalletAddressOutput, AddressWrapper as RustAddressWrapper,
         OutputKind as RustOutputKind,
     },
-    message::Message as RustWalletMessage,
+    message::{
+        Message as RustWalletMessage, MessagePayload as RustWalletPayload,
+        MessageTransactionPayload as RustWalletMessageTransactionPayload,
+        TransactionEssence as RustWalletTransactionEssence, TransactionOutput as RustWalletOutput,
+    },
 };
 use std::{
     convert::{From, Into, TryInto},
@@ -120,13 +124,13 @@ pub struct WalletMessage {
     pub remainder_value: u64,
 }
 
-impl TryFrom<(RustWalletMessage, Bech32HRP)> for WalletMessage {
+impl TryFrom<RustWalletMessage> for WalletMessage {
     type Error = Error;
-    fn try_from((msg, bech32_hrp): (RustWalletMessage, Bech32HRP)) -> Result<Self> {
+    fn try_from(msg: RustWalletMessage) -> Result<Self> {
         let payload = match msg.payload() {
-            Some(RustPayload::Transaction(payload)) => Some(Payload {
+            Some(RustWalletPayload::Transaction(payload)) => Some(Payload {
                 transaction: Some(vec![Transaction {
-                    essence: (payload.essence().to_owned(), bech32_hrp).try_into()?,
+                    essence: payload.essence().to_owned().try_into()?,
                     unlock_blocks: payload
                         .unlock_blocks()
                         .iter()
@@ -137,7 +141,7 @@ impl TryFrom<(RustWalletMessage, Bech32HRP)> for WalletMessage {
                 milestone: None,
                 indexation: None,
             }),
-            Some(RustPayload::Indexation(payload)) => Some(Payload {
+            Some(RustWalletPayload::Indexation(payload)) => Some(Payload {
                 transaction: None,
                 milestone: None,
                 indexation: Some(vec![Indexation {
@@ -151,7 +155,7 @@ impl TryFrom<(RustWalletMessage, Bech32HRP)> for WalletMessage {
                     }),
                 }]),
             }),
-            Some(RustPayload::Milestone(payload)) => Some(Payload {
+            Some(RustWalletPayload::Milestone(payload)) => Some(Payload {
                 transaction: None,
                 milestone: Some(vec![Milestone {
                     essence: payload.essence().to_owned().try_into()?,
@@ -184,11 +188,11 @@ impl TryFrom<(RustWalletMessage, Bech32HRP)> for WalletMessage {
     }
 }
 
-impl TryFrom<(RustEssence, Bech32HRP)> for Essence {
+impl TryFrom<RustWalletTransactionEssence> for Essence {
     type Error = Error;
-    fn try_from((essence, bech32_hrp): (RustEssence, Bech32HRP)) -> Result<Self> {
+    fn try_from(essence: RustWalletTransactionEssence) -> Result<Self> {
         let essence = match essence {
-            RustEssence::Regular(essence) => RegularEssence {
+            RustWalletTransactionEssence::Regular(essence) => RegularEssence {
                 inputs: essence
                     .inputs()
                     .iter()
@@ -209,10 +213,10 @@ impl TryFrom<(RustEssence, Bech32HRP)> for Essence {
                     .iter()
                     .cloned()
                     .map(|output| {
-                        if let RustOutput::SignatureLockedSingle(output) = output {
+                        if let RustWalletOutput::SignatureLockedSingle(output) = output {
                             Output {
-                                address: output.address().to_bech32(&bech32_hrp),
-                                amount: output.amount(),
+                                address: output.address().to_bech32(),
+                                amount: *output.amount(),
                             }
                         } else {
                             unreachable!()
@@ -243,7 +247,6 @@ impl TryFrom<(RustEssence, Bech32HRP)> for Essence {
                 },
             }
             .into(),
-            _ => unimplemented!(),
         };
         Ok(essence)
     }
@@ -302,35 +305,33 @@ impl TryFrom<RustUnlockBlock> for UnlockBlock {
     }
 }
 
-impl TryFrom<WalletMessage> for RustWalletMessage {
-    type Error = Error;
-    fn try_from(msg: WalletMessage) -> Result<Self> {
-        let mut parents = Vec::new();
-        for parent in msg.parents {
-            parents.push(MessageId::from_str(&parent)?);
-        }
-        Ok(Self {
-            id: MessageId::from_str(&msg.id)?,
-            version: msg.version,
-            parents,
-            payload_length: msg.payload_length,
-            payload: match msg.payload {
-                Some(payload) => Some(payload.try_into()?),
-                None => None,
-            },
-            timestamp: DateTime::from_utc(NaiveDateTime::from_timestamp(msg.timestamp, 0), Utc),
-            nonce: msg.nonce,
-            confirmed: msg.confirmed,
-            broadcasted: msg.broadcasted,
-            incoming: msg.incoming,
-            value: msg.value,
-            remainder_value: msg.remainder_value,
-        })
+pub fn to_rust_message(msg: WalletMessage, bech32_hrp: String) -> Result<RustWalletMessage> {
+    let mut parents = Vec::new();
+    for parent in msg.parents {
+        parents.push(MessageId::from_str(&parent)?);
     }
+    Ok(RustWalletMessage {
+        id: MessageId::from_str(&msg.id)?,
+        version: msg.version,
+        parents,
+        payload_length: msg.payload_length,
+        payload: match msg.payload {
+            Some(payload) => Some(to_rust_payload(payload, bech32_hrp)?),
+            None => None,
+        },
+        timestamp: DateTime::from_utc(NaiveDateTime::from_timestamp(msg.timestamp, 0), Utc),
+        nonce: msg.nonce,
+        confirmed: msg.confirmed,
+        broadcasted: msg.broadcasted,
+        incoming: msg.incoming,
+        value: msg.value,
+        remainder_value: msg.remainder_value,
+    })
 }
 
 impl TryFrom<Essence> for RustEssence {
     type Error = Error;
+
     fn try_from(essence: Essence) -> Result<Self> {
         if let Some(essence) = essence.regular {
             let mut builder = RustRegularEssence::builder();
@@ -437,36 +438,34 @@ impl TryFrom<UnlockBlock> for RustUnlockBlock {
     }
 }
 
-impl TryFrom<Payload> for RustPayload {
-    type Error = Error;
-    fn try_from(payload: Payload) -> Result<Self> {
-        if let Some(transaction_payload) = &payload.transaction {
-            let mut transaction = RustTransactionPayload::builder();
-            transaction = transaction.with_essence(transaction_payload[0].essence.clone().try_into()?);
+pub fn to_rust_payload(payload: Payload, bech32_hrp: Bech32HRP) -> Result<RustWalletPayload> {
+    if let Some(transaction_payload) = &payload.transaction {
+        let mut transaction = RustTransactionPayload::builder();
+        transaction = transaction.with_essence(transaction_payload[0].essence.clone().try_into()?);
 
-            let unlock_blocks = transaction_payload[0].unlock_blocks.clone();
-            for unlock_block in unlock_blocks {
-                transaction = transaction.add_unlock_block(unlock_block.try_into()?);
-            }
-
-            Ok(RustPayload::Transaction(Box::new(transaction.finish()?)))
-        } else {
-            let indexation = RustIndexationPayload::new(
-                &(&payload
-                    .indexation
-                    .as_ref()
-                    .unwrap_or_else(|| panic!("Invalid Payload: {:?}", payload))[0]
-                    .index
-                    .clone())
-                    .to_owned(),
-                &payload
-                    .indexation
-                    .as_ref()
-                    .unwrap_or_else(|| panic!("Invalid Payload: {:?}", payload))[0]
-                    .data,
-            )?;
-            Ok(RustPayload::Indexation(Box::new(indexation)))
+        let unlock_blocks = transaction_payload[0].unlock_blocks.clone();
+        for unlock_block in unlock_blocks {
+            transaction = transaction.add_unlock_block(unlock_block.try_into()?);
         }
+        Ok(RustWalletPayload::Transaction(Box::new(
+            RustWalletMessageTransactionPayload::new(&transaction.finish()?, bech32_hrp),
+        )))
+    } else {
+        let indexation = RustIndexationPayload::new(
+            &(&payload
+                .indexation
+                .as_ref()
+                .unwrap_or_else(|| panic!("Invalid Payload: {:?}", payload))[0]
+                .index
+                .clone())
+                .to_owned(),
+            &payload
+                .indexation
+                .as_ref()
+                .unwrap_or_else(|| panic!("Invalid Payload: {:?}", payload))[0]
+                .data,
+        )?;
+        Ok(RustWalletPayload::Indexation(Box::new(indexation)))
     }
 }
 

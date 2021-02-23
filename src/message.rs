@@ -5,7 +5,11 @@ use crate::address::{Address, AddressWrapper, IotaAddress};
 use bee_common::packable::Packable;
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-pub use iota::{Essence, IndexationPayload, Message as IotaMessage, MessageId, Output, Payload};
+pub use iota::{
+    Essence, IndexationPayload, Input, Message as IotaMessage, MessageId, MilestonePayload, Output, Payload,
+    ReceiptPayload, RegularEssence, SignatureLockedDustAllowanceOutput, SignatureLockedSingleOutput,
+    TransactionPayload, TreasuryOutput, TreasuryTransactionPayload, UnlockBlock,
+};
 use serde::{de::Deserializer, Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
 use std::{
@@ -227,6 +231,197 @@ impl Value {
     }
 }
 
+/// Signature locked single output.
+#[derive(Debug, Clone, Serialize, Deserialize, Getters, Eq, PartialEq)]
+#[getset(get = "pub")]
+pub struct TransactionSignatureLockedSingleOutput {
+    /// The output adrress.
+    #[serde(with = "crate::serde::iota_address_serde")]
+    address: AddressWrapper,
+    /// The output amount.
+    amount: u64,
+}
+
+impl TransactionSignatureLockedSingleOutput {
+    fn new(output: &SignatureLockedSingleOutput, bech32_hrp: String) -> Self {
+        Self {
+            address: AddressWrapper::new(*output.address(), bech32_hrp),
+            amount: output.amount(),
+        }
+    }
+}
+
+/// Dust allowance output.
+#[derive(Debug, Clone, Serialize, Deserialize, Getters, Eq, PartialEq)]
+#[getset(get = "pub")]
+pub struct TransactionSignatureLockedDustAllowanceOutput {
+    /// The output adrress.
+    #[serde(with = "crate::serde::iota_address_serde")]
+    address: AddressWrapper,
+    /// The output amount.
+    amount: u64,
+}
+
+impl TransactionSignatureLockedDustAllowanceOutput {
+    fn new(output: &SignatureLockedDustAllowanceOutput, bech32_hrp: String) -> Self {
+        Self {
+            address: AddressWrapper::new(*output.address(), bech32_hrp),
+            amount: output.amount(),
+        }
+    }
+}
+
+/// The transaction output.
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+#[serde(tag = "type", content = "data")]
+pub enum TransactionOutput {
+    /// Signature locked single output.
+    SignatureLockedSingle(TransactionSignatureLockedSingleOutput),
+    /// Dust allowance output.
+    SignatureLockedDustAllowance(TransactionSignatureLockedDustAllowanceOutput),
+    /// Trasury output.
+    Treasury(TreasuryOutput),
+}
+
+impl TransactionOutput {
+    fn new(output: &Output, bech32_hrp: String) -> Self {
+        match output {
+            Output::SignatureLockedSingle(output) => {
+                Self::SignatureLockedSingle(TransactionSignatureLockedSingleOutput::new(output, bech32_hrp))
+            }
+            Output::SignatureLockedDustAllowance(output) => Self::SignatureLockedDustAllowance(
+                TransactionSignatureLockedDustAllowanceOutput::new(output, bech32_hrp),
+            ),
+            Output::Treasury(output) => Self::Treasury(output.clone()),
+            _ => unimplemented!(),
+        }
+    }
+}
+
+/// Regular essence.
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+pub struct TransactionRegularEssence {
+    inputs: Box<[Input]>,
+    outputs: Box<[TransactionOutput]>,
+    payload: Option<Payload>,
+}
+
+impl TransactionRegularEssence {
+    /// Gets the transaction inputs.
+    pub fn inputs(&self) -> &[Input] {
+        &self.inputs
+    }
+
+    /// Gets the transaction outputs.
+    pub fn outputs(&self) -> &[TransactionOutput] {
+        &self.outputs
+    }
+
+    /// Gets the transaction chained payload.
+    pub fn payload(&self) -> &Option<Payload> {
+        &self.payload
+    }
+}
+
+impl TransactionRegularEssence {
+    fn new(regular_essence: &RegularEssence, bech32_hrp: String) -> Self {
+        let mut inputs = Vec::new();
+        for input in regular_essence.inputs() {
+            inputs.push(input.clone());
+        }
+        let mut outputs = Vec::new();
+        for output in regular_essence.outputs() {
+            outputs.push(TransactionOutput::new(output, bech32_hrp.clone()));
+        }
+        Self {
+            inputs: inputs.into_boxed_slice(),
+            outputs: outputs.into_boxed_slice(),
+            payload: regular_essence.payload().clone(),
+        }
+    }
+}
+
+/// The transaction essence.
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+pub enum TransactionEssence {
+    /// Regular essence type.
+    Regular(TransactionRegularEssence),
+}
+
+impl TransactionEssence {
+    #[doc(hidden)]
+    pub fn new(essence: &Essence, bech32_hrp: String) -> Self {
+        match essence {
+            Essence::Regular(regular) => Self::Regular(TransactionRegularEssence::new(regular, bech32_hrp)),
+            _ => unimplemented!(),
+        }
+    }
+}
+
+/// A transaction payload.
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+pub struct MessageTransactionPayload {
+    essence: TransactionEssence,
+    unlock_blocks: Box<[UnlockBlock]>,
+}
+
+impl MessageTransactionPayload {
+    /// The transaction essence.
+    pub fn essence(&self) -> &TransactionEssence {
+        &self.essence
+    }
+
+    fn essence_mut(&mut self) -> &mut TransactionEssence {
+        &mut self.essence
+    }
+
+    /// The unlock blocks.
+    pub fn unlock_blocks(&self) -> &[UnlockBlock] {
+        &self.unlock_blocks
+    }
+
+    #[doc(hidden)]
+    pub fn new(payload: &TransactionPayload, bech32_hrp: String) -> Self {
+        let mut unlock_blocks = Vec::new();
+        for unlock_block in payload.unlock_blocks() {
+            unlock_blocks.push(unlock_block.clone());
+        }
+        Self {
+            essence: TransactionEssence::new(payload.essence(), bech32_hrp),
+            unlock_blocks: unlock_blocks.into_boxed_slice(),
+        }
+    }
+}
+
+/// The message's payload.
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+#[serde(tag = "type", content = "data")]
+pub enum MessagePayload {
+    /// Transaction payload.
+    Transaction(Box<MessageTransactionPayload>),
+    /// Milestone payload.
+    Milestone(Box<MilestonePayload>),
+    /// Indexation payload.
+    Indexation(Box<IndexationPayload>),
+    /// Receipt payload.
+    Receipt(Box<ReceiptPayload>),
+    /// Treasury Transaction payload.
+    TreasuryTransaction(Box<TreasuryTransactionPayload>),
+}
+
+impl MessagePayload {
+    pub(crate) fn new(payload: Payload, bech32_hrp: String) -> Self {
+        match payload {
+            Payload::Transaction(tx) => Self::Transaction(Box::new(MessageTransactionPayload::new(&tx, bech32_hrp))),
+            Payload::Milestone(milestone) => Self::Milestone(milestone),
+            Payload::Indexation(indexation) => Self::Indexation(indexation),
+            Payload::Receipt(receipt) => Self::Receipt(receipt),
+            Payload::TreasuryTransaction(treasury_tx) => Self::TreasuryTransaction(treasury_tx),
+            _ => unimplemented!(),
+        }
+    }
+}
+
 /// A message definition.
 #[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize, Eq)]
 #[getset(get = "pub", set = "pub(crate)")]
@@ -241,7 +436,7 @@ pub struct Message {
     #[serde(rename = "payloadLength")]
     pub payload_length: usize,
     /// Message payload.
-    pub payload: Option<Payload>,
+    pub payload: Option<MessagePayload>,
     /// The transaction timestamp.
     pub timestamp: DateTime<Utc>,
     /// Transaction nonce.
@@ -260,6 +455,28 @@ pub struct Message {
     /// The message's remainder value sum.
     #[serde(rename = "remainderValue")]
     pub remainder_value: u64,
+}
+
+impl Message {
+    pub(crate) fn set_bech32_hrp(&mut self, bech32_hrp: String) {
+        if let Some(MessagePayload::Transaction(tx)) = self.payload.as_mut() {
+            match tx.essence_mut() {
+                TransactionEssence::Regular(essence) => {
+                    for output in essence.outputs.iter_mut() {
+                        match output {
+                            TransactionOutput::SignatureLockedSingle(output) => {
+                                output.address.bech32_hrp = bech32_hrp.clone();
+                            }
+                            TransactionOutput::SignatureLockedDustAllowance(output) => {
+                                output.address.bech32_hrp = bech32_hrp.clone();
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 impl Hash for Message {
@@ -291,15 +508,17 @@ pub(crate) struct MessageBuilder<'a> {
     iota_message: IotaMessage,
     account_addresses: &'a [Address],
     confirmed: Option<bool>,
+    bech32_hrp: String,
 }
 
 impl<'a> MessageBuilder<'a> {
-    pub fn new(id: MessageId, iota_message: IotaMessage, account_addresses: &'a [Address]) -> Self {
+    pub fn new(id: MessageId, iota_message: IotaMessage, account_addresses: &'a [Address], bech32_hrp: String) -> Self {
         Self {
             id,
             iota_message,
             account_addresses,
             confirmed: None,
+            bech32_hrp,
         }
     }
 
@@ -404,13 +623,18 @@ impl<'a> MessageBuilder<'a> {
                 Self::compute_value(&self.iota_message, &self.id, &self.account_addresses).without_denomination();
             (value, total_value - value)
         };
+        let bech32_hrp = self.bech32_hrp.to_string();
 
         Message {
             id: self.id,
             version: 1,
             parents: self.iota_message.parents().to_vec(),
             payload_length: packed_payload.len(),
-            payload: self.iota_message.payload().clone(),
+            payload: self
+                .iota_message
+                .payload()
+                .clone()
+                .map(|p| MessagePayload::new(p, bech32_hrp)),
             timestamp: Utc::now(),
             nonce: self.iota_message.nonce(),
             confirmed: self.confirmed,
@@ -431,23 +655,33 @@ impl Message {
         iota_message: IotaMessage,
         account_addresses: &'_ [Address],
     ) -> MessageBuilder<'_> {
-        MessageBuilder::new(id, iota_message, account_addresses)
+        MessageBuilder::new(
+            id,
+            iota_message,
+            account_addresses,
+            account_addresses
+                .iter()
+                .next()
+                .unwrap()
+                .address()
+                .bech32_hrp()
+                .to_string(),
+        )
     }
 
     /// The message's addresses.
-    pub fn addresses(&self) -> Vec<&IotaAddress> {
+    pub fn addresses(&self) -> Vec<&AddressWrapper> {
         match &self.payload {
-            Some(Payload::Transaction(tx)) => match tx.essence() {
-                Essence::Regular(essence) => essence
+            Some(MessagePayload::Transaction(tx)) => match tx.essence() {
+                TransactionEssence::Regular(essence) => essence
                     .outputs()
                     .iter()
                     .map(|output| match output {
-                        Output::SignatureLockedDustAllowance(o) => o.address(),
-                        Output::SignatureLockedSingle(o) => o.address(),
+                        TransactionOutput::SignatureLockedDustAllowance(o) => o.address(),
+                        TransactionOutput::SignatureLockedSingle(o) => o.address(),
                         _ => unimplemented!(),
                     })
                     .collect(),
-                _ => unimplemented!(),
             },
 
             _ => vec![],
