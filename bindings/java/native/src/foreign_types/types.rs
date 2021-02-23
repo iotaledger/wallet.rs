@@ -47,3 +47,36 @@ foreign_typemap!(
         $out = Duration::from_nanos(temp.unwrap());
     };
 );
+
+fn jstring_array_to_vec_of_string(
+    env: *mut JNIEnv,
+    arr: internal_aliases::JStringObjectsArray,
+) -> Vec<String> {
+    let length = unsafe { (**env).GetArrayLength.unwrap()(env, arr) };
+    
+    let len = <usize as ::std::convert::TryFrom<jsize>>::try_from(length)
+        .expect("invalid jsize, in jsize => usize conversation");
+    let mut result = Vec::with_capacity(len);
+    for i in 0..length {
+        let native: String = unsafe {
+            let obj: jstring = (**env).GetObjectArrayElement.unwrap()(env, arr, i);
+            if (**env).ExceptionCheck.unwrap()(env) != 0 {
+                panic!("Failed to retrieve element {} from this `jobjectArray'", i);
+            }
+            let jstr = JavaString::new(env, obj);
+            jstr.to_str().to_string()
+        };
+        result.push(native);
+    }
+
+    result
+}
+
+foreign_typemap!(
+    ($p:r_type) Vec<String> <= internal_aliases::JStringObjectsArray {
+        $out = jstring_array_to_vec_of_string(env, $p);
+    };
+    ($p:f_type, option = "NoNullAnnotations") <= "java.lang.String []";
+    ($p:f_type, option = "NullAnnotations")
+                  <= "@NonNull java.lang.String []";
+);

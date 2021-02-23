@@ -31,7 +31,7 @@ fn main() {
     let swig_gen = flapigen::Generator::new(LanguageConfig::JavaConfig(java_cfg))
         .rustfmt_bindings(true)
         .remove_not_generated_files_from_output_directory(true)
-        .merge_type_map("chrono_support", include_str!("src/chrono_include.rs"))
+        .merge_type_map("chrono_support", include_str!("src/foreign_types/chrono_include.rs"))
         .merge_type_map("foreign_types", include_str!("src/foreign_types/types.rs"))
         .register_class_attribute_callback("PartialEq", |code, class_name| {
             let needle = format!("class {} {{", class_name);
