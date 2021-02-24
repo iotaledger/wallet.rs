@@ -241,8 +241,13 @@ Supported event names:</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>accountId</td><td><code>string | number</code></td><td><code>null</code></td><td>The account identifier or account index</td></tr>
 </tbody></table>
-<h4 id="syncaccounts"><a class="header" href="#syncaccounts">syncAccounts()</a></h4>
+<h4 id="syncaccountsoptions"><a class="header" href="#syncaccountsoptions">syncAccounts([options])</a></h4>
 <p>Synchronize all stored accounts with the Tangle.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[options]</td><td><code>object</code></td><td><code>{}</code></td><td>The sync options</td></tr>
+<tr><td>[options.addressIndex]</td><td><code>number</code></td><td><code>latest address index</code></td><td>The index of the first account address to sync</td></tr>
+<tr><td>[options.gapLimit]</td><td><code>number</code></td><td><code>10</code></td><td>The number of addresses to check on each account sync</td></tr>
+</tbody></table>
 <p><strong>Returns</strong> A promise resolving to an array of <a href="#syncedaccount">SyncedAccount</a>.</p>
 <h4 id="internaltransferfromaccount-toaccount-amount"><a class="header" href="#internaltransferfromaccount-toaccount-amount">internalTransfer(fromAccount, toAccount, amount)</a></h4>
 <p>Transfers an amount from one subaccount to another.</p>
@@ -339,7 +344,6 @@ Supported event names:</p>
 <tr><td>[options]</td><td><code>object</code></td><td><code>{}</code></td><td>The sync options</td></tr>
 <tr><td>[options.addressIndex]</td><td><code>number</code></td><td><code>latest address index</code></td><td>The index of the first address to sync</td></tr>
 <tr><td>[options.gapLimit]</td><td><code>number</code></td><td><code>10</code></td><td>The number of addresses to check</td></tr>
-<tr><td>[options.skipPersistance]</td><td><code>boolean</code></td><td><code>false</code></td><td>Skip updating the account in storage</td></tr>
 </tbody></table>
 <p><strong>Returns</strong> a <a href="#syncedaccount">SyncedAccount</a> instance.</p>
 <h4 id="islatestaddressunused-1"><a class="header" href="#islatestaddressunused-1">isLatestAddressUnused()</a></h4>

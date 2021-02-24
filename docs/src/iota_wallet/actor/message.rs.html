@@ -436,6 +436,16 @@
 <span id="433">433</span>
 <span id="434">434</span>
 <span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -544,7 +554,14 @@
         <span class="ident">method</span>: <span class="ident">AccountMethod</span>,
     },
     <span class="doccomment">/// Sync accounts.</span>
-    <span class="ident">SyncAccounts</span>,
+    <span class="ident">SyncAccounts</span> {
+        <span class="doccomment">/// The first address index to sync.</span>
+        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;addressIndex&quot;</span>)]</span>
+        <span class="ident">address_index</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
+        <span class="doccomment">/// The gap limit.</span>
+        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;gapLimit&quot;</span>)]</span>
+        <span class="ident">gap_limit</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
+    },
     <span class="doccomment">/// Reattach message.</span>
     <span class="ident">Reattach</span> {
         <span class="doccomment">/// The account identifier.</span>
@@ -656,7 +673,10 @@
                 <span class="ident">account_id</span>: <span class="kw">_</span>,
                 <span class="ident">method</span>: <span class="kw">_</span>,
             } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">4</span>, <span class="string">&quot;CallAccountMethod&quot;</span>),
-            <span class="ident">MessageType</span>::<span class="ident">SyncAccounts</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">5</span>, <span class="string">&quot;SyncAccounts&quot;</span>),
+            <span class="ident">MessageType</span>::<span class="ident">SyncAccounts</span> {
+                <span class="ident">address_index</span>: <span class="kw">_</span>,
+                <span class="ident">gap_limit</span>: <span class="kw">_</span>,
+            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">5</span>, <span class="string">&quot;SyncAccounts&quot;</span>),
             <span class="ident">MessageType</span>::<span class="ident">Reattach</span> {
                 <span class="ident">account_id</span>: <span class="kw">_</span>,
                 <span class="ident">message_id</span>: <span class="kw">_</span>,
