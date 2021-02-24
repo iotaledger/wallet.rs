@@ -16,6 +16,13 @@ pub struct ClientOptions {
     options: ClientOptionsRust
 }
 
+impl ClientOptions {
+    pub fn get_internal(self) -> ClientOptionsRust {
+        // TODO: Find a way to not need clone
+        self.options.clone()
+    }
+}
+
 pub struct ClientOptionsBuilder {
     builder: Rc<RefCell<Option<ClientOptionsBuilderRust>>>
 }

@@ -12,8 +12,11 @@ use anyhow::Result as Result;
 
 use env_logger::*;
 
-use iota_wallet::client::{
-    Api,
+use iota_wallet::{
+    message::Message, address::Address,
+    client::{
+        Api,
+    }
 };
 
 foreign_class!(class RustLogging {
@@ -77,10 +80,24 @@ foreign_class!(class ClientOptionsBuilder {
     fn ClientOptionsBuilder::with_local_pow(&mut self, local: bool) -> ClientOptionsBuilder;
     fn ClientOptionsBuilder::with_request_timeout(&mut self, timeout: Duration) -> ClientOptionsBuilder;
     fn ClientOptionsBuilder::with_api_timeout(&mut self, api: Api, timeout: Duration) -> ClientOptionsBuilder;
-    fn ClientOptionsBuilder::build(&mut self) -> Result<ClientOptions>;ç
+    fn ClientOptionsBuilder::build(&mut self) -> Result<ClientOptions>;
 });
 
 foreign_class!(class ClientOptions{
     self_type ClientOptions;
+    private constructor = empty;
+});
+
+foreign_class!(
+#[derive(Clone, Getters, Setters)]
+class Message{
+    self_type Message;
+    private constructor = empty;
+});
+
+foreign_class!(
+#[derive(Getters, Setters)]
+class Address{
+    self_type Address;
     private constructor = empty;
 });

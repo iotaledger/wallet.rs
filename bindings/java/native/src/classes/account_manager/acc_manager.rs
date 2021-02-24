@@ -9,12 +9,16 @@ use iota_wallet::{
         ManagerStorage as ManagerStorageRust,
         DEFAULT_STORAGE_FOLDER
     },
-    client::ClientOptions,
+    client::ClientOptions as ClientOptionsRust,
     signing::SignerType,
     DateTime, Local,
 };
 
 use crate::Result;
+use crate::{
+    client_options::ClientOptions,
+    acc::AccountInitialiser
+};
 
 fn default_storage_path() -> PathBuf {
     DEFAULT_STORAGE_FOLDER.into()
@@ -26,7 +30,7 @@ pub enum AccountSignerType {
     LedgerNanoSimulator = 3,
 }
 
-fn signer_type_enum_to_type(signer_type: AccountSignerType) -> SignerType {
+pub fn signer_type_enum_to_type(signer_type: AccountSignerType) -> SignerType {
     match signer_type {
         #[cfg(feature = "stronghold")]
         AccountSignerType::Stronghold => SignerType::Stronghold,
@@ -124,6 +128,10 @@ impl AccountManager {
         }
     }
 
+    pub fn storage_path(& self) -> &PathBuf {
+        self.manager.storage_path()
+    }
+
     pub fn stopBackgroundSync(&mut self,) -> Result<()> {
         self.manager.stop_background_sync();
         Ok(())
@@ -168,6 +176,13 @@ impl AccountManager {
     pub fn verify_mnemonic(&mut self, mnemonic: String) -> Result<()> {
         self.manager.verify_mnemonic(mnemonic).expect("error verifying mnemonic");
         Ok(())
+    }
+
+    pub fn create_account(&self, client_options: ClientOptions) -> Result<AccountInitialiser>{
+        let initialiser = self.manager.create_account(client_options.get_internal())
+            .expect("Failed to initialise accauntinitialiser");
+        
+        Ok(AccountInitialiser::new(initialiser))
     }
 }
 

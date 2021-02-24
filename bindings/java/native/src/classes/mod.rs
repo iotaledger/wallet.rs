@@ -10,3 +10,7 @@ pub use account::*;
 pub use account_manager::*;
 pub use event_listener::*;
 pub use synced_account::*;
+
+pub mod message;
+
+pub mod address;
