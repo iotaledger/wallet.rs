@@ -5,10 +5,20 @@ use std::sync::Arc;
 
 use iota_wallet::{account::SyncedAccount, account_manager::AccountManager, Error};
 use neon::prelude::*;
+use serde::Deserialize;
 use tokio::sync::RwLock;
+
+#[derive(Deserialize, Default)]
+pub struct SyncOptions {
+    #[serde(rename = "addressIndex")]
+    address_index: Option<usize>,
+    #[serde(rename = "gapLimit")]
+    gap_limit: Option<usize>,
+}
 
 pub struct SyncTask {
     pub manager: Arc<RwLock<AccountManager>>,
+    pub options: SyncOptions,
 }
 
 impl Task for SyncTask {
@@ -19,7 +29,14 @@ impl Task for SyncTask {
     fn perform(&self) -> Result<Self::Output, Self::Error> {
         crate::block_on(crate::convert_async_panics(|| async {
             let manager = self.manager.read().await;
-            manager.sync_accounts().await
+            let mut synchronizer = manager.sync_accounts()?;
+            if let Some(address_index) = self.options.address_index {
+                synchronizer = synchronizer.address_index(address_index);
+            }
+            if let Some(gap_limit) = self.options.gap_limit {
+                synchronizer = synchronizer.gap_limit(gap_limit);
+            }
+            synchronizer.execute().await
         }))
     }
 

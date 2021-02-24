@@ -157,11 +157,9 @@ Deletes an account.
 | ---------- | ---------------- | ---------------------- | -------------------------------------- |
 | account_id | <code>str</code> | <code>undefined</code> | The account with this id to be deleted |
 
-#### sync_accounts(): list[SyncedAccount]
+#### sync_accounts(): [AccountsSynchronizer](#accountssynchronizer)
 
-Syncs all accounts.
-
-**Returns** A promise resolving to an array of [SyncedAccount](#syncedaccount).
+**Returns** the [AccountsSynchronizer](#accountssynchronizer) to setup the process to synchronize the accounts with the Tangle.
 
 #### internal_transfer(from_account_id, to_account_id, amount): WalletMessage
 
@@ -173,7 +171,7 @@ Transfers an amount from an account to another.
 | to_account_id   | <code>str</code> | <code>undefined</code> | The destination of account id in the transfering |
 | amount          | <code>int</code> | <code>undefined</code> | The transfer amount                              |
 
-**Returns** A promise resolving to the transfer's [WalletMessage](#walletmessage).
+**Returns** The transfer's [WalletMessage](#walletmessage).
 
 #### backup(destination): str
 
@@ -270,6 +268,28 @@ Set the initial address index to start syncing.
 
 Syncs account with the tangle.
 The account syncing process ensures that the latest metadata (balance, transactions) associated with an account is fetched from the tangle and is stored locally.
+
+### AccountsSynchronizer
+
+#### gap_limit(limit): void
+
+Set the number of address indexes that are generated on each account.
+
+| Param | Type             | Default                | Description                                                      |
+| ----- | ---------------- | ---------------------- | ---------------------------------------------------------------- |
+| limit | <code>int</code> | <code>undefined</code> | The number of address indexes that are generated on each account |
+
+#### address_index(address_index): void
+
+Set the initial address index to start syncing on each account.
+
+| Param         | Type             | Default                | Description                                                |
+| ------------- | ---------------- | ---------------------- | ---------------------------------------------------------- |
+| address_index | <code>int</code> | <code>undefined</code> | The initial address index to start syncing on each account |
+
+#### execute(): list[SyncedAccount](#syncedaccount)
+
+Syncs the accounts with the tangle.
 
 ### Transfer
 

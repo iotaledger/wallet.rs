@@ -9,7 +9,7 @@ use iota_wallet::{
         AccountInitialiser as RustAccountInitialiser, AccountSynchronizer as RustAccountSynchronizer,
         SyncedAccount as RustSyncedAccount,
     },
-    account_manager::AccountManager as RustAccountManager,
+    account_manager::{AccountManager as RustAccountManager, AccountsSynchronizer as RustAccountsSynchronizer},
     message::Transfer as RustTransfer,
 };
 use pyo3::prelude::*;
@@ -38,6 +38,11 @@ pub struct SyncedAccount {
 #[pyclass]
 pub struct AccountSynchronizer {
     pub account_synchronizer: Option<RustAccountSynchronizer>,
+}
+
+#[pyclass]
+pub struct AccountsSynchronizer {
+    pub accounts_synchronizer: Option<RustAccountsSynchronizer>,
 }
 
 #[pyclass]

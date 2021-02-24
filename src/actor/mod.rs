@@ -85,7 +85,10 @@ impl WalletMessageHandler {
             MessageType::CallAccountMethod { account_id, method } => {
                 convert_async_panics(|| async { self.call_account_method(account_id, method).await }).await
             }
-            MessageType::SyncAccounts => convert_async_panics(|| async { self.sync_accounts().await }).await,
+            MessageType::SyncAccounts {
+                address_index,
+                gap_limit,
+            } => convert_async_panics(|| async { self.sync_accounts(address_index, gap_limit).await }).await,
             MessageType::Reattach { account_id, message_id } => {
                 convert_async_panics(|| async { self.reattach(account_id, message_id).await }).await
             }
@@ -251,8 +254,15 @@ impl WalletMessageHandler {
         Ok(ResponseType::Reattached(message_id.to_string()))
     }
 
-    async fn sync_accounts(&self) -> Result<ResponseType> {
-        let synced = self.account_manager.sync_accounts().await?;
+    async fn sync_accounts(&self, address_index: &Option<usize>, gap_limit: &Option<usize>) -> Result<ResponseType> {
+        let mut synchronizer = self.account_manager.sync_accounts()?;
+        if let Some(address_index) = address_index {
+            synchronizer = synchronizer.address_index(*address_index);
+        }
+        if let Some(gap_limit) = gap_limit {
+            synchronizer = synchronizer.gap_limit(*gap_limit);
+        }
+        let synced = synchronizer.execute().await?;
         Ok(ResponseType::SyncedAccounts(synced))
     }
 

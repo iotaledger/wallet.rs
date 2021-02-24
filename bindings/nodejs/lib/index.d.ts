@@ -60,7 +60,6 @@ export declare interface Address {
 export declare interface SyncOptions {
   addressIndex?: number
   gapLimit?: number
-  skipPersistance?: boolean
 }
 
 export declare interface AccountBalance {
@@ -151,7 +150,7 @@ export declare class AccountManager {
   getAccount(accountId: string | number): Account | undefined
   getAccounts(): Account[]
   removeAccount(accountId: string | number): void
-  syncAccounts(): Promise<SyncedAccount[]>
+  syncAccounts(options?: SyncOptions): Promise<SyncedAccount[]>
   internalTransfer(fromAccount: Account, toAccount: Account, amount: number): Promise<Message>
   backup(destination: string): string
   importAccounts(source: string, password: string): void

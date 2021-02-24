@@ -635,10 +635,12 @@ impl AccountManager {
     }
 
     /// Syncs all accounts.
-    pub async fn sync_accounts(&self) -> crate::Result<Vec<SyncedAccount>> {
+    pub fn sync_accounts(&self) -> crate::Result<AccountsSynchronizer> {
         self.check_storage_encryption()?;
-
-        sync_accounts(self.accounts.clone(), &self.storage_path, None).await
+        Ok(AccountsSynchronizer::new(
+            self.accounts.clone(),
+            self.storage_path.clone(),
+        ))
     }
 
     /// Transfers an amount from an account to another.
@@ -943,13 +945,108 @@ impl AccountManager {
     }
 }
 
+/// The accounts synchronizer.
+pub struct AccountsSynchronizer {
+    accounts: AccountStore,
+    storage_file_path: PathBuf,
+    address_index: Option<usize>,
+    gap_limit: Option<usize>,
+}
+
+impl AccountsSynchronizer {
+    fn new(accounts: AccountStore, storage_file_path: PathBuf) -> Self {
+        Self {
+            accounts,
+            storage_file_path,
+            address_index: None,
+            gap_limit: None,
+        }
+    }
+
+    /// Number of address indexes that are generated.
+    pub fn gap_limit(mut self, limit: usize) -> Self {
+        self.gap_limit.replace(limit);
+        self
+    }
+
+    /// Initial address index to start syncing.
+    pub fn address_index(mut self, address_index: usize) -> Self {
+        self.address_index.replace(address_index);
+        self
+    }
+
+    /// Syncs the accounts with the Tangle.
+    pub async fn execute(self) -> crate::Result<Vec<SyncedAccount>> {
+        let mut synced_accounts = vec![];
+        let mut last_account = None;
+
+        {
+            let accounts = self.accounts.read().await;
+            for account_handle in accounts.values() {
+                let mut sync = account_handle.sync().await;
+                if let Some(index) = self.address_index {
+                    sync = sync.address_index(index);
+                }
+                if let Some(limit) = self.gap_limit {
+                    sync = sync.gap_limit(limit);
+                }
+                let synced_account = sync.execute().await?;
+
+                let account = account_handle.read().await;
+                last_account = Some((
+                    account.messages().is_empty() || account.addresses().iter().all(|addr| *addr.balance() == 0),
+                    account.client_options().clone(),
+                    account.signer_type().clone(),
+                ));
+                synced_accounts.push(synced_account);
+            }
+        }
+
+        let discovered_accounts_res = match last_account {
+            Some((is_empty, client_options, signer_type)) => {
+                if is_empty {
+                    log::debug!("[SYNC] running account discovery because the latest account is empty");
+                    discover_accounts(
+                        self.accounts.clone(),
+                        &self.storage_file_path,
+                        &client_options,
+                        Some(signer_type),
+                    )
+                    .await
+                } else {
+                    log::debug!("[SYNC] skipping account discovery because the latest account isn't empty");
+                    Ok(vec![])
+                }
+            }
+            None => Ok(vec![]), /* None => discover_accounts(accounts.clone(), &storage_path,
+                                 * &ClientOptions::default(), None).await, */
+        };
+
+        if let Ok(discovered_accounts) = discovered_accounts_res {
+            if !discovered_accounts.is_empty() {
+                let mut accounts = self.accounts.write().await;
+                for (account_handle, synced_account) in discovered_accounts {
+                    account_handle.write().await.set_skip_persistance(false);
+                    accounts.insert(account_handle.id().await, account_handle);
+                    synced_accounts.push(synced_account);
+                }
+            }
+        }
+
+        Ok(synced_accounts)
+    }
+}
+
 async fn poll(accounts: AccountStore, storage_file_path: PathBuf, is_mqtt_monitoring: bool) -> crate::Result<()> {
     let retried = if !is_mqtt_monitoring {
         let mut accounts_before_sync = Vec::new();
         for account_handle in accounts.read().await.values() {
             accounts_before_sync.push(account_handle.read().await.clone());
         }
-        let synced_accounts = sync_accounts(accounts.clone(), &storage_file_path, Some(0)).await?;
+        let synced_accounts = AccountsSynchronizer::new(accounts.clone(), storage_file_path)
+            .address_index(0)
+            .execute()
+            .await?;
         let accounts_after_sync = accounts.read().await;
 
         log::debug!("[POLLING] synced accounts");
@@ -1106,61 +1203,6 @@ async fn discover_accounts(
             synced_accounts.push((account_handle, synced_account));
         }
     }
-    Ok(synced_accounts)
-}
-
-async fn sync_accounts<'a>(
-    accounts: AccountStore,
-    storage_file_path: &PathBuf,
-    address_index: Option<usize>,
-) -> crate::Result<Vec<SyncedAccount>> {
-    let mut synced_accounts = vec![];
-    let mut last_account = None;
-
-    {
-        let accounts = accounts.read().await;
-        for account_handle in accounts.values() {
-            let mut sync = account_handle.sync().await;
-            if let Some(index) = address_index {
-                sync = sync.address_index(index);
-            }
-            let synced_account = sync.execute().await?;
-
-            let account = account_handle.read().await;
-            last_account = Some((
-                account.messages().is_empty() || account.addresses().iter().all(|addr| *addr.balance() == 0),
-                account.client_options().clone(),
-                account.signer_type().clone(),
-            ));
-            synced_accounts.push(synced_account);
-        }
-    }
-
-    let discovered_accounts_res = match last_account {
-        Some((is_empty, client_options, signer_type)) => {
-            if is_empty {
-                log::debug!("[SYNC] running account discovery because the latest account is empty");
-                discover_accounts(accounts.clone(), &storage_file_path, &client_options, Some(signer_type)).await
-            } else {
-                log::debug!("[SYNC] skipping account discovery because the latest account isn't empty");
-                Ok(vec![])
-            }
-        }
-        None => Ok(vec![]), /* None => discover_accounts(accounts.clone(), &storage_path, &ClientOptions::default(),
-                             * None).await, */
-    };
-
-    if let Ok(discovered_accounts) = discovered_accounts_res {
-        if !discovered_accounts.is_empty() {
-            let mut accounts = accounts.write().await;
-            for (account_handle, synced_account) in discovered_accounts {
-                account_handle.write().await.set_skip_persistance(false);
-                accounts.insert(account_handle.id().await, account_handle);
-                synced_accounts.push(synced_account);
-            }
-        }
-    }
-
     Ok(synced_accounts)
 }
 
