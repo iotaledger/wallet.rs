@@ -237,9 +237,13 @@ Returns the account's balance information object.
 
 Balance object: { total: number, available: number, incoming: number, outgoing: number }
 
-#### messageCount()
+#### messageCount([type])
 
 Returns the number of messages associated with the account.
+
+| Param  | Type                | Default           | Description                                                                              |
+| ------ | ------------------- | ----------------- | ---------------------------------------------------------------------------------------- |
+| [type] | <code>number</code> | <code>null</code> | The message type filter (Received = 1, Sent = 2, Failed = 3, Unconfirmed = 4, Value = 5) |
 
 #### listMessages([count, from, type])
 
