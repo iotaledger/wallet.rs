@@ -322,8 +322,11 @@ Supported event names:</p>
 <h4 id="balance-accountbalance"><a class="header" href="#balance-accountbalance">balance(): AccountBalance</a></h4>
 <p>Returns the account's balance information object.</p>
 <p>Balance object: { total: number, available: number, incoming: number, outgoing: number }</p>
-<h4 id="messagecount"><a class="header" href="#messagecount">messageCount()</a></h4>
+<h4 id="messagecounttype"><a class="header" href="#messagecounttype">messageCount([type])</a></h4>
 <p>Returns the number of messages associated with the account.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[type]</td><td><code>number</code></td><td><code>null</code></td><td>The message type filter (Received = 1, Sent = 2, Failed = 3, Unconfirmed = 4, Value = 5)</td></tr>
+</tbody></table>
 <h4 id="listmessagescount-from-type"><a class="header" href="#listmessagescount-from-type">listMessages([count, from, type])</a></h4>
 <p>Returns the account's messages.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
