@@ -621,10 +621,10 @@
     },
     <span class="doccomment">/// Checks if all accounts has unused latest address after syncing with the Tangle.</span>
     <span class="ident">IsLatestAddressUnused</span>,
-    <span class="doccomment">/// Open the iota ledger app on Ledger Nano or Speculos simulator.</span>
+    <span class="doccomment">/// Get the Ledger Nano or Speculos simulator status.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))))]</span>
-    <span class="ident">OpenLedgerApp</span>(<span class="ident">bool</span>),
+    <span class="ident">GetLedgerStatus</span>(<span class="ident">bool</span>),
     <span class="doccomment">/// Deletes the storage.</span>
     <span class="ident">DeleteStorage</span>,
     <span class="doccomment">/// Changes stronghold snapshot password.</span>
@@ -705,7 +705,7 @@
                 <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">19</span>, <span class="string">&quot;IsLatestAddressUnused&quot;</span>)
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
-            <span class="ident">MessageType</span>::<span class="ident">OpenLedgerApp</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">20</span>, <span class="string">&quot;OpenLedgerApp&quot;</span>),
+            <span class="ident">MessageType</span>::<span class="ident">GetLedgerStatus</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">20</span>, <span class="string">&quot;GetLedgerStatus&quot;</span>),
             <span class="ident">MessageType</span>::<span class="ident">DeleteStorage</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">21</span>, <span class="string">&quot;DeleteStorage&quot;</span>),
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>))]</span>
             <span class="ident">MessageType</span>::<span class="ident">ChangeStrongholdPassword</span> {
@@ -820,10 +820,10 @@
     <span class="ident">UpdatedAlias</span>,
     <span class="doccomment">/// Account method SetClientOptions response.</span>
     <span class="ident">UpdatedClientOptions</span>,
-    <span class="doccomment">/// OpenLedgerApp response.</span>
+    <span class="doccomment">/// GetLedgerStatus response.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))))]</span>
-    <span class="ident">OpenedLedgerApp</span>,
+    <span class="ident">LedgerStatus</span>(<span class="kw">crate</span>::<span class="ident">LedgerStatus</span>),
     <span class="doccomment">/// DeleteStorage response.</span>
     <span class="ident">DeletedStorage</span>,
     <span class="doccomment">/// ChangeStrongholdPassword response.</span>

@@ -718,8 +718,8 @@
                 .<span class="kw">await</span>
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
-            <span class="ident">MessageType</span>::<span class="ident">OpenLedgerApp</span>(<span class="ident">is_simulator</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">convert_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">open_ledger_app</span>(<span class="kw-2">*</span><span class="ident">is_simulator</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ResponseType</span>::<span class="ident">OpenedLedgerApp</span>))
+            <span class="ident">MessageType</span>::<span class="ident">GetLedgerStatus</span>(<span class="ident">is_simulator</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">convert_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">LedgerStatus</span>(<span class="kw">crate</span>::<span class="ident">get_ledger_status</span>(<span class="kw-2">*</span><span class="ident">is_simulator</span>))))
             }
             <span class="ident">MessageType</span>::<span class="ident">DeleteStorage</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
