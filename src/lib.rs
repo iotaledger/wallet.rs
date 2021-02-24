@@ -72,7 +72,7 @@ pub async fn with_actor_system<F: FnOnce(&riker::actors::ActorSystem)>(cb: F) {
     cb(&runtime.stronghold.system)
 }
 
-/// The ledger status.
+/// The Ledger device status.
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
 #[derive(Debug, ::serde::Serialize)]
