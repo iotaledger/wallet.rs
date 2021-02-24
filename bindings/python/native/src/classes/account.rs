@@ -174,14 +174,7 @@ impl AccountHandle {
     }
 
     /// The number of messages associated with the account.
-    fn message_count(&self) -> usize {
-        crate::block_on(async { self.account_handle.read().await.messages().len() })
-    }
-
-    /// Bridge to [Account#list_messages](struct.Account.html#method.list_messages).
-    /// This method clones the account's messages so when querying a large list of messages
-    /// prefer using the `read` method to access the account instance.
-    fn list_messages(&self, count: usize, from: usize, message_type: Option<&str>) -> Result<Vec<WalletMessage>> {
+    fn message_count(&self, message_type: Option<&str>) -> usize {
         let message_type = match message_type {
             Some("Received") => Some(RustMessageType::Received),
             Some("Sent") => Some(RustMessageType::Sent),
@@ -190,7 +183,38 @@ impl AccountHandle {
             Some("Value") => Some(RustMessageType::Value),
             _ => None,
         };
-        let messages = crate::block_on(async { self.account_handle.list_messages(count, from, message_type).await });
+        crate::block_on(async {
+            self.account_handle
+                .read()
+                .await
+                .list_messages(0, 0, message_type)
+                .iter()
+                .len()
+        })
+    }
+
+    /// Bridge to [Account#list_messages](struct.Account.html#method.list_messages).
+    /// This method clones the account's messages so when querying a large list of messages
+    /// prefer using the `read` method to access the account instance.
+    fn list_messages(
+        &self,
+        count: Option<usize>,
+        from: Option<usize>,
+        message_type: Option<&str>,
+    ) -> Result<Vec<WalletMessage>> {
+        let message_type = match message_type {
+            Some("Received") => Some(RustMessageType::Received),
+            Some("Sent") => Some(RustMessageType::Sent),
+            Some("Failed") => Some(RustMessageType::Failed),
+            Some("Unconfirmed") => Some(RustMessageType::Unconfirmed),
+            Some("Value") => Some(RustMessageType::Value),
+            _ => None,
+        };
+        let messages = crate::block_on(async {
+            self.account_handle
+                .list_messages(count.unwrap_or(0), from.unwrap_or(0), message_type)
+                .await
+        });
 
         let mut parsed_messages = Vec::new();
         for message in messages {

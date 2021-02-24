@@ -401,9 +401,13 @@ Updates the account's client options.
 | ------- | -------------------------------------------- | ---------------------- | ------------------------- |
 | options | <code>[ClientOptions](#clientoptions)</code> | <code>undefined</code> | The client options to set |
 
-#### message_count(): int
+#### message_count(message_type (optional)): int
 
 Returns the number of messages associated with the account.
+
+| Param        | Type             | Default                | Description                                                       |
+| ------------ | ---------------- | ---------------------- | ----------------------------------------------------------------- |
+| message_type | <code>str</code> | <code>undefined</code> | Should be `Received`, `Sent`, `Failed`, `Unconfirmed`, or `Value` |
 
 #### list_messages(count, from, message_type (optional)): list([WalletMessage](#walletmessage))
 
