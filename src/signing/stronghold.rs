@@ -62,7 +62,7 @@ impl super::Signer for StrongholdSigner {
         inputs.sort_by(|a, b| a.input.cmp(&b.input));
 
         for (current_block_index, recorder) in inputs.iter().enumerate() {
-            let signature_index = format!("{}/{}", recorder.address_index, recorder.address_internal);
+            let signature_index = format!("{}{}", recorder.address_index, recorder.address_internal);
             // Check if current path is same as previous path
             // If so, add a reference unlock block
             if let Some(block_index) = signature_indexes.get(&signature_index) {
