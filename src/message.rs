@@ -367,28 +367,35 @@ impl TransactionRegularEssence {
                     address_belongs_to_account
                 });
                 if all_outputs_belongs_to_account {
-                    let mut remainder = None;
+                    let mut remainder: Option<&Address> = None;
                     for (output_address, _) in &tx_outputs {
                         let account_address = account_addresses
                             .iter()
                             .find(|a| &a.address().as_ref() == output_address)
                             .unwrap(); // safe to unwrap since we already asserted that the address belongs to the account
                         match remainder {
-                            Some(index) => {
+                            Some(remainder_address) => {
                                 let address_index = *account_address.key_index();
                                 // if the address index is the highest or it's the same as the previous one and this is
                                 // a change address, we assume that it holds the remainder value
-                                if address_index > index || (address_index == index && *account_address.internal()) {
-                                    remainder = Some(address_index);
+                                if address_index > *remainder_address.key_index()
+                                    || (address_index == *remainder_address.key_index() && *account_address.internal())
+                                {
+                                    remainder = Some(account_address);
                                 }
                             }
                             None => {
-                                remainder = Some(*account_address.key_index());
+                                remainder = Some(account_address);
                             }
                         }
                     }
-                    for (i, output) in regular_essence.outputs().iter().enumerate() {
-                        outputs.push(TransactionOutput::new(output, bech32_hrp.clone(), remainder == Some(i)));
+                    let remainder = remainder.map(|a| a.address().as_ref());
+                    for (output_address, output) in tx_outputs {
+                        outputs.push(TransactionOutput::new(
+                            output,
+                            bech32_hrp.clone(),
+                            remainder == Some(output_address),
+                        ));
                     }
                 } else {
                     let sent = !account_addresses
