@@ -133,6 +133,7 @@ impl AccountManager {
     fn create_account(&self, client_options: ClientOptions) -> Result<AccountInitialiser> {
         Ok(AccountInitialiser {
             account_initialiser: Some(self.account_manager.create_account(client_options.into())?),
+            addresses: Default::default(),
         })
     }
 

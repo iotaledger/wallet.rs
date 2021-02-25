@@ -37,7 +37,7 @@ pub const MILESTONE_PUBLIC_KEY_LENGTH: usize = 32;
 
 type Bech32HRP = String;
 
-#[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
+#[derive(Debug, Clone, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct WalletAddressOutput {
     pub transaction_id: String,
     pub message_id: String,
@@ -64,7 +64,7 @@ impl TryFrom<WalletAddressOutput> for RustWalletAddressOutput {
     }
 }
 
-#[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
+#[derive(Debug, Clone, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct WalletAddress {
     pub address: String,
     pub balance: u64,
@@ -305,20 +305,26 @@ impl TryFrom<RustUnlockBlock> for UnlockBlock {
     }
 }
 
-pub fn to_rust_message(msg: WalletMessage, bech32_hrp: String) -> Result<RustWalletMessage> {
+pub fn to_rust_message(
+    msg: WalletMessage,
+    bech32_hrp: String,
+    account_addresses: &[RustWalletAddress],
+) -> Result<RustWalletMessage> {
     let mut parents = Vec::new();
     for parent in msg.parents {
         parents.push(MessageId::from_str(&parent)?);
     }
+    let id = MessageId::from_str(&msg.id)?;
+    let payload = match msg.payload {
+        Some(payload) => Some(to_rust_payload(&id, payload, bech32_hrp, account_addresses)?),
+        None => None,
+    };
     Ok(RustWalletMessage {
-        id: MessageId::from_str(&msg.id)?,
+        id,
         version: msg.version,
         parents,
         payload_length: msg.payload_length,
-        payload: match msg.payload {
-            Some(payload) => Some(to_rust_payload(payload, bech32_hrp)?),
-            None => None,
-        },
+        payload,
         timestamp: DateTime::from_utc(NaiveDateTime::from_timestamp(msg.timestamp, 0), Utc),
         nonce: msg.nonce,
         confirmed: msg.confirmed,
@@ -438,7 +444,12 @@ impl TryFrom<UnlockBlock> for RustUnlockBlock {
     }
 }
 
-pub fn to_rust_payload(payload: Payload, bech32_hrp: Bech32HRP) -> Result<RustWalletPayload> {
+pub fn to_rust_payload(
+    message_id: &MessageId,
+    payload: Payload,
+    bech32_hrp: Bech32HRP,
+    account_addresses: &[RustWalletAddress],
+) -> Result<RustWalletPayload> {
     if let Some(transaction_payload) = &payload.transaction {
         let mut transaction = RustTransactionPayload::builder();
         transaction = transaction.with_essence(transaction_payload[0].essence.clone().try_into()?);
@@ -448,7 +459,7 @@ pub fn to_rust_payload(payload: Payload, bech32_hrp: Bech32HRP) -> Result<RustWa
             transaction = transaction.add_unlock_block(unlock_block.try_into()?);
         }
         Ok(RustWalletPayload::Transaction(Box::new(
-            RustWalletMessageTransactionPayload::new(&transaction.finish()?, bech32_hrp),
+            RustWalletMessageTransactionPayload::new(message_id, &transaction.finish()?, bech32_hrp, account_addresses),
         )))
     } else {
         let indexation = RustIndexationPayload::new(
