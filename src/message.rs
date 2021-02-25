@@ -376,11 +376,11 @@ impl TransactionRegularEssence {
                         match remainder {
                             Some(remainder_address) => {
                                 let address_index = *account_address.key_index();
-                                // if the address index is the highest or it's the same as the previous one and this is
-                                // a change address, we assume that it holds the remainder value
-                                if address_index > *remainder_address.key_index()
-                                    || (address_index == *remainder_address.key_index() && *account_address.internal())
-                                {
+                                // if the address index is the highest or it's is a change address,
+                                // we assume that it holds the remainder value.
+                                // note that this also means that the last output to a change address
+                                // is considered the remainder output, which is the case for transactions with this library.
+                                if address_index > *remainder_address.key_index() || *account_address.internal() {
                                     remainder = Some(account_address);
                                 }
                             }
