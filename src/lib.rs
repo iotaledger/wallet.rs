@@ -501,6 +501,7 @@ mod test_utils {
                 parents: vec![MessageId::new([0; 32])],
                 payload_length: 0,
                 payload: Some(MessagePayload::new(
+                    &MessageId::new([0; 32]),
                     Payload::Transaction(Box::new(
                         TransactionPayloadBuilder::new()
                             .with_essence(Essence::Regular(
@@ -522,6 +523,7 @@ mod test_utils {
                             .unwrap(),
                     )),
                     bech32_hrp,
+                    &[],
                 )),
                 timestamp: chrono::Utc::now(),
                 nonce: 0,
