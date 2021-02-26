@@ -21,7 +21,7 @@ We recommend you update Rust to the latest stable version [`rustup update stable
 
 ### Dependencies
 
-`cmake` and `openssl` are required. In order to run the build process succesfully using Cargo you might need install additional build tools on your system. 
+`cmake`, `clang` and `openssl` are required. In order to run the build process succesfully using Cargo you might need install additional build tools on your system. 
 
 ### Windows
 
@@ -54,7 +54,7 @@ $ brew install cmake openssl@1.1
 
 ### Linux
 
-Install `cmake` and `openssl` with your distro's package manager or download from their websites. On Debian and Ubuntu you will also need `build-essential`.
+Install `cmake`, `lang` and `openssl` with your distro's package manager or download from their websites. On Debian and Ubuntu you will also need `build-essential`.
 
 ## Usage
 
