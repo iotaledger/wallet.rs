@@ -293,7 +293,7 @@ impl AccountInitialiser {
                     .into_iter()
                     .map(|msg| {
                         // we use an empty bech32 HRP here because we update it later on wallet.rs
-                        to_rust_message(msg, "".to_string())
+                        to_rust_message(msg, "".to_string(), &self.addresses)
                             .unwrap_or_else(|msg| panic!("AccountInitialiser: Message {:?} is invalid", msg))
                     })
                     .collect(),
@@ -303,7 +303,10 @@ impl AccountInitialiser {
 
     /// Address history associated with the seed.
     /// The account can be initialised with locally stored address history.
-    fn addresses(&mut self, addresses: Vec<WalletAddress>) {
+    fn addresses(&mut self, addresses: Vec<WalletAddress>) -> Result<()> {
+        for address in &addresses {
+            self.addresses.push(address.clone().try_into()?);
+        }
         self.account_initialiser = Some(
             self.account_initialiser.take().unwrap().addresses(
                 addresses
@@ -316,6 +319,7 @@ impl AccountInitialiser {
                     .collect(),
             ),
         );
+        Ok(())
     }
 
     /// Skips storing the account to the database.

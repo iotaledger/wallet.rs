@@ -30,6 +30,7 @@ export declare interface Input {
 export declare interface Output {
   address: string
   amount: number
+  remainder: boolean
 }
 
 export declare interface Transaction {
