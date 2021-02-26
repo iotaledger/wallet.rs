@@ -537,6 +537,8 @@
 <span id="534">534</span>
 <span id="535">535</span>
 <span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1041,6 +1043,7 @@
                 <span class="ident">parents</span>: <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">MessageId</span>::<span class="ident">new</span>([<span class="number">0</span>; <span class="number">32</span>])],
                 <span class="ident">payload_length</span>: <span class="number">0</span>,
                 <span class="ident">payload</span>: <span class="prelude-val">Some</span>(<span class="ident">MessagePayload</span>::<span class="ident">new</span>(
+                    <span class="kw-2">&amp;</span><span class="ident">MessageId</span>::<span class="ident">new</span>([<span class="number">0</span>; <span class="number">32</span>]),
                     <span class="ident">Payload</span>::<span class="ident">Transaction</span>(<span class="ident">Box</span>::<span class="ident">new</span>(
                         <span class="ident">TransactionPayloadBuilder</span>::<span class="ident">new</span>()
                             .<span class="ident">with_essence</span>(<span class="ident">Essence</span>::<span class="ident">Regular</span>(
@@ -1062,6 +1065,7 @@
                             .<span class="ident">unwrap</span>(),
                     )),
                     <span class="ident">bech32_hrp</span>,
+                    <span class="kw-2">&amp;</span>[],
                 )),
                 <span class="ident">timestamp</span>: <span class="ident">chrono</span>::<span class="ident">Utc</span>::<span class="ident">now</span>(),
                 <span class="ident">nonce</span>: <span class="number">0</span>,
