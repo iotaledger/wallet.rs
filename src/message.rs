@@ -426,6 +426,7 @@ impl TransactionRegularEssence {
 
 /// The transaction essence.
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+#[serde(tag = "type", content = "data")]
 pub enum TransactionEssence {
     /// Regular essence type.
     Regular(TransactionRegularEssence),
