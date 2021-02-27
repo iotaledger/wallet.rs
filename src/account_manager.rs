@@ -1068,14 +1068,15 @@ async fn poll(accounts: AccountStore, storage_file_path: PathBuf, is_mqtt_monito
                         address_after_sync.balance()
                     );
                     emit_balance_change(
-                        account_after_sync.id(),
-                        address_after_sync,
+                        &account_after_sync,
+                        address_after_sync.address(),
                         if address_after_sync.balance() > address_before_sync.balance() {
                             BalanceChange::received(address_after_sync.balance() - address_before_sync.balance())
                         } else {
                             BalanceChange::spent(address_before_sync.balance() - address_after_sync.balance())
                         },
-                    );
+                    )
+                    .await?;
                 }
             }
 

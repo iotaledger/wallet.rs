@@ -1,24 +1,28 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{address::Address, message::Message};
+use crate::{account::Account, address::AddressWrapper, message::Message};
 
 use getset::Getters;
 use once_cell::sync::Lazy;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use tokio::sync::Mutex;
+
 use std::{
     ops::Deref,
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex as StdMutex},
 };
 
 /// The event identifier type.
 pub type EventId = [u8; 32];
 
 /// The balance change event payload.
-#[derive(Getters, Serialize)]
+#[derive(Getters, Serialize, Deserialize)]
 pub struct BalanceChange {
-    spent: u64,
-    received: u64,
+    /// The change amount if it was a spent event.
+    pub spent: u64,
+    /// The change amount if it was a receive event.
+    pub received: u64,
 }
 
 impl BalanceChange {
@@ -38,35 +42,29 @@ impl BalanceChange {
 }
 
 /// The balance change event data.
-#[derive(Getters, Serialize)]
+#[derive(Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct BalanceEvent<'a> {
     /// The associated account identifier.
     #[serde(rename = "accountId")]
-    account_id: &'a str,
+    pub account_id: &'a str,
     /// The associated address.
-    address: &'a Address,
+    #[serde(with = "crate::serde::iota_address_serde")]
+    pub address: AddressWrapper,
     /// The balance change data.
     #[serde(rename = "balanceChange")]
-    balance_change: BalanceChange,
-}
-
-impl<'a> BalanceEvent<'a> {
-    #[doc(hidden)]
-    pub fn cloned_address(&self) -> Address {
-        self.address.clone()
-    }
+    pub balance_change: BalanceChange,
 }
 
 /// A transaction-related event data.
-#[derive(Getters, Serialize)]
+#[derive(Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct TransactionEvent<'a> {
     #[serde(rename = "accountId")]
     /// The associated account identifier.
-    account_id: &'a str,
+    pub account_id: &'a str,
     /// The event message.
-    message: &'a Message,
+    pub message: Message,
 }
 
 impl<'a> TransactionEvent<'a> {
@@ -77,23 +75,16 @@ impl<'a> TransactionEvent<'a> {
 }
 
 /// A transaction-related event data.
-#[derive(Getters, Serialize)]
+#[derive(Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct TransactionConfirmationChangeEvent<'a> {
     #[serde(rename = "accountId")]
     /// The associated account identifier.
-    account_id: &'a str,
+    pub account_id: &'a str,
     /// The event message.
-    message: &'a Message,
+    pub message: Message,
     /// The confirmed state of the transaction.
-    confirmed: bool,
-}
-
-impl<'a> TransactionConfirmationChangeEvent<'a> {
-    #[doc(hidden)]
-    pub fn cloned_message(&self) -> Message {
-        self.message.clone()
-    }
+    pub confirmed: bool,
 }
 
 trait EventHandler {
@@ -160,11 +151,11 @@ struct StrongholdStatusChangeEventHandler {
 event_handler_impl!(StrongholdStatusChangeEventHandler);
 
 type BalanceListeners = Arc<Mutex<Vec<BalanceEventHandler>>>;
-type TransactionListeners = Arc<Mutex<Vec<TransactionEventHandler>>>;
-type TransactionConfirmationChangeListeners = Arc<Mutex<Vec<TransactionConfirmationChangeEventHandler>>>;
-type ErrorListeners = Arc<Mutex<Vec<ErrorHandler>>>;
+type TransactionListeners = Arc<StdMutex<Vec<TransactionEventHandler>>>;
+type TransactionConfirmationChangeListeners = Arc<StdMutex<Vec<TransactionConfirmationChangeEventHandler>>>;
+type ErrorListeners = Arc<StdMutex<Vec<ErrorHandler>>>;
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-type StrongholdStatusChangeListeners = Arc<Mutex<Vec<StrongholdStatusChangeEventHandler>>>;
+type StrongholdStatusChangeListeners = Arc<StdMutex<Vec<StrongholdStatusChangeEventHandler>>>;
 
 fn generate_event_id() -> EventId {
     let mut id = [0; 32];
@@ -172,7 +163,7 @@ fn generate_event_id() -> EventId {
     id
 }
 
-fn remove_event_listener<T: EventHandler>(id: &EventId, listeners: &Arc<Mutex<Vec<T>>>) {
+fn remove_event_listener<T: EventHandler>(id: &EventId, listeners: &Arc<StdMutex<Vec<T>>>) {
     let mut listeners = listeners.lock().unwrap();
     if let Some(position) = listeners.iter().position(|e| e.id() == id) {
         listeners.remove(position);
@@ -211,10 +202,8 @@ fn stronghold_status_change_listeners() -> &'static StrongholdStatusChangeListen
 }
 
 /// Listen to balance changes.
-pub fn on_balance_change<F: Fn(&BalanceEvent<'_>) + Send + 'static>(cb: F) -> EventId {
-    let mut l = balance_listeners()
-        .lock()
-        .expect("Failed to lock balance_listeners: on_balance_change()");
+pub async fn on_balance_change<F: Fn(&BalanceEvent<'_>) + Send + 'static>(cb: F) -> EventId {
+    let mut l = balance_listeners().lock().await;
     let id = generate_event_id();
     l.push(BalanceEventHandler {
         id,
@@ -224,23 +213,35 @@ pub fn on_balance_change<F: Fn(&BalanceEvent<'_>) + Send + 'static>(cb: F) -> Ev
 }
 
 /// Removes the balance change listener associated with the given identifier.
-pub fn remove_balance_change_listener(id: &EventId) {
-    remove_event_listener(id, balance_listeners());
+pub fn remove_balance_change_listener(_id: &EventId) {
+    // TODO remove_event_listener(id, balance_listeners());
 }
 
 /// Emits a balance change event.
-pub(crate) fn emit_balance_change(account_id: &str, address: &Address, balance_change: BalanceChange) {
-    let listeners = balance_listeners()
-        .lock()
-        .expect("Failed to lock balance_listeners: emit_balance_change()");
+pub(crate) async fn emit_balance_change(
+    account: &Account,
+    address: &AddressWrapper,
+    balance_change: BalanceChange,
+) -> crate::Result<()> {
+    let listeners = balance_listeners().lock().await;
     let event = BalanceEvent {
-        account_id,
-        address: &address,
+        account_id: account.id(),
+        address: address.clone(),
         balance_change,
     };
+
+    crate::storage::get(account.storage_path())
+        .await?
+        .lock()
+        .await
+        .save_balance_change(&event)
+        .await?;
+
     for listener in listeners.deref() {
         (listener.on_event)(&event);
     }
+
+    Ok(())
 }
 
 /// Emits a transaction-related event.
@@ -250,7 +251,7 @@ pub(crate) fn emit_transaction_event(event_type: TransactionEventType, account_i
         .expect("Failed to lock balance_listeners: emit_balance_change()");
     let event = TransactionEvent {
         account_id,
-        message: &message,
+        message: message.clone(),
     };
     for listener in listeners.deref() {
         if listener.event_type == event_type {
@@ -266,7 +267,7 @@ pub(crate) fn emit_confirmation_state_change(account_id: &str, message: &Message
         .expect("Failed to lock transaction_confirmation_change_listeners: emit_confirmation_state_change()");
     let event = TransactionConfirmationChangeEvent {
         account_id,
-        message: &message,
+        message: message.clone(),
         confirmed,
     };
     for listener in listeners.deref() {

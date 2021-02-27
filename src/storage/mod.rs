@@ -12,6 +12,9 @@ pub mod sqlite;
 pub mod stronghold;
 
 use crate::account::Account;
+use crate::event::BalanceEvent;
+
+use chrono::Utc;
 use crypto::ciphers::chacha::xchacha20poly1305;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
@@ -29,6 +32,12 @@ const ACCOUNT_INDEXATION_KEY: &str = "iota-wallet-account-indexation";
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct AccountIndexation {
     key: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+struct EventIndexation {
+    key: String,
+    timestamp: i64,
 }
 
 struct Storage {
@@ -76,6 +85,7 @@ impl Storage {
 pub(crate) struct StorageManager {
     storage: Storage,
     account_indexation: Vec<AccountIndexation>,
+    balance_change_indexation: Vec<EventIndexation>,
 }
 
 impl StorageManager {
@@ -132,6 +142,36 @@ impl StorageManager {
     }
 }
 
+fn generate_event_key() -> String {
+    let mut key = [0; 32];
+    crypto::rand::fill(&mut key).unwrap();
+    hex::encode(&key)
+}
+
+macro_rules! event_manager_impl {
+    ($event_ty:ty, $index_vec:ident, $index_key: expr, $save_fn_name: ident) => {
+        impl StorageManager {
+            pub async fn $save_fn_name(&mut self, event: &$event_ty) -> crate::Result<()> {
+                let key = generate_event_key();
+                let index = EventIndexation {
+                    key: key.to_string(),
+                    timestamp: Utc::now().timestamp(),
+                };
+                self.$index_vec.push(index);
+                self.storage.set($index_key, &self.$index_vec).await?;
+                self.storage.set(&key, event).await
+            }
+        }
+    };
+}
+
+event_manager_impl!(
+    BalanceEvent<'_>,
+    balance_change_indexation,
+    "iota-wallet-balance-change-events",
+    save_balance_change
+);
+
 pub(crate) type StorageHandle = Arc<Mutex<StorageManager>>;
 type Storages = Arc<RwLock<HashMap<PathBuf, StorageHandle>>>;
 static INSTANCES: OnceCell<Storages> = OnceCell::new();
@@ -160,6 +200,7 @@ pub(crate) async fn set<P: AsRef<Path>>(
     let storage_manager = StorageManager {
         storage,
         account_indexation: Default::default(),
+        balance_change_indexation: Default::default(),
     };
     instances.insert(
         storage_path.as_ref().to_path_buf(),
