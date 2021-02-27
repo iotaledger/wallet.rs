@@ -22,11 +22,15 @@ jobs:
      - uses: actions/checkout@v2
      - uses: actions-rs/toolchain@v1
        with:
-          toolchain: stable
-          override: true
+         toolchain: stable
+         override: true
      - uses: actions/setup-python@v2
        with:
          python-version: ${{ matrix.python-version }}
+     - name: Install required packages
+       run: |
+         sudo apt-get update
+         sudo apt-get install libudev-dev libusb-1.0-0-dev
      - name: Build wheels
        working-directory: bindings/python/native
        run: |
@@ -89,7 +93,7 @@ jobs:
        run: |
          python -m pip install maturin
          maturin build --release --manylinux off
-     - uses: actions/upload-artifact@v1
+     - uses: actions/upload-artifact@v2
        with:
          name: windows-iota-client-py${{ matrix.python-version }}-wheels
          path: bindings/python/native/target/wheels/
