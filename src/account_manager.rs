@@ -181,7 +181,7 @@ impl AccountManagerBuilder {
                         if let Some(parent) = path.parent() {
                             fs::create_dir_all(&parent)?;
                         }
-                        let storage = crate::storage::sqlite::SqliteStorageAdapter::new(&path, "accounts")?;
+                        let storage = crate::storage::sqlite::SqliteStorageAdapter::new(&path)?;
                         (Box::new(storage) as Box<dyn StorageAdapter + Send + Sync>, path)
                     }
                     ManagerStorage::Custom(storage) => (storage, self.storage_path.clone()),
@@ -294,7 +294,7 @@ impl AccountManager {
             .await?
             .lock()
             .await
-            .get_all()
+            .get_accounts()
             .await?;
         for parsed_account in accounts {
             match parsed_account {
@@ -418,7 +418,7 @@ impl AccountManager {
                 let _ = crate::monitor::unsubscribe(account_handle.clone());
             }
             for encrypted_account in &self.encrypted_accounts {
-                let decrypted = crate::storage::decrypt_account_json(encrypted_account, &key)?;
+                let decrypted = crate::storage::decrypt_record(encrypted_account, &key)?;
                 let account = serde_json::from_str::<Account>(&decrypted)?;
                 accounts.insert(account.id().into(), account.into());
             }
@@ -628,7 +628,7 @@ impl AccountManager {
             .await?
             .lock()
             .await
-            .remove(&account_id)
+            .remove_account(&account_id)
             .await?;
 
         Ok(())
@@ -707,10 +707,7 @@ impl AccountManager {
 
                 for account_handle in self.accounts.read().await.values() {
                     stronghold_storage
-                        .set(
-                            &account_handle.read().await.id(),
-                            serde_json::to_string(&*account_handle.read().await)?,
-                        )
+                        .save_account(&account_handle.read().await.id(), &*account_handle.read().await)
                         .await?;
                 }
                 self.storage_folder.join(STRONGHOLD_FILENAME)
@@ -899,7 +896,7 @@ impl AccountManager {
             }
         };
 
-        account.cloned().ok_or(crate::Error::AccountNotFound)
+        account.cloned().ok_or(crate::Error::RecordNotFound)
     }
 
     /// Gets all accounts from storage.
@@ -1567,8 +1564,8 @@ mod tests {
             let account_get_res = manager.get_account(account_handle.read().await.id()).await;
             assert!(account_get_res.is_err(), true);
             match account_get_res.unwrap_err() {
-                crate::Error::AccountNotFound => {}
-                _ => panic!("unexpected get_account response; expected AccountNotFound"),
+                crate::Error::RecordNotFound => {}
+                _ => panic!("unexpected get_account response; expected RecordNotFound"),
             }
         })
         .await;
@@ -1597,6 +1594,13 @@ mod tests {
                 backup_path
             };
 
+            let is_encrypted = crate::storage::get(manager.storage_path())
+                .await
+                .unwrap()
+                .lock()
+                .await
+                .is_encrypted();
+
             // get another manager instance so we can import the accounts to a different storage
             #[allow(unused_mut)]
             let mut manager = crate::test_utils::get_account_manager().await;
@@ -1621,18 +1625,20 @@ mod tests {
                 }
             }
 
-            manager.set_storage_password("password").await.unwrap();
+            if is_encrypted {
+                manager.set_storage_password("password").await.unwrap();
+            }
 
             // import the accounts from the backup and assert that it's the same
 
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             manager
-                .import_accounts(backup_file_path, "password".to_string())
+                .import_accounts(&backup_file_path, "password".to_string())
                 .await
                 .unwrap();
 
             #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-            manager.import_accounts(backup_file_path).await.unwrap();
+            manager.import_accounts(&backup_file_path).await.unwrap();
 
             let imported_account = manager.get_account(account_handle.read().await.id()).await.unwrap();
             // set the account storage path field so the assert works

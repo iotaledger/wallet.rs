@@ -176,12 +176,8 @@ mod test_utils {
         async fn get(&mut self, account_id: &str) -> crate::Result<String> {
             match self.cache.get(account_id) {
                 Some(value) => Ok(value.to_string()),
-                None => Err(crate::Error::AccountNotFound),
+                None => Err(crate::Error::RecordNotFound),
             }
-        }
-
-        async fn get_all(&mut self) -> crate::Result<Vec<String>> {
-            Ok(self.cache.values().cloned().collect())
         }
 
         async fn set(&mut self, account_id: &str, account: String) -> crate::Result<()> {
@@ -190,7 +186,7 @@ mod test_utils {
         }
 
         async fn remove(&mut self, account_id: &str) -> crate::Result<()> {
-            self.cache.remove(account_id).ok_or(crate::Error::AccountNotFound)?;
+            self.cache.remove(account_id).ok_or(crate::Error::RecordNotFound)?;
             Ok(())
         }
     }
@@ -212,7 +208,7 @@ mod test_utils {
         let default_storage = ManagerStorage::Sqlite;
 
         let mut manager = AccountManager::builder()
-            .with_storage(storage_path, default_storage, Some("password"))
+            .with_storage(storage_path, default_storage, None)
             .unwrap()
             .skip_polling()
             .finish()

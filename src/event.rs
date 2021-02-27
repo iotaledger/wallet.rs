@@ -406,7 +406,7 @@ mod tests {
     use rusty_fork::rusty_fork_test;
 
     fn _create_and_drop_error() {
-        let _ = crate::Error::AccountNotFound;
+        let _ = crate::Error::RecordNotFound;
     }
 
     // have to fork this test so other errors dropped doesn't affect it
@@ -414,7 +414,7 @@ mod tests {
         #[test]
         fn error_events() {
             on_error(|error| {
-                assert!(matches!(error, crate::Error::AccountNotFound));
+                assert!(matches!(error, crate::Error::RecordNotFound));
             });
             _create_and_drop_error();
         }
