@@ -1,19 +1,31 @@
 use std::{
     path::{Path, PathBuf},
     time::Duration,
+    str::FromStr,
 };
 
-use crate::jni_c_header::*;
+use chrono::prelude::{DateTime, Utc, Local};
 
-use crate::client_options::*;
-use crate::acc_manager::*;
+use crate::{
+    jni_c_header::*,
+    client_options::*,
+    acc::*,
+    acc_manager::*,
+    message::Message,
+    address::Address
+};
 
 use anyhow::Result as Result;
 
 use env_logger::*;
 
 use iota_wallet::{
-    message::Message, address::Address,
+    message::{
+        MessageType, Value, ValueUnit, MessageId
+    },
+    address::{
+        OutputKind,
+    },
     client::{
         Api,
     }
@@ -45,6 +57,40 @@ foreign_enum!(
         GetTips = Api::GetTips,
         PostMessage = Api::PostMessage,
         GetOutput = Api::GetOutput,
+    }
+);
+
+foreign_enum!(
+    enum MessageType {
+        /// Message received.
+        Received = MessageType::Received,
+        /// Message sent.
+        Sent = MessageType::Sent,
+        /// Message not broadcasted.
+        Failed = MessageType::Failed,
+        /// Message not confirmed.
+        Unconfirmed = MessageType::Unconfirmed,
+        /// A value message.
+        Value = MessageType::Value,
+    }
+);
+
+foreign_enum!(
+    enum ValueUnit {
+        I = ValueUnit::I,
+        Ki = ValueUnit::Ki,
+        Mi = ValueUnit::Mi,
+        Gi = ValueUnit::Gi,
+        Ti = ValueUnit::Ti,
+        Pi = ValueUnit::Pi,
+    }
+);
+
+foreign_enum!(
+    enum OutputKind {
+        SignatureLockedSingle = OutputKind::SignatureLockedSingle,
+        SignatureLockedDustAllowance = OutputKind::SignatureLockedDustAllowance,
+        Treasury = OutputKind::Treasury,
     }
 );
 
@@ -89,15 +135,65 @@ foreign_class!(class ClientOptions{
 });
 
 foreign_class!(
-#[derive(Clone, Getters, Setters)]
-class Message{
-    self_type Message;
-    private constructor = empty;
-});
+    #[derive(PartialEq)]
+    class Value {
+        self_type Value;
+        constructor Value::new(value: u64, unit: ValueUnit) -> Value;
+        fn Value::with_denomination(&self) -> String;
+        fn Value::without_denomination(&self) -> u64;
+        fn Value::value(&self) -> &u64;
+    }
+);
+foreign_class!(
+    #[derive(PartialEq)]
+    class MessageId {
+        self_type MessageId;
+        fn MessageId::fromString(str_rep: &str) -> MessageId {
+            MessageId::from_str(str_rep).unwrap()
+        }
+        constructor MessageId::null() -> MessageId;
+    }
+);
 
 foreign_class!(
-#[derive(Getters, Setters)]
-class Address{
-    self_type Address;
-    private constructor = empty;
-});
+    #[derive(PartialEq)]
+    class Message {
+        self_type Message;
+        private constructor = empty;
+        fn Message::id(&self) -> MessageId;
+        fn Message::version(&self) -> u64;
+        fn Message::parents(&self) -> Vec<MessageId>;
+        fn Message::payload_length(&self) -> usize;
+        //fn Message::payload(&self) -> Payload;
+        fn Message::timestamp(&self) -> DateTime<Utc>;
+        fn Message::nonce(&self) -> u64;
+        fn Message::confirmed(&self) -> Option<bool>;
+        fn Message::broadcasted(&self) -> bool;
+        fn Message::incoming(&self) -> bool;
+        fn Message::value(&self) -> u64;
+        fn Message::remainder_value(&self) -> u64;
+    }
+);
+
+foreign_class!(
+    #[derive(PartialEq)]
+    class Address{
+        self_type Address;
+        private constructor = empty;
+    }
+);
+
+foreign_class!(
+    class AccountInitialiser{
+        self_type AccountInitialiser;
+        private constructor = empty;
+
+        fn AccountInitialiser::signer_type(&mut self, signer_type_enum: AccountSignerType) -> AccountInitialiser;
+        fn AccountInitialiser::alias(&mut self, alias: String) -> AccountInitialiser;
+        fn AccountInitialiser::created_at(&mut self, created_at: DateTime<Local>) -> AccountInitialiser;
+        fn AccountInitialiser::messages(&mut self, messages: Vec<Message>) -> AccountInitialiser;
+        fn AccountInitialiser::addresses(&mut self, addresses: Vec<Address>) -> AccountInitialiser;
+        fn AccountInitialiser::skip_persistance(&mut self) -> AccountInitialiser;
+        //fn AccountInitialiser::initialise(&mut self) -> Result<AccountHandle>;
+    }
+);

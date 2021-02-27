@@ -1,17 +1,14 @@
 #![allow(non_snake_case)]
 
-use std::{num::NonZeroU64, path::PathBuf, sync::Arc};
+use std::{path::PathBuf};
 
 use iota_wallet::{
-    account::AccountIdentifier,
     account_manager::{
-        AccountManager as AccountManagerRust, 
+        AccountManager as AccountManagerRust,
         ManagerStorage as ManagerStorageRust,
         DEFAULT_STORAGE_FOLDER
     },
-    client::ClientOptions as ClientOptionsRust,
     signing::SignerType,
-    DateTime, Local,
 };
 
 use crate::Result;

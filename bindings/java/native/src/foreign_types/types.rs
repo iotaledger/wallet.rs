@@ -6,9 +6,50 @@ foreign_typemap!(
         => "/*chrono*/java.nio.file.Path" "$out = java.nio.file.Paths.get($p);";
 );
 
+// Yikes!
+foreign_typemap!(
+    ($p:r_type) Option<bool> => jshort {
+        $out = match $p {
+            Some(x) => if x { 1 } else { 0 },
+            None => -1,
+        };
+    };
+    ($p:f_type) => "java.util.Optional<java.lang.Boolean>" r#"
+        $out;
+        if ($p == -1 ) {
+            $out = java.util.Optional.empty();
+        } else {
+            $out = java.util.Optional.of(new java.lang.Boolean($p == 1 ? true : false));
+        }
+"#;
+);
+
+foreign_typemap!(
+    ($p:r_type) &u64 => u64 {
+        $out = *($p);
+    };
+);
+
 foreign_typemap!(
     ($p:r_type) &str => PathBuf {
         $out = PathBuf::from($p);
+    };
+);
+
+foreign_typemap!(
+    ($p:r_type) u128 => jobject {
+        let data = $p.to_ne_bytes();
+        let size = data.len();
+        let arr: jbyteArray = (**env)->NewByteArray(env, size);
+        (**env)->SetByteArrayRegion(env, arr, 0, size, data);
+        
+        let clazz: jclass = swig_jni_find_class!(U64_TO_BIGINT, "java.math.BigInteger");
+        assert!(!jcls.is_null());
+        constructor = (*env)->GetMethodID(env, clazz, "<init>", "([B)V");
+        assert!(!constructor.is_null());
+        object = (**env)->NewObject(env, clazz, constructor, arr);
+
+        $out = object;
     };
 );
 
@@ -43,8 +84,9 @@ foreign_typemap!(
 //TODO: Make sure duration doenst cross the i64 limit
 foreign_typemap!(
     ($p:r_type) jlong => Duration {
-        let temp = <u64 as ::std::convert::TryFrom<i64>>::try_from($p);
-        $out = Duration::from_nanos(temp.unwrap());
+        let temp = <u64 as ::std::convert::TryFrom<i64>>::try_from($p)
+            .expect("Duration: milleseconds to u64 convert error (number too big?)");
+        $out = Duration::from_nanos(temp);
     };
 );
 
@@ -79,4 +121,25 @@ foreign_typemap!(
     ($p:f_type, option = "NoNullAnnotations") <= "java.lang.String []";
     ($p:f_type, option = "NullAnnotations")
                   <= "@NonNull java.lang.String []";
+);
+
+// These are dumb...
+//TODO: Find out why this typemap doesnt work:
+// https://github.com/Dushistov/flapigen-rs/blob/5f248cfdeccd15b70685f810d978567891bc78d3/macroslib/src/java_jni/jni-include.rs#L433
+foreign_typemap!(
+    ($p:r_type) Vec<Message> <= internal_aliases::JForeignObjectsArray<Message> {
+        $out = jobject_array_to_vec_of_objects(env, $p);
+    };
+    ($p:f_type, option = "NoNullAnnotations") <= "swig_f_type!(Message) []";
+    ($p:f_type, option = "NullAnnotations")
+                  <= "@NonNull swig_f_type!(Message, NoNullAnnotations) []";
+);
+
+foreign_typemap!(
+    ($p:r_type) Vec<Address> <= internal_aliases::JForeignObjectsArray<Address> {
+        $out = jobject_array_to_vec_of_objects(env, $p);
+    };
+    ($p:f_type, option = "NoNullAnnotations") <= "swig_f_type!(Address) []";
+    ($p:f_type, option = "NullAnnotations")
+                  <= "@NonNull swig_f_type!(Address, NoNullAnnotations) []";
 );

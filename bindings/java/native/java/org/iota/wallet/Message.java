@@ -3,8 +3,103 @@ package org.iota.wallet;
 
 
 public final class Message {
+    public boolean equals(Object obj) {
+        boolean equal = false;
+        if (obj instanceof Message)
+        equal = ((Message)obj).rustEq(this);
+        return equal;
+    }
+    public int hashCode() {
+        return (int)mNativeObj;
+    }
+
 
     private Message() {}
+
+    public final MessageId id() {
+        long ret = do_id(mNativeObj);
+        MessageId convRet = new MessageId(InternalPointerMarker.RAW_PTR, ret);
+
+        return convRet;
+    }
+    private static native long do_id(long self);
+
+    public final long version() {
+        long ret = do_version(mNativeObj);
+
+        return ret;
+    }
+    private static native long do_version(long self);
+
+    public final MessageId [] parents() {
+        MessageId [] ret = do_parents(mNativeObj);
+
+        return ret;
+    }
+    private static native MessageId [] do_parents(long self);
+
+    public final long payload_length() {
+        long ret = do_payload_length(mNativeObj);
+
+        return ret;
+    }
+    private static native long do_payload_length(long self);
+
+    public final java.util.Date timestamp() {
+        long ret = do_timestamp(mNativeObj);
+        java.util.Date convRet = new java.util.Date(ret);
+
+        return convRet;
+    }
+    private static native long do_timestamp(long self);
+
+    public final long nonce() {
+        long ret = do_nonce(mNativeObj);
+
+        return ret;
+    }
+    private static native long do_nonce(long self);
+
+    public final java.util.Optional<java.lang.Boolean> confirmed() {
+        short ret = do_confirmed(mNativeObj);
+        java.util.Optional<java.lang.Boolean> convRet;
+        if (ret == -1 ) {
+            convRet = java.util.Optional.empty();
+        } else {
+            convRet = java.util.Optional.of(new java.lang.Boolean(ret == 1 ? true : false));
+        }
+
+        return convRet;
+    }
+    private static native short do_confirmed(long self);
+
+    public final boolean broadcasted() {
+        boolean ret = do_broadcasted(mNativeObj);
+
+        return ret;
+    }
+    private static native boolean do_broadcasted(long self);
+
+    public final boolean incoming() {
+        boolean ret = do_incoming(mNativeObj);
+
+        return ret;
+    }
+    private static native boolean do_incoming(long self);
+
+    public final long value() {
+        long ret = do_value(mNativeObj);
+
+        return ret;
+    }
+    private static native long do_value(long self);
+
+    public final long remainder_value() {
+        long ret = do_remainder_value(mNativeObj);
+
+        return ret;
+    }
+    private static native long do_remainder_value(long self);
 
     public synchronized void delete() {
         if (mNativeObj != 0) {

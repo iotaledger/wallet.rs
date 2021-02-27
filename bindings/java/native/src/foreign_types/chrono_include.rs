@@ -1,3 +1,5 @@
+use std::time::{UNIX_EPOCH};
+
 //ANCHOR: foreign_typemap_chrono_example
 foreign_typemap!(
     ($p:r_type) DateTime<Utc> => jlong {
@@ -8,6 +10,14 @@ foreign_typemap!(
     ($p:f_type, option = "NullAnnotations", unique_prefix = "/*chrono*/")
         => "/*chrono*/@NonNull java.util.Date" "$out = new java.util.Date($p);";
 );
+
+foreign_typemap!(
+    ($p:r_type) DateTime<Local> <= jlong {
+        let d = UNIX_EPOCH + Duration::from_millis($p as u64);
+        $out = DateTime::<Local>::from(d);
+    };
+);
+
 //ANCHOR_END: foreign_typemap_chrono_example
 
 foreign_typemap!(

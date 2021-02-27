@@ -1,25 +1,21 @@
 use std::{
-    path::PathBuf,
-    time::Duration,
     cell::RefCell,
     rc::Rc,
 };
 
 use iota_wallet::{
     account::{
-        AccountIdentifier,
         AccountInitialiser as AccountInitialiserRust
     },
-    address::Address, message::Message,
     DateTime, Local,
 };
 
-use crate::Result;
 use crate::{
     acc_manager::{
         AccountSignerType
     },
-    client_options::ClientOptions,
+    message::Message,
+    address::Address,
 };
 
 pub struct AccountInitialiser {
@@ -56,12 +52,16 @@ impl AccountInitialiser {
     }
 
     pub fn messages(&mut self, messages: Vec<Message>) -> Self {
-        let new_initialiser = self.initialiser.borrow_mut().take().unwrap().messages(messages);
+        let rust_msgs = messages.into_iter().map(|m| m.get_internal()).collect();
+        
+        let new_initialiser = self.initialiser.borrow_mut().take().unwrap().messages(rust_msgs);
         AccountInitialiser::new_with_initialiser(Rc::new(RefCell::new(Option::from(new_initialiser))))
     }
 
     pub fn addresses(&mut self, addresses: Vec<Address>) -> Self {
-        let new_initialiser = self.initialiser.borrow_mut().take().unwrap().addresses(addresses);
+        let rust_addrs = addresses.into_iter().map(|a| a.get_internal()).collect();
+
+        let new_initialiser = self.initialiser.borrow_mut().take().unwrap().addresses(rust_addrs);
         AccountInitialiser::new_with_initialiser(Rc::new(RefCell::new(Option::from(new_initialiser))))
     }
 
