@@ -226,7 +226,8 @@ fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, Password>>> {
                     crate::event::emit_stronghold_status_change(&Status {
                         snapshot_path: snapshot_path.clone(),
                         snapshot: SnapshotStatus::Locked,
-                    });
+                    })
+                    .await;
                 }
             }
         })
@@ -394,7 +395,7 @@ pub async fn unload_snapshot(storage_path: &PathBuf, persist: bool) -> Result<()
         passwords.remove(storage_path);
     }
 
-    crate::event::emit_stronghold_status_change(&get_status(storage_path).await);
+    crate::event::emit_stronghold_status_change(&get_status(storage_path).await).await;
 
     Ok(())
 }
@@ -411,7 +412,7 @@ async fn load_snapshot_internal(
 ) -> Result<()> {
     set_password(&snapshot_path, password).await;
     check_snapshot(&mut runtime, &snapshot_path).await?;
-    crate::event::emit_stronghold_status_change(&get_status(snapshot_path).await);
+    crate::event::emit_stronghold_status_change(&get_status(snapshot_path).await).await;
     Ok(())
 }
 

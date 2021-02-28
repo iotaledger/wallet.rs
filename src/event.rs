@@ -151,11 +151,11 @@ struct StrongholdStatusChangeEventHandler {
 event_handler_impl!(StrongholdStatusChangeEventHandler);
 
 type BalanceListeners = Arc<Mutex<Vec<BalanceEventHandler>>>;
-type TransactionListeners = Arc<StdMutex<Vec<TransactionEventHandler>>>;
-type TransactionConfirmationChangeListeners = Arc<StdMutex<Vec<TransactionConfirmationChangeEventHandler>>>;
+type TransactionListeners = Arc<Mutex<Vec<TransactionEventHandler>>>;
+type TransactionConfirmationChangeListeners = Arc<Mutex<Vec<TransactionConfirmationChangeEventHandler>>>;
 type ErrorListeners = Arc<StdMutex<Vec<ErrorHandler>>>;
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-type StrongholdStatusChangeListeners = Arc<StdMutex<Vec<StrongholdStatusChangeEventHandler>>>;
+type StrongholdStatusChangeListeners = Arc<Mutex<Vec<StrongholdStatusChangeEventHandler>>>;
 
 fn generate_event_id() -> EventId {
     let mut id = [0; 32];
@@ -163,8 +163,8 @@ fn generate_event_id() -> EventId {
     id
 }
 
-fn remove_event_listener<T: EventHandler>(id: &EventId, listeners: &Arc<StdMutex<Vec<T>>>) {
-    let mut listeners = listeners.lock().unwrap();
+async fn remove_event_listener<T: EventHandler>(id: &EventId, listeners: &Arc<Mutex<Vec<T>>>) {
+    let mut listeners = listeners.lock().await;
     if let Some(position) = listeners.iter().position(|e| e.id() == id) {
         listeners.remove(position);
     }
@@ -213,8 +213,8 @@ pub async fn on_balance_change<F: Fn(&BalanceEvent<'_>) + Send + 'static>(cb: F)
 }
 
 /// Removes the balance change listener associated with the given identifier.
-pub fn remove_balance_change_listener(_id: &EventId) {
-    // TODO remove_event_listener(id, balance_listeners());
+pub async fn remove_balance_change_listener(id: &EventId) {
+    remove_event_listener(id, balance_listeners()).await;
 }
 
 /// Emits a balance change event.
@@ -245,10 +245,8 @@ pub(crate) async fn emit_balance_change(
 }
 
 /// Emits a transaction-related event.
-pub(crate) fn emit_transaction_event(event_type: TransactionEventType, account_id: &str, message: &Message) {
-    let listeners = transaction_listeners()
-        .lock()
-        .expect("Failed to lock balance_listeners: emit_balance_change()");
+pub(crate) async fn emit_transaction_event(event_type: TransactionEventType, account_id: &str, message: &Message) {
+    let listeners = transaction_listeners().lock().await;
     let event = TransactionEvent {
         account_id,
         message: message.clone(),
@@ -261,10 +259,8 @@ pub(crate) fn emit_transaction_event(event_type: TransactionEventType, account_i
 }
 
 /// Emits a transaction confirmation state change event.
-pub(crate) fn emit_confirmation_state_change(account_id: &str, message: &Message, confirmed: bool) {
-    let listeners = transaction_confirmation_change_listeners()
-        .lock()
-        .expect("Failed to lock transaction_confirmation_change_listeners: emit_confirmation_state_change()");
+pub(crate) async fn emit_confirmation_state_change(account_id: &str, message: &Message, confirmed: bool) {
+    let listeners = transaction_confirmation_change_listeners().lock().await;
     let event = TransactionConfirmationChangeEvent {
         account_id,
         message: message.clone(),
@@ -276,13 +272,11 @@ pub(crate) fn emit_confirmation_state_change(account_id: &str, message: &Message
 }
 
 /// Adds a transaction-related event listener.
-fn add_transaction_listener<F: Fn(&TransactionEvent<'_>) + Send + 'static>(
+async fn add_transaction_listener<F: Fn(&TransactionEvent<'_>) + Send + 'static>(
     event_type: TransactionEventType,
     cb: F,
 ) -> EventId {
-    let mut l = transaction_listeners()
-        .lock()
-        .expect("Failed to lock transaction_listeners: add_transaction_listener()");
+    let mut l = transaction_listeners().lock().await;
     let id = generate_event_id();
     l.push(TransactionEventHandler {
         id,
@@ -293,20 +287,20 @@ fn add_transaction_listener<F: Fn(&TransactionEvent<'_>) + Send + 'static>(
 }
 
 /// Listen to new messages.
-pub fn on_new_transaction<F: Fn(&TransactionEvent<'_>) + Send + 'static>(cb: F) -> EventId {
-    add_transaction_listener(TransactionEventType::NewTransaction, cb)
+pub async fn on_new_transaction<F: Fn(&TransactionEvent<'_>) + Send + 'static>(cb: F) -> EventId {
+    add_transaction_listener(TransactionEventType::NewTransaction, cb).await
 }
 
 /// Removes the new transaction listener associated with the given identifier.
-pub fn remove_new_transaction_listener(id: &EventId) {
-    remove_event_listener(id, transaction_listeners());
+pub async fn remove_new_transaction_listener(id: &EventId) {
+    remove_event_listener(id, transaction_listeners()).await;
 }
 
 /// Listen to transaction confirmation state change.
-pub fn on_confirmation_state_change<F: Fn(&TransactionConfirmationChangeEvent<'_>) + Send + 'static>(cb: F) -> EventId {
-    let mut l = transaction_confirmation_change_listeners()
-        .lock()
-        .expect("Failed to lock transaction_confirmation_change_listeners: on_confirmation_state_change()");
+pub async fn on_confirmation_state_change<F: Fn(&TransactionConfirmationChangeEvent<'_>) + Send + 'static>(
+    cb: F,
+) -> EventId {
+    let mut l = transaction_confirmation_change_listeners().lock().await;
     let id = generate_event_id();
     l.push(TransactionConfirmationChangeEventHandler {
         id,
@@ -316,34 +310,32 @@ pub fn on_confirmation_state_change<F: Fn(&TransactionConfirmationChangeEvent<'_
 }
 
 /// Removes the new confirmation state change listener associated with the given identifier.
-pub fn remove_confirmation_state_change_listener(id: &EventId) {
-    remove_event_listener(id, transaction_confirmation_change_listeners());
+pub async fn remove_confirmation_state_change_listener(id: &EventId) {
+    remove_event_listener(id, transaction_confirmation_change_listeners()).await;
 }
 
 /// Listen to transaction reattachment.
-pub fn on_reattachment<F: Fn(&TransactionEvent<'_>) + Send + 'static>(cb: F) -> EventId {
-    add_transaction_listener(TransactionEventType::Reattachment, cb)
+pub async fn on_reattachment<F: Fn(&TransactionEvent<'_>) + Send + 'static>(cb: F) -> EventId {
+    add_transaction_listener(TransactionEventType::Reattachment, cb).await
 }
 
 /// Removes the reattachment listener associated with the given identifier.
-pub fn remove_reattachment_listener(id: &EventId) {
-    remove_event_listener(id, transaction_listeners());
+pub async fn remove_reattachment_listener(id: &EventId) {
+    remove_event_listener(id, transaction_listeners()).await;
 }
 
 /// Listen to transaction broadcast.
-pub fn on_broadcast<F: Fn(&TransactionEvent<'_>) + Send + 'static>(cb: F) -> EventId {
-    add_transaction_listener(TransactionEventType::Broadcast, cb)
+pub async fn on_broadcast<F: Fn(&TransactionEvent<'_>) + Send + 'static>(cb: F) -> EventId {
+    add_transaction_listener(TransactionEventType::Broadcast, cb).await
 }
 
 /// Removes the broadcast listener associated with the given identifier.
-pub fn remove_broadcast_listener(id: &EventId) {
-    remove_event_listener(id, transaction_listeners());
+pub async fn remove_broadcast_listener(id: &EventId) {
+    remove_event_listener(id, transaction_listeners()).await;
 }
 
 pub(crate) fn emit_error(error: &crate::Error) {
-    let listeners = error_listeners()
-        .lock()
-        .expect("Failed to lock error_listeners: emit_error()");
+    let listeners = error_listeners().lock().unwrap();
     for listener in listeners.deref() {
         (listener.on_error)(&error)
     }
@@ -351,9 +343,7 @@ pub(crate) fn emit_error(error: &crate::Error) {
 
 /// Listen to errors.
 pub fn on_error<F: Fn(&crate::Error) + Send + 'static>(cb: F) -> EventId {
-    let mut l = error_listeners()
-        .lock()
-        .expect("Failed to lock error_listeners: on_error()");
+    let mut l = error_listeners().lock().unwrap();
     let id = generate_event_id();
     l.push(ErrorHandler {
         id,
@@ -364,14 +354,15 @@ pub fn on_error<F: Fn(&crate::Error) + Send + 'static>(cb: F) -> EventId {
 
 /// Removes the error listener associated with the given identifier.
 pub fn remove_error_listener(id: &EventId) {
-    remove_event_listener(id, error_listeners());
+    let mut listeners = error_listeners().lock().unwrap();
+    if let Some(position) = listeners.iter().position(|e| e.id() == id) {
+        listeners.remove(position);
+    }
 }
 
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-pub(crate) fn emit_stronghold_status_change(status: &crate::StrongholdStatus) {
-    let listeners = stronghold_status_change_listeners()
-        .lock()
-        .expect("Failed to lock stronghold_status_change_listeners: emit_stronghold_status_change()");
+pub(crate) async fn emit_stronghold_status_change(status: &crate::StrongholdStatus) {
+    let listeners = stronghold_status_change_listeners().lock().await;
     for listener in listeners.deref() {
         (listener.on_event)(&status)
     }
@@ -380,10 +371,8 @@ pub(crate) fn emit_stronghold_status_change(status: &crate::StrongholdStatus) {
 /// Listen to stronghold status change events.
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
 #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
-pub fn on_stronghold_status_change<F: Fn(&crate::StrongholdStatus) + Send + 'static>(cb: F) -> EventId {
-    let mut l = stronghold_status_change_listeners()
-        .lock()
-        .expect("Failed to lock stronghold_status_change_listeners: on_stronghold_status_change()");
+pub async fn on_stronghold_status_change<F: Fn(&crate::StrongholdStatus) + Send + 'static>(cb: F) -> EventId {
+    let mut l = stronghold_status_change_listeners().lock().await;
     let id = generate_event_id();
     l.push(StrongholdStatusChangeEventHandler {
         id,
@@ -395,15 +384,13 @@ pub fn on_stronghold_status_change<F: Fn(&crate::StrongholdStatus) + Send + 'sta
 /// Removes the stronghold status change listener associated with the given identifier.
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
 #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
-pub fn remove_stronghold_status_change_listener(id: &EventId) {
-    remove_event_listener(id, stronghold_status_change_listeners());
+pub async fn remove_stronghold_status_change_listener(id: &EventId) {
+    remove_event_listener(id, stronghold_status_change_listeners()).await;
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::address::{AddressBuilder, AddressWrapper, IotaAddress};
-    use iota::message::prelude::Ed25519Address;
     use rusty_fork::rusty_fork_test;
 
     fn _create_and_drop_error() {
@@ -421,74 +408,75 @@ mod tests {
         }
     }
 
-    #[test]
-    fn balance_events() {
-        on_balance_change(|event| {
-            assert!(event.account_id == hex::encode([1; 32]));
+    #[tokio::test]
+    async fn balance_events() {
+        let manager = crate::test_utils::get_account_manager().await;
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+        let account = account_handle.read().await;
+        let account_id = account.id().to_string();
+        on_balance_change(move |event| {
+            assert!(event.account_id == &account_id);
             assert!(event.balance_change.spent == 5);
             assert!(event.balance_change.received == 0);
-        });
+        })
+        .await;
 
         emit_balance_change(
-            &hex::encode([1; 32]),
-            &AddressBuilder::new()
-                .address(AddressWrapper::new(
-                    IotaAddress::Ed25519(Ed25519Address::new([0; 32])),
-                    "iota".to_string(),
-                ))
-                .balance(0)
-                .key_index(0)
-                .outputs(vec![])
-                .build()
-                .expect("failed to build address"),
+            &account,
+            &crate::test_utils::generate_random_iota_address(),
             BalanceChange::spent(5),
-        );
+        )
+        .await
+        .unwrap();
     }
 
-    #[test]
-    fn on_new_transaction_event() {
+    #[tokio::test]
+    async fn on_new_transaction_event() {
         let account_id = "new-tx";
         let message = crate::test_utils::GenerateMessageBuilder::default().build();
         let message_ = message.clone();
 
         on_new_transaction(move |event| {
             assert!(event.account_id == account_id);
-            assert!(event.message == &message_);
-        });
+            assert!(event.message == message_);
+        })
+        .await;
 
-        emit_transaction_event(TransactionEventType::NewTransaction, account_id, &message);
+        emit_transaction_event(TransactionEventType::NewTransaction, account_id, &message).await;
     }
 
-    #[test]
-    fn on_reattachment_event() {
+    #[tokio::test]
+    async fn on_reattachment_event() {
         let account_id = "reattachment";
         let message = crate::test_utils::GenerateMessageBuilder::default().build();
         let message_ = message.clone();
 
         on_reattachment(move |event| {
             assert!(event.account_id == account_id);
-            assert!(event.message == &message_);
-        });
+            assert!(event.message == message_);
+        })
+        .await;
 
-        emit_transaction_event(TransactionEventType::Reattachment, account_id, &message);
+        emit_transaction_event(TransactionEventType::Reattachment, account_id, &message).await;
     }
 
-    #[test]
-    fn on_broadcast_event() {
+    #[tokio::test]
+    async fn on_broadcast_event() {
         let account_id = "broadcast";
         let message = crate::test_utils::GenerateMessageBuilder::default().build();
         let message_ = message.clone();
 
         on_broadcast(move |event| {
             assert!(event.account_id == account_id);
-            assert!(event.message == &message_);
-        });
+            assert!(event.message == message_);
+        })
+        .await;
 
-        emit_transaction_event(TransactionEventType::Broadcast, account_id, &message);
+        emit_transaction_event(TransactionEventType::Broadcast, account_id, &message).await;
     }
 
-    #[test]
-    fn on_confirmation_state_change_event() {
+    #[tokio::test]
+    async fn on_confirmation_state_change_event() {
         let account_id = "confirm";
         let message = crate::test_utils::GenerateMessageBuilder::default().build();
         let message_ = message.clone();
@@ -496,10 +484,11 @@ mod tests {
 
         on_confirmation_state_change(move |event| {
             assert!(event.account_id == account_id);
-            assert!(event.message == &message_);
+            assert!(event.message == message_);
             assert!(event.confirmed == confirmed);
-        });
+        })
+        .await;
 
-        emit_confirmation_state_change(account_id, &message, confirmed);
+        emit_confirmation_state_change(account_id, &message, confirmed).await;
     }
 }
