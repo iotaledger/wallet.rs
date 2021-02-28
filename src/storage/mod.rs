@@ -151,7 +151,7 @@ fn generate_event_key() -> String {
 }
 
 macro_rules! event_manager_impl {
-    ($event_ty:ty, $index_vec:ident, $index_key: expr, $save_fn_name: ident, $get_fn_name: ident) => {
+    ($event_ty:ty, $index_vec:ident, $index_key: expr, $save_fn_name: ident, $get_fn_name: ident, $get_count_fn_name: ident) => {
         impl StorageManager {
             pub async fn $save_fn_name(&mut self, event: &$event_ty) -> crate::Result<()> {
                 let key = generate_event_key();
@@ -165,7 +165,7 @@ macro_rules! event_manager_impl {
             }
 
             pub async fn $get_fn_name<T: Into<Option<Timestamp>>>(
-                &mut self,
+                &self,
                 count: usize,
                 skip: usize,
                 from_timestamp: T,
@@ -184,6 +184,20 @@ macro_rules! event_manager_impl {
                 }
                 Ok(events)
             }
+
+            pub async fn $get_count_fn_name<T: Into<Option<Timestamp>>>(&self, from_timestamp: T) -> usize {
+                let from_timestamp = from_timestamp.into().unwrap_or(0);
+                self.$index_vec
+                    .iter()
+                    // using folder since it's faster than .filter().count()
+                    .fold(0, |count, index| {
+                        if index.timestamp >= from_timestamp {
+                            count + 1
+                        } else {
+                            count
+                        }
+                    })
+            }
         }
     };
 }
@@ -193,7 +207,8 @@ event_manager_impl!(
     balance_change_indexation,
     "iota-wallet-balance-change-events",
     save_balance_change_event,
-    get_balance_change_events
+    get_balance_change_events,
+    get_balance_change_event_count
 );
 
 pub(crate) type StorageHandle = Arc<Mutex<StorageManager>>;
