@@ -173,7 +173,7 @@ mod test_utils {
 
     #[async_trait::async_trait]
     impl crate::storage::StorageAdapter for TestStorage {
-        async fn get(&mut self, account_id: &str) -> crate::Result<String> {
+        async fn get(&self, account_id: &str) -> crate::Result<String> {
             match self.cache.get(account_id) {
                 Some(value) => Ok(value.to_string()),
                 None => Err(crate::Error::RecordNotFound),

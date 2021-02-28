@@ -8,12 +8,12 @@ use crate::{
     },
     client::ClientOptions,
     event::{
-        emit_balance_change, emit_confirmation_state_change, emit_transaction_event, BalanceChange,
+        emit_balance_change, emit_confirmation_state_change, emit_transaction_event, BalanceChange, BalanceEvent,
         TransactionEventType,
     },
     message::{Message, MessagePayload, MessageType, Transfer},
     signing::SignerType,
-    storage::StorageAdapter,
+    storage::{StorageAdapter, Timestamp},
 };
 
 use std::{
@@ -942,6 +942,43 @@ impl AccountManager {
     }
 }
 
+macro_rules! event_getters_impl {
+    ($event_ty:ty, $get_fn_name: ident, $get_count_fn_name: ident) => {
+        impl AccountManager {
+            /// Gets the paginated events with an optional timestamp filter.
+            pub async fn $get_fn_name<T: Into<Option<Timestamp>>>(
+                &self,
+                count: usize,
+                skip: usize,
+                from_timestamp: T,
+            ) -> crate::Result<Vec<$event_ty>> {
+                crate::storage::get(&self.storage_path)
+                    .await?
+                    .lock()
+                    .await
+                    .$get_fn_name(count, skip, from_timestamp)
+                    .await
+            }
+
+            /// Gets the count of events with an optiona timestamp filter.
+            pub async fn $get_count_fn_name<T: Into<Option<Timestamp>>>(
+                &self,
+                from_timestamp: T,
+            ) -> crate::Result<usize> {
+                let count = crate::storage::get(&self.storage_path)
+                    .await?
+                    .lock()
+                    .await
+                    .$get_count_fn_name(from_timestamp)
+                    .await;
+                Ok(count)
+            }
+        }
+    };
+}
+
+event_getters_impl!(BalanceEvent, get_balance_change_events, get_balance_change_event_count);
+
 /// The accounts synchronizer.
 pub struct AccountsSynchronizer {
     accounts: AccountStore,
@@ -1312,6 +1349,7 @@ mod tests {
     use crate::{
         address::{AddressBuilder, AddressWrapper, IotaAddress},
         client::ClientOptionsBuilder,
+        event::*,
         message::Message,
     };
     use iota::{Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Payload};
@@ -1710,6 +1748,46 @@ mod tests {
                 .unwrap();
             assert_eq!(account_store.read().await.len(), 1);
             assert_eq!(encrypted.len(), 0);
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn get_balance_change_events() {
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+            let account = account_handle.read().await;
+            let change_events = vec![
+                BalanceChange::spent(0),
+                BalanceChange::spent(1),
+                BalanceChange::spent(2),
+                BalanceChange::spent(3),
+            ];
+            for change in &change_events {
+                emit_balance_change(&account, account.latest_address().address(), change.clone())
+                    .await
+                    .unwrap();
+            }
+            assert!(
+                manager.get_balance_change_event_count(None).await.unwrap() == change_events.len(),
+                true
+            );
+            for (take, skip) in &[(2, 0), (2, 2)] {
+                let found = manager
+                    .get_balance_change_events(*take, *skip, None)
+                    .await
+                    .unwrap()
+                    .into_iter()
+                    .map(|e| e.balance_change)
+                    .collect::<Vec<BalanceChange>>();
+                let expected = change_events
+                    .clone()
+                    .into_iter()
+                    .skip(*skip)
+                    .take(*take)
+                    .collect::<Vec<BalanceChange>>();
+                assert!(found == expected, true);
+            }
         })
         .await;
     }

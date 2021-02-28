@@ -34,7 +34,7 @@ struct AccountIndexation {
     key: String,
 }
 
-type Timestamp = i64;
+pub(crate) type Timestamp = i64;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct EventIndexation {
@@ -402,7 +402,7 @@ mod tests {
         let path = "./the-storage-path";
         super::set(path, None, Box::new(MyAdapter {})).await;
         let adapter = super::get(&std::path::PathBuf::from(path)).await.unwrap();
-        let mut adapter = adapter.lock().await;
+        let adapter = adapter.lock().await;
         assert_eq!(adapter.get("").await.unwrap(), "MY_ADAPTER_GET_RESPONSE".to_string());
     }
 

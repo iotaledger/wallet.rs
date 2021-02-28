@@ -17,7 +17,7 @@ use std::{
 pub type EventId = [u8; 32];
 
 /// The balance change event payload.
-#[derive(Getters, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Getters, Serialize, Deserialize)]
 pub struct BalanceChange {
     /// The change amount if it was a spent event.
     pub spent: u64,
@@ -415,7 +415,7 @@ mod tests {
         let account = account_handle.read().await;
         let account_id = account.id().to_string();
         on_balance_change(move |event| {
-            assert!(event.account_id == &account_id);
+            assert!(event.account_id == account_id);
             assert!(event.balance_change.spent == 5);
             assert!(event.balance_change.received == 0);
         })
@@ -442,7 +442,7 @@ mod tests {
         })
         .await;
 
-        emit_transaction_event(TransactionEventType::NewTransaction, account_id, &message).await;
+        emit_transaction_event(TransactionEventType::NewTransaction, account_id.to_string(), &message).await;
     }
 
     #[tokio::test]
@@ -457,7 +457,7 @@ mod tests {
         })
         .await;
 
-        emit_transaction_event(TransactionEventType::Reattachment, account_id, &message).await;
+        emit_transaction_event(TransactionEventType::Reattachment, account_id.to_string(), &message).await;
     }
 
     #[tokio::test]
@@ -472,7 +472,7 @@ mod tests {
         })
         .await;
 
-        emit_transaction_event(TransactionEventType::Broadcast, account_id, &message).await;
+        emit_transaction_event(TransactionEventType::Broadcast, account_id.to_string(), &message).await;
     }
 
     #[tokio::test]
@@ -489,6 +489,6 @@ mod tests {
         })
         .await;
 
-        emit_confirmation_state_change(account_id, &message, confirmed).await;
+        emit_confirmation_state_change(account_id.to_string(), &message, confirmed).await;
     }
 }
