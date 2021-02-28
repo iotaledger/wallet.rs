@@ -9,7 +9,7 @@ use crate::{
     client::ClientOptions,
     event::{
         emit_balance_change, emit_confirmation_state_change, emit_transaction_event, BalanceChange, BalanceEvent,
-        TransactionEventType,
+        TransactionConfirmationChangeEvent, TransactionEvent, TransactionEventType,
     },
     message::{Message, MessagePayload, MessageType, Transfer},
     signing::SignerType,
@@ -978,6 +978,18 @@ macro_rules! event_getters_impl {
 }
 
 event_getters_impl!(BalanceEvent, get_balance_change_events, get_balance_change_event_count);
+event_getters_impl!(
+    TransactionConfirmationChangeEvent,
+    get_transaction_confirmation_events,
+    get_transaction_confirmation_event_count
+);
+event_getters_impl!(
+    TransactionEvent,
+    get_new_transaction_events,
+    get_new_transaction_event_count
+);
+event_getters_impl!(TransactionEvent, get_reattachment_events, get_reattachment_event_count);
+event_getters_impl!(TransactionEvent, get_broadcast_events, get_broadcast_event_count);
 
 /// The accounts synchronizer.
 pub struct AccountsSynchronizer {
@@ -1124,12 +1136,7 @@ async fn poll(accounts: AccountStore, storage_file_path: PathBuf, is_mqtt_monito
                 .filter(|message| !account_before_sync.messages().contains(message))
             {
                 log::info!("[POLLING] new message: {:?}", message.id());
-                emit_transaction_event(
-                    TransactionEventType::NewTransaction,
-                    account_after_sync.id().to_string(),
-                    &message,
-                )
-                .await;
+                emit_transaction_event(TransactionEventType::NewTransaction, &account_after_sync, &message).await?;
             }
 
             // confirmation state change event
@@ -1140,7 +1147,7 @@ async fn poll(accounts: AccountStore, storage_file_path: PathBuf, is_mqtt_monito
                 };
                 if changed {
                     log::info!("[POLLING] message confirmed: {:?}", message.id());
-                    emit_confirmation_state_change(account_after_sync.id().to_string(), &message, true).await;
+                    emit_confirmation_state_change(&account_after_sync, &message, true).await?;
                 }
             }
         }
@@ -1193,10 +1200,9 @@ async fn poll(accounts: AccountStore, storage_file_path: PathBuf, is_mqtt_monito
     for retried_data in retried {
         let mut account = retried_data.account_handle.write().await;
         let client = crate::client::get_client(account.client_options()).await;
-        let account_id = account.id();
 
         for message in &retried_data.reattached {
-            emit_transaction_event(TransactionEventType::Reattachment, account_id.to_string(), &message).await;
+            emit_transaction_event(TransactionEventType::Reattachment, &account, &message).await?;
         }
 
         account.append_messages(retried_data.reattached);
@@ -1791,4 +1797,105 @@ mod tests {
         })
         .await;
     }
+
+    #[tokio::test]
+    async fn get_transaction_confirmation_events() {
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+            let account = account_handle.read().await;
+            let confirmation_change_events = vec![
+                (crate::test_utils::GenerateMessageBuilder::default().build(), true),
+                (crate::test_utils::GenerateMessageBuilder::default().build(), false),
+                (crate::test_utils::GenerateMessageBuilder::default().build(), false),
+                (crate::test_utils::GenerateMessageBuilder::default().build(), true),
+            ];
+            for (message, change) in &confirmation_change_events {
+                emit_confirmation_state_change(&account, message, *change)
+                    .await
+                    .unwrap();
+            }
+            assert!(
+                manager.get_transaction_confirmation_event_count(None).await.unwrap()
+                    == confirmation_change_events.len(),
+                true
+            );
+            for (take, skip) in &[(2, 0), (2, 2)] {
+                let found = manager
+                    .get_transaction_confirmation_events(*take, *skip, None)
+                    .await
+                    .unwrap()
+                    .into_iter()
+                    .map(|e| (e.message, e.confirmed))
+                    .collect::<Vec<(Message, bool)>>();
+                let expected = confirmation_change_events
+                    .clone()
+                    .into_iter()
+                    .skip(*skip)
+                    .take(*take)
+                    .collect::<Vec<(Message, bool)>>();
+                assert!(found == expected, true);
+            }
+        })
+        .await;
+    }
+
+    macro_rules! transaction_event_test {
+        ($event_type: expr, $count_get_fn: ident, $get_fn: ident) => {
+            #[tokio::test]
+            async fn $get_fn() {
+                crate::test_utils::with_account_manager(
+                    crate::test_utils::TestType::Storage,
+                    |manager, _| async move {
+                        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+                        let account = account_handle.read().await;
+                        let events = vec![
+                            crate::test_utils::GenerateMessageBuilder::default().build(),
+                            crate::test_utils::GenerateMessageBuilder::default().build(),
+                            crate::test_utils::GenerateMessageBuilder::default().build(),
+                            crate::test_utils::GenerateMessageBuilder::default().build(),
+                        ];
+                        for message in &events {
+                            emit_transaction_event($event_type, &account, message)
+                                .await
+                                .unwrap();
+                        }
+                        assert!(manager.$count_get_fn(None).await.unwrap() == events.len(), true);
+                        for (take, skip) in &[(2, 0), (2, 2)] {
+                            let found = manager
+                                .$get_fn(*take, *skip, None)
+                                .await
+                                .unwrap()
+                                .into_iter()
+                                .map(|e| e.message)
+                                .collect::<Vec<Message>>();
+                            let expected = events
+                                .clone()
+                                .into_iter()
+                                .skip(*skip)
+                                .take(*take)
+                                .collect::<Vec<Message>>();
+                            assert!(found == expected, true);
+                        }
+                    },
+                )
+                .await;
+            }
+        };
+    }
+
+    transaction_event_test!(
+        TransactionEventType::NewTransaction,
+        get_new_transaction_event_count,
+        get_new_transaction_events
+    );
+    transaction_event_test!(
+        TransactionEventType::Reattachment,
+        get_reattachment_event_count,
+        get_reattachment_events
+    );
+    transaction_event_test!(
+        TransactionEventType::Broadcast,
+        get_broadcast_event_count,
+        get_broadcast_events
+    );
 }

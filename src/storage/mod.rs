@@ -11,8 +11,10 @@ pub mod sqlite;
 /// Stronghold storage.
 pub mod stronghold;
 
-use crate::account::Account;
-use crate::event::BalanceEvent;
+use crate::{
+    account::Account,
+    event::{BalanceEvent, TransactionConfirmationChangeEvent, TransactionEvent},
+};
 
 use chrono::Utc;
 use crypto::ciphers::chacha::xchacha20poly1305;
@@ -88,6 +90,10 @@ pub(crate) struct StorageManager {
     storage: Storage,
     account_indexation: Vec<AccountIndexation>,
     balance_change_indexation: Vec<EventIndexation>,
+    transaction_confirmation_indexation: Vec<EventIndexation>,
+    new_transaction_indexation: Vec<EventIndexation>,
+    reattachment_indexation: Vec<EventIndexation>,
+    broadcast_indexation: Vec<EventIndexation>,
 }
 
 impl StorageManager {
@@ -210,6 +216,38 @@ event_manager_impl!(
     get_balance_change_events,
     get_balance_change_event_count
 );
+event_manager_impl!(
+    TransactionConfirmationChangeEvent,
+    transaction_confirmation_indexation,
+    "iota-wallet-tx-confirmation-events",
+    save_transaction_confirmation_event,
+    get_transaction_confirmation_events,
+    get_transaction_confirmation_event_count
+);
+event_manager_impl!(
+    TransactionEvent,
+    new_transaction_indexation,
+    "iota-wallet-new-tx-events",
+    save_new_transaction_event,
+    get_new_transaction_events,
+    get_new_transaction_event_count
+);
+event_manager_impl!(
+    TransactionEvent,
+    reattachment_indexation,
+    "iota-wallet-tx-reattachment-events",
+    save_reattachment_event,
+    get_reattachment_events,
+    get_reattachment_event_count
+);
+event_manager_impl!(
+    TransactionEvent,
+    broadcast_indexation,
+    "iota-wallet-tx-broadcast-events",
+    save_broadcast_event,
+    get_broadcast_events,
+    get_broadcast_event_count
+);
 
 pub(crate) type StorageHandle = Arc<Mutex<StorageManager>>;
 type Storages = Arc<RwLock<HashMap<PathBuf, StorageHandle>>>;
@@ -240,6 +278,10 @@ pub(crate) async fn set<P: AsRef<Path>>(
         storage,
         account_indexation: Default::default(),
         balance_change_indexation: Default::default(),
+        transaction_confirmation_indexation: Default::default(),
+        new_transaction_indexation: Default::default(),
+        reattachment_indexation: Default::default(),
+        broadcast_indexation: Default::default(),
     };
     instances.insert(
         storage_path.as_ref().to_path_buf(),

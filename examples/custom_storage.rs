@@ -22,7 +22,7 @@ impl MyStorage {
 
 #[async_trait::async_trait]
 impl StorageAdapter for MyStorage {
-    async fn get(&mut self, key: &str) -> iota_wallet::Result<String> {
+    async fn get(&self, key: &str) -> iota_wallet::Result<String> {
         match self.db.get(key) {
             Ok(Some(value)) => Ok(String::from_utf8(value.to_vec()).unwrap()),
             Ok(None) => Err(iota_wallet::Error::RecordNotFound),

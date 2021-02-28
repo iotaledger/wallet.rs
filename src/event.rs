@@ -245,30 +245,67 @@ pub(crate) async fn emit_balance_change(
 }
 
 /// Emits a transaction-related event.
-pub(crate) async fn emit_transaction_event(event_type: TransactionEventType, account_id: String, message: &Message) {
+pub(crate) async fn emit_transaction_event(
+    event_type: TransactionEventType,
+    account: &Account,
+    message: &Message,
+) -> crate::Result<()> {
     let listeners = transaction_listeners().lock().await;
     let event = TransactionEvent {
-        account_id,
+        account_id: account.id().to_string(),
         message: message.clone(),
     };
+
+    {
+        let storage_handle = crate::storage::get(account.storage_path()).await?;
+        let mut storage = storage_handle.lock().await;
+        match event_type {
+            TransactionEventType::Broadcast => {
+                storage.save_broadcast_event(&event).await?;
+            }
+            TransactionEventType::NewTransaction => {
+                storage.save_new_transaction_event(&event).await?;
+            }
+            TransactionEventType::Reattachment => {
+                storage.save_reattachment_event(&event).await?;
+            }
+        }
+    }
+
     for listener in listeners.deref() {
         if listener.event_type == event_type {
             (listener.on_event)(&event);
         }
     }
+
+    Ok(())
 }
 
 /// Emits a transaction confirmation state change event.
-pub(crate) async fn emit_confirmation_state_change(account_id: String, message: &Message, confirmed: bool) {
+pub(crate) async fn emit_confirmation_state_change(
+    account: &Account,
+    message: &Message,
+    confirmed: bool,
+) -> crate::Result<()> {
     let listeners = transaction_confirmation_change_listeners().lock().await;
     let event = TransactionConfirmationChangeEvent {
-        account_id,
+        account_id: account.id().to_string(),
         message: message.clone(),
         confirmed,
     };
+
+    crate::storage::get(account.storage_path())
+        .await?
+        .lock()
+        .await
+        .save_transaction_confirmation_event(&event)
+        .await?;
+
     for listener in listeners.deref() {
         (listener.on_event)(&event);
     }
+
+    Ok(())
 }
 
 /// Adds a transaction-related event listener.
@@ -432,7 +469,10 @@ mod tests {
 
     #[tokio::test]
     async fn on_new_transaction_event() {
-        let account_id = "new-tx";
+        let manager = crate::test_utils::get_account_manager().await;
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+        let account = account_handle.read().await;
+        let account_id = account.id().to_string();
         let message = crate::test_utils::GenerateMessageBuilder::default().build();
         let message_ = message.clone();
 
@@ -442,12 +482,17 @@ mod tests {
         })
         .await;
 
-        emit_transaction_event(TransactionEventType::NewTransaction, account_id.to_string(), &message).await;
+        emit_transaction_event(TransactionEventType::NewTransaction, &account, &message)
+            .await
+            .unwrap();
     }
 
     #[tokio::test]
     async fn on_reattachment_event() {
-        let account_id = "reattachment";
+        let manager = crate::test_utils::get_account_manager().await;
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+        let account = account_handle.read().await;
+        let account_id = account.id().to_string();
         let message = crate::test_utils::GenerateMessageBuilder::default().build();
         let message_ = message.clone();
 
@@ -457,12 +502,17 @@ mod tests {
         })
         .await;
 
-        emit_transaction_event(TransactionEventType::Reattachment, account_id.to_string(), &message).await;
+        emit_transaction_event(TransactionEventType::Reattachment, &account, &message)
+            .await
+            .unwrap();
     }
 
     #[tokio::test]
     async fn on_broadcast_event() {
-        let account_id = "broadcast";
+        let manager = crate::test_utils::get_account_manager().await;
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+        let account = account_handle.read().await;
+        let account_id = account.id().to_string();
         let message = crate::test_utils::GenerateMessageBuilder::default().build();
         let message_ = message.clone();
 
@@ -472,12 +522,17 @@ mod tests {
         })
         .await;
 
-        emit_transaction_event(TransactionEventType::Broadcast, account_id.to_string(), &message).await;
+        emit_transaction_event(TransactionEventType::Broadcast, &account, &message)
+            .await
+            .unwrap();
     }
 
     #[tokio::test]
     async fn on_confirmation_state_change_event() {
-        let account_id = "confirm";
+        let manager = crate::test_utils::get_account_manager().await;
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+        let account = account_handle.read().await;
+        let account_id = account.id().to_string();
         let message = crate::test_utils::GenerateMessageBuilder::default().build();
         let message_ = message.clone();
         let confirmed = true;
@@ -489,6 +544,8 @@ mod tests {
         })
         .await;
 
-        emit_confirmation_state_change(account_id.to_string(), &message, confirmed).await;
+        emit_confirmation_state_change(&account, &message, confirmed)
+            .await
+            .unwrap();
     }
 }

@@ -158,10 +158,10 @@ async fn process_output(
                     .finish();
                 crate::event::emit_transaction_event(
                     crate::event::TransactionEventType::NewTransaction,
-                    account.id().to_string(),
+                    &account,
                     &message,
                 )
-                .await;
+                .await?;
                 account.messages_mut().push(message);
             }
         }
@@ -239,7 +239,7 @@ async fn process_metadata(
                 })
                 .await?;
 
-            crate::event::emit_confirmation_state_change(account.id().to_string(), &message, confirmed).await;
+            crate::event::emit_confirmation_state_change(&account, &message, confirmed).await?;
         }
     }
     Ok(())
