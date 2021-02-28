@@ -32,7 +32,7 @@ impl StorageAdapter for StrongholdStorageAdapter {
         STORAGE_ID
     }
 
-    async fn get(&mut self, key: &str) -> crate::Result<String> {
+    async fn get(&self, key: &str) -> crate::Result<String> {
         crate::stronghold::get_record(&self.path, key)
             .await
             .map_err(storage_err)

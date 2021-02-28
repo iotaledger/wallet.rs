@@ -34,10 +34,12 @@ struct AccountIndexation {
     key: String,
 }
 
+type Timestamp = i64;
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct EventIndexation {
     key: String,
-    timestamp: i64,
+    timestamp: Timestamp,
 }
 
 struct Storage {
@@ -51,7 +53,7 @@ impl Storage {
         self.inner.id()
     }
 
-    async fn get(&mut self, key: &str) -> crate::Result<String> {
+    async fn get(&self, key: &str) -> crate::Result<String> {
         self.inner.get(key).await.and_then(|record| {
             if let Some(key) = &self.encryption_key {
                 decrypt_record(&record, key)
@@ -98,7 +100,7 @@ impl StorageManager {
         self.storage.encryption_key.is_some()
     }
 
-    pub async fn get(&mut self, key: &str) -> crate::Result<String> {
+    pub async fn get(&self, key: &str) -> crate::Result<String> {
         self.storage.get(key).await
     }
 
@@ -149,7 +151,7 @@ fn generate_event_key() -> String {
 }
 
 macro_rules! event_manager_impl {
-    ($event_ty:ty, $index_vec:ident, $index_key: expr, $save_fn_name: ident) => {
+    ($event_ty:ty, $index_vec:ident, $index_key: expr, $save_fn_name: ident, $get_fn_name: ident) => {
         impl StorageManager {
             pub async fn $save_fn_name(&mut self, event: &$event_ty) -> crate::Result<()> {
                 let key = generate_event_key();
@@ -161,15 +163,37 @@ macro_rules! event_manager_impl {
                 self.storage.set($index_key, &self.$index_vec).await?;
                 self.storage.set(&key, event).await
             }
+
+            pub async fn $get_fn_name<T: Into<Option<Timestamp>>>(
+                &mut self,
+                count: usize,
+                skip: usize,
+                from_timestamp: T,
+            ) -> crate::Result<Vec<$event_ty>> {
+                let mut events = Vec::new();
+                let from_timestamp = from_timestamp.into().unwrap_or(0);
+                for index in self
+                    .$index_vec
+                    .iter()
+                    .filter(|i| i.timestamp >= from_timestamp)
+                    .skip(skip)
+                    .take(count)
+                {
+                    let event_json = self.get(&index.key).await?;
+                    events.push(serde_json::from_str(&event_json)?);
+                }
+                Ok(events)
+            }
         }
     };
 }
 
 event_manager_impl!(
-    BalanceEvent<'_>,
+    BalanceEvent,
     balance_change_indexation,
     "iota-wallet-balance-change-events",
-    save_balance_change
+    save_balance_change_event,
+    get_balance_change_events
 );
 
 pub(crate) type StorageHandle = Arc<Mutex<StorageManager>>;
@@ -243,7 +267,7 @@ pub trait StorageAdapter {
         "custom-adapter"
     }
     /// Gets the record associated with the given key from the storage.
-    async fn get(&mut self, key: &str) -> crate::Result<String>;
+    async fn get(&self, key: &str) -> crate::Result<String>;
     /// Saves or updates a record on the storage.
     async fn set(&mut self, key: &str, record: String) -> crate::Result<()>;
     /// Removes a record from the storage.
@@ -349,7 +373,7 @@ mod tests {
         struct MyAdapter;
         #[async_trait::async_trait]
         impl StorageAdapter for MyAdapter {
-            async fn get(&mut self, _key: &str) -> crate::Result<String> {
+            async fn get(&self, _key: &str) -> crate::Result<String> {
                 Ok("MY_ADAPTER_GET_RESPONSE".to_string())
             }
             async fn set(&mut self, _key: &str, _record: String) -> crate::Result<()> {

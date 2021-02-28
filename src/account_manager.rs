@@ -1087,7 +1087,12 @@ async fn poll(accounts: AccountStore, storage_file_path: PathBuf, is_mqtt_monito
                 .filter(|message| !account_before_sync.messages().contains(message))
             {
                 log::info!("[POLLING] new message: {:?}", message.id());
-                emit_transaction_event(TransactionEventType::NewTransaction, account_after_sync.id(), &message).await;
+                emit_transaction_event(
+                    TransactionEventType::NewTransaction,
+                    account_after_sync.id().to_string(),
+                    &message,
+                )
+                .await;
             }
 
             // confirmation state change event
@@ -1098,7 +1103,7 @@ async fn poll(accounts: AccountStore, storage_file_path: PathBuf, is_mqtt_monito
                 };
                 if changed {
                     log::info!("[POLLING] message confirmed: {:?}", message.id());
-                    emit_confirmation_state_change(account_after_sync.id(), &message, true).await;
+                    emit_confirmation_state_change(account_after_sync.id().to_string(), &message, true).await;
                 }
             }
         }
@@ -1154,7 +1159,7 @@ async fn poll(accounts: AccountStore, storage_file_path: PathBuf, is_mqtt_monito
         let account_id = account.id();
 
         for message in &retried_data.reattached {
-            emit_transaction_event(TransactionEventType::Reattachment, &account_id, &message).await;
+            emit_transaction_event(TransactionEventType::Reattachment, account_id.to_string(), &message).await;
         }
 
         account.append_messages(retried_data.reattached);

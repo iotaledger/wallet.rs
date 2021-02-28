@@ -53,7 +53,7 @@ impl StorageAdapter for SqliteStorageAdapter {
         STORAGE_ID
     }
 
-    async fn get(&mut self, key: &str) -> crate::Result<String> {
+    async fn get(&self, key: &str) -> crate::Result<String> {
         let sql = "SELECT value FROM iota_wallet_records WHERE key = ?1 LIMIT 1";
         let params = vec![ToSqlOutput::Owned(Value::Text(key.to_string()))];
 

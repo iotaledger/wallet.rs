@@ -44,10 +44,10 @@ impl BalanceChange {
 /// The balance change event data.
 #[derive(Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
-pub struct BalanceEvent<'a> {
+pub struct BalanceEvent {
     /// The associated account identifier.
     #[serde(rename = "accountId")]
-    pub account_id: &'a str,
+    pub account_id: String,
     /// The associated address.
     #[serde(with = "crate::serde::iota_address_serde")]
     pub address: AddressWrapper,
@@ -59,15 +59,15 @@ pub struct BalanceEvent<'a> {
 /// A transaction-related event data.
 #[derive(Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
-pub struct TransactionEvent<'a> {
+pub struct TransactionEvent {
     #[serde(rename = "accountId")]
     /// The associated account identifier.
-    pub account_id: &'a str,
+    pub account_id: String,
     /// The event message.
     pub message: Message,
 }
 
-impl<'a> TransactionEvent<'a> {
+impl TransactionEvent {
     #[doc(hidden)]
     pub fn cloned_message(&self) -> Message {
         self.message.clone()
@@ -77,10 +77,10 @@ impl<'a> TransactionEvent<'a> {
 /// A transaction-related event data.
 #[derive(Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
-pub struct TransactionConfirmationChangeEvent<'a> {
+pub struct TransactionConfirmationChangeEvent {
     #[serde(rename = "accountId")]
     /// The associated account identifier.
-    pub account_id: &'a str,
+    pub account_id: String,
     /// The event message.
     pub message: Message,
     /// The confirmed state of the transaction.
@@ -104,7 +104,7 @@ macro_rules! event_handler_impl {
 struct BalanceEventHandler {
     id: EventId,
     /// The on event callback.
-    on_event: Box<dyn Fn(&BalanceEvent<'_>) + Send>,
+    on_event: Box<dyn Fn(&BalanceEvent) + Send>,
 }
 
 event_handler_impl!(BalanceEventHandler);
@@ -128,7 +128,7 @@ struct TransactionEventHandler {
     id: EventId,
     event_type: TransactionEventType,
     /// The on event callback.
-    on_event: Box<dyn Fn(&TransactionEvent<'_>) + Send>,
+    on_event: Box<dyn Fn(&TransactionEvent) + Send>,
 }
 
 event_handler_impl!(TransactionEventHandler);
@@ -136,7 +136,7 @@ event_handler_impl!(TransactionEventHandler);
 struct TransactionConfirmationChangeEventHandler {
     id: EventId,
     /// The on event callback.
-    on_event: Box<dyn Fn(&TransactionConfirmationChangeEvent<'_>) + Send>,
+    on_event: Box<dyn Fn(&TransactionConfirmationChangeEvent) + Send>,
 }
 
 event_handler_impl!(TransactionConfirmationChangeEventHandler);
@@ -202,7 +202,7 @@ fn stronghold_status_change_listeners() -> &'static StrongholdStatusChangeListen
 }
 
 /// Listen to balance changes.
-pub async fn on_balance_change<F: Fn(&BalanceEvent<'_>) + Send + 'static>(cb: F) -> EventId {
+pub async fn on_balance_change<F: Fn(&BalanceEvent) + Send + 'static>(cb: F) -> EventId {
     let mut l = balance_listeners().lock().await;
     let id = generate_event_id();
     l.push(BalanceEventHandler {
@@ -225,7 +225,7 @@ pub(crate) async fn emit_balance_change(
 ) -> crate::Result<()> {
     let listeners = balance_listeners().lock().await;
     let event = BalanceEvent {
-        account_id: account.id(),
+        account_id: account.id().to_string(),
         address: address.clone(),
         balance_change,
     };
@@ -234,7 +234,7 @@ pub(crate) async fn emit_balance_change(
         .await?
         .lock()
         .await
-        .save_balance_change(&event)
+        .save_balance_change_event(&event)
         .await?;
 
     for listener in listeners.deref() {
@@ -245,7 +245,7 @@ pub(crate) async fn emit_balance_change(
 }
 
 /// Emits a transaction-related event.
-pub(crate) async fn emit_transaction_event(event_type: TransactionEventType, account_id: &str, message: &Message) {
+pub(crate) async fn emit_transaction_event(event_type: TransactionEventType, account_id: String, message: &Message) {
     let listeners = transaction_listeners().lock().await;
     let event = TransactionEvent {
         account_id,
@@ -259,7 +259,7 @@ pub(crate) async fn emit_transaction_event(event_type: TransactionEventType, acc
 }
 
 /// Emits a transaction confirmation state change event.
-pub(crate) async fn emit_confirmation_state_change(account_id: &str, message: &Message, confirmed: bool) {
+pub(crate) async fn emit_confirmation_state_change(account_id: String, message: &Message, confirmed: bool) {
     let listeners = transaction_confirmation_change_listeners().lock().await;
     let event = TransactionConfirmationChangeEvent {
         account_id,
@@ -272,7 +272,7 @@ pub(crate) async fn emit_confirmation_state_change(account_id: &str, message: &M
 }
 
 /// Adds a transaction-related event listener.
-async fn add_transaction_listener<F: Fn(&TransactionEvent<'_>) + Send + 'static>(
+async fn add_transaction_listener<F: Fn(&TransactionEvent) + Send + 'static>(
     event_type: TransactionEventType,
     cb: F,
 ) -> EventId {
@@ -287,7 +287,7 @@ async fn add_transaction_listener<F: Fn(&TransactionEvent<'_>) + Send + 'static>
 }
 
 /// Listen to new messages.
-pub async fn on_new_transaction<F: Fn(&TransactionEvent<'_>) + Send + 'static>(cb: F) -> EventId {
+pub async fn on_new_transaction<F: Fn(&TransactionEvent) + Send + 'static>(cb: F) -> EventId {
     add_transaction_listener(TransactionEventType::NewTransaction, cb).await
 }
 
@@ -297,7 +297,7 @@ pub async fn remove_new_transaction_listener(id: &EventId) {
 }
 
 /// Listen to transaction confirmation state change.
-pub async fn on_confirmation_state_change<F: Fn(&TransactionConfirmationChangeEvent<'_>) + Send + 'static>(
+pub async fn on_confirmation_state_change<F: Fn(&TransactionConfirmationChangeEvent) + Send + 'static>(
     cb: F,
 ) -> EventId {
     let mut l = transaction_confirmation_change_listeners().lock().await;
@@ -315,7 +315,7 @@ pub async fn remove_confirmation_state_change_listener(id: &EventId) {
 }
 
 /// Listen to transaction reattachment.
-pub async fn on_reattachment<F: Fn(&TransactionEvent<'_>) + Send + 'static>(cb: F) -> EventId {
+pub async fn on_reattachment<F: Fn(&TransactionEvent) + Send + 'static>(cb: F) -> EventId {
     add_transaction_listener(TransactionEventType::Reattachment, cb).await
 }
 
@@ -325,7 +325,7 @@ pub async fn remove_reattachment_listener(id: &EventId) {
 }
 
 /// Listen to transaction broadcast.
-pub async fn on_broadcast<F: Fn(&TransactionEvent<'_>) + Send + 'static>(cb: F) -> EventId {
+pub async fn on_broadcast<F: Fn(&TransactionEvent) + Send + 'static>(cb: F) -> EventId {
     add_transaction_listener(TransactionEventType::Broadcast, cb).await
 }
 
