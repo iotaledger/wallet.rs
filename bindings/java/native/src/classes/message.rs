@@ -7,6 +7,7 @@ use iota_wallet::{
 
 use chrono::prelude::{DateTime, Utc};
 
+#[derive(PartialEq)]
 pub struct Message {
     message: MessageRust
 }

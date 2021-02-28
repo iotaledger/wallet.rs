@@ -130,16 +130,16 @@ foreign_typemap!(
     ($p:r_type) Vec<Message> <= internal_aliases::JForeignObjectsArray<Message> {
         $out = jobject_array_to_vec_of_objects(env, $p);
     };
-    ($p:f_type, option = "NoNullAnnotations") <= "swig_f_type!(Message) []";
+    ($p:f_type, option = "NoNullAnnotations") <= "Message[]";
     ($p:f_type, option = "NullAnnotations")
-                  <= "@NonNull swig_f_type!(Message, NoNullAnnotations) []";
+                  <= "@NonNull Message[]";
 );
 
 foreign_typemap!(
     ($p:r_type) Vec<Address> <= internal_aliases::JForeignObjectsArray<Address> {
         $out = jobject_array_to_vec_of_objects(env, $p);
     };
-    ($p:f_type, option = "NoNullAnnotations") <= "swig_f_type!(Address) []";
+    ($p:f_type, option = "NoNullAnnotations") <= "Address[]";
     ($p:f_type, option = "NullAnnotations")
-                  <= "@NonNull swig_f_type!(Address, NoNullAnnotations) []";
+                  <= "@NonNull Address[]";
 );

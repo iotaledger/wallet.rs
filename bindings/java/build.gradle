@@ -33,5 +33,5 @@ allprojects {
 }
 // Android deleting, TODO move to examples app
 task clean(type: Delete) {
-    delete rootProject.buildDir
+    delete "${rootDir}/native/bin/"
 }

@@ -2,11 +2,11 @@
 package org.iota.wallet;
 
 
-public final class MessageId {
+public final class Address {
     public boolean equals(Object obj) {
         boolean equal = false;
-        if (obj instanceof MessageId)
-        equal = ((MessageId)obj).rustEq(this);
+        if (obj instanceof Address)
+        equal = ((Address)obj).rustEq(this);
         return equal;
     }
     public int hashCode() {
@@ -14,18 +14,17 @@ public final class MessageId {
     }
 
 
-    public static MessageId fromString(String str_rep) {
-        long ret = do_fromString(str_rep);
-        MessageId convRet = new MessageId(InternalPointerMarker.RAW_PTR, ret);
+    private Address() {}
 
-        return convRet;
-    }
-    private static native long do_fromString(String str_rep);
+    private final boolean rustEq(Address o) {
+        long a0 = o.mNativeObj;
+        boolean ret = do_rustEq(mNativeObj, a0);
 
-    public MessageId() {
-        mNativeObj = init();
+        JNIReachabilityFence.reachabilityFence1(o);
+
+        return ret;
     }
-    private static native long init();
+    private static native boolean do_rustEq(long self, long o);
 
     public synchronized void delete() {
         if (mNativeObj != 0) {
@@ -43,7 +42,7 @@ public final class MessageId {
         }
     }
     private static native void do_delete(long me);
-    /*package*/ MessageId(InternalPointerMarker marker, long ptr) {
+    /*package*/ Address(InternalPointerMarker marker, long ptr) {
         assert marker == InternalPointerMarker.RAW_PTR;
         this.mNativeObj = ptr;
     }

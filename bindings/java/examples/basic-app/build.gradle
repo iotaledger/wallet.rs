@@ -7,7 +7,7 @@ plugins {
 }
 
 dependencies {
-    implementation project(':lib')
+    implementation project(':native')
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
@@ -16,10 +16,12 @@ dependencies {
 tasks.withType(Test) {
     systemProperties System.properties
 }
-
+startScripts {
+    classpath += files('../../native/target/debug')
+}
 test {
+    println file("../../native/target/debug")
     systemProperty "java.library.path", file("../../native/target/debug")
 }
-test.outputs.upToDateWhen { false }
 
-mainClassName = 'org.iota.ExampleApp'
+mainClassName = 'org.example.ExampleApp'

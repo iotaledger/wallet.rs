@@ -135,7 +135,6 @@ foreign_class!(class ClientOptions{
 });
 
 foreign_class!(
-    #[derive(PartialEq)]
     class Value {
         self_type Value;
         constructor Value::new(value: u64, unit: ValueUnit) -> Value;
@@ -145,7 +144,6 @@ foreign_class!(
     }
 );
 foreign_class!(
-    #[derive(PartialEq)]
     class MessageId {
         self_type MessageId;
         fn MessageId::fromString(str_rep: &str) -> MessageId {
@@ -160,6 +158,7 @@ foreign_class!(
     class Message {
         self_type Message;
         private constructor = empty;
+        private fn Message::eq(&self, o: &Message) -> bool; alias rustEq;
         fn Message::id(&self) -> MessageId;
         fn Message::version(&self) -> u64;
         fn Message::parents(&self) -> Vec<MessageId>;
@@ -177,9 +176,10 @@ foreign_class!(
 
 foreign_class!(
     #[derive(PartialEq)]
-    class Address{
+    class Address {
         self_type Address;
         private constructor = empty;
+        private fn Address::eq(&self, o: &Address) -> bool; alias rustEq;
     }
 );
 

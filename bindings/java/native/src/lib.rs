@@ -1,3 +1,6 @@
+// Used in verifying correct binding
+pub mod verifylink;
+
 mod java_glue;
 mod jni_c_header;
 mod classes;

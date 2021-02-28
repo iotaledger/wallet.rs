@@ -1,33 +1,33 @@
-buildscript {
-    repositories {
-        jcenter()
-        google()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:3.6.3'
-        classpath "org.codehaus.groovy:groovy-json:2.5.6"
-
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
-    }
+plugins {
+    // Apply the java plugin to add support for Java
+    id 'java-library'
 }
 
-allprojects {
-    repositories {
-        jcenter()
-        maven {
-            url "https://maven.google.com"
-        }
-    }
+repositories {
+    // Use jcenter for resolving dependencies.
+    // You can declare any Maven/Ivy/file repository here.
+    jcenter()
 }
 
-task clean(type: Delete) {
-    delete rootProject.buildDir, 'app/src/main/libs'
+dependencies {
+    // Use JUnit test framework
+    testImplementation 'junit:junit:4.13'
+}
 
-    // Optionally run cargo clean - this will result in huge rebuild times
-    // as cargo will redownload and recompile all dependencies
-    /*exec {
-        workingDir '.'
-        commandLine 'cargo', 'clean'
-    }*/
+tasks.withType(Test) {
+    systemProperties System.properties
+}
+
+test {
+    systemProperty "java.library.path", file("./target/debug")
+}
+
+task cargoBuild(type: Exec) {
+    doFirst {
+        workingDir "./"
+        commandLine 'cargo', 'build'
+    }
+}
+compileJava {
+    dependsOn cargoBuild
 }

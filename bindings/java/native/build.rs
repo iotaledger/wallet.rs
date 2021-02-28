@@ -18,7 +18,7 @@ fn main() {
         .contains("JNI_VERSION_9");
 
     let java_cfg = JavaConfig::new(
-        Path::new("java").join("org").join("iota").join("wallet"),
+        Path::new("src").join("main").join("java").join("org").join("iota").join("wallet"),
         "org.iota.wallet".into(),
     )
     .use_reachability_fence(if have_java_9 {
@@ -43,7 +43,7 @@ fn main() {
 
     println!("cargo:rerun-if-changed={}", in_src.display());
     println!("cargo:rerun-if-changed={}", test_opt_rsc.display());
-    println!("cargo:rerun-if-changed=src/chrono_include.rs");
+    println!("cargo:rerun-if-changed=src/foreign_types/chrono_include.rs");
 }
 
 fn gen_jni_bindings(jni_c_headers_rs: &Path) {

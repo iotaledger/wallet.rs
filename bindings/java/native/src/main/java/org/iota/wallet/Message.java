@@ -16,6 +16,16 @@ public final class Message {
 
     private Message() {}
 
+    private final boolean rustEq(Message o) {
+        long a0 = o.mNativeObj;
+        boolean ret = do_rustEq(mNativeObj, a0);
+
+        JNIReachabilityFence.reachabilityFence1(o);
+
+        return ret;
+    }
+    private static native boolean do_rustEq(long self, long o);
+
     public final MessageId id() {
         long ret = do_id(mNativeObj);
         MessageId convRet = new MessageId(InternalPointerMarker.RAW_PTR, ret);

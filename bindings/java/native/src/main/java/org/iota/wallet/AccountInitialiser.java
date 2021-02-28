@@ -33,21 +33,21 @@ public final class AccountInitialiser {
     }
     private static native long do_created_at(long self, long created_at);
 
-    public final AccountInitialiser messages(swig_f_type!(Message) [] messages) {
+    public final AccountInitialiser messages(Message[] messages) {
         long ret = do_messages(mNativeObj, messages);
         AccountInitialiser convRet = new AccountInitialiser(InternalPointerMarker.RAW_PTR, ret);
 
         return convRet;
     }
-    private static native long do_messages(long self, swig_f_type!(Message) [] messages);
+    private static native long do_messages(long self, Message[] messages);
 
-    public final AccountInitialiser addresses(swig_f_type!(Address) [] addresses) {
+    public final AccountInitialiser addresses(Address[] addresses) {
         long ret = do_addresses(mNativeObj, addresses);
         AccountInitialiser convRet = new AccountInitialiser(InternalPointerMarker.RAW_PTR, ret);
 
         return convRet;
     }
-    private static native long do_addresses(long self, swig_f_type!(Address) [] addresses);
+    private static native long do_addresses(long self, Address[] addresses);
 
     public final AccountInitialiser skip_persistance() {
         long ret = do_skip_persistance(mNativeObj);

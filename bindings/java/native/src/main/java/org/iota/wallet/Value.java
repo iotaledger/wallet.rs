@@ -3,16 +3,6 @@ package org.iota.wallet;
 
 
 public final class Value {
-    public boolean equals(Object obj) {
-        boolean equal = false;
-        if (obj instanceof Value)
-        equal = ((Value)obj).rustEq(this);
-        return equal;
-    }
-    public int hashCode() {
-        return (int)mNativeObj;
-    }
-
 
     public Value(long value, ValueUnit unit) {
         int a1 = unit.getValue();

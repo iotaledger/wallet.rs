@@ -1,4 +1,4 @@
-package org.iota;
+package org.example;
 
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
@@ -6,10 +6,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.nio.file.Path;
 
-import wallet.NativeAPI;
-import wallet.types.*;
-import wallet.accountmanager.*;
-import wallet.account.*;
+import org.iota.NativeAPI;
+import org.iota.wallet.*;
 
 public class ExampleApp {
     public static void main(String[] args) {
@@ -28,17 +26,19 @@ public class ExampleApp {
         System.out.println("Loaded!");
 
         Path storageFolder = Paths.get("./my-db");
-        AccountManager manager = 
-            new AccountManager.Builder()
-                .withStoragePath(storageFolder)
-                .finish();
 
-        ClientOptions clientOptions = new ClientOptions.Builder()
-            .withNode("http://api.lb-0.testnet.chrysalis2.com")
+        ManagerOptions options = new ManagerOptions();
+        options.setStoragePath(storageFolder.toString());
+
+        AccountManager manager = new AccountManager(options);
+
+        ClientOptions clientOptions = new ClientOptionsBuilder()
+            .with_node("http://api.lb-0.testnet.chrysalis2.com")
             .build();
 
-        Account account = manager
-            .createAccount(clientOptions);
+            /*
+        Object account = manager
+            .create_account(clientOptions);
 
         System.out.println("alias " + account.alias());
         System.out.println("balance " + account.balance());
@@ -51,5 +51,6 @@ public class ExampleApp {
         System.out.println("acc messages " + account.listMessages(5, 0, MessageType.FAILED));
         System.out.println("acc spent addresses " + account.listSpentAddresses());
         System.out.println("acc unspent addresses " + account.listUnspentAddresses());
+        */
     }
 }
