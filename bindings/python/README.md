@@ -85,7 +85,7 @@ Creates a new instance of the AccountManager.
 | [storage_password]               | <code>str</code>  | <code>undefined</code>    | The storage password to encrypt/decrypt accounts                                               |
 | [polling_interval]               | <code>int</code>  | <code>30000</code>        | The polling interval in milliseconds                                                           |
 | [automatic_output_consolidation] | <code>bool</code> | <code>true</code>         | Disables the automatic output consolidation process                                            |
-| [output_consolidation_threshold] | <code>int</code>  | <code>500</code>          | Sets the number of outputs an address must have to trigger the automatic consolidation process |
+| [output_consolidation_threshold] | <code>int</code>  | <code>100</code>          | Sets the number of outputs an address must have to trigger the automatic consolidation process |
 
 Note: if the `storage_path` is set, then the `storage` needs to be set too. An exception will be thrown when errors happened.
 

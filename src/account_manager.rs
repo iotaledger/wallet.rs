@@ -48,7 +48,7 @@ use zeroize::Zeroize;
 /// The default storage folder.
 pub const DEFAULT_STORAGE_FOLDER: &str = "./storage";
 
-const DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD: usize = 500;
+const DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD: usize = 100;
 
 /// The default stronghold storage file name.
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
