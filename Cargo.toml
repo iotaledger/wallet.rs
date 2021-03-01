@@ -34,7 +34,7 @@ iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "
 riker = { version = "0.4", optional = true }
 blake2 = { version = "0.9", optional = true }
 slog = { version = "2.7", optional = true }
-zeroize = { version = "1.2", features = ["zeroize_derive"], optional = true }
+zeroize = { version = "1.2", features = ["zeroize_derive"] }
 
 # ledger hardware wallets
 iota-ledger = { git = "https://github.com/iotaledger/ledger.rs", branch = "develop", optional = true  }
@@ -52,8 +52,8 @@ anyhow = "1.0"
 
 [features]
 default = ["stronghold", "stronghold-storage"]
-stronghold = ["iota-stronghold", "riker", "blake2", "slog", "zeroize"]
-stronghold-storage = ["iota-stronghold", "riker", "blake2", "slog", "zeroize"]
+stronghold = ["iota-stronghold", "riker", "blake2", "slog"]
+stronghold-storage = ["iota-stronghold", "riker", "blake2", "slog"]
 sqlite-storage = ["rusqlite"]
 ledger-nano = ["iota-ledger"]
 ledger-nano-simulator = ["iota-ledger"]

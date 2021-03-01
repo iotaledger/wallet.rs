@@ -522,7 +522,7 @@ impl Account {
                 .await?
                 .lock()
                 .await
-                .set(&self.id, serde_json::to_string(&self)?)
+                .save_account(&self.id, self)
                 .await?;
         }
         Ok(())
