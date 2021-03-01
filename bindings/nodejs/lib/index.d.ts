@@ -140,6 +140,23 @@ export declare interface ManagerOptions {
   storagePassword?: string
 }
 
+export declare interface BalanceChangeEvent {
+  accountId: string
+  address: string
+  balanceChange: { spent: number, received: number }
+}
+
+export declare interface TransactionConfirmationEvent {
+  accountId: string
+  message: Message
+  confirmed: boolean
+}
+
+export declare interface TransactionEvent {
+  accountId: string
+  message: Message
+}
+
 export declare class AccountManager {
   constructor(options: ManagerOptions)
   setStoragePassword(password: string): void
@@ -157,6 +174,12 @@ export declare class AccountManager {
   importAccounts(source: string, password: string): void
   isLatestAddressUnused(): Promise<boolean>
   setClientOptions(options: ClientOptions): void
+  // events
+  getBalanceChangeEvents(count?: number, skip?: number, fromTimestamp?: number): BalanceChangeEvent[]
+  getTransactionConfirmationEvents(count?: number, skip?: number, fromTimestamp?: number): TransactionConfirmationEvent[]
+  getNewTransactionEvents(count?: number, skip?: number, fromTimestamp?: number): TransactionEvent[]
+  getReattachmentEvents(count?: number, skip?: number, fromTimestamp?: number): TransactionEvent[]
+  getBroadcastEvents(count?: number, skip?: number, fromTimestamp?: number): TransactionEvent[]
 }
 
 export declare type Event = 'ErrorThrown' |

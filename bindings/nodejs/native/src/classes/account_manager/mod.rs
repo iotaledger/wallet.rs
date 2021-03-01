@@ -77,6 +77,41 @@ struct ManagerOptions {
     storage_password: Option<String>,
 }
 
+macro_rules! event_getter {
+    ($cx: ident, $get_fn_name: ident) => {{
+        let count = match $cx.argument_opt(0) {
+            Some(arg) => arg.downcast::<JsNumber>().or_throw(&mut $cx)?.value() as usize,
+            None => 0,
+        };
+        let skip = match $cx.argument_opt(1) {
+            Some(arg) => arg.downcast::<JsNumber>().or_throw(&mut $cx)?.value() as usize,
+            None => 0,
+        };
+        let from_timestamp = match $cx.argument_opt(2) {
+            Some(arg) => Some(arg.downcast::<JsNumber>().or_throw(&mut $cx)?.value() as i64),
+            None => None,
+        };
+
+        let events = {
+            let this = $cx.this();
+            let guard = $cx.lock();
+            let ref_ = &this.borrow(&guard).0;
+            crate::block_on(async move {
+                let manager = ref_.read().await;
+                manager.$get_fn_name(count, skip, from_timestamp).await.unwrap()
+            })
+        };
+
+        let js_array = JsArray::new(&mut $cx, events.len() as u32);
+        for (index, event) in events.into_iter().enumerate() {
+            let js_event = neon_serde::to_value(&mut $cx, &event)?;
+            js_array.set(&mut $cx, index as u32, js_event)?;
+        }
+
+        Ok(js_array.upcast())
+    }};
+}
+
 declare_types! {
     pub class JsAccountManager for AccountManagerWrapper {
         init(mut cx) {
@@ -386,6 +421,26 @@ declare_types! {
             }
 
             Ok(cx.undefined().upcast())
+        }
+
+        method getBalanceChangeEvents(mut cx) {
+            event_getter!(cx, get_balance_change_events)
+        }
+
+        method getTransactionConfirmationEvents(mut cx) {
+            event_getter!(cx, get_transaction_confirmation_events)
+        }
+
+        method getNewTransactionEvents(mut cx) {
+            event_getter!(cx, get_new_transaction_events)
+        }
+
+        method getReattachmentEvents(mut cx) {
+            event_getter!(cx, get_reattachment_events)
+        }
+
+        method getBroadcastEvents(mut cx) {
+            event_getter!(cx, get_broadcast_events)
         }
     }
 }

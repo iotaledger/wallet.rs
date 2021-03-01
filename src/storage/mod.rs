@@ -178,13 +178,16 @@ macro_rules! event_manager_impl {
             ) -> crate::Result<Vec<$event_ty>> {
                 let mut events = Vec::new();
                 let from_timestamp = from_timestamp.into().unwrap_or(0);
-                for index in self
+                let iter = self
                     .$index_vec
                     .iter()
                     .filter(|i| i.timestamp >= from_timestamp)
-                    .skip(skip)
-                    .take(count)
-                {
+                    .skip(skip);
+                for index in if count == 0 {
+                    iter.collect::<Vec<&EventIndexation>>()
+                } else {
+                    iter.take(count).collect::<Vec<&EventIndexation>>()
+                } {
                     let event_json = self.get(&index.key).await?;
                     events.push(serde_json::from_str(&event_json)?);
                 }

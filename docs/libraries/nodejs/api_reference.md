@@ -162,6 +162,66 @@ Updates the client options for all accounts.
 | ------- | -------------------------------------------- | ----------------- | ------------------------------ |
 | options | <code>[ClientOptions](#clientoptions)</code> | <code>null</code> | The new account client options |
 
+#### getBalanceChangeEvents([count, skip, fromTimestamp])
+
+Gets the persisted balance change events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, address: string, balanceChange: { spent: number, received: number } }
+
+#### getTransactionConfirmationEvents([count, skip, fromTimestamp])
+
+Gets the persisted transaction confirmation change events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, message: Message, confirmed: boolean }
+
+#### getNewTransactionEvents([count, skip, fromTimestamp])
+
+Gets the persisted new transaction events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, message: Message }
+
+#### getReattachmentEvents([count, skip, fromTimestamp])
+
+Gets the persisted transaction reattachment events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, message: Message }
+
+#### getBroadcastEvents([count, skip, fromTimestamp])
+
+Gets the persisted transaction broadcast events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, message: Message }
+
 ### SyncedAccount
 
 #### send(address, amount[, options])

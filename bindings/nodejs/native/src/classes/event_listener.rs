@@ -41,26 +41,26 @@ impl TryFrom<&str> for EventType {
     }
 }
 
-fn listen(event_type: EventType, sender: Sender<String>) -> EventId {
+async fn listen(event_type: EventType, sender: Sender<String>) -> EventId {
     match event_type {
         EventType::ErrorThrown => on_error(move |error| {
             let _ = sender.send(serde_json::to_string(&error).unwrap());
         }),
         EventType::BalanceChange => on_balance_change(move |event| {
             let _ = sender.send(serde_json::to_string(&event).unwrap());
-        }),
+        }).await,
         EventType::NewTransaction => on_new_transaction(move |event| {
             let _ = sender.send(serde_json::to_string(&event).unwrap());
-        }),
+        }).await,
         EventType::ConfirmationStateChange => on_confirmation_state_change(move |event| {
             let _ = sender.send(serde_json::to_string(&event).unwrap());
-        }),
+        }).await,
         EventType::Reattachment => on_reattachment(move |event| {
             let _ = sender.send(serde_json::to_string(&event).unwrap());
-        }),
+        }).await,
         EventType::Broadcast => on_broadcast(move |event| {
             let _ = sender.send(serde_json::to_string(&event).unwrap());
-        }),
+        }).await,
     }
 }
 
@@ -97,7 +97,7 @@ declare_types! {
             let event = EventType::try_from(cx.argument::<JsString>(0)?.value().as_str()).expect("invalid event type");
             let (tx, rx) = channel();
 
-            listen(event, tx);
+            crate::block_on(listen(event, tx));
 
             Ok(EventListener {
                 rx: Arc::new(Mutex::new(rx)),
