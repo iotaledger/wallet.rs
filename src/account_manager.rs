@@ -174,7 +174,6 @@ impl AccountManagerBuilder {
     }
 
     /// Disables the automatic output consolidation process.
-    /// You must do a manual consolidation before the address output count reach 1000.
     pub fn with_automatic_output_consolidation_disabled(mut self) -> Self {
         self.automatic_output_consolidation = true;
         self
