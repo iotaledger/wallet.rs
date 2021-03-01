@@ -1206,9 +1206,7 @@ async fn poll(
             }
         }
         let retried_messages = retry_unconfirmed_transactions(&synced_accounts).await?;
-        if automatic_output_consolidation {
-            consolidate_outputs(&synced_accounts).await?;
-        }
+        consolidate_outputs_if_needed(automatic_output_consolidation, &synced_accounts).await?;
         retried_messages
     } else {
         log::info!("[POLLING] skipping syncing process because MQTT is running");
@@ -1254,9 +1252,7 @@ async fn poll(
             });
         }
 
-        if automatic_output_consolidation {
-            consolidate_outputs(&synced_accounts).await?;
-        }
+        consolidate_outputs_if_needed(automatic_output_consolidation, &synced_accounts).await?;
 
         retried_messages
     };
@@ -1330,9 +1326,28 @@ struct RetriedData {
     account_handle: AccountHandle,
 }
 
-async fn consolidate_outputs(synced_accounts: &[SyncedAccount]) -> crate::Result<()> {
+#[allow(unused_mut)]
+async fn consolidate_outputs_if_needed(
+    mut automatic_consolidation: bool,
+    synced_accounts: &[SyncedAccount],
+) -> crate::Result<()> {
     for synced in synced_accounts {
-        synced.consolidate_outputs().await?;
+        #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+        {
+            let account = synced.account_handle.read().await;
+            let signer_type = account.signer_type();
+            if signer_type == &SignerType::LedgerNano || signer_type == &SignerType::LedgerNanoSimulator {
+                let addresses = synced.account_handle.output_consolidation_addresses().await;
+                for address in addresses {
+                    crate::event::emit_address_consolidation_needed(&account, address).await;
+                }
+                // on ledger we do not consolidate outputs automatically
+                automatic_consolidation = false;
+            }
+        }
+        if automatic_consolidation {
+            synced.consolidate_outputs().await?;
+        }
     }
     Ok(())
 }

@@ -56,6 +56,18 @@ pub struct BalanceEvent {
     pub balance_change: BalanceChange,
 }
 
+/// The `address consolidation needed` data.
+#[derive(Getters, Serialize, Deserialize)]
+#[getset(get = "pub")]
+pub struct AddressConsolidationNeeded {
+    /// The associated account identifier.
+    #[serde(rename = "accountId")]
+    pub account_id: String,
+    /// The associated address.
+    #[serde(with = "crate::serde::iota_address_serde")]
+    pub address: AddressWrapper,
+}
+
 /// A transaction-related event data.
 #[derive(Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
@@ -150,12 +162,24 @@ struct StrongholdStatusChangeEventHandler {
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
 event_handler_impl!(StrongholdStatusChangeEventHandler);
 
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+struct AddressConsolidationNeededHandler {
+    id: EventId,
+    /// The on event callback.
+    on_event: Box<dyn Fn(&AddressConsolidationNeeded) + Send>,
+}
+
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+event_handler_impl!(AddressConsolidationNeededHandler);
+
 type BalanceListeners = Arc<Mutex<Vec<BalanceEventHandler>>>;
 type TransactionListeners = Arc<Mutex<Vec<TransactionEventHandler>>>;
 type TransactionConfirmationChangeListeners = Arc<Mutex<Vec<TransactionConfirmationChangeEventHandler>>>;
 type ErrorListeners = Arc<StdMutex<Vec<ErrorHandler>>>;
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
 type StrongholdStatusChangeListeners = Arc<Mutex<Vec<StrongholdStatusChangeEventHandler>>>;
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+type AddressConsolidationNeededListeners = Arc<Mutex<Vec<AddressConsolidationNeededHandler>>>;
 
 fn generate_event_id() -> EventId {
     let mut id = [0; 32];
@@ -198,6 +222,13 @@ fn error_listeners() -> &'static ErrorListeners {
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
 fn stronghold_status_change_listeners() -> &'static StrongholdStatusChangeListeners {
     static LISTENERS: Lazy<StrongholdStatusChangeListeners> = Lazy::new(Default::default);
+    &LISTENERS
+}
+
+/// Gets the address consolodation needed listeners array.
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+fn on_address_consolidation_needed_listeners() -> &'static AddressConsolidationNeededListeners {
+    static LISTENERS: Lazy<AddressConsolidationNeededListeners> = Lazy::new(Default::default);
     &LISTENERS
 }
 
@@ -423,6 +454,40 @@ pub async fn on_stronghold_status_change<F: Fn(&crate::StrongholdStatus) + Send 
 #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
 pub async fn remove_stronghold_status_change_listener(id: &EventId) {
     remove_event_listener(id, stronghold_status_change_listeners()).await;
+}
+
+/// Listen to `address consolidation needed` events.
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
+pub async fn on_address_consolidation_needed<F: Fn(&AddressConsolidationNeeded) + Send + 'static>(cb: F) -> EventId {
+    let mut l = on_address_consolidation_needed_listeners().lock().await;
+    let id = generate_event_id();
+    l.push(AddressConsolidationNeededHandler {
+        id,
+        on_event: Box::new(cb),
+    });
+    id
+}
+
+/// Removes the balance change listener associated with the given identifier.
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
+pub async fn remove_address_consolidation_needed_listener(id: &EventId) {
+    remove_event_listener(id, on_address_consolidation_needed_listeners()).await;
+}
+
+/// Emits a balance change event.
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+pub(crate) async fn emit_address_consolidation_needed(account: &Account, address: AddressWrapper) {
+    let listeners = on_address_consolidation_needed_listeners().lock().await;
+    let event = AddressConsolidationNeeded {
+        account_id: account.id().to_string(),
+        address,
+    };
+
+    for listener in listeners.deref() {
+        (listener.on_event)(&event);
+    }
 }
 
 #[cfg(test)]

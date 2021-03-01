@@ -76,8 +76,6 @@ async fn main() -> Result<()> {
     // force account update
     let synced = account.sync().await.execute().await?;
 
-    let transfers = synced.get_output_consolidation_transfers().await?;
-    println!("CONSOLIDATION {:?}", transfers);
     let messages = synced.consolidate_outputs().await?;
     println!("MESSAGES {:?}", messages);
 

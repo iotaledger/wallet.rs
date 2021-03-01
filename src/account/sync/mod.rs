@@ -579,7 +579,7 @@ pub struct SyncedAccount {
     /// The associated account handle.
     #[serde(skip)]
     #[getset(get = "pub")]
-    account_handle: AccountHandle,
+    pub(crate) account_handle: AccountHandle,
     /// The account's deposit address.
     #[serde(rename = "depositAddress")]
     #[getset(get = "pub")]
@@ -666,8 +666,7 @@ impl SyncedAccount {
         Ok((addresses, remainder))
     }
 
-    ///
-    pub async fn get_output_consolidation_transfers(&self) -> crate::Result<Vec<Transfer>> {
+    async fn get_output_consolidation_transfers(&self) -> crate::Result<Vec<Transfer>> {
         let mut transfers: Vec<Transfer> = Vec::new();
         // collect the transactions we need to make
         {

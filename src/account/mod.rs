@@ -347,6 +347,19 @@ impl AccountHandle {
     pub(crate) fn locked_addresses(&self) -> Arc<Mutex<Vec<AddressWrapper>>> {
         self.locked_addresses.clone()
     }
+
+    /// Returns the addresses that need output consolidation.
+    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+    pub(crate) async fn output_consolidation_addresses(&self) -> Vec<AddressWrapper> {
+        let mut addresses = Vec::new();
+        let account = self.inner.read().await;
+        for address in account.addresses() {
+            if address.available_outputs(&account).len() >= self.output_consolidation_threshold {
+                addresses.push(address.address().clone());
+            }
+        }
+        addresses
+    }
 }
 
 impl Deref for AccountHandle {
