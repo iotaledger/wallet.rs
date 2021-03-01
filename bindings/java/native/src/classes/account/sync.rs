@@ -73,9 +73,13 @@ impl AccountSynchronizer {
     }
 
     pub fn execute(&mut self) -> Result<SyncedAccount> {
-        let synced_account = crate::block_on(async move {
-            self.synchroniser.borrow_mut().take().unwrap().execute().await
-        }).expect("error syncing account");
+        let synced_account = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async {
+                self.synchroniser.borrow_mut().take().unwrap().execute().await
+            }).expect("error syncing account");
 
         Ok(SyncedAccount {
             synced_account: synced_account

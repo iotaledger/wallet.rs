@@ -34,7 +34,7 @@ public class ExampleApp {
         manager.storeMnemonic(AccountSignerType.Stronghold, null);
 
         ClientOptions clientOptions = new ClientOptionsBuilder()
-            .with_node("http://api.lb-0.testnet.chrysalis2.com")
+            .with_node("https://api.lb-0.testnet.chrysalis2.com")
             .build();
         
         Account account = manager
@@ -43,9 +43,9 @@ public class ExampleApp {
             .initialise();
 
             
-        System.out.println("alias " + account.alias());
-        System.out.println("balance " + account.balance());
-        System.out.println("address: " + account.generate_address());
+        System.out.println("alias: " + account.alias());
+        System.out.println("balance available: " + account.balance().getAvailable());
+        System.out.println("address: " + account.generate_address().getReadable());
 
         
         System.out.println("acc messages " + account.list_messages(5, 0, MessageType.Failed));
@@ -62,7 +62,7 @@ public class ExampleApp {
             Transfer.builder(
                 account.latest_address().address(),
                 150
-            )
+            ).finish()
         );
     }
 }
