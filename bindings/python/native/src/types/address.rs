@@ -90,6 +90,14 @@ impl From<&RustAddressWrapper> for AddressWrapper {
     }
 }
 
+impl From<RustAddressWrapper> for AddressWrapper {
+    fn from(wrapper: RustAddressWrapper) -> Self {
+        Self {
+            inner: wrapper.to_bech32(),
+        }
+    }
+}
+
 impl From<RustWalletAddress> for Address {
     fn from(wallet_address: RustWalletAddress) -> Self {
         Self {

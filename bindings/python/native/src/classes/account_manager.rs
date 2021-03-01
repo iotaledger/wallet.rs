@@ -39,6 +39,37 @@ impl AccountsSynchronizer {
     }
 }
 
+macro_rules! event_getters_impl {
+    ($event_type: ty, $get_fn_name: ident, $get_count_fn_name: ident) => {
+        #[pymethods]
+        impl AccountManager {
+            fn $get_fn_name(
+                &self,
+                count: Option<usize>,
+                skip: Option<usize>,
+                from_timestamp: Option<i64>,
+            ) -> Result<Vec<$event_type>> {
+                crate::block_on(async {
+                    let events = self
+                        .account_manager
+                        .$get_fn_name(count.unwrap_or(0), skip.unwrap_or(0), from_timestamp)
+                        .await?;
+                    let mut parsed_events = Vec::new();
+                    for event in events {
+                        parsed_events.push(event.try_into()?);
+                    }
+                    Ok(parsed_events)
+                })
+            }
+
+            fn $get_count_fn_name(&self, from_timestamp: Option<i64>) -> Result<usize> {
+                crate::block_on(async { self.account_manager.$get_count_fn_name(from_timestamp).await })
+                    .map_err(Into::into)
+            }
+        }
+    };
+}
+
 #[pymethods]
 impl AccountManager {
     #[new]
@@ -235,3 +266,22 @@ impl AccountManager {
         })
     }
 }
+
+event_getters_impl! {
+    BalanceEvent,
+    get_balance_change_events,
+    get_balance_change_event_count
+}
+
+event_getters_impl!(
+    TransactionConfirmationChangeEvent,
+    get_transaction_confirmation_events,
+    get_transaction_confirmation_event_count
+);
+event_getters_impl!(
+    TransactionEvent,
+    get_new_transaction_events,
+    get_new_transaction_event_count
+);
+event_getters_impl!(TransactionEvent, get_reattachment_events, get_reattachment_event_count);
+event_getters_impl!(TransactionEvent, get_broadcast_events, get_broadcast_event_count);

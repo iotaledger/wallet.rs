@@ -46,21 +46,36 @@ async fn listen(event_type: EventType, sender: Sender<String>) -> EventId {
         EventType::ErrorThrown => on_error(move |error| {
             let _ = sender.send(serde_json::to_string(&error).unwrap());
         }),
-        EventType::BalanceChange => on_balance_change(move |event| {
-            let _ = sender.send(serde_json::to_string(&event).unwrap());
-        }).await,
-        EventType::NewTransaction => on_new_transaction(move |event| {
-            let _ = sender.send(serde_json::to_string(&event).unwrap());
-        }).await,
-        EventType::ConfirmationStateChange => on_confirmation_state_change(move |event| {
-            let _ = sender.send(serde_json::to_string(&event).unwrap());
-        }).await,
-        EventType::Reattachment => on_reattachment(move |event| {
-            let _ = sender.send(serde_json::to_string(&event).unwrap());
-        }).await,
-        EventType::Broadcast => on_broadcast(move |event| {
-            let _ = sender.send(serde_json::to_string(&event).unwrap());
-        }).await,
+        EventType::BalanceChange => {
+            on_balance_change(move |event| {
+                let _ = sender.send(serde_json::to_string(&event).unwrap());
+            })
+            .await
+        }
+        EventType::NewTransaction => {
+            on_new_transaction(move |event| {
+                let _ = sender.send(serde_json::to_string(&event).unwrap());
+            })
+            .await
+        }
+        EventType::ConfirmationStateChange => {
+            on_confirmation_state_change(move |event| {
+                let _ = sender.send(serde_json::to_string(&event).unwrap());
+            })
+            .await
+        }
+        EventType::Reattachment => {
+            on_reattachment(move |event| {
+                let _ = sender.send(serde_json::to_string(&event).unwrap());
+            })
+            .await
+        }
+        EventType::Broadcast => {
+            on_broadcast(move |event| {
+                let _ = sender.send(serde_json::to_string(&event).unwrap());
+            })
+            .await
+        }
     }
 }
 
