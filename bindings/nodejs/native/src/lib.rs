@@ -1,6 +1,8 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#![allow(clippy::unnecessary_wraps)]
+
 use std::{
     any::Any,
     collections::HashMap,
@@ -76,7 +78,7 @@ pub(crate) async fn remove_synced_account(id: &str) {
     synced_account_instances().write().await.remove(id);
 }
 
-fn panic_to_response_message(panic: Box<dyn Any>) -> Result<String, Error> {
+fn panic_to_response_message(panic: Box<dyn Any>) -> String {
     let msg = if let Some(message) = panic.downcast_ref::<String>() {
         format!("Internal error: {}", message)
     } else if let Some(message) = panic.downcast_ref::<&str>() {
@@ -85,13 +87,13 @@ fn panic_to_response_message(panic: Box<dyn Any>) -> Result<String, Error> {
         "Internal error".to_string()
     };
     let current_backtrace = backtrace::Backtrace::new();
-    Ok(format!("{}\n\n{:?}", msg, current_backtrace))
+    format!("{}\n\n{:?}", msg, current_backtrace)
 }
 
 pub async fn convert_async_panics<T, F: Future<Output = Result<T, Error>>>(f: impl FnOnce() -> F) -> Result<T, Error> {
     match AssertUnwindSafe(f()).catch_unwind().await {
         Ok(result) => result,
-        Err(panic) => Err(Error::Panic(panic_to_response_message(panic)?)),
+        Err(panic) => Err(Error::Panic(panic_to_response_message(panic))),
     }
 }
 

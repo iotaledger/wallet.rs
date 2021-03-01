@@ -1,7 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-const addon = require('../native')
+const addon = require('../build/Release')
 let { AccountManager, Account, SyncedAccount, EventListener, initLogger } = addon
 
 function promisify (fn) {
@@ -58,14 +58,19 @@ Account.prototype.isLatestAddressUnused = promisify(Account.prototype.isLatestAd
 
 const send = SyncedAccount.prototype.send
 SyncedAccount.prototype.send = function (address, amount, options) {
-  if (options && (typeof options === 'object') && options.indexation && options.indexation.data) {
-    return promisify(send).apply(this, [address, amount, {
-      remainderValueStrategy: options.remainderValueStrategy,
+  if (options && (typeof options === 'object') && options.indexation) {
+    let index = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.index) :  options.indexation.index
+    let data = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.data) :  options.indexation.data
+    const formattedOptions = {
       indexation: {
-        index: options.indexation.index,
-        data: Array.from(options.indexation.data),
+        index: Array.from(index),
+        data: data ? Array.from(data) : null,
       }
-    }])
+    }
+    if (options.remainderValueStrategy) {
+      formattedOptions.remainderValueStrategy = options.remainderValueStrategy
+    }
+    return promisify(send).apply(this, [address, amount, formattedOptions])
   } else {
     return promisify(send).apply(this, options ? [address, amount, options] : [address, amount])
   }
@@ -76,6 +81,8 @@ SyncedAccount.prototype.reattach = promisify(SyncedAccount.prototype.reattach)
 SyncedAccount.prototype.promote = promisify(SyncedAccount.prototype.promote)
 
 const managerClass = AccountManager
+
+/** This is a description of AccountManagern. */
 AccountManager = function () {
   const instance = new managerClass(arguments[0])
 

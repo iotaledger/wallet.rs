@@ -3,7 +3,7 @@
 
 use std::str::FromStr;
 
-use iota_wallet::message::MessageId;
+use iota_wallet::{address::parse as parse_address, message::MessageId};
 use neon::prelude::*;
 
 mod is_latest_address_unused;
@@ -68,6 +68,24 @@ declare_types! {
                 })
             };
             Ok(neon_serde::to_value(&mut cx, &balance)?.upcast())
+        }
+
+        method messageCount(mut cx) {
+            let message_type = match cx.argument_opt(0) {
+                Some(arg) => {
+                    let type_ = arg.downcast::<JsValue>().or_throw(&mut cx)?;
+                    neon_serde::from_value(&mut cx, type_)?
+                },
+                None => None,
+            };
+            let this = cx.this();
+            let id = cx.borrow(&this, |r| r.0.clone());
+            crate::block_on(async move {
+                let account_handle = crate::get_account(&id).await;
+                let account = account_handle.read().await;
+                let count = account.list_messages(0, 0, message_type).iter().len();
+                Ok(cx.number(count as f64).upcast())
+            })
         }
 
         method listMessages(mut cx) {
@@ -202,6 +220,21 @@ declare_types! {
             })
         }
 
+        method getAddress(mut cx) {
+            let address = parse_address(cx.argument::<JsString>(0)?.value()).expect("invalid address");
+            let this = cx.this();
+            let id = cx.borrow(&this, |r| r.0.clone());
+            crate::block_on(async move {
+                let account_handle = crate::get_account(&id).await;
+                let account = account_handle.read().await;
+                let address = account.addresses().iter().find(|a| a.address() == &address);
+                match address {
+                    Some(a) => Ok(neon_serde::to_value(&mut cx, &a)?),
+                    None => Ok(cx.undefined().upcast())
+                }
+            })
+        }
+
         method generateAddress(mut cx) {
             let address = {
                 let this = cx.this();
@@ -222,6 +255,16 @@ declare_types! {
                 let account_handle = crate::get_account(&id).await;
                 let account = account_handle.read().await;
                 let address = account.latest_address();
+                Ok(neon_serde::to_value(&mut cx, &address)?)
+            })
+        }
+
+        method getUnusedAddress(mut cx) {
+            let this = cx.this();
+            let id = cx.borrow(&this, |r| r.0.clone());
+            crate::block_on(async move {
+                let account_handle = crate::get_account(&id).await;
+                let address = account_handle.get_unused_address().await;
                 Ok(neon_serde::to_value(&mut cx, &address)?)
             })
         }

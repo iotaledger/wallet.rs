@@ -105,9 +105,15 @@ Removes the account with the given identifier or index.
 | --------- | ----------------------------- | ----------------- | --------------------------------------- |
 | accountId | <code>string \| number</code> | <code>null</code> | The account identifier or account index |
 
-#### syncAccounts()
+#### syncAccounts([options])
 
 Synchronize all stored accounts with the Tangle.
+
+| Param                  | Type                | Default                           | Description                                           |
+| ---------------------- | ------------------- | --------------------------------- | ----------------------------------------------------- |
+| [options]              | <code>object</code> | <code>{}</code>                   | The sync options                                      |
+| [options.addressIndex] | <code>number</code> | <code>latest address index</code> | The index of the first account address to sync        |
+| [options.gapLimit]     | <code>number</code> | <code>10</code>                   | The number of addresses to check on each account sync |
 
 **Returns** A promise resolving to an array of [SyncedAccount](#syncedaccount).
 
@@ -231,6 +237,14 @@ Returns the account's balance information object.
 
 Balance object: { total: number, available: number, incoming: number, outgoing: number }
 
+#### messageCount([type])
+
+Returns the number of messages associated with the account.
+
+| Param  | Type                | Default           | Description                                                                              |
+| ------ | ------------------- | ----------------- | ---------------------------------------------------------------------------------------- |
+| [type] | <code>number</code> | <code>null</code> | The message type filter (Received = 1, Sent = 2, Failed = 3, Unconfirmed = 4, Value = 5) |
+
 #### listMessages([count, from, type])
 
 Returns the account's messages.
@@ -256,12 +270,11 @@ Address object: { address: string, balance: number, keyIndex: number }
 
 Synchronizes the account with the Tangle.
 
-| Param                     | Type                 | Default                           | Description                            |
-| ------------------------- | -------------------- | --------------------------------- | -------------------------------------- |
-| [options]                 | <code>object</code>  | <code>{}</code>                   | The sync options                       |
-| [options.addressIndex]    | <code>number</code>  | <code>latest address index</code> | The index of the first address to sync |
-| [options.gapLimit]        | <code>number</code>  | <code>10</code>                   | The number of addresses to check       |
-| [options.skipPersistance] | <code>boolean</code> | <code>false</code>                | Skip updating the account in storage   |
+| Param                  | Type                | Default                           | Description                            |
+| ---------------------- | ------------------- | --------------------------------- | -------------------------------------- |
+| [options]              | <code>object</code> | <code>{}</code>                   | The sync options                       |
+| [options.addressIndex] | <code>number</code> | <code>latest address index</code> | The index of the first address to sync |
+| [options.gapLimit]     | <code>number</code> | <code>10</code>                   | The number of addresses to check       |
 
 **Returns** a [SyncedAccount](#syncedaccount) instance.
 
@@ -295,6 +308,14 @@ Gets the message associated with the given identifier.
 | --------- | ------------------- | ----------------- | ------------------------ |
 | messageId | <code>string</code> | <code>null</code> | The message's identifier |
 
+#### getAddress(addressBech32)
+
+Gets the address object by its bech32 representation.
+
+| Param         | Type                | Default           | Description                       |
+| ------------- | ------------------- | ----------------- | --------------------------------- |
+| addressBech32 | <code>string</code> | <code>null</code> | The address bech32 representation |
+
 #### generateAddress()
 
 Generates a new unused address and returns it.
@@ -302,6 +323,11 @@ Generates a new unused address and returns it.
 #### latestAddress()
 
 Returns the latest address (the one with the biggest keyIndex).
+
+#### getUnusedAddress()
+
+Synchronizes the account addresses with the Tangle and returns the latest address in the account,
+which is an address without balance.
 
 ### ClientOptions
 

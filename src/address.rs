@@ -1,14 +1,20 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{account::Account, message::MessageType, signing::GenerateAddressMetadata};
-use bee_rest_api::{
-    handlers::output::OutputResponse,
-    types::{AddressDto, OutputDto},
+use crate::{
+    account::Account,
+    message::{MessagePayload, MessageType, TransactionEssence},
+    signing::GenerateAddressMetadata,
 };
 use getset::{Getters, Setters};
-use iota::message::prelude::{MessageId, TransactionId};
-pub use iota::{Address as IotaAddress, Ed25519Address, Input, Payload, UTXOInput};
+use iota::{
+    bee_rest_api::{
+        handlers::output::OutputResponse,
+        types::{AddressDto, OutputDto},
+    },
+    MessageId, TransactionId,
+};
+pub use iota::{Address as IotaAddress, Ed25519Address, Input, UTXOInput};
 use serde::{Deserialize, Serialize};
 use std::{
     cmp::Ordering,
@@ -28,28 +34,42 @@ pub enum OutputKind {
     Treasury,
 }
 
+impl FromStr for OutputKind {
+    type Err = crate::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let kind = match s {
+            "SignatureLockedSingle" => Self::SignatureLockedSingle,
+            "SignatureLockedDustAllowance" => Self::SignatureLockedDustAllowance,
+            "Treasury" => Self::Treasury,
+            _ => return Err(crate::Error::InvalidOutputKind(s.to_string())),
+        };
+        Ok(kind)
+    }
+}
+
 /// An Address output.
 #[derive(Debug, Getters, Setters, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct AddressOutput {
     /// Transaction ID of the output
     #[serde(rename = "transactionId")]
-    pub(crate) transaction_id: TransactionId,
+    pub transaction_id: TransactionId,
     /// Message ID of the output
     #[serde(rename = "messageId")]
-    pub(crate) message_id: MessageId,
+    pub message_id: MessageId,
     /// Output index.
-    pub(crate) index: u16,
+    pub index: u16,
     /// Output amount.
-    pub(crate) amount: u64,
+    pub amount: u64,
     /// Spend status of the output,
     #[serde(rename = "isSpent")]
-    pub(crate) is_spent: bool,
+    pub is_spent: bool,
     /// Associated address.
     #[serde(with = "crate::serde::iota_address_serde")]
-    pub(crate) address: AddressWrapper,
+    pub address: AddressWrapper,
     /// Output kind.
-    pub(crate) kind: OutputKind,
+    pub kind: OutputKind,
 }
 
 impl AddressOutput {
@@ -60,13 +80,15 @@ impl AddressOutput {
             // message is pending or confirmed
             if m.confirmed().unwrap_or(true) {
                 match m.payload() {
-                    Payload::Transaction(tx) => tx.essence().inputs().iter().any(|input| {
-                        if let Input::UTXO(x) = input {
-                            x == &output_id
-                        } else {
-                            false
-                        }
-                    }),
+                    Some(MessagePayload::Transaction(tx)) => match tx.essence() {
+                        TransactionEssence::Regular(essence) => essence.inputs().iter().any(|input| {
+                            if let Input::UTXO(x) = input {
+                                x == &output_id
+                            } else {
+                                false
+                            }
+                        }),
+                    },
                     _ => false,
                 }
             } else {
@@ -129,7 +151,7 @@ impl AddressOutput {
 
 /// The address builder.
 #[derive(Default)]
-pub(crate) struct AddressBuilder {
+pub struct AddressBuilder {
     address: Option<AddressWrapper>,
     balance: Option<u64>,
     key_index: Option<usize>,
@@ -199,7 +221,7 @@ impl AddressBuilder {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AddressWrapper {
     inner: IotaAddress,
-    bech32_hrp: String,
+    pub(crate) bech32_hrp: String,
 }
 
 impl AsRef<IotaAddress> for AddressWrapper {
@@ -209,7 +231,8 @@ impl AsRef<IotaAddress> for AddressWrapper {
 }
 
 impl AddressWrapper {
-    pub(crate) fn new(address: IotaAddress, bech32_hrp: String) -> Self {
+    /// Create a new address wrapper.
+    pub fn new(address: IotaAddress, bech32_hrp: String) -> Self {
         Self {
             inner: address,
             bech32_hrp,
@@ -273,6 +296,12 @@ impl PartialEq for Address {
 }
 
 impl Address {
+    /// Gets a new instance of the address builder.
+    #[doc(hidden)]
+    pub fn builder() -> AddressBuilder {
+        AddressBuilder::new()
+    }
+
     pub(crate) fn handle_new_output(&mut self, output: AddressOutput) {
         if !self.outputs.iter().any(|o| o == &output) {
             let spent_existing_output = self.outputs.iter().position(|o| {
@@ -305,7 +334,9 @@ impl Address {
             .fold(0, |acc, o| acc + *o.amount())
     }
 
-    pub(crate) fn set_bech32_hrp(&mut self, hrp: String) {
+    /// Updates the Bech32 human readable part.
+    #[doc(hidden)]
+    pub fn set_bech32_hrp(&mut self, hrp: String) {
         self.address.bech32_hrp = hrp.to_string();
         for output in self.outputs.iter_mut() {
             output.address.bech32_hrp = hrp.to_string();
@@ -317,15 +348,9 @@ impl Address {
 pub fn parse<A: AsRef<str>>(address: A) -> crate::Result<AddressWrapper> {
     let address = address.as_ref();
     let mut tokens = address.split('1');
-    let hrp = tokens.next().unwrap();
-    let address = iota::Address::try_from_bech32(address).or_else(|_| {
-        if let Ok(ed25519_address) = Ed25519Address::from_str(address) {
-            Ok(IotaAddress::Ed25519(ed25519_address))
-        } else {
-            Err(crate::Error::InvalidAddress)
-        }
-    });
-    Ok(AddressWrapper::new(address?, hrp.to_string()))
+    let hrp = tokens.next().ok_or(crate::Error::InvalidAddress)?;
+    let address = iota::Address::try_from_bech32(address)?;
+    Ok(AddressWrapper::new(address, hrp.to_string()))
 }
 
 pub(crate) async fn get_iota_address(
@@ -354,6 +379,7 @@ pub(crate) async fn get_new_address(account: &Account, metadata: GenerateAddress
                 .read()
                 .await
                 .get_network_info()
+                .await?
                 .bech32_hrp
         }
     };
@@ -397,7 +423,7 @@ pub(crate) fn is_unspent(account: &Account, address: &AddressWrapper) -> bool {
     !account
         .list_messages(0, 0, Some(MessageType::Sent))
         .iter()
-        .any(|message| message.addresses().contains(&address.as_ref()))
+        .any(|message| message.addresses().contains(&address))
 }
 
 #[cfg(test)]

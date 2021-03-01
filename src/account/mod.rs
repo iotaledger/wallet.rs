@@ -169,7 +169,7 @@ impl AccountInitialiser {
     }
 
     /// Initialises the account.
-    pub async fn initialise(self) -> crate::Result<AccountHandle> {
+    pub async fn initialise(mut self) -> crate::Result<AccountHandle> {
         let accounts = self.accounts.read().await;
 
         let alias = self.alias.unwrap_or_else(|| format!("Account {}", accounts.len()));
@@ -199,6 +199,8 @@ impl AccountInitialiser {
             }
         }
 
+        self.addresses.sort();
+
         let mut account = Account {
             id: account_index.to_string(),
             signer_type: signer_type.clone(),
@@ -218,27 +220,41 @@ impl AccountInitialiser {
             .read()
             .await
             .get_network_info()
+            .await?
             .bech32_hrp;
 
-        let address = crate::address::get_iota_address(
-            &account,
-            0,
-            false,
-            bech32_hrp,
-            GenerateAddressMetadata { syncing: false },
-        )
-        .await?;
+        for address in account.addresses.iter_mut() {
+            address.set_bech32_hrp(bech32_hrp.to_string());
+        }
+        for message in account.messages.iter_mut() {
+            message.set_bech32_hrp(bech32_hrp.to_string());
+        }
 
-        account.addresses.push(
-            AddressBuilder::new()
-                .address(address.clone())
-                .key_index(0)
-                .internal(false)
-                .outputs(Vec::new())
-                .balance(0)
-                .build()
-                .unwrap(), // safe to unwrap since we provide all required fields
-        );
+        let address = match account.addresses.first() {
+            Some(address) => address.address().clone(),
+            None => {
+                let address = crate::address::get_iota_address(
+                    &account,
+                    0,
+                    false,
+                    bech32_hrp,
+                    GenerateAddressMetadata { syncing: false },
+                )
+                .await?;
+
+                account.addresses.push(
+                    AddressBuilder::new()
+                        .address(address.clone())
+                        .key_index(0)
+                        .internal(false)
+                        .outputs(Vec::new())
+                        .balance(0)
+                        .build()
+                        .unwrap(), // safe to unwrap since we provide all required fields
+                );
+                address
+            }
+        };
 
         let mut digest = [0; 32];
         let raw = match address.as_ref() {
@@ -358,7 +374,8 @@ guard_field_getters!(
     This method clones the messages so prefer the using the `read` method to access the account instance."] => messages => Vec<Message>,
     #[doc = "Bridge to [Account#addresses](struct.Account.html#method.addresses).
     This method clones the addresses so prefer the using the `read` method to access the account instance."] => addresses => Vec<Address>,
-    #[doc = "Bridge to [Account#client_options](struct.Account.html#method.client_options)."] => client_options => ClientOptions
+    #[doc = "Bridge to [Account#client_options](struct.Account.html#method.client_options)."] => client_options => ClientOptions,
+    #[doc = "Bridge to [Account#bech32_hrp](struct.Account.html#method.bech32_hrp)."] => bech32_hrp => String
 );
 
 impl AccountHandle {
@@ -517,6 +534,11 @@ impl Account {
         Ok(res)
     }
 
+    /// Returns the address bech32 human readable part.
+    pub fn bech32_hrp(&self) -> String {
+        self.addresses().first().unwrap().address().bech32_hrp().to_string()
+    }
+
     /// Returns the most recent address of the account.
     pub fn latest_address(&self) -> &Address {
         // the addresses list is never empty because we generate an address on the accout creation
@@ -567,6 +589,7 @@ impl Account {
             .read()
             .await
             .get_network_info()
+            .await?
             .bech32_hrp;
         for address in &mut self.addresses {
             address.set_bech32_hrp(bech32_hrp.to_string());
@@ -749,7 +772,10 @@ mod tests {
             let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
 
             let updated_client_options = ClientOptionsBuilder::new()
-                .with_nodes(&["http://test.wallet", "http://test.wallet/set-client-options"])
+                .with_nodes(&[
+                    "http://api.hornet-1.testnet.chrysalis2.com",
+                    "http://api.hornet-2.testnet.chrysalis2.com",
+                ])
                 .unwrap()
                 .build()
                 .unwrap();

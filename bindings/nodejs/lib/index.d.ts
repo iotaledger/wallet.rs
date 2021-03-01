@@ -11,10 +11,15 @@ export declare enum MessageType {
   Value = 5,
 }
 
-export declare interface TransactionPayloadEssence {
+export declare interface RegularEssence {
   inputs: Input[];
   outputs: Output[];
   payload?: Payload[];
+}
+
+export declare type Essence = {
+  type: 'Regular',
+  data: RegularEssence
 }
 
 export declare interface Input {
@@ -25,10 +30,11 @@ export declare interface Input {
 export declare interface Output {
   address: string
   amount: number
+  remainder: boolean
 }
 
 export declare interface Transaction {
-  essence: TransactionPayloadEssence;
+  essence: Essence;
 }
 
 export declare type Payload = Transaction;
@@ -55,7 +61,6 @@ export declare interface Address {
 export declare interface SyncOptions {
   addressIndex?: number
   gapLimit?: number
-  skipPersistance?: boolean
 }
 
 export declare interface AccountBalance {
@@ -70,14 +75,17 @@ export declare class Account {
   index(): number;
   alias(): string;
   balance(): AccountBalance;
+  messageCount(messageType?: MessageType): number;
   listMessages(count?: number, from?: number, messageType?: MessageType): Message[]
   listAddresses(unspent?: boolean): Address[]
   sync(options?: SyncOptions): Promise<SyncedAccount>
   setAlias(alias: string): void
   setClientOptions(options: ClientOptions): void
   getMessage(id: string): Message | undefined
+  getAddress(addressBech32: string): Address | undefined
   generateAddress(): Address
   latestAddress(): Address
+  getUnusedAddress(): Address
   isLatestAddressUnused(): Promise<boolean>
 }
 
@@ -89,7 +97,7 @@ export declare class RemainderValueStrategy {
 
 export declare class TransferOptions {
   remainderValueStrategy?: RemainderValueStrategy
-  indexation?: { index: string, data?: Uint8Array }
+  indexation?: { index: string | number[] | Uint8Array, data?: string | number[] | Uint8Array }
 }
 
 export declare class SyncedAccount {
@@ -143,7 +151,7 @@ export declare class AccountManager {
   getAccount(accountId: string | number): Account | undefined
   getAccounts(): Account[]
   removeAccount(accountId: string | number): void
-  syncAccounts(): Promise<SyncedAccount[]>
+  syncAccounts(options?: SyncOptions): Promise<SyncedAccount[]>
   internalTransfer(fromAccount: Account, toAccount: Account, amount: number): Promise<Message>
   backup(destination: string): string
   importAccounts(source: string, password: string): void
