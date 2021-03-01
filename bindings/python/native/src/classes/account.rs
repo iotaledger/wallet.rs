@@ -115,14 +115,10 @@ impl SyncedAccount {
 
     /// Consolidate outputs.
     fn consolidate_outputs(&self) -> Result<Vec<WalletMessage>> {
-        let res: Result<(Vec<RustWalletMessage>, String)> = crate::block_on(async {
-            let bech32_hrp = self.synced_account.account_handle().bech32_hrp().await;
-            Ok((self.synced_account.consolidate_outputs().await?, bech32_hrp))
-        });
-        let (rust_messages, bech32_hrp) = res?;
+        let rust_messages = crate::block_on(async { self.synced_account.consolidate_outputs().await })?;
         let mut messages = Vec::new();
         for message in rust_messages {
-            messages.push((message, bech32_hrp.clone()).try_into()?);
+            messages.push(message.try_into()?);
         }
         Ok(messages)
     }
