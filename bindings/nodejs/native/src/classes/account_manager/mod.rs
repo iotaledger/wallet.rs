@@ -88,6 +88,62 @@ fn default_automatic_output_consolidation() -> bool {
     true
 }
 
+macro_rules! event_getter {
+    ($cx: ident, $get_fn_name: ident) => {{
+        let count = match $cx.argument_opt(0) {
+            Some(arg) => arg.downcast::<JsNumber>().or_throw(&mut $cx)?.value() as usize,
+            None => 0,
+        };
+        let skip = match $cx.argument_opt(1) {
+            Some(arg) => arg.downcast::<JsNumber>().or_throw(&mut $cx)?.value() as usize,
+            None => 0,
+        };
+        let from_timestamp = match $cx.argument_opt(2) {
+            Some(arg) => Some(arg.downcast::<JsNumber>().or_throw(&mut $cx)?.value() as i64),
+            None => None,
+        };
+
+        let events = {
+            let this = $cx.this();
+            let guard = $cx.lock();
+            let ref_ = &this.borrow(&guard).0;
+            crate::block_on(async move {
+                let manager = ref_.read().await;
+                manager.$get_fn_name(count, skip, from_timestamp).await.unwrap()
+            })
+        };
+
+        let js_array = JsArray::new(&mut $cx, events.len() as u32);
+        for (index, event) in events.into_iter().enumerate() {
+            let js_event = neon_serde::to_value(&mut $cx, &event)?;
+            js_array.set(&mut $cx, index as u32, js_event)?;
+        }
+
+        Ok(js_array.upcast())
+    }};
+}
+
+macro_rules! event_count_getter {
+    ($cx: ident, $get_fn_name: ident) => {{
+        let from_timestamp = match $cx.argument_opt(0) {
+            Some(arg) => Some(arg.downcast::<JsNumber>().or_throw(&mut $cx)?.value() as i64),
+            None => None,
+        };
+
+        let count = {
+            let this = $cx.this();
+            let guard = $cx.lock();
+            let ref_ = &this.borrow(&guard).0;
+            crate::block_on(async move {
+                let manager = ref_.read().await;
+                manager.$get_fn_name(from_timestamp).await.unwrap()
+            })
+        };
+
+        Ok($cx.number(count as f64).upcast())
+    }};
+}
+
 declare_types! {
     pub class JsAccountManager for AccountManagerWrapper {
         init(mut cx) {
@@ -297,11 +353,20 @@ declare_types! {
         }
 
         method syncAccounts(mut cx) {
-            let cb = cx.argument::<JsFunction>(0)?;
+            let (options, cb) = match cx.argument_opt(1) {
+                Some(arg) => {
+                    let cb = arg.downcast::<JsFunction>().or_throw(&mut cx)?;
+                    let options = cx.argument::<JsValue>(0)?;
+                    let options = neon_serde::from_value(&mut cx, options)?;
+                    (options, cb)
+                }
+                None => (Default::default(), cx.argument::<JsFunction>(0)?),
+            };
             let this = cx.this();
             let manager = cx.borrow(&this, |r| r.0.clone());
             let task = sync::SyncTask {
                 manager,
+                options,
             };
             task.schedule(cb);
             Ok(cx.undefined().upcast())
@@ -392,6 +457,46 @@ declare_types! {
             }
 
             Ok(cx.undefined().upcast())
+        }
+
+        method getBalanceChangeEvents(mut cx) {
+            event_getter!(cx, get_balance_change_events)
+        }
+
+        method getBalanceChangeEventCount(mut cx) {
+            event_count_getter!(cx, get_balance_change_event_count)
+        }
+
+        method getTransactionConfirmationEvents(mut cx) {
+            event_getter!(cx, get_transaction_confirmation_events)
+        }
+
+        method getTransactionConfirmationEventCount(mut cx) {
+            event_count_getter!(cx, get_transaction_confirmation_event_count)
+        }
+
+        method getNewTransactionEvents(mut cx) {
+            event_getter!(cx, get_new_transaction_events)
+        }
+
+        method getNewTransactionEventCount(mut cx) {
+            event_count_getter!(cx, get_new_transaction_event_count)
+        }
+
+        method getReattachmentEvents(mut cx) {
+            event_getter!(cx, get_reattachment_events)
+        }
+
+        method getReattachmentEventCount(mut cx) {
+            event_count_getter!(cx, get_reattachment_event_count)
+        }
+
+        method getBroadcastEvents(mut cx) {
+            event_getter!(cx, get_broadcast_events)
+        }
+
+        method getBroadcastEventCount(mut cx) {
+            event_count_getter!(cx, get_broadcast_event_count)
         }
     }
 }

@@ -5,7 +5,6 @@ use crate::types::*;
 use iota::MessageId as RustMessageId;
 use iota_wallet::{
     account_manager::{AccountManager as RustAccountManager, ManagerStorage as RustManagerStorage},
-    message::Message as RustWalletMessage,
     signing::SignerType as RustSingerType,
 };
 use pyo3::{exceptions, prelude::*};
@@ -15,6 +14,61 @@ use std::{
     str::FromStr,
     time::Duration,
 };
+
+#[pymethods]
+impl AccountsSynchronizer {
+    /// Number of address indexes that are generated on each account.
+    fn gap_limit(&mut self, limit: usize) {
+        self.accounts_synchronizer = Some(self.accounts_synchronizer.take().unwrap().gap_limit(limit));
+    }
+
+    /// Initial address index to start syncing on each account.
+    fn address_index(&mut self, address_index: usize) {
+        self.accounts_synchronizer = Some(self.accounts_synchronizer.take().unwrap().address_index(address_index));
+    }
+
+    /// Syncs the accounts with the tangle.
+    fn execute(&mut self) -> Result<Vec<SyncedAccount>> {
+        let synced_accounts = crate::block_on(async { self.accounts_synchronizer.take().unwrap().execute().await })?;
+        Ok(synced_accounts
+            .into_iter()
+            .map(|account| SyncedAccount {
+                synced_account: account,
+            })
+            .collect())
+    }
+}
+
+macro_rules! event_getters_impl {
+    ($event_type: ty, $get_fn_name: ident, $get_count_fn_name: ident) => {
+        #[pymethods]
+        impl AccountManager {
+            fn $get_fn_name(
+                &self,
+                count: Option<usize>,
+                skip: Option<usize>,
+                from_timestamp: Option<i64>,
+            ) -> Result<Vec<$event_type>> {
+                crate::block_on(async {
+                    let events = self
+                        .account_manager
+                        .$get_fn_name(count.unwrap_or(0), skip.unwrap_or(0), from_timestamp)
+                        .await?;
+                    let mut parsed_events = Vec::new();
+                    for event in events {
+                        parsed_events.push(event.try_into()?);
+                    }
+                    Ok(parsed_events)
+                })
+            }
+
+            fn $get_count_fn_name(&self, from_timestamp: Option<i64>) -> Result<usize> {
+                crate::block_on(async { self.account_manager.$get_count_fn_name(from_timestamp).await })
+                    .map_err(Into::into)
+            }
+        }
+    };
+}
 
 #[pymethods]
 impl AccountManager {
@@ -118,6 +172,7 @@ impl AccountManager {
     fn create_account(&self, client_options: ClientOptions) -> Result<AccountInitialiser> {
         Ok(AccountInitialiser {
             account_initialiser: Some(self.account_manager.create_account(client_options.into())?),
+            addresses: Default::default(),
         })
     }
 
@@ -129,38 +184,25 @@ impl AccountManager {
     }
 
     /// Syncs all accounts.
-    fn sync_accounts(&self) -> Result<Vec<SyncedAccount>> {
-        let synced_accounts = crate::block_on(async { self.account_manager.sync_accounts().await })?;
-        Ok(synced_accounts
-            .into_iter()
-            .map(|account| SyncedAccount {
-                synced_account: account,
-            })
-            .collect())
+    fn sync_accounts(&self) -> Result<AccountsSynchronizer> {
+        let accounts_synchronizer = self.account_manager.sync_accounts()?;
+        Ok(AccountsSynchronizer {
+            accounts_synchronizer: Some(accounts_synchronizer),
+        })
     }
 
     /// Transfers an amount from an account to another.
     fn internal_transfer(&self, from_account_id: &str, to_account_id: &str, amount: u64) -> Result<WalletMessage> {
-        let res: Result<(RustWalletMessage, String)> = crate::block_on(async {
-            let bech32_hrp = self
-                .account_manager
-                .get_account(from_account_id)
+        crate::block_on(async {
+            self.account_manager
+                .internal_transfer(
+                    from_account_id,
+                    to_account_id,
+                    NonZeroU64::new(amount).unwrap_or_else(|| panic!("invalid internal transfer amount: {}", amount)),
+                )
                 .await?
-                .bech32_hrp()
-                .await;
-            Ok((
-                self.account_manager
-                    .internal_transfer(
-                        from_account_id,
-                        to_account_id,
-                        NonZeroU64::new(amount)
-                            .unwrap_or_else(|| panic!("invalid internal transfer amount: {}", amount)),
-                    )
-                    .await?,
-                bech32_hrp,
-            ))
-        });
-        res?.try_into()
+                .try_into()
+        })
     }
 
     /// Backups the storage to the given destination
@@ -204,43 +246,50 @@ impl AccountManager {
 
     /// Reattaches an unconfirmed transaction.
     fn reattach(&self, account_id: &str, message_id: &str) -> Result<WalletMessage> {
-        let res: Result<(RustWalletMessage, String)> = crate::block_on(async {
-            let bech32_hrp = self.account_manager.get_account(account_id).await?.bech32_hrp().await;
-            Ok((
-                self.account_manager
-                    .reattach(account_id, &RustMessageId::from_str(&message_id)?)
-                    .await?,
-                bech32_hrp,
-            ))
-        });
-        res?.try_into()
+        crate::block_on(async {
+            self.account_manager
+                .reattach(account_id, &RustMessageId::from_str(&message_id)?)
+                .await?
+                .try_into()
+        })
     }
 
     /// Promotes an unconfirmed transaction.
     fn promote(&self, account_id: &str, message_id: &str) -> Result<WalletMessage> {
-        let res: Result<(RustWalletMessage, String)> = crate::block_on(async {
-            let bech32_hrp = self.account_manager.get_account(account_id).await?.bech32_hrp().await;
-            Ok((
-                self.account_manager
-                    .promote(account_id, &RustMessageId::from_str(&message_id)?)
-                    .await?,
-                bech32_hrp,
-            ))
-        });
-        res?.try_into()
+        crate::block_on(async {
+            self.account_manager
+                .promote(account_id, &RustMessageId::from_str(&message_id)?)
+                .await?
+                .try_into()
+        })
     }
 
     /// Retries an unconfirmed transaction.
     fn retry(&self, account_id: &str, message_id: &str) -> Result<WalletMessage> {
-        let res: Result<(RustWalletMessage, String)> = crate::block_on(async {
-            let bech32_hrp = self.account_manager.get_account(account_id).await?.bech32_hrp().await;
-            Ok((
-                self.account_manager
-                    .retry(account_id, &RustMessageId::from_str(&message_id)?)
-                    .await?,
-                bech32_hrp,
-            ))
-        });
-        res?.try_into()
+        crate::block_on(async {
+            self.account_manager
+                .retry(account_id, &RustMessageId::from_str(&message_id)?)
+                .await?
+                .try_into()
+        })
     }
 }
+
+event_getters_impl! {
+    BalanceEvent,
+    get_balance_change_events,
+    get_balance_change_event_count
+}
+
+event_getters_impl!(
+    TransactionConfirmationChangeEvent,
+    get_transaction_confirmation_events,
+    get_transaction_confirmation_event_count
+);
+event_getters_impl!(
+    TransactionEvent,
+    get_new_transaction_events,
+    get_new_transaction_event_count
+);
+event_getters_impl!(TransactionEvent, get_reattachment_events, get_reattachment_event_count);
+event_getters_impl!(TransactionEvent, get_broadcast_events, get_broadcast_event_count);

@@ -159,11 +159,9 @@ Deletes an account.
 | ---------- | ---------------- | ---------------------- | -------------------------------------- |
 | account_id | <code>str</code> | <code>undefined</code> | The account with this id to be deleted |
 
-#### sync_accounts(): list[SyncedAccount]
+#### sync_accounts(): [AccountsSynchronizer](#accountssynchronizer)
 
-Syncs all accounts.
-
-**Returns** A promise resolving to an array of [SyncedAccount](#syncedaccount).
+**Returns** the [AccountsSynchronizer](#accountssynchronizer) to setup the process to synchronize the accounts with the Tangle.
 
 #### internal_transfer(from_account_id, to_account_id, amount): WalletMessage
 
@@ -175,7 +173,7 @@ Transfers an amount from an account to another.
 | to_account_id   | <code>str</code> | <code>undefined</code> | The destination of account id in the transfering |
 | amount          | <code>int</code> | <code>undefined</code> | The transfer amount                              |
 
-**Returns** A promise resolving to the transfer's [WalletMessage](#walletmessage).
+**Returns** The transfer's [WalletMessage](#walletmessage).
 
 #### backup(destination): str
 
@@ -279,6 +277,28 @@ Set the initial address index to start syncing.
 Syncs account with the tangle.
 The account syncing process ensures that the latest metadata (balance, transactions) associated with an account is fetched from the tangle and is stored locally.
 
+### AccountsSynchronizer
+
+#### gap_limit(limit): void
+
+Set the number of address indexes that are generated on each account.
+
+| Param | Type             | Default                | Description                                                      |
+| ----- | ---------------- | ---------------------- | ---------------------------------------------------------------- |
+| limit | <code>int</code> | <code>undefined</code> | The number of address indexes that are generated on each account |
+
+#### address_index(address_index): void
+
+Set the initial address index to start syncing on each account.
+
+| Param         | Type             | Default                | Description                                                |
+| ------------- | ---------------- | ---------------------- | ---------------------------------------------------------- |
+| address_index | <code>int</code> | <code>undefined</code> | The initial address index to start syncing on each account |
+
+#### execute(): list[SyncedAccount](#syncedaccount)
+
+Syncs the accounts with the tangle.
+
 ### Transfer
 
 #### constructor(amount, address, bench32_hrp, indexation (optional), remainder_value_strategy: str): [Transfer](#transfer)
@@ -335,6 +355,106 @@ Promote the given message.
 
 **Returns** the promoted [WalletMessage](#walletmessage).
 
+#### get_balance_change_events(count (optional), skip (optional), from_timestamp (optional))
+
+Gets the persisted balance change events.
+
+| Param          | Type                | Default           | Description                                                  |
+| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| count          | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| count          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, address: string, balanceChange: { spent: number, received: number } }
+
+#### get_balance_change_event_count(from_timestamp (optional))
+
+Gets the number of persisted balance change events.
+
+| Param          | Type                | Default           | Description                                                  |
+| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+#### get_transaction_confirmation_events(count (optional), skip (optional), from_timestamp (optional))
+
+Gets the persisted transaction confirmation change events.
+
+| Param          | Type                | Default           | Description                                                  |
+| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| count          | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| count          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, message: Message, confirmed: boolean }
+
+#### get_transaction_confirmation_event_count(from_timestamp (optional))
+
+Gets the number of persisted transaction confirmation change events.
+
+| Param          | Type                | Default           | Description                                                  |
+| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+#### get_new_transaction_events(count (optional), skip (optional), from_timestamp (optional))
+
+Gets the persisted new transaction events.
+
+| Param          | Type                | Default           | Description                                                  |
+| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| count          | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| count          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, message: Message }
+
+#### get_new_transaction_event_count(from_timestamp (optional))
+
+Gets the number of persisted new transaction events.
+
+| Param          | Type                | Default           | Description                                                  |
+| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+#### get_reattachment_events(count (optional), skip (optional), from_timestamp (optional))
+
+Gets the persisted transaction reattachment events.
+
+| Param          | Type                | Default           | Description                                                  |
+| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| count          | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| count          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, message: Message }
+
+#### get_reattachment_event_count(from_timestamp (optional))
+
+Gets the number of persisted transaction reattachment events.
+
+| Param          | Type                | Default           | Description                                                  |
+| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+#### get_broadcast_events(count (optional), skip (optional), from_timestamp (optional))
+
+Gets the persisted transaction broadcast events.
+
+| Param          | Type                | Default           | Description                                                  |
+| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| count          | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| count          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, message: Message }
+
+#### get_broadcast_event_count(from_timestamp (optional))
+
+Gets the number of persisted transaction broadcast events.
+
+| Param          | Type                | Default           | Description                                                  |
+| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
 ### AccountHandle
 
 #### sync(): [AccountSynchronizer](#accountsynchronizer)
@@ -388,6 +508,14 @@ Updates the account's client options.
 | Param   | Type                                         | Default                | Description               |
 | ------- | -------------------------------------------- | ---------------------- | ------------------------- |
 | options | <code>[ClientOptions](#clientoptions)</code> | <code>undefined</code> | The client options to set |
+
+#### message_count(message_type (optional)): int
+
+Returns the number of messages associated with the account.
+
+| Param        | Type             | Default                | Description                                                       |
+| ------------ | ---------------- | ---------------------- | ----------------------------------------------------------------- |
+| message_type | <code>str</code> | <code>undefined</code> | Should be `Received`, `Sent`, `Failed`, `Unconfirmed`, or `Value` |
 
 #### list_messages(count, from, message_type (optional)): list([WalletMessage](#walletmessage))
 

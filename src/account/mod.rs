@@ -233,6 +233,9 @@ impl AccountInitialiser {
         for address in account.addresses.iter_mut() {
             address.set_bech32_hrp(bech32_hrp.to_string());
         }
+        for message in account.messages.iter_mut() {
+            message.set_bech32_hrp(bech32_hrp.to_string());
+        }
 
         let address = match account.addresses.first() {
             Some(address) => address.address().clone(),
@@ -526,7 +529,7 @@ impl Account {
                 .await?
                 .lock()
                 .await
-                .set(&self.id, serde_json::to_string(&self)?)
+                .save_account(&self.id, self)
                 .await?;
         }
         Ok(())

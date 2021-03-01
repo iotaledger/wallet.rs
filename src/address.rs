@@ -1,16 +1,20 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{account::Account, message::MessageType, signing::GenerateAddressMetadata};
+use crate::{
+    account::Account,
+    message::{MessagePayload, MessageType, TransactionEssence},
+    signing::GenerateAddressMetadata,
+};
 use getset::{Getters, Setters};
 use iota::{
     bee_rest_api::{
         handlers::output::OutputResponse,
         types::{AddressDto, OutputDto},
     },
-    Essence, MessageId, TransactionId,
+    MessageId, TransactionId,
 };
-pub use iota::{Address as IotaAddress, Ed25519Address, Input, Payload, UTXOInput};
+pub use iota::{Address as IotaAddress, Ed25519Address, Input, UTXOInput};
 use serde::{Deserialize, Serialize};
 use std::{
     cmp::Ordering,
@@ -76,15 +80,14 @@ impl AddressOutput {
             // message is pending or confirmed
             if m.confirmed().unwrap_or(true) {
                 match m.payload() {
-                    Some(Payload::Transaction(tx)) => match tx.essence() {
-                        Essence::Regular(essence) => essence.inputs().iter().any(|input| {
+                    Some(MessagePayload::Transaction(tx)) => match tx.essence() {
+                        TransactionEssence::Regular(essence) => essence.inputs().iter().any(|input| {
                             if let Input::UTXO(x) = input {
                                 x == &output_id
                             } else {
                                 false
                             }
                         }),
-                        _ => unimplemented!(),
                     },
                     _ => false,
                 }
@@ -218,7 +221,7 @@ impl AddressBuilder {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AddressWrapper {
     inner: IotaAddress,
-    bech32_hrp: String,
+    pub(crate) bech32_hrp: String,
 }
 
 impl AsRef<IotaAddress> for AddressWrapper {
@@ -420,7 +423,7 @@ pub(crate) fn is_unspent(account: &Account, address: &AddressWrapper) -> bool {
     !account
         .list_messages(0, 0, Some(MessageType::Sent))
         .iter()
-        .any(|message| message.addresses().contains(&address.as_ref()))
+        .any(|message| message.addresses().contains(&address))
 }
 
 #[cfg(test)]

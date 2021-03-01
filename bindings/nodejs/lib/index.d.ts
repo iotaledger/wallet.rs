@@ -30,6 +30,7 @@ export declare interface Input {
 export declare interface Output {
   address: string
   amount: number
+  remainder: boolean
 }
 
 export declare interface Transaction {
@@ -60,7 +61,6 @@ export declare interface Address {
 export declare interface SyncOptions {
   addressIndex?: number
   gapLimit?: number
-  skipPersistance?: boolean
 }
 
 export declare interface AccountBalance {
@@ -75,6 +75,7 @@ export declare class Account {
   index(): number;
   alias(): string;
   balance(): AccountBalance;
+  messageCount(messageType?: MessageType): number;
   listMessages(count?: number, from?: number, messageType?: MessageType): Message[]
   listAddresses(unspent?: boolean): Address[]
   sync(options?: SyncOptions): Promise<SyncedAccount>
@@ -142,6 +143,23 @@ export declare interface ManagerOptions {
   automaticOutputConsolidation?: boolean
 }
 
+export declare interface BalanceChangeEvent {
+  accountId: string
+  address: string
+  balanceChange: { spent: number, received: number }
+}
+
+export declare interface TransactionConfirmationEvent {
+  accountId: string
+  message: Message
+  confirmed: boolean
+}
+
+export declare interface TransactionEvent {
+  accountId: string
+  message: Message
+}
+
 export declare class AccountManager {
   constructor(options: ManagerOptions)
   setStoragePassword(password: string): void
@@ -153,12 +171,23 @@ export declare class AccountManager {
   getAccount(accountId: string | number): Account | undefined
   getAccounts(): Account[]
   removeAccount(accountId: string | number): void
-  syncAccounts(): Promise<SyncedAccount[]>
+  syncAccounts(options?: SyncOptions): Promise<SyncedAccount[]>
   internalTransfer(fromAccount: Account, toAccount: Account, amount: number): Promise<Message>
   backup(destination: string): string
   importAccounts(source: string, password: string): void
   isLatestAddressUnused(): Promise<boolean>
   setClientOptions(options: ClientOptions): void
+  // events
+  getBalanceChangeEvents(count?: number, skip?: number, fromTimestamp?: number): BalanceChangeEvent[]
+  getBalanceChangeEventCount(fromTimestamp?: number): number
+  getTransactionConfirmationEvents(count?: number, skip?: number, fromTimestamp?: number): TransactionConfirmationEvent[]
+  getTransactionConfirmationEventCount(fromTimestamp?: number): number
+  getNewTransactionEvents(count?: number, skip?: number, fromTimestamp?: number): TransactionEvent[]
+  getNewTransactionEventCount(fromTimestamp?: number): number
+  getReattachmentEvents(count?: number, skip?: number, fromTimestamp?: number): TransactionEvent[]
+  getReattachmentEventCount(fromTimestamp?: number): number
+  getBroadcastEvents(count?: number, skip?: number, fromTimestamp?: number): TransactionEvent[]
+  getBroadcastEventCount(fromTimestamp?: number): number
 }
 
 export declare type Event = 'ErrorThrown' |

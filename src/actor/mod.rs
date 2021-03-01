@@ -85,7 +85,10 @@ impl WalletMessageHandler {
             MessageType::CallAccountMethod { account_id, method } => {
                 convert_async_panics(|| async { self.call_account_method(account_id, method).await }).await
             }
-            MessageType::SyncAccounts => convert_async_panics(|| async { self.sync_accounts().await }).await,
+            MessageType::SyncAccounts {
+                address_index,
+                gap_limit,
+            } => convert_async_panics(|| async { self.sync_accounts(address_index, gap_limit).await }).await,
             MessageType::Reattach { account_id, message_id } => {
                 convert_async_panics(|| async { self.reattach(account_id, message_id).await }).await
             }
@@ -166,8 +169,8 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-            MessageType::OpenLedgerApp(is_simulator) => {
-                convert_panics(|| crate::open_ledger_app(*is_simulator).map(|_| ResponseType::OpenedLedgerApp))
+            MessageType::GetLedgerStatus(is_simulator) => {
+                convert_panics(|| Ok(ResponseType::LedgerStatus(crate::get_ledger_status(*is_simulator))))
             }
             MessageType::DeleteStorage => {
                 convert_async_panics(|| async move {
@@ -251,8 +254,15 @@ impl WalletMessageHandler {
         Ok(ResponseType::Reattached(message_id.to_string()))
     }
 
-    async fn sync_accounts(&self) -> Result<ResponseType> {
-        let synced = self.account_manager.sync_accounts().await?;
+    async fn sync_accounts(&self, address_index: &Option<usize>, gap_limit: &Option<usize>) -> Result<ResponseType> {
+        let mut synchronizer = self.account_manager.sync_accounts()?;
+        if let Some(address_index) = address_index {
+            synchronizer = synchronizer.address_index(*address_index);
+        }
+        if let Some(gap_limit) = gap_limit {
+            synchronizer = synchronizer.gap_limit(*gap_limit);
+        }
+        let synced = synchronizer.execute().await?;
         Ok(ResponseType::SyncedAccounts(synced))
     }
 

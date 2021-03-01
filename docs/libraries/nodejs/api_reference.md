@@ -108,9 +108,15 @@ Removes the account with the given identifier or index.
 | --------- | ----------------------------- | ----------------- | --------------------------------------- |
 | accountId | <code>string \| number</code> | <code>null</code> | The account identifier or account index |
 
-#### syncAccounts()
+#### syncAccounts([options])
 
 Synchronize all stored accounts with the Tangle.
+
+| Param                  | Type                | Default                           | Description                                           |
+| ---------------------- | ------------------- | --------------------------------- | ----------------------------------------------------- |
+| [options]              | <code>object</code> | <code>{}</code>                   | The sync options                                      |
+| [options.addressIndex] | <code>number</code> | <code>latest address index</code> | The index of the first account address to sync        |
+| [options.gapLimit]     | <code>number</code> | <code>10</code>                   | The number of addresses to check on each account sync |
 
 **Returns** A promise resolving to an array of [SyncedAccount](#syncedaccount).
 
@@ -158,6 +164,106 @@ Updates the client options for all accounts.
 | Param   | Type                                         | Default           | Description                    |
 | ------- | -------------------------------------------- | ----------------- | ------------------------------ |
 | options | <code>[ClientOptions](#clientoptions)</code> | <code>null</code> | The new account client options |
+
+#### getBalanceChangeEvents([count, skip, fromTimestamp])
+
+Gets the persisted balance change events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, address: string, balanceChange: { spent: number, received: number } }
+
+#### getBalanceChangeEventCount([fromTimestamp])
+
+Gets the number of persisted balance change events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+#### getTransactionConfirmationEvents([count, skip, fromTimestamp])
+
+Gets the persisted transaction confirmation change events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, message: Message, confirmed: boolean }
+
+#### getTransactionConfirmationEventCount([fromTimestamp])
+
+Gets the number of persisted transaction confirmation change events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+#### getNewTransactionEvents([count, skip, fromTimestamp])
+
+Gets the persisted new transaction events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, message: Message }
+
+#### getNewTransactionEventCount([fromTimestamp])
+
+Gets the number of persisted new transaction events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+#### getReattachmentEvents([count, skip, fromTimestamp])
+
+Gets the persisted transaction reattachment events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, message: Message }
+
+#### getReattachmentEventCount([fromTimestamp])
+
+Gets the number of persisted transaction reattachment events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+#### getBroadcastEvents([count, skip, fromTimestamp])
+
+Gets the persisted transaction broadcast events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, message: Message }
+
+#### getBroadcastEventCount([fromTimestamp])
+
+Gets the number of persisted transaction broadcast events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
 
 ### SyncedAccount
 
@@ -237,6 +343,14 @@ Returns the account's balance information object.
 
 Balance object: { total: number, available: number, incoming: number, outgoing: number }
 
+#### messageCount([type])
+
+Returns the number of messages associated with the account.
+
+| Param  | Type                | Default           | Description                                                                              |
+| ------ | ------------------- | ----------------- | ---------------------------------------------------------------------------------------- |
+| [type] | <code>number</code> | <code>null</code> | The message type filter (Received = 1, Sent = 2, Failed = 3, Unconfirmed = 4, Value = 5) |
+
 #### listMessages([count, from, type])
 
 Returns the account's messages.
@@ -262,12 +376,11 @@ Address object: { address: string, balance: number, keyIndex: number }
 
 Synchronizes the account with the Tangle.
 
-| Param                     | Type                 | Default                           | Description                            |
-| ------------------------- | -------------------- | --------------------------------- | -------------------------------------- |
-| [options]                 | <code>object</code>  | <code>{}</code>                   | The sync options                       |
-| [options.addressIndex]    | <code>number</code>  | <code>latest address index</code> | The index of the first address to sync |
-| [options.gapLimit]        | <code>number</code>  | <code>10</code>                   | The number of addresses to check       |
-| [options.skipPersistance] | <code>boolean</code> | <code>false</code>                | Skip updating the account in storage   |
+| Param                  | Type                | Default                           | Description                            |
+| ---------------------- | ------------------- | --------------------------------- | -------------------------------------- |
+| [options]              | <code>object</code> | <code>{}</code>                   | The sync options                       |
+| [options.addressIndex] | <code>number</code> | <code>latest address index</code> | The index of the first address to sync |
+| [options.gapLimit]     | <code>number</code> | <code>10</code>                   | The number of addresses to check       |
 
 **Returns** a [SyncedAccount](#syncedaccount) instance.
 

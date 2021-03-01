@@ -8,12 +8,12 @@ use crate::{
     },
     client::ClientOptions,
     event::{
-        emit_balance_change, emit_confirmation_state_change, emit_transaction_event, BalanceChange,
-        TransactionEventType,
+        emit_balance_change, emit_confirmation_state_change, emit_transaction_event, BalanceChange, BalanceEvent,
+        TransactionConfirmationChangeEvent, TransactionEvent, TransactionEventType,
     },
-    message::{Message, MessageType, Transfer},
+    message::{Message, MessagePayload, MessageType, Transfer},
     signing::SignerType,
-    storage::StorageAdapter,
+    storage::{StorageAdapter, Timestamp},
 };
 
 use std::{
@@ -34,7 +34,7 @@ use std::{
 use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
-use iota::{bee_rest_api::handlers::message_metadata::LedgerInclusionStateDto, MessageId, Payload};
+use iota::{bee_rest_api::handlers::message_metadata::LedgerInclusionStateDto, MessageId};
 use serde::Deserialize;
 use tokio::{
     sync::{
@@ -200,7 +200,7 @@ impl AccountManagerBuilder {
                         if let Some(parent) = path.parent() {
                             fs::create_dir_all(&parent)?;
                         }
-                        let storage = crate::storage::sqlite::SqliteStorageAdapter::new(&path, "accounts")?;
+                        let storage = crate::storage::sqlite::SqliteStorageAdapter::new(&path)?;
                         (Box::new(storage) as Box<dyn StorageAdapter + Send + Sync>, path)
                     }
                     ManagerStorage::Custom(storage) => (storage, self.storage_path.clone()),
@@ -322,7 +322,7 @@ impl AccountManager {
             .await?
             .lock()
             .await
-            .get_all()
+            .get_accounts()
             .await?;
         for parsed_account in accounts {
             match parsed_account {
@@ -449,7 +449,7 @@ impl AccountManager {
                 let _ = crate::monitor::unsubscribe(account_handle.clone());
             }
             for encrypted_account in &self.encrypted_accounts {
-                let decrypted = crate::storage::decrypt_account_json(encrypted_account, &key)?;
+                let decrypted = crate::storage::decrypt_record(encrypted_account, &key)?;
                 let account = serde_json::from_str::<Account>(&decrypted)?;
                 accounts.insert(
                     account.id().into(),
@@ -670,23 +670,20 @@ impl AccountManager {
             .await?
             .lock()
             .await
-            .remove(&account_id)
+            .remove_account(&account_id)
             .await?;
 
         Ok(())
     }
 
     /// Syncs all accounts.
-    pub async fn sync_accounts(&self) -> crate::Result<Vec<SyncedAccount>> {
+    pub fn sync_accounts(&self) -> crate::Result<AccountsSynchronizer> {
         self.check_storage_encryption()?;
-
-        sync_accounts(
+        Ok(AccountsSynchronizer::new(
             self.accounts.clone(),
-            &self.storage_path,
+            self.storage_path.clone(),
             self.output_consolidation_threshold,
-            None,
-        )
-        .await
+        ))
     }
 
     /// Transfers an amount from an account to another.
@@ -753,10 +750,7 @@ impl AccountManager {
 
                 for account_handle in self.accounts.read().await.values() {
                     stronghold_storage
-                        .set(
-                            &account_handle.read().await.id(),
-                            serde_json::to_string(&*account_handle.read().await)?,
-                        )
+                        .save_account(&account_handle.read().await.id(), &*account_handle.read().await)
                         .await?;
                 }
                 self.storage_folder.join(STRONGHOLD_FILENAME)
@@ -946,7 +940,7 @@ impl AccountManager {
             }
         };
 
-        account.cloned().ok_or(crate::Error::AccountNotFound)
+        account.cloned().ok_or(crate::Error::RecordNotFound)
     }
 
     /// Gets all accounts from storage.
@@ -992,6 +986,150 @@ impl AccountManager {
     }
 }
 
+macro_rules! event_getters_impl {
+    ($event_ty:ty, $get_fn_name: ident, $get_count_fn_name: ident) => {
+        impl AccountManager {
+            /// Gets the paginated events with an optional timestamp filter.
+            pub async fn $get_fn_name<T: Into<Option<Timestamp>>>(
+                &self,
+                count: usize,
+                skip: usize,
+                from_timestamp: T,
+            ) -> crate::Result<Vec<$event_ty>> {
+                crate::storage::get(&self.storage_path)
+                    .await?
+                    .lock()
+                    .await
+                    .$get_fn_name(count, skip, from_timestamp)
+                    .await
+            }
+
+            /// Gets the count of events with an optional timestamp filter.
+            pub async fn $get_count_fn_name<T: Into<Option<Timestamp>>>(
+                &self,
+                from_timestamp: T,
+            ) -> crate::Result<usize> {
+                let count = crate::storage::get(&self.storage_path)
+                    .await?
+                    .lock()
+                    .await
+                    .$get_count_fn_name(from_timestamp)
+                    .await;
+                Ok(count)
+            }
+        }
+    };
+}
+
+event_getters_impl!(BalanceEvent, get_balance_change_events, get_balance_change_event_count);
+event_getters_impl!(
+    TransactionConfirmationChangeEvent,
+    get_transaction_confirmation_events,
+    get_transaction_confirmation_event_count
+);
+event_getters_impl!(
+    TransactionEvent,
+    get_new_transaction_events,
+    get_new_transaction_event_count
+);
+event_getters_impl!(TransactionEvent, get_reattachment_events, get_reattachment_event_count);
+event_getters_impl!(TransactionEvent, get_broadcast_events, get_broadcast_event_count);
+
+/// The accounts synchronizer.
+pub struct AccountsSynchronizer {
+    accounts: AccountStore,
+    storage_file_path: PathBuf,
+    address_index: Option<usize>,
+    gap_limit: Option<usize>,
+    output_consolidation_threshold: usize,
+}
+
+impl AccountsSynchronizer {
+    fn new(accounts: AccountStore, storage_file_path: PathBuf, output_consolidation_threshold: usize) -> Self {
+        Self {
+            accounts,
+            storage_file_path,
+            address_index: None,
+            gap_limit: None,
+            output_consolidation_threshold,
+        }
+    }
+
+    /// Number of address indexes that are generated.
+    pub fn gap_limit(mut self, limit: usize) -> Self {
+        self.gap_limit.replace(limit);
+        self
+    }
+
+    /// Initial address index to start syncing.
+    pub fn address_index(mut self, address_index: usize) -> Self {
+        self.address_index.replace(address_index);
+        self
+    }
+
+    /// Syncs the accounts with the Tangle.
+    pub async fn execute(self) -> crate::Result<Vec<SyncedAccount>> {
+        let mut synced_accounts = vec![];
+        let mut last_account = None;
+
+        {
+            let accounts = self.accounts.read().await;
+            for account_handle in accounts.values() {
+                let mut sync = account_handle.sync().await;
+                if let Some(index) = self.address_index {
+                    sync = sync.address_index(index);
+                }
+                if let Some(limit) = self.gap_limit {
+                    sync = sync.gap_limit(limit);
+                }
+                let synced_account = sync.execute().await?;
+
+                let account = account_handle.read().await;
+                last_account = Some((
+                    account.messages().is_empty() || account.addresses().iter().all(|addr| *addr.balance() == 0),
+                    account.client_options().clone(),
+                    account.signer_type().clone(),
+                ));
+                synced_accounts.push(synced_account);
+            }
+        }
+
+        let discovered_accounts_res = match last_account {
+            Some((is_empty, client_options, signer_type)) => {
+                if is_empty {
+                    log::debug!("[SYNC] running account discovery because the latest account is empty");
+                    discover_accounts(
+                        self.accounts.clone(),
+                        &self.storage_file_path,
+                        &client_options,
+                        Some(signer_type),
+                        self.output_consolidation_threshold,
+                    )
+                    .await
+                } else {
+                    log::debug!("[SYNC] skipping account discovery because the latest account isn't empty");
+                    Ok(vec![])
+                }
+            }
+            None => Ok(vec![]), /* None => discover_accounts(accounts.clone(), &storage_path,
+                                 * &ClientOptions::default(), None).await, */
+        };
+
+        if let Ok(discovered_accounts) = discovered_accounts_res {
+            if !discovered_accounts.is_empty() {
+                let mut accounts = self.accounts.write().await;
+                for (account_handle, synced_account) in discovered_accounts {
+                    account_handle.write().await.set_skip_persistance(false);
+                    accounts.insert(account_handle.id().await, account_handle);
+                    synced_accounts.push(synced_account);
+                }
+            }
+        }
+
+        Ok(synced_accounts)
+    }
+}
+
 async fn poll(
     accounts: AccountStore,
     storage_file_path: PathBuf,
@@ -1004,13 +1142,11 @@ async fn poll(
         for account_handle in accounts.read().await.values() {
             accounts_before_sync.push(account_handle.read().await.clone());
         }
-        let synced_accounts = sync_accounts(
-            accounts.clone(),
-            &storage_file_path,
-            output_consolidation_threshold,
-            Some(0),
-        )
-        .await?;
+        let synced_accounts =
+            AccountsSynchronizer::new(accounts.clone(), storage_file_path, output_consolidation_threshold)
+                .address_index(0)
+                .execute()
+                .await?;
         let accounts_after_sync = accounts.read().await;
 
         log::debug!("[POLLING] synced accounts");
@@ -1035,26 +1171,27 @@ async fn poll(
                         address_after_sync.balance()
                     );
                     emit_balance_change(
-                        account_after_sync.id(),
-                        address_after_sync,
+                        &account_after_sync,
+                        address_after_sync.address(),
                         if address_after_sync.balance() > address_before_sync.balance() {
                             BalanceChange::received(address_after_sync.balance() - address_before_sync.balance())
                         } else {
                             BalanceChange::spent(address_before_sync.balance() - address_after_sync.balance())
                         },
-                    );
+                    )
+                    .await?;
                 }
             }
 
             // new messages event
-            account_after_sync
+            for message in account_after_sync
                 .messages()
                 .iter()
                 .filter(|message| !account_before_sync.messages().contains(message))
-                .for_each(|message| {
-                    log::info!("[POLLING] new message: {:?}", message.id());
-                    emit_transaction_event(TransactionEventType::NewTransaction, account_after_sync.id(), &message)
-                });
+            {
+                log::info!("[POLLING] new message: {:?}", message.id());
+                emit_transaction_event(TransactionEventType::NewTransaction, &account_after_sync, &message).await?;
+            }
 
             // confirmation state change event
             for message in account_after_sync.messages() {
@@ -1064,7 +1201,7 @@ async fn poll(
                 };
                 if changed {
                     log::info!("[POLLING] message confirmed: {:?}", message.id());
-                    emit_confirmation_state_change(account_after_sync.id(), &message, true);
+                    emit_confirmation_state_change(&account_after_sync, &message, true).await?;
                 }
             }
         }
@@ -1079,7 +1216,7 @@ async fn poll(
         let mut synced_accounts = Vec::new();
         for account_handle in accounts.read().await.values() {
             synced_accounts.push(SyncedAccount::from(account_handle.clone()).await);
-            let (account_handle, unconfirmed_messages): (AccountHandle, Vec<(MessageId, Option<Payload>)>) = {
+            let (account_handle, unconfirmed_messages): (AccountHandle, Vec<(MessageId, Option<MessagePayload>)>) = {
                 let account = account_handle.read().await;
                 let unconfirmed_messages = account
                     .list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed))
@@ -1127,10 +1264,9 @@ async fn poll(
     for retried_data in retried {
         let mut account = retried_data.account_handle.write().await;
         let client = crate::client::get_client(account.client_options()).await;
-        let account_id = account.id();
 
         for message in &retried_data.reattached {
-            emit_transaction_event(TransactionEventType::Reattachment, &account_id, &message);
+            emit_transaction_event(TransactionEventType::Reattachment, &account, &message).await?;
         }
 
         account.append_messages(retried_data.reattached);
@@ -1186,69 +1322,6 @@ async fn discover_accounts(
     Ok(synced_accounts)
 }
 
-async fn sync_accounts<'a>(
-    accounts: AccountStore,
-    storage_file_path: &PathBuf,
-    output_consolidation_threshold: usize,
-    address_index: Option<usize>,
-) -> crate::Result<Vec<SyncedAccount>> {
-    let mut synced_accounts = vec![];
-    let mut last_account = None;
-
-    {
-        let accounts = accounts.read().await;
-        for account_handle in accounts.values() {
-            let mut sync = account_handle.sync().await;
-            if let Some(index) = address_index {
-                sync = sync.address_index(index);
-            }
-            let synced_account = sync.execute().await?;
-
-            let account = account_handle.read().await;
-            last_account = Some((
-                account.messages().is_empty() || account.addresses().iter().all(|addr| *addr.balance() == 0),
-                account.client_options().clone(),
-                account.signer_type().clone(),
-            ));
-            synced_accounts.push(synced_account);
-        }
-    }
-
-    let discovered_accounts_res = match last_account {
-        Some((is_empty, client_options, signer_type)) => {
-            if is_empty {
-                log::debug!("[SYNC] running account discovery because the latest account is empty");
-                discover_accounts(
-                    accounts.clone(),
-                    &storage_file_path,
-                    &client_options,
-                    Some(signer_type),
-                    output_consolidation_threshold,
-                )
-                .await
-            } else {
-                log::debug!("[SYNC] skipping account discovery because the latest account isn't empty");
-                Ok(vec![])
-            }
-        }
-        None => Ok(vec![]), /* None => discover_accounts(accounts.clone(), &storage_path, &ClientOptions::default(),
-                             * None).await, */
-    };
-
-    if let Ok(discovered_accounts) = discovered_accounts_res {
-        if !discovered_accounts.is_empty() {
-            let mut accounts = accounts.write().await;
-            for (account_handle, synced_account) in discovered_accounts {
-                account_handle.write().await.set_skip_persistance(false);
-                accounts.insert(account_handle.id().await, account_handle);
-                synced_accounts.push(synced_account);
-            }
-        }
-    }
-
-    Ok(synced_accounts)
-}
-
 struct RetriedData {
     #[allow(dead_code)]
     promoted: Vec<Message>,
@@ -1267,7 +1340,7 @@ async fn consolidate_outputs(synced_accounts: &[SyncedAccount]) -> crate::Result
 async fn retry_unconfirmed_transactions(synced_accounts: &[SyncedAccount]) -> crate::Result<Vec<RetriedData>> {
     let mut retried_messages = vec![];
     for synced in synced_accounts {
-        let unconfirmed_messages: Vec<(MessageId, Option<Payload>)> = synced
+        let unconfirmed_messages: Vec<(MessageId, Option<MessagePayload>)> = synced
             .account_handle()
             .read()
             .await
@@ -1359,6 +1432,7 @@ mod tests {
     use crate::{
         address::{AddressBuilder, AddressWrapper, IotaAddress},
         client::ClientOptionsBuilder,
+        event::*,
         message::Message,
     };
     use iota::{Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Payload};
@@ -1527,7 +1601,7 @@ mod tests {
                         .with_network_id(0)
                         .finish()
                         .unwrap(),
-                    &[],
+                    &[crate::test_utils::generate_random_address()],
                 )
                 .with_confirmed(Some(true))
                 .finish()])
@@ -1617,8 +1691,8 @@ mod tests {
             let account_get_res = manager.get_account(account_handle.read().await.id()).await;
             assert!(account_get_res.is_err(), true);
             match account_get_res.unwrap_err() {
-                crate::Error::AccountNotFound => {}
-                _ => panic!("unexpected get_account response; expected AccountNotFound"),
+                crate::Error::RecordNotFound => {}
+                _ => panic!("unexpected get_account response; expected RecordNotFound"),
             }
         })
         .await;
@@ -1647,6 +1721,13 @@ mod tests {
                 backup_path
             };
 
+            let is_encrypted = crate::storage::get(manager.storage_path())
+                .await
+                .unwrap()
+                .lock()
+                .await
+                .is_encrypted();
+
             // get another manager instance so we can import the accounts to a different storage
             #[allow(unused_mut)]
             let mut manager = crate::test_utils::get_account_manager().await;
@@ -1671,18 +1752,20 @@ mod tests {
                 }
             }
 
-            manager.set_storage_password("password").await.unwrap();
+            if is_encrypted {
+                manager.set_storage_password("password").await.unwrap();
+            }
 
             // import the accounts from the backup and assert that it's the same
 
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             manager
-                .import_accounts(backup_file_path, "password".to_string())
+                .import_accounts(&backup_file_path, "password".to_string())
                 .await
                 .unwrap();
 
             #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-            manager.import_accounts(backup_file_path).await.unwrap();
+            manager.import_accounts(&backup_file_path).await.unwrap();
 
             let imported_account = manager.get_account(account_handle.read().await.id()).await.unwrap();
             // set the account storage path field so the assert works
@@ -1752,4 +1835,145 @@ mod tests {
         })
         .await;
     }
+
+    #[tokio::test]
+    async fn get_balance_change_events() {
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+            let account = account_handle.read().await;
+            let change_events = vec![
+                BalanceChange::spent(0),
+                BalanceChange::spent(1),
+                BalanceChange::spent(2),
+                BalanceChange::spent(3),
+            ];
+            for change in &change_events {
+                emit_balance_change(&account, account.latest_address().address(), change.clone())
+                    .await
+                    .unwrap();
+            }
+            assert!(
+                manager.get_balance_change_event_count(None).await.unwrap() == change_events.len(),
+                true
+            );
+            for (take, skip) in &[(2, 0), (2, 2)] {
+                let found = manager
+                    .get_balance_change_events(*take, *skip, None)
+                    .await
+                    .unwrap()
+                    .into_iter()
+                    .map(|e| e.balance_change)
+                    .collect::<Vec<BalanceChange>>();
+                let expected = change_events
+                    .clone()
+                    .into_iter()
+                    .skip(*skip)
+                    .take(*take)
+                    .collect::<Vec<BalanceChange>>();
+                assert!(found == expected, true);
+            }
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn get_transaction_confirmation_events() {
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+            let account = account_handle.read().await;
+            let confirmation_change_events = vec![
+                (crate::test_utils::GenerateMessageBuilder::default().build(), true),
+                (crate::test_utils::GenerateMessageBuilder::default().build(), false),
+                (crate::test_utils::GenerateMessageBuilder::default().build(), false),
+                (crate::test_utils::GenerateMessageBuilder::default().build(), true),
+            ];
+            for (message, change) in &confirmation_change_events {
+                emit_confirmation_state_change(&account, message, *change)
+                    .await
+                    .unwrap();
+            }
+            assert!(
+                manager.get_transaction_confirmation_event_count(None).await.unwrap()
+                    == confirmation_change_events.len(),
+                true
+            );
+            for (take, skip) in &[(2, 0), (2, 2)] {
+                let found = manager
+                    .get_transaction_confirmation_events(*take, *skip, None)
+                    .await
+                    .unwrap()
+                    .into_iter()
+                    .map(|e| (e.message, e.confirmed))
+                    .collect::<Vec<(Message, bool)>>();
+                let expected = confirmation_change_events
+                    .clone()
+                    .into_iter()
+                    .skip(*skip)
+                    .take(*take)
+                    .collect::<Vec<(Message, bool)>>();
+                assert!(found == expected, true);
+            }
+        })
+        .await;
+    }
+
+    macro_rules! transaction_event_test {
+        ($event_type: expr, $count_get_fn: ident, $get_fn: ident) => {
+            #[tokio::test]
+            async fn $get_fn() {
+                crate::test_utils::with_account_manager(
+                    crate::test_utils::TestType::Storage,
+                    |manager, _| async move {
+                        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+                        let account = account_handle.read().await;
+                        let events = vec![
+                            crate::test_utils::GenerateMessageBuilder::default().build(),
+                            crate::test_utils::GenerateMessageBuilder::default().build(),
+                            crate::test_utils::GenerateMessageBuilder::default().build(),
+                            crate::test_utils::GenerateMessageBuilder::default().build(),
+                        ];
+                        for message in &events {
+                            emit_transaction_event($event_type, &account, message)
+                                .await
+                                .unwrap();
+                        }
+                        assert!(manager.$count_get_fn(None).await.unwrap() == events.len(), true);
+                        for (take, skip) in &[(2, 0), (2, 2)] {
+                            let found = manager
+                                .$get_fn(*take, *skip, None)
+                                .await
+                                .unwrap()
+                                .into_iter()
+                                .map(|e| e.message)
+                                .collect::<Vec<Message>>();
+                            let expected = events
+                                .clone()
+                                .into_iter()
+                                .skip(*skip)
+                                .take(*take)
+                                .collect::<Vec<Message>>();
+                            assert!(found == expected, true);
+                        }
+                    },
+                )
+                .await;
+            }
+        };
+    }
+
+    transaction_event_test!(
+        TransactionEventType::NewTransaction,
+        get_new_transaction_event_count,
+        get_new_transaction_events
+    );
+    transaction_event_test!(
+        TransactionEventType::Reattachment,
+        get_reattachment_event_count,
+        get_reattachment_events
+    );
+    transaction_event_test!(
+        TransactionEventType::Broadcast,
+        get_broadcast_event_count,
+        get_broadcast_events
+    );
 }

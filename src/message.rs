@@ -5,7 +5,11 @@ use crate::address::{Address, AddressOutput, AddressWrapper, IotaAddress};
 use bee_common::packable::Packable;
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
-pub use iota::{Essence, IndexationPayload, Message as IotaMessage, MessageId, Output, Payload};
+pub use iota::{
+    Essence, IndexationPayload, Input, Message as IotaMessage, MessageId, MilestonePayload, Output, Payload,
+    ReceiptPayload, RegularEssence, SignatureLockedDustAllowanceOutput, SignatureLockedSingleOutput,
+    TransactionPayload, TreasuryOutput, TreasuryTransactionPayload, UnlockBlock,
+};
 use serde::{de::Deserializer, Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
 use std::{
@@ -239,6 +243,301 @@ impl Value {
     }
 }
 
+/// Signature locked single output.
+#[derive(Debug, Clone, Serialize, Deserialize, Getters, Eq, PartialEq)]
+#[getset(get = "pub")]
+pub struct TransactionSignatureLockedSingleOutput {
+    /// The output adrress.
+    #[serde(with = "crate::serde::iota_address_serde")]
+    address: AddressWrapper,
+    /// The output amount.
+    amount: u64,
+    /// Whether the output is a remander value output or not.
+    remainder: bool,
+}
+
+impl TransactionSignatureLockedSingleOutput {
+    fn new(output: &SignatureLockedSingleOutput, bech32_hrp: String, remainder: bool) -> Self {
+        Self {
+            address: AddressWrapper::new(*output.address(), bech32_hrp),
+            amount: output.amount(),
+            remainder,
+        }
+    }
+}
+
+/// Dust allowance output.
+#[derive(Debug, Clone, Serialize, Deserialize, Getters, Eq, PartialEq)]
+#[getset(get = "pub")]
+pub struct TransactionSignatureLockedDustAllowanceOutput {
+    /// The output adrress.
+    #[serde(with = "crate::serde::iota_address_serde")]
+    address: AddressWrapper,
+    /// The output amount.
+    amount: u64,
+}
+
+impl TransactionSignatureLockedDustAllowanceOutput {
+    fn new(output: &SignatureLockedDustAllowanceOutput, bech32_hrp: String) -> Self {
+        Self {
+            address: AddressWrapper::new(*output.address(), bech32_hrp),
+            amount: output.amount(),
+        }
+    }
+}
+
+/// The transaction output.
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+#[serde(tag = "type", content = "data")]
+pub enum TransactionOutput {
+    /// Signature locked single output.
+    SignatureLockedSingle(TransactionSignatureLockedSingleOutput),
+    /// Dust allowance output.
+    SignatureLockedDustAllowance(TransactionSignatureLockedDustAllowanceOutput),
+    /// Trasury output.
+    Treasury(TreasuryOutput),
+}
+
+impl TransactionOutput {
+    fn new(output: &Output, bech32_hrp: String, remainder: bool) -> Self {
+        match output {
+            Output::SignatureLockedSingle(output) => Self::SignatureLockedSingle(
+                TransactionSignatureLockedSingleOutput::new(output, bech32_hrp, remainder),
+            ),
+            Output::SignatureLockedDustAllowance(output) => Self::SignatureLockedDustAllowance(
+                TransactionSignatureLockedDustAllowanceOutput::new(output, bech32_hrp),
+            ),
+            Output::Treasury(output) => Self::Treasury(output.clone()),
+            _ => unimplemented!(),
+        }
+    }
+}
+
+/// Regular essence.
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+pub struct TransactionRegularEssence {
+    inputs: Box<[Input]>,
+    outputs: Box<[TransactionOutput]>,
+    payload: Option<Payload>,
+}
+
+impl TransactionRegularEssence {
+    /// Gets the transaction inputs.
+    pub fn inputs(&self) -> &[Input] {
+        &self.inputs
+    }
+
+    /// Gets the transaction outputs.
+    pub fn outputs(&self) -> &[TransactionOutput] {
+        &self.outputs
+    }
+
+    /// Gets the transaction chained payload.
+    pub fn payload(&self) -> &Option<Payload> {
+        &self.payload
+    }
+}
+
+impl TransactionRegularEssence {
+    fn new(
+        message_id: &MessageId,
+        regular_essence: &RegularEssence,
+        bech32_hrp: String,
+        account_addresses: &[Address],
+    ) -> Self {
+        let mut inputs = Vec::new();
+        for input in regular_essence.inputs() {
+            inputs.push(input.clone());
+        }
+        let mut outputs = Vec::new();
+
+        let tx_outputs = regular_essence.outputs();
+        match tx_outputs.len() {
+            0 => {}
+            // if the tx has one output, it is not a remainder output
+            1 => {
+                outputs.push(TransactionOutput::new(tx_outputs.first().unwrap(), bech32_hrp, false));
+            }
+            // if the tx has more than one output, we check which one is the remainder
+            _ => {
+                let tx_outputs: Vec<(&IotaAddress, &Output)> = tx_outputs
+                    .iter()
+                    .map(|output| {
+                        let address = match output {
+                            Output::SignatureLockedDustAllowance(o) => o.address(),
+                            Output::SignatureLockedSingle(o) => o.address(),
+                            _ => unimplemented!(),
+                        };
+                        (address, output)
+                    })
+                    .collect();
+                // if all outputs belongs to the account, we can't determine whether this transfer is incoming or
+                // outgoing; so we assume that the highest address index holds the remainder, and the rest is the
+                // transfer outputs
+                let all_outputs_belongs_to_account = tx_outputs.iter().all(|(address, _)| {
+                    let address_belongs_to_account = account_addresses.iter().any(|a| &a.address().as_ref() == address);
+                    address_belongs_to_account
+                });
+                if all_outputs_belongs_to_account {
+                    let mut remainder: Option<&Address> = None;
+                    for (output_address, _) in &tx_outputs {
+                        let account_address = account_addresses
+                            .iter()
+                            .find(|a| &a.address().as_ref() == output_address)
+                            .unwrap(); // safe to unwrap since we already asserted that the address belongs to the account
+                        match remainder {
+                            Some(remainder_address) => {
+                                let address_index = *account_address.key_index();
+                                // if the address index is the highest or it's the same as the previous one and this is
+                                // a change address, we assume that it holds the remainder value
+                                if address_index > *remainder_address.key_index()
+                                    || (address_index == *remainder_address.key_index() && *account_address.internal())
+                                {
+                                    remainder = Some(account_address);
+                                }
+                            }
+                            None => {
+                                remainder = Some(account_address);
+                            }
+                        }
+                    }
+                    let remainder = remainder.map(|a| a.address().as_ref());
+                    for (output_address, output) in tx_outputs {
+                        outputs.push(TransactionOutput::new(
+                            output,
+                            bech32_hrp.clone(),
+                            remainder == Some(output_address),
+                        ));
+                    }
+                } else {
+                    let sent = !account_addresses
+                        .iter()
+                        .any(|address| address.outputs().iter().any(|o| o.message_id() == message_id));
+                    for (output_address, output) in tx_outputs {
+                        let address_belongs_to_account =
+                            account_addresses.iter().any(|a| a.address().as_ref() == output_address);
+                        if sent {
+                            let remainder = address_belongs_to_account;
+                            outputs.push(TransactionOutput::new(output, bech32_hrp.clone(), remainder));
+                        } else {
+                            let remainder = !address_belongs_to_account;
+                            outputs.push(TransactionOutput::new(output, bech32_hrp.clone(), remainder));
+                        }
+                    }
+                }
+            }
+        }
+
+        Self {
+            inputs: inputs.into_boxed_slice(),
+            outputs: outputs.into_boxed_slice(),
+            payload: regular_essence.payload().clone(),
+        }
+    }
+}
+
+/// The transaction essence.
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+#[serde(tag = "type", content = "data")]
+pub enum TransactionEssence {
+    /// Regular essence type.
+    Regular(TransactionRegularEssence),
+}
+
+impl TransactionEssence {
+    #[doc(hidden)]
+    pub fn new(message_id: &MessageId, essence: &Essence, bech32_hrp: String, account_addresses: &[Address]) -> Self {
+        match essence {
+            Essence::Regular(regular) => Self::Regular(TransactionRegularEssence::new(
+                message_id,
+                regular,
+                bech32_hrp,
+                account_addresses,
+            )),
+            _ => unimplemented!(),
+        }
+    }
+}
+
+/// A transaction payload.
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+pub struct MessageTransactionPayload {
+    essence: TransactionEssence,
+    unlock_blocks: Box<[UnlockBlock]>,
+}
+
+impl MessageTransactionPayload {
+    /// The transaction essence.
+    pub fn essence(&self) -> &TransactionEssence {
+        &self.essence
+    }
+
+    fn essence_mut(&mut self) -> &mut TransactionEssence {
+        &mut self.essence
+    }
+
+    /// The unlock blocks.
+    pub fn unlock_blocks(&self) -> &[UnlockBlock] {
+        &self.unlock_blocks
+    }
+
+    #[doc(hidden)]
+    pub fn new(
+        message_id: &MessageId,
+        payload: &TransactionPayload,
+        bech32_hrp: String,
+        account_addresses: &[Address],
+    ) -> Self {
+        let mut unlock_blocks = Vec::new();
+        for unlock_block in payload.unlock_blocks() {
+            unlock_blocks.push(unlock_block.clone());
+        }
+        Self {
+            essence: TransactionEssence::new(message_id, payload.essence(), bech32_hrp, account_addresses),
+            unlock_blocks: unlock_blocks.into_boxed_slice(),
+        }
+    }
+}
+
+/// The message's payload.
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+#[serde(tag = "type", content = "data")]
+pub enum MessagePayload {
+    /// Transaction payload.
+    Transaction(Box<MessageTransactionPayload>),
+    /// Milestone payload.
+    Milestone(Box<MilestonePayload>),
+    /// Indexation payload.
+    Indexation(Box<IndexationPayload>),
+    /// Receipt payload.
+    Receipt(Box<ReceiptPayload>),
+    /// Treasury Transaction payload.
+    TreasuryTransaction(Box<TreasuryTransactionPayload>),
+}
+
+impl MessagePayload {
+    pub(crate) fn new(
+        message_id: &MessageId,
+        payload: Payload,
+        bech32_hrp: String,
+        account_addresses: &[Address],
+    ) -> Self {
+        match payload {
+            Payload::Transaction(tx) => Self::Transaction(Box::new(MessageTransactionPayload::new(
+                message_id,
+                &tx,
+                bech32_hrp,
+                account_addresses,
+            ))),
+            Payload::Milestone(milestone) => Self::Milestone(milestone),
+            Payload::Indexation(indexation) => Self::Indexation(indexation),
+            Payload::Receipt(receipt) => Self::Receipt(receipt),
+            Payload::TreasuryTransaction(treasury_tx) => Self::TreasuryTransaction(treasury_tx),
+            _ => unimplemented!(),
+        }
+    }
+}
+
 /// A message definition.
 #[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize, Eq)]
 #[getset(get = "pub", set = "pub(crate)")]
@@ -253,7 +552,7 @@ pub struct Message {
     #[serde(rename = "payloadLength")]
     pub payload_length: usize,
     /// Message payload.
-    pub payload: Option<Payload>,
+    pub payload: Option<MessagePayload>,
     /// The transaction timestamp.
     pub timestamp: DateTime<Utc>,
     /// Transaction nonce.
@@ -272,6 +571,28 @@ pub struct Message {
     /// The message's remainder value sum.
     #[serde(rename = "remainderValue")]
     pub remainder_value: u64,
+}
+
+impl Message {
+    pub(crate) fn set_bech32_hrp(&mut self, bech32_hrp: String) {
+        if let Some(MessagePayload::Transaction(tx)) = self.payload.as_mut() {
+            match tx.essence_mut() {
+                TransactionEssence::Regular(essence) => {
+                    for output in essence.outputs.iter_mut() {
+                        match output {
+                            TransactionOutput::SignatureLockedSingle(output) => {
+                                output.address.bech32_hrp = bech32_hrp.clone();
+                            }
+                            TransactionOutput::SignatureLockedDustAllowance(output) => {
+                                output.address.bech32_hrp = bech32_hrp.clone();
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 impl Hash for Message {
@@ -303,15 +624,17 @@ pub(crate) struct MessageBuilder<'a> {
     iota_message: IotaMessage,
     account_addresses: &'a [Address],
     confirmed: Option<bool>,
+    bech32_hrp: String,
 }
 
 impl<'a> MessageBuilder<'a> {
-    pub fn new(id: MessageId, iota_message: IotaMessage, account_addresses: &'a [Address]) -> Self {
+    pub fn new(id: MessageId, iota_message: IotaMessage, account_addresses: &'a [Address], bech32_hrp: String) -> Self {
         Self {
             id,
             iota_message,
             account_addresses,
             confirmed: None,
+            bech32_hrp,
         }
     }
 
@@ -320,109 +643,40 @@ impl<'a> MessageBuilder<'a> {
         self
     }
 
-    /// Gets the absolute value of the transaction.
-    pub fn compute_value(iota_message: &IotaMessage, id: &MessageId, account_addresses: &[Address]) -> Value {
-        let amount = match iota_message.payload().as_ref() {
-            Some(Payload::Transaction(tx)) => {
-                let essence = tx.essence();
-                let outputs = match essence {
-                    Essence::Regular(essence) => essence.outputs(),
-                    _ => unimplemented!(),
-                };
-                let outputs: Vec<(&IotaAddress, u64)> = outputs
-                    .iter()
-                    .map(|output| match output {
-                        Output::SignatureLockedDustAllowance(o) => (o.address(), o.amount()),
-                        Output::SignatureLockedSingle(o) => (o.address(), o.amount()),
-                        _ => unimplemented!(),
-                    })
-                    .collect();
-                // if all outputs belongs to the account, we can't determine whether this transfer is incoming or
-                // outgoing; so we assume that the highest address index holds the remainder, and the rest is the
-                // transfer outputs
-                let all_outputs_belongs_to_account = outputs.iter().all(|(address, _)| {
-                    let address_belongs_to_account = account_addresses.iter().any(|a| &a.address().as_ref() == address);
-                    address_belongs_to_account
-                });
-                if all_outputs_belongs_to_account {
-                    let mut remainder = (None, 0); // (address_index, amount)
-                    let mut total = 0;
-                    for (address, amount) in outputs {
-                        total += amount;
-                        let account_address = account_addresses
-                            .iter()
-                            .find(|a| a.address().as_ref() == address)
-                            .unwrap(); // safe to unwrap since we already asserted that the address belongs to the account
-                        match remainder.0 {
-                            Some(index) => {
-                                let address_index = *account_address.key_index();
-                                // if the address index is the highest or it's the same as the previous one and this is
-                                // a change address, we assume that it holds the
-                                // remainder value
-                                if address_index > index || (address_index == index && *account_address.internal()) {
-                                    remainder = (Some(*account_address.key_index()), amount);
-                                }
-                            }
-                            None => {
-                                remainder = (Some(*account_address.key_index()), amount);
-                            }
-                        }
-                    }
-                    total - remainder.1
-                } else {
-                    let sent = !account_addresses
-                        .iter()
-                        .any(|address| address.outputs().iter().any(|o| o.message_id() == id));
-                    outputs.iter().fold(0, |acc, (address, amount)| {
-                        let address_belongs_to_account =
-                            account_addresses.iter().any(|a| &a.address().as_ref() == address);
-                        if sent {
-                            if address_belongs_to_account {
-                                acc
-                            } else {
-                                acc + amount
-                            }
-                        } else if address_belongs_to_account {
-                            acc + amount
-                        } else {
-                            acc
-                        }
-                    })
-                }
-            }
-            _ => 0,
-        };
-        Value::new(amount, ValueUnit::I)
-    }
-
     pub fn finish(self) -> Message {
         let packed_payload = self.iota_message.payload().pack_new();
+        let bech32_hrp = self.bech32_hrp.to_string();
 
-        let (value, remainder_value) = {
-            let total_value = match self.iota_message.payload().as_ref() {
-                Some(Payload::Transaction(tx)) => match tx.essence() {
-                    Essence::Regular(essence) => essence.outputs().iter().fold(0, |acc, output| {
-                        acc + match output {
-                            Output::SignatureLockedDustAllowance(o) => o.amount(),
-                            Output::SignatureLockedSingle(o) => o.amount(),
-                            _ => 0,
-                        }
-                    }),
-                    _ => unimplemented!(),
-                },
-                _ => 0,
-            };
-            let value =
-                Self::compute_value(&self.iota_message, &self.id, &self.account_addresses).without_denomination();
-            (value, total_value - value)
-        };
+        let payload = self
+            .iota_message
+            .payload()
+            .clone()
+            .map(|p| MessagePayload::new(&self.id, p, bech32_hrp, &self.account_addresses));
+
+        let mut value = 0;
+        let mut remainder_value = 0;
+        if let Some(MessagePayload::Transaction(tx)) = &payload {
+            let TransactionEssence::Regular(essence) = tx.essence();
+            for output in essence.outputs() {
+                let (amount, remainder) = match output {
+                    TransactionOutput::SignatureLockedSingle(o) => (o.amount, o.remainder),
+                    TransactionOutput::SignatureLockedDustAllowance(o) => (o.amount, false),
+                    _ => (0, false),
+                };
+                if remainder {
+                    remainder_value += amount;
+                } else {
+                    value += amount;
+                }
+            }
+        }
 
         Message {
             id: self.id,
             version: 1,
             parents: self.iota_message.parents().to_vec(),
             payload_length: packed_payload.len(),
-            payload: self.iota_message.payload().clone(),
+            payload,
             timestamp: Utc::now(),
             nonce: self.iota_message.nonce(),
             confirmed: self.confirmed,
@@ -443,23 +697,33 @@ impl Message {
         iota_message: IotaMessage,
         account_addresses: &'_ [Address],
     ) -> MessageBuilder<'_> {
-        MessageBuilder::new(id, iota_message, account_addresses)
+        MessageBuilder::new(
+            id,
+            iota_message,
+            account_addresses,
+            account_addresses
+                .iter()
+                .next()
+                .unwrap()
+                .address()
+                .bech32_hrp()
+                .to_string(),
+        )
     }
 
     /// The message's addresses.
-    pub fn addresses(&self) -> Vec<&IotaAddress> {
+    pub fn addresses(&self) -> Vec<&AddressWrapper> {
         match &self.payload {
-            Some(Payload::Transaction(tx)) => match tx.essence() {
-                Essence::Regular(essence) => essence
+            Some(MessagePayload::Transaction(tx)) => match tx.essence() {
+                TransactionEssence::Regular(essence) => essence
                     .outputs()
                     .iter()
                     .map(|output| match output {
-                        Output::SignatureLockedDustAllowance(o) => o.address(),
-                        Output::SignatureLockedSingle(o) => o.address(),
+                        TransactionOutput::SignatureLockedDustAllowance(o) => o.address(),
+                        TransactionOutput::SignatureLockedSingle(o) => o.address(),
                         _ => unimplemented!(),
                     })
                     .collect(),
-                _ => unimplemented!(),
             },
 
             _ => vec![],

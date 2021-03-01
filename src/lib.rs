@@ -72,12 +72,29 @@ pub async fn with_actor_system<F: FnOnce(&riker::actors::ActorSystem)>(cb: F) {
     cb(&runtime.stronghold.system)
 }
 
-/// Opens the IOTA app on Ledger (Nano S/X or Speculos simulator).
+/// The Ledger device status.
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
-pub fn open_ledger_app(is_simulator: bool) -> crate::Result<()> {
-    iota_ledger::get_ledger(signing::ledger::HARDENED, is_simulator)?;
-    Ok(())
+#[derive(Debug, ::serde::Serialize)]
+#[serde(tag = "type")]
+pub enum LedgerStatus {
+    /// Ledger is available and ready to be used.
+    Connected,
+    /// Ledger is disconnected.
+    Disconnected,
+    /// Ledger is locked.
+    Locked,
+}
+
+/// Gets the status of the Ledger device/simulator.
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
+pub fn get_ledger_status(is_simulator: bool) -> LedgerStatus {
+    match iota_ledger::get_ledger(signing::ledger::HARDENED, is_simulator).map_err(Into::into) {
+        Ok(_) => LedgerStatus::Connected,
+        Err(Error::LedgerDongleLocked) => LedgerStatus::Locked,
+        Err(_) => LedgerStatus::Disconnected,
+    }
 }
 
 #[cfg(test)]
@@ -87,7 +104,7 @@ mod test_utils {
         account_manager::{AccountManager, ManagerStorage},
         address::{Address, AddressBuilder, AddressWrapper},
         client::ClientOptionsBuilder,
-        message::Message,
+        message::{Message, MessagePayload},
         signing::SignerType,
     };
     use iota::{
@@ -156,15 +173,11 @@ mod test_utils {
 
     #[async_trait::async_trait]
     impl crate::storage::StorageAdapter for TestStorage {
-        async fn get(&mut self, account_id: &str) -> crate::Result<String> {
+        async fn get(&self, account_id: &str) -> crate::Result<String> {
             match self.cache.get(account_id) {
                 Some(value) => Ok(value.to_string()),
-                None => Err(crate::Error::AccountNotFound),
+                None => Err(crate::Error::RecordNotFound),
             }
-        }
-
-        async fn get_all(&mut self) -> crate::Result<Vec<String>> {
-            Ok(self.cache.values().cloned().collect())
         }
 
         async fn set(&mut self, account_id: &str, account: String) -> crate::Result<()> {
@@ -173,7 +186,7 @@ mod test_utils {
         }
 
         async fn remove(&mut self, account_id: &str) -> crate::Result<()> {
-            self.cache.remove(account_id).ok_or(crate::Error::AccountNotFound)?;
+            self.cache.remove(account_id).ok_or(crate::Error::RecordNotFound)?;
             Ok(())
         }
     }
@@ -195,7 +208,7 @@ mod test_utils {
         let default_storage = ManagerStorage::Sqlite;
 
         let mut manager = AccountManager::builder()
-            .with_storage(storage_path, default_storage, Some("password"))
+            .with_storage(storage_path, default_storage, None)
             .unwrap()
             .skip_polling()
             .finish()
@@ -477,31 +490,37 @@ mod test_utils {
 
     impl GenerateMessageBuilder {
         pub fn build(self) -> Message {
+            let bech32_hrp = self.address.address().bech32_hrp().to_string();
             Message {
                 id: MessageId::new([0; 32]),
                 version: 1,
                 parents: vec![MessageId::new([0; 32])],
                 payload_length: 0,
-                payload: Some(Payload::Transaction(Box::new(
-                    TransactionPayloadBuilder::new()
-                        .with_essence(Essence::Regular(
-                            iota::RegularEssence::builder()
-                                .add_output(
-                                    SignatureLockedSingleOutput::new(*self.address.address().as_ref(), self.value)
-                                        .unwrap()
-                                        .into(),
-                                )
-                                .add_input(UTXOInput::new(self.input_transaction_id, 0).unwrap().into())
-                                .finish()
-                                .unwrap(),
-                        ))
-                        .add_unlock_block(UnlockBlock::Signature(SignatureUnlock::Ed25519(Ed25519Signature::new(
-                            [0; 32],
-                            Box::new([0]),
-                        ))))
-                        .finish()
-                        .unwrap(),
-                ))),
+                payload: Some(MessagePayload::new(
+                    &MessageId::new([0; 32]),
+                    Payload::Transaction(Box::new(
+                        TransactionPayloadBuilder::new()
+                            .with_essence(Essence::Regular(
+                                iota::RegularEssence::builder()
+                                    .add_output(
+                                        SignatureLockedSingleOutput::new(*self.address.address().as_ref(), self.value)
+                                            .unwrap()
+                                            .into(),
+                                    )
+                                    .add_input(UTXOInput::new(self.input_transaction_id, 0).unwrap().into())
+                                    .finish()
+                                    .unwrap(),
+                            ))
+                            .add_unlock_block(UnlockBlock::Signature(SignatureUnlock::Ed25519(Ed25519Signature::new(
+                                [0; 32],
+                                Box::new([0]),
+                            ))))
+                            .finish()
+                            .unwrap(),
+                    )),
+                    bech32_hrp,
+                    &[],
+                )),
                 timestamp: chrono::Utc::now(),
                 nonce: 0,
                 value: self.value,

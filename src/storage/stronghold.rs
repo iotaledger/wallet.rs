@@ -32,27 +32,21 @@ impl StorageAdapter for StrongholdStorageAdapter {
         STORAGE_ID
     }
 
-    async fn get(&mut self, account_id: &str) -> crate::Result<String> {
-        let account = crate::stronghold::get_account(&self.path, account_id)
+    async fn get(&self, key: &str) -> crate::Result<String> {
+        crate::stronghold::get_record(&self.path, key)
             .await
-            .map_err(storage_err)?;
-        Ok(account)
+            .map_err(storage_err)
     }
 
-    async fn get_all(&mut self) -> crate::Result<std::vec::Vec<String>> {
-        let accounts = crate::stronghold::get_accounts(&self.path).await.map_err(storage_err)?;
-        Ok(accounts)
-    }
-
-    async fn set(&mut self, account_id: &str, account: String) -> crate::Result<()> {
-        crate::stronghold::store_account(&self.path, account_id, account)
+    async fn set(&mut self, key: &str, record: String) -> crate::Result<()> {
+        crate::stronghold::store_record(&self.path, key, record)
             .await
             .map_err(storage_err)?;
         Ok(())
     }
 
-    async fn remove(&mut self, account_id: &str) -> crate::Result<()> {
-        crate::stronghold::remove_account(&self.path, account_id)
+    async fn remove(&mut self, key: &str) -> crate::Result<()> {
+        crate::stronghold::remove_record(&self.path, key)
             .await
             .map_err(storage_err)?;
         Ok(())

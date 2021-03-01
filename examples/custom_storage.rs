@@ -22,10 +22,10 @@ impl MyStorage {
 
 #[async_trait::async_trait]
 impl StorageAdapter for MyStorage {
-    async fn get(&mut self, account_id: &str) -> iota_wallet::Result<String> {
-        match self.db.get(account_id) {
+    async fn get(&self, key: &str) -> iota_wallet::Result<String> {
+        match self.db.get(key) {
             Ok(Some(value)) => Ok(String::from_utf8(value.to_vec()).unwrap()),
-            Ok(None) => Err(iota_wallet::Error::AccountNotFound),
+            Ok(None) => Err(iota_wallet::Error::RecordNotFound),
             Err(e) => Err(iota_wallet::Error::Storage(format!(
                 "operational problem encountered: {}",
                 e
@@ -33,25 +33,16 @@ impl StorageAdapter for MyStorage {
         }
     }
 
-    async fn get_all(&mut self) -> iota_wallet::Result<std::vec::Vec<String>> {
-        let mut accounts = vec![];
-        for tuple in self.db.iter() {
-            let (_, value) = tuple.unwrap();
-            accounts.push(String::from_utf8(value.to_vec()).unwrap());
-        }
-        Ok(accounts)
-    }
-
-    async fn set(&mut self, account_id: &str, account: String) -> iota_wallet::Result<()> {
+    async fn set(&mut self, key: &str, record: String) -> iota_wallet::Result<()> {
         self.db
-            .insert(account_id, account.as_bytes())
+            .insert(key, record.as_bytes())
             .map_err(|e| iota_wallet::Error::Storage(e.to_string()))?;
         Ok(())
     }
 
-    async fn remove(&mut self, account_id: &str) -> iota_wallet::Result<()> {
+    async fn remove(&mut self, key: &str) -> iota_wallet::Result<()> {
         self.db
-            .remove(account_id)
+            .remove(key)
             .map_err(|e| iota_wallet::Error::Storage(e.to_string()))?;
         Ok(())
     }
