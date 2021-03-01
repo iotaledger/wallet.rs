@@ -12,9 +12,12 @@ use getset::Getters;
 use iota::{
     bee_rest_api::handlers::message_metadata::LedgerInclusionStateDto,
     client::api::finish_pow,
-    message::prelude::{
-        Essence, Input, Message as IotaMessage, MessageId, Payload, RegularEssence, SignatureLockedSingleOutput,
-        TransactionPayload, UTXOInput,
+    message::{
+        payload::transaction::INPUT_OUTPUT_COUNT_MAX,
+        prelude::{
+            Essence, Input, Message as IotaMessage, MessageId, Payload, RegularEssence, SignatureLockedSingleOutput,
+            TransactionPayload, UTXOInput,
+        },
     },
 };
 use serde::Serialize;
@@ -27,6 +30,7 @@ use tokio::{
 use std::{
     collections::HashSet,
     convert::TryInto,
+    num::NonZeroU64,
     sync::{Arc, Mutex},
     thread,
     time::Duration,
@@ -575,7 +579,7 @@ pub struct SyncedAccount {
     /// The associated account handle.
     #[serde(skip)]
     #[getset(get = "pub")]
-    account_handle: AccountHandle,
+    pub(crate) account_handle: AccountHandle,
     /// The account's deposit address.
     #[serde(rename = "depositAddress")]
     #[getset(get = "pub")]
@@ -593,6 +597,23 @@ pub struct SyncedAccount {
 }
 
 impl SyncedAccount {
+    /// Emulates a synced account from an account handle.
+    /// Should only be used if sync is guaranteed (e.g. when using MQTT)
+    pub(crate) async fn from(account_handle: AccountHandle) -> Self {
+        let id = account_handle.id().await;
+        let index = account_handle.index().await;
+        let deposit_address = account_handle.latest_address().await;
+        Self {
+            id,
+            index,
+            deposit_address,
+            account_handle,
+            is_empty: false,
+            messages: Default::default(),
+            addresses: Default::default(),
+        }
+    }
+
     /// Selects input addresses for a value transaction.
     /// The method ensures that the recipient address doesn’t match any of the selected inputs or the remainder address.
     ///
@@ -610,10 +631,10 @@ impl SyncedAccount {
         locked_addresses: &'a mut MutexGuard<'_, Vec<AddressWrapper>>,
         threshold: u64,
         account: &'a Account,
+        addresses: &'a [Address],
         address: &'a AddressWrapper,
     ) -> crate::Result<(Vec<input_selection::Input>, Option<input_selection::Input>)> {
-        let available_addresses: Vec<input_selection::Input> = account
-            .addresses()
+        let available_addresses: Vec<input_selection::Input> = addresses
             .iter()
             .filter(|a| {
                 // we allow an input equal to the deposit address only if it has more than one output
@@ -645,8 +666,53 @@ impl SyncedAccount {
         Ok((addresses, remainder))
     }
 
+    async fn get_output_consolidation_transfers(&self) -> crate::Result<Vec<Transfer>> {
+        let mut transfers: Vec<Transfer> = Vec::new();
+        // collect the transactions we need to make
+        {
+            let account = self.account_handle.read().await;
+            for address in account.addresses() {
+                let address_outputs = address.available_outputs(&account);
+                // the address outputs exceed the threshold, so we push a transfer to our vector
+                if address_outputs.len() >= self.account_handle.output_consolidation_threshold {
+                    for outputs in address_outputs.chunks(INPUT_OUTPUT_COUNT_MAX) {
+                        transfers.push(
+                            Transfer::builder(
+                                address.address().clone(),
+                                NonZeroU64::new(address.available_balance(&account)).unwrap(),
+                            )
+                            .with_input(
+                                address.address().clone(),
+                                outputs.iter().map(|o| (*o).clone()).collect(),
+                            )
+                            .finish(),
+                        );
+                    }
+                }
+            }
+        }
+        Ok(transfers)
+    }
+
+    /// Consolidate account outputs.
+    pub async fn consolidate_outputs(&self) -> crate::Result<Vec<Message>> {
+        let mut tasks = Vec::new();
+        // run the transfers in parallel
+        for transfer in self.get_output_consolidation_transfers().await? {
+            let task = self.transfer(transfer);
+            tasks.push(task);
+        }
+
+        let mut messages = Vec::new();
+        for response in futures::future::join_all(tasks).await {
+            messages.push(response?);
+        }
+
+        Ok(messages)
+    }
+
     /// Send messages.
-    pub async fn transfer(&self, transfer_obj: Transfer) -> crate::Result<Message> {
+    pub async fn transfer(&self, mut transfer_obj: Transfer) -> crate::Result<Message> {
         let account_ = self.account_handle.read().await;
 
         // lock the transfer process until we select the input addresses
@@ -717,9 +783,58 @@ impl SyncedAccount {
             }
         }
 
-        // select the input addresses and check if a remainder address is needed
-        let (input_addresses, remainder_address) =
-            self.select_inputs(&mut locked_addresses, value, &account_, &transfer_obj.address)?;
+        let (input_addresses, remainder_address): (
+            Vec<(input_selection::Input, Vec<AddressOutput>)>,
+            Option<input_selection::Input>,
+        ) = match transfer_obj.input.take() {
+            Some((address, address_inputs)) => {
+                if let Some(address) = account_.addresses().iter().find(|a| a.address() == &address) {
+                    locked_addresses.push(address.address().clone());
+                    (
+                        vec![(
+                            input_selection::Input {
+                                internal: *address.internal(),
+                                balance: address_inputs.iter().fold(0, |acc, input| acc + input.amount),
+                                address: address.address().clone(),
+                            },
+                            address_inputs,
+                        )],
+                        None,
+                    )
+                } else {
+                    // TODO
+                    return Err(crate::Error::InsufficientFunds);
+                }
+            }
+            None => {
+                // select the input addresses and check if a remainder address is needed
+                let (input_addresses, remainder_address) = self.select_inputs(
+                    &mut locked_addresses,
+                    value,
+                    &account_,
+                    account_.addresses(),
+                    &transfer_obj.address,
+                )?;
+                (
+                    input_addresses
+                        .into_iter()
+                        .map(|input_address| {
+                            let outputs = account_
+                                .addresses()
+                                .iter()
+                                .find(|a| a.address() == &input_address.address)
+                                .unwrap() // safe to unwrap since we know the address belongs to the account
+                                .available_outputs(&account_)
+                                .iter()
+                                .map(|o| (*o).clone())
+                                .collect();
+                            (input_address, outputs)
+                        })
+                        .collect(),
+                    remainder_address,
+                )
+            }
+        };
 
         // unlock the transfer process since we already selected the input addresses and locked them
         drop(locked_addresses);
@@ -740,7 +855,7 @@ impl SyncedAccount {
         .await;
 
         let mut locked_addresses = account_address_locker.lock().await;
-        for input_address in &input_addresses {
+        for (input_address, _) in &input_addresses {
             let index = locked_addresses
                 .iter()
                 .position(|a| &input_address.address == a)
@@ -769,7 +884,7 @@ impl SyncedAccount {
 
 async fn perform_transfer(
     transfer_obj: Transfer,
-    input_addresses: &[input_selection::Input],
+    input_addresses: &[(input_selection::Input, Vec<AddressOutput>)],
     account_handle: AccountHandle,
     remainder_address: Option<input_selection::Input>,
 ) -> crate::Result<Message> {
@@ -784,7 +899,7 @@ async fn perform_transfer(
 
     let account_ = account_handle.read().await;
 
-    for input_address in input_addresses {
+    for (input_address, address_outputs) in input_addresses {
         let account_address = account_
             .addresses()
             .iter()
@@ -800,7 +915,7 @@ async fn perform_transfer(
         ))
         .unwrap();
 
-        for address_output in account_address.available_outputs(&account_) {
+        for address_output in address_outputs {
             outputs.push((
                 (*address_output).clone(),
                 *account_address.key_index(),

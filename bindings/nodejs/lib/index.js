@@ -79,6 +79,7 @@ SyncedAccount.prototype.send = function (address, amount, options) {
 SyncedAccount.prototype.retry = promisify(SyncedAccount.prototype.retry)
 SyncedAccount.prototype.reattach = promisify(SyncedAccount.prototype.reattach)
 SyncedAccount.prototype.promote = promisify(SyncedAccount.prototype.promote)
+SyncedAccount.prototype.consolidateOutputs = promisify(SyncedAccount.prototype.consolidateOutputs)
 
 const managerClass = AccountManager
 

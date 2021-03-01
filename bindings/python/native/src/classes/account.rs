@@ -112,6 +112,16 @@ impl SyncedAccount {
                 .try_into()
         })
     }
+
+    /// Consolidate outputs.
+    fn consolidate_outputs(&self) -> Result<Vec<WalletMessage>> {
+        let rust_messages = crate::block_on(async { self.synced_account.consolidate_outputs().await })?;
+        let mut messages = Vec::new();
+        for message in rust_messages {
+            messages.push(message.try_into()?);
+        }
+        Ok(messages)
+    }
 }
 
 #[pymethods]

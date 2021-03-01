@@ -105,6 +105,7 @@ export declare class SyncedAccount {
   retry(messageId: string): Promise<Message>
   reattach(messageId: string): Promise<Message>
   promote(messageId: string): Promise<Message>
+  consolidateOutputs(): Promise<Message[]>
 }
 
 export declare interface ClientOptions {
@@ -138,6 +139,8 @@ export declare interface ManagerOptions {
   storagePath?: string
   storageType?: StorageType
   storagePassword?: string
+  outputConsolidationThreshold?: number
+  automaticOutputConsolidation?: boolean
 }
 
 export declare interface BalanceChangeEvent {

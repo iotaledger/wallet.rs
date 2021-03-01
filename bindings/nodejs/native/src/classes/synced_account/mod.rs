@@ -10,6 +10,7 @@ use iota_wallet::{
 use neon::prelude::*;
 use serde::Deserialize;
 
+mod consolidate_outputs;
 mod repost;
 mod send;
 
@@ -115,6 +116,17 @@ declare_types! {
                 synced_account_id,
                 message_id,
                 action: repost::RepostAction::Promote,
+            };
+            task.schedule(cb);
+            Ok(cx.undefined().upcast())
+        }
+
+        method consolidateOutputs(mut cx) {
+            let cb = cx.argument::<JsFunction>(0)?;
+            let this = cx.this();
+            let synced_account_id = cx.borrow(&this, |r| r.0.clone());
+            let task = consolidate_outputs::ConsolidateOutputsTask {
+                synced_account_id,
             };
             task.schedule(cb);
             Ok(cx.undefined().upcast())

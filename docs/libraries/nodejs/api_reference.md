@@ -35,11 +35,14 @@ Supported event names:
 
 Creates a new instance of the AccountManager.
 
-| Param         | Type                | Default                | Description                                           |
-| ------------- | ------------------- | ---------------------- | ----------------------------------------------------- |
-| [options]     | <code>object</code> | <code>undefined</code> | The options to configure the account manager          |
-| [storagePath] | <code>string</code> | <code>undefined</code> | The path where the database file will be saved        |
-| [storageType] | <code>number</code> | <code>undefined</code> | The type of the database.  Stronghold = 1, Sqlite = 2 |
+| Param                          | Type                 | Default                | Description                                                                               |
+| ------------------------------ | -------------------- | ---------------------- | ----------------------------------------------------------------------------------------- |
+| [options]                      | <code>object</code>  | <code>undefined</code> | The options to configure the account manager                                              |
+| [storagePath]                  | <code>string</code>  | <code>undefined</code> | The path where the database file will be saved                                            |
+| [storageType]                  | <code>number</code>  | <code>undefined</code> | The type of the database.  Stronghold = 1, Sqlite = 2                                     |
+| [storagePassword]              | <code>string</code>  | <code>undefined</code> | The storage password                                                                      |
+| [outputConsolidationThreshold] | <code>number</code>  | <code>100</code>       | The number of outputs an address must have to trigger the automatic consolidation process |
+| [automaticOutputConsolidation] | <code>boolean</code> | <code>true</code>      | Disables the automatic output consolidation if false                                      |
 
 #### setStrongholdPassword(password): void
 
@@ -316,6 +319,9 @@ Promote the given message.
 | --------- | ------------------- | ----------------- | ------------------------ |
 | messageId | <code>string</code> | <code>null</code> | The message's identifier |
 
+#### consolidateOutputs()
+
+Consolidate the outputs on all account addresses.
 
 ### Account
 

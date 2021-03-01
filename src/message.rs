@@ -1,7 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::address::{Address, AddressWrapper, IotaAddress};
+use crate::address::{Address, AddressOutput, AddressWrapper, IotaAddress};
 use bee_common::packable::Packable;
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
@@ -50,6 +50,8 @@ pub struct TransferBuilder {
     indexation: Option<IndexationPayload>,
     /// The strategy to use for the remainder value.
     remainder_value_strategy: RemainderValueStrategy,
+    /// The input to use (skips input selection)
+    input: Option<(AddressWrapper, Vec<AddressOutput>)>,
 }
 
 impl<'de> Deserialize<'de> for TransferBuilder {
@@ -106,6 +108,7 @@ impl<'de> Deserialize<'de> for TransferBuilder {
                     None => None,
                 },
                 remainder_value_strategy: builder.remainder_value_strategy,
+                input: None,
             })
         })
     }
@@ -119,6 +122,7 @@ impl TransferBuilder {
             amount,
             indexation: None,
             remainder_value_strategy: RemainderValueStrategy::ChangeAddress,
+            input: None,
         }
     }
 
@@ -134,6 +138,12 @@ impl TransferBuilder {
         self
     }
 
+    /// Sets the addresses and utxo to use as transaction input.
+    pub(crate) fn with_input(mut self, address: AddressWrapper, inputs: Vec<AddressOutput>) -> Self {
+        self.input.replace((address, inputs));
+        self
+    }
+
     /// Builds the transfer.
     pub fn finish(self) -> Transfer {
         Transfer {
@@ -141,22 +151,24 @@ impl TransferBuilder {
             amount: self.amount,
             indexation: self.indexation,
             remainder_value_strategy: self.remainder_value_strategy,
+            input: self.input,
         }
     }
 }
 
 /// A transfer to make a transaction.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct Transfer {
     /// The transfer value.
     pub(crate) amount: NonZeroU64,
     /// The transfer address.
-    #[serde(with = "crate::serde::iota_address_serde")]
     pub(crate) address: AddressWrapper,
     /// (Optional) message indexation.
     pub(crate) indexation: Option<IndexationPayload>,
     /// The strategy to use for the remainder value.
     pub(crate) remainder_value_strategy: RemainderValueStrategy,
+    /// The addresses to use as input.
+    pub(crate) input: Option<(AddressWrapper, Vec<AddressOutput>)>,
 }
 
 impl Transfer {

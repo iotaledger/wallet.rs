@@ -60,7 +60,7 @@ pub struct TransactionInput {
 pub struct GenerateAddressMetadata {
     /// Indicates that the address is being generated as part of the account syncing process.
     /// This means that the account might not be saved.
-    pub(crate) syncing: bool,
+    pub syncing: bool,
 }
 
 /// Metadata provided to [sign_message](trait.Signer.html#method.sign_message).
@@ -68,11 +68,11 @@ pub struct GenerateAddressMetadata {
 #[getset(get = "pub")]
 pub struct SignMessageMetadata<'a> {
     /// The transfer's address that has remainder value if any.
-    pub(crate) remainder_address: Option<&'a Address>,
+    pub remainder_address: Option<&'a Address>,
     /// The transfer's remainder value.
-    pub(crate) remainder_value: u64,
+    pub remainder_value: u64,
     /// The transfer's deposit address for the remainder value if any.
-    pub(crate) remainder_deposit_address: Option<&'a Address>,
+    pub remainder_deposit_address: Option<&'a Address>,
 }
 
 /// Signer interface.

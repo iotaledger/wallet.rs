@@ -1904,6 +1904,7 @@ dependencies = [
  "log",
  "once_cell",
  "rand 0.7.3",
+ "reqwest",
  "riker",
  "rusqlite",
  "rusty-fork",
