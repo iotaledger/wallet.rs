@@ -408,7 +408,6 @@ pub async fn unload_snapshot(storage_path: &PathBuf, persist: bool) -> Result<()
 
 pub async fn load_snapshot(snapshot_path: &PathBuf, password: Vec<u8>) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
-    println!("LOAD CALLED");
     load_snapshot_internal(&mut runtime, snapshot_path, password).await
 }
 
