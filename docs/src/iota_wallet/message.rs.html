@@ -737,11 +737,23 @@
 <span id="734">734</span>
 <span id="735">735</span>
 <span id="736">736</span>
+<span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">address</span>::{<span class="ident">Address</span>, <span class="ident">AddressWrapper</span>, <span class="ident">IotaAddress</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">address</span>::{<span class="ident">Address</span>, <span class="ident">AddressOutput</span>, <span class="ident">AddressWrapper</span>, <span class="ident">IotaAddress</span>};
 <span class="kw">use</span> <span class="ident">bee_common</span>::<span class="ident">packable</span>::<span class="ident">Packable</span>;
 <span class="kw">use</span> <span class="ident">chrono</span>::<span class="ident">prelude</span>::{<span class="ident">DateTime</span>, <span class="ident">Utc</span>};
 <span class="kw">use</span> <span class="ident">getset</span>::{<span class="ident">Getters</span>, <span class="ident">Setters</span>};
@@ -790,6 +802,8 @@
     <span class="ident">indexation</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">IndexationPayload</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The strategy to use for the remainder value.</span>
     <span class="ident">remainder_value_strategy</span>: <span class="ident">RemainderValueStrategy</span>,
+    <span class="doccomment">/// The input to use (skips input selection)</span>
+    <span class="ident">input</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">AddressWrapper</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressOutput</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TransferBuilder</span> {
@@ -846,6 +860,7 @@
                     <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
                 },
                 <span class="ident">remainder_value_strategy</span>: <span class="ident">builder</span>.<span class="ident">remainder_value_strategy</span>,
+                <span class="ident">input</span>: <span class="prelude-val">None</span>,
             })
         })
     }
@@ -859,6 +874,7 @@
             <span class="ident">amount</span>,
             <span class="ident">indexation</span>: <span class="prelude-val">None</span>,
             <span class="ident">remainder_value_strategy</span>: <span class="ident">RemainderValueStrategy</span>::<span class="ident">ChangeAddress</span>,
+            <span class="ident">input</span>: <span class="prelude-val">None</span>,
         }
     }
 
@@ -874,6 +890,12 @@
         <span class="self">self</span>
     }
 
+    <span class="doccomment">/// Sets the addresses and utxo to use as transaction input.</span>
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">with_input</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="ident">AddressWrapper</span>, <span class="ident">inputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressOutput</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">input</span>.<span class="ident">replace</span>((<span class="ident">address</span>, <span class="ident">inputs</span>));
+        <span class="self">self</span>
+    }
+
     <span class="doccomment">/// Builds the transfer.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finish</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Transfer</span> {
         <span class="ident">Transfer</span> {
@@ -881,22 +903,24 @@
             <span class="ident">amount</span>: <span class="self">self</span>.<span class="ident">amount</span>,
             <span class="ident">indexation</span>: <span class="self">self</span>.<span class="ident">indexation</span>,
             <span class="ident">remainder_value_strategy</span>: <span class="self">self</span>.<span class="ident">remainder_value_strategy</span>,
+            <span class="ident">input</span>: <span class="self">self</span>.<span class="ident">input</span>,
         }
     }
 }
 
 <span class="doccomment">/// A transfer to make a transaction.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Deserialize</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Transfer</span> {
     <span class="doccomment">/// The transfer value.</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">amount</span>: <span class="ident">NonZeroU64</span>,
     <span class="doccomment">/// The transfer address.</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;crate::serde::iota_address_serde&quot;</span>)]</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">address</span>: <span class="ident">AddressWrapper</span>,
     <span class="doccomment">/// (Optional) message indexation.</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">indexation</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">IndexationPayload</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The strategy to use for the remainder value.</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">remainder_value_strategy</span>: <span class="ident">RemainderValueStrategy</span>,
+    <span class="doccomment">/// The addresses to use as input.</span>
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">input</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">AddressWrapper</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressOutput</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Transfer</span> {

@@ -1295,7 +1295,7 @@
 
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">sign_transaction</span>(
     <span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">PathBuf</span>,
-    <span class="ident">transaction_essence_hash</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>; <span class="number">32</span>],
+    <span class="ident">message</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
     <span class="ident">account_index</span>: <span class="ident">usize</span>,
     <span class="ident">address_index</span>: <span class="ident">usize</span>,
     <span class="ident">internal</span>: <span class="ident">bool</span>,
@@ -1319,7 +1319,7 @@
         .<span class="ident">stronghold</span>
         .<span class="ident">runtime_exec</span>(<span class="ident">Procedure</span>::<span class="ident">Ed25519Sign</span> {
             <span class="ident">private_key</span>: <span class="ident">derived_location</span>,
-            <span class="ident">msg</span>: <span class="ident">transaction_essence_hash</span>.<span class="ident">to_vec</span>(),
+            <span class="ident">msg</span>: <span class="ident">message</span>.<span class="ident">to_vec</span>(),
         })
         .<span class="kw">await</span>;
     <span class="kw">if</span> <span class="kw">let</span> <span class="ident">ProcResult</span>::<span class="ident">Ed25519Sign</span>(<span class="ident">response</span>) <span class="op">=</span> <span class="ident">res</span> {

@@ -652,6 +652,9 @@ Supported event names:</p>
 <tr><td>[options]</td><td><code>object</code></td><td><code>undefined</code></td><td>The options to configure the account manager</td></tr>
 <tr><td>[storagePath]</td><td><code>string</code></td><td><code>undefined</code></td><td>The path where the database file will be saved</td></tr>
 <tr><td>[storageType]</td><td><code>number</code></td><td><code>undefined</code></td><td>The type of the database.  Stronghold = 1, Sqlite = 2</td></tr>
+<tr><td>[storagePassword]</td><td><code>string</code></td><td><code>undefined</code></td><td>The storage password</td></tr>
+<tr><td>[outputConsolidationThreshold]</td><td><code>number</code></td><td><code>100</code></td><td>The number of outputs an address must have to trigger the automatic consolidation process</td></tr>
+<tr><td>[automaticOutputConsolidation]</td><td><code>boolean</code></td><td><code>true</code></td><td>Disables the automatic output consolidation if false</td></tr>
 </tbody></table>
 <h4 id="setstrongholdpasswordpassword-void"><a class="header" href="#setstrongholdpasswordpassword-void">setStrongholdPassword(password): void</a></h4>
 <p>Sets the stronghold password and initialises it.</p>
@@ -830,6 +833,8 @@ Supported event names:</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
 </tbody></table>
+<h4 id="consolidateoutputs"><a class="header" href="#consolidateoutputs">consolidateOutputs()</a></h4>
+<p>Consolidate the outputs on all account addresses.</p>
 <h3 id="account"><a class="header" href="#account">Account</a></h3>
 <h4 id="id"><a class="header" href="#id">id()</a></h4>
 <p>Returns the account's identifier.</p>

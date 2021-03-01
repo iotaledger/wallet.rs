@@ -221,7 +221,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GenerateAddressMetadata</span> {
     <span class="doccomment">/// Indicates that the address is being generated as part of the account syncing process.</span>
     <span class="doccomment">/// This means that the account might not be saved.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">syncing</span>: <span class="ident">bool</span>,
+    <span class="kw">pub</span> <span class="ident">syncing</span>: <span class="ident">bool</span>,
 }
 
 <span class="doccomment">/// Metadata provided to [sign_message](trait.Signer.html#method.sign_message).</span>
@@ -229,11 +229,11 @@
 <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">get</span> <span class="op">=</span> <span class="string">&quot;pub&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SignMessageMetadata</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="doccomment">/// The transfer&#39;s address that has remainder value if any.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">remainder_address</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Address</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">remainder_address</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Address</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The transfer&#39;s remainder value.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">remainder_value</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span> <span class="ident">remainder_value</span>: <span class="ident">u64</span>,
     <span class="doccomment">/// The transfer&#39;s deposit address for the remainder value if any.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">remainder_deposit_address</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Address</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">remainder_deposit_address</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Address</span><span class="op">&gt;</span>,
 }
 
 <span class="doccomment">/// Signer interface.</span>
