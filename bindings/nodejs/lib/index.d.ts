@@ -176,10 +176,15 @@ export declare class AccountManager {
   setClientOptions(options: ClientOptions): void
   // events
   getBalanceChangeEvents(count?: number, skip?: number, fromTimestamp?: number): BalanceChangeEvent[]
+  getBalanceChangeEventCount(fromTimestamp?: number): number
   getTransactionConfirmationEvents(count?: number, skip?: number, fromTimestamp?: number): TransactionConfirmationEvent[]
+  getTransactionConfirmationEventCount(fromTimestamp?: number): number
   getNewTransactionEvents(count?: number, skip?: number, fromTimestamp?: number): TransactionEvent[]
+  getNewTransactionEventCount(fromTimestamp?: number): number
   getReattachmentEvents(count?: number, skip?: number, fromTimestamp?: number): TransactionEvent[]
+  getReattachmentEventCount(fromTimestamp?: number): number
   getBroadcastEvents(count?: number, skip?: number, fromTimestamp?: number): TransactionEvent[]
+  getBroadcastEventCount(fromTimestamp?: number): number
 }
 
 export declare type Event = 'ErrorThrown' |

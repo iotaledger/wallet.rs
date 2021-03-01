@@ -112,6 +112,27 @@ macro_rules! event_getter {
     }};
 }
 
+macro_rules! event_count_getter {
+    ($cx: ident, $get_fn_name: ident) => {{
+        let from_timestamp = match $cx.argument_opt(0) {
+            Some(arg) => Some(arg.downcast::<JsNumber>().or_throw(&mut $cx)?.value() as i64),
+            None => None,
+        };
+
+        let count = {
+            let this = $cx.this();
+            let guard = $cx.lock();
+            let ref_ = &this.borrow(&guard).0;
+            crate::block_on(async move {
+                let manager = ref_.read().await;
+                manager.$get_fn_name(from_timestamp).await.unwrap()
+            })
+        };
+
+        Ok($cx.number(count as f64).upcast())
+    }};
+}
+
 declare_types! {
     pub class JsAccountManager for AccountManagerWrapper {
         init(mut cx) {
@@ -427,20 +448,40 @@ declare_types! {
             event_getter!(cx, get_balance_change_events)
         }
 
+        method getBalanceChangeEventCount(mut cx) {
+            event_count_getter!(cx, get_balance_change_event_count)
+        }
+
         method getTransactionConfirmationEvents(mut cx) {
             event_getter!(cx, get_transaction_confirmation_events)
+        }
+
+        method getTransactionConfirmationEventCount(mut cx) {
+            event_count_getter!(cx, get_transaction_confirmation_event_count)
         }
 
         method getNewTransactionEvents(mut cx) {
             event_getter!(cx, get_new_transaction_events)
         }
 
+        method getNewTransactionEventCount(mut cx) {
+            event_count_getter!(cx, get_new_transaction_event_count)
+        }
+
         method getReattachmentEvents(mut cx) {
             event_getter!(cx, get_reattachment_events)
         }
 
+        method getReattachmentEventCount(mut cx) {
+            event_count_getter!(cx, get_reattachment_event_count)
+        }
+
         method getBroadcastEvents(mut cx) {
             event_getter!(cx, get_broadcast_events)
+        }
+
+        method getBroadcastEventCount(mut cx) {
+            event_count_getter!(cx, get_broadcast_event_count)
         }
     }
 }
