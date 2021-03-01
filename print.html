@@ -730,6 +730,71 @@ Supported event names:</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>options</td><td><code><a href="libraries/nodejs/api_reference.html#clientoptions">ClientOptions</a></code></td><td><code>null</code></td><td>The new account client options</td></tr>
 </tbody></table>
+<h4 id="getbalancechangeeventscount-skip-fromtimestamp"><a class="header" href="#getbalancechangeeventscount-skip-fromtimestamp">getBalanceChangeEvents([count, skip, fromTimestamp])</a></h4>
+<p>Gets the persisted balance change events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[count]</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to return (<code>0</code> to return all)</td></tr>
+<tr><td>[skip]</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to skip</td></tr>
+<tr><td>[fromTimestamp]</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
+</tbody></table>
+<p>Event object: { accountId: string, address: string, balanceChange: { spent: number, received: number } }</p>
+<h4 id="getbalancechangeeventcountfromtimestamp"><a class="header" href="#getbalancechangeeventcountfromtimestamp">getBalanceChangeEventCount([fromTimestamp])</a></h4>
+<p>Gets the number of persisted balance change events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[fromTimestamp]</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
+</tbody></table>
+<h4 id="gettransactionconfirmationeventscount-skip-fromtimestamp"><a class="header" href="#gettransactionconfirmationeventscount-skip-fromtimestamp">getTransactionConfirmationEvents([count, skip, fromTimestamp])</a></h4>
+<p>Gets the persisted transaction confirmation change events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[count]</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to return (<code>0</code> to return all)</td></tr>
+<tr><td>[skip]</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to skip</td></tr>
+<tr><td>[fromTimestamp]</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
+</tbody></table>
+<p>Event object: { accountId: string, message: Message, confirmed: boolean }</p>
+<h4 id="gettransactionconfirmationeventcountfromtimestamp"><a class="header" href="#gettransactionconfirmationeventcountfromtimestamp">getTransactionConfirmationEventCount([fromTimestamp])</a></h4>
+<p>Gets the number of persisted transaction confirmation change events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[fromTimestamp]</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
+</tbody></table>
+<h4 id="getnewtransactioneventscount-skip-fromtimestamp"><a class="header" href="#getnewtransactioneventscount-skip-fromtimestamp">getNewTransactionEvents([count, skip, fromTimestamp])</a></h4>
+<p>Gets the persisted new transaction events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[count]</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to return (<code>0</code> to return all)</td></tr>
+<tr><td>[skip]</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to skip</td></tr>
+<tr><td>[fromTimestamp]</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
+</tbody></table>
+<p>Event object: { accountId: string, message: Message }</p>
+<h4 id="getnewtransactioneventcountfromtimestamp"><a class="header" href="#getnewtransactioneventcountfromtimestamp">getNewTransactionEventCount([fromTimestamp])</a></h4>
+<p>Gets the number of persisted new transaction events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[fromTimestamp]</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
+</tbody></table>
+<h4 id="getreattachmenteventscount-skip-fromtimestamp"><a class="header" href="#getreattachmenteventscount-skip-fromtimestamp">getReattachmentEvents([count, skip, fromTimestamp])</a></h4>
+<p>Gets the persisted transaction reattachment events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[count]</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to return (<code>0</code> to return all)</td></tr>
+<tr><td>[skip]</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to skip</td></tr>
+<tr><td>[fromTimestamp]</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
+</tbody></table>
+<p>Event object: { accountId: string, message: Message }</p>
+<h4 id="getreattachmenteventcountfromtimestamp"><a class="header" href="#getreattachmenteventcountfromtimestamp">getReattachmentEventCount([fromTimestamp])</a></h4>
+<p>Gets the number of persisted transaction reattachment events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[fromTimestamp]</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
+</tbody></table>
+<h4 id="getbroadcasteventscount-skip-fromtimestamp"><a class="header" href="#getbroadcasteventscount-skip-fromtimestamp">getBroadcastEvents([count, skip, fromTimestamp])</a></h4>
+<p>Gets the persisted transaction broadcast events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[count]</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to return (<code>0</code> to return all)</td></tr>
+<tr><td>[skip]</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to skip</td></tr>
+<tr><td>[fromTimestamp]</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
+</tbody></table>
+<p>Event object: { accountId: string, message: Message }</p>
+<h4 id="getbroadcasteventcountfromtimestamp"><a class="header" href="#getbroadcasteventcountfromtimestamp">getBroadcastEventCount([fromTimestamp])</a></h4>
+<p>Gets the number of persisted transaction broadcast events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[fromTimestamp]</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
+</tbody></table>
 <h3 id="syncedaccount"><a class="header" href="#syncedaccount">SyncedAccount</a></h3>
 <h4 id="sendaddress-amount-options"><a class="header" href="#sendaddress-amount-options">send(address, amount[, options])</a></h4>
 <p>Send funds to the given address.</p>

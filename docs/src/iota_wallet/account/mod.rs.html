@@ -1629,7 +1629,7 @@
                 .<span class="kw">await</span><span class="question-mark">?</span>
                 .<span class="ident">lock</span>()
                 .<span class="kw">await</span>
-                .<span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>, <span class="ident">serde_json</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>)<span class="question-mark">?</span>)
+                .<span class="ident">save_account</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>, <span class="self">self</span>)
                 .<span class="kw">await</span><span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>(())

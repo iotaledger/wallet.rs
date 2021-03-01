@@ -767,121 +767,6 @@
 <span id="764">764</span>
 <span id="765">765</span>
 <span id="766">766</span>
-<span id="767">767</span>
-<span id="768">768</span>
-<span id="769">769</span>
-<span id="770">770</span>
-<span id="771">771</span>
-<span id="772">772</span>
-<span id="773">773</span>
-<span id="774">774</span>
-<span id="775">775</span>
-<span id="776">776</span>
-<span id="777">777</span>
-<span id="778">778</span>
-<span id="779">779</span>
-<span id="780">780</span>
-<span id="781">781</span>
-<span id="782">782</span>
-<span id="783">783</span>
-<span id="784">784</span>
-<span id="785">785</span>
-<span id="786">786</span>
-<span id="787">787</span>
-<span id="788">788</span>
-<span id="789">789</span>
-<span id="790">790</span>
-<span id="791">791</span>
-<span id="792">792</span>
-<span id="793">793</span>
-<span id="794">794</span>
-<span id="795">795</span>
-<span id="796">796</span>
-<span id="797">797</span>
-<span id="798">798</span>
-<span id="799">799</span>
-<span id="800">800</span>
-<span id="801">801</span>
-<span id="802">802</span>
-<span id="803">803</span>
-<span id="804">804</span>
-<span id="805">805</span>
-<span id="806">806</span>
-<span id="807">807</span>
-<span id="808">808</span>
-<span id="809">809</span>
-<span id="810">810</span>
-<span id="811">811</span>
-<span id="812">812</span>
-<span id="813">813</span>
-<span id="814">814</span>
-<span id="815">815</span>
-<span id="816">816</span>
-<span id="817">817</span>
-<span id="818">818</span>
-<span id="819">819</span>
-<span id="820">820</span>
-<span id="821">821</span>
-<span id="822">822</span>
-<span id="823">823</span>
-<span id="824">824</span>
-<span id="825">825</span>
-<span id="826">826</span>
-<span id="827">827</span>
-<span id="828">828</span>
-<span id="829">829</span>
-<span id="830">830</span>
-<span id="831">831</span>
-<span id="832">832</span>
-<span id="833">833</span>
-<span id="834">834</span>
-<span id="835">835</span>
-<span id="836">836</span>
-<span id="837">837</span>
-<span id="838">838</span>
-<span id="839">839</span>
-<span id="840">840</span>
-<span id="841">841</span>
-<span id="842">842</span>
-<span id="843">843</span>
-<span id="844">844</span>
-<span id="845">845</span>
-<span id="846">846</span>
-<span id="847">847</span>
-<span id="848">848</span>
-<span id="849">849</span>
-<span id="850">850</span>
-<span id="851">851</span>
-<span id="852">852</span>
-<span id="853">853</span>
-<span id="854">854</span>
-<span id="855">855</span>
-<span id="856">856</span>
-<span id="857">857</span>
-<span id="858">858</span>
-<span id="859">859</span>
-<span id="860">860</span>
-<span id="861">861</span>
-<span id="862">862</span>
-<span id="863">863</span>
-<span id="864">864</span>
-<span id="865">865</span>
-<span id="866">866</span>
-<span id="867">867</span>
-<span id="868">868</span>
-<span id="869">869</span>
-<span id="870">870</span>
-<span id="871">871</span>
-<span id="872">872</span>
-<span id="873">873</span>
-<span id="874">874</span>
-<span id="875">875</span>
-<span id="876">876</span>
-<span id="877">877</span>
-<span id="878">878</span>
-<span id="879">879</span>
-<span id="880">880</span>
-<span id="881">881</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -931,17 +816,12 @@
 <span class="kw">const</span> <span class="ident">DEFAULT_PASSWORD_CLEAR_INTERVAL</span>: <span class="ident">Duration</span> <span class="op">=</span> <span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="number">0</span>);
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">test</span>))]</span>
 <span class="kw">const</span> <span class="ident">DEFAULT_PASSWORD_CLEAR_INTERVAL</span>: <span class="ident">Duration</span> <span class="op">=</span> <span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="number">8</span> <span class="op">*</span> <span class="number">60</span>);
-<span class="kw">const</span> <span class="ident">ACCOUNT_ID_SEPARATOR</span>: <span class="ident">char</span> <span class="op">=</span> <span class="string">&#39;|&#39;</span>;
-<span class="kw">const</span> <span class="ident">ACCOUNT_METADATA_VAULT_PATH</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;iota-wallet-account-metadata&quot;</span>;
-<span class="kw">const</span> <span class="ident">ACCOUNT_IDS_RECORD_PATH</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;iota-wallet-account-ids&quot;</span>;
-<span class="kw">const</span> <span class="ident">ACCOUNT_VAULT_PATH</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;iota-wallet-account-vault&quot;</span>;
-<span class="kw">const</span> <span class="ident">ACCOUNT_RECORD_PATH</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;iota-wallet-account-record&quot;</span>;
 <span class="kw">const</span> <span class="ident">SECRET_VAULT_PATH</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;iota-wallet-secret&quot;</span>;
 <span class="kw">const</span> <span class="ident">SEED_RECORD_PATH</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;iota-wallet-seed&quot;</span>;
 <span class="kw">const</span> <span class="ident">DERIVE_OUTPUT_RECORD_PATH</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;iota-wallet-derived&quot;</span>;
 
-<span class="kw">fn</span> <span class="ident">account_id_to_client_path</span>(<span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
-    <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;iota-wallet-account-{}&quot;</span>, <span class="ident">id</span>).<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>()
+<span class="kw">fn</span> <span class="ident">records_client_path</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+    <span class="string">b&quot;iota-wallet-records&quot;</span>.<span class="ident">to_vec</span>()
 }
 
 <span class="kw">fn</span> <span class="ident">stronghold_response_to_result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">status</span>: <span class="ident">ResultMessage</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
@@ -996,11 +876,11 @@
     .<span class="kw">await</span>
 }
 
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">load_account_actor</span>(<span class="ident">runtime</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ActorRuntime</span>, <span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">PathBuf</span>, <span class="ident">account_id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">load_records_actor</span>(<span class="ident">runtime</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ActorRuntime</span>, <span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">PathBuf</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="ident">load_actor</span>(
         <span class="ident">runtime</span>,
         <span class="ident">snapshot_path</span>,
-        <span class="ident">account_id_to_client_path</span>(<span class="ident">account_id</span>),
+        <span class="ident">records_client_path</span>(),
         <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">StrongholdFlags</span>::<span class="ident">IsReadable</span>(<span class="bool-val">true</span>)],
     )
     .<span class="kw">await</span>
@@ -1116,7 +996,8 @@
                     <span class="kw">crate</span>::<span class="ident">event</span>::<span class="ident">emit_stronghold_status_change</span>(<span class="kw-2">&amp;</span><span class="ident">Status</span> {
                         <span class="ident">snapshot_path</span>: <span class="ident">snapshot_path</span>.<span class="ident">clone</span>(),
                         <span class="ident">snapshot</span>: <span class="ident">SnapshotStatus</span>::<span class="ident">Locked</span>,
-                    });
+                    })
+                    .<span class="kw">await</span>;
                 }
             }
         })
@@ -1135,16 +1016,10 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">thiserror</span>::<span class="ident">Error</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;account id isn&#39;t a valid record hint&quot;</span>)]</span>
-    <span class="ident">InvalidAccountIdentifier</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;must provide account id instead of string&quot;</span>)]</span>
-    <span class="ident">AccountIdMustBeString</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;`{0}`&quot;</span>)]</span>
     <span class="ident">StrongholdError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">iota_stronghold</span>::<span class="ident">Error</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;account not found&quot;</span>)]</span>
-    <span class="ident">AccountNotFound</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;snapshot doesn&#39;t have accounts&quot;</span>)]</span>
-    <span class="ident">EmptySnapshot</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;record not found&quot;</span>)]</span>
+    <span class="ident">RecordNotFound</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to perform action: `{0}`&quot;</span>)]</span>
     <span class="ident">FailedToPerformAction</span>(<span class="ident">String</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;snapshot password not set&quot;</span>)]</span>
@@ -1255,14 +1130,7 @@
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">load_actors</span>(<span class="kw-2">mut</span> <span class="ident">runtime</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ActorRuntime</span>, <span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">PathBuf</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="comment">// load all actors to prevent lost data on save</span>
     <span class="ident">load_private_data_actor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">account_ids_location</span> <span class="op">=</span> <span class="ident">Location</span>::<span class="ident">generic</span>(<span class="ident">ACCOUNT_METADATA_VAULT_PATH</span>, <span class="ident">ACCOUNT_IDS_RECORD_PATH</span>);
-    <span class="kw">let</span> (<span class="ident">data</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">runtime</span>.<span class="ident">stronghold</span>.<span class="ident">read_from_store</span>(<span class="ident">account_ids_location</span>.<span class="ident">clone</span>()).<span class="kw">await</span>;
-
-    <span class="kw">let</span> <span class="ident">account_ids</span> <span class="op">=</span> <span class="ident">String</span>::<span class="ident">from_utf8_lossy</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>).<span class="ident">to_string</span>();
-    <span class="kw">for</span> <span class="ident">account_id</span> <span class="kw">in</span> <span class="ident">account_ids</span>.<span class="ident">split</span>(<span class="ident">ACCOUNT_ID_SEPARATOR</span>).<span class="ident">filter</span>(<span class="op">|</span><span class="ident">id</span><span class="op">|</span> <span class="op">!</span><span class="ident">id</span>.<span class="ident">is_empty</span>()) {
-        <span class="ident">load_account_actor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="ident">account_id</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-    }
-
+    <span class="ident">load_records_actor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
@@ -1297,7 +1165,7 @@
         <span class="ident">passwords</span>.<span class="ident">remove</span>(<span class="ident">storage_path</span>);
     }
 
-    <span class="kw">crate</span>::<span class="ident">event</span>::<span class="ident">emit_stronghold_status_change</span>(<span class="kw-2">&amp;</span><span class="ident">get_status</span>(<span class="ident">storage_path</span>).<span class="kw">await</span>);
+    <span class="kw">crate</span>::<span class="ident">event</span>::<span class="ident">emit_stronghold_status_change</span>(<span class="kw-2">&amp;</span><span class="ident">get_status</span>(<span class="ident">storage_path</span>).<span class="kw">await</span>).<span class="kw">await</span>;
 
     <span class="prelude-val">Ok</span>(())
 }
@@ -1314,7 +1182,7 @@
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="ident">set_password</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="ident">password</span>).<span class="kw">await</span>;
     <span class="ident">check_snapshot</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-    <span class="kw">crate</span>::<span class="ident">event</span>::<span class="ident">emit_stronghold_status_change</span>(<span class="kw-2">&amp;</span><span class="ident">get_status</span>(<span class="ident">snapshot_path</span>).<span class="kw">await</span>);
+    <span class="kw">crate</span>::<span class="ident">event</span>::<span class="ident">emit_stronghold_status_change</span>(<span class="kw-2">&amp;</span><span class="ident">get_status</span>(<span class="ident">snapshot_path</span>).<span class="kw">await</span>).<span class="kw">await</span>;
     <span class="prelude-val">Ok</span>(())
 }
 
@@ -1462,79 +1330,27 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_accounts</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">PathBuf</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_record</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">PathBuf</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">runtime</span> <span class="op">=</span> <span class="ident">actor_runtime</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="ident">check_snapshot</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-    <span class="ident">load_private_data_actor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">account_ids_location</span> <span class="op">=</span> <span class="ident">Location</span>::<span class="ident">generic</span>(<span class="ident">ACCOUNT_METADATA_VAULT_PATH</span>, <span class="ident">ACCOUNT_IDS_RECORD_PATH</span>);
-    <span class="kw">let</span> (<span class="ident">data</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">runtime</span>.<span class="ident">stronghold</span>.<span class="ident">read_from_store</span>(<span class="ident">account_ids_location</span>.<span class="ident">clone</span>()).<span class="kw">await</span>;
-
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">accounts</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
-    <span class="kw">let</span> <span class="ident">account_ids</span> <span class="op">=</span> <span class="ident">String</span>::<span class="ident">from_utf8_lossy</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>).<span class="ident">to_string</span>();
-    <span class="kw">for</span> <span class="ident">account_id</span> <span class="kw">in</span> <span class="ident">account_ids</span>.<span class="ident">split</span>(<span class="ident">ACCOUNT_ID_SEPARATOR</span>).<span class="ident">filter</span>(<span class="op">|</span><span class="ident">id</span><span class="op">|</span> <span class="op">!</span><span class="ident">id</span>.<span class="ident">is_empty</span>()) {
-        <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">get_account_internal</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="ident">account_id</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="ident">accounts</span>.<span class="ident">push</span>(<span class="ident">account</span>);
-    }
-
-    <span class="prelude-val">Ok</span>(<span class="ident">accounts</span>)
-}
-
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_account_internal</span>(
-    <span class="kw-2">mut</span> <span class="ident">runtime</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ActorRuntime</span>,
-    <span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">PathBuf</span>,
-    <span class="ident">account_id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-    <span class="ident">load_account_actor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="ident">account_id</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-    <span class="kw">let</span> (<span class="ident">data</span>, <span class="ident">status</span>) <span class="op">=</span> <span class="ident">runtime</span>
-        .<span class="ident">stronghold</span>
-        .<span class="ident">read_from_store</span>(<span class="ident">Location</span>::<span class="ident">generic</span>(<span class="ident">ACCOUNT_VAULT_PATH</span>, <span class="ident">ACCOUNT_RECORD_PATH</span>))
-        .<span class="kw">await</span>;
-    <span class="ident">stronghold_response_to_result</span>(<span class="ident">status</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">AccountNotFound</span>)<span class="question-mark">?</span>;
+    <span class="ident">load_records_actor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="kw">let</span> (<span class="ident">data</span>, <span class="ident">status</span>) <span class="op">=</span> <span class="ident">runtime</span>.<span class="ident">stronghold</span>.<span class="ident">read_from_store</span>(<span class="ident">Location</span>::<span class="ident">generic</span>(<span class="ident">key</span>, <span class="ident">key</span>)).<span class="kw">await</span>;
+    <span class="ident">stronghold_response_to_result</span>(<span class="ident">status</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">RecordNotFound</span>)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(<span class="ident">String</span>::<span class="ident">from_utf8_lossy</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>).<span class="ident">to_string</span>())
 }
 
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_account</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">PathBuf</span>, <span class="ident">account_id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">store_record</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">PathBuf</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">record</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">runtime</span> <span class="op">=</span> <span class="ident">actor_runtime</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="ident">check_snapshot</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-    <span class="ident">get_account_internal</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="ident">account_id</span>).<span class="kw">await</span>
-}
-
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">store_account</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">PathBuf</span>, <span class="ident">account_id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">account</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">runtime</span> <span class="op">=</span> <span class="ident">actor_runtime</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
-    <span class="ident">check_snapshot</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-
-    <span class="comment">// first we push the account id to the reference array</span>
-    <span class="comment">// the reference array holds all account ids so we can scan them on the `get_accounts` implementation</span>
-    <span class="ident">load_private_data_actor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">account_ids_location</span> <span class="op">=</span> <span class="ident">Location</span>::<span class="ident">generic</span>(<span class="ident">ACCOUNT_METADATA_VAULT_PATH</span>, <span class="ident">ACCOUNT_IDS_RECORD_PATH</span>);
-    <span class="kw">let</span> (<span class="ident">data</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">runtime</span>.<span class="ident">stronghold</span>.<span class="ident">read_from_store</span>(<span class="ident">account_ids_location</span>.<span class="ident">clone</span>()).<span class="kw">await</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account_ids</span> <span class="op">=</span> <span class="ident">String</span>::<span class="ident">from_utf8_lossy</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>).<span class="ident">to_string</span>();
-
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">account_ids</span>.<span class="ident">contains</span>(<span class="ident">account_id</span>) {
-        <span class="ident">account_ids</span>.<span class="ident">push_str</span>(<span class="ident">account_id</span>);
-        <span class="ident">account_ids</span>.<span class="ident">push</span>(<span class="ident">ACCOUNT_ID_SEPARATOR</span>);
-        <span class="ident">stronghold_response_to_result</span>(
-            <span class="ident">runtime</span>
-                .<span class="ident">stronghold</span>
-                .<span class="ident">write_to_store</span>(<span class="ident">account_ids_location</span>, <span class="ident">account_ids</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(), <span class="prelude-val">None</span>)
-                .<span class="kw">await</span>,
-        )<span class="question-mark">?</span>;
-    }
 
     <span class="comment">// since we&#39;re creating a new account, we don&#39;t need to load it from the snapshot</span>
-    <span class="ident">runtime</span>
-        .<span class="ident">loaded_client_paths</span>
-        .<span class="ident">insert</span>(<span class="ident">account_id_to_client_path</span>(<span class="ident">account_id</span>));
+    <span class="ident">runtime</span>.<span class="ident">loaded_client_paths</span>.<span class="ident">insert</span>(<span class="ident">records_client_path</span>());
 
-    <span class="ident">load_account_actor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="ident">account_id</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="ident">load_records_actor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="ident">stronghold_response_to_result</span>(
         <span class="ident">runtime</span>
             .<span class="ident">stronghold</span>
-            .<span class="ident">write_to_store</span>(
-                <span class="ident">Location</span>::<span class="ident">generic</span>(<span class="ident">ACCOUNT_VAULT_PATH</span>, <span class="ident">ACCOUNT_RECORD_PATH</span>),
-                <span class="ident">account</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-                <span class="prelude-val">None</span>,
-            )
+            .<span class="ident">write_to_store</span>(<span class="ident">Location</span>::<span class="ident">generic</span>(<span class="ident">key</span>, <span class="ident">key</span>), <span class="ident">record</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(), <span class="prelude-val">None</span>)
             .<span class="kw">await</span>,
     )<span class="question-mark">?</span>;
 
@@ -1543,38 +1359,12 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">remove_account</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">PathBuf</span>, <span class="ident">account_id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">remove_record</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">PathBuf</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">runtime</span> <span class="op">=</span> <span class="ident">actor_runtime</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="ident">check_snapshot</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>).<span class="kw">await</span><span class="question-mark">?</span>;
 
-    <span class="comment">// first we delete the account id from the reference array</span>
-    <span class="ident">load_private_data_actor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">account_ids_location</span> <span class="op">=</span> <span class="ident">Location</span>::<span class="ident">generic</span>(<span class="ident">ACCOUNT_METADATA_VAULT_PATH</span>, <span class="ident">ACCOUNT_IDS_RECORD_PATH</span>);
-    <span class="kw">let</span> (<span class="ident">data</span>, <span class="ident">status</span>) <span class="op">=</span> <span class="ident">runtime</span>.<span class="ident">stronghold</span>.<span class="ident">read_from_store</span>(<span class="ident">account_ids_location</span>.<span class="ident">clone</span>()).<span class="kw">await</span>;
-    <span class="ident">stronghold_response_to_result</span>(<span class="ident">status</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">AccountNotFound</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">account_ids</span> <span class="op">=</span> <span class="ident">String</span>::<span class="ident">from_utf8_lossy</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>).<span class="ident">to_string</span>();
-
-    <span class="ident">stronghold_response_to_result</span>(
-        <span class="ident">runtime</span>
-            .<span class="ident">stronghold</span>
-            .<span class="ident">write_to_store</span>(
-                <span class="ident">account_ids_location</span>,
-                <span class="ident">account_ids</span>
-                    .<span class="ident">replace</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}{}&quot;</span>, <span class="ident">account_id</span>, <span class="ident">ACCOUNT_ID_SEPARATOR</span>), <span class="string">&quot;&quot;</span>)
-                    .<span class="ident">as_bytes</span>()
-                    .<span class="ident">to_vec</span>(),
-                <span class="prelude-val">None</span>,
-            )
-            .<span class="kw">await</span>,
-    )<span class="question-mark">?</span>;
-
-    <span class="ident">load_account_actor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="ident">account_id</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-    <span class="ident">stronghold_response_to_result</span>(
-        <span class="ident">runtime</span>
-            .<span class="ident">stronghold</span>
-            .<span class="ident">delete_from_store</span>(<span class="ident">Location</span>::<span class="ident">generic</span>(<span class="ident">ACCOUNT_VAULT_PATH</span>, <span class="ident">ACCOUNT_RECORD_PATH</span>))
-            .<span class="kw">await</span>,
-    )<span class="question-mark">?</span>;
+    <span class="ident">load_records_actor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="ident">stronghold_response_to_result</span>(<span class="ident">runtime</span>.<span class="ident">stronghold</span>.<span class="ident">delete_from_store</span>(<span class="ident">Location</span>::<span class="ident">generic</span>(<span class="ident">key</span>, <span class="ident">key</span>)).<span class="kw">await</span>)<span class="question-mark">?</span>;
 
     <span class="ident">save_snapshot</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>).<span class="kw">await</span>
 }
@@ -1599,7 +1389,7 @@
                 <span class="kw">super</span>::<span class="ident">load_snapshot</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, [<span class="number">0</span>; <span class="number">32</span>].<span class="ident">to_vec</span>()).<span class="kw">await</span>.<span class="ident">unwrap</span>();
 
                 <span class="ident">std</span>::<span class="ident">thread</span>::<span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="ident">interval</span> <span class="op">*</span> <span class="number">3</span>));
-                <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">get_account</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="string">&quot;passwordexpires&quot;</span>).<span class="kw">await</span>;
+                <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">get_record</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="string">&quot;passwordexpires&quot;</span>).<span class="kw">await</span>;
                 <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">res</span>.<span class="ident">is_err</span>(), <span class="bool-val">true</span>);
                 <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">unwrap_err</span>();
                 <span class="kw">if</span> <span class="kw">let</span> <span class="kw">super</span>::<span class="ident">Error</span>::<span class="ident">PasswordNotSet</span> <span class="op">=</span> <span class="ident">error</span> {
@@ -1628,7 +1418,7 @@
 
                 <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">1</span>..<span class="number">6</span> {
                     <span class="kw">let</span> <span class="ident">instant</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Instant</span>::<span class="ident">now</span>();
-                    <span class="kw">super</span>::<span class="ident">store_account</span>(
+                    <span class="kw">super</span>::<span class="ident">store_record</span>(
                         <span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>,
                         <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;actionkeepspassword{}&quot;</span>, <span class="ident">i</span>),
                         <span class="string">&quot;data&quot;</span>.<span class="ident">to_string</span>(),
@@ -1651,12 +1441,12 @@
                 }
 
                 <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="string">&quot;actionkeepspassword1&quot;</span>.<span class="ident">to_string</span>();
-                <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">get_account</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>).<span class="kw">await</span>;
+                <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">get_record</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>).<span class="kw">await</span>;
                 <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">res</span>.<span class="ident">is_ok</span>(), <span class="bool-val">true</span>);
 
                 <span class="ident">std</span>::<span class="ident">thread</span>::<span class="ident">sleep</span>(<span class="ident">interval</span> <span class="op">*</span> <span class="number">2</span>);
 
-                <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">get_account</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>).<span class="kw">await</span>;
+                <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">get_record</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>).<span class="kw">await</span>;
                 <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">res</span>.<span class="ident">is_err</span>(), <span class="bool-val">true</span>);
                 <span class="kw">if</span> <span class="kw">let</span> <span class="kw">super</span>::<span class="ident">Error</span>::<span class="ident">PasswordNotSet</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">unwrap_err</span>() {
                     <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">get_status</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>).<span class="kw">await</span>;
@@ -1671,26 +1461,6 @@
     }
 
     <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">write_and_get_all</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">super</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">snapshot_path</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">thread_rng</span>().<span class="ident">sample_iter</span>(<span class="kw-2">&amp;</span><span class="ident">Alphanumeric</span>).<span class="ident">take</span>(<span class="number">10</span>).<span class="ident">collect</span>();
-        <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">create_dir_all</span>(<span class="string">&quot;./test-storage&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">snapshot_path</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;./test-storage/{}.stronghold&quot;</span>, <span class="ident">snapshot_path</span>));
-        <span class="kw">super</span>::<span class="ident">load_snapshot</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, [<span class="number">0</span>; <span class="number">32</span>].<span class="ident">to_vec</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
-
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="string">&quot;id&quot;</span>.<span class="ident">to_string</span>();
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;account data&quot;</span>;
-        <span class="kw">super</span>::<span class="ident">store_account</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>, <span class="ident">data</span>.<span class="ident">to_string</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">r</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">actor_runtime</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
-        <span class="kw">super</span>::<span class="ident">clear_stronghold_cache</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">r</span>, <span class="bool-val">true</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="ident">drop</span>(<span class="ident">r</span>);
-        <span class="kw">let</span> <span class="ident">stored_data</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">get_accounts</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">stored_data</span>.<span class="ident">len</span>(), <span class="number">1</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">stored_data</span>[<span class="number">0</span>], <span class="ident">data</span>);
-
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">write_and_read</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw">super</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">snapshot_path</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">thread_rng</span>().<span class="ident">sample_iter</span>(<span class="kw-2">&amp;</span><span class="ident">Alphanumeric</span>).<span class="ident">take</span>(<span class="number">10</span>).<span class="ident">collect</span>();
         <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">create_dir_all</span>(<span class="string">&quot;./test-storage&quot;</span>).<span class="ident">unwrap</span>();
@@ -1698,9 +1468,9 @@
         <span class="kw">super</span>::<span class="ident">load_snapshot</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, [<span class="number">0</span>; <span class="number">32</span>].<span class="ident">to_vec</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="string">&quot;writeandreadtest&quot;</span>.<span class="ident">to_string</span>();
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;account data&quot;</span>;
-        <span class="kw">super</span>::<span class="ident">store_account</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>, <span class="ident">data</span>.<span class="ident">to_string</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">stored_data</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">get_account</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;record data&quot;</span>;
+        <span class="kw">super</span>::<span class="ident">store_record</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>, <span class="ident">data</span>.<span class="ident">to_string</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">stored_data</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">get_record</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">stored_data</span>, <span class="ident">data</span>);
 
         <span class="prelude-val">Ok</span>(())
@@ -1714,9 +1484,9 @@
         <span class="kw">super</span>::<span class="ident">load_snapshot</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, [<span class="number">0</span>; <span class="number">32</span>].<span class="ident">to_vec</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="string">&quot;writeanddeleteid&quot;</span>.<span class="ident">to_string</span>();
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;account data&quot;</span>;
-        <span class="kw">super</span>::<span class="ident">store_account</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>, <span class="ident">data</span>.<span class="ident">to_string</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">super</span>::<span class="ident">remove_account</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;record data&quot;</span>;
+        <span class="kw">super</span>::<span class="ident">store_record</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>, <span class="ident">data</span>.<span class="ident">to_string</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">super</span>::<span class="ident">remove_record</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -1733,12 +1503,12 @@
 
             <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;multiplesnapshots{}&quot;</span>, <span class="ident">i</span>);
             <span class="kw">let</span> <span class="ident">data</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">thread_rng</span>().<span class="ident">sample_iter</span>(<span class="kw-2">&amp;</span><span class="ident">Alphanumeric</span>).<span class="ident">take</span>(<span class="number">10</span>).<span class="ident">collect</span>();
-            <span class="kw">super</span>::<span class="ident">store_account</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>, <span class="ident">data</span>.<span class="ident">clone</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">super</span>::<span class="ident">store_record</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>, <span class="ident">data</span>.<span class="ident">clone</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="ident">snapshot_saves</span>.<span class="ident">push</span>((<span class="ident">snapshot_path</span>, <span class="ident">id</span>, <span class="ident">data</span>));
         }
 
-        <span class="kw">for</span> (<span class="ident">snapshot_path</span>, <span class="ident">account_id</span>, <span class="ident">data</span>) <span class="kw">in</span> <span class="ident">snapshot_saves</span> {
-            <span class="kw">let</span> <span class="ident">stored_data</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">get_account</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">account_id</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">for</span> (<span class="ident">snapshot_path</span>, <span class="ident">key</span>, <span class="ident">data</span>) <span class="kw">in</span> <span class="ident">snapshot_saves</span> {
+            <span class="kw">let</span> <span class="ident">stored_data</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">get_record</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>).<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">stored_data</span>, <span class="ident">data</span>);
         }
 
@@ -1753,8 +1523,8 @@
         <span class="kw">let</span> <span class="ident">old_password</span> <span class="op">=</span> [<span class="number">5</span>; <span class="number">32</span>].<span class="ident">to_vec</span>();
         <span class="kw">super</span>::<span class="ident">load_snapshot</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="ident">old_password</span>.<span class="ident">to_vec</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="string">&quot;writeanddeleteid&quot;</span>.<span class="ident">to_string</span>();
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;account data&quot;</span>;
-        <span class="kw">super</span>::<span class="ident">store_account</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>, <span class="ident">data</span>.<span class="ident">to_string</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;record data&quot;</span>;
+        <span class="kw">super</span>::<span class="ident">store_record</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>, <span class="ident">data</span>.<span class="ident">to_string</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">new_password</span> <span class="op">=</span> [<span class="number">6</span>; <span class="number">32</span>].<span class="ident">to_vec</span>();
         <span class="kw">super</span>::<span class="ident">change_password</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="ident">old_password</span>, <span class="ident">new_password</span>.<span class="ident">to_vec</span>()).<span class="kw">await</span><span class="question-mark">?</span>;

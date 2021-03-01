@@ -377,7 +377,7 @@
     <span class="ident">LatestAccountIsEmpty</span>,
     <span class="doccomment">/// Account not found</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;account not found&quot;</span>)]</span>
-    <span class="ident">AccountNotFound</span>,
+    <span class="ident">RecordNotFound</span>,
     <span class="doccomment">/// invalid remainder value target address defined on `RemainderValueStrategy`.</span>
     <span class="doccomment">/// the address must belong to the account.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;the remainder value address doesn&#39;t belong to the account&quot;</span>)]</span>
@@ -426,12 +426,12 @@
         <span class="string">&quot;storage adapter not set for path `{0}`; please use the method `with_storage` on the AccountManager builder&quot;</span>
     )]</span>
     <span class="ident">StorageAdapterNotSet</span>(<span class="ident">PathBuf</span>),
-    <span class="doccomment">/// error decrypting stored account using provided encryptionKey</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to decrypt account: {0}&quot;</span>)]</span>
-    <span class="ident">AccountDecrypt</span>(<span class="ident">String</span>),
-    <span class="doccomment">/// error encrypting stored account using provided encryptionKey</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to encrypt account: {0}&quot;</span>)]</span>
-    <span class="ident">AccountEncrypt</span>(<span class="ident">String</span>),
+    <span class="doccomment">/// error decrypting stored record using provided encryptionKey</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to decrypt record: {0}&quot;</span>)]</span>
+    <span class="ident">RecordDecrypt</span>(<span class="ident">String</span>),
+    <span class="doccomment">/// error encrypting stored record using provided encryptionKey</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to encrypt record: {0}&quot;</span>)]</span>
+    <span class="ident">RecordEncrypt</span>(<span class="ident">String</span>),
     <span class="doccomment">/// Can&#39;t use AccountManager API because the storage is encrypted</span>
     <span class="attribute">#[<span class="ident">error</span>(
         <span class="string">&quot;can&#39;t perform operation while storage is encrypted; use AccountManager::set_storage_password to decrypt storage&quot;</span>
@@ -488,7 +488,7 @@
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">stronghold</span>::<span class="ident">Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">error</span>: <span class="kw">crate</span>::<span class="ident">stronghold</span>::<span class="ident">Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">error</span> {
-            <span class="kw">crate</span>::<span class="ident">stronghold</span>::<span class="ident">Error</span>::<span class="ident">AccountNotFound</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">AccountNotFound</span>,
+            <span class="kw">crate</span>::<span class="ident">stronghold</span>::<span class="ident">Error</span>::<span class="ident">RecordNotFound</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">RecordNotFound</span>,
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">StrongholdError</span>(<span class="ident">error</span>),
         }
     }
@@ -546,7 +546,7 @@
             <span class="self">Self</span>::<span class="ident">InsufficientFunds</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;InsufficientFunds&quot;</span>),
             <span class="self">Self</span>::<span class="ident">AccountNotEmpty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;AccountNotEmpty&quot;</span>),
             <span class="self">Self</span>::<span class="ident">LatestAccountIsEmpty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;LatestAccountIsEmpty&quot;</span>),
-            <span class="self">Self</span>::<span class="ident">AccountNotFound</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;AccountNotFound&quot;</span>),
+            <span class="self">Self</span>::<span class="ident">RecordNotFound</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;RecordNotFound&quot;</span>),
             <span class="self">Self</span>::<span class="ident">InvalidRemainderValueAddress</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;InvalidRemainderValueAddress&quot;</span>),
             <span class="self">Self</span>::<span class="ident">Storage</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;Storage&quot;</span>),
             <span class="self">Self</span>::<span class="ident">Panic</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;Panic&quot;</span>),
@@ -564,8 +564,8 @@
             <span class="self">Self</span>::<span class="ident">StorageAdapterNotDefined</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;StorageAdapterNotDefined&quot;</span>),
             <span class="self">Self</span>::<span class="ident">StorageExists</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;StorageExists&quot;</span>),
             <span class="self">Self</span>::<span class="ident">StorageAdapterNotSet</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;StorageAdapterNotSet&quot;</span>),
-            <span class="self">Self</span>::<span class="ident">AccountDecrypt</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;AccountDecrypt&quot;</span>),
-            <span class="self">Self</span>::<span class="ident">AccountEncrypt</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;AccountEncrypt&quot;</span>),
+            <span class="self">Self</span>::<span class="ident">RecordDecrypt</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;RecordDecrypt&quot;</span>),
+            <span class="self">Self</span>::<span class="ident">RecordEncrypt</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;RecordEncrypt&quot;</span>),
             <span class="self">Self</span>::<span class="ident">StorageIsEncrypted</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;StorageIsEncrypted&quot;</span>),
             <span class="self">Self</span>::<span class="ident">CannotUseIndexIdentifier</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;CannotUseIndexIdentifier&quot;</span>),
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
