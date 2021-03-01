@@ -960,7 +960,7 @@ macro_rules! event_getters_impl {
                     .await
             }
 
-            /// Gets the count of events with an optiona timestamp filter.
+            /// Gets the count of events with an optional timestamp filter.
             pub async fn $get_count_fn_name<T: Into<Option<Timestamp>>>(
                 &self,
                 from_timestamp: T,
