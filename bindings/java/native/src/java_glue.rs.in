@@ -10,21 +10,25 @@ use crate::{
     jni_c_header::*,
     client_options::*,
     acc::*,
+    sync::*,
     acc_manager::*,
-    message::Message,
-    address::Address
+    message::*,
+    address::*
 };
 
 use anyhow::Result as Result;
 
-use env_logger::*;
+use log::debug;
 
 use iota_wallet::{
+    account::{
+        AccountBalance,
+    },
     message::{
         MessageType, Value, ValueUnit, MessageId
     },
     address::{
-        OutputKind,
+        OutputKind, AddressWrapper
     },
     client::{
         Api,
@@ -36,6 +40,21 @@ foreign_class!(class RustLogging {
         env_logger::init();
     }
 });
+
+/*
+foreign_enum!(
+    enum IotaAddress {
+        Ed25519 = IotaAddress::Ed25519,
+    }
+);
+*/
+
+foreign_enum!(
+    enum RemainderValueStrategy {
+        ReuseAddress = RemainderValueStrategy::ReuseAddress,
+        ChangeAddress = RemainderValueStrategy::ChangeAddress,
+    }
+);
 
 foreign_enum!(
     enum ManagerStorage {
@@ -112,6 +131,7 @@ foreign_class!(class AccountManager {
     fn AccountManager::generateMnemonic(&mut self) -> Result<String>;
     fn AccountManager::storeMnemonic(&mut self, signer_type_enum: AccountSignerType, mnemonic: String) -> Result<()>;
     fn AccountManager::verify_mnemonic(&mut self, mnemonic: String) -> Result<()>;
+    fn AccountManager::create_account(&mut self, client_options: ClientOptions) -> Result<AccountInitialiser>;
 });
 
 foreign_class!(class ClientOptionsBuilder {
@@ -180,6 +200,17 @@ foreign_class!(
         self_type Address;
         private constructor = empty;
         private fn Address::eq(&self, o: &Address) -> bool; alias rustEq;
+        fn Address::balance(&self) -> u64; alias getBalance;
+        fn Address::readable(&self) -> String; alias getReadable;
+        fn Address::address(&self) -> AddressWrapper;
+    }
+);
+
+foreign_class!(
+    class AddressWrapper {
+        self_type AddressWrapper;
+        private constructor = empty;
+        fn AddressWrapper::to_bech32(&self) -> String; alias toBech32;
     }
 );
 
@@ -194,6 +225,85 @@ foreign_class!(
         fn AccountInitialiser::messages(&mut self, messages: Vec<Message>) -> AccountInitialiser;
         fn AccountInitialiser::addresses(&mut self, addresses: Vec<Address>) -> AccountInitialiser;
         fn AccountInitialiser::skip_persistance(&mut self) -> AccountInitialiser;
-        //fn AccountInitialiser::initialise(&mut self) -> Result<AccountHandle>;
+        fn AccountInitialiser::initialise(&mut self) -> Result<Account>;
+    }
+);
+
+foreign_class!(
+    class AccountBalance {
+        self_type AccountBalance;
+        private constructor = empty;
+        fn AccountBalance::getTotal(&self) -> u64 {
+            this.total
+        }
+        fn AccountBalance::getAvailable(&self) -> u64 {
+            this.available
+        }
+        fn AccountBalance::getIncoming(&self) -> u64 {
+            this.incoming
+        }
+        fn AccountBalance::getOutgoing(&self) -> u64 {
+            this.outgoing
+        }
+    }
+);
+
+foreign_class!(
+    class Account {
+        self_type Account;
+        private constructor = empty;
+        fn Account::sync(&self) -> AccountSynchronizer;
+        fn Account::generate_address(&self) -> Result<Address>;
+        fn Account::get_unused_address(&self) -> Result<Address>;
+        //fn Account::is_latest_address_unused(&self) -> Result<bool>;
+        fn Account::latest_address(&self) -> Address;
+        fn Account::set_alias(&self, alias: String) -> Result<()>;
+        fn Account::set_client_options(&self, options: ClientOptions) -> Result<()>;
+        fn Account::list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<Message>;
+        fn Account::list_spent_addresses(&self) -> Vec<Address>;
+        fn Account::list_unspent_addresses(&self) -> Vec<Address>;
+        fn Account::get_message(&self, message_id: MessageId) -> Option<Message>;
+        fn Account::alias(&self) -> String;
+        fn Account::balance(&self) -> AccountBalance;
+    }
+);
+
+foreign_class!(
+    class AccountSynchronizer {
+        self_type AccountSynchronizer;
+        private constructor = empty;
+
+        fn AccountSynchronizer::gap_limit(&mut self, limit: usize) -> AccountSynchronizer;
+        fn AccountSynchronizer::skip_persistance(&mut self) -> AccountSynchronizer;
+        fn AccountSynchronizer::address_index(&mut self, address_index: usize) -> AccountSynchronizer;
+        fn AccountSynchronizer::execute(&mut self) -> Result<SyncedAccount>;
+    }
+);
+
+foreign_class!(
+    class SyncedAccount {
+        self_type SyncedAccount;
+        private constructor = empty;
+
+        fn SyncedAccount::deposit_address(&mut self) -> Address;
+        fn SyncedAccount::transfer(&mut self, transfer: Transfer) -> Result<Message>;
+    }
+);
+
+foreign_class!(
+    class Transfer {
+        self_type Transfer;
+        private constructor = empty;
+        fn Transfer::builder(address: AddressWrapper, amount: u64) -> TransferBuilder;
+    }
+);
+
+foreign_class!(
+    class TransferBuilder {
+        self_type TransferBuilder;
+        constructor TransferBuilder::new(address: AddressWrapper, amount: u64) -> TransferBuilder;
+        fn TransferBuilder::with_remainder_value_strategy(&mut self, strategy: RemainderValueStrategy) -> TransferBuilder;
+        //TransferBuilder::with_indexation(&mut self, indexation: IndexationPayload) -> TransferBuilder;
+        fn TransferBuilder::finish(&self) -> Transfer;
     }
 );

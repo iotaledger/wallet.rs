@@ -32,7 +32,7 @@ fn main() {
     let out_src = Path::new(&out_dir).join("java_glue.rs");
     let swig_gen = flapigen::Generator::new(LanguageConfig::JavaConfig(java_cfg))
         .rustfmt_bindings(true)
-        .remove_not_generated_files_from_output_directory(true)
+        .remove_not_generated_files_from_output_directory(false)
         .merge_type_map("chrono_support", include_str!("src/foreign_types/chrono_include.rs"))
         .merge_type_map("foreign_types", include_str!("src/foreign_types/types.rs"))
         .register_class_attribute_callback("PartialEq", attributes::class_partial_eq);

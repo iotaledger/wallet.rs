@@ -26,6 +26,28 @@ public final class Address {
     }
     private static native boolean do_rustEq(long self, long o);
 
+    public final long getBalance() {
+        long ret = do_getBalance(mNativeObj);
+
+        return ret;
+    }
+    private static native long do_getBalance(long self);
+
+    public final String getReadable() {
+        String ret = do_getReadable(mNativeObj);
+
+        return ret;
+    }
+    private static native String do_getReadable(long self);
+
+    public final AddressWrapper address() {
+        long ret = do_address(mNativeObj);
+        AddressWrapper convRet = new AddressWrapper(InternalPointerMarker.RAW_PTR, ret);
+
+        return convRet;
+    }
+    private static native long do_address(long self);
+
     public synchronized void delete() {
         if (mNativeObj != 0) {
             do_delete(mNativeObj);

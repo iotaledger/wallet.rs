@@ -53,6 +53,19 @@ public final class AccountManager {
     }
     private static native void do_verify_mnemonic(long self, String mnemonic);
 
+    public final AccountInitialiser create_account(ClientOptions client_options) {
+        long a0 = client_options.mNativeObj;
+        client_options.mNativeObj = 0;
+
+        long ret = do_create_account(mNativeObj, a0);
+        AccountInitialiser convRet = new AccountInitialiser(InternalPointerMarker.RAW_PTR, ret);
+
+        JNIReachabilityFence.reachabilityFence1(client_options);
+
+        return convRet;
+    }
+    private static native long do_create_account(long self, long client_options);
+
     public synchronized void delete() {
         if (mNativeObj != 0) {
             do_delete(mNativeObj);

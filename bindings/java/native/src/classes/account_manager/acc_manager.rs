@@ -90,6 +90,7 @@ impl Default for ManagerOptions {
 
 impl ManagerOptions {
     pub fn setStoragePath(&mut self, storage_path: PathBuf){
+        println!("old storage: {:?}", &self.storage_path);
         self.storage_path = storage_path;
     }
 
@@ -164,8 +165,14 @@ impl AccountManager {
     pub fn storeMnemonic(&mut self, signer_type_enum: AccountSignerType, mnemonic: String) -> Result<()> {
         let signer_type = signer_type_enum_to_type(signer_type_enum);
 
+        // TODO: Make optional from java possible
+        let opt_mnemonic = match mnemonic.as_str() {
+            "" => None,
+            _ => Some(mnemonic),
+        };
+        
         crate::block_on(async move {
-            self.manager.store_mnemonic(signer_type, Option::Some(mnemonic)).await
+            self.manager.store_mnemonic(signer_type, opt_mnemonic).await
         }).expect("error storing mnemonic");
         Ok(())
     }

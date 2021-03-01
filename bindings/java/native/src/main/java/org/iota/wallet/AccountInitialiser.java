@@ -57,6 +57,14 @@ public final class AccountInitialiser {
     }
     private static native long do_skip_persistance(long self);
 
+    public final Account initialise() {
+        long ret = do_initialise(mNativeObj);
+        Account convRet = new Account(InternalPointerMarker.RAW_PTR, ret);
+
+        return convRet;
+    }
+    private static native long do_initialise(long self);
+
     public synchronized void delete() {
         if (mNativeObj != 0) {
             do_delete(mNativeObj);

@@ -5,7 +5,9 @@ use iota_wallet::{
 };
 
 use iota_wallet::account::Account;
-use iota_wallet::address::AddressOutput;
+use iota_wallet::address::{
+    AddressOutput, AddressWrapper
+};
 
 pub struct Address {
     address: AddressRust
@@ -26,6 +28,11 @@ impl PartialEq for Address {
 }
     
 impl Address {
+    pub fn new_with_internal(addr: AddressRust) -> Self {
+        Address {
+            address: addr,
+        }
+    }    
 /*
     #[getset(set = "pub")]
     balance: u64,
@@ -37,6 +44,10 @@ impl Address {
     /// The address outputs.
     #[getset(set = "pub(crate)")]
     pub(crate) outputs: Vec<AddressOutput>,*/
+
+    pub fn readable(&self) -> String {
+        self.address.address().to_bech32()
+    }
 
     pub fn balance(&self) -> u64 {
         *self.address.balance()
@@ -50,5 +61,9 @@ impl Address {
     pub fn get_internal(self) -> AddressRust {
         // TODO: Find a way to not need clone
         self.address.clone()
+    }
+
+    pub fn address(&self) -> AddressWrapper {
+        self.address()
     }
 }

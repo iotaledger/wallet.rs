@@ -19,8 +19,23 @@ tasks.withType(Test) {
 startScripts {
     classpath += files('../../native/target/debug')
 }
+
+task customCleanTask(type: Delete) {
+    // Clean up running "test" artifacts
+    delete "${rootDir}/examples/basic-app/iota.rs-api.lb-0.testnet.chrysalis2.com-80"
+    delete "${rootDir}/examples/basic-app/my-db"
+}
+
 test {
-    println file("../../native/target/debug")
+    // Always run tests, even when they didnt change
+    outputs.upToDateWhen { false }
+
+    // Gradle ignores java logging, not rust logging
+    testLogging.showStandardStreams = true
+
+    dependsOn customCleanTask
+    
+    // Set rust output .so/.lib files to path
     systemProperty "java.library.path", file("../../native/target/debug")
 }
 

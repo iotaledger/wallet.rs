@@ -2,11 +2,9 @@ package org.example;
 
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.nio.file.Path;
 
-import org.iota.NativeAPI;
 import org.iota.wallet.*;
 
 public class ExampleApp {
@@ -31,26 +29,40 @@ public class ExampleApp {
         options.setStoragePath(storageFolder.toString());
 
         AccountManager manager = new AccountManager(options);
+        manager.setStrongholdPassword("YepThisISSecure");
+        // null means "generate one for me"
+        manager.storeMnemonic(AccountSignerType.Stronghold, null);
 
         ClientOptions clientOptions = new ClientOptionsBuilder()
             .with_node("http://api.lb-0.testnet.chrysalis2.com")
             .build();
+        
+        Account account = manager
+            .create_account(clientOptions)
+            .alias("alias1")
+            .initialise();
 
-            /*
-        Object account = manager
-            .create_account(clientOptions);
-
+            
         System.out.println("alias " + account.alias());
         System.out.println("balance " + account.balance());
+        System.out.println("address: " + account.generate_address());
+
         
+        System.out.println("acc messages " + account.list_messages(5, 0, MessageType.Failed));
+        System.out.println("acc spent addresses " + account.list_spent_addresses());
+        System.out.println("acc unspent addresses " + account.list_unspent_addresses());
         System.out.println("syncing account now");
     
-        boolean synced = account.sync().get(500, TimeUnit.MILLISECONDS);
+        SyncedAccount sync_account = account.sync()
+            .skip_persistance()
+            .execute();
     
-        System.out.println("synced " + synced);
-        System.out.println("acc messages " + account.listMessages(5, 0, MessageType.FAILED));
-        System.out.println("acc spent addresses " + account.listSpentAddresses());
-        System.out.println("acc unspent addresses " + account.listUnspentAddresses());
-        */
+        System.out.println("synced " + sync_account);
+        sync_account.transfer(
+            Transfer.builder(
+                account.latest_address().address(),
+                150
+            )
+        );
     }
 }
