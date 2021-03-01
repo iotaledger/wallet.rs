@@ -7,8 +7,11 @@ use crate::{
         repost_message, Account, AccountHandle, AccountIdentifier, AccountInitialiser, RepostAction, SyncedAccount,
     },
     client::ClientOptions,
-    event::{emit_balance_change, emit_confirmation_state_change, emit_transaction_event, TransactionEventType},
-    message::{Message, MessageType, Transfer},
+    event::{
+        emit_balance_change, emit_confirmation_state_change, emit_transaction_event, BalanceChange,
+        TransactionEventType,
+    },
+    message::{Message, MessagePayload, MessageType, Transfer},
     signing::SignerType,
     storage::StorageAdapter,
 };
@@ -28,11 +31,10 @@ use std::{
     time::Duration,
 };
 
-use bee_rest_api::handlers::message_metadata::LedgerInclusionStateDto;
 use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
-use iota::{MessageId, Payload};
+use iota::{bee_rest_api::handlers::message_metadata::LedgerInclusionStateDto, MessageId};
 use serde::Deserialize;
 use tokio::{
     sync::{
@@ -41,6 +43,7 @@ use tokio::{
     },
     time::interval,
 };
+use zeroize::Zeroize;
 
 /// The default storage folder.
 pub const DEFAULT_STORAGE_FOLDER: &str = "./storage";
@@ -147,11 +150,6 @@ impl AccountManagerBuilder {
         Ok(self)
     }
 
-    pub(crate) fn with_storage_encryption_key(mut self, key: Option<[u8; 32]>) -> Self {
-        self.storage_encryption_key = key;
-        self
-    }
-
     /// Sets the polling interval.
     pub fn with_polling_interval(mut self, polling_interval: Duration) -> Self {
         self.polling_interval = polling_interval;
@@ -248,6 +246,9 @@ pub struct AccountManager {
 impl Clone for AccountManager {
     /// Note that when cloning an AccountManager, the original reference's Drop will stop the background sync.
     /// When the cloned reference is dropped, the background sync system won't be stopped.
+    ///
+    /// Additionally, the generated mnemonic isn't cloned for security reasons,
+    /// so you should store it before cloning.
     fn clone(&self) -> Self {
         Self {
             storage_folder: self.storage_folder.clone(),
@@ -256,7 +257,7 @@ impl Clone for AccountManager {
             stop_polling_sender: self.stop_polling_sender.clone(),
             polling_handle: None,
             is_monitoring: self.is_monitoring.clone(),
-            generated_mnemonic: self.generated_mnemonic.clone(),
+            generated_mnemonic: None,
             encrypted_accounts: self.encrypted_accounts.clone(),
         }
     }
@@ -269,11 +270,14 @@ impl Drop for AccountManager {
 }
 
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-fn stronghold_password<P: AsRef<str>>(password: P) -> [u8; 32] {
+fn stronghold_password<P: Into<String>>(password: P) -> Vec<u8> {
+    let mut password = password.into();
     let mut dk = [0; 64];
     // safe to unwrap because rounds > 0
-    crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_ref().as_bytes(), b"wallet.rs", 100, &mut dk).unwrap();
-    dk[0..32][..].try_into().unwrap()
+    crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_bytes(), b"wallet.rs", 100, &mut dk).unwrap();
+    password.zeroize();
+    let password: [u8; 32] = dk[0..32][..].try_into().unwrap();
+    password.to_vec()
 }
 
 impl AccountManager {
@@ -432,13 +436,13 @@ impl AccountManager {
     /// Sets the stronghold password.
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
-    pub async fn set_stronghold_password<P: AsRef<str>>(&mut self, password: P) -> crate::Result<()> {
+    pub async fn set_stronghold_password<P: Into<String>>(&mut self, password: P) -> crate::Result<()> {
         let stronghold_path = if self.storage_path.extension().unwrap_or_default() == "stronghold" {
             self.storage_path.clone()
         } else {
             self.storage_folder.join(STRONGHOLD_FILENAME)
         };
-        crate::stronghold::load_snapshot(&stronghold_path, &stronghold_password(password)).await?;
+        crate::stronghold::load_snapshot(&stronghold_path, stronghold_password(password)).await?;
 
         // let is_empty = self.accounts.read().await.is_empty();
         if self.accounts.read().await.is_empty() {
@@ -460,15 +464,15 @@ impl AccountManager {
     /// Sets the stronghold password.
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
-    pub async fn change_stronghold_password<C: AsRef<str>, N: AsRef<str>>(
+    pub async fn change_stronghold_password<C: Into<String>, N: Into<String>>(
         &self,
         current_password: C,
         new_password: N,
     ) -> crate::Result<()> {
         crate::stronghold::change_password(
             &self.stronghold_snapshot_path().await?,
-            &stronghold_password(current_password),
-            &stronghold_password(new_password),
+            stronghold_password(current_password),
+            stronghold_password(new_password),
         )
         .await
         .map_err(|e| e.into())
@@ -556,7 +560,9 @@ impl AccountManager {
         let mut signer = signer.lock().await;
         signer.store_mnemonic(&self.storage_path, mnemonic).await?;
 
-        self.generated_mnemonic = None;
+        if let Some(mut mnemonic) = self.generated_mnemonic.take() {
+            mnemonic.zeroize();
+        }
 
         Ok(())
     }
@@ -629,10 +635,12 @@ impl AccountManager {
     }
 
     /// Syncs all accounts.
-    pub async fn sync_accounts(&self) -> crate::Result<Vec<SyncedAccount>> {
+    pub fn sync_accounts(&self) -> crate::Result<AccountsSynchronizer> {
         self.check_storage_encryption()?;
-
-        sync_accounts(self.accounts.clone(), &self.storage_path, None).await
+        Ok(AccountsSynchronizer::new(
+            self.accounts.clone(),
+            self.storage_path.clone(),
+        ))
     }
 
     /// Transfers an amount from an account to another.
@@ -691,13 +699,6 @@ impl AccountManager {
                         None,
                     )
                     .unwrap() // safe to unwrap - password is None
-                    .with_storage_encryption_key(
-                        crate::storage::get(&self.storage_path)
-                            .await?
-                            .lock()
-                            .await
-                            .encryption_key,
-                    )
                     .skip_polling()
                     .finish()
                     .await?;
@@ -764,7 +765,7 @@ impl AccountManager {
     pub async fn import_accounts<S: AsRef<Path>>(
         &mut self,
         source: S,
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))] stronghold_password: impl AsRef<str>,
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))] stronghold_password: String,
     ) -> crate::Result<()> {
         let source = source.as_ref();
         if source.is_dir() || !source.exists() {
@@ -798,17 +799,12 @@ impl AccountManager {
                 let mut stronghold_manager = Self::builder()
                     .with_storage(&source, ManagerStorage::Stronghold, None)
                     .unwrap() // safe to unwrap - password is None
-                    .with_storage_encryption_key(
-                        crate::storage::get(&self.storage_path)
-                            .await?
-                            .lock()
-                            .await
-                            .encryption_key,
-                    )
                     .skip_polling()
                     .finish()
                     .await?;
-                stronghold_manager.set_stronghold_password(&stronghold_password).await?;
+                stronghold_manager
+                    .set_stronghold_password(stronghold_password.clone())
+                    .await?;
                 for account_handle in stronghold_manager.accounts.read().await.values() {
                     account_handle.write().await.set_storage_path(self.storage_path.clone());
                 }
@@ -949,13 +945,108 @@ impl AccountManager {
     }
 }
 
+/// The accounts synchronizer.
+pub struct AccountsSynchronizer {
+    accounts: AccountStore,
+    storage_file_path: PathBuf,
+    address_index: Option<usize>,
+    gap_limit: Option<usize>,
+}
+
+impl AccountsSynchronizer {
+    fn new(accounts: AccountStore, storage_file_path: PathBuf) -> Self {
+        Self {
+            accounts,
+            storage_file_path,
+            address_index: None,
+            gap_limit: None,
+        }
+    }
+
+    /// Number of address indexes that are generated.
+    pub fn gap_limit(mut self, limit: usize) -> Self {
+        self.gap_limit.replace(limit);
+        self
+    }
+
+    /// Initial address index to start syncing.
+    pub fn address_index(mut self, address_index: usize) -> Self {
+        self.address_index.replace(address_index);
+        self
+    }
+
+    /// Syncs the accounts with the Tangle.
+    pub async fn execute(self) -> crate::Result<Vec<SyncedAccount>> {
+        let mut synced_accounts = vec![];
+        let mut last_account = None;
+
+        {
+            let accounts = self.accounts.read().await;
+            for account_handle in accounts.values() {
+                let mut sync = account_handle.sync().await;
+                if let Some(index) = self.address_index {
+                    sync = sync.address_index(index);
+                }
+                if let Some(limit) = self.gap_limit {
+                    sync = sync.gap_limit(limit);
+                }
+                let synced_account = sync.execute().await?;
+
+                let account = account_handle.read().await;
+                last_account = Some((
+                    account.messages().is_empty() || account.addresses().iter().all(|addr| *addr.balance() == 0),
+                    account.client_options().clone(),
+                    account.signer_type().clone(),
+                ));
+                synced_accounts.push(synced_account);
+            }
+        }
+
+        let discovered_accounts_res = match last_account {
+            Some((is_empty, client_options, signer_type)) => {
+                if is_empty {
+                    log::debug!("[SYNC] running account discovery because the latest account is empty");
+                    discover_accounts(
+                        self.accounts.clone(),
+                        &self.storage_file_path,
+                        &client_options,
+                        Some(signer_type),
+                    )
+                    .await
+                } else {
+                    log::debug!("[SYNC] skipping account discovery because the latest account isn't empty");
+                    Ok(vec![])
+                }
+            }
+            None => Ok(vec![]), /* None => discover_accounts(accounts.clone(), &storage_path,
+                                 * &ClientOptions::default(), None).await, */
+        };
+
+        if let Ok(discovered_accounts) = discovered_accounts_res {
+            if !discovered_accounts.is_empty() {
+                let mut accounts = self.accounts.write().await;
+                for (account_handle, synced_account) in discovered_accounts {
+                    account_handle.write().await.set_skip_persistance(false);
+                    accounts.insert(account_handle.id().await, account_handle);
+                    synced_accounts.push(synced_account);
+                }
+            }
+        }
+
+        Ok(synced_accounts)
+    }
+}
+
 async fn poll(accounts: AccountStore, storage_file_path: PathBuf, is_mqtt_monitoring: bool) -> crate::Result<()> {
     let retried = if !is_mqtt_monitoring {
         let mut accounts_before_sync = Vec::new();
         for account_handle in accounts.read().await.values() {
             accounts_before_sync.push(account_handle.read().await.clone());
         }
-        let synced_accounts = sync_accounts(accounts.clone(), &storage_file_path, Some(0)).await?;
+        let synced_accounts = AccountsSynchronizer::new(accounts.clone(), storage_file_path)
+            .address_index(0)
+            .execute()
+            .await?;
         let accounts_after_sync = accounts.read().await;
 
         log::debug!("[POLLING] synced accounts");
@@ -982,7 +1073,11 @@ async fn poll(accounts: AccountStore, storage_file_path: PathBuf, is_mqtt_monito
                     emit_balance_change(
                         account_after_sync.id(),
                         address_after_sync,
-                        *address_after_sync.balance(),
+                        if address_after_sync.balance() > address_before_sync.balance() {
+                            BalanceChange::received(address_after_sync.balance() - address_before_sync.balance())
+                        } else {
+                            BalanceChange::spent(address_before_sync.balance() - address_after_sync.balance())
+                        },
                     );
                 }
             }
@@ -1014,7 +1109,7 @@ async fn poll(accounts: AccountStore, storage_file_path: PathBuf, is_mqtt_monito
         log::info!("[POLLING] skipping syncing process because MQTT is running");
         let mut retried_messages = vec![];
         for account_handle in accounts.read().await.values() {
-            let (account_handle, unconfirmed_messages): (AccountHandle, Vec<(MessageId, Payload)>) = {
+            let (account_handle, unconfirmed_messages): (AccountHandle, Vec<(MessageId, Option<MessagePayload>)>) = {
                 let account = account_handle.read().await;
                 let unconfirmed_messages = account
                     .list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed))
@@ -1070,9 +1165,9 @@ async fn poll(accounts: AccountStore, storage_file_path: PathBuf, is_mqtt_monito
         for message_id in retried_data.no_need_promote_or_reattach {
             let message = account.get_message_mut(&message_id).unwrap();
             if let Ok(metadata) = client.read().await.get_message().metadata(&message_id).await {
-                message.set_confirmed(Some(
-                    metadata.ledger_inclusion_state == Some(LedgerInclusionStateDto::Included),
-                ));
+                if let Some(ledger_inclusion_state) = metadata.ledger_inclusion_state {
+                    message.set_confirmed(Some(ledger_inclusion_state == LedgerInclusionStateDto::Included));
+                }
             }
         }
         account.save().await?;
@@ -1111,61 +1206,6 @@ async fn discover_accounts(
     Ok(synced_accounts)
 }
 
-async fn sync_accounts<'a>(
-    accounts: AccountStore,
-    storage_file_path: &PathBuf,
-    address_index: Option<usize>,
-) -> crate::Result<Vec<SyncedAccount>> {
-    let mut synced_accounts = vec![];
-    let mut last_account = None;
-
-    {
-        let accounts = accounts.read().await;
-        for account_handle in accounts.values() {
-            let mut sync = account_handle.sync().await;
-            if let Some(index) = address_index {
-                sync = sync.address_index(index);
-            }
-            let synced_account = sync.execute().await?;
-
-            let account = account_handle.read().await;
-            last_account = Some((
-                account.messages().is_empty() || account.addresses().iter().all(|addr| *addr.balance() == 0),
-                account.client_options().clone(),
-                account.signer_type().clone(),
-            ));
-            synced_accounts.push(synced_account);
-        }
-    }
-
-    let discovered_accounts_res = match last_account {
-        Some((is_empty, client_options, signer_type)) => {
-            if is_empty {
-                log::debug!("[SYNC] running account discovery because the latest account is empty");
-                discover_accounts(accounts.clone(), &storage_file_path, &client_options, Some(signer_type)).await
-            } else {
-                log::debug!("[SYNC] skipping account discovery because the latest account isn't empty");
-                Ok(vec![])
-            }
-        }
-        None => Ok(vec![]), /* None => discover_accounts(accounts.clone(), &storage_path, &ClientOptions::default(),
-                             * None).await, */
-    };
-
-    if let Ok(discovered_accounts) = discovered_accounts_res {
-        if !discovered_accounts.is_empty() {
-            let mut accounts = accounts.write().await;
-            for (account_handle, synced_account) in discovered_accounts {
-                account_handle.write().await.set_skip_persistance(false);
-                accounts.insert(account_handle.id().await, account_handle);
-                synced_accounts.push(synced_account);
-            }
-        }
-    }
-
-    Ok(synced_accounts)
-}
-
 struct RetriedData {
     #[allow(dead_code)]
     promoted: Vec<Message>,
@@ -1177,7 +1217,7 @@ struct RetriedData {
 async fn retry_unconfirmed_transactions(synced_accounts: Vec<SyncedAccount>) -> crate::Result<Vec<RetriedData>> {
     let mut retried_messages = vec![];
     for synced in synced_accounts {
-        let unconfirmed_messages: Vec<(MessageId, Payload)> = synced
+        let unconfirmed_messages: Vec<(MessageId, Option<MessagePayload>)> = synced
             .account_handle()
             .read()
             .await
@@ -1428,18 +1468,19 @@ mod tests {
                 .unwrap()
                 .messages(vec![Message::from_iota_message(
                     MessageId::new([0; 32]),
-                    &[],
                     MessageBuilder::new()
                         .with_nonce_provider(crate::test_utils::NoopNonceProvider {}, 4000f64, None)
                         .with_parents(vec![MessageId::new([0; 32])])
                         .with_payload(Payload::Indexation(Box::new(
-                            IndexationPayload::new("index".to_string(), &[0; 16]).unwrap(),
+                            IndexationPayload::new(b"index", &[0; 16]).unwrap(),
                         )))
                         .with_network_id(0)
                         .finish()
                         .unwrap(),
-                    Some(true),
-                )])
+                    &[crate::test_utils::generate_random_address()],
+                )
+                .with_confirmed(Some(true))
+                .finish()])
                 .initialise()
                 .await
                 .unwrap();
@@ -1467,7 +1508,7 @@ mod tests {
                     .key_index(0)
                     .address(AddressWrapper::new(
                         IotaAddress::Ed25519(Ed25519Address::new([0; 32])),
-                        "iota".to_string(),
+                        "atoi".to_string(),
                     ))
                     .outputs(vec![])
                     .build()
@@ -1585,7 +1626,10 @@ mod tests {
             // import the accounts from the backup and assert that it's the same
 
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-            manager.import_accounts(backup_file_path, "password").await.unwrap();
+            manager
+                .import_accounts(backup_file_path, "password".to_string())
+                .await
+                .unwrap();
 
             #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
             manager.import_accounts(backup_file_path).await.unwrap();
@@ -1629,7 +1673,7 @@ mod tests {
             };
 
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-            let response = manager.import_accounts(backup_file_path, "password").await;
+            let response = manager.import_accounts(backup_file_path, "password".to_string()).await;
 
             #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
             let response = manager.import_accounts(backup_file_path).await;

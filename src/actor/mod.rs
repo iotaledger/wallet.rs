@@ -9,6 +9,7 @@ use crate::{
 };
 use futures::{Future, FutureExt};
 use iota::message::prelude::MessageId;
+use zeroize::Zeroize;
 
 use std::{
     any::Any,
@@ -69,8 +70,8 @@ impl WalletMessageHandler {
     }
 
     /// Handles a message.
-    pub async fn handle(&mut self, message: Message) {
-        let response: Result<ResponseType> = match message.message_type() {
+    pub async fn handle(&mut self, mut message: Message) {
+        let response: Result<ResponseType> = match message.message_type_mut() {
             MessageType::RemoveAccount(account_id) => {
                 convert_async_panics(|| async { self.remove_account(account_id).await }).await
             }
@@ -84,7 +85,10 @@ impl WalletMessageHandler {
             MessageType::CallAccountMethod { account_id, method } => {
                 convert_async_panics(|| async { self.call_account_method(account_id, method).await }).await
             }
-            MessageType::SyncAccounts => convert_async_panics(|| async { self.sync_accounts().await }).await,
+            MessageType::SyncAccounts {
+                address_index,
+                gap_limit,
+            } => convert_async_panics(|| async { self.sync_accounts(address_index, gap_limit).await }).await,
             MessageType::Reattach { account_id, message_id } => {
                 convert_async_panics(|| async { self.reattach(account_id, message_id).await }).await
             }
@@ -94,7 +98,11 @@ impl WalletMessageHandler {
             }
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             MessageType::RestoreBackup { backup_path, password } => {
-                convert_async_panics(|| async { self.restore_backup(backup_path, password).await }).await
+                let res =
+                    convert_async_panics(|| async { self.restore_backup(backup_path, password.to_string()).await })
+                        .await;
+                password.zeroize();
+                res
             }
             #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
             MessageType::RestoreBackup { backup_path } => {
@@ -161,8 +169,8 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-            MessageType::OpenLedgerApp(is_simulator) => {
-                convert_panics(|| crate::open_ledger_app(*is_simulator).map(|_| ResponseType::OpenedLedgerApp))
+            MessageType::GetLedgerStatus(is_simulator) => {
+                convert_panics(|| Ok(ResponseType::LedgerStatus(crate::get_ledger_status(*is_simulator))))
             }
             MessageType::DeleteStorage => {
                 convert_async_panics(|| async move {
@@ -189,8 +197,10 @@ impl WalletMessageHandler {
             } => {
                 convert_async_panics(|| async {
                     self.account_manager
-                        .change_stronghold_password(current_password, new_password)
+                        .change_stronghold_password(current_password.to_string(), new_password.to_string())
                         .await?;
+                    current_password.zeroize();
+                    new_password.zeroize();
                     Ok(ResponseType::StrongholdPasswordChanged)
                 })
                 .await
@@ -223,7 +233,7 @@ impl WalletMessageHandler {
     async fn restore_backup(
         &mut self,
         backup_path: &str,
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))] password: &str,
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))] password: String,
     ) -> Result<ResponseType> {
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         self.account_manager.import_accounts(backup_path, password).await?;
@@ -244,8 +254,15 @@ impl WalletMessageHandler {
         Ok(ResponseType::Reattached(message_id.to_string()))
     }
 
-    async fn sync_accounts(&self) -> Result<ResponseType> {
-        let synced = self.account_manager.sync_accounts().await?;
+    async fn sync_accounts(&self, address_index: &Option<usize>, gap_limit: &Option<usize>) -> Result<ResponseType> {
+        let mut synchronizer = self.account_manager.sync_accounts()?;
+        if let Some(address_index) = address_index {
+            synchronizer = synchronizer.address_index(*address_index);
+        }
+        if let Some(gap_limit) = gap_limit {
+            synchronizer = synchronizer.gap_limit(*gap_limit);
+        }
+        let synced = synchronizer.execute().await?;
         Ok(ResponseType::SyncedAccounts(synced))
     }
 
@@ -500,7 +517,7 @@ mod tests {
                 // create an account
                 let account = AccountToCreate {
                     client_options: ClientOptionsBuilder::new()
-                        .with_node("http://node.iota")
+                        .with_node("http://api.hornet-1.testnet.chrysalis2.com/")
                         .unwrap()
                         .build()
                         .unwrap(),

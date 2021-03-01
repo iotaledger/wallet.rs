@@ -46,6 +46,17 @@ jobs:
         path: bindings/nodejs/native/target
         key: ubuntu-latest-nightly-cargo-build-node-target-${{ hashFiles('**/Cargo.toml') }}
 
+    - name: Install required packages (Ubuntu)
+      run: |
+        sudo apt-get update
+        sudo apt-get install libudev-dev libusb-1.0-0-dev
+
+    - name: Cache python binding cargo target
+      uses: actions/cache@v2
+      with:
+        path: bindings/python/native/target
+        key: ubuntu-latest-nightly-cargo-build-python-target-${{ hashFiles('**/Cargo.toml') }}
+
     - uses: actions-rs/cargo@v1
       with:
         command: install
@@ -60,3 +71,8 @@ jobs:
       with:
         command: udeps
         args: --manifest-path ./bindings/nodejs/native/Cargo.toml --all-targets
+
+    - uses: actions-rs/cargo@v1
+      with:
+        command: udeps
+        args: --manifest-path ./bindings/python/native/Cargo.toml --all-targets

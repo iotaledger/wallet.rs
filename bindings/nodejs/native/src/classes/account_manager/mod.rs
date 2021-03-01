@@ -282,11 +282,20 @@ declare_types! {
         }
 
         method syncAccounts(mut cx) {
-            let cb = cx.argument::<JsFunction>(0)?;
+            let (options, cb) = match cx.argument_opt(1) {
+                Some(arg) => {
+                    let cb = arg.downcast::<JsFunction>().or_throw(&mut cx)?;
+                    let options = cx.argument::<JsValue>(0)?;
+                    let options = neon_serde::from_value(&mut cx, options)?;
+                    (options, cb)
+                }
+                None => (Default::default(), cx.argument::<JsFunction>(0)?),
+            };
             let this = cx.this();
             let manager = cx.borrow(&this, |r| r.0.clone());
             let task = sync::SyncTask {
                 manager,
+                options,
             };
             task.schedule(cb);
             Ok(cx.undefined().upcast())

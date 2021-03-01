@@ -80,11 +80,20 @@ pub(crate) async fn set<P: AsRef<Path>>(
     storage: Box<dyn StorageAdapter + Send + Sync + 'static>,
 ) {
     let mut instances = INSTANCES.get_or_init(Default::default).write().await;
+    #[allow(unused_variables)]
+    let storage_id = storage.id();
     instances.insert(
         storage_path.as_ref().to_path_buf(),
         Arc::new(Mutex::new(Storage {
             storage_path: storage_path.as_ref().to_path_buf(),
             inner: storage,
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            encryption_key: if storage_id == stronghold::STORAGE_ID {
+                None
+            } else {
+                encryption_key
+            },
+            #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
             encryption_key,
         })),
     );

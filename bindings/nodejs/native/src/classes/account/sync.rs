@@ -11,8 +11,6 @@ pub struct SyncOptions {
     address_index: Option<usize>,
     #[serde(rename = "gapLimit")]
     gap_limit: Option<usize>,
-    #[serde(rename = "skipPersistance")]
-    skip_persistance: Option<bool>,
 }
 
 pub struct SyncTask {
@@ -34,11 +32,6 @@ impl Task for SyncTask {
             }
             if let Some(gap_limit) = self.options.gap_limit {
                 synchronizer = synchronizer.gap_limit(gap_limit);
-            }
-            if let Some(skip_persistance) = self.options.skip_persistance {
-                if skip_persistance {
-                    synchronizer = synchronizer.skip_persistance();
-                }
             }
             synchronizer.execute().await
         })

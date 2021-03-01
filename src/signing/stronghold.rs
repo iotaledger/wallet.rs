@@ -3,7 +3,7 @@
 
 use crate::account::Account;
 
-use iota::{common::packable::Packable, ReferenceUnlock, UnlockBlock};
+use iota::{ReferenceUnlock, UnlockBlock};
 
 use std::{collections::HashMap, path::PathBuf};
 
@@ -51,33 +51,34 @@ impl super::Signer for StrongholdSigner {
     async fn sign_message<'a>(
         &mut self,
         account: &Account,
-        essence: &iota::TransactionPayloadEssence,
+        essence: &iota::Essence,
         inputs: &mut Vec<super::TransactionInput>,
         _: super::SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
-        let serialized_essence = essence.pack_new();
+        let hashed_essence = essence.hash();
 
         let mut unlock_blocks = vec![];
-        let mut signature_indexes = HashMap::<usize, usize>::new();
+        let mut signature_indexes = HashMap::<String, usize>::new();
         inputs.sort_by(|a, b| a.input.cmp(&b.input));
 
         for (current_block_index, recorder) in inputs.iter().enumerate() {
+            let signature_index = format!("{}{}", recorder.address_index, recorder.address_internal);
             // Check if current path is same as previous path
             // If so, add a reference unlock block
-            if let Some(block_index) = signature_indexes.get(&recorder.address_index) {
+            if let Some(block_index) = signature_indexes.get(&signature_index) {
                 unlock_blocks.push(UnlockBlock::Reference(ReferenceUnlock::new(*block_index as u16)?));
             } else {
                 // If not, we should create a signature unlock block
-                let signature = crate::stronghold::sign_essence(
+                let signature = crate::stronghold::sign_transaction(
                     &stronghold_path(account.storage_path()).await?,
-                    serialized_essence.clone(),
+                    &hashed_essence,
                     *account.index(),
                     recorder.address_index,
                     recorder.address_internal,
                 )
                 .await?;
                 unlock_blocks.push(UnlockBlock::Signature(signature.into()));
-                signature_indexes.insert(recorder.address_index, current_block_index);
+                signature_indexes.insert(signature_index, current_block_index);
             }
         }
         Ok(unlock_blocks)

@@ -19,6 +19,7 @@ use tokio::{
     sync::Mutex,
     time::{sleep, Duration},
 };
+use zeroize::Zeroize;
 
 use std::{
     collections::{HashMap, HashSet},
@@ -30,7 +31,11 @@ use std::{
     time::Instant,
 };
 
-type SnapshotToPasswordMap = HashMap<PathBuf, [u8; 32]>;
+#[derive(Zeroize)]
+#[zeroize(drop)]
+struct Password(Vec<u8>);
+
+type SnapshotToPasswordMap = HashMap<PathBuf, Password>;
 static PASSWORD_STORE: OnceCell<Arc<Mutex<SnapshotToPasswordMap>>> = OnceCell::new();
 static STRONGHOLD_ACCESS_STORE: OnceCell<Arc<Mutex<HashMap<PathBuf, Instant>>>> = OnceCell::new();
 static CURRENT_SNAPSHOT_PATH: OnceCell<Arc<Mutex<Option<PathBuf>>>> = OnceCell::new();
@@ -77,21 +82,20 @@ async fn load_actor(
     };
 
     if !runtime.loaded_client_paths.contains(&client_path) {
+        runtime.loaded_client_paths.insert(client_path.clone());
         if snapshot_path.exists() {
-            stronghold_response_to_result(
-                runtime
-                    .stronghold
-                    .read_snapshot(
-                        client_path.clone(),
-                        None,
-                        get_password(snapshot_path).await?.to_vec(),
-                        None,
-                        Some(snapshot_path.to_path_buf()),
-                    )
-                    .await,
-            )?;
+            let passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
+            if let Some(password) = passwords.get(snapshot_path) {
+                stronghold_response_to_result(
+                    runtime
+                        .stronghold
+                        .read_snapshot(client_path, None, &password.0, None, Some(snapshot_path.to_path_buf()))
+                        .await,
+                )?;
+            } else {
+                return Err(Error::PasswordNotSet);
+            }
         }
-        runtime.loaded_client_paths.insert(client_path);
     }
 
     Ok(())
@@ -189,7 +193,7 @@ pub async fn get_status(snapshot_path: &PathBuf) -> Status {
     }
 }
 
-fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, [u8; 32]>>> {
+fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, Password>>> {
     thread::spawn(|| {
         crate::spawn(async {
             loop {
@@ -235,21 +239,13 @@ fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, [u8; 32]>>> {
     Default::default()
 }
 
-pub async fn set_password<S: AsRef<Path>>(snapshot_path: S, password: &[u8; 32]) {
+pub async fn set_password<S: AsRef<Path>>(snapshot_path: S, password: Vec<u8>) {
     let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
     let mut access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
 
     let snapshot_path = snapshot_path.as_ref().to_path_buf();
     access_store.insert(snapshot_path.clone(), Instant::now());
-    passwords.insert(snapshot_path, *password);
-}
-
-async fn get_password<P: AsRef<Path>>(snapshot_path: P) -> Result<[u8; 32]> {
-    let passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
-    passwords
-        .get(&snapshot_path.as_ref().to_path_buf())
-        .cloned()
-        .ok_or(Error::PasswordNotSet)
+    passwords.insert(snapshot_path, Password(password));
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -335,16 +331,17 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf)
 
 // saves the snapshot to the file system.
 async fn save_snapshot(runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> Result<()> {
-    stronghold_response_to_result(
-        runtime
-            .stronghold
-            .write_all_to_snapshot(
-                get_password(snapshot_path).await?.to_vec(),
-                None,
-                Some(snapshot_path.to_path_buf()),
-            )
-            .await,
-    )
+    let passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
+    if let Some(password) = passwords.get(snapshot_path) {
+        stronghold_response_to_result(
+            runtime
+                .stronghold
+                .write_all_to_snapshot(&password.0, None, Some(snapshot_path.to_path_buf()))
+                .await,
+        )
+    } else {
+        Err(Error::PasswordNotSet)
+    }
 }
 
 async fn clear_stronghold_cache(mut runtime: &mut ActorRuntime, persist: bool) -> Result<()> {
@@ -420,7 +417,7 @@ pub async fn unload_snapshot(storage_path: &PathBuf, persist: bool) -> Result<()
     Ok(())
 }
 
-pub async fn load_snapshot(snapshot_path: &PathBuf, password: &[u8; 32]) -> Result<()> {
+pub async fn load_snapshot(snapshot_path: &PathBuf, password: Vec<u8>) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
     load_snapshot_internal(&mut runtime, snapshot_path, password).await
 }
@@ -428,7 +425,7 @@ pub async fn load_snapshot(snapshot_path: &PathBuf, password: &[u8; 32]) -> Resu
 async fn load_snapshot_internal(
     mut runtime: &mut ActorRuntime,
     snapshot_path: &PathBuf,
-    password: &[u8; 32],
+    password: Vec<u8>,
 ) -> Result<()> {
     set_password(&snapshot_path, password).await;
     check_snapshot(&mut runtime, &snapshot_path).await?;
@@ -437,18 +434,14 @@ async fn load_snapshot_internal(
 }
 
 /// Changes the snapshot password.
-pub async fn change_password(
-    snapshot_path: &PathBuf,
-    current_password: &[u8; 32],
-    new_password: &[u8; 32],
-) -> Result<()> {
+pub async fn change_password(snapshot_path: &PathBuf, current_password: Vec<u8>, new_password: Vec<u8>) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
     load_snapshot_internal(&mut runtime, snapshot_path, current_password).await?;
 
     stronghold_response_to_result(
         runtime
             .stronghold
-            .write_all_to_snapshot(new_password.to_vec(), None, Some(snapshot_path.to_path_buf()))
+            .write_all_to_snapshot(&new_password, None, Some(snapshot_path.to_path_buf()))
             .await,
     )?;
 
@@ -547,9 +540,9 @@ pub async fn generate_address(
     Ok(address)
 }
 
-pub async fn sign_essence(
+pub async fn sign_transaction(
     snapshot_path: &PathBuf,
-    transaction_essence: Vec<u8>,
+    transaction_essence_hash: &[u8; 32],
     account_index: usize,
     address_index: usize,
     internal: bool,
@@ -573,7 +566,7 @@ pub async fn sign_essence(
         .stronghold
         .runtime_exec(Procedure::Ed25519Sign {
             private_key: derived_location,
-            msg: transaction_essence,
+            msg: transaction_essence_hash.to_vec(),
         })
         .await;
     if let ProcResult::Ed25519Sign(response) = res {
@@ -718,7 +711,7 @@ mod tests {
                 let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
                 std::fs::create_dir_all("./test-storage").unwrap();
                 let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
-                super::load_snapshot(&snapshot_path, &[0; 32]).await.unwrap();
+                super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await.unwrap();
 
                 std::thread::sleep(Duration::from_millis(interval * 3));
                 let res = super::get_account(&snapshot_path, "passwordexpires").await;
@@ -746,7 +739,7 @@ mod tests {
                 let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
                 std::fs::create_dir_all("./test-storage").unwrap();
                 let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
-                super::load_snapshot(&snapshot_path, &[0; 32]).await.unwrap();
+                super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await.unwrap();
 
                 for i in 1..6 {
                     let instant = std::time::Instant::now();
@@ -768,7 +761,7 @@ mod tests {
                     } else {
                         // if the elapsed > interval, set the password again
                         // this might happen if the test is stopped by another thread
-                        super::set_password(&snapshot_path, &[0; 32]).await;
+                        super::set_password(&snapshot_path, [0; 32].to_vec()).await;
                     }
                 }
 
@@ -797,7 +790,7 @@ mod tests {
         let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
         std::fs::create_dir_all("./test-storage").unwrap();
         let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
-        super::load_snapshot(&snapshot_path, &[0; 32]).await?;
+        super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await?;
 
         let id = "id".to_string();
         let data = "account data";
@@ -817,7 +810,7 @@ mod tests {
         let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
         std::fs::create_dir_all("./test-storage").unwrap();
         let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
-        super::load_snapshot(&snapshot_path, &[0; 32]).await?;
+        super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await?;
 
         let id = "writeandreadtest".to_string();
         let data = "account data";
@@ -833,7 +826,7 @@ mod tests {
         let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
         std::fs::create_dir_all("./test-storage").unwrap();
         let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
-        super::load_snapshot(&snapshot_path, &[0; 32]).await?;
+        super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await?;
 
         let id = "writeanddeleteid".to_string();
         let data = "account data";
@@ -851,7 +844,7 @@ mod tests {
             let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
             std::fs::create_dir_all("./test-storage").unwrap();
             let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
-            super::load_snapshot(&snapshot_path, &[0; 32]).await?;
+            super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await?;
 
             let id = format!("multiplesnapshots{}", i);
             let data: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
@@ -872,16 +865,16 @@ mod tests {
         let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
         std::fs::create_dir_all("./test-storage").unwrap();
         let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
-        let old_password = &[5; 32];
-        super::load_snapshot(&snapshot_path, old_password).await?;
+        let old_password = [5; 32].to_vec();
+        super::load_snapshot(&snapshot_path, old_password.to_vec()).await?;
         let id = "writeanddeleteid".to_string();
         let data = "account data";
         super::store_account(&snapshot_path, &id, data.to_string()).await?;
 
-        let new_password = &[6; 32];
-        super::change_password(&snapshot_path, old_password, &new_password).await?;
+        let new_password = [6; 32].to_vec();
+        super::change_password(&snapshot_path, old_password, new_password.to_vec()).await?;
 
-        super::load_snapshot(&snapshot_path, &new_password).await?;
+        super::load_snapshot(&snapshot_path, new_password).await?;
 
         Ok(())
     }

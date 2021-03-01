@@ -72,12 +72,29 @@ pub async fn with_actor_system<F: FnOnce(&riker::actors::ActorSystem)>(cb: F) {
     cb(&runtime.stronghold.system)
 }
 
-/// Opens the IOTA app on Ledger (Nano S/X or Speculos simulator).
+/// The Ledger device status.
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
-pub fn open_ledger_app(is_simulator: bool) -> crate::Result<()> {
-    iota_ledger::get_ledger(signing::ledger::HARDENED, is_simulator)?;
-    Ok(())
+#[derive(Debug, ::serde::Serialize)]
+#[serde(tag = "type")]
+pub enum LedgerStatus {
+    /// Ledger is available and ready to be used.
+    Connected,
+    /// Ledger is disconnected.
+    Disconnected,
+    /// Ledger is locked.
+    Locked,
+}
+
+/// Gets the status of the Ledger device/simulator.
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
+pub fn get_ledger_status(is_simulator: bool) -> LedgerStatus {
+    match iota_ledger::get_ledger(signing::ledger::HARDENED, is_simulator).map_err(Into::into) {
+        Ok(_) => LedgerStatus::Connected,
+        Err(Error::LedgerDongleLocked) => LedgerStatus::Locked,
+        Err(_) => LedgerStatus::Disconnected,
+    }
 }
 
 #[cfg(test)]
@@ -87,13 +104,13 @@ mod test_utils {
         account_manager::{AccountManager, ManagerStorage},
         address::{Address, AddressBuilder, AddressWrapper},
         client::ClientOptionsBuilder,
-        message::Message,
+        message::{Message, MessagePayload},
         signing::SignerType,
     };
     use iota::{
         pow::providers::{Provider as PowProvider, ProviderBuilder as PowProviderBuilder},
-        Address as IotaAddress, Ed25519Address, Ed25519Signature, MessageId, Payload, SignatureLockedSingleOutput,
-        SignatureUnlock, TransactionId, TransactionPayloadBuilder, TransactionPayloadEssence, UTXOInput, UnlockBlock,
+        Address as IotaAddress, Ed25519Address, Ed25519Signature, Essence, MessageId, Payload,
+        SignatureLockedSingleOutput, SignatureUnlock, TransactionId, TransactionPayloadBuilder, UTXOInput, UnlockBlock,
     };
     use once_cell::sync::OnceCell;
     use rand::{distributions::Alphanumeric, thread_rng, Rng};
@@ -141,7 +158,7 @@ mod test_utils {
         async fn sign_message<'a>(
             &mut self,
             _account: &crate::account::Account,
-            _essence: &iota::TransactionPayloadEssence,
+            _essence: &iota::Essence,
             _inputs: &mut Vec<crate::signing::TransactionInput>,
             _metadata: crate::signing::SignMessageMetadata<'a>,
         ) -> crate::Result<Vec<iota::UnlockBlock>> {
@@ -416,7 +433,7 @@ mod test_utils {
     pub fn generate_random_iota_address() -> AddressWrapper {
         AddressWrapper::new(
             IotaAddress::Ed25519(Ed25519Address::new(rand::random::<[u8; 32]>())),
-            "iota".to_string(),
+            "atoi".to_string(),
         )
     }
 
@@ -477,30 +494,36 @@ mod test_utils {
 
     impl GenerateMessageBuilder {
         pub fn build(self) -> Message {
+            let bech32_hrp = self.address.address().bech32_hrp().to_string();
             Message {
                 id: MessageId::new([0; 32]),
                 version: 1,
                 parents: vec![MessageId::new([0; 32])],
                 payload_length: 0,
-                payload: Payload::Transaction(Box::new(
-                    TransactionPayloadBuilder::new()
-                        .with_essence(
-                            TransactionPayloadEssence::builder()
-                                .add_output(
-                                    SignatureLockedSingleOutput::new(*self.address.address().as_ref(), self.value)
-                                        .unwrap()
-                                        .into(),
-                                )
-                                .add_input(UTXOInput::new(self.input_transaction_id, 0).unwrap().into())
-                                .finish()
-                                .unwrap(),
-                        )
-                        .add_unlock_block(UnlockBlock::Signature(SignatureUnlock::Ed25519(Ed25519Signature::new(
-                            [0; 32],
-                            Box::new([0]),
-                        ))))
-                        .finish()
-                        .unwrap(),
+                payload: Some(MessagePayload::new(
+                    &MessageId::new([0; 32]),
+                    Payload::Transaction(Box::new(
+                        TransactionPayloadBuilder::new()
+                            .with_essence(Essence::Regular(
+                                iota::RegularEssence::builder()
+                                    .add_output(
+                                        SignatureLockedSingleOutput::new(*self.address.address().as_ref(), self.value)
+                                            .unwrap()
+                                            .into(),
+                                    )
+                                    .add_input(UTXOInput::new(self.input_transaction_id, 0).unwrap().into())
+                                    .finish()
+                                    .unwrap(),
+                            ))
+                            .add_unlock_block(UnlockBlock::Signature(SignatureUnlock::Ed25519(Ed25519Signature::new(
+                                [0; 32],
+                                Box::new([0]),
+                            ))))
+                            .finish()
+                            .unwrap(),
+                    )),
+                    bech32_hrp,
+                    &[],
                 )),
                 timestamp: chrono::Utc::now(),
                 nonce: 0,

@@ -8,11 +8,14 @@ use crate::{
     message::{Message, MessageType},
 };
 
-use bee_rest_api::handlers::{
-    message_metadata::{LedgerInclusionStateDto, MessageMetadataResponse},
-    output::OutputResponse,
+use iota::{
+    bee_rest_api::handlers::{
+        message_metadata::{LedgerInclusionStateDto, MessageMetadataResponse},
+        output::OutputResponse,
+    },
+    message::prelude::MessageId,
+    Topic, TopicEvent,
 };
-use iota::{message::prelude::MessageId, Topic, TopicEvent};
 
 /// Unsubscribe from all topics associated with the account.
 pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
@@ -31,7 +34,7 @@ pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
         topics.push(Topic::new(format!("messages/{}/metadata", message.id().to_string()))?);
     }
 
-    client.subscriber().with_topics(topics).unsubscribe()?;
+    client.subscriber().with_topics(topics).unsubscribe().await?;
     Ok(())
 }
 
@@ -42,7 +45,11 @@ async fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
 ) -> crate::Result<()> {
     let client = crate::client::get_client(&client_options).await;
     let mut client = client.write().await;
-    client.subscriber().with_topic(Topic::new(topic)?).subscribe(handler)?;
+    client
+        .subscriber()
+        .with_topic(Topic::new(topic)?)
+        .subscribe(handler)
+        .await?;
     Ok(())
 }
 
@@ -71,7 +78,7 @@ pub async fn monitor_address_balance(account_handle: AccountHandle, address: &Ad
             let client_options = client_options.clone();
             let account_handle = account_handle.clone();
 
-            crate::block_on(async {
+            crate::spawn(async move {
                 if let Err(e) =
                     process_output(topic_event.payload.clone(), account_handle, address, client_options).await
                 {
@@ -92,6 +99,7 @@ async fn process_output(
     let output: OutputResponse = serde_json::from_str(&payload)?;
 
     let mut account = account_handle.write().await;
+    let latest_address = account.latest_address().address().clone();
     let account_id = account.id().clone();
     let addresses = account.addresses_mut();
     let address_to_update = addresses.iter_mut().find(|a| a.address() == &address).unwrap();
@@ -102,8 +110,22 @@ async fn process_output(
     let client_options_ = client_options.clone();
     let message_id = *address_output.message_id();
 
+    let old_balance = *address_to_update.balance();
     address_to_update.handle_new_output(address_output);
-    crate::event::emit_balance_change(&account_id, &address_to_update, *address_to_update.balance());
+    let new_balance = *address_to_update.balance();
+    crate::event::emit_balance_change(
+        &account_id,
+        &address_to_update,
+        if new_balance > old_balance {
+            crate::event::BalanceChange::received(new_balance - old_balance)
+        } else {
+            crate::event::BalanceChange::spent(old_balance - new_balance)
+        },
+    );
+
+    if address_to_update.address() == &latest_address {
+        account_handle.generate_address_internal(&mut account).await?;
+    }
 
     match account.messages_mut().iter().position(|m| m.id() == &message_id) {
         Some(message_index) => {
@@ -119,7 +141,9 @@ async fn process_output(
                 .data(&message_id)
                 .await
             {
-                let message = Message::from_iota_message(message_id, account.addresses(), message, Some(true));
+                let message = Message::from_iota_message(message_id, message, account.addresses())
+                    .with_confirmed(Some(true))
+                    .finish();
                 crate::event::emit_transaction_event(
                     crate::event::TransactionEventType::NewTransaction,
                     account.id(),
@@ -165,8 +189,10 @@ pub async fn monitor_confirmation_state_change(
         &client_options,
         format!("messages/{}/metadata", message_id.to_string()),
         move |topic_event| {
+            let topic_event = topic_event.clone();
+            let message = message.clone();
             let account_handle = account_handle.clone();
-            crate::block_on(async {
+            crate::spawn(async move {
                 if let Err(e) =
                     process_metadata(topic_event.payload.clone(), account_handle, message_id, &message).await
                 {

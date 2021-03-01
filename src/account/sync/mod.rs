@@ -8,14 +8,14 @@ use crate::{
     signing::{GenerateAddressMetadata, SignMessageMetadata},
 };
 
-use bee_rest_api::handlers::message_metadata::LedgerInclusionStateDto;
 use getset::Getters;
 use iota::{
+    bee_rest_api::handlers::message_metadata::LedgerInclusionStateDto,
+    client::api::finish_pow,
     message::prelude::{
-        Input, Message as IotaMessage, MessageBuilder, MessageId, Payload, SignatureLockedSingleOutput,
-        TransactionPayload, TransactionPayloadEssence, UTXOInput,
+        Essence, Input, Message as IotaMessage, MessageId, Payload, RegularEssence, SignatureLockedSingleOutput,
+        TransactionPayload, UTXOInput,
     },
-    ClientMiner,
 };
 use serde::Serialize;
 use slip10::BIP32Path;
@@ -160,6 +160,7 @@ async fn sync_addresses(
         .read()
         .await
         .get_network_info()
+        .await?
         .bech32_hrp;
 
     loop {
@@ -384,7 +385,11 @@ async fn perform_sync(
 
     let parsed_messages = new_messages
         .into_iter()
-        .map(|(id, confirmed, message)| Message::from_iota_message(id, account.addresses(), message, confirmed))
+        .map(|(id, confirmed, message)| {
+            Message::from_iota_message(id, message, account.addresses())
+                .with_confirmed(confirmed)
+                .finish()
+        })
         .collect();
     log::debug!("[SYNC] new messages: {:#?}", parsed_messages);
     account.append_messages(parsed_messages);
@@ -412,12 +417,12 @@ pub struct AccountSynchronizer {
 impl AccountSynchronizer {
     /// Initialises a new instance of the sync helper.
     pub(super) async fn new(account_handle: AccountHandle) -> Self {
-        let address_index = account_handle.read().await.addresses().len();
+        let latest_address_index = *account_handle.read().await.latest_address().key_index();
         Self {
             account_handle,
             // by default we synchronize from the latest address (supposedly unspent)
-            address_index: if address_index == 0 { 0 } else { address_index - 1 },
-            gap_limit: if address_index == 0 { 10 } else { 1 },
+            address_index: latest_address_index,
+            gap_limit: if latest_address_index == 0 { 10 } else { 1 },
             skip_persistance: false,
             steps: vec![
                 AccountSynchronizeStep::SyncAddresses,
@@ -479,8 +484,26 @@ impl AccountSynchronizer {
                     let mut account_ref = self.account_handle.write().await;
                     account_ref
                         .do_mut(|account| {
-                            account.set_addresses(account_.addresses().to_vec());
-                            account.set_messages(account_.messages().to_vec());
+                            for address in account_.addresses() {
+                                match account.addresses().iter().position(|a| a == address) {
+                                    Some(index) => {
+                                        account.addresses_mut()[index] = address.clone();
+                                    }
+                                    None => {
+                                        account.addresses_mut().push(address.clone());
+                                    }
+                                }
+                            }
+                            for message in account_.messages() {
+                                match account.messages().iter().position(|m| m == message) {
+                                    Some(index) => {
+                                        account.messages_mut()[index] = message.clone();
+                                    }
+                                    None => {
+                                        account.messages_mut().push(message.clone());
+                                    }
+                                }
+                            }
                             account.set_last_synced_at(Some(chrono::Local::now()));
                             Ok(())
                         })
@@ -593,7 +616,10 @@ impl SyncedAccount {
             .addresses()
             .iter()
             .filter(|a| {
-                a.address() != address && a.available_balance(&account) > 0 && !locked_addresses.contains(a.address())
+                // we allow an input equal to the deposit address only if it has more than one output
+                (a.address() != address || a.available_outputs(&account).len() > 1)
+                    && a.available_balance(&account) > 0
+                    && !locked_addresses.contains(a.address())
             })
             .map(|a| input_selection::Input {
                 address: a.address().clone(),
@@ -785,7 +811,7 @@ async fn perform_transfer(
         utxos.extend(outputs.into_iter());
     }
 
-    let mut essence_builder = TransactionPayloadEssence::builder().add_output(
+    let mut essence_builder = RegularEssence::builder().add_output(
         SignatureLockedSingleOutput::new(*transfer_obj.address.as_ref(), transfer_obj.amount.get())?.into(),
     );
     let mut current_output_sum = 0;
@@ -849,9 +875,11 @@ async fn perform_transfer(
             );
             current_output_sum += *utxo.amount();
 
-            let remaining_balance_on_source = current_output_sum - transfer_obj.amount.get();
-            if remaining_balance_on_source < DUST_ALLOWANCE_VALUE && remaining_balance_on_source != 0 {
-                dust_and_allowance_recorders.push((remaining_balance_on_source, utxo.address().to_bech32(), true));
+            if current_output_sum > transfer_obj.amount.get() {
+                let remaining_balance_on_source = current_output_sum - transfer_obj.amount.get();
+                if remaining_balance_on_source < DUST_ALLOWANCE_VALUE && remaining_balance_on_source != 0 {
+                    dust_and_allowance_recorders.push((remaining_balance_on_source, utxo.address().to_bech32(), true));
+                }
             }
         }
     }
@@ -957,13 +985,12 @@ async fn perform_transfer(
         is_dust_allowed(&account_, &client, address, created_or_consumed_outputs).await?;
     }
 
-    let parents = client.get_tips().await?;
-
     if let Some(indexation) = transfer_obj.indexation {
         essence_builder = essence_builder.with_payload(Payload::Indexation(Box::new(indexation)));
     }
 
     let essence = essence_builder.finish()?;
+    let essence = Essence::Regular(essence);
 
     let unlock_blocks = crate::signing::get_signer(account_.signer_type())
         .await
@@ -994,12 +1021,7 @@ async fn perform_transfer(
     }
     let transaction = tx_builder.finish()?;
 
-    let message = MessageBuilder::<ClientMiner>::new()
-        .with_parents(parents)
-        .with_payload(Payload::Transaction(Box::new(transaction)))
-        .with_network_id(client.get_network_id().await?)
-        .with_nonce_provider(client.get_pow_provider(), client.get_network_info().min_pow_score, None)
-        .finish()?;
+    let message = finish_pow(&client, Some(Payload::Transaction(Box::new(transaction)))).await?;
 
     log::debug!("[TRANSFER] submitting message {:#?}", message);
 
@@ -1024,7 +1046,7 @@ async fn perform_transfer(
         account_.append_addresses(vec![addr]);
     }
 
-    let message = Message::from_iota_message(message_id, account_.addresses(), message, None);
+    let message = Message::from_iota_message(message_id, message, account_.addresses()).finish();
     account_.append_messages(vec![message.clone()]);
 
     account_.save().await?;
@@ -1160,7 +1182,7 @@ pub(crate) async fn repost_message(
                 RepostAction::Reattach => client.reattach(message_id).await?,
                 RepostAction::Retry => client.retry(message_id).await?,
             };
-            let message = Message::from_iota_message(id, account.addresses(), message, None);
+            let message = Message::from_iota_message(id, message, account.addresses()).finish();
 
             account.append_messages(vec![message.clone()]);
 
