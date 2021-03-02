@@ -1656,7 +1656,15 @@ mod tests {
                         IotaAddress::Ed25519(Ed25519Address::new([0; 32])),
                         "atoi".to_string(),
                     ))
-                    .outputs(vec![])
+                    .outputs(vec![AddressOutput {
+                        transaction_id: TransactionId::new([0; 32]),
+                        message_id: MessageId::new([0; 32]),
+                        index: 0,
+                        amount: 5,
+                        is_spent: false,
+                        address: crate::test_utils::generate_random_iota_address(),
+                        kind: OutputKind::SignatureLockedSingle,
+                    }])
                     .build()
                     .unwrap()])
                 .initialise()
