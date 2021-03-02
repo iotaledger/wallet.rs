@@ -1993,7 +1993,6 @@
 <span id="1990">1990</span>
 <span id="1991">1991</span>
 <span id="1992">1992</span>
-<span id="1993">1993</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -3140,7 +3139,6 @@
         }
         <span class="kw">let</span> <span class="ident">synced_accounts</span> <span class="op">=</span>
             <span class="ident">AccountsSynchronizer</span>::<span class="ident">new</span>(<span class="ident">accounts</span>.<span class="ident">clone</span>(), <span class="ident">storage_file_path</span>, <span class="ident">output_consolidation_threshold</span>)
-                .<span class="ident">address_index</span>(<span class="number">0</span>)
                 .<span class="ident">execute</span>()
                 .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">accounts_after_sync</span> <span class="op">=</span> <span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>;
