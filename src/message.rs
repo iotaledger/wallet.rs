@@ -363,18 +363,22 @@ impl TransactionRegularEssence {
 
 impl TransactionRegularEssence {
     async fn new(regular_essence: &RegularEssence, metadata: &TransactionBuilderMetadata<'_>) -> crate::Result<Self> {
-        let client = crate::client::get_client(metadata.client_options).await;
-        let client = client.read().await;
-
         let mut inputs = Vec::new();
         for input in regular_essence.inputs() {
             let input = match input.clone() {
                 Input::UTXO(i) => {
-                    let metadata = if let Ok(output) = client.get_output(&i).await {
-                        let output = AddressOutput::from_output_response(output, metadata.bech32_hrp.clone())?;
-                        Some(output)
-                    } else {
-                        None
+                    #[cfg(test)]
+                    let metadata: Option<AddressOutput> = None;
+                    #[cfg(not(test))]
+                    let metadata = {
+                        let client = crate::client::get_client(metadata.client_options).await;
+                        let client = client.read().await;
+                        if let Ok(output) = client.get_output(&i).await {
+                            let output = AddressOutput::from_output_response(output, metadata.bech32_hrp.clone())?;
+                            Some(output)
+                        } else {
+                            None
+                        };
                     };
                     TransactionInput::UTXO(TransactionUTXOInput { input: i, metadata })
                 }
