@@ -378,7 +378,7 @@ impl TransactionRegularEssence {
                             Some(output)
                         } else {
                             None
-                        };
+                        }
                     };
                     TransactionInput::UTXO(TransactionUTXOInput { input: i, metadata })
                 }
