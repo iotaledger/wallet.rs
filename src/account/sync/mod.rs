@@ -467,134 +467,141 @@ impl AccountSynchronizer {
             log::error!("[MQTT] error unsubscribing from MQTT topics before syncing: {:?}", e);
         }
 
-        let mut account_ = {
-            let account_ref = self.account_handle.read().await;
-            account_ref.clone()
-        };
-        let messages_before_sync: Vec<(MessageId, Option<bool>)> =
-            account_.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
-        let addresses_before_sync: Vec<(String, u64, Vec<AddressOutput>)> = account_
-            .addresses()
-            .iter()
-            .map(|a| (a.address().to_bech32(), *a.balance(), a.outputs().to_vec()))
-            .collect();
-
-        let return_value = match perform_sync(&mut account_, self.address_index, self.gap_limit, self.steps).await {
-            Ok(is_empty) => {
-                if !self.skip_persistance {
-                    let mut account_ref = self.account_handle.write().await;
-                    account_ref
-                        .do_mut(|account| {
-                            for address in account_.addresses() {
-                                match account.addresses().iter().position(|a| a == address) {
-                                    Some(index) => {
-                                        account.addresses_mut()[index] = address.clone();
-                                    }
-                                    None => {
-                                        account.addresses_mut().push(address.clone());
-                                    }
-                                }
-                            }
-                            for message in account_.messages() {
-                                match account.messages().iter().position(|m| m == message) {
-                                    Some(index) => {
-                                        account.messages_mut()[index] = message.clone();
-                                    }
-                                    None => {
-                                        account.messages_mut().push(message.clone());
-                                    }
-                                }
-                            }
-                            account.set_last_synced_at(Some(chrono::Local::now()));
-                            Ok(())
-                        })
-                        .await?;
-                }
-
-                let account_ref = self.account_handle.read().await;
-
-                let new_messages = account_ref
-                    .messages()
-                    .iter()
-                    .filter(|m| {
-                        !messages_before_sync
-                            .iter()
-                            .any(|(id, confirmed)| id == m.id() && confirmed == m.confirmed())
-                    })
-                    .cloned()
-                    .collect::<Vec<Message>>();
-
-                // balance event
-                for (address_before_sync, before_sync_balance, _) in &addresses_before_sync {
-                    let address_after_sync = account_ref
+        let mut account_to_sync = self.account_handle.read().await.clone();
+        let return_value =
+            match perform_sync(&mut account_to_sync, self.address_index, self.gap_limit, self.steps).await {
+                Ok(is_empty) => {
+                    let messages_before_sync: Vec<(MessageId, Option<bool>)> = self
+                        .account_handle
+                        .read()
+                        .await
+                        .messages()
+                        .iter()
+                        .map(|m| (*m.id(), *m.confirmed()))
+                        .collect();
+                    let addresses_before_sync: Vec<(String, u64, Vec<AddressOutput>)> = self
+                        .account_handle
+                        .read()
+                        .await
                         .addresses()
                         .iter()
-                        .find(|addr| &addr.address().to_bech32() == address_before_sync)
-                        .unwrap();
-                    if address_after_sync.balance() != before_sync_balance {
-                        log::debug!(
-                            "[SYNC] address {} balance changed from {} to {}",
-                            address_before_sync,
-                            before_sync_balance,
-                            address_after_sync.balance()
-                        );
-                        emit_balance_change(
-                            &account_ref,
-                            address_after_sync.address(),
-                            if address_after_sync.balance() > before_sync_balance {
-                                BalanceChange::received(address_after_sync.balance() - before_sync_balance)
-                            } else {
-                                BalanceChange::spent(before_sync_balance - address_after_sync.balance())
-                            },
-                        )
-                        .await?;
+                        .map(|a| (a.address().to_bech32(), *a.balance(), a.outputs().to_vec()))
+                        .collect();
+
+                    if !self.skip_persistance {
+                        let mut account_ref = self.account_handle.write().await;
+                        account_ref
+                            .do_mut(|account| {
+                                for address in account_to_sync.addresses() {
+                                    match account.addresses().iter().position(|a| a == address) {
+                                        Some(index) => {
+                                            account.addresses_mut()[index] = address.clone();
+                                        }
+                                        None => {
+                                            account.addresses_mut().push(address.clone());
+                                        }
+                                    }
+                                }
+                                for message in account_to_sync.messages() {
+                                    match account.messages().iter().position(|m| m == message) {
+                                        Some(index) => {
+                                            account.messages_mut()[index] = message.clone();
+                                        }
+                                        None => {
+                                            account.messages_mut().push(message.clone());
+                                        }
+                                    }
+                                }
+                                account.set_last_synced_at(Some(chrono::Local::now()));
+                                Ok(())
+                            })
+                            .await?;
                     }
-                }
 
-                // new messages event
-                for message in &new_messages {
-                    log::info!("[SYNC] new message: {:?}", message.id());
-                    emit_transaction_event(TransactionEventType::NewTransaction, &account_ref, message).await?;
-                }
+                    let account_ref = self.account_handle.read().await;
 
-                // confirmation state change event
-                for message in account_ref.messages() {
-                    let changed = match messages_before_sync.iter().find(|(id, _)| id == message.id()) {
-                        Some((_, confirmed)) => message.confirmed() != confirmed,
-                        None => false,
-                    };
-                    if changed {
-                        log::info!("[POLLING] message confirmed: {:?}", message.id());
-                        emit_confirmation_state_change(&account_ref, &message, true).await?;
-                    }
-                }
-
-                let synced_account = SyncedAccount {
-                    id: account_ref.id().to_string(),
-                    index: *account_ref.index(),
-                    account_handle: self.account_handle.clone(),
-                    deposit_address: account_ref.latest_address().clone(),
-                    is_empty,
-                    addresses: account_ref
-                        .addresses()
+                    let new_messages = account_ref
+                        .messages()
                         .iter()
-                        .filter(|a| {
-                            match addresses_before_sync
+                        .filter(|m| {
+                            !messages_before_sync
                                 .iter()
-                                .find(|(addr, _, _)| addr == &a.address().to_bech32())
-                            {
-                                Some((_, balance, outputs)) => balance != a.balance() || outputs != a.outputs(),
-                                None => true,
-                            }
+                                .any(|(id, confirmed)| id == m.id() && confirmed == m.confirmed())
                         })
                         .cloned()
-                        .collect(),
-                    messages: new_messages,
-                };
-                Ok(synced_account)
-            }
-            Err(e) => Err(e),
-        };
+                        .collect::<Vec<Message>>();
+
+                    // balance event
+                    for (address_before_sync, before_sync_balance, _) in &addresses_before_sync {
+                        let address_after_sync = account_ref
+                            .addresses()
+                            .iter()
+                            .find(|addr| &addr.address().to_bech32() == address_before_sync)
+                            .unwrap();
+                        if address_after_sync.balance() != before_sync_balance {
+                            log::debug!(
+                                "[SYNC] address {} balance changed from {} to {}",
+                                address_before_sync,
+                                before_sync_balance,
+                                address_after_sync.balance()
+                            );
+                            emit_balance_change(
+                                &account_ref,
+                                address_after_sync.address(),
+                                if address_after_sync.balance() > before_sync_balance {
+                                    BalanceChange::received(address_after_sync.balance() - before_sync_balance)
+                                } else {
+                                    BalanceChange::spent(before_sync_balance - address_after_sync.balance())
+                                },
+                            )
+                            .await?;
+                        }
+                    }
+
+                    // new messages event
+                    for message in &new_messages {
+                        log::info!("[SYNC] new message: {:?}", message.id());
+                        emit_transaction_event(TransactionEventType::NewTransaction, &account_ref, message).await?;
+                    }
+
+                    // confirmation state change event
+                    for message in account_ref.messages() {
+                        let changed = match messages_before_sync.iter().find(|(id, _)| id == message.id()) {
+                            Some((_, confirmed)) => message.confirmed() != confirmed,
+                            None => false,
+                        };
+                        if changed {
+                            log::info!("[POLLING] message confirmed: {:?}", message.id());
+                            emit_confirmation_state_change(&account_ref, &message, true).await?;
+                        }
+                    }
+
+                    let synced_account = SyncedAccount {
+                        id: account_ref.id().to_string(),
+                        index: *account_ref.index(),
+                        account_handle: self.account_handle.clone(),
+                        deposit_address: account_ref.latest_address().clone(),
+                        is_empty,
+                        addresses: account_ref
+                            .addresses()
+                            .iter()
+                            .filter(|a| {
+                                match addresses_before_sync
+                                    .iter()
+                                    .find(|(addr, _, _)| addr == &a.address().to_bech32())
+                                {
+                                    Some((_, balance, outputs)) => balance != a.balance() || outputs != a.outputs(),
+                                    None => true,
+                                }
+                            })
+                            .cloned()
+                            .collect(),
+                        messages: new_messages,
+                    };
+                    Ok(synced_account)
+                }
+                Err(e) => Err(e),
+            };
 
         if let Err(e) = crate::monitor::monitor_account_addresses_balance(self.account_handle.clone()).await {
             log::error!(
