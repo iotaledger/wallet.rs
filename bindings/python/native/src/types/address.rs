@@ -21,12 +21,12 @@ pub struct Address {
     outputs: Vec<AddressOutput>,
 }
 
-#[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
+#[derive(Debug, Clone, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct AddressWrapper {
     inner: String,
 }
 
-#[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
+#[derive(Debug, Clone, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct AddressOutput {
     /// Transaction ID of the output
     transaction_id: String,
@@ -69,8 +69,8 @@ impl From<RustAccountBalance> for AccountBalance {
     }
 }
 
-impl From<&RustAddressOutput> for AddressOutput {
-    fn from(output: &RustAddressOutput) -> Self {
+impl From<RustAddressOutput> for AddressOutput {
+    fn from(output: RustAddressOutput) -> Self {
         Self {
             transaction_id: output.transaction_id().to_string(),
             message_id: output.message_id().to_string(),
@@ -105,7 +105,11 @@ impl From<RustWalletAddress> for Address {
             balance: *wallet_address.balance(),
             key_index: *wallet_address.key_index(),
             internal: *wallet_address.internal(),
-            outputs: wallet_address.outputs().iter().map(|output| output.into()).collect(),
+            outputs: wallet_address
+                .outputs()
+                .iter()
+                .map(|output| output.clone().into())
+                .collect(),
         }
     }
 }

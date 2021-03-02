@@ -302,12 +302,12 @@ impl AccountInitialiser {
             .into_iter()
             .map(|msg| {
                 // we use an empty bech32 HRP here because we update it later on wallet.rs
-                to_rust_message(
+                crate::block_on(to_rust_message(
                     msg,
                     "".to_string(),
                     &self.addresses,
                     &account_initialiser.client_options,
-                )
+                ))
                 .unwrap_or_else(|msg| panic!("AccountInitialiser: Message {:?} is invalid", msg))
             })
             .collect();

@@ -1615,7 +1615,8 @@ mod tests {
                         .with_network_id(0)
                         .finish()
                         .unwrap(),
-                    &*crate::test_utils::AccountCreator::new(&manager)
+                    // dummy account
+                    &*crate::test_utils::AccountCreator::new(&crate::test_utils::get_account_manager().await)
                         .create()
                         .await
                         .read()
