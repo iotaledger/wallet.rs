@@ -194,7 +194,7 @@ impl AccountInitialiser {
 
         if let Some(latest_account_handle) = accounts.values().last() {
             let latest_account = latest_account_handle.read().await;
-            if latest_account.messages().is_empty() && latest_account.balance().total == 0 {
+            if latest_account.messages().is_empty() && latest_account.addresses().iter().all(|a| a.outputs.is_empty()) {
                 return Err(crate::Error::LatestAccountIsEmpty);
             }
         }

@@ -656,7 +656,7 @@ impl AccountManager {
             let account_handle = self.get_account(account_id).await?;
             let account = account_handle.read().await;
 
-            if !(account.messages().is_empty() && account.balance().total == 0) {
+            if !(account.messages().is_empty() && account.addresses().iter().all(|a| a.outputs.is_empty())) {
                 return Err(crate::Error::AccountNotEmpty);
             }
 
@@ -1443,12 +1443,12 @@ fn backup_filename(original: &str) -> String {
 #[cfg(test)]
 mod tests {
     use crate::{
-        address::{AddressBuilder, AddressWrapper, IotaAddress},
+        address::{AddressBuilder, AddressOutput, AddressWrapper, IotaAddress, OutputKind},
         client::ClientOptionsBuilder,
         event::*,
         message::Message,
     };
-    use iota::{Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Payload};
+    use iota::{Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Payload, TransactionId};
 
     #[tokio::test]
     async fn store_accounts() {
@@ -1530,7 +1530,15 @@ mod tests {
             // update address balance so we can create the next account
             let mut account = account_handle1.write().await;
             for address in account.addresses_mut() {
-                address.set_balance(5);
+                address.set_outputs(vec![AddressOutput {
+                    transaction_id: TransactionId::new([0; 32]),
+                    message_id: MessageId::new([0; 32]),
+                    index: 0,
+                    amount: 5,
+                    is_spent: false,
+                    address: crate::test_utils::generate_random_iota_address(),
+                    kind: OutputKind::SignatureLockedSingle,
+                }]);
             }
         }
 
@@ -1647,7 +1655,15 @@ mod tests {
                         IotaAddress::Ed25519(Ed25519Address::new([0; 32])),
                         "atoi".to_string(),
                     ))
-                    .outputs(vec![])
+                    .outputs(vec![AddressOutput {
+                        transaction_id: TransactionId::new([0; 32]),
+                        message_id: MessageId::new([0; 32]),
+                        index: 0,
+                        amount: 5,
+                        is_spent: false,
+                        address: crate::test_utils::generate_random_iota_address(),
+                        kind: OutputKind::SignatureLockedSingle,
+                    }])
                     .build()
                     .unwrap()])
                 .initialise()
