@@ -1143,7 +1143,6 @@ async fn poll(
         }
         let synced_accounts =
             AccountsSynchronizer::new(accounts.clone(), storage_file_path, output_consolidation_threshold)
-                .address_index(0)
                 .execute()
                 .await?;
         let accounts_after_sync = accounts.read().await;
