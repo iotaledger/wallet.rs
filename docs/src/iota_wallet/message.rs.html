@@ -810,6 +810,25 @@
 <span id="807">807</span>
 <span id="808">808</span>
 <span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
+<span id="813">813</span>
+<span id="814">814</span>
+<span id="815">815</span>
+<span id="816">816</span>
+<span id="817">817</span>
+<span id="818">818</span>
+<span id="819">819</span>
+<span id="820">820</span>
+<span id="821">821</span>
+<span id="822">822</span>
+<span id="823">823</span>
+<span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -818,6 +837,7 @@
     <span class="ident">account</span>::<span class="ident">Account</span>,
     <span class="ident">address</span>::{<span class="ident">Address</span>, <span class="ident">AddressOutput</span>, <span class="ident">AddressWrapper</span>, <span class="ident">IotaAddress</span>},
     <span class="ident">client</span>::<span class="ident">ClientOptions</span>,
+    <span class="ident">event</span>::{<span class="ident">emit_transfer_progress</span>, <span class="ident">TransferProgressType</span>},
 };
 <span class="kw">use</span> <span class="ident">bee_common</span>::<span class="ident">packable</span>::<span class="ident">Packable</span>;
 <span class="kw">use</span> <span class="ident">chrono</span>::<span class="ident">prelude</span>::{<span class="ident">DateTime</span>, <span class="ident">Utc</span>};
@@ -869,6 +889,8 @@
     <span class="ident">remainder_value_strategy</span>: <span class="ident">RemainderValueStrategy</span>,
     <span class="doccomment">/// The input to use (skips input selection)</span>
     <span class="ident">input</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">AddressWrapper</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressOutput</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
+    <span class="doccomment">/// Whether the transfer should emit events or not.</span>
+    <span class="ident">with_events</span>: <span class="ident">bool</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TransferBuilder</span> {
@@ -926,6 +948,7 @@
                 },
                 <span class="ident">remainder_value_strategy</span>: <span class="ident">builder</span>.<span class="ident">remainder_value_strategy</span>,
                 <span class="ident">input</span>: <span class="prelude-val">None</span>,
+                <span class="ident">with_events</span>: <span class="bool-val">true</span>,
             })
         })
     }
@@ -940,6 +963,7 @@
             <span class="ident">indexation</span>: <span class="prelude-val">None</span>,
             <span class="ident">remainder_value_strategy</span>: <span class="ident">RemainderValueStrategy</span>::<span class="ident">ChangeAddress</span>,
             <span class="ident">input</span>: <span class="prelude-val">None</span>,
+            <span class="ident">with_events</span>: <span class="bool-val">true</span>,
         }
     }
 
@@ -961,6 +985,11 @@
         <span class="self">self</span>
     }
 
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">with_events</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">flag</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">with_events</span> <span class="op">=</span> <span class="ident">flag</span>;
+        <span class="self">self</span>
+    }
+
     <span class="doccomment">/// Builds the transfer.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finish</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Transfer</span> {
         <span class="ident">Transfer</span> {
@@ -969,6 +998,7 @@
             <span class="ident">indexation</span>: <span class="self">self</span>.<span class="ident">indexation</span>,
             <span class="ident">remainder_value_strategy</span>: <span class="self">self</span>.<span class="ident">remainder_value_strategy</span>,
             <span class="ident">input</span>: <span class="self">self</span>.<span class="ident">input</span>,
+            <span class="ident">with_events</span>: <span class="self">self</span>.<span class="ident">with_events</span>,
         }
     }
 }
@@ -986,12 +1016,20 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">remainder_value_strategy</span>: <span class="ident">RemainderValueStrategy</span>,
     <span class="doccomment">/// The addresses to use as input.</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">input</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">AddressWrapper</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressOutput</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
+    <span class="doccomment">/// Whether the transfer should emit events or not.</span>
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">with_events</span>: <span class="ident">bool</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Transfer</span> {
     <span class="doccomment">/// Initialises the transfer builder.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">address</span>: <span class="ident">AddressWrapper</span>, <span class="ident">amount</span>: <span class="ident">NonZeroU64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TransferBuilder</span> {
         <span class="ident">TransferBuilder</span>::<span class="ident">new</span>(<span class="ident">address</span>, <span class="ident">amount</span>)
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">emit_event_if_needed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">account_id</span>: <span class="ident">String</span>, <span class="ident">event</span>: <span class="ident">TransferProgressType</span>) {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">with_events</span> {
+            <span class="ident">emit_transfer_progress</span>(<span class="ident">account_id</span>, <span class="ident">event</span>).<span class="kw">await</span>;
+        }
     }
 }
 

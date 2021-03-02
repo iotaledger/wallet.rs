@@ -611,7 +611,7 @@
         <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;accountId&quot;</span>)]</span>
         <span class="ident">account_id</span>: <span class="ident">AccountIdentifier</span>,
         <span class="doccomment">/// The transfer details.</span>
-        <span class="ident">transfer</span>: <span class="ident">TransferBuilder</span>,
+        <span class="ident">transfer</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">TransferBuilder</span><span class="op">&gt;</span>,
     },
     <span class="doccomment">/// Move funds on stored accounts.</span>
     <span class="ident">InternalTransfer</span> {

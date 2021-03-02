@@ -1160,6 +1160,12 @@
 <span id="1157">1157</span>
 <span id="1158">1158</span>
 <span id="1159">1159</span>
+<span id="1160">1160</span>
+<span id="1161">1161</span>
+<span id="1162">1162</span>
+<span id="1163">1163</span>
+<span id="1164">1164</span>
+<span id="1165">1165</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1168,6 +1174,7 @@
     <span class="ident">account_manager</span>::<span class="ident">AccountStore</span>,
     <span class="ident">address</span>::{<span class="ident">Address</span>, <span class="ident">AddressBuilder</span>, <span class="ident">AddressWrapper</span>},
     <span class="ident">client</span>::<span class="ident">ClientOptions</span>,
+    <span class="ident">event</span>::<span class="ident">TransferProgressType</span>,
     <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessageType</span>, <span class="ident">Transfer</span>},
     <span class="ident">signing</span>::{<span class="ident">GenerateAddressMetadata</span>, <span class="ident">SignerType</span>},
 };
@@ -1575,7 +1582,12 @@
 
     <span class="doccomment">/// Send messages.</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">transfer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">transfer_obj</span>: <span class="ident">Transfer</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">sync</span>().<span class="kw">await</span>.<span class="ident">execute</span>().<span class="kw">await</span><span class="question-mark">?</span>.<span class="ident">transfer</span>(<span class="ident">transfer_obj</span>).<span class="kw">await</span>
+        <span class="kw">let</span> <span class="ident">account_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>().<span class="kw">await</span>;
+        <span class="ident">transfer_obj</span>
+            .<span class="ident">emit_event_if_needed</span>(<span class="ident">account_id</span>.<span class="ident">clone</span>(), <span class="ident">TransferProgressType</span>::<span class="ident">SyncingAccount</span>)
+            .<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">synced</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">sync</span>().<span class="kw">await</span>.<span class="ident">execute</span>().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="ident">synced</span>.<span class="ident">transfer</span>(<span class="ident">transfer_obj</span>).<span class="kw">await</span>
     }
 
     <span class="doccomment">/// Retry message.</span>

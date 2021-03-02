@@ -617,6 +617,68 @@
 <span id="614">614</span>
 <span id="615">615</span>
 <span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -699,13 +761,6 @@
     <span class="kw">pub</span> <span class="ident">message</span>: <span class="ident">Message</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">TransactionEvent</span> {
-    <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cloned_message</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Message</span> {
-        <span class="self">self</span>.<span class="ident">message</span>.<span class="ident">clone</span>()
-    }
-}
-
 <span class="doccomment">/// A transaction-related event data.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Getters</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">get</span> <span class="op">=</span> <span class="string">&quot;pub&quot;</span>)]</span>
@@ -717,6 +772,35 @@
     <span class="kw">pub</span> <span class="ident">message</span>: <span class="ident">Message</span>,
     <span class="doccomment">/// The confirmed state of the transaction.</span>
     <span class="kw">pub</span> <span class="ident">confirmed</span>: <span class="ident">bool</span>,
+}
+
+<span class="doccomment">/// Transfer event type.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
+<span class="attribute">#[<span class="ident">serde</span>(<span class="ident">tag</span> <span class="op">=</span> <span class="string">&quot;type&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TransferProgressType</span> {
+    <span class="doccomment">/// Syncing account.</span>
+    <span class="ident">SyncingAccount</span>,
+    <span class="doccomment">/// Performing input selection.</span>
+    <span class="ident">SelectingInputs</span>,
+    <span class="doccomment">/// Generating remainder value deposit address.</span>
+    <span class="ident">GeneratingRemainderDepositAddress</span>,
+    <span class="doccomment">/// Signing the transaction.</span>
+    <span class="ident">SigningTransaction</span>,
+    <span class="doccomment">/// Performing PoW.</span>
+    <span class="ident">PerformingPoW</span>,
+    <span class="doccomment">/// Broadcasting.</span>
+    <span class="ident">Broadcasting</span>,
+}
+
+<span class="doccomment">/// Transfer event data.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Getters</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
+<span class="attribute">#[<span class="ident">getset</span>(<span class="ident">get</span> <span class="op">=</span> <span class="string">&quot;pub&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TransferProgress</span> {
+    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;accountId&quot;</span>)]</span>
+    <span class="doccomment">/// The associated account identifier.</span>
+    <span class="kw">pub</span> <span class="ident">account_id</span>: <span class="ident">String</span>,
+    <span class="doccomment">/// The transfer event type.</span>
+    <span class="kw">pub</span> <span class="ident">event</span>: <span class="ident">TransferProgressType</span>,
 }
 
 <span class="kw">trait</span> <span class="ident">EventHandler</span> {
@@ -792,6 +876,14 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
 <span class="macro">event_handler_impl</span><span class="macro">!</span>(<span class="ident">AddressConsolidationNeededHandler</span>);
 
+<span class="kw">struct</span> <span class="ident">TransferProgressHandler</span> {
+    <span class="ident">id</span>: <span class="ident">EventId</span>,
+    <span class="doccomment">/// The on event callback.</span>
+    <span class="ident">on_event</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">TransferProgress</span>) <span class="op">+</span> <span class="ident">Send</span><span class="op">&gt;</span>,
+}
+
+<span class="macro">event_handler_impl</span><span class="macro">!</span>(<span class="ident">TransferProgressHandler</span>);
+
 <span class="kw">type</span> <span class="ident">BalanceListeners</span> <span class="op">=</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BalanceEventHandler</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 <span class="kw">type</span> <span class="ident">TransactionListeners</span> <span class="op">=</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TransactionEventHandler</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 <span class="kw">type</span> <span class="ident">TransactionConfirmationChangeListeners</span> <span class="op">=</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TransactionConfirmationChangeEventHandler</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
@@ -800,6 +892,7 @@
 <span class="kw">type</span> <span class="ident">StrongholdStatusChangeListeners</span> <span class="op">=</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">StrongholdStatusChangeEventHandler</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
 <span class="kw">type</span> <span class="ident">AddressConsolidationNeededListeners</span> <span class="op">=</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressConsolidationNeededHandler</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+<span class="kw">type</span> <span class="ident">TransferProgressListeners</span> <span class="op">=</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TransferProgressHandler</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
 <span class="kw">fn</span> <span class="ident">generate_event_id</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EventId</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">id</span> <span class="op">=</span> [<span class="number">0</span>; <span class="number">32</span>];
@@ -847,8 +940,13 @@
 
 <span class="doccomment">/// Gets the address consolodation needed listeners array.</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
-<span class="kw">fn</span> <span class="ident">on_address_consolidation_needed_listeners</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">AddressConsolidationNeededListeners</span> {
+<span class="kw">fn</span> <span class="ident">address_consolidation_needed_listeners</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">AddressConsolidationNeededListeners</span> {
     <span class="kw">static</span> <span class="ident">LISTENERS</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">AddressConsolidationNeededListeners</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy</span>::<span class="ident">new</span>(<span class="ident">Default</span>::<span class="ident">default</span>);
+    <span class="kw-2">&amp;</span><span class="ident">LISTENERS</span>
+}
+
+<span class="kw">fn</span> <span class="ident">transfer_progress_listeners</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">TransferProgressListeners</span> {
+    <span class="kw">static</span> <span class="ident">LISTENERS</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">TransferProgressListeners</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy</span>::<span class="ident">new</span>(<span class="ident">Default</span>::<span class="ident">default</span>);
     <span class="kw-2">&amp;</span><span class="ident">LISTENERS</span>
 }
 
@@ -1080,7 +1178,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))))]</span>
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_address_consolidation_needed</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">AddressConsolidationNeeded</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EventId</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">l</span> <span class="op">=</span> <span class="ident">on_address_consolidation_needed_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">l</span> <span class="op">=</span> <span class="ident">address_consolidation_needed_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">generate_event_id</span>();
     <span class="ident">l</span>.<span class="ident">push</span>(<span class="ident">AddressConsolidationNeededHandler</span> {
         <span class="ident">id</span>,
@@ -1093,17 +1191,43 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))))]</span>
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">remove_address_consolidation_needed_listener</span>(<span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">EventId</span>) {
-    <span class="ident">remove_event_listener</span>(<span class="ident">id</span>, <span class="ident">on_address_consolidation_needed_listeners</span>()).<span class="kw">await</span>;
+    <span class="ident">remove_event_listener</span>(<span class="ident">id</span>, <span class="ident">address_consolidation_needed_listeners</span>()).<span class="kw">await</span>;
 }
 
 <span class="doccomment">/// Emits a balance change event.</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">emit_address_consolidation_needed</span>(<span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Account</span>, <span class="ident">address</span>: <span class="ident">AddressWrapper</span>) {
-    <span class="kw">let</span> <span class="ident">listeners</span> <span class="op">=</span> <span class="ident">on_address_consolidation_needed_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
+    <span class="kw">let</span> <span class="ident">listeners</span> <span class="op">=</span> <span class="ident">address_consolidation_needed_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">AddressConsolidationNeeded</span> {
         <span class="ident">account_id</span>: <span class="ident">account</span>.<span class="ident">id</span>().<span class="ident">to_string</span>(),
         <span class="ident">address</span>,
     };
+
+    <span class="kw">for</span> <span class="ident">listener</span> <span class="kw">in</span> <span class="ident">listeners</span>.<span class="ident">deref</span>() {
+        (<span class="ident">listener</span>.<span class="ident">on_event</span>)(<span class="kw-2">&amp;</span><span class="ident">event</span>);
+    }
+}
+
+<span class="doccomment">/// Listen to a transfer event.</span>
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_transfer_progress</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">TransferProgress</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EventId</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">l</span> <span class="op">=</span> <span class="ident">transfer_progress_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
+    <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">generate_event_id</span>();
+    <span class="ident">l</span>.<span class="ident">push</span>(<span class="ident">TransferProgressHandler</span> {
+        <span class="ident">id</span>,
+        <span class="ident">on_event</span>: <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">cb</span>),
+    });
+    <span class="ident">id</span>
+}
+
+<span class="doccomment">/// Remove a transfer event listener.</span>
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">remove_transfer_progress_listener</span>(<span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">EventId</span>) {
+    <span class="ident">remove_event_listener</span>(<span class="ident">id</span>, <span class="ident">transfer_progress_listeners</span>()).<span class="kw">await</span>;
+}
+
+<span class="doccomment">/// Emit a transfer event.</span>
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">emit_transfer_progress</span>(<span class="ident">account_id</span>: <span class="ident">String</span>, <span class="ident">event</span>: <span class="ident">TransferProgressType</span>) {
+    <span class="kw">let</span> <span class="ident">listeners</span> <span class="op">=</span> <span class="ident">transfer_progress_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
+    <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">TransferProgress</span> { <span class="ident">account_id</span>, <span class="ident">event</span> };
 
     <span class="kw">for</span> <span class="ident">listener</span> <span class="kw">in</span> <span class="ident">listeners</span>.<span class="ident">deref</span>() {
         (<span class="ident">listener</span>.<span class="ident">on_event</span>)(<span class="kw-2">&amp;</span><span class="ident">event</span>);
