@@ -379,14 +379,15 @@ async fn perform_sync(
 
     account.append_addresses(addresses_to_save);
 
-    let parsed_messages = new_messages
-        .into_iter()
-        .map(|(id, confirmed, message)| {
-            Message::from_iota_message(id, message, account.addresses())
+    let mut parsed_messages = Vec::new();
+    for (id, confirmed, message) in new_messages {
+        parsed_messages.push(
+            Message::from_iota_message(id, message, &account)
                 .with_confirmed(confirmed)
                 .finish()
-        })
-        .collect();
+                .await?,
+        );
+    }
     log::debug!("[SYNC] new messages: {:#?}", parsed_messages);
     account.append_messages(parsed_messages);
 
@@ -1153,7 +1154,9 @@ async fn perform_transfer(
         account_.append_addresses(vec![addr]);
     }
 
-    let message = Message::from_iota_message(message_id, message, account_.addresses()).finish();
+    let message = Message::from_iota_message(message_id, message, &account_)
+        .finish()
+        .await?;
     account_.append_messages(vec![message.clone()]);
 
     account_.save().await?;
@@ -1289,7 +1292,7 @@ pub(crate) async fn repost_message(
                 RepostAction::Reattach => client.reattach(message_id).await?,
                 RepostAction::Retry => client.retry(message_id).await?,
             };
-            let message = Message::from_iota_message(id, message, account.addresses()).finish();
+            let message = Message::from_iota_message(id, message, &account).finish().await?;
 
             account.append_messages(vec![message.clone()]);
 

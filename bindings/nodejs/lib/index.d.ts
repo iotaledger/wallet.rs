@@ -22,16 +22,40 @@ export declare type Essence = {
   data: RegularEssence
 }
 
-export declare interface Input {
-  transactionId: string
-  outputIndex: number
+export declare interface UTXOInput {
+  input: string
+  metadata?: {
+    transactionId: string
+    messageId: string
+    index: number
+    amount: number
+    is_spent: boolean
+    address: string
+  }
 }
 
-export declare interface Output {
+export declare type Input = { type: 'UTXO', data: UTXOInput }
+
+export declare interface SignatureLockedSingleOutput {
   address: string
   amount: number
   remainder: boolean
 }
+
+export declare interface SignatureLockedDustAllowance {
+  address: string
+  amount: number
+  remainder: boolean
+}
+
+export declare type Output = {
+  type: 'SignatureLockedSingleOutput',
+  data: SignatureLockedSingleOutput
+}
+  | {
+    type: 'SignatureLockedDustAllowance',
+    data: SignatureLockedDustAllowance
+  }
 
 export declare interface Transaction {
   essence: Essence;

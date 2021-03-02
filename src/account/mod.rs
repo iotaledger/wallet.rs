@@ -107,7 +107,8 @@ pub struct AccountInitialiser {
     created_at: Option<DateTime<Local>>,
     messages: Vec<Message>,
     addresses: Vec<Address>,
-    client_options: ClientOptions,
+    #[doc(hidden)]
+    pub client_options: ClientOptions,
     signer_type: Option<SignerType>,
     skip_persistance: bool,
 }
@@ -947,13 +948,15 @@ mod tests {
             .address(first_address.clone())
             .value(15)
             .input_transaction_id(first_address.outputs[0].transaction_id)
-            .build();
+            .build()
+            .await;
         let confirmed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(second_address.clone())
             .value(10)
             .input_transaction_id(second_address.outputs[0].transaction_id)
             .confirmed(Some(true))
-            .build();
+            .build()
+            .await;
 
         account_handle
             .write()
@@ -977,18 +980,22 @@ mod tests {
         let received_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
             .incoming(true)
-            .build();
+            .build()
+            .await;
         let failed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
             .broadcasted(false)
-            .build();
+            .build()
+            .await;
         let unconfirmed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
             .confirmed(None)
-            .build();
+            .build()
+            .await;
         let value_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
-            .build();
+            .build()
+            .await;
         account_handle.write().await.append_messages(vec![
             received_message,
             failed_message,
@@ -1016,31 +1023,36 @@ mod tests {
             .incoming(true)
             .confirmed(Some(true))
             .broadcasted(true)
-            .build();
+            .build()
+            .await;
         let sent_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(external_address.clone())
             .incoming(false)
             .confirmed(Some(true))
             .broadcasted(true)
-            .build();
+            .build()
+            .await;
         let failed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
             .incoming(false)
             .confirmed(Some(true))
             .broadcasted(false)
-            .build();
+            .build()
+            .await;
         let unconfirmed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
             .incoming(false)
             .confirmed(None)
             .broadcasted(true)
-            .build();
+            .build()
+            .await;
         let value_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
             .incoming(false)
             .confirmed(Some(true))
             .broadcasted(true)
-            .build();
+            .build()
+            .await;
 
         account_handle.write().await.append_messages(vec![
             received_message.clone(),
@@ -1076,12 +1088,10 @@ mod tests {
         let manager = crate::test_utils::get_account_manager().await;
         let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
 
-        let message = crate::test_utils::GenerateMessageBuilder::default().build();
-        account_handle.write().await.append_messages(vec![
-            crate::test_utils::GenerateMessageBuilder::default().build(),
-            message.clone(),
-        ]);
-        assert_eq!(account_handle.read().await.get_message(message.id()).unwrap(), &message);
+        let m1 = crate::test_utils::GenerateMessageBuilder::default().build().await;
+        let m2 = crate::test_utils::GenerateMessageBuilder::default().build().await;
+        account_handle.write().await.append_messages(vec![m1, m2.clone()]);
+        assert_eq!(account_handle.read().await.get_message(m2.id()).unwrap(), &m2);
     }
 
     #[tokio::test]
@@ -1101,7 +1111,8 @@ mod tests {
                 let spent_tx = crate::test_utils::GenerateMessageBuilder::default()
                     .address(spent_address.clone())
                     .incoming(false)
-                    .build();
+                    .build()
+                    .await;
 
                 account_handle.write().await.append_messages(vec![spent_tx]);
 

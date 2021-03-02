@@ -1622,10 +1622,17 @@ mod tests {
                         .with_network_id(0)
                         .finish()
                         .unwrap(),
-                    &[crate::test_utils::generate_random_address()],
+                    // dummy account
+                    &*crate::test_utils::AccountCreator::new(&crate::test_utils::get_account_manager().await)
+                        .create()
+                        .await
+                        .read()
+                        .await,
                 )
                 .with_confirmed(Some(true))
-                .finish()])
+                .finish()
+                .await
+                .unwrap()])
                 .initialise()
                 .await
                 .unwrap();
@@ -1910,11 +1917,17 @@ mod tests {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
             let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
             let account = account_handle.read().await;
+            let m1 = crate::test_utils::GenerateMessageBuilder::default().build().await;
+            let m2 = crate::test_utils::GenerateMessageBuilder::default().build().await;
+            let m3 = crate::test_utils::GenerateMessageBuilder::default().build().await;
             let confirmation_change_events = vec![
-                (crate::test_utils::GenerateMessageBuilder::default().build(), true),
-                (crate::test_utils::GenerateMessageBuilder::default().build(), false),
-                (crate::test_utils::GenerateMessageBuilder::default().build(), false),
-                (crate::test_utils::GenerateMessageBuilder::default().build(), true),
+                (m1, true),
+                (
+                    crate::test_utils::GenerateMessageBuilder::default().build().await,
+                    false,
+                ),
+                (m2, false),
+                (m3, true),
             ];
             for (message, change) in &confirmation_change_events {
                 emit_confirmation_state_change(&account, message, *change)
@@ -1955,12 +1968,11 @@ mod tests {
                     |manager, _| async move {
                         let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
                         let account = account_handle.read().await;
-                        let events = vec![
-                            crate::test_utils::GenerateMessageBuilder::default().build(),
-                            crate::test_utils::GenerateMessageBuilder::default().build(),
-                            crate::test_utils::GenerateMessageBuilder::default().build(),
-                            crate::test_utils::GenerateMessageBuilder::default().build(),
-                        ];
+                        let m1 = crate::test_utils::GenerateMessageBuilder::default().build().await;
+                        let m2 = crate::test_utils::GenerateMessageBuilder::default().build().await;
+                        let m3 = crate::test_utils::GenerateMessageBuilder::default().build().await;
+                        let m4 = crate::test_utils::GenerateMessageBuilder::default().build().await;
+                        let events = vec![m1, m2, m3, m4];
                         for message in &events {
                             emit_transaction_event($event_type, &account, message)
                                 .await
