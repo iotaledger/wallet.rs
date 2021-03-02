@@ -19,7 +19,10 @@ impl Task for SendTask {
 
     fn perform(&self) -> Result<Self::Output, Self::Error> {
         crate::block_on(crate::convert_async_panics(|| async {
-            crate::get_account(&self.account_id).await.transfer(self.transfer.clone()).await
+            crate::get_account(&self.account_id)
+                .await
+                .transfer(self.transfer.clone())
+                .await
         }))
     }
 
