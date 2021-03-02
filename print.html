@@ -799,42 +799,7 @@ Supported event names:</p>
 <tr><td>[fromTimestamp]</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
 </tbody></table>
 <h3 id="syncedaccount"><a class="header" href="#syncedaccount">SyncedAccount</a></h3>
-<h4 id="sendaddress-amount-options"><a class="header" href="#sendaddress-amount-options">send(address, amount[, options])</a></h4>
-<p>Send funds to the given address.</p>
-<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
-<tr><td>address</td><td><code>string</code></td><td><code>null</code></td><td>The bech32 string of the transfer address</td></tr>
-<tr><td>amount</td><td><code>number</code></td><td><code>undefined</code></td><td>The transfer amount</td></tr>
-<tr><td>options</td><td><code>TransferOptions</code></td><td><code>undefined</code></td><td>The transfer options</td></tr>
-</tbody></table>
-<h5 id="transferoptions"><a class="header" href="#transferoptions">TransferOptions</a></h5>
-<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
-<tr><td>remainderValueStrategy</td><td><code>RemainderValueStrategy</code></td><td><code>null</code></td><td>The strategy to use for the remainder value if any</td></tr>
-<tr><td>indexation</td><td><code>{ index: string, data?: Uint8Array }</code></td><td><code>null</code></td><td>Message indexation</td></tr>
-</tbody></table>
-<h5 id="remaindervaluestrategy"><a class="header" href="#remaindervaluestrategy">RemainderValueStrategy</a></h5>
-<h6 id="changeaddress"><a class="header" href="#changeaddress">changeAddress()</a></h6>
-<p>Send the remainder value to an internal address.</p>
-<h6 id="reuseaddress"><a class="header" href="#reuseaddress">reuseAddress()</a></h6>
-<p>Send the remainder value to its original address.</p>
-<h6 id="accountaddressaddress-string"><a class="header" href="#accountaddressaddress-string">accountAddress(address: string)</a></h6>
-<p>Send the remainder value to a specific address that must belong to the account.</p>
-<h4 id="retrymessageid"><a class="header" href="#retrymessageid">retry(messageId)</a></h4>
-<p>Retries (promotes or reattaches) the given message.</p>
-<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
-<tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
-</tbody></table>
-<h4 id="reattachmessageid"><a class="header" href="#reattachmessageid">reattach(messageId)</a></h4>
-<p>Reattach the given message.</p>
-<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
-<tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
-</tbody></table>
-<h4 id="promotemessageid"><a class="header" href="#promotemessageid">promote(messageId)</a></h4>
-<p>Promote the given message.</p>
-<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
-<tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
-</tbody></table>
-<h4 id="consolidateoutputs"><a class="header" href="#consolidateoutputs">consolidateOutputs()</a></h4>
-<p>Consolidate the outputs on all account addresses.</p>
+<p>The result of a <code>sync</code> operation on an Account.</p>
 <h3 id="account"><a class="header" href="#account">Account</a></h3>
 <h4 id="id"><a class="header" href="#id">id()</a></h4>
 <p>Returns the account's identifier.</p>
@@ -872,6 +837,42 @@ Supported event names:</p>
 <tr><td>[options.gapLimit]</td><td><code>number</code></td><td><code>10</code></td><td>The number of addresses to check</td></tr>
 </tbody></table>
 <p><strong>Returns</strong> a <a href="libraries/nodejs/api_reference.html#syncedaccount">SyncedAccount</a> instance.</p>
+<h4 id="sendaddress-amount-options"><a class="header" href="#sendaddress-amount-options">send(address, amount[, options])</a></h4>
+<p>Send funds to the given address.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>address</td><td><code>string</code></td><td><code>null</code></td><td>The bech32 string of the transfer address</td></tr>
+<tr><td>amount</td><td><code>number</code></td><td><code>undefined</code></td><td>The transfer amount</td></tr>
+<tr><td>options</td><td><code>TransferOptions</code></td><td><code>undefined</code></td><td>The transfer options</td></tr>
+</tbody></table>
+<h5 id="transferoptions"><a class="header" href="#transferoptions">TransferOptions</a></h5>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>remainderValueStrategy</td><td><code>RemainderValueStrategy</code></td><td><code>null</code></td><td>The strategy to use for the remainder value if any</td></tr>
+<tr><td>indexation</td><td><code>{ index: string, data?: Uint8Array }</code></td><td><code>null</code></td><td>Message indexation</td></tr>
+</tbody></table>
+<h5 id="remaindervaluestrategy"><a class="header" href="#remaindervaluestrategy">RemainderValueStrategy</a></h5>
+<h6 id="changeaddress"><a class="header" href="#changeaddress">changeAddress()</a></h6>
+<p>Send the remainder value to an internal address.</p>
+<h6 id="reuseaddress"><a class="header" href="#reuseaddress">reuseAddress()</a></h6>
+<p>Send the remainder value to its original address.</p>
+<h6 id="accountaddressaddress-string"><a class="header" href="#accountaddressaddress-string">accountAddress(address: string)</a></h6>
+<p>Send the remainder value to a specific address that must belong to the account.</p>
+<h4 id="retrymessageid"><a class="header" href="#retrymessageid">retry(messageId)</a></h4>
+<p>Retries (promotes or reattaches) the given message.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
+</tbody></table>
+<h4 id="reattachmessageid"><a class="header" href="#reattachmessageid">reattach(messageId)</a></h4>
+<p>Reattach the given message.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
+</tbody></table>
+<h4 id="promotemessageid"><a class="header" href="#promotemessageid">promote(messageId)</a></h4>
+<p>Promote the given message.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>messageId</td><td><code>string</code></td><td><code>null</code></td><td>The message's identifier</td></tr>
+</tbody></table>
+<h4 id="consolidateoutputs"><a class="header" href="#consolidateoutputs">consolidateOutputs()</a></h4>
+<p>Consolidate the outputs on all account addresses.</p>
 <h4 id="islatestaddressunused-1"><a class="header" href="#islatestaddressunused-1">isLatestAddressUnused()</a></h4>
 <p>Determines whether the account has unused latest address after syncing with the Tangle.</p>
 <p><strong>Returns</strong> A promise resolving to the boolean value.</p>

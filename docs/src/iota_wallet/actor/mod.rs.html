@@ -558,7 +558,6 @@
 <span id="555">555</span>
 <span id="556">556</span>
 <span id="557">557</span>
-<span id="558">558</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -970,8 +969,7 @@
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_transfer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">account_id</span>: <span class="kw-2">&amp;</span><span class="ident">AccountIdentifier</span>, <span class="ident">transfer</span>: <span class="ident">Transfer</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ResponseType</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">get_account</span>(<span class="ident">account_id</span>.<span class="ident">clone</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">synced</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">sync</span>().<span class="kw">await</span>.<span class="ident">execute</span>().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">synced</span>.<span class="ident">transfer</span>(<span class="ident">transfer</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">transfer</span>(<span class="ident">transfer</span>).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">SentTransfer</span>(<span class="ident">message</span>))
     }
 
