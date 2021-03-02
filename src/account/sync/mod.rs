@@ -235,10 +235,7 @@ async fn sync_addresses(
 
 /// Syncs messages with the tangle.
 /// The method should ensures that the wallet local state has messages associated with the address history.
-async fn sync_messages(
-    account: &mut Account,
-    stop_at_address_index: usize,
-) -> crate::Result<Vec<(MessageId, Option<bool>, IotaMessage)>> {
+async fn sync_messages(account: &mut Account) -> crate::Result<Vec<(MessageId, Option<bool>, IotaMessage)>> {
     let mut messages = vec![];
     let client_options = account.client_options().clone();
 
@@ -249,70 +246,65 @@ async fn sync_messages(
         .map(|m| *m.id())
         .collect();
 
-    let futures_ = account
-        .addresses_mut()
-        .iter_mut()
-        .filter(|address| *address.key_index() < stop_at_address_index)
-        .map(|address| {
-            let client_options = client_options.clone();
-            let messages_with_known_confirmation = messages_with_known_confirmation.clone();
-            async move {
-                let client = crate::client::get_client(&client_options).await;
-                let client = client.read().await;
+    let futures_ = account.addresses_mut().iter_mut().map(|address| {
+        let client_options = client_options.clone();
+        let messages_with_known_confirmation = messages_with_known_confirmation.clone();
+        async move {
+            let client = crate::client::get_client(&client_options).await;
+            let client = client.read().await;
 
-                let address_outputs = client
-                    .get_address()
-                    .outputs(&address.address().to_bech32().into())
-                    .await?;
-                let balance = client
-                    .get_address()
-                    .balance(&address.address().to_bech32().into())
-                    .await?
-                    .balance;
+            let address_outputs = client
+                .get_address()
+                .outputs(&address.address().to_bech32().into())
+                .await?;
+            let balance = client
+                .get_address()
+                .balance(&address.address().to_bech32().into())
+                .await?
+                .balance;
 
-                log::debug!(
-                    "[SYNC] syncing messages and outputs for address {}, got {} outputs and balance {}",
-                    address.address().to_bech32(),
-                    address_outputs.len(),
-                    balance
-                );
+            log::debug!(
+                "[SYNC] syncing messages and outputs for address {}, got {} outputs and balance {}",
+                address.address().to_bech32(),
+                address_outputs.len(),
+                balance
+            );
 
-                let mut outputs = vec![];
-                let mut messages = vec![];
-                for output in address_outputs.iter() {
-                    let output = client.get_output(output).await?;
-                    let output =
-                        AddressOutput::from_output_response(output, address.address().bech32_hrp().to_string())?;
-                    let output_message_id = *output.message_id();
+            let mut outputs = vec![];
+            let mut messages = vec![];
+            for output in address_outputs.iter() {
+                let output = client.get_output(output).await?;
+                let output = AddressOutput::from_output_response(output, address.address().bech32_hrp().to_string())?;
+                let output_message_id = *output.message_id();
 
-                    outputs.push(output);
+                outputs.push(output);
 
-                    // if we already have the message stored
-                    // and the confirmation state is known
-                    // we skip the `get_message` call
-                    if messages_with_known_confirmation.contains(&output_message_id) {
-                        continue;
-                    }
-
-                    if let Ok(message) = client.get_message().data(&output_message_id).await {
-                        if let Ok(metadata) = client.get_message().metadata(&output_message_id).await {
-                            messages.push((
-                                output_message_id,
-                                metadata
-                                    .ledger_inclusion_state
-                                    .map(|l| l == LedgerInclusionStateDto::Included),
-                                message,
-                            ));
-                        }
-                    }
+                // if we already have the message stored
+                // and the confirmation state is known
+                // we skip the `get_message` call
+                if messages_with_known_confirmation.contains(&output_message_id) {
+                    continue;
                 }
 
-                address.set_outputs(outputs);
-                address.set_balance(balance);
-
-                crate::Result::Ok(messages)
+                if let Ok(message) = client.get_message().data(&output_message_id).await {
+                    if let Ok(metadata) = client.get_message().metadata(&output_message_id).await {
+                        messages.push((
+                            output_message_id,
+                            metadata
+                                .ledger_inclusion_state
+                                .map(|l| l == LedgerInclusionStateDto::Included),
+                            message,
+                        ));
+                    }
+                }
             }
-        });
+
+            address.set_outputs(outputs);
+            address.set_balance(balance);
+
+            crate::Result::Ok(messages)
+        }
+    });
 
     for res in futures::future::join_all(futures_).await {
         messages.extend(res?);
@@ -350,7 +342,7 @@ async fn perform_sync(
     }
 
     if steps.contains(&AccountSynchronizeStep::SyncMessages) {
-        let synced_messages = sync_messages(&mut account, address_index).await?;
+        let synced_messages = sync_messages(&mut account).await?;
         new_messages.extend(synced_messages.into_iter());
     }
 
