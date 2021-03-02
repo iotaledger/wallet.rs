@@ -1444,12 +1444,12 @@ fn backup_filename(original: &str) -> String {
 #[cfg(test)]
 mod tests {
     use crate::{
-        address::{AddressBuilder, AddressWrapper, IotaAddress},
+        address::{AddressBuilder, AddressOutput, AddressWrapper, IotaAddress, OutputKind},
         client::ClientOptionsBuilder,
         event::*,
         message::Message,
     };
-    use iota::{Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Payload};
+    use iota::{Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Payload, TransactionId};
 
     #[tokio::test]
     async fn store_accounts() {
@@ -1531,7 +1531,15 @@ mod tests {
             // update address balance so we can create the next account
             let mut account = account_handle1.write().await;
             for address in account.addresses_mut() {
-                address.set_balance(5);
+                address.set_outputs(vec![AddressOutput {
+                    transaction_id: TransactionId::new([0; 32]),
+                    message_id: MessageId::new([0; 32]),
+                    index: 0,
+                    amount: 5,
+                    is_spent: false,
+                    address: crate::test_utils::generate_random_iota_address(),
+                    kind: OutputKind::SignatureLockedSingle,
+                }]);
             }
         }
 
