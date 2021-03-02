@@ -535,6 +535,17 @@
 <span id="532">532</span>
 <span id="533">533</span>
 <span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -642,7 +653,7 @@
         <span class="ident">account_manager</span>::{<span class="ident">AccountManager</span>, <span class="ident">ManagerStorage</span>},
         <span class="ident">address</span>::{<span class="ident">Address</span>, <span class="ident">AddressBuilder</span>, <span class="ident">AddressWrapper</span>},
         <span class="ident">client</span>::<span class="ident">ClientOptionsBuilder</span>,
-        <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessagePayload</span>},
+        <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessagePayload</span>, <span class="ident">TransactionBuilderMetadata</span>},
         <span class="ident">signing</span>::<span class="ident">SignerType</span>,
     };
     <span class="kw">use</span> <span class="ident">iota</span>::{
@@ -1027,38 +1038,49 @@
     );
 
     <span class="kw">impl</span> <span class="ident">GenerateMessageBuilder</span> {
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Message</span> {
+        <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Message</span> {
             <span class="kw">let</span> <span class="ident">bech32_hrp</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">address</span>.<span class="ident">address</span>().<span class="ident">bech32_hrp</span>().<span class="ident">to_string</span>();
+            <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">MessageId</span>::<span class="ident">new</span>([<span class="number">0</span>; <span class="number">32</span>]);
+            <span class="kw">let</span> <span class="ident">tx_metadata</span> <span class="op">=</span> <span class="ident">TransactionBuilderMetadata</span> {
+                <span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">id</span>,
+                <span class="ident">bech32_hrp</span>,
+                <span class="ident">account_addresses</span>: <span class="kw-2">&amp;</span>[],
+                <span class="ident">client_options</span>: <span class="kw-2">&amp;</span><span class="ident">ClientOptionsBuilder</span>::<span class="ident">new</span>().<span class="ident">build</span>().<span class="ident">unwrap</span>(),
+            };
             <span class="ident">Message</span> {
-                <span class="ident">id</span>: <span class="ident">MessageId</span>::<span class="ident">new</span>([<span class="number">0</span>; <span class="number">32</span>]),
+                <span class="ident">id</span>,
                 <span class="ident">version</span>: <span class="number">1</span>,
                 <span class="ident">parents</span>: <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">MessageId</span>::<span class="ident">new</span>([<span class="number">0</span>; <span class="number">32</span>])],
                 <span class="ident">payload_length</span>: <span class="number">0</span>,
-                <span class="ident">payload</span>: <span class="prelude-val">Some</span>(<span class="ident">MessagePayload</span>::<span class="ident">new</span>(
-                    <span class="kw-2">&amp;</span><span class="ident">MessageId</span>::<span class="ident">new</span>([<span class="number">0</span>; <span class="number">32</span>]),
-                    <span class="ident">Payload</span>::<span class="ident">Transaction</span>(<span class="ident">Box</span>::<span class="ident">new</span>(
-                        <span class="ident">TransactionPayloadBuilder</span>::<span class="ident">new</span>()
-                            .<span class="ident">with_essence</span>(<span class="ident">Essence</span>::<span class="ident">Regular</span>(
-                                <span class="ident">iota</span>::<span class="ident">RegularEssence</span>::<span class="ident">builder</span>()
-                                    .<span class="ident">add_output</span>(
-                                        <span class="ident">SignatureLockedSingleOutput</span>::<span class="ident">new</span>(<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">address</span>.<span class="ident">address</span>().<span class="ident">as_ref</span>(), <span class="self">self</span>.<span class="ident">value</span>)
+                <span class="ident">payload</span>: <span class="prelude-val">Some</span>(
+                    <span class="ident">MessagePayload</span>::<span class="ident">new</span>(
+                        <span class="ident">Payload</span>::<span class="ident">Transaction</span>(<span class="ident">Box</span>::<span class="ident">new</span>(
+                            <span class="ident">TransactionPayloadBuilder</span>::<span class="ident">new</span>()
+                                .<span class="ident">with_essence</span>(<span class="ident">Essence</span>::<span class="ident">Regular</span>(
+                                    <span class="ident">iota</span>::<span class="ident">RegularEssence</span>::<span class="ident">builder</span>()
+                                        .<span class="ident">add_output</span>(
+                                            <span class="ident">SignatureLockedSingleOutput</span>::<span class="ident">new</span>(
+                                                <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">address</span>.<span class="ident">address</span>().<span class="ident">as_ref</span>(),
+                                                <span class="self">self</span>.<span class="ident">value</span>,
+                                            )
                                             .<span class="ident">unwrap</span>()
                                             .<span class="ident">into</span>(),
-                                    )
-                                    .<span class="ident">add_input</span>(<span class="ident">UTXOInput</span>::<span class="ident">new</span>(<span class="self">self</span>.<span class="ident">input_transaction_id</span>, <span class="number">0</span>).<span class="ident">unwrap</span>().<span class="ident">into</span>())
-                                    .<span class="ident">finish</span>()
-                                    .<span class="ident">unwrap</span>(),
-                            ))
-                            .<span class="ident">add_unlock_block</span>(<span class="ident">UnlockBlock</span>::<span class="ident">Signature</span>(<span class="ident">SignatureUnlock</span>::<span class="ident">Ed25519</span>(<span class="ident">Ed25519Signature</span>::<span class="ident">new</span>(
-                                [<span class="number">0</span>; <span class="number">32</span>],
-                                <span class="ident">Box</span>::<span class="ident">new</span>([<span class="number">0</span>]),
-                            ))))
-                            .<span class="ident">finish</span>()
-                            .<span class="ident">unwrap</span>(),
-                    )),
-                    <span class="ident">bech32_hrp</span>,
-                    <span class="kw-2">&amp;</span>[],
-                )),
+                                        )
+                                        .<span class="ident">add_input</span>(<span class="ident">UTXOInput</span>::<span class="ident">new</span>(<span class="self">self</span>.<span class="ident">input_transaction_id</span>, <span class="number">0</span>).<span class="ident">unwrap</span>().<span class="ident">into</span>())
+                                        .<span class="ident">finish</span>()
+                                        .<span class="ident">unwrap</span>(),
+                                ))
+                                .<span class="ident">add_unlock_block</span>(<span class="ident">UnlockBlock</span>::<span class="ident">Signature</span>(<span class="ident">SignatureUnlock</span>::<span class="ident">Ed25519</span>(
+                                    <span class="ident">Ed25519Signature</span>::<span class="ident">new</span>([<span class="number">0</span>; <span class="number">32</span>], <span class="ident">Box</span>::<span class="ident">new</span>([<span class="number">0</span>])),
+                                )))
+                                .<span class="ident">finish</span>()
+                                .<span class="ident">unwrap</span>(),
+                        )),
+                        <span class="kw-2">&amp;</span><span class="ident">tx_metadata</span>,
+                    )
+                    .<span class="kw">await</span>
+                    .<span class="ident">unwrap</span>(),
+                ),
                 <span class="ident">timestamp</span>: <span class="ident">chrono</span>::<span class="ident">Utc</span>::<span class="ident">now</span>(),
                 <span class="ident">nonce</span>: <span class="number">0</span>,
                 <span class="ident">value</span>: <span class="self">self</span>.<span class="ident">value</span>,
