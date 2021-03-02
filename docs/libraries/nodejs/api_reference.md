@@ -28,6 +28,7 @@ Supported event names:
 - ConfirmationStateChange
 - Reattachment
 - Broadcast
+- TransferProgress
 
 ### AccountManager
 

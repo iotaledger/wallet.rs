@@ -218,7 +218,8 @@ export declare type Event = 'ErrorThrown' |
   'NewTransaction' |
   'ConfirmationStateChange' |
   'Reattachment' |
-  'Broadcast'
+  'Broadcast' |
+  'TransferProgress'
 
 export interface LoggerOutput {
   name?: string

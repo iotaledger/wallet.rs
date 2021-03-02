@@ -5,6 +5,7 @@ use crate::{
     account::Account,
     address::{Address, AddressOutput, AddressWrapper, IotaAddress},
     client::ClientOptions,
+    event::{emit_transfer_progress, TransferProgressType},
 };
 use bee_common::packable::Packable;
 use chrono::prelude::{DateTime, Utc};
@@ -56,6 +57,8 @@ pub struct TransferBuilder {
     remainder_value_strategy: RemainderValueStrategy,
     /// The input to use (skips input selection)
     input: Option<(AddressWrapper, Vec<AddressOutput>)>,
+    /// Whether the transfer should emit events or not.
+    with_events: bool,
 }
 
 impl<'de> Deserialize<'de> for TransferBuilder {
@@ -113,6 +116,7 @@ impl<'de> Deserialize<'de> for TransferBuilder {
                 },
                 remainder_value_strategy: builder.remainder_value_strategy,
                 input: None,
+                with_events: true,
             })
         })
     }
@@ -127,6 +131,7 @@ impl TransferBuilder {
             indexation: None,
             remainder_value_strategy: RemainderValueStrategy::ChangeAddress,
             input: None,
+            with_events: true,
         }
     }
 
@@ -148,6 +153,11 @@ impl TransferBuilder {
         self
     }
 
+    pub(crate) fn with_events(mut self, flag: bool) -> Self {
+        self.with_events = flag;
+        self
+    }
+
     /// Builds the transfer.
     pub fn finish(self) -> Transfer {
         Transfer {
@@ -156,6 +166,7 @@ impl TransferBuilder {
             indexation: self.indexation,
             remainder_value_strategy: self.remainder_value_strategy,
             input: self.input,
+            with_events: self.with_events,
         }
     }
 }
@@ -173,12 +184,20 @@ pub struct Transfer {
     pub(crate) remainder_value_strategy: RemainderValueStrategy,
     /// The addresses to use as input.
     pub(crate) input: Option<(AddressWrapper, Vec<AddressOutput>)>,
+    /// Whether the transfer should emit events or not.
+    pub(crate) with_events: bool,
 }
 
 impl Transfer {
     /// Initialises the transfer builder.
     pub fn builder(address: AddressWrapper, amount: NonZeroU64) -> TransferBuilder {
         TransferBuilder::new(address, amount)
+    }
+
+    pub(crate) async fn emit_event_if_needed(&self, account_id: String, event: TransferProgressType) {
+        if self.with_events {
+            emit_transfer_progress(account_id, event).await;
+        }
     }
 }
 
