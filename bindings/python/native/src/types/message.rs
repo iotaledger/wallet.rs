@@ -208,7 +208,7 @@ impl TryFrom<RustWalletTransactionEssence> for Essence {
                             Input {
                                 transaction_id: input.input.output_id().transaction_id().to_string(),
                                 index: input.input.output_id().index(),
-                                metadata: input.metadata.map(|m| m.into()),
+                                metadata: input.metadata.map(|m| (&m).into()),
                             }
                         } else {
                             unreachable!()
