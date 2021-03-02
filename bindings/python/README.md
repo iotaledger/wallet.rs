@@ -12,7 +12,7 @@ Currently the package isn't published so you'd need to build by yourself.
 
 - Go to `bindings/python/native`
 - $ cargo build --release
-- The built library is located in `target/release/` On MacOS, rename `libiota_wallet.dylib` to `iota_wallet.so`, on Windows, use `iota_wallet.dll` directly, and on Linux, rename `libiota_wallet.so` to `iota_wallet.so`.
+- The built library is located in `target/release/` On MacOS, rename `libiota_wallet.dylib` to `iota_wallet.so`, on Windows rename `iota_wallet.dll` to `iota_wallet.pyd`, and on Linux, rename `libiota_wallet.so` to `iota_wallet.so`.
 - Copy your renamed library to `bindings/python/examples/``
 - Go to `binding/python/examples`
 - `$ python account_operations.py`
