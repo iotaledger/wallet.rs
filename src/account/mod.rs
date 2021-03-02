@@ -5,6 +5,7 @@ use crate::{
     account_manager::AccountStore,
     address::{Address, AddressBuilder, AddressWrapper},
     client::ClientOptions,
+    event::TransferProgressType,
     message::{Message, MessageType, Transfer},
     signing::{GenerateAddressMetadata, SignerType},
 };
@@ -412,7 +413,12 @@ impl AccountHandle {
 
     /// Send messages.
     pub async fn transfer(&self, transfer_obj: Transfer) -> crate::Result<Message> {
-        self.sync().await.execute().await?.transfer(transfer_obj).await
+        let account_id = self.id().await;
+        transfer_obj
+            .emit_event_if_needed(account_id.clone(), TransferProgressType::SyncingAccount)
+            .await;
+        let synced = self.sync().await.execute().await?;
+        synced.transfer(transfer_obj).await
     }
 
     /// Retry message.

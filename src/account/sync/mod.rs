@@ -6,7 +6,7 @@ use crate::{
     address::{Address, AddressBuilder, AddressOutput, AddressWrapper, OutputKind},
     event::{
         emit_balance_change, emit_confirmation_state_change, emit_transaction_event, BalanceChange,
-        TransactionEventType,
+        TransactionEventType, TransferProgressType,
     },
     message::{Message, RemainderValueStrategy, Transfer},
     signing::{GenerateAddressMetadata, SignMessageMetadata},
@@ -736,6 +736,7 @@ impl SyncedAccount {
                                 address.address().clone(),
                                 outputs.iter().map(|o| (*o).clone()).collect(),
                             )
+                            .with_events(false)
                             .finish(),
                         );
                     }
@@ -858,6 +859,9 @@ impl SyncedAccount {
                 }
             }
             None => {
+                transfer_obj
+                    .emit_event_if_needed(account_.id().to_string(), TransferProgressType::SelectingInputs)
+                    .await;
                 // select the input addresses and check if a remainder address is needed
                 let (input_addresses, remainder_address) = self.select_inputs(
                     &mut locked_addresses,
@@ -1067,7 +1071,7 @@ async fn perform_transfer(
 
         log::debug!("[TRANSFER] remainder value is {}", remainder_value);
 
-        let remainder_deposit_address = match transfer_obj.remainder_value_strategy {
+        let remainder_deposit_address = match transfer_obj.remainder_value_strategy.clone() {
             // use one of the account's addresses to send the remainder value
             RemainderValueStrategy::AccountAddress(target_address) => {
                 log::debug!(
@@ -1082,6 +1086,12 @@ async fn perform_transfer(
                     let mut deposit_address = account_.latest_address().address().clone();
                     // if the latest address is the transfer's address, we'll generate a new one as remainder deposit
                     if deposit_address == transfer_obj.address {
+                        transfer_obj
+                            .emit_event_if_needed(
+                                account_.id().to_string(),
+                                TransferProgressType::GeneratingRemainderDepositAddress,
+                            )
+                            .await;
                         account_handle.generate_address_internal(&mut account_).await?;
                         deposit_address = account_.latest_address().address().clone();
                     }
@@ -1097,6 +1107,12 @@ async fn perform_transfer(
                 {
                     address.address().clone()
                 } else {
+                    transfer_obj
+                        .emit_event_if_needed(
+                            account_.id().to_string(),
+                            TransferProgressType::GeneratingRemainderDepositAddress,
+                        )
+                        .await;
                     let change_address = crate::address::get_new_change_address(
                         &account_,
                         &remainder_address,
@@ -1151,13 +1167,16 @@ async fn perform_transfer(
         is_dust_allowed(&account_, &client, address, created_or_consumed_outputs).await?;
     }
 
-    if let Some(indexation) = transfer_obj.indexation {
-        essence_builder = essence_builder.with_payload(Payload::Indexation(Box::new(indexation)));
+    if let Some(indexation) = &transfer_obj.indexation {
+        essence_builder = essence_builder.with_payload(Payload::Indexation(Box::new(indexation.clone())));
     }
 
     let essence = essence_builder.finish()?;
     let essence = Essence::Regular(essence);
 
+    transfer_obj
+        .emit_event_if_needed(account_.id().to_string(), TransferProgressType::SigningTransaction)
+        .await;
     let unlock_blocks = crate::signing::get_signer(account_.signer_type())
         .await
         .lock()
@@ -1187,10 +1206,16 @@ async fn perform_transfer(
     }
     let transaction = tx_builder.finish()?;
 
+    transfer_obj
+        .emit_event_if_needed(account_.id().to_string(), TransferProgressType::PerformingPoW)
+        .await;
     let message = finish_pow(&client, Some(Payload::Transaction(Box::new(transaction)))).await?;
 
     log::debug!("[TRANSFER] submitting message {:#?}", message);
 
+    transfer_obj
+        .emit_event_if_needed(account_.id().to_string(), TransferProgressType::Broadcasting)
+        .await;
     let message_id = client.post_message(&message).await?;
 
     // if this is a transfer to the account's latest address or we used the latest as deposit of the remainder

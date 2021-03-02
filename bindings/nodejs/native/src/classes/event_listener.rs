@@ -11,7 +11,7 @@ use std::{
 
 use iota_wallet::event::{
     on_balance_change, on_broadcast, on_confirmation_state_change, on_error, on_new_transaction, on_reattachment,
-    EventId,
+    on_transfer_progress, EventId,
 };
 use neon::prelude::*;
 
@@ -22,6 +22,7 @@ pub enum EventType {
     ConfirmationStateChange,
     Reattachment,
     Broadcast,
+    TransferProgress,
 }
 
 impl TryFrom<&str> for EventType {
@@ -35,6 +36,7 @@ impl TryFrom<&str> for EventType {
             "ConfirmationStateChange" => EventType::ConfirmationStateChange,
             "Reattachment" => EventType::Reattachment,
             "Broadcast" => EventType::Broadcast,
+            "TransferProgress" => EventType::TransferProgress,
             _ => return Err(format!("invalid event name {}", value)),
         };
         Ok(event_type)
@@ -72,6 +74,12 @@ async fn listen(event_type: EventType, sender: Sender<String>) -> EventId {
         }
         EventType::Broadcast => {
             on_broadcast(move |event| {
+                let _ = sender.send(serde_json::to_string(&event).unwrap());
+            })
+            .await
+        }
+        EventType::TransferProgress => {
+            on_transfer_progress(move |event| {
                 let _ = sender.send(serde_json::to_string(&event).unwrap());
             })
             .await
