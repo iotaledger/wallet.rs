@@ -297,18 +297,22 @@ impl AccountInitialiser {
     /// Messages associated with the seed.
     /// The account can be initialised with locally stored messages.
     fn messages(&mut self, messages: Vec<WalletMessage>) {
-        self.account_initialiser = Some(
-            self.account_initialiser.take().unwrap().messages(
-                messages
-                    .into_iter()
-                    .map(|msg| {
-                        // we use an empty bech32 HRP here because we update it later on wallet.rs
-                        to_rust_message(msg, "".to_string(), &self.addresses)
-                            .unwrap_or_else(|msg| panic!("AccountInitialiser: Message {:?} is invalid", msg))
-                    })
-                    .collect(),
-            ),
-        );
+        let mut account_initialiser = self.account_initialiser.take().unwrap();
+        let messages = messages
+            .into_iter()
+            .map(|msg| {
+                // we use an empty bech32 HRP here because we update it later on wallet.rs
+                to_rust_message(
+                    msg,
+                    "".to_string(),
+                    &self.addresses,
+                    &account_initialiser.client_options,
+                )
+                .unwrap_or_else(|msg| panic!("AccountInitialiser: Message {:?} is invalid", msg))
+            })
+            .collect();
+        account_initialiser = account_initialiser.messages(messages);
+        self.account_initialiser = Some(account_initialiser);
     }
 
     /// Address history associated with the seed.

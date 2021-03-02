@@ -3,7 +3,7 @@
 
 use crate::{
     account::Account,
-    message::{MessagePayload, MessageType, TransactionEssence},
+    message::{MessagePayload, MessageType, TransactionEssence, TransactionInput},
     signing::GenerateAddressMetadata,
 };
 use getset::{Getters, Setters};
@@ -82,8 +82,8 @@ impl AddressOutput {
                 match m.payload() {
                     Some(MessagePayload::Transaction(tx)) => match tx.essence() {
                         TransactionEssence::Regular(essence) => essence.inputs().iter().any(|input| {
-                            if let Input::UTXO(x) = input {
-                                x == &output_id
+                            if let TransactionInput::UTXO(x) = input {
+                                x.input == output_id
                             } else {
                                 false
                             }
@@ -436,7 +436,8 @@ mod tests {
         let spent_tx = crate::test_utils::GenerateMessageBuilder::default()
             .address(address.clone())
             .incoming(false)
-            .build();
+            .build()
+            .await;
 
         account_handle.write().await.append_messages(vec![spent_tx]);
 

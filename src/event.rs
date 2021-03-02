@@ -538,7 +538,7 @@ mod tests {
         let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
         let account = account_handle.read().await;
         let account_id = account.id().to_string();
-        let message = crate::test_utils::GenerateMessageBuilder::default().build();
+        let message = crate::test_utils::GenerateMessageBuilder::default().build().await;
         let message_ = message.clone();
 
         on_new_transaction(move |event| {
@@ -558,7 +558,7 @@ mod tests {
         let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
         let account = account_handle.read().await;
         let account_id = account.id().to_string();
-        let message = crate::test_utils::GenerateMessageBuilder::default().build();
+        let message = crate::test_utils::GenerateMessageBuilder::default().build().await;
         let message_ = message.clone();
 
         on_reattachment(move |event| {
@@ -578,7 +578,7 @@ mod tests {
         let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
         let account = account_handle.read().await;
         let account_id = account.id().to_string();
-        let message = crate::test_utils::GenerateMessageBuilder::default().build();
+        let message = crate::test_utils::GenerateMessageBuilder::default().build().await;
         let message_ = message.clone();
 
         on_broadcast(move |event| {
@@ -598,7 +598,7 @@ mod tests {
         let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
         let account = account_handle.read().await;
         let account_id = account.id().to_string();
-        let message = crate::test_utils::GenerateMessageBuilder::default().build();
+        let message = crate::test_utils::GenerateMessageBuilder::default().build().await;
         let message_ = message.clone();
         let confirmed = true;
 

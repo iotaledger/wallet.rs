@@ -21,9 +21,11 @@ use iota_wallet::{
         Address as RustWalletAddress, AddressOutput as RustWalletAddressOutput, AddressWrapper as RustAddressWrapper,
         OutputKind as RustOutputKind,
     },
+    client::ClientOptions as RustWalletClientOptions,
     message::{
         Message as RustWalletMessage, MessagePayload as RustWalletPayload,
         MessageTransactionPayload as RustWalletMessageTransactionPayload,
+        TransactionBuilderMetadata as RustWalletTransactionBuilderMetadata,
         TransactionEssence as RustWalletTransactionEssence, TransactionOutput as RustWalletOutput,
     },
 };
@@ -309,6 +311,7 @@ pub fn to_rust_message(
     msg: WalletMessage,
     bech32_hrp: String,
     account_addresses: &[RustWalletAddress],
+    client_options: &RustWalletClientOptions,
 ) -> Result<RustWalletMessage> {
     let mut parents = Vec::new();
     for parent in msg.parents {
@@ -316,7 +319,13 @@ pub fn to_rust_message(
     }
     let id = MessageId::from_str(&msg.id)?;
     let payload = match msg.payload {
-        Some(payload) => Some(to_rust_payload(&id, payload, bech32_hrp, account_addresses)?),
+        Some(payload) => Some(to_rust_payload(
+            &id,
+            payload,
+            bech32_hrp,
+            account_addresses,
+            client_options,
+        )?),
         None => None,
     };
     Ok(RustWalletMessage {
@@ -449,6 +458,7 @@ pub fn to_rust_payload(
     payload: Payload,
     bech32_hrp: Bech32HRP,
     account_addresses: &[RustWalletAddress],
+    client_options: &RustWalletClientOptions,
 ) -> Result<RustWalletPayload> {
     if let Some(transaction_payload) = &payload.transaction {
         let mut transaction = RustTransactionPayload::builder();
@@ -458,8 +468,14 @@ pub fn to_rust_payload(
         for unlock_block in unlock_blocks {
             transaction = transaction.add_unlock_block(unlock_block.try_into()?);
         }
+        let metadata = RustWalletTransactionBuilderMetadata {
+            id: message_id,
+            bech32_hrp,
+            account_addresses,
+            client_options,
+        };
         Ok(RustWalletPayload::Transaction(Box::new(
-            RustWalletMessageTransactionPayload::new(message_id, &transaction.finish()?, bech32_hrp, account_addresses),
+            RustWalletMessageTransactionPayload::new(&transaction.finish()?, &metadata),
         )))
     } else {
         let indexation = RustIndexationPayload::new(
