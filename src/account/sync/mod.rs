@@ -4,6 +4,10 @@
 use crate::{
     account::{Account, AccountHandle},
     address::{Address, AddressBuilder, AddressOutput, AddressWrapper, OutputKind},
+    event::{
+        emit_balance_change, emit_confirmation_state_change, emit_transaction_event, BalanceChange,
+        TransactionEventType,
+    },
     message::{Message, RemainderValueStrategy, Transfer},
     signing::{GenerateAddressMetadata, SignMessageMetadata},
 };
@@ -509,6 +513,62 @@ impl AccountSynchronizer {
 
                 let account_ref = self.account_handle.read().await;
 
+                let new_messages = account_ref
+                    .messages()
+                    .iter()
+                    .filter(|m| {
+                        !messages_before_sync
+                            .iter()
+                            .any(|(id, confirmed)| id == m.id() && confirmed == m.confirmed())
+                    })
+                    .cloned()
+                    .collect::<Vec<Message>>();
+
+                // balance event
+                for (address_before_sync, before_sync_balance, _) in &addresses_before_sync {
+                    let address_after_sync = account_ref
+                        .addresses()
+                        .iter()
+                        .find(|addr| &addr.address().to_bech32() == address_before_sync)
+                        .unwrap();
+                    if address_after_sync.balance() != before_sync_balance {
+                        log::debug!(
+                            "[SYNC] address {} balance changed from {} to {}",
+                            address_before_sync,
+                            before_sync_balance,
+                            address_after_sync.balance()
+                        );
+                        emit_balance_change(
+                            &account_ref,
+                            address_after_sync.address(),
+                            if address_after_sync.balance() > before_sync_balance {
+                                BalanceChange::received(address_after_sync.balance() - before_sync_balance)
+                            } else {
+                                BalanceChange::spent(before_sync_balance - address_after_sync.balance())
+                            },
+                        )
+                        .await?;
+                    }
+                }
+
+                // new messages event
+                for message in &new_messages {
+                    log::info!("[SYNC] new message: {:?}", message.id());
+                    emit_transaction_event(TransactionEventType::NewTransaction, &account_ref, message).await?;
+                }
+
+                // confirmation state change event
+                for message in account_ref.messages() {
+                    let changed = match messages_before_sync.iter().find(|(id, _)| id == message.id()) {
+                        Some((_, confirmed)) => message.confirmed() != confirmed,
+                        None => false,
+                    };
+                    if changed {
+                        log::info!("[POLLING] message confirmed: {:?}", message.id());
+                        emit_confirmation_state_change(&account_ref, &message, true).await?;
+                    }
+                }
+
                 let synced_account = SyncedAccount {
                     id: account_ref.id().to_string(),
                     index: *account_ref.index(),
@@ -529,16 +589,7 @@ impl AccountSynchronizer {
                         })
                         .cloned()
                         .collect(),
-                    messages: account_ref
-                        .messages()
-                        .iter()
-                        .filter(|m| {
-                            !messages_before_sync
-                                .iter()
-                                .any(|(id, confirmed)| id == m.id() && confirmed == m.confirmed())
-                        })
-                        .cloned()
-                        .collect(),
+                    messages: new_messages,
                 };
                 Ok(synced_account)
             }
@@ -688,7 +739,7 @@ impl SyncedAccount {
     }
 
     /// Consolidate account outputs.
-    pub async fn consolidate_outputs(&self) -> crate::Result<Vec<Message>> {
+    pub(crate) async fn consolidate_outputs(&self) -> crate::Result<Vec<Message>> {
         let mut tasks = Vec::new();
         // run the transfers in parallel
         for transfer in self.get_output_consolidation_transfers().await? {
@@ -705,7 +756,7 @@ impl SyncedAccount {
     }
 
     /// Send messages.
-    pub async fn transfer(&self, mut transfer_obj: Transfer) -> crate::Result<Message> {
+    pub(super) async fn transfer(&self, mut transfer_obj: Transfer) -> crate::Result<Message> {
         let account_ = self.account_handle.read().await;
 
         // lock the transfer process until we select the input addresses
@@ -860,17 +911,17 @@ impl SyncedAccount {
     }
 
     /// Retry message.
-    pub async fn retry(&self, message_id: &MessageId) -> crate::Result<Message> {
+    pub(crate) async fn retry(&self, message_id: &MessageId) -> crate::Result<Message> {
         repost_message(self.account_handle.clone(), message_id, RepostAction::Retry).await
     }
 
     /// Promote message.
-    pub async fn promote(&self, message_id: &MessageId) -> crate::Result<Message> {
+    pub(super) async fn promote(&self, message_id: &MessageId) -> crate::Result<Message> {
         repost_message(self.account_handle.clone(), message_id, RepostAction::Promote).await
     }
 
     /// Reattach message.
-    pub async fn reattach(&self, message_id: &MessageId) -> crate::Result<Message> {
+    pub(super) async fn reattach(&self, message_id: &MessageId) -> crate::Result<Message> {
         repost_message(self.account_handle.clone(), message_id, RepostAction::Reattach).await
     }
 }
