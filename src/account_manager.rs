@@ -656,7 +656,7 @@ impl AccountManager {
             let account_handle = self.get_account(account_id).await?;
             let account = account_handle.read().await;
 
-            if !(account.messages().is_empty() && account.balance().total == 0) {
+            if !(account.messages().is_empty() && account.addresses().iter().all(|a| a.outputs.is_empty())) {
                 return Err(crate::Error::AccountNotEmpty);
             }
 
