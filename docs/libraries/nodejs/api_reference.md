@@ -35,11 +35,14 @@ Supported event names:
 
 Creates a new instance of the AccountManager.
 
-| Param         | Type                | Default                | Description                                           |
-| ------------- | ------------------- | ---------------------- | ----------------------------------------------------- |
-| [options]     | <code>object</code> | <code>undefined</code> | The options to configure the account manager          |
-| [storagePath] | <code>string</code> | <code>undefined</code> | The path where the database file will be saved        |
-| [storageType] | <code>number</code> | <code>undefined</code> | The type of the database.  Stronghold = 1, Sqlite = 2 |
+| Param                          | Type                 | Default                | Description                                                                               |
+| ------------------------------ | -------------------- | ---------------------- | ----------------------------------------------------------------------------------------- |
+| [options]                      | <code>object</code>  | <code>undefined</code> | The options to configure the account manager                                              |
+| [storagePath]                  | <code>string</code>  | <code>undefined</code> | The path where the database file will be saved                                            |
+| [storageType]                  | <code>number</code>  | <code>undefined</code> | The type of the database.  Stronghold = 1, Sqlite = 2                                     |
+| [storagePassword]              | <code>string</code>  | <code>undefined</code> | The storage password                                                                      |
+| [outputConsolidationThreshold] | <code>number</code>  | <code>100</code>       | The number of outputs an address must have to trigger the automatic consolidation process |
+| [automaticOutputConsolidation] | <code>boolean</code> | <code>true</code>      | Disables the automatic output consolidation if false                                      |
 
 #### setStrongholdPassword(password): void
 
@@ -162,6 +165,106 @@ Updates the client options for all accounts.
 | ------- | -------------------------------------------- | ----------------- | ------------------------------ |
 | options | <code>[ClientOptions](#clientoptions)</code> | <code>null</code> | The new account client options |
 
+#### getBalanceChangeEvents([count, skip, fromTimestamp])
+
+Gets the persisted balance change events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, address: string, balanceChange: { spent: number, received: number } }
+
+#### getBalanceChangeEventCount([fromTimestamp])
+
+Gets the number of persisted balance change events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+#### getTransactionConfirmationEvents([count, skip, fromTimestamp])
+
+Gets the persisted transaction confirmation change events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, message: Message, confirmed: boolean }
+
+#### getTransactionConfirmationEventCount([fromTimestamp])
+
+Gets the number of persisted transaction confirmation change events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+#### getNewTransactionEvents([count, skip, fromTimestamp])
+
+Gets the persisted new transaction events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, message: Message }
+
+#### getNewTransactionEventCount([fromTimestamp])
+
+Gets the number of persisted new transaction events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+#### getReattachmentEvents([count, skip, fromTimestamp])
+
+Gets the persisted transaction reattachment events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, message: Message }
+
+#### getReattachmentEventCount([fromTimestamp])
+
+Gets the number of persisted transaction reattachment events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+#### getBroadcastEvents([count, skip, fromTimestamp])
+
+Gets the persisted transaction broadcast events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, message: Message }
+
+#### getBroadcastEventCount([fromTimestamp])
+
+Gets the number of persisted transaction broadcast events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
 ### SyncedAccount
 
 #### send(address, amount[, options])
@@ -216,6 +319,9 @@ Promote the given message.
 | --------- | ------------------- | ----------------- | ------------------------ |
 | messageId | <code>string</code> | <code>null</code> | The message's identifier |
 
+#### consolidateOutputs()
+
+Consolidate the outputs on all account addresses.
 
 ### Account
 

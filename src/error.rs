@@ -82,7 +82,7 @@ pub enum Error {
     LatestAccountIsEmpty,
     /// Account not found
     #[error("account not found")]
-    AccountNotFound,
+    RecordNotFound,
     /// invalid remainder value target address defined on `RemainderValueStrategy`.
     /// the address must belong to the account.
     #[error("the remainder value address doesn't belong to the account")]
@@ -131,12 +131,12 @@ pub enum Error {
         "storage adapter not set for path `{0}`; please use the method `with_storage` on the AccountManager builder"
     )]
     StorageAdapterNotSet(PathBuf),
-    /// error decrypting stored account using provided encryptionKey
-    #[error("failed to decrypt account: {0}")]
-    AccountDecrypt(String),
-    /// error encrypting stored account using provided encryptionKey
-    #[error("failed to encrypt account: {0}")]
-    AccountEncrypt(String),
+    /// error decrypting stored record using provided encryptionKey
+    #[error("failed to decrypt record: {0}")]
+    RecordDecrypt(String),
+    /// error encrypting stored record using provided encryptionKey
+    #[error("failed to encrypt record: {0}")]
+    RecordEncrypt(String),
     /// Can't use AccountManager API because the storage is encrypted
     #[error(
         "can't perform operation while storage is encrypted; use AccountManager::set_storage_password to decrypt storage"
@@ -193,7 +193,7 @@ impl From<iota::message::Error> for Error {
 impl From<crate::stronghold::Error> for Error {
     fn from(error: crate::stronghold::Error) -> Self {
         match error {
-            crate::stronghold::Error::AccountNotFound => Self::AccountNotFound,
+            crate::stronghold::Error::RecordNotFound => Self::RecordNotFound,
             _ => Self::StrongholdError(error),
         }
     }
@@ -251,7 +251,7 @@ impl serde::Serialize for Error {
             Self::InsufficientFunds => serialize_variant(self, serializer, "InsufficientFunds"),
             Self::AccountNotEmpty => serialize_variant(self, serializer, "AccountNotEmpty"),
             Self::LatestAccountIsEmpty => serialize_variant(self, serializer, "LatestAccountIsEmpty"),
-            Self::AccountNotFound => serialize_variant(self, serializer, "AccountNotFound"),
+            Self::RecordNotFound => serialize_variant(self, serializer, "RecordNotFound"),
             Self::InvalidRemainderValueAddress => serialize_variant(self, serializer, "InvalidRemainderValueAddress"),
             Self::Storage(_) => serialize_variant(self, serializer, "Storage"),
             Self::Panic(_) => serialize_variant(self, serializer, "Panic"),
@@ -269,8 +269,8 @@ impl serde::Serialize for Error {
             Self::StorageAdapterNotDefined => serialize_variant(self, serializer, "StorageAdapterNotDefined"),
             Self::StorageExists => serialize_variant(self, serializer, "StorageExists"),
             Self::StorageAdapterNotSet(_) => serialize_variant(self, serializer, "StorageAdapterNotSet"),
-            Self::AccountDecrypt(_) => serialize_variant(self, serializer, "AccountDecrypt"),
-            Self::AccountEncrypt(_) => serialize_variant(self, serializer, "AccountEncrypt"),
+            Self::RecordDecrypt(_) => serialize_variant(self, serializer, "RecordDecrypt"),
+            Self::RecordEncrypt(_) => serialize_variant(self, serializer, "RecordEncrypt"),
             Self::StorageIsEncrypted => serialize_variant(self, serializer, "StorageIsEncrypted"),
             Self::CannotUseIndexIdentifier => serialize_variant(self, serializer, "CannotUseIndexIdentifier"),
             #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
