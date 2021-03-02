@@ -5,3 +5,6 @@ It offers abstractions to handle IOTA payments and can optionally interact with 
 
 
 ![wallet.rs overview](overview.drawio.svg)
+
+
+![iota layers overview](iota_layers_overview.svg)

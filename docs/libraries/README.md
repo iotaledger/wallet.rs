@@ -1,6 +1,7 @@
-# IOTA Wallet libraries
+# IOTA Wallet Libraries
 
 We currently support the following libraries:
 
 - [Rust](./rust/) 
 - [Node.js](./nodejs/) 
+- [Python](./python/)
