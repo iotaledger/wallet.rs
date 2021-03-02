@@ -208,6 +208,16 @@ pub enum MessageType {
     },
     /// Updates the client options for all accounts.
     SetClientOptions(Box<ClientOptions>),
+    /// Call a Firefly plugin
+    #[cfg(any(feature = "plugin"))]
+    CallPlugin {
+        /// The plugin name.
+        plugin: String,
+        /// The method name
+        method: String,
+        /// An optional payload
+        payload: Option<String>,
+    },
 }
 
 impl Serialize for MessageType {
@@ -286,6 +296,12 @@ impl Serialize for MessageType {
             MessageType::SetClientOptions(_) => {
                 serializer.serialize_unit_variant("MessageType", 23, "SetClientOptions")
             }
+            #[cfg(any(feature = "plugin"))]
+            MessageType::CallPlugin {
+                plugin: _,
+                method: _,
+                payload: _,
+            } => serializer.serialize_unit_variant("MessageType", 24, "CallPlugin"),
         }
     }
 }
@@ -403,6 +419,9 @@ pub enum ResponseType {
     StrongholdPasswordChanged,
     /// SetClientOptions response.
     UpdatedAllClientOptions,
+    #[cfg(any(feature = "plugin"))]
+    /// Called a plugin
+    CalledPlugin(String),
 }
 
 /// The message type.
