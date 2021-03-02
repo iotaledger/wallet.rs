@@ -5,7 +5,7 @@ use crate::{
     account_manager::AccountStore,
     address::{Address, AddressBuilder, AddressWrapper},
     client::ClientOptions,
-    message::{Message, MessageType},
+    message::{Message, MessageType, Transfer},
     signing::{GenerateAddressMetadata, SignerType},
 };
 
@@ -405,6 +405,31 @@ impl AccountHandle {
         AccountSynchronizer::new(self.clone()).await
     }
 
+    /// Consolidate account outputs.
+    pub async fn consolidate_outputs(&self) -> crate::Result<Vec<Message>> {
+        self.sync().await.execute().await?.consolidate_outputs().await
+    }
+
+    /// Send messages.
+    pub async fn transfer(&self, transfer_obj: Transfer) -> crate::Result<Message> {
+        self.sync().await.execute().await?.transfer(transfer_obj).await
+    }
+
+    /// Retry message.
+    pub async fn retry(&self, message_id: &MessageId) -> crate::Result<Message> {
+        self.sync().await.execute().await?.retry(message_id).await
+    }
+
+    /// Promote message.
+    pub async fn promote(&self, message_id: &MessageId) -> crate::Result<Message> {
+        self.sync().await.execute().await?.promote(message_id).await
+    }
+
+    /// Reattach message.
+    pub async fn reattach(&self, message_id: &MessageId) -> crate::Result<Message> {
+        self.sync().await.execute().await?.reattach(message_id).await
+    }
+
     /// Gets a new unused address and links it to this account.
     pub async fn generate_address(&self) -> crate::Result<Address> {
         let mut account = self.inner.write().await;
@@ -562,7 +587,7 @@ impl Account {
 
     /// Returns the most recent address of the account.
     pub fn latest_address(&self) -> &Address {
-        // the addresses list is never empty because we generate an address on the accout creation
+        // the addresses list is never empty because we generate an address on the account creation
         self.addresses
             .iter()
             .filter(|a| !a.internal())

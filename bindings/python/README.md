@@ -251,12 +251,6 @@ Promote the given message.
 
 **Returns** the promoted [WalletMessage](#walletmessage).
 
-#### consolidate_outputs(): list[WalletMessage](#walletmessage)
-
-Consolidates the account addresses outputs.
-
-**Returns** the list of generated [WalletMessage](#walletmessage).
-
 ### AccountSynchronizer
 
 #### gap_limit(limit): void
@@ -323,45 +317,7 @@ The `Transfer` object used in [SyncedAccount](#syncedaccount)
 
 ### SyncedAccount
 
-#### transfer(transfer_obj): [WalletMessage](#walletmessage)
-
-Transfer tokens.
-
-| Param        | Type                               | Default                | Description                  |
-| ------------ | ---------------------------------- | ---------------------- | ---------------------------- |
-| transfer_obj | <code>[Transfer](#transfer)</code> | <code>undefined</code> | The transfer we want to make |
-
-**Returns** the [WalletMessage](#walletmessage) which makes the transfering.
-
-#### retry(message_id): [WalletMessage](#walletmessage)
-
-Retries (promotes or reattaches) the given message.
-
-| Param      | Type             | Default                | Description              |
-| ---------- | ---------------- | ---------------------- | ------------------------ |
-| message_id | <code>str</code> | <code>undefined</code> | The message's identifier |
-
-**Returns** the retried [WalletMessage](#walletmessage).
-
-#### reattach(message_id): [WalletMessage](#walletmessage)
-
-Reattach the given message.
-
-| Param      | Type             | Default                | Description              |
-| ---------- | ---------------- | ---------------------- | ------------------------ |
-| message_id | <code>str</code> | <code>undefined</code> | The message's identifier |
-
-**Returns** the reattached [WalletMessage](#walletmessage).
-
-#### promote(message_id): [WalletMessage](#walletmessage)
-
-Promote the given message.
-
-| Param      | Type             | Default                | Description              |
-| ---------- | ---------------- | ---------------------- | ------------------------ |
-| message_id | <code>str</code> | <code>undefined</code> | The message's identifier |
-
-**Returns** the promoted [WalletMessage](#walletmessage).
+The result of a `sync` operation on an Account.
 
 #### get_balance_change_events(count (optional), skip (optional), from_timestamp (optional))
 
@@ -468,6 +424,52 @@ Gets the number of persisted transaction broadcast events.
 #### sync(): [AccountSynchronizer](#accountsynchronizer)
 
 **Returns** the [AccountSynchronizer](#accountsynchronizer) to setup the process to synchronize this account with the Tangle.
+
+#### transfer(transfer_obj): [WalletMessage](#walletmessage)
+
+Transfer tokens.
+
+| Param        | Type                               | Default                | Description                  |
+| ------------ | ---------------------------------- | ---------------------- | ---------------------------- |
+| transfer_obj | <code>[Transfer](#transfer)</code> | <code>undefined</code> | The transfer we want to make |
+
+**Returns** the [WalletMessage](#walletmessage) which makes the transfering.
+
+#### retry(message_id): [WalletMessage](#walletmessage)
+
+Retries (promotes or reattaches) the given message.
+
+| Param      | Type             | Default                | Description              |
+| ---------- | ---------------- | ---------------------- | ------------------------ |
+| message_id | <code>str</code> | <code>undefined</code> | The message's identifier |
+
+**Returns** the retried [WalletMessage](#walletmessage).
+
+#### reattach(message_id): [WalletMessage](#walletmessage)
+
+Reattach the given message.
+
+| Param      | Type             | Default                | Description              |
+| ---------- | ---------------- | ---------------------- | ------------------------ |
+| message_id | <code>str</code> | <code>undefined</code> | The message's identifier |
+
+**Returns** the reattached [WalletMessage](#walletmessage).
+
+#### promote(message_id): [WalletMessage](#walletmessage)
+
+Promote the given message.
+
+| Param      | Type             | Default                | Description              |
+| ---------- | ---------------- | ---------------------- | ------------------------ |
+| message_id | <code>str</code> | <code>undefined</code> | The message's identifier |
+
+**Returns** the promoted [WalletMessage](#walletmessage).
+
+#### consolidate_outputs(): list[WalletMessage](#walletmessage)
+
+Consolidates the account addresses outputs.
+
+**Returns** the list of generated [WalletMessage](#walletmessage).
 
 #### generate_address(): [Address](#address)
 

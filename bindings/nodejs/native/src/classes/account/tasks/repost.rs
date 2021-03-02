@@ -14,7 +14,7 @@ pub enum RepostAction {
 }
 
 pub struct RepostTask {
-    pub synced_account_id: String,
+    pub account_id: String,
     pub message_id: MessageId,
     pub action: RepostAction,
 }
@@ -26,12 +26,11 @@ impl Task for RepostTask {
 
     fn perform(&self) -> Result<Self::Output, Self::Error> {
         crate::block_on(crate::convert_async_panics(|| async {
-            let synced = crate::get_synced_account(&self.synced_account_id).await;
-            let synced = synced.read().await;
+            let account = crate::get_account(&self.account_id).await;
             let message = match self.action {
-                RepostAction::Retry => synced.retry(&self.message_id).await?,
-                RepostAction::Reattach => synced.reattach(&self.message_id).await?,
-                RepostAction::Promote => synced.promote(&self.message_id).await?,
+                RepostAction::Retry => account.retry(&self.message_id).await?,
+                RepostAction::Reattach => account.reattach(&self.message_id).await?,
+                RepostAction::Promote => account.promote(&self.message_id).await?,
             };
 
             Ok(message)

@@ -103,6 +103,11 @@ export declare class Account {
   listMessages(count?: number, from?: number, messageType?: MessageType): Message[]
   listAddresses(unspent?: boolean): Address[]
   sync(options?: SyncOptions): Promise<SyncedAccount>
+  send(address: string, amount: number, options?: TransferOptions): Promise<Message>
+  retry(messageId: string): Promise<Message>
+  reattach(messageId: string): Promise<Message>
+  promote(messageId: string): Promise<Message>
+  consolidateOutputs(): Promise<Message[]>
   setAlias(alias: string): void
   setClientOptions(options: ClientOptions): void
   getMessage(id: string): Message | undefined
@@ -124,13 +129,7 @@ export declare class TransferOptions {
   indexation?: { index: string | number[] | Uint8Array, data?: string | number[] | Uint8Array }
 }
 
-export declare class SyncedAccount {
-  send(address: string, amount: number, options?: TransferOptions): Promise<Message>
-  retry(messageId: string): Promise<Message>
-  reattach(messageId: string): Promise<Message>
-  promote(messageId: string): Promise<Message>
-  consolidateOutputs(): Promise<Message[]>
-}
+export declare class SyncedAccount { }
 
 export declare interface ClientOptions {
   node?: string;

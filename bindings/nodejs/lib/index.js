@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 const addon = require('../build/Release')
-let { AccountManager, Account, SyncedAccount, EventListener, initLogger } = addon
+let { AccountManager, Account, EventListener, initLogger } = addon
 
 function promisify (fn) {
   return function () {
@@ -56,8 +56,8 @@ class RemainderValueStrategy {
 Account.prototype.sync = promisify(Account.prototype.sync)
 Account.prototype.isLatestAddressUnused = promisify(Account.prototype.isLatestAddressUnused)
 
-const send = SyncedAccount.prototype.send
-SyncedAccount.prototype.send = function (address, amount, options) {
+const send = Account.prototype.send
+Account.prototype.send = function (address, amount, options) {
   if (options && (typeof options === 'object') && options.indexation) {
     let index = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.index) :  options.indexation.index
     let data = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.data) :  options.indexation.data
@@ -76,10 +76,10 @@ SyncedAccount.prototype.send = function (address, amount, options) {
   }
 }
 
-SyncedAccount.prototype.retry = promisify(SyncedAccount.prototype.retry)
-SyncedAccount.prototype.reattach = promisify(SyncedAccount.prototype.reattach)
-SyncedAccount.prototype.promote = promisify(SyncedAccount.prototype.promote)
-SyncedAccount.prototype.consolidateOutputs = promisify(SyncedAccount.prototype.consolidateOutputs)
+Account.prototype.retry = promisify(Account.prototype.retry)
+Account.prototype.reattach = promisify(Account.prototype.reattach)
+Account.prototype.promote = promisify(Account.prototype.promote)
+Account.prototype.consolidateOutputs = promisify(Account.prototype.consolidateOutputs)
 
 const managerClass = AccountManager
 

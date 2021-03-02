@@ -5,7 +5,7 @@ use iota_wallet::{message::Message, Error};
 use neon::prelude::*;
 
 pub struct ConsolidateOutputsTask {
-    pub synced_account_id: String,
+    pub account_id: String,
 }
 
 impl Task for ConsolidateOutputsTask {
@@ -15,9 +15,7 @@ impl Task for ConsolidateOutputsTask {
 
     fn perform(&self) -> Result<Self::Output, Self::Error> {
         crate::block_on(crate::convert_async_panics(|| async {
-            let synced = crate::get_synced_account(&self.synced_account_id).await;
-            let synced = synced.read().await;
-            synced.consolidate_outputs().await
+            crate::get_account(&self.account_id).await.consolidate_outputs().await
         }))
     }
 
