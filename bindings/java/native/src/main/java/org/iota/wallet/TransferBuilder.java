@@ -24,6 +24,19 @@ public final class TransferBuilder {
     }
     private static native long do_with_remainder_value_strategy(long self, int strategy);
 
+    public final TransferBuilder with_indexation(IndexationPayload indexation) {
+        long a0 = indexation.mNativeObj;
+        indexation.mNativeObj = 0;
+
+        long ret = do_with_indexation(mNativeObj, a0);
+        TransferBuilder convRet = new TransferBuilder(InternalPointerMarker.RAW_PTR, ret);
+
+        JNIReachabilityFence.reachabilityFence1(indexation);
+
+        return convRet;
+    }
+    private static native long do_with_indexation(long self, long indexation);
+
     public final Transfer finish() {
         long ret = do_finish(mNativeObj);
         Transfer convRet = new Transfer(InternalPointerMarker.RAW_PTR, ret);

@@ -131,8 +131,7 @@ foreign_typemap!(
         $out = jobject_array_to_vec_of_objects(env, $p);
     };
     ($p:f_type, option = "NoNullAnnotations") <= "Message[]";
-    ($p:f_type, option = "NullAnnotations")
-                  <= "@NonNull Message[]";
+    ($p:f_type, option = "NullAnnotations") <= "@NonNull Message[]";
 );
 
 foreign_typemap!(
@@ -140,6 +139,5 @@ foreign_typemap!(
         $out = jobject_array_to_vec_of_objects(env, $p);
     };
     ($p:f_type, option = "NoNullAnnotations") <= "Address[]";
-    ($p:f_type, option = "NullAnnotations")
-                  <= "@NonNull Address[]";
+    ($p:f_type, option = "NullAnnotations") <= "@NonNull Address[]";
 );

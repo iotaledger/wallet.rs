@@ -3,25 +3,10 @@ package org.iota.wallet;
 
 
 public enum MessageType {
-        /**
-     * Message received.
-     */
     Received(0),
-        /**
-     * Message sent.
-     */
     Sent(1),
-        /**
-     * Message not broadcasted.
-     */
     Failed(2),
-        /**
-     * Message not confirmed.
-     */
     Unconfirmed(3),
-        /**
-     * A value message.
-     */
     Value(4);
 
     private final int value;

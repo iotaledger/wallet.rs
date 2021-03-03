@@ -9,6 +9,7 @@ use chrono::prelude::{DateTime, Utc, Local};
 use crate::{
     jni_c_header::*,
     client_options::*,
+    bee_types::*,
     acc::*,
     sync::*,
     acc_manager::*,
@@ -40,14 +41,6 @@ foreign_class!(class RustLogging {
         env_logger::init();
     }
 });
-
-/*
-foreign_enum!(
-    enum IotaAddress {
-        Ed25519 = IotaAddress::Ed25519,
-    }
-);
-*/
 
 foreign_enum!(
     enum RemainderValueStrategy {
@@ -81,15 +74,10 @@ foreign_enum!(
 
 foreign_enum!(
     enum MessageType {
-        /// Message received.
         Received = MessageType::Received,
-        /// Message sent.
         Sent = MessageType::Sent,
-        /// Message not broadcasted.
         Failed = MessageType::Failed,
-        /// Message not confirmed.
         Unconfirmed = MessageType::Unconfirmed,
-        /// A value message.
         Value = MessageType::Value,
     }
 );
@@ -183,7 +171,7 @@ foreign_class!(
         fn Message::version(&self) -> u64;
         fn Message::parents(&self) -> Vec<MessageId>;
         fn Message::payload_length(&self) -> usize;
-        //fn Message::payload(&self) -> Payload;
+        fn Message::payload(&self) -> Option<MessagePayload>;
         fn Message::timestamp(&self) -> DateTime<Utc>;
         fn Message::nonce(&self) -> u64;
         fn Message::confirmed(&self) -> Option<bool>;
@@ -194,6 +182,19 @@ foreign_class!(
     }
 );
 
+foreign_class!(
+    class MessagePayload {
+        self_type MessagePayload;
+        private constructor = empty;
+    }
+);
+
+foreign_class!(
+    class IndexationPayload {
+        self_type IndexationPayload;
+        private constructor = empty;
+    }
+);
 foreign_class!(
     #[derive(PartialEq)]
     class Address {
@@ -303,7 +304,7 @@ foreign_class!(
         self_type TransferBuilder;
         constructor TransferBuilder::new(address: AddressWrapper, amount: u64) -> TransferBuilder;
         fn TransferBuilder::with_remainder_value_strategy(&mut self, strategy: RemainderValueStrategy) -> TransferBuilder;
-        //TransferBuilder::with_indexation(&mut self, indexation: IndexationPayload) -> TransferBuilder;
+        fn TransferBuilder::with_indexation(&mut self, indexation: IndexationPayload) -> TransferBuilder;
         fn TransferBuilder::finish(&self) -> Transfer;
     }
 );

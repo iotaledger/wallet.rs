@@ -32,18 +32,7 @@ impl Address {
         Address {
             address: addr,
         }
-    }    
-/*
-    #[getset(set = "pub")]
-    balance: u64,
-    #[getset(set = "pub(crate)")]
-    key_index: usize,
-    /// Determines if an address is a public or an internal (change) address.
-    #[getset(set = "pub(crate)")]
-    internal: bool,
-    /// The address outputs.
-    #[getset(set = "pub(crate)")]
-    pub(crate) outputs: Vec<AddressOutput>,*/
+    }
 
     pub fn readable(&self) -> String {
         self.address.address().to_bech32()
@@ -64,6 +53,6 @@ impl Address {
     }
 
     pub fn address(&self) -> AddressWrapper {
-        self.address()
+        self.address.address().clone()
     }
 }

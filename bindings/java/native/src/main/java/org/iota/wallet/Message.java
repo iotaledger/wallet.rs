@@ -55,6 +55,19 @@ public final class Message {
     }
     private static native long do_payload_length(long self);
 
+    public final java.util.Optional<MessagePayload> payload() {
+        long ret = do_payload(mNativeObj);
+        java.util.Optional<MessagePayload> convRet;
+        if (ret != 0) {
+            convRet = java.util.Optional.of(new MessagePayload(InternalPointerMarker.RAW_PTR, ret));
+        } else {
+            convRet = java.util.Optional.empty();
+        }
+
+        return convRet;
+    }
+    private static native long do_payload(long self);
+
     public final java.util.Date timestamp() {
         long ret = do_timestamp(mNativeObj);
         java.util.Date convRet = new java.util.Date(ret);

@@ -9,11 +9,15 @@ use iota_wallet::{
         Message as MessageRust,
         Transfer as TransferRust,
         TransferBuilder as TransferBuilderRust,
-        MessageId, Payload,
+        MessageId,
     },
     address::{
         AddressWrapper
     }
+};
+
+use crate::bee_types::{
+    IndexationPayload, MessagePayload
 };
 
 use std::num::NonZeroU64;
@@ -27,11 +31,8 @@ pub enum RemainderValueStrategy {
 pub fn remainder_type_enum_to_type(strategy: RemainderValueStrategy) -> RemainderValueStrategyRust {
     match strategy {
         RemainderValueStrategy::ReuseAddress => RemainderValueStrategyRust::ReuseAddress,
-        RemainderValueStrategy::ChangeAddress => RemainderValueStrategyRust::ChangeAddress,
-
-        // Default to ChangeAddress
-        // TODO: Will break
-        _ => RemainderValueStrategyRust::ChangeAddress,
+        RemainderValueStrategy::ChangeAddress => RemainderValueStrategyRust::ChangeAddress
+        // TODO: Add strategy for sending to an address from an account
     }
 }
 
@@ -76,11 +77,10 @@ impl TransferBuilder {
         TransferBuilder::new_with_builder(new_builder)
     }
 
-    /*
     pub fn with_indexation(&mut self, indexation: IndexationPayload) -> Self {
-        let new_builder = self.builder.borrow_mut().take().unwrap().with_indexation(indexation);
+        let new_builder = self.builder.borrow_mut().take().unwrap().with_indexation(indexation.get_internal());
         TransferBuilder::new_with_builder(new_builder)
-    }*/
+    }
 
     /// Builds the transfer.
     pub fn finish(&self) -> Transfer {
@@ -123,8 +123,11 @@ impl Message {
     pub fn payload_length(&self) -> usize {
         *(self.message.payload_length())
     }
-    pub fn payload(&self) -> Payload {
-        self.message.payload().clone()
+    pub fn payload(&self) -> Option<MessagePayload> {
+        match self.message.payload() {
+            None => None,
+            Some(e) => Some(MessagePayload::new_with_internal(e.clone())),
+        }
     }
     pub fn timestamp(&self) -> DateTime<Utc> {
         *(self.message.timestamp())
@@ -151,6 +154,5 @@ impl Message {
     pub fn get_internal(self) -> MessageRust {
         // TODO: Find a way to not need clone
         self.message
- 
     }
 }
