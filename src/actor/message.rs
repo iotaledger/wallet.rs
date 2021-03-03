@@ -162,7 +162,7 @@ pub enum MessageType {
         #[serde(rename = "accountId")]
         account_id: AccountIdentifier,
         /// The transfer details.
-        transfer: TransferBuilder,
+        transfer: Box<TransferBuilder>,
     },
     /// Move funds on stored accounts.
     InternalTransfer {

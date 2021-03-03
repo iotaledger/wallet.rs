@@ -79,13 +79,6 @@ pub struct TransactionEvent {
     pub message: Message,
 }
 
-impl TransactionEvent {
-    #[doc(hidden)]
-    pub fn cloned_message(&self) -> Message {
-        self.message.clone()
-    }
-}
-
 /// A transaction-related event data.
 #[derive(Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
@@ -97,6 +90,35 @@ pub struct TransactionConfirmationChangeEvent {
     pub message: Message,
     /// The confirmed state of the transaction.
     pub confirmed: bool,
+}
+
+/// Transfer event type.
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum TransferProgressType {
+    /// Syncing account.
+    SyncingAccount,
+    /// Performing input selection.
+    SelectingInputs,
+    /// Generating remainder value deposit address.
+    GeneratingRemainderDepositAddress,
+    /// Signing the transaction.
+    SigningTransaction,
+    /// Performing PoW.
+    PerformingPoW,
+    /// Broadcasting.
+    Broadcasting,
+}
+
+/// Transfer event data.
+#[derive(Getters, Serialize, Deserialize)]
+#[getset(get = "pub")]
+pub struct TransferProgress {
+    #[serde(rename = "accountId")]
+    /// The associated account identifier.
+    pub account_id: String,
+    /// The transfer event type.
+    pub event: TransferProgressType,
 }
 
 trait EventHandler {
@@ -172,6 +194,14 @@ struct AddressConsolidationNeededHandler {
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 event_handler_impl!(AddressConsolidationNeededHandler);
 
+struct TransferProgressHandler {
+    id: EventId,
+    /// The on event callback.
+    on_event: Box<dyn Fn(&TransferProgress) + Send>,
+}
+
+event_handler_impl!(TransferProgressHandler);
+
 type BalanceListeners = Arc<Mutex<Vec<BalanceEventHandler>>>;
 type TransactionListeners = Arc<Mutex<Vec<TransactionEventHandler>>>;
 type TransactionConfirmationChangeListeners = Arc<Mutex<Vec<TransactionConfirmationChangeEventHandler>>>;
@@ -180,6 +210,7 @@ type ErrorListeners = Arc<StdMutex<Vec<ErrorHandler>>>;
 type StrongholdStatusChangeListeners = Arc<Mutex<Vec<StrongholdStatusChangeEventHandler>>>;
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 type AddressConsolidationNeededListeners = Arc<Mutex<Vec<AddressConsolidationNeededHandler>>>;
+type TransferProgressListeners = Arc<Mutex<Vec<TransferProgressHandler>>>;
 
 fn generate_event_id() -> EventId {
     let mut id = [0; 32];
@@ -227,8 +258,13 @@ fn stronghold_status_change_listeners() -> &'static StrongholdStatusChangeListen
 
 /// Gets the address consolodation needed listeners array.
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-fn on_address_consolidation_needed_listeners() -> &'static AddressConsolidationNeededListeners {
+fn address_consolidation_needed_listeners() -> &'static AddressConsolidationNeededListeners {
     static LISTENERS: Lazy<AddressConsolidationNeededListeners> = Lazy::new(Default::default);
+    &LISTENERS
+}
+
+fn transfer_progress_listeners() -> &'static TransferProgressListeners {
+    static LISTENERS: Lazy<TransferProgressListeners> = Lazy::new(Default::default);
     &LISTENERS
 }
 
@@ -460,7 +496,7 @@ pub async fn remove_stronghold_status_change_listener(id: &EventId) {
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
 pub async fn on_address_consolidation_needed<F: Fn(&AddressConsolidationNeeded) + Send + 'static>(cb: F) -> EventId {
-    let mut l = on_address_consolidation_needed_listeners().lock().await;
+    let mut l = address_consolidation_needed_listeners().lock().await;
     let id = generate_event_id();
     l.push(AddressConsolidationNeededHandler {
         id,
@@ -473,17 +509,43 @@ pub async fn on_address_consolidation_needed<F: Fn(&AddressConsolidationNeeded) 
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
 pub async fn remove_address_consolidation_needed_listener(id: &EventId) {
-    remove_event_listener(id, on_address_consolidation_needed_listeners()).await;
+    remove_event_listener(id, address_consolidation_needed_listeners()).await;
 }
 
 /// Emits a balance change event.
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 pub(crate) async fn emit_address_consolidation_needed(account: &Account, address: AddressWrapper) {
-    let listeners = on_address_consolidation_needed_listeners().lock().await;
+    let listeners = address_consolidation_needed_listeners().lock().await;
     let event = AddressConsolidationNeeded {
         account_id: account.id().to_string(),
         address,
     };
+
+    for listener in listeners.deref() {
+        (listener.on_event)(&event);
+    }
+}
+
+/// Listen to a transfer event.
+pub async fn on_transfer_progress<F: Fn(&TransferProgress) + Send + 'static>(cb: F) -> EventId {
+    let mut l = transfer_progress_listeners().lock().await;
+    let id = generate_event_id();
+    l.push(TransferProgressHandler {
+        id,
+        on_event: Box::new(cb),
+    });
+    id
+}
+
+/// Remove a transfer event listener.
+pub async fn remove_transfer_progress_listener(id: &EventId) {
+    remove_event_listener(id, transfer_progress_listeners()).await;
+}
+
+/// Emit a transfer event.
+pub(crate) async fn emit_transfer_progress(account_id: String, event: TransferProgressType) {
+    let listeners = transfer_progress_listeners().lock().await;
+    let event = TransferProgress { account_id, event };
 
     for listener in listeners.deref() {
         (listener.on_event)(&event);
@@ -538,7 +600,7 @@ mod tests {
         let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
         let account = account_handle.read().await;
         let account_id = account.id().to_string();
-        let message = crate::test_utils::GenerateMessageBuilder::default().build();
+        let message = crate::test_utils::GenerateMessageBuilder::default().build().await;
         let message_ = message.clone();
 
         on_new_transaction(move |event| {
@@ -558,7 +620,7 @@ mod tests {
         let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
         let account = account_handle.read().await;
         let account_id = account.id().to_string();
-        let message = crate::test_utils::GenerateMessageBuilder::default().build();
+        let message = crate::test_utils::GenerateMessageBuilder::default().build().await;
         let message_ = message.clone();
 
         on_reattachment(move |event| {
@@ -578,7 +640,7 @@ mod tests {
         let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
         let account = account_handle.read().await;
         let account_id = account.id().to_string();
-        let message = crate::test_utils::GenerateMessageBuilder::default().build();
+        let message = crate::test_utils::GenerateMessageBuilder::default().build().await;
         let message_ = message.clone();
 
         on_broadcast(move |event| {
@@ -598,7 +660,7 @@ mod tests {
         let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
         let account = account_handle.read().await;
         let account_id = account.id().to_string();
-        let message = crate::test_utils::GenerateMessageBuilder::default().build();
+        let message = crate::test_utils::GenerateMessageBuilder::default().build().await;
         let message_ = message.clone();
         let confirmed = true;
 

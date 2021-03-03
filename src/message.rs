@@ -1,14 +1,19 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::address::{Address, AddressOutput, AddressWrapper, IotaAddress};
+use crate::{
+    account::Account,
+    address::{Address, AddressOutput, AddressWrapper, IotaAddress},
+    client::ClientOptions,
+    event::{emit_transfer_progress, TransferProgressType},
+};
 use bee_common::packable::Packable;
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
 pub use iota::{
     Essence, IndexationPayload, Input, Message as IotaMessage, MessageId, MilestonePayload, Output, Payload,
     ReceiptPayload, RegularEssence, SignatureLockedDustAllowanceOutput, SignatureLockedSingleOutput,
-    TransactionPayload, TreasuryOutput, TreasuryTransactionPayload, UnlockBlock,
+    TransactionPayload, TreasuryInput, TreasuryOutput, TreasuryTransactionPayload, UTXOInput, UnlockBlock,
 };
 use serde::{de::Deserializer, Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
@@ -52,6 +57,8 @@ pub struct TransferBuilder {
     remainder_value_strategy: RemainderValueStrategy,
     /// The input to use (skips input selection)
     input: Option<(AddressWrapper, Vec<AddressOutput>)>,
+    /// Whether the transfer should emit events or not.
+    with_events: bool,
 }
 
 impl<'de> Deserialize<'de> for TransferBuilder {
@@ -109,6 +116,7 @@ impl<'de> Deserialize<'de> for TransferBuilder {
                 },
                 remainder_value_strategy: builder.remainder_value_strategy,
                 input: None,
+                with_events: true,
             })
         })
     }
@@ -123,6 +131,7 @@ impl TransferBuilder {
             indexation: None,
             remainder_value_strategy: RemainderValueStrategy::ChangeAddress,
             input: None,
+            with_events: true,
         }
     }
 
@@ -144,6 +153,11 @@ impl TransferBuilder {
         self
     }
 
+    pub(crate) fn with_events(mut self, flag: bool) -> Self {
+        self.with_events = flag;
+        self
+    }
+
     /// Builds the transfer.
     pub fn finish(self) -> Transfer {
         Transfer {
@@ -152,6 +166,7 @@ impl TransferBuilder {
             indexation: self.indexation,
             remainder_value_strategy: self.remainder_value_strategy,
             input: self.input,
+            with_events: self.with_events,
         }
     }
 }
@@ -169,12 +184,20 @@ pub struct Transfer {
     pub(crate) remainder_value_strategy: RemainderValueStrategy,
     /// The addresses to use as input.
     pub(crate) input: Option<(AddressWrapper, Vec<AddressOutput>)>,
+    /// Whether the transfer should emit events or not.
+    pub(crate) with_events: bool,
 }
 
 impl Transfer {
     /// Initialises the transfer builder.
     pub fn builder(address: AddressWrapper, amount: NonZeroU64) -> TransferBuilder {
         TransferBuilder::new(address, amount)
+    }
+
+    pub(crate) async fn emit_event_if_needed(&self, account_id: String, event: TransferProgressType) {
+        if self.with_events {
+            emit_transfer_progress(account_id, event).await;
+        }
     }
 }
 
@@ -313,17 +336,36 @@ impl TransactionOutput {
     }
 }
 
+/// UTXO input.
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+pub struct TransactionUTXOInput {
+    /// UTXO input.
+    pub input: UTXOInput,
+    /// Metadata.
+    pub metadata: Option<AddressOutput>,
+}
+
+/// Transaction input.
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+#[serde(tag = "type", content = "data")]
+pub enum TransactionInput {
+    /// UTXO input.
+    UTXO(TransactionUTXOInput),
+    /// Treasury input.
+    Treasury(TreasuryInput),
+}
+
 /// Regular essence.
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 pub struct TransactionRegularEssence {
-    inputs: Box<[Input]>,
+    inputs: Box<[TransactionInput]>,
     outputs: Box<[TransactionOutput]>,
     payload: Option<Payload>,
 }
 
 impl TransactionRegularEssence {
     /// Gets the transaction inputs.
-    pub fn inputs(&self) -> &[Input] {
+    pub fn inputs(&self) -> &[TransactionInput] {
         &self.inputs
     }
 
@@ -339,15 +381,30 @@ impl TransactionRegularEssence {
 }
 
 impl TransactionRegularEssence {
-    fn new(
-        message_id: &MessageId,
-        regular_essence: &RegularEssence,
-        bech32_hrp: String,
-        account_addresses: &[Address],
-    ) -> Self {
+    async fn new(regular_essence: &RegularEssence, metadata: &TransactionBuilderMetadata<'_>) -> crate::Result<Self> {
         let mut inputs = Vec::new();
         for input in regular_essence.inputs() {
-            inputs.push(input.clone());
+            let input = match input.clone() {
+                Input::UTXO(i) => {
+                    #[cfg(test)]
+                    let metadata: Option<AddressOutput> = None;
+                    #[cfg(not(test))]
+                    let metadata = {
+                        let client = crate::client::get_client(metadata.client_options).await;
+                        let client = client.read().await;
+                        if let Ok(output) = client.get_output(&i).await {
+                            let output = AddressOutput::from_output_response(output, metadata.bech32_hrp.clone())?;
+                            Some(output)
+                        } else {
+                            None
+                        }
+                    };
+                    TransactionInput::UTXO(TransactionUTXOInput { input: i, metadata })
+                }
+                Input::Treasury(treasury) => TransactionInput::Treasury(treasury),
+                _ => unimplemented!(),
+            };
+            inputs.push(input);
         }
         let mut outputs = Vec::new();
 
@@ -356,7 +413,11 @@ impl TransactionRegularEssence {
             0 => {}
             // if the tx has one output, it is not a remainder output
             1 => {
-                outputs.push(TransactionOutput::new(tx_outputs.first().unwrap(), bech32_hrp, false));
+                outputs.push(TransactionOutput::new(
+                    tx_outputs.first().unwrap(),
+                    metadata.bech32_hrp.clone(),
+                    false,
+                ));
             }
             // if the tx has more than one output, we check which one is the remainder
             _ => {
@@ -375,13 +436,17 @@ impl TransactionRegularEssence {
                 // outgoing; so we assume that the highest address index holds the remainder, and the rest is the
                 // transfer outputs
                 let all_outputs_belongs_to_account = tx_outputs.iter().all(|(address, _)| {
-                    let address_belongs_to_account = account_addresses.iter().any(|a| &a.address().as_ref() == address);
+                    let address_belongs_to_account = metadata
+                        .account_addresses
+                        .iter()
+                        .any(|a| &a.address().as_ref() == address);
                     address_belongs_to_account
                 });
                 if all_outputs_belongs_to_account {
                     let mut remainder: Option<&Address> = None;
                     for (output_address, _) in &tx_outputs {
-                        let account_address = account_addresses
+                        let account_address = metadata
+                            .account_addresses
                             .iter()
                             .find(|a| &a.address().as_ref() == output_address)
                             .unwrap(); // safe to unwrap since we already asserted that the address belongs to the account
@@ -405,34 +470,37 @@ impl TransactionRegularEssence {
                     for (output_address, output) in tx_outputs {
                         outputs.push(TransactionOutput::new(
                             output,
-                            bech32_hrp.clone(),
+                            metadata.bech32_hrp.clone(),
                             remainder == Some(output_address),
                         ));
                     }
                 } else {
-                    let sent = !account_addresses
+                    let sent = !metadata
+                        .account_addresses
                         .iter()
-                        .any(|address| address.outputs().iter().any(|o| o.message_id() == message_id));
+                        .any(|address| address.outputs().iter().any(|o| o.message_id() == metadata.id));
                     for (output_address, output) in tx_outputs {
-                        let address_belongs_to_account =
-                            account_addresses.iter().any(|a| a.address().as_ref() == output_address);
+                        let address_belongs_to_account = metadata
+                            .account_addresses
+                            .iter()
+                            .any(|a| a.address().as_ref() == output_address);
                         if sent {
                             let remainder = address_belongs_to_account;
-                            outputs.push(TransactionOutput::new(output, bech32_hrp.clone(), remainder));
+                            outputs.push(TransactionOutput::new(output, metadata.bech32_hrp.clone(), remainder));
                         } else {
                             let remainder = !address_belongs_to_account;
-                            outputs.push(TransactionOutput::new(output, bech32_hrp.clone(), remainder));
+                            outputs.push(TransactionOutput::new(output, metadata.bech32_hrp.clone(), remainder));
                         }
                     }
                 }
             }
         }
 
-        Self {
+        Ok(Self {
             inputs: inputs.into_boxed_slice(),
             outputs: outputs.into_boxed_slice(),
             payload: regular_essence.payload().clone(),
-        }
+        })
     }
 }
 
@@ -446,16 +514,12 @@ pub enum TransactionEssence {
 
 impl TransactionEssence {
     #[doc(hidden)]
-    pub fn new(message_id: &MessageId, essence: &Essence, bech32_hrp: String, account_addresses: &[Address]) -> Self {
-        match essence {
-            Essence::Regular(regular) => Self::Regular(TransactionRegularEssence::new(
-                message_id,
-                regular,
-                bech32_hrp,
-                account_addresses,
-            )),
+    pub async fn new(essence: &Essence, metadata: &TransactionBuilderMetadata<'_>) -> crate::Result<Self> {
+        let essence = match essence {
+            Essence::Regular(regular) => Self::Regular(TransactionRegularEssence::new(regular, metadata).await?),
             _ => unimplemented!(),
-        }
+        };
+        Ok(essence)
     }
 }
 
@@ -482,20 +546,15 @@ impl MessageTransactionPayload {
     }
 
     #[doc(hidden)]
-    pub fn new(
-        message_id: &MessageId,
-        payload: &TransactionPayload,
-        bech32_hrp: String,
-        account_addresses: &[Address],
-    ) -> Self {
+    pub async fn new(payload: &TransactionPayload, metadata: &TransactionBuilderMetadata<'_>) -> crate::Result<Self> {
         let mut unlock_blocks = Vec::new();
         for unlock_block in payload.unlock_blocks() {
             unlock_blocks.push(unlock_block.clone());
         }
-        Self {
-            essence: TransactionEssence::new(message_id, payload.essence(), bech32_hrp, account_addresses),
+        Ok(Self {
+            essence: TransactionEssence::new(payload.essence(), metadata).await?,
             unlock_blocks: unlock_blocks.into_boxed_slice(),
-        }
+        })
     }
 }
 
@@ -516,25 +575,18 @@ pub enum MessagePayload {
 }
 
 impl MessagePayload {
-    pub(crate) fn new(
-        message_id: &MessageId,
-        payload: Payload,
-        bech32_hrp: String,
-        account_addresses: &[Address],
-    ) -> Self {
-        match payload {
-            Payload::Transaction(tx) => Self::Transaction(Box::new(MessageTransactionPayload::new(
-                message_id,
-                &tx,
-                bech32_hrp,
-                account_addresses,
-            ))),
+    pub(crate) async fn new(payload: Payload, metadata: &TransactionBuilderMetadata<'_>) -> crate::Result<Self> {
+        let payload = match payload {
+            Payload::Transaction(tx) => {
+                Self::Transaction(Box::new(MessageTransactionPayload::new(&tx, metadata).await?))
+            }
             Payload::Milestone(milestone) => Self::Milestone(milestone),
             Payload::Indexation(indexation) => Self::Indexation(indexation),
             Payload::Receipt(receipt) => Self::Receipt(receipt),
             Payload::TreasuryTransaction(treasury_tx) => Self::TreasuryTransaction(treasury_tx),
             _ => unimplemented!(),
-        }
+        };
+        Ok(payload)
     }
 }
 
@@ -619,22 +671,38 @@ impl PartialOrd for Message {
     }
 }
 
+#[doc(hidden)]
+pub struct TransactionBuilderMetadata<'a> {
+    pub id: &'a MessageId,
+    pub bech32_hrp: String,
+    pub account_addresses: &'a [Address],
+    pub client_options: &'a ClientOptions,
+}
+
 pub(crate) struct MessageBuilder<'a> {
     id: MessageId,
     iota_message: IotaMessage,
     account_addresses: &'a [Address],
     confirmed: Option<bool>,
     bech32_hrp: String,
+    client_options: &'a ClientOptions,
 }
 
 impl<'a> MessageBuilder<'a> {
-    pub fn new(id: MessageId, iota_message: IotaMessage, account_addresses: &'a [Address], bech32_hrp: String) -> Self {
+    pub fn new(
+        id: MessageId,
+        iota_message: IotaMessage,
+        account_addresses: &'a [Address],
+        bech32_hrp: String,
+        client_options: &'a ClientOptions,
+    ) -> Self {
         Self {
             id,
             iota_message,
             account_addresses,
             confirmed: None,
             bech32_hrp,
+            client_options,
         }
     }
 
@@ -643,15 +711,24 @@ impl<'a> MessageBuilder<'a> {
         self
     }
 
-    pub fn finish(self) -> Message {
+    pub async fn finish(self) -> crate::Result<Message> {
         let packed_payload = self.iota_message.payload().pack_new();
-        let bech32_hrp = self.bech32_hrp.to_string();
 
-        let payload = self
-            .iota_message
-            .payload()
-            .clone()
-            .map(|p| MessagePayload::new(&self.id, p, bech32_hrp, &self.account_addresses));
+        let payload = match self.iota_message.payload() {
+            Some(payload) => Some(
+                MessagePayload::new(
+                    payload.clone(),
+                    &TransactionBuilderMetadata {
+                        id: &self.id,
+                        bech32_hrp: self.bech32_hrp.clone(),
+                        account_addresses: &self.account_addresses,
+                        client_options: &self.client_options,
+                    },
+                )
+                .await?,
+            ),
+            None => None,
+        };
 
         let mut value = 0;
         let mut remainder_value = 0;
@@ -671,7 +748,7 @@ impl<'a> MessageBuilder<'a> {
             }
         }
 
-        Message {
+        let message = Message {
             id: self.id,
             version: 1,
             parents: self.iota_message.parents().to_vec(),
@@ -687,7 +764,8 @@ impl<'a> MessageBuilder<'a> {
                 .any(|address| address.outputs().iter().any(|o| o.message_id() == &self.id)),
             value,
             remainder_value,
-        }
+        };
+        Ok(message)
     }
 }
 
@@ -695,19 +773,21 @@ impl Message {
     pub(crate) fn from_iota_message(
         id: MessageId,
         iota_message: IotaMessage,
-        account_addresses: &'_ [Address],
+        account: &'_ Account,
     ) -> MessageBuilder<'_> {
         MessageBuilder::new(
             id,
             iota_message,
-            account_addresses,
-            account_addresses
+            account.addresses(),
+            account
+                .addresses()
                 .iter()
                 .next()
                 .unwrap()
                 .address()
                 .bech32_hrp()
                 .to_string(),
+            account.client_options(),
         )
     }
 

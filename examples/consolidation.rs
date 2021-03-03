@@ -73,10 +73,7 @@ async fn main() -> Result<()> {
         wait_for_message_confirmation(&iota_client, message_id).await;
     }
 
-    // force account update
-    let synced = account.sync().await.execute().await?;
-
-    let messages = synced.consolidate_outputs().await?;
+    let messages = account.consolidate_outputs().await?;
     println!("MESSAGES {:?}", messages);
 
     Ok(())

@@ -15,8 +15,10 @@ impl Task for IsLatestAddressUnusedTask {
 
     fn perform(&self) -> Result<Self::Output, Self::Error> {
         crate::block_on(async move {
-            let account_handle = crate::get_account(&self.account_id).await;
-            account_handle.is_latest_address_unused().await
+            crate::get_account(&self.account_id)
+                .await
+                .is_latest_address_unused()
+                .await
         })
     }
 

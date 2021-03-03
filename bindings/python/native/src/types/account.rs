@@ -1,7 +1,6 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::address::AddressWrapper;
 use dict_derive::{FromPyObject as DeriveFromPyObject, IntoPyObject as DeriveIntoPyObject};
 use iota_wallet::{
     account::{
@@ -51,22 +50,6 @@ pub struct AccountsSynchronizer {
 #[derive(Debug, Clone)]
 pub struct Transfer {
     pub transfer: RustTransfer,
-}
-
-#[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
-pub struct AddressOutput {
-    /// Transaction ID of the output
-    transaction_id: String,
-    /// Message ID of the output
-    message_id: String,
-    /// Output index.
-    index: u16,
-    /// Output amount.
-    amount: u64,
-    /// Spend status of the output,
-    is_spent: bool,
-    /// Associated address.
-    address: AddressWrapper,
 }
 
 #[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]

@@ -77,20 +77,26 @@ async fn load_actor(
     };
 
     if !runtime.loaded_client_paths.contains(&client_path) {
-        runtime.loaded_client_paths.insert(client_path.clone());
         if snapshot_path.exists() {
             let passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
             if let Some(password) = passwords.get(snapshot_path) {
                 stronghold_response_to_result(
                     runtime
                         .stronghold
-                        .read_snapshot(client_path, None, &password.0, None, Some(snapshot_path.to_path_buf()))
+                        .read_snapshot(
+                            client_path.clone(),
+                            None,
+                            &password.0,
+                            None,
+                            Some(snapshot_path.to_path_buf()),
+                        )
                         .await,
                 )?;
             } else {
                 return Err(Error::PasswordNotSet);
             }
         }
+        runtime.loaded_client_paths.insert(client_path);
     }
 
     Ok(())

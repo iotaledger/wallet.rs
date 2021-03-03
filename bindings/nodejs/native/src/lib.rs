@@ -58,6 +58,7 @@ fn synced_account_instances() -> &'static SyncedAccountInstanceMap {
     &INSTANCES
 }
 
+#[allow(dead_code)]
 pub(crate) async fn get_synced_account(id: &str) -> SyncedAccountHandle {
     synced_account_instances()
         .read()

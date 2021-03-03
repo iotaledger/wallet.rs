@@ -21,12 +21,12 @@ pub struct Address {
     outputs: Vec<AddressOutput>,
 }
 
-#[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
+#[derive(Debug, Clone, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct AddressWrapper {
     inner: String,
 }
 
-#[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
+#[derive(Debug, Clone, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct AddressOutput {
     /// Transaction ID of the output
     transaction_id: String,

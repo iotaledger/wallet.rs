@@ -8,8 +8,8 @@ use crate::{
     },
     client::ClientOptions,
     event::{
-        emit_balance_change, emit_confirmation_state_change, emit_transaction_event, BalanceChange, BalanceEvent,
-        TransactionConfirmationChangeEvent, TransactionEvent, TransactionEventType,
+        emit_transaction_event, BalanceEvent, TransactionConfirmationChangeEvent, TransactionEvent,
+        TransactionEventType,
     },
     message::{Message, MessagePayload, MessageType, Transfer},
     signing::SignerType,
@@ -656,7 +656,7 @@ impl AccountManager {
             let account_handle = self.get_account(account_id).await?;
             let account = account_handle.read().await;
 
-            if !(account.messages().is_empty() && account.balance().total == 0) {
+            if !(account.messages().is_empty() && account.addresses().iter().all(|a| a.outputs.is_empty())) {
                 return Err(crate::Error::AccountNotEmpty);
             }
 
@@ -702,8 +702,8 @@ impl AccountManager {
             .latest_address()
             .clone();
 
-        let from_synchronized = self.get_account(from_account_id).await?.sync().await.execute().await?;
-        from_synchronized
+        self.get_account(from_account_id)
+            .await?
             .transfer(Transfer::builder(to_address.address().clone(), amount).finish())
             .await
     }
@@ -960,8 +960,7 @@ impl AccountManager {
         account_id: I,
         message_id: &MessageId,
     ) -> crate::Result<Message> {
-        let account = self.get_account(account_id).await?;
-        account.sync().await.execute().await?.reattach(message_id).await
+        self.get_account(account_id).await?.reattach(message_id).await
     }
 
     /// Promotes an unconfirmed transaction.
@@ -970,8 +969,7 @@ impl AccountManager {
         account_id: I,
         message_id: &MessageId,
     ) -> crate::Result<Message> {
-        let account = self.get_account(account_id).await?;
-        account.sync().await.execute().await?.promote(message_id).await
+        self.get_account(account_id).await?.promote(message_id).await
     }
 
     /// Retries an unconfirmed transaction.
@@ -980,8 +978,7 @@ impl AccountManager {
         account_id: I,
         message_id: &MessageId,
     ) -> crate::Result<Message> {
-        let account = self.get_account(account_id).await?;
-        account.sync().await.execute().await?.retry(message_id).await
+        self.get_account(account_id).await?.retry(message_id).await
     }
 }
 
@@ -1137,73 +1134,13 @@ async fn poll(
     automatic_output_consolidation: bool,
 ) -> crate::Result<()> {
     let retried = if !is_mqtt_monitoring {
-        let mut accounts_before_sync = Vec::new();
-        for account_handle in accounts.read().await.values() {
-            accounts_before_sync.push(account_handle.read().await.clone());
-        }
         let synced_accounts =
             AccountsSynchronizer::new(accounts.clone(), storage_file_path, output_consolidation_threshold)
-                .address_index(0)
                 .execute()
                 .await?;
-        let accounts_after_sync = accounts.read().await;
 
         log::debug!("[POLLING] synced accounts");
 
-        // compare accounts to check for balance changes and new messages
-        for account_before_sync in &accounts_before_sync {
-            let account_after_sync = accounts_after_sync.get(account_before_sync.id()).unwrap();
-            let account_after_sync = account_after_sync.read().await;
-
-            // balance event
-            for address_before_sync in account_before_sync.addresses() {
-                let address_after_sync = account_after_sync
-                    .addresses()
-                    .iter()
-                    .find(|addr| addr == &address_before_sync)
-                    .unwrap();
-                if address_after_sync.balance() != address_before_sync.balance() {
-                    log::debug!(
-                        "[POLLING] address {} balance changed from {} to {}",
-                        address_after_sync.address().to_bech32(),
-                        address_before_sync.balance(),
-                        address_after_sync.balance()
-                    );
-                    emit_balance_change(
-                        &account_after_sync,
-                        address_after_sync.address(),
-                        if address_after_sync.balance() > address_before_sync.balance() {
-                            BalanceChange::received(address_after_sync.balance() - address_before_sync.balance())
-                        } else {
-                            BalanceChange::spent(address_before_sync.balance() - address_after_sync.balance())
-                        },
-                    )
-                    .await?;
-                }
-            }
-
-            // new messages event
-            for message in account_after_sync
-                .messages()
-                .iter()
-                .filter(|message| !account_before_sync.messages().contains(message))
-            {
-                log::info!("[POLLING] new message: {:?}", message.id());
-                emit_transaction_event(TransactionEventType::NewTransaction, &account_after_sync, &message).await?;
-            }
-
-            // confirmation state change event
-            for message in account_after_sync.messages() {
-                let changed = match account_before_sync.messages().iter().find(|m| m.id() == message.id()) {
-                    Some(old_message) => message.confirmed() != old_message.confirmed(),
-                    None => false,
-                };
-                if changed {
-                    log::info!("[POLLING] message confirmed: {:?}", message.id());
-                    emit_confirmation_state_change(&account_after_sync, &message, true).await?;
-                }
-            }
-        }
         let retried_messages = retry_unconfirmed_transactions(&synced_accounts).await?;
         consolidate_outputs_if_needed(automatic_output_consolidation, &synced_accounts).await?;
         retried_messages
@@ -1444,12 +1381,12 @@ fn backup_filename(original: &str) -> String {
 #[cfg(test)]
 mod tests {
     use crate::{
-        address::{AddressBuilder, AddressWrapper, IotaAddress},
+        address::{AddressBuilder, AddressOutput, AddressWrapper, IotaAddress, OutputKind},
         client::ClientOptionsBuilder,
         event::*,
         message::Message,
     };
-    use iota::{Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Payload};
+    use iota::{Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Payload, TransactionId};
 
     #[tokio::test]
     async fn store_accounts() {
@@ -1531,7 +1468,15 @@ mod tests {
             // update address balance so we can create the next account
             let mut account = account_handle1.write().await;
             for address in account.addresses_mut() {
-                address.set_balance(5);
+                address.set_outputs(vec![AddressOutput {
+                    transaction_id: TransactionId::new([0; 32]),
+                    message_id: MessageId::new([0; 32]),
+                    index: 0,
+                    amount: 5,
+                    is_spent: false,
+                    address: crate::test_utils::generate_random_iota_address(),
+                    kind: OutputKind::SignatureLockedSingle,
+                }]);
             }
         }
 
@@ -1615,10 +1560,17 @@ mod tests {
                         .with_network_id(0)
                         .finish()
                         .unwrap(),
-                    &[crate::test_utils::generate_random_address()],
+                    // dummy account
+                    &*crate::test_utils::AccountCreator::new(&crate::test_utils::get_account_manager().await)
+                        .create()
+                        .await
+                        .read()
+                        .await,
                 )
                 .with_confirmed(Some(true))
-                .finish()])
+                .finish()
+                .await
+                .unwrap()])
                 .initialise()
                 .await
                 .unwrap();
@@ -1648,7 +1600,15 @@ mod tests {
                         IotaAddress::Ed25519(Ed25519Address::new([0; 32])),
                         "atoi".to_string(),
                     ))
-                    .outputs(vec![])
+                    .outputs(vec![AddressOutput {
+                        transaction_id: TransactionId::new([0; 32]),
+                        message_id: MessageId::new([0; 32]),
+                        index: 0,
+                        amount: 5,
+                        is_spent: false,
+                        address: crate::test_utils::generate_random_iota_address(),
+                        kind: OutputKind::SignatureLockedSingle,
+                    }])
                     .build()
                     .unwrap()])
                 .initialise()
@@ -1895,11 +1855,17 @@ mod tests {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
             let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
             let account = account_handle.read().await;
+            let m1 = crate::test_utils::GenerateMessageBuilder::default().build().await;
+            let m2 = crate::test_utils::GenerateMessageBuilder::default().build().await;
+            let m3 = crate::test_utils::GenerateMessageBuilder::default().build().await;
             let confirmation_change_events = vec![
-                (crate::test_utils::GenerateMessageBuilder::default().build(), true),
-                (crate::test_utils::GenerateMessageBuilder::default().build(), false),
-                (crate::test_utils::GenerateMessageBuilder::default().build(), false),
-                (crate::test_utils::GenerateMessageBuilder::default().build(), true),
+                (m1, true),
+                (
+                    crate::test_utils::GenerateMessageBuilder::default().build().await,
+                    false,
+                ),
+                (m2, false),
+                (m3, true),
             ];
             for (message, change) in &confirmation_change_events {
                 emit_confirmation_state_change(&account, message, *change)
@@ -1940,12 +1906,11 @@ mod tests {
                     |manager, _| async move {
                         let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
                         let account = account_handle.read().await;
-                        let events = vec![
-                            crate::test_utils::GenerateMessageBuilder::default().build(),
-                            crate::test_utils::GenerateMessageBuilder::default().build(),
-                            crate::test_utils::GenerateMessageBuilder::default().build(),
-                            crate::test_utils::GenerateMessageBuilder::default().build(),
-                        ];
+                        let m1 = crate::test_utils::GenerateMessageBuilder::default().build().await;
+                        let m2 = crate::test_utils::GenerateMessageBuilder::default().build().await;
+                        let m3 = crate::test_utils::GenerateMessageBuilder::default().build().await;
+                        let m4 = crate::test_utils::GenerateMessageBuilder::default().build().await;
+                        let events = vec![m1, m2, m3, m4];
                         for message in &events {
                             emit_transaction_event($event_type, &account, message)
                                 .await

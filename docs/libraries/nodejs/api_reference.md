@@ -28,6 +28,7 @@ Supported event names:
 - ConfirmationStateChange
 - Reattachment
 - Broadcast
+- TransferProgress
 
 ### AccountManager
 
@@ -267,61 +268,7 @@ Gets the number of persisted transaction broadcast events.
 
 ### SyncedAccount
 
-#### send(address, amount[, options])
-
-Send funds to the given address.
-
-| Param   | Type                         | Default                | Description                               |
-| ------- | ---------------------------- | ---------------------- | ----------------------------------------- |
-| address | <code>string</code>          | <code>null</code>      | The bech32 string of the transfer address |
-| amount  | <code>number</code>          | <code>undefined</code> | The transfer amount                       |
-| options | <code>TransferOptions</code> | <code>undefined</code> | The transfer options                      |
-
-##### TransferOptions
-
-| Param                  | Type                                              | Default           | Description                                        |
-| ---------------------- | ------------------------------------------------- | ----------------- | -------------------------------------------------- |
-| remainderValueStrategy | <code>RemainderValueStrategy</code>               | <code>null</code> | The strategy to use for the remainder value if any |
-| indexation             | <code>{ index: string, data?: Uint8Array }</code> | <code>null</code> | Message indexation                                 |
-
-##### RemainderValueStrategy
-
-###### changeAddress()
-Send the remainder value to an internal address.
-
-###### reuseAddress()
-Send the remainder value to its original address.
-
-###### accountAddress(address: string)
-Send the remainder value to a specific address that must belong to the account.
-
-#### retry(messageId)
-
-Retries (promotes or reattaches) the given message.
-
-| Param     | Type                | Default           | Description              |
-| --------- | ------------------- | ----------------- | ------------------------ |
-| messageId | <code>string</code> | <code>null</code> | The message's identifier |
-
-#### reattach(messageId)
-
-Reattach the given message.
-
-| Param     | Type                | Default           | Description              |
-| --------- | ------------------- | ----------------- | ------------------------ |
-| messageId | <code>string</code> | <code>null</code> | The message's identifier |
-
-#### promote(messageId)
-
-Promote the given message.
-
-| Param     | Type                | Default           | Description              |
-| --------- | ------------------- | ----------------- | ------------------------ |
-| messageId | <code>string</code> | <code>null</code> | The message's identifier |
-
-#### consolidateOutputs()
-
-Consolidate the outputs on all account addresses.
+The result of a `sync` operation on an Account.
 
 ### Account
 
@@ -383,6 +330,62 @@ Synchronizes the account with the Tangle.
 | [options.gapLimit]     | <code>number</code> | <code>10</code>                   | The number of addresses to check       |
 
 **Returns** a [SyncedAccount](#syncedaccount) instance.
+
+#### send(address, amount[, options])
+
+Send funds to the given address.
+
+| Param   | Type                         | Default                | Description                               |
+| ------- | ---------------------------- | ---------------------- | ----------------------------------------- |
+| address | <code>string</code>          | <code>null</code>      | The bech32 string of the transfer address |
+| amount  | <code>number</code>          | <code>undefined</code> | The transfer amount                       |
+| options | <code>TransferOptions</code> | <code>undefined</code> | The transfer options                      |
+
+##### TransferOptions
+
+| Param                  | Type                                              | Default           | Description                                        |
+| ---------------------- | ------------------------------------------------- | ----------------- | -------------------------------------------------- |
+| remainderValueStrategy | <code>RemainderValueStrategy</code>               | <code>null</code> | The strategy to use for the remainder value if any |
+| indexation             | <code>{ index: string, data?: Uint8Array }</code> | <code>null</code> | Message indexation                                 |
+
+##### RemainderValueStrategy
+
+###### changeAddress()
+Send the remainder value to an internal address.
+
+###### reuseAddress()
+Send the remainder value to its original address.
+
+###### accountAddress(address: string)
+Send the remainder value to a specific address that must belong to the account.
+
+#### retry(messageId)
+
+Retries (promotes or reattaches) the given message.
+
+| Param     | Type                | Default           | Description              |
+| --------- | ------------------- | ----------------- | ------------------------ |
+| messageId | <code>string</code> | <code>null</code> | The message's identifier |
+
+#### reattach(messageId)
+
+Reattach the given message.
+
+| Param     | Type                | Default           | Description              |
+| --------- | ------------------- | ----------------- | ------------------------ |
+| messageId | <code>string</code> | <code>null</code> | The message's identifier |
+
+#### promote(messageId)
+
+Promote the given message.
+
+| Param     | Type                | Default           | Description              |
+| --------- | ------------------- | ----------------- | ------------------------ |
+| messageId | <code>string</code> | <code>null</code> | The message's identifier |
+
+#### consolidateOutputs()
+
+Consolidate the outputs on all account addresses.
 
 #### isLatestAddressUnused()
 

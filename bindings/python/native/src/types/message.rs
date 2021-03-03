@@ -1,7 +1,10 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::error::{Error, Result};
+use super::{
+    error::{Error, Result},
+    AddressOutput,
+};
 use chrono::prelude::{DateTime, NaiveDateTime, Utc};
 use core::convert::TryFrom;
 use dict_derive::{FromPyObject as DeriveFromPyObject, IntoPyObject as DeriveIntoPyObject};
@@ -21,10 +24,13 @@ use iota_wallet::{
         Address as RustWalletAddress, AddressOutput as RustWalletAddressOutput, AddressWrapper as RustAddressWrapper,
         OutputKind as RustOutputKind,
     },
+    client::ClientOptions as RustWalletClientOptions,
     message::{
         Message as RustWalletMessage, MessagePayload as RustWalletPayload,
         MessageTransactionPayload as RustWalletMessageTransactionPayload,
-        TransactionEssence as RustWalletTransactionEssence, TransactionOutput as RustWalletOutput,
+        TransactionBuilderMetadata as RustWalletTransactionBuilderMetadata,
+        TransactionEssence as RustWalletTransactionEssence, TransactionInput as RustWalletInput,
+        TransactionOutput as RustWalletOutput,
     },
 };
 use std::{
@@ -198,10 +204,11 @@ impl TryFrom<RustWalletTransactionEssence> for Essence {
                     .iter()
                     .cloned()
                     .map(|input| {
-                        if let RustInput::UTXO(input) = input {
+                        if let RustWalletInput::UTXO(input) = input {
                             Input {
-                                transaction_id: input.output_id().transaction_id().to_string(),
-                                index: input.output_id().index(),
+                                transaction_id: input.input.output_id().transaction_id().to_string(),
+                                index: input.input.output_id().index(),
+                                metadata: input.metadata.map(|m| (&m).into()),
                             }
                         } else {
                             unreachable!()
@@ -305,10 +312,11 @@ impl TryFrom<RustUnlockBlock> for UnlockBlock {
     }
 }
 
-pub fn to_rust_message(
+pub async fn to_rust_message(
     msg: WalletMessage,
     bech32_hrp: String,
     account_addresses: &[RustWalletAddress],
+    client_options: &RustWalletClientOptions,
 ) -> Result<RustWalletMessage> {
     let mut parents = Vec::new();
     for parent in msg.parents {
@@ -316,7 +324,7 @@ pub fn to_rust_message(
     }
     let id = MessageId::from_str(&msg.id)?;
     let payload = match msg.payload {
-        Some(payload) => Some(to_rust_payload(&id, payload, bech32_hrp, account_addresses)?),
+        Some(payload) => Some(to_rust_payload(&id, payload, bech32_hrp, account_addresses, client_options).await?),
         None => None,
     };
     Ok(RustWalletMessage {
@@ -444,11 +452,12 @@ impl TryFrom<UnlockBlock> for RustUnlockBlock {
     }
 }
 
-pub fn to_rust_payload(
+pub async fn to_rust_payload(
     message_id: &MessageId,
     payload: Payload,
     bech32_hrp: Bech32HRP,
     account_addresses: &[RustWalletAddress],
+    client_options: &RustWalletClientOptions,
 ) -> Result<RustWalletPayload> {
     if let Some(transaction_payload) = &payload.transaction {
         let mut transaction = RustTransactionPayload::builder();
@@ -458,8 +467,14 @@ pub fn to_rust_payload(
         for unlock_block in unlock_blocks {
             transaction = transaction.add_unlock_block(unlock_block.try_into()?);
         }
+        let metadata = RustWalletTransactionBuilderMetadata {
+            id: message_id,
+            bech32_hrp,
+            account_addresses,
+            client_options,
+        };
         Ok(RustWalletPayload::Transaction(Box::new(
-            RustWalletMessageTransactionPayload::new(message_id, &transaction.finish()?, bech32_hrp, account_addresses),
+            RustWalletMessageTransactionPayload::new(&transaction.finish()?, &metadata).await?,
         )))
     } else {
         let indexation = RustIndexationPayload::new(
@@ -559,6 +574,7 @@ pub struct Output {
 pub struct Input {
     pub transaction_id: String,
     pub index: u16,
+    pub metadata: Option<AddressOutput>,
 }
 
 #[derive(Debug, Clone, DeriveFromPyObject, DeriveIntoPyObject)]
