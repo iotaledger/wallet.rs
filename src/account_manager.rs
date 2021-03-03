@@ -212,12 +212,13 @@ impl AccountManagerBuilder {
 
         // with the stronghold storage feature, the accounts are loaded when the password is set
         #[cfg(feature = "stronghold-storage")]
-        let (accounts, encrypted_accounts) = (Default::default(), Vec::new());
+        let (accounts, loaded_accounts) = (Default::default(), false);
         #[cfg(not(feature = "stronghold-storage"))]
-        let (accounts, encrypted_accounts) =
+        let (accounts, loaded_accounts) =
             AccountManager::load_accounts(&storage_file_path, self.output_consolidation_threshold)
                 .await
-                .unwrap_or_else(|_| (AccountStore::default(), Vec::new()));
+                .map(|accounts| (accounts, true))
+                .unwrap_or_else(|_| (AccountStore::default(), false));
 
         let mut instance = AccountManager {
             storage_folder: if self.storage_path.is_file() || self.storage_path.extension().is_some() {
@@ -228,13 +229,13 @@ impl AccountManagerBuilder {
             } else {
                 self.storage_path
             },
+            loaded_accounts,
             storage_path: storage_file_path,
             accounts,
             stop_polling_sender: None,
             polling_handle: None,
             is_monitoring: Arc::new(AtomicBool::new(false)),
             generated_mnemonic: None,
-            encrypted_accounts,
             output_consolidation_threshold: self.output_consolidation_threshold,
         };
 
@@ -254,6 +255,7 @@ impl AccountManagerBuilder {
 #[derive(Getters)]
 pub struct AccountManager {
     storage_folder: PathBuf,
+    loaded_accounts: bool,
     /// the path to the storage.
     #[getset(get = "pub")]
     storage_path: PathBuf,
@@ -262,7 +264,6 @@ pub struct AccountManager {
     polling_handle: Option<thread::JoinHandle<()>>,
     is_monitoring: Arc<AtomicBool>,
     generated_mnemonic: Option<String>,
-    encrypted_accounts: Vec<String>,
     output_consolidation_threshold: usize,
 }
 
@@ -275,13 +276,13 @@ impl Clone for AccountManager {
     fn clone(&self) -> Self {
         Self {
             storage_folder: self.storage_folder.clone(),
+            loaded_accounts: self.loaded_accounts,
             storage_path: self.storage_path.clone(),
             accounts: self.accounts.clone(),
             stop_polling_sender: self.stop_polling_sender.clone(),
             polling_handle: None,
             is_monitoring: self.is_monitoring.clone(),
             generated_mnemonic: None,
-            encrypted_accounts: self.encrypted_accounts.clone(),
             output_consolidation_threshold: self.output_consolidation_threshold,
         }
     }
@@ -313,8 +314,7 @@ impl AccountManager {
     async fn load_accounts(
         storage_file_path: &PathBuf,
         output_consolidation_threshold: usize,
-    ) -> crate::Result<(AccountStore, Vec<String>)> {
-        let mut encrypted_accounts = Vec::new();
+    ) -> crate::Result<AccountStore> {
         let mut parsed_accounts = HashMap::new();
 
         let accounts = crate::storage::get(&storage_file_path)
@@ -323,21 +323,14 @@ impl AccountManager {
             .await
             .get_accounts()
             .await?;
-        for parsed_account in accounts {
-            match parsed_account {
-                crate::storage::ParsedAccount::Account(account) => {
-                    parsed_accounts.insert(
-                        account.id().clone(),
-                        AccountHandle::new(account, output_consolidation_threshold),
-                    );
-                }
-                crate::storage::ParsedAccount::EncryptedAccount(value) => {
-                    encrypted_accounts.push(value);
-                }
-            }
+        for account in accounts {
+            parsed_accounts.insert(
+                account.id().clone(),
+                AccountHandle::new(account, output_consolidation_threshold),
+            );
         }
 
-        Ok((Arc::new(RwLock::new(parsed_accounts)), encrypted_accounts))
+        Ok(Arc::new(RwLock::new(parsed_accounts)))
     }
 
     /// Deletes the storage.
@@ -379,7 +372,7 @@ impl AccountManager {
 
     // error out if the storage is encrypted
     fn check_storage_encryption(&self) -> crate::Result<()> {
-        if self.encrypted_accounts.is_empty() {
+        if self.loaded_accounts {
             Ok(())
         } else {
             Err(crate::Error::StorageIsEncrypted)
@@ -437,31 +430,28 @@ impl AccountManager {
             .await
             .unwrap();
 
-        // save the accounts again to reencrypt with the new key
+        if self.accounts.read().await.is_empty() {
+            let accounts = Self::load_accounts(&self.storage_path, self.output_consolidation_threshold).await?;
+            self.loaded_accounts = true;
+            let mut accounts_store = self.accounts.write().await;
+            for (id, account) in &*accounts.read().await {
+                accounts_store.insert(id.clone(), account.clone());
+            }
+        } else {
+            // save the accounts again to reencrypt with the new key
+            for account_handle in self.accounts.read().await.values() {
+                account_handle.write().await.save().await?;
+            }
+        }
+
         for account_handle in self.accounts.read().await.values() {
-            account_handle.write().await.save().await?;
+            let _ = crate::monitor::unsubscribe(account_handle.clone());
         }
 
-        if !self.encrypted_accounts.is_empty() {
-            let mut accounts = self.accounts.write().await;
-            for account_handle in accounts.values() {
-                let _ = crate::monitor::unsubscribe(account_handle.clone());
-            }
-            for encrypted_account in &self.encrypted_accounts {
-                let decrypted = crate::storage::decrypt_record(encrypted_account, &key)?;
-                let account = serde_json::from_str::<Account>(&decrypted)?;
-                accounts.insert(
-                    account.id().into(),
-                    AccountHandle::new(account, self.output_consolidation_threshold),
-                );
-            }
-            self.encrypted_accounts.clear();
-
-            crate::spawn(Self::start_monitoring(
-                self.accounts.clone(),
-                self.is_monitoring.clone(),
-            ));
-        }
+        crate::spawn(Self::start_monitoring(
+            self.accounts.clone(),
+            self.is_monitoring.clone(),
+        ));
 
         Ok(())
     }
@@ -479,13 +469,12 @@ impl AccountManager {
 
         // let is_empty = self.accounts.read().await.is_empty();
         if self.accounts.read().await.is_empty() {
-            let (accounts, encrypted_accounts) =
-                Self::load_accounts(&self.storage_path, self.output_consolidation_threshold).await?;
+            let accounts = Self::load_accounts(&self.storage_path, self.output_consolidation_threshold).await?;
+            self.loaded_accounts = true;
             let mut accounts_store = self.accounts.write().await;
             for (id, account) in &*accounts.read().await {
                 accounts_store.insert(id.clone(), account.clone());
             }
-            self.encrypted_accounts = encrypted_accounts;
             crate::spawn(Self::start_monitoring(
                 self.accounts.clone(),
                 self.is_monitoring.clone(),
@@ -863,13 +852,12 @@ impl AccountManager {
         // the accounts map isn't empty when restoring SQLite from a stronghold snapshot
         #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
         if self.accounts.read().await.is_empty() {
-            let (accounts, encrypted_accounts) =
-                Self::load_accounts(&self.storage_path, self.output_consolidation_threshold).await?;
+            let accounts = Self::load_accounts(&self.storage_path, self.output_consolidation_threshold).await?;
+            self.loaded_accounts = true;
             let mut accounts_store = self.accounts.write().await;
             for (id, account) in &*accounts.read().await {
                 accounts_store.insert(id.clone(), account.clone());
             }
-            self.encrypted_accounts = encrypted_accounts;
 
             crate::spawn(Self::start_monitoring(
                 self.accounts.clone(),
@@ -1800,12 +1788,11 @@ mod tests {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |mut manager, _| async move {
             crate::test_utils::AccountCreator::new(&manager).create().await;
             manager.set_storage_password("new-password").await.unwrap();
-            let (account_store, encrypted) =
+            let account_store =
                 super::AccountManager::load_accounts(manager.storage_path(), manager.output_consolidation_threshold)
                     .await
                     .unwrap();
             assert_eq!(account_store.read().await.len(), 1);
-            assert_eq!(encrypted.len(), 0);
         })
         .await;
     }
