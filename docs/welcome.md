@@ -1,12 +1,14 @@
 # Welcome
-This is the documentation for the official IOTA Wallet Library Software. It can be used to easily intgrate an IOTA Wallet into your applications.
+This is the documentation for the official IOTA Wallet Library Software. It can be used to easily integrate an IOTA Wallet into your applications. You can read more about core principles behind IOTA client libraries in the following blog [post](https://blog.iota.org/the-new-iota-client-libraries-harder-better-faster-stronger/).
 
-`Wallet.rs` is a general wallet library written in Rust. It is being utilized by our wallet software `Firefly` and other software components across IOTA ecosystem. `Wallet.rs` contains all the logic to safely build wallets or integrations that require wallet or value-based transfers (such as exchanges, pay-as-you-go systems, etc.). It includes account state management and backup, account creation, transferring tokens and much more. Needless to say, it is also based on our official `one-source-code-of-truth` [IOTA Rust library](https://github.com/iotaledger/iota.rs) and may be integrated with [Stronghold component](https://blog.iota.org/iota-stronghold-6ce55d311d7c/) to achieve a maximum level of security and security best practices.
+`Wallet.rs` is a general wallet library written in Rust. It is being utilized by our wallet software `Firefly` and other software components across IOTA ecosystem. `Wallet.rs` contains all the logic to safely build wallets or integrations that require value-based transfers (such as exchanges, pay-as-you-go systems, etc.). It includes account state management and backup, account creation, transferring tokens and much more. Needless to say, it is also based on our official `one-source-code-of-truth` [IOTA Rust library](https://github.com/iotaledger/iota.rs) and can be integrated with our [Stronghold component](https://blog.iota.org/iota-stronghold-6ce55d311d7c/) to achieve a maximum level of security.
+
+**Using `stronghold` is a recommended approach to store account data using `wallet.rs`. One get the best security practices for free**. 
 
 ## Warning
 This library is in active development. The library targets the Chrysalis testnet and does not work with current IOTA mainnet.
 
-## Chrysalis Testnet
+## Testnet
 To join the Chrysalis public testnet checkout [this link](https://blog.iota.org/chrysalis-phase-2-testnet-out-now/). More information about Chrysalis components is available at [documentation portal](https://chrysalis.docs.iota.org/).
 
 ## Joining the discussion
