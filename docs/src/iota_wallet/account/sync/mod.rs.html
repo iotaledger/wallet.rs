@@ -1484,7 +1484,6 @@
 <span id="1481">1481</span>
 <span id="1482">1482</span>
 <span id="1483">1483</span>
-<span id="1484">1484</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1502,13 +1501,13 @@
 
 <span class="kw">use</span> <span class="ident">getset</span>::<span class="ident">Getters</span>;
 <span class="kw">use</span> <span class="ident">iota</span>::{
-    <span class="ident">bee_rest_api</span>::<span class="ident">handlers</span>::<span class="ident">message_metadata</span>::<span class="ident">LedgerInclusionStateDto</span>,
+    <span class="ident">bee_rest_api</span>::<span class="ident">endpoints</span>::<span class="ident">api</span>::<span class="ident">v1</span>::<span class="ident">message_metadata</span>::<span class="ident">LedgerInclusionStateDto</span>,
     <span class="ident">client</span>::<span class="ident">api</span>::<span class="ident">finish_pow</span>,
     <span class="ident">message</span>::{
-        <span class="ident">payload</span>::<span class="ident">transaction</span>::<span class="ident">INPUT_OUTPUT_COUNT_MAX</span>,
+        <span class="ident">constants</span>::<span class="ident">INPUT_OUTPUT_COUNT_MAX</span>,
         <span class="ident">prelude</span>::{
             <span class="ident">Essence</span>, <span class="ident">Input</span>, <span class="ident">Message</span> <span class="kw">as</span> <span class="ident">IotaMessage</span>, <span class="ident">MessageId</span>, <span class="ident">Payload</span>, <span class="ident">RegularEssence</span>, <span class="ident">SignatureLockedSingleOutput</span>,
-            <span class="ident">TransactionPayload</span>, <span class="ident">UTXOInput</span>,
+            <span class="ident">TransactionPayload</span>, <span class="ident">UTXOInput</span>, <span class="ident">UnlockBlocks</span>,
         },
     },
 };
@@ -2688,11 +2687,10 @@
         )
         .<span class="kw">await</span><span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tx_builder</span> <span class="op">=</span> <span class="ident">TransactionPayload</span>::<span class="ident">builder</span>().<span class="ident">with_essence</span>(<span class="ident">essence</span>);
-    <span class="kw">for</span> <span class="ident">unlock_block</span> <span class="kw">in</span> <span class="ident">unlock_blocks</span> {
-        <span class="ident">tx_builder</span> <span class="op">=</span> <span class="ident">tx_builder</span>.<span class="ident">add_unlock_block</span>(<span class="ident">unlock_block</span>);
-    }
-    <span class="kw">let</span> <span class="ident">transaction</span> <span class="op">=</span> <span class="ident">tx_builder</span>.<span class="ident">finish</span>()<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">transaction</span> <span class="op">=</span> <span class="ident">TransactionPayload</span>::<span class="ident">builder</span>()
+        .<span class="ident">with_essence</span>(<span class="ident">essence</span>)
+        .<span class="ident">with_unlock_blocks</span>(<span class="ident">UnlockBlocks</span>::<span class="ident">new</span>(<span class="ident">unlock_blocks</span>)<span class="question-mark">?</span>)
+        .<span class="ident">finish</span>()<span class="question-mark">?</span>;
 
     <span class="ident">transfer_obj</span>
         .<span class="ident">emit_event_if_needed</span>(<span class="ident">account_</span>.<span class="ident">id</span>().<span class="ident">to_string</span>(), <span class="ident">TransferProgressType</span>::<span class="ident">PerformingPoW</span>)
