@@ -14,13 +14,13 @@ use crate::{
 
 use getset::Getters;
 use iota::{
-    bee_rest_api::handlers::message_metadata::LedgerInclusionStateDto,
+    bee_rest_api::endpoints::api::v1::message_metadata::LedgerInclusionStateDto,
     client::api::finish_pow,
     message::{
-        payload::transaction::INPUT_OUTPUT_COUNT_MAX,
+        constants::INPUT_OUTPUT_COUNT_MAX,
         prelude::{
             Essence, Input, Message as IotaMessage, MessageId, Payload, RegularEssence, SignatureLockedSingleOutput,
-            TransactionPayload, UTXOInput,
+            TransactionPayload, UTXOInput, UnlockBlocks,
         },
     },
 };
@@ -1200,11 +1200,10 @@ async fn perform_transfer(
         )
         .await?;
 
-    let mut tx_builder = TransactionPayload::builder().with_essence(essence);
-    for unlock_block in unlock_blocks {
-        tx_builder = tx_builder.add_unlock_block(unlock_block);
-    }
-    let transaction = tx_builder.finish()?;
+    let transaction = TransactionPayload::builder()
+        .with_essence(essence)
+        .with_unlock_blocks(UnlockBlocks::new(unlock_blocks)?)
+        .finish()?;
 
     transfer_obj
         .emit_event_if_needed(account_.id().to_string(), TransferProgressType::PerformingPoW)
