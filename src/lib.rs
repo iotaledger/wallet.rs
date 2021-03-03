@@ -104,13 +104,14 @@ mod test_utils {
         account_manager::{AccountManager, ManagerStorage},
         address::{Address, AddressBuilder, AddressWrapper},
         client::ClientOptionsBuilder,
-        message::{Message, MessagePayload},
+        message::{Message, MessagePayload, TransactionBuilderMetadata},
         signing::SignerType,
     };
     use iota::{
         pow::providers::{Provider as PowProvider, ProviderBuilder as PowProviderBuilder},
         Address as IotaAddress, Ed25519Address, Ed25519Signature, Essence, MessageId, Payload,
         SignatureLockedSingleOutput, SignatureUnlock, TransactionId, TransactionPayloadBuilder, UTXOInput, UnlockBlock,
+        UnlockBlocks,
     };
     use once_cell::sync::OnceCell;
     use rand::{distributions::Alphanumeric, thread_rng, Rng};
@@ -173,15 +174,11 @@ mod test_utils {
 
     #[async_trait::async_trait]
     impl crate::storage::StorageAdapter for TestStorage {
-        async fn get(&mut self, account_id: &str) -> crate::Result<String> {
+        async fn get(&self, account_id: &str) -> crate::Result<String> {
             match self.cache.get(account_id) {
                 Some(value) => Ok(value.to_string()),
-                None => Err(crate::Error::AccountNotFound),
+                None => Err(crate::Error::RecordNotFound),
             }
-        }
-
-        async fn get_all(&mut self) -> crate::Result<Vec<String>> {
-            Ok(self.cache.values().cloned().collect())
         }
 
         async fn set(&mut self, account_id: &str, account: String) -> crate::Result<()> {
@@ -190,7 +187,7 @@ mod test_utils {
         }
 
         async fn remove(&mut self, account_id: &str) -> crate::Result<()> {
-            self.cache.remove(account_id).ok_or(crate::Error::AccountNotFound)?;
+            self.cache.remove(account_id).ok_or(crate::Error::RecordNotFound)?;
             Ok(())
         }
     }
@@ -212,7 +209,7 @@ mod test_utils {
         let default_storage = ManagerStorage::Sqlite;
 
         let mut manager = AccountManager::builder()
-            .with_storage(storage_path, default_storage, Some("password"))
+            .with_storage(storage_path, default_storage, None)
             .unwrap()
             .skip_polling()
             .finish()
@@ -493,38 +490,52 @@ mod test_utils {
     );
 
     impl GenerateMessageBuilder {
-        pub fn build(self) -> Message {
+        pub async fn build(self) -> Message {
             let bech32_hrp = self.address.address().bech32_hrp().to_string();
+            let id = MessageId::new([0; 32]);
+            let tx_metadata = TransactionBuilderMetadata {
+                id: &id,
+                bech32_hrp,
+                account_addresses: &[],
+                client_options: &ClientOptionsBuilder::new().build().unwrap(),
+            };
             Message {
-                id: MessageId::new([0; 32]),
+                id,
                 version: 1,
                 parents: vec![MessageId::new([0; 32])],
                 payload_length: 0,
-                payload: Some(MessagePayload::new(
-                    &MessageId::new([0; 32]),
-                    Payload::Transaction(Box::new(
-                        TransactionPayloadBuilder::new()
-                            .with_essence(Essence::Regular(
-                                iota::RegularEssence::builder()
-                                    .add_output(
-                                        SignatureLockedSingleOutput::new(*self.address.address().as_ref(), self.value)
+                payload: Some(
+                    MessagePayload::new(
+                        Payload::Transaction(Box::new(
+                            TransactionPayloadBuilder::new()
+                                .with_essence(Essence::Regular(
+                                    iota::RegularEssence::builder()
+                                        .add_output(
+                                            SignatureLockedSingleOutput::new(
+                                                *self.address.address().as_ref(),
+                                                self.value,
+                                            )
                                             .unwrap()
                                             .into(),
-                                    )
-                                    .add_input(UTXOInput::new(self.input_transaction_id, 0).unwrap().into())
-                                    .finish()
+                                        )
+                                        .add_input(UTXOInput::new(self.input_transaction_id, 0).unwrap().into())
+                                        .finish()
+                                        .unwrap(),
+                                ))
+                                .with_unlock_blocks(
+                                    UnlockBlocks::new(vec![UnlockBlock::Signature(SignatureUnlock::Ed25519(
+                                        Ed25519Signature::new([0; 32], Box::new([0])),
+                                    ))])
                                     .unwrap(),
-                            ))
-                            .add_unlock_block(UnlockBlock::Signature(SignatureUnlock::Ed25519(Ed25519Signature::new(
-                                [0; 32],
-                                Box::new([0]),
-                            ))))
-                            .finish()
-                            .unwrap(),
-                    )),
-                    bech32_hrp,
-                    &[],
-                )),
+                                )
+                                .finish()
+                                .unwrap(),
+                        )),
+                        &tx_metadata,
+                    )
+                    .await
+                    .unwrap(),
+                ),
                 timestamp: chrono::Utc::now(),
                 nonce: 0,
                 value: self.value,

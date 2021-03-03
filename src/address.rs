@@ -3,13 +3,13 @@
 
 use crate::{
     account::Account,
-    message::{MessagePayload, MessageType, TransactionEssence},
+    message::{MessagePayload, MessageType, TransactionEssence, TransactionInput},
     signing::GenerateAddressMetadata,
 };
 use getset::{Getters, Setters};
 use iota::{
     bee_rest_api::{
-        handlers::output::OutputResponse,
+        endpoints::api::v1::output::OutputResponse,
         types::{AddressDto, OutputDto},
     },
     MessageId, TransactionId,
@@ -82,8 +82,8 @@ impl AddressOutput {
                 match m.payload() {
                     Some(MessagePayload::Transaction(tx)) => match tx.essence() {
                         TransactionEssence::Regular(essence) => essence.inputs().iter().any(|input| {
-                            if let Input::UTXO(x) = input {
-                                x == &output_id
+                            if let TransactionInput::UTXO(x) = input {
+                                x.input == output_id
                             } else {
                                 false
                             }
@@ -304,17 +304,17 @@ impl Address {
 
     pub(crate) fn handle_new_output(&mut self, output: AddressOutput) {
         if !self.outputs.iter().any(|o| o == &output) {
-            let spent_existing_output = self.outputs.iter().position(|o| {
+            let spent_existing_output = self.outputs.iter_mut().find(|o| {
                 o.message_id == output.message_id
                     && o.transaction_id == output.transaction_id
                     && o.index == output.index
                     && o.amount == output.amount
                     && (!o.is_spent && output.is_spent)
             });
-            if let Some(spent_output) = spent_existing_output {
-                log::debug!("[ADDRESS] got spent of {:?}", spent_output);
+            if let Some(spent_existing_output) = spent_existing_output {
+                log::debug!("[ADDRESS] got spent of {:?}", spent_existing_output);
                 self.balance -= output.amount;
-                self.outputs.remove(spent_output);
+                spent_existing_output.is_spent = true;
             } else {
                 log::debug!("[ADDRESS] got new output {:?}", output);
                 self.balance += output.amount;
@@ -325,7 +325,10 @@ impl Address {
 
     /// Gets the list of outputs that aren't spent or pending.
     pub fn available_outputs(&self, account: &Account) -> Vec<&AddressOutput> {
-        self.outputs.iter().filter(|o| !o.is_used(account)).collect()
+        self.outputs
+            .iter()
+            .filter(|o| !(o.is_spent || o.is_used(account)))
+            .collect()
     }
 
     pub(crate) fn available_balance(&self, account: &Account) -> u64 {
@@ -436,7 +439,8 @@ mod tests {
         let spent_tx = crate::test_utils::GenerateMessageBuilder::default()
             .address(address.clone())
             .incoming(false)
-            .build();
+            .build()
+            .await;
 
         account_handle.write().await.append_messages(vec![spent_tx]);
 

@@ -22,16 +22,40 @@ export declare type Essence = {
   data: RegularEssence
 }
 
-export declare interface Input {
-  transactionId: string
-  outputIndex: number
+export declare interface UTXOInput {
+  input: string
+  metadata?: {
+    transactionId: string
+    messageId: string
+    index: number
+    amount: number
+    is_spent: boolean
+    address: string
+  }
 }
 
-export declare interface Output {
+export declare type Input = { type: 'UTXO', data: UTXOInput }
+
+export declare interface SignatureLockedSingleOutput {
   address: string
   amount: number
   remainder: boolean
 }
+
+export declare interface SignatureLockedDustAllowance {
+  address: string
+  amount: number
+  remainder: boolean
+}
+
+export declare type Output = {
+  type: 'SignatureLockedSingleOutput',
+  data: SignatureLockedSingleOutput
+}
+  | {
+    type: 'SignatureLockedDustAllowance',
+    data: SignatureLockedDustAllowance
+  }
 
 export declare interface Transaction {
   essence: Essence;
@@ -79,6 +103,11 @@ export declare class Account {
   listMessages(count?: number, from?: number, messageType?: MessageType): Message[]
   listAddresses(unspent?: boolean): Address[]
   sync(options?: SyncOptions): Promise<SyncedAccount>
+  send(address: string, amount: number, options?: TransferOptions): Promise<Message>
+  retry(messageId: string): Promise<Message>
+  reattach(messageId: string): Promise<Message>
+  promote(messageId: string): Promise<Message>
+  consolidateOutputs(): Promise<Message[]>
   setAlias(alias: string): void
   setClientOptions(options: ClientOptions): void
   getMessage(id: string): Message | undefined
@@ -100,12 +129,7 @@ export declare class TransferOptions {
   indexation?: { index: string | number[] | Uint8Array, data?: string | number[] | Uint8Array }
 }
 
-export declare class SyncedAccount {
-  send(address: string, amount: number, options?: TransferOptions): Promise<Message>
-  retry(messageId: string): Promise<Message>
-  reattach(messageId: string): Promise<Message>
-  promote(messageId: string): Promise<Message>
-}
+export declare class SyncedAccount { }
 
 export declare interface ClientOptions {
   node?: string;
@@ -138,6 +162,25 @@ export declare interface ManagerOptions {
   storagePath?: string
   storageType?: StorageType
   storagePassword?: string
+  outputConsolidationThreshold?: number
+  automaticOutputConsolidation?: boolean
+}
+
+export declare interface BalanceChangeEvent {
+  accountId: string
+  address: string
+  balanceChange: { spent: number, received: number }
+}
+
+export declare interface TransactionConfirmationEvent {
+  accountId: string
+  message: Message
+  confirmed: boolean
+}
+
+export declare interface TransactionEvent {
+  accountId: string
+  message: Message
 }
 
 export declare class AccountManager {
@@ -157,6 +200,17 @@ export declare class AccountManager {
   importAccounts(source: string, password: string): void
   isLatestAddressUnused(): Promise<boolean>
   setClientOptions(options: ClientOptions): void
+  // events
+  getBalanceChangeEvents(count?: number, skip?: number, fromTimestamp?: number): BalanceChangeEvent[]
+  getBalanceChangeEventCount(fromTimestamp?: number): number
+  getTransactionConfirmationEvents(count?: number, skip?: number, fromTimestamp?: number): TransactionConfirmationEvent[]
+  getTransactionConfirmationEventCount(fromTimestamp?: number): number
+  getNewTransactionEvents(count?: number, skip?: number, fromTimestamp?: number): TransactionEvent[]
+  getNewTransactionEventCount(fromTimestamp?: number): number
+  getReattachmentEvents(count?: number, skip?: number, fromTimestamp?: number): TransactionEvent[]
+  getReattachmentEventCount(fromTimestamp?: number): number
+  getBroadcastEvents(count?: number, skip?: number, fromTimestamp?: number): TransactionEvent[]
+  getBroadcastEventCount(fromTimestamp?: number): number
 }
 
 export declare type Event = 'ErrorThrown' |
@@ -164,7 +218,8 @@ export declare type Event = 'ErrorThrown' |
   'NewTransaction' |
   'ConfirmationStateChange' |
   'Reattachment' |
-  'Broadcast'
+  'Broadcast' |
+  'TransferProgress'
 
 export interface LoggerOutput {
   name?: string

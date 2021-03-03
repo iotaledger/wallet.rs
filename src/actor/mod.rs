@@ -408,8 +408,7 @@ impl WalletMessageHandler {
 
     async fn send_transfer(&self, account_id: &AccountIdentifier, transfer: Transfer) -> Result<ResponseType> {
         let account = self.account_manager.get_account(account_id.clone()).await?;
-        let synced = account.sync().await.execute().await?;
-        let message = synced.transfer(transfer).await?;
+        let message = account.transfer(transfer).await?;
         Ok(ResponseType::SentTransfer(message))
     }
 

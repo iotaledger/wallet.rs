@@ -11,7 +11,7 @@ use std::{
 
 use iota_wallet::event::{
     on_balance_change, on_broadcast, on_confirmation_state_change, on_error, on_new_transaction, on_reattachment,
-    EventId,
+    on_transfer_progress, EventId,
 };
 use neon::prelude::*;
 
@@ -22,6 +22,7 @@ pub enum EventType {
     ConfirmationStateChange,
     Reattachment,
     Broadcast,
+    TransferProgress,
 }
 
 impl TryFrom<&str> for EventType {
@@ -35,32 +36,54 @@ impl TryFrom<&str> for EventType {
             "ConfirmationStateChange" => EventType::ConfirmationStateChange,
             "Reattachment" => EventType::Reattachment,
             "Broadcast" => EventType::Broadcast,
+            "TransferProgress" => EventType::TransferProgress,
             _ => return Err(format!("invalid event name {}", value)),
         };
         Ok(event_type)
     }
 }
 
-fn listen(event_type: EventType, sender: Sender<String>) -> EventId {
+async fn listen(event_type: EventType, sender: Sender<String>) -> EventId {
     match event_type {
         EventType::ErrorThrown => on_error(move |error| {
             let _ = sender.send(serde_json::to_string(&error).unwrap());
         }),
-        EventType::BalanceChange => on_balance_change(move |event| {
-            let _ = sender.send(serde_json::to_string(&event).unwrap());
-        }),
-        EventType::NewTransaction => on_new_transaction(move |event| {
-            let _ = sender.send(serde_json::to_string(&event).unwrap());
-        }),
-        EventType::ConfirmationStateChange => on_confirmation_state_change(move |event| {
-            let _ = sender.send(serde_json::to_string(&event).unwrap());
-        }),
-        EventType::Reattachment => on_reattachment(move |event| {
-            let _ = sender.send(serde_json::to_string(&event).unwrap());
-        }),
-        EventType::Broadcast => on_broadcast(move |event| {
-            let _ = sender.send(serde_json::to_string(&event).unwrap());
-        }),
+        EventType::BalanceChange => {
+            on_balance_change(move |event| {
+                let _ = sender.send(serde_json::to_string(&event).unwrap());
+            })
+            .await
+        }
+        EventType::NewTransaction => {
+            on_new_transaction(move |event| {
+                let _ = sender.send(serde_json::to_string(&event).unwrap());
+            })
+            .await
+        }
+        EventType::ConfirmationStateChange => {
+            on_confirmation_state_change(move |event| {
+                let _ = sender.send(serde_json::to_string(&event).unwrap());
+            })
+            .await
+        }
+        EventType::Reattachment => {
+            on_reattachment(move |event| {
+                let _ = sender.send(serde_json::to_string(&event).unwrap());
+            })
+            .await
+        }
+        EventType::Broadcast => {
+            on_broadcast(move |event| {
+                let _ = sender.send(serde_json::to_string(&event).unwrap());
+            })
+            .await
+        }
+        EventType::TransferProgress => {
+            on_transfer_progress(move |event| {
+                let _ = sender.send(serde_json::to_string(&event).unwrap());
+            })
+            .await
+        }
     }
 }
 
@@ -97,7 +120,7 @@ declare_types! {
             let event = EventType::try_from(cx.argument::<JsString>(0)?.value().as_str()).expect("invalid event type");
             let (tx, rx) = channel();
 
-            listen(event, tx);
+            crate::block_on(listen(event, tx));
 
             Ok(EventListener {
                 rx: Arc::new(Mutex::new(rx)),

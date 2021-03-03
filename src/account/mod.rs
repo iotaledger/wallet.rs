@@ -5,7 +5,8 @@ use crate::{
     account_manager::AccountStore,
     address::{Address, AddressBuilder, AddressWrapper},
     client::ClientOptions,
-    message::{Message, MessageType},
+    event::TransferProgressType,
+    message::{Message, MessageType, Transfer},
     signing::{GenerateAddressMetadata, SignerType},
 };
 
@@ -102,21 +103,29 @@ impl From<usize> for AccountIdentifier {
 pub struct AccountInitialiser {
     accounts: AccountStore,
     storage_path: PathBuf,
+    output_consolidation_threshold: usize,
     alias: Option<String>,
     created_at: Option<DateTime<Local>>,
     messages: Vec<Message>,
     addresses: Vec<Address>,
-    client_options: ClientOptions,
+    #[doc(hidden)]
+    pub client_options: ClientOptions,
     signer_type: Option<SignerType>,
     skip_persistance: bool,
 }
 
 impl AccountInitialiser {
     /// Initialises the account builder.
-    pub(crate) fn new(client_options: ClientOptions, accounts: AccountStore, storage_path: PathBuf) -> Self {
+    pub(crate) fn new(
+        client_options: ClientOptions,
+        accounts: AccountStore,
+        storage_path: PathBuf,
+        output_consolidation_threshold: usize,
+    ) -> Self {
         Self {
             accounts,
             storage_path,
+            output_consolidation_threshold,
             alias: None,
             created_at: None,
             messages: vec![],
@@ -187,7 +196,7 @@ impl AccountInitialiser {
 
         if let Some(latest_account_handle) = accounts.values().last() {
             let latest_account = latest_account_handle.read().await;
-            if latest_account.messages().is_empty() && latest_account.balance().total == 0 {
+            if latest_account.messages().is_empty() && latest_account.addresses().iter().all(|a| a.outputs.is_empty()) {
                 return Err(crate::Error::LatestAccountIsEmpty);
             }
         }
@@ -265,11 +274,11 @@ impl AccountInitialiser {
         account.set_id(format!("{}{}", ACCOUNT_ID_PREFIX, hex::encode(digest)));
 
         let guard = if self.skip_persistance {
-            account.into()
+            AccountHandle::new(account, self.output_consolidation_threshold)
         } else {
             account.save().await?;
             let account_id = account.id().clone();
-            let guard: AccountHandle = account.into();
+            let guard = AccountHandle::new(account, self.output_consolidation_threshold);
             drop(accounts);
             self.accounts.write().await.insert(account_id, guard.clone());
             let _ = crate::monitor::monitor_account_addresses_balance(guard.clone()).await;
@@ -325,20 +334,33 @@ pub struct Account {
 pub struct AccountHandle {
     inner: Arc<RwLock<Account>>,
     locked_addresses: Arc<Mutex<Vec<AddressWrapper>>>,
+    pub(crate) output_consolidation_threshold: usize,
 }
 
 impl AccountHandle {
-    pub(crate) fn locked_addresses(&self) -> Arc<Mutex<Vec<AddressWrapper>>> {
-        self.locked_addresses.clone()
-    }
-}
-
-impl From<Account> for AccountHandle {
-    fn from(account: Account) -> Self {
+    pub(crate) fn new(account: Account, output_consolidation_threshold: usize) -> Self {
         Self {
             inner: Arc::new(RwLock::new(account)),
             locked_addresses: Default::default(),
+            output_consolidation_threshold,
         }
+    }
+
+    pub(crate) fn locked_addresses(&self) -> Arc<Mutex<Vec<AddressWrapper>>> {
+        self.locked_addresses.clone()
+    }
+
+    /// Returns the addresses that need output consolidation.
+    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+    pub(crate) async fn output_consolidation_addresses(&self) -> Vec<AddressWrapper> {
+        let mut addresses = Vec::new();
+        let account = self.inner.read().await;
+        for address in account.addresses() {
+            if address.available_outputs(&account).len() >= self.output_consolidation_threshold {
+                addresses.push(address.address().clone());
+            }
+        }
+        addresses
     }
 }
 
@@ -382,6 +404,36 @@ impl AccountHandle {
     /// Returns the builder to setup the process to synchronize this account with the Tangle.
     pub async fn sync(&self) -> AccountSynchronizer {
         AccountSynchronizer::new(self.clone()).await
+    }
+
+    /// Consolidate account outputs.
+    pub async fn consolidate_outputs(&self) -> crate::Result<Vec<Message>> {
+        self.sync().await.execute().await?.consolidate_outputs().await
+    }
+
+    /// Send messages.
+    pub async fn transfer(&self, transfer_obj: Transfer) -> crate::Result<Message> {
+        let account_id = self.id().await;
+        transfer_obj
+            .emit_event_if_needed(account_id.clone(), TransferProgressType::SyncingAccount)
+            .await;
+        let synced = self.sync().await.execute().await?;
+        synced.transfer(transfer_obj).await
+    }
+
+    /// Retry message.
+    pub async fn retry(&self, message_id: &MessageId) -> crate::Result<Message> {
+        self.sync().await.execute().await?.retry(message_id).await
+    }
+
+    /// Promote message.
+    pub async fn promote(&self, message_id: &MessageId) -> crate::Result<Message> {
+        self.sync().await.execute().await?.promote(message_id).await
+    }
+
+    /// Reattach message.
+    pub async fn reattach(&self, message_id: &MessageId) -> crate::Result<Message> {
+        self.sync().await.execute().await?.reattach(message_id).await
     }
 
     /// Gets a new unused address and links it to this account.
@@ -522,7 +574,7 @@ impl Account {
                 .await?
                 .lock()
                 .await
-                .set(&self.id, serde_json::to_string(&self)?)
+                .save_account(&self.id, self)
                 .await?;
         }
         Ok(())
@@ -541,7 +593,7 @@ impl Account {
 
     /// Returns the most recent address of the account.
     pub fn latest_address(&self) -> &Address {
-        // the addresses list is never empty because we generate an address on the accout creation
+        // the addresses list is never empty because we generate an address on the account creation
         self.addresses
             .iter()
             .filter(|a| !a.internal())
@@ -927,13 +979,15 @@ mod tests {
             .address(first_address.clone())
             .value(15)
             .input_transaction_id(first_address.outputs[0].transaction_id)
-            .build();
+            .build()
+            .await;
         let confirmed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(second_address.clone())
             .value(10)
             .input_transaction_id(second_address.outputs[0].transaction_id)
             .confirmed(Some(true))
-            .build();
+            .build()
+            .await;
 
         account_handle
             .write()
@@ -957,18 +1011,22 @@ mod tests {
         let received_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
             .incoming(true)
-            .build();
+            .build()
+            .await;
         let failed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
             .broadcasted(false)
-            .build();
+            .build()
+            .await;
         let unconfirmed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
             .confirmed(None)
-            .build();
+            .build()
+            .await;
         let value_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
-            .build();
+            .build()
+            .await;
         account_handle.write().await.append_messages(vec![
             received_message,
             failed_message,
@@ -996,31 +1054,36 @@ mod tests {
             .incoming(true)
             .confirmed(Some(true))
             .broadcasted(true)
-            .build();
+            .build()
+            .await;
         let sent_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(external_address.clone())
             .incoming(false)
             .confirmed(Some(true))
             .broadcasted(true)
-            .build();
+            .build()
+            .await;
         let failed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
             .incoming(false)
             .confirmed(Some(true))
             .broadcasted(false)
-            .build();
+            .build()
+            .await;
         let unconfirmed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
             .incoming(false)
             .confirmed(None)
             .broadcasted(true)
-            .build();
+            .build()
+            .await;
         let value_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
             .incoming(false)
             .confirmed(Some(true))
             .broadcasted(true)
-            .build();
+            .build()
+            .await;
 
         account_handle.write().await.append_messages(vec![
             received_message.clone(),
@@ -1056,12 +1119,10 @@ mod tests {
         let manager = crate::test_utils::get_account_manager().await;
         let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
 
-        let message = crate::test_utils::GenerateMessageBuilder::default().build();
-        account_handle.write().await.append_messages(vec![
-            crate::test_utils::GenerateMessageBuilder::default().build(),
-            message.clone(),
-        ]);
-        assert_eq!(account_handle.read().await.get_message(message.id()).unwrap(), &message);
+        let m1 = crate::test_utils::GenerateMessageBuilder::default().build().await;
+        let m2 = crate::test_utils::GenerateMessageBuilder::default().build().await;
+        account_handle.write().await.append_messages(vec![m1, m2.clone()]);
+        assert_eq!(account_handle.read().await.get_message(m2.id()).unwrap(), &m2);
     }
 
     #[tokio::test]
@@ -1081,7 +1142,8 @@ mod tests {
                 let spent_tx = crate::test_utils::GenerateMessageBuilder::default()
                     .address(spent_address.clone())
                     .incoming(false)
-                    .build();
+                    .build()
+                    .await;
 
                 account_handle.write().await.append_messages(vec![spent_tx]);
 
