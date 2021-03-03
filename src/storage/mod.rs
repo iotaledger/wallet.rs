@@ -110,7 +110,7 @@ impl StorageManager {
         self.storage.get(key).await
     }
 
-    pub async fn get_accounts(&mut self) -> crate::Result<Vec<ParsedAccount>> {
+    pub async fn get_accounts(&mut self) -> crate::Result<Vec<Account>> {
         if self.account_indexation.is_empty() {
             if let Ok(record) = self.storage.get(ACCOUNT_INDEXATION_KEY).await {
                 self.account_indexation = serde_json::from_str(&record)?;
@@ -370,18 +370,13 @@ pub(crate) fn decrypt_record(record: &str, encryption_key: &[u8; 32]) -> crate::
     Ok(String::from_utf8_lossy(&pt).to_string())
 }
 
-pub(crate) enum ParsedAccount {
-    Account(Account),
-    EncryptedAccount(String),
-}
-
 fn parse_accounts(
     storage_path: &PathBuf,
     accounts: &[String],
     encryption_key: &Option<[u8; 32]>,
-) -> crate::Result<Vec<ParsedAccount>> {
+) -> crate::Result<Vec<Account>> {
     let mut err = None;
-    let accounts: Vec<Option<ParsedAccount>> = accounts
+    let accounts: Vec<Option<Account>> = accounts
         .iter()
         .map(|account| {
             let account_json = if account.starts_with('{') {
@@ -401,7 +396,7 @@ fn parse_accounts(
                 match serde_json::from_str::<Account>(&json) {
                     Ok(mut acc) => {
                         acc.set_storage_path(storage_path.clone());
-                        Some(ParsedAccount::Account(acc))
+                        Some(acc)
                     }
                     Err(e) => {
                         err = Some(e.into());
@@ -409,7 +404,8 @@ fn parse_accounts(
                     }
                 }
             } else {
-                Some(ParsedAccount::EncryptedAccount(account.to_string()))
+                err = Some(crate::Error::StorageIsEncrypted);
+                None
             }
         })
         .collect();
@@ -486,9 +482,6 @@ mod tests {
         assert!(response.is_ok());
         let parsed_accounts = response.unwrap();
         let parsed_account = parsed_accounts.first().unwrap();
-        match parsed_account {
-            super::ParsedAccount::Account(parsed) => assert_eq!(parsed, &*account_handle.read().await),
-            _ => panic!("invalid parsed account format"),
-        }
+        assert_eq!(parsed_account, &*account_handle.read().await);
     }
 }
