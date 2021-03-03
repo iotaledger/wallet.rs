@@ -9,7 +9,7 @@ use crate::{
 };
 
 use iota::{
-    bee_rest_api::handlers::{
+    bee_rest_api::endpoints::api::v1::{
         message_metadata::{LedgerInclusionStateDto, MessageMetadataResponse},
         output::OutputResponse,
     },

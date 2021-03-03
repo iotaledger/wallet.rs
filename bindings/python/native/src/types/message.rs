@@ -15,7 +15,7 @@ use iota::{
     ReferenceUnlock as RustReferenceUnlock, RegularEssence as RustRegularEssence,
     SignatureLockedSingleOutput as RustSignatureLockedSingleOutput, SignatureUnlock as RustSignatureUnlock,
     TransactionId as RustTransationId, TransactionPayload as RustTransactionPayload, UTXOInput as RustUTXOInput,
-    UnlockBlock as RustUnlockBlock,
+    UnlockBlock as RustUnlockBlock, UnlockBlocks as RustUnlockBlocks,
 };
 // use iota::MessageId as RustMessageId,
 use iota::{Address as IotaAddress, MessageId, TransactionId};
@@ -463,10 +463,13 @@ pub async fn to_rust_payload(
         let mut transaction = RustTransactionPayload::builder();
         transaction = transaction.with_essence(transaction_payload[0].essence.clone().try_into()?);
 
-        let unlock_blocks = transaction_payload[0].unlock_blocks.clone();
-        for unlock_block in unlock_blocks {
-            transaction = transaction.add_unlock_block(unlock_block.try_into()?);
-        }
+        let unlock_blocks: Result<Vec<RustUnlockBlock>> = transaction_payload[0]
+            .unlock_blocks
+            .to_vec()
+            .into_iter()
+            .map(|u| u.try_into())
+            .collect();
+        transaction = transaction.with_unlock_blocks(RustUnlockBlocks::new(unlock_blocks?)?);
         let metadata = RustWalletTransactionBuilderMetadata {
             id: message_id,
             bech32_hrp,

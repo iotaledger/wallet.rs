@@ -9,7 +9,7 @@ use crate::{
 use getset::{Getters, Setters};
 use iota::{
     bee_rest_api::{
-        handlers::output::OutputResponse,
+        endpoints::api::v1::output::OutputResponse,
         types::{AddressDto, OutputDto},
     },
     MessageId, TransactionId,

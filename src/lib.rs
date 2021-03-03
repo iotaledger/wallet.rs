@@ -111,6 +111,7 @@ mod test_utils {
         pow::providers::{Provider as PowProvider, ProviderBuilder as PowProviderBuilder},
         Address as IotaAddress, Ed25519Address, Ed25519Signature, Essence, MessageId, Payload,
         SignatureLockedSingleOutput, SignatureUnlock, TransactionId, TransactionPayloadBuilder, UTXOInput, UnlockBlock,
+        UnlockBlocks,
     };
     use once_cell::sync::OnceCell;
     use rand::{distributions::Alphanumeric, thread_rng, Rng};
@@ -521,9 +522,12 @@ mod test_utils {
                                         .finish()
                                         .unwrap(),
                                 ))
-                                .add_unlock_block(UnlockBlock::Signature(SignatureUnlock::Ed25519(
-                                    Ed25519Signature::new([0; 32], Box::new([0])),
-                                )))
+                                .with_unlock_blocks(
+                                    UnlockBlocks::new(vec![UnlockBlock::Signature(SignatureUnlock::Ed25519(
+                                        Ed25519Signature::new([0; 32], Box::new([0])),
+                                    ))])
+                                    .unwrap(),
+                                )
                                 .finish()
                                 .unwrap(),
                         )),

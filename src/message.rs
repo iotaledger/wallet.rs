@@ -548,7 +548,7 @@ impl MessageTransactionPayload {
     #[doc(hidden)]
     pub async fn new(payload: &TransactionPayload, metadata: &TransactionBuilderMetadata<'_>) -> crate::Result<Self> {
         let mut unlock_blocks = Vec::new();
-        for unlock_block in payload.unlock_blocks() {
+        for unlock_block in payload.unlock_blocks().as_ref() {
             unlock_blocks.push(unlock_block.clone());
         }
         Ok(Self {
