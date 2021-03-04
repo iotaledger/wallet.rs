@@ -3766,7 +3766,7 @@
                 <span class="ident">BalanceChange</span>::<span class="ident">spent</span>(<span class="number">3</span>),
             ];
             <span class="kw">for</span> <span class="ident">change</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">change_events</span> {
-                <span class="ident">emit_balance_change</span>(<span class="kw-2">&amp;</span><span class="ident">account</span>, <span class="ident">account</span>.<span class="ident">latest_address</span>().<span class="ident">address</span>(), <span class="ident">change</span>.<span class="ident">clone</span>())
+                <span class="ident">emit_balance_change</span>(<span class="kw-2">&amp;</span><span class="ident">account</span>, <span class="ident">account</span>.<span class="ident">latest_address</span>().<span class="ident">address</span>(), <span class="macro">vec</span><span class="macro">!</span>[], <span class="ident">change</span>.<span class="ident">clone</span>())
                     .<span class="kw">await</span>
                     .<span class="ident">unwrap</span>();
             }
