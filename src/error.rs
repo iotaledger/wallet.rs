@@ -52,7 +52,7 @@ pub enum Error {
     StrongholdError(crate::stronghold::Error),
     /// iota.rs error.
     #[error("`{0}`")]
-    ClientError(#[from] iota::client::Error),
+    ClientError(Box<iota::client::Error>),
     /// url parse error (client options builder).
     #[error("`{0}`")]
     UrlError(#[from] url::ParseError),
@@ -180,6 +180,12 @@ pub enum Error {
 impl Drop for Error {
     fn drop(&mut self) {
         crate::event::emit_error(self);
+    }
+}
+
+impl From<iota::client::Error> for Error {
+    fn from(error: iota::client::Error) -> Self {
+        Self::ClientError(Box::new(error))
     }
 }
 

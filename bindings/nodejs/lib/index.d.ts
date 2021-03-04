@@ -131,8 +131,18 @@ export declare class TransferOptions {
 
 export declare class SyncedAccount { }
 
+export declare type NodeUrl = string
+
+export declare interface Node {
+  url: NodeUrl
+  auth?: {
+    username: string
+    password: string
+  }
+}
+
 export declare interface ClientOptions {
-  node?: string;
+  node?: NodeUrl | Node;
   nodes?: string[];
   network?: string;
   quorumSize?: number;
