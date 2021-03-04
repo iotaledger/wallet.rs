@@ -292,6 +292,12 @@
 <span id="289">289</span>
 <span id="290">290</span>
 <span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -347,7 +353,7 @@
     <span class="ident">StrongholdError</span>(<span class="kw">crate</span>::<span class="ident">stronghold</span>::<span class="ident">Error</span>),
     <span class="doccomment">/// iota.rs error.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;`{0}`&quot;</span>)]</span>
-    <span class="ident">ClientError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">iota</span>::<span class="ident">client</span>::<span class="ident">Error</span>),
+    <span class="ident">ClientError</span>(<span class="ident">Box</span><span class="op">&lt;</span><span class="ident">iota</span>::<span class="ident">client</span>::<span class="ident">Error</span><span class="op">&gt;</span>),
     <span class="doccomment">/// url parse error (client options builder).</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;`{0}`&quot;</span>)]</span>
     <span class="ident">UrlError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">url</span>::<span class="ident">ParseError</span>),
@@ -475,6 +481,12 @@
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Error</span> {
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="kw">crate</span>::<span class="ident">event</span>::<span class="ident">emit_error</span>(<span class="self">self</span>);
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">iota</span>::<span class="ident">client</span>::<span class="ident">Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">error</span>: <span class="ident">iota</span>::<span class="ident">client</span>::<span class="ident">Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span>::<span class="ident">ClientError</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">error</span>))
     }
 }
 

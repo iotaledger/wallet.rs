@@ -1946,6 +1946,10 @@
 <span id="1943">1943</span>
 <span id="1944">1944</span>
 <span id="1945">1945</span>
+<span id="1946">1946</span>
+<span id="1947">1947</span>
+<span id="1948">1948</span>
+<span id="1949">1949</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -3110,8 +3114,10 @@
                             <span class="ident">promotions</span>.<span class="ident">push</span>(<span class="ident">new_message</span>);
                         }
                     }
-                    <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">ClientError</span>(<span class="ident">iota</span>::<span class="ident">client</span>::<span class="ident">Error</span>::<span class="ident">NoNeedPromoteOrReattach</span>(<span class="kw">_</span>))) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">no_need_promote_or_reattach</span>.<span class="ident">push</span>(<span class="ident">message_id</span>);
+                    <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">ClientError</span>(<span class="kw-2">ref</span> <span class="ident">e</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">iota</span>::<span class="ident">client</span>::<span class="ident">Error</span>::<span class="ident">NoNeedPromoteOrReattach</span>(<span class="kw">_</span>) <span class="op">=</span> <span class="ident">e</span>.<span class="ident">as_ref</span>() {
+                            <span class="ident">no_need_promote_or_reattach</span>.<span class="ident">push</span>(<span class="ident">message_id</span>);
+                        }
                     }
                     <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
                 }
@@ -3252,8 +3258,10 @@
                         <span class="ident">promotions</span>.<span class="ident">push</span>(<span class="ident">new_message</span>);
                     }
                 }
-                <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">ClientError</span>(<span class="ident">iota</span>::<span class="ident">client</span>::<span class="ident">Error</span>::<span class="ident">NoNeedPromoteOrReattach</span>(<span class="kw">_</span>))) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">no_need_promote_or_reattach</span>.<span class="ident">push</span>(<span class="ident">message_id</span>);
+                <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">ClientError</span>(<span class="kw-2">ref</span> <span class="ident">e</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">if</span> <span class="kw">let</span> <span class="ident">iota</span>::<span class="ident">client</span>::<span class="ident">Error</span>::<span class="ident">NoNeedPromoteOrReattach</span>(<span class="kw">_</span>) <span class="op">=</span> <span class="ident">e</span>.<span class="ident">as_ref</span>() {
+                        <span class="ident">no_need_promote_or_reattach</span>.<span class="ident">push</span>(<span class="ident">message_id</span>);
+                    }
                 }
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
             }
