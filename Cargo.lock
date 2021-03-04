@@ -3192,6 +3192,7 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite",
  "serde 1.0.123",
+ "serde_json",
  "serde_urlencoded",
  "tokio",
  "tokio-native-tls",
