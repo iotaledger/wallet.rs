@@ -1813,7 +1813,7 @@ mod tests {
                 BalanceChange::spent(3),
             ];
             for change in &change_events {
-                emit_balance_change(&account, account.latest_address().address(), change.clone())
+                emit_balance_change(&account, account.latest_address().address(), vec![], change.clone())
                     .await
                     .unwrap();
             }

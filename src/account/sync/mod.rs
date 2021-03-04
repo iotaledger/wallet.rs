@@ -15,7 +15,7 @@ use crate::{
 use getset::Getters;
 use iota::{
     bee_rest_api::endpoints::api::v1::message_metadata::LedgerInclusionStateDto,
-    client::api::finish_pow,
+    client::{api::finish_pow, AddressOutputsOptions, Client},
     message::{
         constants::INPUT_OUTPUT_COUNT_MAX,
         prelude::{
@@ -23,6 +23,7 @@ use iota::{
             TransactionPayload, UTXOInput, UnlockBlocks,
         },
     },
+    Bech32Address,
 };
 use serde::Serialize;
 use slip10::BIP32Path;
@@ -45,6 +46,37 @@ mod input_selection;
 const OUTPUT_LOCK_TIMEOUT: Duration = Duration::from_secs(30);
 const DUST_ALLOWANCE_VALUE: u64 = 1_000_000;
 
+async fn get_address_outputs(address: Bech32Address, client: &Client) -> crate::Result<Vec<UTXOInput>> {
+    let mut address_outputs = client
+        .get_address()
+        .outputs(
+            &address,
+            AddressOutputsOptions {
+                include_spent: true,
+                ..Default::default()
+            },
+        )
+        .await?
+        .to_vec();
+    // if we hit the max output length, we need to fetch again without including spent outputs
+    if address_outputs.len() == 1000 {
+        let unspent_address_outputs = client
+            .get_address()
+            .outputs(
+                &address,
+                AddressOutputsOptions {
+                    include_spent: false,
+                    ..Default::default()
+                },
+            )
+            .await?
+            .to_vec();
+        address_outputs.extend(unspent_address_outputs);
+        address_outputs.dedup();
+    }
+    Ok(address_outputs)
+}
+
 pub(crate) async fn sync_address(
     account: &Account,
     address: &mut Address,
@@ -55,10 +87,7 @@ pub(crate) async fn sync_address(
 
     let iota_address = address.address();
 
-    let address_outputs = client
-        .get_address()
-        .outputs(&iota_address.to_bech32().into(), Default::default())
-        .await?;
+    let address_outputs = get_address_outputs(iota_address.to_bech32().into(), &client).await?;
     let balance = client
         .get_address()
         .balance(&iota_address.to_bech32().into())
@@ -260,10 +289,7 @@ async fn sync_messages(account: &mut Account) -> crate::Result<Vec<(MessageId, O
             let client = crate::client::get_client(&client_options).await;
             let client = client.read().await;
 
-            let address_outputs = client
-                .get_address()
-                .outputs(&address.address().to_bech32().into(), Default::default())
-                .await?;
+            let address_outputs = get_address_outputs(address.address().to_bech32().into(), &client).await?;
             let balance = client
                 .get_address()
                 .balance(&address.address().to_bech32().into())
@@ -535,7 +561,7 @@ impl AccountSynchronizer {
                         .collect::<Vec<Message>>();
 
                     // balance event
-                    for (address_before_sync, before_sync_balance, _) in &addresses_before_sync {
+                    for (address_before_sync, before_sync_balance, before_sync_outputs) in &addresses_before_sync {
                         let address_after_sync = account_ref
                             .addresses()
                             .iter()
@@ -548,9 +574,18 @@ impl AccountSynchronizer {
                                 before_sync_balance,
                                 address_after_sync.balance()
                             );
+
+                            let mut message_ids = Vec::new();
+                            // check new and updated outputs to find message ids
+                            for output in address_after_sync.outputs() {
+                                if !before_sync_outputs.contains(&output) {
+                                    message_ids.push(output.message_id);
+                                }
+                            }
                             emit_balance_change(
                                 &account_ref,
                                 address_after_sync.address(),
+                                message_ids,
                                 if address_after_sync.balance() > before_sync_balance {
                                     BalanceChange::received(address_after_sync.balance() - before_sync_balance)
                                 } else {
