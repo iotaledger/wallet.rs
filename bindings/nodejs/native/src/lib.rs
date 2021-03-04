@@ -23,6 +23,7 @@ use tokio::{runtime::Runtime, sync::RwLock};
 
 mod classes;
 use classes::*;
+pub(crate) mod types;
 
 type AccountInstanceMap = Arc<RwLock<HashMap<String, AccountHandle>>>;
 type SyncedAccountHandle = Arc<RwLock<SyncedAccount>>;

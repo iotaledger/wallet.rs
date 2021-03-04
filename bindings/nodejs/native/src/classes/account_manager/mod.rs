@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use super::JsAccount;
+use crate::types::ClientOptionsDto;
 use std::{num::NonZeroU64, path::PathBuf, sync::Arc};
 
 use iota_wallet::{
     account::AccountIdentifier,
     account_manager::{AccountManager, ManagerStorage, DEFAULT_STORAGE_FOLDER},
-    client::ClientOptions,
     signing::SignerType,
     DateTime, Local,
 };
@@ -35,7 +35,7 @@ impl Default for AccountSignerType {
 #[derive(Deserialize)]
 pub struct AccountToCreate {
     #[serde(rename = "clientOptions")]
-    pub client_options: ClientOptions,
+    pub client_options: ClientOptionsDto,
     pub alias: Option<String>,
     #[serde(rename = "createdAt")]
     pub created_at: Option<DateTime<Local>>,
@@ -269,7 +269,7 @@ declare_types! {
                 let manager = crate::block_on(ref_.read());
 
                 let mut builder = manager
-                    .create_account(account_to_create.client_options)
+                    .create_account(account_to_create.client_options.into())
                     .expect("failed to create account")
                     .signer_type(match account_to_create.signer_type {
                         AccountSignerType::Stronghold => SignerType::Stronghold,

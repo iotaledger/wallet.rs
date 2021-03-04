@@ -1,6 +1,8 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::types::ClientOptionsDto;
+
 use std::{num::NonZeroU64, str::FromStr};
 
 use iota_wallet::{
@@ -211,14 +213,14 @@ declare_types! {
 
         method setClientOptions(mut cx) {
             let client_options = cx.argument::<JsValue>(0)?;
-            let client_options = neon_serde::from_value(&mut cx, client_options)?;
+            let client_options: ClientOptionsDto = neon_serde::from_value(&mut cx, client_options)?;
             {
                 let this = cx.this();
                 let guard = cx.lock();
                 let id = &this.borrow(&guard).0;
                 crate::block_on(async move {
                     let account_handle = crate::get_account(id).await;
-                    account_handle.set_client_options(client_options).await.expect("failed to update client options");
+                    account_handle.set_client_options(client_options.into()).await.expect("failed to update client options");
                 });
             }
             Ok(cx.undefined().upcast())

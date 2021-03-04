@@ -696,8 +696,8 @@ A dict with the following key/value pairs.
 
 ```python
 client_options = {
-    'nodes': list[str] (opitonal),
-    'node_pool_urls': list[str] (opitonal),
+    'nodes': list[[Node](#node)] (optional),
+    'node_pool_urls': list[str] (optional),
     'network': str (optional),
     'mqtt_broker_options': [BrokerOptions](#brokeroptions) (optional), 
     'local_pow': bool (optional),
@@ -713,6 +713,28 @@ client_options = {
 ```
 
 Note that this message object in `wallet.rs` is not the same as the message object in `iota.rs`.
+
+### Node
+
+A dict with the following key/value pairs.
+
+```python
+node = {
+    'url': string,
+    'auth': [NodeAuth](#nodeauth) (optional),
+}
+```
+
+### NodeAuth
+
+A dict with the following key/value pairs.
+
+```python
+node = {
+    'username': string,
+    'password': string,
+}
+```
 
 ### BrokerOptions
 

@@ -2,17 +2,51 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use dict_derive::{FromPyObject as DeriveFromPyObject, IntoPyObject as DeriveIntoPyObject};
-use iota_wallet::client::{Api as RustApi, BrokerOptions as RustBrokerOptions, ClientOptions as RustClientOptions};
+use iota_wallet::client::{
+    Api as RustApi, BrokerOptions as RustBrokerOptions, ClientOptions as RustClientOptions, Node as RustNode,
+    NodeAuth as RustNodeAuth,
+};
 use std::{
     collections::HashMap,
     convert::{From, Into},
     str::FromStr,
     time::Duration,
 };
+use url::Url;
+
+#[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
+pub struct NodeAuth {
+    username: String,
+    password: String,
+}
+
+impl From<NodeAuth> for RustNodeAuth {
+    fn from(auth: NodeAuth) -> RustNodeAuth {
+        RustNodeAuth {
+            username: auth.username,
+            password: auth.password,
+        }
+    }
+}
+
+#[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
+pub struct Node {
+    url: String,
+    auth: Option<NodeAuth>,
+}
+
+impl From<Node> for RustNode {
+    fn from(node: Node) -> Self {
+        Self {
+            url: Url::parse(&node.url).expect("invalid url"),
+            auth: node.auth.map(|a| a.into()),
+        }
+    }
+}
 
 #[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct ClientOptions {
-    pub nodes: Option<Vec<String>>,
+    pub nodes: Option<Vec<Node>>,
     pub node_pool_urls: Option<Vec<String>>,
     pub network: Option<String>,
     pub mqtt_broker_options: Option<BrokerOptions>,
@@ -53,9 +87,16 @@ impl From<ClientOptions> for RustClientOptions {
     fn from(client_options: ClientOptions) -> Self {
         let mut builder = RustClientOptions::builder();
         if let Some(nodes) = client_options.nodes {
-            builder = builder
-                .with_nodes(&(nodes.iter().map(|node| &node[..]).collect::<Vec<&str>>()))
-                .unwrap();
+            for node in nodes {
+                let node: RustNode = node.into();
+                if let Some(auth) = node.auth {
+                    builder = builder
+                        .with_node_auth(node.url.as_str(), &auth.username, &auth.password)
+                        .unwrap();
+                } else {
+                    builder = builder.with_node(node.url.as_str()).unwrap();
+                }
+            }
         }
         if let Some(node_pool_urls) = client_options.node_pool_urls {
             builder = builder

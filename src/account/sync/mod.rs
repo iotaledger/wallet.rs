@@ -55,7 +55,10 @@ pub(crate) async fn sync_address(
 
     let iota_address = address.address();
 
-    let address_outputs = client.get_address().outputs(&iota_address.to_bech32().into()).await?;
+    let address_outputs = client
+        .get_address()
+        .outputs(&iota_address.to_bech32().into(), Default::default())
+        .await?;
     let balance = client
         .get_address()
         .balance(&iota_address.to_bech32().into())
@@ -259,7 +262,7 @@ async fn sync_messages(account: &mut Account) -> crate::Result<Vec<(MessageId, O
 
             let address_outputs = client
                 .get_address()
-                .outputs(&address.address().to_bech32().into())
+                .outputs(&address.address().to_bech32().into(), Default::default())
                 .await?;
             let balance = client
                 .get_address()
@@ -1361,8 +1364,8 @@ pub(crate) async fn repost_message(
                 .find(|m| m.payload() == message_to_repost.payload())
                 .unwrap();
             if message_to_repost.confirmed().unwrap_or(false) {
-                return Err(crate::Error::ClientError(iota::client::Error::NoNeedPromoteOrReattach(
-                    message_id.to_string(),
+                return Err(crate::Error::ClientError(Box::new(
+                    iota::client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
                 )));
             }
 
