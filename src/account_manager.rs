@@ -1161,8 +1161,10 @@ async fn poll(
                             promotions.push(new_message);
                         }
                     }
-                    Err(crate::Error::ClientError(iota::client::Error::NoNeedPromoteOrReattach(_))) => {
-                        no_need_promote_or_reattach.push(message_id);
+                    Err(crate::Error::ClientError(ref e)) => {
+                        if let iota::client::Error::NoNeedPromoteOrReattach(_) = e.as_ref() {
+                            no_need_promote_or_reattach.push(message_id);
+                        }
                     }
                     _ => {}
                 }
@@ -1303,8 +1305,10 @@ async fn retry_unconfirmed_transactions(synced_accounts: &[SyncedAccount]) -> cr
                         promotions.push(new_message);
                     }
                 }
-                Err(crate::Error::ClientError(iota::client::Error::NoNeedPromoteOrReattach(_))) => {
-                    no_need_promote_or_reattach.push(message_id);
+                Err(crate::Error::ClientError(ref e)) => {
+                    if let iota::client::Error::NoNeedPromoteOrReattach(_) = e.as_ref() {
+                        no_need_promote_or_reattach.push(message_id);
+                    }
                 }
                 _ => {}
             }

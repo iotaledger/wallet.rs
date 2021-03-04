@@ -1399,8 +1399,8 @@ pub(crate) async fn repost_message(
                 .find(|m| m.payload() == message_to_repost.payload())
                 .unwrap();
             if message_to_repost.confirmed().unwrap_or(false) {
-                return Err(crate::Error::ClientError(iota::client::Error::NoNeedPromoteOrReattach(
-                    message_id.to_string(),
+                return Err(crate::Error::ClientError(Box::new(
+                    iota::client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
                 )));
             }
 
