@@ -15,7 +15,7 @@ use crate::{
 use getset::Getters;
 use iota::{
     bee_rest_api::endpoints::api::v1::message_metadata::LedgerInclusionStateDto,
-    client::{api::finish_pow, AddressOutputsOptions},
+    client::{api::finish_pow, AddressOutputsOptions, Client},
     message::{
         constants::INPUT_OUTPUT_COUNT_MAX,
         prelude::{
@@ -23,6 +23,7 @@ use iota::{
             TransactionPayload, UTXOInput, UnlockBlocks,
         },
     },
+    Bech32Address,
 };
 use serde::Serialize;
 use slip10::BIP32Path;
@@ -45,11 +46,35 @@ mod input_selection;
 const OUTPUT_LOCK_TIMEOUT: Duration = Duration::from_secs(30);
 const DUST_ALLOWANCE_VALUE: u64 = 1_000_000;
 
-fn address_outputs_options() -> AddressOutputsOptions {
-    AddressOutputsOptions {
-        include_spent: true,
-        ..Default::default()
+async fn get_address_outputs(address: Bech32Address, client: &Client) -> crate::Result<Vec<UTXOInput>> {
+    let mut address_outputs = client
+        .get_address()
+        .outputs(
+            &address,
+            AddressOutputsOptions {
+                include_spent: true,
+                ..Default::default()
+            },
+        )
+        .await?
+        .to_vec();
+    // if we hit the max output length, we need to fetch again without including spent outputs
+    if address_outputs.len() == 1000 {
+        let unspent_address_outputs = client
+            .get_address()
+            .outputs(
+                &address,
+                AddressOutputsOptions {
+                    include_spent: false,
+                    ..Default::default()
+                },
+            )
+            .await?
+            .to_vec();
+        address_outputs.extend(unspent_address_outputs);
+        address_outputs.dedup();
     }
+    Ok(address_outputs)
 }
 
 pub(crate) async fn sync_address(
@@ -62,10 +87,7 @@ pub(crate) async fn sync_address(
 
     let iota_address = address.address();
 
-    let address_outputs = client
-        .get_address()
-        .outputs(&iota_address.to_bech32().into(), address_outputs_options())
-        .await?;
+    let address_outputs = get_address_outputs(iota_address.to_bech32().into(), &client).await?;
     let balance = client
         .get_address()
         .balance(&iota_address.to_bech32().into())
@@ -267,10 +289,7 @@ async fn sync_messages(account: &mut Account) -> crate::Result<Vec<(MessageId, O
             let client = crate::client::get_client(&client_options).await;
             let client = client.read().await;
 
-            let address_outputs = client
-                .get_address()
-                .outputs(&address.address().to_bech32().into(), address_outputs_options())
-                .await?;
+            let address_outputs = get_address_outputs(address.address().to_bech32().into(), &client).await?;
             let balance = client
                 .get_address()
                 .balance(&address.address().to_bech32().into())
