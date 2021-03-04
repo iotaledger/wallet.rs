@@ -116,6 +116,58 @@ impl SyncedAccount {
 
 #[pymethods]
 impl AccountHandle {
+    /// Bridge to [Account#id](struct.Account.html#method.id).
+    /// Returns the account ID.
+    fn id(&self) -> String {
+        crate::block_on(async { self.account_handle.id().await })
+    }
+
+    /// Bridge to [Account#signer_type](struct.Account.html#method.signer_type).
+    /// Return the singer type of this account.
+    fn signer_type(&self) -> String {
+        match crate::block_on(async { self.account_handle.signer_type().await }) {
+            RustSingerType::Stronghold => "Stronghold".to_string(),
+            RustSingerType::LedgerNano => "LedgerNano".to_string(),
+            RustSingerType::LedgerNanoSimulator => "LedgerNanoSimulator".to_string(),
+            RustSingerType::Custom(s) => s,
+        }
+    }
+
+    /// Bridge to [Account#index](struct.Account.html#method.index).
+    /// Return the account index.
+    fn index(&self) -> usize {
+        crate::block_on(async { self.account_handle.index().await })
+    }
+
+    /// Bridge to [Account#alias](struct.Account.html#method.alias).
+    /// Return the account alias.
+    fn alias(&self) -> String {
+        crate::block_on(async { self.account_handle.alias().await })
+    }
+
+    /// Bridge to [Account#created_at](struct.Account.html#method.created_at).
+    /// Return the created UNIX timestamp
+    fn created_at(&self) -> i64 {
+        crate::block_on(async { self.account_handle.created_at().await }).timestamp()
+    }
+
+    /// Bridge to [Account#last_synced_at](struct.Account.html#method.last_synced_at).
+    /// Return the last synced UNIX timestamp
+    fn last_synced_at(&self) -> Option<i64> {
+        crate::block_on(async { self.account_handle.last_synced_at().await }).map(|t| t.timestamp())
+    }
+
+    /// Bridge to [Account#client_options](struct.Account.html#method.client_options).
+    /// Return the client options of this account
+    fn client_options(&self) -> ClientOptions {
+        crate::block_on(async { self.account_handle.client_options().await }).into()
+    }
+
+    // #[doc = "Bridge to [Account#bech32_hrp](struct.Account.html#method.bech32_hrp)."] => bech32_hrp => String
+    fn bech32_hrp(&self) -> String {
+        crate::block_on(async { self.account_handle.bech32_hrp().await })
+    }
+
     /// Returns the builder to setup the process to synchronize this account with the Tangle.
     fn sync(&self) -> AccountSynchronizer {
         let account_synchronizer = crate::block_on(async { self.account_handle.sync().await });

@@ -343,7 +343,8 @@ impl Into<iota::BrokerOptions> for BrokerOptions {
 
 /// The client options type.
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, Getters)]
-#[getset(get = "pub(crate)")]
+/// Need to set the get methods to be public for binding
+#[getset(get = "pub")]
 pub struct ClientOptions {
     /// this option is here just to simplify usage from consumers using the deserialization
     node: Option<Url>,
