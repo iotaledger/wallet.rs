@@ -213,9 +213,11 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(any(feature = "plugin"))]
-            MessageType::CallPlugin{ plugin, method: _, payload: _ } => {
-                Ok(ResponseType::CalledPlugin(plugin.to_string()))
-            }
+            MessageType::CallPlugin {
+                plugin,
+                method: _,
+                payload: _,
+            } => Ok(ResponseType::CalledPlugin(plugin.to_string())),
         };
 
         let response = match response {
