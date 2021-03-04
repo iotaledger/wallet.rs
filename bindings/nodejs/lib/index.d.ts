@@ -169,6 +169,7 @@ export declare interface ManagerOptions {
 export declare interface BalanceChangeEvent {
   accountId: string
   address: string
+  messageIds: string[]
   balanceChange: { spent: number, received: number }
 }
 
