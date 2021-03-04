@@ -177,12 +177,12 @@ impl AccountManager {
         Ok(())
     }
 
-    pub fn verify_mnemonic(&mut self, mnemonic: String) -> Result<()> {
+    pub fn verifyMnemonic(&mut self, mnemonic: String) -> Result<()> {
         self.manager.verify_mnemonic(mnemonic).expect("error verifying mnemonic");
         Ok(())
     }
 
-    pub fn create_account(&self, client_options: ClientOptions) -> Result<AccountInitialiser>{
+    pub fn createAccount(&self, client_options: ClientOptions) -> Result<AccountInitialiser>{
         let initialiser = self.manager.create_account(client_options.get_internal())
             .expect("Failed to initialise accauntinitialiser");
         

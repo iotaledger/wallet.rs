@@ -3,12 +3,18 @@ package org.iota.wallet;
 
 
 public final class Address {
+    @Override
+    public String toString() {
+        return this.to_string();
+    }
+
     public boolean equals(Object obj) {
         boolean equal = false;
         if (obj instanceof Address)
         equal = ((Address)obj).rustEq(this);
         return equal;
     }
+
     public int hashCode() {
         return (int)mNativeObj;
     }
@@ -25,6 +31,13 @@ public final class Address {
         return ret;
     }
     private static native boolean do_rustEq(long self, long o);
+
+    private final String to_string() {
+        String ret = do_to_string(mNativeObj);
+
+        return ret;
+    }
+    private static native String do_to_string(long self);
 
     public final long getBalance() {
         long ret = do_getBalance(mNativeObj);

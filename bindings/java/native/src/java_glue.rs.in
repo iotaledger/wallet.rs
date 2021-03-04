@@ -2,6 +2,7 @@ use std::{
     path::{Path, PathBuf},
     time::Duration,
     str::FromStr,
+    fmt::Display,
 };
 
 use chrono::prelude::{DateTime, Utc, Local};
@@ -11,7 +12,6 @@ use crate::{
     client_options::*,
     bee_types::*,
     acc::*,
-    sync::*,
     acc_manager::*,
     message::*,
     address::*
@@ -44,41 +44,41 @@ foreign_class!(class RustLogging {
 
 foreign_enum!(
     enum RemainderValueStrategy {
-        ReuseAddress = RemainderValueStrategy::ReuseAddress,
-        ChangeAddress = RemainderValueStrategy::ChangeAddress,
+        REUSE_ADDRESS = RemainderValueStrategy::ReuseAddress,
+        CHANGE_ADDRESS = RemainderValueStrategy::ChangeAddress,
     }
 );
 
 foreign_enum!(
     enum ManagerStorage {
-        Stronghold = ManagerStorage::Stronghold,
-        Sqlite = ManagerStorage::Sqlite,
+        STRONGHOLD = ManagerStorage::Stronghold,
+        SQLITE = ManagerStorage::Sqlite,
     }
 );
 
 foreign_enum!(
     enum AccountSignerType {
-        Stronghold = AccountSignerType::Stronghold,
-        LedgerNano = AccountSignerType::LedgerNano,
-        LedgerNanoSimulator = AccountSignerType::LedgerNanoSimulator,
+        STRONGHOLD = AccountSignerType::Stronghold,
+        LEDGER_NANO = AccountSignerType::LedgerNano,
+        LEDGER_NANO_SIMULATOR = AccountSignerType::LedgerNanoSimulator,
     }
 );
 
 foreign_enum!(
     enum Api {
-        GetTips = Api::GetTips,
-        PostMessage = Api::PostMessage,
-        GetOutput = Api::GetOutput,
+        GET_TIPS = Api::GetTips,
+        POST_MESSAGE = Api::PostMessage,
+        GET_OUTPUT = Api::GetOutput,
     }
 );
 
 foreign_enum!(
     enum MessageType {
-        Received = MessageType::Received,
-        Sent = MessageType::Sent,
-        Failed = MessageType::Failed,
-        Unconfirmed = MessageType::Unconfirmed,
-        Value = MessageType::Value,
+        RECEIVED = MessageType::Received,
+        SENT = MessageType::Sent,
+        FAILED = MessageType::Failed,
+        UNCONFIRMED = MessageType::Unconfirmed,
+        VALUE = MessageType::Value,
     }
 );
 
@@ -95,9 +95,9 @@ foreign_enum!(
 
 foreign_enum!(
     enum OutputKind {
-        SignatureLockedSingle = OutputKind::SignatureLockedSingle,
-        SignatureLockedDustAllowance = OutputKind::SignatureLockedDustAllowance,
-        Treasury = OutputKind::Treasury,
+        SIGNATURE_LOCKED_SINGLE = OutputKind::SignatureLockedSingle,
+        SIGNATURE_LOCKED_DUST_ALLOWANCE = OutputKind::SignatureLockedDustAllowance,
+        TREASURY = OutputKind::Treasury,
     }
 );
 
@@ -118,22 +118,22 @@ foreign_class!(class AccountManager {
     fn AccountManager::changeStrongholdPassword(&mut self, current_password: &str, new_password: &str) -> Result<()>;
     fn AccountManager::generateMnemonic(&mut self) -> Result<String>;
     fn AccountManager::storeMnemonic(&mut self, signer_type_enum: AccountSignerType, mnemonic: String) -> Result<()>;
-    fn AccountManager::verify_mnemonic(&mut self, mnemonic: String) -> Result<()>;
-    fn AccountManager::create_account(&mut self, client_options: ClientOptions) -> Result<AccountInitialiser>;
+    fn AccountManager::verifyMnemonic(&mut self, mnemonic: String) -> Result<()>;
+    fn AccountManager::createAccount(&mut self, client_options: ClientOptions) -> Result<AccountInitialiser>;
 });
 
 foreign_class!(class ClientOptionsBuilder {
     self_type ClientOptionsBuilder;
     constructor ClientOptionsBuilder::new() -> ClientOptionsBuilder;
-    fn ClientOptionsBuilder::with_node(&mut self, node: &str) -> ClientOptionsBuilder;
-    fn ClientOptionsBuilder::with_node_pool_urls(&mut self, node_pool_urls: Vec<String>) -> ClientOptionsBuilder;
-    fn ClientOptionsBuilder::with_network(&mut self, network: String) -> ClientOptionsBuilder;
-    fn ClientOptionsBuilder::with_node_sync_interval(&mut self, node_sync_interval: Duration) -> ClientOptionsBuilder;
-    fn ClientOptionsBuilder::with_node_sync_disabled(&mut self) -> ClientOptionsBuilder;
+    fn ClientOptionsBuilder::withNode(&mut self, node: &str) -> ClientOptionsBuilder;
+    fn ClientOptionsBuilder::withNodePoolUrls(&mut self, node_pool_urls: Vec<String>) -> ClientOptionsBuilder;
+    fn ClientOptionsBuilder::withNetwork(&mut self, network: String) -> ClientOptionsBuilder;
+    fn ClientOptionsBuilder::withNodeSyncInterval(&mut self, node_sync_interval: Duration) -> ClientOptionsBuilder;
+    fn ClientOptionsBuilder::withNodeSyncDisabled(&mut self) -> ClientOptionsBuilder;
     //fn ClientOptionsBuilder::with_mqtt_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientOptionsBuilder;
-    fn ClientOptionsBuilder::with_local_pow(&mut self, local: bool) -> ClientOptionsBuilder;
-    fn ClientOptionsBuilder::with_request_timeout(&mut self, timeout: Duration) -> ClientOptionsBuilder;
-    fn ClientOptionsBuilder::with_api_timeout(&mut self, api: Api, timeout: Duration) -> ClientOptionsBuilder;
+    fn ClientOptionsBuilder::withLocalPow(&mut self, local: bool) -> ClientOptionsBuilder;
+    fn ClientOptionsBuilder::withRequestTimeout(&mut self, timeout: Duration) -> ClientOptionsBuilder;
+    fn ClientOptionsBuilder::withApiTimeout(&mut self, api: Api, timeout: Duration) -> ClientOptionsBuilder;
     fn ClientOptionsBuilder::build(&mut self) -> Result<ClientOptions>;
 });
 
@@ -143,21 +143,25 @@ foreign_class!(class ClientOptions{
 });
 
 foreign_class!(
+    #[derive(Display)]
     class Value {
         self_type Value;
         constructor Value::new(value: u64, unit: ValueUnit) -> Value;
-        fn Value::with_denomination(&self) -> String;
-        fn Value::without_denomination(&self) -> u64;
+        private fn Value::with_denomination(&self) -> String; alias to_string;
+        fn Value::with_denomination(&self) -> String; alias withDenomination;
+        fn Value::without_denomination(&self) -> u64; alias withoutDenomination;
         fn Value::value(&self) -> &u64;
     }
 );
 foreign_class!(
+    #[derive(Display)]
     class MessageId {
         self_type MessageId;
+        constructor MessageId::null() -> MessageId;
+        private fn MessageId::to_string(&self) -> String;
         fn MessageId::fromString(str_rep: &str) -> MessageId {
             MessageId::from_str(str_rep).unwrap()
         }
-        constructor MessageId::null() -> MessageId;
     }
 );
 
@@ -170,7 +174,7 @@ foreign_class!(
         fn Message::id(&self) -> MessageId;
         fn Message::version(&self) -> u64;
         fn Message::parents(&self) -> Vec<MessageId>;
-        fn Message::payload_length(&self) -> usize;
+        fn Message::payloadLength(&self) -> usize;
         fn Message::payload(&self) -> Option<MessagePayload>;
         fn Message::timestamp(&self) -> DateTime<Utc>;
         fn Message::nonce(&self) -> u64;
@@ -178,7 +182,7 @@ foreign_class!(
         fn Message::broadcasted(&self) -> bool;
         fn Message::incoming(&self) -> bool;
         fn Message::value(&self) -> u64;
-        fn Message::remainder_value(&self) -> u64;
+        fn Message::remainderValue(&self) -> u64;
     }
 );
 
@@ -193,14 +197,19 @@ foreign_class!(
     class IndexationPayload {
         self_type IndexationPayload;
         private constructor = empty;
+        //fn new(index: &[u8], data: &[u8]) -> Result<IndexationPayload>;
+        fn IndexationPayload::index(&self) -> &[u8];
+        fn IndexationPayload::data(&self) -> &[u8];
     }
 );
+
 foreign_class!(
-    #[derive(PartialEq)]
+    #[derive(PartialEq, Display)]
     class Address {
         self_type Address;
         private constructor = empty;
         private fn Address::eq(&self, o: &Address) -> bool; alias rustEq;
+        private fn Address::to_string(&self) -> String;
         fn Address::balance(&self) -> u64; alias getBalance;
         fn Address::readable(&self) -> String; alias getReadable;
         fn Address::address(&self) -> AddressWrapper;
@@ -219,13 +228,12 @@ foreign_class!(
     class AccountInitialiser{
         self_type AccountInitialiser;
         private constructor = empty;
-
-        fn AccountInitialiser::signer_type(&mut self, signer_type_enum: AccountSignerType) -> AccountInitialiser;
+        fn AccountInitialiser::signerType(&mut self, signer_type_enum: AccountSignerType) -> AccountInitialiser;
         fn AccountInitialiser::alias(&mut self, alias: String) -> AccountInitialiser;
-        fn AccountInitialiser::created_at(&mut self, created_at: DateTime<Local>) -> AccountInitialiser;
+        fn AccountInitialiser::createdAt(&mut self, created_at: DateTime<Local>) -> AccountInitialiser;
         fn AccountInitialiser::messages(&mut self, messages: Vec<Message>) -> AccountInitialiser;
         fn AccountInitialiser::addresses(&mut self, addresses: Vec<Address>) -> AccountInitialiser;
-        fn AccountInitialiser::skip_persistance(&mut self) -> AccountInitialiser;
+        fn AccountInitialiser::skipPersistance(&mut self) -> AccountInitialiser;
         fn AccountInitialiser::initialise(&mut self) -> Result<Account>;
     }
 );
@@ -253,41 +261,19 @@ foreign_class!(
     class Account {
         self_type Account;
         private constructor = empty;
-        fn Account::sync(&self) -> AccountSynchronizer;
-        fn Account::generate_address(&self) -> Result<Address>;
-        fn Account::get_unused_address(&self) -> Result<Address>;
-        //fn Account::is_latest_address_unused(&self) -> Result<bool>;
-        fn Account::latest_address(&self) -> Address;
-        fn Account::set_alias(&self, alias: String) -> Result<()>;
-        fn Account::set_client_options(&self, options: ClientOptions) -> Result<()>;
-        fn Account::list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<Message>;
-        fn Account::list_spent_addresses(&self) -> Vec<Address>;
-        fn Account::list_unspent_addresses(&self) -> Vec<Address>;
-        fn Account::get_message(&self, message_id: MessageId) -> Option<Message>;
+        fn Account::transfer(&mut self, transfer: Transfer) -> Result<Message>;
+        fn Account::generateAddress(&self) -> Result<Address>;
+        fn Account::getUnusedAddress(&self) -> Result<Address>;
+        fn Account::isLatestAddressUnused(&self) -> Result<bool>;
+        fn Account::latestAddress(&self) -> Address;
+        fn Account::setAlias(&self, alias: String) -> Result<()>;
+        fn Account::setClientOptions(&self, options: ClientOptions) -> Result<()>;
+        fn Account::listMessages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<Message>;
+        fn Account::listSpentAddresses(&self) -> Vec<Address>;
+        fn Account::listUnspentAddresses(&self) -> Vec<Address>;
+        fn Account::getMessage(&self, message_id: MessageId) -> Option<Message>;
         fn Account::alias(&self) -> String;
         fn Account::balance(&self) -> AccountBalance;
-    }
-);
-
-foreign_class!(
-    class AccountSynchronizer {
-        self_type AccountSynchronizer;
-        private constructor = empty;
-
-        fn AccountSynchronizer::gap_limit(&mut self, limit: usize) -> AccountSynchronizer;
-        fn AccountSynchronizer::skip_persistance(&mut self) -> AccountSynchronizer;
-        fn AccountSynchronizer::address_index(&mut self, address_index: usize) -> AccountSynchronizer;
-        fn AccountSynchronizer::execute(&mut self) -> Result<SyncedAccount>;
-    }
-);
-
-foreign_class!(
-    class SyncedAccount {
-        self_type SyncedAccount;
-        private constructor = empty;
-
-        fn SyncedAccount::deposit_address(&mut self) -> Address;
-        fn SyncedAccount::transfer(&mut self, transfer: Transfer) -> Result<Message>;
     }
 );
 
@@ -303,8 +289,8 @@ foreign_class!(
     class TransferBuilder {
         self_type TransferBuilder;
         constructor TransferBuilder::new(address: AddressWrapper, amount: u64) -> TransferBuilder;
-        fn TransferBuilder::with_remainder_value_strategy(&mut self, strategy: RemainderValueStrategy) -> TransferBuilder;
-        fn TransferBuilder::with_indexation(&mut self, indexation: IndexationPayload) -> TransferBuilder;
+        fn TransferBuilder::withRemainderValueStrategy(&mut self, strategy: RemainderValueStrategy) -> TransferBuilder;
+        fn TransferBuilder::withIndexation(&mut self, indexation: IndexationPayload) -> TransferBuilder;
         fn TransferBuilder::finish(&self) -> Transfer;
     }
 );

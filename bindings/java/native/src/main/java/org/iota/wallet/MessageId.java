@@ -3,6 +3,18 @@ package org.iota.wallet;
 
 
 public final class MessageId {
+    @Override
+    public String toString() {
+        return this.to_string();
+    }
+
+
+    private final String to_string() {
+        String ret = do_to_string(mNativeObj);
+
+        return ret;
+    }
+    private static native String do_to_string(long self);
 
     public static MessageId fromString(String str_rep) {
         long ret = do_fromString(str_rep);

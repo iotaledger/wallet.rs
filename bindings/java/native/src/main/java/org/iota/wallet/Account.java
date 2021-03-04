@@ -6,13 +6,18 @@ public final class Account {
 
     private Account() {}
 
-    public final AccountSynchronizer sync() {
-        long ret = do_sync(mNativeObj);
-        AccountSynchronizer convRet = new AccountSynchronizer(InternalPointerMarker.RAW_PTR, ret);
+    public final Message transfer(Transfer transfer) {
+        long a0 = transfer.mNativeObj;
+        transfer.mNativeObj = 0;
+
+        long ret = do_transfer(mNativeObj, a0);
+        Message convRet = new Message(InternalPointerMarker.RAW_PTR, ret);
+
+        JNIReachabilityFence.reachabilityFence1(transfer);
 
         return convRet;
     }
-    private static native long do_sync(long self);
+    private static native long do_transfer(long self, long transfer);
 
     public final Address generate_address() {
         long ret = do_generate_address(mNativeObj);
@@ -29,6 +34,13 @@ public final class Account {
         return convRet;
     }
     private static native long do_get_unused_address(long self);
+
+    public final boolean is_latest_address_unused() {
+        boolean ret = do_is_latest_address_unused(mNativeObj);
+
+        return ret;
+    }
+    private static native boolean do_is_latest_address_unused(long self);
 
     public final Address latest_address() {
         long ret = do_latest_address(mNativeObj);

@@ -35,7 +35,8 @@ fn main() {
         .remove_not_generated_files_from_output_directory(false)
         .merge_type_map("chrono_support", include_str!("src/foreign_types/chrono_include.rs"))
         .merge_type_map("foreign_types", include_str!("src/foreign_types/types.rs"))
-        .register_class_attribute_callback("PartialEq", attributes::class_partial_eq);
+        .register_class_attribute_callback("PartialEq", attributes::class_partial_eq)
+        .register_class_attribute_callback("Display", attributes::class_to_string);
         // TODO: Create a attribute for auto generation
         //.register_class_attribute_callback("PartialGetters", attributes::class_getters)
         //.register_class_attribute_callback("PartialSetters", attributes::class_setters);

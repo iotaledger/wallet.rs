@@ -1,6 +1,7 @@
 package org.example;
 
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.nio.file.Path;
@@ -31,7 +32,7 @@ public class ExampleApp {
         AccountManager manager = new AccountManager(options);
         manager.setStrongholdPassword("YepThisISSecure");
         // null means "generate one for me"
-        manager.storeMnemonic(AccountSignerType.Stronghold, null);
+        manager.storeMnemonic(AccountSignerType.STRONGHOLD, null);
 
         ClientOptions clientOptions = new ClientOptionsBuilder()
             .with_node("https://api.lb-0.testnet.chrysalis2.com")
@@ -41,24 +42,16 @@ public class ExampleApp {
             .create_account(clientOptions)
             .alias("alias1")
             .initialise();
-
             
         System.out.println("alias: " + account.alias());
         System.out.println("balance available: " + account.balance().getAvailable());
         System.out.println("address: " + account.generate_address().getReadable());
-
         
-        System.out.println("acc messages " + account.list_messages(5, 0, MessageType.Failed));
-        System.out.println("acc spent addresses " + account.list_spent_addresses());
-        System.out.println("acc unspent addresses " + account.list_unspent_addresses());
-        System.out.println("syncing account now");
-    
-        SyncedAccount sync_account = account.sync()
-            .skip_persistance()
-            .execute();
-    
-        System.out.println("synced " + sync_account);
-        sync_account.transfer(
+        System.out.println("acc messages " + Arrays.toString(account.list_messages(5, 0, MessageType.FAILED)));
+        System.out.println("acc spent addresses " + Arrays.toString(account.list_spent_addresses()));
+        System.out.println("acc unspent addresses " + Arrays.toString(account.list_unspent_addresses()));
+
+        account.transfer(
             Transfer.builder(
                 account.latest_address().address(),
                 150

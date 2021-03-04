@@ -9,6 +9,7 @@ public final class Message {
         equal = ((Message)obj).rustEq(this);
         return equal;
     }
+
     public int hashCode() {
         return (int)mNativeObj;
     }

@@ -6,27 +6,6 @@ public final class SyncedAccount {
 
     private SyncedAccount() {}
 
-    public final Address deposit_address() {
-        long ret = do_deposit_address(mNativeObj);
-        Address convRet = new Address(InternalPointerMarker.RAW_PTR, ret);
-
-        return convRet;
-    }
-    private static native long do_deposit_address(long self);
-
-    public final Message transfer(Transfer transfer) {
-        long a0 = transfer.mNativeObj;
-        transfer.mNativeObj = 0;
-
-        long ret = do_transfer(mNativeObj, a0);
-        Message convRet = new Message(InternalPointerMarker.RAW_PTR, ret);
-
-        JNIReachabilityFence.reachabilityFence1(transfer);
-
-        return convRet;
-    }
-    private static native long do_transfer(long self, long transfer);
-
     public synchronized void delete() {
         if (mNativeObj != 0) {
             do_delete(mNativeObj);

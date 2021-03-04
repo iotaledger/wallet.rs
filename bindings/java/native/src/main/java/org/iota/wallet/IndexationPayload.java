@@ -6,6 +6,20 @@ public final class IndexationPayload {
 
     private IndexationPayload() {}
 
+    public final int [] index() {
+        int [] ret = do_index(mNativeObj);
+
+        return ret;
+    }
+    private static native int [] do_index(long self);
+
+    public final int [] data() {
+        int [] ret = do_data(mNativeObj);
+
+        return ret;
+    }
+    private static native int [] do_data(long self);
+
     public synchronized void delete() {
         if (mNativeObj != 0) {
             do_delete(mNativeObj);

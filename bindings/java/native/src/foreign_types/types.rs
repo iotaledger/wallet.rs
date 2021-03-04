@@ -1,9 +1,31 @@
+use jni::{
+    objects::{
+        AutoLocal,
+    },
+    JNIEnv,
+};
+
 foreign_typemap!(
     ($p:r_type) PathBuf => jstring {
         $out = $p.as_path().to_str();
     };
     ($p:f_type, option = "NoNullAnnotations", unique_prefix = "/*chrono*/")
         => "/*chrono*/java.nio.file.Path" "$out = java.nio.file.Paths.get($p);";
+);
+
+//TODO: Properly wrap error
+foreign_typemap!(
+    ($p:r_type) Result<bool> => bool {
+        $out = $p.unwrap();
+    };
+);
+
+foreign_typemap!(
+    ($p:r_type) &[u8] => jintArray {
+        let java_array = (**env)->IntArrayFromSlice(env, $p);
+        let obj = AutoLocal::new(&env, JObject::from(java_array));
+        $out = obj;
+    };
 );
 
 // Yikes!

@@ -1,29 +1,23 @@
+use std::fmt::{
+    Display, Formatter
+};
+
 use iota_wallet::{
     address::{
         Address as AddressRust,
+        AddressOutput, AddressWrapper,
     },
+    account::Account,
 };
 
-use iota_wallet::account::Account;
-use iota_wallet::address::{
-    AddressOutput, AddressWrapper
-};
-
+#[derive(Clone, PartialEq)]
 pub struct Address {
     address: AddressRust
 }
 
-impl Clone for Address {
-    fn clone(&self) -> Self {
-        Address {
-            address: self.address.clone()
-        }
-    }
-}
-
-impl PartialEq for Address {
-    fn eq(&self, other: &Self) -> bool {
-        self.address.eq(&other.address)
+impl Display for Address {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "({})", self.readable())
     }
 }
     

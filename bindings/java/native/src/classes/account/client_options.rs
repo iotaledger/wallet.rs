@@ -46,28 +46,28 @@ impl ClientOptionsBuilder {
         }
     }
 
-    pub fn with_node(&mut self, node: &str) -> ClientOptionsBuilder {
+    pub fn withNode(&mut self, node: &str) -> ClientOptionsBuilder {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_node(node).unwrap();
         ClientOptionsBuilder::new_with_builder(new_builder)
     }
 
-    pub fn with_node_pool_urls(&mut self, node_pool_urls: Vec<String>) -> ClientOptionsBuilder {
+    pub fn withNodePoolUrls(&mut self, node_pool_urls: Vec<String>) -> ClientOptionsBuilder {
         let nodes_urls: Vec<&str> = node_pool_urls.iter().map(|x| &**x).collect();
         let new_builder = self.builder.borrow_mut().take().unwrap().with_node_pool_urls(&nodes_urls).unwrap();
         ClientOptionsBuilder::new_with_builder(new_builder)
     }
 
-    pub fn with_network(&mut self, network: String) -> ClientOptionsBuilder {
+    pub fn withNetwork(&mut self, network: String) -> ClientOptionsBuilder {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_network(network);
         ClientOptionsBuilder::new_with_builder(new_builder)
     }
 
-    pub fn with_node_sync_interval(&mut self, node_sync_interval: Duration) -> ClientOptionsBuilder {
+    pub fn withNodeSyncInterval(&mut self, node_sync_interval: Duration) -> ClientOptionsBuilder {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_node_sync_interval(node_sync_interval);
         ClientOptionsBuilder::new_with_builder(new_builder)
     }
 
-    pub fn with_node_sync_disabled(&mut self) -> ClientOptionsBuilder {
+    pub fn withNodeSyncDisabled(&mut self) -> ClientOptionsBuilder {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_node_sync_disabled();
         ClientOptionsBuilder::new_with_builder(new_builder)
     }
@@ -78,17 +78,17 @@ impl ClientOptionsBuilder {
         ClientOptionsBuilder::new_with_builder(new_builder)
     }*/
 
-    pub fn with_local_pow(&mut self, local: bool) -> ClientOptionsBuilder {
+    pub fn withLocalPow(&mut self, local: bool) -> ClientOptionsBuilder {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_local_pow(local);
         ClientOptionsBuilder::new_with_builder(new_builder)
     }
 
-    pub fn with_request_timeout(&mut self, timeout: Duration) -> ClientOptionsBuilder {
+    pub fn withRequestTimeout(&mut self, timeout: Duration) -> ClientOptionsBuilder {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_request_timeout(timeout);
         ClientOptionsBuilder::new_with_builder(new_builder)
     }
 
-    pub fn with_api_timeout(&mut self, api: Api, timeout: Duration) -> ClientOptionsBuilder {
+    pub fn withApiTimeout(&mut self, api: Api, timeout: Duration) -> ClientOptionsBuilder {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_api_timeout(api, timeout);
         ClientOptionsBuilder::new_with_builder(new_builder)
     }

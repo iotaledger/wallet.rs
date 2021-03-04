@@ -3,6 +3,11 @@ package org.iota.wallet;
 
 
 public final class Value {
+    @Override
+    public String toString() {
+        return this.to_string();
+    }
+
 
     public Value(long value, ValueUnit unit) {
         int a1 = unit.getValue();
@@ -10,6 +15,13 @@ public final class Value {
         JNIReachabilityFence.reachabilityFence1(unit);
     }
     private static native long init(long value, int unit);
+
+    private final String to_string() {
+        String ret = do_to_string(mNativeObj);
+
+        return ret;
+    }
+    private static native String do_to_string(long self);
 
     public final String with_denomination() {
         String ret = do_with_denomination(mNativeObj);

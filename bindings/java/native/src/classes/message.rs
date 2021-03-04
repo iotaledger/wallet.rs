@@ -70,14 +70,14 @@ impl TransferBuilder {
         }
     }
 
-    pub fn with_remainder_value_strategy(&mut self, strategy: RemainderValueStrategy) -> Self {
+    pub fn withRemainderValueStrategy(&mut self, strategy: RemainderValueStrategy) -> Self {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_remainder_value_strategy(
             remainder_type_enum_to_type(strategy)
         );
         TransferBuilder::new_with_builder(new_builder)
     }
 
-    pub fn with_indexation(&mut self, indexation: IndexationPayload) -> Self {
+    pub fn withIndexation(&mut self, indexation: IndexationPayload) -> Self {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_indexation(indexation.get_internal());
         TransferBuilder::new_with_builder(new_builder)
     }
@@ -120,7 +120,7 @@ impl Message {
     pub fn parents(&self) -> Vec<MessageId> {
         self.message.parents().to_vec()
     }
-    pub fn payload_length(&self) -> usize {
+    pub fn payloadLength(&self) -> usize {
         *(self.message.payload_length())
     }
     pub fn payload(&self) -> Option<MessagePayload> {
@@ -147,7 +147,7 @@ impl Message {
     pub fn value(&self) -> u64 {
         *(self.message.value())
     }
-    pub fn remainder_value(&self) -> u64 {
+    pub fn remainderValue(&self) -> u64 {
         *(self.message.remainder_value())
     }
 

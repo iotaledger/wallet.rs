@@ -16,14 +16,13 @@ use iota_wallet::{
 };
 
 use crate::{
-    sync::{
-        AccountSynchronizer,
-    },
     client_options::ClientOptions,
     acc_manager::{
         AccountSignerType
     },
-    message::Message,
+    message::{
+        Message, Transfer
+    },
     address::Address,
     Result,
 };
@@ -45,7 +44,7 @@ impl AccountInitialiser {
         }
     }
 
-    pub fn signer_type(&mut self, signer_type_enum: AccountSignerType) -> Self {
+    pub fn signerType(&mut self, signer_type_enum: AccountSignerType) -> Self {
         let signer_type = crate::acc_manager::signer_type_enum_to_type(signer_type_enum);
         let new_initialiser = self.initialiser.borrow_mut().take().unwrap().signer_type(signer_type);
         AccountInitialiser::new_with_initialiser(Rc::new(RefCell::new(Option::from(new_initialiser))))
@@ -56,7 +55,7 @@ impl AccountInitialiser {
         AccountInitialiser::new_with_initialiser(Rc::new(RefCell::new(Option::from(new_initialiser))))
     }
 
-    pub fn created_at(&mut self, created_at: DateTime<Local>) -> Self {
+    pub fn createdAt(&mut self, created_at: DateTime<Local>) -> Self {
         let new_initialiser = self.initialiser.borrow_mut().take().unwrap().created_at(created_at);
         AccountInitialiser::new_with_initialiser(Rc::new(RefCell::new(Option::from(new_initialiser))))
     }
@@ -75,7 +74,7 @@ impl AccountInitialiser {
         AccountInitialiser::new_with_initialiser(Rc::new(RefCell::new(Option::from(new_initialiser))))
     }
 
-    pub fn skip_persistance(&mut self) -> Self {
+    pub fn skipPersistance(&mut self) -> Self {
         let new_initialiser = self.initialiser.borrow_mut().take().unwrap().skip_persistance();
         AccountInitialiser::new_with_initialiser(Rc::new(RefCell::new(Option::from(new_initialiser))))
     }
@@ -95,15 +94,19 @@ pub struct Account {
 }
 
 impl Account {
-    pub fn sync(&self) -> AccountSynchronizer {
-        let synchroniser = crate::block_on(async move {
-            self.handle.sync().await
-        });
+    pub fn transfer(&mut self, transfer: Transfer) -> Result<Message> {
+        let msg = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async move {
+                self.handle.transfer(transfer.get_internal()).await
+            }).expect("failed creating a transfer");
 
-        AccountSynchronizer::new_with_instance(synchroniser)
+        Ok(Message::new_with_internal(msg))
     }
 
-    pub fn generate_address(&self) -> Result<Address> {
+    pub fn generateAddress(&self) -> Result<Address> {
         let addr = crate::block_on(async move {
             self.handle.generate_address().await
         }).expect("error initialising account");
@@ -111,7 +114,7 @@ impl Account {
         Ok(Address::new_with_internal(addr))
     }
 
-    pub fn get_unused_address(&self) -> Result<Address> {
+    pub fn getUnusedAddress(&self) -> Result<Address> {
         let addr = crate::block_on(async move {
             self.handle.get_unused_address().await
         }).expect("error in getting unused address");
@@ -119,7 +122,7 @@ impl Account {
         Ok(Address::new_with_internal(addr))
     }
 
-    pub fn is_latest_address_unused(&self) -> Result<bool> {
+    pub fn isLatestAddressUnused(&self) -> Result<bool> {
         let is_unused = crate::block_on(async move {
             self.handle.is_latest_address_unused().await
         }).expect("error checking latest addres usage");
@@ -127,14 +130,14 @@ impl Account {
         Ok(is_unused)
     }
 
-    pub fn latest_address(&self) -> Address {
+    pub fn latestAddress(&self) -> Address {
         let latest_address = crate::block_on(async move {
             self.handle.latest_address().await
         });
         Address::new_with_internal(latest_address)
     }
 
-    pub fn set_alias(&self, alias: String) -> Result<()> {
+    pub fn setAlias(&self, alias: String) -> Result<()> {
         crate::block_on(async move {
             self.handle.set_alias(alias).await
         }).expect("failed setting new alias");
@@ -142,7 +145,7 @@ impl Account {
         Ok(())
     }
 
-    pub fn set_client_options(&self, options: ClientOptions) -> Result<()> {
+    pub fn setClientOptions(&self, options: ClientOptions) -> Result<()> {
         crate::block_on(async move {
             self.handle.set_client_options(options.get_internal()).await
         }).expect("failed setting new client options");
@@ -150,7 +153,7 @@ impl Account {
         Ok(())
     }
 
-    pub fn list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<Message> {
+    pub fn listMessages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<Message> {
         let msgs = crate::block_on(async move {
             self.handle.list_messages(count, from, message_type).await
         });
@@ -158,7 +161,7 @@ impl Account {
         msgs.into_iter().map(|m| Message::new_with_internal(m)).collect()
     }
 
-    pub fn list_spent_addresses(&self) -> Vec<Address> {
+    pub fn listSpentAddresses(&self) -> Vec<Address> {
         let addrs = crate::block_on(async move {
             self.handle.list_spent_addresses().await
         });
@@ -166,7 +169,7 @@ impl Account {
         addrs.into_iter().map(|a| Address::new_with_internal(a)).collect()
     }
 
-    pub fn list_unspent_addresses(&self) -> Vec<Address> {
+    pub fn listUnspentAddresses(&self) -> Vec<Address> {
         let addrs = crate::block_on(async move {
             self.handle.list_unspent_addresses().await
         });
@@ -174,7 +177,7 @@ impl Account {
         addrs.into_iter().map(|a| Address::new_with_internal(a)).collect()
     }
 
-    pub fn get_message(&self, message_id: MessageId) -> Option<Message> {
+    pub fn getMessage(&self, message_id: MessageId) -> Option<Message> {
         let msg = crate::block_on(async move {
             self.handle.get_message(&message_id).await
         });
