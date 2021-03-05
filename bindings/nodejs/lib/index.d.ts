@@ -174,6 +174,7 @@ export declare interface ManagerOptions {
   storagePassword?: string
   outputConsolidationThreshold?: number
   automaticOutputConsolidation?: boolean
+  syncSpentOutputs?: boolean
 }
 
 export declare interface BalanceChangeEvent {

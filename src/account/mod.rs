@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    account_manager::AccountStore,
+    account_manager::{AccountOptions, AccountStore},
     address::{Address, AddressBuilder, AddressWrapper},
     client::ClientOptions,
     event::TransferProgressType,
@@ -103,7 +103,7 @@ impl From<usize> for AccountIdentifier {
 pub struct AccountInitialiser {
     accounts: AccountStore,
     storage_path: PathBuf,
-    output_consolidation_threshold: usize,
+    account_options: AccountOptions,
     alias: Option<String>,
     created_at: Option<DateTime<Local>>,
     messages: Vec<Message>,
@@ -120,12 +120,12 @@ impl AccountInitialiser {
         client_options: ClientOptions,
         accounts: AccountStore,
         storage_path: PathBuf,
-        output_consolidation_threshold: usize,
+        account_options: AccountOptions,
     ) -> Self {
         Self {
             accounts,
             storage_path,
-            output_consolidation_threshold,
+            account_options,
             alias: None,
             created_at: None,
             messages: vec![],
@@ -274,11 +274,11 @@ impl AccountInitialiser {
         account.set_id(format!("{}{}", ACCOUNT_ID_PREFIX, hex::encode(digest)));
 
         let guard = if self.skip_persistance {
-            AccountHandle::new(account, self.output_consolidation_threshold)
+            AccountHandle::new(account, self.account_options)
         } else {
             account.save().await?;
             let account_id = account.id().clone();
-            let guard = AccountHandle::new(account, self.output_consolidation_threshold);
+            let guard = AccountHandle::new(account, self.account_options);
             drop(accounts);
             self.accounts.write().await.insert(account_id, guard.clone());
             let _ = crate::monitor::monitor_account_addresses_balance(guard.clone()).await;
@@ -334,15 +334,15 @@ pub struct Account {
 pub struct AccountHandle {
     inner: Arc<RwLock<Account>>,
     locked_addresses: Arc<Mutex<Vec<AddressWrapper>>>,
-    pub(crate) output_consolidation_threshold: usize,
+    pub(crate) account_options: AccountOptions,
 }
 
 impl AccountHandle {
-    pub(crate) fn new(account: Account, output_consolidation_threshold: usize) -> Self {
+    pub(crate) fn new(account: Account, account_options: AccountOptions) -> Self {
         Self {
             inner: Arc::new(RwLock::new(account)),
             locked_addresses: Default::default(),
-            output_consolidation_threshold,
+            account_options,
         }
     }
 
@@ -356,7 +356,7 @@ impl AccountHandle {
         let mut addresses = Vec::new();
         let account = self.inner.read().await;
         for address in account.addresses() {
-            if address.available_outputs(&account).len() >= self.output_consolidation_threshold {
+            if address.available_outputs(&account).len() >= self.account_options.output_consolidation_threshold {
                 addresses.push(address.address().clone());
             }
         }
@@ -480,7 +480,16 @@ impl AccountHandle {
     pub async fn is_latest_address_unused(&self) -> crate::Result<bool> {
         let mut latest_address = self.latest_address().await;
         let bech32_hrp = latest_address.address().bech32_hrp().to_string();
-        sync::sync_address(&*self.inner.read().await, &mut latest_address, bech32_hrp).await?;
+        let account = self.inner.read().await;
+        sync::sync_address(
+            account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect(),
+            account.client_options().clone(),
+            Some(latest_address.outputs().to_vec()),
+            &mut latest_address,
+            bech32_hrp,
+            self.account_options,
+        )
+        .await?;
         Ok(*latest_address.balance() == 0 && latest_address.outputs().is_empty())
     }
 

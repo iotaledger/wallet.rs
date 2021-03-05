@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    account::Account,
     address::{Address, AddressOutput, AddressWrapper, IotaAddress},
     client::ClientOptions,
     event::{emit_transfer_progress, TransferProgressType},
@@ -770,24 +769,24 @@ impl<'a> MessageBuilder<'a> {
 }
 
 impl Message {
-    pub(crate) fn from_iota_message(
+    pub(crate) fn from_iota_message<'a>(
         id: MessageId,
         iota_message: IotaMessage,
-        account: &'_ Account,
-    ) -> MessageBuilder<'_> {
+        account_addresses: &'a [Address],
+        client_options: &'a ClientOptions,
+    ) -> MessageBuilder<'a> {
         MessageBuilder::new(
             id,
             iota_message,
-            account.addresses(),
-            account
-                .addresses()
+            account_addresses,
+            account_addresses
                 .iter()
                 .next()
                 .unwrap()
                 .address()
                 .bech32_hrp()
                 .to_string(),
-            account.client_options(),
+            client_options,
         )
     }
 
