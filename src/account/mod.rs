@@ -480,7 +480,15 @@ impl AccountHandle {
     pub async fn is_latest_address_unused(&self) -> crate::Result<bool> {
         let mut latest_address = self.latest_address().await;
         let bech32_hrp = latest_address.address().bech32_hrp().to_string();
-        sync::sync_address(&*self.inner.read().await, &mut latest_address, bech32_hrp).await?;
+        let account = self.inner.read().await;
+        sync::sync_address(
+            account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect(),
+            account.client_options().clone(),
+            Some(latest_address.outputs().to_vec()),
+            &mut latest_address,
+            bech32_hrp,
+        )
+        .await?;
         Ok(*latest_address.balance() == 0 && latest_address.outputs().is_empty())
     }
 
