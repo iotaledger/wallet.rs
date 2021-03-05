@@ -487,6 +487,7 @@ impl AccountHandle {
             Some(latest_address.outputs().to_vec()),
             &mut latest_address,
             bech32_hrp,
+            self.account_options,
         )
         .await?;
         Ok(*latest_address.balance() == 0 && latest_address.outputs().is_empty())

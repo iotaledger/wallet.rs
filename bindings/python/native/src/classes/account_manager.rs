@@ -81,6 +81,7 @@ impl AccountManager {
         polling_interval: Option<u64>,
         automatic_output_consolidation: Option<bool>,
         output_consolidation_threshold: Option<usize>,
+        sync_spent_outputs: Option<bool>,
     ) -> Result<Self> {
         let mut account_manager = RustAccountManager::builder();
         if storage_path.is_some() & storage.is_some() {
@@ -108,6 +109,9 @@ impl AccountManager {
         }
         if !automatic_output_consolidation.unwrap_or(true) {
             account_manager = account_manager.with_automatic_output_consolidation_disabled();
+        }
+        if sync_spent_outputs.unwrap_or(false) {
+            account_manager = account_manager.with_sync_spent_outputs();
         }
         if let Some(threshold) = output_consolidation_threshold {
             account_manager = account_manager.with_output_consolidation_threshold(threshold);

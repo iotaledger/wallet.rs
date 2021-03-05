@@ -82,18 +82,19 @@ Also for all the optional values, the default values are the same as the ones in
 
 ### AccountManager
 
-#### constructor(storage_path (optional), storage (optional), password (optional), polling_interval (optional), automatic_output_consolidation(optional), output_consolidation_threshold(optional)): [AccountManager](#accountmanager)
+#### constructor(storage_path (optional), storage (optional), password (optional), polling_interval (optional), automatic_output_consolidation(optional), output_consolidation_threshold(optional), sync_spent_outputs(optional)): [AccountManager](#accountmanager)
 
 Creates a new instance of the AccountManager.
 
-| Param                            | Type              | Default                   | Description                                                                                    |
-| -------------------------------- | ----------------- | ------------------------- | ---------------------------------------------------------------------------------------------- |
-| [storage_path]                   | <code>str</code>  | <code>`./storage`</code>  | The path where the database file will be saved                                                 |
-| [storage]                        | <code>str</code>  | <code>`Stronghold`</code> | The storage implementation to use. Should be `Stronghold` or `Sqlite`                          |
-| [storage_password]               | <code>str</code>  | <code>undefined</code>    | The storage password to encrypt/decrypt accounts                                               |
-| [polling_interval]               | <code>int</code>  | <code>30000</code>        | The polling interval in milliseconds                                                           |
-| [automatic_output_consolidation] | <code>bool</code> | <code>true</code>         | Disables the automatic output consolidation process                                            |
-| [output_consolidation_threshold] | <code>int</code>  | <code>100</code>          | Sets the number of outputs an address must have to trigger the automatic consolidation process |
+| Param                            | Type                 | Default                   | Description                                                                                    |
+| -------------------------------- | -------------------- | ------------------------- | ---------------------------------------------------------------------------------------------- |
+| [storage_path]                   | <code>str</code>     | <code>`./storage`</code>  | The path where the database file will be saved                                                 |
+| [storage]                        | <code>str</code>     | <code>`Stronghold`</code> | The storage implementation to use. Should be `Stronghold` or `Sqlite`                          |
+| [storage_password]               | <code>str</code>     | <code>undefined</code>    | The storage password to encrypt/decrypt accounts                                               |
+| [polling_interval]               | <code>int</code>     | <code>30000</code>        | The polling interval in milliseconds                                                           |
+| [automatic_output_consolidation] | <code>bool</code>    | <code>true</code>         | Disables the automatic output consolidation process                                            |
+| [output_consolidation_threshold] | <code>int</code>     | <code>100</code>          | Sets the number of outputs an address must have to trigger the automatic consolidation process |
+| [sync_spent_outputs]             | <code>boolean</code> | <code>false</code>        | Enables fetching spent output history on account sync                                          |
 
 Note: if the `storage_path` is set, then the `storage` needs to be set too. An exception will be thrown when errors happened.
 

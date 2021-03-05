@@ -130,6 +130,7 @@ impl Default for AccountManagerBuilder {
             account_options: AccountOptions {
                 output_consolidation_threshold: DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
                 automatic_output_consolidation: true,
+                sync_spent_outputs: false,
             },
         }
     }
@@ -177,6 +178,12 @@ impl AccountManagerBuilder {
     /// Disables the automatic output consolidation process.
     pub fn with_automatic_output_consolidation_disabled(mut self) -> Self {
         self.account_options.automatic_output_consolidation = true;
+        self
+    }
+
+    /// Enables fetching spent output history on sync.
+    pub fn with_sync_spent_outputs(mut self) -> Self {
+        self.account_options.sync_spent_outputs = true;
         self
     }
 
@@ -257,6 +264,7 @@ impl AccountManagerBuilder {
 pub(crate) struct AccountOptions {
     pub(crate) output_consolidation_threshold: usize,
     pub(crate) automatic_output_consolidation: bool,
+    pub(crate) sync_spent_outputs: bool,
 }
 
 /// The account manager.
@@ -293,7 +301,7 @@ impl Clone for AccountManager {
             polling_handle: None,
             is_monitoring: self.is_monitoring.clone(),
             generated_mnemonic: None,
-            account_options: self.account_options.clone(),
+            account_options: self.account_options,
         }
     }
 }
@@ -334,10 +342,7 @@ impl AccountManager {
             .get_accounts()
             .await?;
         for account in accounts {
-            parsed_accounts.insert(
-                account.id().clone(),
-                AccountHandle::new(account, account_options.clone()),
-            );
+            parsed_accounts.insert(account.id().clone(), AccountHandle::new(account, account_options));
         }
 
         Ok(Arc::new(RwLock::new(parsed_accounts)))
@@ -441,7 +446,7 @@ impl AccountManager {
             .unwrap();
 
         if self.accounts.read().await.is_empty() {
-            let accounts = Self::load_accounts(&self.storage_path, self.account_options.clone()).await?;
+            let accounts = Self::load_accounts(&self.storage_path, self.account_options).await?;
             self.loaded_accounts = true;
             let mut accounts_store = self.accounts.write().await;
             for (id, account) in &*accounts.read().await {
@@ -479,7 +484,7 @@ impl AccountManager {
 
         // let is_empty = self.accounts.read().await.is_empty();
         if self.accounts.read().await.is_empty() {
-            let accounts = Self::load_accounts(&self.storage_path, self.account_options.clone()).await?;
+            let accounts = Self::load_accounts(&self.storage_path, self.account_options).await?;
             self.loaded_accounts = true;
             let mut accounts_store = self.accounts.write().await;
             for (id, account) in &*accounts.read().await {
@@ -540,7 +545,7 @@ impl AccountManager {
         let storage_file_path = self.storage_path.clone();
         let accounts = self.accounts.clone();
         let is_monitoring = self.is_monitoring.clone();
-        let account_options = self.account_options.clone();
+        let account_options = self.account_options;
 
         let handle = thread::spawn(move || {
             let runtime = tokio::runtime::Builder::new_current_thread()
@@ -555,7 +560,7 @@ impl AccountManager {
                             interval.tick().await;
 
                             let storage_file_path_ = storage_file_path.clone();
-                            let account_options = account_options.clone();
+                            let account_options = account_options;
 
                             if let Err(error) = AssertUnwindSafe(poll(accounts.clone(), storage_file_path_, account_options, is_monitoring.load(Ordering::Relaxed), automatic_output_consolidation))
                                 .catch_unwind()
@@ -644,7 +649,7 @@ impl AccountManager {
             client_options,
             self.accounts.clone(),
             self.storage_path.clone(),
-            self.account_options.clone(),
+            self.account_options,
         ))
     }
 
@@ -681,7 +686,7 @@ impl AccountManager {
         Ok(AccountsSynchronizer::new(
             self.accounts.clone(),
             self.storage_path.clone(),
-            self.account_options.clone(),
+            self.account_options,
         ))
     }
 
@@ -1230,7 +1235,7 @@ async fn discover_accounts(
             client_options.clone(),
             accounts.clone(),
             storage_path.clone(),
-            account_options.clone(),
+            account_options,
         )
         .skip_persistance();
         if let Some(signer_type) = &signer_type {
@@ -1563,11 +1568,8 @@ mod tests {
                         .finish()
                         .unwrap(),
                     // dummy account
-                    &*crate::test_utils::AccountCreator::new(&crate::test_utils::get_account_manager().await)
-                        .create()
-                        .await
-                        .read()
-                        .await,
+                    &[],
+                    &ClientOptionsBuilder::new().build().unwrap(),
                 )
                 .with_confirmed(Some(true))
                 .finish()
@@ -1802,10 +1804,9 @@ mod tests {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |mut manager, _| async move {
             crate::test_utils::AccountCreator::new(&manager).create().await;
             manager.set_storage_password("new-password").await.unwrap();
-            let account_store =
-                super::AccountManager::load_accounts(manager.storage_path(), manager.output_consolidation_threshold)
-                    .await
-                    .unwrap();
+            let account_store = super::AccountManager::load_accounts(manager.storage_path(), manager.account_options)
+                .await
+                .unwrap();
             assert_eq!(account_store.read().await.len(), 1);
         })
         .await;

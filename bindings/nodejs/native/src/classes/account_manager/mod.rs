@@ -82,6 +82,8 @@ struct ManagerOptions {
         default = "default_automatic_output_consolidation"
     )]
     automatic_output_consolidation: bool,
+    #[serde(rename = "syncSpentOutputs", default)]
+    sync_spent_outputs: bool,
 }
 
 fn default_automatic_output_consolidation() -> bool {
@@ -163,6 +165,9 @@ declare_types! {
                 .expect("failed to init storage");
             if !options.automatic_output_consolidation {
                 manager = manager.with_automatic_output_consolidation_disabled();
+            }
+            if options.sync_spent_outputs {
+                manager = manager.with_sync_spent_outputs();
             }
             if let Some(threshold) = options.output_consolidation_threshold {
                 manager = manager.with_output_consolidation_threshold(threshold);
