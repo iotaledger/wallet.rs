@@ -222,11 +222,10 @@ impl AccountManagerBuilder {
         #[cfg(feature = "stronghold-storage")]
         let (accounts, loaded_accounts) = (Default::default(), false);
         #[cfg(not(feature = "stronghold-storage"))]
-        let (accounts, loaded_accounts) =
-            AccountManager::load_accounts(&storage_file_path, self.output_consolidation_threshold)
-                .await
-                .map(|accounts| (accounts, true))
-                .unwrap_or_else(|_| (AccountStore::default(), false));
+        let (accounts, loaded_accounts) = AccountManager::load_accounts(&storage_file_path, self.account_options)
+            .await
+            .map(|accounts| (accounts, true))
+            .unwrap_or_else(|_| (AccountStore::default(), false));
 
         let mut instance = AccountManager {
             storage_folder: if self.storage_path.is_file() || self.storage_path.extension().is_some() {
@@ -868,7 +867,7 @@ impl AccountManager {
         // the accounts map isn't empty when restoring SQLite from a stronghold snapshot
         #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
         if self.accounts.read().await.is_empty() {
-            let accounts = Self::load_accounts(&self.storage_path, self.output_consolidation_threshold).await?;
+            let accounts = Self::load_accounts(&self.storage_path, self.account_options).await?;
             self.loaded_accounts = true;
             let mut accounts_store = self.accounts.write().await;
             for (id, account) in &*accounts.read().await {
