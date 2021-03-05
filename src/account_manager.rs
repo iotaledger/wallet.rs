@@ -1568,7 +1568,7 @@ mod tests {
                         .finish()
                         .unwrap(),
                     // dummy account
-                    &[],
+                    &[crate::test_utils::generate_random_address()],
                     &ClientOptionsBuilder::new().build().unwrap(),
                 )
                 .with_confirmed(Some(true))
