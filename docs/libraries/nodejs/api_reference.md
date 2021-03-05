@@ -177,7 +177,7 @@ Gets the persisted balance change events.
 | [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
 | [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
 
-Event object: { accountId: string, address: string, messageIds: string[], balanceChange: { spent: number, received: number } }
+Event object: { indexationId: string, accountId: string, address: string, balanceChange: { spent: number, received: number } }
 
 #### getBalanceChangeEventCount([fromTimestamp])
 
@@ -197,7 +197,7 @@ Gets the persisted transaction confirmation change events.
 | [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
 | [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
 
-Event object: { accountId: string, message: Message, confirmed: boolean }
+Event object: { indexationId: string, accountId: string, message: Message, confirmed: boolean }
 
 #### getTransactionConfirmationEventCount([fromTimestamp])
 
@@ -217,7 +217,7 @@ Gets the persisted new transaction events.
 | [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
 | [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
 
-Event object: { accountId: string, message: Message }
+Event object: { indexationId: string, accountId: string, message: Message }
 
 #### getNewTransactionEventCount([fromTimestamp])
 
@@ -237,7 +237,7 @@ Gets the persisted transaction reattachment events.
 | [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
 | [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
 
-Event object: { accountId: string, message: Message }
+Event object: { indexationId: string, accountId: string, message: Message }
 
 #### getReattachmentEventCount([fromTimestamp])
 
@@ -257,7 +257,7 @@ Gets the persisted transaction broadcast events.
 | [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
 | [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
 
-Event object: { accountId: string, message: Message }
+Event object: { indexationId: string, accountId: string, message: Message }
 
 #### getBroadcastEventCount([fromTimestamp])
 

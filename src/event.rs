@@ -1,11 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    account::Account,
-    address::AddressWrapper,
-    message::{Message, MessageId},
-};
+use crate::{account::Account, address::AddressWrapper, message::Message};
 
 use getset::Getters;
 use once_cell::sync::Lazy;
@@ -19,6 +15,12 @@ use std::{
 
 /// The event identifier type.
 pub type EventId = [u8; 32];
+
+fn generate_indexation_id() -> String {
+    let mut key = [0; 32];
+    crypto::rand::fill(&mut key).unwrap();
+    hex::encode(&key)
+}
 
 /// The balance change event payload.
 #[derive(Clone, PartialEq, Eq, Getters, Serialize, Deserialize)]
@@ -49,15 +51,15 @@ impl BalanceChange {
 #[derive(Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct BalanceEvent {
+    /// Event unique identifier.
+    #[serde(rename = "indexationId")]
+    pub indexation_id: String,
     /// The associated account identifier.
     #[serde(rename = "accountId")]
     pub account_id: String,
     /// The associated address.
     #[serde(with = "crate::serde::iota_address_serde")]
     pub address: AddressWrapper,
-    /// The message id associated with the balance change.
-    #[serde(rename = "messageIds", default)]
-    pub message_ids: Vec<MessageId>,
     /// The balance change data.
     #[serde(rename = "balanceChange")]
     pub balance_change: BalanceChange,
@@ -79,6 +81,9 @@ pub struct AddressConsolidationNeeded {
 #[derive(Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct TransactionEvent {
+    /// Event unique identifier.
+    #[serde(rename = "indexationId")]
+    pub indexation_id: String,
     #[serde(rename = "accountId")]
     /// The associated account identifier.
     pub account_id: String,
@@ -90,6 +95,9 @@ pub struct TransactionEvent {
 #[derive(Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct TransactionConfirmationChangeEvent {
+    /// Event unique identifier.
+    #[serde(rename = "indexationId")]
+    pub indexation_id: String,
     #[serde(rename = "accountId")]
     /// The associated account identifier.
     pub account_id: String,
@@ -295,14 +303,13 @@ pub async fn remove_balance_change_listener(id: &EventId) {
 pub(crate) async fn emit_balance_change(
     account: &Account,
     address: &AddressWrapper,
-    message_ids: Vec<MessageId>,
     balance_change: BalanceChange,
 ) -> crate::Result<()> {
     let listeners = balance_listeners().lock().await;
     let event = BalanceEvent {
+        indexation_id: generate_indexation_id(),
         account_id: account.id().to_string(),
         address: address.clone(),
-        message_ids,
         balance_change,
     };
 
@@ -328,6 +335,7 @@ pub(crate) async fn emit_transaction_event(
 ) -> crate::Result<()> {
     let listeners = transaction_listeners().lock().await;
     let event = TransactionEvent {
+        indexation_id: generate_indexation_id(),
         account_id: account.id().to_string(),
         message: message.clone(),
     };
@@ -365,6 +373,7 @@ pub(crate) async fn emit_confirmation_state_change(
 ) -> crate::Result<()> {
     let listeners = transaction_confirmation_change_listeners().lock().await;
     let event = TransactionConfirmationChangeEvent {
+        indexation_id: generate_indexation_id(),
         account_id: account.id().to_string(),
         message: message.clone(),
         confirmed,
@@ -597,7 +606,6 @@ mod tests {
         emit_balance_change(
             &account,
             &crate::test_utils::generate_random_iota_address(),
-            vec![],
             BalanceChange::spent(5),
         )
         .await

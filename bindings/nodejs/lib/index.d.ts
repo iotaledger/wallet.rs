@@ -178,19 +178,21 @@ export declare interface ManagerOptions {
 }
 
 export declare interface BalanceChangeEvent {
+  indexationId: string
   accountId: string
   address: string
-  messageIds: string[]
   balanceChange: { spent: number, received: number }
 }
 
 export declare interface TransactionConfirmationEvent {
+  indexationId: string
   accountId: string
   message: Message
   confirmed: boolean
 }
 
 export declare interface TransactionEvent {
+  indexationId: string
   accountId: string
   message: Message
 }
