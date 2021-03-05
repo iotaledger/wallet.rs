@@ -1960,6 +1960,16 @@
 <span id="1957">1957</span>
 <span id="1958">1958</span>
 <span id="1959">1959</span>
+<span id="1960">1960</span>
+<span id="1961">1961</span>
+<span id="1962">1962</span>
+<span id="1963">1963</span>
+<span id="1964">1964</span>
+<span id="1965">1965</span>
+<span id="1966">1966</span>
+<span id="1967">1967</span>
+<span id="1968">1968</span>
+<span id="1969">1969</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2661,18 +2671,28 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">check_storage_encryption</span>()<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">to_address</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">get_account</span>(<span class="ident">to_account_id</span>)
-            .<span class="kw">await</span><span class="question-mark">?</span>
-            .<span class="ident">read</span>()
-            .<span class="kw">await</span>
-            .<span class="ident">latest_address</span>()
-            .<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">to_account_handle</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_account</span>(<span class="ident">to_account_id</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">to_address</span> <span class="op">=</span> <span class="ident">to_account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">latest_address</span>().<span class="ident">address</span>().<span class="ident">clone</span>();
 
-        <span class="self">self</span>.<span class="ident">get_account</span>(<span class="ident">from_account_id</span>)
+        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">get_account</span>(<span class="ident">from_account_id</span>)
             .<span class="kw">await</span><span class="question-mark">?</span>
-            .<span class="ident">transfer</span>(<span class="ident">Transfer</span>::<span class="ident">builder</span>(<span class="ident">to_address</span>.<span class="ident">address</span>().<span class="ident">clone</span>(), <span class="ident">amount</span>).<span class="ident">finish</span>())
+            .<span class="ident">transfer</span>(<span class="ident">Transfer</span>::<span class="ident">builder</span>(<span class="ident">to_address</span>, <span class="ident">amount</span>).<span class="ident">finish</span>())
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="comment">// store the message on the receive account</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">message_</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">clone</span>();
+        <span class="ident">message_</span>.<span class="ident">set_incoming</span>(<span class="bool-val">true</span>);
+        <span class="ident">to_account_handle</span>
+            .<span class="ident">write</span>()
             .<span class="kw">await</span>
+            .<span class="ident">do_mut</span>(<span class="op">|</span><span class="ident">account</span><span class="op">|</span> {
+                <span class="ident">account</span>.<span class="ident">append_messages</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">message_</span>]);
+                <span class="prelude-val">Ok</span>(())
+            })
+            .<span class="kw">await</span><span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(<span class="ident">message</span>)
     }
 
     <span class="doccomment">/// Backups the storage to the given destination</span>
