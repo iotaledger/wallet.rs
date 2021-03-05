@@ -3,8 +3,41 @@ package org.iota.wallet;
 
 
 public final class MessagePayload {
+    @Override
+    public String toString() {
+        return this.to_string();
+    }
+
 
     private MessagePayload() {}
+
+    private final String to_string() {
+        String ret = do_to_string(mNativeObj);
+
+        return ret;
+    }
+    private static native String do_to_string(long self);
+
+    public final MessagePayloadType payloadType() {
+        int ret = do_payloadType(mNativeObj);
+        MessagePayloadType convRet = MessagePayloadType.fromInt(ret);
+
+        return convRet;
+    }
+    private static native int do_payloadType(long self);
+
+    public final java.util.Optional<IndexationPayload> getAsIndexation() {
+        long ret = do_getAsIndexation(mNativeObj);
+        java.util.Optional<IndexationPayload> convRet;
+        if (ret != 0) {
+            convRet = java.util.Optional.of(new IndexationPayload(InternalPointerMarker.RAW_PTR, ret));
+        } else {
+            convRet = java.util.Optional.empty();
+        }
+
+        return convRet;
+    }
+    private static native long do_getAsIndexation(long self);
 
     public synchronized void delete() {
         if (mNativeObj != 0) {

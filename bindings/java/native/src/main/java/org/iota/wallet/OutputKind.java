@@ -3,9 +3,9 @@ package org.iota.wallet;
 
 
 public enum OutputKind {
-    SignatureLockedSingle(0),
-    SignatureLockedDustAllowance(1),
-    Treasury(2);
+    SIGNATURE_LOCKED_SINGLE(0),
+    SIGNATURE_LOCKED_DUST_ALLOWANCE(1),
+    TREASURY(2);
 
     private final int value;
     OutputKind(int value) {
@@ -14,9 +14,9 @@ public enum OutputKind {
     public final int getValue() { return value; }
     /*package*/ static OutputKind fromInt(int x) {
         switch (x) {
-            case 0: return SignatureLockedSingle;
-            case 1: return SignatureLockedDustAllowance;
-            case 2: return Treasury;
+            case 0: return SIGNATURE_LOCKED_SINGLE;
+            case 1: return SIGNATURE_LOCKED_DUST_ALLOWANCE;
+            case 2: return TREASURY;
             default: throw new Error("Invalid value for enum OutputKind: " + x);
         }
     }

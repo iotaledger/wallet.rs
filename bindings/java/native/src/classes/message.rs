@@ -17,7 +17,7 @@ use iota_wallet::{
 };
 
 use crate::bee_types::{
-    IndexationPayload, MessagePayload
+    IndexationPayload, MessagePayload,
 };
 
 use std::num::NonZeroU64;
@@ -70,15 +70,17 @@ impl TransferBuilder {
         }
     }
 
-    pub fn withRemainderValueStrategy(&mut self, strategy: RemainderValueStrategy) -> Self {
+    pub fn with_remainder_value_strategy(&mut self, strategy: RemainderValueStrategy) -> Self {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_remainder_value_strategy(
             remainder_type_enum_to_type(strategy)
         );
         TransferBuilder::new_with_builder(new_builder)
     }
 
-    pub fn withIndexation(&mut self, indexation: IndexationPayload) -> Self {
-        let new_builder = self.builder.borrow_mut().take().unwrap().with_indexation(indexation.get_internal());
+    pub fn with_indexation(&mut self, indexation: IndexationPayload) -> Self {
+        let new_builder = self.builder.borrow_mut().take().unwrap().with_indexation(
+            indexation.get_internal()
+        );
         TransferBuilder::new_with_builder(new_builder)
     }
 
@@ -120,9 +122,10 @@ impl Message {
     pub fn parents(&self) -> Vec<MessageId> {
         self.message.parents().to_vec()
     }
-    pub fn payloadLength(&self) -> usize {
+    pub fn payload_length(&self) -> usize {
         *(self.message.payload_length())
     }
+
     pub fn payload(&self) -> Option<MessagePayload> {
         match self.message.payload() {
             None => None,
@@ -147,7 +150,7 @@ impl Message {
     pub fn value(&self) -> u64 {
         *(self.message.value())
     }
-    pub fn remainderValue(&self) -> u64 {
+    pub fn remainder_value(&self) -> u64 {
         *(self.message.remainder_value())
     }
 

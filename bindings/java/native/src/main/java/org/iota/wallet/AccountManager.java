@@ -48,23 +48,23 @@ public final class AccountManager {
     }
     private static native void do_storeMnemonic(long self, int signer_type_enum, String mnemonic);
 
-    public final void verify_mnemonic(String mnemonic) {
-        do_verify_mnemonic(mNativeObj, mnemonic);
+    public final void verifyMnemonic(String mnemonic) {
+        do_verifyMnemonic(mNativeObj, mnemonic);
     }
-    private static native void do_verify_mnemonic(long self, String mnemonic);
+    private static native void do_verifyMnemonic(long self, String mnemonic);
 
-    public final AccountInitialiser create_account(ClientOptions client_options) {
+    public final AccountInitialiser createAccount(ClientOptions client_options) {
         long a0 = client_options.mNativeObj;
         client_options.mNativeObj = 0;
 
-        long ret = do_create_account(mNativeObj, a0);
+        long ret = do_createAccount(mNativeObj, a0);
         AccountInitialiser convRet = new AccountInitialiser(InternalPointerMarker.RAW_PTR, ret);
 
         JNIReachabilityFence.reachabilityFence1(client_options);
 
         return convRet;
     }
-    private static native long do_create_account(long self, long client_options);
+    private static native long do_createAccount(long self, long client_options);
 
     public synchronized void delete() {
         if (mNativeObj != 0) {

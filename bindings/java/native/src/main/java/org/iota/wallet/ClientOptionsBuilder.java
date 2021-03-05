@@ -9,72 +9,72 @@ public final class ClientOptionsBuilder {
     }
     private static native long init();
 
-    public final ClientOptionsBuilder with_node(String node) {
-        long ret = do_with_node(mNativeObj, node);
+    public final ClientOptionsBuilder withNode(String node) {
+        long ret = do_withNode(mNativeObj, node);
         ClientOptionsBuilder convRet = new ClientOptionsBuilder(InternalPointerMarker.RAW_PTR, ret);
 
         return convRet;
     }
-    private static native long do_with_node(long self, String node);
+    private static native long do_withNode(long self, String node);
 
-    public final ClientOptionsBuilder with_node_pool_urls(java.lang.String [] node_pool_urls) {
-        long ret = do_with_node_pool_urls(mNativeObj, node_pool_urls);
+    public final ClientOptionsBuilder withNodePoolUrls(java.lang.String [] node_pool_urls) {
+        long ret = do_withNodePoolUrls(mNativeObj, node_pool_urls);
         ClientOptionsBuilder convRet = new ClientOptionsBuilder(InternalPointerMarker.RAW_PTR, ret);
 
         return convRet;
     }
-    private static native long do_with_node_pool_urls(long self, java.lang.String [] node_pool_urls);
+    private static native long do_withNodePoolUrls(long self, java.lang.String [] node_pool_urls);
 
-    public final ClientOptionsBuilder with_network(String network) {
-        long ret = do_with_network(mNativeObj, network);
+    public final ClientOptionsBuilder withNetwork(String network) {
+        long ret = do_withNetwork(mNativeObj, network);
         ClientOptionsBuilder convRet = new ClientOptionsBuilder(InternalPointerMarker.RAW_PTR, ret);
 
         return convRet;
     }
-    private static native long do_with_network(long self, String network);
+    private static native long do_withNetwork(long self, String network);
 
-    public final ClientOptionsBuilder with_node_sync_interval(long node_sync_interval) {
-        long ret = do_with_node_sync_interval(mNativeObj, node_sync_interval);
+    public final ClientOptionsBuilder withNodeSyncInterval(long node_sync_interval) {
+        long ret = do_withNodeSyncInterval(mNativeObj, node_sync_interval);
         ClientOptionsBuilder convRet = new ClientOptionsBuilder(InternalPointerMarker.RAW_PTR, ret);
 
         return convRet;
     }
-    private static native long do_with_node_sync_interval(long self, long node_sync_interval);
+    private static native long do_withNodeSyncInterval(long self, long node_sync_interval);
 
-    public final ClientOptionsBuilder with_node_sync_disabled() {
-        long ret = do_with_node_sync_disabled(mNativeObj);
+    public final ClientOptionsBuilder withNodeSyncDisabled() {
+        long ret = do_withNodeSyncDisabled(mNativeObj);
         ClientOptionsBuilder convRet = new ClientOptionsBuilder(InternalPointerMarker.RAW_PTR, ret);
 
         return convRet;
     }
-    private static native long do_with_node_sync_disabled(long self);
+    private static native long do_withNodeSyncDisabled(long self);
 
-    public final ClientOptionsBuilder with_local_pow(boolean local) {
-        long ret = do_with_local_pow(mNativeObj, local);
+    public final ClientOptionsBuilder withLocalPow(boolean local) {
+        long ret = do_withLocalPow(mNativeObj, local);
         ClientOptionsBuilder convRet = new ClientOptionsBuilder(InternalPointerMarker.RAW_PTR, ret);
 
         return convRet;
     }
-    private static native long do_with_local_pow(long self, boolean local);
+    private static native long do_withLocalPow(long self, boolean local);
 
-    public final ClientOptionsBuilder with_request_timeout(long timeout) {
-        long ret = do_with_request_timeout(mNativeObj, timeout);
+    public final ClientOptionsBuilder withRequestTimeout(long timeout) {
+        long ret = do_withRequestTimeout(mNativeObj, timeout);
         ClientOptionsBuilder convRet = new ClientOptionsBuilder(InternalPointerMarker.RAW_PTR, ret);
 
         return convRet;
     }
-    private static native long do_with_request_timeout(long self, long timeout);
+    private static native long do_withRequestTimeout(long self, long timeout);
 
-    public final ClientOptionsBuilder with_api_timeout(Api api, long timeout) {
+    public final ClientOptionsBuilder withApiTimeout(Api api, long timeout) {
         int a0 = api.getValue();
-        long ret = do_with_api_timeout(mNativeObj, a0, timeout);
+        long ret = do_withApiTimeout(mNativeObj, a0, timeout);
         ClientOptionsBuilder convRet = new ClientOptionsBuilder(InternalPointerMarker.RAW_PTR, ret);
 
         JNIReachabilityFence.reachabilityFence1(api);
 
         return convRet;
     }
-    private static native long do_with_api_timeout(long self, int api, long timeout);
+    private static native long do_withApiTimeout(long self, int api, long timeout);
 
     public final ClientOptions build() {
         long ret = do_build(mNativeObj);

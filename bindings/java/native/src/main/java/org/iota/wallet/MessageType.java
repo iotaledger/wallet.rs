@@ -3,11 +3,11 @@ package org.iota.wallet;
 
 
 public enum MessageType {
-    Received(0),
-    Sent(1),
-    Failed(2),
-    Unconfirmed(3),
-    Value(4);
+    RECEIVED(0),
+    SENT(1),
+    FAILED(2),
+    UNCONFIRMED(3),
+    VALUE(4);
 
     private final int value;
     MessageType(int value) {
@@ -16,11 +16,11 @@ public enum MessageType {
     public final int getValue() { return value; }
     /*package*/ static MessageType fromInt(int x) {
         switch (x) {
-            case 0: return Received;
-            case 1: return Sent;
-            case 2: return Failed;
-            case 3: return Unconfirmed;
-            case 4: return Value;
+            case 0: return RECEIVED;
+            case 1: return SENT;
+            case 2: return FAILED;
+            case 3: return UNCONFIRMED;
+            case 4: return VALUE;
             default: throw new Error("Invalid value for enum MessageType: " + x);
         }
     }

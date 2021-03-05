@@ -1,9 +1,15 @@
-use jni::{
-    objects::{
-        AutoLocal,
-    },
-    JNIEnv,
-};
+foreign_typemap!(
+    ($p:r_type) &[u8] => Vec<i16> {
+        $out = $p.iter().cloned().map(|x| x as i16).collect();
+    };
+);
+
+foreign_typemap!(
+    ($p:r_type) &[u8] <= JavaShortArray {
+        let iter: Vec<u8> = $p.to_slice().iter().cloned().map(|x| x as u8).collect();
+        $out = iter.as_slice();
+    };
+);
 
 foreign_typemap!(
     ($p:r_type) PathBuf => jstring {
@@ -17,14 +23,6 @@ foreign_typemap!(
 foreign_typemap!(
     ($p:r_type) Result<bool> => bool {
         $out = $p.unwrap();
-    };
-);
-
-foreign_typemap!(
-    ($p:r_type) &[u8] => jintArray {
-        let java_array = (**env)->IntArrayFromSlice(env, $p);
-        let obj = AutoLocal::new(&env, JObject::from(java_array));
-        $out = obj;
     };
 );
 

@@ -23,19 +23,19 @@ public final class Value {
     }
     private static native String do_to_string(long self);
 
-    public final String with_denomination() {
-        String ret = do_with_denomination(mNativeObj);
+    public final String withDenomination() {
+        String ret = do_withDenomination(mNativeObj);
 
         return ret;
     }
-    private static native String do_with_denomination(long self);
+    private static native String do_withDenomination(long self);
 
-    public final long without_denomination() {
-        long ret = do_without_denomination(mNativeObj);
+    public final long withoutDenomination() {
+        long ret = do_withoutDenomination(mNativeObj);
 
         return ret;
     }
-    private static native long do_without_denomination(long self);
+    private static native long do_withoutDenomination(long self);
 
     public final long value() {
         long ret = do_value(mNativeObj);

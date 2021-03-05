@@ -13,29 +13,29 @@ public final class TransferBuilder {
     }
     private static native long init(long address, long amount);
 
-    public final TransferBuilder with_remainder_value_strategy(RemainderValueStrategy strategy) {
+    public final TransferBuilder withRemainderValueStrategy(RemainderValueStrategy strategy) {
         int a0 = strategy.getValue();
-        long ret = do_with_remainder_value_strategy(mNativeObj, a0);
+        long ret = do_withRemainderValueStrategy(mNativeObj, a0);
         TransferBuilder convRet = new TransferBuilder(InternalPointerMarker.RAW_PTR, ret);
 
         JNIReachabilityFence.reachabilityFence1(strategy);
 
         return convRet;
     }
-    private static native long do_with_remainder_value_strategy(long self, int strategy);
+    private static native long do_withRemainderValueStrategy(long self, int strategy);
 
-    public final TransferBuilder with_indexation(IndexationPayload indexation) {
+    public final TransferBuilder withIndexation(IndexationPayload indexation) {
         long a0 = indexation.mNativeObj;
         indexation.mNativeObj = 0;
 
-        long ret = do_with_indexation(mNativeObj, a0);
+        long ret = do_withIndexation(mNativeObj, a0);
         TransferBuilder convRet = new TransferBuilder(InternalPointerMarker.RAW_PTR, ret);
 
         JNIReachabilityFence.reachabilityFence1(indexation);
 
         return convRet;
     }
-    private static native long do_with_indexation(long self, long indexation);
+    private static native long do_withIndexation(long self, long indexation);
 
     public final Transfer finish() {
         long ret = do_finish(mNativeObj);

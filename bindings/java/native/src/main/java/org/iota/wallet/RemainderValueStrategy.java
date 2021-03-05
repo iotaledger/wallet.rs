@@ -3,8 +3,8 @@ package org.iota.wallet;
 
 
 public enum RemainderValueStrategy {
-    ReuseAddress(0),
-    ChangeAddress(1);
+    REUSE_ADDRESS(0),
+    CHANGE_ADDRESS(1);
 
     private final int value;
     RemainderValueStrategy(int value) {
@@ -13,8 +13,8 @@ public enum RemainderValueStrategy {
     public final int getValue() { return value; }
     /*package*/ static RemainderValueStrategy fromInt(int x) {
         switch (x) {
-            case 0: return ReuseAddress;
-            case 1: return ChangeAddress;
+            case 0: return REUSE_ADDRESS;
+            case 1: return CHANGE_ADDRESS;
             default: throw new Error("Invalid value for enum RemainderValueStrategy: " + x);
         }
     }

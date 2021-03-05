@@ -3,9 +3,9 @@ package org.iota.wallet;
 
 
 public enum Api {
-    GetTips(0),
-    PostMessage(1),
-    GetOutput(2);
+    GET_TIPS(0),
+    POST_MESSAGE(1),
+    GET_OUTPUT(2);
 
     private final int value;
     Api(int value) {
@@ -14,9 +14,9 @@ public enum Api {
     public final int getValue() { return value; }
     /*package*/ static Api fromInt(int x) {
         switch (x) {
-            case 0: return GetTips;
-            case 1: return PostMessage;
-            case 2: return GetOutput;
+            case 0: return GET_TIPS;
+            case 1: return POST_MESSAGE;
+            case 2: return GET_OUTPUT;
             default: throw new Error("Invalid value for enum Api: " + x);
         }
     }

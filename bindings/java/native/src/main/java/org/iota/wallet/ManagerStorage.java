@@ -3,8 +3,8 @@ package org.iota.wallet;
 
 
 public enum ManagerStorage {
-    Stronghold(0),
-    Sqlite(1);
+    STRONGHOLD(0),
+    SQLITE(1);
 
     private final int value;
     ManagerStorage(int value) {
@@ -13,8 +13,8 @@ public enum ManagerStorage {
     public final int getValue() { return value; }
     /*package*/ static ManagerStorage fromInt(int x) {
         switch (x) {
-            case 0: return Stronghold;
-            case 1: return Sqlite;
+            case 0: return STRONGHOLD;
+            case 1: return SQLITE;
             default: throw new Error("Invalid value for enum ManagerStorage: " + x);
         }
     }

@@ -6,16 +6,16 @@ public final class AccountInitialiser {
 
     private AccountInitialiser() {}
 
-    public final AccountInitialiser signer_type(AccountSignerType signer_type_enum) {
+    public final AccountInitialiser signerType(AccountSignerType signer_type_enum) {
         int a0 = signer_type_enum.getValue();
-        long ret = do_signer_type(mNativeObj, a0);
+        long ret = do_signerType(mNativeObj, a0);
         AccountInitialiser convRet = new AccountInitialiser(InternalPointerMarker.RAW_PTR, ret);
 
         JNIReachabilityFence.reachabilityFence1(signer_type_enum);
 
         return convRet;
     }
-    private static native long do_signer_type(long self, int signer_type_enum);
+    private static native long do_signerType(long self, int signer_type_enum);
 
     public final AccountInitialiser alias(String alias) {
         long ret = do_alias(mNativeObj, alias);
@@ -25,13 +25,13 @@ public final class AccountInitialiser {
     }
     private static native long do_alias(long self, String alias);
 
-    public final AccountInitialiser created_at(long created_at) {
-        long ret = do_created_at(mNativeObj, created_at);
+    public final AccountInitialiser createdAt(long created_at) {
+        long ret = do_createdAt(mNativeObj, created_at);
         AccountInitialiser convRet = new AccountInitialiser(InternalPointerMarker.RAW_PTR, ret);
 
         return convRet;
     }
-    private static native long do_created_at(long self, long created_at);
+    private static native long do_createdAt(long self, long created_at);
 
     public final AccountInitialiser messages(Message[] messages) {
         long ret = do_messages(mNativeObj, messages);
@@ -49,13 +49,13 @@ public final class AccountInitialiser {
     }
     private static native long do_addresses(long self, Address[] addresses);
 
-    public final AccountInitialiser skip_persistance() {
-        long ret = do_skip_persistance(mNativeObj);
+    public final AccountInitialiser skipPersistance() {
+        long ret = do_skipPersistance(mNativeObj);
         AccountInitialiser convRet = new AccountInitialiser(InternalPointerMarker.RAW_PTR, ret);
 
         return convRet;
     }
-    private static native long do_skip_persistance(long self);
+    private static native long do_skipPersistance(long self);
 
     public final Account initialise() {
         long ret = do_initialise(mNativeObj);

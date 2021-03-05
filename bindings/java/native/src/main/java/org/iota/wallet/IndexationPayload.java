@@ -6,19 +6,27 @@ public final class IndexationPayload {
 
     private IndexationPayload() {}
 
-    public final int [] index() {
-        int [] ret = do_index(mNativeObj);
+    public static IndexationPayload new_with(short [] index, short [] data) {
+        long ret = do_new_with(index, data);
+        IndexationPayload convRet = new IndexationPayload(InternalPointerMarker.RAW_PTR, ret);
+
+        return convRet;
+    }
+    private static native long do_new_with(short [] index, short [] data);
+
+    public final short [] index() {
+        short [] ret = do_index(mNativeObj);
 
         return ret;
     }
-    private static native int [] do_index(long self);
+    private static native short [] do_index(long self);
 
-    public final int [] data() {
-        int [] ret = do_data(mNativeObj);
+    public final short [] data() {
+        short [] ret = do_data(mNativeObj);
 
         return ret;
     }
-    private static native int [] do_data(long self);
+    private static native short [] do_data(long self);
 
     public synchronized void delete() {
         if (mNativeObj != 0) {

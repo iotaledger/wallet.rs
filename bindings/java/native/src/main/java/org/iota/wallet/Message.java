@@ -49,12 +49,12 @@ public final class Message {
     }
     private static native MessageId [] do_parents(long self);
 
-    public final long payload_length() {
-        long ret = do_payload_length(mNativeObj);
+    public final long payloadLength() {
+        long ret = do_payloadLength(mNativeObj);
 
         return ret;
     }
-    private static native long do_payload_length(long self);
+    private static native long do_payloadLength(long self);
 
     public final java.util.Optional<MessagePayload> payload() {
         long ret = do_payload(mNativeObj);
@@ -118,12 +118,12 @@ public final class Message {
     }
     private static native long do_value(long self);
 
-    public final long remainder_value() {
-        long ret = do_remainder_value(mNativeObj);
+    public final long remainderValue() {
+        long ret = do_remainderValue(mNativeObj);
 
         return ret;
     }
-    private static native long do_remainder_value(long self);
+    private static native long do_remainderValue(long self);
 
     public synchronized void delete() {
         if (mNativeObj != 0) {

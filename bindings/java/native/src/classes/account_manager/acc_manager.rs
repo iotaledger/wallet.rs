@@ -89,16 +89,16 @@ impl Default for ManagerOptions {
 }
 
 impl ManagerOptions {
-    pub fn setStoragePath(&mut self, storage_path: PathBuf){
+    pub fn set_storage_path(&mut self, storage_path: PathBuf){
         println!("old storage: {:?}", &self.storage_path);
         self.storage_path = storage_path;
     }
 
-    pub fn setStorageType(&mut self, storage_type: ManagerStorage){
+    pub fn set_storage_type(&mut self, storage_type: ManagerStorage){
         self.storage_type = Option::Some(storage_enum_to_storage(storage_type));
     }
 
-    pub fn setStoragePassword(&mut self, storage_password: String){
+    pub fn set_storage_password(&mut self, storage_password: String){
         self.storage_password = Option::Some(storage_password);
     }
 }
@@ -130,39 +130,39 @@ impl AccountManager {
         self.manager.storage_path()
     }
 
-    pub fn stopBackgroundSync(&mut self,) -> Result<()> {
+    pub fn stop_background_sync(&mut self,) -> Result<()> {
         self.manager.stop_background_sync();
         Ok(())
     }
 
-    pub fn setStoragePassword(&mut self, password: &str) -> Result<()> {
+    pub fn set_storage_password(&mut self, password: &str) -> Result<()> {
         crate::block_on(async move {
             self.manager.set_storage_password(password).await
         }).expect("error setting storage password");
         Ok(())
     }
 
-    pub fn setStrongholdPassword(&mut self, password: &str) -> Result<()> {
+    pub fn set_stronghold_password(&mut self, password: &str) -> Result<()> {
         crate::block_on(async move {
             self.manager.set_stronghold_password(password).await
         }).expect("error setting stronghold password");
         Ok(())
     }
 
-    pub fn changeStrongholdPassword(&mut self, current_password: &str, new_password: &str) -> Result<()> {
+    pub fn change_stronghold_password(&mut self, current_password: &str, new_password: &str) -> Result<()> {
         crate::block_on(async move {
             self.manager.change_stronghold_password(current_password, new_password).await
         }).expect("error changing stronghold password");
         Ok(())
     }
 
-    pub fn generateMnemonic(&mut self) -> Result<String> {
+    pub fn generate_mnemonic(&mut self) -> Result<String> {
         let mnemonic = self.manager.generate_mnemonic()
             .expect("error generating mnemonic");
         Ok(mnemonic)
     }
 
-    pub fn storeMnemonic(&mut self, signer_type_enum: AccountSignerType, mnemonic: String) -> Result<()> {
+    pub fn store_mnemonic(&mut self, signer_type_enum: AccountSignerType, mnemonic: String) -> Result<()> {
         let signer_type = signer_type_enum_to_type(signer_type_enum);
 
         // TODO: Make optional from java possible
@@ -177,12 +177,12 @@ impl AccountManager {
         Ok(())
     }
 
-    pub fn verifyMnemonic(&mut self, mnemonic: String) -> Result<()> {
+    pub fn verify_mnemonic(&mut self, mnemonic: String) -> Result<()> {
         self.manager.verify_mnemonic(mnemonic).expect("error verifying mnemonic");
         Ok(())
     }
 
-    pub fn createAccount(&self, client_options: ClientOptions) -> Result<AccountInitialiser>{
+    pub fn create_account(&self, client_options: ClientOptions) -> Result<AccountInitialiser>{
         let initialiser = self.manager.create_account(client_options.get_internal())
             .expect("Failed to initialise accauntinitialiser");
         

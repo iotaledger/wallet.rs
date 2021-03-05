@@ -83,6 +83,16 @@ foreign_enum!(
 );
 
 foreign_enum!(
+    enum MessagePayloadType {
+        TRANSACTION = MessagePayloadType::Transaction,
+        MILESTONE = MessagePayloadType::Milestone,
+        INDEXATION = MessagePayloadType::Indexation,
+        RECEIPT = MessagePayloadType::Receipt,
+        TREASURY_TRANSACTION = MessagePayloadType::TreasuryTransaction,
+    }
+);
+
+foreign_enum!(
     enum ValueUnit {
         I = ValueUnit::I,
         Ki = ValueUnit::Ki,
@@ -104,36 +114,36 @@ foreign_enum!(
 foreign_class!(class ManagerOptions {
     self_type ManagerOptions;
     constructor ManagerOptions::default() -> ManagerOptions;
-    fn ManagerOptions::setStoragePath(&mut self, storage_path: PathBuf);
-    fn ManagerOptions::setStorageType(&mut self, storage_type: ManagerStorage);
-    fn ManagerOptions::setStoragePassword(&mut self, storage_password: String);
+    fn ManagerOptions::set_storage_path(&mut self, storage_path: PathBuf); alias setStoragePath;
+    fn ManagerOptions::set_storage_type(&mut self, storage_type: ManagerStorage); alias setStorageType;
+    fn ManagerOptions::set_storage_password(&mut self, storage_password: String); alias setStoragePassword;
 });
 
 foreign_class!(class AccountManager {
     self_type AccountManager;
     constructor AccountManager::new(options: ManagerOptions) -> AccountManager;
-    fn AccountManager::stopBackgroundSync(&mut self,) -> Result<()>;
-    fn AccountManager::setStoragePassword(&mut self, password: &str) -> Result<()>;
-    fn AccountManager::setStrongholdPassword(&mut self, password: &str) -> Result<()>;
-    fn AccountManager::changeStrongholdPassword(&mut self, current_password: &str, new_password: &str) -> Result<()>;
-    fn AccountManager::generateMnemonic(&mut self) -> Result<String>;
-    fn AccountManager::storeMnemonic(&mut self, signer_type_enum: AccountSignerType, mnemonic: String) -> Result<()>;
-    fn AccountManager::verifyMnemonic(&mut self, mnemonic: String) -> Result<()>;
-    fn AccountManager::createAccount(&mut self, client_options: ClientOptions) -> Result<AccountInitialiser>;
+    fn AccountManager::stop_background_sync(&mut self,) -> Result<()>; alias stopBackgroundSync;
+    fn AccountManager::set_storage_password(&mut self, password: &str) -> Result<()>; alias setStoragePassword;
+    fn AccountManager::set_stronghold_password(&mut self, password: &str) -> Result<()>; alias setStrongholdPassword;
+    fn AccountManager::change_stronghold_password(&mut self, current_password: &str, new_password: &str) -> Result<()>; alias changeStrongholdPassword;
+    fn AccountManager::generate_mnemonic(&mut self) -> Result<String>; alias generateMnemonic;
+    fn AccountManager::store_mnemonic(&mut self, signer_type_enum: AccountSignerType, mnemonic: String) -> Result<()>; alias storeMnemonic;
+    fn AccountManager::verify_mnemonic(&mut self, mnemonic: String) -> Result<()>; alias verifyMnemonic;
+    fn AccountManager::create_account(&mut self, client_options: ClientOptions) -> Result<AccountInitialiser>; alias createAccount;
 });
 
 foreign_class!(class ClientOptionsBuilder {
     self_type ClientOptionsBuilder;
     constructor ClientOptionsBuilder::new() -> ClientOptionsBuilder;
-    fn ClientOptionsBuilder::withNode(&mut self, node: &str) -> ClientOptionsBuilder;
-    fn ClientOptionsBuilder::withNodePoolUrls(&mut self, node_pool_urls: Vec<String>) -> ClientOptionsBuilder;
-    fn ClientOptionsBuilder::withNetwork(&mut self, network: String) -> ClientOptionsBuilder;
-    fn ClientOptionsBuilder::withNodeSyncInterval(&mut self, node_sync_interval: Duration) -> ClientOptionsBuilder;
-    fn ClientOptionsBuilder::withNodeSyncDisabled(&mut self) -> ClientOptionsBuilder;
+    fn ClientOptionsBuilder::with_node(&mut self, node: &str) -> ClientOptionsBuilder; alias withNode;
+    fn ClientOptionsBuilder::with_node_pool_urls(&mut self, node_pool_urls: Vec<String>) -> ClientOptionsBuilder; alias withNodePoolUrls;
+    fn ClientOptionsBuilder::with_network(&mut self, network: String) -> ClientOptionsBuilder; alias withNetwork;
+    fn ClientOptionsBuilder::with_node_sync_interval(&mut self, node_sync_interval: Duration) -> ClientOptionsBuilder; alias withNodeSyncInterval;
+    fn ClientOptionsBuilder::with_node_sync_disabled(&mut self) -> ClientOptionsBuilder; alias withNodeSyncDisabled;
     //fn ClientOptionsBuilder::with_mqtt_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientOptionsBuilder;
-    fn ClientOptionsBuilder::withLocalPow(&mut self, local: bool) -> ClientOptionsBuilder;
-    fn ClientOptionsBuilder::withRequestTimeout(&mut self, timeout: Duration) -> ClientOptionsBuilder;
-    fn ClientOptionsBuilder::withApiTimeout(&mut self, api: Api, timeout: Duration) -> ClientOptionsBuilder;
+    fn ClientOptionsBuilder::with_local_pow(&mut self, local: bool) -> ClientOptionsBuilder; alias withLocalPow;
+    fn ClientOptionsBuilder::with_request_timeout(&mut self, timeout: Duration) -> ClientOptionsBuilder; alias withRequestTimeout;
+    fn ClientOptionsBuilder::with_api_timeout(&mut self, api: Api, timeout: Duration) -> ClientOptionsBuilder; alias withApiTimeout;
     fn ClientOptionsBuilder::build(&mut self) -> Result<ClientOptions>;
 });
 
@@ -174,7 +184,7 @@ foreign_class!(
         fn Message::id(&self) -> MessageId;
         fn Message::version(&self) -> u64;
         fn Message::parents(&self) -> Vec<MessageId>;
-        fn Message::payloadLength(&self) -> usize;
+        fn Message::payload_length(&self) -> usize; alias payloadLength;
         fn Message::payload(&self) -> Option<MessagePayload>;
         fn Message::timestamp(&self) -> DateTime<Utc>;
         fn Message::nonce(&self) -> u64;
@@ -182,24 +192,7 @@ foreign_class!(
         fn Message::broadcasted(&self) -> bool;
         fn Message::incoming(&self) -> bool;
         fn Message::value(&self) -> u64;
-        fn Message::remainderValue(&self) -> u64;
-    }
-);
-
-foreign_class!(
-    class MessagePayload {
-        self_type MessagePayload;
-        private constructor = empty;
-    }
-);
-
-foreign_class!(
-    class IndexationPayload {
-        self_type IndexationPayload;
-        private constructor = empty;
-        //fn new(index: &[u8], data: &[u8]) -> Result<IndexationPayload>;
-        fn IndexationPayload::index(&self) -> &[u8];
-        fn IndexationPayload::data(&self) -> &[u8];
+        fn Message::remainder_value(&self) -> u64; alias remainderValue;
     }
 );
 
@@ -228,12 +221,12 @@ foreign_class!(
     class AccountInitialiser{
         self_type AccountInitialiser;
         private constructor = empty;
-        fn AccountInitialiser::signerType(&mut self, signer_type_enum: AccountSignerType) -> AccountInitialiser;
+        fn AccountInitialiser::signer_type(&mut self, signer_type_enum: AccountSignerType) -> AccountInitialiser; alias signerType;
         fn AccountInitialiser::alias(&mut self, alias: String) -> AccountInitialiser;
-        fn AccountInitialiser::createdAt(&mut self, created_at: DateTime<Local>) -> AccountInitialiser;
+        fn AccountInitialiser::created_at(&mut self, created_at: DateTime<Local>) -> AccountInitialiser; alias createdAt;
         fn AccountInitialiser::messages(&mut self, messages: Vec<Message>) -> AccountInitialiser;
         fn AccountInitialiser::addresses(&mut self, addresses: Vec<Address>) -> AccountInitialiser;
-        fn AccountInitialiser::skipPersistance(&mut self) -> AccountInitialiser;
+        fn AccountInitialiser::skip_persistance(&mut self) -> AccountInitialiser; alias skipPersistance;
         fn AccountInitialiser::initialise(&mut self) -> Result<Account>;
     }
 );
@@ -262,16 +255,16 @@ foreign_class!(
         self_type Account;
         private constructor = empty;
         fn Account::transfer(&mut self, transfer: Transfer) -> Result<Message>;
-        fn Account::generateAddress(&self) -> Result<Address>;
-        fn Account::getUnusedAddress(&self) -> Result<Address>;
-        fn Account::isLatestAddressUnused(&self) -> Result<bool>;
-        fn Account::latestAddress(&self) -> Address;
-        fn Account::setAlias(&self, alias: String) -> Result<()>;
-        fn Account::setClientOptions(&self, options: ClientOptions) -> Result<()>;
-        fn Account::listMessages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<Message>;
-        fn Account::listSpentAddresses(&self) -> Vec<Address>;
-        fn Account::listUnspentAddresses(&self) -> Vec<Address>;
-        fn Account::getMessage(&self, message_id: MessageId) -> Option<Message>;
+        fn Account::generate_address(&self) -> Result<Address>; alias generateAddress;
+        fn Account::get_unused_address(&self) -> Result<Address>; alias getUnusedAddress;
+        fn Account::is_latest_address_unused(&self) -> Result<bool>; alias isLatestAddressUnused;
+        fn Account::latest_address(&self) -> Address; alias latestAddress;
+        fn Account::set_alias(&self, alias: String) -> Result<()>; alias setAlias;
+        fn Account::set_client_options(&self, options: ClientOptions) -> Result<()>; alias setClientOptions;
+        fn Account::list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<Message>; alias listMessages;
+        fn Account::list_spent_addresses(&self) -> Vec<Address>; alias listSpentAddresses;
+        fn Account::list_unspent_addresses(&self) -> Vec<Address>; alias listUnspentAddresses;
+        fn Account::get_message(&self, message_id: MessageId) -> Option<Message>; alias getMessage;
         fn Account::alias(&self) -> String;
         fn Account::balance(&self) -> AccountBalance;
     }
@@ -289,8 +282,35 @@ foreign_class!(
     class TransferBuilder {
         self_type TransferBuilder;
         constructor TransferBuilder::new(address: AddressWrapper, amount: u64) -> TransferBuilder;
-        fn TransferBuilder::withRemainderValueStrategy(&mut self, strategy: RemainderValueStrategy) -> TransferBuilder;
-        fn TransferBuilder::withIndexation(&mut self, indexation: IndexationPayload) -> TransferBuilder;
+        fn TransferBuilder::with_remainder_value_strategy(&mut self, strategy: RemainderValueStrategy) -> TransferBuilder; alias withRemainderValueStrategy;
+        fn TransferBuilder::with_indexation(&mut self, indexation: IndexationPayload) -> TransferBuilder; alias withIndexation;
         fn TransferBuilder::finish(&self) -> Transfer;
     }
 );
+
+
+// Bee types wrapping
+foreign_class!(
+    #[derive(Display)]
+    class MessagePayload {
+        self_type MessagePayload;
+        private constructor = empty;
+        private fn MessagePayload::to_string(&self) -> String;
+        fn MessagePayload::payload_type(&self) -> MessagePayloadType; alias payloadType;
+        fn MessagePayload::get_as_indexation(&self) -> Option<IndexationPayload>; alias getAsIndexation;
+    }
+);
+
+foreign_class!(
+    class IndexationPayload {
+        self_type IndexationPayload;
+        private constructor = empty;
+        fn IndexationPayload::new_with(index: &[u8], data: &[u8]) -> Result<IndexationPayload>;
+        fn IndexationPayload::index(&self) -> &[u8];
+        fn IndexationPayload::data(&self) -> &[u8];
+    }
+);
+
+// TransactionEssence
+
+// UnlockBlock

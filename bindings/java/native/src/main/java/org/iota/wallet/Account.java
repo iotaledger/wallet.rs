@@ -19,82 +19,82 @@ public final class Account {
     }
     private static native long do_transfer(long self, long transfer);
 
-    public final Address generate_address() {
-        long ret = do_generate_address(mNativeObj);
+    public final Address generateAddress() {
+        long ret = do_generateAddress(mNativeObj);
         Address convRet = new Address(InternalPointerMarker.RAW_PTR, ret);
 
         return convRet;
     }
-    private static native long do_generate_address(long self);
+    private static native long do_generateAddress(long self);
 
-    public final Address get_unused_address() {
-        long ret = do_get_unused_address(mNativeObj);
+    public final Address getUnusedAddress() {
+        long ret = do_getUnusedAddress(mNativeObj);
         Address convRet = new Address(InternalPointerMarker.RAW_PTR, ret);
 
         return convRet;
     }
-    private static native long do_get_unused_address(long self);
+    private static native long do_getUnusedAddress(long self);
 
-    public final boolean is_latest_address_unused() {
-        boolean ret = do_is_latest_address_unused(mNativeObj);
+    public final boolean isLatestAddressUnused() {
+        boolean ret = do_isLatestAddressUnused(mNativeObj);
 
         return ret;
     }
-    private static native boolean do_is_latest_address_unused(long self);
+    private static native boolean do_isLatestAddressUnused(long self);
 
-    public final Address latest_address() {
-        long ret = do_latest_address(mNativeObj);
+    public final Address latestAddress() {
+        long ret = do_latestAddress(mNativeObj);
         Address convRet = new Address(InternalPointerMarker.RAW_PTR, ret);
 
         return convRet;
     }
-    private static native long do_latest_address(long self);
+    private static native long do_latestAddress(long self);
 
-    public final void set_alias(String alias) {
-        do_set_alias(mNativeObj, alias);
+    public final void setAlias(String alias) {
+        do_setAlias(mNativeObj, alias);
     }
-    private static native void do_set_alias(long self, String alias);
+    private static native void do_setAlias(long self, String alias);
 
-    public final void set_client_options(ClientOptions options) {
+    public final void setClientOptions(ClientOptions options) {
         long a0 = options.mNativeObj;
         options.mNativeObj = 0;
 
-        do_set_client_options(mNativeObj, a0);
+        do_setClientOptions(mNativeObj, a0);
 
         JNIReachabilityFence.reachabilityFence1(options);
     }
-    private static native void do_set_client_options(long self, long options);
+    private static native void do_setClientOptions(long self, long options);
 
-    public final Message [] list_messages(long count, long from, MessageType message_type) {
+    public final Message [] listMessages(long count, long from, MessageType message_type) {
         int a2 = (message_type != null) ? message_type.getValue() : -1;
 
-        Message [] ret = do_list_messages(mNativeObj, count, from, a2);
+        Message [] ret = do_listMessages(mNativeObj, count, from, a2);
 
         JNIReachabilityFence.reachabilityFence1(message_type);
 
         return ret;
     }
-    private static native Message [] do_list_messages(long self, long count, long from, int message_type);
+    private static native Message [] do_listMessages(long self, long count, long from, int message_type);
 
-    public final Address [] list_spent_addresses() {
-        Address [] ret = do_list_spent_addresses(mNativeObj);
-
-        return ret;
-    }
-    private static native Address [] do_list_spent_addresses(long self);
-
-    public final Address [] list_unspent_addresses() {
-        Address [] ret = do_list_unspent_addresses(mNativeObj);
+    public final Address [] listSpentAddresses() {
+        Address [] ret = do_listSpentAddresses(mNativeObj);
 
         return ret;
     }
-    private static native Address [] do_list_unspent_addresses(long self);
+    private static native Address [] do_listSpentAddresses(long self);
 
-    public final java.util.Optional<Message> get_message(MessageId message_id) {
+    public final Address [] listUnspentAddresses() {
+        Address [] ret = do_listUnspentAddresses(mNativeObj);
+
+        return ret;
+    }
+    private static native Address [] do_listUnspentAddresses(long self);
+
+    public final java.util.Optional<Message> getMessage(MessageId message_id) {
         long a0 = message_id.mNativeObj;
         message_id.mNativeObj = 0;
 
-        long ret = do_get_message(mNativeObj, a0);
+        long ret = do_getMessage(mNativeObj, a0);
         java.util.Optional<Message> convRet;
         if (ret != 0) {
             convRet = java.util.Optional.of(new Message(InternalPointerMarker.RAW_PTR, ret));
@@ -106,7 +106,7 @@ public final class Account {
 
         return convRet;
     }
-    private static native long do_get_message(long self, long message_id);
+    private static native long do_getMessage(long self, long message_id);
 
     public final String alias() {
         String ret = do_alias(mNativeObj);

@@ -3,9 +3,9 @@ package org.iota.wallet;
 
 
 public enum AccountSignerType {
-    Stronghold(0),
-    LedgerNano(1),
-    LedgerNanoSimulator(2);
+    STRONGHOLD(0),
+    LEDGER_NANO(1),
+    LEDGER_NANO_SIMULATOR(2);
 
     private final int value;
     AccountSignerType(int value) {
@@ -14,9 +14,9 @@ public enum AccountSignerType {
     public final int getValue() { return value; }
     /*package*/ static AccountSignerType fromInt(int x) {
         switch (x) {
-            case 0: return Stronghold;
-            case 1: return LedgerNano;
-            case 2: return LedgerNanoSimulator;
+            case 0: return STRONGHOLD;
+            case 1: return LEDGER_NANO;
+            case 2: return LEDGER_NANO_SIMULATOR;
             default: throw new Error("Invalid value for enum AccountSignerType: " + x);
         }
     }

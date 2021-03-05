@@ -9,6 +9,11 @@ public final class MessageId {
     }
 
 
+    public MessageId() {
+        mNativeObj = init();
+    }
+    private static native long init();
+
     private final String to_string() {
         String ret = do_to_string(mNativeObj);
 
@@ -23,11 +28,6 @@ public final class MessageId {
         return convRet;
     }
     private static native long do_fromString(String str_rep);
-
-    public MessageId() {
-        mNativeObj = init();
-    }
-    private static native long init();
 
     public synchronized void delete() {
         if (mNativeObj != 0) {
