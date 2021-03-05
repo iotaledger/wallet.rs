@@ -5,11 +5,12 @@ This is the documentation for the official IOTA Wallet Library Software. It can 
 
 > Using `stronghold` is a recommended approach to store account data using `wallet.rs`. One get the best security practices for free 
 
-With the `wallet.rs` library, developers do not need to use a self-generated seed anymore. By default, the seed is created and stored in Stronghold. It is not possible to extract the seed from Stronghold for security purposes. Stronghold uses encrypted snapshots that can easily be backed up and securely shared between devices. These snapshots are further secured with a password.
+With the `wallet.rs` library, developers do not need to use a self-generated seed anymore. By default, the seed is created and stored in Stronghold encrypted at rest. It is not possible to extract the seed from Stronghold for security purposes. Stronghold uses encrypted snapshots that can easily be backed up and securely shared between devices. These snapshots are further secured with a password.
 
 ## IOTA 1.5 (Chrysalis) in a nutshell
 * IOTA network uses a DAG (Directed Acyclic Graph) to store its transactions. Each transaction can reference up to 8 parent transactions
 * There is a breaking change moving from IOTA 1.0 to IOTA 1.5 (Chrysalis). IOTA address was originally based on WOTS signature scheme (81 trytes) and it has been replaced by a Ed25519 signature scheme (Bech32 [checksummed base32 format] string of 64 characters)
+* In contrast to IOTA 1.0, IOTA 1.5 addresses are perfectly resuable: so even if one spent funds from the given address it can be used again
 * There are new client libraries developed in rust, specifically `iota.rs`, `wallet.rs` and `stronghold.rs` that serve as `one-source-code-of-truth` to IOTA users and providing binding to other programming languages 
 * Example of new format of the IOTA 1.5 address (Bech32 string):
 <table>
