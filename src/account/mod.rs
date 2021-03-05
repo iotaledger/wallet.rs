@@ -1115,19 +1115,19 @@ mod tests {
             (MessageType::Received, &received_message),
             (MessageType::Sent, &sent_message),
             (MessageType::Unconfirmed, &unconfirmed_message),
-            (MessageType::Value, &value_message),
+            (MessageType::Value, &received_message),
         ];
         for (tx_type, expected) in cases {
-            let failed_messages = account_handle.list_messages(0, 0, Some(tx_type.clone())).await;
+            let messages = account_handle.list_messages(0, 0, Some(tx_type.clone())).await;
             assert_eq!(
-                failed_messages.len(),
+                messages.len(),
                 match tx_type {
                     MessageType::Sent => 4,
                     MessageType::Value => 5,
                     _ => 1,
                 }
             );
-            assert_eq!(failed_messages.first().unwrap(), expected);
+            assert_eq!(messages.first().unwrap(), expected);
         }
     }
 
