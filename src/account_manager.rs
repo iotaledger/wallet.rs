@@ -698,18 +698,28 @@ impl AccountManager {
     ) -> crate::Result<Message> {
         self.check_storage_encryption()?;
 
-        let to_address = self
-            .get_account(to_account_id)
-            .await?
-            .read()
-            .await
-            .latest_address()
-            .clone();
+        let to_account_handle = self.get_account(to_account_id).await?;
+        let to_address = to_account_handle.read().await.latest_address().address().clone();
 
-        self.get_account(from_account_id)
+        let message = self
+            .get_account(from_account_id)
             .await?
-            .transfer(Transfer::builder(to_address.address().clone(), amount).finish())
+            .transfer(Transfer::builder(to_address, amount).finish())
+            .await?;
+
+        // store the message on the receive account
+        let mut message_ = message.clone();
+        message_.set_incoming(true);
+        to_account_handle
+            .write()
             .await
+            .do_mut(|account| {
+                account.append_messages(vec![message_]);
+                Ok(())
+            })
+            .await?;
+
+        Ok(message)
     }
 
     /// Backups the storage to the given destination
