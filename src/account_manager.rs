@@ -109,8 +109,7 @@ pub struct AccountManagerBuilder {
     polling_interval: Duration,
     skip_polling: bool,
     storage_encryption_key: Option<[u8; 32]>,
-    output_consolidation_threshold: usize,
-    automatic_output_consolidation: bool,
+    account_options: AccountOptions,
 }
 
 impl Default for AccountManagerBuilder {
@@ -128,8 +127,10 @@ impl Default for AccountManagerBuilder {
             polling_interval: Duration::from_millis(30_000),
             skip_polling: false,
             storage_encryption_key: None,
-            output_consolidation_threshold: DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
-            automatic_output_consolidation: true,
+            account_options: AccountOptions {
+                output_consolidation_threshold: DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
+                automatic_output_consolidation: true,
+            },
         }
     }
 }
@@ -169,13 +170,13 @@ impl AccountManagerBuilder {
 
     /// Sets the number of outputs an address must have to trigger the automatic consolidation process.
     pub fn with_output_consolidation_threshold(mut self, threshold: usize) -> Self {
-        self.output_consolidation_threshold = threshold;
+        self.account_options.output_consolidation_threshold = threshold;
         self
     }
 
     /// Disables the automatic output consolidation process.
     pub fn with_automatic_output_consolidation_disabled(mut self) -> Self {
-        self.automatic_output_consolidation = true;
+        self.account_options.automatic_output_consolidation = true;
         self
     }
 
@@ -236,17 +237,26 @@ impl AccountManagerBuilder {
             polling_handle: None,
             is_monitoring: Arc::new(AtomicBool::new(false)),
             generated_mnemonic: None,
-            output_consolidation_threshold: self.output_consolidation_threshold,
+            account_options: self.account_options,
         };
 
         if !self.skip_polling {
             instance
-                .start_background_sync(self.polling_interval, self.automatic_output_consolidation)
+                .start_background_sync(
+                    self.polling_interval,
+                    self.account_options.automatic_output_consolidation,
+                )
                 .await;
         }
 
         Ok(instance)
     }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct AccountOptions {
+    pub(crate) output_consolidation_threshold: usize,
+    pub(crate) automatic_output_consolidation: bool,
 }
 
 /// The account manager.
@@ -264,7 +274,7 @@ pub struct AccountManager {
     polling_handle: Option<thread::JoinHandle<()>>,
     is_monitoring: Arc<AtomicBool>,
     generated_mnemonic: Option<String>,
-    output_consolidation_threshold: usize,
+    account_options: AccountOptions,
 }
 
 impl Clone for AccountManager {
@@ -283,7 +293,7 @@ impl Clone for AccountManager {
             polling_handle: None,
             is_monitoring: self.is_monitoring.clone(),
             generated_mnemonic: None,
-            output_consolidation_threshold: self.output_consolidation_threshold,
+            account_options: self.account_options.clone(),
         }
     }
 }
@@ -313,7 +323,7 @@ impl AccountManager {
 
     async fn load_accounts(
         storage_file_path: &PathBuf,
-        output_consolidation_threshold: usize,
+        account_options: AccountOptions,
     ) -> crate::Result<AccountStore> {
         let mut parsed_accounts = HashMap::new();
 
@@ -326,7 +336,7 @@ impl AccountManager {
         for account in accounts {
             parsed_accounts.insert(
                 account.id().clone(),
-                AccountHandle::new(account, output_consolidation_threshold),
+                AccountHandle::new(account, account_options.clone()),
             );
         }
 
@@ -431,7 +441,7 @@ impl AccountManager {
             .unwrap();
 
         if self.accounts.read().await.is_empty() {
-            let accounts = Self::load_accounts(&self.storage_path, self.output_consolidation_threshold).await?;
+            let accounts = Self::load_accounts(&self.storage_path, self.account_options.clone()).await?;
             self.loaded_accounts = true;
             let mut accounts_store = self.accounts.write().await;
             for (id, account) in &*accounts.read().await {
@@ -469,7 +479,7 @@ impl AccountManager {
 
         // let is_empty = self.accounts.read().await.is_empty();
         if self.accounts.read().await.is_empty() {
-            let accounts = Self::load_accounts(&self.storage_path, self.output_consolidation_threshold).await?;
+            let accounts = Self::load_accounts(&self.storage_path, self.account_options.clone()).await?;
             self.loaded_accounts = true;
             let mut accounts_store = self.accounts.write().await;
             for (id, account) in &*accounts.read().await {
@@ -530,7 +540,7 @@ impl AccountManager {
         let storage_file_path = self.storage_path.clone();
         let accounts = self.accounts.clone();
         let is_monitoring = self.is_monitoring.clone();
-        let output_consolidation_threshold = self.output_consolidation_threshold;
+        let account_options = self.account_options.clone();
 
         let handle = thread::spawn(move || {
             let runtime = tokio::runtime::Builder::new_current_thread()
@@ -545,8 +555,9 @@ impl AccountManager {
                             interval.tick().await;
 
                             let storage_file_path_ = storage_file_path.clone();
+                            let account_options = account_options.clone();
 
-                            if let Err(error) = AssertUnwindSafe(poll(accounts.clone(), storage_file_path_, output_consolidation_threshold, is_monitoring.load(Ordering::Relaxed), automatic_output_consolidation))
+                            if let Err(error) = AssertUnwindSafe(poll(accounts.clone(), storage_file_path_, account_options, is_monitoring.load(Ordering::Relaxed), automatic_output_consolidation))
                                 .catch_unwind()
                                 .await {
                                     // if the error isn't a crate::Error type
@@ -633,7 +644,7 @@ impl AccountManager {
             client_options,
             self.accounts.clone(),
             self.storage_path.clone(),
-            self.output_consolidation_threshold,
+            self.account_options.clone(),
         ))
     }
 
@@ -670,7 +681,7 @@ impl AccountManager {
         Ok(AccountsSynchronizer::new(
             self.accounts.clone(),
             self.storage_path.clone(),
-            self.output_consolidation_threshold,
+            self.account_options.clone(),
         ))
     }
 
@@ -1025,17 +1036,17 @@ pub struct AccountsSynchronizer {
     storage_file_path: PathBuf,
     address_index: Option<usize>,
     gap_limit: Option<usize>,
-    output_consolidation_threshold: usize,
+    account_options: AccountOptions,
 }
 
 impl AccountsSynchronizer {
-    fn new(accounts: AccountStore, storage_file_path: PathBuf, output_consolidation_threshold: usize) -> Self {
+    fn new(accounts: AccountStore, storage_file_path: PathBuf, account_options: AccountOptions) -> Self {
         Self {
             accounts,
             storage_file_path,
             address_index: None,
             gap_limit: None,
-            output_consolidation_threshold,
+            account_options,
         }
     }
 
@@ -1087,7 +1098,7 @@ impl AccountsSynchronizer {
                         &self.storage_file_path,
                         &client_options,
                         Some(signer_type),
-                        self.output_consolidation_threshold,
+                        self.account_options,
                     )
                     .await
                 } else {
@@ -1117,15 +1128,14 @@ impl AccountsSynchronizer {
 async fn poll(
     accounts: AccountStore,
     storage_file_path: PathBuf,
-    output_consolidation_threshold: usize,
+    account_options: AccountOptions,
     is_mqtt_monitoring: bool,
     automatic_output_consolidation: bool,
 ) -> crate::Result<()> {
     let retried = if !is_mqtt_monitoring {
-        let synced_accounts =
-            AccountsSynchronizer::new(accounts.clone(), storage_file_path, output_consolidation_threshold)
-                .execute()
-                .await?;
+        let synced_accounts = AccountsSynchronizer::new(accounts.clone(), storage_file_path, account_options)
+            .execute()
+            .await?;
 
         log::debug!("[POLLING] synced accounts");
 
@@ -1212,7 +1222,7 @@ async fn discover_accounts(
     storage_path: &PathBuf,
     client_options: &ClientOptions,
     signer_type: Option<SignerType>,
-    output_consolidation_threshold: usize,
+    account_options: AccountOptions,
 ) -> crate::Result<Vec<(AccountHandle, SyncedAccount)>> {
     let mut synced_accounts = vec![];
     loop {
@@ -1220,7 +1230,7 @@ async fn discover_accounts(
             client_options.clone(),
             accounts.clone(),
             storage_path.clone(),
-            output_consolidation_threshold,
+            account_options.clone(),
         )
         .skip_persistance();
         if let Some(signer_type) = &signer_type {

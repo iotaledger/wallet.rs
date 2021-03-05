@@ -853,7 +853,7 @@ impl SyncedAccount {
             for address in account.addresses() {
                 let address_outputs = address.available_outputs(&account);
                 // the address outputs exceed the threshold, so we push a transfer to our vector
-                if address_outputs.len() >= self.account_handle.output_consolidation_threshold {
+                if address_outputs.len() >= self.account_handle.account_options.output_consolidation_threshold {
                     for outputs in address_outputs.chunks(INPUT_OUTPUT_COUNT_MAX) {
                         transfers.push(
                             Transfer::builder(
