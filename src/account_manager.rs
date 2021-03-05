@@ -97,7 +97,7 @@ fn storage_file_path(storage: &Option<ManagerStorage>, storage_path: &PathBuf) -
 fn storage_password_to_encryption_key(password: &str) -> [u8; 32] {
     let mut dk = [0; 64];
     // safe to unwrap (rounds > 0)
-    crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_bytes(), b"wallet.rs::storage", 100, &mut dk).unwrap();
+    crypto::keys::pbkdf::PBKDF2_HMAC_SHA512(password.as_bytes(), b"wallet.rs::storage", 100, &mut dk).unwrap();
     let key: [u8; 32] = dk[0..32][..].try_into().unwrap();
     key
 }
@@ -316,7 +316,7 @@ fn stronghold_password<P: Into<String>>(password: P) -> Vec<u8> {
     let mut password = password.into();
     let mut dk = [0; 64];
     // safe to unwrap because rounds > 0
-    crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_bytes(), b"wallet.rs", 100, &mut dk).unwrap();
+    crypto::keys::pbkdf::PBKDF2_HMAC_SHA512(password.as_bytes(), b"wallet.rs", 100, &mut dk).unwrap();
     password.zeroize();
     let password: [u8; 32] = dk[0..32][..].try_into().unwrap();
     password.to_vec()
@@ -614,8 +614,8 @@ impl AccountManager {
     /// Generates a new mnemonic.
     pub fn generate_mnemonic(&mut self) -> crate::Result<String> {
         let mut entropy = [0u8; 32];
-        crypto::rand::fill(&mut entropy).map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
-        let mnemonic = crypto::bip39::wordlist::encode(&entropy, &crypto::bip39::wordlist::ENGLISH)
+        crypto::utils::rand::fill(&mut entropy).map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
+        let mnemonic = crypto::keys::bip39::wordlist::encode(&entropy, &crypto::keys::bip39::wordlist::ENGLISH)
             .map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
         self.generated_mnemonic = Some(mnemonic.clone());
         Ok(mnemonic)
@@ -625,7 +625,7 @@ impl AccountManager {
     /// should match the generated.
     pub fn verify_mnemonic<S: AsRef<str>>(&mut self, mnemonic: S) -> crate::Result<()> {
         // first we check if the mnemonic is valid to give meaningful errors
-        crypto::bip39::wordlist::verify(mnemonic.as_ref(), &crypto::bip39::wordlist::ENGLISH)
+        crypto::keys::bip39::wordlist::verify(mnemonic.as_ref(), &crypto::keys::bip39::wordlist::ENGLISH)
             // TODO: crypto::bip39::wordlist::Error should impl Display
             .map_err(|e| crate::Error::InvalidMnemonic(format!("{:?}", e)))?;
 

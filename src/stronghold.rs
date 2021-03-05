@@ -3,10 +3,8 @@
 
 //! Stronghold interface abstractions over an account
 
-use blake2::{
-    digest::{Update, VariableOutput},
-    VarBlake2b,
-};
+use crypto::hashes::{blake2b::Blake2b256, Digest};
+
 use iota::{Address, Ed25519Address, Ed25519Signature};
 use iota_stronghold::{
     hd::Chain, Location, ProcResult, Procedure, RecordHint, ResultMessage, SLIP10DeriveInput, Stronghold,
@@ -70,9 +68,14 @@ async fn load_actor(
     on_stronghold_access(&snapshot_path).await?;
 
     if runtime.spawned_client_paths.contains(&client_path) {
-        stronghold_response_to_result(runtime.stronghold.switch_actor_target(client_path.clone()))?;
+        stronghold_response_to_result(runtime.stronghold.switch_actor_target(client_path.clone()).await)?;
     } else {
-        stronghold_response_to_result(runtime.stronghold.spawn_stronghold_actor(client_path.clone(), flags))?;
+        stronghold_response_to_result(
+            runtime
+                .stronghold
+                .spawn_stronghold_actor(client_path.clone(), flags)
+                .await,
+        )?;
         runtime.spawned_client_paths.insert(client_path.clone());
     };
 
@@ -517,14 +520,9 @@ pub async fn generate_address(
     let public_key = get_public_key(&mut runtime, derived_location).await?;
 
     // Hash the public key to get the address
-    let mut hasher = VarBlake2b::new(32).unwrap();
-    hasher.update(public_key);
-    let mut result = vec![];
-    hasher.finalize_variable(|res| {
-        result = res.to_vec();
-    });
+    let hash = Blake2b256::digest(&public_key);
 
-    let ed25519_address = Ed25519Address::new(result.try_into().unwrap());
+    let ed25519_address = Ed25519Address::new(hash.try_into().unwrap());
     let address = Address::Ed25519(ed25519_address);
     Ok(address)
 }

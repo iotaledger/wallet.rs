@@ -330,7 +330,7 @@ pub trait StorageAdapter {
 
 fn encrypt_record<O: Write>(record: &[u8], encryption_key: &[u8; 32], output: &mut O) -> crate::Result<()> {
     let mut nonce = [0; xchacha20poly1305::XCHACHA20POLY1305_NONCE_SIZE];
-    crypto::rand::fill(&mut nonce).map_err(|e| crate::Error::RecordEncrypt(format!("{:?}", e)))?;
+    crypto::utils::rand::fill(&mut nonce).map_err(|e| crate::Error::RecordEncrypt(format!("{:?}", e)))?;
 
     let mut tag = [0; xchacha20poly1305::XCHACHA20POLY1305_TAG_SIZE];
     let mut ct = vec![0; record.len()];

@@ -30,8 +30,8 @@ async-trait = "0.1"
 log = "0.4"
 
 # stronghold
-iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "87ec1eb0dc46dc83e92cb4a2e3873270e1b6cdf7", optional = true }
-riker = { version = "0.4", optional = true }
+iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "0299572d1591f81ce2b02973927bdcabfbece085", optional = true }
+riker = { version = "0.4", git ="https://github.com/elenaf9/riker", branch = "master", optional = true }
 blake2 = { version = "0.9", optional = true }
 slog = { version = "2.7", optional = true }
 zeroize = { version = "1.2", features = ["zeroize_derive"] }
@@ -41,8 +41,8 @@ iota-ledger = { git = "https://github.com/iotaledger/ledger.rs", branch = "devel
 
 [dependencies.iota-crypto]
 git = "https://github.com/iotaledger/crypto.rs"
-rev = "09ff1a94d6a87838589ccf1b874cfa3283a00f26"
-features = ["random", "sha", "pbkdf", "hmac", "bip39", "bip39-en", "chacha"]
+rev = "c3bf565eba62d0b81144174c2ff917bfde282e49"
+features = ["random", "sha", "pbkdf", "hmac", "bip39", "bip39-en", "chacha", "blake2b"]
 
 [dev-dependencies]
 tokio = { version = "1.0", features = ["full"] }
