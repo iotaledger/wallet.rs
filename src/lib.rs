@@ -492,7 +492,9 @@ mod test_utils {
     impl GenerateMessageBuilder {
         pub async fn build(self) -> Message {
             let bech32_hrp = self.address.address().bech32_hrp().to_string();
-            let id = MessageId::new([0; 32]);
+            let mut id = [0; 32];
+            crypto::utils::rand::fill(&mut id).unwrap();
+            let id = MessageId::new(id);
             let tx_metadata = TransactionBuilderMetadata {
                 id: &id,
                 bech32_hrp,
