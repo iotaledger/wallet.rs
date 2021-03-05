@@ -689,15 +689,19 @@
 <span id="686">686</span>
 <span id="687">687</span>
 <span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">account</span>::<span class="ident">Account</span>,
-    <span class="ident">address</span>::<span class="ident">AddressWrapper</span>,
-    <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessageId</span>},
-};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">account</span>::<span class="ident">Account</span>, <span class="ident">address</span>::<span class="ident">AddressWrapper</span>, <span class="ident">message</span>::<span class="ident">Message</span>};
 
 <span class="kw">use</span> <span class="ident">getset</span>::<span class="ident">Getters</span>;
 <span class="kw">use</span> <span class="ident">once_cell</span>::<span class="ident">sync</span>::<span class="ident">Lazy</span>;
@@ -711,6 +715,12 @@
 
 <span class="doccomment">/// The event identifier type.</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">EventId</span> <span class="op">=</span> [<span class="ident">u8</span>; <span class="number">32</span>];
+
+<span class="kw">fn</span> <span class="ident">generate_indexation_id</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">key</span> <span class="op">=</span> [<span class="number">0</span>; <span class="number">32</span>];
+    <span class="ident">crypto</span>::<span class="ident">rand</span>::<span class="ident">fill</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">key</span>).<span class="ident">unwrap</span>();
+    <span class="ident">hex</span>::<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
+}
 
 <span class="doccomment">/// The balance change event payload.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Getters</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
@@ -741,15 +751,15 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Getters</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">get</span> <span class="op">=</span> <span class="string">&quot;pub&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BalanceEvent</span> {
+    <span class="doccomment">/// Event unique identifier.</span>
+    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;indexationId&quot;</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">indexation_id</span>: <span class="ident">String</span>,
     <span class="doccomment">/// The associated account identifier.</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;accountId&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">account_id</span>: <span class="ident">String</span>,
     <span class="doccomment">/// The associated address.</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;crate::serde::iota_address_serde&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">AddressWrapper</span>,
-    <span class="doccomment">/// The message id associated with the balance change.</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;messageIds&quot;</span>, <span class="ident">default</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">message_ids</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MessageId</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The balance change data.</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;balanceChange&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">balance_change</span>: <span class="ident">BalanceChange</span>,
@@ -771,6 +781,9 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Getters</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">get</span> <span class="op">=</span> <span class="string">&quot;pub&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TransactionEvent</span> {
+    <span class="doccomment">/// Event unique identifier.</span>
+    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;indexationId&quot;</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">indexation_id</span>: <span class="ident">String</span>,
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;accountId&quot;</span>)]</span>
     <span class="doccomment">/// The associated account identifier.</span>
     <span class="kw">pub</span> <span class="ident">account_id</span>: <span class="ident">String</span>,
@@ -782,6 +795,9 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Getters</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">get</span> <span class="op">=</span> <span class="string">&quot;pub&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TransactionConfirmationChangeEvent</span> {
+    <span class="doccomment">/// Event unique identifier.</span>
+    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;indexationId&quot;</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">indexation_id</span>: <span class="ident">String</span>,
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;accountId&quot;</span>)]</span>
     <span class="doccomment">/// The associated account identifier.</span>
     <span class="kw">pub</span> <span class="ident">account_id</span>: <span class="ident">String</span>,
@@ -987,14 +1003,13 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">emit_balance_change</span>(
     <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Account</span>,
     <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">AddressWrapper</span>,
-    <span class="ident">message_ids</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MessageId</span><span class="op">&gt;</span>,
     <span class="ident">balance_change</span>: <span class="ident">BalanceChange</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">listeners</span> <span class="op">=</span> <span class="ident">balance_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">BalanceEvent</span> {
+        <span class="ident">indexation_id</span>: <span class="ident">generate_indexation_id</span>(),
         <span class="ident">account_id</span>: <span class="ident">account</span>.<span class="ident">id</span>().<span class="ident">to_string</span>(),
         <span class="ident">address</span>: <span class="ident">address</span>.<span class="ident">clone</span>(),
-        <span class="ident">message_ids</span>,
         <span class="ident">balance_change</span>,
     };
 
@@ -1020,6 +1035,7 @@
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">listeners</span> <span class="op">=</span> <span class="ident">transaction_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">TransactionEvent</span> {
+        <span class="ident">indexation_id</span>: <span class="ident">generate_indexation_id</span>(),
         <span class="ident">account_id</span>: <span class="ident">account</span>.<span class="ident">id</span>().<span class="ident">to_string</span>(),
         <span class="ident">message</span>: <span class="ident">message</span>.<span class="ident">clone</span>(),
     };
@@ -1057,6 +1073,7 @@
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">listeners</span> <span class="op">=</span> <span class="ident">transaction_confirmation_change_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">TransactionConfirmationChangeEvent</span> {
+        <span class="ident">indexation_id</span>: <span class="ident">generate_indexation_id</span>(),
         <span class="ident">account_id</span>: <span class="ident">account</span>.<span class="ident">id</span>().<span class="ident">to_string</span>(),
         <span class="ident">message</span>: <span class="ident">message</span>.<span class="ident">clone</span>(),
         <span class="ident">confirmed</span>,
@@ -1289,7 +1306,6 @@
         <span class="ident">emit_balance_change</span>(
             <span class="kw-2">&amp;</span><span class="ident">account</span>,
             <span class="kw-2">&amp;</span><span class="kw">crate</span>::<span class="ident">test_utils</span>::<span class="ident">generate_random_iota_address</span>(),
-            <span class="macro">vec</span><span class="macro">!</span>[],
             <span class="ident">BalanceChange</span>::<span class="ident">spent</span>(<span class="number">5</span>),
         )
         .<span class="kw">await</span>

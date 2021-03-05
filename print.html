@@ -742,7 +742,7 @@ Supported event names:</p>
 <tr><td>[skip]</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to skip</td></tr>
 <tr><td>[fromTimestamp]</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
 </tbody></table>
-<p>Event object: { accountId: string, address: string, messageIds: string[], balanceChange: { spent: number, received: number } }</p>
+<p>Event object: { indexationId: string, accountId: string, address: string, balanceChange: { spent: number, received: number } }</p>
 <h4 id="getbalancechangeeventcountfromtimestamp"><a class="header" href="#getbalancechangeeventcountfromtimestamp">getBalanceChangeEventCount([fromTimestamp])</a></h4>
 <p>Gets the number of persisted balance change events.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
@@ -755,7 +755,7 @@ Supported event names:</p>
 <tr><td>[skip]</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to skip</td></tr>
 <tr><td>[fromTimestamp]</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
 </tbody></table>
-<p>Event object: { accountId: string, message: Message, confirmed: boolean }</p>
+<p>Event object: { indexationId: string, accountId: string, message: Message, confirmed: boolean }</p>
 <h4 id="gettransactionconfirmationeventcountfromtimestamp"><a class="header" href="#gettransactionconfirmationeventcountfromtimestamp">getTransactionConfirmationEventCount([fromTimestamp])</a></h4>
 <p>Gets the number of persisted transaction confirmation change events.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
@@ -768,7 +768,7 @@ Supported event names:</p>
 <tr><td>[skip]</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to skip</td></tr>
 <tr><td>[fromTimestamp]</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
 </tbody></table>
-<p>Event object: { accountId: string, message: Message }</p>
+<p>Event object: { indexationId: string, accountId: string, message: Message }</p>
 <h4 id="getnewtransactioneventcountfromtimestamp"><a class="header" href="#getnewtransactioneventcountfromtimestamp">getNewTransactionEventCount([fromTimestamp])</a></h4>
 <p>Gets the number of persisted new transaction events.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
@@ -781,7 +781,7 @@ Supported event names:</p>
 <tr><td>[skip]</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to skip</td></tr>
 <tr><td>[fromTimestamp]</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
 </tbody></table>
-<p>Event object: { accountId: string, message: Message }</p>
+<p>Event object: { indexationId: string, accountId: string, message: Message }</p>
 <h4 id="getreattachmenteventcountfromtimestamp"><a class="header" href="#getreattachmenteventcountfromtimestamp">getReattachmentEventCount([fromTimestamp])</a></h4>
 <p>Gets the number of persisted transaction reattachment events.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
@@ -794,7 +794,7 @@ Supported event names:</p>
 <tr><td>[skip]</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to skip</td></tr>
 <tr><td>[fromTimestamp]</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
 </tbody></table>
-<p>Event object: { accountId: string, message: Message }</p>
+<p>Event object: { indexationId: string, accountId: string, message: Message }</p>
 <h4 id="getbroadcasteventcountfromtimestamp"><a class="header" href="#getbroadcasteventcountfromtimestamp">getBroadcastEventCount([fromTimestamp])</a></h4>
 <p>Gets the number of persisted transaction broadcast events.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
