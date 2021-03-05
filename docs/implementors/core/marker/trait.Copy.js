@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["iota_wallet"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/marker/trait.Copy.html\" title=\"trait core::marker::Copy\">Copy</a> for <a class=\"struct\" href=\"iota_wallet/account_manager/struct.AccountOptions.html\" title=\"struct iota_wallet::account_manager::AccountOptions\">AccountOptions</a>","synthetic":false,"types":["iota_wallet::account_manager::AccountOptions"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
