@@ -149,7 +149,7 @@ mod test_utils {
                 Ok(iota::Address::Ed25519(*address))
             } else {
                 let mut address = [0; iota::ED25519_ADDRESS_LENGTH];
-                crypto::rand::fill(&mut address).unwrap();
+                crypto::utils::rand::fill(&mut address).unwrap();
                 let address = iota::Ed25519Address::new(address);
                 generated_addresses.insert(key, address);
                 Ok(iota::Address::Ed25519(address))
@@ -493,7 +493,7 @@ mod test_utils {
         pub async fn build(self) -> Message {
             let bech32_hrp = self.address.address().bech32_hrp().to_string();
             let mut id = [0; 32];
-            crypto::rand::fill(&mut id).unwrap();
+            crypto::utils::rand::fill(&mut id).unwrap();
             let id = MessageId::new(id);
             let tx_metadata = TransactionBuilderMetadata {
                 id: &id,

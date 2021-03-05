@@ -18,7 +18,7 @@ pub type EventId = [u8; 32];
 
 fn generate_indexation_id() -> String {
     let mut key = [0; 32];
-    crypto::rand::fill(&mut key).unwrap();
+    crypto::utils::rand::fill(&mut key).unwrap();
     hex::encode(&key)
 }
 
@@ -229,7 +229,7 @@ type TransferProgressListeners = Arc<Mutex<Vec<TransferProgressHandler>>>;
 
 fn generate_event_id() -> EventId {
     let mut id = [0; 32];
-    crypto::rand::fill(&mut id).unwrap();
+    crypto::utils::rand::fill(&mut id).unwrap();
     id
 }
 
