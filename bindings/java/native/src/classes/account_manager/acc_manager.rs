@@ -1,6 +1,9 @@
 #![allow(non_snake_case)]
 
-use std::{path::PathBuf};
+use std::{
+    path::PathBuf,
+    num::NonZeroU64,
+};
 
 use iota_wallet::{
     account_manager::{
@@ -8,13 +11,17 @@ use iota_wallet::{
         ManagerStorage as ManagerStorageRust,
         DEFAULT_STORAGE_FOLDER
     },
+    message::MessageId,
     signing::SignerType,
 };
 
-use crate::Result;
 use crate::{
+    Result,
     client_options::ClientOptions,
-    acc::AccountInitialiser
+    acc::{
+        AccountInitialiser, Account
+    },
+    message::Message,
 };
 
 fn default_storage_path() -> PathBuf {
@@ -188,5 +195,98 @@ impl AccountManager {
         
         Ok(AccountInitialiser::new(initialiser))
     }
+
+    pub fn remove_account(&self, account_id: String) -> Result<()> {
+        crate::block_on(async move {
+            self.manager.remove_account(account_id).await
+        }).expect("error removing account");
+
+        Ok(())
+    }
+
+    pub fn get_account(&self, account_id: String) -> Result<Account> {
+        let acc = crate::block_on(async move {
+            self.manager.get_account(account_id).await
+        }).expect("error getting account");
+
+        Ok(Account::new_with_internal(acc))
+    }
+
+    pub fn get_accounts(&self) -> Result<Vec<Account>> {
+        let accs = crate::block_on(async move {
+            self.manager.get_accounts().await
+        }).expect("error getting accounts");
+
+        Ok(accs.iter().map(|acc| Account::new_with_internal(acc.clone()) ).collect())
+    }
+
+    //TODO: Do we still need synchronisers?
+    /*
+    pub fn sync_accounts(&self) -> Result<AccountsSynchronizer> {
+        self.manager.sync_accounts()
+    }
+    */
+
+    
+    pub fn reattach(&self, account_id: String, message_id: MessageId) -> Result<Message> {
+        let msg = crate::block_on(async move {
+            self.manager.reattach(account_id, &message_id).await
+        }).expect("error reattaching message");
+
+        Ok(Message::new_with_internal(msg))
+    }
+
+    pub fn promote(&self, account_id: String, message_id: MessageId) -> Result<Message> {
+        let msg = crate::block_on(async move {
+            self.manager.promote(account_id, &message_id).await
+        }).expect("error promoting message");
+
+        Ok(Message::new_with_internal(msg))
+    }
+
+    pub fn retry(&self, account_id: String, message_id: MessageId) -> Result<Message> {
+        let msg = crate::block_on(async move {
+            self.manager.retry(account_id, &message_id).await
+        }).expect("error retrying account");
+
+        Ok(Message::new_with_internal(msg))
+    }
+
+    pub fn internal_transfer(&self, from_account_id: String, to_account_id: String, amount: u64) -> Result<Message> {
+        let msg = crate::block_on(async move {
+            self.manager.internal_transfer(from_account_id, to_account_id, NonZeroU64::new(amount).unwrap()).await
+        }).expect("error retrying account");
+
+        Ok(Message::new_with_internal(msg))
+    }
+/*
+    #[cfg(!any(feature = "stronghold-storage", feature = "sqlite-storage"))]
+    pub async fn backup(&self, destination: Path) -> crate::Result<PathBuf> {
+        Err(anyhow!("No storage found during compilation"))
+    }
+
+    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
+    pub async fn backup(&self, destination: Path) -> crate::Result<PathBuf> {
+
+    }
+
+    #[cfg(!any(feature = "stronghold-storage", feature = "sqlite-storage"))]ç
+    pub async fn import_accounts<S: AsRef<Path>>(
+        &mut self,
+        source: S,
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))] stronghold_password: String,
+    ) -> crate::Result<()> {
+        Err(anyhow!("No storage found during compilation"))
+    }
+
+    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
+    pub async fn import_accounts<S: AsRef<Path>>(
+        &mut self,
+        source: S,
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))] stronghold_password: String,
+    ) -> crate::Result<()> {
+
+    }
+    */
 }
 

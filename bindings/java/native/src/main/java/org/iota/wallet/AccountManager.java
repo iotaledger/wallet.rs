@@ -66,6 +66,73 @@ public final class AccountManager {
     }
     private static native long do_createAccount(long self, long client_options);
 
+    public final void removeAccount(String account_id) {
+        do_removeAccount(mNativeObj, account_id);
+    }
+    private static native void do_removeAccount(long self, String account_id);
+
+    public final Account getAccount(String account_id) {
+        long ret = do_getAccount(mNativeObj, account_id);
+        Account convRet = new Account(InternalPointerMarker.RAW_PTR, ret);
+
+        return convRet;
+    }
+    private static native long do_getAccount(long self, String account_id);
+
+    public final Account [] getAccounts() {
+        Account [] ret = do_getAccounts(mNativeObj);
+
+        return ret;
+    }
+    private static native Account [] do_getAccounts(long self);
+
+    public final Message reattach(String account_id, MessageId message_id) {
+        long a1 = message_id.mNativeObj;
+        message_id.mNativeObj = 0;
+
+        long ret = do_reattach(mNativeObj, account_id, a1);
+        Message convRet = new Message(InternalPointerMarker.RAW_PTR, ret);
+
+        JNIReachabilityFence.reachabilityFence1(message_id);
+
+        return convRet;
+    }
+    private static native long do_reattach(long self, String account_id, long message_id);
+
+    public final Message promote(String account_id, MessageId message_id) {
+        long a1 = message_id.mNativeObj;
+        message_id.mNativeObj = 0;
+
+        long ret = do_promote(mNativeObj, account_id, a1);
+        Message convRet = new Message(InternalPointerMarker.RAW_PTR, ret);
+
+        JNIReachabilityFence.reachabilityFence1(message_id);
+
+        return convRet;
+    }
+    private static native long do_promote(long self, String account_id, long message_id);
+
+    public final Message retry(String account_id, MessageId message_id) {
+        long a1 = message_id.mNativeObj;
+        message_id.mNativeObj = 0;
+
+        long ret = do_retry(mNativeObj, account_id, a1);
+        Message convRet = new Message(InternalPointerMarker.RAW_PTR, ret);
+
+        JNIReachabilityFence.reachabilityFence1(message_id);
+
+        return convRet;
+    }
+    private static native long do_retry(long self, String account_id, long message_id);
+
+    public final Message internalTransfer(String from_account_id, String to_account_id, long amount) {
+        long ret = do_internalTransfer(mNativeObj, from_account_id, to_account_id, amount);
+        Message convRet = new Message(InternalPointerMarker.RAW_PTR, ret);
+
+        return convRet;
+    }
+    private static native long do_internalTransfer(long self, String from_account_id, String to_account_id, long amount);
+
     public synchronized void delete() {
         if (mNativeObj != 0) {
             do_delete(mNativeObj);

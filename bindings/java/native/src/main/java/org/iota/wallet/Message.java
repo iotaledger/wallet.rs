@@ -90,7 +90,7 @@ public final class Message {
         if (ret == -1 ) {
             convRet = java.util.Optional.empty();
         } else {
-            convRet = java.util.Optional.of(new java.lang.Boolean(ret == 1 ? true : false));
+            convRet = java.util.Optional.of(java.lang.Boolean.valueOf(ret == 1 ? true : false));
         }
 
         return convRet;

@@ -94,6 +94,24 @@ pub struct Account {
 }
 
 impl Account {
+    pub fn new_with_internal(handle: AccountHandleRust) -> Account {
+        Account {
+            handle: handle
+        }
+    }
+
+    pub fn consolidate_outputs(&self) -> Result<Vec<Message>> {
+        let msgs = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async move {
+                self.handle.consolidate_outputs().await
+            }).expect("failed consolidate outputs");
+
+        Ok(msgs.into_iter().map(|m| Message::new_with_internal(m)).collect())
+    }
+
     pub fn transfer(&mut self, transfer: Transfer) -> Result<Message> {
         let msg = tokio::runtime::Builder::new_current_thread()
             .enable_all()
@@ -197,6 +215,24 @@ impl Account {
     pub fn balance(&self) -> AccountBalance {
         crate::block_on(async move {
             self.handle.balance().await
+        })
+    }
+
+    pub fn id(&self) -> String {
+        crate::block_on(async move {
+            self.handle.id().await
+        })
+    }
+
+    pub fn created_at(&self) -> DateTime<Local> {
+        crate::block_on(async move {
+            self.handle.created_at().await
+        })
+    }
+
+    pub fn last_synced_at(&self) -> Option<DateTime<Local>> {
+        crate::block_on(async move {
+            self.handle.last_synced_at().await
         })
     }
 }

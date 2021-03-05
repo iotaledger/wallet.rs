@@ -123,6 +123,26 @@ public final class Account {
     }
     private static native long do_balance(long self);
 
+    public final String id() {
+        String ret = do_id(mNativeObj);
+
+        return ret;
+    }
+    private static native String do_id(long self);
+
+    public final java.util.Calendar created_at() {
+        long ret = do_created_at(mNativeObj);
+        java.util.Calendar convRet;
+
+        java.util.Calendar theCalendar = java.util.Calendar.getInstance();
+        theCalendar.setTime(new java.util.Date(ret));
+
+        convRet = theCalendar;
+
+        return convRet;
+    }
+    private static native long do_created_at(long self);
+
     public synchronized void delete() {
         if (mNativeObj != 0) {
             do_delete(mNativeObj);

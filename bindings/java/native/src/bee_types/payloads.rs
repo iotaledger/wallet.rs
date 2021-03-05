@@ -1,8 +1,3 @@
-use std::{
-    cell::RefCell,
-    rc::Rc,
-};
-
 use iota_wallet::{
     message::{
         IndexationPayload as IndexationPayloadRust,
@@ -60,13 +55,11 @@ impl MessagePayload {
 }
 
 pub struct IndexationPayload {
-    // Box<iota_wallet::message::IndexationPayload>
     payload: IndexationPayloadRust,
 }
 
 impl IndexationPayload {
     pub fn get_internal(self) -> IndexationPayloadRust {
-        // TODO: Find a way to not need clone
         self.payload
     }
 

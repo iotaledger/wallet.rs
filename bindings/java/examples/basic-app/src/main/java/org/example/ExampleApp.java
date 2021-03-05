@@ -46,7 +46,8 @@ public class ExampleApp {
             .createAccount(clientOptions)
             .alias("alias1")
             .initialise();
-            
+
+        System.out.println("id: " + account.id());
         System.out.println("alias: " + account.alias());
         System.out.println("balance available: " + account.balance().getAvailable());
         System.out.println("address: " + account.generateAddress().getReadable());
@@ -55,8 +56,7 @@ public class ExampleApp {
         System.out.println("Messages: " + messages.length);
         for (Message m : messages) {
             if (m.payload().isPresent()){
-                MessagePayload payload = m.payload().get();
-                System.out.println("Message payload: " + payload.payloadType());
+                printMessage(m.payload().get());
             }
         }
 
@@ -69,5 +69,10 @@ public class ExampleApp {
                 150
             ).finish()
         );
+    }
+
+    private void printMessage(MessagePayload payload){
+        System.out.println("Message payload type: " + payload.payloadType());
+        System.out.println("Message payload: " + payload);
     }
 }

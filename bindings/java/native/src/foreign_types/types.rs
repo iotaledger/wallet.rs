@@ -39,7 +39,7 @@ foreign_typemap!(
         if ($p == -1 ) {
             $out = java.util.Optional.empty();
         } else {
-            $out = java.util.Optional.of(new java.lang.Boolean($p == 1 ? true : false));
+            $out = java.util.Optional.of(java.lang.Boolean.valueOf($p == 1 ? true : false));
         }
 "#;
 );

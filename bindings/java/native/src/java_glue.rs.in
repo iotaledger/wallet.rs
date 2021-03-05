@@ -130,6 +130,13 @@ foreign_class!(class AccountManager {
     fn AccountManager::store_mnemonic(&mut self, signer_type_enum: AccountSignerType, mnemonic: String) -> Result<()>; alias storeMnemonic;
     fn AccountManager::verify_mnemonic(&mut self, mnemonic: String) -> Result<()>; alias verifyMnemonic;
     fn AccountManager::create_account(&mut self, client_options: ClientOptions) -> Result<AccountInitialiser>; alias createAccount;
+    fn AccountManager::remove_account(&self, account_id: String) -> Result<()>; alias removeAccount;
+    fn AccountManager::get_account(&self, account_id: String) -> Result<Account>; alias getAccount;
+    fn AccountManager::get_accounts(&self) -> Result<Vec<Account>>; alias getAccounts;
+    fn AccountManager::reattach(&self, account_id: String, message_id: MessageId) -> Result<Message>;
+    fn AccountManager::promote(&self, account_id: String, message_id: MessageId) -> Result<Message>; 
+    fn AccountManager::retry(&self, account_id: String, message_id: MessageId) -> Result<Message>;
+    fn AccountManager::internal_transfer(&self, from_account_id: String, to_account_id: String, amount: u64) -> Result<Message>; alias internalTransfer;
 });
 
 foreign_class!(class ClientOptionsBuilder {
@@ -267,6 +274,10 @@ foreign_class!(
         fn Account::get_message(&self, message_id: MessageId) -> Option<Message>; alias getMessage;
         fn Account::alias(&self) -> String;
         fn Account::balance(&self) -> AccountBalance;
+
+        fn Account::id(&self) -> String;
+        fn Account::created_at(&self) -> DateTime<Local>;
+        //fn Account::last_synced_at(&self) -> Option<DateTime<Local>>;
     }
 );
 
