@@ -759,9 +759,17 @@ impl Account {
             .collect()
     }
 
-    #[doc(hidden)]
-    pub fn append_messages(&mut self, messages: Vec<Message>) {
-        self.messages.extend(messages);
+    pub(crate) fn append_messages(&mut self, messages: Vec<Message>) {
+        messages.into_iter().for_each(
+            |message| match self.messages.iter().position(|m| m.id() == message.id()) {
+                Some(index) => {
+                    self.messages[index] = message;
+                }
+                None => {
+                    self.messages.push(message);
+                }
+            },
+        );
     }
 
     pub(crate) fn append_addresses(&mut self, addresses: Vec<Address>) {
