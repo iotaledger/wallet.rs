@@ -893,7 +893,7 @@ mod tests {
 
     fn _generate_address_output(value: u64) -> AddressOutput {
         let mut tx_id = [0; 32];
-        crypto::rand::fill(&mut tx_id).unwrap();
+        crypto::utils::rand::fill(&mut tx_id).unwrap();
         AddressOutput {
             transaction_id: TransactionId::new(tx_id),
             message_id: MessageId::new([0; 32]),

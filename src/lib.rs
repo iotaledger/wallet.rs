@@ -149,7 +149,7 @@ mod test_utils {
                 Ok(iota::Address::Ed25519(*address))
             } else {
                 let mut address = [0; iota::ED25519_ADDRESS_LENGTH];
-                crypto::rand::fill(&mut address).unwrap();
+                crypto::utils::rand::fill(&mut address).unwrap();
                 let address = iota::Ed25519Address::new(address);
                 generated_addresses.insert(key, address);
                 Ok(iota::Address::Ed25519(address))
