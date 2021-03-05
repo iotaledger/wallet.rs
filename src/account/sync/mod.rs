@@ -665,10 +665,16 @@ impl AccountSynchronizer {
                 let new_messages = account_ref
                     .messages()
                     .iter()
+                    .filter(|m| !messages_before_sync.iter().any(|(id, _)| id == m.id()))
+                    .cloned()
+                    .collect::<Vec<Message>>();
+                let confirmation_changed_messages = account_ref
+                    .messages()
+                    .iter()
                     .filter(|m| {
-                        !messages_before_sync
+                        messages_before_sync
                             .iter()
-                            .any(|(id, confirmed)| id == m.id() && confirmed == m.confirmed())
+                            .any(|(id, confirmed)| id == m.id() && confirmed != m.confirmed())
                     })
                     .cloned()
                     .collect::<Vec<Message>>();
@@ -708,17 +714,14 @@ impl AccountSynchronizer {
                 }
 
                 // confirmation state change event
-                for message in account_ref.messages() {
-                    let changed = match messages_before_sync.iter().find(|(id, _)| id == message.id()) {
-                        Some((_, confirmed)) => message.confirmed() != confirmed,
-                        None => false,
-                    };
-                    if changed {
-                        log::info!("[POLLING] message confirmed: {:?}", message.id());
-                        emit_confirmation_state_change(&account_ref, &message, true).await?;
-                    }
+                for message in &confirmation_changed_messages {
+                    log::info!("[POLLING] message confirmation state changed: {:?}", message.id());
+                    emit_confirmation_state_change(&account_ref, &message, message.confirmed().unwrap_or(false))
+                        .await?;
                 }
 
+                let mut updated_messages = new_messages;
+                updated_messages.extend(confirmation_changed_messages);
                 let synced_account = SyncedAccount {
                     id: account_ref.id().to_string(),
                     index: *account_ref.index(),
@@ -739,7 +742,7 @@ impl AccountSynchronizer {
                         })
                         .cloned()
                         .collect(),
-                    messages: new_messages,
+                    messages: updated_messages,
                 };
                 Ok(synced_account)
             }
