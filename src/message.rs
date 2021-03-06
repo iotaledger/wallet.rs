@@ -750,7 +750,7 @@ impl<'a> MessageBuilder<'a> {
         let message = Message {
             id: self.id,
             version: 1,
-            parents: self.iota_message.parents().to_vec(),
+            parents: self.iota_message.parents().map(|m| *m).collect(),
             payload_length: packed_payload.len(),
             payload,
             timestamp: Utc::now(),

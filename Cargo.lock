@@ -322,7 +322,7 @@ dependencies = [
 [[package]]
 name = "bee-ledger"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=6a3ac5d7475a8f13289da4bdc8c920e4d4b97c04#6a3ac5d7475a8f13289da4bdc8c920e4d4b97c04"
+source = "git+https://github.com/iotaledger/bee.git?rev=acab07e4bcff947c70cde312789a2ef2977c652b#acab07e4bcff947c70cde312789a2ef2977c652b"
 dependencies = [
  "async-trait",
  "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
@@ -337,7 +337,7 @@ dependencies = [
  "flume",
  "futures",
  "hex",
- "iota-crypto 0.2.0 (git+https://github.com/iotaledger/crypto.rs?rev=09ff1a94d6a87838589ccf1b874cfa3283a00f26)",
+ "iota-crypto 0.3.0",
  "log",
  "serde 1.0.123",
  "thiserror",
@@ -348,14 +348,14 @@ dependencies = [
 [[package]]
 name = "bee-message"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=6a3ac5d7475a8f13289da4bdc8c920e4d4b97c04#6a3ac5d7475a8f13289da4bdc8c920e4d4b97c04"
+source = "git+https://github.com/iotaledger/bee.git?rev=acab07e4bcff947c70cde312789a2ef2977c652b#acab07e4bcff947c70cde312789a2ef2977c652b"
 dependencies = [
  "bech32 0.8.0",
  "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
  "bee-pow",
  "digest 0.9.0",
  "hex",
- "iota-crypto 0.2.0 (git+https://github.com/iotaledger/crypto.rs?rev=09ff1a94d6a87838589ccf1b874cfa3283a00f26)",
+ "iota-crypto 0.3.0",
  "ref-cast",
  "serde 1.0.123",
  "thiserror",
@@ -364,7 +364,7 @@ dependencies = [
 [[package]]
 name = "bee-network"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=6a3ac5d7475a8f13289da4bdc8c920e4d4b97c04#6a3ac5d7475a8f13289da4bdc8c920e4d4b97c04"
+source = "git+https://github.com/iotaledger/bee.git?rev=acab07e4bcff947c70cde312789a2ef2977c652b#acab07e4bcff947c70cde312789a2ef2977c652b"
 dependencies = [
  "async-trait",
  "bee-runtime",
@@ -383,18 +383,18 @@ dependencies = [
 [[package]]
 name = "bee-pow"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=6a3ac5d7475a8f13289da4bdc8c920e4d4b97c04#6a3ac5d7475a8f13289da4bdc8c920e4d4b97c04"
+source = "git+https://github.com/iotaledger/bee.git?rev=acab07e4bcff947c70cde312789a2ef2977c652b#acab07e4bcff947c70cde312789a2ef2977c652b"
 dependencies = [
  "bee-crypto 0.2.0-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
  "bee-ternary 0.4.0-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
- "iota-crypto 0.2.0 (git+https://github.com/iotaledger/crypto.rs?rev=09ff1a94d6a87838589ccf1b874cfa3283a00f26)",
+ "iota-crypto 0.3.0",
  "thiserror",
 ]
 
 [[package]]
 name = "bee-protocol"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=6a3ac5d7475a8f13289da4bdc8c920e4d4b97c04#6a3ac5d7475a8f13289da4bdc8c920e4d4b97c04"
+source = "git+https://github.com/iotaledger/bee.git?rev=acab07e4bcff947c70cde312789a2ef2977c652b#acab07e4bcff947c70cde312789a2ef2977c652b"
 dependencies = [
  "async-channel",
  "async-priority-queue",
@@ -413,7 +413,7 @@ dependencies = [
  "futures-util",
  "fxhash",
  "hex",
- "iota-crypto 0.2.0 (git+https://github.com/iotaledger/crypto.rs?rev=09ff1a94d6a87838589ccf1b874cfa3283a00f26)",
+ "iota-crypto 0.3.0",
  "log",
  "num_cpus",
  "pin-project 1.0.5",
@@ -430,7 +430,7 @@ dependencies = [
 [[package]]
 name = "bee-rest-api"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=6a3ac5d7475a8f13289da4bdc8c920e4d4b97c04#6a3ac5d7475a8f13289da4bdc8c920e4d4b97c04"
+source = "git+https://github.com/iotaledger/bee.git?rev=acab07e4bcff947c70cde312789a2ef2977c652b#acab07e4bcff947c70cde312789a2ef2977c652b"
 dependencies = [
  "async-trait",
  "bech32 0.8.0",
@@ -446,7 +446,7 @@ dependencies = [
  "digest 0.9.0",
  "futures",
  "hex",
- "iota-crypto 0.2.0 (git+https://github.com/iotaledger/crypto.rs?rev=09ff1a94d6a87838589ccf1b874cfa3283a00f26)",
+ "iota-crypto 0.3.0",
  "log",
  "num_cpus",
  "serde 1.0.123",
@@ -470,7 +470,7 @@ dependencies = [
 [[package]]
 name = "bee-snapshot"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=6a3ac5d7475a8f13289da4bdc8c920e4d4b97c04#6a3ac5d7475a8f13289da4bdc8c920e4d4b97c04"
+source = "git+https://github.com/iotaledger/bee.git?rev=acab07e4bcff947c70cde312789a2ef2977c652b#acab07e4bcff947c70cde312789a2ef2977c652b"
 dependencies = [
  "async-trait",
  "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
@@ -500,7 +500,7 @@ dependencies = [
 [[package]]
 name = "bee-tangle"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=6a3ac5d7475a8f13289da4bdc8c920e4d4b97c04#6a3ac5d7475a8f13289da4bdc8c920e4d4b97c04"
+source = "git+https://github.com/iotaledger/bee.git?rev=acab07e4bcff947c70cde312789a2ef2977c652b#acab07e4bcff947c70cde312789a2ef2977c652b"
 dependencies = [
  "async-trait",
  "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
@@ -1749,7 +1749,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=39efeed3a1143e7f376469801db491faaabe2c78#39efeed3a1143e7f376469801db491faaabe2c78"
+source = "git+https://github.com/iotaledger/iota.rs?rev=dc0b284bd94f0e77ff8fba10b0e9e7f9431b31de#dc0b284bd94f0e77ff8fba10b0e9e7f9431b31de"
 dependencies = [
  "async-trait",
  "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
@@ -1776,7 +1776,7 @@ dependencies = [
 [[package]]
 name = "iota-core"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=39efeed3a1143e7f376469801db491faaabe2c78#39efeed3a1143e7f376469801db491faaabe2c78"
+source = "git+https://github.com/iotaledger/iota.rs?rev=dc0b284bd94f0e77ff8fba10b0e9e7f9431b31de#dc0b284bd94f0e77ff8fba10b0e9e7f9431b31de"
 dependencies = [
  "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?rev=c42171ff33c80cc2efb183e244dc79b7f58d9ac4)",
  "bee-message",
@@ -1822,6 +1822,7 @@ dependencies = [
  "blake2",
  "chacha20poly1305 0.7.1",
  "digest 0.9.0",
+ "ed25519-zebra",
  "getrandom 0.2.2",
  "hmac 0.10.1",
  "pbkdf2",
