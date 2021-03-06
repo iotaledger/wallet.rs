@@ -11,9 +11,15 @@ pub mod sqlite;
 /// Stronghold storage.
 pub mod stronghold;
 
-use crate::account::Account;
+use crate::{
+    account::Account,
+    event::{BalanceEvent, TransactionConfirmationChangeEvent, TransactionEvent},
+};
+
+use chrono::Utc;
 use crypto::ciphers::chacha::xchacha20poly1305;
 use once_cell::sync::OnceCell;
+use serde::{Deserialize, Serialize};
 use tokio::sync::{Mutex, RwLock};
 
 use std::{
@@ -23,53 +29,224 @@ use std::{
     sync::Arc,
 };
 
-pub(crate) struct Storage {
+const ACCOUNT_INDEXATION_KEY: &str = "iota-wallet-account-indexation";
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+struct AccountIndexation {
+    key: String,
+}
+
+pub(crate) type Timestamp = i64;
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+struct EventIndexation {
+    key: String,
+    timestamp: Timestamp,
+}
+
+struct Storage {
     storage_path: PathBuf,
     inner: Box<dyn StorageAdapter + Sync + Send>,
-    pub(crate) encryption_key: Option<[u8; 32]>,
+    encryption_key: Option<[u8; 32]>,
 }
 
 impl Storage {
-    pub fn id(&self) -> &'static str {
+    fn id(&self) -> &'static str {
         self.inner.id()
     }
 
-    #[allow(dead_code)]
-    pub async fn get(&mut self, account_id: &str) -> crate::Result<String> {
-        self.inner.get(account_id).await.and_then(|account| {
+    async fn get(&self, key: &str) -> crate::Result<String> {
+        self.inner.get(key).await.and_then(|record| {
             if let Some(key) = &self.encryption_key {
-                decrypt_account_json(&account, key)
+                decrypt_record(&record, key)
             } else {
-                Ok(account)
+                Ok(record)
             }
         })
     }
 
-    pub async fn get_all(&mut self) -> crate::Result<Vec<ParsedAccount>> {
-        parse_accounts(&self.storage_path, &self.inner.get_all().await?, &self.encryption_key)
-    }
-
-    pub async fn set(&mut self, account_id: &str, account: String) -> crate::Result<()> {
+    async fn set<T: Serialize>(&mut self, key: &str, record: T) -> crate::Result<()> {
+        let record = serde_json::to_string(&record)?;
         self.inner
             .set(
-                account_id,
+                key,
                 if let Some(key) = &self.encryption_key {
                     let mut output = Vec::new();
-                    encrypt_account_json(account.as_bytes(), key, &mut output)?;
+                    encrypt_record(record.as_bytes(), key, &mut output)?;
                     serde_json::to_string(&output)?
                 } else {
-                    account
+                    record
                 },
             )
             .await
     }
 
-    pub async fn remove(&mut self, account_id: &str) -> crate::Result<()> {
-        self.inner.remove(account_id).await
+    async fn remove(&mut self, key: &str) -> crate::Result<()> {
+        self.inner.remove(key).await
     }
 }
 
-type StorageHandle = Arc<Mutex<Storage>>;
+pub(crate) struct StorageManager {
+    storage: Storage,
+    account_indexation: Vec<AccountIndexation>,
+    balance_change_indexation: Vec<EventIndexation>,
+    transaction_confirmation_indexation: Vec<EventIndexation>,
+    new_transaction_indexation: Vec<EventIndexation>,
+    reattachment_indexation: Vec<EventIndexation>,
+    broadcast_indexation: Vec<EventIndexation>,
+}
+
+impl StorageManager {
+    pub fn id(&self) -> &'static str {
+        self.storage.id()
+    }
+
+    #[cfg(test)]
+    pub fn is_encrypted(&self) -> bool {
+        self.storage.encryption_key.is_some()
+    }
+
+    pub async fn get(&self, key: &str) -> crate::Result<String> {
+        self.storage.get(key).await
+    }
+
+    pub async fn get_accounts(&mut self) -> crate::Result<Vec<Account>> {
+        if self.account_indexation.is_empty() {
+            if let Ok(record) = self.storage.get(ACCOUNT_INDEXATION_KEY).await {
+                self.account_indexation = serde_json::from_str(&record)?;
+            }
+        }
+
+        let mut accounts = Vec::new();
+        for account_index in self.account_indexation.clone() {
+            accounts.push(self.get(&account_index.key).await?);
+        }
+        parse_accounts(&self.storage.storage_path, &accounts, &self.storage.encryption_key)
+    }
+
+    pub async fn save_account(&mut self, key: &str, account: &Account) -> crate::Result<()> {
+        let index = AccountIndexation { key: key.to_string() };
+        if !self.account_indexation.contains(&index) {
+            self.account_indexation.push(index);
+            self.storage
+                .set(ACCOUNT_INDEXATION_KEY, &self.account_indexation)
+                .await?;
+        }
+        self.storage.set(key, account).await
+    }
+
+    pub async fn remove_account(&mut self, key: &str) -> crate::Result<()> {
+        let index = AccountIndexation { key: key.to_string() };
+        if let Some(index) = self.account_indexation.iter().position(|i| i == &index) {
+            self.account_indexation.remove(index);
+            self.storage
+                .set(ACCOUNT_INDEXATION_KEY, &self.account_indexation)
+                .await?;
+            self.storage.remove(key).await?;
+            Ok(())
+        } else {
+            Err(crate::Error::RecordNotFound)
+        }
+    }
+}
+
+macro_rules! event_manager_impl {
+    ($event_ty:ty, $index_vec:ident, $index_key: expr, $save_fn_name: ident, $get_fn_name: ident, $get_count_fn_name: ident) => {
+        impl StorageManager {
+            pub async fn $save_fn_name(&mut self, event: &$event_ty) -> crate::Result<()> {
+                let key = event.indexation_id.clone();
+                let index = EventIndexation {
+                    key: key.to_string(),
+                    timestamp: Utc::now().timestamp(),
+                };
+                self.$index_vec.push(index);
+                self.storage.set($index_key, &self.$index_vec).await?;
+                self.storage.set(&key, event).await
+            }
+
+            pub async fn $get_fn_name<T: Into<Option<Timestamp>>>(
+                &self,
+                count: usize,
+                skip: usize,
+                from_timestamp: T,
+            ) -> crate::Result<Vec<$event_ty>> {
+                let mut events = Vec::new();
+                let from_timestamp = from_timestamp.into().unwrap_or(0);
+                let iter = self
+                    .$index_vec
+                    .iter()
+                    .filter(|i| i.timestamp >= from_timestamp)
+                    .skip(skip);
+                for index in if count == 0 {
+                    iter.collect::<Vec<&EventIndexation>>()
+                } else {
+                    iter.take(count).collect::<Vec<&EventIndexation>>()
+                } {
+                    let event_json = self.get(&index.key).await?;
+                    events.push(serde_json::from_str(&event_json)?);
+                }
+                Ok(events)
+            }
+
+            pub async fn $get_count_fn_name<T: Into<Option<Timestamp>>>(&self, from_timestamp: T) -> usize {
+                let from_timestamp = from_timestamp.into().unwrap_or(0);
+                self.$index_vec
+                    .iter()
+                    // using folder since it's faster than .filter().count()
+                    .fold(0, |count, index| {
+                        if index.timestamp >= from_timestamp {
+                            count + 1
+                        } else {
+                            count
+                        }
+                    })
+            }
+        }
+    };
+}
+
+event_manager_impl!(
+    BalanceEvent,
+    balance_change_indexation,
+    "iota-wallet-balance-change-events",
+    save_balance_change_event,
+    get_balance_change_events,
+    get_balance_change_event_count
+);
+event_manager_impl!(
+    TransactionConfirmationChangeEvent,
+    transaction_confirmation_indexation,
+    "iota-wallet-tx-confirmation-events",
+    save_transaction_confirmation_event,
+    get_transaction_confirmation_events,
+    get_transaction_confirmation_event_count
+);
+event_manager_impl!(
+    TransactionEvent,
+    new_transaction_indexation,
+    "iota-wallet-new-tx-events",
+    save_new_transaction_event,
+    get_new_transaction_events,
+    get_new_transaction_event_count
+);
+event_manager_impl!(
+    TransactionEvent,
+    reattachment_indexation,
+    "iota-wallet-tx-reattachment-events",
+    save_reattachment_event,
+    get_reattachment_events,
+    get_reattachment_event_count
+);
+event_manager_impl!(
+    TransactionEvent,
+    broadcast_indexation,
+    "iota-wallet-tx-broadcast-events",
+    save_broadcast_event,
+    get_broadcast_events,
+    get_broadcast_event_count
+);
+
+pub(crate) type StorageHandle = Arc<Mutex<StorageManager>>;
 type Storages = Arc<RwLock<HashMap<PathBuf, StorageHandle>>>;
 static INSTANCES: OnceCell<Storages> = OnceCell::new();
 
@@ -82,20 +259,30 @@ pub(crate) async fn set<P: AsRef<Path>>(
     let mut instances = INSTANCES.get_or_init(Default::default).write().await;
     #[allow(unused_variables)]
     let storage_id = storage.id();
+    let storage = Storage {
+        storage_path: storage_path.as_ref().to_path_buf(),
+        inner: storage,
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        encryption_key: if storage_id == stronghold::STORAGE_ID {
+            None
+        } else {
+            encryption_key
+        },
+        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
+        encryption_key,
+    };
+    let storage_manager = StorageManager {
+        storage,
+        account_indexation: Default::default(),
+        balance_change_indexation: Default::default(),
+        transaction_confirmation_indexation: Default::default(),
+        new_transaction_indexation: Default::default(),
+        reattachment_indexation: Default::default(),
+        broadcast_indexation: Default::default(),
+    };
     instances.insert(
         storage_path.as_ref().to_path_buf(),
-        Arc::new(Mutex::new(Storage {
-            storage_path: storage_path.as_ref().to_path_buf(),
-            inner: storage,
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-            encryption_key: if storage_id == stronghold::STORAGE_ID {
-                None
-            } else {
-                encryption_key
-            },
-            #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-            encryption_key,
-        })),
+        Arc::new(Mutex::new(storage_manager)),
     );
 }
 
@@ -108,8 +295,8 @@ pub(crate) async fn remove(storage_path: &PathBuf) -> String {
 pub(crate) async fn set_encryption_key(storage_path: &PathBuf, encryption_key: [u8; 32]) -> crate::Result<()> {
     let instances = INSTANCES.get_or_init(Default::default).read().await;
     if let Some(instance) = instances.get(storage_path) {
-        let mut storage = instance.lock().await;
-        storage.encryption_key = Some(encryption_key);
+        let mut storage_manager = instance.lock().await;
+        storage_manager.storage.encryption_key = Some(encryption_key);
         Ok(())
     } else {
         Err(crate::Error::StorageAdapterNotSet(storage_path.clone()))
@@ -133,24 +320,22 @@ pub trait StorageAdapter {
     fn id(&self) -> &'static str {
         "custom-adapter"
     }
-    /// Gets the account with the given id/alias from the storage.
-    async fn get(&mut self, account_id: &str) -> crate::Result<String>;
-    /// Gets all the accounts from the storage.
-    async fn get_all(&mut self) -> crate::Result<Vec<String>>;
-    /// Saves or updates an account on the storage.
-    async fn set(&mut self, account_id: &str, account: String) -> crate::Result<()>;
-    /// Removes an account from the storage.
-    async fn remove(&mut self, account_id: &str) -> crate::Result<()>;
+    /// Gets the record associated with the given key from the storage.
+    async fn get(&self, key: &str) -> crate::Result<String>;
+    /// Saves or updates a record on the storage.
+    async fn set(&mut self, key: &str, record: String) -> crate::Result<()>;
+    /// Removes a record from the storage.
+    async fn remove(&mut self, key: &str) -> crate::Result<()>;
 }
 
-fn encrypt_account_json<O: Write>(account: &[u8], key: &[u8; 32], output: &mut O) -> crate::Result<()> {
+fn encrypt_record<O: Write>(record: &[u8], encryption_key: &[u8; 32], output: &mut O) -> crate::Result<()> {
     let mut nonce = [0; xchacha20poly1305::XCHACHA20POLY1305_NONCE_SIZE];
-    crypto::rand::fill(&mut nonce).map_err(|e| crate::Error::AccountEncrypt(format!("{:?}", e)))?;
+    crypto::utils::rand::fill(&mut nonce).map_err(|e| crate::Error::RecordEncrypt(format!("{:?}", e)))?;
 
     let mut tag = [0; xchacha20poly1305::XCHACHA20POLY1305_TAG_SIZE];
-    let mut ct = vec![0; account.len()];
-    xchacha20poly1305::encrypt(&mut ct, &mut tag, account, key, &nonce, &[])
-        .map_err(|e| crate::Error::AccountEncrypt(format!("{:?}", e)))?;
+    let mut ct = vec![0; record.len()];
+    xchacha20poly1305::encrypt(&mut ct, &mut tag, record, encryption_key, &nonce, &[])
+        .map_err(|e| crate::Error::RecordEncrypt(format!("{:?}", e)))?;
 
     output.write_all(&nonce)?;
     output.write_all(&tag)?;
@@ -159,44 +344,39 @@ fn encrypt_account_json<O: Write>(account: &[u8], key: &[u8; 32], output: &mut O
     Ok(())
 }
 
-pub(crate) fn decrypt_account_json(account: &str, key: &[u8; 32]) -> crate::Result<String> {
-    let account: Vec<u8> = serde_json::from_str(&account)?;
-    let mut account: &[u8] = &account;
+pub(crate) fn decrypt_record(record: &str, encryption_key: &[u8; 32]) -> crate::Result<String> {
+    let record: Vec<u8> = serde_json::from_str(&record)?;
+    let mut record: &[u8] = &record;
 
     let mut nonce = [0; xchacha20poly1305::XCHACHA20POLY1305_NONCE_SIZE];
-    account.read_exact(&mut nonce)?;
+    record.read_exact(&mut nonce)?;
 
     let mut tag = [0; xchacha20poly1305::XCHACHA20POLY1305_TAG_SIZE];
-    account.read_exact(&mut tag)?;
+    record.read_exact(&mut tag)?;
 
     let mut ct = Vec::new();
-    account.read_to_end(&mut ct)?;
+    record.read_to_end(&mut ct)?;
 
     let mut pt = vec![0; ct.len()];
-    xchacha20poly1305::decrypt(&mut pt, &ct, key, &tag, &nonce, &[])
-        .map_err(|e| crate::Error::AccountDecrypt(format!("{:?}", e)))?;
+    xchacha20poly1305::decrypt(&mut pt, &ct, encryption_key, &tag, &nonce, &[])
+        .map_err(|e| crate::Error::RecordDecrypt(format!("{:?}", e)))?;
 
     Ok(String::from_utf8_lossy(&pt).to_string())
-}
-
-pub(crate) enum ParsedAccount {
-    Account(Account),
-    EncryptedAccount(String),
 }
 
 fn parse_accounts(
     storage_path: &PathBuf,
     accounts: &[String],
     encryption_key: &Option<[u8; 32]>,
-) -> crate::Result<Vec<ParsedAccount>> {
+) -> crate::Result<Vec<Account>> {
     let mut err = None;
-    let accounts: Vec<Option<ParsedAccount>> = accounts
+    let accounts: Vec<Option<Account>> = accounts
         .iter()
         .map(|account| {
             let account_json = if account.starts_with('{') {
                 Some(account.to_string())
             } else if let Some(key) = encryption_key {
-                match decrypt_account_json(account, key) {
+                match decrypt_record(account, key) {
                     Ok(json) => Some(json),
                     Err(e) => {
                         err = Some(e);
@@ -210,7 +390,7 @@ fn parse_accounts(
                 match serde_json::from_str::<Account>(&json) {
                     Ok(mut acc) => {
                         acc.set_storage_path(storage_path.clone());
-                        Some(ParsedAccount::Account(acc))
+                        Some(acc)
                     }
                     Err(e) => {
                         err = Some(e.into());
@@ -218,7 +398,8 @@ fn parse_accounts(
                     }
                 }
             } else {
-                Some(ParsedAccount::EncryptedAccount(account.to_string()))
+                err = Some(crate::Error::StorageIsEncrypted);
+                None
             }
         })
         .collect();
@@ -242,13 +423,10 @@ mod tests {
         struct MyAdapter;
         #[async_trait::async_trait]
         impl StorageAdapter for MyAdapter {
-            async fn get(&mut self, _key: &str) -> crate::Result<String> {
+            async fn get(&self, _key: &str) -> crate::Result<String> {
                 Ok("MY_ADAPTER_GET_RESPONSE".to_string())
             }
-            async fn get_all(&mut self) -> crate::Result<Vec<String>> {
-                Ok(vec![])
-            }
-            async fn set(&mut self, _key: &str, _account: String) -> crate::Result<()> {
+            async fn set(&mut self, _key: &str, _record: String) -> crate::Result<()> {
                 Ok(())
             }
             async fn remove(&mut self, _key: &str) -> crate::Result<()> {
@@ -259,7 +437,7 @@ mod tests {
         let path = "./the-storage-path";
         super::set(path, None, Box::new(MyAdapter {})).await;
         let adapter = super::get(&std::path::PathBuf::from(path)).await.unwrap();
-        let mut adapter = adapter.lock().await;
+        let adapter = adapter.lock().await;
         assert_eq!(adapter.get("").await.unwrap(), "MY_ADAPTER_GET_RESPONSE".to_string());
     }
 
@@ -298,9 +476,6 @@ mod tests {
         assert!(response.is_ok());
         let parsed_accounts = response.unwrap();
         let parsed_account = parsed_accounts.first().unwrap();
-        match parsed_account {
-            super::ParsedAccount::Account(parsed) => assert_eq!(parsed, &*account_handle.read().await),
-            _ => panic!("invalid parsed account format"),
-        }
+        assert_eq!(parsed_account, &*account_handle.read().await);
     }
 }

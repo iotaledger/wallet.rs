@@ -9,7 +9,7 @@ use crate::{
 };
 
 use iota::{
-    bee_rest_api::handlers::{
+    bee_rest_api::endpoints::api::v1::{
         message_metadata::{LedgerInclusionStateDto, MessageMetadataResponse},
         output::OutputResponse,
     },
@@ -100,30 +100,42 @@ async fn process_output(
 
     let mut account = account_handle.write().await;
     let latest_address = account.latest_address().address().clone();
-    let account_id = account.id().clone();
-    let addresses = account.addresses_mut();
-    let address_to_update = addresses.iter_mut().find(|a| a.address() == &address).unwrap();
-
-    let address_output =
-        AddressOutput::from_output_response(output, address_to_update.address().bech32_hrp().to_string())?;
-
-    let client_options_ = client_options.clone();
+    let address_wrapper = account
+        .addresses()
+        .iter()
+        .find(|a| a.address() == &address)
+        .unwrap()
+        .address()
+        .clone();
+    let address_output = AddressOutput::from_output_response(output, address_wrapper.bech32_hrp().to_string())?;
     let message_id = *address_output.message_id();
 
-    let old_balance = *address_to_update.balance();
-    address_to_update.handle_new_output(address_output);
-    let new_balance = *address_to_update.balance();
+    let (old_balance, new_balance) = {
+        let address_to_update = account
+            .addresses_mut()
+            .iter_mut()
+            .find(|a| a.address() == &address)
+            .unwrap();
+        let old_balance = *address_to_update.balance();
+        address_to_update.handle_new_output(address_output);
+        let new_balance = *address_to_update.balance();
+        (old_balance, new_balance)
+    };
+
+    let client_options_ = client_options.clone();
+
     crate::event::emit_balance_change(
-        &account_id,
-        &address_to_update,
+        &account,
+        &address_wrapper,
         if new_balance > old_balance {
             crate::event::BalanceChange::received(new_balance - old_balance)
         } else {
             crate::event::BalanceChange::spent(old_balance - new_balance)
         },
-    );
+    )
+    .await?;
 
-    if address_to_update.address() == &latest_address {
+    if address_wrapper == latest_address {
         account_handle.generate_address_internal(&mut account).await?;
     }
 
@@ -141,14 +153,17 @@ async fn process_output(
                 .data(&message_id)
                 .await
             {
-                let message = Message::from_iota_message(message_id, message, account.addresses())
-                    .with_confirmed(Some(true))
-                    .finish();
+                let message =
+                    Message::from_iota_message(message_id, message, account.addresses(), account.client_options())
+                        .with_confirmed(Some(true))
+                        .finish()
+                        .await?;
                 crate::event::emit_transaction_event(
                     crate::event::TransactionEventType::NewTransaction,
-                    account.id(),
+                    &account,
                     &message,
-                );
+                )
+                .await?;
                 account.messages_mut().push(message);
             }
         }
@@ -226,7 +241,7 @@ async fn process_metadata(
                 })
                 .await?;
 
-            crate::event::emit_confirmation_state_change(account.id(), &message, confirmed);
+            crate::event::emit_confirmation_state_change(&account, &message, confirmed).await?;
         }
     }
     Ok(())

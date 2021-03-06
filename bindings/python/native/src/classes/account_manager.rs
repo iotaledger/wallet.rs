@@ -39,6 +39,37 @@ impl AccountsSynchronizer {
     }
 }
 
+macro_rules! event_getters_impl {
+    ($event_type: ty, $get_fn_name: ident, $get_count_fn_name: ident) => {
+        #[pymethods]
+        impl AccountManager {
+            fn $get_fn_name(
+                &self,
+                count: Option<usize>,
+                skip: Option<usize>,
+                from_timestamp: Option<i64>,
+            ) -> Result<Vec<$event_type>> {
+                crate::block_on(async {
+                    let events = self
+                        .account_manager
+                        .$get_fn_name(count.unwrap_or(0), skip.unwrap_or(0), from_timestamp)
+                        .await?;
+                    let mut parsed_events = Vec::new();
+                    for event in events {
+                        parsed_events.push(event.try_into()?);
+                    }
+                    Ok(parsed_events)
+                })
+            }
+
+            fn $get_count_fn_name(&self, from_timestamp: Option<i64>) -> Result<usize> {
+                crate::block_on(async { self.account_manager.$get_count_fn_name(from_timestamp).await })
+                    .map_err(Into::into)
+            }
+        }
+    };
+}
+
 #[pymethods]
 impl AccountManager {
     #[new]
@@ -46,8 +77,11 @@ impl AccountManager {
     fn new(
         storage_path: Option<&str>,
         storage: Option<&str>, // 'Stronghold' or 'Sqlite'
-        password: Option<&str>,
+        storage_password: Option<&str>,
         polling_interval: Option<u64>,
+        automatic_output_consolidation: Option<bool>,
+        output_consolidation_threshold: Option<usize>,
+        sync_spent_outputs: Option<bool>,
     ) -> Result<Self> {
         let mut account_manager = RustAccountManager::builder();
         if storage_path.is_some() & storage.is_some() {
@@ -56,14 +90,14 @@ impl AccountManager {
                     account_manager = account_manager.with_storage(
                         storage_path.unwrap_or_else(|| panic!("invalid Stronghold storage path: {:?}", storage_path)),
                         RustManagerStorage::Stronghold,
-                        password,
+                        storage_password,
                     )?
                 }
                 Some("Sqlite") => {
                     account_manager = account_manager.with_storage(
                         storage_path.unwrap_or_else(|| panic!("invalid Sqlite storage path: {:?}", storage_path)),
                         RustManagerStorage::Sqlite,
-                        password,
+                        storage_password,
                     )?
                 }
                 _ => {
@@ -72,6 +106,15 @@ impl AccountManager {
                     })
                 }
             }
+        }
+        if !automatic_output_consolidation.unwrap_or(true) {
+            account_manager = account_manager.with_automatic_output_consolidation_disabled();
+        }
+        if sync_spent_outputs.unwrap_or(false) {
+            account_manager = account_manager.with_sync_spent_outputs();
+        }
+        if let Some(threshold) = output_consolidation_threshold {
+            account_manager = account_manager.with_output_consolidation_threshold(threshold);
         }
         if let Some(polling_interval) = polling_interval {
             account_manager = account_manager.with_polling_interval(Duration::from_millis(polling_interval));
@@ -235,3 +278,22 @@ impl AccountManager {
         })
     }
 }
+
+event_getters_impl! {
+    BalanceEvent,
+    get_balance_change_events,
+    get_balance_change_event_count
+}
+
+event_getters_impl!(
+    TransactionConfirmationChangeEvent,
+    get_transaction_confirmation_events,
+    get_transaction_confirmation_event_count
+);
+event_getters_impl!(
+    TransactionEvent,
+    get_new_transaction_events,
+    get_new_transaction_event_count
+);
+event_getters_impl!(TransactionEvent, get_reattachment_events, get_reattachment_event_count);
+event_getters_impl!(TransactionEvent, get_broadcast_events, get_broadcast_event_count);

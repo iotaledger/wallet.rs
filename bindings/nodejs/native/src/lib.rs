@@ -23,6 +23,7 @@ use tokio::{runtime::Runtime, sync::RwLock};
 
 mod classes;
 use classes::*;
+pub(crate) mod types;
 
 type AccountInstanceMap = Arc<RwLock<HashMap<String, AccountHandle>>>;
 type SyncedAccountHandle = Arc<RwLock<SyncedAccount>>;
@@ -58,6 +59,7 @@ fn synced_account_instances() -> &'static SyncedAccountInstanceMap {
     &INSTANCES
 }
 
+#[allow(dead_code)]
 pub(crate) async fn get_synced_account(id: &str) -> SyncedAccountHandle {
     synced_account_instances()
         .read()

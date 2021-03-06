@@ -31,10 +31,7 @@ async fn main() -> iota_wallet::Result<()> {
     let mut message = String::new();
     std::io::stdin().read_line(&mut message).unwrap();
     println!("Sending transfer...");
-    // we need to synchronize with the Tangle first
-    let sync_accounts = manager.sync_accounts()?.execute().await?;
-    let sync_account = sync_accounts.first().unwrap();
-    let message = sync_account
+    let message = account
         .transfer(
             Transfer::builder(
                 account.latest_address().await.address().clone(),

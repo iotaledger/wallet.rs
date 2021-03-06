@@ -28,6 +28,7 @@ Supported event names:
 - ConfirmationStateChange
 - Reattachment
 - Broadcast
+- TransferProgress
 
 ### AccountManager
 
@@ -35,11 +36,15 @@ Supported event names:
 
 Creates a new instance of the AccountManager.
 
-| Param         | Type                | Default                | Description                                           |
-| ------------- | ------------------- | ---------------------- | ----------------------------------------------------- |
-| [options]     | <code>object</code> | <code>undefined</code> | The options to configure the account manager          |
-| [storagePath] | <code>string</code> | <code>undefined</code> | The path where the database file will be saved        |
-| [storageType] | <code>number</code> | <code>undefined</code> | The type of the database.  Stronghold = 1, Sqlite = 2 |
+| Param                          | Type                 | Default                | Description                                                                               |
+| ------------------------------ | -------------------- | ---------------------- | ----------------------------------------------------------------------------------------- |
+| [options]                      | <code>object</code>  | <code>undefined</code> | The options to configure the account manager                                              |
+| [storagePath]                  | <code>string</code>  | <code>undefined</code> | The path where the database file will be saved                                            |
+| [storageType]                  | <code>number</code>  | <code>undefined</code> | The type of the database.  Stronghold = 1, Sqlite = 2                                     |
+| [storagePassword]              | <code>string</code>  | <code>undefined</code> | The storage password                                                                      |
+| [outputConsolidationThreshold] | <code>number</code>  | <code>100</code>       | The number of outputs an address must have to trigger the automatic consolidation process |
+| [automaticOutputConsolidation] | <code>boolean</code> | <code>true</code>      | Disables the automatic output consolidation if false                                      |
+| [syncSpentOutputs]             | <code>boolean</code> | <code>false</code>     | Enables fetching spent output history on account sync                                     |
 
 #### setStrongholdPassword(password): void
 
@@ -162,60 +167,109 @@ Updates the client options for all accounts.
 | ------- | -------------------------------------------- | ----------------- | ------------------------------ |
 | options | <code>[ClientOptions](#clientoptions)</code> | <code>null</code> | The new account client options |
 
+#### getBalanceChangeEvents([count, skip, fromTimestamp])
+
+Gets the persisted balance change events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { indexationId: string, accountId: string, address: string, balanceChange: { spent: number, received: number } }
+
+#### getBalanceChangeEventCount([fromTimestamp])
+
+Gets the number of persisted balance change events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+#### getTransactionConfirmationEvents([count, skip, fromTimestamp])
+
+Gets the persisted transaction confirmation change events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { indexationId: string, accountId: string, message: Message, confirmed: boolean }
+
+#### getTransactionConfirmationEventCount([fromTimestamp])
+
+Gets the number of persisted transaction confirmation change events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+#### getNewTransactionEvents([count, skip, fromTimestamp])
+
+Gets the persisted new transaction events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { indexationId: string, accountId: string, message: Message }
+
+#### getNewTransactionEventCount([fromTimestamp])
+
+Gets the number of persisted new transaction events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+#### getReattachmentEvents([count, skip, fromTimestamp])
+
+Gets the persisted transaction reattachment events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { indexationId: string, accountId: string, message: Message }
+
+#### getReattachmentEventCount([fromTimestamp])
+
+Gets the number of persisted transaction reattachment events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+#### getBroadcastEvents([count, skip, fromTimestamp])
+
+Gets the persisted transaction broadcast events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { indexationId: string, accountId: string, message: Message }
+
+#### getBroadcastEventCount([fromTimestamp])
+
+Gets the number of persisted transaction broadcast events.
+
+| Param           | Type                | Default           | Description                                                  |
+| --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
 ### SyncedAccount
 
-#### send(address, amount[, options])
-
-Send funds to the given address.
-
-| Param   | Type                         | Default                | Description                               |
-| ------- | ---------------------------- | ---------------------- | ----------------------------------------- |
-| address | <code>string</code>          | <code>null</code>      | The bech32 string of the transfer address |
-| amount  | <code>number</code>          | <code>undefined</code> | The transfer amount                       |
-| options | <code>TransferOptions</code> | <code>undefined</code> | The transfer options                      |
-
-##### TransferOptions
-
-| Param                  | Type                                              | Default           | Description                                        |
-| ---------------------- | ------------------------------------------------- | ----------------- | -------------------------------------------------- |
-| remainderValueStrategy | <code>RemainderValueStrategy</code>               | <code>null</code> | The strategy to use for the remainder value if any |
-| indexation             | <code>{ index: string, data?: Uint8Array }</code> | <code>null</code> | Message indexation                                 |
-
-##### RemainderValueStrategy
-
-###### changeAddress()
-Send the remainder value to an internal address.
-
-###### reuseAddress()
-Send the remainder value to its original address.
-
-###### accountAddress(address: string)
-Send the remainder value to a specific address that must belong to the account.
-
-#### retry(messageId)
-
-Retries (promotes or reattaches) the given message.
-
-| Param     | Type                | Default           | Description              |
-| --------- | ------------------- | ----------------- | ------------------------ |
-| messageId | <code>string</code> | <code>null</code> | The message's identifier |
-
-#### reattach(messageId)
-
-Reattach the given message.
-
-| Param     | Type                | Default           | Description              |
-| --------- | ------------------- | ----------------- | ------------------------ |
-| messageId | <code>string</code> | <code>null</code> | The message's identifier |
-
-#### promote(messageId)
-
-Promote the given message.
-
-| Param     | Type                | Default           | Description              |
-| --------- | ------------------- | ----------------- | ------------------------ |
-| messageId | <code>string</code> | <code>null</code> | The message's identifier |
-
+The result of a `sync` operation on an Account.
 
 ### Account
 
@@ -277,6 +331,62 @@ Synchronizes the account with the Tangle.
 | [options.gapLimit]     | <code>number</code> | <code>10</code>                   | The number of addresses to check       |
 
 **Returns** a [SyncedAccount](#syncedaccount) instance.
+
+#### send(address, amount[, options])
+
+Send funds to the given address.
+
+| Param   | Type                         | Default                | Description                               |
+| ------- | ---------------------------- | ---------------------- | ----------------------------------------- |
+| address | <code>string</code>          | <code>null</code>      | The bech32 string of the transfer address |
+| amount  | <code>number</code>          | <code>undefined</code> | The transfer amount                       |
+| options | <code>TransferOptions</code> | <code>undefined</code> | The transfer options                      |
+
+##### TransferOptions
+
+| Param                  | Type                                              | Default           | Description                                        |
+| ---------------------- | ------------------------------------------------- | ----------------- | -------------------------------------------------- |
+| remainderValueStrategy | <code>RemainderValueStrategy</code>               | <code>null</code> | The strategy to use for the remainder value if any |
+| indexation             | <code>{ index: string, data?: Uint8Array }</code> | <code>null</code> | Message indexation                                 |
+
+##### RemainderValueStrategy
+
+###### changeAddress()
+Send the remainder value to an internal address.
+
+###### reuseAddress()
+Send the remainder value to its original address.
+
+###### accountAddress(address: string)
+Send the remainder value to a specific address that must belong to the account.
+
+#### retry(messageId)
+
+Retries (promotes or reattaches) the given message.
+
+| Param     | Type                | Default           | Description              |
+| --------- | ------------------- | ----------------- | ------------------------ |
+| messageId | <code>string</code> | <code>null</code> | The message's identifier |
+
+#### reattach(messageId)
+
+Reattach the given message.
+
+| Param     | Type                | Default           | Description              |
+| --------- | ------------------- | ----------------- | ------------------------ |
+| messageId | <code>string</code> | <code>null</code> | The message's identifier |
+
+#### promote(messageId)
+
+Promote the given message.
+
+| Param     | Type                | Default           | Description              |
+| --------- | ------------------- | ----------------- | ------------------------ |
+| messageId | <code>string</code> | <code>null</code> | The message's identifier |
+
+#### consolidateOutputs()
+
+Consolidate the outputs on all account addresses.
 
 #### isLatestAddressUnused()
 

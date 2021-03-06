@@ -55,8 +55,6 @@ impl super::Signer for StrongholdSigner {
         inputs: &mut Vec<super::TransactionInput>,
         _: super::SignMessageMetadata<'a>,
     ) -> crate::Result<Vec<iota::UnlockBlock>> {
-        let hashed_essence = essence.hash();
-
         let mut unlock_blocks = vec![];
         let mut signature_indexes = HashMap::<String, usize>::new();
         inputs.sort_by(|a, b| a.input.cmp(&b.input));
@@ -71,7 +69,7 @@ impl super::Signer for StrongholdSigner {
                 // If not, we should create a signature unlock block
                 let signature = crate::stronghold::sign_transaction(
                     &stronghold_path(account.storage_path()).await?,
-                    &hashed_essence,
+                    &essence.hash(),
                     *account.index(),
                     recorder.address_index,
                     recorder.address_internal,

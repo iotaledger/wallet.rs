@@ -77,16 +77,24 @@ impl Transfer {
 }
 
 #[pymethods]
-impl SyncedAccount {
+impl AccountHandle {
+    /// Returns the builder to setup the process to synchronize this account with the Tangle.
+    fn sync(&self) -> AccountSynchronizer {
+        let account_synchronizer = crate::block_on(async { self.account_handle.sync().await });
+        AccountSynchronizer {
+            account_synchronizer: Some(account_synchronizer),
+        }
+    }
+
     /// Send messages.
     fn transfer(&self, transfer_obj: Transfer) -> Result<WalletMessage> {
-        crate::block_on(async { self.synced_account.transfer(transfer_obj.transfer).await?.try_into() })
+        crate::block_on(async { self.account_handle.transfer(transfer_obj.transfer).await?.try_into() })
     }
 
     /// Retry message.
     fn retry(&self, message_id: &str) -> Result<WalletMessage> {
         crate::block_on(async {
-            self.synced_account
+            self.account_handle
                 .retry(&RustMessageId::from_str(&message_id)?)
                 .await?
                 .try_into()
@@ -96,7 +104,7 @@ impl SyncedAccount {
     /// Promote message.
     fn promote(&self, message_id: &str) -> Result<WalletMessage> {
         crate::block_on(async {
-            self.synced_account
+            self.account_handle
                 .promote(&RustMessageId::from_str(&message_id)?)
                 .await?
                 .try_into()
@@ -106,7 +114,7 @@ impl SyncedAccount {
     /// Reattach message.
     fn reattach(&self, message_id: &str) -> Result<WalletMessage> {
         crate::block_on(async {
-            self.synced_account
+            self.account_handle
                 .reattach(&RustMessageId::from_str(&message_id)?)
                 .await?
                 .try_into()
@@ -168,12 +176,14 @@ impl AccountHandle {
         crate::block_on(async { self.account_handle.bech32_hrp().await })
     }
 
-    /// Returns the builder to setup the process to synchronize this account with the Tangle.
-    fn sync(&self) -> AccountSynchronizer {
-        let account_synchronizer = crate::block_on(async { self.account_handle.sync().await });
-        AccountSynchronizer {
-            account_synchronizer: Some(account_synchronizer),
+    /// Consolidate outputs.
+    fn consolidate_outputs(&self) -> Result<Vec<WalletMessage>> {
+        let rust_messages = crate::block_on(async { self.account_handle.consolidate_outputs().await })?;
+        let mut messages = Vec::new();
+        for message in rust_messages {
+            messages.push(message.try_into()?);
         }
+        Ok(messages)
     }
 
     /// Gets a new unused address and links it to this account.
@@ -339,18 +349,22 @@ impl AccountInitialiser {
     /// Messages associated with the seed.
     /// The account can be initialised with locally stored messages.
     fn messages(&mut self, messages: Vec<WalletMessage>) {
-        self.account_initialiser = Some(
-            self.account_initialiser.take().unwrap().messages(
-                messages
-                    .into_iter()
-                    .map(|msg| {
-                        // we use an empty bech32 HRP here because we update it later on wallet.rs
-                        to_rust_message(msg, "".to_string(), &self.addresses)
-                            .unwrap_or_else(|msg| panic!("AccountInitialiser: Message {:?} is invalid", msg))
-                    })
-                    .collect(),
-            ),
-        );
+        let mut account_initialiser = self.account_initialiser.take().unwrap();
+        let messages = messages
+            .into_iter()
+            .map(|msg| {
+                // we use an empty bech32 HRP here because we update it later on wallet.rs
+                crate::block_on(to_rust_message(
+                    msg,
+                    "".to_string(),
+                    &self.addresses,
+                    &account_initialiser.client_options,
+                ))
+                .unwrap_or_else(|msg| panic!("AccountInitialiser: Message {:?} is invalid", msg))
+            })
+            .collect();
+        account_initialiser = account_initialiser.messages(messages);
+        self.account_initialiser = Some(account_initialiser);
     }
 
     /// Address history associated with the seed.

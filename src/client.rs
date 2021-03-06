@@ -37,9 +37,6 @@ pub(crate) async fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
                     .unwrap_or_else(|| iota::BrokerOptions::new().automatic_disconnect(false)),
             )
             .with_local_pow(*options.local_pow())
-            // we validate the URL beforehand so it's safe to unwrap here
-            .with_nodes(&options.nodes().iter().map(|url| url.as_str()).collect::<Vec<&str>>()[..])
-            .unwrap()
             .with_node_pool_urls(
                 &options
                     .node_pool_urls()
@@ -55,9 +52,26 @@ pub(crate) async fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
             client_builder = client_builder.with_network(network);
         }
 
+        for node in options.nodes() {
+            // safe to unwrap since we're sure we have valid URLs
+            if let Some(auth) = &node.auth {
+                client_builder = client_builder
+                    .with_node_auth(node.url.as_str(), &auth.username, &auth.password)
+                    .unwrap();
+            } else {
+                client_builder = client_builder.with_node(node.url.as_str()).unwrap();
+            }
+        }
+
         if let Some(node) = options.node() {
             // safe to unwrap since we're sure we have valid URLs
-            client_builder = client_builder.with_node(node.as_str()).unwrap();
+            if let Some(auth) = &node.auth {
+                client_builder = client_builder
+                    .with_node_auth(node.url.as_str(), &auth.username, &auth.password)
+                    .unwrap();
+            } else {
+                client_builder = client_builder.with_node(node.url.as_str()).unwrap();
+            }
         }
 
         if let Some(node_sync_interval) = options.node_sync_interval() {
@@ -90,7 +104,7 @@ pub(crate) async fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
 
 /// The options builder for a client connected to multiple nodes.
 pub struct ClientOptionsBuilder {
-    nodes: Vec<Url>,
+    nodes: Vec<Node>,
     node_pool_urls: Vec<Url>,
     network: Option<String>,
     mqtt_broker_options: Option<BrokerOptions>,
@@ -158,13 +172,27 @@ impl ClientOptionsBuilder {
     /// ```
     pub fn with_nodes(mut self, nodes: &[&str]) -> crate::Result<Self> {
         let nodes_urls = convert_urls(nodes)?;
-        self.nodes.extend(nodes_urls);
+        self.nodes
+            .extend(nodes_urls.into_iter().map(|u| u.into()).collect::<Vec<Node>>());
         Ok(self)
     }
 
     /// Adds a node to the node list.
     pub fn with_node(mut self, node: &str) -> crate::Result<Self> {
-        self.nodes.push(Url::parse(node)?);
+        self.nodes.push(Url::parse(node)?.into());
+        Ok(self)
+    }
+
+    /// Adds a node with authentication to the node list.
+    pub fn with_node_auth(mut self, node: &str, username: &str, password: &str) -> crate::Result<Self> {
+        self.nodes.push(Node {
+            url: Url::parse(node)?,
+            auth: NodeAuth {
+                username: username.into(),
+                password: password.into(),
+            }
+            .into(),
+        });
         Ok(self)
     }
 
@@ -341,16 +369,42 @@ impl Into<iota::BrokerOptions> for BrokerOptions {
     }
 }
 
+/// Node authentication object.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+pub struct NodeAuth {
+    /// Username.
+    pub username: String,
+    /// Password.
+    pub password: String,
+}
+
+/// Node definition.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Getters)]
+#[getset(get = "pub(crate)")]
+pub struct Node {
+    /// Node url.
+    pub url: Url,
+    /// Node auth options.
+    pub auth: Option<NodeAuth>,
+}
+
+impl From<Url> for Node {
+    fn from(url: Url) -> Self {
+        Self { url, auth: None }
+    }
+}
+
 /// The client options type.
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, Getters)]
 /// Need to set the get methods to be public for binding
 #[getset(get = "pub")]
 pub struct ClientOptions {
     /// this option is here just to simplify usage from consumers using the deserialization
-    node: Option<Url>,
-    /// The nodes urls.
+    /// The node.
+    node: Option<Node>,
+    /// The nodes vector.
     #[serde(default)]
-    nodes: Vec<Url>,
+    nodes: Vec<Node>,
     /// The node pool urls.
     #[serde(rename = "nodePoolUrls", default)]
     node_pool_urls: Vec<Url>,
@@ -459,7 +513,14 @@ mod tests {
     fn single_node() {
         let node = "https://api.lb-0.testnet.chrysalis2.com";
         let client = ClientOptionsBuilder::new().with_node(node).unwrap().build().unwrap();
-        assert_eq!(client.nodes(), &super::convert_urls(&[node]).unwrap());
+        assert_eq!(
+            client.nodes(),
+            &super::convert_urls(&[node])
+                .unwrap()
+                .into_iter()
+                .map(|u| u.into())
+                .collect::<Vec<super::Node>>()
+        );
         assert!(client.network().is_none());
     }
 
@@ -467,7 +528,14 @@ mod tests {
     fn multi_node() {
         let nodes = ["https://api.lb-0.testnet.chrysalis2.com"];
         let client = ClientOptionsBuilder::new().with_nodes(&nodes).unwrap().build().unwrap();
-        assert_eq!(client.nodes(), &super::convert_urls(&nodes).unwrap());
+        assert_eq!(
+            client.nodes(),
+            &super::convert_urls(&nodes)
+                .unwrap()
+                .into_iter()
+                .map(|u| u.into())
+                .collect::<Vec<super::Node>>()
+        );
         assert!(client.network().is_none());
     }
 
@@ -481,7 +549,14 @@ mod tests {
             .unwrap()
             .build()
             .unwrap();
-        assert_eq!(client.nodes(), &super::convert_urls(&nodes).unwrap());
+        assert_eq!(
+            client.nodes(),
+            &super::convert_urls(&nodes)
+                .unwrap()
+                .into_iter()
+                .map(|u| u.into())
+                .collect::<Vec<super::Node>>()
+        );
         assert_eq!(client.network(), &Some(network.to_string()));
     }
 

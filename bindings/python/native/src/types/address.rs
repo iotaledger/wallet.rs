@@ -21,12 +21,12 @@ pub struct Address {
     outputs: Vec<AddressOutput>,
 }
 
-#[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
+#[derive(Debug, Clone, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct AddressWrapper {
     inner: String,
 }
 
-#[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
+#[derive(Debug, Clone, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct AddressOutput {
     /// Transaction ID of the output
     transaction_id: String,
@@ -84,6 +84,14 @@ impl From<&RustAddressOutput> for AddressOutput {
 
 impl From<&RustAddressWrapper> for AddressWrapper {
     fn from(wrapper: &RustAddressWrapper) -> Self {
+        Self {
+            inner: wrapper.to_bech32(),
+        }
+    }
+}
+
+impl From<RustAddressWrapper> for AddressWrapper {
+    fn from(wrapper: RustAddressWrapper) -> Self {
         Self {
             inner: wrapper.to_bech32(),
         }
