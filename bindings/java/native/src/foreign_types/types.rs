@@ -13,10 +13,16 @@ foreign_typemap!(
 
 foreign_typemap!(
     ($p:r_type) PathBuf => jstring {
-        $out = $p.as_path().to_str();
+        $out = from_std_string_jstring($p.as_path().display().to_string(), env);
     };
     ($p:f_type, option = "NoNullAnnotations", unique_prefix = "/*chrono*/")
         => "/*chrono*/java.nio.file.Path" "$out = java.nio.file.Paths.get($p);";
+);
+
+foreign_typemap!(
+    ($p:r_type) &str => PathBuf {
+        $out = PathBuf::from($p);
+    };
 );
 
 //TODO: Properly wrap error
@@ -47,12 +53,6 @@ foreign_typemap!(
 foreign_typemap!(
     ($p:r_type) &u64 => u64 {
         $out = *($p);
-    };
-);
-
-foreign_typemap!(
-    ($p:r_type) &str => PathBuf {
-        $out = PathBuf::from($p);
     };
 );
 

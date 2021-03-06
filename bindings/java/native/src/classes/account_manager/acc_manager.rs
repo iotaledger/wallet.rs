@@ -1,5 +1,4 @@
-#![allow(non_snake_case)]
-
+use anyhow::anyhow;
 use std::{
     path::PathBuf,
     num::NonZeroU64,
@@ -259,34 +258,33 @@ impl AccountManager {
 
         Ok(Message::new_with_internal(msg))
     }
-/*
-    #[cfg(!any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    pub async fn backup(&self, destination: Path) -> crate::Result<PathBuf> {
+
+    #[cfg(not(any(feature = "stronghold-storage", feature = "sqlite-storage")))]
+    pub fn backup(&self, _: PathBuf) -> Result<PathBuf> {
         Err(anyhow!("No storage found during compilation"))
     }
 
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    pub async fn backup(&self, destination: Path) -> crate::Result<PathBuf> {
+    pub fn backup(&self, destination: PathBuf) -> Result<PathBuf> {
+        let path = crate::block_on(async move {
+            self.manager.backup(destination).await
+        }).expect("error backuping account");
 
+        Ok(path)
     }
 
-    #[cfg(!any(feature = "stronghold-storage", feature = "sqlite-storage"))]ç
-    pub async fn import_accounts<S: AsRef<Path>>(
-        &mut self,
-        source: S,
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))] stronghold_password: String,
-    ) -> crate::Result<()> {
+    #[cfg(not(any(feature = "stronghold-storage", feature = "sqlite-storage")))]
+    pub fn import_accounts(&self, _: PathBuf, _: String) -> Result<()> {
         Err(anyhow!("No storage found during compilation"))
     }
 
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    pub async fn import_accounts<S: AsRef<Path>>(
-        &mut self,
-        source: S,
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))] stronghold_password: String,
-    ) -> crate::Result<()> {
+    pub fn import_accounts(&self, source: PathBuf, stronghold_password: String) -> Result<()> {
+        crate::import_accounts(async move {
+            self.manager.retry(source, stronghold_password).await
+        }).expect("error importing accounts");
 
+        Ok(())
     }
-    */
 }
 

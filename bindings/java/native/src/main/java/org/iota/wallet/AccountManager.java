@@ -133,6 +133,19 @@ public final class AccountManager {
     }
     private static native long do_internalTransfer(long self, String from_account_id, String to_account_id, long amount);
 
+    public final java.nio.file.Path backup(String destination) {
+        String ret = do_backup(mNativeObj, destination);
+        java.nio.file.Path convRet = java.nio.file.Paths.get(ret);
+
+        return convRet;
+    }
+    private static native String do_backup(long self, String destination);
+
+    public final void importAccounts(String source, String stronghold_password) {
+        do_importAccounts(mNativeObj, source, stronghold_password);
+    }
+    private static native void do_importAccounts(long self, String source, String stronghold_password);
+
     public synchronized void delete() {
         if (mNativeObj != 0) {
             do_delete(mNativeObj);
