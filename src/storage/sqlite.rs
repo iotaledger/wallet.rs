@@ -8,11 +8,8 @@ use rusqlite::{
     types::{ToSqlOutput, Value},
     Connection, NO_PARAMS,
 };
+use std::{path::Path, sync::Arc};
 use tokio::sync::Mutex;
-use std::{
-    path::Path,
-    sync::Arc,
-};
 
 /// The storage id.
 pub const STORAGE_ID: &str = "SQLITE";
