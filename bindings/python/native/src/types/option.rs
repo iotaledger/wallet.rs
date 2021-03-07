@@ -78,7 +78,7 @@ impl From<BrokerOptions> for RustBrokerOptions {
             } else {
                 None
             },
-            use_websockets: broker_options.use_websockets,
+            use_websockets: broker_options.use_websockets.unwrap_or(false),
         }
     }
 }
