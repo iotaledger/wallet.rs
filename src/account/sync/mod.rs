@@ -197,22 +197,37 @@ async fn get_address_for_sync(
     bech32_hrp: String,
     index: usize,
     internal: bool,
-) -> crate::Result<AddressWrapper> {
+) -> crate::Result<Option<AddressWrapper>> {
     if let Some(address) = account
         .addresses()
         .iter()
         .find(|a| *a.key_index() == index && *a.internal() == internal)
     {
-        Ok(address.address().clone())
+        Ok(Some(address.address().clone()))
     } else {
-        crate::address::get_iota_address(
+        // if stronghold is locked, we skip address generation
+        #[cfg(feature = "stronghold")]
+        {
+            if account.signer_type() == &crate::signing::SignerType::Stronghold
+                && crate::stronghold::get_status(
+                    &crate::signing::stronghold::stronghold_path(account.storage_path()).await?,
+                )
+                .await
+                .snapshot
+                    == crate::stronghold::SnapshotStatus::Locked
+            {
+                return Ok(None);
+            }
+        }
+        let generated_address = crate::address::get_iota_address(
             &account,
             index,
             internal,
             bech32_hrp,
             GenerateAddressMetadata { syncing: true },
         )
-        .await
+        .await?;
+        Ok(Some(generated_address))
     }
 }
 
@@ -252,19 +267,20 @@ async fn sync_addresses(
         .bech32_hrp;
 
     loop {
+        let mut address_generation_locked = false;
         let mut generated_iota_addresses = vec![]; // collection of (address_index, internal, address) pairs
         for i in address_index..(address_index + gap_limit) {
             // generate both `public` and `internal (change)` addresses
-            generated_iota_addresses.push((
-                i,
-                false,
-                get_address_for_sync(&account, bech32_hrp.to_string(), i, false).await?,
-            ));
-            generated_iota_addresses.push((
-                i,
-                true,
-                get_address_for_sync(&account, bech32_hrp.to_string(), i, true).await?,
-            ));
+            if let Some(public_address) = get_address_for_sync(&account, bech32_hrp.to_string(), i, false).await? {
+                generated_iota_addresses.push((i, false, public_address));
+                if let Some(change_address) = get_address_for_sync(&account, bech32_hrp.to_string(), i, true).await? {
+                    generated_iota_addresses.push((i, true, change_address));
+                } else {
+                    address_generation_locked = true;
+                }
+            } else {
+                address_generation_locked = true;
+            }
         }
 
         let mut curr_generated_addresses = vec![];
@@ -337,6 +353,11 @@ async fn sync_addresses(
             log::debug!(
                 "[SYNC] finishing address syncing because the current messages list and address list are empty"
             );
+            break;
+        }
+
+        if address_generation_locked {
+            log::debug!("[SYNC] finishing address syncing because stronghold is locked");
             break;
         }
     }

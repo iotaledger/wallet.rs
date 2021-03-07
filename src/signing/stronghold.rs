@@ -10,7 +10,7 @@ use std::{collections::HashMap, path::PathBuf};
 #[derive(Default)]
 pub struct StrongholdSigner;
 
-async fn stronghold_path(storage_path: &PathBuf) -> crate::Result<PathBuf> {
+pub(crate) async fn stronghold_path(storage_path: &PathBuf) -> crate::Result<PathBuf> {
     let storage_id = crate::storage::get(&storage_path).await?.lock().await.id();
     let path = if storage_id == crate::storage::stronghold::STORAGE_ID {
         storage_path.clone()

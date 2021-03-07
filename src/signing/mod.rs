@@ -18,7 +18,7 @@ use tokio::sync::Mutex;
 pub(crate) mod ledger;
 
 #[cfg(feature = "stronghold")]
-mod stronghold;
+pub(crate) mod stronghold;
 
 type SignerHandle = Arc<Mutex<Box<dyn Signer + Sync + Send>>>;
 type Signers = Arc<Mutex<HashMap<SignerType, SignerHandle>>>;
