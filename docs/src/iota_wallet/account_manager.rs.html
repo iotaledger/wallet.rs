@@ -1970,6 +1970,15 @@
 <span id="1967">1967</span>
 <span id="1968">1968</span>
 <span id="1969">1969</span>
+<span id="1970">1970</span>
+<span id="1971">1971</span>
+<span id="1972">1972</span>
+<span id="1973">1973</span>
+<span id="1974">1974</span>
+<span id="1975">1975</span>
+<span id="1976">1976</span>
+<span id="1977">1977</span>
+<span id="1978">1978</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2526,6 +2535,7 @@
                 .<span class="ident">unwrap</span>();
             <span class="ident">runtime</span>.<span class="ident">block_on</span>(<span class="kw">async</span> {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">interval</span> <span class="op">=</span> <span class="ident">interval</span>(<span class="ident">polling_interval</span>);
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">synced</span> <span class="op">=</span> <span class="bool-val">false</span>;
                 <span class="kw">loop</span> {
                     <span class="ident">tokio</span>::<span class="macro">select</span><span class="macro">!</span> {
                         <span class="kw">_</span> <span class="op">=</span> <span class="kw">async</span> {
@@ -2534,22 +2544,30 @@
                             <span class="kw">let</span> <span class="ident">storage_file_path_</span> <span class="op">=</span> <span class="ident">storage_file_path</span>.<span class="ident">clone</span>();
                             <span class="kw">let</span> <span class="ident">account_options</span> <span class="op">=</span> <span class="ident">account_options</span>;
 
-                            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">error</span>) <span class="op">=</span> <span class="ident">AssertUnwindSafe</span>(<span class="ident">poll</span>(<span class="ident">accounts</span>.<span class="ident">clone</span>(), <span class="ident">storage_file_path_</span>, <span class="ident">account_options</span>, <span class="ident">is_monitoring</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Relaxed</span>), <span class="ident">automatic_output_consolidation</span>))
-                                .<span class="ident">catch_unwind</span>()
-                                .<span class="kw">await</span> {
-                                    <span class="comment">// if the error isn&#39;t a crate::Error type</span>
-                                <span class="kw">if</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Error</span><span class="op">&gt;</span>().<span class="ident">is_none</span>() {
-                                    <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">message</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>() {
-                                        <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Internal error: {}&quot;</span>, <span class="ident">message</span>)
-                                    } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">message</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>() {
-                                        <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Internal error: {}&quot;</span>, <span class="ident">message</span>)
-                                    } <span class="kw">else</span> {
-                                        <span class="string">&quot;Internal error&quot;</span>.<span class="ident">to_string</span>()
-                                    };
-                                    <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;[POLLING] error: {}&quot;</span>, <span class="ident">msg</span>);
-                                    <span class="kw">let</span> <span class="ident">_error</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">Panic</span>(<span class="ident">msg</span>);
-                                    <span class="comment">// when the error is dropped, the on_error event will be triggered</span>
-                                }
+                            <span class="kw">if</span> <span class="op">!</span><span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">is_empty</span>() {
+                                <span class="kw">let</span> <span class="ident">should_sync</span> <span class="op">=</span> <span class="op">!</span>(<span class="ident">synced</span> <span class="op">&amp;&amp;</span> <span class="ident">is_monitoring</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Relaxed</span>));
+                                <span class="kw">match</span> <span class="ident">AssertUnwindSafe</span>(<span class="ident">poll</span>(<span class="ident">accounts</span>.<span class="ident">clone</span>(), <span class="ident">storage_file_path_</span>, <span class="ident">account_options</span>, <span class="ident">should_sync</span>, <span class="ident">automatic_output_consolidation</span>))
+                                    .<span class="ident">catch_unwind</span>()
+                                    .<span class="kw">await</span> {
+                                        <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                            <span class="ident">synced</span> <span class="op">=</span> <span class="bool-val">true</span>;
+                                        }
+                                        <span class="prelude-val">Err</span>(<span class="ident">error</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                            <span class="comment">// if the error isn&#39;t a crate::Error type</span>
+                                            <span class="kw">if</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Error</span><span class="op">&gt;</span>().<span class="ident">is_none</span>() {
+                                                <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">message</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>() {
+                                                    <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Internal error: {}&quot;</span>, <span class="ident">message</span>)
+                                                } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">message</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>() {
+                                                    <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Internal error: {}&quot;</span>, <span class="ident">message</span>)
+                                                } <span class="kw">else</span> {
+                                                    <span class="string">&quot;Internal error&quot;</span>.<span class="ident">to_string</span>()
+                                                };
+                                                <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;[POLLING] error: {}&quot;</span>, <span class="ident">msg</span>);
+                                                <span class="kw">let</span> <span class="ident">_error</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">Panic</span>(<span class="ident">msg</span>);
+                                                <span class="comment">// when the error is dropped, the on_error event will be triggered</span>
+                                            }
+                                        }
+                                    }
                             }
                         } <span class="op">=</span><span class="op">&gt;</span> {}
                         <span class="kw">_</span> <span class="op">=</span> <span class="ident">stop</span>.<span class="ident">recv</span>() <span class="op">=</span><span class="op">&gt;</span> {
@@ -3116,10 +3134,10 @@
     <span class="ident">accounts</span>: <span class="ident">AccountStore</span>,
     <span class="ident">storage_file_path</span>: <span class="ident">PathBuf</span>,
     <span class="ident">account_options</span>: <span class="ident">AccountOptions</span>,
-    <span class="ident">is_mqtt_monitoring</span>: <span class="ident">bool</span>,
+    <span class="ident">should_sync</span>: <span class="ident">bool</span>,
     <span class="ident">automatic_output_consolidation</span>: <span class="ident">bool</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">retried</span> <span class="op">=</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">is_mqtt_monitoring</span> {
+    <span class="kw">let</span> <span class="ident">retried</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">should_sync</span> {
         <span class="kw">let</span> <span class="ident">synced_accounts</span> <span class="op">=</span> <span class="ident">AccountsSynchronizer</span>::<span class="ident">new</span>(<span class="ident">accounts</span>.<span class="ident">clone</span>(), <span class="ident">storage_file_path</span>, <span class="ident">account_options</span>)
             .<span class="ident">execute</span>()
             .<span class="kw">await</span><span class="question-mark">?</span>;
