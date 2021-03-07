@@ -25,7 +25,7 @@ use std::{
 };
 
 /// The strategy to use for the remainder value management when sending funds.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(tag = "strategy", content = "value")]
 pub enum RemainderValueStrategy {
     /// Keep the remainder value on the source address.
@@ -449,6 +449,21 @@ impl TransactionRegularEssence {
                             .iter()
                             .find(|a| &a.address().as_ref() == output_address)
                             .unwrap(); // safe to unwrap since we already asserted that the address belongs to the account
+
+                        // if the output is listed on the inputs, it's the remainder output.
+                        if inputs.iter().any(|input| match input {
+                            TransactionInput::UTXO(input) => {
+                                if let Some(metadata) = &input.metadata {
+                                    &metadata.address().as_ref() == output_address
+                                } else {
+                                    false
+                                }
+                            }
+                            _ => false,
+                        }) {
+                            remainder = Some(account_address);
+                            break;
+                        }
                         match remainder {
                             Some(remainder_address) => {
                                 let address_index = *account_address.key_index();

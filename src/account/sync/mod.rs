@@ -844,7 +844,7 @@ impl SyncedAccount {
     fn select_inputs<'a>(
         &self,
         locked_addresses: &'a mut MutexGuard<'_, Vec<AddressWrapper>>,
-        threshold: u64,
+        transfer_obj: &Transfer,
         account: &'a Account,
         addresses: &'a [Address],
         address: &'a AddressWrapper,
@@ -863,22 +863,47 @@ impl SyncedAccount {
                 balance: a.available_balance(&account),
             })
             .collect();
-        let addresses = input_selection::select_input(threshold, available_addresses)?;
+        let mut selected_addresses = input_selection::select_input(transfer_obj.amount.get(), available_addresses)?;
+        let has_remainder = selected_addresses.iter().fold(0, |acc, a| acc + a.balance) > transfer_obj.amount.get();
+
+        // if we're reusing the input address for remainder output
+        // and we have remainder value, we should run the input selection again
+        // without the output address.
+        if has_remainder
+            && transfer_obj.remainder_value_strategy == RemainderValueStrategy::ReuseAddress
+            && addresses.iter().any(|input| input.address() == &transfer_obj.address)
+        {
+            let available_addresses: Vec<input_selection::Input> = addresses
+                .iter()
+                .filter(|a| {
+                    // we do not allow the deposit address as input address
+                    a.address() != address
+                        && a.available_balance(&account) > 0
+                        && !locked_addresses.contains(a.address())
+                })
+                .map(|a| input_selection::Input {
+                    address: a.address().clone(),
+                    internal: *a.internal(),
+                    balance: a.available_balance(&account),
+                })
+                .collect();
+            selected_addresses = input_selection::select_input(transfer_obj.amount.get(), available_addresses)?;
+        }
 
         locked_addresses.extend(
-            addresses
+            selected_addresses
                 .iter()
                 .map(|a| a.address.clone())
                 .collect::<Vec<AddressWrapper>>(),
         );
 
-        let remainder = if addresses.iter().fold(0, |acc, a| acc + a.balance) > threshold {
-            addresses.last().cloned()
+        let remainder = if has_remainder {
+            selected_addresses.last().cloned()
         } else {
             None
         };
 
-        Ok((addresses, remainder))
+        Ok((selected_addresses, remainder))
     }
 
     async fn get_output_consolidation_transfers(&self) -> crate::Result<Vec<Transfer>> {
@@ -930,6 +955,17 @@ impl SyncedAccount {
     /// Send messages.
     pub(super) async fn transfer(&self, mut transfer_obj: Transfer) -> crate::Result<Message> {
         let account_ = self.account_handle.read().await;
+
+        // if the deposit address belongs to the account, we'll reuse the input address
+        // for remainder value output. This is the only way to know the transaction value for
+        // transactions between account addresses.
+        if account_
+            .addresses()
+            .iter()
+            .any(|a| a.address() == &transfer_obj.address)
+        {
+            transfer_obj.remainder_value_strategy = RemainderValueStrategy::ReuseAddress;
+        }
 
         // lock the transfer process until we select the input addresses
         // we do this to prevent multiple threads trying to transfer at the same time
@@ -1029,7 +1065,7 @@ impl SyncedAccount {
                 // select the input addresses and check if a remainder address is needed
                 let (input_addresses, remainder_address) = self.select_inputs(
                     &mut locked_addresses,
-                    value,
+                    &transfer_obj,
                     &account_,
                     account_.addresses(),
                     &transfer_obj.address,
