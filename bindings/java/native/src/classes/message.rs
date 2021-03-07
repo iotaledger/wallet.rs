@@ -42,7 +42,6 @@ pub struct Transfer {
 
 impl Transfer {
     pub fn get_internal(self) -> TransferRust {
-        // TODO: Find a way to not need clone
         self.transfer
     }
 

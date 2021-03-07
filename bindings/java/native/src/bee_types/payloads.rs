@@ -1,9 +1,17 @@
 use iota_wallet::{
     message::{
-        IndexationPayload as IndexationPayloadRust,
         MessagePayload as MessagePayloadRust,
+        TransactionPayload as TransactionPayloadRust,
+        MilestonePayload as MilestonePayloadRust,
+        IndexationPayload as IndexationPayloadRust,
+        ReceiptPayload as ReceiptPayloadRust,
+        TreasuryTransactionPayload as TreasuryTransactionPayloadRust,
     },
 };
+
+// TreasuryInput, TreasuryOutput
+// Essence, UTXOInput, UnlockBlock
+// RegularEssence, SignatureLockedDustAllowanceOutput, SignatureLockedSingleOutput
 
 use crate::Result;
 
@@ -51,6 +59,28 @@ impl MessagePayload {
         } else {
             None
         }
+    }
+
+    /*
+    pub fn get_as_milestone(&self) -> Option<MilestonePayload> {
+        if let MessagePayloadRust::Milestone(index) = &self.payload {
+            match MilestonePayload::new_with(index.index(), index.data()) {
+                Ok(i) => Some(i),
+                Err(_) => None,
+            }
+        } else {
+            None
+        }
+    }*/
+}
+
+pub struct MilestonePayload {
+    payload: MilestonePayloadRust,
+}
+
+impl MilestonePayload {
+    pub fn get_internal(self) -> MilestonePayloadRust {
+        self.payload
     }
 }
 

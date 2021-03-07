@@ -9,12 +9,13 @@ use chrono::prelude::{DateTime, Utc, Local};
 
 use crate::{
     jni_c_header::*,
-    client_options::*,
     bee_types::*,
     acc::*,
+    client_options::*,
     acc_manager::*,
+    event_manager::*,
     message::*,
-    address::*
+    address::*,
 };
 
 use anyhow::Result as Result;
@@ -33,7 +34,10 @@ use iota_wallet::{
     },
     client::{
         Api,
-    }
+    },
+    event::{
+        EventId,
+    },
 };
 
 foreign_class!(class RustLogging {
@@ -301,6 +305,27 @@ foreign_class!(
     }
 );
 
+// Events
+
+foreign_class!(
+    class EventId {
+    self_type EventId;
+    private constructor = empty;
+}
+);
+
+foreign_callback!(callback ErrorEvent {
+    self_type ErrorEvent + Send + 'static;
+    onStateChanged = ErrorEvent::on_error(&self, error: String);
+});
+
+foreign_class!(
+    class EventManager {
+        self_type EventManager;
+        private constructor = empty;
+        fn EventManager::subscribe_errors(cb: Box<dyn ErrorEvent + Send + 'static>) -> EventId;
+    }
+);
 
 // Bee types wrapping
 foreign_class!(
