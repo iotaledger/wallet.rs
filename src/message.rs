@@ -389,13 +389,26 @@ impl TransactionRegularEssence {
                     let metadata: Option<AddressOutput> = None;
                     #[cfg(not(test))]
                     let metadata = {
-                        let client = crate::client::get_client(metadata.client_options).await;
-                        let client = client.read().await;
-                        if let Ok(output) = client.get_output(&i).await {
-                            let output = AddressOutput::from_output_response(output, metadata.bech32_hrp.clone())?;
+                        let mut output = None;
+                        for address in metadata.account_addresses {
+                            if let Some(found_output) = address.outputs().iter().find(|o| {
+                                &o.transaction_id == i.output_id().transaction_id() && o.index == i.output_id().index()
+                            }) {
+                                output = Some(found_output.clone());
+                                break;
+                            }
+                        }
+                        if let Some(output) = output {
                             Some(output)
                         } else {
-                            None
+                            let client = crate::client::get_client(metadata.client_options).await;
+                            let client = client.read().await;
+                            if let Ok(output) = client.get_output(&i).await {
+                                let output = AddressOutput::from_output_response(output, metadata.bech32_hrp.clone())?;
+                                Some(output)
+                            } else {
+                                None
+                            }
                         }
                     };
                     TransactionInput::UTXO(TransactionUTXOInput { input: i, metadata })
