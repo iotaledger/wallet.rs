@@ -3375,7 +3375,7 @@
         <span class="ident">event</span>::<span class="kw-2">*</span>,
         <span class="ident">message</span>::<span class="ident">Message</span>,
     };
-    <span class="kw">use</span> <span class="ident">iota</span>::{<span class="ident">Ed25519Address</span>, <span class="ident">IndexationPayload</span>, <span class="ident">MessageBuilder</span>, <span class="ident">MessageId</span>, <span class="ident">Payload</span>, <span class="ident">TransactionId</span>};
+    <span class="kw">use</span> <span class="ident">iota</span>::{<span class="ident">Ed25519Address</span>, <span class="ident">IndexationPayload</span>, <span class="ident">MessageBuilder</span>, <span class="ident">MessageId</span>, <span class="ident">Parents</span>, <span class="ident">Payload</span>, <span class="ident">TransactionId</span>};
 
     <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">store_accounts</span>() {
@@ -3542,7 +3542,7 @@
                     <span class="ident">MessageId</span>::<span class="ident">new</span>([<span class="number">0</span>; <span class="number">32</span>]),
                     <span class="ident">MessageBuilder</span>::<span class="ident">new</span>()
                         .<span class="ident">with_nonce_provider</span>(<span class="kw">crate</span>::<span class="ident">test_utils</span>::<span class="ident">NoopNonceProvider</span> {}, <span class="number">4000f64</span>, <span class="prelude-val">None</span>)
-                        .<span class="ident">with_parents</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">MessageId</span>::<span class="ident">new</span>([<span class="number">0</span>; <span class="number">32</span>])])
+                        .<span class="ident">with_parents</span>(<span class="ident">Parents</span>::<span class="ident">new</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">MessageId</span>::<span class="ident">new</span>([<span class="number">0</span>; <span class="number">32</span>])]).<span class="ident">unwrap</span>())
                         .<span class="ident">with_payload</span>(<span class="ident">Payload</span>::<span class="ident">Indexation</span>(<span class="ident">Box</span>::<span class="ident">new</span>(
                             <span class="ident">IndexationPayload</span>::<span class="ident">new</span>(<span class="string">b&quot;index&quot;</span>, <span class="kw-2">&amp;</span>[<span class="number">0</span>; <span class="number">16</span>]).<span class="ident">unwrap</span>(),
                         )))

@@ -1637,7 +1637,7 @@
         <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">Message</span> {
             <span class="ident">id</span>: <span class="self">self</span>.<span class="ident">id</span>,
             <span class="ident">version</span>: <span class="number">1</span>,
-            <span class="ident">parents</span>: <span class="self">self</span>.<span class="ident">iota_message</span>.<span class="ident">parents</span>().<span class="ident">to_vec</span>(),
+            <span class="ident">parents</span>: <span class="self">self</span>.<span class="ident">iota_message</span>.<span class="ident">parents</span>().<span class="ident">copied</span>().<span class="ident">collect</span>(),
             <span class="ident">payload_length</span>: <span class="ident">packed_payload</span>.<span class="ident">len</span>(),
             <span class="ident">payload</span>,
             <span class="ident">timestamp</span>: <span class="ident">Utc</span>::<span class="ident">now</span>(),
