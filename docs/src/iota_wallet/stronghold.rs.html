@@ -771,6 +771,8 @@
 <span id="768">768</span>
 <span id="769">769</span>
 <span id="770">770</span>
+<span id="771">771</span>
+<span id="772">772</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -921,7 +923,7 @@
 }
 
 <span class="doccomment">/// Snapshot status.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Serialize</span>)]</span>
 <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">tag</span> <span class="op">=</span> <span class="string">&quot;status&quot;</span>, <span class="ident">content</span> <span class="op">=</span> <span class="string">&quot;data&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SnapshotStatus</span> {
     <span class="doccomment">/// Snapshot is locked. This means that the password must be set again.</span>
@@ -933,9 +935,11 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>)]</span>
 <span class="doccomment">/// Stronghold status.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Status</span> {
+    <span class="doccomment">/// The snapshot path.</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;snapshotPath&quot;</span>)]</span>
-    <span class="ident">snapshot_path</span>: <span class="ident">PathBuf</span>,
-    <span class="ident">snapshot</span>: <span class="ident">SnapshotStatus</span>,
+    <span class="kw">pub</span> <span class="ident">snapshot_path</span>: <span class="ident">PathBuf</span>,
+    <span class="doccomment">/// The snapshot status.</span>
+    <span class="kw">pub</span> <span class="ident">snapshot</span>: <span class="ident">SnapshotStatus</span>,
 }
 
 <span class="doccomment">/// Gets the stronghold status for the given snapshot.</span>
