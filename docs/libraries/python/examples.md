@@ -105,6 +105,7 @@ print("Syncing with the Tangle...")
 account.sync().execute()
 ```
 
+Output:
 ```json
 [{'address': {'inner': 'atoi1qzy79ew8x4hn4dsr0t3j8ce8hdwdrh8xzx85x2gkse6k0fx2jkyaqdgd2rn'},
   'balance': 0,
@@ -147,6 +148,7 @@ print("Balance per individual addresses:")
 print(account.addresses())
 ```
 
+Output:
 ```json
 Total balance:
 {'total': 10000000, 'available': 10000000, 'incoming': 10000000, 'outgoing': 0}
@@ -274,7 +276,7 @@ for ac in account.list_messages():
 ### Dust protection
 Please note, there is also implemented a [dust protection](https://chrysalis.docs.iota.org/guides/dev_guide.html#dust-protection) mechanism in the network protocol to avoid malicious actors to spam network in order to decrease node performance while keeping track of unspent amount (`UTXO`):
 > "... microtransaction below 1Mi of IOTA tokens [can be sent] to another address if you already have at least 1Mi on that address"
-That's why we did send 1Mi in the given example to comply this protection.
+That's why we did send 1Mi in the given example to comply this protection."
 
 ## Backup database
 Underlying database (`Stronghold` by default) is encrypted at rest and there is no way how to get a seed from it due to security practices that are incorporated in the Stronghold DNA. It means you are dealing with the database as an atomic unit that includes all wallet information.
@@ -298,6 +300,7 @@ backup_file_path = account_manager.backup(backup_dir_path)
 print(f'Backup path: {backup_file_path}')
 ```
 
+Output:
 ```plaintext
 Backup path: ./backup/2021-03-07T18-24-06-iota-wallet-backup-wallet.stronghold
 ```
@@ -330,4 +333,78 @@ account_manager = iw.AccountManager(
     storage='Stronghold', storage_path='./alice-database'
 )
 account_manager.set_stronghold_password("password")
+```
+
+## Listening to events
+`Wallet.rs` also supports asynchronous event listeners to be listened to. In the python binding it is currently implemented in a way the provided callback is executed as soon as the event is triggered; `event` details are passed as an argument to the callback method. No coroutines (async/await).
+
+There are following event listeners supported:
+* `on_balance_change(callback): id`
+* `on_new_transaction(callback): id`
+* `on_confirmation_state_change(callback): id`
+* `on_reattachment(callback): id`
+* `on_broadcast(callback): id`
+* `on_error(callback): id`
+* `on_stronghold_status_change(callback): id`
+
+When the event listener is registered by calling function above, it returns `id` of the listener as a `list[Bytes]`. This `id` can be then leveraged to deregister the given listener:
+* `remove_balance_change_listener(id)`
+* `remove_new_transaction_listener(id)`
+* `remove_confirmation_state_change_listener(id)`
+* `remove_reattachment_listener(id)`
+* `remove_broadcast_listener(id)`
+* `remove_error_listener(id)`
+* `remove_stronghold_status_change_listener(id)`
+
+Example of listening to `on_balance_change`:
+
+```python
+import threading
+import time
+import iota_wallet as iw
+
+result_available = threading.Event()
+def balance_changed_event_processing(event):
+    print(f'On balanced changed: {event}')
+    result_available.set()
+
+# This example shows some events.
+account_manager = iw.AccountManager(
+    storage='Stronghold', storage_path='./alice-database'
+)
+account_manager.set_stronghold_password("password")
+
+account = account_manager.get_account('Alice')
+print(f'Account: {account.alias()}')
+
+# Always sync before doing anything with the account
+print('Syncing...')
+synced = account.sync().execute()
+
+# Get the latest unused address
+last_address_obj = account.latest_address()
+print(f"Address: {last_address_obj['address']}")
+
+# Use the Chrysalis Faucet to send testnet tokens to your address:
+print('Fill your address with the Faucet: https://faucet.testnet.chrysalis2.com/')
+
+iw.on_balance_change(balance_changed_event_processing)
+print("Waiting for external event (on_balance_changed)...")
+
+# wait for results to be available before continue
+# will not wait longer than 360 seconds
+result_available.wait(timeout=360)
+
+print("Done.")
+```
+
+Output:
+```plaintext
+Account: Alice
+Syncing...
+Address: {'inner': 'atoi1qquszp0hzfsrgx4vx58dfg4v6eh20d2k3ddfgg9dt5778c2egc9uyw7g457'}
+Fill your address with the Faucet: https://faucet.testnet.chrysalis2.com/
+Waiting for external event (on_balance_changed)...
+On balanced changed: {"indexationId":"c3a7a1ab8ba78460954223a704693d088ddd0388681ac6cc1dd964a388d1a619","accountId":"wallet-account://e51a6285ea2d8cbdf5b6da2b85a8344f619d798d869ef4fb88c5fac0e653d6cc","address":"atoi1qquszp0hzfsrgx4vx58dfg4v6eh20d2k3ddfgg9dt5778c2egc9uyw7g457","balanceChange":{"spent":0,"received":10000000}}
+Done.
 ```

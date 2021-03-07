@@ -1,2 +1,2 @@
 # API Reference
-{{#include ../bindings/python/README.md:80:}}
+{{#include ../../../bindings/python/README.md:80:}}
