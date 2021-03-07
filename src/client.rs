@@ -34,7 +34,11 @@ pub(crate) async fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
                     .mqtt_broker_options()
                     .as_ref()
                     .map(|options| options.clone().into())
-                    .unwrap_or_else(|| iota::BrokerOptions::new().automatic_disconnect(false)),
+                    .unwrap_or_else(|| {
+                        iota::BrokerOptions::new()
+                            .automatic_disconnect(false)
+                            .use_websockets(false)
+                    }),
             )
             .with_local_pow(*options.local_pow())
             .with_node_pool_urls(
