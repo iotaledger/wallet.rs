@@ -1402,7 +1402,7 @@ mod tests {
         event::*,
         message::Message,
     };
-    use iota::{Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Payload, TransactionId};
+    use iota::{Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Parents, Payload, TransactionId};
 
     #[tokio::test]
     async fn store_accounts() {
@@ -1569,7 +1569,7 @@ mod tests {
                     MessageId::new([0; 32]),
                     MessageBuilder::new()
                         .with_nonce_provider(crate::test_utils::NoopNonceProvider {}, 4000f64, None)
-                        .with_parents(vec![MessageId::new([0; 32])])
+                        .with_parents(Parents::new(vec![MessageId::new([0; 32])]).unwrap())
                         .with_payload(Payload::Indexation(Box::new(
                             IndexationPayload::new(b"index", &[0; 16]).unwrap(),
                         )))

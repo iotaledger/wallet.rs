@@ -8,10 +8,8 @@ use rusqlite::{
     types::{ToSqlOutput, Value},
     Connection, NO_PARAMS,
 };
-use std::{
-    path::Path,
-    sync::{Arc, Mutex},
-};
+use std::{path::Path, sync::Arc};
+use tokio::sync::Mutex;
 
 /// The storage id.
 pub const STORAGE_ID: &str = "SQLITE";
@@ -57,7 +55,7 @@ impl StorageAdapter for SqliteStorageAdapter {
         let sql = "SELECT value FROM iota_wallet_records WHERE key = ?1 LIMIT 1";
         let params = vec![ToSqlOutput::Owned(Value::Text(key.to_string()))];
 
-        let connection = self.connection.lock().expect("failed to get connection lock");
+        let connection = self.connection.lock().await;
         let mut query = connection.prepare(&sql).map_err(storage_err)?;
         let results = query
             .query_and_then(params, |row| row.get(0))
@@ -70,7 +68,7 @@ impl StorageAdapter for SqliteStorageAdapter {
     }
 
     async fn set(&mut self, key: &str, record: String) -> crate::Result<()> {
-        let connection = self.connection.lock().expect("failed to get connection lock");
+        let connection = self.connection.lock().await;
         connection
             .execute(
                 "INSERT OR REPLACE INTO iota_wallet_records VALUES (?1, ?2, ?3)",
@@ -84,7 +82,7 @@ impl StorageAdapter for SqliteStorageAdapter {
         let sql = "DELETE FROM iota_wallet_records WHERE key = ?1";
         let params = vec![ToSqlOutput::Owned(Value::Text(key.to_string()))];
 
-        let connection = self.connection.lock().expect("failed to get connection lock");
+        let connection = self.connection.lock().await;
         connection
             .execute(&sql, params)
             .map_err(|_| crate::Error::Storage("failed to delete data".into()))?;
