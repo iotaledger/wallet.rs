@@ -600,6 +600,7 @@
 <span id="597">597</span>
 <span id="598">598</span>
 <span id="599">599</span>
+<span id="600">600</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -637,7 +638,11 @@
                     .<span class="ident">mqtt_broker_options</span>()
                     .<span class="ident">as_ref</span>()
                     .<span class="ident">map</span>(<span class="op">|</span><span class="ident">options</span><span class="op">|</span> <span class="ident">options</span>.<span class="ident">clone</span>().<span class="ident">into</span>())
-                    .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">iota</span>::<span class="ident">BrokerOptions</span>::<span class="ident">new</span>().<span class="ident">automatic_disconnect</span>(<span class="bool-val">false</span>)),
+                    .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+                        <span class="ident">iota</span>::<span class="ident">BrokerOptions</span>::<span class="ident">new</span>()
+                            .<span class="ident">automatic_disconnect</span>(<span class="bool-val">false</span>)
+                            .<span class="ident">use_websockets</span>(<span class="bool-val">false</span>)
+                    }),
             )
             .<span class="ident">with_local_pow</span>(<span class="kw-2">*</span><span class="ident">options</span>.<span class="ident">local_pow</span>())
             .<span class="ident">with_node_pool_urls</span>(
@@ -951,22 +956,19 @@
     <span class="kw">pub</span> <span class="ident">automatic_disconnect</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
     <span class="doccomment">/// timeout of the mqtt broker.</span>
     <span class="kw">pub</span> <span class="ident">timeout</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;useWebsockets&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;useWebsockets&quot;</span>, <span class="ident">default</span>)]</span>
     <span class="doccomment">/// use websockets or not.</span>
-    <span class="kw">pub</span> <span class="ident">use_websockets</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">use_websockets</span>: <span class="ident">bool</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">iota</span>::<span class="ident">BrokerOptions</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BrokerOptions</span> {
     <span class="kw">fn</span> <span class="ident">into</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">iota</span>::<span class="ident">BrokerOptions</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">iota</span>::<span class="ident">BrokerOptions</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">iota</span>::<span class="ident">BrokerOptions</span>::<span class="ident">new</span>().<span class="ident">use_websockets</span>(<span class="self">self</span>.<span class="ident">use_websockets</span>);
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">automatic_disconnect</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">automatic_disconnect</span> {
             <span class="ident">options</span> <span class="op">=</span> <span class="ident">options</span>.<span class="ident">automatic_disconnect</span>(<span class="ident">automatic_disconnect</span>);
         }
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">timeout</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">timeout</span> {
             <span class="ident">options</span> <span class="op">=</span> <span class="ident">options</span>.<span class="ident">timeout</span>(<span class="ident">timeout</span>);
-        }
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">use_websockets</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">use_websockets</span> {
-            <span class="ident">options</span> <span class="op">=</span> <span class="ident">options</span>.<span class="ident">use_websockets</span>(<span class="ident">use_websockets</span>);
         }
         <span class="ident">options</span>
     }
