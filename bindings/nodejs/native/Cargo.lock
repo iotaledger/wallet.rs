@@ -187,9 +187,9 @@ dependencies = [
 
 [[package]]
 name = "async-trait"
-version = "0.1.45"
+version = "0.1.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3340571769500ddef1e94b45055fabed6b08a881269b7570c830b8f32ef84ef"
+checksum = "7e098e9c493fdf92832223594d9a164f96bdf17ba81a42aff86f85c76768726a"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1777,7 +1777,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=2ca80f1a632b153d420516c84b13464ba841d4ed#2ca80f1a632b153d420516c84b13464ba841d4ed"
+source = "git+https://github.com/iotaledger/iota.rs?rev=9aab8aa36de0b1dc4d53443676f300ce780c8e3d#9aab8aa36de0b1dc4d53443676f300ce780c8e3d"
 dependencies = [
  "async-trait",
  "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
@@ -1804,7 +1804,7 @@ dependencies = [
 [[package]]
 name = "iota-core"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=2ca80f1a632b153d420516c84b13464ba841d4ed#2ca80f1a632b153d420516c84b13464ba841d4ed"
+source = "git+https://github.com/iotaledger/iota.rs?rev=9aab8aa36de0b1dc4d53443676f300ce780c8e3d#9aab8aa36de0b1dc4d53443676f300ce780c8e3d"
 dependencies = [
  "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?rev=c42171ff33c80cc2efb183e244dc79b7f58d9ac4)",
  "bee-message",

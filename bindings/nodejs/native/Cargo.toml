@@ -20,7 +20,7 @@ paho-mqtt = { git = "https://github.com/rajivshah3/paho.mqtt.rust", branch = "fe
 [dependencies]
 neon = "0.4.0"
 iota-wallet = { path = "../../../", version = "0.1.0", features = ["stronghold", "stronghold-storage", "sqlite-storage"] }
-iota-core = { git = "https://github.com/iotaledger/iota.rs", rev = "2ca80f1a632b153d420516c84b13464ba841d4ed", features = ["mqtt"] }
+iota-core = { git = "https://github.com/iotaledger/iota.rs", rev = "9aab8aa36de0b1dc4d53443676f300ce780c8e3d", features = ["mqtt"] }
 serde = "1.0"
 serde_json = "1.0"
 serde_repr = "0.1"
