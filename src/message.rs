@@ -25,7 +25,7 @@ use std::{
 };
 
 /// The strategy to use for the remainder value management when sending funds.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(tag = "strategy", content = "value")]
 pub enum RemainderValueStrategy {
     /// Keep the remainder value on the source address.
@@ -389,13 +389,26 @@ impl TransactionRegularEssence {
                     let metadata: Option<AddressOutput> = None;
                     #[cfg(not(test))]
                     let metadata = {
-                        let client = crate::client::get_client(metadata.client_options).await;
-                        let client = client.read().await;
-                        if let Ok(output) = client.get_output(&i).await {
-                            let output = AddressOutput::from_output_response(output, metadata.bech32_hrp.clone())?;
+                        let mut output = None;
+                        for address in metadata.account_addresses {
+                            if let Some(found_output) = address.outputs().iter().find(|o| {
+                                &o.transaction_id == i.output_id().transaction_id() && o.index == i.output_id().index()
+                            }) {
+                                output = Some(found_output.clone());
+                                break;
+                            }
+                        }
+                        if let Some(output) = output {
                             Some(output)
                         } else {
-                            None
+                            let client = crate::client::get_client(metadata.client_options).await;
+                            let client = client.read().await;
+                            if let Ok(output) = client.get_output(&i).await {
+                                let output = AddressOutput::from_output_response(output, metadata.bech32_hrp.clone())?;
+                                Some(output)
+                            } else {
+                                None
+                            }
                         }
                     };
                     TransactionInput::UTXO(TransactionUTXOInput { input: i, metadata })
@@ -449,6 +462,21 @@ impl TransactionRegularEssence {
                             .iter()
                             .find(|a| &a.address().as_ref() == output_address)
                             .unwrap(); // safe to unwrap since we already asserted that the address belongs to the account
+
+                        // if the output is listed on the inputs, it's the remainder output.
+                        if inputs.iter().any(|input| match input {
+                            TransactionInput::UTXO(input) => {
+                                if let Some(metadata) = &input.metadata {
+                                    &metadata.address().as_ref() == output_address
+                                } else {
+                                    false
+                                }
+                            }
+                            _ => false,
+                        }) {
+                            remainder = Some(account_address);
+                            break;
+                        }
                         match remainder {
                             Some(remainder_address) => {
                                 let address_index = *account_address.key_index();
