@@ -2,7 +2,7 @@
 package org.iota.wallet;
 
 
-public interface ErrorEvent {
+public interface ErrorListener {
 
 
     void onError(String error);

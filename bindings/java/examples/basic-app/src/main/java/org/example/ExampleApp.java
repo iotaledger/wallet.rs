@@ -75,4 +75,13 @@ public class ExampleApp {
         System.out.println("Message payload type: " + payload.payloadType());
         System.out.println("Message payload: " + payload);
     }
+
+    private void hexTest(){
+        String test = "Yes im a test!";
+        String hex = RustHex.encode(test);
+        
+        System.out.println(Arrays.toString(test.getBytes()));
+        System.out.println(hex);
+        System.out.println(Arrays.toString(RustHex.decode(hex)));
+    }
 }

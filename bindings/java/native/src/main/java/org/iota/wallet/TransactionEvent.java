@@ -2,9 +2,24 @@
 package org.iota.wallet;
 
 
-public final class SyncedAccount {
+public final class TransactionEvent {
 
-    private SyncedAccount() {}
+    private TransactionEvent() {}
+
+    public final String account_id() {
+        String ret = do_account_id(mNativeObj);
+
+        return ret;
+    }
+    private static native String do_account_id(long self);
+
+    public final Message message() {
+        long ret = do_message(mNativeObj);
+        Message convRet = new Message(InternalPointerMarker.RAW_PTR, ret);
+
+        return convRet;
+    }
+    private static native long do_message(long self);
 
     public synchronized void delete() {
         if (mNativeObj != 0) {
@@ -22,7 +37,7 @@ public final class SyncedAccount {
         }
     }
     private static native void do_delete(long me);
-    /*package*/ SyncedAccount(InternalPointerMarker marker, long ptr) {
+    /*package*/ TransactionEvent(InternalPointerMarker marker, long ptr) {
         assert marker == InternalPointerMarker.RAW_PTR;
         this.mNativeObj = ptr;
     }

@@ -6,13 +6,61 @@ public final class EventManager {
 
     private EventManager() {}
 
-    public static EventId subscribe_errors(ErrorEvent cb) {
+    public static EventId subscribe_errors(ErrorListener cb) {
         long ret = do_subscribe_errors(cb);
         EventId convRet = new EventId(InternalPointerMarker.RAW_PTR, ret);
 
         return convRet;
     }
-    private static native long do_subscribe_errors(ErrorEvent cb);
+    private static native long do_subscribe_errors(ErrorListener cb);
+
+    public static EventId subscribe_new_transaction(NewTransactionListener cb) {
+        long ret = do_subscribe_new_transaction(cb);
+        EventId convRet = new EventId(InternalPointerMarker.RAW_PTR, ret);
+
+        return convRet;
+    }
+    private static native long do_subscribe_new_transaction(NewTransactionListener cb);
+
+    public static EventId subscribe_reattachment(ReattachTransactionListener cb) {
+        long ret = do_subscribe_reattachment(cb);
+        EventId convRet = new EventId(InternalPointerMarker.RAW_PTR, ret);
+
+        return convRet;
+    }
+    private static native long do_subscribe_reattachment(ReattachTransactionListener cb);
+
+    public static EventId subscribe_broadcast(BroadcastTransactionListener cb) {
+        long ret = do_subscribe_broadcast(cb);
+        EventId convRet = new EventId(InternalPointerMarker.RAW_PTR, ret);
+
+        return convRet;
+    }
+    private static native long do_subscribe_broadcast(BroadcastTransactionListener cb);
+
+    public static EventId subscribe_transfer_progress(TransferProgressListener cb) {
+        long ret = do_subscribe_transfer_progress(cb);
+        EventId convRet = new EventId(InternalPointerMarker.RAW_PTR, ret);
+
+        return convRet;
+    }
+    private static native long do_subscribe_transfer_progress(TransferProgressListener cb);
+
+    public static EventId subscribe_confirmation_state_change(TransactionConfirmationChangeListener cb) {
+        long ret = do_subscribe_confirmation_state_change(cb);
+        EventId convRet = new EventId(InternalPointerMarker.RAW_PTR, ret);
+
+        return convRet;
+    }
+    private static native long do_subscribe_confirmation_state_change(TransactionConfirmationChangeListener cb);
+
+    public static EventId subscribe_balance_change(BalanceChangeListener cb) {
+        long ret = do_subscribe_balance_change(cb);
+        EventId convRet = new EventId(InternalPointerMarker.RAW_PTR, ret);
+
+        return convRet;
+    }
+    private static native long do_subscribe_balance_change(BalanceChangeListener cb);
 
     public synchronized void delete() {
         if (mNativeObj != 0) {
