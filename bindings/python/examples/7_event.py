@@ -4,13 +4,27 @@
 
 import iota_wallet
 import threading
+import queue
+import time
+
+# This example shows how to listen to on_balance_change event.
+
+# The queue to store received events
+q = queue.Queue()
+
+
+def worker():
+    while True:
+        item = q.get(True)
+        print(f'Get event: {item}')
+        q.task_done()
 
 
 def balance_changed_event_processing(event):
     print(f'On balanced changed: {event}')
+    q.put(event)
 
 
-# This example shows some events.
 manager = iota_wallet.AccountManager(
     storage='Stronghold', storage_path='./alice-database')
 manager.set_stronghold_password("password")
@@ -26,7 +40,19 @@ synced = account.sync().execute()
 last_address_obj = account.latest_address()
 print(f"Address: {last_address_obj['address']}")
 
-# Use the Chrysalis Faucet to send testnet tokens to your address:
-print('Fill your address with the Faucet: https://faucet.testnet.chrysalis2.com/')
+# turn-on the worker thread
+threading.Thread(target=worker, daemon=True).start()
 
+# listen to the on_balance_change event
 iota_wallet.on_balance_change(balance_changed_event_processing)
+
+
+# Use the Chrysalis Faucet to send testnet tokens to your address:
+print(
+    f"Fill your Address ({last_address_obj['address']['inner']}) with the Faucet: https://faucet.testnet.chrysalis2.com/")
+print("To see how the on_balance_change is called, please send tokens to the address in 1 min")
+time.sleep(60)
+
+# block until all tasks are done
+q.join()
+print('All work completed')
