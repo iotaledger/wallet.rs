@@ -194,7 +194,20 @@ impl AccountInitialiser {
             }
         }
 
-        if let Some(latest_account_handle) = accounts.values().last() {
+        let mut latest_account_handle = None;
+        for account_handle in accounts.values() {
+            match latest_account_handle {
+                Some(handle) => {
+                    if account_handle.index().await > handle.index().await {
+                        latest_account_handle = Some(account_handle.clone());
+                    }
+                }
+                None => {
+                    latest_account_handle = Some(account_handle.clone());
+                }
+            }
+        }
+        if let Some(latest_account_handle) = latest_account_handle {
             let latest_account = latest_account_handle.read().await;
             if latest_account.messages().is_empty() && latest_account.addresses().iter().all(|a| a.outputs.is_empty()) {
                 return Err(crate::Error::LatestAccountIsEmpty);
