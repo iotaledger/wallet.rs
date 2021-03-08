@@ -634,6 +634,134 @@ Initialises the account.
 
 **Returns** the initilized [AccountHandle](#accounthandle)
 
+### Event Listeners
+
+#### on_balance_change(callback): list[int]
+
+Listen to balance changes.
+
+| Param      | Type                  | Default                | Description           |
+| ---------- | --------------------- | ---------------------- | --------------------- |
+| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+
+**Returns** the event id as list[int].
+
+#### remove_balance_change_listener(list[int]): void
+
+Removes the balance change listener associated with the given identifier.
+
+| Param | Type                   | Default                | Description  |
+| ----- | ---------------------- | ---------------------- | ------------ |
+| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+
+#### on_new_transaction(callback): list[int]
+
+Listen to new messages.
+
+| Param      | Type                  | Default                | Description           |
+| ---------- | --------------------- | ---------------------- | --------------------- |
+| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+
+**Returns** the event id as list[int].
+
+#### remove_new_transaction_listener(list[int]): void
+
+Removes the new transaction listener associated with the given identifier.
+
+| Param | Type                   | Default                | Description  |
+| ----- | ---------------------- | ---------------------- | ------------ |
+| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+
+#### on_confirmation_state_change(callback): list[int]
+
+Listen to transaction confirmation state change.
+
+| Param      | Type                  | Default                | Description           |
+| ---------- | --------------------- | ---------------------- | --------------------- |
+| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+
+**Returns** the event id as list[int].
+
+#### remove_confirmation_state_change_listener(list[int]): void
+
+Removes the new transaction listener associated with the given identifier.
+
+| Param | Type                   | Default                | Description  |
+| ----- | ---------------------- | ---------------------- | ------------ |
+| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+
+#### on_reattachment(callback): list[int]
+
+Listen to transaction reattachment.
+
+| Param      | Type                  | Default                | Description           |
+| ---------- | --------------------- | ---------------------- | --------------------- |
+| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+
+**Returns** the event id as list[int].
+
+#### remove_reattachment_listener(list[int]): void
+
+Removes the reattachment listener associated with the given identifier.
+
+| Param | Type                   | Default                | Description  |
+| ----- | ---------------------- | ---------------------- | ------------ |
+| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+
+#### on_broadcast(callback): list[int]
+
+Listen to transaction broadcast.
+
+| Param      | Type                  | Default                | Description           |
+| ---------- | --------------------- | ---------------------- | --------------------- |
+| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+
+**Returns** the event id as list[int].
+
+#### remove_broadcast_listener(list[int]): void
+
+Removes the broadcast listener associated with the given identifier.
+
+| Param | Type                   | Default                | Description  |
+| ----- | ---------------------- | ---------------------- | ------------ |
+| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+
+#### on_error(callback): list[int]
+
+Listen to errors.
+
+| Param      | Type                  | Default                | Description           |
+| ---------- | --------------------- | ---------------------- | --------------------- |
+| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+
+**Returns** the event id as list[int].
+
+#### remove_error_listener(list[int]): void
+
+Removes the error listener associated with the given identifier.
+
+| Param | Type                   | Default                | Description  |
+| ----- | ---------------------- | ---------------------- | ------------ |
+| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+
+#### on_stronghold_status_change(callback): list[int]
+
+Listen to stronghold status change events.
+
+| Param      | Type                  | Default                | Description           |
+| ---------- | --------------------- | ---------------------- | --------------------- |
+| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+
+**Returns** the event id as list[int].
+
+#### remove_stronghold_status_change_listener(list[int]): void
+
+Removes the stronghold status change listener associated with the given identifier.
+
+| Param | Type                   | Default                | Description  |
+| ----- | ---------------------- | ---------------------- | ------------ |
+| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+
 ### WalletAddress
 
 A dict with the following key/value pairs.
