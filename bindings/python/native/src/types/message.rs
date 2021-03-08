@@ -265,7 +265,7 @@ impl TryFrom<RustMilestonePayloadEssence> for MilestonePayloadEssence {
         Ok(MilestonePayloadEssence {
             index: essence.index(),
             timestamp: essence.timestamp(),
-            parents: essence.parents().iter().map(|parent| parent.to_string()).collect(),
+            parents: essence.parents().map(|parent| parent.to_string()).collect(),
             merkle_proof: essence.merkle_proof().try_into()?,
             public_keys: essence
                 .public_keys()

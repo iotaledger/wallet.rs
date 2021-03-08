@@ -197,22 +197,37 @@ async fn get_address_for_sync(
     bech32_hrp: String,
     index: usize,
     internal: bool,
-) -> crate::Result<AddressWrapper> {
+) -> crate::Result<Option<AddressWrapper>> {
     if let Some(address) = account
         .addresses()
         .iter()
         .find(|a| *a.key_index() == index && *a.internal() == internal)
     {
-        Ok(address.address().clone())
+        Ok(Some(address.address().clone()))
     } else {
-        crate::address::get_iota_address(
+        // if stronghold is locked, we skip address generation
+        #[cfg(feature = "stronghold")]
+        {
+            if account.signer_type() == &crate::signing::SignerType::Stronghold
+                && crate::stronghold::get_status(
+                    &crate::signing::stronghold::stronghold_path(account.storage_path()).await?,
+                )
+                .await
+                .snapshot
+                    == crate::stronghold::SnapshotStatus::Locked
+            {
+                return Ok(None);
+            }
+        }
+        let generated_address = crate::address::get_iota_address(
             &account,
             index,
             internal,
             bech32_hrp,
             GenerateAddressMetadata { syncing: true },
         )
-        .await
+        .await?;
+        Ok(Some(generated_address))
     }
 }
 
@@ -252,19 +267,20 @@ async fn sync_addresses(
         .bech32_hrp;
 
     loop {
+        let mut address_generation_locked = false;
         let mut generated_iota_addresses = vec![]; // collection of (address_index, internal, address) pairs
         for i in address_index..(address_index + gap_limit) {
             // generate both `public` and `internal (change)` addresses
-            generated_iota_addresses.push((
-                i,
-                false,
-                get_address_for_sync(&account, bech32_hrp.to_string(), i, false).await?,
-            ));
-            generated_iota_addresses.push((
-                i,
-                true,
-                get_address_for_sync(&account, bech32_hrp.to_string(), i, true).await?,
-            ));
+            if let Some(public_address) = get_address_for_sync(&account, bech32_hrp.to_string(), i, false).await? {
+                generated_iota_addresses.push((i, false, public_address));
+                if let Some(change_address) = get_address_for_sync(&account, bech32_hrp.to_string(), i, true).await? {
+                    generated_iota_addresses.push((i, true, change_address));
+                } else {
+                    address_generation_locked = true;
+                }
+            } else {
+                address_generation_locked = true;
+            }
         }
 
         let mut curr_generated_addresses = vec![];
@@ -337,6 +353,11 @@ async fn sync_addresses(
             log::debug!(
                 "[SYNC] finishing address syncing because the current messages list and address list are empty"
             );
+            break;
+        }
+
+        if address_generation_locked {
+            log::debug!("[SYNC] finishing address syncing because stronghold is locked");
             break;
         }
     }
@@ -844,7 +865,7 @@ impl SyncedAccount {
     fn select_inputs<'a>(
         &self,
         locked_addresses: &'a mut MutexGuard<'_, Vec<AddressWrapper>>,
-        threshold: u64,
+        transfer_obj: &Transfer,
         account: &'a Account,
         addresses: &'a [Address],
         address: &'a AddressWrapper,
@@ -863,22 +884,47 @@ impl SyncedAccount {
                 balance: a.available_balance(&account),
             })
             .collect();
-        let addresses = input_selection::select_input(threshold, available_addresses)?;
+        let mut selected_addresses = input_selection::select_input(transfer_obj.amount.get(), available_addresses)?;
+        let has_remainder = selected_addresses.iter().fold(0, |acc, a| acc + a.balance) > transfer_obj.amount.get();
+
+        // if we're reusing the input address for remainder output
+        // and we have remainder value, we should run the input selection again
+        // without the output address.
+        if has_remainder
+            && transfer_obj.remainder_value_strategy == RemainderValueStrategy::ReuseAddress
+            && addresses.iter().any(|input| input.address() == &transfer_obj.address)
+        {
+            let available_addresses: Vec<input_selection::Input> = addresses
+                .iter()
+                .filter(|a| {
+                    // we do not allow the deposit address as input address
+                    a.address() != address
+                        && a.available_balance(&account) > 0
+                        && !locked_addresses.contains(a.address())
+                })
+                .map(|a| input_selection::Input {
+                    address: a.address().clone(),
+                    internal: *a.internal(),
+                    balance: a.available_balance(&account),
+                })
+                .collect();
+            selected_addresses = input_selection::select_input(transfer_obj.amount.get(), available_addresses)?;
+        }
 
         locked_addresses.extend(
-            addresses
+            selected_addresses
                 .iter()
                 .map(|a| a.address.clone())
                 .collect::<Vec<AddressWrapper>>(),
         );
 
-        let remainder = if addresses.iter().fold(0, |acc, a| acc + a.balance) > threshold {
-            addresses.last().cloned()
+        let remainder = if has_remainder {
+            selected_addresses.last().cloned()
         } else {
             None
         };
 
-        Ok((addresses, remainder))
+        Ok((selected_addresses, remainder))
     }
 
     async fn get_output_consolidation_transfers(&self) -> crate::Result<Vec<Transfer>> {
@@ -930,6 +976,17 @@ impl SyncedAccount {
     /// Send messages.
     pub(super) async fn transfer(&self, mut transfer_obj: Transfer) -> crate::Result<Message> {
         let account_ = self.account_handle.read().await;
+
+        // if the deposit address belongs to the account, we'll reuse the input address
+        // for remainder value output. This is the only way to know the transaction value for
+        // transactions between account addresses.
+        if account_
+            .addresses()
+            .iter()
+            .any(|a| a.address() == &transfer_obj.address)
+        {
+            transfer_obj.remainder_value_strategy = RemainderValueStrategy::ReuseAddress;
+        }
 
         // lock the transfer process until we select the input addresses
         // we do this to prevent multiple threads trying to transfer at the same time
@@ -1029,7 +1086,7 @@ impl SyncedAccount {
                 // select the input addresses and check if a remainder address is needed
                 let (input_addresses, remainder_address) = self.select_inputs(
                     &mut locked_addresses,
-                    value,
+                    &transfer_obj,
                     &account_,
                     account_.addresses(),
                     &transfer_obj.address,

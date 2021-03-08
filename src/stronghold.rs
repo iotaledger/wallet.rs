@@ -147,7 +147,7 @@ pub async fn set_password_clear_interval(interval: Duration) {
 }
 
 /// Snapshot status.
-#[derive(Debug, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize)]
 #[serde(tag = "status", content = "data")]
 pub enum SnapshotStatus {
     /// Snapshot is locked. This means that the password must be set again.
@@ -159,9 +159,11 @@ pub enum SnapshotStatus {
 #[derive(Debug, Serialize)]
 /// Stronghold status.
 pub struct Status {
+    /// The snapshot path.
     #[serde(rename = "snapshotPath")]
-    snapshot_path: PathBuf,
-    snapshot: SnapshotStatus,
+    pub snapshot_path: PathBuf,
+    /// The snapshot status.
+    pub snapshot: SnapshotStatus,
 }
 
 /// Gets the stronghold status for the given snapshot.

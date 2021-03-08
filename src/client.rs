@@ -34,7 +34,11 @@ pub(crate) async fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
                     .mqtt_broker_options()
                     .as_ref()
                     .map(|options| options.clone().into())
-                    .unwrap_or_else(|| iota::BrokerOptions::new().automatic_disconnect(false)),
+                    .unwrap_or_else(|| {
+                        iota::BrokerOptions::new()
+                            .automatic_disconnect(false)
+                            .use_websockets(false)
+                    }),
             )
             .with_local_pow(*options.local_pow())
             .with_node_pool_urls(
@@ -348,22 +352,19 @@ pub struct BrokerOptions {
     pub automatic_disconnect: Option<bool>,
     /// timeout of the mqtt broker.
     pub timeout: Option<Duration>,
-    #[serde(rename = "useWebsockets")]
+    #[serde(rename = "useWebsockets", default)]
     /// use websockets or not.
-    pub use_websockets: Option<bool>,
+    pub use_websockets: bool,
 }
 
 impl Into<iota::BrokerOptions> for BrokerOptions {
     fn into(self) -> iota::BrokerOptions {
-        let mut options = iota::BrokerOptions::new();
+        let mut options = iota::BrokerOptions::new().use_websockets(self.use_websockets);
         if let Some(automatic_disconnect) = self.automatic_disconnect {
             options = options.automatic_disconnect(automatic_disconnect);
         }
         if let Some(timeout) = self.timeout {
             options = options.timeout(timeout);
-        }
-        if let Some(use_websockets) = self.use_websockets {
-            options = options.use_websockets(use_websockets);
         }
         options
     }

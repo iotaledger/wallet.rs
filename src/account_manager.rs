@@ -553,6 +553,7 @@ impl AccountManager {
                 .unwrap();
             runtime.block_on(async {
                 let mut interval = interval(polling_interval);
+                let mut synced = false;
                 loop {
                     tokio::select! {
                         _ = async {
@@ -561,22 +562,30 @@ impl AccountManager {
                             let storage_file_path_ = storage_file_path.clone();
                             let account_options = account_options;
 
-                            if let Err(error) = AssertUnwindSafe(poll(accounts.clone(), storage_file_path_, account_options, is_monitoring.load(Ordering::Relaxed), automatic_output_consolidation))
-                                .catch_unwind()
-                                .await {
-                                    // if the error isn't a crate::Error type
-                                if error.downcast_ref::<crate::Error>().is_none() {
-                                    let msg = if let Some(message) = error.downcast_ref::<String>() {
-                                        format!("Internal error: {}", message)
-                                    } else if let Some(message) = error.downcast_ref::<&str>() {
-                                        format!("Internal error: {}", message)
-                                    } else {
-                                        "Internal error".to_string()
-                                    };
-                                    log::error!("[POLLING] error: {}", msg);
-                                    let _error = crate::Error::Panic(msg);
-                                    // when the error is dropped, the on_error event will be triggered
-                                }
+                            if !accounts.read().await.is_empty() {
+                                let should_sync = !(synced && is_monitoring.load(Ordering::Relaxed));
+                                match AssertUnwindSafe(poll(accounts.clone(), storage_file_path_, account_options, should_sync, automatic_output_consolidation))
+                                    .catch_unwind()
+                                    .await {
+                                        Ok(_) => {
+                                            synced = true;
+                                        }
+                                        Err(error) => {
+                                            // if the error isn't a crate::Error type
+                                            if error.downcast_ref::<crate::Error>().is_none() {
+                                                let msg = if let Some(message) = error.downcast_ref::<String>() {
+                                                    format!("Internal error: {}", message)
+                                                } else if let Some(message) = error.downcast_ref::<&str>() {
+                                                    format!("Internal error: {}", message)
+                                                } else {
+                                                    "Internal error".to_string()
+                                                };
+                                                log::error!("[POLLING] error: {}", msg);
+                                                let _error = crate::Error::Panic(msg);
+                                                // when the error is dropped, the on_error event will be triggered
+                                            }
+                                        }
+                                    }
                             }
                         } => {}
                         _ = stop.recv() => {
@@ -1143,10 +1152,10 @@ async fn poll(
     accounts: AccountStore,
     storage_file_path: PathBuf,
     account_options: AccountOptions,
-    is_mqtt_monitoring: bool,
+    should_sync: bool,
     automatic_output_consolidation: bool,
 ) -> crate::Result<()> {
-    let retried = if !is_mqtt_monitoring {
+    let retried = if should_sync {
         let synced_accounts = AccountsSynchronizer::new(accounts.clone(), storage_file_path, account_options)
             .execute()
             .await?;
@@ -1402,7 +1411,7 @@ mod tests {
         event::*,
         message::Message,
     };
-    use iota::{Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Payload, TransactionId};
+    use iota::{Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Parents, Payload, TransactionId};
 
     #[tokio::test]
     async fn store_accounts() {
@@ -1569,7 +1578,7 @@ mod tests {
                     MessageId::new([0; 32]),
                     MessageBuilder::new()
                         .with_nonce_provider(crate::test_utils::NoopNonceProvider {}, 4000f64, None)
-                        .with_parents(vec![MessageId::new([0; 32])])
+                        .with_parents(Parents::new(vec![MessageId::new([0; 32])]).unwrap())
                         .with_payload(Payload::Indexation(Box::new(
                             IndexationPayload::new(b"index", &[0; 16]).unwrap(),
                         )))
