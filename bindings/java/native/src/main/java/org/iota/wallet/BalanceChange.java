@@ -6,12 +6,12 @@ public final class BalanceChange {
 
     private BalanceChange() {}
 
-    public final boolean is_spent() {
-        boolean ret = do_is_spent(mNativeObj);
+    public final boolean isSpent() {
+        boolean ret = do_isSpent(mNativeObj);
 
         return ret;
     }
-    private static native boolean do_is_spent(long self);
+    private static native boolean do_isSpent(long self);
 
     public final long spent() {
         long ret = do_spent(mNativeObj);

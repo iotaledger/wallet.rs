@@ -2,8 +2,6 @@ package org.example;
 
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.nio.file.Path;
 
 import org.iota.wallet.*;
@@ -11,19 +9,16 @@ import org.iota.wallet.local.*;
 
 public class ExampleApp {
     public static void main(String[] args) {
-        System.out.println("Hi im main");
 
         try {
             new ExampleApp();
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public ExampleApp() throws InterruptedException, ExecutionException, TimeoutException {
-        System.out.println("Hi im ExampleApp... loading!");
+    public ExampleApp() {
         NativeAPI.verifyLink();
-        System.out.println("Loaded!");
 
         Path storageFolder = Paths.get("./my-db");
 

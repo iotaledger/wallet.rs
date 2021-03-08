@@ -130,8 +130,8 @@ public final class Account {
     }
     private static native String do_id(long self);
 
-    public final java.util.Calendar created_at() {
-        long ret = do_created_at(mNativeObj);
+    public final java.util.Calendar createdAt() {
+        long ret = do_createdAt(mNativeObj);
         java.util.Calendar convRet;
 
         java.util.Calendar theCalendar = java.util.Calendar.getInstance();
@@ -141,10 +141,10 @@ public final class Account {
 
         return convRet;
     }
-    private static native long do_created_at(long self);
+    private static native long do_createdAt(long self);
 
-    public final java.util.Optional<java.util.Calendar> last_synced_at() {
-        long ret = do_last_synced_at(mNativeObj);
+    public final java.util.Optional<java.util.Calendar> lastSyncedAt() {
+        long ret = do_lastSyncedAt(mNativeObj);
         java.util.Optional<java.util.Calendar> convRet;
         if (ret == -1 ) {
             convRet = java.util.Optional.empty();
@@ -157,7 +157,7 @@ public final class Account {
 
         return convRet;
     }
-    private static native long do_last_synced_at(long self);
+    private static native long do_lastSyncedAt(long self);
 
     public synchronized void delete() {
         if (mNativeObj != 0) {

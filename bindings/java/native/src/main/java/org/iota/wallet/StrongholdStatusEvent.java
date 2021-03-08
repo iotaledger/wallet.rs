@@ -6,13 +6,13 @@ public final class StrongholdStatusEvent {
 
     private StrongholdStatusEvent() {}
 
-    public final java.nio.file.Path snapshot_path() {
-        String ret = do_snapshot_path(mNativeObj);
+    public final java.nio.file.Path snapshotPath() {
+        String ret = do_snapshotPath(mNativeObj);
         java.nio.file.Path convRet = java.nio.file.Paths.get(ret);
 
         return convRet;
     }
-    private static native String do_snapshot_path(long self);
+    private static native String do_snapshotPath(long self);
 
     public final StrongholdStatusType status() {
         int ret = do_status(mNativeObj);
@@ -22,8 +22,8 @@ public final class StrongholdStatusEvent {
     }
     private static native int do_status(long self);
 
-    public final java.time.Duration unlocked_duration() {
-        float ret = do_unlocked_duration(mNativeObj);
+    public final java.time.Duration unlockedDuration() {
+        float ret = do_unlockedDuration(mNativeObj);
         java.time.Duration convRet;
         java.time.Duration d = java.time.Duration.ofSeconds((int)ret);
         d.plusMillis((int)(ret % 1 * 1000));
@@ -31,7 +31,7 @@ public final class StrongholdStatusEvent {
 
         return convRet;
     }
-    private static native float do_unlocked_duration(long self);
+    private static native float do_unlockedDuration(long self);
 
     public synchronized void delete() {
         if (mNativeObj != 0) {

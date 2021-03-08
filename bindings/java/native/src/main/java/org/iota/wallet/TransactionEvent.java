@@ -6,12 +6,12 @@ public final class TransactionEvent {
 
     private TransactionEvent() {}
 
-    public final String account_id() {
-        String ret = do_account_id(mNativeObj);
+    public final String accountId() {
+        String ret = do_accountId(mNativeObj);
 
         return ret;
     }
-    private static native String do_account_id(long self);
+    private static native String do_accountId(long self);
 
     public final Message message() {
         long ret = do_message(mNativeObj);

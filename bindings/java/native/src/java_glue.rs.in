@@ -323,8 +323,8 @@ foreign_class!(
         fn Account::balance(&self) -> AccountBalance;
 
         fn Account::id(&self) -> String;
-        fn Account::created_at(&self) -> DateTime<Local>;
-        fn Account::last_synced_at(&self) -> Option<DateTime<Local>>;
+        fn Account::created_at(&self) -> DateTime<Local>; alias createdAt;
+        fn Account::last_synced_at(&self) -> Option<DateTime<Local>>; alias lastSyncedAt;
     }
 );
 
@@ -370,9 +370,9 @@ foreign_class!(
     class StrongholdStatusEvent {
         self_type StrongholdStatusEvent;
         private constructor = empty;
-        fn StrongholdStatusEvent::snapshot_path(&self) -> PathBuf;
+        fn StrongholdStatusEvent::snapshot_path(&self) -> PathBuf; alias snapshotPath;
         fn StrongholdStatusEvent::status(&self) -> StrongholdStatusType;
-        fn StrongholdStatusEvent::unlocked_duration(&self) -> Result<Duration>;
+        fn StrongholdStatusEvent::unlocked_duration(&self) -> Result<Duration>; alias unlockedDuration;
     }
 );
 
@@ -380,7 +380,7 @@ foreign_class!(
     class TransactionEvent {
         self_type WalletTransactionEvent;
         private constructor = empty;
-        fn WalletTransactionEvent::account_id(&self) -> &str {
+        fn WalletTransactionEvent::accountId(&self) -> &str {
             this.account_id()
         }
         fn WalletTransactionEvent::message(&self) -> Message {
@@ -393,7 +393,7 @@ foreign_class!(
     class TransactionConfirmationChangeEvent {
         self_type WalletTransactionConfirmationChangeEvent;
         private constructor = empty;
-        fn WalletTransactionConfirmationChangeEvent::account_id(&self) -> &str {
+        fn WalletTransactionConfirmationChangeEvent::accountId(&self) -> &str {
             this.account_id()
         }
         fn WalletTransactionConfirmationChangeEvent::message(&self) -> Message {
@@ -409,7 +409,7 @@ foreign_class!(
     class TransferProgressEvent {
         self_type WalletTransferProgress;
         private constructor = empty;
-        fn WalletTransferProgress::account_id(&self) -> &str {
+        fn WalletTransferProgress::accountId(&self) -> &str {
             this.account_id()
         }
         fn WalletTransferProgress::event(&self) -> TransferProgressType {
@@ -422,7 +422,7 @@ foreign_class!(
     class BalanceChange {
         self_type BalanceChange;
         private constructor = empty;
-        fn BalanceChange::is_spent(&self) -> bool {
+        fn BalanceChange::isSpent(&self) -> bool {
             this.spent != 0
         }
         fn BalanceChange::spent(&self) -> u64 {
@@ -438,13 +438,13 @@ foreign_class!(
     class BalanceEvent {
         self_type WalletBalanceEvent;
         private constructor = empty;
-        fn WalletBalanceEvent::account_id(&self) -> &str {
+        fn WalletBalanceEvent::accountId(&self) -> &str {
             this.account_id()
         }
         fn WalletBalanceEvent::address(&self) -> AddressWrapper {
             this.address().clone()
         }
-        fn WalletBalanceEvent::balance_change(&self) -> BalanceChange {
+        fn WalletBalanceEvent::balanceChange(&self) -> BalanceChange {
             this.balance_change().clone()
         }
     }

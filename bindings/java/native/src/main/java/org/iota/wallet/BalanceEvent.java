@@ -6,12 +6,12 @@ public final class BalanceEvent {
 
     private BalanceEvent() {}
 
-    public final String account_id() {
-        String ret = do_account_id(mNativeObj);
+    public final String accountId() {
+        String ret = do_accountId(mNativeObj);
 
         return ret;
     }
-    private static native String do_account_id(long self);
+    private static native String do_accountId(long self);
 
     public final AddressWrapper address() {
         long ret = do_address(mNativeObj);
@@ -21,13 +21,13 @@ public final class BalanceEvent {
     }
     private static native long do_address(long self);
 
-    public final BalanceChange balance_change() {
-        long ret = do_balance_change(mNativeObj);
+    public final BalanceChange balanceChange() {
+        long ret = do_balanceChange(mNativeObj);
         BalanceChange convRet = new BalanceChange(InternalPointerMarker.RAW_PTR, ret);
 
         return convRet;
     }
-    private static native long do_balance_change(long self);
+    private static native long do_balanceChange(long self);
 
     public synchronized void delete() {
         if (mNativeObj != 0) {
