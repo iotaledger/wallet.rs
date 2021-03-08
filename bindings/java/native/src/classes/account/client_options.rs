@@ -7,10 +7,51 @@ use std::{
 use iota_wallet::client::{
     ClientOptionsBuilder as ClientOptionsBuilderRust,
     ClientOptions as ClientOptionsRust,
+    BrokerOptions as BrokerOptionsRust,
     Api,
 };
 
 use crate::Result;
+
+pub struct BrokerOptions {
+    builder: Rc<RefCell<Option<BrokerOptionsRust>>>
+}
+
+impl BrokerOptions {
+    pub fn new() -> Self {
+        Self {
+            builder: Rc::new(RefCell::new(Option::from(BrokerOptionsRust {
+                automatic_disconnect: None,
+                timeout: None,
+                use_websockets: None,
+            })))
+        }
+    }
+
+    fn new_with(options: BrokerOptionsRust) -> BrokerOptions{
+        Self {
+            builder: Rc::new(RefCell::new(Option::from(options)))
+        }
+    }
+
+    pub fn automatic_disconnect(&self, disconnect: bool) -> BrokerOptions  {
+        let mut builder = self.builder.borrow_mut().take().unwrap();
+        builder.automatic_disconnect = Some(disconnect);
+        BrokerOptions::new_with(builder)
+    }
+
+    pub fn timeout(&self, timeout: Duration) -> BrokerOptions  {
+        let mut builder = self.builder.borrow_mut().take().unwrap();
+        builder.timeout = Some(timeout);
+        BrokerOptions::new_with(builder)
+    }
+
+    pub fn use_ws(&self, use_ws: bool) -> BrokerOptions  {
+        let mut builder = self.builder.borrow_mut().take().unwrap();
+        builder.use_websockets = Some(use_ws);
+        BrokerOptions::new_with(builder)
+    }
+}
 
 pub struct ClientOptions {
     options: ClientOptionsRust
@@ -73,10 +114,12 @@ impl ClientOptionsBuilder {
     }
 
     /// Sets the MQTT broker options.
-    /*pub fn with_mqtt_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientOptionsBuilder {
-        let new_builder = self.builder.borrow_mut().take().unwrap().with_mqtt_mqtt_broker_options(options);
+    pub fn with_mqtt_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientOptionsBuilder {
+        let new_builder = self.builder.borrow_mut().take().unwrap().with_mqtt_mqtt_broker_options(
+            options.builder.borrow_mut().take().unwrap()
+        );
         ClientOptionsBuilder::new_with_builder(new_builder)
-    }*/
+    }
 
     pub fn with_local_pow(&mut self, local: bool) -> ClientOptionsBuilder {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_local_pow(local);

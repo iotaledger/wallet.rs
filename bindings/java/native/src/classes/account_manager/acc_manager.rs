@@ -142,30 +142,37 @@ impl AccountManager {
     }
 
     pub fn set_storage_password(&mut self, password: &str) -> Result<()> {
-        crate::block_on(async move {
+        match crate::block_on(async move {
             self.manager.set_storage_password(password).await
-        }).expect("error setting storage password");
-        Ok(())
+        }) {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(_) => Ok(()),
+        }
     }
 
     pub fn set_stronghold_password(&mut self, password: &str) -> Result<()> {
-        crate::block_on(async move {
+        match crate::block_on(async move {
             self.manager.set_stronghold_password(password).await
-        }).expect("error setting stronghold password");
-        Ok(())
+        }) {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(_) => Ok(()),
+        }
     }
 
     pub fn change_stronghold_password(&mut self, current_password: &str, new_password: &str) -> Result<()> {
-        crate::block_on(async move {
+        match crate::block_on(async move {
             self.manager.change_stronghold_password(current_password, new_password).await
-        }).expect("error changing stronghold password");
-        Ok(())
+        }) {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(_) => Ok(()),
+        }
     }
 
     pub fn generate_mnemonic(&mut self) -> Result<String> {
-        let mnemonic = self.manager.generate_mnemonic()
-            .expect("error generating mnemonic");
-        Ok(mnemonic)
+        match self.manager.generate_mnemonic() {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(mnemonic) => Ok(mnemonic),
+        }
     }
 
     pub fn store_mnemonic(&mut self, signer_type_enum: AccountSignerType, mnemonic: String) -> Result<()> {
@@ -177,46 +184,53 @@ impl AccountManager {
             _ => Some(mnemonic),
         };
         
-        crate::block_on(async move {
+        match crate::block_on(async move {
             self.manager.store_mnemonic(signer_type, opt_mnemonic).await
-        }).expect("error storing mnemonic");
-        Ok(())
+        }) {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(_) => Ok(()),
+        }
     }
 
     pub fn verify_mnemonic(&mut self, mnemonic: String) -> Result<()> {
-        self.manager.verify_mnemonic(mnemonic).expect("error verifying mnemonic");
-        Ok(())
+        match self.manager.verify_mnemonic(mnemonic) {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(_) => Ok(()),
+        }
     }
 
     pub fn create_account(&self, client_options: ClientOptions) -> Result<AccountInitialiser>{
-        let initialiser = self.manager.create_account(client_options.get_internal())
-            .expect("Failed to initialise accauntinitialiser");
-        
-        Ok(AccountInitialiser::new(initialiser))
+        match self.manager.create_account(client_options.get_internal()) {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(initialiser) => Ok(AccountInitialiser::new(initialiser)),
+        }
     }
 
     pub fn remove_account(&self, account_id: String) -> Result<()> {
-        crate::block_on(async move {
+        match crate::block_on(async move {
             self.manager.remove_account(account_id).await
-        }).expect("error removing account");
-
-        Ok(())
+        }){
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(_) => Ok(()),
+        }
     }
 
     pub fn get_account(&self, account_id: String) -> Result<Account> {
-        let acc = crate::block_on(async move {
+        match crate::block_on(async move {
             self.manager.get_account(account_id).await
-        }).expect("error getting account");
-
-        Ok(Account::new_with_internal(acc))
+        }){
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(acc) => Ok(Account::new_with_internal(acc)),
+        }
     }
 
     pub fn get_accounts(&self) -> Result<Vec<Account>> {
-        let accs = crate::block_on(async move {
+        match crate::block_on(async move {
             self.manager.get_accounts().await
-        }).expect("error getting accounts");
-
-        Ok(accs.iter().map(|acc| Account::new_with_internal(acc.clone()) ).collect())
+        }){
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(accs) => Ok(accs.iter().map(|acc| Account::new_with_internal(acc.clone()) ).collect()),
+        }
     }
 
     //TODO: Do we still need synchronisers?
@@ -228,35 +242,39 @@ impl AccountManager {
 
     
     pub fn reattach(&self, account_id: String, message_id: MessageId) -> Result<Message> {
-        let msg = crate::block_on(async move {
+        match crate::block_on(async move {
             self.manager.reattach(account_id, &message_id).await
-        }).expect("error reattaching message");
-
-        Ok(Message::new_with_internal(msg))
+        }){
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(msg) => Ok(Message::new_with_internal(msg)),
+        }
     }
 
     pub fn promote(&self, account_id: String, message_id: MessageId) -> Result<Message> {
-        let msg = crate::block_on(async move {
+         match crate::block_on(async move {
             self.manager.promote(account_id, &message_id).await
-        }).expect("error promoting message");
-
-        Ok(Message::new_with_internal(msg))
+        }){
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(msg) => Ok(Message::new_with_internal(msg)),
+        }
     }
 
     pub fn retry(&self, account_id: String, message_id: MessageId) -> Result<Message> {
-        let msg = crate::block_on(async move {
+        match crate::block_on(async move {
             self.manager.retry(account_id, &message_id).await
-        }).expect("error retrying account");
-
-        Ok(Message::new_with_internal(msg))
+        }){
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(msg) => Ok(Message::new_with_internal(msg)),
+        }
     }
 
     pub fn internal_transfer(&self, from_account_id: String, to_account_id: String, amount: u64) -> Result<Message> {
-        let msg = crate::block_on(async move {
+        match crate::block_on(async move {
             self.manager.internal_transfer(from_account_id, to_account_id, NonZeroU64::new(amount).unwrap()).await
-        }).expect("error retrying account");
-
-        Ok(Message::new_with_internal(msg))
+        }){
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(msg) => Ok(Message::new_with_internal(msg)),
+        }
     }
 
     #[cfg(not(any(feature = "stronghold-storage", feature = "sqlite-storage")))]
@@ -266,11 +284,12 @@ impl AccountManager {
 
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
     pub fn backup(&self, destination: PathBuf) -> Result<PathBuf> {
-        let path = crate::block_on(async move {
+        match crate::block_on(async move {
             self.manager.backup(destination).await
-        }).expect("error backuping account");
-
-        Ok(path)
+        }){
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(path) => Ok(path),
+        }
     }
 
     #[cfg(not(any(feature = "stronghold-storage", feature = "sqlite-storage")))]
@@ -280,11 +299,12 @@ impl AccountManager {
 
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
     pub fn import_accounts(&self, source: PathBuf, stronghold_password: String) -> Result<()> {
-        crate::import_accounts(async move {
+        match crate::import_accounts(async move {
             self.manager.retry(source, stronghold_password).await
-        }).expect("error importing accounts");
-
-        Ok(())
+        }){
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(_) => Ok(()),
+        }
     }
 }
 

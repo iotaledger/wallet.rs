@@ -27,6 +27,8 @@ use crate::{
     Result,
 };
 
+use anyhow::anyhow;
+
 pub struct AccountInitialiser {
     initialiser:  Rc<RefCell<Option<AccountInitialiserRust>>>,
 }
@@ -80,12 +82,16 @@ impl AccountInitialiser {
     }
 
     pub fn initialise(&self) -> Result<Account> {
-        let acc_handle = crate::block_on(async move {
+        let acc_handle_res = crate::block_on(async move {
             self.initialiser.borrow_mut().take().unwrap().initialise().await
-        }).expect("error initialising account");
-        Ok(Account {
-            handle: acc_handle
-        })
+        });
+
+        match acc_handle_res {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(acc_handle) => Ok(Account {
+                handle: acc_handle
+            }),
+        }
     }
 }
 
@@ -101,51 +107,66 @@ impl Account {
     }
 
     pub fn consolidate_outputs(&self) -> Result<Vec<Message>> {
-        let msgs = tokio::runtime::Builder::new_current_thread()
+        let msgs_res = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
             .unwrap()
             .block_on(async move {
                 self.handle.consolidate_outputs().await
-            }).expect("failed consolidate outputs");
+            });
 
-        Ok(msgs.into_iter().map(|m| Message::new_with_internal(m)).collect())
+        match msgs_res {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(msgs) => Ok(msgs.into_iter().map(|m| Message::new_with_internal(m)).collect()),
+        }
     }
 
     pub fn transfer(&mut self, transfer: Transfer) -> Result<Message> {
-        let msg = tokio::runtime::Builder::new_current_thread()
+        let msg_res = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
             .unwrap()
             .block_on(async move {
                 self.handle.transfer(transfer.get_internal()).await
-            }).expect("failed creating a transfer");
+            });
 
-        Ok(Message::new_with_internal(msg))
+        match msg_res {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(msg) => Ok(Message::new_with_internal(msg)),
+        }
     }
 
     pub fn generate_address(&self) -> Result<Address> {
-        let addr = crate::block_on(async move {
+        let addr_res = crate::block_on(async move {
             self.handle.generate_address().await
-        }).expect("error initialising account");
-
-        Ok(Address::new_with_internal(addr))
+        });
+        
+        match addr_res {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(addr) => Ok(Address::new_with_internal(addr)),
+        }
     }
 
     pub fn get_unused_address(&self) -> Result<Address> {
-        let addr = crate::block_on(async move {
+        let addr_res = crate::block_on(async move {
             self.handle.get_unused_address().await
-        }).expect("error in getting unused address");
+        });
 
-        Ok(Address::new_with_internal(addr))
+        match addr_res {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(addr) => Ok(Address::new_with_internal(addr)),
+        }
     }
 
     pub fn is_latest_address_unused(&self) -> Result<bool> {
-        let is_unused = crate::block_on(async move {
+        let is_unused_res = crate::block_on(async move {
             self.handle.is_latest_address_unused().await
-        }).expect("error checking latest addres usage");
+        });
 
-        Ok(is_unused)
+        match is_unused_res {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(is_unused) => Ok(is_unused),
+        }
     }
 
     pub fn latest_address(&self) -> Address {
@@ -156,19 +177,25 @@ impl Account {
     }
 
     pub fn set_alias(&self, alias: String) -> Result<()> {
-        crate::block_on(async move {
+        let res = crate::block_on(async move {
             self.handle.set_alias(alias).await
-        }).expect("failed setting new alias");
+        });
 
-        Ok(())
+        match res {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(_) => Ok(()),
+        }
     }
 
     pub fn set_client_options(&self, options: ClientOptions) -> Result<()> {
-        crate::block_on(async move {
+        let opts = crate::block_on(async move {
             self.handle.set_client_options(options.get_internal()).await
-        }).expect("failed setting new client options");
+        });
 
-        Ok(())
+        match opts {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(_) => Ok(()),
+        }
     }
 
     pub fn list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<Message> {
