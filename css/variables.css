@@ -6,9 +6,58 @@
     --page-padding: 15px;
     --content-max-width: 750px;
     --menu-bar-height: 50px;
+
+    --primary: rgb(0, 224, 202);
+    --secondary: rgb(15, 193, 183);
+    --text: rgb(19, 31, 55)
+
 }
 
 /* Themes */
+
+
+
+/* Themes */
+.iota {
+    --bg: #ffffff;
+    --fg: #4f4f4f;
+
+    --sidebar-bg: #fff;
+    --sidebar-fg: var(--text);;
+    --sidebar-non-existant: #5c6773;
+    --sidebar-active: var(--secondary);
+    --sidebar-spacer: var(--secondary);
+
+    --scrollbar: #cccccc;
+
+    --icons: #4f4f4f;
+    --icons-hover: var(--primary);
+
+    --links: var(--secondary);
+
+    --inline-code-color: var(--text);
+
+    --theme-popup-bg: #fafafa;
+    --theme-popup-border: #cccccc;
+    --theme-hover: #e6e6e6;
+
+    --quote-bg: #f1f1f1;
+    --quote-fg: var(--secondary);
+    --quote-border: var(--secondary);
+
+    --table-border-color: #019792;
+    --table-header-bg: #ffffff;
+    --table-alternate-bg: #ffffff;
+
+    --searchbar-border-color: #ffffff;
+    --searchbar-bg: #ffffff;
+    --searchbar-fg: #fff;
+    --searchbar-shadow-color: #cccccc;
+    --searchresults-header-fg: var(--secondary);
+    --searchresults-border-color: #ffffff;
+    --searchresults-li-bg: var(--secondary);
+    --search-mark-bg: var(--primary);
+}
 
 .ayu {
     --bg: hsl(210, 25%, 8%);
@@ -92,22 +141,22 @@
 
 .light {
     --bg: hsl(0, 0%, 100%);
-    --fg: hsl(0, 0%, 0%);
+    --fg: #333333;
 
     --sidebar-bg: #fafafa;
-    --sidebar-fg: hsl(0, 0%, 0%);
+    --sidebar-fg: #364149;
     --sidebar-non-existant: #aaaaaa;
-    --sidebar-active: #1f1fff;
+    --sidebar-active: #008cff;
     --sidebar-spacer: #f4f4f4;
 
-    --scrollbar: #8F8F8F;
+    --scrollbar: #cccccc;
 
-    --icons: #747474;
-    --icons-hover: #000000;
+    --icons: #cccccc;
+    --icons-hover: #333333;
 
-    --links: #20609f;
+    --links: #4183c4;
 
-    --inline-code-color: #301900;
+    --inline-code-color: #6e6b5e;
 
     --theme-popup-bg: #fafafa;
     --theme-popup-border: #cccccc;
