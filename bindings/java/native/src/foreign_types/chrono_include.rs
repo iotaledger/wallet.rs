@@ -34,23 +34,27 @@ foreign_typemap!(
 );
 
 //ANCHOR_END: foreign_typemap_chrono_example
-/*
 foreign_typemap!(
-    ($p:r_type) Option<DateTime<Local>> => internal_aliases::JOptionalLong {
-        let tmp: Option<i64> = $p.map(|x| x.timestamp_millis());
-        $out = to_java_util_optional_long(env, tmp);
+    ($p:r_type) Option<DateTime<Local>> => jlong {
+        $out = match $p {
+            Some(x) => x.timestamp_millis(),
+            None => -1,
+        };
     };
-    ($p:f_type) => "java.util.Optional<java.util.Date>"
+    ($p:f_type) => "java.util.Optional<java.util.Calendar>"
         r#"
         $out;
-        Locale exampleLocale = Locale.GERMANY;
-        TimeZone zone = TimeZone.getTimeZone("EST");
+        if ($p == -1 ) {
+            $out = java.util.Optional.empty();
+        } else {
+            java.util.Calendar theCalendar = java.util.Calendar.getInstance();
+            theCalendar.setTime(new java.util.Date($p));
 
-        Calendar theCalendar = Calendar.getInstance(zone, exampleLocale);
-        theCaledar.setTime(new Date(rightNow));
+            $out = java.util.Optional.of(theCalendar);
+        }
 "#;
 );
-*/
+
 foreign_typemap!(
     ($p:r_type) Option<DateTime<Utc>> => internal_aliases::JOptionalLong {
         let tmp: Option<i64> = $p.map(|x| x.timestamp_millis());

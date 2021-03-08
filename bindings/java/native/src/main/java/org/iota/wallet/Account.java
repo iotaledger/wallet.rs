@@ -143,6 +143,22 @@ public final class Account {
     }
     private static native long do_created_at(long self);
 
+    public final java.util.Optional<java.util.Calendar> last_synced_at() {
+        long ret = do_last_synced_at(mNativeObj);
+        java.util.Optional<java.util.Calendar> convRet;
+        if (ret == -1 ) {
+            convRet = java.util.Optional.empty();
+        } else {
+            java.util.Calendar theCalendar = java.util.Calendar.getInstance();
+            theCalendar.setTime(new java.util.Date(ret));
+
+            convRet = java.util.Optional.of(theCalendar);
+        }
+
+        return convRet;
+    }
+    private static native long do_last_synced_at(long self);
+
     public synchronized void delete() {
         if (mNativeObj != 0) {
             do_delete(mNativeObj);

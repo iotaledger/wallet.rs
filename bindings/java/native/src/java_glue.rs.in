@@ -324,7 +324,7 @@ foreign_class!(
 
         fn Account::id(&self) -> String;
         fn Account::created_at(&self) -> DateTime<Local>;
-        //fn Account::last_synced_at(&self) -> Option<DateTime<Local>>;
+        fn Account::last_synced_at(&self) -> Option<DateTime<Local>>;
     }
 );
 
