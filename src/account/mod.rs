@@ -194,10 +194,10 @@ impl AccountInitialiser {
             }
         }
 
-        let mut latest_account_handle = None;
+        let mut latest_account_handle: Option<AccountHandle> = None;
         for account_handle in accounts.values() {
             match latest_account_handle {
-                Some(handle) => {
+                Some(ref handle) => {
                     if account_handle.index().await > handle.index().await {
                         latest_account_handle = Some(account_handle.clone());
                     }
