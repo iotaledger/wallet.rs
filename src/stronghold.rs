@@ -388,6 +388,13 @@ async fn switch_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf
     Ok(())
 }
 
+async fn unset_password(storage_path: &PathBuf) {
+    let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
+    let mut access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
+    access_store.remove(storage_path);
+    passwords.remove(storage_path);
+}
+
 /// Removes the snapshot from memory and clears the password.
 pub async fn unload_snapshot(storage_path: &PathBuf, persist: bool) -> Result<()> {
     let current_snapshot_path = CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await.clone();
@@ -399,12 +406,7 @@ pub async fn unload_snapshot(storage_path: &PathBuf, persist: bool) -> Result<()
         }
     }
 
-    {
-        let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
-        let mut access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
-        access_store.remove(storage_path);
-        passwords.remove(storage_path);
-    }
+    unset_password(storage_path).await;
 
     crate::event::emit_stronghold_status_change(&get_status(storage_path).await).await;
 
@@ -422,7 +424,10 @@ async fn load_snapshot_internal(
     password: Vec<u8>,
 ) -> Result<()> {
     set_password(&snapshot_path, password).await;
-    check_snapshot(&mut runtime, &snapshot_path).await?;
+    if let Err(e) = check_snapshot(&mut runtime, &snapshot_path).await {
+        unset_password(&snapshot_path).await;
+        return Err(e);
+    };
     crate::event::emit_stronghold_status_change(&get_status(snapshot_path).await).await;
     Ok(())
 }
