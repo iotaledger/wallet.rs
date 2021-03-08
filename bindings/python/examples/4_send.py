@@ -22,6 +22,6 @@ transfer = iota_wallet.Transfer(amount=10000000,
                                 address='atoi1qzt0nhsf38nh6rs4p6zs5knqp6psgha9wsv74uajqgjmwc75ugupx3y7x0r',
                                 bench32_hrp=account.bech32_hrp(),
                                 remainder_value_strategy='ReuseAddress')
-node_response = synced.transfer(transfer)
+node_response = account.transfer(transfer)
 print(
     f"Check your message on https://explorer.iota.org/chrysalis/message/{node_response['id']}")
