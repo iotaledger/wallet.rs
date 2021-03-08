@@ -422,6 +422,38 @@ Gets the number of persisted transaction broadcast events.
 
 ### AccountHandle
 
+#### id(): str
+
+**Returns** the account ID.
+
+#### signer_type(): str
+
+**Returns** the singer type of this account.
+
+#### index(): int
+
+**Returns** the account index.
+
+#### alias(): str
+
+**Returns** the account alias.
+
+#### created_at(): int
+
+**Returns** the created UNIX timestamp.
+
+#### last_synced_at(): int or None (it did not be synced before)
+
+**Returns** the last synced UNIX timestamp.
+
+#### client_options(): [ClientOptions](#clientoptions)
+
+**Returns** the client options of this account.
+
+#### bech32_hrp(): str
+
+**Returns** the Bech32 HRP string.
+
 #### sync(): [AccountSynchronizer](#accountsynchronizer)
 
 **Returns** the [AccountSynchronizer](#accountsynchronizer) to setup the process to synchronize this account with the Tangle.
