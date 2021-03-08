@@ -115,6 +115,19 @@ foreign_enum!(
     }
 );
 
+foreign_enum!(
+    enum InputKind {
+        UTXO = InputKind::UTXO,
+        TREASURY = InputKind::Treasury,
+    }
+);
+foreign_enum!(
+    enum UnlockBlockKind {
+        ED25519 = UnlockBlockKind::Ed25519,
+        REFERENCE = UnlockBlockKind::Reference,
+    }
+);
+
 foreign_class!(class ManagerOptions {
     self_type ManagerOptions;
     constructor ManagerOptions::default() -> ManagerOptions;
@@ -316,7 +329,7 @@ foreign_class!(
 
 foreign_callback!(callback ErrorEvent {
     self_type ErrorEvent + Send + 'static;
-    onStateChanged = ErrorEvent::on_error(&self, error: String);
+    onError = ErrorEvent::on_error(&self, error: String);
 });
 
 foreign_class!(
@@ -336,6 +349,7 @@ foreign_class!(
         private fn MessagePayload::to_string(&self) -> String;
         fn MessagePayload::payload_type(&self) -> MessagePayloadType; alias payloadType;
         fn MessagePayload::get_as_indexation(&self) -> Option<IndexationPayload>; alias getAsIndexation;
+        fn MessagePayload::get_as_milestone(&self) -> Option<MilestonePayload>; alias getAsMilestone;
     }
 );
 
@@ -349,6 +363,83 @@ foreign_class!(
     }
 );
 
+foreign_class!(
+    class MilestonePayload {
+        self_type MilestonePayload;
+        private constructor = empty;
+        fn MilestonePayload::id(&self) -> String;
+        fn MilestonePayload::essence(&self) -> MilestonePayloadEssence;
+        fn MilestonePayload::validate(&self, applicable_public_keys: &[String], min_threshold: usize) -> bool;
+        //fn MilestonePayload::signatures(&self) -> Vec<Box<[u8]>>;
+    }
+);
+
+foreign_class!(
+    class MilestonePayloadEssence {
+        self_type MilestonePayloadEssence;
+        private constructor = empty;
+        fn MilestonePayloadEssence::index(&self) -> u32;
+        fn MilestonePayloadEssence::timestamp(&self) -> u64;
+        fn MilestonePayloadEssence::parents(&self) -> Vec<MessageId>;
+        fn MilestonePayloadEssence::merkle_proof(&self) -> Vec<u8>; alias merkleProof;
+    }
+);
+
 // TransactionEssence
 
-// UnlockBlock
+foreign_class!(
+    class MessageTransactionPayload {
+        self_type MessageTransactionPayload;
+        private constructor = empty;
+        fn MessageTransactionPayload::essence(&self) -> Essence;
+        fn MessageTransactionPayload::unlock_blocks(&self) -> Vec<UnlockBlock>;
+    }
+);
+
+foreign_class!(
+    class Essence {
+        self_type Essence;
+        private constructor = empty;
+        fn Essence::get_as_regular(&self) -> Option<RegularEssence>;
+    }
+);
+
+foreign_class!(
+    class RegularEssence {
+        self_type RegularEssence;
+        private constructor = empty;
+        fn RegularEssence::inputs(&self) -> Vec<TransactionInput>;
+        fn RegularEssence::outputs(&self) -> Vec<TransactionOutput>;
+    }
+);
+
+foreign_class!(
+    #[derive(Display)]
+    class TransactionInput {
+        self_type TransactionInput;
+        private constructor = empty;
+        private fn TransactionInput::to_string(&self) -> String;
+        fn TransactionInput::kind(&self) -> InputKind;
+    }
+);
+
+foreign_class!(
+    #[derive(Display)]
+    class TransactionOutput {
+        self_type TransactionOutput;
+        private constructor = empty;
+        private fn TransactionOutput::to_string(&self) -> String;
+        fn TransactionOutput::kind(&self) -> OutputKind;
+    }
+);
+
+foreign_class!(
+    #[derive(Display)]
+    class UnlockBlock {
+        self_type UnlockBlock;
+        private constructor = empty;
+        private fn UnlockBlock::to_string(&self) -> String;
+        fn UnlockBlock::kind(&self) -> UnlockBlockKind;
+    }
+);
+

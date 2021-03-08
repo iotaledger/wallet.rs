@@ -1,13 +1,25 @@
 use iota_wallet::{
     message::{
         MessagePayload as MessagePayloadRust,
-        TransactionPayload as TransactionPayloadRust,
-        MilestonePayload as MilestonePayloadRust,
-        IndexationPayload as IndexationPayloadRust,
         ReceiptPayload as ReceiptPayloadRust,
         TreasuryTransactionPayload as TreasuryTransactionPayloadRust,
+        MessageId,
     },
 };
+
+use iota::{
+    Address as RustAddress, Ed25519Address as RustEd25519Address, Ed25519Signature as RustEd25519Signature,
+    Essence as RustEssence, IndexationPayload as RustIndexationPayload, Input as RustInput,
+    Output as RustOutput, Payload as RustPayload,
+    ReferenceUnlock as RustReferenceUnlock, RegularEssence as RustRegularEssence,
+    SignatureLockedSingleOutput as RustSignatureLockedSingleOutput, SignatureUnlock as RustSignatureUnlock,
+    TransactionId as RustTransationId, TransactionPayload as RustTransactionPayload, UTXOInput as RustUTXOInput,
+    UnlockBlock as RustUnlockBlock, UnlockBlocks as RustUnlockBlocks,
+};
+
+use crate::bee_types::index::*;
+use crate::bee_types::milestone::*;
+use crate::bee_types::transaction::*;
 
 // TreasuryInput, TreasuryOutput
 // Essence, UTXOInput, UnlockBlock
@@ -30,6 +42,10 @@ pub struct MessagePayload {
 }
 
 impl MessagePayload {
+    pub fn get_internal(self) -> MessagePayloadRust {
+        self.payload
+    }
+
     pub fn new_with_internal(payload: MessagePayloadRust) -> Self {
         MessagePayload {
             payload: payload,
@@ -50,6 +66,14 @@ impl MessagePayload {
         format!("{:?}", self.payload)
     }
 
+    pub fn get_as_transaction(&self) -> Option<MessageTransactionPayload> {
+        if let MessagePayloadRust::Transaction(payload) = &self.payload {
+            Some(MessageTransactionPayload::new_with_rust(payload))
+        } else {
+            None
+        }
+    }
+
     pub fn get_as_indexation(&self) -> Option<IndexationPayload> {
         if let MessagePayloadRust::Indexation(index) = &self.payload {
             match IndexationPayload::new_with(index.index(), index.data()) {
@@ -61,55 +85,17 @@ impl MessagePayload {
         }
     }
 
-    /*
     pub fn get_as_milestone(&self) -> Option<MilestonePayload> {
-        if let MessagePayloadRust::Milestone(index) = &self.payload {
-            match MilestonePayload::new_with(index.index(), index.data()) {
+        if let MessagePayloadRust::Milestone(payload) = &self.payload {
+            match MilestonePayload::new_with(
+                payload.essence().to_owned(),
+                payload.signatures().to_owned()
+            ) {
                 Ok(i) => Some(i),
                 Err(_) => None,
             }
         } else {
             None
         }
-    }*/
-}
-
-pub struct MilestonePayload {
-    payload: MilestonePayloadRust,
-}
-
-impl MilestonePayload {
-    pub fn get_internal(self) -> MilestonePayloadRust {
-        self.payload
     }
 }
-
-pub struct IndexationPayload {
-    payload: IndexationPayloadRust,
-}
-
-impl IndexationPayload {
-    pub fn get_internal(self) -> IndexationPayloadRust {
-        self.payload
-    }
-
-    pub fn new_with(index: &[u8], data: &[u8]) -> Result<IndexationPayload> {
-        let index = IndexationPayloadRust::new(&index, &data);
-        match index {
-            Err(e) => Err(anyhow!(e.to_string())),
-            Ok(i) => Ok(IndexationPayload {
-                payload: i
-            })
-        }
-    }
-
-    pub fn index(&self) -> &[u8] {
-        self.payload.index()
-    }
-
-    pub fn data(&self) -> &[u8] {
-        self.payload.data()
-    }
-}
-
-

@@ -1969,6 +1969,8 @@ dependencies = [
  "chrono",
  "env_logger",
  "flapigen",
+ "hex",
+ "iota-core",
  "iota-wallet",
  "jni",
  "log",

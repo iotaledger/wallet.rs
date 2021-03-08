@@ -5,6 +5,6 @@ package org.iota.wallet;
 public interface ErrorEvent {
 
 
-    void onStateChanged(String error);
+    void onError(String error);
 
 }

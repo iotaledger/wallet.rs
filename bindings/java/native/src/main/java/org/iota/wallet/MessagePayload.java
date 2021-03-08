@@ -39,6 +39,19 @@ public final class MessagePayload {
     }
     private static native long do_getAsIndexation(long self);
 
+    public final java.util.Optional<MilestonePayload> getAsMilestone() {
+        long ret = do_getAsMilestone(mNativeObj);
+        java.util.Optional<MilestonePayload> convRet;
+        if (ret != 0) {
+            convRet = java.util.Optional.of(new MilestonePayload(InternalPointerMarker.RAW_PTR, ret));
+        } else {
+            convRet = java.util.Optional.empty();
+        }
+
+        return convRet;
+    }
+    private static native long do_getAsMilestone(long self);
+
     public synchronized void delete() {
         if (mNativeObj != 0) {
             do_delete(mNativeObj);
