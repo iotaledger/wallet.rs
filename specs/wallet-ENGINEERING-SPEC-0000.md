@@ -22,7 +22,6 @@
       - [SignedDataPayload](#signeddatapayload)
       - [IndexationPayload](#indexationpayload)
       - [UnsignedTransaction](#unsignedtransaction)
-      - [WOTSSignature](#wotssignature)
       - [Ed25519Signature](#ed25519signature)
       - [SignatureUnblockBlock](#signatureunblockblock)
       - [ReferenceUnblockBlock](#referenceunblockblock)
@@ -430,8 +429,6 @@ Account configuration or initialization object. It should support parameters acc
 
 Useful [reference](https://medium.com/@harshagoli/hd-wallets-explained-from-high-level-to-nuts-and-bolts-9a41545f5b0) for address management in Hierarchical Deterministic (HD) wallets.
 
-Note: The library only supports Ed25519 addresses. Therefore a `type` property for distinguishing between WOTS and Ed25519 addresses is unncecessary.
-
 <table>
   <tr>
     <td><strong>Property</strong></td>
@@ -627,13 +624,13 @@ Note: Currently, it is not possible to send multiple payloads as part of the mes
     <td>type</td>
     <td>&#10004;</td>
     <td>number</td>
-    <td>Set to value <code>0</code> to denote a WOTS Address and <code>1</code> to denote an Ed25519 address.</td>
+    <td>Set to value <code>0</code> to denote an Ed25519 address.</td>
   </tr>
   <tr>
     <td>address</td>
     <td>&#10004;</td>
     <td>string</td>
-    <td>If type is set to <code>0</code>, this should contain a WOTS address. Otherwise (if type is set to <code>1</code>), it should contain an Ed25519 address.</td>
+    <td>If type is set to <code>0</code>, it should contain an Ed25519 address.</td>
   </tr>
 </table>
 
@@ -804,29 +801,6 @@ Note: Currently, it is not possible to send multiple payloads as part of the mes
   </tr>
 </table>
 
-#### WOTSSignature
-
-<table>
-  <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
-  </tr>
-  <tr>
-    <td>type</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Set to value <code>0</code> to denote a WOTS Signature.</td>
-  </tr>
-  <tr>
-    <td>signature</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Signature signing the serialized unsigned transaction.</td>
-  </tr>
-</table>
-
 #### Ed25519Signature
 
 <table>
@@ -875,7 +849,6 @@ Note: Currently, it is not possible to send multiple payloads as part of the mes
     <td>signature</td>
     <td>&#10004;</td>
     <td>
-        <a href="#wotssignature">WOTSSignature</a> |
         <a href="#ed25519signature">Ed25519Signature</a>
     </td>
     <td>An unlock block containing signature(s) unlocking input(s).</td>
