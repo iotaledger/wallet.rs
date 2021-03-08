@@ -187,18 +187,15 @@ impl AccountInitialiser {
         ))?;
         let created_at = self.created_at.unwrap_or_else(Local::now);
 
+        let mut latest_account_handle: Option<AccountHandle> = None;
         for account_handle in accounts.values() {
             let account = account_handle.read().await;
             if account.alias() == &alias {
                 return Err(crate::Error::AccountAliasAlreadyExists);
             }
-        }
-
-        let mut latest_account_handle: Option<AccountHandle> = None;
-        for account_handle in accounts.values() {
             match latest_account_handle {
                 Some(ref handle) => {
-                    if account_handle.index().await > handle.index().await {
+                    if account.index() > handle.index().await {
                         latest_account_handle = Some(account_handle.clone());
                     }
                 }
