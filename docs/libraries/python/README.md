@@ -10,7 +10,7 @@ If you want to get involved in discussions about this library, or you're looking
 
 ## Overview
 
-- [Getting Started with wallet and node.js](./getting_started.md)
+- [Getting Started with wallet and python](./getting_started.md)
 - [Examples](./examples.md)
 - [API Reference](./api_reference.md)
 - [Troubleshooting](./troubleshooting.md)

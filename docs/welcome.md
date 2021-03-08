@@ -1,18 +1,21 @@
 # Welcome
 This is the documentation for the official IOTA Wallet Library Software. It can be used to easily integrate an IOTA Wallet into your applications. You can read more about core principles behind IOTA client libraries in the following blog [post](https://blog.iota.org/the-new-iota-client-libraries-harder-better-faster-stronger/).
 
-`Wallet.rs` is a general wallet library written in Rust. It is being utilized by our wallet software `Firefly` and other software components across IOTA ecosystem. `Wallet.rs` contains all the logic to safely build wallets or integrations that require value-based transfers (such as exchanges, pay-as-you-go systems, etc.). It includes account state management and backup, account creation, transferring tokens and much more. Needless to say, it is also based on our official `one-source-code-of-truth` [IOTA Rust library](https://github.com/iotaledger/iota.rs) and can be integrated with our [Stronghold enclave](https://blog.iota.org/iota-stronghold-6ce55d311d7c/) to achieve a maximum level of security.
+`Wallet.rs` is a general wallet library written in Rust. It is being utilized by our wallet software `Firefly` and other software components across IOTA ecosystem. `Wallet.rs` contains all the logic to safely build wallets or integrations that require value-based transfers (such as exchanges, pay-as-you-go systems, etc.). It includes account state management and backup, account creation, transferring tokens and much more. Needless to say, it is also based on our official `one-source-code-of-truth` [IOTA Rust library](https://github.com/iotaledger/iota.rs) and can be integrated with the [Stronghold enclave](https://blog.iota.org/iota-stronghold-6ce55d311d7c/) to achieve a maximum level of security.
 
-> Using `stronghold` is a recommended approach to store account data using `wallet.rs`. One get the best security practices for free 
+> Using `stronghold` is a recommended approach to store account data using `wallet.rs`. The best security practices are integrated for free 
 
 With the `wallet.rs` library, developers do not need to use a self-generated seed anymore. By default, the seed is created and stored in Stronghold encrypted at rest. It is not possible to extract the seed from Stronghold for security purposes. Stronghold uses encrypted snapshots that can easily be backed up and securely shared between devices. These snapshots are further secured with a password.
 
 ## IOTA 1.5 (Chrysalis) in a nutshell
 * IOTA network uses a DAG (Directed Acyclic Graph) to store its transactions. Each transaction can reference up to 8 parent transactions
-* There is a breaking change moving from IOTA 1.0 to IOTA 1.5 (Chrysalis). IOTA address was originally based on WOTS signature scheme (81 trytes) and it has been replaced by a Ed25519 signature scheme (Bech32 [checksummed base32 format] string of 64 characters)
-* In contrast to IOTA 1.0, IOTA 1.5 addresses are perfectly resuable: so even if one spent funds from the given address it can be used again
+* There is a breaking change moving from IOTA 1.0 to IOTA 1.5 (Chrysalis). IOTA address was originally based on WOTS signature scheme (81 trytes) and it has been replaced by a Ed25519 signature scheme
+* In contrast to IOTA 1.0, IOTA 1.5 addresses are perfectly reusable: so even if one spent funds from the given address it can be used again
 * There are new client libraries developed in rust, specifically `iota.rs`, `wallet.rs` and `stronghold.rs` that serve as `one-source-code-of-truth` to IOTA users and providing binding to other programming languages 
-* Example of new format of the IOTA 1.5 address (Bech32 string):
+
+### IOTA 1.5 address anatomy
+IOTA address is based on Ed25519 signature scheme and it is usually represented by Bech32 (checksummed base32) format string of 64 characters:
+
 <table>
     <thead>
         <tr>
@@ -24,7 +27,7 @@ With the `wallet.rs` library, developers do not need to use a self-generated see
             <td colspan=4><center>three distinguished parts</center></td>
         </tr>
         <tr>
-            <td><center><strong>human-readable</strong></center></td>
+            <td><center><strong>human-readable id</strong></center></td>
             <td><center><strong>separator</strong></center></td>
             <td><center><strong>data</strong></center></td>
             <td><center><strong>checksum</strong></center></td>
@@ -46,6 +49,8 @@ With the `wallet.rs` library, developers do not need to use a self-generated see
         </tr>
     </tbody>
 </table>
+
+More details: [RFC: Bech32 Address Format](https://github.com/iotaledger/protocol-rfcs/pull/20)
 
 ## Warning
 This library is in active development. The library targets the Chrysalis testnet and does not work with current IOTA mainnet.

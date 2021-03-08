@@ -6,7 +6,7 @@ There are currently available the following official bindings to `wallet.rs`:
 - [Python](./python/)
 
 ## Getting Started
-It is a recommended approach to start your interactions with IOTA on a `testnet` network. The official libraries incorporate an automatic node discovery mechanism and so endpoint API is not important to get you started. 
+It is a recommended approach to start your interactions with IOTA on a `testnet` network.  API load balancer: api.lb-0.testnet.chrysalis2.com  
 
 Network explorer is available at [IOTA Tangle Explorer](https://explorer.iota.org/chrysalis).
 
