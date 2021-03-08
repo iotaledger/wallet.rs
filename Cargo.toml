@@ -16,7 +16,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_repr = "0.1"
 once_cell = "1.5"
-iota-core = { git = "https://github.com/iotaledger/iota.rs", rev = "9aab8aa36de0b1dc4d53443676f300ce780c8e3d", features = ["mqtt"] }
+iota-core = { git = "https://github.com/iotaledger/iota.rs", rev = "be869fc47117f996cf040c8466ba4023d70cacfa", features = ["mqtt"] }
 bee-common = { git = "https://github.com/iotaledger/bee.git", branch = "dev" }
 url = { version = "2.2", features = [ "serde" ] }
 tokio = { version = "1.0", features = ["macros", "sync", "time", "rt", "rt-multi-thread"] }
