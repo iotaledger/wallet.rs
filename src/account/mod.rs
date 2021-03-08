@@ -195,7 +195,7 @@ impl AccountInitialiser {
             }
             match latest_account_handle {
                 Some(ref handle) => {
-                    if account.index() > handle.index().await {
+                    if account.index() > &handle.index().await {
                         latest_account_handle = Some(account_handle.clone());
                     }
                 }
