@@ -14,6 +14,8 @@ q = queue.Queue()
 
 
 def worker():
+    """The worker to process the queued events.
+    """
     while True:
         item = q.get(True)
         print(f'Get event: {item}')
@@ -21,14 +23,18 @@ def worker():
 
 
 def balance_changed_event_processing(event):
+    """Processing function when event is received.
+    """
     print(f'On balanced changed: {event}')
     q.put(event)
 
 
+# Get the acount manager
 manager = iota_wallet.AccountManager(
     storage='Stronghold', storage_path='./alice-database')
 manager.set_stronghold_password("password")
 
+# Get the account
 account = manager.get_account('Alice')
 print(f'Account: {account.alias()}')
 
@@ -45,7 +51,6 @@ threading.Thread(target=worker, daemon=True).start()
 
 # listen to the on_balance_change event
 iota_wallet.on_balance_change(balance_changed_event_processing)
-
 
 # Use the Chrysalis Faucet to send testnet tokens to your address:
 print(
