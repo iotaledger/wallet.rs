@@ -21,10 +21,6 @@ use crate::bee_types::index::*;
 use crate::bee_types::milestone::*;
 use crate::bee_types::transaction::*;
 
-// TreasuryInput, TreasuryOutput
-// Essence, UTXOInput, UnlockBlock
-// RegularEssence, SignatureLockedDustAllowanceOutput, SignatureLockedSingleOutput
-
 use crate::Result;
 
 use anyhow::anyhow;

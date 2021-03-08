@@ -63,12 +63,16 @@ public class ExampleApp {
         System.out.println("acc spent addresses " + Arrays.toString(account.listSpentAddresses()));
         System.out.println("acc unspent addresses " + Arrays.toString(account.listUnspentAddresses()));
 
-        account.transfer(
-            Transfer.builder(
-                account.latestAddress().address(),
-                150
-            ).finish()
-        );
+        try {
+            account.transfer(
+                Transfer.builder(
+                    account.latestAddress().address(),
+                    150
+                ).finish()
+            );
+        } catch (WalletException e){
+            System.out.println(e.getMessage());
+        }
     }
 
     private void printMessage(MessagePayload payload){

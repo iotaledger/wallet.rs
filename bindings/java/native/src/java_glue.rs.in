@@ -359,6 +359,23 @@ foreign_enum!(
     }
 );
 
+foreign_enum!(
+    enum StrongholdStatusType {
+        UNLOCKED = StrongholdStatusType::Unlocked,
+        LOCKED = StrongholdStatusType::Locked,
+    }
+);
+
+foreign_class!(
+    class StrongholdStatusEvent {
+        self_type StrongholdStatusEvent;
+        private constructor = empty;
+        fn StrongholdStatusEvent::snapshot_path(&self) -> PathBuf;
+        fn StrongholdStatusEvent::status(&self) -> StrongholdStatusType;
+        fn StrongholdStatusEvent::unlocked_duration(&self) -> Result<Duration>;
+    }
+);
+
 foreign_class!(
     class TransactionEvent {
         self_type WalletTransactionEvent;

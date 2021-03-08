@@ -17,13 +17,13 @@ public final class BrokerOptions {
     }
     private static native long do_automaticDisconnect(long self, boolean disconnect);
 
-    public final BrokerOptions timeout(long timeout) {
+    public final BrokerOptions timeout(float timeout) {
         long ret = do_timeout(mNativeObj, timeout);
         BrokerOptions convRet = new BrokerOptions(InternalPointerMarker.RAW_PTR, ret);
 
         return convRet;
     }
-    private static native long do_timeout(long self, long timeout);
+    private static native long do_timeout(long self, float timeout);
 
     public final BrokerOptions useWebSockets(boolean use_ws) {
         long ret = do_useWebSockets(mNativeObj, use_ws);

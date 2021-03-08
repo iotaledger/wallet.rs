@@ -83,7 +83,7 @@ foreign_typemap!(
             Err(err) => {
                 let msg = err.to_string();
                 let exception_class = match err {
-                    _ => swig_jni_find_class!(WALLET_BASE_EXCEPTION, "java/lang/Error"),
+                    _ => swig_jni_find_class!(WALLET_BASE_EXCEPTION, "org/iota/wallet/WalletException"),
                 };
                 jni_throw(env, exception_class, &msg);
                 return <swig_i_type!(T)>::jni_invalid_value();
@@ -96,17 +96,22 @@ foreign_typemap!(
 
 // Duration
 foreign_typemap!(
-    ($p:r_type) Duration => jlong {
-        $out = $p.as_nanos();
+    ($p:r_type) Duration => jfloat {
+        $out = $p.as_secs_f32();
     };
+    ($p:f_type) => "java.time.Duration"
+        r#"
+        $out;
+        java.time.Duration d = java.time.Duration.ofSeconds((int)$p);
+        d.plusMillis((int)($p % 1 * 1000));
+        $out = d;
+"#;
 );
 
 //TODO: Make sure duration doenst cross the i64 limit
 foreign_typemap!(
-    ($p:r_type) jlong => Duration {
-        let temp = <u64 as ::std::convert::TryFrom<i64>>::try_from($p)
-            .expect("Duration: milleseconds to u64 convert error (number too big?)");
-        $out = Duration::from_nanos(temp);
+    ($p:r_type) jfloat => Duration {
+        $out = Duration::from_secs_f32($p);
     };
 );
 

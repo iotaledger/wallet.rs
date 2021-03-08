@@ -33,13 +33,13 @@ public final class ClientOptionsBuilder {
     }
     private static native long do_withNetwork(long self, String network);
 
-    public final ClientOptionsBuilder withNodeSyncInterval(long node_sync_interval) {
+    public final ClientOptionsBuilder withNodeSyncInterval(float node_sync_interval) {
         long ret = do_withNodeSyncInterval(mNativeObj, node_sync_interval);
         ClientOptionsBuilder convRet = new ClientOptionsBuilder(InternalPointerMarker.RAW_PTR, ret);
 
         return convRet;
     }
-    private static native long do_withNodeSyncInterval(long self, long node_sync_interval);
+    private static native long do_withNodeSyncInterval(long self, float node_sync_interval);
 
     public final ClientOptionsBuilder withNodeSyncDisabled() {
         long ret = do_withNodeSyncDisabled(mNativeObj);
@@ -70,15 +70,15 @@ public final class ClientOptionsBuilder {
     }
     private static native long do_withLocalPow(long self, boolean local);
 
-    public final ClientOptionsBuilder withRequestTimeout(long timeout) {
+    public final ClientOptionsBuilder withRequestTimeout(float timeout) {
         long ret = do_withRequestTimeout(mNativeObj, timeout);
         ClientOptionsBuilder convRet = new ClientOptionsBuilder(InternalPointerMarker.RAW_PTR, ret);
 
         return convRet;
     }
-    private static native long do_withRequestTimeout(long self, long timeout);
+    private static native long do_withRequestTimeout(long self, float timeout);
 
-    public final ClientOptionsBuilder withApiTimeout(Api api, long timeout) {
+    public final ClientOptionsBuilder withApiTimeout(Api api, float timeout) {
         int a0 = api.getValue();
         long ret = do_withApiTimeout(mNativeObj, a0, timeout);
         ClientOptionsBuilder convRet = new ClientOptionsBuilder(InternalPointerMarker.RAW_PTR, ret);
@@ -87,7 +87,7 @@ public final class ClientOptionsBuilder {
 
         return convRet;
     }
-    private static native long do_withApiTimeout(long self, int api, long timeout);
+    private static native long do_withApiTimeout(long self, int api, float timeout);
 
     public final ClientOptions build() {
         long ret = do_build(mNativeObj);

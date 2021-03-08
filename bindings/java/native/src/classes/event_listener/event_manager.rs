@@ -1,3 +1,11 @@
+use std::{
+    path::PathBuf,
+    time::Duration,
+};
+
+use crate::Result;
+use anyhow::anyhow;
+
 use iota_wallet::{
     Error as WalletError,
     event::{
@@ -8,11 +16,41 @@ use iota_wallet::{
         TransactionConfirmationChangeEvent as WalletTransactionConfirmationChangeEvent,
         TransferProgress as WalletTransferProgress,
         BalanceEvent as WalletBalanceEvent,
+        AddressConsolidationNeeded as WalletAddressConsolidationNeeded,
     },
+    StrongholdStatus as StrongholdStatusWallet, 
+    StrongholdSnapshotStatus as SnapshotStatus,
 };
 
 pub struct EventManager {
 
+}
+
+pub enum StrongholdStatusType {
+    Unlocked = 0,
+    Locked = 1,
+}
+
+pub struct StrongholdStatusEvent {
+    status: StrongholdStatusWallet
+}
+
+impl StrongholdStatusEvent {
+    pub fn snapshot_path(&self) -> PathBuf {
+        self.status.snapshot_path().clone()
+    }
+    pub fn status(&self) -> StrongholdStatusType {
+        match self.status.snapshot() {
+            SnapshotStatus::Locked => StrongholdStatusType::Locked,
+            SnapshotStatus::Unlocked(_) => StrongholdStatusType::Unlocked,
+        }
+    }
+    pub fn unlocked_duration(&self) -> Result<Duration> {
+        match self.status.snapshot() {
+            SnapshotStatus::Locked => Err(anyhow!("Stronghold is locked")),
+            SnapshotStatus::Unlocked(d) => Ok(*d),
+        }
+    }
 }
 
 pub trait ErrorListener {
@@ -41,6 +79,16 @@ pub trait TransferProgressListener {
 
 pub trait BalanceChangeListener {
     fn on_balance_change(&self, error: WalletBalanceEvent);
+}
+
+// Ledger
+pub trait AddressConsolidationNeededListener {
+    fn on_address_consolidation_needed(&self, error: WalletAddressConsolidationNeeded);
+}
+
+// Stronghold
+pub trait StrongholdStatusListener {
+    fn on_stronghold_status_change(&self, error: StrongholdStatusEvent);
 }
 
 impl EventManager {
@@ -98,4 +146,37 @@ impl EventManager {
             cb.on_error(error.to_string());
         })
     }
+
+    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    pub fn subscribe_stronghold_status_change(cb: Box<dyn StrongholdStatusListener + Send + 'static>) -> Result<EventId> {
+        let id = crate::block_on(async move {
+            on_stronghold_status_change(move |event| {
+                cb.on_stronghold_status_change(StrongholdStatusEvent { 
+                    status: event.clone()
+                });
+            }).await
+        });
+        Ok(id)
+    }
+
+    #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
+    pub fn subscribe_stronghold_status_change(_: Box<dyn StrongholdStatusListener + Send + 'static>) -> Result<EventId> {
+        Err(anyhow!("No stronghold found during compilation"))
+    }
+
+    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+    pub fn subscribe_address_consolidation_needed(cb: Box<dyn AddressConsolidationNeededListener + Send + 'static>) -> Result<EventId> {
+        let id = crate::block_on(async move {
+            on_address_consolidation_needed(move |event| {
+                cb.on_address_consolidation_needed(event.clone());
+            }).await
+        });
+        Ok(id)
+    }
+
+    #[cfg(not(any(feature = "ledger-nano", feature = "ledger-nano-simulator")))]
+    pub fn subscribe_address_consolidation_needed(_: Box<dyn AddressConsolidationNeededListener + Send + 'static>) -> Result<EventId> {
+        Err(anyhow!("No ledger found during compilation"))
+    }
+    
 }
