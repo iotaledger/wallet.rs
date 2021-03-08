@@ -1,4 +1,4 @@
-package org.iota.wallet;
+package org.iota.wallet.local;
 
 
 /**

@@ -7,6 +7,7 @@ import java.util.concurrent.TimeoutException;
 import java.nio.file.Path;
 
 import org.iota.wallet.*;
+import org.iota.wallet.local.*;
 
 public class ExampleApp {
     public static void main(String[] args) {

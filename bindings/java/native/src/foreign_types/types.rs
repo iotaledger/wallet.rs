@@ -83,7 +83,7 @@ foreign_typemap!(
             Err(err) => {
                 let msg = err.to_string();
                 let exception_class = match err {
-                    _ => swig_jni_find_class!(WALLET_BASE_EXCEPTION, "org/iota/wallet/WalletException"),
+                    _ => swig_jni_find_class!(WALLET_BASE_EXCEPTION, "org/iota/wallet/local/WalletException"),
                 };
                 jni_throw(env, exception_class, &msg);
                 return <swig_i_type!(T)>::jni_invalid_value();
