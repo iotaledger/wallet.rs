@@ -948,7 +948,6 @@ which is an address without balance.</p>
 <li><a href="specs/index.html#signeddatapayload">SignedDataPayload</a></li>
 <li><a href="specs/index.html#indexationpayload">IndexationPayload</a></li>
 <li><a href="specs/index.html#unsignedtransaction">UnsignedTransaction</a></li>
-<li><a href="specs/index.html#wotssignature">WOTSSignature</a></li>
 <li><a href="specs/index.html#ed25519signature">Ed25519Signature</a></li>
 <li><a href="specs/index.html#signatureunblockblock">SignatureUnblockBlock</a></li>
 <li><a href="specs/index.html#referenceunblockblock">ReferenceUnblockBlock</a></li>
@@ -1362,7 +1361,6 @@ which is an address without balance.</p>
 </table>
 <h4 id="address"><a class="header" href="#address">Address</a></h4>
 <p>Useful <a href="https://medium.com/@harshagoli/hd-wallets-explained-from-high-level-to-nuts-and-bolts-9a41545f5b0">reference</a> for address management in Hierarchical Deterministic (HD) wallets.</p>
-<p>Note: The library only supports Ed25519 addresses. Therefore a <code>type</code> property for distinguishing between WOTS and Ed25519 addresses is unncecessary.</p>
 <table>
   <tr>
     <td><strong>Property</strong></td>
@@ -1544,13 +1542,13 @@ which is an address without balance.</p>
     <td>type</td>
     <td>&#10004;</td>
     <td>number</td>
-    <td>Set to value <code>0</code> to denote a WOTS Address and <code>1</code> to denote an Ed25519 address.</td>
+    <td>Set to value <code>0</code> to denote an Ed25519 address.</td>
   </tr>
   <tr>
     <td>address</td>
     <td>&#10004;</td>
     <td>string</td>
-    <td>If type is set to <code>0</code>, this should contain a WOTS address. Otherwise (if type is set to <code>1</code>), it should contain an Ed25519 address.</td>
+    <td>If type is set to <code>0</code>, it should contain an Ed25519 address.</td>
   </tr>
 </table>
 <h4 id="output"><a class="header" href="#output">Output</a></h4>
@@ -1710,27 +1708,6 @@ which is an address without balance.</p>
     <td>Payload containing data. As multiple payloads are not yet supported, only <a href="specs/index.html#unsigneddatapayload">unsigned data payload</a> should be used.</td>
   </tr>
 </table>
-<h4 id="wotssignature"><a class="header" href="#wotssignature">WOTSSignature</a></h4>
-<table>
-  <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
-  </tr>
-  <tr>
-    <td>type</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Set to value <code>0</code> to denote a WOTS Signature.</td>
-  </tr>
-  <tr>
-    <td>signature</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Signature signing the serialized unsigned transaction.</td>
-  </tr>
-</table>
 <h4 id="ed25519signature"><a class="header" href="#ed25519signature">Ed25519Signature</a></h4>
 <table>
   <tr>
@@ -1776,7 +1753,6 @@ which is an address without balance.</p>
     <td>signature</td>
     <td>&#10004;</td>
     <td>
-        <a href="specs/index.html#wotssignature">WOTSSignature</a> |
         <a href="specs/index.html#ed25519signature">Ed25519Signature</a>
     </td>
     <td>An unlock block containing signature(s) unlocking input(s).</td>
