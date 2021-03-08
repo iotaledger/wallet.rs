@@ -31,6 +31,8 @@ use std::{
     time::Instant,
 };
 
+use getset::Getters;
+
 #[derive(Zeroize)]
 #[zeroize(drop)]
 struct Password(Vec<u8>);
@@ -153,12 +155,15 @@ pub enum SnapshotStatus {
     Unlocked(Duration),
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Getters, Debug, Serialize)]
+#[getset(get = "pub")]
 /// Stronghold status.
 pub struct Status {
+    // The location of the snapshot
     #[serde(rename = "snapshotPath")]
-    snapshot_path: PathBuf,
-    snapshot: SnapshotStatus,
+    pub snapshot_path: PathBuf,
+    // The status of the snapshot
+    pub snapshot: SnapshotStatus,
 }
 
 /// Gets the stronghold status for the given snapshot.
