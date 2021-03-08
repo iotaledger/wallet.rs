@@ -2038,7 +2038,7 @@ dependencies = [
  "iota-wallet",
  "once_cell",
  "pyo3",
- "serde 1.0.123",
+ "serde 1.0.124",
  "serde_json",
  "tokio",
  "url",

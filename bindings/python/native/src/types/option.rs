@@ -155,7 +155,7 @@ impl From<&RustBrokerOptions> for BrokerOptions {
         Self {
             automatic_disconnect: broker_options.automatic_disconnect,
             timeout: broker_options.timeout.map(|s| s.as_secs()),
-            use_websockets: broker_options.use_websockets,
+            use_websockets: Some(broker_options.use_websockets),
         }
     }
 }
