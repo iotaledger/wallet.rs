@@ -1089,6 +1089,7 @@ impl AccountsSynchronizer {
     pub async fn execute(self) -> crate::Result<Vec<SyncedAccount>> {
         let mut synced_accounts = vec![];
         let mut last_account = None;
+        let mut last_account_index = 0;
 
         {
             let accounts = self.accounts.read().await;
@@ -1103,11 +1104,14 @@ impl AccountsSynchronizer {
                 let synced_account = sync.execute().await?;
 
                 let account = account_handle.read().await;
-                last_account = Some((
-                    account.messages().is_empty() || account.addresses().iter().all(|addr| *addr.balance() == 0),
-                    account.client_options().clone(),
-                    account.signer_type().clone(),
-                ));
+                if *account.index() >= last_account_index {
+                    last_account_index = *account.index();
+                    last_account = Some((
+                        account.messages().is_empty() || account.addresses().iter().all(|addr| *addr.balance() == 0),
+                        account.client_options().clone(),
+                        account.signer_type().clone(),
+                    ));
+                }
                 synced_accounts.push(synced_account);
             }
         }
