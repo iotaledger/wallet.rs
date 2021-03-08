@@ -54,13 +54,21 @@ public final class EventManager {
     }
     private static native long do_subscribe_confirmation_state_change(TransactionConfirmationChangeListener cb);
 
-    public static EventId subscribe_balance_change(BalanceChangeListener cb) {
-        long ret = do_subscribe_balance_change(cb);
+    public static EventId subscribe_stronghold_status_change(StrongholdStatusListener cb) {
+        long ret = do_subscribe_stronghold_status_change(cb);
         EventId convRet = new EventId(InternalPointerMarker.RAW_PTR, ret);
 
         return convRet;
     }
-    private static native long do_subscribe_balance_change(BalanceChangeListener cb);
+    private static native long do_subscribe_stronghold_status_change(StrongholdStatusListener cb);
+
+    public static EventId subscribe_address_consolidation_needed(AddressConsolidationNeededListener cb) {
+        long ret = do_subscribe_address_consolidation_needed(cb);
+        EventId convRet = new EventId(InternalPointerMarker.RAW_PTR, ret);
+
+        return convRet;
+    }
+    private static native long do_subscribe_address_consolidation_needed(AddressConsolidationNeededListener cb);
 
     public synchronized void delete() {
         if (mNativeObj != 0) {

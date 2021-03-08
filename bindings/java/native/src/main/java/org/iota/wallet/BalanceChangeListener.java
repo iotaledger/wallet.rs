@@ -5,6 +5,6 @@ package org.iota.wallet;
 public interface BalanceChangeListener {
 
 
-    void onbalanceChange(BalanceEvent event);
+    void onBalanceChange(BalanceEvent event);
 
 }

@@ -44,6 +44,7 @@ use iota_wallet::{
         EventId, TransferProgressType, BalanceChange,
         TransactionEvent as WalletTransactionEvent,
         TransactionConfirmationChangeEvent as WalletTransactionConfirmationChangeEvent,
+        AddressConsolidationNeeded as WalletAddressConsolidationNeeded,
         TransferProgress as WalletTransferProgress,
         BalanceEvent as WalletBalanceEvent,
     },
@@ -377,6 +378,19 @@ foreign_class!(
 );
 
 foreign_class!(
+    class AddressConsolidationNeededEvent {
+        self_type WalletAddressConsolidationNeeded;
+        private constructor = empty;
+        fn WalletAddressConsolidationNeeded::accountId(&self) -> &str {
+            this.account_id()
+        }
+        fn WalletAddressConsolidationNeeded::address(&self) -> AddressWrapper {
+            this.address().clone()
+        }
+    }
+);
+
+foreign_class!(
     class TransactionEvent {
         self_type WalletTransactionEvent;
         private constructor = empty;
@@ -489,7 +503,17 @@ foreign_callback!(callback TransactionConfirmationChangeListener {
 
 foreign_callback!(callback BalanceChangeListener {
     self_type BalanceChangeListener + Send + 'static;
-    onbalanceChange = BalanceChangeListener::on_balance_change(&self, event: WalletBalanceEvent);
+    onBalanceChange = BalanceChangeListener::on_balance_change(&self, event: WalletBalanceEvent);
+});
+
+foreign_callback!(callback StrongholdStatusListener {
+    self_type StrongholdStatusListener + Send + 'static;
+    onStrongholdStatusChange = StrongholdStatusListener::on_stronghold_status_change(&self, event: StrongholdStatusEvent);
+});
+
+foreign_callback!(callback AddressConsolidationNeededListener {
+    self_type AddressConsolidationNeededListener + Send + 'static;
+    onAddressConsolidationNeeded = AddressConsolidationNeededListener::on_address_consolidation_needed(&self, event: WalletAddressConsolidationNeeded);
 });
 
 foreign_class!(
@@ -502,7 +526,8 @@ foreign_class!(
         fn EventManager::subscribe_broadcast(cb: Box<dyn BroadcastTransactionListener + Send + 'static>) -> EventId;
         fn EventManager::subscribe_transfer_progress(cb: Box<dyn TransferProgressListener + Send + 'static>) -> EventId;
         fn EventManager::subscribe_confirmation_state_change(cb: Box<dyn TransactionConfirmationChangeListener + Send + 'static>) -> EventId;
-        fn EventManager::subscribe_balance_change(cb: Box<dyn BalanceChangeListener + Send + 'static>) -> EventId;
+        fn EventManager::subscribe_stronghold_status_change(cb: Box<dyn StrongholdStatusListener + Send + 'static>) -> Result<EventId>;
+        fn EventManager::subscribe_address_consolidation_needed(cb: Box<dyn AddressConsolidationNeededListener + Send + 'static>) -> Result<EventId>;
     }
 );
 
