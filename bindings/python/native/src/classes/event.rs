@@ -20,9 +20,9 @@ fn py_slice_to_event_id(id: &[u8]) -> PyResult<EventId> {
 pub fn on_balance_change(callback: PyObject) -> PyResult<EventId> {
     crate::block_on(async {
         Ok(iota_wallet::event::on_balance_change(move |event| {
+            let event_string = serde_json::to_string(&event).unwrap();
             let gil = Python::acquire_gil();
             let py = gil.python();
-            let event_string = serde_json::to_string(&event).unwrap();
             let args = PyTuple::new(py, &[event_string]);
             callback.call1(py, args).unwrap_or_else(|_| {
                 PyErr::new::<exceptions::PyTypeError, _>(
@@ -48,9 +48,9 @@ pub fn remove_balance_change_listener(id: &[u8]) -> PyResult<()> {
 pub fn on_new_transaction(callback: PyObject) -> PyResult<EventId> {
     crate::block_on(async {
         Ok(iota_wallet::event::on_new_transaction(move |event| {
+            let event_string = serde_json::to_string(&event).unwrap();
             let gil = Python::acquire_gil();
             let py = gil.python();
-            let event_string = serde_json::to_string(&event).unwrap();
             let args = PyTuple::new(py, &[event_string]);
             callback.call1(py, args).unwrap_or_else(|_| {
                 PyErr::new::<exceptions::PyTypeError, _>(
@@ -76,9 +76,9 @@ pub fn remove_new_transaction_listener(id: &[u8]) -> PyResult<()> {
 pub fn on_confirmation_state_change(callback: PyObject) -> PyResult<EventId> {
     crate::block_on(async {
         Ok(iota_wallet::event::on_confirmation_state_change(move |event| {
+            let event_string = serde_json::to_string(&event).unwrap();
             let gil = Python::acquire_gil();
             let py = gil.python();
-            let event_string = serde_json::to_string(&event).unwrap();
             let args = PyTuple::new(py, &[event_string]);
             callback.call1(py, args).unwrap_or_else(|_| {
                 PyErr::new::<exceptions::PyTypeError, _>(
@@ -104,9 +104,9 @@ pub fn remove_confirmation_state_change_listener(id: &[u8]) -> PyResult<()> {
 pub fn on_reattachment(callback: PyObject) -> PyResult<EventId> {
     crate::block_on(async {
         Ok(iota_wallet::event::on_reattachment(move |event| {
+            let event_string = serde_json::to_string(&event).unwrap();
             let gil = Python::acquire_gil();
             let py = gil.python();
-            let event_string = serde_json::to_string(&event).unwrap();
             let args = PyTuple::new(py, &[event_string]);
             callback.call1(py, args).unwrap_or_else(|_| {
                 PyErr::new::<exceptions::PyTypeError, _>(
@@ -132,9 +132,9 @@ pub fn remove_reattachment_listener(id: &[u8]) -> PyResult<()> {
 pub fn on_broadcast(callback: PyObject) -> PyResult<EventId> {
     crate::block_on(async {
         Ok(iota_wallet::event::on_broadcast(move |event| {
+            let event_string = serde_json::to_string(&event).unwrap();
             let gil = Python::acquire_gil();
             let py = gil.python();
-            let event_string = serde_json::to_string(&event).unwrap();
             let args = PyTuple::new(py, &[event_string]);
             callback.call1(py, args).unwrap_or_else(|_| {
                 PyErr::new::<exceptions::PyTypeError, _>(
@@ -159,9 +159,9 @@ pub fn remove_broadcast_listener(id: &[u8]) -> PyResult<()> {
 #[pyfunction]
 pub fn on_error(callback: PyObject) -> PyResult<EventId> {
     Ok(iota_wallet::event::on_error(move |event| {
+        let event_string = serde_json::to_string(&event).unwrap();
         let gil = Python::acquire_gil();
         let py = gil.python();
-        let event_string = serde_json::to_string(&event).unwrap();
         let args = PyTuple::new(py, &[event_string]);
         callback.call1(py, args).unwrap_or_else(|_| {
             PyErr::new::<exceptions::PyTypeError, _>("Unable to use the python callback function for on_error()!")
@@ -183,9 +183,9 @@ pub fn remove_error_listener(id: &[u8]) -> PyResult<()> {
 pub fn on_stronghold_status_change(callback: PyObject) -> PyResult<EventId> {
     crate::block_on(async {
         Ok(iota_wallet::event::on_stronghold_status_change(move |event| {
+            let event_string = serde_json::to_string(&event).unwrap();
             let gil = Python::acquire_gil();
             let py = gil.python();
-            let event_string = serde_json::to_string(&event).unwrap();
             let args = PyTuple::new(py, &[event_string]);
             callback.call1(py, args).unwrap_or_else(|_| {
                 PyErr::new::<exceptions::PyTypeError, _>(
