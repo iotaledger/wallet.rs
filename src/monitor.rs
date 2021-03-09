@@ -154,6 +154,14 @@ async fn process_output(
         Some(message_index) => {
             let message = &mut account.messages_mut()[message_index];
             message.set_confirmed(Some(true));
+            let message = message.clone();
+            crate::event::emit_confirmation_state_change(
+                &account,
+                &message,
+                true,
+                account_handle.account_options.persist_events,
+            )
+            .await?;
         }
         None => {
             if let Ok(message) = crate::client::get_client(&client_options_)
