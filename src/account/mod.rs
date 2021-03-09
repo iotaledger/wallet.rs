@@ -181,7 +181,7 @@ impl AccountInitialiser {
     pub async fn initialise(mut self) -> crate::Result<AccountHandle> {
         let accounts = self.accounts.read().await;
 
-        let alias = self.alias.unwrap_or_else(|| format!("Account {}", accounts.len()));
+        let alias = self.alias.unwrap_or_else(|| format!("Account {}", accounts.len() + 1));
         let signer_type = self.signer_type.ok_or(crate::Error::AccountInitialiseRequiredField(
             crate::error::AccountInitialiseRequiredField::SignerType,
         ))?;
