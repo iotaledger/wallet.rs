@@ -1712,6 +1712,18 @@
 <span id="1709">1709</span>
 <span id="1710">1710</span>
 <span id="1711">1711</span>
+<span id="1712">1712</span>
+<span id="1713">1713</span>
+<span id="1714">1714</span>
+<span id="1715">1715</span>
+<span id="1716">1716</span>
+<span id="1717">1717</span>
+<span id="1718">1718</span>
+<span id="1719">1719</span>
+<span id="1720">1720</span>
+<span id="1721">1721</span>
+<span id="1722">1722</span>
+<span id="1723">1723</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2456,6 +2468,7 @@
                             } <span class="kw">else</span> {
                                 <span class="ident">BalanceChange</span>::<span class="ident">spent</span>(<span class="ident">before_sync_balance</span> <span class="op">-</span> <span class="ident">address_after_sync</span>.<span class="ident">balance</span>())
                             },
+                            <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">account_options</span>.<span class="ident">persist_events</span>,
                         )
                         .<span class="kw">await</span><span class="question-mark">?</span>;
                     }
@@ -2464,14 +2477,25 @@
                 <span class="comment">// new messages event</span>
                 <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">new_messages</span> {
                     <span class="ident">log</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;[SYNC] new message: {:?}&quot;</span>, <span class="ident">message</span>.<span class="ident">id</span>());
-                    <span class="ident">emit_transaction_event</span>(<span class="ident">TransactionEventType</span>::<span class="ident">NewTransaction</span>, <span class="kw-2">&amp;</span><span class="ident">account_ref</span>, <span class="ident">message</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="ident">emit_transaction_event</span>(
+                        <span class="ident">TransactionEventType</span>::<span class="ident">NewTransaction</span>,
+                        <span class="kw-2">&amp;</span><span class="ident">account_ref</span>,
+                        <span class="ident">message</span>,
+                        <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">account_options</span>.<span class="ident">persist_events</span>,
+                    )
+                    .<span class="kw">await</span><span class="question-mark">?</span>;
                 }
 
                 <span class="comment">// confirmation state change event</span>
                 <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">confirmation_changed_messages</span> {
                     <span class="ident">log</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;[POLLING] message confirmation state changed: {:?}&quot;</span>, <span class="ident">message</span>.<span class="ident">id</span>());
-                    <span class="ident">emit_confirmation_state_change</span>(<span class="kw-2">&amp;</span><span class="ident">account_ref</span>, <span class="kw-2">&amp;</span><span class="ident">message</span>, <span class="ident">message</span>.<span class="ident">confirmed</span>().<span class="ident">unwrap_or</span>(<span class="bool-val">false</span>))
-                        .<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="ident">emit_confirmation_state_change</span>(
+                        <span class="kw-2">&amp;</span><span class="ident">account_ref</span>,
+                        <span class="kw-2">&amp;</span><span class="ident">message</span>,
+                        <span class="ident">message</span>.<span class="ident">confirmed</span>().<span class="ident">unwrap_or</span>(<span class="bool-val">false</span>),
+                        <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">account_options</span>.<span class="ident">persist_events</span>,
+                    )
+                    .<span class="kw">await</span><span class="question-mark">?</span>;
                 }
 
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">updated_messages</span> <span class="op">=</span> <span class="ident">new_messages</span>;
