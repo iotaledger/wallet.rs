@@ -625,6 +625,7 @@ mod tests {
         emit_balance_change(
             &account,
             &crate::test_utils::generate_random_iota_address(),
+            vec![],
             BalanceChange::spent(5),
             true,
         )
