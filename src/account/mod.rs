@@ -4,7 +4,7 @@
 use crate::{
     account_manager::{AccountOptions, AccountStore},
     address::{Address, AddressBuilder, AddressWrapper},
-    client::ClientOptions,
+    client::{ClientOptions, Node},
     event::TransferProgressType,
     message::{Message, MessageType, Transfer},
     signing::{GenerateAddressMetadata, SignerType},
@@ -229,23 +229,25 @@ impl AccountInitialiser {
             skip_persistance: self.skip_persistance,
         };
 
-        let bech32_hrp = {
-            let client_guard = crate::client::get_client(&account.client_options).await;
-            let client = client_guard.read().await;
-
-            let unsynced_nodes = client.unsynced_nodes().await;
-            if !unsynced_nodes.is_empty() {
-                return Err(crate::Error::NodesNotSynced(
-                    unsynced_nodes
-                        .into_iter()
-                        .map(|n| n.as_str())
+        let bech32_hrp = crate::client::get_client(&account.client_options)
+            .await
+            .read()
+            .await
+            .get_network_info()
+            .await
+            .map_err(|e| match e {
+                iota::client::Error::SyncedNodePoolEmpty => crate::Error::NodesNotSynced(
+                    account
+                        .client_options
+                        .nodes()
+                        .iter()
+                        .map(|node| node.url.as_str())
                         .collect::<Vec<&str>>()
                         .join(", "),
-                ));
-            }
-
-            client.get_network_info().await?.bech32_hrp
-        };
+                ),
+                _ => e.into(),
+            })?
+            .bech32_hrp;
 
         for address in account.addresses.iter_mut() {
             address.set_bech32_hrp(bech32_hrp.to_string());
@@ -663,13 +665,19 @@ impl Account {
 
         let unsynced_nodes = client.unsynced_nodes().await;
         if !unsynced_nodes.is_empty() {
-            return Err(crate::Error::NodesNotSynced(
-                unsynced_nodes
-                    .into_iter()
-                    .map(|n| n.as_str())
-                    .collect::<Vec<&str>>()
-                    .join(", "),
-            ));
+            let diff_nodes: Vec<&Node> = options
+                .nodes()
+                .iter()
+                .filter(|node| !self.client_options.nodes().contains(node))
+                .collect();
+            let unsynced_diff_nodes: Vec<&str> = unsynced_nodes
+                .into_iter()
+                .filter(|url| diff_nodes.iter().any(|node| &&node.url == url))
+                .map(|url| url.as_str())
+                .collect();
+            if !unsynced_diff_nodes.is_empty() {
+                return Err(crate::Error::NodesNotSynced(unsynced_diff_nodes.join(", ")));
+            }
         }
 
         let bech32_hrp = client.get_network_info().await?.bech32_hrp;
