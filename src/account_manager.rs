@@ -406,13 +406,16 @@ impl AccountManager {
         is_monitoring.store(Self::_start_monitoring(accounts).await.is_ok(), Ordering::Relaxed);
     }
 
+    #[cfg(test)]
+    async fn _start_monitoring(_accounts: AccountStore) -> crate::Result<()> {
+        Ok(())
+    }
+
+    #[cfg(not(test))]
     async fn _start_monitoring(accounts: AccountStore) -> crate::Result<()> {
-        #[cfg(not(test))]
-        {
-            for account in accounts.read().await.values() {
-                crate::monitor::monitor_account_addresses_balance(account.clone()).await?;
-                crate::monitor::monitor_unconfirmed_messages(account.clone()).await?;
-            }
+        for account in accounts.read().await.values() {
+            crate::monitor::monitor_account_addresses_balance(account.clone()).await?;
+            crate::monitor::monitor_unconfirmed_messages(account.clone()).await?;
         }
         Ok(())
     }
