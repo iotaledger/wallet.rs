@@ -71,7 +71,7 @@ pub(crate) async fn get_synced_account(id: &str) -> SyncedAccountHandle {
 
 pub(crate) async fn store_synced_account(synced_account: SyncedAccount) -> String {
     let mut map = synced_account_instances().write().await;
-    let id: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
+    let id: String = thread_rng().sample_iter(&Alphanumeric).map(char::from).take(10).collect();
     map.insert(id.clone(), Arc::new(RwLock::new(synced_account)));
     id
 }
