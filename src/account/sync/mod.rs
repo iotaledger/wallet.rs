@@ -711,7 +711,7 @@ impl AccountSynchronizer {
                     .collect::<Vec<Message>>();
 
                 // balance event
-                for (address_before_sync, before_sync_balance, _) in &addresses_before_sync {
+                for (address_before_sync, before_sync_balance, before_sync_outputs) in &addresses_before_sync {
                     let address_after_sync = account_ref
                         .addresses()
                         .iter()
@@ -725,9 +725,18 @@ impl AccountSynchronizer {
                             address_after_sync.balance()
                         );
 
+                        let mut message_ids = Vec::new();
+                        // check new and updated outputs to find message ids
+                        for output in address_after_sync.outputs() {
+                            if !before_sync_outputs.contains(&output) {
+                                message_ids.push(output.message_id);
+                            }
+                        }
+
                         emit_balance_change(
                             &account_ref,
                             address_after_sync.address(),
+                            message_ids,
                             if address_after_sync.balance() > before_sync_balance {
                                 BalanceChange::received(address_after_sync.balance() - before_sync_balance)
                             } else {

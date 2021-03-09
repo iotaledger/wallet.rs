@@ -182,6 +182,7 @@ export declare interface BalanceChangeEvent {
   indexationId: string
   accountId: string
   address: string
+  messageIds: string[]
   balanceChange: { spent: number, received: number }
 }
 
