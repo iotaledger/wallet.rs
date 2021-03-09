@@ -72,6 +72,7 @@ macro_rules! event_getters_impl {
 
 #[pymethods]
 impl AccountManager {
+    #[allow(clippy::too_many_arguments)]
     #[new]
     /// The constructor of account manager.
     fn new(
