@@ -38,6 +38,16 @@ pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
     Ok(())
 }
 
+#[cfg(test)]
+async fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
+    _client_options: &ClientOptions,
+    _topic: String,
+    _handler: C,
+) -> crate::Result<()> {
+    Ok(())
+}
+
+#[cfg(not(test))]
 async fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
     client_options: &ClientOptions,
     topic: String,
