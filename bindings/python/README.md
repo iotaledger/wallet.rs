@@ -924,10 +924,7 @@ wallet_message = {
     'timestamp': int,
     'nonce': int,
     'confirmed': bool (optional),
-    'broadcasted': bool,
-    'incoming': bool,
-    'value': int,
-    'remainder_value': int
+    'broadcasted': bool
 }
 ```
 
@@ -1009,6 +1006,10 @@ transaction_regular_essence = {
     'inputs': list[Input],
     'outputs': list[Output],
     'payload': Payload (optional),
+    'internal': bool,
+    'incoming': bool,
+    'value': int,
+    'remainder_value': int,
 }
 ```
 Please refer to [Input](#input), [Output](#output), and [Payload](#payload) for the details of these types.

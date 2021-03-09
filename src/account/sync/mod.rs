@@ -3,7 +3,7 @@
 
 use crate::{
     account::{Account, AccountHandle},
-    account_manager::AccountOptions,
+    account_manager::{AccountOptions, AccountStore},
     address::{Address, AddressBuilder, AddressOutput, AddressWrapper, OutputKind},
     client::ClientOptions,
     event::{
@@ -478,6 +478,7 @@ async fn sync_messages(
 
 async fn perform_sync(
     mut account: &mut Account,
+    accounts: AccountStore,
     address_index: usize,
     gap_limit: usize,
     steps: Vec<AccountSynchronizeStep>,
@@ -546,10 +547,12 @@ async fn perform_sync(
     let mut futures_ = Vec::new();
     for (id, confirmed, message) in new_messages {
         let client_options = account.client_options().clone();
+        let account_id = account.id().to_string();
         let account_addresses = account.addresses().to_vec();
+        let accounts = accounts.clone();
         futures_.push(async move {
             tokio::spawn(async move {
-                Message::from_iota_message(id, message, &account_addresses, &client_options)
+                Message::from_iota_message(id, message, accounts, &account_id, &account_addresses, &client_options)
                     .with_confirmed(confirmed)
                     .finish()
                     .await
@@ -644,6 +647,7 @@ impl AccountSynchronizer {
         let mut account_to_sync = self.account_handle.read().await.clone();
         let return_value = match perform_sync(
             &mut account_to_sync,
+            self.account_handle.accounts.clone(),
             self.address_index,
             self.gap_limit,
             self.steps,
@@ -1474,9 +1478,16 @@ async fn perform_transfer(
     // drop the  client ref so it doesn't lock the Message parsing
     drop(client);
 
-    let message = Message::from_iota_message(message_id, message, account_.addresses(), account_.client_options())
-        .finish()
-        .await?;
+    let message = Message::from_iota_message(
+        message_id,
+        message,
+        account_handle.accounts.clone(),
+        account_.id(),
+        account_.addresses(),
+        account_.client_options(),
+    )
+    .finish()
+    .await?;
     account_.append_messages(vec![message.clone()]);
 
     account_.save().await?;
@@ -1613,9 +1624,16 @@ pub(crate) async fn repost_message(
                 RepostAction::Reattach => client.reattach(message_id).await?,
                 RepostAction::Retry => client.retry(message_id).await?,
             };
-            let message = Message::from_iota_message(id, message, account.addresses(), account.client_options())
-                .finish()
-                .await?;
+            let message = Message::from_iota_message(
+                id,
+                message,
+                account_handle.accounts.clone(),
+                account.id(),
+                account.addresses(),
+                account.client_options(),
+            )
+            .finish()
+            .await?;
 
             account.append_messages(vec![message.clone()]);
 

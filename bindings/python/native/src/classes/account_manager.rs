@@ -182,6 +182,7 @@ impl AccountManager {
         Ok(AccountInitialiser {
             account_initialiser: Some(self.account_manager.create_account(client_options.into())?),
             addresses: Default::default(),
+            accounts: self.account_manager.accounts().clone(),
         })
     }
 

@@ -104,7 +104,7 @@ mod test_utils {
         account_manager::{AccountManager, ManagerStorage},
         address::{Address, AddressBuilder, AddressWrapper},
         client::ClientOptionsBuilder,
-        message::{Message, MessagePayload, TransactionBuilderMetadata},
+        message::{Message, MessagePayload, TransactionBuilderMetadata, TransactionEssence},
         signing::SignerType,
     };
     use iota::{
@@ -506,53 +506,54 @@ mod test_utils {
             let tx_metadata = TransactionBuilderMetadata {
                 id: &id,
                 bech32_hrp,
+                account_id: "",
+                accounts: Default::default(),
                 account_addresses: &[],
                 client_options: &ClientOptionsBuilder::new().build().unwrap(),
             };
+
+            let mut payload = MessagePayload::new(
+                Payload::Transaction(Box::new(
+                    TransactionPayloadBuilder::new()
+                        .with_essence(Essence::Regular(
+                            iota::RegularEssence::builder()
+                                .add_output(
+                                    SignatureLockedSingleOutput::new(*self.address.address().as_ref(), self.value)
+                                        .unwrap()
+                                        .into(),
+                                )
+                                .add_input(UTXOInput::new(self.input_transaction_id, 0).unwrap().into())
+                                .finish()
+                                .unwrap(),
+                        ))
+                        .with_unlock_blocks(
+                            UnlockBlocks::new(vec![UnlockBlock::Signature(SignatureUnlock::Ed25519(
+                                Ed25519Signature::new([0; 32], Box::new([0])),
+                            ))])
+                            .unwrap(),
+                        )
+                        .finish()
+                        .unwrap(),
+                )),
+                &tx_metadata,
+            )
+            .await
+            .unwrap();
+            if let MessagePayload::Transaction(ref mut tx) = payload {
+                let TransactionEssence::Regular(ref mut essence) = tx.essence_mut();
+                essence.incoming = self.incoming;
+            }
+
             Message {
                 id,
                 version: 1,
                 parents: vec![MessageId::new([0; 32])],
                 payload_length: 0,
-                payload: Some(
-                    MessagePayload::new(
-                        Payload::Transaction(Box::new(
-                            TransactionPayloadBuilder::new()
-                                .with_essence(Essence::Regular(
-                                    iota::RegularEssence::builder()
-                                        .add_output(
-                                            SignatureLockedSingleOutput::new(
-                                                *self.address.address().as_ref(),
-                                                self.value,
-                                            )
-                                            .unwrap()
-                                            .into(),
-                                        )
-                                        .add_input(UTXOInput::new(self.input_transaction_id, 0).unwrap().into())
-                                        .finish()
-                                        .unwrap(),
-                                ))
-                                .with_unlock_blocks(
-                                    UnlockBlocks::new(vec![UnlockBlock::Signature(SignatureUnlock::Ed25519(
-                                        Ed25519Signature::new([0; 32], Box::new([0])),
-                                    ))])
-                                    .unwrap(),
-                                )
-                                .finish()
-                                .unwrap(),
-                        )),
-                        &tx_metadata,
-                    )
-                    .await
-                    .unwrap(),
-                ),
+                payload: Some(payload),
                 timestamp: chrono::Utc::now(),
                 nonce: 0,
-                value: self.value,
-                remainder_value: 0,
                 confirmed: self.confirmed,
                 broadcasted: self.broadcasted,
-                incoming: self.incoming,
             }
         }
     }

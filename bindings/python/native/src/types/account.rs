@@ -8,7 +8,9 @@ use iota_wallet::{
         AccountInitialiser as RustAccountInitialiser, AccountSynchronizer as RustAccountSynchronizer,
         SyncedAccount as RustSyncedAccount,
     },
-    account_manager::{AccountManager as RustAccountManager, AccountsSynchronizer as RustAccountsSynchronizer},
+    account_manager::{
+        AccountManager as RustAccountManager, AccountStore, AccountsSynchronizer as RustAccountsSynchronizer,
+    },
     address::Address as RustWalletAddress,
     message::Transfer as RustTransfer,
 };
@@ -24,6 +26,7 @@ pub struct AccountManager {
 pub struct AccountInitialiser {
     pub account_initialiser: Option<RustAccountInitialiser>,
     pub addresses: Vec<RustWalletAddress>,
+    pub accounts: AccountStore,
 }
 
 #[pyclass]

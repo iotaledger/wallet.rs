@@ -357,6 +357,8 @@ impl AccountInitialiser {
                 crate::block_on(to_rust_message(
                     msg,
                     "".to_string(),
+                    self.accounts.clone(),
+                    "",
                     &self.addresses,
                     &account_initialiser.client_options,
                 ))
