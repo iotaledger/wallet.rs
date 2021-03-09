@@ -187,9 +187,9 @@ dependencies = [
 
 [[package]]
 name = "async-trait"
-version = "0.1.47"
+version = "0.1.48"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e098e9c493fdf92832223594d9a164f96bdf17ba81a42aff86f85c76768726a"
+checksum = "36ea56748e10732c49404c153638a15ec3d6211ec5ff35d9bb20e13b93576adf"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -329,7 +329,7 @@ dependencies = [
  "flume",
  "futures 0.3.13",
  "hex",
- "iota-crypto 0.3.0",
+ "iota-crypto 0.3.0 (git+https://github.com/iotaledger/crypto.rs?rev=c3bf565eba62d0b81144174c2ff917bfde282e49)",
  "log",
  "serde 1.0.124",
  "thiserror",
@@ -347,7 +347,7 @@ dependencies = [
  "bee-pow",
  "digest 0.9.0",
  "hex",
- "iota-crypto 0.3.0",
+ "iota-crypto 0.3.0 (git+https://github.com/iotaledger/crypto.rs?rev=c3bf565eba62d0b81144174c2ff917bfde282e49)",
  "ref-cast",
  "serde 1.0.124",
  "thiserror",
@@ -379,7 +379,7 @@ source = "git+https://github.com/iotaledger/bee.git?rev=acab07e4bcff947c70cde312
 dependencies = [
  "bee-crypto 0.2.0-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
  "bee-ternary 0.4.0-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
- "iota-crypto 0.3.0",
+ "iota-crypto 0.3.0 (git+https://github.com/iotaledger/crypto.rs?rev=c3bf565eba62d0b81144174c2ff917bfde282e49)",
  "thiserror",
 ]
 
@@ -405,7 +405,7 @@ dependencies = [
  "futures-util",
  "fxhash",
  "hex",
- "iota-crypto 0.3.0",
+ "iota-crypto 0.3.0 (git+https://github.com/iotaledger/crypto.rs?rev=c3bf565eba62d0b81144174c2ff917bfde282e49)",
  "log",
  "num_cpus",
  "pin-project 1.0.5",
@@ -438,7 +438,7 @@ dependencies = [
  "digest 0.9.0",
  "futures 0.3.13",
  "hex",
- "iota-crypto 0.3.0",
+ "iota-crypto 0.3.0 (git+https://github.com/iotaledger/crypto.rs?rev=c3bf565eba62d0b81144174c2ff917bfde282e49)",
  "log",
  "num_cpus",
  "serde 1.0.124",
@@ -1777,7 +1777,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=9aab8aa36de0b1dc4d53443676f300ce780c8e3d#9aab8aa36de0b1dc4d53443676f300ce780c8e3d"
+source = "git+https://github.com/iotaledger/iota.rs?rev=be869fc47117f996cf040c8466ba4023d70cacfa#be869fc47117f996cf040c8466ba4023d70cacfa"
 dependencies = [
  "async-trait",
  "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
@@ -1804,7 +1804,7 @@ dependencies = [
 [[package]]
 name = "iota-core"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=9aab8aa36de0b1dc4d53443676f300ce780c8e3d#9aab8aa36de0b1dc4d53443676f300ce780c8e3d"
+source = "git+https://github.com/iotaledger/iota.rs?rev=be869fc47117f996cf040c8466ba4023d70cacfa#be869fc47117f996cf040c8466ba4023d70cacfa"
 dependencies = [
  "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?rev=c42171ff33c80cc2efb183e244dc79b7f58d9ac4)",
  "bee-message",
@@ -1848,9 +1848,18 @@ version = "0.3.0"
 source = "git+https://github.com/iotaledger/crypto.rs?rev=c3bf565eba62d0b81144174c2ff917bfde282e49#c3bf565eba62d0b81144174c2ff917bfde282e49"
 dependencies = [
  "blake2",
- "chacha20poly1305 0.7.1",
  "digest 0.9.0",
  "ed25519-zebra",
+]
+
+[[package]]
+name = "iota-crypto"
+version = "0.3.0"
+source = "git+https://github.com/iotaledger/crypto.rs?rev=fa67e9da78799186fbc8c7892d862221bd5d3171#fa67e9da78799186fbc8c7892d862221bd5d3171"
+dependencies = [
+ "blake2",
+ "chacha20poly1305 0.7.1",
+ "digest 0.9.0",
  "getrandom 0.2.2",
  "hmac 0.10.1",
  "pbkdf2",
@@ -1890,11 +1899,11 @@ dependencies = [
  "getset",
  "hex",
  "iota-core",
- "iota-crypto 0.3.0",
+ "iota-crypto 0.3.0 (git+https://github.com/iotaledger/crypto.rs?rev=fa67e9da78799186fbc8c7892d862221bd5d3171)",
  "iota-stronghold",
  "log",
  "once_cell",
- "rand 0.7.3",
+ "rand 0.8.3",
  "riker",
  "rusqlite",
  "serde 1.0.124",
@@ -1921,7 +1930,7 @@ dependencies = [
  "neon-build",
  "neon-serde",
  "once_cell",
- "rand 0.7.3",
+ "rand 0.8.3",
  "serde 1.0.124",
  "serde_json",
  "serde_repr",
@@ -3213,7 +3222,7 @@ dependencies = [
 [[package]]
 name = "riker"
 version = "0.4.2"
-source = "git+https://github.com/elenaf9/riker?branch=master#54dc5d8c1b26a1ebb47c324460fdf67cef5f6163"
+source = "git+https://github.com/elenaf9/riker#54dc5d8c1b26a1ebb47c324460fdf67cef5f6163"
 dependencies = [
  "chrono",
  "config",
@@ -3233,7 +3242,7 @@ dependencies = [
 [[package]]
 name = "riker-macros"
 version = "0.2.0"
-source = "git+https://github.com/elenaf9/riker?branch=master#54dc5d8c1b26a1ebb47c324460fdf67cef5f6163"
+source = "git+https://github.com/elenaf9/riker#54dc5d8c1b26a1ebb47c324460fdf67cef5f6163"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3367,9 +3376,9 @@ dependencies = [
 
 [[package]]
 name = "security-framework"
-version = "2.1.1"
+version = "2.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2dfd318104249865096c8da1dfabf09ddbb6d0330ea176812a62ec75e40c4166"
+checksum = "d493c5f39e02dfb062cd8f33301f90f9b13b650e8c1b1d0fd75c19dd64bff69d"
 dependencies = [
  "bitflags",
  "core-foundation",

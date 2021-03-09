@@ -38,6 +38,16 @@ pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
     Ok(())
 }
 
+#[cfg(test)]
+async fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
+    _client_options: &ClientOptions,
+    _topic: String,
+    _handler: C,
+) -> crate::Result<()> {
+    Ok(())
+}
+
+#[cfg(not(test))]
 async fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
     client_options: &ClientOptions,
     topic: String,
@@ -132,6 +142,7 @@ async fn process_output(
         } else {
             crate::event::BalanceChange::spent(old_balance - new_balance)
         },
+        account_handle.account_options.persist_events,
     )
     .await?;
 
@@ -162,6 +173,7 @@ async fn process_output(
                     crate::event::TransactionEventType::NewTransaction,
                     &account,
                     &message,
+                    account_handle.account_options.persist_events,
                 )
                 .await?;
                 account.messages_mut().push(message);
@@ -241,7 +253,13 @@ async fn process_metadata(
                 })
                 .await?;
 
-            crate::event::emit_confirmation_state_change(&account, &message, confirmed).await?;
+            crate::event::emit_confirmation_state_change(
+                &account,
+                &message,
+                confirmed,
+                account_handle.account_options.persist_events,
+            )
+            .await?;
         }
     }
     Ok(())

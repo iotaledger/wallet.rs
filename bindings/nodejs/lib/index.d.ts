@@ -175,6 +175,7 @@ export declare interface ManagerOptions {
   outputConsolidationThreshold?: number
   automaticOutputConsolidation?: boolean
   syncSpentOutputs?: boolean
+  persistEvents?: boolean
 }
 
 export declare interface BalanceChangeEvent {

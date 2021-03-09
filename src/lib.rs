@@ -194,7 +194,11 @@ mod test_utils {
 
     pub async fn get_account_manager() -> AccountManager {
         let storage_path = loop {
-            let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
+            let storage_path: String = thread_rng()
+                .sample_iter(&Alphanumeric)
+                .map(char::from)
+                .take(10)
+                .collect();
             let storage_path = PathBuf::from(format!("./test-storage/{}", storage_path));
             if !storage_path.exists() {
                 break storage_path;
@@ -292,7 +296,11 @@ mod test_utils {
 
         for test_case in test_cases {
             let storage_path = loop {
-                let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
+                let storage_path: String = thread_rng()
+                    .sample_iter(&Alphanumeric)
+                    .map(char::from)
+                    .take(10)
+                    .collect();
                 let storage_path = PathBuf::from(format!("./test-storage/{}", storage_path));
                 if !storage_path.exists() {
                     std::fs::create_dir_all(&storage_path).unwrap();
@@ -469,7 +477,7 @@ mod test_utils {
     impl Default for GenerateMessageBuilder {
         fn default() -> Self {
             Self {
-                value: rand::thread_rng().gen_range(1, 50000),
+                value: rand::thread_rng().gen_range(1..50000),
                 address: generate_random_address(),
                 confirmed: Some(false),
                 broadcasted: false,

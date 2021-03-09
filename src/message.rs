@@ -502,10 +502,16 @@ impl TransactionRegularEssence {
                         ));
                     }
                 } else {
-                    let sent = !metadata
-                        .account_addresses
-                        .iter()
-                        .any(|address| address.outputs().iter().any(|o| o.message_id() == metadata.id));
+                    let sent = inputs.iter().any(|i| match i {
+                        TransactionInput::UTXO(input) => match input.metadata {
+                            Some(ref input_metadata) => metadata
+                                .account_addresses
+                                .iter()
+                                .any(|a| &input_metadata.address == a.address()),
+                            None => false,
+                        },
+                        _ => false,
+                    });
                     for (output_address, output) in tx_outputs {
                         let address_belongs_to_account = metadata
                             .account_addresses
@@ -759,8 +765,21 @@ impl<'a> MessageBuilder<'a> {
 
         let mut value = 0;
         let mut remainder_value = 0;
+        let mut sent = false;
         if let Some(MessagePayload::Transaction(tx)) = &payload {
             let TransactionEssence::Regular(essence) = tx.essence();
+
+            sent = essence.inputs().iter().any(|i| match i {
+                TransactionInput::UTXO(input) => match input.metadata {
+                    Some(ref input_metadata) => self
+                        .account_addresses
+                        .iter()
+                        .any(|a| &input_metadata.address == a.address()),
+                    None => false,
+                },
+                _ => false,
+            });
+
             for output in essence.outputs() {
                 let (amount, remainder) = match output {
                     TransactionOutput::SignatureLockedSingle(o) => (o.amount, o.remainder),
@@ -785,10 +804,7 @@ impl<'a> MessageBuilder<'a> {
             nonce: self.iota_message.nonce(),
             confirmed: self.confirmed,
             broadcasted: true,
-            incoming: self
-                .account_addresses
-                .iter()
-                .any(|address| address.outputs().iter().any(|o| o.message_id() == &self.id)),
+            incoming: !sent,
             value,
             remainder_value,
         };

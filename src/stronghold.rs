@@ -388,6 +388,13 @@ async fn switch_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf
     Ok(())
 }
 
+async fn unset_password(storage_path: &PathBuf) {
+    let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
+    let mut access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
+    access_store.remove(storage_path);
+    passwords.remove(storage_path);
+}
+
 /// Removes the snapshot from memory and clears the password.
 pub async fn unload_snapshot(storage_path: &PathBuf, persist: bool) -> Result<()> {
     let current_snapshot_path = CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await.clone();
@@ -399,12 +406,7 @@ pub async fn unload_snapshot(storage_path: &PathBuf, persist: bool) -> Result<()
         }
     }
 
-    {
-        let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
-        let mut access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
-        access_store.remove(storage_path);
-        passwords.remove(storage_path);
-    }
+    unset_password(storage_path).await;
 
     crate::event::emit_stronghold_status_change(&get_status(storage_path).await).await;
 
@@ -422,7 +424,10 @@ async fn load_snapshot_internal(
     password: Vec<u8>,
 ) -> Result<()> {
     set_password(&snapshot_path, password).await;
-    check_snapshot(&mut runtime, &snapshot_path).await?;
+    if let Err(e) = check_snapshot(&mut runtime, &snapshot_path).await {
+        unset_password(&snapshot_path).await;
+        return Err(e);
+    };
     crate::event::emit_stronghold_status_change(&get_status(snapshot_path).await).await;
     Ok(())
 }
@@ -619,7 +624,7 @@ mod tests {
             runtime.block_on(async {
                 let interval = 500;
                 super::set_password_clear_interval(Duration::from_millis(interval)).await;
-                let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
+                let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).map(char::from).take(10).collect();
                 std::fs::create_dir_all("./test-storage").unwrap();
                 let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
                 super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await.unwrap();
@@ -647,7 +652,7 @@ mod tests {
             runtime.block_on(async {
                 let interval = Duration::from_millis(900);
                 super::set_password_clear_interval(interval).await;
-                let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
+                let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).map(char::from).take(10).collect();
                 std::fs::create_dir_all("./test-storage").unwrap();
                 let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
                 super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await.unwrap();
@@ -698,7 +703,11 @@ mod tests {
 
     #[tokio::test]
     async fn write_and_read() -> super::Result<()> {
-        let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
+        let snapshot_path: String = thread_rng()
+            .sample_iter(&Alphanumeric)
+            .map(char::from)
+            .take(10)
+            .collect();
         std::fs::create_dir_all("./test-storage").unwrap();
         let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
         super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await?;
@@ -714,7 +723,11 @@ mod tests {
 
     #[tokio::test]
     async fn write_and_delete() -> super::Result<()> {
-        let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
+        let snapshot_path: String = thread_rng()
+            .sample_iter(&Alphanumeric)
+            .map(char::from)
+            .take(10)
+            .collect();
         std::fs::create_dir_all("./test-storage").unwrap();
         let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
         super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await?;
@@ -732,13 +745,21 @@ mod tests {
         let mut snapshot_saves = vec![];
 
         for i in 1..3 {
-            let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
+            let snapshot_path: String = thread_rng()
+                .sample_iter(&Alphanumeric)
+                .map(char::from)
+                .take(10)
+                .collect();
             std::fs::create_dir_all("./test-storage").unwrap();
             let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
             super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await?;
 
             let id = format!("multiplesnapshots{}", i);
-            let data: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
+            let data: String = thread_rng()
+                .sample_iter(&Alphanumeric)
+                .map(char::from)
+                .take(10)
+                .collect();
             super::store_record(&snapshot_path, &id, data.clone()).await?;
             snapshot_saves.push((snapshot_path, id, data));
         }
@@ -753,7 +774,11 @@ mod tests {
 
     #[tokio::test]
     async fn change_password() -> super::Result<()> {
-        let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
+        let snapshot_path: String = thread_rng()
+            .sample_iter(&Alphanumeric)
+            .map(char::from)
+            .take(10)
+            .collect();
         std::fs::create_dir_all("./test-storage").unwrap();
         let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
         let old_password = [5; 32].to_vec();

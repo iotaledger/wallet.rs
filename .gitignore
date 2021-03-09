@@ -4,3 +4,8 @@
 backup
 .DS_Store
 book
+*.pyc
+.env
+.vscode
+*.ipynb
+*.stronghold

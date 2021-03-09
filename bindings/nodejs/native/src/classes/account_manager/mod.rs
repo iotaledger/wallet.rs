@@ -84,6 +84,8 @@ struct ManagerOptions {
     automatic_output_consolidation: bool,
     #[serde(rename = "syncSpentOutputs", default)]
     sync_spent_outputs: bool,
+    #[serde(rename = "persistEvents", default)]
+    persist_events: bool,
 }
 
 fn default_automatic_output_consolidation() -> bool {
@@ -168,6 +170,9 @@ declare_types! {
             }
             if options.sync_spent_outputs {
                 manager = manager.with_sync_spent_outputs();
+            }
+            if options.persist_events {
+                manager = manager.with_event_persistence();
             }
             if let Some(threshold) = options.output_consolidation_threshold {
                 manager = manager.with_output_consolidation_threshold(threshold);
