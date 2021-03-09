@@ -45,6 +45,7 @@ Creates a new instance of the AccountManager.
 | [outputConsolidationThreshold] | <code>number</code>  | <code>100</code>       | The number of outputs an address must have to trigger the automatic consolidation process |
 | [automaticOutputConsolidation] | <code>boolean</code> | <code>true</code>      | Disables the automatic output consolidation if false                                      |
 | [syncSpentOutputs]             | <code>boolean</code> | <code>false</code>     | Enables fetching spent output history on account sync                                     |
+| [persistEvents]                | <code>boolean</code> | <code>false</code>     | Enables event persistence                                                                 |
 
 #### setStrongholdPassword(password): void
 

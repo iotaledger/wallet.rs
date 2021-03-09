@@ -82,7 +82,7 @@ Also for all the optional values, the default values are the same as the ones in
 
 ### AccountManager
 
-#### constructor(storage_path (optional), storage (optional), password (optional), polling_interval (optional), automatic_output_consolidation(optional), output_consolidation_threshold(optional), sync_spent_outputs(optional)): [AccountManager](#accountmanager)
+#### constructor(storage_path (optional), storage (optional), password (optional), polling_interval (optional), automatic_output_consolidation(optional), output_consolidation_threshold(optional), sync_spent_outputs(optional), persist_events(optional)): [AccountManager](#accountmanager)
 
 Creates a new instance of the AccountManager.
 
@@ -95,6 +95,7 @@ Creates a new instance of the AccountManager.
 | [automatic_output_consolidation] | <code>bool</code>    | <code>true</code>         | Disables the automatic output consolidation process                                            |
 | [output_consolidation_threshold] | <code>int</code>     | <code>100</code>          | Sets the number of outputs an address must have to trigger the automatic consolidation process |
 | [sync_spent_outputs]             | <code>boolean</code> | <code>false</code>        | Enables fetching spent output history on account sync                                          |
+| [persist_events]                 | <code>boolean</code> | <code>false</code>        | Enables event persistence                                                                      |
 
 Note: if the `storage_path` is set, then the `storage` needs to be set too. An exception will be thrown when errors happened.
 

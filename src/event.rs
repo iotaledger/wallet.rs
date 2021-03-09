@@ -304,6 +304,7 @@ pub(crate) async fn emit_balance_change(
     account: &Account,
     address: &AddressWrapper,
     balance_change: BalanceChange,
+    persist: bool,
 ) -> crate::Result<()> {
     let listeners = balance_listeners().lock().await;
     let event = BalanceEvent {
@@ -313,12 +314,14 @@ pub(crate) async fn emit_balance_change(
         balance_change,
     };
 
-    crate::storage::get(account.storage_path())
-        .await?
-        .lock()
-        .await
-        .save_balance_change_event(&event)
-        .await?;
+    if persist {
+        crate::storage::get(account.storage_path())
+            .await?
+            .lock()
+            .await
+            .save_balance_change_event(&event)
+            .await?;
+    }
 
     for listener in listeners.deref() {
         (listener.on_event)(&event);
@@ -332,6 +335,7 @@ pub(crate) async fn emit_transaction_event(
     event_type: TransactionEventType,
     account: &Account,
     message: &Message,
+    persist: bool,
 ) -> crate::Result<()> {
     let listeners = transaction_listeners().lock().await;
     let event = TransactionEvent {
@@ -340,7 +344,7 @@ pub(crate) async fn emit_transaction_event(
         message: message.clone(),
     };
 
-    {
+    if persist {
         let storage_handle = crate::storage::get(account.storage_path()).await?;
         let mut storage = storage_handle.lock().await;
         match event_type {
@@ -370,6 +374,7 @@ pub(crate) async fn emit_confirmation_state_change(
     account: &Account,
     message: &Message,
     confirmed: bool,
+    persist: bool,
 ) -> crate::Result<()> {
     let listeners = transaction_confirmation_change_listeners().lock().await;
     let event = TransactionConfirmationChangeEvent {
@@ -379,12 +384,14 @@ pub(crate) async fn emit_confirmation_state_change(
         confirmed,
     };
 
-    crate::storage::get(account.storage_path())
-        .await?
-        .lock()
-        .await
-        .save_transaction_confirmation_event(&event)
-        .await?;
+    if persist {
+        crate::storage::get(account.storage_path())
+            .await?
+            .lock()
+            .await
+            .save_transaction_confirmation_event(&event)
+            .await?;
+    }
 
     for listener in listeners.deref() {
         (listener.on_event)(&event);
@@ -607,6 +614,7 @@ mod tests {
             &account,
             &crate::test_utils::generate_random_iota_address(),
             BalanceChange::spent(5),
+            true,
         )
         .await
         .unwrap();
@@ -627,7 +635,7 @@ mod tests {
         })
         .await;
 
-        emit_transaction_event(TransactionEventType::NewTransaction, &account, &message)
+        emit_transaction_event(TransactionEventType::NewTransaction, &account, &message, true)
             .await
             .unwrap();
     }
@@ -647,7 +655,7 @@ mod tests {
         })
         .await;
 
-        emit_transaction_event(TransactionEventType::Reattachment, &account, &message)
+        emit_transaction_event(TransactionEventType::Reattachment, &account, &message, true)
             .await
             .unwrap();
     }
@@ -667,7 +675,7 @@ mod tests {
         })
         .await;
 
-        emit_transaction_event(TransactionEventType::Broadcast, &account, &message)
+        emit_transaction_event(TransactionEventType::Broadcast, &account, &message, true)
             .await
             .unwrap();
     }
@@ -689,7 +697,7 @@ mod tests {
         })
         .await;
 
-        emit_confirmation_state_change(&account, &message, confirmed)
+        emit_confirmation_state_change(&account, &message, confirmed, true)
             .await
             .unwrap();
     }

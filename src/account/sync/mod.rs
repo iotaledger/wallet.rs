@@ -741,6 +741,7 @@ impl AccountSynchronizer {
                             } else {
                                 BalanceChange::spent(before_sync_balance - address_after_sync.balance())
                             },
+                            self.account_handle.account_options.persist_events,
                         )
                         .await?;
                     }
@@ -749,14 +750,25 @@ impl AccountSynchronizer {
                 // new messages event
                 for message in &new_messages {
                     log::info!("[SYNC] new message: {:?}", message.id());
-                    emit_transaction_event(TransactionEventType::NewTransaction, &account_ref, message).await?;
+                    emit_transaction_event(
+                        TransactionEventType::NewTransaction,
+                        &account_ref,
+                        message,
+                        self.account_handle.account_options.persist_events,
+                    )
+                    .await?;
                 }
 
                 // confirmation state change event
                 for message in &confirmation_changed_messages {
                     log::info!("[POLLING] message confirmation state changed: {:?}", message.id());
-                    emit_confirmation_state_change(&account_ref, &message, message.confirmed().unwrap_or(false))
-                        .await?;
+                    emit_confirmation_state_change(
+                        &account_ref,
+                        &message,
+                        message.confirmed().unwrap_or(false),
+                        self.account_handle.account_options.persist_events,
+                    )
+                    .await?;
                 }
 
                 let mut updated_messages = new_messages;
