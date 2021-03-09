@@ -652,25 +652,19 @@ impl AccountSynchronizer {
         .await
         {
             Ok(is_empty) => {
-                let messages_before_sync: Vec<(MessageId, Option<bool>)> = self
-                    .account_handle
-                    .read()
-                    .await
+                let mut account_ref = self.account_handle.write().await;
+                let messages_before_sync: Vec<(MessageId, Option<bool>)> = account_ref
                     .messages()
                     .iter()
                     .map(|m| (*m.id(), *m.confirmed()))
                     .collect();
-                let addresses_before_sync: Vec<(String, u64, Vec<AddressOutput>)> = self
-                    .account_handle
-                    .read()
-                    .await
+                let addresses_before_sync: Vec<(String, u64, Vec<AddressOutput>)> = account_ref
                     .addresses()
                     .iter()
                     .map(|a| (a.address().to_bech32(), *a.balance(), a.outputs().to_vec()))
                     .collect();
 
                 if !self.skip_persistance {
-                    let mut account_ref = self.account_handle.write().await;
                     account_ref
                         .do_mut(|account| {
                             for address in account_to_sync.addresses() {
@@ -698,8 +692,6 @@ impl AccountSynchronizer {
                         })
                         .await?;
                 }
-
-                let account_ref = self.account_handle.read().await;
 
                 let new_messages = account_ref
                     .messages()
