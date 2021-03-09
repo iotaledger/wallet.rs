@@ -317,6 +317,9 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf)
         // save the current snapshot and clear the cache
         if curr_snapshot_path != snapshot_path {
             switch_snapshot(&mut runtime, snapshot_path).await?;
+        } else {
+            // otherwise reload the actors so the password is verified
+            load_actors(&mut runtime, snapshot_path).await?;
         }
     } else {
         load_actors(&mut runtime, snapshot_path).await?;
@@ -423,6 +426,25 @@ async fn load_snapshot_internal(
     snapshot_path: &PathBuf,
     password: Vec<u8>,
 ) -> Result<()> {
+    // if we're reloading the snapshot with a different password,
+    // we force a snapshot refresh so the password is verified.
+    if CURRENT_SNAPSHOT_PATH
+        .get_or_init(Default::default)
+        .lock()
+        .await
+        .as_ref()
+        == Some(snapshot_path)
+        && PASSWORD_STORE
+            .get_or_init(default_password_store)
+            .lock()
+            .await
+            .get(snapshot_path)
+            .map(|p| &p.0)
+            != Some(&password)
+    {
+        clear_stronghold_cache(runtime, true).await?;
+    }
+
     set_password(&snapshot_path, password).await;
     if let Err(e) = check_snapshot(&mut runtime, &snapshot_path).await {
         unset_password(&snapshot_path).await;
@@ -791,6 +813,30 @@ mod tests {
         super::change_password(&snapshot_path, old_password, new_password.to_vec()).await?;
 
         super::load_snapshot(&snapshot_path, new_password).await?;
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn change_password_invalid() -> super::Result<()> {
+        let snapshot_path: String = thread_rng()
+            .sample_iter(&Alphanumeric)
+            .map(char::from)
+            .take(10)
+            .collect();
+        std::fs::create_dir_all("./test-storage").unwrap();
+        let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
+        super::load_snapshot(&snapshot_path, [5; 32].to_vec()).await?;
+        let id = "writeanddeleteid".to_string();
+        let data = "record data";
+        super::store_record(&snapshot_path, &id, data.to_string()).await?;
+
+        let wrong_password = [16; 32].to_vec();
+        let new_password = [6; 32].to_vec();
+        match super::change_password(&snapshot_path, wrong_password, new_password.to_vec()).await {
+            Err(super::Error::FailedToPerformAction(_)) => {}
+            _ => panic!("expected a stronghold error when changing password"),
+        }
 
         Ok(())
     }
