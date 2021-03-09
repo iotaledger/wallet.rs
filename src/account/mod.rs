@@ -6,7 +6,7 @@ use crate::{
     address::{Address, AddressBuilder, AddressWrapper},
     client::{ClientOptions, Node},
     event::TransferProgressType,
-    message::{Message, MessageType, Transfer},
+    message::{Message, MessagePayload, MessageType, TransactionEssence, Transfer},
     signing::{GenerateAddressMetadata, SignerType},
 };
 
@@ -291,11 +291,11 @@ impl AccountInitialiser {
         account.set_id(format!("{}{}", ACCOUNT_ID_PREFIX, hex::encode(digest)));
 
         let guard = if self.skip_persistance {
-            AccountHandle::new(account, self.account_options)
+            AccountHandle::new(account, self.accounts.clone(), self.account_options)
         } else {
             account.save().await?;
             let account_id = account.id().clone();
-            let guard = AccountHandle::new(account, self.account_options);
+            let guard = AccountHandle::new(account, self.accounts.clone(), self.account_options);
             drop(accounts);
             self.accounts.write().await.insert(account_id, guard.clone());
             let _ = crate::monitor::monitor_account_addresses_balance(guard.clone()).await;
@@ -350,14 +350,16 @@ pub struct Account {
 #[derive(Debug, Clone)]
 pub struct AccountHandle {
     inner: Arc<RwLock<Account>>,
+    pub(crate) accounts: AccountStore,
     locked_addresses: Arc<Mutex<Vec<AddressWrapper>>>,
     pub(crate) account_options: AccountOptions,
 }
 
 impl AccountHandle {
-    pub(crate) fn new(account: Account, account_options: AccountOptions) -> Self {
+    pub(crate) fn new(account: Account, accounts: AccountStore, account_options: AccountOptions) -> Self {
         Self {
             inner: Arc::new(RwLock::new(account)),
+            accounts,
             locked_addresses: Default::default(),
             account_options,
         }
@@ -633,11 +635,17 @@ impl Account {
             self.list_messages(0, 0, None)
                 .iter()
                 .fold((0, 0), |(incoming, outgoing), message| {
-                    if *message.incoming() {
-                        (incoming + *message.value(), outgoing)
-                    } else {
-                        (incoming, outgoing + *message.value())
+                    if let Some(MessagePayload::Transaction(tx)) = message.payload() {
+                        let TransactionEssence::Regular(essence) = tx.essence();
+                        if !essence.internal() {
+                            if essence.incoming() {
+                                return (incoming + essence.value(), outgoing);
+                            } else {
+                                return (incoming, outgoing + essence.value());
+                            }
+                        }
                     }
+                    (incoming, outgoing)
                 });
         AccountBalance {
             total: self.addresses.iter().fold(0, |acc, address| acc + address.balance()),
@@ -753,11 +761,25 @@ impl Account {
             }
             let should_push = if let Some(message_type) = message_type.clone() {
                 match message_type {
-                    MessageType::Received => *message.incoming(),
-                    MessageType::Sent => !message.incoming(),
+                    MessageType::Received => {
+                        if let Some(MessagePayload::Transaction(tx)) = message.payload() {
+                            let TransactionEssence::Regular(essence) = tx.essence();
+                            essence.incoming()
+                        } else {
+                            false
+                        }
+                    }
+                    MessageType::Sent => {
+                        if let Some(MessagePayload::Transaction(tx)) = message.payload() {
+                            let TransactionEssence::Regular(essence) = tx.essence();
+                            !essence.incoming()
+                        } else {
+                            false
+                        }
+                    }
                     MessageType::Failed => !message.broadcasted(),
                     MessageType::Unconfirmed => message.confirmed().is_none(),
-                    MessageType::Value => *message.value() > 0,
+                    MessageType::Value => matches!(message.payload(), Some(MessagePayload::Transaction(_))),
                 }
             } else {
                 true

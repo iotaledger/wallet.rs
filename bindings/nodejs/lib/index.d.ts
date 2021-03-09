@@ -15,6 +15,10 @@ export declare interface RegularEssence {
   inputs: Input[];
   outputs: Output[];
   payload?: Payload[];
+  incoming: boolean;
+  internal: boolean;
+  value: number;
+  remainderValue: number;
 }
 
 export declare type Essence = {
@@ -72,8 +76,6 @@ export declare interface Message {
   nonce: number;
   confirmed?: boolean;
   broadcasted: boolean;
-  incoming: boolean;
-  value: number;
 }
 
 export declare interface Address {

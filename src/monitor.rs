@@ -173,11 +173,17 @@ async fn process_output(
                 .data(&message_id)
                 .await
             {
-                let message =
-                    Message::from_iota_message(message_id, message, account.addresses(), account.client_options())
-                        .with_confirmed(Some(true))
-                        .finish()
-                        .await?;
+                let message = Message::from_iota_message(
+                    message_id,
+                    message,
+                    account_handle.accounts.clone(),
+                    account.id(),
+                    account.addresses(),
+                    account.client_options(),
+                )
+                .with_confirmed(Some(true))
+                .finish()
+                .await?;
                 crate::event::emit_transaction_event(
                     crate::event::TransactionEventType::NewTransaction,
                     &account,

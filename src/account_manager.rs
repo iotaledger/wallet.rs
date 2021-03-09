@@ -60,7 +60,8 @@ pub const STRONGHOLD_FILENAME: &str = "wallet.stronghold";
 #[cfg_attr(docsrs, doc(cfg(feature = "sqlite-storage")))]
 pub const SQLITE_FILENAME: &str = "wallet.db";
 
-pub(crate) type AccountStore = Arc<RwLock<HashMap<String, AccountHandle>>>;
+#[doc(hidden)]
+pub type AccountStore = Arc<RwLock<HashMap<String, AccountHandle>>>;
 
 /// The storage used by the manager.
 #[derive(Deserialize)]
@@ -284,6 +285,8 @@ pub struct AccountManager {
     /// the path to the storage.
     #[getset(get = "pub")]
     storage_path: PathBuf,
+    /// Returns a handle to the accounts store.
+    #[getset(get = "pub")]
     accounts: AccountStore,
     stop_polling_sender: Option<BroadcastSender<()>>,
     polling_handle: Option<thread::JoinHandle<()>>,
@@ -340,7 +343,7 @@ impl AccountManager {
         storage_file_path: &PathBuf,
         account_options: AccountOptions,
     ) -> crate::Result<AccountStore> {
-        let mut parsed_accounts = HashMap::new();
+        let parsed_accounts = Arc::new(RwLock::new(HashMap::new()));
 
         let accounts = crate::storage::get(&storage_file_path)
             .await?
@@ -349,10 +352,13 @@ impl AccountManager {
             .get_accounts()
             .await?;
         for account in accounts {
-            parsed_accounts.insert(account.id().clone(), AccountHandle::new(account, account_options));
+            parsed_accounts.write().await.insert(
+                account.id().clone(),
+                AccountHandle::new(account, parsed_accounts.clone(), account_options),
+            );
         }
 
-        Ok(Arc::new(RwLock::new(parsed_accounts)))
+        Ok(parsed_accounts)
     }
 
     /// Deletes the storage.
@@ -725,8 +731,7 @@ impl AccountManager {
             .await?;
 
         // store the message on the receive account
-        let mut message_ = message.clone();
-        message_.set_incoming(true);
+        let message_ = message.clone();
         to_account_handle
             .write()
             .await
