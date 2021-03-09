@@ -2001,6 +2001,7 @@
 <span id="1998">1998</span>
 <span id="1999">1999</span>
 <span id="2000">2000</span>
+<span id="2001">2001</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -3192,9 +3193,10 @@
         <span class="kw">for</span> <span class="ident">account_handle</span> <span class="kw">in</span> <span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">values</span>() {
             <span class="ident">synced_accounts</span>.<span class="ident">push</span>(<span class="ident">SyncedAccount</span>::<span class="ident">from</span>(<span class="ident">account_handle</span>.<span class="ident">clone</span>()).<span class="kw">await</span>);
             <span class="kw">let</span> (<span class="ident">account_handle</span>, <span class="ident">unconfirmed_messages</span>): (<span class="ident">AccountHandle</span>, <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">MessageId</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MessagePayload</span><span class="op">&gt;</span>)<span class="op">&gt;</span>) <span class="op">=</span> {
-                <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>;
-                <span class="kw">let</span> <span class="ident">unconfirmed_messages</span> <span class="op">=</span> <span class="ident">account</span>
-                    .<span class="ident">list_messages</span>(<span class="ident">account</span>.<span class="ident">messages</span>().<span class="ident">len</span>(), <span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="ident">MessageType</span>::<span class="ident">Unconfirmed</span>))
+                <span class="kw">let</span> <span class="ident">unconfirmed_messages</span> <span class="op">=</span> <span class="ident">account_handle</span>
+                    .<span class="ident">read</span>()
+                    .<span class="kw">await</span>
+                    .<span class="ident">list_messages</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="ident">MessageType</span>::<span class="ident">Unconfirmed</span>))
                     .<span class="ident">iter</span>()
                     .<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> (<span class="kw-2">*</span><span class="ident">m</span>.<span class="ident">id</span>(), <span class="ident">m</span>.<span class="ident">payload</span>().<span class="ident">clone</span>()))
                     .<span class="ident">collect</span>();
