@@ -82,6 +82,7 @@ impl AccountManager {
         automatic_output_consolidation: Option<bool>,
         output_consolidation_threshold: Option<usize>,
         sync_spent_outputs: Option<bool>,
+        persist_events: Option<bool>,
     ) -> Result<Self> {
         let mut account_manager = RustAccountManager::builder();
         if storage_path.is_some() & storage.is_some() {
@@ -112,6 +113,9 @@ impl AccountManager {
         }
         if sync_spent_outputs.unwrap_or(false) {
             account_manager = account_manager.with_sync_spent_outputs();
+        }
+        if persist_events.unwrap_or(false) {
+            account_manager = account_manager.with_event_persistence();
         }
         if let Some(threshold) = output_consolidation_threshold {
             account_manager = account_manager.with_output_consolidation_threshold(threshold);

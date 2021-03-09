@@ -132,6 +132,7 @@ async fn process_output(
         } else {
             crate::event::BalanceChange::spent(old_balance - new_balance)
         },
+        account_handle.account_options.persist_events,
     )
     .await?;
 
@@ -162,6 +163,7 @@ async fn process_output(
                     crate::event::TransactionEventType::NewTransaction,
                     &account,
                     &message,
+                    account_handle.account_options.persist_events,
                 )
                 .await?;
                 account.messages_mut().push(message);
@@ -241,7 +243,13 @@ async fn process_metadata(
                 })
                 .await?;
 
-            crate::event::emit_confirmation_state_change(&account, &message, confirmed).await?;
+            crate::event::emit_confirmation_state_change(
+                &account,
+                &message,
+                confirmed,
+                account_handle.account_options.persist_events,
+            )
+            .await?;
         }
     }
     Ok(())

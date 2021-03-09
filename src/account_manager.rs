@@ -131,6 +131,7 @@ impl Default for AccountManagerBuilder {
                 output_consolidation_threshold: DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
                 automatic_output_consolidation: true,
                 sync_spent_outputs: false,
+                persist_events: false,
             },
         }
     }
@@ -184,6 +185,12 @@ impl AccountManagerBuilder {
     /// Enables fetching spent output history on sync.
     pub fn with_sync_spent_outputs(mut self) -> Self {
         self.account_options.sync_spent_outputs = true;
+        self
+    }
+
+    /// Enables event persistence.
+    pub fn with_event_persistence(mut self) -> Self {
+        self.account_options.persist_events = true;
         self
     }
 
@@ -264,6 +271,7 @@ pub(crate) struct AccountOptions {
     pub(crate) output_consolidation_threshold: usize,
     pub(crate) automatic_output_consolidation: bool,
     pub(crate) sync_spent_outputs: bool,
+    pub(crate) persist_events: bool,
 }
 
 /// The account manager.
@@ -1229,7 +1237,13 @@ async fn poll(
         let client = crate::client::get_client(account.client_options()).await;
 
         for message in &retried_data.reattached {
-            emit_transaction_event(TransactionEventType::Reattachment, &account, &message).await?;
+            emit_transaction_event(
+                TransactionEventType::Reattachment,
+                &account,
+                &message,
+                retried_data.account_handle.account_options.persist_events,
+            )
+            .await?;
         }
 
         account.append_messages(retried_data.reattached);
@@ -1850,7 +1864,7 @@ mod tests {
                 BalanceChange::spent(3),
             ];
             for change in &change_events {
-                emit_balance_change(&account, account.latest_address().address(), change.clone())
+                emit_balance_change(&account, account.latest_address().address(), change.clone(), true)
                     .await
                     .unwrap();
             }
@@ -1896,7 +1910,7 @@ mod tests {
                 (m3, true),
             ];
             for (message, change) in &confirmation_change_events {
-                emit_confirmation_state_change(&account, message, *change)
+                emit_confirmation_state_change(&account, message, *change, true)
                     .await
                     .unwrap();
             }
@@ -1940,7 +1954,7 @@ mod tests {
                         let m4 = crate::test_utils::GenerateMessageBuilder::default().build().await;
                         let events = vec![m1, m2, m3, m4];
                         for message in &events {
-                            emit_transaction_event($event_type, &account, message)
+                            emit_transaction_event($event_type, &account, message, true)
                                 .await
                                 .unwrap();
                         }
