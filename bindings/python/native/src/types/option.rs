@@ -21,8 +21,17 @@ pub struct NodeAuth {
 }
 
 impl From<NodeAuth> for RustNodeAuth {
-    fn from(auth: NodeAuth) -> RustNodeAuth {
-        RustNodeAuth {
+    fn from(auth: NodeAuth) -> Self {
+        Self {
+            username: auth.username,
+            password: auth.password,
+        }
+    }
+}
+
+impl From<RustNodeAuth> for NodeAuth {
+    fn from(auth: RustNodeAuth) -> Self {
+        Self {
             username: auth.username,
             password: auth.password,
         }
@@ -44,6 +53,15 @@ impl From<Node> for RustNode {
     }
 }
 
+impl From<RustNode> for Node {
+    fn from(node: RustNode) -> Self {
+        Self {
+            url: node.url.as_str().to_string(),
+            auth: node.auth.map(|auth| auth.into()),
+        }
+    }
+}
+
 #[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct ClientOptions {
     pub nodes: Option<Vec<Node>>,
@@ -56,6 +74,7 @@ pub struct ClientOptions {
     pub node_sync_enabled: Option<bool>,
     /// in mllisecond
     pub request_timeout: Option<u64>,
+    /// in mllisecond
     pub api_timeout: Option<HashMap<String, u64>>,
 }
 
@@ -129,4 +148,55 @@ impl From<ClientOptions> for RustClientOptions {
         }
         builder.build().unwrap()
     }
+}
+
+impl From<&RustBrokerOptions> for BrokerOptions {
+    fn from(broker_options: &RustBrokerOptions) -> Self {
+        Self {
+            automatic_disconnect: broker_options.automatic_disconnect,
+            timeout: broker_options.timeout.map(|s| s.as_secs()),
+            use_websockets: Some(broker_options.use_websockets),
+        }
+    }
+}
+
+impl From<RustClientOptions> for ClientOptions {
+    fn from(client_options: RustClientOptions) -> Self {
+        Self {
+            nodes: Some(client_options.nodes().iter().map(|s| s.clone().into()).collect()),
+            node_pool_urls: Some(
+                client_options
+                    .node_pool_urls()
+                    .iter()
+                    .map(|s| s.as_str().to_string())
+                    .collect(),
+            ),
+            network: client_options.network().as_ref().map(|s| s.to_string()),
+            mqtt_broker_options: client_options
+                .mqtt_broker_options()
+                .as_ref()
+                .map(|options| options.into()),
+            local_pow: Some(*client_options.local_pow()),
+            node_sync_interval: client_options.node_sync_interval().map(duration_to_millisec),
+            node_sync_enabled: Some(*client_options.node_sync_enabled()),
+            request_timeout: client_options.request_timeout().map(duration_to_millisec),
+            api_timeout: {
+                let mut map: HashMap<String, u64> = HashMap::new();
+                for (api, s) in client_options.api_timeout().iter() {
+                    let api = match api {
+                        RustApi::GetTips => "GetTips",
+                        RustApi::PostMessage => "PostMessage",
+                        RustApi::GetOutput => "GetOutput",
+                    };
+                    map.insert(api.to_string(), duration_to_millisec(*s));
+                }
+                Some(map)
+            },
+        }
+    }
+}
+
+/// Helper function of casting duration to millisec
+fn duration_to_millisec(s: Duration) -> u64 {
+    s.as_secs() * 1000 + s.subsec_nanos() as u64 / 1_000_000
 }
