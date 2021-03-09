@@ -65,7 +65,9 @@ pub struct BalanceEvent {
     #[serde(with = "crate::serde::iota_address_serde")]
     pub address: AddressWrapper,
     /// The message id associated with the balance change.
-    /// Note that this is unreliable without [AccountManagerBuilder#with_sync_spent_outputs](struct.AccountManagerBuilder.html#method.with_sync_spent_outputs). ``
+    /// Note that this is unreliable without
+    /// [AccountManagerBuilder#with_sync_spent_outputs](struct.AccountManagerBuilder.html#method.
+    /// with_sync_spent_outputs). ``
     #[serde(rename = "messageIds", default)]
     pub message_ids: Vec<MessageId>,
     /// The balance change data.
