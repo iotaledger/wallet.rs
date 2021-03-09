@@ -22,8 +22,11 @@ impl StrongholdStorageAdapter {
     }
 }
 
-fn storage_err<E: ToString>(error: E) -> crate::Error {
-    crate::Error::Storage(error.to_string())
+fn storage_err(error: crate::stronghold::Error) -> crate::Error {
+    match error {
+        crate::stronghold::Error::RecordNotFound => crate::Error::RecordNotFound,
+        _ => crate::Error::Storage(error.to_string()),
+    }
 }
 
 #[async_trait::async_trait]

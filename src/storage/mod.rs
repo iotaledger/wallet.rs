@@ -19,7 +19,7 @@ use crate::{
 use chrono::Utc;
 use crypto::ciphers::chacha::xchacha20poly1305;
 use once_cell::sync::OnceCell;
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use tokio::sync::{Mutex, RwLock};
 
 use std::{
@@ -89,11 +89,11 @@ impl Storage {
 pub(crate) struct StorageManager {
     storage: Storage,
     account_indexation: Vec<AccountIndexation>,
-    balance_change_indexation: Vec<EventIndexation>,
-    transaction_confirmation_indexation: Vec<EventIndexation>,
-    new_transaction_indexation: Vec<EventIndexation>,
-    reattachment_indexation: Vec<EventIndexation>,
-    broadcast_indexation: Vec<EventIndexation>,
+    balance_change_indexation: Option<Vec<EventIndexation>>,
+    transaction_confirmation_indexation: Option<Vec<EventIndexation>>,
+    new_transaction_indexation: Option<Vec<EventIndexation>>,
+    reattachment_indexation: Option<Vec<EventIndexation>>,
+    broadcast_indexation: Option<Vec<EventIndexation>>,
 }
 
 impl StorageManager {
@@ -126,13 +126,14 @@ impl StorageManager {
 
     pub async fn save_account(&mut self, key: &str, account: &Account) -> crate::Result<()> {
         let index = AccountIndexation { key: key.to_string() };
+        self.storage.set(key, account).await?;
         if !self.account_indexation.contains(&index) {
             self.account_indexation.push(index);
             self.storage
                 .set(ACCOUNT_INDEXATION_KEY, &self.account_indexation)
                 .await?;
         }
-        self.storage.set(key, account).await
+        Ok(())
     }
 
     pub async fn remove_account(&mut self, key: &str) -> crate::Result<()> {
@@ -150,30 +151,54 @@ impl StorageManager {
     }
 }
 
+async fn load_optional_data<T: DeserializeOwned + Default>(storage: &Storage, key: &str) -> crate::Result<T> {
+    let record = match storage.get(key).await {
+        Ok(record) => serde_json::from_str(&record)?,
+        Err(crate::Error::RecordNotFound) => T::default(),
+        Err(e) => return Err(e),
+    };
+    Ok(record)
+}
+
 macro_rules! event_manager_impl {
     ($event_ty:ty, $index_vec:ident, $index_key: expr, $save_fn_name: ident, $get_fn_name: ident, $get_count_fn_name: ident) => {
         impl StorageManager {
             pub async fn $save_fn_name(&mut self, event: &$event_ty) -> crate::Result<()> {
                 let key = event.indexation_id.clone();
+                self.storage.set(&key, event).await?;
                 let index = EventIndexation {
                     key: key.to_string(),
                     timestamp: Utc::now().timestamp(),
                 };
-                self.$index_vec.push(index);
+                match self.$index_vec {
+                    Some(ref mut indexation) => indexation.push(index),
+                    None => {
+                        let mut indexation: Vec<EventIndexation> =
+                            load_optional_data(&self.storage, $index_key).await?;
+                        indexation.push(index);
+                        self.$index_vec = Some(indexation);
+                    }
+                }
                 self.storage.set($index_key, &self.$index_vec).await?;
-                self.storage.set(&key, event).await
+                Ok(())
             }
 
             pub async fn $get_fn_name<T: Into<Option<Timestamp>>>(
-                &self,
+                &mut self,
                 count: usize,
                 skip: usize,
                 from_timestamp: T,
             ) -> crate::Result<Vec<$event_ty>> {
+                let indexation = match &self.$index_vec {
+                    Some(indexation) => indexation,
+                    None => {
+                        self.$index_vec = Some(load_optional_data(&self.storage, $index_key).await?);
+                        self.$index_vec.as_ref().unwrap()
+                    }
+                };
                 let mut events = Vec::new();
                 let from_timestamp = from_timestamp.into().unwrap_or(0);
-                let iter = self
-                    .$index_vec
+                let iter = indexation
                     .iter()
                     .filter(|i| i.timestamp >= from_timestamp)
                     .skip(skip);
@@ -188,9 +213,19 @@ macro_rules! event_manager_impl {
                 Ok(events)
             }
 
-            pub async fn $get_count_fn_name<T: Into<Option<Timestamp>>>(&self, from_timestamp: T) -> usize {
+            pub async fn $get_count_fn_name<T: Into<Option<Timestamp>>>(
+                &mut self,
+                from_timestamp: T,
+            ) -> crate::Result<usize> {
+                let indexation = match &self.$index_vec {
+                    Some(indexation) => indexation,
+                    None => {
+                        self.$index_vec = Some(load_optional_data(&self.storage, $index_key).await?);
+                        self.$index_vec.as_ref().unwrap()
+                    }
+                };
                 let from_timestamp = from_timestamp.into().unwrap_or(0);
-                self.$index_vec
+                let count = indexation
                     .iter()
                     // using folder since it's faster than .filter().count()
                     .fold(0, |count, index| {
@@ -199,7 +234,8 @@ macro_rules! event_manager_impl {
                         } else {
                             count
                         }
-                    })
+                    });
+                Ok(count)
             }
         }
     };
