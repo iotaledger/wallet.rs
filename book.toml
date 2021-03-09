@@ -7,9 +7,10 @@ title = "IOTA Wallet Library"
 
 [output.html]
 default-theme = "iota"
+theme = "./docs/theme"
 git-repository-url = "https://github.com/iotaledger/wallet.rs"
 git-repository-icon = "fa-github"
-additional-css = ["./theme/css/custom/header.css"]
+additional-css = ["./docs/theme/css/custom/header.css"]
 
 [output.html.playpen]
 editable = false
