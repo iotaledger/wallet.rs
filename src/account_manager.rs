@@ -1036,7 +1036,7 @@ macro_rules! event_getters_impl {
                     .lock()
                     .await
                     .$get_count_fn_name(from_timestamp)
-                    .await;
+                    .await?;
                 Ok(count)
             }
         }
