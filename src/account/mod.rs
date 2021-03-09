@@ -240,7 +240,7 @@ impl AccountInitialiser {
                         .into_iter()
                         .map(|n| n.as_str())
                         .collect::<Vec<&str>>()
-                        .join(" "),
+                        .join(", "),
                 ));
             }
 
@@ -668,7 +668,7 @@ impl Account {
                     .into_iter()
                     .map(|n| n.as_str())
                     .collect::<Vec<&str>>()
-                    .join(" "),
+                    .join(", "),
             ));
         }
 
