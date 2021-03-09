@@ -49,18 +49,18 @@ public final class ClientOptionsBuilder {
     }
     private static native long do_withNodeSyncDisabled(long self);
 
-    public final ClientOptionsBuilder with_mqtt_mqtt_broker_options(BrokerOptions options) {
+    public final ClientOptionsBuilder withMqttBrokerOptions(BrokerOptions options) {
         long a0 = options.mNativeObj;
         options.mNativeObj = 0;
 
-        long ret = do_with_mqtt_mqtt_broker_options(mNativeObj, a0);
+        long ret = do_withMqttBrokerOptions(mNativeObj, a0);
         ClientOptionsBuilder convRet = new ClientOptionsBuilder(InternalPointerMarker.RAW_PTR, ret);
 
         JNIReachabilityFence.reachabilityFence1(options);
 
         return convRet;
     }
-    private static native long do_with_mqtt_mqtt_broker_options(long self, long options);
+    private static native long do_withMqttBrokerOptions(long self, long options);
 
     public final ClientOptionsBuilder withLocalPow(boolean local) {
         long ret = do_withLocalPow(mNativeObj, local);

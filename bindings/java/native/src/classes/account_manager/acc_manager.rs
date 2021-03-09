@@ -27,6 +27,7 @@ fn default_storage_path() -> PathBuf {
     DEFAULT_STORAGE_FOLDER.into()
 }
 
+#[derive(Debug)]
 pub enum AccountSignerType {
     Stronghold = 1,
     LedgerNano = 2,
@@ -50,6 +51,7 @@ pub fn signer_type_enum_to_type(signer_type: AccountSignerType) -> SignerType {
     }
 }
 
+#[derive(Debug)]
 pub enum ManagerStorage {
     Stronghold = 1,
     Sqlite = 2,
@@ -58,10 +60,10 @@ pub enum ManagerStorage {
 fn storage_enum_to_storage(storage: ManagerStorage) -> ManagerStorageRust {
     match storage {
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-        Stronghold => ManagerStorageRust::Stronghold,
-
+        ManagerStorage::Stronghold => ManagerStorageRust::Stronghold,
+        
         #[cfg(feature = "sqlite-storage")]
-        Sqlite => ManagerStorageRust::Sqlite,
+        ManagerStorage::Sqlite => ManagerStorageRust::Sqlite,
 
         // Default to Stringhold
         // TODO: Will break
@@ -96,7 +98,6 @@ impl Default for ManagerOptions {
 
 impl ManagerOptions {
     pub fn set_storage_path(&mut self, storage_path: PathBuf){
-        println!("old storage: {:?}", &self.storage_path);
         self.storage_path = storage_path;
     }
 
@@ -298,9 +299,9 @@ impl AccountManager {
     }
 
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    pub fn import_accounts(&self, source: PathBuf, stronghold_password: String) -> Result<()> {
-        match crate::import_accounts(async move {
-            self.manager.retry(source, stronghold_password).await
+    pub fn import_accounts(&mut self, source: PathBuf, stronghold_password: String) -> Result<()> {
+        match crate::block_on(async move {
+            self.manager.import_accounts(source, stronghold_password).await
         }){
             Err(e) => Err(anyhow!(e.to_string())),
             Ok(_) => Ok(()),

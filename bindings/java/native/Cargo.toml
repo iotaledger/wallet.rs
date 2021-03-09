@@ -7,7 +7,7 @@ build = "build.rs"
 
 [dependencies]
 #, features = ["stronghold", "stronghold-storage", "sqlite-storage", "ledger-nano", "ledger-nano-simulator"] 
-iota-wallet = { path = "../../../", version = "0.1.0"}
+iota-wallet = { path = "../../../", version = "0.1.0" }
 iota-core = { git = "https://github.com/iotaledger/iota.rs", rev = "815a6271b50251b41b6bc94377075dcc2a0e56b5", features = ["mqtt"] }
 bee-message = { git = "https://github.com/iotaledger/bee.git", branch = "chrysalis-pt-2" }
 log = "0.4.6"
@@ -17,15 +17,21 @@ smol = "1.2.5"
 anyhow = "1.0.38"
 hex = "0.4"
 jni = "0.19" # Used in directly verifying binding linkage
-#flapigen = { git = "https://github.com/Dushistov/flapigen-rs" }
-tokio = { version = "1.2"}
-flapigen = { path = "../../../../flapigen-rs/macroslib" }
+flapigen = { git = "https://github.com/Dushistov/flapigen-rs" }
+tokio = { version = "1.2" }
 
 [lib]
 crate_type = ["cdylib"]
 
 [build-dependencies]
-#flapigen = { git = "https://github.com/Dushistov/flapigen-rs" }
-flapigen = { path = "../../../../flapigen-rs/macroslib" }
+flapigen = { git = "https://github.com/Dushistov/flapigen-rs" }
 env_logger = "0.7"
 bindgen = "0.55.1"
+
+[features]
+default = ["stronghold", "sqlite-storage"]
+stronghold = ["iota-wallet/stronghold"]
+stronghold-storage = ["iota-wallet/stronghold-storage"]
+sqlite-storage = ["iota-wallet/sqlite-storage"]
+ledger-nano = ["iota-wallet/ledger-nano"]
+ledger-nano-simulator = ["iota-wallet/ledger-nano-simulator"]

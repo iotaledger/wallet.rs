@@ -176,7 +176,7 @@ foreign_class!(class AccountManager {
     fn AccountManager::retry(&self, account_id: String, message_id: MessageId) -> Result<Message>;
     fn AccountManager::internal_transfer(&self, from_account_id: String, to_account_id: String, amount: u64) -> Result<Message>; alias internalTransfer;
     fn AccountManager::backup(&self, destination: PathBuf) -> Result<PathBuf>;
-    fn AccountManager::import_accounts(&self, source: PathBuf, stronghold_password: String) -> Result<()>; alias importAccounts;
+    fn AccountManager::import_accounts(&mut self, source: PathBuf, stronghold_password: String) -> Result<()>; alias importAccounts;
 });
 
 foreign_class!(class BrokerOptions {
@@ -195,7 +195,7 @@ foreign_class!(class ClientOptionsBuilder {
     fn ClientOptionsBuilder::with_network(&mut self, network: String) -> ClientOptionsBuilder; alias withNetwork;
     fn ClientOptionsBuilder::with_node_sync_interval(&mut self, node_sync_interval: Duration) -> ClientOptionsBuilder; alias withNodeSyncInterval;
     fn ClientOptionsBuilder::with_node_sync_disabled(&mut self) -> ClientOptionsBuilder; alias withNodeSyncDisabled;
-    fn ClientOptionsBuilder::with_mqtt_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientOptionsBuilder;
+    fn ClientOptionsBuilder::with_mqtt_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientOptionsBuilder; alias withMqttBrokerOptions;
     fn ClientOptionsBuilder::with_local_pow(&mut self, local: bool) -> ClientOptionsBuilder; alias withLocalPow;
     fn ClientOptionsBuilder::with_request_timeout(&mut self, timeout: Duration) -> ClientOptionsBuilder; alias withRequestTimeout;
     fn ClientOptionsBuilder::with_api_timeout(&mut self, api: Api, timeout: Duration) -> ClientOptionsBuilder; alias withApiTimeout;

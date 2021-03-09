@@ -23,6 +23,7 @@ startScripts {
 task customCleanTask(type: Delete) {
     // Clean up running "test" artifacts
     delete "${rootDir}/examples/basic-app/iota.rs-api.lb-0.testnet.chrysalis2.com-80"
+    delete "${rootDir}/examples/basic-app/iota.rs-api.lb-0.testnet.chrysalis2.com-443"
     delete "${rootDir}/examples/basic-app/my-db"
 }
 

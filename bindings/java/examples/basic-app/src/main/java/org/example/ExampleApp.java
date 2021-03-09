@@ -7,7 +7,7 @@ import java.nio.file.Path;
 import org.iota.wallet.*;
 import org.iota.wallet.local.*;
 
-public class ExampleApp {
+public class ExampleApp implements ErrorListener, StrongholdStatusListener {
     public static void main(String[] args) {
 
         try {
@@ -20,9 +20,13 @@ public class ExampleApp {
     public ExampleApp() {
         NativeAPI.verifyLink();
 
+        EventManager.subscribe_errors(this);
+        EventManager.subscribe_stronghold_status_change(this);
+
         Path storageFolder = Paths.get("./my-db");
 
         ManagerOptions options = new ManagerOptions();
+        options.setStorageType(ManagerStorage.STRONGHOLD);
         options.setStoragePath(storageFolder.toString());
 
         AccountManager manager = new AccountManager(options);
@@ -34,12 +38,16 @@ public class ExampleApp {
         // null means "generate one for me"
         manager.storeMnemonic(AccountSignerType.STRONGHOLD, mnemonic);
 
+        BrokerOptions mqtt = new BrokerOptions();
+        
         ClientOptions clientOptions = new ClientOptionsBuilder()
             .withNode("https://api.lb-0.testnet.chrysalis2.com")
+            .withMqttBrokerOptions(mqtt)
             .build();
         
         Account account = manager
             .createAccount(clientOptions)
+            .signerType(AccountSignerType.STRONGHOLD)
             .alias("alias1")
             .initialise();
 
@@ -83,5 +91,16 @@ public class ExampleApp {
         System.out.println(Arrays.toString(test.getBytes()));
         System.out.println(hex);
         System.out.println(Arrays.toString(RustHex.decode(hex)));
+    }
+
+    @Override
+    public void onError(String error) {
+        System.out.println("ON_ERROR: " + error);
+    }
+
+    @Override
+    public void onStrongholdStatusChange(StrongholdStatusEvent event) {
+        System.out.println("STRONGHOLD STATUS: " + event.status());
+        System.out.println("seconds left: " + event.unlockedDuration().getSeconds());
     }
 }

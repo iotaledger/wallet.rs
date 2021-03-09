@@ -150,7 +150,7 @@ impl EventManager {
     #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
     pub fn subscribe_stronghold_status_change(cb: Box<dyn StrongholdStatusListener + Send + 'static>) -> Result<EventId> {
         let id = crate::block_on(async move {
-            on_stronghold_status_change(move |event| {
+            iota_wallet::event::on_stronghold_status_change(move |event| {
                 cb.on_stronghold_status_change(StrongholdStatusEvent { 
                     status: event.clone()
                 });
@@ -167,7 +167,7 @@ impl EventManager {
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     pub fn subscribe_address_consolidation_needed(cb: Box<dyn AddressConsolidationNeededListener + Send + 'static>) -> Result<EventId> {
         let id = crate::block_on(async move {
-            on_address_consolidation_needed(move |event| {
+            iota_wallet::event::on_address_consolidation_needed(move |event| {
                 cb.on_address_consolidation_needed(event.clone());
             }).await
         });
