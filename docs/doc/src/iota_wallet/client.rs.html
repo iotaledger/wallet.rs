@@ -601,6 +601,17 @@
 <span id="598">598</span>
 <span id="599">599</span>
 <span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1001,25 +1012,36 @@
 
 <span class="doccomment">/// The client options type.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">Getters</span>)]</span>
-<span class="attribute">#[<span class="ident">getset</span>(<span class="ident">get</span> <span class="op">=</span> <span class="string">&quot;pub(crate)&quot;</span>)]</span>
+<span class="doccomment">/// Need to set the get methods to be public for binding</span>
+<span class="attribute">#[<span class="ident">getset</span>(<span class="ident">get</span> <span class="op">=</span> <span class="string">&quot;pub&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ClientOptions</span> {
     <span class="doccomment">/// this option is here just to simplify usage from consumers using the deserialization</span>
+    <span class="doccomment">/// The node.</span>
     <span class="ident">node</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Node</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The nodes vector.</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">default</span>)]</span>
     <span class="ident">nodes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Node</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The node pool urls.</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;nodePoolUrls&quot;</span>, <span class="ident">default</span>)]</span>
     <span class="ident">node_pool_urls</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Url</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The network string.</span>
     <span class="ident">network</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The MQTT broker options.</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;mqttBrokerOptions&quot;</span>)]</span>
     <span class="ident">mqtt_broker_options</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BrokerOptions</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Enable local proof-of-work or not.</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;localPow&quot;</span>, <span class="ident">default</span> <span class="op">=</span> <span class="string">&quot;default_local_pow&quot;</span>)]</span>
     <span class="ident">local_pow</span>: <span class="ident">bool</span>,
+    <span class="doccomment">/// The node sync interval.</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;nodeSyncInterval&quot;</span>)]</span>
     <span class="ident">node_sync_interval</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Enable node synchronization or not.</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;nodeSyncEnabled&quot;</span>, <span class="ident">default</span> <span class="op">=</span> <span class="string">&quot;default_node_sync_enabled&quot;</span>)]</span>
     <span class="ident">node_sync_enabled</span>: <span class="ident">bool</span>,
+    <span class="doccomment">/// The request timeout.</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;requestTimeout&quot;</span>)]</span>
     <span class="ident">request_timeout</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The API timeout.</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;apiTimeout&quot;</span>, <span class="ident">default</span>)]</span>
     <span class="ident">api_timeout</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Api</span>, <span class="ident">Duration</span><span class="op">&gt;</span>,
 }

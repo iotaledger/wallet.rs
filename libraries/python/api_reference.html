@@ -378,6 +378,22 @@ The account syncing process ensures that the latest metadata (balance, transacti
 <tr><td>from_timestamp</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
 </tbody></table>
 <h3 id="accounthandle"><a class="header" href="#accounthandle">AccountHandle</a></h3>
+<h4 id="id-str"><a class="header" href="#id-str">id(): str</a></h4>
+<p><strong>Returns</strong> the account ID.</p>
+<h4 id="signer_type-str"><a class="header" href="#signer_type-str">signer_type(): str</a></h4>
+<p><strong>Returns</strong> the singer type of this account.</p>
+<h4 id="index-int"><a class="header" href="#index-int">index(): int</a></h4>
+<p><strong>Returns</strong> the account index.</p>
+<h4 id="alias-str"><a class="header" href="#alias-str">alias(): str</a></h4>
+<p><strong>Returns</strong> the account alias.</p>
+<h4 id="created_at-int"><a class="header" href="#created_at-int">created_at(): int</a></h4>
+<p><strong>Returns</strong> the created UNIX timestamp.</p>
+<h4 id="last_synced_at-int-or-none-it-did-not-be-synced-before"><a class="header" href="#last_synced_at-int-or-none-it-did-not-be-synced-before">last_synced_at(): int or None (it did not be synced before)</a></h4>
+<p><strong>Returns</strong> the last synced UNIX timestamp.</p>
+<h4 id="client_options-a-hrefclientoptionsclientoptionsa"><a class="header" href="#client_options-a-hrefclientoptionsclientoptionsa">client_options(): <a href="#clientoptions">ClientOptions</a></a></h4>
+<p><strong>Returns</strong> the client options of this account.</p>
+<h4 id="bech32_hrp-str"><a class="header" href="#bech32_hrp-str">bech32_hrp(): str</a></h4>
+<p><strong>Returns</strong> the Bech32 HRP string.</p>
 <h4 id="sync-a-hrefaccountsynchronizeraccountsynchronizera"><a class="header" href="#sync-a-hrefaccountsynchronizeraccountsynchronizera">sync(): <a href="#accountsynchronizer">AccountSynchronizer</a></a></h4>
 <p><strong>Returns</strong> the <a href="#accountsynchronizer">AccountSynchronizer</a> to setup the process to synchronize this account with the Tangle.</p>
 <h4 id="transfertransfer_obj-a-hrefwalletmessagewalletmessagea"><a class="header" href="#transfertransfer_obj-a-hrefwalletmessagewalletmessagea">transfer(transfer_obj): <a href="#walletmessage">WalletMessage</a></a></h4>
@@ -483,6 +499,84 @@ The account can be initialised with locally stored address history.</p>
 <h4 id="initialise-a-hrefaccounthandleaccounthandlea"><a class="header" href="#initialise-a-hrefaccounthandleaccounthandlea">initialise(): <a href="#accounthandle">AccountHandle</a></a></h4>
 <p>Initialises the account.</p>
 <p><strong>Returns</strong> the initilized <a href="#accounthandle">AccountHandle</a></p>
+<h3 id="event-listeners"><a class="header" href="#event-listeners">Event Listeners</a></h3>
+<h4 id="on_balance_changecallback-listint"><a class="header" href="#on_balance_changecallback-listint">on_balance_change(callback): list[int]</a></h4>
+<p>Listen to balance changes.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[callback]</td><td><code>function</code></td><td><code>undefined</code></td><td>The callback function</td></tr>
+</tbody></table>
+<p><strong>Returns</strong> the event id as list[int].</p>
+<h4 id="remove_balance_change_listenerlistint-void"><a class="header" href="#remove_balance_change_listenerlistint-void">remove_balance_change_listener(list[int]): void</a></h4>
+<p>Removes the balance change listener associated with the given identifier.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[id]</td><td><code>list[int]</code></td><td><code>undefined</code></td><td>The event id</td></tr>
+</tbody></table>
+<h4 id="on_new_transactioncallback-listint"><a class="header" href="#on_new_transactioncallback-listint">on_new_transaction(callback): list[int]</a></h4>
+<p>Listen to new messages.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[callback]</td><td><code>function</code></td><td><code>undefined</code></td><td>The callback function</td></tr>
+</tbody></table>
+<p><strong>Returns</strong> the event id as list[int].</p>
+<h4 id="remove_new_transaction_listenerlistint-void"><a class="header" href="#remove_new_transaction_listenerlistint-void">remove_new_transaction_listener(list[int]): void</a></h4>
+<p>Removes the new transaction listener associated with the given identifier.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[id]</td><td><code>list[int]</code></td><td><code>undefined</code></td><td>The event id</td></tr>
+</tbody></table>
+<h4 id="on_confirmation_state_changecallback-listint"><a class="header" href="#on_confirmation_state_changecallback-listint">on_confirmation_state_change(callback): list[int]</a></h4>
+<p>Listen to transaction confirmation state change.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[callback]</td><td><code>function</code></td><td><code>undefined</code></td><td>The callback function</td></tr>
+</tbody></table>
+<p><strong>Returns</strong> the event id as list[int].</p>
+<h4 id="remove_confirmation_state_change_listenerlistint-void"><a class="header" href="#remove_confirmation_state_change_listenerlistint-void">remove_confirmation_state_change_listener(list[int]): void</a></h4>
+<p>Removes the new transaction listener associated with the given identifier.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[id]</td><td><code>list[int]</code></td><td><code>undefined</code></td><td>The event id</td></tr>
+</tbody></table>
+<h4 id="on_reattachmentcallback-listint"><a class="header" href="#on_reattachmentcallback-listint">on_reattachment(callback): list[int]</a></h4>
+<p>Listen to transaction reattachment.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[callback]</td><td><code>function</code></td><td><code>undefined</code></td><td>The callback function</td></tr>
+</tbody></table>
+<p><strong>Returns</strong> the event id as list[int].</p>
+<h4 id="remove_reattachment_listenerlistint-void"><a class="header" href="#remove_reattachment_listenerlistint-void">remove_reattachment_listener(list[int]): void</a></h4>
+<p>Removes the reattachment listener associated with the given identifier.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[id]</td><td><code>list[int]</code></td><td><code>undefined</code></td><td>The event id</td></tr>
+</tbody></table>
+<h4 id="on_broadcastcallback-listint"><a class="header" href="#on_broadcastcallback-listint">on_broadcast(callback): list[int]</a></h4>
+<p>Listen to transaction broadcast.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[callback]</td><td><code>function</code></td><td><code>undefined</code></td><td>The callback function</td></tr>
+</tbody></table>
+<p><strong>Returns</strong> the event id as list[int].</p>
+<h4 id="remove_broadcast_listenerlistint-void"><a class="header" href="#remove_broadcast_listenerlistint-void">remove_broadcast_listener(list[int]): void</a></h4>
+<p>Removes the broadcast listener associated with the given identifier.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[id]</td><td><code>list[int]</code></td><td><code>undefined</code></td><td>The event id</td></tr>
+</tbody></table>
+<h4 id="on_errorcallback-listint"><a class="header" href="#on_errorcallback-listint">on_error(callback): list[int]</a></h4>
+<p>Listen to errors.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[callback]</td><td><code>function</code></td><td><code>undefined</code></td><td>The callback function</td></tr>
+</tbody></table>
+<p><strong>Returns</strong> the event id as list[int].</p>
+<h4 id="remove_error_listenerlistint-void"><a class="header" href="#remove_error_listenerlistint-void">remove_error_listener(list[int]): void</a></h4>
+<p>Removes the error listener associated with the given identifier.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[id]</td><td><code>list[int]</code></td><td><code>undefined</code></td><td>The event id</td></tr>
+</tbody></table>
+<h4 id="on_stronghold_status_changecallback-listint"><a class="header" href="#on_stronghold_status_changecallback-listint">on_stronghold_status_change(callback): list[int]</a></h4>
+<p>Listen to stronghold status change events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[callback]</td><td><code>function</code></td><td><code>undefined</code></td><td>The callback function</td></tr>
+</tbody></table>
+<p><strong>Returns</strong> the event id as list[int].</p>
+<h4 id="remove_stronghold_status_change_listenerlistint-void"><a class="header" href="#remove_stronghold_status_change_listenerlistint-void">remove_stronghold_status_change_listener(list[int]): void</a></h4>
+<p>Removes the stronghold status change listener associated with the given identifier.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[id]</td><td><code>list[int]</code></td><td><code>undefined</code></td><td>The event id</td></tr>
+</tbody></table>
 <h3 id="walletaddress"><a class="header" href="#walletaddress">WalletAddress</a></h3>
 <p>A dict with the following key/value pairs.</p>
 <pre><code class="language-python">wallet_address = {
