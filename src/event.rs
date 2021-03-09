@@ -1,7 +1,11 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{account::Account, address::AddressWrapper, message::Message};
+use crate::{
+    account::Account,
+    address::AddressWrapper,
+    message::{Message, MessageId},
+};
 
 use getset::Getters;
 use once_cell::sync::Lazy;
@@ -60,6 +64,10 @@ pub struct BalanceEvent {
     /// The associated address.
     #[serde(with = "crate::serde::iota_address_serde")]
     pub address: AddressWrapper,
+    /// The message id associated with the balance change.
+    /// Note that this is unreliable without [AccountManagerBuilder#with_sync_spent_outputs](struct.AccountManagerBuilder.html#method.with_sync_spent_outputs). ``
+    #[serde(rename = "messageIds", default)]
+    pub message_ids: Vec<MessageId>,
     /// The balance change data.
     #[serde(rename = "balanceChange")]
     pub balance_change: BalanceChange,
@@ -303,6 +311,7 @@ pub async fn remove_balance_change_listener(id: &EventId) {
 pub(crate) async fn emit_balance_change(
     account: &Account,
     address: &AddressWrapper,
+    message_ids: Vec<MessageId>,
     balance_change: BalanceChange,
     persist: bool,
 ) -> crate::Result<()> {
@@ -311,6 +320,7 @@ pub(crate) async fn emit_balance_change(
         indexation_id: generate_indexation_id(),
         account_id: account.id().to_string(),
         address: address.clone(),
+        message_ids,
         balance_change,
     };
 
