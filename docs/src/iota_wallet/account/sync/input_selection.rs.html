@@ -318,7 +318,7 @@
                     <span class="ident">IotaAddress</span>::<span class="ident">Ed25519</span>(<span class="ident">Ed25519Address</span>::<span class="ident">new</span>([<span class="number">0</span>; <span class="number">32</span>])),
                     <span class="string">&quot;iota&quot;</span>.<span class="ident">to_string</span>(),
                 ))
-                .<span class="ident">balance</span>(<span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">0</span>, <span class="number">2000</span>))
+                .<span class="ident">balance</span>(<span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">0</span>..<span class="number">2000</span>))
                 .<span class="ident">key_index</span>(<span class="ident">i</span>)
                 .<span class="ident">outputs</span>(<span class="macro">vec</span><span class="macro">!</span>[])
                 .<span class="ident">build</span>()
@@ -333,7 +333,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">sum_random_utxos</span>(<span class="ident">rng</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">StdRng</span>, <span class="ident">available_utxos</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Input</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
-        <span class="kw">let</span> <span class="ident">utxos_picked_len</span> <span class="op">=</span> <span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">2</span>, <span class="ident">available_utxos</span>.<span class="ident">len</span>() <span class="op">/</span> <span class="number">2</span>);
+        <span class="kw">let</span> <span class="ident">utxos_picked_len</span> <span class="op">=</span> <span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">2</span>..<span class="ident">available_utxos</span>.<span class="ident">len</span>() <span class="op">/</span> <span class="number">2</span>);
         <span class="ident">available_utxos</span>.<span class="ident">shuffle</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">thread_rng</span>());
         <span class="ident">available_utxos</span>[..<span class="ident">utxos_picked_len</span>]
             .<span class="ident">iter</span>()
@@ -384,7 +384,7 @@
         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">20</span> {
             <span class="kw">let</span> <span class="ident">available_utxos</span> <span class="op">=</span> <span class="ident">generate_random_utxos</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>, <span class="number">30</span>);
             <span class="kw">let</span> <span class="ident">sum_utxos</span> <span class="op">=</span> <span class="ident">available_utxos</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">address</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">address</span>.<span class="ident">balance</span>);
-            <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="ident">sum_utxos</span> <span class="op">/</span> <span class="number">2</span>, <span class="ident">sum_utxos</span> <span class="op">*</span> <span class="number">2</span>);
+            <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="ident">sum_utxos</span> <span class="op">/</span> <span class="number">2</span>..<span class="ident">sum_utxos</span> <span class="op">*</span> <span class="number">2</span>);
             <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">select_input</span>(<span class="ident">target</span>, <span class="ident">available_utxos</span>);
             <span class="kw">if</span> <span class="ident">target</span> <span class="op">&gt;</span> <span class="ident">sum_utxos</span> {
                 <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">response</span>.<span class="ident">is_err</span>());
