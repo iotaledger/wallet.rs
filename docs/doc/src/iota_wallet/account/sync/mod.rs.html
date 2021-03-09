@@ -1725,13 +1725,31 @@
 <span id="1722">1722</span>
 <span id="1723">1723</span>
 <span id="1724">1724</span>
+<span id="1725">1725</span>
+<span id="1726">1726</span>
+<span id="1727">1727</span>
+<span id="1728">1728</span>
+<span id="1729">1729</span>
+<span id="1730">1730</span>
+<span id="1731">1731</span>
+<span id="1732">1732</span>
+<span id="1733">1733</span>
+<span id="1734">1734</span>
+<span id="1735">1735</span>
+<span id="1736">1736</span>
+<span id="1737">1737</span>
+<span id="1738">1738</span>
+<span id="1739">1739</span>
+<span id="1740">1740</span>
+<span id="1741">1741</span>
+<span id="1742">1742</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">account</span>::{<span class="ident">Account</span>, <span class="ident">AccountHandle</span>},
-    <span class="ident">account_manager</span>::<span class="ident">AccountOptions</span>,
+    <span class="ident">account_manager</span>::{<span class="ident">AccountOptions</span>, <span class="ident">AccountStore</span>},
     <span class="ident">address</span>::{<span class="ident">Address</span>, <span class="ident">AddressBuilder</span>, <span class="ident">AddressOutput</span>, <span class="ident">AddressWrapper</span>, <span class="ident">OutputKind</span>},
     <span class="ident">client</span>::<span class="ident">ClientOptions</span>,
     <span class="ident">event</span>::{
@@ -2206,6 +2224,7 @@
 
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">perform_sync</span>(
     <span class="kw-2">mut</span> <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Account</span>,
+    <span class="ident">accounts</span>: <span class="ident">AccountStore</span>,
     <span class="ident">address_index</span>: <span class="ident">usize</span>,
     <span class="ident">gap_limit</span>: <span class="ident">usize</span>,
     <span class="ident">steps</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AccountSynchronizeStep</span><span class="op">&gt;</span>,
@@ -2274,10 +2293,12 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">futures_</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
     <span class="kw">for</span> (<span class="ident">id</span>, <span class="ident">confirmed</span>, <span class="ident">message</span>) <span class="kw">in</span> <span class="ident">new_messages</span> {
         <span class="kw">let</span> <span class="ident">client_options</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">client_options</span>().<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">account_id</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">id</span>().<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="ident">account_addresses</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">addresses</span>().<span class="ident">to_vec</span>();
+        <span class="kw">let</span> <span class="ident">accounts</span> <span class="op">=</span> <span class="ident">accounts</span>.<span class="ident">clone</span>();
         <span class="ident">futures_</span>.<span class="ident">push</span>(<span class="kw">async</span> <span class="kw">move</span> {
             <span class="ident">tokio</span>::<span class="ident">spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
-                <span class="ident">Message</span>::<span class="ident">from_iota_message</span>(<span class="ident">id</span>, <span class="ident">message</span>, <span class="kw-2">&amp;</span><span class="ident">account_addresses</span>, <span class="kw-2">&amp;</span><span class="ident">client_options</span>)
+                <span class="ident">Message</span>::<span class="ident">from_iota_message</span>(<span class="ident">id</span>, <span class="ident">message</span>, <span class="ident">accounts</span>, <span class="kw-2">&amp;</span><span class="ident">account_id</span>, <span class="kw-2">&amp;</span><span class="ident">account_addresses</span>, <span class="kw-2">&amp;</span><span class="ident">client_options</span>)
                     .<span class="ident">with_confirmed</span>(<span class="ident">confirmed</span>)
                     .<span class="ident">finish</span>()
                     .<span class="kw">await</span>
@@ -2372,6 +2393,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account_to_sync</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">return_value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">perform_sync</span>(
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">account_to_sync</span>,
+            <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>(),
             <span class="self">self</span>.<span class="ident">address_index</span>,
             <span class="self">self</span>.<span class="ident">gap_limit</span>,
             <span class="self">self</span>.<span class="ident">steps</span>,
@@ -3202,9 +3224,16 @@
     <span class="comment">// drop the  client ref so it doesn&#39;t lock the Message parsing</span>
     <span class="ident">drop</span>(<span class="ident">client</span>);
 
-    <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">Message</span>::<span class="ident">from_iota_message</span>(<span class="ident">message_id</span>, <span class="ident">message</span>, <span class="ident">account_</span>.<span class="ident">addresses</span>(), <span class="ident">account_</span>.<span class="ident">client_options</span>())
-        .<span class="ident">finish</span>()
-        .<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">Message</span>::<span class="ident">from_iota_message</span>(
+        <span class="ident">message_id</span>,
+        <span class="ident">message</span>,
+        <span class="ident">account_handle</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>(),
+        <span class="ident">account_</span>.<span class="ident">id</span>(),
+        <span class="ident">account_</span>.<span class="ident">addresses</span>(),
+        <span class="ident">account_</span>.<span class="ident">client_options</span>(),
+    )
+    .<span class="ident">finish</span>()
+    .<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="ident">account_</span>.<span class="ident">append_messages</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">message</span>.<span class="ident">clone</span>()]);
 
     <span class="ident">account_</span>.<span class="ident">save</span>().<span class="kw">await</span><span class="question-mark">?</span>;
@@ -3341,9 +3370,16 @@
                 <span class="ident">RepostAction</span>::<span class="ident">Reattach</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">client</span>.<span class="ident">reattach</span>(<span class="ident">message_id</span>).<span class="kw">await</span><span class="question-mark">?</span>,
                 <span class="ident">RepostAction</span>::<span class="ident">Retry</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">client</span>.<span class="ident">retry</span>(<span class="ident">message_id</span>).<span class="kw">await</span><span class="question-mark">?</span>,
             };
-            <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">Message</span>::<span class="ident">from_iota_message</span>(<span class="ident">id</span>, <span class="ident">message</span>, <span class="ident">account</span>.<span class="ident">addresses</span>(), <span class="ident">account</span>.<span class="ident">client_options</span>())
-                .<span class="ident">finish</span>()
-                .<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">Message</span>::<span class="ident">from_iota_message</span>(
+                <span class="ident">id</span>,
+                <span class="ident">message</span>,
+                <span class="ident">account_handle</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>(),
+                <span class="ident">account</span>.<span class="ident">id</span>(),
+                <span class="ident">account</span>.<span class="ident">addresses</span>(),
+                <span class="ident">account</span>.<span class="ident">client_options</span>(),
+            )
+            .<span class="ident">finish</span>()
+            .<span class="kw">await</span><span class="question-mark">?</span>;
 
             <span class="ident">account</span>.<span class="ident">append_messages</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">message</span>.<span class="ident">clone</span>()]);
 

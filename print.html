@@ -1954,10 +1954,7 @@ The account can be initialised with locally stored address history.</p>
     'timestamp': int,
     'nonce': int,
     'confirmed': bool (optional),
-    'broadcasted': bool,
-    'incoming': bool,
-    'value': int,
-    'remainder_value': int
+    'broadcasted': bool
 }
 </code></pre>
 <p>Please refer to <a href="libraries/python/api_reference.html#payload">Payload</a> for the details of this type.</p>
@@ -2011,6 +2008,10 @@ The account can be initialised with locally stored address history.</p>
     'inputs': list[Input],
     'outputs': list[Output],
     'payload': Payload (optional),
+    'internal': bool,
+    'incoming': bool,
+    'value': int,
+    'remainder_value': int,
 }
 </code></pre>
 <p>Please refer to <a href="libraries/python/api_reference.html#input">Input</a>, <a href="libraries/python/api_reference.html#output">Output</a>, and <a href="libraries/python/api_reference.html#payload">Payload</a> for the details of these types.</p>

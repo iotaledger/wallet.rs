@@ -1214,6 +1214,34 @@
 <span id="1211">1211</span>
 <span id="1212">1212</span>
 <span id="1213">1213</span>
+<span id="1214">1214</span>
+<span id="1215">1215</span>
+<span id="1216">1216</span>
+<span id="1217">1217</span>
+<span id="1218">1218</span>
+<span id="1219">1219</span>
+<span id="1220">1220</span>
+<span id="1221">1221</span>
+<span id="1222">1222</span>
+<span id="1223">1223</span>
+<span id="1224">1224</span>
+<span id="1225">1225</span>
+<span id="1226">1226</span>
+<span id="1227">1227</span>
+<span id="1228">1228</span>
+<span id="1229">1229</span>
+<span id="1230">1230</span>
+<span id="1231">1231</span>
+<span id="1232">1232</span>
+<span id="1233">1233</span>
+<span id="1234">1234</span>
+<span id="1235">1235</span>
+<span id="1236">1236</span>
+<span id="1237">1237</span>
+<span id="1238">1238</span>
+<span id="1239">1239</span>
+<span id="1240">1240</span>
+<span id="1241">1241</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1223,7 +1251,7 @@
     <span class="ident">address</span>::{<span class="ident">Address</span>, <span class="ident">AddressBuilder</span>, <span class="ident">AddressWrapper</span>},
     <span class="ident">client</span>::{<span class="ident">ClientOptions</span>, <span class="ident">Node</span>},
     <span class="ident">event</span>::<span class="ident">TransferProgressType</span>,
-    <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessageType</span>, <span class="ident">Transfer</span>},
+    <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessagePayload</span>, <span class="ident">MessageType</span>, <span class="ident">TransactionEssence</span>, <span class="ident">Transfer</span>},
     <span class="ident">signing</span>::{<span class="ident">GenerateAddressMetadata</span>, <span class="ident">SignerType</span>},
 };
 
@@ -1508,11 +1536,11 @@
         <span class="ident">account</span>.<span class="ident">set_id</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}{}&quot;</span>, <span class="ident">ACCOUNT_ID_PREFIX</span>, <span class="ident">hex</span>::<span class="ident">encode</span>(<span class="ident">digest</span>)));
 
         <span class="kw">let</span> <span class="ident">guard</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">skip_persistance</span> {
-            <span class="ident">AccountHandle</span>::<span class="ident">new</span>(<span class="ident">account</span>, <span class="self">self</span>.<span class="ident">account_options</span>)
+            <span class="ident">AccountHandle</span>::<span class="ident">new</span>(<span class="ident">account</span>, <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>(), <span class="self">self</span>.<span class="ident">account_options</span>)
         } <span class="kw">else</span> {
             <span class="ident">account</span>.<span class="ident">save</span>().<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">account_id</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">id</span>().<span class="ident">clone</span>();
-            <span class="kw">let</span> <span class="ident">guard</span> <span class="op">=</span> <span class="ident">AccountHandle</span>::<span class="ident">new</span>(<span class="ident">account</span>, <span class="self">self</span>.<span class="ident">account_options</span>);
+            <span class="kw">let</span> <span class="ident">guard</span> <span class="op">=</span> <span class="ident">AccountHandle</span>::<span class="ident">new</span>(<span class="ident">account</span>, <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>(), <span class="self">self</span>.<span class="ident">account_options</span>);
             <span class="ident">drop</span>(<span class="ident">accounts</span>);
             <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">write</span>().<span class="kw">await</span>.<span class="ident">insert</span>(<span class="ident">account_id</span>, <span class="ident">guard</span>.<span class="ident">clone</span>());
             <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">monitor</span>::<span class="ident">monitor_account_addresses_balance</span>(<span class="ident">guard</span>.<span class="ident">clone</span>()).<span class="kw">await</span>;
@@ -1567,14 +1595,16 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AccountHandle</span> {
     <span class="ident">inner</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">accounts</span>: <span class="ident">AccountStore</span>,
     <span class="ident">locked_addresses</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressWrapper</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">account_options</span>: <span class="ident">AccountOptions</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">AccountHandle</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">account</span>: <span class="ident">Account</span>, <span class="ident">account_options</span>: <span class="ident">AccountOptions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">account</span>: <span class="ident">Account</span>, <span class="ident">accounts</span>: <span class="ident">AccountStore</span>, <span class="ident">account_options</span>: <span class="ident">AccountOptions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">inner</span>: <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">RwLock</span>::<span class="ident">new</span>(<span class="ident">account</span>)),
+            <span class="ident">accounts</span>,
             <span class="ident">locked_addresses</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
             <span class="ident">account_options</span>,
         }
@@ -1850,11 +1880,17 @@
             <span class="self">self</span>.<span class="ident">list_messages</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="prelude-val">None</span>)
                 .<span class="ident">iter</span>()
                 .<span class="ident">fold</span>((<span class="number">0</span>, <span class="number">0</span>), <span class="op">|</span>(<span class="ident">incoming</span>, <span class="ident">outgoing</span>), <span class="ident">message</span><span class="op">|</span> {
-                    <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">message</span>.<span class="ident">incoming</span>() {
-                        (<span class="ident">incoming</span> <span class="op">+</span> <span class="kw-2">*</span><span class="ident">message</span>.<span class="ident">value</span>(), <span class="ident">outgoing</span>)
-                    } <span class="kw">else</span> {
-                        (<span class="ident">incoming</span>, <span class="ident">outgoing</span> <span class="op">+</span> <span class="kw-2">*</span><span class="ident">message</span>.<span class="ident">value</span>())
+                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">MessagePayload</span>::<span class="ident">Transaction</span>(<span class="ident">tx</span>)) <span class="op">=</span> <span class="ident">message</span>.<span class="ident">payload</span>() {
+                        <span class="kw">let</span> <span class="ident">TransactionEssence</span>::<span class="ident">Regular</span>(<span class="ident">essence</span>) <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">essence</span>();
+                        <span class="kw">if</span> <span class="op">!</span><span class="ident">essence</span>.<span class="ident">internal</span>() {
+                            <span class="kw">if</span> <span class="ident">essence</span>.<span class="ident">incoming</span>() {
+                                <span class="kw">return</span> (<span class="ident">incoming</span> <span class="op">+</span> <span class="ident">essence</span>.<span class="ident">value</span>(), <span class="ident">outgoing</span>);
+                            } <span class="kw">else</span> {
+                                <span class="kw">return</span> (<span class="ident">incoming</span>, <span class="ident">outgoing</span> <span class="op">+</span> <span class="ident">essence</span>.<span class="ident">value</span>());
+                            }
+                        }
                     }
+                    (<span class="ident">incoming</span>, <span class="ident">outgoing</span>)
                 });
         <span class="ident">AccountBalance</span> {
             <span class="ident">total</span>: <span class="self">self</span>.<span class="ident">addresses</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">address</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">address</span>.<span class="ident">balance</span>()),
@@ -1970,11 +2006,25 @@
             }
             <span class="kw">let</span> <span class="ident">should_push</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">message_type</span>) <span class="op">=</span> <span class="ident">message_type</span>.<span class="ident">clone</span>() {
                 <span class="kw">match</span> <span class="ident">message_type</span> {
-                    <span class="ident">MessageType</span>::<span class="ident">Received</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">message</span>.<span class="ident">incoming</span>(),
-                    <span class="ident">MessageType</span>::<span class="ident">Sent</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">!</span><span class="ident">message</span>.<span class="ident">incoming</span>(),
+                    <span class="ident">MessageType</span>::<span class="ident">Received</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">MessagePayload</span>::<span class="ident">Transaction</span>(<span class="ident">tx</span>)) <span class="op">=</span> <span class="ident">message</span>.<span class="ident">payload</span>() {
+                            <span class="kw">let</span> <span class="ident">TransactionEssence</span>::<span class="ident">Regular</span>(<span class="ident">essence</span>) <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">essence</span>();
+                            <span class="ident">essence</span>.<span class="ident">incoming</span>()
+                        } <span class="kw">else</span> {
+                            <span class="bool-val">false</span>
+                        }
+                    }
+                    <span class="ident">MessageType</span>::<span class="ident">Sent</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">MessagePayload</span>::<span class="ident">Transaction</span>(<span class="ident">tx</span>)) <span class="op">=</span> <span class="ident">message</span>.<span class="ident">payload</span>() {
+                            <span class="kw">let</span> <span class="ident">TransactionEssence</span>::<span class="ident">Regular</span>(<span class="ident">essence</span>) <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">essence</span>();
+                            <span class="op">!</span><span class="ident">essence</span>.<span class="ident">incoming</span>()
+                        } <span class="kw">else</span> {
+                            <span class="bool-val">false</span>
+                        }
+                    }
                     <span class="ident">MessageType</span>::<span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">!</span><span class="ident">message</span>.<span class="ident">broadcasted</span>(),
                     <span class="ident">MessageType</span>::<span class="ident">Unconfirmed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">message</span>.<span class="ident">confirmed</span>().<span class="ident">is_none</span>(),
-                    <span class="ident">MessageType</span>::<span class="ident">Value</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">message</span>.<span class="ident">value</span>() <span class="op">&gt;</span> <span class="number">0</span>,
+                    <span class="ident">MessageType</span>::<span class="ident">Value</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">matches</span><span class="macro">!</span>(<span class="ident">message</span>.<span class="ident">payload</span>(), <span class="prelude-val">Some</span>(<span class="ident">MessagePayload</span>::<span class="ident">Transaction</span>(<span class="kw">_</span>))),
                 }
             } <span class="kw">else</span> {
                 <span class="bool-val">true</span>
@@ -2059,7 +2109,7 @@
         <span class="ident">account_manager</span>::<span class="ident">AccountManager</span>,
         <span class="ident">address</span>::{<span class="ident">Address</span>, <span class="ident">AddressBuilder</span>, <span class="ident">AddressOutput</span>, <span class="ident">OutputKind</span>},
         <span class="ident">client</span>::<span class="ident">ClientOptionsBuilder</span>,
-        <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessageType</span>},
+        <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessagePayload</span>, <span class="ident">MessageType</span>, <span class="ident">TransactionEssence</span>},
     };
     <span class="kw">use</span> <span class="ident">iota</span>::{<span class="ident">MessageId</span>, <span class="ident">TransactionId</span>};
 
@@ -2261,7 +2311,13 @@
 
         <span class="macro">assert_eq</span><span class="macro">!</span>(
             <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">balance</span>().<span class="ident">available</span>,
-            <span class="ident">balance</span> <span class="op">-</span> <span class="kw-2">*</span><span class="ident">unconfirmed_message</span>.<span class="ident">value</span>()
+            <span class="ident">balance</span>
+                <span class="op">-</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">MessagePayload</span>::<span class="ident">Transaction</span>(<span class="ident">tx</span>)) <span class="op">=</span> <span class="ident">unconfirmed_message</span>.<span class="ident">payload</span>() {
+                    <span class="kw">let</span> <span class="ident">TransactionEssence</span>::<span class="ident">Regular</span>(<span class="ident">essence</span>) <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">essence</span>();
+                    <span class="ident">essence</span>.<span class="ident">value</span>()
+                } <span class="kw">else</span> {
+                    <span class="number">0</span>
+                }
         );
     }
 
