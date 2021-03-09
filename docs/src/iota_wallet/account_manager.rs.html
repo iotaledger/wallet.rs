@@ -2001,12 +2001,6 @@
 <span id="1998">1998</span>
 <span id="1999">1999</span>
 <span id="2000">2000</span>
-<span id="2001">2001</span>
-<span id="2002">2002</span>
-<span id="2003">2003</span>
-<span id="2004">2004</span>
-<span id="2005">2005</span>
-<span id="2006">2006</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2416,12 +2410,6 @@
         <span class="ident">is_monitoring</span>.<span class="ident">store</span>(<span class="self">Self</span>::<span class="ident">_start_monitoring</span>(<span class="ident">accounts</span>).<span class="kw">await</span>.<span class="ident">is_ok</span>(), <span class="ident">Ordering</span>::<span class="ident">Relaxed</span>);
     }
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">_start_monitoring</span>(<span class="ident">_accounts</span>: <span class="ident">AccountStore</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">test</span>))]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">_start_monitoring</span>(<span class="ident">accounts</span>: <span class="ident">AccountStore</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">for</span> <span class="ident">account</span> <span class="kw">in</span> <span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">values</span>() {
             <span class="kw">crate</span>::<span class="ident">monitor</span>::<span class="ident">monitor_account_addresses_balance</span>(<span class="ident">account</span>.<span class="ident">clone</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
