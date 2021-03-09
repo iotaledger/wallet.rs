@@ -362,7 +362,7 @@ pub struct TransactionRegularEssence {
     outputs: Box<[TransactionOutput]>,
     payload: Option<Payload>,
     internal: bool,
-    incoming: bool,
+    pub(crate) incoming: bool,
     value: u64,
     #[serde(rename = "remainderValue")]
     remainder_value: u64,
@@ -637,7 +637,7 @@ impl MessageTransactionPayload {
         &self.essence
     }
 
-    fn essence_mut(&mut self) -> &mut TransactionEssence {
+    pub(crate) fn essence_mut(&mut self) -> &mut TransactionEssence {
         &mut self.essence
     }
 

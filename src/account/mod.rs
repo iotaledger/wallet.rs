@@ -864,7 +864,7 @@ mod tests {
         account_manager::AccountManager,
         address::{Address, AddressBuilder, AddressOutput, OutputKind},
         client::ClientOptionsBuilder,
-        message::{Message, MessageType},
+        message::{Message, MessagePayload, MessageType, TransactionEssence},
     };
     use iota::{MessageId, TransactionId};
 
@@ -1066,7 +1066,13 @@ mod tests {
 
         assert_eq!(
             account_handle.read().await.balance().available,
-            balance - *unconfirmed_message.value()
+            balance
+                - if let Some(MessagePayload::Transaction(tx)) = unconfirmed_message.payload() {
+                    let TransactionEssence::Regular(essence) = tx.essence();
+                    essence.value()
+                } else {
+                    0
+                }
         );
     }
 

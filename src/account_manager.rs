@@ -1613,7 +1613,8 @@ mod tests {
                         .with_network_id(0)
                         .finish()
                         .unwrap(),
-                    // dummy account
+                    Default::default(),
+                    "",
                     &[crate::test_utils::generate_random_address()],
                     &ClientOptionsBuilder::new().build().unwrap(),
                 )
