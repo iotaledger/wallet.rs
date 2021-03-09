@@ -407,9 +407,12 @@ impl AccountManager {
     }
 
     async fn _start_monitoring(accounts: AccountStore) -> crate::Result<()> {
-        for account in accounts.read().await.values() {
-            crate::monitor::monitor_account_addresses_balance(account.clone()).await?;
-            crate::monitor::monitor_unconfirmed_messages(account.clone()).await?;
+        #[cfg(not(test))]
+        {
+            for account in accounts.read().await.values() {
+                crate::monitor::monitor_account_addresses_balance(account.clone()).await?;
+                crate::monitor::monitor_unconfirmed_messages(account.clone()).await?;
+            }
         }
         Ok(())
     }
