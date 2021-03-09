@@ -1777,7 +1777,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=be869fc47117f996cf040c8466ba4023d70cacfa#be869fc47117f996cf040c8466ba4023d70cacfa"
+source = "git+https://github.com/iotaledger/iota.rs?rev=15dbf1f928b34a1caf3eba6d575468e4981d0a26#15dbf1f928b34a1caf3eba6d575468e4981d0a26"
 dependencies = [
  "async-trait",
  "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
@@ -1804,7 +1804,7 @@ dependencies = [
 [[package]]
 name = "iota-core"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=be869fc47117f996cf040c8466ba4023d70cacfa#be869fc47117f996cf040c8466ba4023d70cacfa"
+source = "git+https://github.com/iotaledger/iota.rs?rev=15dbf1f928b34a1caf3eba6d575468e4981d0a26#15dbf1f928b34a1caf3eba6d575468e4981d0a26"
 dependencies = [
  "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?rev=c42171ff33c80cc2efb183e244dc79b7f58d9ac4)",
  "bee-message",
@@ -3222,7 +3222,7 @@ dependencies = [
 [[package]]
 name = "riker"
 version = "0.4.2"
-source = "git+https://github.com/elenaf9/riker#54dc5d8c1b26a1ebb47c324460fdf67cef5f6163"
+source = "git+https://github.com/elenaf9/riker?branch=master#54dc5d8c1b26a1ebb47c324460fdf67cef5f6163"
 dependencies = [
  "chrono",
  "config",
@@ -3242,7 +3242,7 @@ dependencies = [
 [[package]]
 name = "riker-macros"
 version = "0.2.0"
-source = "git+https://github.com/elenaf9/riker#54dc5d8c1b26a1ebb47c324460fdf67cef5f6163"
+source = "git+https://github.com/elenaf9/riker?branch=master#54dc5d8c1b26a1ebb47c324460fdf67cef5f6163"
 dependencies = [
  "proc-macro2",
  "quote",

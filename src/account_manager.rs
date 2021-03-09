@@ -1188,9 +1188,10 @@ async fn poll(
         for account_handle in accounts.read().await.values() {
             synced_accounts.push(SyncedAccount::from(account_handle.clone()).await);
             let (account_handle, unconfirmed_messages): (AccountHandle, Vec<(MessageId, Option<MessagePayload>)>) = {
-                let account = account_handle.read().await;
-                let unconfirmed_messages = account
-                    .list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed))
+                let unconfirmed_messages = account_handle
+                    .read()
+                    .await
+                    .list_messages(0, 0, Some(MessageType::Unconfirmed))
                     .iter()
                     .map(|m| (*m.id(), m.payload().clone()))
                     .collect();
