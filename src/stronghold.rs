@@ -767,7 +767,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn write_and_read_multiple_snapshots() -> super::Result<()> {
+    async fn write_and_read_multiple_snapshots() {
         let mut snapshot_saves = vec![];
 
         for i in 1..3 {
@@ -778,7 +778,9 @@ mod tests {
                 .collect();
             std::fs::create_dir_all("./test-storage").unwrap();
             let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
-            super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await?;
+            super::load_snapshot(&snapshot_path, [0; 32].to_vec())
+                .await
+                .expect("failed to load snapshot");
 
             let id = format!("multiplesnapshots{}", i);
             let data: String = thread_rng()
@@ -786,16 +788,18 @@ mod tests {
                 .map(char::from)
                 .take(10)
                 .collect();
-            super::store_record(&snapshot_path, &id, data.clone()).await?;
+            super::store_record(&snapshot_path, &id, data.clone())
+                .await
+                .expect("failed to store record");
             snapshot_saves.push((snapshot_path, id, data));
         }
 
         for (snapshot_path, key, data) in snapshot_saves {
-            let stored_data = super::get_record(&snapshot_path, &key).await?;
+            let stored_data = super::get_record(&snapshot_path, &key)
+                .await
+                .expect("failed to read record");
             assert_eq!(stored_data, data);
         }
-
-        Ok(())
     }
 
     #[tokio::test]
