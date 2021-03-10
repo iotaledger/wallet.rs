@@ -440,12 +440,10 @@ async fn load_snapshot_internal(
             let stored_password = passwords.get(snapshot_path).map(|p| &p.0);
             (stored_password.is_none(), stored_password != Some(&password))
         };
-        if !is_password_empty {
+        if !is_password_empty && is_password_updated {
             save_snapshot(&mut runtime, &snapshot_path).await?;
-            if is_password_updated {
-                runtime.spawned_client_paths = HashSet::new();
-                runtime.loaded_client_paths = HashSet::new();
-            }
+            runtime.spawned_client_paths = HashSet::new();
+            runtime.loaded_client_paths = HashSet::new();
         }
     }
 
