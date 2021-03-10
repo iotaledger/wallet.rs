@@ -318,13 +318,20 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf,
         if curr_snapshot_path != snapshot_path {
             switch_snapshot(&mut runtime, snapshot_path).await?;
         } else if reload && snapshot_path.exists() {
-            // otherwise reload the actors so the password is verified
-            if let Err(e) = clear_stronghold_cache(&mut runtime, false).await {
-                println!("clear stronghold cache error {:?}", e);
-            };
-            if let Err(e) = load_actors(&mut runtime, snapshot_path).await {
-                println!("load actors {:?}", e);
-                return Err(e);
+            let passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
+            if let Some(password) = passwords.get(snapshot_path) {
+                stronghold_response_to_result(
+                    runtime
+                        .stronghold
+                        .read_snapshot(
+                            PRIVATE_DATA_CLIENT_PATH.to_vec(),
+                            None,
+                            &password.0,
+                            None,
+                            Some(snapshot_path.to_path_buf()),
+                        )
+                        .await,
+                )?;
             }
         }
     } else {
