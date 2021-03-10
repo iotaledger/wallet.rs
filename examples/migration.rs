@@ -5,18 +5,12 @@ use iota_wallet::{
     account_manager::AccountManager,
     client::ClientOptionsBuilder,
     iota_migration::{
-        client::{
-            extended::PrepareTransfersBuilder,
-            migration::{encode_migration_address, mine, sign_migration_bundle},
-            response::Input,
-            Transfer as MigrationTransfer,
-        },
+        client::migration::{mine, prepare_migration_bundle, sign_migration_bundle, Address},
         signing::ternary::seed::Seed as TernarySeed,
         ternary::{T1B1Buf, T3B1Buf, TryteBuf},
-        transaction::bundled::{Address as TryteAddress, BundledTransactionField},
+        transaction::bundled::BundledTransactionField,
     },
     signing::SignerType,
-    Address,
 };
 use std::{collections::HashMap, io};
 
@@ -105,39 +99,9 @@ async fn main() -> iota_wallet::Result<()> {
         Address::Ed25519(a) => a,
         _ => panic!("Unsopported address type"),
     };
-    let _migration_address = encode_migration_address(new_converted_address);
-    // overwrite to reuse tokens for testing
-    let migration_address = TryteAddress::from_inner_unchecked(
-        TryteBuf::try_from_str("CHZHKFUCUMRHOFXB9SGEZVYUUXYKEIJ9VX9SLKATMLWQZUQXDWUKLYGZLMYYWHXKKTPQHIOHQMYARINLD")
-            .unwrap()
-            .as_trits()
-            .encode(),
-    );
 
-    let transfer = vec![MigrationTransfer {
-        address: migration_address,
-        value: account_input_data.0,
-        message: None,
-        tag: None,
-    }];
-
-    let address_inputs = account_input_data
-        .1
-        .iter()
-        .cloned()
-        .map(|i| Input {
-            address: i.address,
-            balance: i.balance,
-            index: i.index,
-        })
-        .collect();
-
-    let mut prepared_bundle = PrepareTransfersBuilder::new(&iota, None)
-        .security(security_level)
-        .transfers(transfer)
-        .inputs(address_inputs)
-        .build_unsigned()
-        .await?;
+    let mut prepared_bundle =
+        prepare_migration_bundle(&iota, new_converted_address, account_input_data.1.clone()).await?;
 
     // Ideally split inputs to have one bundle for each spent address
     if account_input_data
