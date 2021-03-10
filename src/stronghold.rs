@@ -14,7 +14,7 @@ use once_cell::sync::{Lazy, OnceCell};
 use riker::actors::*;
 use serde::Serialize;
 use tokio::{
-    sync::Mutex,
+    sync::{Mutex, MutexGuard},
     time::{sleep, Duration},
 };
 use zeroize::Zeroize;
@@ -29,7 +29,7 @@ use std::{
     time::Instant,
 };
 
-#[derive(Zeroize)]
+#[derive(PartialEq, Eq, Zeroize)]
 #[zeroize(drop)]
 struct Password(Vec<u8>);
 
@@ -246,13 +246,26 @@ fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, Password>>> {
     Default::default()
 }
 
-pub async fn set_password<S: AsRef<Path>>(snapshot_path: S, password: Vec<u8>) {
+pub async fn set_password<S: AsRef<Path>>(
+    runtime: &mut ActorRuntime,
+    snapshot_path: S,
+    password: Vec<u8>,
+) -> Result<()> {
     let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
     let mut access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
 
     let snapshot_path = snapshot_path.as_ref().to_path_buf();
     access_store.insert(snapshot_path.clone(), Instant::now());
-    passwords.insert(snapshot_path, Password(password));
+    let password = Password(password);
+    // if we updated the password, save the state with the current password
+    // so the verification step doesn't cause data loss
+    if let Some(curr_password) = passwords.get(&snapshot_path) {
+        if curr_password != &password {
+            save_snapshot_internal(runtime, &snapshot_path, &passwords).await?;
+        }
+    }
+    passwords.insert(snapshot_path, password);
+    Ok(())
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -304,7 +317,7 @@ pub fn actor_runtime() -> &'static Arc<Mutex<ActorRuntime>> {
 
 // check if the snapshot path is different than the current loaded one
 // if it is, write the current snapshot and load the new one
-async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> Result<()> {
+async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf, reload: bool) -> Result<()> {
     let curr_snapshot_path = CURRENT_SNAPSHOT_PATH
         .get_or_init(Default::default)
         .lock()
@@ -317,8 +330,9 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf)
         // save the current snapshot and clear the cache
         if curr_snapshot_path != snapshot_path {
             switch_snapshot(&mut runtime, snapshot_path).await?;
-        } else {
+        } else if reload && snapshot_path.exists() {
             // otherwise reload the actors so the password is verified
+            clear_stronghold_cache(&mut runtime, false).await?;
             load_actors(&mut runtime, snapshot_path).await?;
         }
     } else {
@@ -336,6 +350,14 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf)
 // saves the snapshot to the file system.
 async fn save_snapshot(runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> Result<()> {
     let passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
+    save_snapshot_internal(runtime, snapshot_path, &passwords).await
+}
+
+async fn save_snapshot_internal(
+    runtime: &mut ActorRuntime,
+    snapshot_path: &PathBuf,
+    passwords: &MutexGuard<'_, SnapshotToPasswordMap>,
+) -> Result<()> {
     if let Some(password) = passwords.get(snapshot_path) {
         stronghold_response_to_result(
             runtime
@@ -426,33 +448,8 @@ async fn load_snapshot_internal(
     snapshot_path: &PathBuf,
     password: Vec<u8>,
 ) -> Result<()> {
-    // if we're reloading the snapshot with a different password,
-    // we force a snapshot refresh so the password is verified.
-    if CURRENT_SNAPSHOT_PATH
-        .get_or_init(Default::default)
-        .lock()
-        .await
-        .as_ref()
-        == Some(snapshot_path)
-    {
-        let (is_password_empty, is_password_updated) = {
-            let passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
-            let stored_password = passwords.get(snapshot_path).map(|p| &p.0);
-            (stored_password.is_none(), stored_password != Some(&password))
-        };
-        if !is_password_empty && is_password_updated {
-            match save_snapshot(&mut runtime, &snapshot_path).await {
-                Ok(_) => {}
-                Err(Error::PasswordNotSet) => {}
-                Err(e) => return Err(e),
-            }
-            runtime.spawned_client_paths = HashSet::new();
-            runtime.loaded_client_paths = HashSet::new();
-        }
-    }
-
-    set_password(&snapshot_path, password).await;
-    if let Err(e) = check_snapshot(&mut runtime, &snapshot_path).await {
+    set_password(&mut runtime, &snapshot_path, password).await?;
+    if let Err(e) = check_snapshot(&mut runtime, &snapshot_path, true).await {
         unset_password(&snapshot_path).await;
         return Err(e);
     };
@@ -472,14 +469,14 @@ pub async fn change_password(snapshot_path: &PathBuf, current_password: Vec<u8>,
             .await,
     )?;
 
-    set_password(snapshot_path, new_password).await;
+    set_password(&mut runtime, snapshot_path, new_password).await?;
 
     Ok(())
 }
 
 pub async fn store_mnemonic(snapshot_path: &PathBuf, mnemonic: String) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
-    check_snapshot(&mut runtime, snapshot_path).await?;
+    check_snapshot(&mut runtime, snapshot_path, false).await?;
     load_private_data_actor(&mut runtime, snapshot_path).await?;
 
     let res = runtime
@@ -540,7 +537,7 @@ pub async fn generate_address(
     internal: bool,
 ) -> Result<Address> {
     let mut runtime = actor_runtime().lock().await;
-    check_snapshot(&mut runtime, &snapshot_path).await?;
+    check_snapshot(&mut runtime, &snapshot_path, false).await?;
     load_private_data_actor(&mut runtime, snapshot_path).await?;
 
     let chain = Chain::from_u32_hardened(vec![
@@ -570,7 +567,7 @@ pub async fn sign_transaction(
     internal: bool,
 ) -> Result<Ed25519Signature> {
     let mut runtime = actor_runtime().lock().await;
-    check_snapshot(&mut runtime, &snapshot_path).await?;
+    check_snapshot(&mut runtime, &snapshot_path, false).await?;
     load_private_data_actor(&mut runtime, snapshot_path).await?;
 
     let chain = Chain::from_u32_hardened(vec![
@@ -601,7 +598,7 @@ pub async fn sign_transaction(
 
 pub async fn get_record(snapshot_path: &PathBuf, key: &str) -> Result<String> {
     let mut runtime = actor_runtime().lock().await;
-    check_snapshot(&mut runtime, &snapshot_path).await?;
+    check_snapshot(&mut runtime, &snapshot_path, false).await?;
     load_records_actor(&mut runtime, snapshot_path).await?;
     let (data, status) = runtime.stronghold.read_from_store(Location::generic(key, key)).await;
     stronghold_response_to_result(status).map_err(|_| Error::RecordNotFound)?;
@@ -610,7 +607,7 @@ pub async fn get_record(snapshot_path: &PathBuf, key: &str) -> Result<String> {
 
 pub async fn store_record(snapshot_path: &PathBuf, key: &str, record: String) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
-    check_snapshot(&mut runtime, &snapshot_path).await?;
+    check_snapshot(&mut runtime, &snapshot_path, false).await?;
 
     // since we're creating a new account, we don't need to load it from the snapshot
     runtime.loaded_client_paths.insert(records_client_path());
@@ -630,7 +627,7 @@ pub async fn store_record(snapshot_path: &PathBuf, key: &str, record: String) ->
 
 pub async fn remove_record(snapshot_path: &PathBuf, key: &str) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
-    check_snapshot(&mut runtime, &snapshot_path).await?;
+    check_snapshot(&mut runtime, &snapshot_path, false).await?;
 
     load_records_actor(&mut runtime, snapshot_path).await?;
     stronghold_response_to_result(runtime.stronghold.delete_from_store(Location::generic(key, key)).await)?;
@@ -705,7 +702,8 @@ mod tests {
                     } else {
                         // if the elapsed > interval, set the password again
                         // this might happen if the test is stopped by another thread
-                        super::set_password(&snapshot_path, [0; 32].to_vec()).await;
+                        let mut actor_runtime = super::actor_runtime().lock().await;
+                        super::set_password(&mut actor_runtime, &snapshot_path, [0; 32].to_vec()).await.unwrap();
                     }
                 }
 
