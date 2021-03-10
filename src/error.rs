@@ -179,6 +179,10 @@ pub enum Error {
     /// Node not synced when creating account or updating client options.
     #[error("nodes {0} not synced")]
     NodesNotSynced(String),
+    /// iota 1.0 client error
+    // #[cfg(feature = "migration")]
+    #[error("nodes {0} not synced")]
+    OldIotaError(#[from] iota_migration::client::Error),
 }
 
 impl Drop for Error {
@@ -297,6 +301,8 @@ impl serde::Serialize for Error {
             Self::DustError(_) => serialize_variant(self, serializer, "DustError"),
             Self::InvalidOutputKind(_) => serialize_variant(self, serializer, "InvalidOutputKind"),
             Self::NodesNotSynced(_) => serialize_variant(self, serializer, "NodesNotSynced"),
+            // #[cfg(feature = "migration")]
+            Self::OldIotaError(_) => serialize_variant(self, serializer, "OldIotaError"),
         }
     }
 }

@@ -97,6 +97,11 @@ pub fn get_ledger_status(is_simulator: bool) -> LedgerStatus {
     }
 }
 
+// #[cfg(feature = "migration")]
+pub use iota_migration;
+// #[cfg(feature = "migration")]
+pub use iota::Address;
+
 #[cfg(test)]
 mod test_utils {
     use super::{

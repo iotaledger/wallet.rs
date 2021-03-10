@@ -39,6 +39,10 @@ zeroize = { version = "1.2", features = ["zeroize_derive"] }
 # ledger hardware wallets
 iota-ledger = { git = "https://github.com/iotaledger/ledger.rs", branch = "develop", optional = true  }
 
+# migration
+# iota-1 = { git = "https://github.com/iotaledger/iota.rs", rev = "d4305cb2d5ca2e91912512e7d76dab0253003d0f", package = "iota-core", optional = true }
+iota-migration = { git = "https://github.com/iotaledger/iota.rs", rev = "d4305cb2d5ca2e91912512e7d76dab0253003d0f", package = "iota-core" }
+
 [dependencies.iota-crypto]
 git = "https://github.com/iotaledger/crypto.rs"
 rev = "fa67e9da78799186fbc8c7892d862221bd5d3171"
@@ -58,3 +62,4 @@ stronghold-storage = ["iota-stronghold", "riker", "blake2", "slog"]
 sqlite-storage = ["rusqlite"]
 ledger-nano = ["iota-ledger"]
 ledger-nano-simulator = ["iota-ledger"]
+# migration = ["iota-migration"]
