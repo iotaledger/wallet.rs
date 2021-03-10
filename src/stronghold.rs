@@ -14,7 +14,7 @@ use once_cell::sync::{Lazy, OnceCell};
 use riker::actors::*;
 use serde::Serialize;
 use tokio::{
-    sync::{Mutex, MutexGuard},
+    sync::Mutex,
     time::{sleep, Duration},
 };
 use zeroize::Zeroize;
@@ -246,26 +246,13 @@ fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, Password>>> {
     Default::default()
 }
 
-pub async fn set_password<S: AsRef<Path>>(
-    runtime: &mut ActorRuntime,
-    snapshot_path: S,
-    password: Vec<u8>,
-) -> Result<()> {
+pub async fn set_password<S: AsRef<Path>>(snapshot_path: S, password: Vec<u8>) {
     let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
     let mut access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
 
     let snapshot_path = snapshot_path.as_ref().to_path_buf();
     access_store.insert(snapshot_path.clone(), Instant::now());
-    let password = Password(password);
-    // if we updated the password, save the state with the current password
-    // so the verification step doesn't cause data loss
-    if let Some(curr_password) = passwords.get(&snapshot_path) {
-        if curr_password != &password {
-            save_snapshot_internal(runtime, &snapshot_path, &passwords).await?;
-        }
-    }
-    passwords.insert(snapshot_path, password);
-    Ok(())
+    passwords.insert(snapshot_path, Password(password));
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -350,14 +337,6 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf,
 // saves the snapshot to the file system.
 async fn save_snapshot(runtime: &mut ActorRuntime, snapshot_path: &PathBuf) -> Result<()> {
     let passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
-    save_snapshot_internal(runtime, snapshot_path, &passwords).await
-}
-
-async fn save_snapshot_internal(
-    runtime: &mut ActorRuntime,
-    snapshot_path: &PathBuf,
-    passwords: &MutexGuard<'_, SnapshotToPasswordMap>,
-) -> Result<()> {
     if let Some(password) = passwords.get(snapshot_path) {
         stronghold_response_to_result(
             runtime
@@ -448,8 +427,16 @@ async fn load_snapshot_internal(
     snapshot_path: &PathBuf,
     password: Vec<u8>,
 ) -> Result<()> {
-    set_password(&mut runtime, &snapshot_path, password).await?;
-    if let Err(e) = check_snapshot(&mut runtime, &snapshot_path, true).await {
+    let (is_password_empty, is_password_updated) = {
+        let passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
+        let stored_password = passwords.get(snapshot_path).map(|p| &p.0);
+        (stored_password.is_none(), stored_password != Some(&password))
+    };
+    if !runtime.spawned_client_paths.is_empty() && !is_password_empty && is_password_updated {
+        save_snapshot(runtime, &snapshot_path).await?;
+    }
+    set_password(&snapshot_path, password).await;
+    if let Err(e) = check_snapshot(&mut runtime, &snapshot_path, is_password_updated).await {
         unset_password(&snapshot_path).await;
         return Err(e);
     };
@@ -469,7 +456,7 @@ pub async fn change_password(snapshot_path: &PathBuf, current_password: Vec<u8>,
             .await,
     )?;
 
-    set_password(&mut runtime, snapshot_path, new_password).await?;
+    set_password(snapshot_path, new_password).await;
 
     Ok(())
 }
@@ -702,8 +689,7 @@ mod tests {
                     } else {
                         // if the elapsed > interval, set the password again
                         // this might happen if the test is stopped by another thread
-                        let mut actor_runtime = super::actor_runtime().lock().await;
-                        super::set_password(&mut actor_runtime, &snapshot_path, [0; 32].to_vec()).await.unwrap();
+                        super::set_password(&snapshot_path, [0; 32].to_vec()).await;
                     }
                 }
 
@@ -778,9 +764,7 @@ mod tests {
                 .collect();
             std::fs::create_dir_all("./test-storage").unwrap();
             let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
-            super::load_snapshot(&snapshot_path, [0; 32].to_vec())
-                .await
-                .expect("failed to load snapshot");
+            super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await.unwrap();
 
             let id = format!("multiplesnapshots{}", i);
             let data: String = thread_rng()
