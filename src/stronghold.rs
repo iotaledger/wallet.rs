@@ -319,8 +319,13 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf,
             switch_snapshot(&mut runtime, snapshot_path).await?;
         } else if reload && snapshot_path.exists() {
             // otherwise reload the actors so the password is verified
-            clear_stronghold_cache(&mut runtime, false).await?;
-            load_actors(&mut runtime, snapshot_path).await?;
+            if let Err(e) = clear_stronghold_cache(&mut runtime, false).await {
+                println!("clear stronghold cache error {:?}", e);
+            };
+            if let Err(e) = load_actors(&mut runtime, snapshot_path).await {
+                println!("load actors {:?}", e);
+                return Err(e);
+            }
         }
     } else {
         load_actors(&mut runtime, snapshot_path).await?;
@@ -427,14 +432,25 @@ async fn load_snapshot_internal(
     snapshot_path: &PathBuf,
     password: Vec<u8>,
 ) -> Result<()> {
-    let (is_password_empty, is_password_updated) = {
-        let passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
-        let stored_password = passwords.get(snapshot_path).map(|p| &p.0);
-        (stored_password.is_none(), stored_password != Some(&password))
+    let is_password_updated = if CURRENT_SNAPSHOT_PATH
+        .get_or_init(Default::default)
+        .lock()
+        .await
+        .as_ref()
+        == Some(&snapshot_path)
+    {
+        let (is_password_empty, is_password_updated) = {
+            let passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
+            let stored_password = passwords.get(snapshot_path).map(|p| &p.0);
+            (stored_password.is_none(), stored_password != Some(&password))
+        };
+        if !runtime.spawned_client_paths.is_empty() && !is_password_empty && is_password_updated {
+            save_snapshot(runtime, &snapshot_path).await?;
+        }
+        is_password_updated
+    } else {
+        false
     };
-    if !runtime.spawned_client_paths.is_empty() && !is_password_empty && is_password_updated {
-        // save_snapshot(runtime, &snapshot_path).await?;
-    }
     set_password(&snapshot_path, password).await;
     if let Err(e) = check_snapshot(&mut runtime, &snapshot_path, is_password_updated).await {
         unset_password(&snapshot_path).await;
