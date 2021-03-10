@@ -316,10 +316,13 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf,
         // if the current loaded snapshot is different than the snapshot we're tring to use,
         // save the current snapshot and clear the cache
         if curr_snapshot_path != snapshot_path {
+            println!("switch snapshot {:?}", snapshot_path);
             switch_snapshot(&mut runtime, snapshot_path).await?;
+            println!("switched snapshot {:?}", snapshot_path);
         } else if reload && snapshot_path.exists() {
             let passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
             if let Some(password) = passwords.get(snapshot_path) {
+                println!("reading snapshot {:?}", snapshot_path);
                 stronghold_response_to_result(
                     runtime
                         .stronghold
@@ -332,10 +335,13 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf,
                         )
                         .await,
                 )?;
+                println!("read snapshot {:?}", snapshot_path);
             }
         }
     } else {
+        println!("loading actors {:?}", snapshot_path);
         load_actors(&mut runtime, snapshot_path).await?;
+        println!("loaded actors {:?}", snapshot_path);
         CURRENT_SNAPSHOT_PATH
             .get_or_init(Default::default)
             .lock()
@@ -452,9 +458,7 @@ async fn load_snapshot_internal(
             (stored_password.is_none(), stored_password != Some(&password))
         };
         if !runtime.spawned_client_paths.is_empty() && !is_password_empty && is_password_updated {
-            if let Err(e) = save_snapshot(runtime, &snapshot_path).await {
-                println!("save snapshot failed {:?}", e);
-            }
+            save_snapshot(runtime, &snapshot_path).await?;
         }
         is_password_updated
     } else {
