@@ -82,18 +82,20 @@ Also for all the optional values, the default values are the same as the ones in
 
 ### AccountManager
 
-#### constructor(storage_path (optional), storage (optional), password (optional), polling_interval (optional), automatic_output_consolidation(optional), output_consolidation_threshold(optional)): [AccountManager](#accountmanager)
+#### constructor(storage_path (optional), storage (optional), password (optional), polling_interval (optional), automatic_output_consolidation(optional), output_consolidation_threshold(optional), sync_spent_outputs(optional), persist_events(optional)): [AccountManager](#accountmanager)
 
 Creates a new instance of the AccountManager.
 
-| Param                            | Type              | Default                   | Description                                                                                    |
-| -------------------------------- | ----------------- | ------------------------- | ---------------------------------------------------------------------------------------------- |
-| [storage_path]                   | <code>str</code>  | <code>`./storage`</code>  | The path where the database file will be saved                                                 |
-| [storage]                        | <code>str</code>  | <code>`Stronghold`</code> | The storage implementation to use. Should be `Stronghold` or `Sqlite`                          |
-| [storage_password]               | <code>str</code>  | <code>undefined</code>    | The storage password to encrypt/decrypt accounts                                               |
-| [polling_interval]               | <code>int</code>  | <code>30000</code>        | The polling interval in milliseconds                                                           |
-| [automatic_output_consolidation] | <code>bool</code> | <code>true</code>         | Disables the automatic output consolidation process                                            |
-| [output_consolidation_threshold] | <code>int</code>  | <code>100</code>          | Sets the number of outputs an address must have to trigger the automatic consolidation process |
+| Param                            | Type                 | Default                   | Description                                                                                    |
+| -------------------------------- | -------------------- | ------------------------- | ---------------------------------------------------------------------------------------------- |
+| [storage_path]                   | <code>str</code>     | <code>`./storage`</code>  | The path where the database file will be saved                                                 |
+| [storage]                        | <code>str</code>     | <code>`Stronghold`</code> | The storage implementation to use. Should be `Stronghold` or `Sqlite`                          |
+| [storage_password]               | <code>str</code>     | <code>undefined</code>    | The storage password to encrypt/decrypt accounts                                               |
+| [polling_interval]               | <code>int</code>     | <code>30000</code>        | The polling interval in milliseconds                                                           |
+| [automatic_output_consolidation] | <code>bool</code>    | <code>true</code>         | Disables the automatic output consolidation process                                            |
+| [output_consolidation_threshold] | <code>int</code>     | <code>100</code>          | Sets the number of outputs an address must have to trigger the automatic consolidation process |
+| [sync_spent_outputs]             | <code>boolean</code> | <code>false</code>        | Enables fetching spent output history on account sync                                          |
+| [persist_events]                 | <code>boolean</code> | <code>false</code>        | Enables event persistence                                                                      |
 
 Note: if the `storage_path` is set, then the `storage` needs to be set too. An exception will be thrown when errors happened.
 
@@ -421,6 +423,38 @@ Gets the number of persisted transaction broadcast events.
 
 ### AccountHandle
 
+#### id(): str
+
+**Returns** the account ID.
+
+#### signer_type(): str
+
+**Returns** the singer type of this account.
+
+#### index(): int
+
+**Returns** the account index.
+
+#### alias(): str
+
+**Returns** the account alias.
+
+#### created_at(): int
+
+**Returns** the created UNIX timestamp.
+
+#### last_synced_at(): int or None (it did not be synced before)
+
+**Returns** the last synced UNIX timestamp.
+
+#### client_options(): [ClientOptions](#clientoptions)
+
+**Returns** the client options of this account.
+
+#### bech32_hrp(): str
+
+**Returns** the Bech32 HRP string.
+
 #### sync(): [AccountSynchronizer](#accountsynchronizer)
 
 **Returns** the [AccountSynchronizer](#accountsynchronizer) to setup the process to synchronize this account with the Tangle.
@@ -601,6 +635,134 @@ Initialises the account.
 
 **Returns** the initilized [AccountHandle](#accounthandle)
 
+### Event Listeners
+
+#### on_balance_change(callback): list[int]
+
+Listen to balance changes.
+
+| Param      | Type                  | Default                | Description           |
+| ---------- | --------------------- | ---------------------- | --------------------- |
+| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+
+**Returns** the event id as list[int].
+
+#### remove_balance_change_listener(list[int]): void
+
+Removes the balance change listener associated with the given identifier.
+
+| Param | Type                   | Default                | Description  |
+| ----- | ---------------------- | ---------------------- | ------------ |
+| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+
+#### on_new_transaction(callback): list[int]
+
+Listen to new messages.
+
+| Param      | Type                  | Default                | Description           |
+| ---------- | --------------------- | ---------------------- | --------------------- |
+| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+
+**Returns** the event id as list[int].
+
+#### remove_new_transaction_listener(list[int]): void
+
+Removes the new transaction listener associated with the given identifier.
+
+| Param | Type                   | Default                | Description  |
+| ----- | ---------------------- | ---------------------- | ------------ |
+| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+
+#### on_confirmation_state_change(callback): list[int]
+
+Listen to transaction confirmation state change.
+
+| Param      | Type                  | Default                | Description           |
+| ---------- | --------------------- | ---------------------- | --------------------- |
+| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+
+**Returns** the event id as list[int].
+
+#### remove_confirmation_state_change_listener(list[int]): void
+
+Removes the new transaction listener associated with the given identifier.
+
+| Param | Type                   | Default                | Description  |
+| ----- | ---------------------- | ---------------------- | ------------ |
+| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+
+#### on_reattachment(callback): list[int]
+
+Listen to transaction reattachment.
+
+| Param      | Type                  | Default                | Description           |
+| ---------- | --------------------- | ---------------------- | --------------------- |
+| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+
+**Returns** the event id as list[int].
+
+#### remove_reattachment_listener(list[int]): void
+
+Removes the reattachment listener associated with the given identifier.
+
+| Param | Type                   | Default                | Description  |
+| ----- | ---------------------- | ---------------------- | ------------ |
+| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+
+#### on_broadcast(callback): list[int]
+
+Listen to transaction broadcast.
+
+| Param      | Type                  | Default                | Description           |
+| ---------- | --------------------- | ---------------------- | --------------------- |
+| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+
+**Returns** the event id as list[int].
+
+#### remove_broadcast_listener(list[int]): void
+
+Removes the broadcast listener associated with the given identifier.
+
+| Param | Type                   | Default                | Description  |
+| ----- | ---------------------- | ---------------------- | ------------ |
+| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+
+#### on_error(callback): list[int]
+
+Listen to errors.
+
+| Param      | Type                  | Default                | Description           |
+| ---------- | --------------------- | ---------------------- | --------------------- |
+| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+
+**Returns** the event id as list[int].
+
+#### remove_error_listener(list[int]): void
+
+Removes the error listener associated with the given identifier.
+
+| Param | Type                   | Default                | Description  |
+| ----- | ---------------------- | ---------------------- | ------------ |
+| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+
+#### on_stronghold_status_change(callback): list[int]
+
+Listen to stronghold status change events.
+
+| Param      | Type                  | Default                | Description           |
+| ---------- | --------------------- | ---------------------- | --------------------- |
+| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+
+**Returns** the event id as list[int].
+
+#### remove_stronghold_status_change_listener(list[int]): void
+
+Removes the stronghold status change listener associated with the given identifier.
+
+| Param | Type                   | Default                | Description  |
+| ----- | ---------------------- | ---------------------- | ------------ |
+| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+
 ### WalletAddress
 
 A dict with the following key/value pairs.
@@ -696,8 +858,8 @@ A dict with the following key/value pairs.
 
 ```python
 client_options = {
-    'nodes': list[str] (opitonal),
-    'node_pool_urls': list[str] (opitonal),
+    'nodes': list[[Node](#node)] (optional),
+    'node_pool_urls': list[str] (optional),
     'network': str (optional),
     'mqtt_broker_options': [BrokerOptions](#brokeroptions) (optional), 
     'local_pow': bool (optional),
@@ -713,6 +875,28 @@ client_options = {
 ```
 
 Note that this message object in `wallet.rs` is not the same as the message object in `iota.rs`.
+
+### Node
+
+A dict with the following key/value pairs.
+
+```python
+node = {
+    'url': string,
+    'auth': [NodeAuth](#nodeauth) (optional),
+}
+```
+
+### NodeAuth
+
+A dict with the following key/value pairs.
+
+```python
+node = {
+    'username': string,
+    'password': string,
+}
+```
 
 ### BrokerOptions
 
@@ -740,10 +924,7 @@ wallet_message = {
     'timestamp': int,
     'nonce': int,
     'confirmed': bool (optional),
-    'broadcasted': bool,
-    'incoming': bool,
-    'value': int,
-    'remainder_value': int
+    'broadcasted': bool
 }
 ```
 
@@ -825,6 +1006,10 @@ transaction_regular_essence = {
     'inputs': list[Input],
     'outputs': list[Output],
     'payload': Payload (optional),
+    'internal': bool,
+    'incoming': bool,
+    'value': int,
+    'remainder_value': int,
 }
 ```
 Please refer to [Input](#input), [Output](#output), and [Payload](#payload) for the details of these types.

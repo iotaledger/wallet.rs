@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    account_manager::AccountStore,
+    account_manager::{AccountOptions, AccountStore},
     address::{Address, AddressBuilder, AddressWrapper},
-    client::ClientOptions,
+    client::{ClientOptions, Node},
     event::TransferProgressType,
-    message::{Message, MessageType, Transfer},
+    message::{Message, MessagePayload, MessageType, TransactionEssence, Transfer},
     signing::{GenerateAddressMetadata, SignerType},
 };
 
@@ -103,7 +103,7 @@ impl From<usize> for AccountIdentifier {
 pub struct AccountInitialiser {
     accounts: AccountStore,
     storage_path: PathBuf,
-    output_consolidation_threshold: usize,
+    account_options: AccountOptions,
     alias: Option<String>,
     created_at: Option<DateTime<Local>>,
     messages: Vec<Message>,
@@ -120,12 +120,12 @@ impl AccountInitialiser {
         client_options: ClientOptions,
         accounts: AccountStore,
         storage_path: PathBuf,
-        output_consolidation_threshold: usize,
+        account_options: AccountOptions,
     ) -> Self {
         Self {
             accounts,
             storage_path,
-            output_consolidation_threshold,
+            account_options,
             alias: None,
             created_at: None,
             messages: vec![],
@@ -181,20 +181,25 @@ impl AccountInitialiser {
     pub async fn initialise(mut self) -> crate::Result<AccountHandle> {
         let accounts = self.accounts.read().await;
 
-        let alias = self.alias.unwrap_or_else(|| format!("Account {}", accounts.len()));
+        let alias = self.alias.unwrap_or_else(|| format!("Account {}", accounts.len() + 1));
         let signer_type = self.signer_type.ok_or(crate::Error::AccountInitialiseRequiredField(
             crate::error::AccountInitialiseRequiredField::SignerType,
         ))?;
         let created_at = self.created_at.unwrap_or_else(Local::now);
 
+        let mut latest_account_handle: Option<AccountHandle> = None;
+        let mut latest_account_index = 0;
         for account_handle in accounts.values() {
             let account = account_handle.read().await;
             if account.alias() == &alias {
                 return Err(crate::Error::AccountAliasAlreadyExists);
             }
+            if *account.index() >= latest_account_index {
+                latest_account_index = *account.index();
+                latest_account_handle = Some(account_handle.clone());
+            }
         }
-
-        if let Some(latest_account_handle) = accounts.values().last() {
+        if let Some(latest_account_handle) = latest_account_handle {
             let latest_account = latest_account_handle.read().await;
             if latest_account.messages().is_empty() && latest_account.addresses().iter().all(|a| a.outputs.is_empty()) {
                 return Err(crate::Error::LatestAccountIsEmpty);
@@ -224,12 +229,24 @@ impl AccountInitialiser {
             skip_persistance: self.skip_persistance,
         };
 
-        let bech32_hrp = crate::client::get_client(account.client_options())
+        let bech32_hrp = crate::client::get_client(&account.client_options)
             .await
             .read()
             .await
             .get_network_info()
-            .await?
+            .await
+            .map_err(|e| match e {
+                iota::client::Error::SyncedNodePoolEmpty => crate::Error::NodesNotSynced(
+                    account
+                        .client_options
+                        .nodes()
+                        .iter()
+                        .map(|node| node.url.as_str())
+                        .collect::<Vec<&str>>()
+                        .join(", "),
+                ),
+                _ => e.into(),
+            })?
             .bech32_hrp;
 
         for address in account.addresses.iter_mut() {
@@ -274,11 +291,11 @@ impl AccountInitialiser {
         account.set_id(format!("{}{}", ACCOUNT_ID_PREFIX, hex::encode(digest)));
 
         let guard = if self.skip_persistance {
-            AccountHandle::new(account, self.output_consolidation_threshold)
+            AccountHandle::new(account, self.accounts.clone(), self.account_options)
         } else {
             account.save().await?;
             let account_id = account.id().clone();
-            let guard = AccountHandle::new(account, self.output_consolidation_threshold);
+            let guard = AccountHandle::new(account, self.accounts.clone(), self.account_options);
             drop(accounts);
             self.accounts.write().await.insert(account_id, guard.clone());
             let _ = crate::monitor::monitor_account_addresses_balance(guard.clone()).await;
@@ -333,16 +350,18 @@ pub struct Account {
 #[derive(Debug, Clone)]
 pub struct AccountHandle {
     inner: Arc<RwLock<Account>>,
+    pub(crate) accounts: AccountStore,
     locked_addresses: Arc<Mutex<Vec<AddressWrapper>>>,
-    pub(crate) output_consolidation_threshold: usize,
+    pub(crate) account_options: AccountOptions,
 }
 
 impl AccountHandle {
-    pub(crate) fn new(account: Account, output_consolidation_threshold: usize) -> Self {
+    pub(crate) fn new(account: Account, accounts: AccountStore, account_options: AccountOptions) -> Self {
         Self {
             inner: Arc::new(RwLock::new(account)),
+            accounts,
             locked_addresses: Default::default(),
-            output_consolidation_threshold,
+            account_options,
         }
     }
 
@@ -356,7 +375,7 @@ impl AccountHandle {
         let mut addresses = Vec::new();
         let account = self.inner.read().await;
         for address in account.addresses() {
-            if address.available_outputs(&account).len() >= self.output_consolidation_threshold {
+            if address.available_outputs(&account).len() >= self.account_options.output_consolidation_threshold {
                 addresses.push(address.address().clone());
             }
         }
@@ -480,7 +499,16 @@ impl AccountHandle {
     pub async fn is_latest_address_unused(&self) -> crate::Result<bool> {
         let mut latest_address = self.latest_address().await;
         let bech32_hrp = latest_address.address().bech32_hrp().to_string();
-        sync::sync_address(&*self.inner.read().await, &mut latest_address, bech32_hrp).await?;
+        let account = self.inner.read().await;
+        sync::sync_address(
+            account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect(),
+            account.client_options().clone(),
+            Some(latest_address.outputs().to_vec()),
+            &mut latest_address,
+            bech32_hrp,
+            self.account_options,
+        )
+        .await?;
         Ok(*latest_address.balance() == 0 && latest_address.outputs().is_empty())
     }
 
@@ -607,11 +635,17 @@ impl Account {
             self.list_messages(0, 0, None)
                 .iter()
                 .fold((0, 0), |(incoming, outgoing), message| {
-                    if *message.incoming() {
-                        (incoming + *message.value(), outgoing)
-                    } else {
-                        (incoming, outgoing + *message.value())
+                    if let Some(MessagePayload::Transaction(tx)) = message.payload() {
+                        let TransactionEssence::Regular(essence) = tx.essence();
+                        if !essence.internal() {
+                            if essence.incoming() {
+                                return (incoming + essence.value(), outgoing);
+                            } else {
+                                return (incoming, outgoing + essence.value());
+                            }
+                        }
                     }
+                    (incoming, outgoing)
                 });
         AccountBalance {
             total: self.addresses.iter().fold(0, |acc, address| acc + address.balance()),
@@ -634,18 +668,32 @@ impl Account {
 
     /// Updates the account's client options.
     pub async fn set_client_options(&mut self, options: ClientOptions) -> crate::Result<()> {
-        self.client_options = options;
+        let client_guard = crate::client::get_client(&options).await;
+        let client = client_guard.read().await;
 
-        let bech32_hrp = crate::client::get_client(&self.client_options)
-            .await
-            .read()
-            .await
-            .get_network_info()
-            .await?
-            .bech32_hrp;
+        let unsynced_nodes = client.unsynced_nodes().await;
+        if !unsynced_nodes.is_empty() {
+            let diff_nodes: Vec<&Node> = options
+                .nodes()
+                .iter()
+                .filter(|node| !self.client_options.nodes().contains(node))
+                .collect();
+            let unsynced_diff_nodes: Vec<&str> = unsynced_nodes
+                .into_iter()
+                .filter(|url| diff_nodes.iter().any(|node| &&node.url == url))
+                .map(|url| url.as_str())
+                .collect();
+            if !unsynced_diff_nodes.is_empty() {
+                return Err(crate::Error::NodesNotSynced(unsynced_diff_nodes.join(", ")));
+            }
+        }
+
+        let bech32_hrp = client.get_network_info().await?.bech32_hrp;
         for address in &mut self.addresses {
             address.set_bech32_hrp(bech32_hrp.to_string());
         }
+
+        self.client_options = options;
 
         self.save().await
     }
@@ -666,7 +714,7 @@ impl Account {
     ///
     /// #[tokio::main]
     /// async fn main() {
-    ///     # let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
+    ///     # let storage_path: String = thread_rng().sample_iter(&Alphanumeric).map(char::from).take(10).collect();
     ///     # let storage_path = std::path::PathBuf::from(format!("./test-storage/{}", storage_path));
     ///     // gets 10 received messages, skipping the first 5 most recent messages.
     ///     let client_options = ClientOptionsBuilder::new()
@@ -713,11 +761,25 @@ impl Account {
             }
             let should_push = if let Some(message_type) = message_type.clone() {
                 match message_type {
-                    MessageType::Received => *message.incoming(),
-                    MessageType::Sent => !message.incoming(),
+                    MessageType::Received => {
+                        if let Some(MessagePayload::Transaction(tx)) = message.payload() {
+                            let TransactionEssence::Regular(essence) = tx.essence();
+                            essence.incoming()
+                        } else {
+                            false
+                        }
+                    }
+                    MessageType::Sent => {
+                        if let Some(MessagePayload::Transaction(tx)) = message.payload() {
+                            let TransactionEssence::Regular(essence) = tx.essence();
+                            !essence.incoming()
+                        } else {
+                            false
+                        }
+                    }
                     MessageType::Failed => !message.broadcasted(),
                     MessageType::Unconfirmed => message.confirmed().is_none(),
-                    MessageType::Value => *message.value() > 0,
+                    MessageType::Value => matches!(message.payload(), Some(MessagePayload::Transaction(_))),
                 }
             } else {
                 true
@@ -750,9 +812,17 @@ impl Account {
             .collect()
     }
 
-    #[doc(hidden)]
-    pub fn append_messages(&mut self, messages: Vec<Message>) {
-        self.messages.extend(messages);
+    pub(crate) fn append_messages(&mut self, messages: Vec<Message>) {
+        messages.into_iter().for_each(
+            |message| match self.messages.iter().position(|m| m.id() == message.id()) {
+                Some(index) => {
+                    self.messages[index] = message;
+                }
+                None => {
+                    self.messages.push(message);
+                }
+            },
+        );
     }
 
     pub(crate) fn append_addresses(&mut self, addresses: Vec<Address>) {
@@ -794,7 +864,7 @@ mod tests {
         account_manager::AccountManager,
         address::{Address, AddressBuilder, AddressOutput, OutputKind},
         client::ClientOptionsBuilder,
-        message::{Message, MessageType},
+        message::{Message, MessagePayload, MessageType, TransactionEssence},
     };
     use iota::{MessageId, TransactionId};
 
@@ -876,7 +946,7 @@ mod tests {
 
     fn _generate_address_output(value: u64) -> AddressOutput {
         let mut tx_id = [0; 32];
-        crypto::rand::fill(&mut tx_id).unwrap();
+        crypto::utils::rand::fill(&mut tx_id).unwrap();
         AddressOutput {
             transaction_id: TransactionId::new(tx_id),
             message_id: MessageId::new([0; 32]),
@@ -996,7 +1066,13 @@ mod tests {
 
         assert_eq!(
             account_handle.read().await.balance().available,
-            balance - *unconfirmed_message.value()
+            balance
+                - if let Some(MessagePayload::Transaction(tx)) = unconfirmed_message.payload() {
+                    let TransactionEssence::Regular(essence) = tx.essence();
+                    essence.value()
+                } else {
+                    0
+                }
         );
     }
 
@@ -1098,19 +1174,19 @@ mod tests {
             (MessageType::Received, &received_message),
             (MessageType::Sent, &sent_message),
             (MessageType::Unconfirmed, &unconfirmed_message),
-            (MessageType::Value, &value_message),
+            (MessageType::Value, &received_message),
         ];
         for (tx_type, expected) in cases {
-            let failed_messages = account_handle.list_messages(0, 0, Some(tx_type.clone())).await;
+            let messages = account_handle.list_messages(0, 0, Some(tx_type.clone())).await;
             assert_eq!(
-                failed_messages.len(),
+                messages.len(),
                 match tx_type {
                     MessageType::Sent => 4,
                     MessageType::Value => 5,
                     _ => 1,
                 }
             );
-            assert_eq!(failed_messages.first().unwrap(), expected);
+            assert_eq!(messages.first().unwrap(), expected);
         }
     }
 

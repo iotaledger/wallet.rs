@@ -104,13 +104,14 @@ mod test_utils {
         account_manager::{AccountManager, ManagerStorage},
         address::{Address, AddressBuilder, AddressWrapper},
         client::ClientOptionsBuilder,
-        message::{Message, MessagePayload, TransactionBuilderMetadata},
+        message::{Message, MessagePayload, TransactionBuilderMetadata, TransactionEssence},
         signing::SignerType,
     };
     use iota::{
         pow::providers::{Provider as PowProvider, ProviderBuilder as PowProviderBuilder},
         Address as IotaAddress, Ed25519Address, Ed25519Signature, Essence, MessageId, Payload,
         SignatureLockedSingleOutput, SignatureUnlock, TransactionId, TransactionPayloadBuilder, UTXOInput, UnlockBlock,
+        UnlockBlocks,
     };
     use once_cell::sync::OnceCell;
     use rand::{distributions::Alphanumeric, thread_rng, Rng};
@@ -148,7 +149,7 @@ mod test_utils {
                 Ok(iota::Address::Ed25519(*address))
             } else {
                 let mut address = [0; iota::ED25519_ADDRESS_LENGTH];
-                crypto::rand::fill(&mut address).unwrap();
+                crypto::utils::rand::fill(&mut address).unwrap();
                 let address = iota::Ed25519Address::new(address);
                 generated_addresses.insert(key, address);
                 Ok(iota::Address::Ed25519(address))
@@ -193,7 +194,11 @@ mod test_utils {
 
     pub async fn get_account_manager() -> AccountManager {
         let storage_path = loop {
-            let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
+            let storage_path: String = thread_rng()
+                .sample_iter(&Alphanumeric)
+                .map(char::from)
+                .take(10)
+                .collect();
             let storage_path = PathBuf::from(format!("./test-storage/{}", storage_path));
             if !storage_path.exists() {
                 break storage_path;
@@ -291,7 +296,11 @@ mod test_utils {
 
         for test_case in test_cases {
             let storage_path = loop {
-                let storage_path: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
+                let storage_path: String = thread_rng()
+                    .sample_iter(&Alphanumeric)
+                    .map(char::from)
+                    .take(10)
+                    .collect();
                 let storage_path = PathBuf::from(format!("./test-storage/{}", storage_path));
                 if !storage_path.exists() {
                     std::fs::create_dir_all(&storage_path).unwrap();
@@ -468,7 +477,7 @@ mod test_utils {
     impl Default for GenerateMessageBuilder {
         fn default() -> Self {
             Self {
-                value: rand::thread_rng().gen_range(1, 50000),
+                value: rand::thread_rng().gen_range(1..50000),
                 address: generate_random_address(),
                 confirmed: Some(false),
                 broadcasted: false,
@@ -491,54 +500,60 @@ mod test_utils {
     impl GenerateMessageBuilder {
         pub async fn build(self) -> Message {
             let bech32_hrp = self.address.address().bech32_hrp().to_string();
-            let id = MessageId::new([0; 32]);
+            let mut id = [0; 32];
+            crypto::utils::rand::fill(&mut id).unwrap();
+            let id = MessageId::new(id);
             let tx_metadata = TransactionBuilderMetadata {
                 id: &id,
                 bech32_hrp,
+                account_id: "",
+                accounts: Default::default(),
                 account_addresses: &[],
                 client_options: &ClientOptionsBuilder::new().build().unwrap(),
             };
+
+            let mut payload = MessagePayload::new(
+                Payload::Transaction(Box::new(
+                    TransactionPayloadBuilder::new()
+                        .with_essence(Essence::Regular(
+                            iota::RegularEssence::builder()
+                                .add_output(
+                                    SignatureLockedSingleOutput::new(*self.address.address().as_ref(), self.value)
+                                        .unwrap()
+                                        .into(),
+                                )
+                                .add_input(UTXOInput::new(self.input_transaction_id, 0).unwrap().into())
+                                .finish()
+                                .unwrap(),
+                        ))
+                        .with_unlock_blocks(
+                            UnlockBlocks::new(vec![UnlockBlock::Signature(SignatureUnlock::Ed25519(
+                                Ed25519Signature::new([0; 32], Box::new([0])),
+                            ))])
+                            .unwrap(),
+                        )
+                        .finish()
+                        .unwrap(),
+                )),
+                &tx_metadata,
+            )
+            .await
+            .unwrap();
+            if let MessagePayload::Transaction(ref mut tx) = payload {
+                let TransactionEssence::Regular(ref mut essence) = tx.essence_mut();
+                essence.incoming = self.incoming;
+            }
+
             Message {
                 id,
                 version: 1,
                 parents: vec![MessageId::new([0; 32])],
                 payload_length: 0,
-                payload: Some(
-                    MessagePayload::new(
-                        Payload::Transaction(Box::new(
-                            TransactionPayloadBuilder::new()
-                                .with_essence(Essence::Regular(
-                                    iota::RegularEssence::builder()
-                                        .add_output(
-                                            SignatureLockedSingleOutput::new(
-                                                *self.address.address().as_ref(),
-                                                self.value,
-                                            )
-                                            .unwrap()
-                                            .into(),
-                                        )
-                                        .add_input(UTXOInput::new(self.input_transaction_id, 0).unwrap().into())
-                                        .finish()
-                                        .unwrap(),
-                                ))
-                                .add_unlock_block(UnlockBlock::Signature(SignatureUnlock::Ed25519(
-                                    Ed25519Signature::new([0; 32], Box::new([0])),
-                                )))
-                                .finish()
-                                .unwrap(),
-                        )),
-                        &tx_metadata,
-                    )
-                    .await
-                    .unwrap(),
-                ),
+                payload: Some(payload),
                 timestamp: chrono::Utc::now(),
                 nonce: 0,
-                value: self.value,
-                remainder_value: 0,
                 confirmed: self.confirmed,
                 broadcasted: self.broadcasted,
-                incoming: self.incoming,
             }
         }
     }

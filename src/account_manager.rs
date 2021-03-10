@@ -34,7 +34,7 @@ use std::{
 use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
-use iota::{bee_rest_api::handlers::message_metadata::LedgerInclusionStateDto, MessageId};
+use iota::{bee_rest_api::endpoints::api::v1::message_metadata::LedgerInclusionStateDto, MessageId};
 use serde::Deserialize;
 use tokio::{
     sync::{
@@ -60,7 +60,8 @@ pub const STRONGHOLD_FILENAME: &str = "wallet.stronghold";
 #[cfg_attr(docsrs, doc(cfg(feature = "sqlite-storage")))]
 pub const SQLITE_FILENAME: &str = "wallet.db";
 
-pub(crate) type AccountStore = Arc<RwLock<HashMap<String, AccountHandle>>>;
+#[doc(hidden)]
+pub type AccountStore = Arc<RwLock<HashMap<String, AccountHandle>>>;
 
 /// The storage used by the manager.
 #[derive(Deserialize)]
@@ -97,7 +98,7 @@ fn storage_file_path(storage: &Option<ManagerStorage>, storage_path: &PathBuf) -
 fn storage_password_to_encryption_key(password: &str) -> [u8; 32] {
     let mut dk = [0; 64];
     // safe to unwrap (rounds > 0)
-    crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_bytes(), b"wallet.rs::storage", 100, &mut dk).unwrap();
+    crypto::keys::pbkdf::PBKDF2_HMAC_SHA512(password.as_bytes(), b"wallet.rs::storage", 100, &mut dk).unwrap();
     let key: [u8; 32] = dk[0..32][..].try_into().unwrap();
     key
 }
@@ -109,8 +110,7 @@ pub struct AccountManagerBuilder {
     polling_interval: Duration,
     skip_polling: bool,
     storage_encryption_key: Option<[u8; 32]>,
-    output_consolidation_threshold: usize,
-    automatic_output_consolidation: bool,
+    account_options: AccountOptions,
 }
 
 impl Default for AccountManagerBuilder {
@@ -128,8 +128,12 @@ impl Default for AccountManagerBuilder {
             polling_interval: Duration::from_millis(30_000),
             skip_polling: false,
             storage_encryption_key: None,
-            output_consolidation_threshold: DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
-            automatic_output_consolidation: true,
+            account_options: AccountOptions {
+                output_consolidation_threshold: DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
+                automatic_output_consolidation: true,
+                sync_spent_outputs: false,
+                persist_events: false,
+            },
         }
     }
 }
@@ -169,13 +173,25 @@ impl AccountManagerBuilder {
 
     /// Sets the number of outputs an address must have to trigger the automatic consolidation process.
     pub fn with_output_consolidation_threshold(mut self, threshold: usize) -> Self {
-        self.output_consolidation_threshold = threshold;
+        self.account_options.output_consolidation_threshold = threshold;
         self
     }
 
     /// Disables the automatic output consolidation process.
     pub fn with_automatic_output_consolidation_disabled(mut self) -> Self {
-        self.automatic_output_consolidation = true;
+        self.account_options.automatic_output_consolidation = true;
+        self
+    }
+
+    /// Enables fetching spent output history on sync.
+    pub fn with_sync_spent_outputs(mut self) -> Self {
+        self.account_options.sync_spent_outputs = true;
+        self
+    }
+
+    /// Enables event persistence.
+    pub fn with_event_persistence(mut self) -> Self {
+        self.account_options.persist_events = true;
         self
     }
 
@@ -212,12 +228,12 @@ impl AccountManagerBuilder {
 
         // with the stronghold storage feature, the accounts are loaded when the password is set
         #[cfg(feature = "stronghold-storage")]
-        let (accounts, encrypted_accounts) = (Default::default(), Vec::new());
+        let (accounts, loaded_accounts) = (Default::default(), false);
         #[cfg(not(feature = "stronghold-storage"))]
-        let (accounts, encrypted_accounts) =
-            AccountManager::load_accounts(&storage_file_path, self.output_consolidation_threshold)
-                .await
-                .unwrap_or_else(|_| (AccountStore::default(), Vec::new()));
+        let (accounts, loaded_accounts) = AccountManager::load_accounts(&storage_file_path, self.account_options)
+            .await
+            .map(|accounts| (accounts, true))
+            .unwrap_or_else(|_| (AccountStore::default(), false));
 
         let mut instance = AccountManager {
             storage_folder: if self.storage_path.is_file() || self.storage_path.extension().is_some() {
@@ -228,24 +244,35 @@ impl AccountManagerBuilder {
             } else {
                 self.storage_path
             },
+            loaded_accounts,
             storage_path: storage_file_path,
             accounts,
             stop_polling_sender: None,
             polling_handle: None,
             is_monitoring: Arc::new(AtomicBool::new(false)),
             generated_mnemonic: None,
-            encrypted_accounts,
-            output_consolidation_threshold: self.output_consolidation_threshold,
+            account_options: self.account_options,
         };
 
         if !self.skip_polling {
             instance
-                .start_background_sync(self.polling_interval, self.automatic_output_consolidation)
+                .start_background_sync(
+                    self.polling_interval,
+                    self.account_options.automatic_output_consolidation,
+                )
                 .await;
         }
 
         Ok(instance)
     }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct AccountOptions {
+    pub(crate) output_consolidation_threshold: usize,
+    pub(crate) automatic_output_consolidation: bool,
+    pub(crate) sync_spent_outputs: bool,
+    pub(crate) persist_events: bool,
 }
 
 /// The account manager.
@@ -254,16 +281,18 @@ impl AccountManagerBuilder {
 #[derive(Getters)]
 pub struct AccountManager {
     storage_folder: PathBuf,
+    loaded_accounts: bool,
     /// the path to the storage.
     #[getset(get = "pub")]
     storage_path: PathBuf,
+    /// Returns a handle to the accounts store.
+    #[getset(get = "pub")]
     accounts: AccountStore,
     stop_polling_sender: Option<BroadcastSender<()>>,
     polling_handle: Option<thread::JoinHandle<()>>,
     is_monitoring: Arc<AtomicBool>,
     generated_mnemonic: Option<String>,
-    encrypted_accounts: Vec<String>,
-    output_consolidation_threshold: usize,
+    account_options: AccountOptions,
 }
 
 impl Clone for AccountManager {
@@ -275,14 +304,14 @@ impl Clone for AccountManager {
     fn clone(&self) -> Self {
         Self {
             storage_folder: self.storage_folder.clone(),
+            loaded_accounts: self.loaded_accounts,
             storage_path: self.storage_path.clone(),
             accounts: self.accounts.clone(),
             stop_polling_sender: self.stop_polling_sender.clone(),
             polling_handle: None,
             is_monitoring: self.is_monitoring.clone(),
             generated_mnemonic: None,
-            encrypted_accounts: self.encrypted_accounts.clone(),
-            output_consolidation_threshold: self.output_consolidation_threshold,
+            account_options: self.account_options,
         }
     }
 }
@@ -298,7 +327,7 @@ fn stronghold_password<P: Into<String>>(password: P) -> Vec<u8> {
     let mut password = password.into();
     let mut dk = [0; 64];
     // safe to unwrap because rounds > 0
-    crypto::kdfs::pbkdf::PBKDF2_HMAC_SHA512(password.as_bytes(), b"wallet.rs", 100, &mut dk).unwrap();
+    crypto::keys::pbkdf::PBKDF2_HMAC_SHA512(password.as_bytes(), b"wallet.rs", 100, &mut dk).unwrap();
     password.zeroize();
     let password: [u8; 32] = dk[0..32][..].try_into().unwrap();
     password.to_vec()
@@ -312,10 +341,9 @@ impl AccountManager {
 
     async fn load_accounts(
         storage_file_path: &PathBuf,
-        output_consolidation_threshold: usize,
-    ) -> crate::Result<(AccountStore, Vec<String>)> {
-        let mut encrypted_accounts = Vec::new();
-        let mut parsed_accounts = HashMap::new();
+        account_options: AccountOptions,
+    ) -> crate::Result<AccountStore> {
+        let parsed_accounts = Arc::new(RwLock::new(HashMap::new()));
 
         let accounts = crate::storage::get(&storage_file_path)
             .await?
@@ -323,21 +351,14 @@ impl AccountManager {
             .await
             .get_accounts()
             .await?;
-        for parsed_account in accounts {
-            match parsed_account {
-                crate::storage::ParsedAccount::Account(account) => {
-                    parsed_accounts.insert(
-                        account.id().clone(),
-                        AccountHandle::new(account, output_consolidation_threshold),
-                    );
-                }
-                crate::storage::ParsedAccount::EncryptedAccount(value) => {
-                    encrypted_accounts.push(value);
-                }
-            }
+        for account in accounts {
+            parsed_accounts.write().await.insert(
+                account.id().clone(),
+                AccountHandle::new(account, parsed_accounts.clone(), account_options),
+            );
         }
 
-        Ok((Arc::new(RwLock::new(parsed_accounts)), encrypted_accounts))
+        Ok(parsed_accounts)
     }
 
     /// Deletes the storage.
@@ -379,7 +400,7 @@ impl AccountManager {
 
     // error out if the storage is encrypted
     fn check_storage_encryption(&self) -> crate::Result<()> {
-        if self.encrypted_accounts.is_empty() {
+        if self.loaded_accounts {
             Ok(())
         } else {
             Err(crate::Error::StorageIsEncrypted)
@@ -437,31 +458,28 @@ impl AccountManager {
             .await
             .unwrap();
 
-        // save the accounts again to reencrypt with the new key
+        if self.accounts.read().await.is_empty() {
+            let accounts = Self::load_accounts(&self.storage_path, self.account_options).await?;
+            self.loaded_accounts = true;
+            let mut accounts_store = self.accounts.write().await;
+            for (id, account) in &*accounts.read().await {
+                accounts_store.insert(id.clone(), account.clone());
+            }
+        } else {
+            // save the accounts again to reencrypt with the new key
+            for account_handle in self.accounts.read().await.values() {
+                account_handle.write().await.save().await?;
+            }
+        }
+
         for account_handle in self.accounts.read().await.values() {
-            account_handle.write().await.save().await?;
+            let _ = crate::monitor::unsubscribe(account_handle.clone());
         }
 
-        if !self.encrypted_accounts.is_empty() {
-            let mut accounts = self.accounts.write().await;
-            for account_handle in accounts.values() {
-                let _ = crate::monitor::unsubscribe(account_handle.clone());
-            }
-            for encrypted_account in &self.encrypted_accounts {
-                let decrypted = crate::storage::decrypt_record(encrypted_account, &key)?;
-                let account = serde_json::from_str::<Account>(&decrypted)?;
-                accounts.insert(
-                    account.id().into(),
-                    AccountHandle::new(account, self.output_consolidation_threshold),
-                );
-            }
-            self.encrypted_accounts.clear();
-
-            crate::spawn(Self::start_monitoring(
-                self.accounts.clone(),
-                self.is_monitoring.clone(),
-            ));
-        }
+        crate::spawn(Self::start_monitoring(
+            self.accounts.clone(),
+            self.is_monitoring.clone(),
+        ));
 
         Ok(())
     }
@@ -479,13 +497,12 @@ impl AccountManager {
 
         // let is_empty = self.accounts.read().await.is_empty();
         if self.accounts.read().await.is_empty() {
-            let (accounts, encrypted_accounts) =
-                Self::load_accounts(&self.storage_path, self.output_consolidation_threshold).await?;
+            let accounts = Self::load_accounts(&self.storage_path, self.account_options).await?;
+            self.loaded_accounts = true;
             let mut accounts_store = self.accounts.write().await;
             for (id, account) in &*accounts.read().await {
                 accounts_store.insert(id.clone(), account.clone());
             }
-            self.encrypted_accounts = encrypted_accounts;
             crate::spawn(Self::start_monitoring(
                 self.accounts.clone(),
                 self.is_monitoring.clone(),
@@ -541,7 +558,7 @@ impl AccountManager {
         let storage_file_path = self.storage_path.clone();
         let accounts = self.accounts.clone();
         let is_monitoring = self.is_monitoring.clone();
-        let output_consolidation_threshold = self.output_consolidation_threshold;
+        let account_options = self.account_options;
 
         let handle = thread::spawn(move || {
             let runtime = tokio::runtime::Builder::new_current_thread()
@@ -550,29 +567,39 @@ impl AccountManager {
                 .unwrap();
             runtime.block_on(async {
                 let mut interval = interval(polling_interval);
+                let mut synced = false;
                 loop {
                     tokio::select! {
                         _ = async {
                             interval.tick().await;
 
                             let storage_file_path_ = storage_file_path.clone();
+                            let account_options = account_options;
 
-                            if let Err(error) = AssertUnwindSafe(poll(accounts.clone(), storage_file_path_, output_consolidation_threshold, is_monitoring.load(Ordering::Relaxed), automatic_output_consolidation))
-                                .catch_unwind()
-                                .await {
-                                    // if the error isn't a crate::Error type
-                                if error.downcast_ref::<crate::Error>().is_none() {
-                                    let msg = if let Some(message) = error.downcast_ref::<String>() {
-                                        format!("Internal error: {}", message)
-                                    } else if let Some(message) = error.downcast_ref::<&str>() {
-                                        format!("Internal error: {}", message)
-                                    } else {
-                                        "Internal error".to_string()
-                                    };
-                                    log::error!("[POLLING] error: {}", msg);
-                                    let _error = crate::Error::Panic(msg);
-                                    // when the error is dropped, the on_error event will be triggered
-                                }
+                            if !accounts.read().await.is_empty() {
+                                let should_sync = !(synced && is_monitoring.load(Ordering::Relaxed));
+                                match AssertUnwindSafe(poll(accounts.clone(), storage_file_path_, account_options, should_sync, automatic_output_consolidation))
+                                    .catch_unwind()
+                                    .await {
+                                        Ok(_) => {
+                                            synced = true;
+                                        }
+                                        Err(error) => {
+                                            // if the error isn't a crate::Error type
+                                            if error.downcast_ref::<crate::Error>().is_none() {
+                                                let msg = if let Some(message) = error.downcast_ref::<String>() {
+                                                    format!("Internal error: {}", message)
+                                                } else if let Some(message) = error.downcast_ref::<&str>() {
+                                                    format!("Internal error: {}", message)
+                                                } else {
+                                                    "Internal error".to_string()
+                                                };
+                                                log::error!("[POLLING] error: {}", msg);
+                                                let _error = crate::Error::Panic(msg);
+                                                // when the error is dropped, the on_error event will be triggered
+                                            }
+                                        }
+                                    }
                             }
                         } => {}
                         _ = stop.recv() => {
@@ -610,8 +637,8 @@ impl AccountManager {
     /// Generates a new mnemonic.
     pub fn generate_mnemonic(&mut self) -> crate::Result<String> {
         let mut entropy = [0u8; 32];
-        crypto::rand::fill(&mut entropy).map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
-        let mnemonic = crypto::bip39::wordlist::encode(&entropy, &crypto::bip39::wordlist::ENGLISH)
+        crypto::utils::rand::fill(&mut entropy).map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
+        let mnemonic = crypto::keys::bip39::wordlist::encode(&entropy, &crypto::keys::bip39::wordlist::ENGLISH)
             .map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
         self.generated_mnemonic = Some(mnemonic.clone());
         Ok(mnemonic)
@@ -621,7 +648,7 @@ impl AccountManager {
     /// should match the generated.
     pub fn verify_mnemonic<S: AsRef<str>>(&mut self, mnemonic: S) -> crate::Result<()> {
         // first we check if the mnemonic is valid to give meaningful errors
-        crypto::bip39::wordlist::verify(mnemonic.as_ref(), &crypto::bip39::wordlist::ENGLISH)
+        crypto::keys::bip39::wordlist::verify(mnemonic.as_ref(), &crypto::keys::bip39::wordlist::ENGLISH)
             // TODO: crypto::bip39::wordlist::Error should impl Display
             .map_err(|e| crate::Error::InvalidMnemonic(format!("{:?}", e)))?;
 
@@ -644,7 +671,7 @@ impl AccountManager {
             client_options,
             self.accounts.clone(),
             self.storage_path.clone(),
-            self.output_consolidation_threshold,
+            self.account_options,
         ))
     }
 
@@ -681,7 +708,7 @@ impl AccountManager {
         Ok(AccountsSynchronizer::new(
             self.accounts.clone(),
             self.storage_path.clone(),
-            self.output_consolidation_threshold,
+            self.account_options,
         ))
     }
 
@@ -694,18 +721,27 @@ impl AccountManager {
     ) -> crate::Result<Message> {
         self.check_storage_encryption()?;
 
-        let to_address = self
-            .get_account(to_account_id)
-            .await?
-            .read()
-            .await
-            .latest_address()
-            .clone();
+        let to_account_handle = self.get_account(to_account_id).await?;
+        let to_address = to_account_handle.read().await.latest_address().address().clone();
 
-        self.get_account(from_account_id)
+        let message = self
+            .get_account(from_account_id)
             .await?
-            .transfer(Transfer::builder(to_address.address().clone(), amount).finish())
+            .transfer(Transfer::builder(to_address, amount).finish())
+            .await?;
+
+        // store the message on the receive account
+        let message_ = message.clone();
+        to_account_handle
+            .write()
             .await
+            .do_mut(|account| {
+                account.append_messages(vec![message_]);
+                Ok(())
+            })
+            .await?;
+
+        Ok(message)
     }
 
     /// Backups the storage to the given destination
@@ -848,6 +884,10 @@ impl AccountManager {
                     account_handle.write().await.set_storage_path(self.storage_path.clone());
                 }
                 self.accounts = stronghold_manager.accounts.clone();
+                self.set_stronghold_password(stronghold_password.clone()).await?;
+                for account in self.accounts.read().await.values() {
+                    account.write().await.save().await?;
+                }
             }
             #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
             return Err(crate::Error::InvalidBackupFile);
@@ -863,13 +903,12 @@ impl AccountManager {
         // the accounts map isn't empty when restoring SQLite from a stronghold snapshot
         #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
         if self.accounts.read().await.is_empty() {
-            let (accounts, encrypted_accounts) =
-                Self::load_accounts(&self.storage_path, self.output_consolidation_threshold).await?;
+            let accounts = Self::load_accounts(&self.storage_path, self.account_options).await?;
+            self.loaded_accounts = true;
             let mut accounts_store = self.accounts.write().await;
             for (id, account) in &*accounts.read().await {
                 accounts_store.insert(id.clone(), account.clone());
             }
-            self.encrypted_accounts = encrypted_accounts;
 
             crate::spawn(Self::start_monitoring(
                 self.accounts.clone(),
@@ -1010,7 +1049,7 @@ macro_rules! event_getters_impl {
                     .lock()
                     .await
                     .$get_count_fn_name(from_timestamp)
-                    .await;
+                    .await?;
                 Ok(count)
             }
         }
@@ -1037,17 +1076,17 @@ pub struct AccountsSynchronizer {
     storage_file_path: PathBuf,
     address_index: Option<usize>,
     gap_limit: Option<usize>,
-    output_consolidation_threshold: usize,
+    account_options: AccountOptions,
 }
 
 impl AccountsSynchronizer {
-    fn new(accounts: AccountStore, storage_file_path: PathBuf, output_consolidation_threshold: usize) -> Self {
+    fn new(accounts: AccountStore, storage_file_path: PathBuf, account_options: AccountOptions) -> Self {
         Self {
             accounts,
             storage_file_path,
             address_index: None,
             gap_limit: None,
-            output_consolidation_threshold,
+            account_options,
         }
     }
 
@@ -1067,6 +1106,7 @@ impl AccountsSynchronizer {
     pub async fn execute(self) -> crate::Result<Vec<SyncedAccount>> {
         let mut synced_accounts = vec![];
         let mut last_account = None;
+        let mut last_account_index = 0;
 
         {
             let accounts = self.accounts.read().await;
@@ -1081,11 +1121,14 @@ impl AccountsSynchronizer {
                 let synced_account = sync.execute().await?;
 
                 let account = account_handle.read().await;
-                last_account = Some((
-                    account.messages().is_empty() || account.addresses().iter().all(|addr| *addr.balance() == 0),
-                    account.client_options().clone(),
-                    account.signer_type().clone(),
-                ));
+                if *account.index() >= last_account_index {
+                    last_account_index = *account.index();
+                    last_account = Some((
+                        account.messages().is_empty() || account.addresses().iter().all(|addr| *addr.balance() == 0),
+                        account.client_options().clone(),
+                        account.signer_type().clone(),
+                    ));
+                }
                 synced_accounts.push(synced_account);
             }
         }
@@ -1099,7 +1142,7 @@ impl AccountsSynchronizer {
                         &self.storage_file_path,
                         &client_options,
                         Some(signer_type),
-                        self.output_consolidation_threshold,
+                        self.account_options,
                     )
                     .await
                 } else {
@@ -1129,15 +1172,14 @@ impl AccountsSynchronizer {
 async fn poll(
     accounts: AccountStore,
     storage_file_path: PathBuf,
-    output_consolidation_threshold: usize,
-    is_mqtt_monitoring: bool,
+    account_options: AccountOptions,
+    should_sync: bool,
     automatic_output_consolidation: bool,
 ) -> crate::Result<()> {
-    let retried = if !is_mqtt_monitoring {
-        let synced_accounts =
-            AccountsSynchronizer::new(accounts.clone(), storage_file_path, output_consolidation_threshold)
-                .execute()
-                .await?;
+    let retried = if should_sync {
+        let synced_accounts = AccountsSynchronizer::new(accounts.clone(), storage_file_path, account_options)
+            .execute()
+            .await?;
 
         log::debug!("[POLLING] synced accounts");
 
@@ -1151,9 +1193,10 @@ async fn poll(
         for account_handle in accounts.read().await.values() {
             synced_accounts.push(SyncedAccount::from(account_handle.clone()).await);
             let (account_handle, unconfirmed_messages): (AccountHandle, Vec<(MessageId, Option<MessagePayload>)>) = {
-                let account = account_handle.read().await;
-                let unconfirmed_messages = account
-                    .list_messages(account.messages().len(), 0, Some(MessageType::Unconfirmed))
+                let unconfirmed_messages = account_handle
+                    .read()
+                    .await
+                    .list_messages(0, 0, Some(MessageType::Unconfirmed))
                     .iter()
                     .map(|m| (*m.id(), m.payload().clone()))
                     .collect();
@@ -1173,8 +1216,10 @@ async fn poll(
                             promotions.push(new_message);
                         }
                     }
-                    Err(crate::Error::ClientError(iota::client::Error::NoNeedPromoteOrReattach(_))) => {
-                        no_need_promote_or_reattach.push(message_id);
+                    Err(crate::Error::ClientError(ref e)) => {
+                        if let iota::client::Error::NoNeedPromoteOrReattach(_) = e.as_ref() {
+                            no_need_promote_or_reattach.push(message_id);
+                        }
                     }
                     _ => {}
                 }
@@ -1198,7 +1243,13 @@ async fn poll(
         let client = crate::client::get_client(account.client_options()).await;
 
         for message in &retried_data.reattached {
-            emit_transaction_event(TransactionEventType::Reattachment, &account, &message).await?;
+            emit_transaction_event(
+                TransactionEventType::Reattachment,
+                &account,
+                &message,
+                retried_data.account_handle.account_options.persist_events,
+            )
+            .await?;
         }
 
         account.append_messages(retried_data.reattached);
@@ -1222,7 +1273,7 @@ async fn discover_accounts(
     storage_path: &PathBuf,
     client_options: &ClientOptions,
     signer_type: Option<SignerType>,
-    output_consolidation_threshold: usize,
+    account_options: AccountOptions,
 ) -> crate::Result<Vec<(AccountHandle, SyncedAccount)>> {
     let mut synced_accounts = vec![];
     loop {
@@ -1230,7 +1281,7 @@ async fn discover_accounts(
             client_options.clone(),
             accounts.clone(),
             storage_path.clone(),
-            output_consolidation_threshold,
+            account_options,
         )
         .skip_persistance();
         if let Some(signer_type) = &signer_type {
@@ -1315,8 +1366,10 @@ async fn retry_unconfirmed_transactions(synced_accounts: &[SyncedAccount]) -> cr
                         promotions.push(new_message);
                     }
                 }
-                Err(crate::Error::ClientError(iota::client::Error::NoNeedPromoteOrReattach(_))) => {
-                    no_need_promote_or_reattach.push(message_id);
+                Err(crate::Error::ClientError(ref e)) => {
+                    if let iota::client::Error::NoNeedPromoteOrReattach(_) = e.as_ref() {
+                        no_need_promote_or_reattach.push(message_id);
+                    }
                 }
                 _ => {}
             }
@@ -1386,7 +1439,7 @@ mod tests {
         event::*,
         message::Message,
     };
-    use iota::{Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Payload, TransactionId};
+    use iota::{Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Parents, Payload, TransactionId};
 
     #[tokio::test]
     async fn store_accounts() {
@@ -1553,19 +1606,17 @@ mod tests {
                     MessageId::new([0; 32]),
                     MessageBuilder::new()
                         .with_nonce_provider(crate::test_utils::NoopNonceProvider {}, 4000f64, None)
-                        .with_parents(vec![MessageId::new([0; 32])])
+                        .with_parents(Parents::new(vec![MessageId::new([0; 32])]).unwrap())
                         .with_payload(Payload::Indexation(Box::new(
                             IndexationPayload::new(b"index", &[0; 16]).unwrap(),
                         )))
                         .with_network_id(0)
                         .finish()
                         .unwrap(),
-                    // dummy account
-                    &*crate::test_utils::AccountCreator::new(&crate::test_utils::get_account_manager().await)
-                        .create()
-                        .await
-                        .read()
-                        .await,
+                    Default::default(),
+                    "",
+                    &[crate::test_utils::generate_random_address()],
+                    &ClientOptionsBuilder::new().build().unwrap(),
                 )
                 .with_confirmed(Some(true))
                 .finish()
@@ -1800,12 +1851,10 @@ mod tests {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |mut manager, _| async move {
             crate::test_utils::AccountCreator::new(&manager).create().await;
             manager.set_storage_password("new-password").await.unwrap();
-            let (account_store, encrypted) =
-                super::AccountManager::load_accounts(manager.storage_path(), manager.output_consolidation_threshold)
-                    .await
-                    .unwrap();
+            let account_store = super::AccountManager::load_accounts(manager.storage_path(), manager.account_options)
+                .await
+                .unwrap();
             assert_eq!(account_store.read().await.len(), 1);
-            assert_eq!(encrypted.len(), 0);
         })
         .await;
     }
@@ -1822,9 +1871,15 @@ mod tests {
                 BalanceChange::spent(3),
             ];
             for change in &change_events {
-                emit_balance_change(&account, account.latest_address().address(), change.clone())
-                    .await
-                    .unwrap();
+                emit_balance_change(
+                    &account,
+                    account.latest_address().address(),
+                    vec![],
+                    change.clone(),
+                    true,
+                )
+                .await
+                .unwrap();
             }
             assert!(
                 manager.get_balance_change_event_count(None).await.unwrap() == change_events.len(),
@@ -1868,7 +1923,7 @@ mod tests {
                 (m3, true),
             ];
             for (message, change) in &confirmation_change_events {
-                emit_confirmation_state_change(&account, message, *change)
+                emit_confirmation_state_change(&account, message, *change, true)
                     .await
                     .unwrap();
             }
@@ -1912,7 +1967,7 @@ mod tests {
                         let m4 = crate::test_utils::GenerateMessageBuilder::default().build().await;
                         let events = vec![m1, m2, m3, m4];
                         for message in &events {
-                            emit_transaction_event($event_type, &account, message)
+                            emit_transaction_event($event_type, &account, message, true)
                                 .await
                                 .unwrap();
                         }

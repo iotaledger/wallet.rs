@@ -15,6 +15,10 @@ export declare interface RegularEssence {
   inputs: Input[];
   outputs: Output[];
   payload?: Payload[];
+  incoming: boolean;
+  internal: boolean;
+  value: number;
+  remainderValue: number;
 }
 
 export declare type Essence = {
@@ -72,8 +76,6 @@ export declare interface Message {
   nonce: number;
   confirmed?: boolean;
   broadcasted: boolean;
-  incoming: boolean;
-  value: number;
 }
 
 export declare interface Address {
@@ -131,8 +133,18 @@ export declare class TransferOptions {
 
 export declare class SyncedAccount { }
 
+export declare type NodeUrl = string
+
+export declare interface Node {
+  url: NodeUrl
+  auth?: {
+    username: string
+    password: string
+  }
+}
+
 export declare interface ClientOptions {
-  node?: string;
+  node?: NodeUrl | Node;
   nodes?: string[];
   network?: string;
   quorumSize?: number;
@@ -164,21 +176,27 @@ export declare interface ManagerOptions {
   storagePassword?: string
   outputConsolidationThreshold?: number
   automaticOutputConsolidation?: boolean
+  syncSpentOutputs?: boolean
+  persistEvents?: boolean
 }
 
 export declare interface BalanceChangeEvent {
+  indexationId: string
   accountId: string
   address: string
+  messageIds: string[]
   balanceChange: { spent: number, received: number }
 }
 
 export declare interface TransactionConfirmationEvent {
+  indexationId: string
   accountId: string
   message: Message
   confirmed: boolean
 }
 
 export declare interface TransactionEvent {
+  indexationId: string
   accountId: string
   message: Message
 }
