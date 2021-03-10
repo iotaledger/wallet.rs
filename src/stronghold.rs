@@ -345,12 +345,9 @@ async fn check_snapshot(
         // if the current loaded snapshot is different than the snapshot we're tring to use,
         // save the current snapshot and clear the cache
         if curr_snapshot_path != snapshot_path {
-            println!("switch snapshot {:?}", snapshot_path);
             switch_snapshot(&mut runtime, snapshot_path, password).await?;
-            println!("switched snapshot {:?}", snapshot_path);
         } else if let Some(password) = password {
             if snapshot_path.exists() {
-                println!("reading snapshot {:?}", snapshot_path);
                 stronghold_response_to_result(
                     runtime
                         .stronghold
@@ -363,13 +360,10 @@ async fn check_snapshot(
                         )
                         .await,
                 )?;
-                println!("read snapshot {:?}", snapshot_path);
             }
         }
     } else {
-        println!("loading actors {:?}", snapshot_path);
         load_actors(&mut runtime, snapshot_path, password).await?;
-        println!("loaded actors {:?}", snapshot_path);
         CURRENT_SNAPSHOT_PATH
             .get_or_init(Default::default)
             .lock()
