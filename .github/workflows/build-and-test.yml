@@ -1,7 +1,16 @@
 name: Build and run tests
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    branches:
+      - develop
+    paths-ignore:
+      - 'specs/**'
+      - 'docs/**'
 
 jobs:
   crate:

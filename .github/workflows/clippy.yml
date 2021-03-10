@@ -1,7 +1,15 @@
 name: Clippy
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+      - develop
+    paths-ignore:
+      - 'specs/**'
 
 jobs:
   clippy:

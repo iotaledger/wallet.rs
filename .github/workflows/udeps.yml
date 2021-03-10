@@ -1,7 +1,14 @@
 name: Udeps
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - develop
+      - master
+  pull_request:
+    branches:
+      - develop
+      - master
 
 jobs:
   udeps:

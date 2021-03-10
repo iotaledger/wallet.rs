@@ -1,6 +1,20 @@
 name: Audit
 
 on:
+  schedule:
+    - cron: '0 0 * * *'
+  push:
+    branches:
+      - master
+    paths:
+      - "**/Cargo.lock"
+      - "**/Cargo.toml"
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "**/Cargo.lock"
+      - "**/Cargo.toml"
   workflow_dispatch:
 
 jobs:
