@@ -119,7 +119,7 @@ async fn main() -> iota_wallet::Result<()> {
     } else {
         println!("No spent address as input");
     }
-    let signed_bundle_trytes = sign_migration_bundle(tryte_seed, prepared_bundle, account_input_data)?;
+    let signed_bundle_trytes = sign_migration_bundle(tryte_seed, prepared_bundle, account_input_data.1)?;
 
     // Send to Tangle
     let send_trytes = iota
