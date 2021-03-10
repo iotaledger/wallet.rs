@@ -442,7 +442,7 @@ async fn load_snapshot_internal(
             .map(|p| &p.0)
             != Some(&password)
     {
-        clear_stronghold_cache(runtime, true).await?;
+        clear_stronghold_cache(runtime, false).await?;
     }
 
     set_password(&snapshot_path, password).await;
