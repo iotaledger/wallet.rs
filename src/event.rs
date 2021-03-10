@@ -609,109 +609,126 @@ mod tests {
         }
     }
 
-    #[tokio::test]
-    async fn balance_events() {
-        let manager = crate::test_utils::get_account_manager().await;
-        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
-        let account = account_handle.read().await;
-        let account_id = account.id().to_string();
-        on_balance_change(move |event| {
-            assert!(event.account_id == account_id);
-            assert!(event.balance_change.spent == 5);
-            assert!(event.balance_change.received == 0);
-        })
-        .await;
+    rusty_fork_test! {
+        #[test]
+        fn balance_events() {
+            let runtime = tokio::runtime::Runtime::new().unwrap();
+            runtime.block_on(async {
+                let manager = crate::test_utils::get_account_manager().await;
+                let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+                let account = account_handle.read().await;
+                let account_id = account.id().to_string();
+                on_balance_change(move |event| {
+                    assert!(event.account_id == account_id);
+                    assert!(event.balance_change.spent == 5);
+                    assert!(event.balance_change.received == 0);
+                })
+                .await;
 
-        emit_balance_change(
-            &account,
-            &crate::test_utils::generate_random_iota_address(),
-            vec![],
-            BalanceChange::spent(5),
-            true,
-        )
-        .await
-        .unwrap();
-    }
+                emit_balance_change(
+                    &account,
+                    &crate::test_utils::generate_random_iota_address(),
+                    vec![],
+                    BalanceChange::spent(5),
+                    true,
+                )
+                .await
+                .unwrap();
+            });
+        }
 
-    #[tokio::test]
-    async fn on_new_transaction_event() {
-        let manager = crate::test_utils::get_account_manager().await;
-        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
-        let account = account_handle.read().await;
-        let account_id = account.id().to_string();
-        let message = crate::test_utils::GenerateMessageBuilder::default().build().await;
-        let message_ = message.clone();
+        #[test]
+        fn on_new_transaction_event() {
+            let runtime = tokio::runtime::Runtime::new().unwrap();
+            runtime.block_on(async {
+                let manager = crate::test_utils::get_account_manager().await;
+                let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+                let account = account_handle.read().await;
+                let account_id = account.id().to_string();
+                let message = crate::test_utils::GenerateMessageBuilder::default().build().await;
+                let message_ = message.clone();
 
-        on_new_transaction(move |event| {
-            assert!(event.account_id == account_id);
-            assert!(event.message == message_);
-        })
-        .await;
+                on_new_transaction(move |event| {
+                    assert!(event.account_id == account_id);
+                    assert!(event.message == message_);
+                })
+                .await;
 
-        emit_transaction_event(TransactionEventType::NewTransaction, &account, &message, true)
-            .await
-            .unwrap();
-    }
+                emit_transaction_event(TransactionEventType::NewTransaction, &account, &message, true)
+                    .await
+                    .unwrap();
+            });
+        }
 
-    #[tokio::test]
-    async fn on_reattachment_event() {
-        let manager = crate::test_utils::get_account_manager().await;
-        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
-        let account = account_handle.read().await;
-        let account_id = account.id().to_string();
-        let message = crate::test_utils::GenerateMessageBuilder::default().build().await;
-        let message_ = message.clone();
+        #[test]
+        fn on_reattachment_event() {
+            let runtime = tokio::runtime::Runtime::new().unwrap();
+            runtime.block_on(async {
+                let manager = crate::test_utils::get_account_manager().await;
+                let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+                let account = account_handle.read().await;
+                let account_id = account.id().to_string();
+                let message = crate::test_utils::GenerateMessageBuilder::default().build().await;
+                let message_ = message.clone();
 
-        on_reattachment(move |event| {
-            assert!(event.account_id == account_id);
-            assert!(event.message == message_);
-        })
-        .await;
+                on_reattachment(move |event| {
+                    assert!(event.account_id == account_id);
+                    assert!(event.message == message_);
+                })
+                .await;
 
-        emit_transaction_event(TransactionEventType::Reattachment, &account, &message, true)
-            .await
-            .unwrap();
-    }
+                emit_transaction_event(TransactionEventType::Reattachment, &account, &message, true)
+                    .await
+                    .unwrap();
+            });
+        }
 
-    #[tokio::test]
-    async fn on_broadcast_event() {
-        let manager = crate::test_utils::get_account_manager().await;
-        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
-        let account = account_handle.read().await;
-        let account_id = account.id().to_string();
-        let message = crate::test_utils::GenerateMessageBuilder::default().build().await;
-        let message_ = message.clone();
+        #[test]
+        fn on_broadcast_event() {
+            let runtime = tokio::runtime::Runtime::new().unwrap();
+            runtime.block_on(async {
+                let manager = crate::test_utils::get_account_manager().await;
+                let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+                let account = account_handle.read().await;
+                let account_id = account.id().to_string();
+                let message = crate::test_utils::GenerateMessageBuilder::default().build().await;
+                let message_ = message.clone();
 
-        on_broadcast(move |event| {
-            assert!(event.account_id == account_id);
-            assert!(event.message == message_);
-        })
-        .await;
+                on_broadcast(move |event| {
+                    assert!(event.account_id == account_id);
+                    assert!(event.message == message_);
+                })
+                .await;
 
-        emit_transaction_event(TransactionEventType::Broadcast, &account, &message, true)
-            .await
-            .unwrap();
-    }
+                emit_transaction_event(TransactionEventType::Broadcast, &account, &message, true)
+                    .await
+                    .unwrap();
+            });
+        }
 
-    #[tokio::test]
-    async fn on_confirmation_state_change_event() {
-        let manager = crate::test_utils::get_account_manager().await;
-        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
-        let account = account_handle.read().await;
-        let account_id = account.id().to_string();
-        let message = crate::test_utils::GenerateMessageBuilder::default().build().await;
-        let message_ = message.clone();
-        let confirmed = true;
+        #[test]
+        fn on_confirmation_state_change_event() {
+            let runtime = tokio::runtime::Runtime::new().unwrap();
+            runtime.block_on(async {
+                let manager = crate::test_utils::get_account_manager().await;
+                let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+                let account = account_handle.read().await;
+                let account_id = account.id().to_string();
+                let message = crate::test_utils::GenerateMessageBuilder::default().build().await;
+                let message_ = message.clone();
+                let confirmed = true;
 
-        on_confirmation_state_change(move |event| {
-            assert!(event.account_id == account_id);
-            assert!(event.message == message_);
-            assert!(event.confirmed == confirmed);
-        })
-        .await;
+                on_confirmation_state_change(move |event| {
+                    assert!(event.account_id == account_id);
+                    assert!(event.message == message_);
+                    assert!(event.confirmed == confirmed);
+                })
+                .await;
 
-        emit_confirmation_state_change(&account, &message, confirmed, true)
-            .await
-            .unwrap();
+                emit_confirmation_state_change(&account, &message, confirmed, true)
+                    .await
+                    .unwrap();
+            });
+        }
     }
 }
