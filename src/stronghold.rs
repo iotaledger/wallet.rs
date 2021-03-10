@@ -452,7 +452,9 @@ async fn load_snapshot_internal(
             (stored_password.is_none(), stored_password != Some(&password))
         };
         if !runtime.spawned_client_paths.is_empty() && !is_password_empty && is_password_updated {
-            save_snapshot(runtime, &snapshot_path).await?;
+            if let Err(e) = save_snapshot(runtime, &snapshot_path).await {
+                println!("save snapshot failed {:?}", e);
+            }
         }
         is_password_updated
     } else {
