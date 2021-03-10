@@ -319,8 +319,8 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf,
             switch_snapshot(&mut runtime, snapshot_path).await?;
         } else if reload && snapshot_path.exists() {
             // otherwise reload the actors so the password is verified
-            clear_stronghold_cache(&mut runtime, false).await?;
-            load_actors(&mut runtime, snapshot_path).await?;
+            // clear_stronghold_cache(&mut runtime, false).await?;
+            // load_actors(&mut runtime, snapshot_path).await?;
         }
     } else {
         load_actors(&mut runtime, snapshot_path).await?;
