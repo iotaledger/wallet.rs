@@ -441,7 +441,11 @@ async fn load_snapshot_internal(
             (stored_password.is_none(), stored_password != Some(&password))
         };
         if !is_password_empty && is_password_updated {
-            save_snapshot(&mut runtime, &snapshot_path).await?;
+            match save_snapshot(&mut runtime, &snapshot_path).await {
+                Ok(_) => {}
+                Err(Error::PasswordNotSet) => {}
+                Err(e) => return Err(e),
+            }
             runtime.spawned_client_paths = HashSet::new();
             runtime.loaded_client_paths = HashSet::new();
         }
