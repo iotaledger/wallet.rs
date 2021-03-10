@@ -442,10 +442,10 @@ async fn load_snapshot_internal(
         };
         if !is_password_empty {
             save_snapshot(&mut runtime, &snapshot_path).await?;
-        }
-        if is_password_updated {
-            runtime.spawned_client_paths = HashSet::new();
-            runtime.loaded_client_paths = HashSet::new();
+            if is_password_updated {
+                runtime.spawned_client_paths = HashSet::new();
+                runtime.loaded_client_paths = HashSet::new();
+            }
         }
     }
 
