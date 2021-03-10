@@ -319,8 +319,8 @@ async fn check_snapshot(mut runtime: &mut ActorRuntime, snapshot_path: &PathBuf,
             switch_snapshot(&mut runtime, snapshot_path).await?;
         } else if reload && snapshot_path.exists() {
             // otherwise reload the actors so the password is verified
-            // clear_stronghold_cache(&mut runtime, false).await?;
-            // load_actors(&mut runtime, snapshot_path).await?;
+            clear_stronghold_cache(&mut runtime, false).await?;
+            load_actors(&mut runtime, snapshot_path).await?;
         }
     } else {
         load_actors(&mut runtime, snapshot_path).await?;
@@ -433,7 +433,7 @@ async fn load_snapshot_internal(
         (stored_password.is_none(), stored_password != Some(&password))
     };
     if !runtime.spawned_client_paths.is_empty() && !is_password_empty && is_password_updated {
-        save_snapshot(runtime, &snapshot_path).await?;
+        // save_snapshot(runtime, &snapshot_path).await?;
     }
     set_password(&snapshot_path, password).await;
     if let Err(e) = check_snapshot(&mut runtime, &snapshot_path, is_password_updated).await {
