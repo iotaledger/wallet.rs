@@ -442,7 +442,9 @@ async fn load_snapshot_internal(
             .map(|p| &p.0)
             != Some(&password)
     {
-        clear_stronghold_cache(runtime, false).await?;
+        save_snapshot(&mut runtime, &snapshot_path).await?;
+        runtime.spawned_client_paths = HashSet::new();
+        runtime.loaded_client_paths = HashSet::new();
     }
 
     set_password(&snapshot_path, password).await;
