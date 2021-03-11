@@ -5,7 +5,7 @@ use iota_wallet::{
     account_manager::AccountManager,
     client::ClientOptionsBuilder,
     iota_migration::{
-        client::migration::{mine, prepare_migration_bundle, sign_migration_bundle, Address},
+        client::migration::{mine, create_migration_bundle, sign_migration_bundle, Address},
         signing::ternary::seed::Seed as TernarySeed,
         ternary::{T1B1Buf, T3B1Buf, TryteBuf},
         transaction::bundled::BundledTransactionField,
@@ -101,7 +101,7 @@ async fn main() -> iota_wallet::Result<()> {
     };
 
     let mut prepared_bundle =
-        prepare_migration_bundle(&iota, new_converted_address, account_input_data.1.clone()).await?;
+        create_migration_bundle(&iota, new_converted_address, account_input_data.1.clone()).await?;
 
     // Ideally split inputs to have one bundle for each spent address
     if account_input_data
