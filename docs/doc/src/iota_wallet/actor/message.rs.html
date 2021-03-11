@@ -476,8 +476,8 @@
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;createdAt&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">created_at</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Local</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Whether to skip saving the account to storage or not.</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;skipPersistance&quot;</span>, <span class="ident">default</span>)]</span>
-    <span class="kw">pub</span> <span class="ident">skip_persistance</span>: <span class="ident">bool</span>,
+    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;skipPersistence&quot;</span>, <span class="ident">default</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">skip_persistence</span>: <span class="ident">bool</span>,
     <span class="doccomment">/// The account&#39;s signer type.</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;signerType&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">signer_type</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SignerType</span><span class="op">&gt;</span>,
@@ -522,8 +522,8 @@
         <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;gapLimit&quot;</span>)]</span>
         <span class="ident">gap_limit</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
         <span class="doccomment">/// Whether to skip writing the account in storage or not (defaults to false).</span>
-        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;skipPersistance&quot;</span>)]</span>
-        <span class="ident">skip_persistance</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
+        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;skipPersistence&quot;</span>)]</span>
+        <span class="ident">skip_persistence</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
     },
     <span class="doccomment">/// Checks if the account&#39;s latest address is unused after syncing with the Tangle.</span>
     <span class="ident">IsLatestAddressUnused</span>,

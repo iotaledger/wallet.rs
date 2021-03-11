@@ -1242,6 +1242,16 @@
 <span id="1239">1239</span>
 <span id="1240">1240</span>
 <span id="1241">1241</span>
+<span id="1242">1242</span>
+<span id="1243">1243</span>
+<span id="1244">1244</span>
+<span id="1245">1245</span>
+<span id="1246">1246</span>
+<span id="1247">1247</span>
+<span id="1248">1248</span>
+<span id="1249">1249</span>
+<span id="1250">1250</span>
+<span id="1251">1251</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1356,7 +1366,8 @@
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
     <span class="kw">pub</span> <span class="ident">client_options</span>: <span class="ident">ClientOptions</span>,
     <span class="ident">signer_type</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SignerType</span><span class="op">&gt;</span>,
-    <span class="ident">skip_persistance</span>: <span class="ident">bool</span>,
+    <span class="ident">skip_persistence</span>: <span class="ident">bool</span>,
+    <span class="ident">index</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">AccountInitialiser</span> {
@@ -1380,7 +1391,8 @@
             <span class="ident">signer_type</span>: <span class="prelude-val">Some</span>(<span class="ident">SignerType</span>::<span class="ident">Stronghold</span>),
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>))]</span>
             <span class="ident">signer_type</span>: <span class="prelude-val">None</span>,
-            <span class="ident">skip_persistance</span>: <span class="bool-val">false</span>,
+            <span class="ident">skip_persistence</span>: <span class="bool-val">false</span>,
+            <span class="ident">index</span>: <span class="prelude-val">None</span>,
         }
     }
 
@@ -1417,8 +1429,14 @@
     }
 
     <span class="doccomment">/// Skips storing the account to the database.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">skip_persistance</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">skip_persistance</span> <span class="op">=</span> <span class="bool-val">true</span>;
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">skip_persistence</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">skip_persistence</span> <span class="op">=</span> <span class="bool-val">true</span>;
+        <span class="self">self</span>
+    }
+
+    <span class="doccomment">/// Sets the account index. Useful for account discovery.</span>
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">index</span>.<span class="ident">replace</span>(<span class="ident">index</span>);
         <span class="self">self</span>
     }
 
@@ -1426,10 +1444,23 @@
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">initialise</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">AccountHandle</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">accounts</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>;
 
-        <span class="kw">let</span> <span class="ident">alias</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">alias</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Account {}&quot;</span>, <span class="ident">accounts</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="number">1</span>));
         <span class="kw">let</span> <span class="ident">signer_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">signer_type</span>.<span class="ident">ok_or</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">AccountInitialiseRequiredField</span>(
             <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">AccountInitialiseRequiredField</span>::<span class="ident">SignerType</span>,
         ))<span class="question-mark">?</span>;
+
+        <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">index</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">index</span> {
+            <span class="ident">index</span>
+        } <span class="kw">else</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account_index</span> <span class="op">=</span> <span class="number">0</span>;
+            <span class="kw">for</span> <span class="ident">account</span> <span class="kw">in</span> <span class="ident">accounts</span>.<span class="ident">values</span>() {
+                <span class="kw">if</span> <span class="ident">account</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">signer_type</span>() <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">signer_type</span> {
+                    <span class="ident">account_index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                }
+            }
+            <span class="ident">account_index</span>
+        };
+
+        <span class="kw">let</span> <span class="ident">alias</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">alias</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Account {}&quot;</span>, <span class="ident">index</span> <span class="op">+</span> <span class="number">1</span>));
         <span class="kw">let</span> <span class="ident">created_at</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">created_at</span>.<span class="ident">unwrap_or_else</span>(<span class="ident">Local</span>::<span class="ident">now</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">latest_account_handle</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">AccountHandle</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
@@ -1451,19 +1482,12 @@
             }
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account_index</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">for</span> <span class="ident">account</span> <span class="kw">in</span> <span class="ident">accounts</span>.<span class="ident">values</span>() {
-            <span class="kw">if</span> <span class="ident">account</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">signer_type</span>() <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">signer_type</span> {
-                <span class="ident">account_index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-            }
-        }
-
         <span class="self">self</span>.<span class="ident">addresses</span>.<span class="ident">sort</span>();
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">Account</span> {
-            <span class="ident">id</span>: <span class="ident">account_index</span>.<span class="ident">to_string</span>(),
+            <span class="ident">id</span>: <span class="ident">index</span>.<span class="ident">to_string</span>(),
             <span class="ident">signer_type</span>: <span class="ident">signer_type</span>.<span class="ident">clone</span>(),
-            <span class="ident">index</span>: <span class="ident">account_index</span>,
+            <span class="ident">index</span>,
             <span class="ident">alias</span>,
             <span class="ident">created_at</span>,
             <span class="ident">last_synced_at</span>: <span class="prelude-val">None</span>,
@@ -1471,7 +1495,7 @@
             <span class="ident">addresses</span>: <span class="self">self</span>.<span class="ident">addresses</span>,
             <span class="ident">client_options</span>: <span class="self">self</span>.<span class="ident">client_options</span>,
             <span class="ident">storage_path</span>: <span class="self">self</span>.<span class="ident">storage_path</span>,
-            <span class="ident">skip_persistance</span>: <span class="self">self</span>.<span class="ident">skip_persistance</span>,
+            <span class="ident">skip_persistence</span>: <span class="self">self</span>.<span class="ident">skip_persistence</span>,
         };
 
         <span class="kw">let</span> <span class="ident">bech32_hrp</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">client</span>::<span class="ident">get_client</span>(<span class="kw-2">&amp;</span><span class="ident">account</span>.<span class="ident">client_options</span>)
@@ -1535,7 +1559,7 @@
         <span class="ident">crypto</span>::<span class="ident">hashes</span>::<span class="ident">sha</span>::<span class="ident">SHA256</span>(<span class="kw-2">&amp;</span><span class="ident">raw</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">digest</span>);
         <span class="ident">account</span>.<span class="ident">set_id</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}{}&quot;</span>, <span class="ident">ACCOUNT_ID_PREFIX</span>, <span class="ident">hex</span>::<span class="ident">encode</span>(<span class="ident">digest</span>)));
 
-        <span class="kw">let</span> <span class="ident">guard</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">skip_persistance</span> {
+        <span class="kw">let</span> <span class="ident">guard</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">skip_persistence</span> {
             <span class="ident">AccountHandle</span>::<span class="ident">new</span>(<span class="ident">account</span>, <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>(), <span class="self">self</span>.<span class="ident">account_options</span>)
         } <span class="kw">else</span> {
             <span class="ident">account</span>.<span class="ident">save</span>().<span class="kw">await</span><span class="question-mark">?</span>;
@@ -1588,7 +1612,7 @@
     <span class="ident">storage_path</span>: <span class="ident">PathBuf</span>,
     <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">set</span> <span class="op">=</span> <span class="string">&quot;pub(crate)&quot;</span>, <span class="ident">get</span> <span class="op">=</span> <span class="string">&quot;pub(crate)&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">skip</span>)]</span>
-    <span class="ident">skip_persistance</span>: <span class="ident">bool</span>,
+    <span class="ident">skip_persistence</span>: <span class="ident">bool</span>,
 }
 
 <span class="doccomment">/// A thread guard over an account.</span>
@@ -1596,7 +1620,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AccountHandle</span> {
     <span class="ident">inner</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">accounts</span>: <span class="ident">AccountStore</span>,
-    <span class="ident">locked_addresses</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressWrapper</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">locked_addresses</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressWrapper</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">account_options</span>: <span class="ident">AccountOptions</span>,
 }
 
@@ -1608,10 +1632,6 @@
             <span class="ident">locked_addresses</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
             <span class="ident">account_options</span>,
         }
-    }
-
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">locked_addresses</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressWrapper</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">locked_addresses</span>.<span class="ident">clone</span>()
     }
 
     <span class="doccomment">/// Returns the addresses that need output consolidation.</span>
@@ -1841,7 +1861,7 @@
 
 <span class="kw">impl</span> <span class="ident">Account</span> {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">save</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">skip_persistance</span> {
+        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">skip_persistence</span> {
             <span class="kw">let</span> <span class="ident">storage_path</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">storage_path</span>.<span class="ident">clone</span>();
             <span class="kw">crate</span>::<span class="ident">storage</span>::<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">storage_path</span>)
                 .<span class="kw">await</span><span class="question-mark">?</span>

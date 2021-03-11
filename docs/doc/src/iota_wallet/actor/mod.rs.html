@@ -876,7 +876,7 @@
             <span class="ident">AccountMethod</span>::<span class="ident">SyncAccount</span> {
                 <span class="ident">address_index</span>,
                 <span class="ident">gap_limit</span>,
-                <span class="ident">skip_persistance</span>,
+                <span class="ident">skip_persistence</span>,
             } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">synchronizer</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">sync</span>().<span class="kw">await</span>;
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">address_index</span>) <span class="op">=</span> <span class="ident">address_index</span> {
@@ -885,9 +885,9 @@
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">gap_limit</span>) <span class="op">=</span> <span class="ident">gap_limit</span> {
                     <span class="ident">synchronizer</span> <span class="op">=</span> <span class="ident">synchronizer</span>.<span class="ident">gap_limit</span>(<span class="kw-2">*</span><span class="ident">gap_limit</span>);
                 }
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">skip_persistance</span>) <span class="op">=</span> <span class="ident">skip_persistance</span> {
-                    <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">skip_persistance</span> {
-                        <span class="ident">synchronizer</span> <span class="op">=</span> <span class="ident">synchronizer</span>.<span class="ident">skip_persistance</span>();
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">skip_persistence</span>) <span class="op">=</span> <span class="ident">skip_persistence</span> {
+                    <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">skip_persistence</span> {
+                        <span class="ident">synchronizer</span> <span class="op">=</span> <span class="ident">synchronizer</span>.<span class="ident">skip_persistence</span>();
                     }
                 }
                 <span class="kw">let</span> <span class="ident">synced</span> <span class="op">=</span> <span class="ident">synchronizer</span>.<span class="ident">execute</span>().<span class="kw">await</span><span class="question-mark">?</span>;
@@ -925,8 +925,8 @@
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">created_at</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">account</span>.<span class="ident">created_at</span> {
             <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">created_at</span>(<span class="kw-2">*</span><span class="ident">created_at</span>);
         }
-        <span class="kw">if</span> <span class="ident">account</span>.<span class="ident">skip_persistance</span> {
-            <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">skip_persistance</span>();
+        <span class="kw">if</span> <span class="ident">account</span>.<span class="ident">skip_persistence</span> {
+            <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">skip_persistence</span>();
         }
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">signer_type</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">account</span>.<span class="ident">signer_type</span> {
             <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">signer_type</span>(<span class="ident">signer_type</span>.<span class="ident">clone</span>());
@@ -1083,7 +1083,7 @@
                         .<span class="ident">unwrap</span>(),
                     <span class="ident">alias</span>: <span class="prelude-val">None</span>,
                     <span class="ident">created_at</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">skip_persistance</span>: <span class="bool-val">false</span>,
+                    <span class="ident">skip_persistence</span>: <span class="bool-val">false</span>,
                     <span class="ident">signer_type</span>: <span class="prelude-val">Some</span>(<span class="ident">signer_type</span>.<span class="ident">clone</span>()),
                 };
                 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>))]</span>
