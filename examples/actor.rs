@@ -59,7 +59,7 @@ async fn main() {
             .unwrap(),
         alias: None,
         created_at: None,
-        skip_persistance: false,
+        skip_persistence: false,
         signer_type: None,
     };
 
