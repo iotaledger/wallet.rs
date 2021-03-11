@@ -663,7 +663,6 @@ impl AccountManager {
                     "doesn't match the generated mnemonic".to_string(),
                 ));
             }
-            self.generated_mnemonic = None;
         }
         Ok(())
     }
