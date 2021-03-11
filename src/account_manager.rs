@@ -25,7 +25,7 @@ use std::{
     path::{Path, PathBuf},
     sync::{
         atomic::{AtomicBool, Ordering},
-        Arc, Mutex,
+        Arc,
     },
     thread,
     time::Duration,
@@ -39,7 +39,7 @@ use serde::Deserialize;
 use tokio::{
     sync::{
         broadcast::{channel as broadcast_channel, Receiver as BroadcastReceiver, Sender as BroadcastSender},
-        RwLock,
+        Mutex, RwLock,
     },
     time::interval,
 };
@@ -1115,7 +1115,7 @@ impl AccountsSynchronizer {
 
     /// Syncs the accounts with the Tangle.
     pub async fn execute(self) -> crate::Result<Vec<SyncedAccount>> {
-        let _lock = self.mutex.lock().unwrap();
+        let _lock = self.mutex.lock().await;
         let mut synced_accounts = vec![];
         let mut last_account = None;
         let mut last_account_index = 0;
