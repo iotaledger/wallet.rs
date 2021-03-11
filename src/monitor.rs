@@ -20,7 +20,7 @@ use iota::{
 /// Unsubscribe from all topics associated with the account.
 pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
     let account = account_handle.read().await;
-    let client = crate::client::get_client(account.client_options()).await;
+    let client = crate::client::get_client(account.client_options()).await?;
     let mut client = client.write().await;
 
     let mut topics = Vec::new();
@@ -53,7 +53,7 @@ async fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
     topic: String,
     handler: C,
 ) -> crate::Result<()> {
-    let client = crate::client::get_client(&client_options).await;
+    let client = crate::client::get_client(&client_options).await?;
     let mut client = client.write().await;
     client
         .subscriber()
@@ -166,7 +166,7 @@ async fn process_output(
         }
         None => {
             if let Ok(message) = crate::client::get_client(&client_options_)
-                .await
+                .await?
                 .read()
                 .await
                 .get_message()
