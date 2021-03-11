@@ -22,6 +22,14 @@ public final class EventManager {
     }
     private static native long do_subscribe_new_transaction(NewTransactionListener cb);
 
+    public static EventId subscribe_confirmation_state_change(TransactionConfirmationChangeListener cb) {
+        long ret = do_subscribe_confirmation_state_change(cb);
+        EventId convRet = new EventId(InternalPointerMarker.RAW_PTR, ret);
+
+        return convRet;
+    }
+    private static native long do_subscribe_confirmation_state_change(TransactionConfirmationChangeListener cb);
+
     public static EventId subscribe_reattachment(ReattachTransactionListener cb) {
         long ret = do_subscribe_reattachment(cb);
         EventId convRet = new EventId(InternalPointerMarker.RAW_PTR, ret);
@@ -46,13 +54,13 @@ public final class EventManager {
     }
     private static native long do_subscribe_transfer_progress(TransferProgressListener cb);
 
-    public static EventId subscribe_confirmation_state_change(TransactionConfirmationChangeListener cb) {
-        long ret = do_subscribe_confirmation_state_change(cb);
+    public static EventId subscribe_balance_change(BalanceChangeListener cb) {
+        long ret = do_subscribe_balance_change(cb);
         EventId convRet = new EventId(InternalPointerMarker.RAW_PTR, ret);
 
         return convRet;
     }
-    private static native long do_subscribe_confirmation_state_change(TransactionConfirmationChangeListener cb);
+    private static native long do_subscribe_balance_change(BalanceChangeListener cb);
 
     public static EventId subscribe_stronghold_status_change(StrongholdStatusListener cb) {
         long ret = do_subscribe_stronghold_status_change(cb);
@@ -69,6 +77,96 @@ public final class EventManager {
         return convRet;
     }
     private static native long do_subscribe_address_consolidation_needed(AddressConsolidationNeededListener cb);
+
+    public static void remove_error_listener(EventId event) {
+        long a0 = event.mNativeObj;
+        event.mNativeObj = 0;
+
+        do_remove_error_listener(a0);
+
+        JNIReachabilityFence.reachabilityFence1(event);
+    }
+    private static native void do_remove_error_listener(long event);
+
+    public static void remove_new_transaction_listener(EventId event) {
+        long a0 = event.mNativeObj;
+        event.mNativeObj = 0;
+
+        do_remove_new_transaction_listener(a0);
+
+        JNIReachabilityFence.reachabilityFence1(event);
+    }
+    private static native void do_remove_new_transaction_listener(long event);
+
+    public static void remove_confirmation_state_change_listener(EventId event) {
+        long a0 = event.mNativeObj;
+        event.mNativeObj = 0;
+
+        do_remove_confirmation_state_change_listener(a0);
+
+        JNIReachabilityFence.reachabilityFence1(event);
+    }
+    private static native void do_remove_confirmation_state_change_listener(long event);
+
+    public static void remove_reattachment_listener(EventId event) {
+        long a0 = event.mNativeObj;
+        event.mNativeObj = 0;
+
+        do_remove_reattachment_listener(a0);
+
+        JNIReachabilityFence.reachabilityFence1(event);
+    }
+    private static native void do_remove_reattachment_listener(long event);
+
+    public static void remove_broadcast_listener(EventId event) {
+        long a0 = event.mNativeObj;
+        event.mNativeObj = 0;
+
+        do_remove_broadcast_listener(a0);
+
+        JNIReachabilityFence.reachabilityFence1(event);
+    }
+    private static native void do_remove_broadcast_listener(long event);
+
+    public static void remove_transfer_progress_listener(EventId event) {
+        long a0 = event.mNativeObj;
+        event.mNativeObj = 0;
+
+        do_remove_transfer_progress_listener(a0);
+
+        JNIReachabilityFence.reachabilityFence1(event);
+    }
+    private static native void do_remove_transfer_progress_listener(long event);
+
+    public static void remove_balance_change_listener(EventId event) {
+        long a0 = event.mNativeObj;
+        event.mNativeObj = 0;
+
+        do_remove_balance_change_listener(a0);
+
+        JNIReachabilityFence.reachabilityFence1(event);
+    }
+    private static native void do_remove_balance_change_listener(long event);
+
+    public static void remove_stronghold_status_change_listener(EventId event) {
+        long a0 = event.mNativeObj;
+        event.mNativeObj = 0;
+
+        do_remove_stronghold_status_change_listener(a0);
+
+        JNIReachabilityFence.reachabilityFence1(event);
+    }
+    private static native void do_remove_stronghold_status_change_listener(long event);
+
+    public static void remove_address_consolidation_needed_listener(EventId event) {
+        long a0 = event.mNativeObj;
+        event.mNativeObj = 0;
+
+        do_remove_address_consolidation_needed_listener(a0);
+
+        JNIReachabilityFence.reachabilityFence1(event);
+    }
+    private static native void do_remove_address_consolidation_needed_listener(long event);
 
     public synchronized void delete() {
         if (mNativeObj != 0) {

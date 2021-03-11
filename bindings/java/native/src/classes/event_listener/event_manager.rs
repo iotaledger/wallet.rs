@@ -9,9 +9,7 @@ use anyhow::anyhow;
 use iota_wallet::{
     Error as WalletError,
     event::{
-        EventId, 
-        on_error, on_new_transaction, 
-        on_confirmation_state_change, on_reattachment, on_broadcast, on_transfer_progress, on_balance_change,
+        EventId,
         TransactionEvent as WalletTransactionEvent,
         TransactionConfirmationChangeEvent as WalletTransactionConfirmationChangeEvent,
         TransferProgress as WalletTransferProgress,
@@ -95,88 +93,142 @@ impl EventManager {
 
     pub fn subscribe_new_transaction(cb: Box<dyn NewTransactionListener + Send + 'static>) -> EventId {
         crate::block_on(async move {
-            on_new_transaction(move |event| {
+            iota_wallet::event::on_new_transaction(move |event| {
                 cb.on_new_transaction(event.clone());
             }).await
         })
     }
 
+    pub fn remove_new_transaction_listener(event: EventId) {
+        crate::block_on(async move {
+            iota_wallet::event::remove_new_transaction_listener(&event).await
+        })
+    }
+
     pub fn subscribe_confirmation_state_change(cb: Box<dyn TransactionConfirmationChangeListener + Send + 'static>) -> EventId {
         crate::block_on(async move {
-            on_confirmation_state_change(move |event| {
+            iota_wallet::event::on_confirmation_state_change(move |event| {
                 cb.on_confirmation_state_change(event.clone());
             }).await
+        })
+    }
+
+    pub fn remove_confirmation_state_change_listener(event: EventId) {
+        crate::block_on(async move {
+            iota_wallet::event::remove_confirmation_state_change_listener(&event).await
         })
     }
     
     pub fn subscribe_reattachment(cb: Box<dyn ReattachTransactionListener + Send + 'static>) -> EventId {
         crate::block_on(async move {
-            on_reattachment(move |event| {
+            iota_wallet::event::on_reattachment(move |event| {
                 cb.on_reattachment(event.clone());
             }).await
+        })
+    }
+
+    pub fn remove_reattachment_listener(event: EventId) {
+        crate::block_on(async move {
+            iota_wallet::event::remove_reattachment_listener(&event).await
         })
     }
     
     pub fn subscribe_broadcast(cb: Box<dyn BroadcastTransactionListener + Send + 'static>) -> EventId {
         crate::block_on(async move {
-            on_broadcast(move |event| {
+            iota_wallet::event::on_broadcast(move |event| {
                 cb.on_broadcast(event.clone());
             }).await
+        })
+    }
+    
+    pub fn remove_broadcast_listener(event: EventId) {
+        crate::block_on(async move {
+            iota_wallet::event::remove_broadcast_listener(&event).await
         })
     }
 
     pub fn subscribe_transfer_progress(cb: Box<dyn TransferProgressListener + Send + 'static>) -> EventId {
         crate::block_on(async move {
-            on_transfer_progress(move |event| {
+            iota_wallet::event::on_transfer_progress(move |event| {
                 cb.on_transfer_progress(event.clone());
             }).await
         })
     }
 
+    pub fn remove_transfer_progress_listener(event: EventId) {
+        crate::block_on(async move {
+            iota_wallet::event::remove_transfer_progress_listener(&event).await
+        })
+    }
+
     pub fn subscribe_balance_change(cb: Box<dyn BalanceChangeListener + Send + 'static>) -> EventId {
         crate::block_on(async move {
-            on_balance_change(move |event| {
+            iota_wallet::event::on_balance_change(move |event| {
                 cb.on_balance_change(event.clone());
             }).await
         })
     }
 
+    pub fn remove_balance_change_listener(event: EventId) {
+        crate::block_on(async move {
+            iota_wallet::event::remove_balance_change_listener(&event).await
+        })
+    }
+
     pub fn subscribe_errors(cb: Box<dyn ErrorListener + Send + 'static>) -> EventId {
-        on_error(move |error| {
+        iota_wallet::event::on_error(move |error| {
             cb.on_error(error.to_string());
         })
     }
 
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    pub fn subscribe_stronghold_status_change(cb: Box<dyn StrongholdStatusListener + Send + 'static>) -> Result<EventId> {
-        let id = crate::block_on(async move {
-            iota_wallet::event::on_stronghold_status_change(move |event| {
-                cb.on_stronghold_status_change(StrongholdStatusEvent { 
-                    status: event.clone()
-                });
-            }).await
-        });
-        Ok(id)
+    pub fn remove_error_listener(event: EventId) {
+        iota_wallet::event::remove_error_listener(&event)
     }
 
-    #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-    pub fn subscribe_stronghold_status_change(_: Box<dyn StrongholdStatusListener + Send + 'static>) -> Result<EventId> {
+    pub fn subscribe_stronghold_status_change(cb: Box<dyn StrongholdStatusListener + Send + 'static>) -> Result<EventId> {
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        {
+            let id = crate::block_on(async move {
+                iota_wallet::event::on_stronghold_status_change(move |event| {
+                    cb.on_stronghold_status_change(StrongholdStatusEvent { 
+                        status: event.clone()
+                    });
+                }).await
+            });
+            return Ok(id);
+        }
         Err(anyhow!("No stronghold found during compilation"))
     }
 
-    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-    pub fn subscribe_address_consolidation_needed(cb: Box<dyn AddressConsolidationNeededListener + Send + 'static>) -> Result<EventId> {
-        let id = crate::block_on(async move {
-            iota_wallet::event::on_address_consolidation_needed(move |event| {
-                cb.on_address_consolidation_needed(event.clone());
-            }).await
-        });
-        Ok(id)
-    }
-
-    #[cfg(not(any(feature = "ledger-nano", feature = "ledger-nano-simulator")))]
-    pub fn subscribe_address_consolidation_needed(_: Box<dyn AddressConsolidationNeededListener + Send + 'static>) -> Result<EventId> {
-        Err(anyhow!("No ledger found during compilation"))
+    pub fn remove_stronghold_status_change_listener(event: EventId) {
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        {
+            crate::block_on(async move {
+                iota_wallet::event::remove_stronghold_status_change_listener(&event).await
+            })
+        }
     }
     
+    pub fn subscribe_address_consolidation_needed(cb: Box<dyn AddressConsolidationNeededListener + Send + 'static>) -> Result<EventId> {
+        #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+        {
+            let id = crate::block_on(async move {
+                iota_wallet::event::on_address_consolidation_needed(move |event| {
+                    cb.on_address_consolidation_needed(event.clone());
+                }).await
+            });
+            return Ok(id);
+        }
+        
+        Err(anyhow!("No ledger found during compilation"))
+    }
+
+    pub fn remove_address_consolidation_needed_listener(event: EventId) {
+        #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+        {
+            crate::block_on(async move {
+                iota_wallet::event::remove_address_consolidation_needed_listener(&event).await
+            })
+        }
+    }
 }

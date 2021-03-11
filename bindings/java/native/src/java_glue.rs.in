@@ -522,12 +522,23 @@ foreign_class!(
         private constructor = empty;
         fn EventManager::subscribe_errors(cb: Box<dyn ErrorListener + Send + 'static>) -> EventId;
         fn EventManager::subscribe_new_transaction(cb: Box<dyn NewTransactionListener + Send + 'static>) -> EventId;
+        fn EventManager::subscribe_confirmation_state_change(cb: Box<dyn TransactionConfirmationChangeListener + Send + 'static>) -> EventId;
         fn EventManager::subscribe_reattachment(cb: Box<dyn ReattachTransactionListener + Send + 'static>) -> EventId;
         fn EventManager::subscribe_broadcast(cb: Box<dyn BroadcastTransactionListener + Send + 'static>) -> EventId;
         fn EventManager::subscribe_transfer_progress(cb: Box<dyn TransferProgressListener + Send + 'static>) -> EventId;
-        fn EventManager::subscribe_confirmation_state_change(cb: Box<dyn TransactionConfirmationChangeListener + Send + 'static>) -> EventId;
+        fn EventManager::subscribe_balance_change(cb: Box<dyn BalanceChangeListener + Send + 'static>) -> EventId;
         fn EventManager::subscribe_stronghold_status_change(cb: Box<dyn StrongholdStatusListener + Send + 'static>) -> Result<EventId>;
         fn EventManager::subscribe_address_consolidation_needed(cb: Box<dyn AddressConsolidationNeededListener + Send + 'static>) -> Result<EventId>;
+    
+        fn EventManager::remove_error_listener(event: EventId);
+        fn EventManager::remove_new_transaction_listener(event: EventId);
+        fn EventManager::remove_confirmation_state_change_listener(event: EventId);
+        fn EventManager::remove_reattachment_listener(event: EventId);
+        fn EventManager::remove_broadcast_listener(event: EventId);
+        fn EventManager::remove_transfer_progress_listener(event: EventId);
+        fn EventManager::remove_balance_change_listener(event: EventId);
+        fn EventManager::remove_stronghold_status_change_listener(event: EventId);
+        fn EventManager::remove_address_consolidation_needed_listener(event: EventId);
     }
 );
 

@@ -63,11 +63,7 @@ fn storage_enum_to_storage(storage: ManagerStorage) -> ManagerStorageRust {
         ManagerStorage::Stronghold => ManagerStorageRust::Stronghold,
         
         #[cfg(feature = "sqlite-storage")]
-        ManagerStorage::Sqlite => ManagerStorageRust::Sqlite,
-
-        // Default to Stringhold
-        // TODO: Will break
-        _ => ManagerStorageRust::Stronghold,
+        ManagerStorage::Sqlite => ManagerStorageRust::Sqlite
     }
 }
 
