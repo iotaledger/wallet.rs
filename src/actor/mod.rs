@@ -3,7 +3,7 @@
 
 use crate::{
     account::AccountIdentifier,
-    account_manager::AccountManager,
+    account_manager::{AccountManager, MigrationDataFinder},
     message::{Message as WalletMessage, Transfer},
     Result,
 };
@@ -209,6 +209,26 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async {
                     self.account_manager.set_client_options(*options.clone()).await?;
                     Ok(ResponseType::UpdatedAllClientOptions)
+                })
+                .await
+            }
+            MessageType::GetMigrationData {
+                node,
+                seed,
+                security_level,
+                gap_limit,
+            } => {
+                convert_async_panics(|| async {
+                    let mut finder = MigrationDataFinder::new(&node, &seed)?;
+                    if let Some(level) = security_level {
+                        finder = finder.with_security_level(*level);
+                    }
+                    if let Some(gap_limit) = gap_limit {
+                        finder = finder.with_gap_limit(*gap_limit);
+                    }
+                    let data = self.account_manager.migration_data(finder).await?;
+                    seed.zeroize();
+                    Ok(ResponseType::MigrationData(data.into()))
                 })
                 .await
             }

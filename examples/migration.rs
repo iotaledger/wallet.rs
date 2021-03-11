@@ -94,7 +94,7 @@ async fn main() -> iota_wallet::Result<()> {
     println!("spent_bundle_hashes {:?}", spent_bundle_hashes);
 
     // Create bundle
-    let new_address = Address::try_from_bech32(&new_migration_address.address().to_bech32())?;
+    let new_address = Address::try_from_bech32(&new_migration_address.address().to_bech32()).unwrap();
     let new_converted_address = match new_address {
         Address::Ed25519(a) => a,
         _ => panic!("Unsopported address type"),

@@ -17,9 +17,10 @@ use crate::{
 };
 
 use std::{
-    collections::HashMap,
+    collections::{hash_map::DefaultHasher, HashMap},
     convert::TryInto,
     fs,
+    hash::{Hash, Hasher},
     num::NonZeroU64,
     panic::AssertUnwindSafe,
     path::{Path, PathBuf},
@@ -35,6 +36,11 @@ use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
 use iota::{bee_rest_api::endpoints::api::v1::message_metadata::LedgerInclusionStateDto, MessageId};
+use iota_migration::{
+    client::response::InputData,
+    signing::ternary::seed::Seed as TernarySeed,
+    ternary::{T1B1Buf, TryteBuf},
+};
 use serde::Deserialize;
 use tokio::{
     sync::{
@@ -252,6 +258,7 @@ impl AccountManagerBuilder {
             is_monitoring: Arc::new(AtomicBool::new(false)),
             generated_mnemonic: None,
             account_options: self.account_options,
+            migration_data: Default::default(),
         };
 
         if !self.skip_polling {
@@ -275,6 +282,12 @@ pub(crate) struct AccountOptions {
     pub(crate) persist_events: bool,
 }
 
+struct CachedMigrationData {
+    seed: TernarySeed,
+    seed_hash: u64,
+    inputs: Vec<InputData>,
+}
+
 /// The account manager.
 ///
 /// Used to manage multiple accounts.
@@ -293,14 +306,14 @@ pub struct AccountManager {
     is_monitoring: Arc<AtomicBool>,
     generated_mnemonic: Option<String>,
     account_options: AccountOptions,
+    migration_data: Vec<CachedMigrationData>,
 }
 
 impl Clone for AccountManager {
     /// Note that when cloning an AccountManager, the original reference's Drop will stop the background sync.
     /// When the cloned reference is dropped, the background sync system won't be stopped.
     ///
-    /// Additionally, the generated mnemonic isn't cloned for security reasons,
-    /// so you should store it before cloning.
+    /// Additionally, the generated mnemonic and migration data isn't cloned for security reasons.
     fn clone(&self) -> Self {
         Self {
             storage_folder: self.storage_folder.clone(),
@@ -312,6 +325,7 @@ impl Clone for AccountManager {
             is_monitoring: self.is_monitoring.clone(),
             generated_mnemonic: None,
             account_options: self.account_options,
+            migration_data: Default::default(),
         }
     }
 }
@@ -333,10 +347,118 @@ fn stronghold_password<P: Into<String>>(password: P) -> Vec<u8> {
     password.to_vec()
 }
 
+/// Migration data.
+#[derive(Clone)]
+pub struct MigrationData {
+    /// Total seed balance.
+    pub balance: u64,
+    /// Migration inputs.
+    pub inputs: Vec<InputData>,
+}
+
+/// Finds account data for the migration from legacy network.
+pub struct MigrationDataFinder<'a> {
+    node: &'a str,
+    seed: TernarySeed,
+    seed_hash: u64,
+    security_level: u8,
+    gap_limit: u64,
+}
+
+impl<'a> MigrationDataFinder<'a> {
+    /// Creates a new migration accoutn data finder.
+    pub fn new(node: &'a str, seed: &'a str) -> crate::Result<Self> {
+        let mut hasher = DefaultHasher::new();
+        seed.hash(&mut hasher);
+        let seed_hash = hasher.finish();
+        let seed = TernarySeed::from_trits(TryteBuf::try_from_str(&seed).unwrap().as_trits().encode::<T1B1Buf>())
+            .map_err(|_| crate::Error::InvalidSeed)?;
+        Ok(Self {
+            node,
+            seed,
+            seed_hash,
+            security_level: 2,
+            gap_limit: 30,
+        })
+    }
+
+    /// Sets the security level.
+    pub fn with_security_level(mut self, level: u8) -> Self {
+        self.security_level = level;
+        self
+    }
+
+    /// Sets the gap limit.
+    pub fn with_gap_limit(mut self, gap_limit: u64) -> Self {
+        self.gap_limit = gap_limit;
+        self
+    }
+
+    async fn finish(&self) -> crate::Result<MigrationData> {
+        let mut previous_balance = 0;
+
+        let mut inputs = Vec::new();
+        let mut address_index = 0;
+        let legacy_client = iota_migration::ClientBuilder::new().node(self.node)?.build()?;
+        let balance = loop {
+            let more_inputs = legacy_client
+                .get_account_data_for_migration()
+                .with_seed(&self.seed)
+                .with_security(self.security_level)
+                .with_start_index(address_index)
+                .finish()
+                .await?;
+            inputs.extend(more_inputs.1);
+            // Filter duplicates because when it's called another time it could return duplicated entries
+            let mut unique_inputs = HashMap::new();
+            for input in inputs {
+                unique_inputs.insert(input.index, input);
+            }
+            inputs = unique_inputs
+                .into_iter()
+                .map(|(_, input)| input)
+                .collect::<Vec<InputData>>();
+            // Get total available balance
+            let balance = inputs.iter().map(|d| d.balance).sum();
+
+            // if balance didn't change, we stop searching for balance
+            if balance == previous_balance {
+                break balance;
+            }
+
+            previous_balance = balance;
+            address_index += self.gap_limit;
+        };
+
+        Ok(MigrationData { balance, inputs })
+    }
+}
+
 impl AccountManager {
     /// Initialises the account manager builder.
     pub fn builder() -> AccountManagerBuilder {
         AccountManagerBuilder::new()
+    }
+
+    /// Gets the legacy migration data for the seed.
+    pub async fn migration_data(&mut self, finder: MigrationDataFinder<'_>) -> crate::Result<MigrationData> {
+        let data = finder.finish().await?;
+        let data_ = data.clone();
+
+        match self.migration_data.iter_mut().find(|d| d.seed_hash == finder.seed_hash) {
+            Some(stored_data) => {
+                stored_data.inputs = data.inputs;
+            }
+            None => {
+                self.migration_data.push(CachedMigrationData {
+                    seed: finder.seed,
+                    seed_hash: finder.seed_hash,
+                    inputs: data.inputs,
+                });
+            }
+        }
+
+        Ok(data_)
     }
 
     async fn load_accounts(

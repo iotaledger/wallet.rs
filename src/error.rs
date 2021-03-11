@@ -183,6 +183,9 @@ pub enum Error {
     // #[cfg(feature = "migration")]
     #[error("nodes {0} not synced")]
     OldIotaError(#[from] iota_migration::client::Error),
+    /// Invalid legacy seed.
+    #[error("invalid seed")]
+    InvalidSeed,
 }
 
 impl Drop for Error {
@@ -303,6 +306,7 @@ impl serde::Serialize for Error {
             Self::NodesNotSynced(_) => serialize_variant(self, serializer, "NodesNotSynced"),
             // #[cfg(feature = "migration")]
             Self::OldIotaError(_) => serialize_variant(self, serializer, "OldIotaError"),
+            Self::InvalidSeed => serialize_variant(self, serializer, "InvalidSeed"),
         }
     }
 }

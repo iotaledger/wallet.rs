@@ -10,6 +10,7 @@ use crate::{
     Error,
 };
 use chrono::{DateTime, Local};
+use iota_migration::transaction::bundled::BundledTransactionField;
 use serde::{ser::Serializer, Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -208,6 +209,19 @@ pub enum MessageType {
     },
     /// Updates the client options for all accounts.
     SetClientOptions(Box<ClientOptions>),
+    /// Get legacy network balance for the seed.
+    GetMigrationData {
+        /// The node to connect to.
+        node: String,
+        /// The legacy seed.
+        seed: String,
+        /// The WOTS address security level.
+        #[serde(rename = "securityLevel")]
+        security_level: Option<u8>,
+        /// The address gap limit.
+        #[serde(rename = "gapLimit")]
+        gap_limit: Option<u64>,
+    },
 }
 
 impl Serialize for MessageType {
@@ -286,6 +300,12 @@ impl Serialize for MessageType {
             MessageType::SetClientOptions(_) => {
                 serializer.serialize_unit_variant("MessageType", 23, "SetClientOptions")
             }
+            MessageType::GetMigrationData {
+                node: _,
+                seed: _,
+                gap_limit: _,
+                security_level: _,
+            } => serializer.serialize_unit_variant("MessageType", 24, "GetMigrationData"),
         }
     }
 }
@@ -312,6 +332,45 @@ impl Response {
     /// The response's type.
     pub fn response(&self) -> &ResponseType {
         &self.response
+    }
+}
+
+/// Spent address data.
+#[derive(Debug, Serialize)]
+pub struct SpentAddress {
+    address: String,
+    balance: u64,
+}
+
+/// Legacy information fetched.
+#[derive(Debug, Serialize)]
+pub struct MigrationData {
+    balance: u64,
+    #[serde(rename = "spentAddresses")]
+    spent_addresses: Vec<SpentAddress>,
+}
+
+impl From<crate::account_manager::MigrationData> for MigrationData {
+    fn from(data: crate::account_manager::MigrationData) -> Self {
+        let mut spent_addresses: Vec<SpentAddress> = Vec::new();
+        for input in data.inputs {
+            let address = input.address.to_inner().to_string();
+            if input.spent {
+                match spent_addresses.iter_mut().find(|a| a.address == address) {
+                    Some(spent_address) => {
+                        spent_address.balance += input.balance;
+                    }
+                    None => spent_addresses.push(SpentAddress {
+                        address,
+                        balance: input.balance,
+                    }),
+                }
+            }
+        }
+        Self {
+            balance: data.balance,
+            spent_addresses,
+        }
     }
 }
 
@@ -403,6 +462,8 @@ pub enum ResponseType {
     StrongholdPasswordChanged,
     /// SetClientOptions response.
     UpdatedAllClientOptions,
+    /// Legacy balance.
+    MigrationData(MigrationData),
 }
 
 /// The message type.
