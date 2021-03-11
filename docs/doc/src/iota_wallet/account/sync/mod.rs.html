@@ -1756,6 +1756,30 @@
 <span id="1753">1753</span>
 <span id="1754">1754</span>
 <span id="1755">1755</span>
+<span id="1756">1756</span>
+<span id="1757">1757</span>
+<span id="1758">1758</span>
+<span id="1759">1759</span>
+<span id="1760">1760</span>
+<span id="1761">1761</span>
+<span id="1762">1762</span>
+<span id="1763">1763</span>
+<span id="1764">1764</span>
+<span id="1765">1765</span>
+<span id="1766">1766</span>
+<span id="1767">1767</span>
+<span id="1768">1768</span>
+<span id="1769">1769</span>
+<span id="1770">1770</span>
+<span id="1771">1771</span>
+<span id="1772">1772</span>
+<span id="1773">1773</span>
+<span id="1774">1774</span>
+<span id="1775">1775</span>
+<span id="1776">1776</span>
+<span id="1777">1777</span>
+<span id="1778">1778</span>
+<span id="1779">1779</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2489,26 +2513,50 @@
                             <span class="ident">address_after_sync</span>.<span class="ident">balance</span>()
                         );
 
-                        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">message_ids</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+                        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output_change_balance</span> <span class="op">=</span> <span class="number">0</span>;
+                        <span class="comment">// we use this flag in case the new balance is 0</span>
+                        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">emitted_event</span> <span class="op">=</span> <span class="bool-val">false</span>;
                         <span class="comment">// check new and updated outputs to find message ids</span>
                         <span class="kw">for</span> <span class="ident">output</span> <span class="kw">in</span> <span class="ident">address_after_sync</span>.<span class="ident">outputs</span>() {
                             <span class="kw">if</span> <span class="op">!</span><span class="ident">before_sync_outputs</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">output</span>) {
-                                <span class="ident">message_ids</span>.<span class="ident">push</span>(<span class="ident">output</span>.<span class="ident">message_id</span>);
+                                <span class="ident">emit_balance_change</span>(
+                                    <span class="kw-2">&amp;</span><span class="ident">account_ref</span>,
+                                    <span class="ident">address_after_sync</span>.<span class="ident">address</span>(),
+                                    <span class="prelude-val">Some</span>(<span class="ident">output</span>.<span class="ident">message_id</span>),
+                                    <span class="kw">if</span> <span class="ident">output</span>.<span class="ident">is_spent</span> {
+                                        <span class="ident">BalanceChange</span>::<span class="ident">spent</span>(<span class="ident">output</span>.<span class="ident">amount</span>)
+                                    } <span class="kw">else</span> {
+                                        <span class="ident">BalanceChange</span>::<span class="ident">received</span>(<span class="ident">output</span>.<span class="ident">amount</span>)
+                                    },
+                                    <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">account_options</span>.<span class="ident">persist_events</span>,
+                                )
+                                .<span class="kw">await</span><span class="question-mark">?</span>;
+                                <span class="ident">output_change_balance</span> <span class="op">+</span><span class="op">=</span> <span class="ident">output</span>.<span class="ident">amount</span>;
+                                <span class="ident">emitted_event</span> <span class="op">=</span> <span class="bool-val">true</span>;
                             }
                         }
 
-                        <span class="ident">emit_balance_change</span>(
-                            <span class="kw-2">&amp;</span><span class="ident">account_ref</span>,
-                            <span class="ident">address_after_sync</span>.<span class="ident">address</span>(),
-                            <span class="ident">message_ids</span>,
-                            <span class="kw">if</span> <span class="ident">address_after_sync</span>.<span class="ident">balance</span>() <span class="op">&gt;</span> <span class="ident">before_sync_balance</span> {
-                                <span class="ident">BalanceChange</span>::<span class="ident">received</span>(<span class="ident">address_after_sync</span>.<span class="ident">balance</span>() <span class="op">-</span> <span class="ident">before_sync_balance</span>)
-                            } <span class="kw">else</span> {
-                                <span class="ident">BalanceChange</span>::<span class="ident">spent</span>(<span class="ident">before_sync_balance</span> <span class="op">-</span> <span class="ident">address_after_sync</span>.<span class="ident">balance</span>())
-                            },
-                            <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">account_options</span>.<span class="ident">persist_events</span>,
-                        )
-                        .<span class="kw">await</span><span class="question-mark">?</span>;
+                        <span class="comment">// we can&#39;t guarantee we picked up all output changes since querying spent outputs is optional</span>
+                        <span class="comment">// so we handle it here; if not all balance change has been emitted,</span>
+                        <span class="comment">// we emit the remainder value with `None` as message_id</span>
+                        <span class="kw">if</span> <span class="op">!</span><span class="ident">emitted_event</span> <span class="op">|</span><span class="op">|</span> <span class="ident">output_change_balance</span> <span class="op">!</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">address_after_sync</span>.<span class="ident">balance</span>() {
+                            <span class="ident">emit_balance_change</span>(
+                                <span class="kw-2">&amp;</span><span class="ident">account_ref</span>,
+                                <span class="ident">address_after_sync</span>.<span class="ident">address</span>(),
+                                <span class="prelude-val">None</span>,
+                                <span class="kw">if</span> <span class="ident">address_after_sync</span>.<span class="ident">balance</span>() <span class="op">&gt;</span> <span class="ident">before_sync_balance</span> {
+                                    <span class="ident">BalanceChange</span>::<span class="ident">received</span>(
+                                        <span class="ident">address_after_sync</span>.<span class="ident">balance</span>() <span class="op">-</span> <span class="ident">before_sync_balance</span> <span class="op">-</span> <span class="ident">output_change_balance</span>,
+                                    )
+                                } <span class="kw">else</span> {
+                                    <span class="ident">BalanceChange</span>::<span class="ident">spent</span>(
+                                        <span class="ident">before_sync_balance</span> <span class="op">-</span> <span class="ident">output_change_balance</span> <span class="op">-</span> <span class="ident">address_after_sync</span>.<span class="ident">balance</span>(),
+                                    )
+                                },
+                                <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">account_options</span>.<span class="ident">persist_events</span>,
+                            )
+                            .<span class="kw">await</span><span class="question-mark">?</span>;
+                        }
                     }
                 }
 
