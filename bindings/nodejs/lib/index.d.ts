@@ -162,7 +162,7 @@ export declare interface AccountToCreate {
   alias?: string;
   createdAt?: string;
   signerType?: SignerType;
-  skipPersistance?: boolean;
+  skipPersistence?: boolean;
 }
 
 export declare enum StorageType {

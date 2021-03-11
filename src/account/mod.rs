@@ -111,7 +111,7 @@ pub struct AccountInitialiser {
     #[doc(hidden)]
     pub client_options: ClientOptions,
     signer_type: Option<SignerType>,
-    skip_persistance: bool,
+    skip_persistence: bool,
     index: Option<usize>,
 }
 
@@ -136,7 +136,7 @@ impl AccountInitialiser {
             signer_type: Some(SignerType::Stronghold),
             #[cfg(not(feature = "stronghold"))]
             signer_type: None,
-            skip_persistance: false,
+            skip_persistence: false,
             index: None,
         }
     }
@@ -174,8 +174,8 @@ impl AccountInitialiser {
     }
 
     /// Skips storing the account to the database.
-    pub fn skip_persistance(mut self) -> Self {
-        self.skip_persistance = true;
+    pub fn skip_persistence(mut self) -> Self {
+        self.skip_persistence = true;
         self
     }
 
@@ -240,7 +240,7 @@ impl AccountInitialiser {
             addresses: self.addresses,
             client_options: self.client_options,
             storage_path: self.storage_path,
-            skip_persistance: self.skip_persistance,
+            skip_persistence: self.skip_persistence,
         };
 
         let bech32_hrp = crate::client::get_client(&account.client_options)
@@ -304,7 +304,7 @@ impl AccountInitialiser {
         crypto::hashes::sha::SHA256(&raw, &mut digest);
         account.set_id(format!("{}{}", ACCOUNT_ID_PREFIX, hex::encode(digest)));
 
-        let guard = if self.skip_persistance {
+        let guard = if self.skip_persistence {
             AccountHandle::new(account, self.accounts.clone(), self.account_options)
         } else {
             account.save().await?;
@@ -357,7 +357,7 @@ pub struct Account {
     storage_path: PathBuf,
     #[getset(set = "pub(crate)", get = "pub(crate)")]
     #[serde(skip)]
-    skip_persistance: bool,
+    skip_persistence: bool,
 }
 
 /// A thread guard over an account.
@@ -606,7 +606,7 @@ pub struct AccountBalance {
 
 impl Account {
     pub(crate) async fn save(&mut self) -> crate::Result<()> {
-        if !self.skip_persistance {
+        if !self.skip_persistence {
             let storage_path = self.storage_path.clone();
             crate::storage::get(&storage_path)
                 .await?

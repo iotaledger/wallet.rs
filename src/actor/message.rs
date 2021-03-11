@@ -27,8 +27,8 @@ pub struct AccountToCreate {
     #[serde(rename = "createdAt")]
     pub created_at: Option<DateTime<Local>>,
     /// Whether to skip saving the account to storage or not.
-    #[serde(rename = "skipPersistance", default)]
-    pub skip_persistance: bool,
+    #[serde(rename = "skipPersistence", default)]
+    pub skip_persistence: bool,
     /// The account's signer type.
     #[serde(rename = "signerType")]
     pub signer_type: Option<SignerType>,
@@ -73,8 +73,8 @@ pub enum AccountMethod {
         #[serde(rename = "gapLimit")]
         gap_limit: Option<usize>,
         /// Whether to skip writing the account in storage or not (defaults to false).
-        #[serde(rename = "skipPersistance")]
-        skip_persistance: Option<bool>,
+        #[serde(rename = "skipPersistence")]
+        skip_persistence: Option<bool>,
     },
     /// Checks if the account's latest address is unused after syncing with the Tangle.
     IsLatestAddressUnused,

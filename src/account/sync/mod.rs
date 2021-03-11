@@ -584,7 +584,7 @@ pub struct AccountSynchronizer {
     account_handle: AccountHandle,
     address_index: usize,
     gap_limit: usize,
-    skip_persistance: bool,
+    skip_persistence: bool,
     steps: Vec<AccountSynchronizeStep>,
     emit_events: bool,
 }
@@ -598,7 +598,7 @@ impl AccountSynchronizer {
             // by default we synchronize from the latest address (supposedly unspent)
             address_index: latest_address_index,
             gap_limit: if latest_address_index == 0 { 10 } else { 1 },
-            skip_persistance: false,
+            skip_persistence: false,
             steps: vec![
                 AccountSynchronizeStep::SyncAddresses,
                 AccountSynchronizeStep::SyncMessages,
@@ -615,8 +615,8 @@ impl AccountSynchronizer {
 
     /// Skip saving new messages and addresses on the account object.
     /// The found data is returned on the `execute` call but won't be persisted on the database.
-    pub fn skip_persistance(mut self) -> Self {
-        self.skip_persistance = true;
+    pub fn skip_persistence(mut self) -> Self {
+        self.skip_persistence = true;
         self
     }
 
@@ -677,7 +677,7 @@ impl AccountSynchronizer {
                     .map(|a| (a.address().to_bech32(), *a.balance(), a.outputs().to_vec()))
                     .collect();
 
-                if !self.skip_persistance {
+                if !self.skip_persistence {
                     account_ref
                         .do_mut(|account| {
                             for address in account_to_sync.addresses() {

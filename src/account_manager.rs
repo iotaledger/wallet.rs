@@ -1171,7 +1171,7 @@ impl AccountsSynchronizer {
                 let mut accounts = self.accounts.write().await;
                 for (account_handle, synced_account) in discovered_accounts {
                     let mut account = account_handle.write().await;
-                    account.set_skip_persistance(false);
+                    account.set_skip_persistence(false);
                     account.save().await?;
                     accounts.insert(account.id().clone(), account_handle.clone());
                     synced_accounts.push(synced_account);
@@ -1300,7 +1300,7 @@ async fn discover_accounts(
             storage_path.clone(),
             account_options,
         )
-        .skip_persistance()
+        .skip_persistence()
         .index(index);
         if let Some(signer_type) = &signer_type {
             account_initialiser = account_initialiser.signer_type(signer_type.clone());
@@ -1716,7 +1716,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn create_account_skip_persistance() {
+    async fn create_account_skip_persistence() {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
             let client_options = ClientOptionsBuilder::new()
                 .with_node("https://api.lb-0.testnet.chrysalis2.com")
@@ -1727,7 +1727,7 @@ mod tests {
             let account_handle = manager
                 .create_account(client_options.clone())
                 .unwrap()
-                .skip_persistance()
+                .skip_persistence()
                 .initialise()
                 .await
                 .expect("failed to add account");
