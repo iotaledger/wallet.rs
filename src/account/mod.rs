@@ -112,6 +112,7 @@ pub struct AccountInitialiser {
     pub client_options: ClientOptions,
     signer_type: Option<SignerType>,
     skip_persistance: bool,
+    index: Option<usize>,
 }
 
 impl AccountInitialiser {
@@ -136,6 +137,7 @@ impl AccountInitialiser {
             #[cfg(not(feature = "stronghold"))]
             signer_type: None,
             skip_persistance: false,
+            index: None,
         }
     }
 
@@ -177,14 +179,33 @@ impl AccountInitialiser {
         self
     }
 
+    /// Sets the account index. Useful for account discovery.
+    pub(crate) fn index(mut self, index: usize) -> Self {
+        self.index.replace(index);
+        self
+    }
+
     /// Initialises the account.
     pub async fn initialise(mut self) -> crate::Result<AccountHandle> {
         let accounts = self.accounts.read().await;
 
-        let alias = self.alias.unwrap_or_else(|| format!("Account {}", accounts.len() + 1));
         let signer_type = self.signer_type.ok_or(crate::Error::AccountInitialiseRequiredField(
             crate::error::AccountInitialiseRequiredField::SignerType,
         ))?;
+
+        let index = if let Some(index) = self.index {
+            index
+        } else {
+            let mut account_index = 0;
+            for account in accounts.values() {
+                if account.read().await.signer_type() == &signer_type {
+                    account_index += 1;
+                }
+            }
+            account_index
+        };
+
+        let alias = self.alias.unwrap_or_else(|| format!("Account {}", index + 1));
         let created_at = self.created_at.unwrap_or_else(Local::now);
 
         let mut latest_account_handle: Option<AccountHandle> = None;
@@ -206,19 +227,12 @@ impl AccountInitialiser {
             }
         }
 
-        let mut account_index = 0;
-        for account in accounts.values() {
-            if account.read().await.signer_type() == &signer_type {
-                account_index += 1;
-            }
-        }
-
         self.addresses.sort();
 
         let mut account = Account {
-            id: account_index.to_string(),
+            id: index.to_string(),
             signer_type: signer_type.clone(),
-            index: account_index,
+            index,
             alias,
             created_at,
             last_synced_at: None,
@@ -351,7 +365,7 @@ pub struct Account {
 pub struct AccountHandle {
     inner: Arc<RwLock<Account>>,
     pub(crate) accounts: AccountStore,
-    locked_addresses: Arc<Mutex<Vec<AddressWrapper>>>,
+    pub(crate) locked_addresses: Arc<Mutex<Vec<AddressWrapper>>>,
     pub(crate) account_options: AccountOptions,
 }
 
@@ -363,10 +377,6 @@ impl AccountHandle {
             locked_addresses: Default::default(),
             account_options,
         }
-    }
-
-    pub(crate) fn locked_addresses(&self) -> Arc<Mutex<Vec<AddressWrapper>>> {
-        self.locked_addresses.clone()
     }
 
     /// Returns the addresses that need output consolidation.

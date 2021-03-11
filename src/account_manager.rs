@@ -25,7 +25,7 @@ use std::{
     path::{Path, PathBuf},
     sync::{
         atomic::{AtomicBool, Ordering},
-        Arc,
+        Arc, Mutex,
     },
     thread,
     time::Duration,
@@ -252,6 +252,7 @@ impl AccountManagerBuilder {
             is_monitoring: Arc::new(AtomicBool::new(false)),
             generated_mnemonic: None,
             account_options: self.account_options,
+            sync_accounts_lock: Arc::new(Mutex::new(())),
         };
 
         if !self.skip_polling {
@@ -293,6 +294,7 @@ pub struct AccountManager {
     is_monitoring: Arc<AtomicBool>,
     generated_mnemonic: Option<String>,
     account_options: AccountOptions,
+    sync_accounts_lock: Arc<Mutex<()>>,
 }
 
 impl Clone for AccountManager {
@@ -312,6 +314,7 @@ impl Clone for AccountManager {
             is_monitoring: self.is_monitoring.clone(),
             generated_mnemonic: None,
             account_options: self.account_options,
+            sync_accounts_lock: self.sync_accounts_lock.clone(),
         }
     }
 }
@@ -559,9 +562,10 @@ impl AccountManager {
         let accounts = self.accounts.clone();
         let is_monitoring = self.is_monitoring.clone();
         let account_options = self.account_options;
+        let sync_accounts_lock = self.sync_accounts_lock.clone();
 
         let handle = thread::spawn(move || {
-            let runtime = tokio::runtime::Builder::new_current_thread()
+            let runtime = tokio::runtime::Builder::new_multi_thread()
                 .enable_all()
                 .build()
                 .unwrap();
@@ -578,7 +582,7 @@ impl AccountManager {
 
                             if !accounts.read().await.is_empty() {
                                 let should_sync = !(synced && is_monitoring.load(Ordering::Relaxed));
-                                match AssertUnwindSafe(poll(accounts.clone(), storage_file_path_, account_options, should_sync, automatic_output_consolidation))
+                                match AssertUnwindSafe(poll(sync_accounts_lock.clone(), accounts.clone(), storage_file_path_, account_options, should_sync, automatic_output_consolidation))
                                     .catch_unwind()
                                     .await {
                                         Ok(_) => {
@@ -706,6 +710,7 @@ impl AccountManager {
     pub fn sync_accounts(&self) -> crate::Result<AccountsSynchronizer> {
         self.check_storage_encryption()?;
         Ok(AccountsSynchronizer::new(
+            self.sync_accounts_lock.clone(),
             self.accounts.clone(),
             self.storage_path.clone(),
             self.account_options,
@@ -1072,6 +1077,7 @@ event_getters_impl!(TransactionEvent, get_broadcast_events, get_broadcast_event_
 
 /// The accounts synchronizer.
 pub struct AccountsSynchronizer {
+    mutex: Arc<Mutex<()>>,
     accounts: AccountStore,
     storage_file_path: PathBuf,
     address_index: Option<usize>,
@@ -1080,8 +1086,14 @@ pub struct AccountsSynchronizer {
 }
 
 impl AccountsSynchronizer {
-    fn new(accounts: AccountStore, storage_file_path: PathBuf, account_options: AccountOptions) -> Self {
+    fn new(
+        mutex: Arc<Mutex<()>>,
+        accounts: AccountStore,
+        storage_file_path: PathBuf,
+        account_options: AccountOptions,
+    ) -> Self {
         Self {
+            mutex,
             accounts,
             storage_file_path,
             address_index: None,
@@ -1104,6 +1116,7 @@ impl AccountsSynchronizer {
 
     /// Syncs the accounts with the Tangle.
     pub async fn execute(self) -> crate::Result<Vec<SyncedAccount>> {
+        let _lock = self.mutex.lock().unwrap();
         let mut synced_accounts = vec![];
         let mut last_account = None;
         let mut last_account_index = 0;
@@ -1135,8 +1148,8 @@ impl AccountsSynchronizer {
 
         let discovered_accounts_res = match last_account {
             Some((is_empty, client_options, signer_type)) => {
-                if is_empty {
-                    log::debug!("[SYNC] running account discovery because the latest account is empty");
+                if !is_empty {
+                    log::debug!("[SYNC] running account discovery because the latest account is not empty");
                     discover_accounts(
                         self.accounts.clone(),
                         &self.storage_file_path,
@@ -1146,20 +1159,21 @@ impl AccountsSynchronizer {
                     )
                     .await
                 } else {
-                    log::debug!("[SYNC] skipping account discovery because the latest account isn't empty");
+                    log::debug!("[SYNC] skipping account discovery because the latest account is empty");
                     Ok(vec![])
                 }
             }
-            None => Ok(vec![]), /* None => discover_accounts(accounts.clone(), &storage_path,
-                                 * &ClientOptions::default(), None).await, */
+            None => Ok(vec![]),
         };
 
         if let Ok(discovered_accounts) = discovered_accounts_res {
             if !discovered_accounts.is_empty() {
                 let mut accounts = self.accounts.write().await;
                 for (account_handle, synced_account) in discovered_accounts {
-                    account_handle.write().await.set_skip_persistance(false);
-                    accounts.insert(account_handle.id().await, account_handle);
+                    let mut account = account_handle.write().await;
+                    account.set_skip_persistance(false);
+                    account.save().await?;
+                    accounts.insert(account.id().clone(), account_handle.clone());
                     synced_accounts.push(synced_account);
                 }
             }
@@ -1170,6 +1184,7 @@ impl AccountsSynchronizer {
 }
 
 async fn poll(
+    sync_accounts_lock: Arc<Mutex<()>>,
     accounts: AccountStore,
     storage_file_path: PathBuf,
     account_options: AccountOptions,
@@ -1177,9 +1192,10 @@ async fn poll(
     automatic_output_consolidation: bool,
 ) -> crate::Result<()> {
     let retried = if should_sync {
-        let synced_accounts = AccountsSynchronizer::new(accounts.clone(), storage_file_path, account_options)
-            .execute()
-            .await?;
+        let synced_accounts =
+            AccountsSynchronizer::new(sync_accounts_lock, accounts.clone(), storage_file_path, account_options)
+                .execute()
+                .await?;
 
         log::debug!("[POLLING] synced accounts");
 
@@ -1276,6 +1292,7 @@ async fn discover_accounts(
     account_options: AccountOptions,
 ) -> crate::Result<Vec<(AccountHandle, SyncedAccount)>> {
     let mut synced_accounts = vec![];
+    let mut index = accounts.read().await.len();
     loop {
         let mut account_initialiser = AccountInitialiser::new(
             client_options.clone(),
@@ -1283,7 +1300,8 @@ async fn discover_accounts(
             storage_path.clone(),
             account_options,
         )
-        .skip_persistance();
+        .skip_persistance()
+        .index(index);
         if let Some(signer_type) = &signer_type {
             account_initialiser = account_initialiser.signer_type(signer_type.clone());
         }
@@ -1293,12 +1311,13 @@ async fn discover_accounts(
             account_handle.read().await.alias(),
             account_handle.read().await.signer_type()
         );
-        let synced_account = account_handle.sync().await.execute().await?;
+        let synced_account = account_handle.sync().await.skip_events().execute().await?;
         let is_empty = *synced_account.is_empty();
         log::debug!("[SYNC] account is empty? {}", is_empty);
         if is_empty {
             break;
         } else {
+            index += 1;
             synced_accounts.push((account_handle, synced_account));
         }
     }
