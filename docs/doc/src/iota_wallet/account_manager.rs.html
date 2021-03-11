@@ -2054,7 +2054,7 @@
     <span class="ident">path</span>::{<span class="ident">Path</span>, <span class="ident">PathBuf</span>},
     <span class="ident">sync</span>::{
         <span class="ident">atomic</span>::{<span class="ident">AtomicBool</span>, <span class="ident">Ordering</span>},
-        <span class="ident">Arc</span>, <span class="ident">Mutex</span>,
+        <span class="ident">Arc</span>,
     },
     <span class="ident">thread</span>,
     <span class="ident">time</span>::<span class="ident">Duration</span>,
@@ -2068,7 +2068,7 @@
 <span class="kw">use</span> <span class="ident">tokio</span>::{
     <span class="ident">sync</span>::{
         <span class="ident">broadcast</span>::{<span class="ident">channel</span> <span class="kw">as</span> <span class="ident">broadcast_channel</span>, <span class="ident">Receiver</span> <span class="kw">as</span> <span class="ident">BroadcastReceiver</span>, <span class="ident">Sender</span> <span class="kw">as</span> <span class="ident">BroadcastSender</span>},
-        <span class="ident">RwLock</span>,
+        <span class="ident">Mutex</span>, <span class="ident">RwLock</span>,
     },
     <span class="ident">time</span>::<span class="ident">interval</span>,
 };
@@ -3144,7 +3144,7 @@
 
     <span class="doccomment">/// Syncs the accounts with the Tangle.</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">execute</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SyncedAccount</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">mutex</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">mutex</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">synced_accounts</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">last_account</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">last_account_index</span> <span class="op">=</span> <span class="number">0</span>;
