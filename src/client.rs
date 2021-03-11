@@ -24,7 +24,7 @@ fn instances() -> &'static ClientInstanceMap {
     &INSTANCES
 }
 
-pub(crate) async fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
+pub(crate) async fn get_client(options: &ClientOptions) -> crate::Result<Arc<RwLock<Client>>> {
     let mut map = instances().lock().await;
 
     if !map.contains_key(&options) {
@@ -59,9 +59,7 @@ pub(crate) async fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
         for node in options.nodes() {
             // safe to unwrap since we're sure we have valid URLs
             if let Some(auth) = &node.auth {
-                client_builder = client_builder
-                    .with_node_auth(node.url.as_str(), &auth.username, &auth.password)
-                    .unwrap();
+                client_builder = client_builder.with_node_auth(node.url.as_str(), &auth.username, &auth.password)?;
             } else {
                 client_builder = client_builder.with_node(node.url.as_str()).unwrap();
             }
@@ -94,16 +92,14 @@ pub(crate) async fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
             client_builder = client_builder.with_api_timeout(api.clone().into(), *timeout);
         }
 
-        let client = client_builder
-            .finish()
-            .await
-            .expect("failed to initialise ClientBuilder");
+        let client = client_builder.finish().await?;
 
         map.insert(options.clone(), Arc::new(RwLock::new(client)));
     }
 
-    let client = map.get(&options).expect("client not initialised");
-    client.clone()
+    // safe to unwrap since we make sure the client exists on the block above
+    let client = map.get(&options).unwrap();
+    Ok(client.clone())
 }
 
 /// The options builder for a client connected to multiple nodes.
@@ -597,14 +593,14 @@ mod tests {
         // assert that each different client_options create a new client instance
         for case in &test_cases {
             let len = super::instances().lock().await.len();
-            super::get_client(&case).await;
+            super::get_client(&case).await.unwrap();
             assert_eq!(super::instances().lock().await.len() - len, 1);
         }
 
         // assert that subsequent calls with options already initialized doesn't create new clients
         let len = super::instances().lock().await.len();
         for case in &test_cases {
-            super::get_client(&case).await;
+            super::get_client(&case).await.unwrap();
             assert_eq!(super::instances().lock().await.len(), len);
         }
     }

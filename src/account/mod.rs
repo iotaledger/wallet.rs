@@ -244,7 +244,7 @@ impl AccountInitialiser {
         };
 
         let bech32_hrp = crate::client::get_client(&account.client_options)
-            .await
+            .await?
             .read()
             .await
             .get_network_info()
@@ -678,7 +678,7 @@ impl Account {
 
     /// Updates the account's client options.
     pub async fn set_client_options(&mut self, options: ClientOptions) -> crate::Result<()> {
-        let client_guard = crate::client::get_client(&options).await;
+        let client_guard = crate::client::get_client(&options).await?;
         let client = client_guard.read().await;
 
         let unsynced_nodes = client.unsynced_nodes().await;

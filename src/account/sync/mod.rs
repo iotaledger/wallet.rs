@@ -92,7 +92,7 @@ pub(crate) async fn sync_address(
     bech32_hrp: String,
     options: AccountOptions,
 ) -> crate::Result<Vec<(MessageId, Option<bool>, IotaMessage)>> {
-    let client_guard = crate::client::get_client(&client_options).await;
+    let client_guard = crate::client::get_client(&client_options).await?;
     let client = client_guard.read().await;
 
     let iota_address = address.address();
@@ -259,13 +259,7 @@ async fn sync_addresses(
     let mut generated_addresses = vec![];
     let mut found_messages = vec![];
 
-    let bech32_hrp = crate::client::get_client(account.client_options())
-        .await
-        .read()
-        .await
-        .get_network_info()
-        .await?
-        .bech32_hrp;
+    let bech32_hrp = account.bech32_hrp().clone();
 
     loop {
         let mut address_generation_locked = false;
@@ -385,7 +379,7 @@ async fn sync_messages(
 
     let mut addresses = Vec::new();
 
-    let client = crate::client::get_client(&client_options).await;
+    let client = crate::client::get_client(&client_options).await?;
 
     let mut futures_ = Vec::new();
     for mut address in account.addresses().to_vec() {
@@ -1430,7 +1424,7 @@ async fn perform_transfer(
         }
     }
 
-    let client = crate::client::get_client(account_.client_options()).await;
+    let client = crate::client::get_client(account_.client_options()).await?;
     let client = client.read().await;
 
     // Check if we would let dust on an address behind or send new dust, which would make the tx unconfirmable
@@ -1669,7 +1663,7 @@ pub(crate) async fn repost_message(
                 )));
             }
 
-            let client = crate::client::get_client(account.client_options()).await;
+            let client = crate::client::get_client(account.client_options()).await?;
             let client = client.read().await;
 
             let (id, message) = match action {
