@@ -14,6 +14,7 @@ use crate::{
     signing::{GenerateAddressMetadata, SignMessageMetadata},
 };
 
+use bee_common::packable::Packable;
 use getset::Getters;
 use iota::{
     bee_rest_api::endpoints::api::v1::message_metadata::LedgerInclusionStateDto,
@@ -21,8 +22,8 @@ use iota::{
     message::{
         constants::INPUT_OUTPUT_COUNT_MAX,
         prelude::{
-            Essence, Input, Message as IotaMessage, MessageId, Payload, RegularEssence, SignatureLockedSingleOutput,
-            TransactionPayload, UTXOInput, UnlockBlocks,
+            Essence, Input, Message as IotaMessage, MessageId, Output, Payload, RegularEssence,
+            SignatureLockedSingleOutput, TransactionPayload, UTXOInput, UnlockBlocks,
         },
     },
     Bech32Address,
@@ -1219,9 +1220,10 @@ async fn perform_transfer(
         utxos.extend(outputs.into_iter());
     }
 
-    let mut essence_builder = RegularEssence::builder().add_output(
-        SignatureLockedSingleOutput::new(*transfer_obj.address.as_ref(), transfer_obj.amount.get())?.into(),
-    );
+    let mut inputs_for_essence: Vec<Input> = Vec::new();
+    let mut outputs_for_essence: Vec<Output> = Vec::new();
+    outputs_for_essence
+        .push(SignatureLockedSingleOutput::new(*transfer_obj.address.as_ref(), transfer_obj.amount.get())?.into());
     let mut current_output_sum = 0;
     let mut remainder_value = 0;
 
@@ -1239,7 +1241,7 @@ async fn perform_transfer(
         }
 
         let input: Input = UTXOInput::new(*utxo.transaction_id(), *utxo.index())?.into();
-        essence_builder = essence_builder.add_input(input.clone());
+        inputs_for_essence.push(input.clone());
         transaction_inputs.push(crate::signing::TransactionInput {
             input,
             address_index,
@@ -1375,8 +1377,8 @@ async fn perform_transfer(
             }
         };
         remainder_value_deposit_address = Some(remainder_deposit_address.clone());
-        essence_builder = essence_builder
-            .add_output(SignatureLockedSingleOutput::new(*remainder_deposit_address.as_ref(), remainder_value)?.into());
+        outputs_for_essence
+            .push(SignatureLockedSingleOutput::new(*remainder_deposit_address.as_ref(), remainder_value)?.into());
         Some(remainder_deposit_address)
     } else {
         None
@@ -1404,6 +1406,17 @@ async fn perform_transfer(
             .collect();
         is_dust_allowed(&account_, &client, address, created_or_consumed_outputs).await?;
     }
+
+    // Build transaction essence
+    let mut essence_builder = RegularEssence::builder();
+
+    // Order inputs and add them to the essence
+    inputs_for_essence.sort_unstable_by_key(|a| a.pack_new());
+    essence_builder = essence_builder.with_inputs(inputs_for_essence);
+
+    // Order outputs and add them to the essence
+    outputs_for_essence.sort_unstable_by_key(|a| a.pack_new());
+    essence_builder = essence_builder.with_outputs(outputs_for_essence);
 
     if let Some(indexation) = &transfer_obj.indexation {
         essence_builder = essence_builder.with_payload(Payload::Indexation(Box::new(indexation.clone())));
