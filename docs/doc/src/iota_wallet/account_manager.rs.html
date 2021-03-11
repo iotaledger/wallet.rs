@@ -3284,7 +3284,7 @@
 
     <span class="kw">for</span> <span class="ident">retried_data</span> <span class="kw">in</span> <span class="ident">retried</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">retried_data</span>.<span class="ident">account_handle</span>.<span class="ident">write</span>().<span class="kw">await</span>;
-        <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">client</span>::<span class="ident">get_client</span>(<span class="ident">account</span>.<span class="ident">client_options</span>()).<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">client</span>::<span class="ident">get_client</span>(<span class="ident">account</span>.<span class="ident">client_options</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">retried_data</span>.<span class="ident">reattached</span> {
             <span class="ident">emit_transaction_event</span>(

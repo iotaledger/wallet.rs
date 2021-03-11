@@ -1499,7 +1499,7 @@
         };
 
         <span class="kw">let</span> <span class="ident">bech32_hrp</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">client</span>::<span class="ident">get_client</span>(<span class="kw-2">&amp;</span><span class="ident">account</span>.<span class="ident">client_options</span>)
-            .<span class="kw">await</span>
+            .<span class="kw">await</span><span class="question-mark">?</span>
             .<span class="ident">read</span>()
             .<span class="kw">await</span>
             .<span class="ident">get_network_info</span>()
@@ -1933,7 +1933,7 @@
 
     <span class="doccomment">/// Updates the account&#39;s client options.</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_client_options</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">options</span>: <span class="ident">ClientOptions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">client_guard</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">client</span>::<span class="ident">get_client</span>(<span class="kw-2">&amp;</span><span class="ident">options</span>).<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">client_guard</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">client</span>::<span class="ident">get_client</span>(<span class="kw-2">&amp;</span><span class="ident">options</span>).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">client_guard</span>.<span class="ident">read</span>().<span class="kw">await</span>;
 
         <span class="kw">let</span> <span class="ident">unsynced_nodes</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">unsynced_nodes</span>().<span class="kw">await</span>;

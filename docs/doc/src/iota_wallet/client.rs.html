@@ -608,10 +608,6 @@
 <span id="605">605</span>
 <span id="606">606</span>
 <span id="607">607</span>
-<span id="608">608</span>
-<span id="609">609</span>
-<span id="610">610</span>
-<span id="611">611</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -639,7 +635,7 @@
     <span class="kw-2">&amp;</span><span class="ident">INSTANCES</span>
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_client</span>(<span class="ident">options</span>: <span class="kw-2">&amp;</span><span class="ident">ClientOptions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Client</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_client</span>(<span class="ident">options</span>: <span class="kw-2">&amp;</span><span class="ident">ClientOptions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Client</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span> <span class="op">=</span> <span class="ident">instances</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
 
     <span class="kw">if</span> <span class="op">!</span><span class="ident">map</span>.<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">options</span>) {
@@ -674,9 +670,7 @@
         <span class="kw">for</span> <span class="ident">node</span> <span class="kw">in</span> <span class="ident">options</span>.<span class="ident">nodes</span>() {
             <span class="comment">// safe to unwrap since we&#39;re sure we have valid URLs</span>
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">auth</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">node</span>.<span class="ident">auth</span> {
-                <span class="ident">client_builder</span> <span class="op">=</span> <span class="ident">client_builder</span>
-                    .<span class="ident">with_node_auth</span>(<span class="ident">node</span>.<span class="ident">url</span>.<span class="ident">as_str</span>(), <span class="kw-2">&amp;</span><span class="ident">auth</span>.<span class="ident">username</span>, <span class="kw-2">&amp;</span><span class="ident">auth</span>.<span class="ident">password</span>)
-                    .<span class="ident">unwrap</span>();
+                <span class="ident">client_builder</span> <span class="op">=</span> <span class="ident">client_builder</span>.<span class="ident">with_node_auth</span>(<span class="ident">node</span>.<span class="ident">url</span>.<span class="ident">as_str</span>(), <span class="kw-2">&amp;</span><span class="ident">auth</span>.<span class="ident">username</span>, <span class="kw-2">&amp;</span><span class="ident">auth</span>.<span class="ident">password</span>)<span class="question-mark">?</span>;
             } <span class="kw">else</span> {
                 <span class="ident">client_builder</span> <span class="op">=</span> <span class="ident">client_builder</span>.<span class="ident">with_node</span>(<span class="ident">node</span>.<span class="ident">url</span>.<span class="ident">as_str</span>()).<span class="ident">unwrap</span>();
             }
@@ -709,16 +703,14 @@
             <span class="ident">client_builder</span> <span class="op">=</span> <span class="ident">client_builder</span>.<span class="ident">with_api_timeout</span>(<span class="ident">api</span>.<span class="ident">clone</span>().<span class="ident">into</span>(), <span class="kw-2">*</span><span class="ident">timeout</span>);
         }
 
-        <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">client_builder</span>
-            .<span class="ident">finish</span>()
-            .<span class="kw">await</span>
-            .<span class="ident">expect</span>(<span class="string">&quot;failed to initialise ClientBuilder&quot;</span>);
+        <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">client_builder</span>.<span class="ident">finish</span>().<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="ident">map</span>.<span class="ident">insert</span>(<span class="ident">options</span>.<span class="ident">clone</span>(), <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">RwLock</span>::<span class="ident">new</span>(<span class="ident">client</span>)));
     }
 
-    <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">options</span>).<span class="ident">expect</span>(<span class="string">&quot;client not initialised&quot;</span>);
-    <span class="ident">client</span>.<span class="ident">clone</span>()
+    <span class="comment">// safe to unwrap since we make sure the client exists on the block above</span>
+    <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">options</span>).<span class="ident">unwrap</span>();
+    <span class="prelude-val">Ok</span>(<span class="ident">client</span>.<span class="ident">clone</span>())
 }
 
 <span class="doccomment">/// The options builder for a client connected to multiple nodes.</span>
@@ -1212,14 +1204,14 @@
         <span class="comment">// assert that each different client_options create a new client instance</span>
         <span class="kw">for</span> <span class="ident">case</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">test_cases</span> {
             <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">instances</span>().<span class="ident">lock</span>().<span class="kw">await</span>.<span class="ident">len</span>();
-            <span class="kw">super</span>::<span class="ident">get_client</span>(<span class="kw-2">&amp;</span><span class="ident">case</span>).<span class="kw">await</span>;
+            <span class="kw">super</span>::<span class="ident">get_client</span>(<span class="kw-2">&amp;</span><span class="ident">case</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
             <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">super</span>::<span class="ident">instances</span>().<span class="ident">lock</span>().<span class="kw">await</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">len</span>, <span class="number">1</span>);
         }
 
         <span class="comment">// assert that subsequent calls with options already initialized doesn&#39;t create new clients</span>
         <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">instances</span>().<span class="ident">lock</span>().<span class="kw">await</span>.<span class="ident">len</span>();
         <span class="kw">for</span> <span class="ident">case</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">test_cases</span> {
-            <span class="kw">super</span>::<span class="ident">get_client</span>(<span class="kw-2">&amp;</span><span class="ident">case</span>).<span class="kw">await</span>;
+            <span class="kw">super</span>::<span class="ident">get_client</span>(<span class="kw-2">&amp;</span><span class="ident">case</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
             <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">super</span>::<span class="ident">instances</span>().<span class="ident">lock</span>().<span class="kw">await</span>.<span class="ident">len</span>(), <span class="ident">len</span>);
         }
     }
