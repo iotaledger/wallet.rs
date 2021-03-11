@@ -766,7 +766,12 @@ impl AccountSynchronizer {
                             // optional so we handle it here; if not all balance change has
                             // been emitted, we emit the remainder value with `None` as
                             // message_id
-                            if !emitted_event || output_change_balance != *address_after_sync.balance() {
+                            let absolute_balance_change = if address_after_sync.balance() < before_sync_balance {
+                                before_sync_balance - address_after_sync.balance()
+                            } else {
+                                address_after_sync.balance() - before_sync_balance
+                            };
+                            if !emitted_event || output_change_balance != absolute_balance_change {
                                 emit_balance_change(
                                     &account_ref,
                                     address_after_sync.address(),
