@@ -178,7 +178,7 @@ Gets the persisted balance change events.
 | [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
 | [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
 
-Event object: { indexationId: string, accountId: string, address: string, messageIds: string[], balanceChange: { spent: number, received: number } }
+Event object: { indexationId: string, accountId: string, address: string, message?: string, balanceChange: { spent: number, received: number } }
 
 #### getBalanceChangeEventCount([fromTimestamp])
 

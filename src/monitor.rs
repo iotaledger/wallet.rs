@@ -137,7 +137,7 @@ async fn process_output(
     crate::event::emit_balance_change(
         &account,
         &address_wrapper,
-        vec![message_id],
+        Some(message_id),
         if new_balance > old_balance {
             crate::event::BalanceChange::received(new_balance - old_balance)
         } else {
