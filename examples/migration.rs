@@ -5,7 +5,7 @@ use iota_wallet::{
     account_manager::AccountManager,
     client::ClientOptionsBuilder,
     iota_migration::{
-        client::migration::{mine, create_migration_bundle, sign_migration_bundle, Address},
+        client::migration::{create_migration_bundle, mine, sign_migration_bundle, Address},
         signing::ternary::seed::Seed as TernarySeed,
         ternary::{T1B1Buf, T3B1Buf, TryteBuf},
         transaction::bundled::BundledTransactionField,
@@ -39,6 +39,7 @@ async fn main() -> iota_wallet::Result<()> {
     let ledger = false;
     let iota = iota_migration::ClientBuilder::new()
         .node("https://nodes.devnet.iota.org")?
+        // .permanode("https://permanode.org")?
         .build()?;
     let tryte_seed = TernarySeed::from_trits(
         TryteBuf::try_from_str("TRYTESEEDTRYTESEEDTRYTESEEDTRYTESEEDTRYTESEEDTRYTESEEDTRYTESEEDTRYTESEEDTRYTESEED")
@@ -60,6 +61,7 @@ async fn main() -> iota_wallet::Result<()> {
             .with_seed(&tryte_seed)
             .with_security(security_level as u8)
             .with_start_index(address_index)
+            // .with_gap_limit(30)
             .finish()
             .await?;
         account_input_data.1.extend(more_inputs.1);
