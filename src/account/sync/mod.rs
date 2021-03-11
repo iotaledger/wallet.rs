@@ -731,7 +731,8 @@ impl AccountSynchronizer {
                         );
 
                         let mut output_change_balance = 0;
-                        let mut emitted_event = false; // we use this flag in case the new balance is 0
+                        // we use this flag in case the new balance is 0
+                        let mut emitted_event = false;
                         // check new and updated outputs to find message ids
                         for output in address_after_sync.outputs() {
                             if !before_sync_outputs.contains(&output) {
@@ -761,9 +762,13 @@ impl AccountSynchronizer {
                                 address_after_sync.address(),
                                 None,
                                 if address_after_sync.balance() > before_sync_balance {
-                                    BalanceChange::received(address_after_sync.balance() - before_sync_balance - output_change_balance)
+                                    BalanceChange::received(
+                                        address_after_sync.balance() - before_sync_balance - output_change_balance,
+                                    )
                                 } else {
-                                    BalanceChange::spent(before_sync_balance - output_change_balance - address_after_sync.balance())
+                                    BalanceChange::spent(
+                                        before_sync_balance - output_change_balance - address_after_sync.balance(),
+                                    )
                                 },
                                 self.account_handle.account_options.persist_events,
                             )
