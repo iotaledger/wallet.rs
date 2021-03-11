@@ -3,6 +3,7 @@
 
 use crate::{
     account::{Account, AccountBalance, AccountIdentifier, SyncedAccount},
+    account_manager::MigrationData,
     address::Address,
     client::ClientOptions,
     message::{Message as WalletMessage, MessageType as WalletMessageType, TransferBuilder},
@@ -337,39 +338,36 @@ impl Response {
 
 /// Spent address data.
 #[derive(Debug, Serialize)]
-pub struct SpentAddress {
+pub struct MigrationInputDto {
     address: String,
     balance: u64,
+    spent: bool,
+    #[serde(rename = "spentBundleHashes")]
+    spent_bundle_hashes: Option<Vec<String>>,
 }
 
 /// Legacy information fetched.
 #[derive(Debug, Serialize)]
-pub struct MigrationData {
+pub struct MigrationDataDto {
     balance: u64,
-    #[serde(rename = "spentAddresses")]
-    spent_addresses: Vec<SpentAddress>,
+    inputs: Vec<MigrationInputDto>,
 }
 
-impl From<crate::account_manager::MigrationData> for MigrationData {
-    fn from(data: crate::account_manager::MigrationData) -> Self {
-        let mut spent_addresses: Vec<SpentAddress> = Vec::new();
+impl From<MigrationData> for MigrationDataDto {
+    fn from(data: MigrationData) -> Self {
+        let mut inputs: Vec<MigrationInputDto> = Vec::new();
         for input in data.inputs {
             let address = input.address.to_inner().to_string();
-            if input.spent {
-                match spent_addresses.iter_mut().find(|a| a.address == address) {
-                    Some(spent_address) => {
-                        spent_address.balance += input.balance;
-                    }
-                    None => spent_addresses.push(SpentAddress {
-                        address,
-                        balance: input.balance,
-                    }),
-                }
-            }
+            inputs.push(MigrationInputDto {
+                address,
+                balance: input.balance,
+                spent: input.spent,
+                spent_bundle_hashes: input.spent_bundlehashes,
+            });
         }
         Self {
             balance: data.balance,
-            spent_addresses,
+            inputs,
         }
     }
 }
@@ -463,7 +461,7 @@ pub enum ResponseType {
     /// SetClientOptions response.
     UpdatedAllClientOptions,
     /// Legacy balance.
-    MigrationData(MigrationData),
+    MigrationData(MigrationDataDto),
 }
 
 /// The message type.
