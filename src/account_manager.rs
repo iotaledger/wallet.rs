@@ -1871,15 +1871,9 @@ mod tests {
                 BalanceChange::spent(3),
             ];
             for change in &change_events {
-                emit_balance_change(
-                    &account,
-                    account.latest_address().address(),
-                    vec![],
-                    change.clone(),
-                    true,
-                )
-                .await
-                .unwrap();
+                emit_balance_change(&account, account.latest_address().address(), None, change.clone(), true)
+                    .await
+                    .unwrap();
             }
             assert!(
                 manager.get_balance_change_event_count(None).await.unwrap() == change_events.len(),

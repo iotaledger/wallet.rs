@@ -65,11 +65,11 @@ pub struct BalanceEvent {
     #[serde(with = "crate::serde::iota_address_serde")]
     pub address: AddressWrapper,
     /// The message id associated with the balance change.
-    /// Note that this is unreliable without
+    /// Note that this might be `None` without
     /// [AccountManagerBuilder#with_sync_spent_outputs](struct.AccountManagerBuilder.html#method.
-    /// with_sync_spent_outputs). ``
-    #[serde(rename = "messageIds", default)]
-    pub message_ids: Vec<MessageId>,
+    /// with_sync_spent_outputs).
+    #[serde(rename = "messageId")]
+    pub message_id: Option<MessageId>,
     /// The balance change data.
     #[serde(rename = "balanceChange")]
     pub balance_change: BalanceChange,
@@ -313,7 +313,7 @@ pub async fn remove_balance_change_listener(id: &EventId) {
 pub(crate) async fn emit_balance_change(
     account: &Account,
     address: &AddressWrapper,
-    message_ids: Vec<MessageId>,
+    message_id: Option<MessageId>,
     balance_change: BalanceChange,
     persist: bool,
 ) -> crate::Result<()> {
@@ -322,7 +322,7 @@ pub(crate) async fn emit_balance_change(
         indexation_id: generate_indexation_id(),
         account_id: account.id().to_string(),
         address: address.clone(),
-        message_ids,
+        message_id,
         balance_change,
     };
 
@@ -628,7 +628,7 @@ mod tests {
                 emit_balance_change(
                     &account,
                     &crate::test_utils::generate_random_iota_address(),
-                    vec![],
+                    None,
                     BalanceChange::spent(5),
                     true,
                 )

@@ -730,26 +730,45 @@ impl AccountSynchronizer {
                             address_after_sync.balance()
                         );
 
-                        let mut message_ids = Vec::new();
+                        let mut output_change_balance = 0;
+                        let mut emitted_event = false; // we use this flag in case the new balance is 0
                         // check new and updated outputs to find message ids
                         for output in address_after_sync.outputs() {
                             if !before_sync_outputs.contains(&output) {
-                                message_ids.push(output.message_id);
+                                emit_balance_change(
+                                    &account_ref,
+                                    address_after_sync.address(),
+                                    Some(output.message_id),
+                                    if output.is_spent {
+                                        BalanceChange::spent(output.amount)
+                                    } else {
+                                        BalanceChange::received(output.amount)
+                                    },
+                                    self.account_handle.account_options.persist_events,
+                                )
+                                .await?;
+                                output_change_balance += output.amount;
+                                emitted_event = true;
                             }
                         }
 
-                        emit_balance_change(
-                            &account_ref,
-                            address_after_sync.address(),
-                            message_ids,
-                            if address_after_sync.balance() > before_sync_balance {
-                                BalanceChange::received(address_after_sync.balance() - before_sync_balance)
-                            } else {
-                                BalanceChange::spent(before_sync_balance - address_after_sync.balance())
-                            },
-                            self.account_handle.account_options.persist_events,
-                        )
-                        .await?;
+                        // we can't guarantee we picked up all output changes since querying spent outputs is optional
+                        // so we handle it here; if not all balance change has been emitted,
+                        // we emit the remainder value with `None` as message_id
+                        if !emitted_event || output_change_balance != *address_after_sync.balance() {
+                            emit_balance_change(
+                                &account_ref,
+                                address_after_sync.address(),
+                                None,
+                                if address_after_sync.balance() > before_sync_balance {
+                                    BalanceChange::received(address_after_sync.balance() - before_sync_balance - output_change_balance)
+                                } else {
+                                    BalanceChange::spent(before_sync_balance - output_change_balance - address_after_sync.balance())
+                                },
+                                self.account_handle.account_options.persist_events,
+                            )
+                            .await?;
+                        }
                     }
                 }
 
