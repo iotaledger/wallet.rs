@@ -159,10 +159,10 @@ pub enum SnapshotStatus {
 #[getset(get = "pub")]
 /// Stronghold status.
 pub struct Status {
-    // The location of the snapshot
+    /// The location of the snapshot
     #[serde(rename = "snapshotPath")]
     pub snapshot_path: PathBuf,
-    // The status of the snapshot
+    /// The status of the snapshot
     pub snapshot: SnapshotStatus,
 }
 

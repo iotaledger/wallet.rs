@@ -5,8 +5,10 @@ mod payloads;
 mod index;
 mod milestone;
 mod transaction;
+mod receipt;
 
 pub use payloads::*;
 pub use index::*;
 pub use milestone::*;
 pub use transaction::*;
+pub use receipt::*;

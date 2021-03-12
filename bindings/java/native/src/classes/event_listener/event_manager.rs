@@ -7,7 +7,6 @@ use crate::Result;
 use anyhow::anyhow;
 
 use iota_wallet::{
-    Error as WalletError,
     event::{
         EventId,
         TransactionEvent as WalletTransactionEvent,
@@ -195,7 +194,7 @@ impl EventManager {
                     });
                 }).await
             });
-            return Ok(id);
+            return Ok(id)
         }
         Err(anyhow!("No stronghold found during compilation"))
     }
@@ -209,25 +208,25 @@ impl EventManager {
         }
     }
     
-    pub fn subscribe_address_consolidation_needed(cb: Box<dyn AddressConsolidationNeededListener + Send + 'static>) -> Result<EventId> {
+    pub fn subscribe_address_consolidation_needed(_cb: Box<dyn AddressConsolidationNeededListener + Send + 'static>) -> Result<EventId> {
         #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
         {
-            let id = crate::block_on(async move {
+            let id: EventId = crate::block_on(async move {
                 iota_wallet::event::on_address_consolidation_needed(move |event| {
-                    cb.on_address_consolidation_needed(event.clone());
+                    _cb.on_address_consolidation_needed(event.clone());
                 }).await
             });
-            return Ok(id);
+            return Ok(id)
         }
         
         Err(anyhow!("No ledger found during compilation"))
     }
 
-    pub fn remove_address_consolidation_needed_listener(event: EventId) {
+    pub fn remove_address_consolidation_needed_listener(_event: EventId) {
         #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
         {
             crate::block_on(async move {
-                iota_wallet::event::remove_address_consolidation_needed_listener(&event).await
+                iota_wallet::event::remove_address_consolidation_needed_listener(&_event).await
             })
         }
     }

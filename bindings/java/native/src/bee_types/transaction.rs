@@ -1,41 +1,19 @@
-use anyhow::anyhow;
-use crate::Result;
-
-use std::{
-    cell::RefCell,
-    rc::Rc,
-    str::FromStr,
-    convert::{
-        TryInto, TryFrom
-    },
-};
-
 use iota_wallet::{
     message::{
         MessageTransactionPayload as MessageTransactionPayloadRust,
-        MessageId,
-        Message as RustWalletMessage, MessagePayload as RustWalletPayload,
-        TransactionBuilderMetadata as RustWalletTransactionBuilderMetadata,
         TransactionRegularEssence as TransactionRegularEssenceRust, 
         TransactionEssence as TransactionEssenceRust,
         TransactionInput as RustWalletInput,
         TransactionOutput as RustWalletOutput,
     },
     address::{
-        Address as RustWalletAddress, AddressOutput as RustWalletAddressOutput, AddressWrapper as RustAddressWrapper,
         OutputKind as RustOutputKind,
     },
-    client::ClientOptions as RustWalletClientOptions,
 };
 
 use iota::{
-    Address as RustAddress, Ed25519Address as RustEd25519Address, Ed25519Signature as RustEd25519Signature,
-    Essence as RustEssence, IndexationPayload as RustIndexationPayload, Input as RustInput,
-    Output as RustOutput, Payload as RustPayload,
-    ReferenceUnlock as RustReferenceUnlock, RegularEssence as RustRegularEssence,
-    SignatureLockedSingleOutput as RustSignatureLockedSingleOutput, SignatureUnlock as RustSignatureUnlock,
-    TransactionId as RustTransationId, TransactionPayload as RustTransactionPayload, UTXOInput as RustUTXOInput,
-    UnlockBlock as RustUnlockBlock, UnlockBlocks as RustUnlockBlocks,
+    Payload as RustPayload,
+    UnlockBlock as RustUnlockBlock,
 };
 
 pub enum InputKind {
@@ -47,10 +25,6 @@ pub enum UnlockBlockKind {
     Reference = 0,
     Ed25519 = 1,
 }
-
-use crate::{
-    bee_types::MessagePayload,
-};
         
 pub struct MessageTransactionPayload {
     essence: Essence,

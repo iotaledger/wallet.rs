@@ -2,7 +2,6 @@ use std::{
     path::{Path, PathBuf},
     time::Duration,
     str::FromStr,
-    fmt::Display,
 };
 
 use chrono::prelude::{
@@ -25,8 +24,6 @@ use anyhow::{
     anyhow,
 };
 
-use log::debug;
-
 use iota_wallet::{
     account::{
         AccountBalance,
@@ -48,6 +45,10 @@ use iota_wallet::{
         TransferProgress as WalletTransferProgress,
         BalanceEvent as WalletBalanceEvent,
     },
+};
+
+use iota::{
+    SignatureLockedSingleOutput
 };
 
 foreign_class!(class RustLogging {
@@ -645,3 +646,30 @@ foreign_class!(
     }
 );
 
+foreign_class!(
+    class SignatureLockedSingleOutput {
+        self_type SignatureLockedSingleOutput;
+        private constructor = empty;
+        fn SignatureLockedSingleOutput::amount(&self) -> u64;
+    }
+);
+
+foreign_class!(
+    class ReceiptPayload {
+        self_type ReceiptPayload;
+        private constructor = empty;
+        fn ReceiptPayload::index(&self) -> u32;
+        fn ReceiptPayload::last(&self) -> bool;
+        fn ReceiptPayload::funds(&self) -> Vec<MigratedFundsEntry>;
+        fn ReceiptPayload::amount(&self) -> u64;
+    }
+);
+
+foreign_class!(
+    class MigratedFundsEntry {
+        self_type MigratedFundsEntry;
+        private constructor = empty;
+        fn MigratedFundsEntry::tail_transaction_hash(&self) -> Vec<u8>;
+        fn MigratedFundsEntry::output(&self) -> SignatureLockedSingleOutput;
+    }
+);

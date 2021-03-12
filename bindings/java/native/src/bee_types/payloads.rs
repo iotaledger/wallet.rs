@@ -1,29 +1,13 @@
 use iota_wallet::{
     message::{
         MessagePayload as MessagePayloadRust,
-        ReceiptPayload as ReceiptPayloadRust,
-        TreasuryTransactionPayload as TreasuryTransactionPayloadRust,
-        MessageId,
     },
-};
-
-use iota::{
-    Address as RustAddress, Ed25519Address as RustEd25519Address, Ed25519Signature as RustEd25519Signature,
-    Essence as RustEssence, IndexationPayload as RustIndexationPayload, Input as RustInput,
-    Output as RustOutput, Payload as RustPayload,
-    ReferenceUnlock as RustReferenceUnlock, RegularEssence as RustRegularEssence,
-    SignatureLockedSingleOutput as RustSignatureLockedSingleOutput, SignatureUnlock as RustSignatureUnlock,
-    TransactionId as RustTransationId, TransactionPayload as RustTransactionPayload, UTXOInput as RustUTXOInput,
-    UnlockBlock as RustUnlockBlock, UnlockBlocks as RustUnlockBlocks,
 };
 
 use crate::bee_types::index::*;
 use crate::bee_types::milestone::*;
 use crate::bee_types::transaction::*;
-
-use crate::Result;
-
-use anyhow::anyhow;
+use crate::bee_types::receipt::*;
 
 pub enum MessagePayloadType {
     Transaction = 1,
@@ -94,4 +78,14 @@ impl MessagePayload {
             None
         }
     }
+
+    pub fn get_as_receipt(&self) -> Option<ReceiptPayload> {
+        if let MessagePayloadRust::Receipt(payload) = &self.payload {
+            Some(ReceiptPayload::new_with_rust(*payload.clone()))
+        } else {
+            None
+        }
+    }
+
+    // TreasuryTransaction
 }
