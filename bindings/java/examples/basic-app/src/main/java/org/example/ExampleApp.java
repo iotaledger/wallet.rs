@@ -31,12 +31,12 @@ public class ExampleApp implements ErrorListener, StrongholdStatusListener {
 
         AccountManager manager = new AccountManager(options);
         manager.setStrongholdPassword("YepThisISSecure");
+
         // Generate your own for peristance:
         // String mnemonic = manager.generateMnemonic();
-        String mnemonic = "quick pave evoke master often ketchup rough lecture rotate improve demise envelope rent donkey peanut dizzy lesson capital confirm expire figure slide candy allow";
-
+        
         // null means "generate one for me"
-        manager.storeMnemonic(AccountSignerType.STRONGHOLD, mnemonic);
+        manager.storeMnemonic(AccountSignerType.STRONGHOLD, null);
 
         BrokerOptions mqtt = new BrokerOptions();
         
@@ -68,13 +68,8 @@ public class ExampleApp implements ErrorListener, StrongholdStatusListener {
         System.out.println("acc unspent addresses " + Arrays.toString(account.listUnspentAddresses()));
 
         try {
-            account.transfer(
-                Transfer.builder(
-                    account.latestAddress().address(),
-                    150
-                ).finish()
-            );
-        } catch (WalletException e){
+            account.transfer(Transfer.builder(account.latestAddress().address(), 150).finish());
+        } catch (WalletException e) {
             System.out.println(e.getMessage());
         }
     }
