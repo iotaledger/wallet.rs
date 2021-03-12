@@ -1736,23 +1736,6 @@ dependencies = [
 [[package]]
 name = "iota-crypto"
 version = "0.3.0"
-source = "git+https://github.com/iotaledger/crypto.rs?rev=b849861b86c3f7357b7477de4253b7352b363627#b849861b86c3f7357b7477de4253b7352b363627"
-dependencies = [
- "aead",
- "blake2",
- "chacha20poly1305 0.7.1",
- "digest 0.9.0",
- "generic-array 0.14.4",
- "getrandom 0.2.2",
- "hmac 0.10.1",
- "pbkdf2",
- "sha2 0.9.3",
- "unicode-normalization",
-]
-
-[[package]]
-name = "iota-crypto"
-version = "0.3.0"
 source = "git+https://github.com/iotaledger/crypto.rs?rev=c3bf565eba62d0b81144174c2ff917bfde282e49#c3bf565eba62d0b81144174c2ff917bfde282e49"
 dependencies = [
  "blake2",
@@ -1818,7 +1801,7 @@ dependencies = [
  "getset",
  "hex",
  "iota-core",
- "iota-crypto 0.3.0 (git+https://github.com/iotaledger/crypto.rs?rev=b849861b86c3f7357b7477de4253b7352b363627)",
+ "iota-crypto 0.3.0 (git+https://github.com/iotaledger/crypto.rs?rev=c3bf565eba62d0b81144174c2ff917bfde282e49)",
  "iota-ledger",
  "iota-stronghold",
  "log",
