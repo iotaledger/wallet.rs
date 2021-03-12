@@ -227,14 +227,17 @@ impl AccountManagerBuilder {
 
         crate::storage::set(&storage_file_path, self.storage_encryption_key, storage).await;
 
+        let is_monitoring = Arc::new(AtomicBool::new(false));
+
         // with the stronghold storage feature, the accounts are loaded when the password is set
         #[cfg(feature = "stronghold-storage")]
         let (accounts, loaded_accounts) = (Default::default(), false);
         #[cfg(not(feature = "stronghold-storage"))]
-        let (accounts, loaded_accounts) = AccountManager::load_accounts(&storage_file_path, self.account_options)
-            .await
-            .map(|accounts| (accounts, true))
-            .unwrap_or_else(|_| (AccountStore::default(), false));
+        let (accounts, loaded_accounts) =
+            AccountManager::load_accounts(&storage_file_path, self.account_options, is_monitoring.clone())
+                .await
+                .map(|accounts| (accounts, true))
+                .unwrap_or_else(|_| (AccountStore::default(), false));
 
         let mut instance = AccountManager {
             storage_folder: if self.storage_path.is_file() || self.storage_path.extension().is_some() {
@@ -250,7 +253,7 @@ impl AccountManagerBuilder {
             accounts,
             stop_polling_sender: None,
             polling_handle: None,
-            is_monitoring: Arc::new(AtomicBool::new(false)),
+            is_monitoring,
             generated_mnemonic: None,
             account_options: self.account_options,
             sync_accounts_lock: Arc::new(Mutex::new(())),
