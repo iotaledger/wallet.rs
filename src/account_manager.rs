@@ -45,7 +45,7 @@ use serde::Deserialize;
 use tokio::{
     sync::{
         broadcast::{channel as broadcast_channel, Receiver as BroadcastReceiver, Sender as BroadcastSender},
-        RwLock,
+        Mutex, RwLock,
     },
     time::interval,
 };
@@ -258,6 +258,7 @@ impl AccountManagerBuilder {
             is_monitoring: Arc::new(AtomicBool::new(false)),
             generated_mnemonic: None,
             account_options: self.account_options,
+            sync_accounts_lock: Arc::new(Mutex::new(())),
             migration_data: Default::default(),
         };
 
@@ -306,6 +307,7 @@ pub struct AccountManager {
     is_monitoring: Arc<AtomicBool>,
     generated_mnemonic: Option<String>,
     account_options: AccountOptions,
+    sync_accounts_lock: Arc<Mutex<()>>,
     migration_data: Vec<CachedMigrationData>,
 }
 
@@ -325,6 +327,7 @@ impl Clone for AccountManager {
             is_monitoring: self.is_monitoring.clone(),
             generated_mnemonic: None,
             account_options: self.account_options,
+            sync_accounts_lock: self.sync_accounts_lock.clone(),
             migration_data: Default::default(),
         }
     }
@@ -681,9 +684,10 @@ impl AccountManager {
         let accounts = self.accounts.clone();
         let is_monitoring = self.is_monitoring.clone();
         let account_options = self.account_options;
+        let sync_accounts_lock = self.sync_accounts_lock.clone();
 
         let handle = thread::spawn(move || {
-            let runtime = tokio::runtime::Builder::new_current_thread()
+            let runtime = tokio::runtime::Builder::new_multi_thread()
                 .enable_all()
                 .build()
                 .unwrap();
@@ -700,7 +704,7 @@ impl AccountManager {
 
                             if !accounts.read().await.is_empty() {
                                 let should_sync = !(synced && is_monitoring.load(Ordering::Relaxed));
-                                match AssertUnwindSafe(poll(accounts.clone(), storage_file_path_, account_options, should_sync, automatic_output_consolidation))
+                                match AssertUnwindSafe(poll(sync_accounts_lock.clone(), accounts.clone(), storage_file_path_, account_options, should_sync, automatic_output_consolidation))
                                     .catch_unwind()
                                     .await {
                                         Ok(_) => {
@@ -781,7 +785,6 @@ impl AccountManager {
                     "doesn't match the generated mnemonic".to_string(),
                 ));
             }
-            self.generated_mnemonic = None;
         }
         Ok(())
     }
@@ -828,6 +831,7 @@ impl AccountManager {
     pub fn sync_accounts(&self) -> crate::Result<AccountsSynchronizer> {
         self.check_storage_encryption()?;
         Ok(AccountsSynchronizer::new(
+            self.sync_accounts_lock.clone(),
             self.accounts.clone(),
             self.storage_path.clone(),
             self.account_options,
@@ -970,7 +974,7 @@ impl AccountManager {
         }
 
         #[allow(unused_variables)]
-        #[cfg(feature = "stronghold-storage")]
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         let storage_file_path = {
             let storage_file_path = self.storage_folder.join(STRONGHOLD_FILENAME);
             let storage_id = crate::storage::get(&self.storage_path).await?.lock().await.id();
@@ -979,6 +983,11 @@ impl AccountManager {
             }
             storage_file_path
         };
+
+        #[allow(unused_variables)]
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        let stronghold_file_path = storage_file_path.clone();
+
         #[cfg(feature = "sqlite-storage")]
         let storage_file_path = {
             if !self.accounts.read().await.is_empty() {
@@ -990,36 +999,35 @@ impl AccountManager {
 
         fs::create_dir_all(&self.storage_folder)?;
 
-        if cfg!(feature = "sqlite-storage") && source.extension().unwrap_or_default() == "stronghold" {
+        if source.extension().unwrap_or_default() == "stronghold" {
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             {
-                let mut stronghold_manager = Self::builder()
-                    .with_storage(&source, ManagerStorage::Stronghold, None)
-                    .unwrap() // safe to unwrap - password is None
-                    .skip_polling()
-                    .finish()
-                    .await?;
-                stronghold_manager
-                    .set_stronghold_password(stronghold_password.clone())
-                    .await?;
-                for account_handle in stronghold_manager.accounts.read().await.values() {
-                    account_handle.write().await.set_storage_path(self.storage_path.clone());
+                #[cfg(feature = "sqlite-storage")]
+                {
+                    let mut stronghold_manager = Self::builder()
+                        .with_storage(&source, ManagerStorage::Stronghold, None)
+                        .unwrap() // safe to unwrap - password is None
+                        .skip_polling()
+                        .finish()
+                        .await?;
+                    stronghold_manager
+                        .set_stronghold_password(stronghold_password.clone())
+                        .await?;
+                    for account_handle in stronghold_manager.accounts.read().await.values() {
+                        account_handle.write().await.set_storage_path(self.storage_path.clone());
+                    }
+                    self.accounts = stronghold_manager.accounts.clone();
+                    self.set_stronghold_password(stronghold_password.clone()).await?;
+                    for account in self.accounts.read().await.values() {
+                        account.write().await.save().await?;
+                    }
                 }
-                self.accounts = stronghold_manager.accounts.clone();
-                self.set_stronghold_password(stronghold_password.clone()).await?;
-                for account in self.accounts.read().await.values() {
-                    account.write().await.save().await?;
-                }
+                // wait for stronghold to finish its tasks
+                let _ = crate::stronghold::actor_runtime().lock().await;
+                fs::copy(source, &stronghold_file_path)?;
             }
             #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
             return Err(crate::Error::InvalidBackupFile);
-        } else {
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-            {
-                // wait for stronghold to finish its tasks
-                let _ = crate::stronghold::actor_runtime().lock().await;
-            }
-            fs::copy(source, &storage_file_path)?;
         }
 
         // the accounts map isn't empty when restoring SQLite from a stronghold snapshot
@@ -1194,6 +1202,7 @@ event_getters_impl!(TransactionEvent, get_broadcast_events, get_broadcast_event_
 
 /// The accounts synchronizer.
 pub struct AccountsSynchronizer {
+    mutex: Arc<Mutex<()>>,
     accounts: AccountStore,
     storage_file_path: PathBuf,
     address_index: Option<usize>,
@@ -1202,8 +1211,14 @@ pub struct AccountsSynchronizer {
 }
 
 impl AccountsSynchronizer {
-    fn new(accounts: AccountStore, storage_file_path: PathBuf, account_options: AccountOptions) -> Self {
+    fn new(
+        mutex: Arc<Mutex<()>>,
+        accounts: AccountStore,
+        storage_file_path: PathBuf,
+        account_options: AccountOptions,
+    ) -> Self {
         Self {
+            mutex,
             accounts,
             storage_file_path,
             address_index: None,
@@ -1226,6 +1241,7 @@ impl AccountsSynchronizer {
 
     /// Syncs the accounts with the Tangle.
     pub async fn execute(self) -> crate::Result<Vec<SyncedAccount>> {
+        let _lock = self.mutex.lock().await;
         let mut synced_accounts = vec![];
         let mut last_account = None;
         let mut last_account_index = 0;
@@ -1257,8 +1273,8 @@ impl AccountsSynchronizer {
 
         let discovered_accounts_res = match last_account {
             Some((is_empty, client_options, signer_type)) => {
-                if is_empty {
-                    log::debug!("[SYNC] running account discovery because the latest account is empty");
+                if !is_empty {
+                    log::debug!("[SYNC] running account discovery because the latest account is not empty");
                     discover_accounts(
                         self.accounts.clone(),
                         &self.storage_file_path,
@@ -1268,20 +1284,21 @@ impl AccountsSynchronizer {
                     )
                     .await
                 } else {
-                    log::debug!("[SYNC] skipping account discovery because the latest account isn't empty");
+                    log::debug!("[SYNC] skipping account discovery because the latest account is empty");
                     Ok(vec![])
                 }
             }
-            None => Ok(vec![]), /* None => discover_accounts(accounts.clone(), &storage_path,
-                                 * &ClientOptions::default(), None).await, */
+            None => Ok(vec![]),
         };
 
         if let Ok(discovered_accounts) = discovered_accounts_res {
             if !discovered_accounts.is_empty() {
                 let mut accounts = self.accounts.write().await;
                 for (account_handle, synced_account) in discovered_accounts {
-                    account_handle.write().await.set_skip_persistance(false);
-                    accounts.insert(account_handle.id().await, account_handle);
+                    let mut account = account_handle.write().await;
+                    account.set_skip_persistence(false);
+                    account.save().await?;
+                    accounts.insert(account.id().clone(), account_handle.clone());
                     synced_accounts.push(synced_account);
                 }
             }
@@ -1292,6 +1309,7 @@ impl AccountsSynchronizer {
 }
 
 async fn poll(
+    sync_accounts_lock: Arc<Mutex<()>>,
     accounts: AccountStore,
     storage_file_path: PathBuf,
     account_options: AccountOptions,
@@ -1299,9 +1317,10 @@ async fn poll(
     automatic_output_consolidation: bool,
 ) -> crate::Result<()> {
     let retried = if should_sync {
-        let synced_accounts = AccountsSynchronizer::new(accounts.clone(), storage_file_path, account_options)
-            .execute()
-            .await?;
+        let synced_accounts =
+            AccountsSynchronizer::new(sync_accounts_lock, accounts.clone(), storage_file_path, account_options)
+                .execute()
+                .await?;
 
         log::debug!("[POLLING] synced accounts");
 
@@ -1362,7 +1381,7 @@ async fn poll(
 
     for retried_data in retried {
         let mut account = retried_data.account_handle.write().await;
-        let client = crate::client::get_client(account.client_options()).await;
+        let client = crate::client::get_client(account.client_options()).await?;
 
         for message in &retried_data.reattached {
             emit_transaction_event(
@@ -1398,6 +1417,7 @@ async fn discover_accounts(
     account_options: AccountOptions,
 ) -> crate::Result<Vec<(AccountHandle, SyncedAccount)>> {
     let mut synced_accounts = vec![];
+    let mut index = accounts.read().await.len();
     loop {
         let mut account_initialiser = AccountInitialiser::new(
             client_options.clone(),
@@ -1405,7 +1425,8 @@ async fn discover_accounts(
             storage_path.clone(),
             account_options,
         )
-        .skip_persistance();
+        .skip_persistence()
+        .index(index);
         if let Some(signer_type) = &signer_type {
             account_initialiser = account_initialiser.signer_type(signer_type.clone());
         }
@@ -1415,12 +1436,13 @@ async fn discover_accounts(
             account_handle.read().await.alias(),
             account_handle.read().await.signer_type()
         );
-        let synced_account = account_handle.sync().await.execute().await?;
+        let synced_account = account_handle.sync().await.skip_events().execute().await?;
         let is_empty = *synced_account.is_empty();
         log::debug!("[SYNC] account is empty? {}", is_empty);
         if is_empty {
             break;
         } else {
+            index += 1;
             synced_accounts.push((account_handle, synced_account));
         }
     }
@@ -1555,6 +1577,7 @@ fn backup_filename(original: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    use super::ManagerStorage;
     use crate::{
         address::{AddressBuilder, AddressOutput, AddressWrapper, IotaAddress, OutputKind},
         client::ClientOptionsBuilder,
@@ -1819,7 +1842,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn create_account_skip_persistance() {
+    async fn create_account_skip_persistence() {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
             let client_options = ClientOptionsBuilder::new()
                 .with_node("https://api.lb-0.testnet.chrysalis2.com")
@@ -1830,7 +1853,7 @@ mod tests {
             let account_handle = manager
                 .create_account(client_options.clone())
                 .unwrap()
-                .skip_persistance()
+                .skip_persistence()
                 .initialise()
                 .await
                 .expect("failed to add account");
@@ -1906,10 +1929,18 @@ mod tests {
             // import the accounts from the backup and assert that it's the same
 
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-            manager
-                .import_accounts(&backup_file_path, "password".to_string())
-                .await
-                .unwrap();
+            {
+                manager
+                    .import_accounts(&backup_file_path, "password".to_string())
+                    .await
+                    .unwrap();
+                if backup_file_path.extension().unwrap_or_default() == "stronghold" {
+                    assert!(
+                        super::storage_file_path(&Some(ManagerStorage::Stronghold), manager.storage_path()).exists(),
+                        true
+                    );
+                }
+            }
 
             #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
             manager.import_accounts(&backup_file_path).await.unwrap();
@@ -1993,15 +2024,9 @@ mod tests {
                 BalanceChange::spent(3),
             ];
             for change in &change_events {
-                emit_balance_change(
-                    &account,
-                    account.latest_address().address(),
-                    vec![],
-                    change.clone(),
-                    true,
-                )
-                .await
-                .unwrap();
+                emit_balance_change(&account, account.latest_address().address(), None, change.clone(), true)
+                    .await
+                    .unwrap();
             }
             assert!(
                 manager.get_balance_change_event_count(None).await.unwrap() == change_events.len(),

@@ -162,7 +162,7 @@ export declare interface AccountToCreate {
   alias?: string;
   createdAt?: string;
   signerType?: SignerType;
-  skipPersistance?: boolean;
+  skipPersistence?: boolean;
 }
 
 export declare enum StorageType {
@@ -184,7 +184,7 @@ export declare interface BalanceChangeEvent {
   indexationId: string
   accountId: string
   address: string
-  messageIds: string[]
+  messageId?: string
   balanceChange: { spent: number, received: number }
 }
 

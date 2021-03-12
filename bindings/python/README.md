@@ -263,7 +263,7 @@ Set the number of address indexes that are generated.
 | ----- | ---------------- | ---------------------- | ------------------------------------------------ |
 | limit | <code>int</code> | <code>undefined</code> | The number of address indexes that are generated |
 
-#### skip_persistance(): void
+#### skip_persistence(): void
 
 Skip saving new messages and addresses on the account object.
 The found [SyncedAccount](#syncedaccount) is returned on the `execute` call but won't be persisted on the database.
@@ -625,7 +625,7 @@ The account can be initialised with locally stored address history.
 | addresses | <code>list([WalletAddress](#walletaddress))</code> | <code>undefined</code> | The historical addresses |
 
 
-#### skip_persistance(): void
+#### skip_persistence(): void
 
 Skips storing the account to the database.
 

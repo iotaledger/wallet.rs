@@ -335,7 +335,7 @@ impl WalletMessageHandler {
             AccountMethod::SyncAccount {
                 address_index,
                 gap_limit,
-                skip_persistance,
+                skip_persistence,
             } => {
                 let mut synchronizer = account_handle.sync().await;
                 if let Some(address_index) = address_index {
@@ -344,9 +344,9 @@ impl WalletMessageHandler {
                 if let Some(gap_limit) = gap_limit {
                     synchronizer = synchronizer.gap_limit(*gap_limit);
                 }
-                if let Some(skip_persistance) = skip_persistance {
-                    if *skip_persistance {
-                        synchronizer = synchronizer.skip_persistance();
+                if let Some(skip_persistence) = skip_persistence {
+                    if *skip_persistence {
+                        synchronizer = synchronizer.skip_persistence();
                     }
                 }
                 let synced = synchronizer.execute().await?;
@@ -384,8 +384,8 @@ impl WalletMessageHandler {
         if let Some(created_at) = &account.created_at {
             builder = builder.created_at(*created_at);
         }
-        if account.skip_persistance {
-            builder = builder.skip_persistance();
+        if account.skip_persistence {
+            builder = builder.skip_persistence();
         }
         if let Some(signer_type) = &account.signer_type {
             builder = builder.signer_type(signer_type.clone());
@@ -542,7 +542,7 @@ mod tests {
                         .unwrap(),
                     alias: None,
                     created_at: None,
-                    skip_persistance: false,
+                    skip_persistence: false,
                     signer_type: Some(signer_type.clone()),
                 };
                 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
