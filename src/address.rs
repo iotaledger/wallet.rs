@@ -378,7 +378,7 @@ pub(crate) async fn get_new_address(account: &Account, metadata: GenerateAddress
         Some(address) => address.address().bech32_hrp().to_string(),
         None => {
             crate::client::get_client(account.client_options())
-                .await
+                .await?
                 .read()
                 .await
                 .get_network_info()

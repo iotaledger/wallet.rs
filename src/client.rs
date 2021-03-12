@@ -24,7 +24,7 @@ fn instances() -> &'static ClientInstanceMap {
     &INSTANCES
 }
 
-pub(crate) async fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
+pub(crate) async fn get_client(options: &ClientOptions) -> crate::Result<Arc<RwLock<Client>>> {
     let mut map = instances().lock().await;
 
     if !map.contains_key(&options) {
@@ -34,12 +34,13 @@ pub(crate) async fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
                     .mqtt_broker_options()
                     .as_ref()
                     .map(|options| options.clone().into())
-                    .unwrap_or_else(|| iota::BrokerOptions::new().automatic_disconnect(false)),
+                    .unwrap_or_else(|| {
+                        iota::BrokerOptions::new()
+                            .automatic_disconnect(false)
+                            .use_websockets(false)
+                    }),
             )
             .with_local_pow(*options.local_pow())
-            // we validate the URL beforehand so it's safe to unwrap here
-            .with_nodes(&options.nodes().iter().map(|url| url.as_str()).collect::<Vec<&str>>()[..])
-            .unwrap()
             .with_node_pool_urls(
                 &options
                     .node_pool_urls()
@@ -55,9 +56,24 @@ pub(crate) async fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
             client_builder = client_builder.with_network(network);
         }
 
+        for node in options.nodes() {
+            // safe to unwrap since we're sure we have valid URLs
+            if let Some(auth) = &node.auth {
+                client_builder = client_builder.with_node_auth(node.url.as_str(), &auth.username, &auth.password)?;
+            } else {
+                client_builder = client_builder.with_node(node.url.as_str()).unwrap();
+            }
+        }
+
         if let Some(node) = options.node() {
             // safe to unwrap since we're sure we have valid URLs
-            client_builder = client_builder.with_node(node.as_str()).unwrap();
+            if let Some(auth) = &node.auth {
+                client_builder = client_builder
+                    .with_node_auth(node.url.as_str(), &auth.username, &auth.password)
+                    .unwrap();
+            } else {
+                client_builder = client_builder.with_node(node.url.as_str()).unwrap();
+            }
         }
 
         if let Some(node_sync_interval) = options.node_sync_interval() {
@@ -76,21 +92,19 @@ pub(crate) async fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
             client_builder = client_builder.with_api_timeout(api.clone().into(), *timeout);
         }
 
-        let client = client_builder
-            .finish()
-            .await
-            .expect("failed to initialise ClientBuilder");
+        let client = client_builder.finish().await?;
 
         map.insert(options.clone(), Arc::new(RwLock::new(client)));
     }
 
-    let client = map.get(&options).expect("client not initialised");
-    client.clone()
+    // safe to unwrap since we make sure the client exists on the block above
+    let client = map.get(&options).unwrap();
+    Ok(client.clone())
 }
 
 /// The options builder for a client connected to multiple nodes.
 pub struct ClientOptionsBuilder {
-    nodes: Vec<Url>,
+    nodes: Vec<Node>,
     node_pool_urls: Vec<Url>,
     network: Option<String>,
     mqtt_broker_options: Option<BrokerOptions>,
@@ -158,13 +172,27 @@ impl ClientOptionsBuilder {
     /// ```
     pub fn with_nodes(mut self, nodes: &[&str]) -> crate::Result<Self> {
         let nodes_urls = convert_urls(nodes)?;
-        self.nodes.extend(nodes_urls);
+        self.nodes
+            .extend(nodes_urls.into_iter().map(|u| u.into()).collect::<Vec<Node>>());
         Ok(self)
     }
 
     /// Adds a node to the node list.
     pub fn with_node(mut self, node: &str) -> crate::Result<Self> {
-        self.nodes.push(Url::parse(node)?);
+        self.nodes.push(Url::parse(node)?.into());
+        Ok(self)
+    }
+
+    /// Adds a node with authentication to the node list.
+    pub fn with_node_auth(mut self, node: &str, username: &str, password: &str) -> crate::Result<Self> {
+        self.nodes.push(Node {
+            url: Url::parse(node)?,
+            auth: NodeAuth {
+                username: username.into(),
+                password: password.into(),
+            }
+            .into(),
+        });
         Ok(self)
     }
 
@@ -320,48 +348,81 @@ pub struct BrokerOptions {
     pub automatic_disconnect: Option<bool>,
     /// timeout of the mqtt broker.
     pub timeout: Option<Duration>,
-    #[serde(rename = "useWebsockets")]
+    #[serde(rename = "useWebsockets", default)]
     /// use websockets or not.
-    pub use_websockets: Option<bool>,
+    pub use_websockets: bool,
 }
 
 impl Into<iota::BrokerOptions> for BrokerOptions {
     fn into(self) -> iota::BrokerOptions {
-        let mut options = iota::BrokerOptions::new();
+        let mut options = iota::BrokerOptions::new().use_websockets(self.use_websockets);
         if let Some(automatic_disconnect) = self.automatic_disconnect {
             options = options.automatic_disconnect(automatic_disconnect);
         }
         if let Some(timeout) = self.timeout {
             options = options.timeout(timeout);
         }
-        if let Some(use_websockets) = self.use_websockets {
-            options = options.use_websockets(use_websockets);
-        }
         options
+    }
+}
+
+/// Node authentication object.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+pub struct NodeAuth {
+    /// Username.
+    pub username: String,
+    /// Password.
+    pub password: String,
+}
+
+/// Node definition.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Getters)]
+#[getset(get = "pub(crate)")]
+pub struct Node {
+    /// Node url.
+    pub url: Url,
+    /// Node auth options.
+    pub auth: Option<NodeAuth>,
+}
+
+impl From<Url> for Node {
+    fn from(url: Url) -> Self {
+        Self { url, auth: None }
     }
 }
 
 /// The client options type.
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, Getters)]
-#[getset(get = "pub(crate)")]
+/// Need to set the get methods to be public for binding
+#[getset(get = "pub")]
 pub struct ClientOptions {
     /// this option is here just to simplify usage from consumers using the deserialization
-    node: Option<Url>,
+    /// The node.
+    node: Option<Node>,
+    /// The nodes vector.
     #[serde(default)]
-    nodes: Vec<Url>,
+    nodes: Vec<Node>,
+    /// The node pool urls.
     #[serde(rename = "nodePoolUrls", default)]
     node_pool_urls: Vec<Url>,
+    /// The network string.
     network: Option<String>,
+    /// The MQTT broker options.
     #[serde(rename = "mqttBrokerOptions")]
     mqtt_broker_options: Option<BrokerOptions>,
+    /// Enable local proof-of-work or not.
     #[serde(rename = "localPow", default = "default_local_pow")]
     local_pow: bool,
+    /// The node sync interval.
     #[serde(rename = "nodeSyncInterval")]
     node_sync_interval: Option<Duration>,
+    /// Enable node synchronization or not.
     #[serde(rename = "nodeSyncEnabled", default = "default_node_sync_enabled")]
     node_sync_enabled: bool,
+    /// The request timeout.
     #[serde(rename = "requestTimeout")]
     request_timeout: Option<Duration>,
+    /// The API timeout.
     #[serde(rename = "apiTimeout", default)]
     api_timeout: HashMap<Api, Duration>,
 }
@@ -449,7 +510,14 @@ mod tests {
     fn single_node() {
         let node = "https://api.lb-0.testnet.chrysalis2.com";
         let client = ClientOptionsBuilder::new().with_node(node).unwrap().build().unwrap();
-        assert_eq!(client.nodes(), &super::convert_urls(&[node]).unwrap());
+        assert_eq!(
+            client.nodes(),
+            &super::convert_urls(&[node])
+                .unwrap()
+                .into_iter()
+                .map(|u| u.into())
+                .collect::<Vec<super::Node>>()
+        );
         assert!(client.network().is_none());
     }
 
@@ -457,7 +525,14 @@ mod tests {
     fn multi_node() {
         let nodes = ["https://api.lb-0.testnet.chrysalis2.com"];
         let client = ClientOptionsBuilder::new().with_nodes(&nodes).unwrap().build().unwrap();
-        assert_eq!(client.nodes(), &super::convert_urls(&nodes).unwrap());
+        assert_eq!(
+            client.nodes(),
+            &super::convert_urls(&nodes)
+                .unwrap()
+                .into_iter()
+                .map(|u| u.into())
+                .collect::<Vec<super::Node>>()
+        );
         assert!(client.network().is_none());
     }
 
@@ -471,7 +546,14 @@ mod tests {
             .unwrap()
             .build()
             .unwrap();
-        assert_eq!(client.nodes(), &super::convert_urls(&nodes).unwrap());
+        assert_eq!(
+            client.nodes(),
+            &super::convert_urls(&nodes)
+                .unwrap()
+                .into_iter()
+                .map(|u| u.into())
+                .collect::<Vec<super::Node>>()
+        );
         assert_eq!(client.network(), &Some(network.to_string()));
     }
 
@@ -511,14 +593,14 @@ mod tests {
         // assert that each different client_options create a new client instance
         for case in &test_cases {
             let len = super::instances().lock().await.len();
-            super::get_client(&case).await;
+            super::get_client(&case).await.unwrap();
             assert_eq!(super::instances().lock().await.len() - len, 1);
         }
 
         // assert that subsequent calls with options already initialized doesn't create new clients
         let len = super::instances().lock().await.len();
         for case in &test_cases {
-            super::get_client(&case).await;
+            super::get_client(&case).await.unwrap();
             assert_eq!(super::instances().lock().await.len(), len);
         }
     }

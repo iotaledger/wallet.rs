@@ -23,6 +23,7 @@ use tokio::{runtime::Runtime, sync::RwLock};
 
 mod classes;
 use classes::*;
+pub(crate) mod types;
 
 type AccountInstanceMap = Arc<RwLock<HashMap<String, AccountHandle>>>;
 type SyncedAccountHandle = Arc<RwLock<SyncedAccount>>;
@@ -70,7 +71,11 @@ pub(crate) async fn get_synced_account(id: &str) -> SyncedAccountHandle {
 
 pub(crate) async fn store_synced_account(synced_account: SyncedAccount) -> String {
     let mut map = synced_account_instances().write().await;
-    let id: String = thread_rng().sample_iter(&Alphanumeric).take(10).collect();
+    let id: String = thread_rng()
+        .sample_iter(&Alphanumeric)
+        .map(char::from)
+        .take(10)
+        .collect();
     map.insert(id.clone(), Arc::new(RwLock::new(synced_account)));
     id
 }

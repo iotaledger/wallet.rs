@@ -19,7 +19,7 @@ use crate::{
 use chrono::Utc;
 use crypto::ciphers::chacha::xchacha20poly1305;
 use once_cell::sync::OnceCell;
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use tokio::sync::{Mutex, RwLock};
 
 use std::{
@@ -89,11 +89,11 @@ impl Storage {
 pub(crate) struct StorageManager {
     storage: Storage,
     account_indexation: Vec<AccountIndexation>,
-    balance_change_indexation: Vec<EventIndexation>,
-    transaction_confirmation_indexation: Vec<EventIndexation>,
-    new_transaction_indexation: Vec<EventIndexation>,
-    reattachment_indexation: Vec<EventIndexation>,
-    broadcast_indexation: Vec<EventIndexation>,
+    balance_change_indexation: Option<Vec<EventIndexation>>,
+    transaction_confirmation_indexation: Option<Vec<EventIndexation>>,
+    new_transaction_indexation: Option<Vec<EventIndexation>>,
+    reattachment_indexation: Option<Vec<EventIndexation>>,
+    broadcast_indexation: Option<Vec<EventIndexation>>,
 }
 
 impl StorageManager {
@@ -110,7 +110,7 @@ impl StorageManager {
         self.storage.get(key).await
     }
 
-    pub async fn get_accounts(&mut self) -> crate::Result<Vec<ParsedAccount>> {
+    pub async fn get_accounts(&mut self) -> crate::Result<Vec<Account>> {
         if self.account_indexation.is_empty() {
             if let Ok(record) = self.storage.get(ACCOUNT_INDEXATION_KEY).await {
                 self.account_indexation = serde_json::from_str(&record)?;
@@ -126,13 +126,14 @@ impl StorageManager {
 
     pub async fn save_account(&mut self, key: &str, account: &Account) -> crate::Result<()> {
         let index = AccountIndexation { key: key.to_string() };
+        self.storage.set(key, account).await?;
         if !self.account_indexation.contains(&index) {
             self.account_indexation.push(index);
             self.storage
                 .set(ACCOUNT_INDEXATION_KEY, &self.account_indexation)
                 .await?;
         }
-        self.storage.set(key, account).await
+        Ok(())
     }
 
     pub async fn remove_account(&mut self, key: &str) -> crate::Result<()> {
@@ -150,36 +151,54 @@ impl StorageManager {
     }
 }
 
-fn generate_event_key() -> String {
-    let mut key = [0; 32];
-    crypto::rand::fill(&mut key).unwrap();
-    hex::encode(&key)
+async fn load_optional_data<T: DeserializeOwned + Default>(storage: &Storage, key: &str) -> crate::Result<T> {
+    let record = match storage.get(key).await {
+        Ok(record) => serde_json::from_str(&record)?,
+        Err(crate::Error::RecordNotFound) => T::default(),
+        Err(e) => return Err(e),
+    };
+    Ok(record)
 }
 
 macro_rules! event_manager_impl {
     ($event_ty:ty, $index_vec:ident, $index_key: expr, $save_fn_name: ident, $get_fn_name: ident, $get_count_fn_name: ident) => {
         impl StorageManager {
             pub async fn $save_fn_name(&mut self, event: &$event_ty) -> crate::Result<()> {
-                let key = generate_event_key();
+                let key = event.indexation_id.clone();
+                self.storage.set(&key, event).await?;
                 let index = EventIndexation {
                     key: key.to_string(),
                     timestamp: Utc::now().timestamp(),
                 };
-                self.$index_vec.push(index);
+                match self.$index_vec {
+                    Some(ref mut indexation) => indexation.push(index),
+                    None => {
+                        let mut indexation: Vec<EventIndexation> =
+                            load_optional_data(&self.storage, $index_key).await?;
+                        indexation.push(index);
+                        self.$index_vec = Some(indexation);
+                    }
+                }
                 self.storage.set($index_key, &self.$index_vec).await?;
-                self.storage.set(&key, event).await
+                Ok(())
             }
 
             pub async fn $get_fn_name<T: Into<Option<Timestamp>>>(
-                &self,
+                &mut self,
                 count: usize,
                 skip: usize,
                 from_timestamp: T,
             ) -> crate::Result<Vec<$event_ty>> {
+                let indexation = match &self.$index_vec {
+                    Some(indexation) => indexation,
+                    None => {
+                        self.$index_vec = Some(load_optional_data(&self.storage, $index_key).await?);
+                        self.$index_vec.as_ref().unwrap()
+                    }
+                };
                 let mut events = Vec::new();
                 let from_timestamp = from_timestamp.into().unwrap_or(0);
-                let iter = self
-                    .$index_vec
+                let iter = indexation
                     .iter()
                     .filter(|i| i.timestamp >= from_timestamp)
                     .skip(skip);
@@ -194,9 +213,19 @@ macro_rules! event_manager_impl {
                 Ok(events)
             }
 
-            pub async fn $get_count_fn_name<T: Into<Option<Timestamp>>>(&self, from_timestamp: T) -> usize {
+            pub async fn $get_count_fn_name<T: Into<Option<Timestamp>>>(
+                &mut self,
+                from_timestamp: T,
+            ) -> crate::Result<usize> {
+                let indexation = match &self.$index_vec {
+                    Some(indexation) => indexation,
+                    None => {
+                        self.$index_vec = Some(load_optional_data(&self.storage, $index_key).await?);
+                        self.$index_vec.as_ref().unwrap()
+                    }
+                };
                 let from_timestamp = from_timestamp.into().unwrap_or(0);
-                self.$index_vec
+                let count = indexation
                     .iter()
                     // using folder since it's faster than .filter().count()
                     .fold(0, |count, index| {
@@ -205,7 +234,8 @@ macro_rules! event_manager_impl {
                         } else {
                             count
                         }
-                    })
+                    });
+                Ok(count)
             }
         }
     };
@@ -336,7 +366,7 @@ pub trait StorageAdapter {
 
 fn encrypt_record<O: Write>(record: &[u8], encryption_key: &[u8; 32], output: &mut O) -> crate::Result<()> {
     let mut nonce = [0; xchacha20poly1305::XCHACHA20POLY1305_NONCE_SIZE];
-    crypto::rand::fill(&mut nonce).map_err(|e| crate::Error::RecordEncrypt(format!("{:?}", e)))?;
+    crypto::utils::rand::fill(&mut nonce).map_err(|e| crate::Error::RecordEncrypt(format!("{:?}", e)))?;
 
     let mut tag = [0; xchacha20poly1305::XCHACHA20POLY1305_TAG_SIZE];
     let mut ct = vec![0; record.len()];
@@ -370,18 +400,13 @@ pub(crate) fn decrypt_record(record: &str, encryption_key: &[u8; 32]) -> crate::
     Ok(String::from_utf8_lossy(&pt).to_string())
 }
 
-pub(crate) enum ParsedAccount {
-    Account(Account),
-    EncryptedAccount(String),
-}
-
 fn parse_accounts(
     storage_path: &PathBuf,
     accounts: &[String],
     encryption_key: &Option<[u8; 32]>,
-) -> crate::Result<Vec<ParsedAccount>> {
+) -> crate::Result<Vec<Account>> {
     let mut err = None;
-    let accounts: Vec<Option<ParsedAccount>> = accounts
+    let accounts: Vec<Option<Account>> = accounts
         .iter()
         .map(|account| {
             let account_json = if account.starts_with('{') {
@@ -401,7 +426,7 @@ fn parse_accounts(
                 match serde_json::from_str::<Account>(&json) {
                     Ok(mut acc) => {
                         acc.set_storage_path(storage_path.clone());
-                        Some(ParsedAccount::Account(acc))
+                        Some(acc)
                     }
                     Err(e) => {
                         err = Some(e.into());
@@ -409,7 +434,8 @@ fn parse_accounts(
                     }
                 }
             } else {
-                Some(ParsedAccount::EncryptedAccount(account.to_string()))
+                err = Some(crate::Error::StorageIsEncrypted);
+                None
             }
         })
         .collect();
@@ -486,9 +512,6 @@ mod tests {
         assert!(response.is_ok());
         let parsed_accounts = response.unwrap();
         let parsed_account = parsed_accounts.first().unwrap();
-        match parsed_account {
-            super::ParsedAccount::Account(parsed) => assert_eq!(parsed, &*account_handle.read().await),
-            _ => panic!("invalid parsed account format"),
-        }
+        assert_eq!(parsed_account, &*account_handle.read().await);
     }
 }

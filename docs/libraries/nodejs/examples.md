@@ -97,5 +97,5 @@ node 7-events.js
 
 Code:
 ```javascript
-{{ #include ../../../bindings/nodejs/examples/7-eveents.js }}
+{{ #include ../../../bindings/nodejs/examples/7-events.js }}
 ```

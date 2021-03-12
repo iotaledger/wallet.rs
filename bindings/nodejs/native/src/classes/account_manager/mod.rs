@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use super::JsAccount;
+use crate::types::ClientOptionsDto;
 use std::{num::NonZeroU64, path::PathBuf, sync::Arc};
 
 use iota_wallet::{
     account::AccountIdentifier,
     account_manager::{AccountManager, ManagerStorage, DEFAULT_STORAGE_FOLDER},
-    client::ClientOptions,
     signing::SignerType,
     DateTime, Local,
 };
@@ -35,14 +35,14 @@ impl Default for AccountSignerType {
 #[derive(Deserialize)]
 pub struct AccountToCreate {
     #[serde(rename = "clientOptions")]
-    pub client_options: ClientOptions,
+    pub client_options: ClientOptionsDto,
     pub alias: Option<String>,
     #[serde(rename = "createdAt")]
     pub created_at: Option<DateTime<Local>>,
     #[serde(rename = "signerType", default)]
     pub signer_type: AccountSignerType,
-    #[serde(rename = "skipPersistance", default)]
-    pub skip_persistance: bool,
+    #[serde(rename = "skipPersistence", default)]
+    pub skip_persistence: bool,
 }
 
 fn js_value_to_account_id(
@@ -82,6 +82,10 @@ struct ManagerOptions {
         default = "default_automatic_output_consolidation"
     )]
     automatic_output_consolidation: bool,
+    #[serde(rename = "syncSpentOutputs", default)]
+    sync_spent_outputs: bool,
+    #[serde(rename = "persistEvents", default)]
+    persist_events: bool,
 }
 
 fn default_automatic_output_consolidation() -> bool {
@@ -163,6 +167,12 @@ declare_types! {
                 .expect("failed to init storage");
             if !options.automatic_output_consolidation {
                 manager = manager.with_automatic_output_consolidation_disabled();
+            }
+            if options.sync_spent_outputs {
+                manager = manager.with_sync_spent_outputs();
+            }
+            if options.persist_events {
+                manager = manager.with_event_persistence();
             }
             if let Some(threshold) = options.output_consolidation_threshold {
                 manager = manager.with_output_consolidation_threshold(threshold);
@@ -269,7 +279,7 @@ declare_types! {
                 let manager = crate::block_on(ref_.read());
 
                 let mut builder = manager
-                    .create_account(account_to_create.client_options)
+                    .create_account(account_to_create.client_options.into())
                     .expect("failed to create account")
                     .signer_type(match account_to_create.signer_type {
                         AccountSignerType::Stronghold => SignerType::Stronghold,
@@ -280,8 +290,8 @@ declare_types! {
                 if let Some(created_at) = &account_to_create.created_at {
                     builder = builder.created_at(*created_at);
                 }
-                if account_to_create.skip_persistance {
-                    builder = builder.skip_persistance();
+                if account_to_create.skip_persistence {
+                    builder = builder.skip_persistence();
                 }
 
                 crate::block_on(builder.initialise()).expect("error creating account")

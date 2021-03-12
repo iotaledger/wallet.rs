@@ -44,6 +44,8 @@ Creates a new instance of the AccountManager.
 | [storagePassword]              | <code>string</code>  | <code>undefined</code> | The storage password                                                                      |
 | [outputConsolidationThreshold] | <code>number</code>  | <code>100</code>       | The number of outputs an address must have to trigger the automatic consolidation process |
 | [automaticOutputConsolidation] | <code>boolean</code> | <code>true</code>      | Disables the automatic output consolidation if false                                      |
+| [syncSpentOutputs]             | <code>boolean</code> | <code>false</code>     | Enables fetching spent output history on account sync                                     |
+| [persistEvents]                | <code>boolean</code> | <code>false</code>     | Enables event persistence                                                                 |
 
 #### setStrongholdPassword(password): void
 
@@ -176,7 +178,7 @@ Gets the persisted balance change events.
 | [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
 | [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
 
-Event object: { accountId: string, address: string, balanceChange: { spent: number, received: number } }
+Event object: { indexationId: string, accountId: string, address: string, message?: string, balanceChange: { spent: number, received: number } }
 
 #### getBalanceChangeEventCount([fromTimestamp])
 
@@ -196,7 +198,7 @@ Gets the persisted transaction confirmation change events.
 | [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
 | [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
 
-Event object: { accountId: string, message: Message, confirmed: boolean }
+Event object: { indexationId: string, accountId: string, message: Message, confirmed: boolean }
 
 #### getTransactionConfirmationEventCount([fromTimestamp])
 
@@ -216,7 +218,7 @@ Gets the persisted new transaction events.
 | [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
 | [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
 
-Event object: { accountId: string, message: Message }
+Event object: { indexationId: string, accountId: string, message: Message }
 
 #### getNewTransactionEventCount([fromTimestamp])
 
@@ -236,7 +238,7 @@ Gets the persisted transaction reattachment events.
 | [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
 | [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
 
-Event object: { accountId: string, message: Message }
+Event object: { indexationId: string, accountId: string, message: Message }
 
 #### getReattachmentEventCount([fromTimestamp])
 
@@ -256,7 +258,7 @@ Gets the persisted transaction broadcast events.
 | [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
 | [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
 
-Event object: { accountId: string, message: Message }
+Event object: { indexationId: string, accountId: string, message: Message }
 
 #### getBroadcastEventCount([fromTimestamp])
 

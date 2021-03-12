@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use serde::ser::{SerializeStruct, Serializer};
+
 use std::path::PathBuf;
 
 /// Each of the account initialisation required fields.
@@ -52,7 +53,7 @@ pub enum Error {
     StrongholdError(crate::stronghold::Error),
     /// iota.rs error.
     #[error("`{0}`")]
-    ClientError(#[from] iota::client::Error),
+    ClientError(Box<iota::client::Error>),
     /// url parse error (client options builder).
     #[error("`{0}`")]
     UrlError(#[from] url::ParseError),
@@ -175,11 +176,20 @@ pub enum Error {
     /// Invalid output kind.
     #[error("invalid output kind: {0}")]
     InvalidOutputKind(String),
+    /// Node not synced when creating account or updating client options.
+    #[error("nodes {0} not synced")]
+    NodesNotSynced(String),
 }
 
 impl Drop for Error {
     fn drop(&mut self) {
         crate::event::emit_error(self);
+    }
+}
+
+impl From<iota::client::Error> for Error {
+    fn from(error: iota::client::Error) -> Self {
+        Self::ClientError(Box::new(error))
     }
 }
 
@@ -286,6 +296,7 @@ impl serde::Serialize for Error {
             Self::AccountAliasAlreadyExists => serialize_variant(self, serializer, "AccountAliasAlreadyExists"),
             Self::DustError(_) => serialize_variant(self, serializer, "DustError"),
             Self::InvalidOutputKind(_) => serialize_variant(self, serializer, "InvalidOutputKind"),
+            Self::NodesNotSynced(_) => serialize_variant(self, serializer, "NodesNotSynced"),
         }
     }
 }

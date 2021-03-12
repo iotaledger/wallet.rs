@@ -117,7 +117,7 @@ mod tests {
                     IotaAddress::Ed25519(Ed25519Address::new([0; 32])),
                     "iota".to_string(),
                 ))
-                .balance(rng.gen_range(0, 2000))
+                .balance(rng.gen_range(0..2000))
                 .key_index(i)
                 .outputs(vec![])
                 .build()
@@ -132,7 +132,7 @@ mod tests {
     }
 
     fn sum_random_utxos(rng: &mut StdRng, available_utxos: &mut Vec<Input>) -> u64 {
-        let utxos_picked_len = rng.gen_range(2, available_utxos.len() / 2);
+        let utxos_picked_len = rng.gen_range(2..available_utxos.len() / 2);
         available_utxos.shuffle(&mut thread_rng());
         available_utxos[..utxos_picked_len]
             .iter()
@@ -183,7 +183,7 @@ mod tests {
         for _ in 0..20 {
             let available_utxos = generate_random_utxos(&mut rng, 30);
             let sum_utxos = available_utxos.iter().fold(0, |acc, address| acc + address.balance);
-            let target = rng.gen_range(sum_utxos / 2, sum_utxos * 2);
+            let target = rng.gen_range(sum_utxos / 2..sum_utxos * 2);
             let response = select_input(target, available_utxos);
             if target > sum_utxos {
                 assert!(response.is_err());

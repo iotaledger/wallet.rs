@@ -24,10 +24,44 @@ jobs:
           toolchain: stable
           override: true
 
+    - name: Get current date
+      run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
     - name: Install required packages (Ubuntu)
       run: |
         sudo apt-get update
         sudo apt-get install libudev-dev libusb-1.0-0-dev
+
+    - name: Cache cargo registry
+      uses: actions/cache@v2.1.4
+      with:
+        path: ~/.cargo/registry
+        # Add date to the cache to keep it up to date
+        key: ubuntu-latest-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+        # Restore from outdated cache for speed
+        restore-keys: |
+          ubuntu-latest-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          ubuntu-latest-stable-cargo-registry-
+    - name: Cache cargo index
+      uses: actions/cache@v2.1.4
+      with:
+        path: ~/.cargo/git
+        # Add date to the cache to keep it up to date
+        key: ubuntu-latest-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+        # Restore from outdated cache for speed
+        restore-keys: |
+          ubuntu-latest-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          ubuntu-latest-stable-cargo-index-
+    - name: Cache cargo target
+      uses: actions/cache@v2.1.4
+      with:
+        path: target
+        # Add date to the cache to keep it up to date
+        key: ubuntu-latest-stable-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+        # Restore from outdated cache for speed
+        restore-keys: |
+          ubuntu-latest-stable-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+          ubuntu-latest-stable-cargo-build-target-
 
     - name: Run tests
       uses: actions-rs/cargo@v1

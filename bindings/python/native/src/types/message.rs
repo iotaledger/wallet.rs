@@ -20,6 +20,7 @@ use iota::{
 // use iota::MessageId as RustMessageId,
 use iota::{Address as IotaAddress, MessageId, TransactionId};
 use iota_wallet::{
+    account_manager::AccountStore,
     address::{
         Address as RustWalletAddress, AddressOutput as RustWalletAddressOutput, AddressWrapper as RustAddressWrapper,
         OutputKind as RustOutputKind,
@@ -122,12 +123,6 @@ pub struct WalletMessage {
     pub confirmed: Option<bool>,
     /// Whether the transaction is broadcasted or not.
     pub broadcasted: bool,
-    /// Whether the message represents an incoming transaction or not.
-    pub incoming: bool,
-    /// The message's value.
-    pub value: u64,
-    /// The message's remainder value sum.
-    pub remainder_value: u64,
 }
 
 impl TryFrom<RustWalletMessage> for WalletMessage {
@@ -187,9 +182,6 @@ impl TryFrom<RustWalletMessage> for WalletMessage {
             nonce: *msg.nonce(),
             confirmed: *msg.confirmed(),
             broadcasted: *msg.broadcasted(),
-            incoming: *msg.incoming(),
-            value: *msg.value(),
-            remainder_value: *msg.remainder_value(),
         })
     }
 }
@@ -252,6 +244,10 @@ impl TryFrom<RustWalletTransactionEssence> for Essence {
                 } else {
                     None
                 },
+                internal: essence.internal(),
+                incoming: essence.incoming(),
+                value: essence.value(),
+                remainder_value: essence.remainder_value(),
             }
             .into(),
         };
@@ -265,7 +261,7 @@ impl TryFrom<RustMilestonePayloadEssence> for MilestonePayloadEssence {
         Ok(MilestonePayloadEssence {
             index: essence.index(),
             timestamp: essence.timestamp(),
-            parents: essence.parents().iter().map(|parent| parent.to_string()).collect(),
+            parents: essence.parents().map(|parent| parent.to_string()).collect(),
             merkle_proof: essence.merkle_proof().try_into()?,
             public_keys: essence
                 .public_keys()
@@ -315,6 +311,8 @@ impl TryFrom<RustUnlockBlock> for UnlockBlock {
 pub async fn to_rust_message(
     msg: WalletMessage,
     bech32_hrp: String,
+    accounts: AccountStore,
+    account_id: &str,
     account_addresses: &[RustWalletAddress],
     client_options: &RustWalletClientOptions,
 ) -> Result<RustWalletMessage> {
@@ -324,7 +322,18 @@ pub async fn to_rust_message(
     }
     let id = MessageId::from_str(&msg.id)?;
     let payload = match msg.payload {
-        Some(payload) => Some(to_rust_payload(&id, payload, bech32_hrp, account_addresses, client_options).await?),
+        Some(payload) => Some(
+            to_rust_payload(
+                &id,
+                payload,
+                bech32_hrp,
+                accounts,
+                account_id,
+                account_addresses,
+                client_options,
+            )
+            .await?,
+        ),
         None => None,
     };
     Ok(RustWalletMessage {
@@ -337,9 +346,6 @@ pub async fn to_rust_message(
         nonce: msg.nonce,
         confirmed: msg.confirmed,
         broadcasted: msg.broadcasted,
-        incoming: msg.incoming,
-        value: msg.value,
-        remainder_value: msg.remainder_value,
     })
 }
 
@@ -456,6 +462,8 @@ pub async fn to_rust_payload(
     message_id: &MessageId,
     payload: Payload,
     bech32_hrp: Bech32HRP,
+    accounts: AccountStore,
+    account_id: &str,
     account_addresses: &[RustWalletAddress],
     client_options: &RustWalletClientOptions,
 ) -> Result<RustWalletPayload> {
@@ -473,6 +481,8 @@ pub async fn to_rust_payload(
         let metadata = RustWalletTransactionBuilderMetadata {
             id: message_id,
             bech32_hrp,
+            account_id,
+            accounts,
             account_addresses,
             client_options,
         };
@@ -559,6 +569,13 @@ pub struct RegularEssence {
     pub inputs: Vec<Input>,
     pub outputs: Vec<Output>,
     pub payload: Option<Payload>,
+    pub internal: bool,
+    /// Whether the transaction is incoming (received) or outgoing (sent).
+    pub incoming: bool,
+    /// The transaction's value.
+    pub value: u64,
+    /// The transaction's remainder value sum.
+    pub remainder_value: u64,
 }
 
 impl From<RegularEssence> for Essence {

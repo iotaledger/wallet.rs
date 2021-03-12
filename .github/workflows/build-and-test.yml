@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - develop
   pull_request:
     branches:
       - develop
@@ -79,12 +80,6 @@ jobs:
       run: |
         choco install openssl --no-progress
         echo "OPENSSL_DIR=C:\Program Files\OpenSSL-Win64" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-    - name: Build
-      uses: actions-rs/cargo@v1
-      with:
-        command: build
-        args: --all-features --release --locked
 
     - name: Run tests
       uses: actions-rs/cargo@v1

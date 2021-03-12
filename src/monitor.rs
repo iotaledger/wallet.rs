@@ -20,7 +20,7 @@ use iota::{
 /// Unsubscribe from all topics associated with the account.
 pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
     let account = account_handle.read().await;
-    let client = crate::client::get_client(account.client_options()).await;
+    let client = crate::client::get_client(account.client_options()).await?;
     let mut client = client.write().await;
 
     let mut topics = Vec::new();
@@ -38,12 +38,22 @@ pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
     Ok(())
 }
 
+#[cfg(test)]
+async fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
+    _client_options: &ClientOptions,
+    _topic: String,
+    _handler: C,
+) -> crate::Result<()> {
+    Ok(())
+}
+
+#[cfg(not(test))]
 async fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
     client_options: &ClientOptions,
     topic: String,
     handler: C,
 ) -> crate::Result<()> {
-    let client = crate::client::get_client(&client_options).await;
+    let client = crate::client::get_client(&client_options).await?;
     let mut client = client.write().await;
     client
         .subscriber()
@@ -127,11 +137,13 @@ async fn process_output(
     crate::event::emit_balance_change(
         &account,
         &address_wrapper,
+        Some(message_id),
         if new_balance > old_balance {
             crate::event::BalanceChange::received(new_balance - old_balance)
         } else {
             crate::event::BalanceChange::spent(old_balance - new_balance)
         },
+        account_handle.account_options.persist_events,
     )
     .await?;
 
@@ -143,24 +155,40 @@ async fn process_output(
         Some(message_index) => {
             let message = &mut account.messages_mut()[message_index];
             message.set_confirmed(Some(true));
+            let message = message.clone();
+            crate::event::emit_confirmation_state_change(
+                &account,
+                &message,
+                true,
+                account_handle.account_options.persist_events,
+            )
+            .await?;
         }
         None => {
             if let Ok(message) = crate::client::get_client(&client_options_)
-                .await
+                .await?
                 .read()
                 .await
                 .get_message()
                 .data(&message_id)
                 .await
             {
-                let message = Message::from_iota_message(message_id, message, &account)
-                    .with_confirmed(Some(true))
-                    .finish()
-                    .await?;
+                let message = Message::from_iota_message(
+                    message_id,
+                    message,
+                    account_handle.accounts.clone(),
+                    account.id(),
+                    account.addresses(),
+                    account.client_options(),
+                )
+                .with_confirmed(Some(true))
+                .finish()
+                .await?;
                 crate::event::emit_transaction_event(
                     crate::event::TransactionEventType::NewTransaction,
                     &account,
                     &message,
+                    account_handle.account_options.persist_events,
                 )
                 .await?;
                 account.messages_mut().push(message);
@@ -240,7 +268,13 @@ async fn process_metadata(
                 })
                 .await?;
 
-            crate::event::emit_confirmation_state_change(&account, &message, confirmed).await?;
+            crate::event::emit_confirmation_state_change(
+                &account,
+                &message,
+                confirmed,
+                account_handle.account_options.persist_events,
+            )
+            .await?;
         }
     }
     Ok(())

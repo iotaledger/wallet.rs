@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    account::Account,
+    account_manager::AccountStore,
     address::{Address, AddressOutput, AddressWrapper, IotaAddress},
     client::ClientOptions,
     event::{emit_transfer_progress, TransferProgressType},
@@ -26,7 +26,7 @@ use std::{
 };
 
 /// The strategy to use for the remainder value management when sending funds.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(tag = "strategy", content = "value")]
 pub enum RemainderValueStrategy {
     /// Keep the remainder value on the source address.
@@ -361,6 +361,11 @@ pub struct TransactionRegularEssence {
     inputs: Box<[TransactionInput]>,
     outputs: Box<[TransactionOutput]>,
     payload: Option<Payload>,
+    internal: bool,
+    pub(crate) incoming: bool,
+    value: u64,
+    #[serde(rename = "remainderValue")]
+    remainder_value: u64,
 }
 
 impl TransactionRegularEssence {
@@ -378,6 +383,26 @@ impl TransactionRegularEssence {
     pub fn payload(&self) -> &Option<Payload> {
         &self.payload
     }
+
+    /// Whether the transaction is between the mnemonic accounts or not.
+    pub fn internal(&self) -> bool {
+        self.internal
+    }
+
+    /// Whether the transaction is incoming or outgoing.
+    pub fn incoming(&self) -> bool {
+        self.incoming
+    }
+
+    /// The transactions's value.
+    pub fn value(&self) -> u64 {
+        self.value
+    }
+
+    /// The transactions's remainder value sum.
+    pub fn remainder_value(&self) -> u64 {
+        self.remainder_value
+    }
 }
 
 impl TransactionRegularEssence {
@@ -390,13 +415,26 @@ impl TransactionRegularEssence {
                     let metadata: Option<AddressOutput> = None;
                     #[cfg(not(test))]
                     let metadata = {
-                        let client = crate::client::get_client(metadata.client_options).await;
-                        let client = client.read().await;
-                        if let Ok(output) = client.get_output(&i).await {
-                            let output = AddressOutput::from_output_response(output, metadata.bech32_hrp.clone())?;
+                        let mut output = None;
+                        for address in metadata.account_addresses {
+                            if let Some(found_output) = address.outputs().iter().find(|o| {
+                                &o.transaction_id == i.output_id().transaction_id() && o.index == i.output_id().index()
+                            }) {
+                                output = Some(found_output.clone());
+                                break;
+                            }
+                        }
+                        if let Some(output) = output {
                             Some(output)
                         } else {
-                            None
+                            let client = crate::client::get_client(metadata.client_options).await?;
+                            let client = client.read().await;
+                            if let Ok(output) = client.get_output(&i).await {
+                                let output = AddressOutput::from_output_response(output, metadata.bech32_hrp.clone())?;
+                                Some(output)
+                            } else {
+                                None
+                            }
                         }
                     };
                     TransactionInput::UTXO(TransactionUTXOInput { input: i, metadata })
@@ -450,6 +488,21 @@ impl TransactionRegularEssence {
                             .iter()
                             .find(|a| &a.address().as_ref() == output_address)
                             .unwrap(); // safe to unwrap since we already asserted that the address belongs to the account
+
+                        // if the output is listed on the inputs, it's the remainder output.
+                        if inputs.iter().any(|input| match input {
+                            TransactionInput::UTXO(input) => {
+                                if let Some(metadata) = &input.metadata {
+                                    &metadata.address().as_ref() == output_address
+                                } else {
+                                    false
+                                }
+                            }
+                            _ => false,
+                        }) {
+                            remainder = Some(account_address);
+                            break;
+                        }
                         match remainder {
                             Some(remainder_address) => {
                                 let address_index = *account_address.key_index();
@@ -475,10 +528,16 @@ impl TransactionRegularEssence {
                         ));
                     }
                 } else {
-                    let sent = !metadata
-                        .account_addresses
-                        .iter()
-                        .any(|address| address.outputs().iter().any(|o| o.message_id() == metadata.id));
+                    let sent = inputs.iter().any(|i| match i {
+                        TransactionInput::UTXO(input) => match input.metadata {
+                            Some(ref input_metadata) => metadata
+                                .account_addresses
+                                .iter()
+                                .any(|a| &input_metadata.address == a.address()),
+                            None => false,
+                        },
+                        _ => false,
+                    });
                     for (output_address, output) in tx_outputs {
                         let address_belongs_to_account = metadata
                             .account_addresses
@@ -496,11 +555,53 @@ impl TransactionRegularEssence {
             }
         }
 
-        Ok(Self {
+        let mut value = 0;
+        let mut remainder_value = 0;
+        for output in &outputs {
+            let (output_value, remainder) = match output {
+                TransactionOutput::SignatureLockedSingle(o) => (o.amount, o.remainder),
+                TransactionOutput::SignatureLockedDustAllowance(o) => (o.amount, false),
+                TransactionOutput::Treasury(o) => (o.amount(), false),
+            };
+            if remainder {
+                remainder_value += output_value;
+            } else {
+                value += output_value;
+            }
+        }
+
+        let mut essence = Self {
             inputs: inputs.into_boxed_slice(),
             outputs: outputs.into_boxed_slice(),
             payload: regular_essence.payload().clone(),
-        })
+            internal: false,
+            incoming: false,
+            value,
+            remainder_value,
+        };
+
+        let sent = essence.inputs().iter().any(|i| match i {
+            TransactionInput::UTXO(input) => match input.metadata {
+                Some(ref input_metadata) => metadata
+                    .account_addresses
+                    .iter()
+                    .any(|a| &input_metadata.address == a.address()),
+                None => false,
+            },
+            _ => false,
+        });
+
+        let is_internal = is_internal(
+            &essence,
+            metadata.accounts.clone(),
+            metadata.account_id,
+            metadata.account_addresses,
+        )
+        .await;
+        essence.internal = is_internal;
+        essence.incoming = !sent;
+
+        Ok(essence)
     }
 }
 
@@ -536,7 +637,7 @@ impl MessageTransactionPayload {
         &self.essence
     }
 
-    fn essence_mut(&mut self) -> &mut TransactionEssence {
+    pub(crate) fn essence_mut(&mut self) -> &mut TransactionEssence {
         &mut self.essence
     }
 
@@ -616,13 +717,6 @@ pub struct Message {
     /// Whether the transaction is broadcasted or not.
     #[getset(set = "pub")]
     pub broadcasted: bool,
-    /// Whether the message represents an incoming transaction or not.
-    pub incoming: bool,
-    /// The message's value.
-    pub value: u64,
-    /// The message's remainder value sum.
-    #[serde(rename = "remainderValue")]
-    pub remainder_value: u64,
 }
 
 impl Message {
@@ -671,10 +765,71 @@ impl PartialOrd for Message {
     }
 }
 
+fn transaction_inputs_belongs_to_account(essence: &TransactionRegularEssence, account_addresses: &[Address]) -> bool {
+    return essence.inputs().iter().all(|input| {
+        if let TransactionInput::UTXO(i) = input {
+            if let Some(metadata) = &i.metadata {
+                return account_addresses
+                    .iter()
+                    .any(|address| address.address() == &metadata.address);
+            }
+        }
+        false
+    });
+}
+
+fn transaction_outputs_belongs_to_account(essence: &TransactionRegularEssence, account_addresses: &[Address]) -> bool {
+    return essence.outputs().iter().all(|output| {
+        let output_address = match output {
+            TransactionOutput::SignatureLockedDustAllowance(o) => o.address(),
+            TransactionOutput::SignatureLockedSingle(o) => o.address(),
+            _ => unimplemented!(),
+        };
+        return account_addresses
+            .iter()
+            .any(|address| address.address() == output_address);
+    });
+}
+
+async fn is_internal(
+    essence: &TransactionRegularEssence,
+    accounts: AccountStore,
+    account_id: &str,
+    account_addresses: &[Address],
+) -> bool {
+    let mut inputs_belongs_to_account = false;
+    let mut outputs_belongs_to_account = false;
+    for (id, account_handle) in accounts.read().await.iter() {
+        if id == account_id {
+            if !inputs_belongs_to_account {
+                inputs_belongs_to_account = transaction_inputs_belongs_to_account(&essence, &account_addresses);
+            }
+            if !outputs_belongs_to_account {
+                outputs_belongs_to_account = transaction_outputs_belongs_to_account(&essence, &account_addresses);
+            }
+        } else {
+            let account = account_handle.read().await;
+            if !inputs_belongs_to_account {
+                inputs_belongs_to_account = transaction_inputs_belongs_to_account(&essence, account.addresses());
+            }
+            if !outputs_belongs_to_account {
+                outputs_belongs_to_account = transaction_outputs_belongs_to_account(&essence, &account_addresses);
+            }
+        }
+
+        if inputs_belongs_to_account && outputs_belongs_to_account {
+            return true;
+        }
+    }
+    false
+}
+
 #[doc(hidden)]
 pub struct TransactionBuilderMetadata<'a> {
     pub id: &'a MessageId,
     pub bech32_hrp: String,
+    pub accounts: AccountStore,
+    pub account_id: &'a str,
     pub account_addresses: &'a [Address],
     pub client_options: &'a ClientOptions,
 }
@@ -682,6 +837,8 @@ pub struct TransactionBuilderMetadata<'a> {
 pub(crate) struct MessageBuilder<'a> {
     id: MessageId,
     iota_message: IotaMessage,
+    accounts: AccountStore,
+    account_id: &'a str,
     account_addresses: &'a [Address],
     confirmed: Option<bool>,
     bech32_hrp: String,
@@ -692,6 +849,8 @@ impl<'a> MessageBuilder<'a> {
     pub fn new(
         id: MessageId,
         iota_message: IotaMessage,
+        accounts: AccountStore,
+        account_id: &'a str,
         account_addresses: &'a [Address],
         bech32_hrp: String,
         client_options: &'a ClientOptions,
@@ -699,6 +858,8 @@ impl<'a> MessageBuilder<'a> {
         Self {
             id,
             iota_message,
+            accounts,
+            account_id,
             account_addresses,
             confirmed: None,
             bech32_hrp,
@@ -721,6 +882,8 @@ impl<'a> MessageBuilder<'a> {
                     &TransactionBuilderMetadata {
                         id: &self.id,
                         bech32_hrp: self.bech32_hrp.clone(),
+                        accounts: self.accounts.clone(),
+                        account_id: self.account_id,
                         account_addresses: &self.account_addresses,
                         client_options: &self.client_options,
                     },
@@ -730,64 +893,44 @@ impl<'a> MessageBuilder<'a> {
             None => None,
         };
 
-        let mut value = 0;
-        let mut remainder_value = 0;
-        if let Some(MessagePayload::Transaction(tx)) = &payload {
-            let TransactionEssence::Regular(essence) = tx.essence();
-            for output in essence.outputs() {
-                let (amount, remainder) = match output {
-                    TransactionOutput::SignatureLockedSingle(o) => (o.amount, o.remainder),
-                    TransactionOutput::SignatureLockedDustAllowance(o) => (o.amount, false),
-                    _ => (0, false),
-                };
-                if remainder {
-                    remainder_value += amount;
-                } else {
-                    value += amount;
-                }
-            }
-        }
-
         let message = Message {
             id: self.id,
             version: 1,
-            parents: self.iota_message.parents().to_vec(),
+            parents: self.iota_message.parents().copied().collect(),
             payload_length: packed_payload.len(),
             payload,
             timestamp: Utc::now(),
             nonce: self.iota_message.nonce(),
             confirmed: self.confirmed,
             broadcasted: true,
-            incoming: self
-                .account_addresses
-                .iter()
-                .any(|address| address.outputs().iter().any(|o| o.message_id() == &self.id)),
-            value,
-            remainder_value,
         };
         Ok(message)
     }
 }
 
 impl Message {
-    pub(crate) fn from_iota_message(
+    pub(crate) fn from_iota_message<'a>(
         id: MessageId,
         iota_message: IotaMessage,
-        account: &'_ Account,
-    ) -> MessageBuilder<'_> {
+        accounts: AccountStore,
+        account_id: &'a str,
+        account_addresses: &'a [Address],
+        client_options: &'a ClientOptions,
+    ) -> MessageBuilder<'a> {
         MessageBuilder::new(
             id,
             iota_message,
-            account.addresses(),
-            account
-                .addresses()
+            accounts,
+            account_id,
+            account_addresses,
+            account_addresses
                 .iter()
                 .next()
                 .unwrap()
                 .address()
                 .bech32_hrp()
                 .to_string(),
-            account.client_options(),
+            client_options,
         )
     }
 
