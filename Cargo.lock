@@ -1747,7 +1747,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=116893e8d6751a09877757b2be770352c1dd027b#116893e8d6751a09877757b2be770352c1dd027b"
+source = "git+https://github.com/iotaledger/iota.rs?rev=db62b87f01dd89dbc52c19272892426e1e855c24#db62b87f01dd89dbc52c19272892426e1e855c24"
 dependencies = [
  "async-trait",
  "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
@@ -1774,7 +1774,7 @@ dependencies = [
 [[package]]
 name = "iota-core"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=116893e8d6751a09877757b2be770352c1dd027b#116893e8d6751a09877757b2be770352c1dd027b"
+source = "git+https://github.com/iotaledger/iota.rs?rev=db62b87f01dd89dbc52c19272892426e1e855c24#db62b87f01dd89dbc52c19272892426e1e855c24"
 dependencies = [
  "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?rev=c42171ff33c80cc2efb183e244dc79b7f58d9ac4)",
  "bee-message",
