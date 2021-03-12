@@ -311,7 +311,7 @@ dependencies = [
 [[package]]
 name = "bee-ledger"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=3edeb71205207b04c65d48757403f397d9fe1d2b#3edeb71205207b04c65d48757403f397d9fe1d2b"
+source = "git+https://github.com/iotaledger/bee.git?rev=d379dc3f6d96bca53c32e53feb3e6b7a0a7372b4#d379dc3f6d96bca53c32e53feb3e6b7a0a7372b4"
 dependencies = [
  "async-trait",
  "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
@@ -337,7 +337,7 @@ dependencies = [
 [[package]]
 name = "bee-message"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=3edeb71205207b04c65d48757403f397d9fe1d2b#3edeb71205207b04c65d48757403f397d9fe1d2b"
+source = "git+https://github.com/iotaledger/bee.git?rev=d379dc3f6d96bca53c32e53feb3e6b7a0a7372b4#d379dc3f6d96bca53c32e53feb3e6b7a0a7372b4"
 dependencies = [
  "bech32 0.8.0",
  "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
@@ -353,7 +353,7 @@ dependencies = [
 [[package]]
 name = "bee-network"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=3edeb71205207b04c65d48757403f397d9fe1d2b#3edeb71205207b04c65d48757403f397d9fe1d2b"
+source = "git+https://github.com/iotaledger/bee.git?rev=d379dc3f6d96bca53c32e53feb3e6b7a0a7372b4#d379dc3f6d96bca53c32e53feb3e6b7a0a7372b4"
 dependencies = [
  "async-trait",
  "bee-runtime",
@@ -372,7 +372,7 @@ dependencies = [
 [[package]]
 name = "bee-pow"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=3edeb71205207b04c65d48757403f397d9fe1d2b#3edeb71205207b04c65d48757403f397d9fe1d2b"
+source = "git+https://github.com/iotaledger/bee.git?rev=d379dc3f6d96bca53c32e53feb3e6b7a0a7372b4#d379dc3f6d96bca53c32e53feb3e6b7a0a7372b4"
 dependencies = [
  "bee-crypto 0.2.0-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
  "bee-ternary 0.4.0-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
@@ -383,7 +383,7 @@ dependencies = [
 [[package]]
 name = "bee-protocol"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=3edeb71205207b04c65d48757403f397d9fe1d2b#3edeb71205207b04c65d48757403f397d9fe1d2b"
+source = "git+https://github.com/iotaledger/bee.git?rev=d379dc3f6d96bca53c32e53feb3e6b7a0a7372b4#d379dc3f6d96bca53c32e53feb3e6b7a0a7372b4"
 dependencies = [
  "async-channel",
  "async-priority-queue",
@@ -419,7 +419,7 @@ dependencies = [
 [[package]]
 name = "bee-rest-api"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=3edeb71205207b04c65d48757403f397d9fe1d2b#3edeb71205207b04c65d48757403f397d9fe1d2b"
+source = "git+https://github.com/iotaledger/bee.git?rev=d379dc3f6d96bca53c32e53feb3e6b7a0a7372b4#d379dc3f6d96bca53c32e53feb3e6b7a0a7372b4"
 dependencies = [
  "async-trait",
  "bech32 0.8.0",
@@ -459,7 +459,7 @@ dependencies = [
 [[package]]
 name = "bee-snapshot"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=3edeb71205207b04c65d48757403f397d9fe1d2b#3edeb71205207b04c65d48757403f397d9fe1d2b"
+source = "git+https://github.com/iotaledger/bee.git?rev=d379dc3f6d96bca53c32e53feb3e6b7a0a7372b4#d379dc3f6d96bca53c32e53feb3e6b7a0a7372b4"
 dependencies = [
  "async-trait",
  "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
@@ -489,7 +489,7 @@ dependencies = [
 [[package]]
 name = "bee-tangle"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=3edeb71205207b04c65d48757403f397d9fe1d2b#3edeb71205207b04c65d48757403f397d9fe1d2b"
+source = "git+https://github.com/iotaledger/bee.git?rev=d379dc3f6d96bca53c32e53feb3e6b7a0a7372b4#d379dc3f6d96bca53c32e53feb3e6b7a0a7372b4"
 dependencies = [
  "async-trait",
  "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
@@ -1675,7 +1675,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=db62b87f01dd89dbc52c19272892426e1e855c24#db62b87f01dd89dbc52c19272892426e1e855c24"
+source = "git+https://github.com/iotaledger/iota.rs?rev=1554893c01d37ef067a4d7559e33a0da48401cac#1554893c01d37ef067a4d7559e33a0da48401cac"
 dependencies = [
  "async-trait",
  "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
@@ -1686,7 +1686,7 @@ dependencies = [
  "chrono",
  "futures",
  "hex",
- "iota-crypto 0.3.0 (git+https://github.com/iotaledger/crypto.rs.git?rev=61924d5c237254f5a6da0e9ac61cd7e7bb310058)",
+ "iota-crypto 0.3.0 (git+https://github.com/iotaledger/crypto.rs?rev=b849861b86c3f7357b7477de4253b7352b363627)",
  "num_cpus",
  "once_cell",
  "regex",
@@ -1702,7 +1702,7 @@ dependencies = [
 [[package]]
 name = "iota-core"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=db62b87f01dd89dbc52c19272892426e1e855c24#db62b87f01dd89dbc52c19272892426e1e855c24"
+source = "git+https://github.com/iotaledger/iota.rs?rev=1554893c01d37ef067a4d7559e33a0da48401cac#1554893c01d37ef067a4d7559e33a0da48401cac"
 dependencies = [
  "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?rev=c42171ff33c80cc2efb183e244dc79b7f58d9ac4)",
  "bee-message",
@@ -1712,25 +1712,21 @@ dependencies = [
 
 [[package]]
 name = "iota-crypto"
-version = "0.2.0"
-source = "git+https://github.com/iotaledger/crypto.rs?rev=09ff1a94d6a87838589ccf1b874cfa3283a00f26#09ff1a94d6a87838589ccf1b874cfa3283a00f26"
-dependencies = [
- "chacha20poly1305 0.7.1",
- "getrandom 0.2.2",
-]
-
-[[package]]
-name = "iota-crypto"
 version = "0.3.0"
-source = "git+https://github.com/iotaledger/crypto.rs.git?rev=61924d5c237254f5a6da0e9ac61cd7e7bb310058#61924d5c237254f5a6da0e9ac61cd7e7bb310058"
+source = "git+https://github.com/iotaledger/crypto.rs?rev=b849861b86c3f7357b7477de4253b7352b363627#b849861b86c3f7357b7477de4253b7352b363627"
 dependencies = [
+ "aead",
  "blake2",
+ "chacha20poly1305 0.7.1",
  "digest 0.9.0",
  "ed25519-zebra",
+ "generic-array 0.14.4",
  "getrandom 0.2.2",
  "hmac 0.10.1",
+ "pbkdf2",
  "serde 1.0.124",
  "sha2 0.9.3",
+ "unicode-normalization",
 ]
 
 [[package]]
@@ -1744,10 +1740,7 @@ dependencies = [
  "ed25519-zebra",
  "getrandom 0.2.2",
  "hmac 0.10.1",
- "pbkdf2",
- "serde 1.0.124",
  "sha2 0.9.3",
- "unicode-normalization",
  "x25519-dalek",
 ]
 
@@ -1773,12 +1766,12 @@ dependencies = [
 [[package]]
 name = "iota-stronghold"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=829ecac2e8090d478706c673cd45f1b91a60b2de#829ecac2e8090d478706c673cd45f1b91a60b2de"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=b8904ff0df9c963980ae148815ad56c40588d84a#b8904ff0df9c963980ae148815ad56c40588d84a"
 dependencies = [
  "anyhow",
  "bincode",
  "futures",
- "iota-crypto 0.3.0 (git+https://github.com/iotaledger/crypto.rs?rev=c3bf565eba62d0b81144174c2ff917bfde282e49)",
+ "iota-crypto 0.3.0 (git+https://github.com/iotaledger/crypto.rs?rev=b849861b86c3f7357b7477de4253b7352b363627)",
  "riker",
  "serde 1.0.124",
  "stronghold-engine",
@@ -1801,7 +1794,7 @@ dependencies = [
  "getset",
  "hex",
  "iota-core",
- "iota-crypto 0.3.0 (git+https://github.com/iotaledger/crypto.rs?rev=c3bf565eba62d0b81144174c2ff917bfde282e49)",
+ "iota-crypto 0.3.0 (git+https://github.com/iotaledger/crypto.rs?rev=b849861b86c3f7357b7477de4253b7352b363627)",
  "iota-ledger",
  "iota-stronghold",
  "log",
@@ -3152,7 +3145,7 @@ dependencies = [
 [[package]]
 name = "runtime"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=829ecac2e8090d478706c673cd45f1b91a60b2de#829ecac2e8090d478706c673cd45f1b91a60b2de"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=b8904ff0df9c963980ae148815ad56c40588d84a#b8904ff0df9c963980ae148815ad56c40588d84a"
 dependencies = [
  "libsodium-sys",
  "serde 1.0.124",
@@ -3489,7 +3482,7 @@ checksum = "fe0f37c9e8f3c5a4a66ad655a93c74daac4ad00c441533bf5c6e7990bb42604e"
 [[package]]
 name = "snapshot"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=829ecac2e8090d478706c673cd45f1b91a60b2de#829ecac2e8090d478706c673cd45f1b91a60b2de"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=b8904ff0df9c963980ae148815ad56c40588d84a#b8904ff0df9c963980ae148815ad56c40588d84a"
 dependencies = [
  "dirs-next",
  "hex",
@@ -3556,7 +3549,7 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 [[package]]
 name = "store"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=829ecac2e8090d478706c673cd45f1b91a60b2de#829ecac2e8090d478706c673cd45f1b91a60b2de"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=b8904ff0df9c963980ae148815ad56c40588d84a#b8904ff0df9c963980ae148815ad56c40588d84a"
 dependencies = [
  "once_cell",
  "paste 1.0.4",
@@ -3576,7 +3569,7 @@ dependencies = [
 [[package]]
 name = "stronghold-engine"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=829ecac2e8090d478706c673cd45f1b91a60b2de#829ecac2e8090d478706c673cd45f1b91a60b2de"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=b8904ff0df9c963980ae148815ad56c40588d84a#b8904ff0df9c963980ae148815ad56c40588d84a"
 dependencies = [
  "runtime",
  "snapshot",
@@ -3587,7 +3580,7 @@ dependencies = [
 [[package]]
 name = "stronghold-utils"
 version = "0.1.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=829ecac2e8090d478706c673cd45f1b91a60b2de#829ecac2e8090d478706c673cd45f1b91a60b2de"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=b8904ff0df9c963980ae148815ad56c40588d84a#b8904ff0df9c963980ae148815ad56c40588d84a"
 dependencies = [
  "futures",
  "rand 0.8.3",
@@ -4020,10 +4013,10 @@ dependencies = [
 [[package]]
 name = "vault"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=829ecac2e8090d478706c673cd45f1b91a60b2de#829ecac2e8090d478706c673cd45f1b91a60b2de"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=b8904ff0df9c963980ae148815ad56c40588d84a#b8904ff0df9c963980ae148815ad56c40588d84a"
 dependencies = [
  "anyhow",
- "iota-crypto 0.2.0",
+ "iota-crypto 0.3.0 (git+https://github.com/iotaledger/crypto.rs?rev=b849861b86c3f7357b7477de4253b7352b363627)",
  "runtime",
  "serde 1.0.124",
  "thiserror",
