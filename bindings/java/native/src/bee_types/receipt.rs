@@ -1,12 +1,12 @@
 use iota_wallet::{
     message::{
         ReceiptPayload as ReceiptPayloadRust,
+        SignatureLockedSingleOutput,
     }
 };
 
 use iota::{
     MigratedFundsEntry as MigratedFundsEntryRust,
-    SignatureLockedSingleOutput,
 };
 
 pub struct ReceiptPayload {

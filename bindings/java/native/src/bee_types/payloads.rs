@@ -8,6 +8,7 @@ use crate::bee_types::index::*;
 use crate::bee_types::milestone::*;
 use crate::bee_types::transaction::*;
 use crate::bee_types::receipt::*;
+use crate::bee_types::treasury::*;
 
 pub enum MessagePayloadType {
     Transaction = 1,
@@ -87,5 +88,11 @@ impl MessagePayload {
         }
     }
 
-    // TreasuryTransaction
+    pub fn get_as_treasury(&self) -> Option<TreasuryTransactionPayload> {
+        if let MessagePayloadRust::TreasuryTransaction(payload) = &self.payload {
+            Some(TreasuryTransactionPayload::new_with_rust(*payload.clone()))
+        } else {
+            None
+        }
+    }
 }

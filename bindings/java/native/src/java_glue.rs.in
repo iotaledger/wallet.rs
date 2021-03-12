@@ -1,5 +1,5 @@
 use std::{
-    path::{Path, PathBuf},
+    path::PathBuf,
     time::Duration,
     str::FromStr,
 };
@@ -48,7 +48,7 @@ use iota_wallet::{
 };
 
 use iota::{
-    SignatureLockedSingleOutput
+    SignatureLockedSingleOutput,
 };
 
 foreign_class!(class RustLogging {
@@ -671,5 +671,14 @@ foreign_class!(
         private constructor = empty;
         fn MigratedFundsEntry::tail_transaction_hash(&self) -> Vec<u8>;
         fn MigratedFundsEntry::output(&self) -> SignatureLockedSingleOutput;
+    }
+);
+
+foreign_class!(
+    class TreasuryTransactionPayload {
+        self_type TreasuryTransactionPayload;
+        private constructor = empty;
+        fn TreasuryTransactionPayload::input(&self) -> MessageId;
+        fn TreasuryTransactionPayload::output(&self) -> u64;
     }
 );
