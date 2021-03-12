@@ -905,8 +905,7 @@ A dict with the following key/value pairs.
 ```python
 broker_options = {
     'automatic_disconnect': bool (optional),
-    'timeout': int (optional),
-    'use_websockets': bool (optional)
+    'timeout': int (optional)
 }
 ```
 

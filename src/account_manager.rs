@@ -172,6 +172,7 @@ impl AccountManagerBuilder {
         self
     }
 
+    #[allow(dead_code)]
     pub(crate) fn skip_polling(mut self) -> Self {
         self.skip_polling = true;
         self
@@ -232,14 +233,17 @@ impl AccountManagerBuilder {
 
         crate::storage::set(&storage_file_path, self.storage_encryption_key, storage).await;
 
+        let is_monitoring = Arc::new(AtomicBool::new(false));
+
         // with the stronghold storage feature, the accounts are loaded when the password is set
         #[cfg(feature = "stronghold-storage")]
         let (accounts, loaded_accounts) = (Default::default(), false);
         #[cfg(not(feature = "stronghold-storage"))]
-        let (accounts, loaded_accounts) = AccountManager::load_accounts(&storage_file_path, self.account_options)
-            .await
-            .map(|accounts| (accounts, true))
-            .unwrap_or_else(|_| (AccountStore::default(), false));
+        let (accounts, loaded_accounts) =
+            AccountManager::load_accounts(&storage_file_path, self.account_options, is_monitoring.clone())
+                .await
+                .map(|accounts| (accounts, true))
+                .unwrap_or_else(|_| (AccountStore::default(), false));
 
         let mut instance = AccountManager {
             storage_folder: if self.storage_path.is_file() || self.storage_path.extension().is_some() {
@@ -255,7 +259,7 @@ impl AccountManagerBuilder {
             accounts,
             stop_polling_sender: None,
             polling_handle: None,
-            is_monitoring: Arc::new(AtomicBool::new(false)),
+            is_monitoring,
             generated_mnemonic: None,
             account_options: self.account_options,
             sync_accounts_lock: Arc::new(Mutex::new(())),
@@ -467,6 +471,7 @@ impl AccountManager {
     async fn load_accounts(
         storage_file_path: &PathBuf,
         account_options: AccountOptions,
+        is_monitoring: Arc<AtomicBool>,
     ) -> crate::Result<AccountStore> {
         let parsed_accounts = Arc::new(RwLock::new(HashMap::new()));
 
@@ -479,7 +484,7 @@ impl AccountManager {
         for account in accounts {
             parsed_accounts.write().await.insert(
                 account.id().clone(),
-                AccountHandle::new(account, parsed_accounts.clone(), account_options),
+                AccountHandle::new(account, parsed_accounts.clone(), account_options, is_monitoring.clone()),
             );
         }
 
@@ -533,21 +538,16 @@ impl AccountManager {
     }
 
     /// Starts monitoring the accounts with the node's mqtt topics.
-    async fn start_monitoring(accounts: AccountStore, is_monitoring: Arc<AtomicBool>) {
-        is_monitoring.store(Self::_start_monitoring(accounts).await.is_ok(), Ordering::Relaxed);
-    }
-
-    async fn _start_monitoring(accounts: AccountStore) -> crate::Result<()> {
+    async fn start_monitoring(accounts: AccountStore) {
         for account in accounts.read().await.values() {
-            crate::monitor::monitor_account_addresses_balance(account.clone()).await?;
-            crate::monitor::monitor_unconfirmed_messages(account.clone()).await?;
+            crate::monitor::monitor_account_addresses_balance(account.clone()).await;
+            crate::monitor::monitor_unconfirmed_messages(account.clone()).await;
         }
-        Ok(())
     }
 
     /// Initialises the background polling and MQTT monitoring.
     async fn start_background_sync(&mut self, polling_interval: Duration, automatic_output_consolidation: bool) {
-        Self::start_monitoring(self.accounts.clone(), self.is_monitoring.clone()).await;
+        Self::start_monitoring(self.accounts.clone()).await;
         let (stop_polling_sender, stop_polling_receiver) = broadcast_channel(1);
         self.start_polling(polling_interval, stop_polling_receiver, automatic_output_consolidation);
         self.stop_polling_sender = Some(stop_polling_sender);
@@ -584,12 +584,16 @@ impl AccountManager {
             .unwrap();
 
         if self.accounts.read().await.is_empty() {
-            let accounts = Self::load_accounts(&self.storage_path, self.account_options).await?;
+            let accounts =
+                Self::load_accounts(&self.storage_path, self.account_options, self.is_monitoring.clone()).await?;
             self.loaded_accounts = true;
-            let mut accounts_store = self.accounts.write().await;
-            for (id, account) in &*accounts.read().await {
-                accounts_store.insert(id.clone(), account.clone());
+            {
+                let mut accounts_store = self.accounts.write().await;
+                for (id, account) in &*accounts.read().await {
+                    accounts_store.insert(id.clone(), account.clone());
+                }
             }
+            crate::spawn(Self::start_monitoring(self.accounts.clone()));
         } else {
             // save the accounts again to reencrypt with the new key
             for account_handle in self.accounts.read().await.values() {
@@ -600,11 +604,6 @@ impl AccountManager {
         for account_handle in self.accounts.read().await.values() {
             let _ = crate::monitor::unsubscribe(account_handle.clone());
         }
-
-        crate::spawn(Self::start_monitoring(
-            self.accounts.clone(),
-            self.is_monitoring.clone(),
-        ));
 
         Ok(())
     }
@@ -620,18 +619,17 @@ impl AccountManager {
         };
         crate::stronghold::load_snapshot(&stronghold_path, stronghold_password(password)).await?;
 
-        // let is_empty = self.accounts.read().await.is_empty();
         if self.accounts.read().await.is_empty() {
-            let accounts = Self::load_accounts(&self.storage_path, self.account_options).await?;
+            let accounts =
+                Self::load_accounts(&self.storage_path, self.account_options, self.is_monitoring.clone()).await?;
             self.loaded_accounts = true;
-            let mut accounts_store = self.accounts.write().await;
-            for (id, account) in &*accounts.read().await {
-                accounts_store.insert(id.clone(), account.clone());
+            {
+                let mut accounts_store = self.accounts.write().await;
+                for (id, account) in &*accounts.read().await {
+                    accounts_store.insert(id.clone(), account.clone());
+                }
             }
-            crate::spawn(Self::start_monitoring(
-                self.accounts.clone(),
-                self.is_monitoring.clone(),
-            ));
+            crate::spawn(Self::start_monitoring(self.accounts.clone()));
         }
 
         Ok(())
@@ -704,7 +702,16 @@ impl AccountManager {
 
                             if !accounts.read().await.is_empty() {
                                 let should_sync = !(synced && is_monitoring.load(Ordering::Relaxed));
-                                match AssertUnwindSafe(poll(sync_accounts_lock.clone(), accounts.clone(), storage_file_path_, account_options, should_sync, automatic_output_consolidation))
+                                match AssertUnwindSafe(
+                                    poll(
+                                        sync_accounts_lock.clone(),
+                                        accounts.clone(),
+                                        storage_file_path_,
+                                        account_options,
+                                        should_sync,
+                                        is_monitoring.clone(),
+                                        automatic_output_consolidation)
+                                    )
                                     .catch_unwind()
                                     .await {
                                         Ok(_) => {
@@ -797,6 +804,7 @@ impl AccountManager {
             self.accounts.clone(),
             self.storage_path.clone(),
             self.account_options,
+            self.is_monitoring.clone(),
         ))
     }
 
@@ -835,6 +843,7 @@ impl AccountManager {
             self.accounts.clone(),
             self.storage_path.clone(),
             self.account_options,
+            self.is_monitoring.clone(),
         ))
     }
 
@@ -1040,10 +1049,7 @@ impl AccountManager {
                 accounts_store.insert(id.clone(), account.clone());
             }
 
-            crate::spawn(Self::start_monitoring(
-                self.accounts.clone(),
-                self.is_monitoring.clone(),
-            ));
+            crate::spawn(Self::start_monitoring(self.accounts.clone()));
         }
 
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
@@ -1208,6 +1214,7 @@ pub struct AccountsSynchronizer {
     address_index: Option<usize>,
     gap_limit: Option<usize>,
     account_options: AccountOptions,
+    is_monitoring: Arc<AtomicBool>,
 }
 
 impl AccountsSynchronizer {
@@ -1216,6 +1223,7 @@ impl AccountsSynchronizer {
         accounts: AccountStore,
         storage_file_path: PathBuf,
         account_options: AccountOptions,
+        is_monitoring: Arc<AtomicBool>,
     ) -> Self {
         Self {
             mutex,
@@ -1224,6 +1232,7 @@ impl AccountsSynchronizer {
             address_index: None,
             gap_limit: None,
             account_options,
+            is_monitoring,
         }
     }
 
@@ -1281,6 +1290,7 @@ impl AccountsSynchronizer {
                         &client_options,
                         Some(signer_type),
                         self.account_options,
+                        self.is_monitoring.clone(),
                     )
                     .await
                 } else {
@@ -1314,13 +1324,19 @@ async fn poll(
     storage_file_path: PathBuf,
     account_options: AccountOptions,
     should_sync: bool,
+    is_monitoring: Arc<AtomicBool>,
     automatic_output_consolidation: bool,
 ) -> crate::Result<()> {
     let retried = if should_sync {
-        let synced_accounts =
-            AccountsSynchronizer::new(sync_accounts_lock, accounts.clone(), storage_file_path, account_options)
-                .execute()
-                .await?;
+        let synced_accounts = AccountsSynchronizer::new(
+            sync_accounts_lock,
+            accounts.clone(),
+            storage_file_path,
+            account_options,
+            is_monitoring,
+        )
+        .execute()
+        .await?;
 
         log::debug!("[POLLING] synced accounts");
 
@@ -1415,6 +1431,7 @@ async fn discover_accounts(
     client_options: &ClientOptions,
     signer_type: Option<SignerType>,
     account_options: AccountOptions,
+    is_monitoring: Arc<AtomicBool>,
 ) -> crate::Result<Vec<(AccountHandle, SyncedAccount)>> {
     let mut synced_accounts = vec![];
     let mut index = accounts.read().await.len();
@@ -1424,6 +1441,7 @@ async fn discover_accounts(
             accounts.clone(),
             storage_path.clone(),
             account_options,
+            is_monitoring.clone(),
         )
         .skip_persistence()
         .index(index);
@@ -2004,9 +2022,13 @@ mod tests {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |mut manager, _| async move {
             crate::test_utils::AccountCreator::new(&manager).create().await;
             manager.set_storage_password("new-password").await.unwrap();
-            let account_store = super::AccountManager::load_accounts(manager.storage_path(), manager.account_options)
-                .await
-                .unwrap();
+            let account_store = super::AccountManager::load_accounts(
+                manager.storage_path(),
+                manager.account_options,
+                manager.is_monitoring.clone(),
+            )
+            .await
+            .unwrap();
             assert_eq!(account_store.read().await.len(), 1);
         })
         .await;
