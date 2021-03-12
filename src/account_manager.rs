@@ -861,6 +861,11 @@ impl AccountManager {
             }
             storage_file_path
         };
+
+        #[allow(unused_variables)]
+        #[cfg(feature = "stronghold-storage")]
+        let stronghold_file_path = storage_file_path.clone();
+
         #[cfg(feature = "sqlite-storage")]
         let storage_file_path = {
             if !self.accounts.read().await.is_empty() {
@@ -872,36 +877,37 @@ impl AccountManager {
 
         fs::create_dir_all(&self.storage_folder)?;
 
-        if cfg!(feature = "sqlite-storage") && source.extension().unwrap_or_default() == "stronghold" {
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-            {
-                let mut stronghold_manager = Self::builder()
-                    .with_storage(&source, ManagerStorage::Stronghold, None)
-                    .unwrap() // safe to unwrap - password is None
-                    .skip_polling()
-                    .finish()
-                    .await?;
-                stronghold_manager
-                    .set_stronghold_password(stronghold_password.clone())
-                    .await?;
-                for account_handle in stronghold_manager.accounts.read().await.values() {
-                    account_handle.write().await.set_storage_path(self.storage_path.clone());
+        if source.extension().unwrap_or_default() == "stronghold" {
+            if cfg!(feature = "sqlite-storage") {
+                #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+                {
+                    let mut stronghold_manager = Self::builder()
+                        .with_storage(&source, ManagerStorage::Stronghold, None)
+                        .unwrap() // safe to unwrap - password is None
+                        .skip_polling()
+                        .finish()
+                        .await?;
+                    stronghold_manager
+                        .set_stronghold_password(stronghold_password.clone())
+                        .await?;
+                    for account_handle in stronghold_manager.accounts.read().await.values() {
+                        account_handle.write().await.set_storage_path(self.storage_path.clone());
+                    }
+                    self.accounts = stronghold_manager.accounts.clone();
+                    self.set_stronghold_password(stronghold_password.clone()).await?;
+                    for account in self.accounts.read().await.values() {
+                        account.write().await.save().await?;
+                    }
                 }
-                self.accounts = stronghold_manager.accounts.clone();
-                self.set_stronghold_password(stronghold_password.clone()).await?;
-                for account in self.accounts.read().await.values() {
-                    account.write().await.save().await?;
-                }
+                #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
+                return Err(crate::Error::InvalidBackupFile);
             }
-            #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-            return Err(crate::Error::InvalidBackupFile);
-        } else {
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             {
                 // wait for stronghold to finish its tasks
                 let _ = crate::stronghold::actor_runtime().lock().await;
             }
-            fs::copy(source, &storage_file_path)?;
+            fs::copy(source, &stronghold_file_path)?;
         }
 
         // the accounts map isn't empty when restoring SQLite from a stronghold snapshot
@@ -1451,6 +1457,7 @@ fn backup_filename(original: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    use super::ManagerStorage;
     use crate::{
         address::{AddressBuilder, AddressOutput, AddressWrapper, IotaAddress, OutputKind},
         client::ClientOptionsBuilder,
@@ -1802,10 +1809,18 @@ mod tests {
             // import the accounts from the backup and assert that it's the same
 
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-            manager
-                .import_accounts(&backup_file_path, "password".to_string())
-                .await
-                .unwrap();
+            {
+                manager
+                    .import_accounts(&backup_file_path, "password".to_string())
+                    .await
+                    .unwrap();
+                if backup_file_path.extension().unwrap_or_default() == "stronghold" {
+                    assert!(
+                        super::storage_file_path(&Some(ManagerStorage::Stronghold), manager.storage_path()).exists(),
+                        true
+                    );
+                }
+            }
 
             #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
             manager.import_accounts(&backup_file_path).await.unwrap();
