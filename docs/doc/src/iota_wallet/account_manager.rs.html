@@ -2026,6 +2026,21 @@
 <span id="2023">2023</span>
 <span id="2024">2024</span>
 <span id="2025">2025</span>
+<span id="2026">2026</span>
+<span id="2027">2027</span>
+<span id="2028">2028</span>
+<span id="2029">2029</span>
+<span id="2030">2030</span>
+<span id="2031">2031</span>
+<span id="2032">2032</span>
+<span id="2033">2033</span>
+<span id="2034">2034</span>
+<span id="2035">2035</span>
+<span id="2036">2036</span>
+<span id="2037">2037</span>
+<span id="2038">2038</span>
+<span id="2039">2039</span>
+<span id="2040">2040</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2890,6 +2905,11 @@
             }
             <span class="ident">storage_file_path</span>
         };
+
+        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_variables</span>)]</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>)]</span>
+        <span class="kw">let</span> <span class="ident">stronghold_file_path</span> <span class="op">=</span> <span class="ident">storage_file_path</span>.<span class="ident">clone</span>();
+
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;sqlite-storage&quot;</span>)]</span>
         <span class="kw">let</span> <span class="ident">storage_file_path</span> <span class="op">=</span> {
             <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">is_empty</span>() {
@@ -2901,36 +2921,37 @@
 
         <span class="ident">fs</span>::<span class="ident">create_dir_all</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_folder</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;sqlite-storage&quot;</span>) <span class="op">&amp;&amp;</span> <span class="ident">source</span>.<span class="ident">extension</span>().<span class="ident">unwrap_or_default</span>() <span class="op">=</span><span class="op">=</span> <span class="string">&quot;stronghold&quot;</span> {
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>))]</span>
-            {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stronghold_manager</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">builder</span>()
-                    .<span class="ident">with_storage</span>(<span class="kw-2">&amp;</span><span class="ident">source</span>, <span class="ident">ManagerStorage</span>::<span class="ident">Stronghold</span>, <span class="prelude-val">None</span>)
-                    .<span class="ident">unwrap</span>() <span class="comment">// safe to unwrap - password is None</span>
-                    .<span class="ident">skip_polling</span>()
-                    .<span class="ident">finish</span>()
-                    .<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="ident">stronghold_manager</span>
-                    .<span class="ident">set_stronghold_password</span>(<span class="ident">stronghold_password</span>.<span class="ident">clone</span>())
-                    .<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="kw">for</span> <span class="ident">account_handle</span> <span class="kw">in</span> <span class="ident">stronghold_manager</span>.<span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">values</span>() {
-                    <span class="ident">account_handle</span>.<span class="ident">write</span>().<span class="kw">await</span>.<span class="ident">set_storage_path</span>(<span class="self">self</span>.<span class="ident">storage_path</span>.<span class="ident">clone</span>());
+        <span class="kw">if</span> <span class="ident">source</span>.<span class="ident">extension</span>().<span class="ident">unwrap_or_default</span>() <span class="op">=</span><span class="op">=</span> <span class="string">&quot;stronghold&quot;</span> {
+            <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;sqlite-storage&quot;</span>) {
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>))]</span>
+                {
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stronghold_manager</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">builder</span>()
+                        .<span class="ident">with_storage</span>(<span class="kw-2">&amp;</span><span class="ident">source</span>, <span class="ident">ManagerStorage</span>::<span class="ident">Stronghold</span>, <span class="prelude-val">None</span>)
+                        .<span class="ident">unwrap</span>() <span class="comment">// safe to unwrap - password is None</span>
+                        .<span class="ident">skip_polling</span>()
+                        .<span class="ident">finish</span>()
+                        .<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="ident">stronghold_manager</span>
+                        .<span class="ident">set_stronghold_password</span>(<span class="ident">stronghold_password</span>.<span class="ident">clone</span>())
+                        .<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="kw">for</span> <span class="ident">account_handle</span> <span class="kw">in</span> <span class="ident">stronghold_manager</span>.<span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">values</span>() {
+                        <span class="ident">account_handle</span>.<span class="ident">write</span>().<span class="kw">await</span>.<span class="ident">set_storage_path</span>(<span class="self">self</span>.<span class="ident">storage_path</span>.<span class="ident">clone</span>());
+                    }
+                    <span class="self">self</span>.<span class="ident">accounts</span> <span class="op">=</span> <span class="ident">stronghold_manager</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>();
+                    <span class="self">self</span>.<span class="ident">set_stronghold_password</span>(<span class="ident">stronghold_password</span>.<span class="ident">clone</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="kw">for</span> <span class="ident">account</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">values</span>() {
+                        <span class="ident">account</span>.<span class="ident">write</span>().<span class="kw">await</span>.<span class="ident">save</span>().<span class="kw">await</span><span class="question-mark">?</span>;
+                    }
                 }
-                <span class="self">self</span>.<span class="ident">accounts</span> <span class="op">=</span> <span class="ident">stronghold_manager</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>();
-                <span class="self">self</span>.<span class="ident">set_stronghold_password</span>(<span class="ident">stronghold_password</span>.<span class="ident">clone</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="kw">for</span> <span class="ident">account</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">values</span>() {
-                    <span class="ident">account</span>.<span class="ident">write</span>().<span class="kw">await</span>.<span class="ident">save</span>().<span class="kw">await</span><span class="question-mark">?</span>;
-                }
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>)))]</span>
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">InvalidBackupFile</span>);
             }
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>)))]</span>
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">InvalidBackupFile</span>);
-        } <span class="kw">else</span> {
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>))]</span>
             {
                 <span class="comment">// wait for stronghold to finish its tasks</span>
                 <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">stronghold</span>::<span class="ident">actor_runtime</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
             }
-            <span class="ident">fs</span>::<span class="ident">copy</span>(<span class="ident">source</span>, <span class="kw-2">&amp;</span><span class="ident">storage_file_path</span>)<span class="question-mark">?</span>;
+            <span class="ident">fs</span>::<span class="ident">copy</span>(<span class="ident">source</span>, <span class="kw-2">&amp;</span><span class="ident">stronghold_file_path</span>)<span class="question-mark">?</span>;
         }
 
         <span class="comment">// the accounts map isn&#39;t empty when restoring SQLite from a stronghold snapshot</span>
@@ -3480,6 +3501,7 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">ManagerStorage</span>;
     <span class="kw">use</span> <span class="kw">crate</span>::{
         <span class="ident">address</span>::{<span class="ident">AddressBuilder</span>, <span class="ident">AddressOutput</span>, <span class="ident">AddressWrapper</span>, <span class="ident">IotaAddress</span>, <span class="ident">OutputKind</span>},
         <span class="ident">client</span>::<span class="ident">ClientOptionsBuilder</span>,
@@ -3831,10 +3853,18 @@
             <span class="comment">// import the accounts from the backup and assert that it&#39;s the same</span>
 
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>))]</span>
-            <span class="ident">manager</span>
-                .<span class="ident">import_accounts</span>(<span class="kw-2">&amp;</span><span class="ident">backup_file_path</span>, <span class="string">&quot;password&quot;</span>.<span class="ident">to_string</span>())
-                .<span class="kw">await</span>
-                .<span class="ident">unwrap</span>();
+            {
+                <span class="ident">manager</span>
+                    .<span class="ident">import_accounts</span>(<span class="kw-2">&amp;</span><span class="ident">backup_file_path</span>, <span class="string">&quot;password&quot;</span>.<span class="ident">to_string</span>())
+                    .<span class="kw">await</span>
+                    .<span class="ident">unwrap</span>();
+                <span class="kw">if</span> <span class="ident">backup_file_path</span>.<span class="ident">extension</span>().<span class="ident">unwrap_or_default</span>() <span class="op">=</span><span class="op">=</span> <span class="string">&quot;stronghold&quot;</span> {
+                    <span class="macro">assert</span><span class="macro">!</span>(
+                        <span class="kw">super</span>::<span class="ident">storage_file_path</span>(<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(<span class="ident">ManagerStorage</span>::<span class="ident">Stronghold</span>), <span class="ident">manager</span>.<span class="ident">storage_path</span>()).<span class="ident">exists</span>(),
+                        <span class="bool-val">true</span>
+                    );
+                }
+            }
 
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>)))]</span>
             <span class="ident">manager</span>.<span class="ident">import_accounts</span>(<span class="kw-2">&amp;</span><span class="ident">backup_file_path</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
