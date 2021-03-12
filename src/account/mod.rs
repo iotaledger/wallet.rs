@@ -678,22 +678,22 @@ impl Account {
 
     /// Gets the account balance information.
     pub fn balance(&self) -> AccountBalance {
-        let (incoming, outgoing) =
-            self.list_messages(0, 0, Some(MessageType::Confirmed))
-                .iter()
-                .fold((0, 0), |(incoming, outgoing), message| {
-                    if let Some(MessagePayload::Transaction(tx)) = message.payload() {
-                        let TransactionEssence::Regular(essence) = tx.essence();
-                        if !essence.internal() {
-                            if essence.incoming() {
-                                return (incoming + essence.value(), outgoing);
-                            } else {
-                                return (incoming, outgoing + essence.value());
-                            }
+        let (incoming, outgoing) = self.list_messages(0, 0, Some(MessageType::Confirmed)).iter().fold(
+            (0, 0),
+            |(incoming, outgoing), message| {
+                if let Some(MessagePayload::Transaction(tx)) = message.payload() {
+                    let TransactionEssence::Regular(essence) = tx.essence();
+                    if !essence.internal() {
+                        if essence.incoming() {
+                            return (incoming + essence.value(), outgoing);
+                        } else {
+                            return (incoming, outgoing + essence.value());
                         }
                     }
-                    (incoming, outgoing)
-                });
+                }
+                (incoming, outgoing)
+            },
+        );
         AccountBalance {
             total: self.addresses.iter().fold(0, |acc, address| acc + address.balance()),
             available: self
