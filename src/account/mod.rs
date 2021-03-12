@@ -20,7 +20,7 @@ use std::{
     hash::{Hash, Hasher},
     ops::Deref,
     path::PathBuf,
-    sync::Arc,
+    sync::{atomic::AtomicBool, Arc},
 };
 
 mod sync;
@@ -104,6 +104,7 @@ pub struct AccountInitialiser {
     accounts: AccountStore,
     storage_path: PathBuf,
     account_options: AccountOptions,
+    is_monitoring: Arc<AtomicBool>,
     alias: Option<String>,
     created_at: Option<DateTime<Local>>,
     messages: Vec<Message>,
@@ -122,11 +123,13 @@ impl AccountInitialiser {
         accounts: AccountStore,
         storage_path: PathBuf,
         account_options: AccountOptions,
+        is_monitoring: Arc<AtomicBool>,
     ) -> Self {
         Self {
             accounts,
             storage_path,
             account_options,
+            is_monitoring,
             alias: None,
             created_at: None,
             messages: vec![],
@@ -305,11 +308,21 @@ impl AccountInitialiser {
         account.set_id(format!("{}{}", ACCOUNT_ID_PREFIX, hex::encode(digest)));
 
         let guard = if self.skip_persistence {
-            AccountHandle::new(account, self.accounts.clone(), self.account_options)
+            AccountHandle::new(
+                account,
+                self.accounts.clone(),
+                self.account_options,
+                self.is_monitoring.clone(),
+            )
         } else {
             account.save().await?;
             let account_id = account.id().clone();
-            let guard = AccountHandle::new(account, self.accounts.clone(), self.account_options);
+            let guard = AccountHandle::new(
+                account,
+                self.accounts.clone(),
+                self.account_options,
+                self.is_monitoring.clone(),
+            );
             drop(accounts);
             self.accounts.write().await.insert(account_id, guard.clone());
             let _ = crate::monitor::monitor_account_addresses_balance(guard.clone()).await;
@@ -367,15 +380,22 @@ pub struct AccountHandle {
     pub(crate) accounts: AccountStore,
     pub(crate) locked_addresses: Arc<Mutex<Vec<AddressWrapper>>>,
     pub(crate) account_options: AccountOptions,
+    pub(crate) is_monitoring: Arc<AtomicBool>,
 }
 
 impl AccountHandle {
-    pub(crate) fn new(account: Account, accounts: AccountStore, account_options: AccountOptions) -> Self {
+    pub(crate) fn new(
+        account: Account,
+        accounts: AccountStore,
+        account_options: AccountOptions,
+        is_monitoring: Arc<AtomicBool>,
+    ) -> Self {
         Self {
             inner: Arc::new(RwLock::new(account)),
             accounts,
             locked_addresses: Default::default(),
             account_options,
+            is_monitoring,
         }
     }
 

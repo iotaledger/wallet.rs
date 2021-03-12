@@ -17,6 +17,8 @@ use iota::{
     Topic, TopicEvent,
 };
 
+use std::sync::{atomic::AtomicBool, Arc};
+
 /// Unsubscribe from all topics associated with the account.
 pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
     let account = account_handle.read().await;
@@ -40,47 +42,54 @@ pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
 
 #[cfg(test)]
 async fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
-    _client_options: &ClientOptions,
+    _client_options: ClientOptions,
     _topic: String,
+    _is_monitoring: Arc<AtomicBool>,
     _handler: C,
-) -> crate::Result<()> {
-    Ok(())
+) {
 }
 
 #[cfg(not(test))]
 async fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
-    client_options: &ClientOptions,
+    client_options: ClientOptions,
     topic: String,
+    is_monitoring: Arc<AtomicBool>,
     handler: C,
-) -> crate::Result<()> {
-    let client = crate::client::get_client(&client_options).await?;
-    let mut client = client.write().await;
-    client
-        .subscriber()
-        .with_topic(Topic::new(topic)?)
-        .subscribe(handler)
-        .await?;
-    Ok(())
+) {
+    tokio::spawn(async move {
+        let client = crate::client::get_client(&client_options).await?;
+        let mut client = client.write().await;
+        if client
+            .subscriber()
+            .with_topic(Topic::new(topic)?)
+            .subscribe(handler)
+            .await
+            .is_err()
+        {
+            is_monitoring.store(false, std::sync::atomic::Ordering::Relaxed);
+        }
+        crate::Result::Ok(())
+    });
 }
 
 /// Monitor account addresses for balance changes.
-pub async fn monitor_account_addresses_balance(account_handle: AccountHandle) -> crate::Result<()> {
+pub async fn monitor_account_addresses_balance(account_handle: AccountHandle) {
     let account = account_handle.read().await;
     for address in account.addresses() {
-        monitor_address_balance(account_handle.clone(), address.address()).await?;
+        monitor_address_balance(account_handle.clone(), address.address()).await;
     }
-    Ok(())
 }
 
 /// Monitor address for balance changes.
-pub async fn monitor_address_balance(account_handle: AccountHandle, address: &AddressWrapper) -> crate::Result<()> {
+pub async fn monitor_address_balance(account_handle: AccountHandle, address: &AddressWrapper) {
     let client_options = account_handle.client_options().await;
     let client_options_ = client_options.clone();
     let address = address.clone();
 
     subscribe_to_topic(
-        &client_options_,
+        client_options_,
         format!("addresses/{}/outputs", address.to_bech32()),
+        account_handle.is_monitoring.clone(),
         move |topic_event| {
             log::info!("[MQTT] got {:?}", topic_event);
             let topic_event = topic_event.clone();
@@ -202,19 +211,15 @@ async fn process_output(
 }
 
 /// Monitor the account's unconfirmed messages for confirmation state change.
-pub async fn monitor_unconfirmed_messages(account_handle: AccountHandle) -> crate::Result<()> {
+pub async fn monitor_unconfirmed_messages(account_handle: AccountHandle) {
     let account = account_handle.read().await;
     for message in account.list_messages(0, 0, Some(MessageType::Unconfirmed)) {
-        monitor_confirmation_state_change(account_handle.clone(), message.id()).await?;
+        monitor_confirmation_state_change(account_handle.clone(), message.id()).await;
     }
-    Ok(())
 }
 
 /// Monitor message for confirmation state.
-pub async fn monitor_confirmation_state_change(
-    account_handle: AccountHandle,
-    message_id: &MessageId,
-) -> crate::Result<()> {
+pub async fn monitor_confirmation_state_change(account_handle: AccountHandle, message_id: &MessageId) {
     let (message, client_options) = {
         let account = account_handle.read().await;
         let message = account
@@ -228,8 +233,9 @@ pub async fn monitor_confirmation_state_change(
     let message_id = *message_id;
 
     subscribe_to_topic(
-        &client_options,
+        client_options,
         format!("messages/{}/metadata", message_id.to_string()),
+        account_handle.is_monitoring.clone(),
         move |topic_event| {
             let topic_event = topic_event.clone();
             let message = message.clone();
