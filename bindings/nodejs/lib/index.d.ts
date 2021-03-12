@@ -9,6 +9,8 @@ export declare enum MessageType {
   Unconfirmed = 4,
   /// A value message.
   Value = 5,
+  /// Message confirmed.
+  Confirmed = 6,
 }
 
 export declare interface RegularEssence {

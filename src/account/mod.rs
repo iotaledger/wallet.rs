@@ -827,6 +827,7 @@ impl Account {
                     MessageType::Failed => !message.broadcasted(),
                     MessageType::Unconfirmed => message.confirmed().is_none(),
                     MessageType::Value => matches!(message.payload(), Some(MessagePayload::Transaction(_))),
+                    MessageType::Confirmed => message.confirmed().unwrap_or_default(),
                 }
             } else {
                 true
@@ -1222,6 +1223,7 @@ mod tests {
             (MessageType::Sent, &sent_message),
             (MessageType::Unconfirmed, &unconfirmed_message),
             (MessageType::Value, &received_message),
+            (MessageType::Confirmed, &received_message),
         ];
         for (tx_type, expected) in cases {
             let messages = account_handle.list_messages(0, 0, Some(tx_type.clone())).await;
@@ -1229,6 +1231,7 @@ mod tests {
                 messages.len(),
                 match tx_type {
                     MessageType::Sent => 4,
+                    MessageType::Confirmed => 4,
                     MessageType::Value => 5,
                     _ => 1,
                 }
