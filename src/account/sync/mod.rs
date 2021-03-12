@@ -638,14 +638,7 @@ impl AccountSynchronizer {
     /// The account syncing process ensures that the latest metadata (balance, transactions)
     /// associated with an account is fetched from the tangle and is stored locally.
     pub async fn execute(self) -> crate::Result<SyncedAccount> {
-        let account_handle_ = self.account_handle.clone();
-        tokio::spawn(async move {
-            if let Err(e) = crate::monitor::unsubscribe(account_handle_).await {
-                log::error!("[MQTT] error unsubscribing from MQTT topics before syncing: {:?}", e);
-            }
-        })
-        .await
-        .unwrap();
+        self.account_handle.disable_mqtt();
 
         let mut account_to_sync = self.account_handle.read().await.clone();
         let return_value = match perform_sync(
@@ -840,18 +833,7 @@ impl AccountSynchronizer {
             Err(e) => Err(e),
         };
 
-        if let Err(e) = crate::monitor::monitor_account_addresses_balance(self.account_handle.clone()).await {
-            log::error!(
-                "[MQTT] error resubscribing to addresses balances after syncing: {:?}",
-                e
-            );
-        }
-        if let Err(e) = crate::monitor::monitor_unconfirmed_messages(self.account_handle.clone()).await {
-            log::error!(
-                "[MQTT] error resubscribing to unconfirmed messages after syncing: {:?}",
-                e
-            );
-        }
+        self.account_handle.enable_mqtt();
 
         return_value
     }
@@ -1542,17 +1524,11 @@ async fn perform_transfer(
     // drop the  account_ ref so it doesn't lock the monitor system
     drop(account_);
 
-    tokio::spawn(async move {
-        for address in addresses_to_watch {
-            // ignore errors because we fallback to the polling system
-            let _ = crate::monitor::monitor_address_balance(account_handle.clone(), &address);
-        }
-
+    for address in addresses_to_watch {
         // ignore errors because we fallback to the polling system
-        if let Err(e) = crate::monitor::monitor_confirmation_state_change(account_handle.clone(), &message_id).await {
-            log::error!("[MQTT] error monitoring for confirmation change: {:?}", e);
-        }
-    });
+        let _ = crate::monitor::monitor_address_balance(account_handle.clone(), &address);
+    }
+    crate::monitor::monitor_confirmation_state_change(account_handle.clone(), &message_id).await;
 
     Ok(message)
 }
