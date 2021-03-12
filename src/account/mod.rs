@@ -20,7 +20,10 @@ use std::{
     hash::{Hash, Hasher},
     ops::Deref,
     path::PathBuf,
-    sync::{atomic::AtomicBool, Arc},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
 };
 
 mod sync;
@@ -381,6 +384,7 @@ pub struct AccountHandle {
     pub(crate) locked_addresses: Arc<Mutex<Vec<AddressWrapper>>>,
     pub(crate) account_options: AccountOptions,
     pub(crate) is_monitoring: Arc<AtomicBool>,
+    is_mqtt_enabled: Arc<AtomicBool>,
 }
 
 impl AccountHandle {
@@ -396,6 +400,7 @@ impl AccountHandle {
             locked_addresses: Default::default(),
             account_options,
             is_monitoring,
+            is_mqtt_enabled: Arc::new(AtomicBool::new(true)),
         }
     }
 
@@ -410,6 +415,18 @@ impl AccountHandle {
             }
         }
         addresses
+    }
+
+    pub(crate) fn is_mqtt_enabled(&self) -> bool {
+        self.is_mqtt_enabled.load(Ordering::Relaxed)
+    }
+
+    pub(crate) fn disable_mqtt(&self) {
+        self.is_mqtt_enabled.store(false, Ordering::Relaxed);
+    }
+
+    pub(crate) fn enable_mqtt(&self) {
+        self.is_mqtt_enabled.store(false, Ordering::Relaxed);
     }
 }
 

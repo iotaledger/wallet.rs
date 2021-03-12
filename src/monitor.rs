@@ -92,18 +92,22 @@ pub async fn monitor_address_balance(account_handle: AccountHandle, address: &Ad
         account_handle.is_monitoring.clone(),
         move |topic_event| {
             log::info!("[MQTT] got {:?}", topic_event);
-            let topic_event = topic_event.clone();
-            let address = address.clone();
-            let client_options = client_options.clone();
-            let account_handle = account_handle.clone();
+            if account_handle.is_mqtt_enabled() {
+                let topic_event = topic_event.clone();
+                let address = address.clone();
+                let client_options = client_options.clone();
+                let account_handle = account_handle.clone();
 
-            crate::spawn(async move {
-                if let Err(e) =
-                    process_output(topic_event.payload.clone(), account_handle, address, client_options).await
-                {
-                    log::error!("[MQTT] error processing output: {:?}", e);
-                }
-            });
+                crate::spawn(async move {
+                    if let Err(e) =
+                        process_output(topic_event.payload.clone(), account_handle, address, client_options).await
+                    {
+                        log::error!("[MQTT] error processing output: {:?}", e);
+                    }
+                });
+            } else {
+                log::info!("[MQTT] event ignored because account disabled mqtt");
+            }
         },
     )
     .await
@@ -237,16 +241,21 @@ pub async fn monitor_confirmation_state_change(account_handle: AccountHandle, me
         format!("messages/{}/metadata", message_id.to_string()),
         account_handle.is_monitoring.clone(),
         move |topic_event| {
-            let topic_event = topic_event.clone();
-            let message = message.clone();
-            let account_handle = account_handle.clone();
-            crate::spawn(async move {
-                if let Err(e) =
-                    process_metadata(topic_event.payload.clone(), account_handle, message_id, &message).await
-                {
-                    log::error!("[MQTT] error processing metadata: {:?}", e);
-                }
-            });
+            log::info!("[MQTT] got {:?}", topic_event);
+            if account_handle.is_mqtt_enabled() {
+                let topic_event = topic_event.clone();
+                let message = message.clone();
+                let account_handle = account_handle.clone();
+                crate::spawn(async move {
+                    if let Err(e) =
+                        process_metadata(topic_event.payload.clone(), account_handle, message_id, &message).await
+                    {
+                        log::error!("[MQTT] error processing metadata: {:?}", e);
+                    }
+                });
+            } else {
+                log::info!("[MQTT] event ignored because account disabled mqtt");
+            }
         },
     )
     .await

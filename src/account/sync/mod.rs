@@ -638,14 +638,7 @@ impl AccountSynchronizer {
     /// The account syncing process ensures that the latest metadata (balance, transactions)
     /// associated with an account is fetched from the tangle and is stored locally.
     pub async fn execute(self) -> crate::Result<SyncedAccount> {
-        let account_handle_ = self.account_handle.clone();
-        tokio::spawn(async move {
-            if let Err(e) = crate::monitor::unsubscribe(account_handle_).await {
-                log::error!("[MQTT] error unsubscribing from MQTT topics before syncing: {:?}", e);
-            }
-        })
-        .await
-        .unwrap();
+        self.account_handle.disable_mqtt();
 
         let mut account_to_sync = self.account_handle.read().await.clone();
         let return_value = match perform_sync(
@@ -840,8 +833,7 @@ impl AccountSynchronizer {
             Err(e) => Err(e),
         };
 
-        crate::monitor::monitor_account_addresses_balance(self.account_handle.clone()).await;
-        crate::monitor::monitor_unconfirmed_messages(self.account_handle.clone()).await;
+        self.account_handle.enable_mqtt();
 
         return_value
     }
