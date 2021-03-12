@@ -852,7 +852,7 @@ impl AccountManager {
         }
 
         #[allow(unused_variables)]
-        #[cfg(feature = "stronghold-storage")]
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         let storage_file_path = {
             let storage_file_path = self.storage_folder.join(STRONGHOLD_FILENAME);
             let storage_id = crate::storage::get(&self.storage_path).await?.lock().await.id();
@@ -863,7 +863,7 @@ impl AccountManager {
         };
 
         #[allow(unused_variables)]
-        #[cfg(feature = "stronghold-storage")]
+        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         let stronghold_file_path = storage_file_path.clone();
 
         #[cfg(feature = "sqlite-storage")]
