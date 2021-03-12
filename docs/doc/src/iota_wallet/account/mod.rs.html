@@ -1252,6 +1252,43 @@
 <span id="1249">1249</span>
 <span id="1250">1250</span>
 <span id="1251">1251</span>
+<span id="1252">1252</span>
+<span id="1253">1253</span>
+<span id="1254">1254</span>
+<span id="1255">1255</span>
+<span id="1256">1256</span>
+<span id="1257">1257</span>
+<span id="1258">1258</span>
+<span id="1259">1259</span>
+<span id="1260">1260</span>
+<span id="1261">1261</span>
+<span id="1262">1262</span>
+<span id="1263">1263</span>
+<span id="1264">1264</span>
+<span id="1265">1265</span>
+<span id="1266">1266</span>
+<span id="1267">1267</span>
+<span id="1268">1268</span>
+<span id="1269">1269</span>
+<span id="1270">1270</span>
+<span id="1271">1271</span>
+<span id="1272">1272</span>
+<span id="1273">1273</span>
+<span id="1274">1274</span>
+<span id="1275">1275</span>
+<span id="1276">1276</span>
+<span id="1277">1277</span>
+<span id="1278">1278</span>
+<span id="1279">1279</span>
+<span id="1280">1280</span>
+<span id="1281">1281</span>
+<span id="1282">1282</span>
+<span id="1283">1283</span>
+<span id="1284">1284</span>
+<span id="1285">1285</span>
+<span id="1286">1286</span>
+<span id="1287">1287</span>
+<span id="1288">1288</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1275,7 +1312,10 @@
     <span class="ident">hash</span>::{<span class="ident">Hash</span>, <span class="ident">Hasher</span>},
     <span class="ident">ops</span>::<span class="ident">Deref</span>,
     <span class="ident">path</span>::<span class="ident">PathBuf</span>,
-    <span class="ident">sync</span>::<span class="ident">Arc</span>,
+    <span class="ident">sync</span>::{
+        <span class="ident">atomic</span>::{<span class="ident">AtomicBool</span>, <span class="ident">Ordering</span>},
+        <span class="ident">Arc</span>,
+    },
 };
 
 <span class="kw">mod</span> <span class="ident">sync</span>;
@@ -1359,6 +1399,7 @@
     <span class="ident">accounts</span>: <span class="ident">AccountStore</span>,
     <span class="ident">storage_path</span>: <span class="ident">PathBuf</span>,
     <span class="ident">account_options</span>: <span class="ident">AccountOptions</span>,
+    <span class="ident">is_monitoring</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
     <span class="ident">alias</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="ident">created_at</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Local</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">messages</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span>,
@@ -1377,11 +1418,13 @@
         <span class="ident">accounts</span>: <span class="ident">AccountStore</span>,
         <span class="ident">storage_path</span>: <span class="ident">PathBuf</span>,
         <span class="ident">account_options</span>: <span class="ident">AccountOptions</span>,
+        <span class="ident">is_monitoring</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">accounts</span>,
             <span class="ident">storage_path</span>,
             <span class="ident">account_options</span>,
+            <span class="ident">is_monitoring</span>,
             <span class="ident">alias</span>: <span class="prelude-val">None</span>,
             <span class="ident">created_at</span>: <span class="prelude-val">None</span>,
             <span class="ident">messages</span>: <span class="macro">vec</span><span class="macro">!</span>[],
@@ -1560,11 +1603,21 @@
         <span class="ident">account</span>.<span class="ident">set_id</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}{}&quot;</span>, <span class="ident">ACCOUNT_ID_PREFIX</span>, <span class="ident">hex</span>::<span class="ident">encode</span>(<span class="ident">digest</span>)));
 
         <span class="kw">let</span> <span class="ident">guard</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">skip_persistence</span> {
-            <span class="ident">AccountHandle</span>::<span class="ident">new</span>(<span class="ident">account</span>, <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>(), <span class="self">self</span>.<span class="ident">account_options</span>)
+            <span class="ident">AccountHandle</span>::<span class="ident">new</span>(
+                <span class="ident">account</span>,
+                <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>(),
+                <span class="self">self</span>.<span class="ident">account_options</span>,
+                <span class="self">self</span>.<span class="ident">is_monitoring</span>.<span class="ident">clone</span>(),
+            )
         } <span class="kw">else</span> {
             <span class="ident">account</span>.<span class="ident">save</span>().<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">account_id</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">id</span>().<span class="ident">clone</span>();
-            <span class="kw">let</span> <span class="ident">guard</span> <span class="op">=</span> <span class="ident">AccountHandle</span>::<span class="ident">new</span>(<span class="ident">account</span>, <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>(), <span class="self">self</span>.<span class="ident">account_options</span>);
+            <span class="kw">let</span> <span class="ident">guard</span> <span class="op">=</span> <span class="ident">AccountHandle</span>::<span class="ident">new</span>(
+                <span class="ident">account</span>,
+                <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>(),
+                <span class="self">self</span>.<span class="ident">account_options</span>,
+                <span class="self">self</span>.<span class="ident">is_monitoring</span>.<span class="ident">clone</span>(),
+            );
             <span class="ident">drop</span>(<span class="ident">accounts</span>);
             <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">write</span>().<span class="kw">await</span>.<span class="ident">insert</span>(<span class="ident">account_id</span>, <span class="ident">guard</span>.<span class="ident">clone</span>());
             <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">monitor</span>::<span class="ident">monitor_account_addresses_balance</span>(<span class="ident">guard</span>.<span class="ident">clone</span>()).<span class="kw">await</span>;
@@ -1622,15 +1675,24 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">accounts</span>: <span class="ident">AccountStore</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">locked_addresses</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressWrapper</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">account_options</span>: <span class="ident">AccountOptions</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">is_monitoring</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
+    <span class="ident">is_mqtt_enabled</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">AccountHandle</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">account</span>: <span class="ident">Account</span>, <span class="ident">accounts</span>: <span class="ident">AccountStore</span>, <span class="ident">account_options</span>: <span class="ident">AccountOptions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(
+        <span class="ident">account</span>: <span class="ident">Account</span>,
+        <span class="ident">accounts</span>: <span class="ident">AccountStore</span>,
+        <span class="ident">account_options</span>: <span class="ident">AccountOptions</span>,
+        <span class="ident">is_monitoring</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">inner</span>: <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">RwLock</span>::<span class="ident">new</span>(<span class="ident">account</span>)),
             <span class="ident">accounts</span>,
             <span class="ident">locked_addresses</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
             <span class="ident">account_options</span>,
+            <span class="ident">is_monitoring</span>,
+            <span class="ident">is_mqtt_enabled</span>: <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">true</span>)),
         }
     }
 
@@ -1645,6 +1707,18 @@
             }
         }
         <span class="ident">addresses</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">is_mqtt_enabled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="self">self</span>.<span class="ident">is_mqtt_enabled</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Relaxed</span>)
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">disable_mqtt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="self">self</span>.<span class="ident">is_mqtt_enabled</span>.<span class="ident">store</span>(<span class="bool-val">false</span>, <span class="ident">Ordering</span>::<span class="ident">Relaxed</span>);
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">enable_mqtt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="self">self</span>.<span class="ident">is_mqtt_enabled</span>.<span class="ident">store</span>(<span class="bool-val">false</span>, <span class="ident">Ordering</span>::<span class="ident">Relaxed</span>);
     }
 }
 
