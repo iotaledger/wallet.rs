@@ -878,8 +878,9 @@ impl AccountManager {
         fs::create_dir_all(&self.storage_folder)?;
 
         if source.extension().unwrap_or_default() == "stronghold" {
-            if cfg!(feature = "sqlite-storage") {
-                #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            {
+                #[cfg(feature = "sqlite-storage")]
                 {
                     let mut stronghold_manager = Self::builder()
                         .with_storage(&source, ManagerStorage::Stronghold, None)
@@ -899,15 +900,12 @@ impl AccountManager {
                         account.write().await.save().await?;
                     }
                 }
-                #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-                return Err(crate::Error::InvalidBackupFile);
-            }
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-            {
                 // wait for stronghold to finish its tasks
                 let _ = crate::stronghold::actor_runtime().lock().await;
+                fs::copy(source, &stronghold_file_path)?;
             }
-            fs::copy(source, &stronghold_file_path)?;
+            #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
+            return Err(crate::Error::InvalidBackupFile);
         }
 
         // the accounts map isn't empty when restoring SQLite from a stronghold snapshot
