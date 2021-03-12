@@ -896,10 +896,10 @@
 
 <span class="kw">use</span> <span class="ident">crypto</span>::<span class="ident">hashes</span>::{<span class="ident">blake2b</span>::<span class="ident">Blake2b256</span>, <span class="ident">Digest</span>};
 
+<span class="kw">use</span> <span class="ident">crypto</span>::<span class="ident">keys</span>::<span class="ident">slip10</span>::<span class="ident">Chain</span>;
 <span class="kw">use</span> <span class="ident">iota</span>::{<span class="ident">Address</span>, <span class="ident">Ed25519Address</span>, <span class="ident">Ed25519Signature</span>};
 <span class="kw">use</span> <span class="ident">iota_stronghold</span>::{
-    <span class="ident">hd</span>::<span class="ident">Chain</span>, <span class="ident">Location</span>, <span class="ident">ProcResult</span>, <span class="ident">Procedure</span>, <span class="ident">RecordHint</span>, <span class="ident">ResultMessage</span>, <span class="ident">SLIP10DeriveInput</span>, <span class="ident">Stronghold</span>,
-    <span class="ident">StrongholdFlags</span>,
+    <span class="ident">Location</span>, <span class="ident">ProcResult</span>, <span class="ident">Procedure</span>, <span class="ident">RecordHint</span>, <span class="ident">ResultMessage</span>, <span class="ident">SLIP10DeriveInput</span>, <span class="ident">Stronghold</span>, <span class="ident">StrongholdFlags</span>,
 };
 <span class="kw">use</span> <span class="ident">once_cell</span>::<span class="ident">sync</span>::{<span class="ident">Lazy</span>, <span class="ident">OnceCell</span>};
 <span class="kw">use</span> <span class="ident">riker</span>::<span class="ident">actors</span>::<span class="kw-2">*</span>;
