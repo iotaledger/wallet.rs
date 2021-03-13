@@ -30,23 +30,12 @@ use iota::{
 };
 use serde::Serialize;
 use slip10::BIP32Path;
-use tokio::{
-    sync::{mpsc::channel, MutexGuard},
-    time::sleep,
-};
+use tokio::sync::MutexGuard;
 
-use std::{
-    collections::HashSet,
-    convert::TryInto,
-    num::NonZeroU64,
-    sync::{Arc, Mutex},
-    thread,
-    time::Duration,
-};
+use std::{collections::HashSet, convert::TryInto, num::NonZeroU64};
 
 mod input_selection;
 
-const OUTPUT_LOCK_TIMEOUT: Duration = Duration::from_secs(30);
 const DUST_ALLOWANCE_VALUE: u64 = 1_000_000;
 
 async fn get_address_outputs(
