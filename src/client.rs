@@ -53,21 +53,19 @@ pub(crate) async fn get_client(options: &ClientOptions) -> crate::Result<Arc<RwL
         }
 
         for node in options.nodes() {
-            // safe to unwrap since we're sure we have valid URLs
             if let Some(auth) = &node.auth {
                 client_builder = client_builder.with_node_auth(node.url.as_str(), &auth.username, &auth.password)?;
             } else {
+                // safe to unwrap since we're sure we have valid URLs
                 client_builder = client_builder.with_node(node.url.as_str()).unwrap();
             }
         }
 
         if let Some(node) = options.node() {
-            // safe to unwrap since we're sure we have valid URLs
             if let Some(auth) = &node.auth {
-                client_builder = client_builder
-                    .with_node_auth(node.url.as_str(), &auth.username, &auth.password)
-                    .unwrap();
+                client_builder = client_builder.with_node_auth(node.url.as_str(), &auth.username, &auth.password)?;
             } else {
+                // safe to unwrap since we're sure we have valid URLs
                 client_builder = client_builder.with_node(node.url.as_str()).unwrap();
             }
         }
@@ -126,6 +124,7 @@ fn convert_urls(urls: &[&str]) -> crate::Result<Vec<Url>> {
     if let Some(err) = err {
         Err(err.into())
     } else {
+        // safe to unwrap: all URLs were parsed above
         let urls = urls.iter().map(|url| url.clone().unwrap()).collect();
         Ok(urls)
     }
