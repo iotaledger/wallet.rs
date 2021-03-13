@@ -32,7 +32,6 @@ log = "0.4"
 # stronghold
 iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "b8904ff0df9c963980ae148815ad56c40588d84a", optional = true }
 riker = { version = "0.4", optional = true }
-blake2 = { version = "0.9", optional = true }
 slog = { version = "2.7", optional = true }
 zeroize = { version = "1.2", features = ["zeroize_derive"] }
 
@@ -53,8 +52,8 @@ reqwest = { version = "0.11", features = ["json"] }
 
 [features]
 default = ["stronghold", "stronghold-storage"]
-stronghold = ["iota-stronghold", "riker", "blake2", "slog"]
-stronghold-storage = ["iota-stronghold", "riker", "blake2", "slog"]
+stronghold = ["iota-stronghold", "riker", "slog"]
+stronghold-storage = ["iota-stronghold", "riker", "slog"]
 sqlite-storage = ["rusqlite"]
 ledger-nano = ["iota-ledger"]
 ledger-nano-simulator = ["iota-ledger"]
