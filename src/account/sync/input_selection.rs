@@ -25,9 +25,7 @@ pub fn select_input(target: u64, mut available_utxos: Vec<Input>) -> crate::Resu
     }
 
     // Not insufficient funds, but still not possible to create this transaction because it would create dust
-    if target != total_available_balance
-        && target as i64 > (total_available_balance as i64 - DUST_ALLOWANCE_VALUE as i64)
-    {
+    if target != total_available_balance && total_available_balance - target < DUST_ALLOWANCE_VALUE {
         return Err(crate::Error::DustError(format!(
             "Transaction would leave dust behind ({}i)",
             total_available_balance - target
