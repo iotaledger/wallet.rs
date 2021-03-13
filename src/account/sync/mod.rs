@@ -906,8 +906,9 @@ impl SyncedAccount {
         let available_addresses: Vec<input_selection::Input> = addresses
             .iter()
             .filter(|a| {
-                // we allow an input equal to the deposit address only if it has more than one output
-                (a.address() != address || a.available_outputs(&account).len() > 1)
+                // we allow an input equal to the deposit address only if it has balance <= transfer amount, so there
+                // can't be a remainder value with this address as input alone
+                (a.address() == address && a.available_balance(&account) <= transfer_obj.amount.get())
                     && a.available_balance(&account) > 0
                     && !locked_addresses.contains(a.address())
             })
@@ -917,32 +918,8 @@ impl SyncedAccount {
                 balance: a.available_balance(&account),
             })
             .collect();
-        let mut selected_addresses = input_selection::select_input(transfer_obj.amount.get(), available_addresses)?;
+        let selected_addresses = input_selection::select_input(transfer_obj.amount.get(), available_addresses)?;
         let has_remainder = selected_addresses.iter().fold(0, |acc, a| acc + a.balance) > transfer_obj.amount.get();
-
-        // if we're reusing the input address for remainder output
-        // and we have remainder value, we should run the input selection again
-        // without the output address.
-        if has_remainder
-            && transfer_obj.remainder_value_strategy == RemainderValueStrategy::ReuseAddress
-            && addresses.iter().any(|input| input.address() == &transfer_obj.address)
-        {
-            let available_addresses: Vec<input_selection::Input> = addresses
-                .iter()
-                .filter(|a| {
-                    // we do not allow the deposit address as input address
-                    a.address() != address
-                        && a.available_balance(&account) > 0
-                        && !locked_addresses.contains(a.address())
-                })
-                .map(|a| input_selection::Input {
-                    address: a.address().clone(),
-                    internal: *a.internal(),
-                    balance: a.available_balance(&account),
-                })
-                .collect();
-            selected_addresses = input_selection::select_input(transfer_obj.amount.get(), available_addresses)?;
-        }
 
         locked_addresses.extend(
             selected_addresses
@@ -952,7 +929,15 @@ impl SyncedAccount {
         );
 
         let remainder = if has_remainder {
-            selected_addresses.last().cloned()
+            selected_addresses
+                .clone()
+                .into_iter()
+                // We filter the output address, but since we checked that this address balance <=
+                // transfer_obj.amount.get() we need to have another input address
+                .filter(|a| a.address != transfer_obj.address)
+                .collect::<Vec<input_selection::Input>>()
+                .last()
+                .cloned()
         } else {
             None
         };
