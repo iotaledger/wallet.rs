@@ -1289,6 +1289,9 @@
 <span id="1286">1286</span>
 <span id="1287">1287</span>
 <span id="1288">1288</span>
+<span id="1289">1289</span>
+<span id="1290">1290</span>
+<span id="1291">1291</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1970,22 +1973,22 @@
 
     <span class="doccomment">/// Gets the account balance information.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">balance</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AccountBalance</span> {
-        <span class="kw">let</span> (<span class="ident">incoming</span>, <span class="ident">outgoing</span>) <span class="op">=</span>
-            <span class="self">self</span>.<span class="ident">list_messages</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="prelude-val">None</span>)
-                .<span class="ident">iter</span>()
-                .<span class="ident">fold</span>((<span class="number">0</span>, <span class="number">0</span>), <span class="op">|</span>(<span class="ident">incoming</span>, <span class="ident">outgoing</span>), <span class="ident">message</span><span class="op">|</span> {
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">MessagePayload</span>::<span class="ident">Transaction</span>(<span class="ident">tx</span>)) <span class="op">=</span> <span class="ident">message</span>.<span class="ident">payload</span>() {
-                        <span class="kw">let</span> <span class="ident">TransactionEssence</span>::<span class="ident">Regular</span>(<span class="ident">essence</span>) <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">essence</span>();
-                        <span class="kw">if</span> <span class="op">!</span><span class="ident">essence</span>.<span class="ident">internal</span>() {
-                            <span class="kw">if</span> <span class="ident">essence</span>.<span class="ident">incoming</span>() {
-                                <span class="kw">return</span> (<span class="ident">incoming</span> <span class="op">+</span> <span class="ident">essence</span>.<span class="ident">value</span>(), <span class="ident">outgoing</span>);
-                            } <span class="kw">else</span> {
-                                <span class="kw">return</span> (<span class="ident">incoming</span>, <span class="ident">outgoing</span> <span class="op">+</span> <span class="ident">essence</span>.<span class="ident">value</span>());
-                            }
+        <span class="kw">let</span> (<span class="ident">incoming</span>, <span class="ident">outgoing</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">list_messages</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="ident">MessageType</span>::<span class="ident">Confirmed</span>)).<span class="ident">iter</span>().<span class="ident">fold</span>(
+            (<span class="number">0</span>, <span class="number">0</span>),
+            <span class="op">|</span>(<span class="ident">incoming</span>, <span class="ident">outgoing</span>), <span class="ident">message</span><span class="op">|</span> {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">MessagePayload</span>::<span class="ident">Transaction</span>(<span class="ident">tx</span>)) <span class="op">=</span> <span class="ident">message</span>.<span class="ident">payload</span>() {
+                    <span class="kw">let</span> <span class="ident">TransactionEssence</span>::<span class="ident">Regular</span>(<span class="ident">essence</span>) <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">essence</span>();
+                    <span class="kw">if</span> <span class="op">!</span><span class="ident">essence</span>.<span class="ident">internal</span>() {
+                        <span class="kw">if</span> <span class="ident">essence</span>.<span class="ident">incoming</span>() {
+                            <span class="kw">return</span> (<span class="ident">incoming</span> <span class="op">+</span> <span class="ident">essence</span>.<span class="ident">value</span>(), <span class="ident">outgoing</span>);
+                        } <span class="kw">else</span> {
+                            <span class="kw">return</span> (<span class="ident">incoming</span>, <span class="ident">outgoing</span> <span class="op">+</span> <span class="ident">essence</span>.<span class="ident">value</span>());
                         }
                     }
-                    (<span class="ident">incoming</span>, <span class="ident">outgoing</span>)
-                });
+                }
+                (<span class="ident">incoming</span>, <span class="ident">outgoing</span>)
+            },
+        );
         <span class="ident">AccountBalance</span> {
             <span class="ident">total</span>: <span class="self">self</span>.<span class="ident">addresses</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">address</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">address</span>.<span class="ident">balance</span>()),
             <span class="ident">available</span>: <span class="self">self</span>
@@ -2119,6 +2122,7 @@
                     <span class="ident">MessageType</span>::<span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">!</span><span class="ident">message</span>.<span class="ident">broadcasted</span>(),
                     <span class="ident">MessageType</span>::<span class="ident">Unconfirmed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">message</span>.<span class="ident">confirmed</span>().<span class="ident">is_none</span>(),
                     <span class="ident">MessageType</span>::<span class="ident">Value</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">matches</span><span class="macro">!</span>(<span class="ident">message</span>.<span class="ident">payload</span>(), <span class="prelude-val">Some</span>(<span class="ident">MessagePayload</span>::<span class="ident">Transaction</span>(<span class="kw">_</span>))),
+                    <span class="ident">MessageType</span>::<span class="ident">Confirmed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">message</span>.<span class="ident">confirmed</span>().<span class="ident">unwrap_or_default</span>(),
                 }
             } <span class="kw">else</span> {
                 <span class="bool-val">true</span>
@@ -2514,6 +2518,7 @@
             (<span class="ident">MessageType</span>::<span class="ident">Sent</span>, <span class="kw-2">&amp;</span><span class="ident">sent_message</span>),
             (<span class="ident">MessageType</span>::<span class="ident">Unconfirmed</span>, <span class="kw-2">&amp;</span><span class="ident">unconfirmed_message</span>),
             (<span class="ident">MessageType</span>::<span class="ident">Value</span>, <span class="kw-2">&amp;</span><span class="ident">received_message</span>),
+            (<span class="ident">MessageType</span>::<span class="ident">Confirmed</span>, <span class="kw-2">&amp;</span><span class="ident">received_message</span>),
         ];
         <span class="kw">for</span> (<span class="ident">tx_type</span>, <span class="ident">expected</span>) <span class="kw">in</span> <span class="ident">cases</span> {
             <span class="kw">let</span> <span class="ident">messages</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">list_messages</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="ident">tx_type</span>.<span class="ident">clone</span>())).<span class="kw">await</span>;
@@ -2521,6 +2526,7 @@
                 <span class="ident">messages</span>.<span class="ident">len</span>(),
                 <span class="kw">match</span> <span class="ident">tx_type</span> {
                     <span class="ident">MessageType</span>::<span class="ident">Sent</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">4</span>,
+                    <span class="ident">MessageType</span>::<span class="ident">Confirmed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">4</span>,
                     <span class="ident">MessageType</span>::<span class="ident">Value</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">5</span>,
                     <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
                 }
