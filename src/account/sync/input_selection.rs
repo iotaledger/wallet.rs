@@ -72,12 +72,7 @@ fn single_random_draw(target: u64, mut available_utxos: Vec<Input>) -> Vec<Input
             let value = address.balance;
             let old_sum = sum;
             sum += value;
-            if old_sum < target {
-                true
-            } else {
-                // Check that remaining value doesn't create dust
-                old_sum - target < DUST_ALLOWANCE_VALUE
-            }
+            old_sum < target || (old_sum - target < DUST_ALLOWANCE_VALUE && old_sum != target)
         })
         .collect()
 }
