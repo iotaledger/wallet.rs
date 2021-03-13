@@ -175,9 +175,11 @@ pub(crate) async fn sync_address(
         });
     }
 
-    let results = futures::future::try_join_all(futures_).await.unwrap();
+    let results = futures::future::try_join_all(futures_)
+        .await
+        .expect("failed to sync address");
     for res in results {
-        let (found_output, found_message) = res.unwrap();
+        let (found_output, found_message) = res?;
         found_outputs.push(found_output);
         if let Some(m) = found_message {
             found_messages.push(m);
@@ -324,9 +326,11 @@ async fn sync_addresses(
             });
         }
 
-        let results = futures::future::try_join_all(futures_).await.unwrap();
+        let results = futures::future::try_join_all(futures_)
+            .await
+            .expect("failed to sync addresses");
         for res in results {
-            let (found_messages, address) = res.unwrap();
+            let (found_messages, address) = res?;
             // if the address is a change address and has no outputs, we ignore it
             if !(*address.internal() && address.outputs().is_empty()) {
                 curr_generated_addresses.push(address);
@@ -461,8 +465,11 @@ async fn sync_messages(
         });
     }
 
-    for res in futures::future::try_join_all(futures_).await.expect("A") {
-        let (address, found_messages) = res.unwrap();
+    for res in futures::future::try_join_all(futures_)
+        .await
+        .expect("failed to sync messages")
+    {
+        let (address, found_messages) = res?;
         addresses.push(address);
         messages.extend(found_messages);
     }
@@ -556,7 +563,10 @@ async fn perform_sync(
         });
     }
     let mut parsed_messages = Vec::new();
-    for message in futures::future::try_join_all(futures_).await.unwrap() {
+    for message in futures::future::try_join_all(futures_)
+        .await
+        .expect("failed to parse messages")
+    {
         parsed_messages.push(message?);
     }
     log::debug!("[SYNC] new messages: {:#?}", parsed_messages);
@@ -1035,45 +1045,6 @@ impl SyncedAccount {
 
         if value > balance.total {
             return Err(crate::Error::InsufficientFunds);
-        }
-
-        let available_balance = balance.available;
-        drop(account_);
-
-        // if the transfer value exceeds the account's available balance,
-        // wait for an account update or sync it with the tangle
-        if value > available_balance {
-            let (tx, mut rx) = channel(1);
-            let tx = Arc::new(Mutex::new(tx));
-
-            let account_handle = self.account_handle.clone();
-            thread::spawn(move || {
-                let tx = tx.lock().unwrap();
-                for _ in 1..30 {
-                    thread::sleep(OUTPUT_LOCK_TIMEOUT / 30);
-                    let account = crate::block_on(async { account_handle.read().await });
-                    // the account received an update and now the balance is sufficient
-                    if value <= account.balance().available {
-                        let _ = tx.send(());
-                        break;
-                    }
-                }
-            });
-
-            let delay = sleep(Duration::from_millis(50));
-            tokio::pin!(delay);
-            tokio::select! {
-                v = rx.recv() => {
-                    if v.is_none() {
-                        // if we got an error waiting for the account update, we try to sync it
-                        self.account_handle.sync().await.execute().await?;
-                    }
-                }
-                _ = &mut delay => {
-                    // if we got a timeout waiting for the account update, we try to sync it
-                    self.account_handle.sync().await.execute().await?;
-                }
-            }
         }
 
         let account_ = self.account_handle.read().await;
