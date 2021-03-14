@@ -419,7 +419,7 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;provided backup path isn&#39;t a valid file&quot;</span>)]</span>
     <span class="ident">InvalidBackupFile</span>,
     <span class="doccomment">/// Backup `destination` argument is invalid</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;backup destination must be a directory and it must exist&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;backup destination must be an existing directory or a file on an existing directory&quot;</span>)]</span>
     <span class="ident">InvalidBackupDestination</span>,
     <span class="doccomment">/// the storage adapter isn&#39;t set</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;the storage adapter isn&#39;t set; use the AccountManagerBuilder&#39;s `with_storage` method or one of the default storages with the crate features `sqlite-storage` and `stronghold-storage`.&quot;</span>)]</span>
