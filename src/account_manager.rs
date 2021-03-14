@@ -762,7 +762,10 @@ impl AccountManager {
     #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
     pub async fn backup<P: AsRef<Path>>(&self, destination: P) -> crate::Result<PathBuf> {
         let destination = destination.as_ref().to_path_buf();
-        if !(destination.is_dir() || destination.parent().map(|parent| parent.is_dir()).unwrap_or_default()) {
+        // destination can't be an existing file, a non-existing directory or a file in a non-existing directory
+        if destination.is_file()
+            || !(destination.is_dir() || destination.parent().map(|parent| parent.is_dir()).unwrap_or_default())
+        {
             return Err(crate::Error::InvalidBackupDestination);
         }
 
