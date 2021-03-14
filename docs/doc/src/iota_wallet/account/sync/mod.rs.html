@@ -1724,8 +1724,6 @@
 <span id="1721">1721</span>
 <span id="1722">1722</span>
 <span id="1723">1723</span>
-<span id="1724">1724</span>
-<span id="1725">1725</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2764,8 +2762,6 @@
         <span class="kw">if</span> <span class="ident">value</span> <span class="op">&gt;</span> <span class="ident">balance</span>.<span class="ident">total</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">InsufficientFunds</span>);
         }
-
-        <span class="kw">let</span> <span class="ident">account_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>;
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">RemainderValueStrategy</span>::<span class="ident">AccountAddress</span>(<span class="kw-2">ref</span> <span class="ident">remainder_deposit_address</span>) <span class="op">=</span>
             <span class="ident">transfer_obj</span>.<span class="ident">remainder_value_strategy</span>
