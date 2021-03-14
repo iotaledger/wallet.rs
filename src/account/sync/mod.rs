@@ -729,22 +729,26 @@ impl AccountSynchronizer {
                             // we use this flag in case the new balance is 0
                             let mut emitted_event = false;
                             // check new and updated outputs to find message ids
-                            for output in address_after_sync.outputs() {
-                                if !before_sync_outputs.contains(&output) {
-                                    emit_balance_change(
-                                        &account_ref,
-                                        address_after_sync.address(),
-                                        Some(output.message_id),
-                                        if output.is_spent {
-                                            BalanceChange::spent(output.amount)
-                                        } else {
-                                            BalanceChange::received(output.amount)
-                                        },
-                                        self.account_handle.account_options.persist_events,
-                                    )
-                                    .await?;
-                                    output_change_balance += output.amount;
-                                    emitted_event = true;
+                            // note that this is unreliable if we're not syncing spent outputs,
+                            // since not all information are collected.
+                            if self.account_handle.account_options.sync_spent_outputs {
+                                for output in address_after_sync.outputs() {
+                                    if !before_sync_outputs.contains(&output) {
+                                        emit_balance_change(
+                                            &account_ref,
+                                            address_after_sync.address(),
+                                            Some(output.message_id),
+                                            if output.is_spent {
+                                                BalanceChange::spent(output.amount)
+                                            } else {
+                                                BalanceChange::received(output.amount)
+                                            },
+                                            self.account_handle.account_options.persist_events,
+                                        )
+                                        .await?;
+                                        output_change_balance += output.amount;
+                                        emitted_event = true;
+                                    }
                                 }
                             }
 
