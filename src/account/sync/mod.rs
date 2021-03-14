@@ -930,13 +930,13 @@ impl SyncedAccount {
 
         let remainder = if has_remainder {
             selected_addresses
-                .clone()
-                .into_iter()
+                .iter()
                 // We filter the output address, but since we checked that this address balance <=
                 // transfer_obj.amount.get() we need to have another input address
                 .filter(|a| a.address != transfer_obj.address)
-                .collect::<Vec<input_selection::Input>>()
+                .collect::<Vec<&input_selection::Input>>()
                 .last()
+                .cloned()
                 .cloned()
         } else {
             None
