@@ -1036,8 +1036,6 @@ impl SyncedAccount {
             return Err(crate::Error::InsufficientFunds);
         }
 
-        let account_ = self.account_handle.read().await;
-
         if let RemainderValueStrategy::AccountAddress(ref remainder_deposit_address) =
             transfer_obj.remainder_value_strategy
         {

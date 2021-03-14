@@ -49,12 +49,13 @@ pub fn select_input(target: u64, mut available_utxos: Vec<Input>) -> crate::Resu
     );
 
     let selected_balance = selected_coins.iter().fold(0, |acc, address| acc + address.balance);
-    let remaining_value = selected_coins.iter().fold(0, |acc, address| acc + address.balance) as i64 - target as i64;
+    let remaining_value = if selected_balance >= target {
+        selected_balance - target
+    } else {
+        0
+    };
 
-    if result
-        && selected_balance >= target
-        && (remaining_value == 0 || remaining_value.abs() > DUST_ALLOWANCE_VALUE as i64)
-    {
+    if result && selected_balance >= target && (remaining_value == 0 || remaining_value > DUST_ALLOWANCE_VALUE) {
         Ok(selected_coins)
     } else {
         // If no match, Single Random Draw
