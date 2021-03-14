@@ -4,24 +4,14 @@
 First of all, let's initialize (open) a secure storage for individual accounts (backed up by Stronghold by default) using `AccountManager` instance:
 
 ```python
-import iota_wallet as iw
-
-account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
-) #note: `storage` and `storage_path` have to be declared together
-
-account_manager.set_stronghold_password("password")
-
-# mnemonic (seed) should be set only for new storage
-# once the storage has been initialized earlier then you should omit this step
-account_manager.store_mnemonic("Stronghold")
+{{ #include ../../../bindings/python/examples/1a_create_account_manager.py }}
 ```
 * Storage is initialized under the given path (`./alice-database`)
 * Password is set (`password`)
 * Only during the initialization new database: Stronghold mnemonic (seed) is automatically generated and stored. Note: the library can also generate mnemonic for other signer types, such as `LedgerNano`, or `LedgerNanoSimulator`.
 * Alternatively, own mnemonic can be stored using `store_mnemonic(signer_type, mnemonic=None)` method and validated via `verify_mnemonic(mnemonic): None` method later
 
-Just a reminder. Any information stored via Stronghold is encrypted at rest.
+Just a reminder. Any information stored using Stronghold is encrypted at rest.
 
 The `AccountManager` instance is the main vehicle while dealing with the underlying wallet storage. 
 
