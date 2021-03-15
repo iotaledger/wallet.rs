@@ -219,9 +219,9 @@ pub enum MessageType {
         /// The WOTS address security level.
         #[serde(rename = "securityLevel")]
         security_level: Option<u8>,
-        /// The address gap limit.
-        #[serde(rename = "gapLimit")]
-        gap_limit: Option<u64>,
+        /// The initial address index.
+        #[serde(rename = "initialAddressIndex")]
+        initial_address_index: Option<u64>,
     },
 }
 
@@ -304,7 +304,7 @@ impl Serialize for MessageType {
             MessageType::GetMigrationData {
                 node: _,
                 seed: _,
-                gap_limit: _,
+                initial_address_index: _,
                 security_level: _,
             } => serializer.serialize_unit_variant("MessageType", 24, "GetMigrationData"),
         }

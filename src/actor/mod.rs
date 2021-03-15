@@ -216,15 +216,15 @@ impl WalletMessageHandler {
                 node,
                 seed,
                 security_level,
-                gap_limit,
+                initial_address_index,
             } => {
                 convert_async_panics(|| async {
                     let mut finder = MigrationDataFinder::new(&node, &seed)?;
                     if let Some(level) = security_level {
                         finder = finder.with_security_level(*level);
                     }
-                    if let Some(gap_limit) = gap_limit {
-                        finder = finder.with_gap_limit(*gap_limit);
+                    if let Some(initial_address_index) = initial_address_index {
+                        finder = finder.with_initial_address_index(*initial_address_index);
                     }
                     let data = self.account_manager.migration_data(finder).await?;
                     seed.zeroize();

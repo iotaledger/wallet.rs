@@ -22,6 +22,7 @@ use std::{
     fs,
     hash::{Hash, Hasher},
     num::NonZeroU64,
+    ops::Range,
     panic::AssertUnwindSafe,
     path::{Path, PathBuf},
     sync::{
@@ -290,7 +291,7 @@ pub(crate) struct AccountOptions {
 struct CachedMigrationData {
     seed: TernarySeed,
     seed_hash: u64,
-    inputs: Vec<InputData>,
+    inputs: HashMap<Range<u64>, Vec<InputData>>,
 }
 
 /// The account manager.
@@ -370,6 +371,7 @@ pub struct MigrationDataFinder<'a> {
     seed_hash: u64,
     security_level: u8,
     gap_limit: u64,
+    initial_address_index: u64,
 }
 
 impl<'a> MigrationDataFinder<'a> {
@@ -386,6 +388,7 @@ impl<'a> MigrationDataFinder<'a> {
             seed_hash,
             security_level: 2,
             gap_limit: 30,
+            initial_address_index: 0,
         })
     }
 
@@ -395,39 +398,40 @@ impl<'a> MigrationDataFinder<'a> {
         self
     }
 
-    /// Sets the gap limit.
-    pub fn with_gap_limit(mut self, gap_limit: u64) -> Self {
-        self.gap_limit = gap_limit;
+    /// Sets the initial address index.
+    pub fn with_initial_address_index(mut self, initial_address_index: u64) -> Self {
+        self.initial_address_index = initial_address_index;
         self
     }
 
-    async fn finish(&self) -> crate::Result<MigrationData> {
+    async fn finish(&self, inputs: &mut HashMap<Range<u64>, Vec<InputData>>) -> crate::Result<u64> {
         let mut previous_balance = 0;
 
-        let mut inputs = Vec::new();
-        let mut address_index = 0;
+        let mut address_index = self.initial_address_index;
         let legacy_client = iota_migration::ClientBuilder::new().node(self.node)?.build()?;
         let balance = loop {
-            let more_inputs = legacy_client
+            let migration_inputs = legacy_client
                 .get_account_data_for_migration()
                 .with_seed(&self.seed)
                 .with_security(self.security_level)
                 .with_start_index(address_index)
+                .with_gap_limit(self.gap_limit)
                 .finish()
                 .await?;
-            inputs.extend(more_inputs.1);
+            let mut current_inputs = migration_inputs.1;
             // Filter duplicates because when it's called another time it could return duplicated entries
             let mut unique_inputs = HashMap::new();
-            for input in inputs {
+            for input in current_inputs {
                 unique_inputs.insert(input.index, input);
             }
-            inputs = unique_inputs
+            current_inputs = unique_inputs
                 .into_iter()
                 .map(|(_, input)| input)
                 .collect::<Vec<InputData>>();
             // Get total available balance
-            let balance = inputs.iter().map(|d| d.balance).sum();
-
+            let balance = current_inputs.iter().map(|d| d.balance).sum();
+            inputs.insert(address_index..address_index + self.gap_limit, current_inputs);
+            
             // if balance didn't change, we stop searching for balance
             if balance == previous_balance {
                 break balance;
@@ -437,7 +441,7 @@ impl<'a> MigrationDataFinder<'a> {
             address_index += self.gap_limit;
         };
 
-        Ok(MigrationData { balance, inputs })
+        Ok(balance)
     }
 }
 
@@ -449,23 +453,27 @@ impl AccountManager {
 
     /// Gets the legacy migration data for the seed.
     pub async fn migration_data(&mut self, finder: MigrationDataFinder<'_>) -> crate::Result<MigrationData> {
-        let data = finder.finish().await?;
-        let data_ = data.clone();
-
-        match self.migration_data.iter_mut().find(|d| d.seed_hash == finder.seed_hash) {
+        let (balance, inputs) = match self.migration_data.iter_mut().find(|d| d.seed_hash == finder.seed_hash) {
             Some(stored_data) => {
-                stored_data.inputs = data.inputs;
+                let balance = finder.finish(&mut stored_data.inputs).await?;
+                (balance, stored_data.inputs.clone())
             }
             None => {
+                let mut inputs = Default::default();
+                let balance = finder.finish(&mut inputs).await?;
                 self.migration_data.push(CachedMigrationData {
                     seed: finder.seed,
                     seed_hash: finder.seed_hash,
-                    inputs: data.inputs,
+                    inputs: inputs.clone(),
                 });
+                (balance, inputs)
             }
-        }
+        };
 
-        Ok(data_)
+        Ok(MigrationData {
+            balance,
+            inputs: inputs.into_iter().map(|(_, v)| v).flatten().collect(),
+        })
     }
 
     async fn load_accounts(
