@@ -94,6 +94,7 @@ foreign_enum!(
         FAILED = MessageType::Failed,
         UNCONFIRMED = MessageType::Unconfirmed,
         VALUE = MessageType::Value,
+        CONFIRMED = MessageType::Confirmed,
     }
 );
 
@@ -185,7 +186,6 @@ foreign_class!(class BrokerOptions {
     constructor BrokerOptions::new() -> BrokerOptions;
     fn BrokerOptions::automatic_disconnect(&self, disconnect: bool) -> BrokerOptions; alias automaticDisconnect;
     fn BrokerOptions::timeout(&self, timeout: Duration) -> BrokerOptions;
-    fn BrokerOptions::use_ws(&self, use_ws: bool) -> BrokerOptions; alias useWebSockets;
 });
 
 foreign_class!(class ClientOptionsBuilder {

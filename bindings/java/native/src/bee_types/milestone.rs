@@ -1,5 +1,4 @@
 use crate::Result;
-use std::convert::TryInto;
 
 use iota_wallet::{
     message::{
