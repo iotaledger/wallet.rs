@@ -31,3 +31,14 @@ task cargoBuild(type: Exec) {
 compileJava {
     dependsOn cargoBuild
 }
+
+task cargoClean(type: Exec) {
+    doFirst {
+        workingDir "./"
+        commandLine 'cargo', 'clean'
+    }
+}
+
+clean {
+    dependsOn cargoClean
+}

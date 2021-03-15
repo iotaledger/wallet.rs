@@ -12,17 +12,21 @@ use iota::{
     MilestonePayloadEssence as RustMilestonePayloadEssence,
 };
 
+use anyhow::anyhow;
+
 pub struct MilestonePayload {
     payload: MilestonePayloadRust,
 }
 
 impl MilestonePayload {
     pub fn new_with(essence: RustMilestonePayloadEssence, signatures: Vec<Box<[u8]>>) -> Result<MilestonePayload> {
-        let index = MilestonePayloadRust::new(essence, signatures);
-        Ok(MilestonePayload {
+        let res = MilestonePayloadRust::new(essence, signatures);
+        match res {
+            Ok(index) => Ok(MilestonePayload {
                 payload: index
-            }
-        )
+            }),
+            Err(err) => Err(anyhow!(err.to_string())),
+        }
     }
 
     pub fn id(&self) -> String {
@@ -31,14 +35,9 @@ impl MilestonePayload {
 
     pub fn essence(&self) -> MilestonePayloadEssence {
         let ess_ref = self.payload.essence();
+
         MilestonePayloadEssence {
-            essence: RustMilestonePayloadEssence::new(
-                ess_ref.index(),
-                ess_ref.timestamp(),
-                ess_ref.parents().to_vec(),
-                ess_ref.merkle_proof().try_into().unwrap(),
-                ess_ref.public_keys().to_owned(),
-            )
+            essence: ess_ref.clone()
         }
     }
 
@@ -68,7 +67,7 @@ impl MilestonePayloadEssence {
     }
 
     pub fn parents(&self) -> Vec<MessageId> {
-        (*self.essence.parents()).to_vec()
+        self.essence.parents().map(|e| e.clone()).collect()
     }
 
     pub fn merkle_proof(&self) -> Vec<u8> {

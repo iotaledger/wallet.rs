@@ -143,15 +143,6 @@ impl Message {
     pub fn broadcasted(&self) -> bool {
         *(self.message.broadcasted())
     }
-    pub fn incoming(&self) -> bool {
-        *(self.message.incoming())
-    }
-    pub fn value(&self) -> u64 {
-        *(self.message.value())
-    }
-    pub fn remainder_value(&self) -> u64 {
-        *(self.message.remainder_value())
-    }
 
     pub fn get_internal(self) -> MessageRust {
         // TODO: Find a way to not need clone

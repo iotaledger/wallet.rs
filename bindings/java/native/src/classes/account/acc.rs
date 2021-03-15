@@ -76,8 +76,8 @@ impl AccountInitialiser {
         AccountInitialiser::new_with_initialiser(Rc::new(RefCell::new(Option::from(new_initialiser))))
     }
 
-    pub fn skip_persistance(&mut self) -> Self {
-        let new_initialiser = self.initialiser.borrow_mut().take().unwrap().skip_persistance();
+    pub fn skip_persistence(&mut self) -> Self {
+        let new_initialiser = self.initialiser.borrow_mut().take().unwrap().skip_persistence();
         AccountInitialiser::new_with_initialiser(Rc::new(RefCell::new(Option::from(new_initialiser))))
     }
 

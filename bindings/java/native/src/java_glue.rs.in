@@ -246,9 +246,6 @@ foreign_class!(
         fn Message::nonce(&self) -> u64;
         fn Message::confirmed(&self) -> Option<bool>;
         fn Message::broadcasted(&self) -> bool;
-        fn Message::incoming(&self) -> bool;
-        fn Message::value(&self) -> u64;
-        fn Message::remainder_value(&self) -> u64; alias remainderValue;
     }
 );
 
@@ -282,7 +279,7 @@ foreign_class!(
         fn AccountInitialiser::created_at(&mut self, created_at: DateTime<Local>) -> AccountInitialiser; alias createdAt;
         fn AccountInitialiser::messages(&mut self, messages: Vec<Message>) -> AccountInitialiser;
         fn AccountInitialiser::addresses(&mut self, addresses: Vec<Address>) -> AccountInitialiser;
-        fn AccountInitialiser::skip_persistance(&mut self) -> AccountInitialiser; alias skipPersistance;
+        fn AccountInitialiser::skip_persistence(&mut self) -> AccountInitialiser; alias skipPersistence;
         fn AccountInitialiser::initialise(&mut self) -> Result<Account>;
     }
 );

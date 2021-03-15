@@ -6,7 +6,7 @@ use iota_wallet::{
 };
 
 use iota::{
-    TreasuryInput, TreasuryOutput, Input, Output,
+    Input, Output,
 };
 
 pub struct TreasuryTransactionPayload {

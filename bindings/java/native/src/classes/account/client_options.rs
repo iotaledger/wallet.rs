@@ -23,7 +23,7 @@ impl BrokerOptions {
             builder: Rc::new(RefCell::new(Option::from(BrokerOptionsRust {
                 automatic_disconnect: None,
                 timeout: None,
-                use_websockets: None,
+                use_websockets: false,
             })))
         }
     }
@@ -48,7 +48,7 @@ impl BrokerOptions {
 
     pub fn use_ws(&self, use_ws: bool) -> BrokerOptions  {
         let mut builder = self.builder.borrow_mut().take().unwrap();
-        builder.use_websockets = Some(use_ws);
+        builder.use_websockets = use_ws;
         BrokerOptions::new_with(builder)
     }
 }
