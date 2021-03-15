@@ -226,9 +226,17 @@ impl WalletMessageHandler {
                     if let Some(initial_address_index) = initial_address_index {
                         finder = finder.with_initial_address_index(*initial_address_index);
                     }
-                    let data = self.account_manager.migration_data(finder).await?;
+                    let data = self.account_manager.get_migration_data(finder).await?;
                     seed.zeroize();
                     Ok(ResponseType::MigrationData(data.into()))
+                })
+                .await
+            }
+            MessageType::CreateMigrationBundle { seed, address } => {
+                convert_async_panics(|| async {
+                    let hash = self.account_manager.create_migration_bundle(&seed, &address).await?;
+                    seed.zeroize();
+                    Ok(ResponseType::CreatedMigrationBundle(hash))
                 })
                 .await
             }

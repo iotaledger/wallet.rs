@@ -223,6 +223,13 @@ pub enum MessageType {
         #[serde(rename = "initialAddressIndex")]
         initial_address_index: Option<u64>,
     },
+    /// Creates the bundle for migration, performs bundle mining if the address was spent and signs the bundle.
+    CreateMigrationBundle {
+        /// The legacy seed.
+        seed: String,
+        /// The associated address.
+        address: String,
+    },
 }
 
 impl Serialize for MessageType {
@@ -307,6 +314,9 @@ impl Serialize for MessageType {
                 initial_address_index: _,
                 security_level: _,
             } => serializer.serialize_unit_variant("MessageType", 24, "GetMigrationData"),
+            MessageType::CreateMigrationBundle { seed: _, address: _ } => {
+                serializer.serialize_unit_variant("MessageType", 25, "CreateMigrationBundle")
+            }
         }
     }
 }
@@ -460,8 +470,10 @@ pub enum ResponseType {
     StrongholdPasswordChanged,
     /// SetClientOptions response.
     UpdatedAllClientOptions,
-    /// Legacy balance.
+    /// GetMigrationData response.
     MigrationData(MigrationDataDto),
+    /// CreateMigrationBundle response (bundle hash).
+    CreatedMigrationBundle(String),
 }
 
 /// The message type.

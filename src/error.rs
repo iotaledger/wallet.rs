@@ -186,6 +186,9 @@ pub enum Error {
     /// Invalid legacy seed.
     #[error("invalid seed")]
     InvalidSeed,
+    /// Migration data not found.
+    #[error("migration data not found for the provided seed; call `get_migration_data` first.")]
+    MigrationDataNotFound,
 }
 
 impl Drop for Error {
@@ -307,6 +310,7 @@ impl serde::Serialize for Error {
             // #[cfg(feature = "migration")]
             Self::OldIotaError(_) => serialize_variant(self, serializer, "OldIotaError"),
             Self::InvalidSeed => serialize_variant(self, serializer, "InvalidSeed"),
+            Self::MigrationDataNotFound => serialize_variant(self, serializer, "MigrationDataNotFound"),
         }
     }
 }
