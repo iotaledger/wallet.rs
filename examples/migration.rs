@@ -115,7 +115,7 @@ async fn main() -> iota_wallet::Result<()> {
     {
         println!("Mining bundle because of spent addresses, this can take some time..."); // 40 seconds in this case
                                                                                           // Mine bundle essence
-        let mining_result = mine(prepared_bundle, security_level, ledger, spent_bundle_hashes, 40)?;
+        let mining_result = mine(prepared_bundle, security_level, ledger, spent_bundle_hashes, 40).await?;
         println!("Mining info: {:?}", mining_result.0);
         prepared_bundle = mining_result.1;
     } else {
