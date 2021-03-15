@@ -6,7 +6,6 @@ edition = "2018"
 build = "build.rs"
 
 [dependencies]
-#, features = ["stronghold", "stronghold-storage", "sqlite-storage", "ledger-nano", "ledger-nano-simulator"] 
 iota-wallet = { path = "../../../", version = "0.1.0" }
 iota-core = { git = "https://github.com/iotaledger/iota.rs", rev = "815a6271b50251b41b6bc94377075dcc2a0e56b5", features = ["mqtt"] }
 bee-message = { git = "https://github.com/iotaledger/bee.git", branch = "chrysalis-pt-2" }
