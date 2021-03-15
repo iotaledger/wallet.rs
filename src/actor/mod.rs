@@ -240,6 +240,15 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            MessageType::SendMigrationBundle { node, bundle_hash, mwm } => {
+                convert_async_panics(|| async {
+                    self.account_manager
+                        .send_migration_bundle(node, bundle_hash, *mwm)
+                        .await?;
+                    Ok(ResponseType::SentMigrationBundle)
+                })
+                .await
+            }
         };
 
         let response = match response {

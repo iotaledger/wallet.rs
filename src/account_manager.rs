@@ -314,7 +314,7 @@ pub struct AccountManager {
     account_options: AccountOptions,
     sync_accounts_lock: Arc<Mutex<()>>,
     cached_migration_data: HashMap<u64, CachedMigrationData>,
-    cached_migration_bundles: HashMap<(u64, String), Vec<BundledTransaction>>,
+    cached_migration_bundles: HashMap<String, Vec<BundledTransaction>>,
 }
 
 impl Clone for AccountManager {
@@ -405,9 +405,19 @@ impl AccountManager {
         let account_handle = self.get_account(0).await?;
         let bundle = migration::create_bundle(account_handle, &data, seed, address).await?;
         let bundle_hash = bundle.first().unwrap().bundle().to_inner().to_string();
-        let key = (seed_hash, bundle_hash.clone());
-        self.cached_migration_bundles.insert(key, bundle);
+        self.cached_migration_bundles.insert(bundle_hash.clone(), bundle);
         Ok(bundle_hash)
+    }
+
+    /// Sends the migration bundle to the given node.
+    pub async fn send_migration_bundle(&mut self, node: &str, hash: &str, mwm: u8) -> crate::Result<()> {
+        let bundle = self
+            .cached_migration_bundles
+            .get(hash)
+            .ok_or(crate::Error::MigrationBundleNotFound)?;
+        migration::send_bundle(node, bundle.to_vec(), mwm).await?;
+        self.cached_migration_bundles.remove(hash);
+        Ok(())
     }
 
     async fn load_accounts(

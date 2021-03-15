@@ -230,6 +230,16 @@ pub enum MessageType {
         /// The associated address.
         address: String,
     },
+    /// Sends the migration bundle associated with the hash.
+    SendMigrationBundle {
+        /// Node URL.
+        node: String,
+        /// Bundle hash returned on `CreateMigrationBundle`.
+        #[serde(rename = "bundleHash")]
+        bundle_hash: String,
+        /// Minimum weight magnitude.
+        mwm: u8,
+    },
 }
 
 impl Serialize for MessageType {
@@ -317,6 +327,11 @@ impl Serialize for MessageType {
             MessageType::CreateMigrationBundle { seed: _, address: _ } => {
                 serializer.serialize_unit_variant("MessageType", 25, "CreateMigrationBundle")
             }
+            MessageType::SendMigrationBundle {
+                node: _,
+                bundle_hash: _,
+                mwm: _,
+            } => serializer.serialize_unit_variant("MessageType", 26, "SendMigrationBundle"),
         }
     }
 }
@@ -474,6 +489,8 @@ pub enum ResponseType {
     MigrationData(MigrationDataDto),
     /// CreateMigrationBundle response (bundle hash).
     CreatedMigrationBundle(String),
+    /// SendMigrationBundle response.
+    SentMigrationBundle,
 }
 
 /// The message type.

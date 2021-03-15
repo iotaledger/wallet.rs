@@ -189,6 +189,9 @@ pub enum Error {
     /// Migration data not found.
     #[error("migration data not found for the provided seed; call `get_migration_data` first.")]
     MigrationDataNotFound,
+    /// Migration bundle not found.
+    #[error("migration bundle not found with the provided bundle hash")]
+    MigrationBundleNotFound,
 }
 
 impl Drop for Error {
@@ -311,6 +314,7 @@ impl serde::Serialize for Error {
             Self::OldIotaError(_) => serialize_variant(self, serializer, "OldIotaError"),
             Self::InvalidSeed => serialize_variant(self, serializer, "InvalidSeed"),
             Self::MigrationDataNotFound => serialize_variant(self, serializer, "MigrationDataNotFound"),
+            Self::MigrationBundleNotFound => serialize_variant(self, serializer, "MigrationBundleNotFound"),
         }
     }
 }

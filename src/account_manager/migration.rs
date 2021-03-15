@@ -150,11 +150,23 @@ pub(crate) async fn create_bundle(
         prepared_bundle = mining_result.1;
     }
 
-    let bundles = sign_migration_bundle(
+    let bundle = sign_migration_bundle(
         seed,
         prepared_bundle,
         address_inputs.clone().into_iter().map(|i| i.clone()).collect(),
     )?;
 
-    Ok(bundles)
+    Ok(bundle)
+}
+
+pub(crate) async fn send_bundle(node: &str, bundle: Vec<BundledTransaction>, mwm: u8) -> crate::Result<()> {
+    let legacy_client = iota_migration::ClientBuilder::new().node(node)?.build()?;
+    let _send_trytes = legacy_client
+        .send_trytes()
+        .with_trytes(bundle)
+        .with_depth(2)
+        .with_min_weight_magnitude(mwm)
+        .finish()
+        .await?;
+    Ok(())
 }
