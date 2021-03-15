@@ -128,6 +128,7 @@ module.exports = {
     Sent: 2,
     Failed: 3,
     Unconfirmed: 4,
-    Value: 5
+    Value: 5,
+    Confirmed: 6
   }
 }

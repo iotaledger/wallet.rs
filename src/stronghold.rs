@@ -5,10 +5,10 @@
 
 use crypto::hashes::{blake2b::Blake2b256, Digest};
 
+use crypto::keys::slip10::Chain;
 use iota::{Address, Ed25519Address, Ed25519Signature};
 use iota_stronghold::{
-    hd::Chain, Location, ProcResult, Procedure, RecordHint, ResultMessage, SLIP10DeriveInput, Stronghold,
-    StrongholdFlags,
+    Location, ProcResult, Procedure, RecordHint, ResultMessage, SLIP10DeriveInput, Stronghold, StrongholdFlags,
 };
 use once_cell::sync::{Lazy, OnceCell};
 use riker::actors::*;

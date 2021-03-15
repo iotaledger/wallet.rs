@@ -30,23 +30,12 @@ use iota::{
 };
 use serde::Serialize;
 use slip10::BIP32Path;
-use tokio::{
-    sync::{mpsc::channel, MutexGuard},
-    time::sleep,
-};
+use tokio::sync::MutexGuard;
 
-use std::{
-    collections::HashSet,
-    convert::TryInto,
-    num::NonZeroU64,
-    sync::{Arc, Mutex},
-    thread,
-    time::Duration,
-};
+use std::{collections::HashSet, convert::TryInto, num::NonZeroU64};
 
 mod input_selection;
 
-const OUTPUT_LOCK_TIMEOUT: Duration = Duration::from_secs(30);
 const DUST_ALLOWANCE_VALUE: u64 = 1_000_000;
 
 async fn get_address_outputs(
@@ -175,9 +164,11 @@ pub(crate) async fn sync_address(
         });
     }
 
-    let results = futures::future::try_join_all(futures_).await.unwrap();
+    let results = futures::future::try_join_all(futures_)
+        .await
+        .expect("failed to sync address");
     for res in results {
-        let (found_output, found_message) = res.unwrap();
+        let (found_output, found_message) = res?;
         found_outputs.push(found_output);
         if let Some(m) = found_message {
             found_messages.push(m);
@@ -324,9 +315,11 @@ async fn sync_addresses(
             });
         }
 
-        let results = futures::future::try_join_all(futures_).await.unwrap();
+        let results = futures::future::try_join_all(futures_)
+            .await
+            .expect("failed to sync addresses");
         for res in results {
-            let (found_messages, address) = res.unwrap();
+            let (found_messages, address) = res?;
             // if the address is a change address and has no outputs, we ignore it
             if !(*address.internal() && address.outputs().is_empty()) {
                 curr_generated_addresses.push(address);
@@ -461,8 +454,11 @@ async fn sync_messages(
         });
     }
 
-    for res in futures::future::try_join_all(futures_).await.expect("A") {
-        let (address, found_messages) = res.unwrap();
+    for res in futures::future::try_join_all(futures_)
+        .await
+        .expect("failed to sync messages")
+    {
+        let (address, found_messages) = res?;
         addresses.push(address);
         messages.extend(found_messages);
     }
@@ -556,7 +552,10 @@ async fn perform_sync(
         });
     }
     let mut parsed_messages = Vec::new();
-    for message in futures::future::try_join_all(futures_).await.unwrap() {
+    for message in futures::future::try_join_all(futures_)
+        .await
+        .expect("failed to parse messages")
+    {
         parsed_messages.push(message?);
     }
     log::debug!("[SYNC] new messages: {:#?}", parsed_messages);
@@ -638,14 +637,7 @@ impl AccountSynchronizer {
     /// The account syncing process ensures that the latest metadata (balance, transactions)
     /// associated with an account is fetched from the tangle and is stored locally.
     pub async fn execute(self) -> crate::Result<SyncedAccount> {
-        let account_handle_ = self.account_handle.clone();
-        tokio::spawn(async move {
-            if let Err(e) = crate::monitor::unsubscribe(account_handle_).await {
-                log::error!("[MQTT] error unsubscribing from MQTT topics before syncing: {:?}", e);
-            }
-        })
-        .await
-        .unwrap();
+        self.account_handle.disable_mqtt();
 
         let mut account_to_sync = self.account_handle.read().await.clone();
         let return_value = match perform_sync(
@@ -737,22 +729,26 @@ impl AccountSynchronizer {
                             // we use this flag in case the new balance is 0
                             let mut emitted_event = false;
                             // check new and updated outputs to find message ids
-                            for output in address_after_sync.outputs() {
-                                if !before_sync_outputs.contains(&output) {
-                                    emit_balance_change(
-                                        &account_ref,
-                                        address_after_sync.address(),
-                                        Some(output.message_id),
-                                        if output.is_spent {
-                                            BalanceChange::spent(output.amount)
-                                        } else {
-                                            BalanceChange::received(output.amount)
-                                        },
-                                        self.account_handle.account_options.persist_events,
-                                    )
-                                    .await?;
-                                    output_change_balance += output.amount;
-                                    emitted_event = true;
+                            // note that this is unreliable if we're not syncing spent outputs,
+                            // since not all information are collected.
+                            if self.account_handle.account_options.sync_spent_outputs {
+                                for output in address_after_sync.outputs() {
+                                    if !before_sync_outputs.contains(&output) {
+                                        emit_balance_change(
+                                            &account_ref,
+                                            address_after_sync.address(),
+                                            Some(output.message_id),
+                                            if output.is_spent {
+                                                BalanceChange::spent(output.amount)
+                                            } else {
+                                                BalanceChange::received(output.amount)
+                                            },
+                                            self.account_handle.account_options.persist_events,
+                                        )
+                                        .await?;
+                                        output_change_balance += output.amount;
+                                        emitted_event = true;
+                                    }
                                 }
                             }
 
@@ -840,18 +836,7 @@ impl AccountSynchronizer {
             Err(e) => Err(e),
         };
 
-        if let Err(e) = crate::monitor::monitor_account_addresses_balance(self.account_handle.clone()).await {
-            log::error!(
-                "[MQTT] error resubscribing to addresses balances after syncing: {:?}",
-                e
-            );
-        }
-        if let Err(e) = crate::monitor::monitor_unconfirmed_messages(self.account_handle.clone()).await {
-            log::error!(
-                "[MQTT] error resubscribing to unconfirmed messages after syncing: {:?}",
-                e
-            );
-        }
+        self.account_handle.enable_mqtt();
 
         return_value
     }
@@ -1054,47 +1039,6 @@ impl SyncedAccount {
         if value > balance.total {
             return Err(crate::Error::InsufficientFunds);
         }
-
-        let available_balance = balance.available;
-        drop(account_);
-
-        // if the transfer value exceeds the account's available balance,
-        // wait for an account update or sync it with the tangle
-        if value > available_balance {
-            let (tx, mut rx) = channel(1);
-            let tx = Arc::new(Mutex::new(tx));
-
-            let account_handle = self.account_handle.clone();
-            thread::spawn(move || {
-                let tx = tx.lock().unwrap();
-                for _ in 1..30 {
-                    thread::sleep(OUTPUT_LOCK_TIMEOUT / 30);
-                    let account = crate::block_on(async { account_handle.read().await });
-                    // the account received an update and now the balance is sufficient
-                    if value <= account.balance().available {
-                        let _ = tx.send(());
-                        break;
-                    }
-                }
-            });
-
-            let delay = sleep(Duration::from_millis(50));
-            tokio::pin!(delay);
-            tokio::select! {
-                v = rx.recv() => {
-                    if v.is_none() {
-                        // if we got an error waiting for the account update, we try to sync it
-                        self.account_handle.sync().await.execute().await?;
-                    }
-                }
-                _ = &mut delay => {
-                    // if we got a timeout waiting for the account update, we try to sync it
-                    self.account_handle.sync().await.execute().await?;
-                }
-            }
-        }
-
-        let account_ = self.account_handle.read().await;
 
         if let RemainderValueStrategy::AccountAddress(ref remainder_deposit_address) =
             transfer_obj.remainder_value_strategy
@@ -1542,17 +1486,11 @@ async fn perform_transfer(
     // drop the  account_ ref so it doesn't lock the monitor system
     drop(account_);
 
-    tokio::spawn(async move {
-        for address in addresses_to_watch {
-            // ignore errors because we fallback to the polling system
-            let _ = crate::monitor::monitor_address_balance(account_handle.clone(), &address);
-        }
-
+    for address in addresses_to_watch {
         // ignore errors because we fallback to the polling system
-        if let Err(e) = crate::monitor::monitor_confirmation_state_change(account_handle.clone(), &message_id).await {
-            log::error!("[MQTT] error monitoring for confirmation change: {:?}", e);
-        }
-    });
+        let _ = crate::monitor::monitor_address_balance(account_handle.clone(), &address);
+    }
+    crate::monitor::monitor_confirmation_state_change(account_handle.clone(), &message_id).await;
 
     Ok(message)
 }

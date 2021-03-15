@@ -243,6 +243,7 @@ impl AccountHandle {
             Some("Failed") => Some(RustMessageType::Failed),
             Some("Unconfirmed") => Some(RustMessageType::Unconfirmed),
             Some("Value") => Some(RustMessageType::Value),
+            Some("Confirmed") => Some(RustMessageType::Confirmed),
             _ => None,
         };
         crate::block_on(async {
@@ -270,6 +271,7 @@ impl AccountHandle {
             Some("Failed") => Some(RustMessageType::Failed),
             Some("Unconfirmed") => Some(RustMessageType::Unconfirmed),
             Some("Value") => Some(RustMessageType::Value),
+            Some("Confirmed") => Some(RustMessageType::Confirmed),
             _ => None,
         };
         let messages = crate::block_on(async {

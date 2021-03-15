@@ -34,11 +34,7 @@ pub(crate) async fn get_client(options: &ClientOptions) -> crate::Result<Arc<RwL
                     .mqtt_broker_options()
                     .as_ref()
                     .map(|options| options.clone().into())
-                    .unwrap_or_else(|| {
-                        iota::BrokerOptions::new()
-                            .automatic_disconnect(false)
-                            .use_websockets(false)
-                    }),
+                    .unwrap_or_else(|| iota::BrokerOptions::new().automatic_disconnect(false)),
             )
             .with_local_pow(*options.local_pow())
             .with_node_pool_urls(
@@ -57,21 +53,19 @@ pub(crate) async fn get_client(options: &ClientOptions) -> crate::Result<Arc<RwL
         }
 
         for node in options.nodes() {
-            // safe to unwrap since we're sure we have valid URLs
             if let Some(auth) = &node.auth {
                 client_builder = client_builder.with_node_auth(node.url.as_str(), &auth.username, &auth.password)?;
             } else {
+                // safe to unwrap since we're sure we have valid URLs
                 client_builder = client_builder.with_node(node.url.as_str()).unwrap();
             }
         }
 
         if let Some(node) = options.node() {
-            // safe to unwrap since we're sure we have valid URLs
             if let Some(auth) = &node.auth {
-                client_builder = client_builder
-                    .with_node_auth(node.url.as_str(), &auth.username, &auth.password)
-                    .unwrap();
+                client_builder = client_builder.with_node_auth(node.url.as_str(), &auth.username, &auth.password)?;
             } else {
+                // safe to unwrap since we're sure we have valid URLs
                 client_builder = client_builder.with_node(node.url.as_str()).unwrap();
             }
         }
@@ -130,6 +124,7 @@ fn convert_urls(urls: &[&str]) -> crate::Result<Vec<Url>> {
     if let Some(err) = err {
         Err(err.into())
     } else {
+        // safe to unwrap: all URLs were parsed above
         let urls = urls.iter().map(|url| url.clone().unwrap()).collect();
         Ok(urls)
     }
@@ -348,14 +343,11 @@ pub struct BrokerOptions {
     pub automatic_disconnect: Option<bool>,
     /// timeout of the mqtt broker.
     pub timeout: Option<Duration>,
-    #[serde(rename = "useWebsockets", default)]
-    /// use websockets or not.
-    pub use_websockets: bool,
 }
 
 impl Into<iota::BrokerOptions> for BrokerOptions {
     fn into(self) -> iota::BrokerOptions {
-        let mut options = iota::BrokerOptions::new().use_websockets(self.use_websockets);
+        let mut options = iota::BrokerOptions::new();
         if let Some(automatic_disconnect) = self.automatic_disconnect {
             options = options.automatic_disconnect(automatic_disconnect);
         }

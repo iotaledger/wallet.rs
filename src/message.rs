@@ -968,4 +968,6 @@ pub enum MessageType {
     Unconfirmed = 4,
     /// A value message.
     Value = 5,
+    /// Message confirmed.
+    Confirmed = 6,
 }
