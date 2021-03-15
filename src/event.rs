@@ -101,7 +101,7 @@ pub struct TransactionEvent {
     pub message: Message,
 }
 
-/// A transaction-related event data.
+/// A transaction confirmation state change event data.
 #[derive(Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct TransactionConfirmationChangeEvent {
@@ -115,6 +115,23 @@ pub struct TransactionConfirmationChangeEvent {
     pub message: Message,
     /// The confirmed state of the transaction.
     pub confirmed: bool,
+}
+
+/// Transaction reattachment event data.
+#[derive(Getters, Serialize, Deserialize)]
+#[getset(get = "pub")]
+pub struct TransactionReattachmentEvent {
+    /// Event unique identifier.
+    #[serde(rename = "indexationId")]
+    pub indexation_id: String,
+    #[serde(rename = "accountId")]
+    /// The associated account identifier.
+    pub account_id: String,
+    /// The event message.
+    pub message: Message,
+    /// The id of the message that was reattached.
+    #[serde(rename = "reattachedMessageId")]
+    pub reattached_message_id: MessageId,
 }
 
 /// Transfer event type.
@@ -179,7 +196,6 @@ event_handler_impl!(ErrorHandler);
 #[derive(PartialEq)]
 pub(crate) enum TransactionEventType {
     NewTransaction,
-    Reattachment,
     Broadcast,
 }
 
@@ -199,6 +215,14 @@ struct TransactionConfirmationChangeEventHandler {
 }
 
 event_handler_impl!(TransactionConfirmationChangeEventHandler);
+
+struct TransactionReattachmentEventHandler {
+    id: EventId,
+    /// The on event callback.
+    on_event: Box<dyn Fn(&TransactionReattachmentEvent) + Send>,
+}
+
+event_handler_impl!(TransactionReattachmentEventHandler);
 
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
 struct StrongholdStatusChangeEventHandler {
@@ -230,6 +254,7 @@ event_handler_impl!(TransferProgressHandler);
 type BalanceListeners = Arc<Mutex<Vec<BalanceEventHandler>>>;
 type TransactionListeners = Arc<Mutex<Vec<TransactionEventHandler>>>;
 type TransactionConfirmationChangeListeners = Arc<Mutex<Vec<TransactionConfirmationChangeEventHandler>>>;
+type TransactionReattachmentListeners = Arc<Mutex<Vec<TransactionReattachmentEventHandler>>>;
 type ErrorListeners = Arc<StdMutex<Vec<ErrorHandler>>>;
 #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
 type StrongholdStatusChangeListeners = Arc<Mutex<Vec<StrongholdStatusChangeEventHandler>>>;
@@ -265,6 +290,12 @@ fn transaction_listeners() -> &'static TransactionListeners {
 /// Gets the transaction confirmation change listeners array.
 fn transaction_confirmation_change_listeners() -> &'static TransactionConfirmationChangeListeners {
     static LISTENERS: Lazy<TransactionConfirmationChangeListeners> = Lazy::new(Default::default);
+    &LISTENERS
+}
+
+/// Gets the transaction reattachment listeners array.
+fn transaction_reattachment_listeners() -> &'static TransactionReattachmentListeners {
+    static LISTENERS: Lazy<TransactionReattachmentListeners> = Lazy::new(Default::default);
     &LISTENERS
 }
 
@@ -366,9 +397,6 @@ pub(crate) async fn emit_transaction_event(
             TransactionEventType::NewTransaction => {
                 storage.save_new_transaction_event(&event).await?;
             }
-            TransactionEventType::Reattachment => {
-                storage.save_reattachment_event(&event).await?;
-            }
         }
     }
 
@@ -402,6 +430,37 @@ pub(crate) async fn emit_confirmation_state_change(
             .lock()
             .await
             .save_transaction_confirmation_event(&event)
+            .await?;
+    }
+
+    for listener in listeners.deref() {
+        (listener.on_event)(&event);
+    }
+
+    Ok(())
+}
+
+/// Emits a transaction reattachment change event.
+pub(crate) async fn emit_reattachment_event(
+    account: &Account,
+    reattached_message_id: MessageId,
+    message: &Message,
+    persist: bool,
+) -> crate::Result<()> {
+    let listeners = transaction_reattachment_listeners().lock().await;
+    let event = TransactionReattachmentEvent {
+        indexation_id: generate_indexation_id(),
+        account_id: account.id().to_string(),
+        message: message.clone(),
+        reattached_message_id,
+    };
+
+    if persist {
+        crate::storage::get(account.storage_path())
+            .await?
+            .lock()
+            .await
+            .save_reattachment_event(&event)
             .await?;
     }
 
@@ -450,19 +509,25 @@ pub async fn on_confirmation_state_change<F: Fn(&TransactionConfirmationChangeEv
     id
 }
 
+/// Listen to transaction reattachment change.
+pub async fn on_reattachment<F: Fn(&TransactionReattachmentEvent) + Send + 'static>(cb: F) -> EventId {
+    let mut l = transaction_reattachment_listeners().lock().await;
+    let id = generate_event_id();
+    l.push(TransactionReattachmentEventHandler {
+        id,
+        on_event: Box::new(cb),
+    });
+    id
+}
+
 /// Removes the new confirmation state change listener associated with the given identifier.
 pub async fn remove_confirmation_state_change_listener(id: &EventId) {
     remove_event_listener(id, transaction_confirmation_change_listeners()).await;
 }
 
-/// Listen to transaction reattachment.
-pub async fn on_reattachment<F: Fn(&TransactionEvent) + Send + 'static>(cb: F) -> EventId {
-    add_transaction_listener(TransactionEventType::Reattachment, cb).await
-}
-
 /// Removes the reattachment listener associated with the given identifier.
 pub async fn remove_reattachment_listener(id: &EventId) {
-    remove_event_listener(id, transaction_listeners()).await;
+    remove_event_listener(id, transaction_reattachment_listeners()).await;
 }
 
 /// Listen to transaction broadcast.
@@ -677,7 +742,7 @@ mod tests {
                 })
                 .await;
 
-                emit_transaction_event(TransactionEventType::Reattachment, &account, &message, true)
+                emit_reattachment_event(&account, *message.id(), &message, true)
                     .await
                     .unwrap();
             });

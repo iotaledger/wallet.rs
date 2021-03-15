@@ -13,7 +13,7 @@ pub mod stronghold;
 
 use crate::{
     account::Account,
-    event::{BalanceEvent, TransactionConfirmationChangeEvent, TransactionEvent},
+    event::{BalanceEvent, TransactionConfirmationChangeEvent, TransactionEvent, TransactionReattachmentEvent},
 };
 
 use chrono::Utc;
@@ -267,7 +267,7 @@ event_manager_impl!(
     get_new_transaction_event_count
 );
 event_manager_impl!(
-    TransactionEvent,
+    TransactionReattachmentEvent,
     reattachment_indexation,
     "iota-wallet-tx-reattachment-events",
     save_reattachment_event,
