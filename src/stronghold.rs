@@ -18,7 +18,7 @@ use tokio::{
     time::{sleep, Duration},
 };
 use zeroize::Zeroize;
-
+use getset::Getters;
 use std::{
     collections::{HashMap, HashSet},
     convert::TryInto,
