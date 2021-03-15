@@ -1,0 +1,54 @@
+{
+    "account_manager": [
+        {
+            "client_options": {
+                "node": "https://api.lb-0.testnet.chrysalis2.com",
+                "local_pow": true,
+                "request_timeout": 6000,
+                "api_timeout": {
+                    "PostMessage": 3000
+                }
+            },
+            "account_manager": {
+                "storage": "Stronghold",
+                "storage_path": "./alice-database",
+                "password": "password",
+                "store_mnemonic": "Stronghold"
+            },
+            "alias": "Alice"
+        },
+        {
+            "client_options": {
+                "node": "https://api.lb-0.testnet.chrysalis2.com",
+                "local_pow": false,
+                "request_timeout": 6000,
+                "api_timeout": {
+                    "PostMessage": 3000
+                }
+            },
+            "account_manager": {
+                "storage": "Stronghold",
+                "storage_path": "./jane-database",
+                "password": "password",
+                "store_mnemonic": "Stronghold"
+            },
+            "alias": "Jane"
+        }
+    ],
+    "transfer": {
+        "amount": 10000000,
+        "address": "atoi1qzt0nhsf38nh6rs4p6zs5knqp6psgha9wsv74uajqgjmwc75ugupx3y7x0r",
+        "remainder_value_strategy": "ReuseAddress"
+    },
+    "backup_restore": {
+        "account_manager": {
+            "storage": "Stronghold",
+            "storage_path": "./alice-database",
+            "storage_path_backup": "./alice-database_backup",
+            "password": "password",
+            "store_mnemonic": "Stronghold"
+        },
+        "alias": "Alice",
+        "backup_dir_path": "./backup"
+    }
+}
