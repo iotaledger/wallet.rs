@@ -19,6 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+        java: [11.0.x, 11.0.3, 12, 13]
 
     steps:
     - uses: actions/checkout@v2
@@ -219,3 +220,76 @@ jobs:
       - name: Build python binding
         run: cargo build --release
         working-directory: bindings/python/native
+
+  java-bindings:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      
+      - name: Set up Java ${{ matrix.java }}
+        uses: actions/setup-java@v1
+        with:
+            java-version: ${{ matrix.java }}
+            architecture: x64
+
+      - name: Get current date
+        run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+        if: matrix.os == 'macos-latest' || matrix.os == 'ubuntu-latest'
+
+      - name: Get current date
+        if: matrix.os == 'windows-latest'
+        run: echo "CURRENT_DATE=$(Get-Date -Format "yyyy-MM-dd")" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Install required packages (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libudev-dev libusb-1.0-0-dev
+
+      - name: Cache cargo registry
+        uses: actions/cache@v2.1.4
+        with:
+          path: ~/.cargo/registry
+          # Add date to the cache to keep it up to date
+          key: ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+          # Restore from outdated cache for speed
+          restore-keys: |
+            ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+            ${{ matrix.os }}-stable-cargo-registry-
+
+      - name: Cache cargo index
+        uses: actions/cache@v2.1.4
+        with:
+          path: ~/.cargo/git
+          # Add date to the cache to keep it up to date
+          key: ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+          # Restore from outdated cache for speed
+          restore-keys: |
+            ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+            ${{ matrix.os }}-stable-cargo-index-
+     
+      - name: Cache java binding cargo target
+        uses: actions/cache@v2.1.4
+        with:
+          path: bindings/java/native/target
+          # Add date to the cache to keep it up to date
+          key: ${{ matrix.os }}-stable-cargo-build-java-target-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+          # Restore from outdated cache for speed
+          restore-keys: |
+            ${{ matrix.os }}-stable-cargo-build-java-target-${{ hashFiles('**/Cargo.lock') }}
+            ${{ matrix.os }}-stable-cargo-build-java-target-
+
+      - name: Build java binding
+        run: cargo build --release
+        working-directory: bindings/java/native
