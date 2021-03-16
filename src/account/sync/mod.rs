@@ -725,7 +725,7 @@ impl AccountSynchronizer {
                                 address_after_sync.balance()
                             );
 
-                            let mut output_change_balance = 0;
+                            let mut output_change_balance = 0i64;
                             // we use this flag in case the new balance is 0
                             let mut emitted_event = false;
                             // check new and updated outputs to find message ids
@@ -746,7 +746,11 @@ impl AccountSynchronizer {
                                             self.account_handle.account_options.persist_events,
                                         )
                                         .await?;
-                                        output_change_balance += output.amount;
+                                        if output.is_spent {
+                                            output_change_balance -= output.amount as i64;
+                                        } else {
+                                            output_change_balance += output.amount as i64;
+                                        }
                                         emitted_event = true;
                                     }
                                 }
@@ -756,24 +760,18 @@ impl AccountSynchronizer {
                             // optional so we handle it here; if not all balance change has
                             // been emitted, we emit the remainder value with `None` as
                             // message_id
-                            let absolute_balance_change = if address_after_sync.balance() < before_sync_balance {
-                                before_sync_balance - address_after_sync.balance()
-                            } else {
-                                address_after_sync.balance() - before_sync_balance
-                            };
-                            if !emitted_event || output_change_balance != absolute_balance_change {
+                            let balance_change = *address_after_sync.balance() as i64 - *before_sync_balance as i64;
+                            if !emitted_event || output_change_balance != balance_change {
                                 emit_balance_change(
                                     &account_ref,
                                     address_after_sync.address(),
                                     None,
-                                    if address_after_sync.balance() > before_sync_balance {
-                                        BalanceChange::received(
-                                            address_after_sync.balance() - before_sync_balance - output_change_balance,
-                                        )
+                                    if balance_change > 0 {
+                                        // balance_change is positive; subtract the already emitted balance.
+                                        BalanceChange::received((balance_change - output_change_balance) as u64)
                                     } else {
-                                        BalanceChange::spent(
-                                            before_sync_balance - output_change_balance - address_after_sync.balance(),
-                                        )
+                                        // balance_change is negative; get the absolute diff.
+                                        BalanceChange::spent((balance_change - output_change_balance).abs() as u64)
                                     },
                                     self.account_handle.account_options.persist_events,
                                 )
