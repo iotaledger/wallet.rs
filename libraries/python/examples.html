@@ -177,17 +177,25 @@ account_manager.store_mnemonic(&quot;Stronghold&quot;)
 <ul>
 <li>Storage is initialized under the given path (<code>./alice-database</code>)</li>
 <li>Password is set (<code>password</code>)</li>
-<li>Only during the initialization new database: Stronghold mnemonic (seed) is automatically generated and stored. Note: the library can also generate mnemonic for other signer types, such as <code>LedgerNano</code>, or <code>LedgerNanoSimulator</code>.</li>
-<li>Alternatively, own mnemonic can be stored using <code>store_mnemonic(signer_type, mnemonic=None)</code> method and validated via <code>verify_mnemonic(mnemonic): None</code> method later</li>
+<li>Only during the initialization new database: stronghold mnemonic (seed) is automatically generated and stored by default</li>
 </ul>
-<p>Just a reminder. Any information stored via Stronghold is encrypted at rest.</p>
-<p>The <code>AccountManager</code> instance is the main vehicle while dealing with the underlying wallet storage. </p>
+<p>The storage is encrypted at rest and so you need a strong password and location where to put your storage. </p>
+<blockquote>
+<p>Please note: deal with the password with utmost care</p>
+</blockquote>
+<p>Technically speaking, the storage means a single file called <code>wallet.stronghold</code>. It is also needed to generate a seed (mnemonic) that serves as a cryptographic key from which all accounts and related addresses are generated.</p>
+<p>One of the key principle behind the <code>stronghold</code>-based storage is that no one can get a seed from the storage. You deal with all accounts purely via <code>Account_Manager</code> instance and all complexities are hidden under the hood and are dealt with in a secure way.</p>
+<p>In case one would like to store a seed also somewhere else, there is a method <code>AccountManager.generate_mnemonic()</code> that generates random seed and it can be leveraged before the actual account initialization.</p>
+<p>Please note, it is highly recommended to store <code>stronghold</code> password and <code>stronghold</code> database on separate devices.</p>
 <h3 id="accounts"><a class="header" href="#accounts">Accounts</a></h3>
-<p>The library uses a model of individual accounts to separate individual users/clients from each other. It is possible to generate multiple addresses for each account deterministically. Please note, it is important to declare on which IOTA network should be the given account created (argument <code>node</code>).</p>
-<pre><code class="language-python"># general Tangle specific options
+<p>The library uses a model of individual accounts to separate individual users/clients from each other. It is possible to generate multiple addresses for each account deterministically. </p>
+<p>Please note, it is important to declare on which IOTA network should be the given account created (argument <code>node</code>).</p>
+<pre><code class="language-python"># ... continue from prev example 1a
+
+# general Tangle specific options
 client_options = {
     'node': 'https://api.lb-0.testnet.chrysalis2.com',
-    'local_pow': True,
+    'local_pow': True
 }
 
 # an account is generated with the given alias via `account_initialiser`
@@ -197,8 +205,7 @@ account_initialiser.alias('Alice')
 # initialise account based via `account_initialiser`
 # store it to db and sync with Tangle
 account = account_initialiser.initialise()
-
-print(f'Account `{account.alias()}` created...')
+print(f'Account created: {account.alias()}')
 </code></pre>
 <p>Once an account has been created you get an instance of it using the following methods: <code>get_account(account_id: str)</code> or <code>get_accounts()</code>.
 An account can be then referred to via <code>index</code>, <code>alias</code> or one of its generated <code>addresses</code>. The network against which the account is active can be checked via <code>account.bech32_hrp()</code>.</p>
@@ -222,35 +229,47 @@ An account can be then referred to via <code>index</code>, <code>alias</code> or
 </ul>
 <h2 id="generating-addresses"><a class="header" href="#generating-addresses">Generating address(es)</a></h2>
 <p>Each account can posses multiple addresses. Addresses are generated deterministically based on the account and address index. It means that the combination of account and index uniquely identifies the given address.</p>
+<p>Addresses are of two types: <code>internal</code> and <code>public</code> (external):</p>
+<ul>
+<li>each set of addresses is independent from each other and has independent <code>index</code> id</li>
+<li>addresses that are created by <code>account.generate_address()</code> are indicated as <code>internal=false</code> (public)</li>
+<li>internal addresses (<code>internal=true</code>) are so called <code>change</code> addresses and are used to send the excess funds to</li>
+<li>the approach is also known as a <em>BIP32 Hierarchical Deterministic wallet (HD Wallet)</em>.</li>
+</ul>
 <p><em>Note: You may remember IOTA 1.0 network in which addresses were not reusable. It is no longer true and addresses can be reused multiple times in IOTA 1.5 (Chrysalis) network.</em></p>
 <p>Addresses are generated via instance of <code>account</code> that is gotten from the <code>account_manager</code> instance:</p>
-<pre><code class="language-python">import iota_wallet as iw
+<pre><code class="language-python"># Copyright 2020 IOTA Stiftung
+# SPDX-License-Identifier: Apache-2.0
 
+import iota_wallet as iw
+
+# This example generates a new address.
 account_manager = iw.AccountManager(
     storage='Stronghold', storage_path='./alice-database'
 )
 account_manager.set_stronghold_password(&quot;password&quot;)
 
 # get a specific instance of some account
-account = account_manager.get_account(&quot;Alice&quot;)
+account = account_manager.get_account('Alice')
+print(f'Account: {account.alias()}')
 
-# sync the underlying storage with the Tangle
-print(&quot;Syncing with the Tangle...&quot;)
-account.sync().execute()
+# Always sync before doing anything with the account
+print('Syncing...')
+synced = account.sync().execute()
 
 # generate new address
-account.generate_address()
+address = account.generate_address()
+print(f'New address: {address}')
 
 # print all addresses generated so far
 print(&quot;List of addresses:&quot;)
 print(account.addresses())
 
-# sync the underlying storage with the Tangle
-# new address will become &quot;known&quot; to Tangle
-print(&quot;Syncing with the Tangle...&quot;)
-account.sync().execute()
+# You can also get the latest unused address
+last_address_obj = account.latest_address()
+print(f&quot;Last address: {last_address_obj['address']}&quot;)
 </code></pre>
-<p>Output:</p>
+<p>Output example:</p>
 <pre><code class="language-json">[{'address': {'inner': 'atoi1qzy79ew8x4hn4dsr0t3j8ce8hdwdrh8xzx85x2gkse6k0fx2jkyaqdgd2rn'},
   'balance': 0,
   'key_index': 0,
@@ -262,23 +281,29 @@ account.sync().execute()
   'internal': False,
   'outputs': []}]
 </code></pre>
-<p>Take a closer look at the output above and check the beginning of both addresses. As mentioned in <a href="./welcome.html">overview chapter</a> there are two human-readable prefixes in IOTA 1.5 network: <code>iota</code> (mainnet) and <code>atoi</code> (testnet).</p>
+<p>Take a closer look at the output above and check the beginning of both addresses. As mentioned in <a href="../../welcome.html">overview chapter</a> there are two human-readable prefixes in IOTA 1.5 network: <code>iota</code> (mainnet) and <code>atoi</code> (testnet).</p>
 <h2 id="checking-the-balance"><a class="header" href="#checking-the-balance">Checking the balance</a></h2>
 <p>Before we continue further, go to <a href="https://faucet.testnet.chrysalis2.com/">IOTA testnet faucet service</a> and send to your testnet addresses some tokens:
 <img src="screenshot_faucet.png" alt="faucet screenshot" /></p>
-<pre><code class="language-python">import iota_wallet as iw
+<pre><code class="language-python"># Copyright 2020 IOTA Stiftung
+# SPDX-License-Identifier: Apache-2.0
 
+
+import iota_wallet as iw
+
+# This example checks the account balance.
 account_manager = iw.AccountManager(
     storage='Stronghold', storage_path='./alice-database'
 )
 account_manager.set_stronghold_password(&quot;password&quot;)
 
 # get a specific instance of some account
-account = account_manager.get_account(&quot;Alice&quot;)
+account = account_manager.get_account('Alice')
+print(f'Account: {account.alias()}')
 
-# sync the underlying storage with the Tangle
-print(&quot;Syncing with the Tangle...&quot;)
-account.sync().execute()
+# Always sync before doing anything with the account
+print('Syncing...')
+synced = account.sync().execute()
 
 # get total balance for the account
 print(&quot;Total balance:&quot;)
@@ -313,7 +338,7 @@ Balance per individual addresses:
   'internal': False,
   'outputs': []}]
 </code></pre>
-<p>In the detailed view per individual addresses, there is also <code>outputs</code> section that indicates the latest transaction (also known as <code>wallet message</code>) &quot;responsible&quot; for the current amount. The amount can be also double checked using <a href="https://explorer.iota.org/chrysalis/addr/atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg">Tangle Explorer</a>.</p>
+<p>In the detailed view per individual addresses, there is also <code>outputs</code> section that indicates transaction(s) (also known as <code>wallet message(s)</code>) &quot;responsible&quot; for the current amount. The amount can be also double checked using <a href="https://explorer.iota.org/chrysalis/addr/atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg">Tangle Explorer</a>.</p>
 <h2 id="sending-tokens"><a class="header" href="#sending-tokens">Sending tokens</a></h2>
 <p>The process of sending tokens via <code>wallet.rs</code> can be described as follows:</p>
 <ul>
@@ -321,10 +346,15 @@ Balance per individual addresses:
 <li><code>bench32_hrp</code> indicates which network should be used to send tokens thru, and can be gotten from <code>account.bech32_hrp()</code> function</li>
 <li><code>remainder_value_strategy</code> can be: <code>ReuseAddress</code> or <code>ChangeAddress</code>. You may be familiar with a concept <code>changing address with every spent</code> in IOTA 1.0. It is not an issue in IOTA 1.5 world but it may still become handy depending on your use case</li>
 <li>once instance of <code>iota_wallet.Transfer()</code> is created, it can be sent via <code>transfer()</code> function of the <code>Account</code> instance</li>
-<li>Needless to repeat, always sync the account information with the Tangle before do anything with the account</li>
+<li>needless to repeat, always sync the account information with the Tangle before do anything with the account</li>
 </ul>
-<pre><code class="language-python">import iota_wallet as iw
+<pre><code class="language-python"># Copyright 2020 IOTA Stiftung
+# SPDX-License-Identifier: Apache-2.0
 
+
+import iota_wallet as iw
+
+# This example sends IOTA toens to an address.
 account_manager = iw.AccountManager(
     storage='Stronghold', storage_path='./alice-database'
 )
@@ -341,12 +371,11 @@ synced = account.sync().execute()
 print(f&quot;Available balance {account.balance()['available']}&quot;)
 
 # TODO: Replace with the address of your choice!
-target_address = &quot;atoi1qpvnsgygzal4vkxhlc0ew7c6c6csnjr72x5rgn3txqswrsa2xfrec8v04f7&quot;
 transfer = iw.Transfer(
     amount=1_000_000,
-    address=target_address,
+    address='atoi1qzt0nhsf38nh6rs4p6zs5knqp6psgha9wsv74uajqgjmwc75ugupx3y7x0r',
     bench32_hrp=account.bech32_hrp(),
-    remainder_value_strategy=&quot;ReuseAddress&quot;
+    remainder_value_strategy='ReuseAddress'
 )
 
 # Propogate the Transfer to Tangle
@@ -390,28 +419,51 @@ print(
  'value': 1000000,
  'remainder_value': 9000000}
 </code></pre>
-<p>It is a <code>wallet message</code> that fully describes the given transaction. Please, kindly get yourself familiar with a concept of <a href="https://chrysalis.docs.iota.org/introduction/what_is_chrysalis.html#switch-to-utxo-model">UTXO</a> to understand all aspects of messages.</p>
-<p>The given message can be double checked via Tangle Explorer using <code>node_response['ID']</code> field (<a href="https://explorer.iota.org/chrysalis/message/9d3c401d59b0a87f6fbaa58582bb71e1858d63336421ccbae834821d9be113d3">Tangle Explorer</a>).</p>
-<p>Needless to say, if <code>remainder_value_strategy</code> == <code>ChangeAddress</code> is used, the given message transfer tokens to target address as well as new address within the given account (<code>internal</code>). </p>
+<p>It is a <code>wallet message</code> that fully describes the given transaction.</p>
+<p>Please, kindly get yourself familiar with a concept of <a href="https://chrysalis.docs.iota.org/introduction/what_is_chrysalis.html#switch-to-utxo-model">UTXO</a> to understand all aspects of messages.</p>
+<p>The given message can be double checked via Tangle Explorer using <code>node_response['id']</code> field (<a href="https://explorer.iota.org/chrysalis/message/9d3c401d59b0a87f6fbaa58582bb71e1858d63336421ccbae834821d9be113d3">Tangle Explorer</a>).</p>
+<p>Needless to say, if <code>remainder_value_strategy</code> == <code>ChangeAddress</code> is used, the given message transfer tokens to target address as well as new <code>internal</code> address within the given account (<code>internal=True</code>). </p>
 <h3 id="reattachments"><a class="header" href="#reattachments">Reattachments</a></h3>
 <p>If message reattachment is needed then <code>account_id</code> and <code>message_id</code> is passed to <code>iota_wallet.promote(account_id, message_id)</code> or <code>iota_wallet.reattach(account_id, message_id)</code>.</p>
 <h3 id="list-of-messages-transactions"><a class="header" href="#list-of-messages-transactions">List of messages (transactions)</a></h3>
-<p>List of all particular messages (transactions) related to the given account get be obtained via: <code>account.list_messages()</code> and related <code>account.message_count()</code>. Those can be used also to check whether the given message was confirmed/broadcasted, etc. Needless to say, sync the account with the Tangle before checking confirmation status:</p>
-<pre><code class="language-python">account = account_manager.get_account('Alice')
-account.sync().execute()
+<p>List of all particular messages (transactions) related to the given account get be obtained via: <code>account.list_messages()</code> and related <code>account.message_count()</code>.</p>
+<p>Those can be used also to check whether the given message was confirmed/broadcasted, etc. Needless to say, sync the account with the Tangle before checking confirmation status:</p>
+<pre><code class="language-python"># Copyright 2020 IOTA Stiftung
+# SPDX-License-Identifier: Apache-2.0
+
+
+import iota_wallet as iw
+
+# This example sends IOTA toens to an address.
+account_manager = iw.AccountManager(
+    storage='Stronghold', storage_path='./alice-database'
+)
+account_manager.set_stronghold_password(&quot;password&quot;)
+
+account = account_manager.get_account('Alice')
+print(f'Account: {account.alias()} selected')
+
+# Always sync before doing anything with the account
+print('Syncing...')
+synced = account.sync().execute()
+
 for ac in account.list_messages():
     print(f&quot;message {ac['id']}; confirmation status = {ac['confirmed']}'&quot;)
 </code></pre>
 <h3 id="dust-protection"><a class="header" href="#dust-protection">Dust protection</a></h3>
 <p>Please note, there is also implemented a <a href="https://chrysalis.docs.iota.org/guides/dev_guide.html#dust-protection">dust protection</a> mechanism in the network protocol to avoid malicious actors to spam network in order to decrease node performance while keeping track of unspent amount (<code>UTXO</code>):</p>
 <blockquote>
-<p>&quot;... microtransaction below 1Mi of IOTA tokens [can be sent] to another address if you already have at least 1Mi on that address&quot;
-That's why we did send 1Mi in the given example to comply this protection.&quot;</p>
+<p>&quot;... microtransaction below 1Mi of IOTA tokens [can be sent] to another address if there is already at least 1Mi on that address&quot;
+That's why we did send 1Mi in the given example to comply with the protection.&quot;</p>
 </blockquote>
 <h2 id="backup-database"><a class="header" href="#backup-database">Backup database</a></h2>
-<p>Underlying database (<code>Stronghold</code> by default) is encrypted at rest and there is no way how to get a seed from it due to security practices that are incorporated in the Stronghold DNA. It means you are dealing with the database as an atomic unit that includes all wallet information.</p>
+<p>Underlying database (provided by <code>Stronghold</code> by default) is encrypted at rest and there is no way how to get a seed from it due to security practices that are incorporated in the Stronghold's DNA. It means you are dealing with the database as an atomic unit that includes all wallet information.</p>
 <p>So backing up the database is very important task from this respect.</p>
-<pre><code class="language-python">import iota_wallet as iw
+<pre><code class="language-python"># Copyright 2020 IOTA Stiftung
+# SPDX-License-Identifier: Apache-2.0
+
+
+import iota_wallet as iw
 import os
 
 # This example backups your data in a secure file.
@@ -425,6 +477,7 @@ backup_dir_path = './backup'
 if not os.path.exists(backup_dir_path):
     os.makedirs(backup_dir_path)
 backup_file_path = account_manager.backup(backup_dir_path)
+
 print(f'Backup path: {backup_file_path}')
 </code></pre>
 <p>Output:</p>
@@ -436,7 +489,11 @@ print(f'Backup path: {backup_file_path}')
 <li>create new empty database with a password (without mnemonic [seed])</li>
 <li>import all accounts from the file that has been backed up earlier</li>
 </ul>
-<pre><code class="language-python">import iota_wallet as iw
+<pre><code class="language-python"># Copyright 2020 IOTA Stiftung
+# SPDX-License-Identifier: Apache-2.0
+
+
+import iota_wallet as iw
 
 # This example restores a secured backup file.
 account_manager = iw.AccountManager(
@@ -445,7 +502,7 @@ account_manager = iw.AccountManager(
 account_manager.set_stronghold_password(&quot;password&quot;)
 
 #  Add the path to the file from example 5-backup.js
-#  for example: ./backup/2021-03-07T18-24-06-iota-wallet-backup-wallet.stronghold
+#  for example: ./backup/2021-03-04T15-31-04-iota-wallet-backup-wallet.stronghold
 backup_file_path = r'./backup/2021-03-07T18-24-06-iota-wallet-backup-wallet.stronghold'
 
 account_manager.import_accounts(backup_file_path, 'password')
@@ -459,7 +516,7 @@ print(f'Account: {account.alias()}')
 account_manager.set_stronghold_password(&quot;password&quot;)
 </code></pre>
 <h2 id="listening-to-events"><a class="header" href="#listening-to-events">Listening to events</a></h2>
-<p><code>Wallet.rs</code> also supports asynchronous event listeners to be listened to. In the python binding it is currently implemented in a way the provided callback is executed as soon as the event is triggered; <code>event</code> details are passed as an argument to the callback method. No coroutines (async/await).</p>
+<p><code>Wallet.rs</code> also supports asynchronous event listeners to be listened to. In the python binding it is currently implemented in a way the provided callback is executed as soon as the event is triggered; <code>event</code> details are passed as an argument to the callback method. <em>No coroutines (async/await) are implemented in the python binding.</em></p>
 <p>There are following event listeners supported:</p>
 <ul>
 <li><code>on_balance_change(callback): id</code></li>
@@ -480,8 +537,11 @@ account_manager.set_stronghold_password(&quot;password&quot;)
 <li><code>remove_error_listener(id)</code></li>
 <li><code>remove_stronghold_status_change_listener(id)</code></li>
 </ul>
-<p>Example of listening to <code>on_balance_change</code>:</p>
-<pre><code class="language-python">import threading
+<p>Example of listening to <code>on_balance_change</code> via simple event-based pattern in python:</p>
+<pre><code class="language-python"># Copyright 2020 IOTA Stiftung
+# SPDX-License-Identifier: Apache-2.0
+
+import threading
 import time
 import iota_wallet as iw
 
@@ -527,6 +587,71 @@ Fill your address with the Faucet: https://faucet.testnet.chrysalis2.com/
 Waiting for external event (on_balance_changed)...
 On balanced changed: {&quot;indexationId&quot;:&quot;c3a7a1ab8ba78460954223a704693d088ddd0388681ac6cc1dd964a388d1a619&quot;,&quot;accountId&quot;:&quot;wallet-account://e51a6285ea2d8cbdf5b6da2b85a8344f619d798d869ef4fb88c5fac0e653d6cc&quot;,&quot;address&quot;:&quot;atoi1qquszp0hzfsrgx4vx58dfg4v6eh20d2k3ddfgg9dt5778c2egc9uyw7g457&quot;,&quot;balanceChange&quot;:{&quot;spent&quot;:0,&quot;received&quot;:10000000}}
 Done.
+</code></pre>
+<p>Alternatively it can be consumed via queue-base pattern:</p>
+<pre><code class="language-python"># Copyright 2020 IOTA Stiftung
+# SPDX-License-Identifier: Apache-2.0
+
+
+import iota_wallet
+import threading
+import queue
+import time
+
+# This example shows how to listen to on_balance_change event.
+
+# The queue to store received events
+q = queue.Queue()
+
+
+def worker():
+    &quot;&quot;&quot;The worker to process the queued events.
+    &quot;&quot;&quot;
+    while True:
+        item = q.get(True)
+        print(f'Get event: {item}')
+        q.task_done()
+
+
+def balance_changed_event_processing(event):
+    &quot;&quot;&quot;Processing function when event is received.
+    &quot;&quot;&quot;
+    print(f'On balanced changed: {event}')
+    q.put(event)
+
+
+# Get the acount manager
+manager = iota_wallet.AccountManager(
+    storage='Stronghold', storage_path='./alice-database')
+manager.set_stronghold_password(&quot;password&quot;)
+
+# Get the account
+account = manager.get_account('Alice')
+print(f'Account: {account.alias()}')
+
+# Always sync before doing anything with the account
+print('Syncing...')
+synced = account.sync().execute()
+
+# Get the latest unused address
+last_address_obj = account.latest_address()
+print(f&quot;Address: {last_address_obj['address']}&quot;)
+
+# turn-on the worker thread
+threading.Thread(target=worker, daemon=True).start()
+
+# listen to the on_balance_change event
+iota_wallet.on_balance_change(balance_changed_event_processing)
+
+# Use the Chrysalis Faucet to send testnet tokens to your address:
+print(
+    f&quot;Fill your Address ({last_address_obj['address']['inner']}) with the Faucet: https://faucet.testnet.chrysalis2.com/&quot;)
+print(&quot;To see how the on_balance_change is called, please send tokens to the address in 1 min&quot;)
+time.sleep(60)
+
+# block until all tasks are done
+q.join()
+print('All work completed')
 </code></pre>
 
                     </main>
