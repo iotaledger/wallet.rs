@@ -797,7 +797,7 @@ impl AccountSynchronizer {
                         log::info!("[POLLING] message confirmation state changed: {:?}", message.id());
                         emit_confirmation_state_change(
                             &account_ref,
-                            &message,
+                            message.clone(),
                             message.confirmed().unwrap_or(false),
                             self.account_handle.account_options.persist_events,
                         )

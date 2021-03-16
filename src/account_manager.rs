@@ -580,6 +580,7 @@ impl AccountManager {
 
                             if !accounts.read().await.is_empty() {
                                 let should_sync = !(synced && is_monitoring.load(Ordering::Relaxed));
+                                // println!("synced {}, monitoring {}", synced, is_monitoring.load(Ordering::Relaxed));
                                 match AssertUnwindSafe(
                                     poll(
                                         sync_accounts_lock.clone(),
@@ -1301,7 +1302,16 @@ async fn poll(
             let message = account.get_message_mut(&message_id).unwrap();
             if let Ok(metadata) = client.read().await.get_message().metadata(&message_id).await {
                 if let Some(ledger_inclusion_state) = metadata.ledger_inclusion_state {
-                    message.set_confirmed(Some(ledger_inclusion_state == LedgerInclusionStateDto::Included));
+                    let confirmed = ledger_inclusion_state == LedgerInclusionStateDto::Included;
+                    message.set_confirmed(Some(confirmed));
+                    let message = message.clone();
+                    crate::event::emit_confirmation_state_change(
+                        &account,
+                        message,
+                        confirmed,
+                        retried_data.account_handle.account_options.persist_events,
+                    )
+                    .await?;
                 }
             }
         }
@@ -1937,7 +1947,7 @@ mod tests {
                 (m3, true),
             ];
             for (message, change) in &confirmation_change_events {
-                emit_confirmation_state_change(&account, message, *change, true)
+                emit_confirmation_state_change(&account, message.clone(), *change, true)
                     .await
                     .unwrap();
             }

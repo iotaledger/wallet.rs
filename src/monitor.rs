@@ -158,7 +158,7 @@ async fn process_output(
             let message = message.clone();
             crate::event::emit_confirmation_state_change(
                 &account,
-                &message,
+                message.clone(),
                 true,
                 account_handle.account_options.persist_events,
             )
@@ -285,7 +285,7 @@ async fn process_metadata(
 
             crate::event::emit_confirmation_state_change(
                 &account,
-                &message,
+                message.clone(),
                 confirmed,
                 account_handle.account_options.persist_events,
             )
