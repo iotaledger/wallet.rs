@@ -227,7 +227,8 @@ impl AccountManagerBuilder {
 
         crate::storage::set(&storage_file_path, self.storage_encryption_key, storage).await;
 
-        let is_monitoring = Arc::new(AtomicBool::new(false));
+        // is_monitoring is set to false if an mqtt error happens, so we can initialize it with `true`.
+        let is_monitoring = Arc::new(AtomicBool::new(true));
 
         // with the stronghold storage feature, the accounts are loaded when the password is set
         #[cfg(feature = "stronghold-storage")]
