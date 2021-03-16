@@ -739,6 +739,26 @@ impl Message {
             }
         }
     }
+
+    pub(crate) fn is_remainder(&self, address: &AddressWrapper) -> Option<bool> {
+        if let Some(MessagePayload::Transaction(tx)) = &self.payload {
+            match tx.essence() {
+                TransactionEssence::Regular(essence) => {
+                    for output in essence.outputs() {
+                        let (output_address, remainder) = match output {
+                            TransactionOutput::SignatureLockedSingle(o) => (o.address(), o.remainder),
+                            TransactionOutput::SignatureLockedDustAllowance(o) => (o.address(), false),
+                            _ => unimplemented!(),
+                        };
+                        if output_address == address {
+                            return Some(remainder);
+                        }
+                    }
+                }
+            }
+        }
+        None
+    }
 }
 
 impl Hash for Message {
