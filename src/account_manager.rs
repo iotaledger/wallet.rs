@@ -8,8 +8,9 @@ use crate::{
     },
     client::ClientOptions,
     event::{
-        emit_reattachment_event, emit_transaction_event, BalanceEvent, TransactionConfirmationChangeEvent,
-        TransactionEvent, TransactionEventType, TransactionReattachmentEvent,
+        emit_balance_change, emit_confirmation_state_change, emit_reattachment_event, emit_transaction_event,
+        BalanceEvent, TransactionConfirmationChangeEvent, TransactionEvent, TransactionEventType,
+        TransactionReattachmentEvent,
     },
     message::{Message, MessagePayload, MessageType, Transfer},
     signing::SignerType,
@@ -1138,7 +1139,7 @@ impl AccountsSynchronizer {
         {
             let accounts = self.accounts.read().await;
             for account_handle in accounts.values() {
-                let mut sync = account_handle.sync().await;
+                let mut sync = account_handle.sync().await.skip_events();
                 if let Some(index) = self.address_index {
                     sync = sync.address_index(index);
                 }
@@ -1157,6 +1158,34 @@ impl AccountsSynchronizer {
                     ));
                 }
                 synced_accounts.push(synced_account);
+            }
+        }
+
+        for synced_account in &synced_accounts {
+            let account_handle = synced_account.account_handle();
+            let persist_events = account_handle.account_options.persist_events;
+            let account = account_handle.read().await;
+            for balance_change_event in synced_account.skipped_balance_change_events() {
+                emit_balance_change(
+                    &account,
+                    &balance_change_event.address,
+                    balance_change_event.message_id,
+                    balance_change_event.balance_change,
+                    persist_events,
+                )
+                .await?;
+            }
+            for message in synced_account.skipped_new_transaction_events() {
+                emit_transaction_event(TransactionEventType::NewTransaction, &account, message, persist_events).await?;
+            }
+            for confirmation_change_event in synced_account.skipped_confirmation_change_events() {
+                emit_confirmation_state_change(
+                    &account,
+                    confirmation_change_event.message.clone(),
+                    confirmation_change_event.confirmed,
+                    persist_events,
+                )
+                .await?;
             }
         }
 
@@ -1305,7 +1334,7 @@ async fn poll(
                     let confirmed = ledger_inclusion_state == LedgerInclusionStateDto::Included;
                     message.set_confirmed(Some(confirmed));
                     let message = message.clone();
-                    crate::event::emit_confirmation_state_change(
+                    emit_confirmation_state_change(
                         &account,
                         message,
                         confirmed,
@@ -1901,7 +1930,7 @@ mod tests {
                 BalanceChange::spent(3),
             ];
             for change in &change_events {
-                emit_balance_change(&account, account.latest_address().address(), None, change.clone(), true)
+                emit_balance_change(&account, account.latest_address().address(), None, *change, true)
                     .await
                     .unwrap();
             }
