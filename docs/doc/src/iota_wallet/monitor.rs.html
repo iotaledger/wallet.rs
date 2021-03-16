@@ -447,19 +447,6 @@
 
     <span class="kw">let</span> <span class="ident">client_options_</span> <span class="op">=</span> <span class="ident">client_options</span>.<span class="ident">clone</span>();
 
-    <span class="kw">crate</span>::<span class="ident">event</span>::<span class="ident">emit_balance_change</span>(
-        <span class="kw-2">&amp;</span><span class="ident">account</span>,
-        <span class="kw-2">&amp;</span><span class="ident">address_wrapper</span>,
-        <span class="prelude-val">Some</span>(<span class="ident">message_id</span>),
-        <span class="kw">if</span> <span class="ident">new_balance</span> <span class="op">&gt;</span> <span class="ident">old_balance</span> {
-            <span class="kw">crate</span>::<span class="ident">event</span>::<span class="ident">BalanceChange</span>::<span class="ident">received</span>(<span class="ident">new_balance</span> <span class="op">-</span> <span class="ident">old_balance</span>)
-        } <span class="kw">else</span> {
-            <span class="kw">crate</span>::<span class="ident">event</span>::<span class="ident">BalanceChange</span>::<span class="ident">spent</span>(<span class="ident">old_balance</span> <span class="op">-</span> <span class="ident">new_balance</span>)
-        },
-        <span class="ident">account_handle</span>.<span class="ident">account_options</span>.<span class="ident">persist_events</span>,
-    )
-    .<span class="kw">await</span><span class="question-mark">?</span>;
-
     <span class="kw">if</span> <span class="ident">address_wrapper</span> <span class="op">=</span><span class="op">=</span> <span class="ident">latest_address</span> {
         <span class="ident">account_handle</span>.<span class="ident">generate_address_internal</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">account</span>).<span class="kw">await</span><span class="question-mark">?</span>;
     }
@@ -508,6 +495,19 @@
             }
         }
     }
+
+    <span class="kw">crate</span>::<span class="ident">event</span>::<span class="ident">emit_balance_change</span>(
+        <span class="kw-2">&amp;</span><span class="ident">account</span>,
+        <span class="kw-2">&amp;</span><span class="ident">address_wrapper</span>,
+        <span class="prelude-val">Some</span>(<span class="ident">message_id</span>),
+        <span class="kw">if</span> <span class="ident">new_balance</span> <span class="op">&gt;</span> <span class="ident">old_balance</span> {
+            <span class="kw">crate</span>::<span class="ident">event</span>::<span class="ident">BalanceChange</span>::<span class="ident">received</span>(<span class="ident">new_balance</span> <span class="op">-</span> <span class="ident">old_balance</span>)
+        } <span class="kw">else</span> {
+            <span class="kw">crate</span>::<span class="ident">event</span>::<span class="ident">BalanceChange</span>::<span class="ident">spent</span>(<span class="ident">old_balance</span> <span class="op">-</span> <span class="ident">new_balance</span>)
+        },
+        <span class="ident">account_handle</span>.<span class="ident">account_options</span>.<span class="ident">persist_events</span>,
+    )
+    .<span class="kw">await</span><span class="question-mark">?</span>;
 
     <span class="ident">account</span>.<span class="ident">save</span>().<span class="kw">await</span><span class="question-mark">?</span>;
 
