@@ -551,7 +551,7 @@
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">account</span>::<span class="ident">Account</span>,
-    <span class="ident">event</span>::{<span class="ident">BalanceEvent</span>, <span class="ident">TransactionConfirmationChangeEvent</span>, <span class="ident">TransactionEvent</span>},
+    <span class="ident">event</span>::{<span class="ident">BalanceEvent</span>, <span class="ident">TransactionConfirmationChangeEvent</span>, <span class="ident">TransactionEvent</span>, <span class="ident">TransactionReattachmentEvent</span>},
 };
 
 <span class="kw">use</span> <span class="ident">chrono</span>::<span class="ident">Utc</span>;
@@ -805,7 +805,7 @@
     <span class="ident">get_new_transaction_event_count</span>
 );
 <span class="macro">event_manager_impl</span><span class="macro">!</span>(
-    <span class="ident">TransactionEvent</span>,
+    <span class="ident">TransactionReattachmentEvent</span>,
     <span class="ident">reattachment_indexation</span>,
     <span class="string">&quot;iota-wallet-tx-reattachment-events&quot;</span>,
     <span class="ident">save_reattachment_event</span>,
