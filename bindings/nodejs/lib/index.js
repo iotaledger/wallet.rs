@@ -81,32 +81,6 @@ Account.prototype.reattach = promisify(Account.prototype.reattach)
 Account.prototype.promote = promisify(Account.prototype.promote)
 Account.prototype.consolidateOutputs = promisify(Account.prototype.consolidateOutputs)
 
-const managerClass = AccountManager
-
-/** This is a description of AccountManagern. */
-AccountManager = function () {
-  const instance = new managerClass(arguments[0])
-
-  // workaround to force the manager to cleanup
-  // this is needed because somehow the manager `drop` impl isn't being called - issue on Neon
-  const cleanup = () => {
-    try {
-      instance.stopBackgroundSync()
-    }
-    finally {
-      process.exit()
-    }
-  }
-
-  process.on('exit', cleanup)
-  process.on('SIGINT', cleanup)
-  process.on('SIGTERM', cleanup)
-  process.on('SIGHUP', cleanup)
-  process.on('SIGBREAK', cleanup)
-
-  return instance
-}
-AccountManager.prototype = managerClass.prototype
 AccountManager.prototype.syncAccounts = promisify(AccountManager.prototype.syncAccounts)
 AccountManager.prototype.internalTransfer = promisify(AccountManager.prototype.internalTransfer)
 AccountManager.prototype.isLatestAddressUnused = promisify(AccountManager.prototype.isLatestAddressUnused)
