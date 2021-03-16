@@ -27,7 +27,7 @@ fn generate_indexation_id() -> String {
 }
 
 /// The balance change event payload.
-#[derive(Clone, PartialEq, Eq, Getters, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Getters, Serialize, Deserialize)]
 pub struct BalanceChange {
     /// The change amount if it was a spent event.
     pub spent: u64,
@@ -52,7 +52,7 @@ impl BalanceChange {
 }
 
 /// The balance change event data.
-#[derive(Getters, Serialize, Deserialize)]
+#[derive(Debug, Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct BalanceEvent {
     /// Event unique identifier.
@@ -70,6 +70,9 @@ pub struct BalanceEvent {
     /// with_sync_spent_outputs).
     #[serde(rename = "messageId")]
     pub message_id: Option<MessageId>,
+    /// Whether the event is associated with a remainder output or not.
+    /// Note that this might be `None` if we couldn't get the message object from the node.
+    remainder: Option<bool>,
     /// The balance change data.
     #[serde(rename = "balanceChange")]
     pub balance_change: BalanceChange,
@@ -318,11 +321,21 @@ pub(crate) async fn emit_balance_change(
     persist: bool,
 ) -> crate::Result<()> {
     let listeners = balance_listeners().lock().await;
+    let remainder = if balance_change.spent > 0 {
+        Some(false)
+    } else {
+        message_id.and_then(|id| {
+            account
+                .get_message(&id)
+                .and_then(|message| message.is_remainder(&address))
+        })
+    };
     let event = BalanceEvent {
         indexation_id: generate_indexation_id(),
         account_id: account.id().to_string(),
         address: address.clone(),
         message_id,
+        remainder,
         balance_change,
     };
 
