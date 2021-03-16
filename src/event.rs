@@ -425,7 +425,7 @@ pub(crate) async fn emit_transaction_event(
 /// Emits a transaction confirmation state change event.
 pub(crate) async fn emit_confirmation_state_change(
     account: &Account,
-    message: &Message,
+    message: Message,
     confirmed: bool,
     persist: bool,
 ) -> crate::Result<()> {
@@ -433,7 +433,7 @@ pub(crate) async fn emit_confirmation_state_change(
     let event = TransactionConfirmationChangeEvent {
         indexation_id: generate_indexation_id(),
         account_id: account.id().to_string(),
-        message: message.clone(),
+        message,
         confirmed,
     };
 
@@ -803,7 +803,7 @@ mod tests {
                 })
                 .await;
 
-                emit_confirmation_state_change(&account, &message, confirmed, true)
+                emit_confirmation_state_change(&account, message.clone(), confirmed, true)
                     .await
                     .unwrap();
             });
