@@ -491,7 +491,7 @@ async fn perform_sync(
         if !account
             .messages()
             .iter()
-            .any(|message| message.id() == &found_message_id)
+            .any(|message| message.id() == &found_message_id && message.confirmed() == &confirmed)
         {
             new_messages.push((found_message_id, confirmed, found_message));
         }
