@@ -580,7 +580,6 @@ impl AccountManager {
 
                             if !accounts.read().await.is_empty() {
                                 let should_sync = !(synced && is_monitoring.load(Ordering::Relaxed));
-                                // println!("synced {}, monitoring {}", synced, is_monitoring.load(Ordering::Relaxed));
                                 match AssertUnwindSafe(
                                     poll(
                                         sync_accounts_lock.clone(),
