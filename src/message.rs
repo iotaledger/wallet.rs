@@ -833,7 +833,7 @@ async fn is_internal(
                 inputs_belongs_to_account = transaction_inputs_belongs_to_account(&essence, account.addresses());
             }
             if !outputs_belongs_to_account {
-                outputs_belongs_to_account = transaction_outputs_belongs_to_account(&essence, &account_addresses);
+                outputs_belongs_to_account = transaction_outputs_belongs_to_account(&essence, account.addresses());
             }
         }
 
