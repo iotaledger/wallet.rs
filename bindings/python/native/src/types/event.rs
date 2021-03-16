@@ -7,7 +7,7 @@ use dict_derive::{FromPyObject as DeriveFromPyObject, IntoPyObject as DeriveInto
 use iota_wallet::event::{
     BalanceChange as WalletBalanceChange, BalanceEvent as WalletBalanceEvent,
     TransactionConfirmationChangeEvent as WalletTransactionConfirmationChangeEvent,
-    TransactionEvent as WalletTransactionEvent,
+    TransactionEvent as WalletTransactionEvent, TransactionReattachmentEvent as WalletTransactionReattachmentEvent,
 };
 
 use std::convert::{TryFrom, TryInto};
@@ -72,7 +72,7 @@ impl TryFrom<WalletTransactionEvent> for TransactionEvent {
 pub struct TransactionConfirmationChangeEvent {
     /// Associated account.
     account_id: String,
-    /// The address.
+    /// The associated message.
     message: WalletMessage,
     /// Confirmed flag.
     confirmed: bool,
@@ -85,6 +85,27 @@ impl TryFrom<WalletTransactionConfirmationChangeEvent> for TransactionConfirmati
             account_id: value.account_id,
             message: value.message.try_into()?,
             confirmed: value.confirmed,
+        })
+    }
+}
+
+#[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
+pub struct TransactionReattachmentEvent {
+    /// Associated account.
+    account_id: String,
+    /// The reattachment message.
+    message: WalletMessage,
+    /// The id of the message that was reattached.
+    reattached_message_id: MessageId,
+}
+
+impl TryFrom<WalletTransactionReattachmentEvent> for TransactionReattachmentEvent {
+    type Error = Error;
+    fn try_from(value: WalletTransactionReattachmentEvent) -> Result<Self, Self::Error> {
+        Ok(Self {
+            account_id: value.account_id,
+            message: value.message.try_into()?,
+            reattached_message_id: value.reattached_message_id,
         })
     }
 }
