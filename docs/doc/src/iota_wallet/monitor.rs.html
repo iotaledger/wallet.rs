@@ -458,7 +458,7 @@
             <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">clone</span>();
             <span class="kw">crate</span>::<span class="ident">event</span>::<span class="ident">emit_confirmation_state_change</span>(
                 <span class="kw-2">&amp;</span><span class="ident">account</span>,
-                <span class="kw-2">&amp;</span><span class="ident">message</span>,
+                <span class="ident">message</span>.<span class="ident">clone</span>(),
                 <span class="bool-val">true</span>,
                 <span class="ident">account_handle</span>.<span class="ident">account_options</span>.<span class="ident">persist_events</span>,
             )
@@ -585,7 +585,7 @@
 
             <span class="kw">crate</span>::<span class="ident">event</span>::<span class="ident">emit_confirmation_state_change</span>(
                 <span class="kw-2">&amp;</span><span class="ident">account</span>,
-                <span class="kw-2">&amp;</span><span class="ident">message</span>,
+                <span class="ident">message</span>.<span class="ident">clone</span>(),
                 <span class="ident">confirmed</span>,
                 <span class="ident">account_handle</span>.<span class="ident">account_options</span>.<span class="ident">persist_events</span>,
             )
