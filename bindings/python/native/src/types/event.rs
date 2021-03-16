@@ -96,7 +96,7 @@ pub struct TransactionReattachmentEvent {
     /// The reattachment message.
     message: WalletMessage,
     /// The id of the message that was reattached.
-    reattached_message_id: MessageId,
+    reattached_message_id: String,
 }
 
 impl TryFrom<WalletTransactionReattachmentEvent> for TransactionReattachmentEvent {
@@ -105,7 +105,7 @@ impl TryFrom<WalletTransactionReattachmentEvent> for TransactionReattachmentEven
         Ok(Self {
             account_id: value.account_id,
             message: value.message.try_into()?,
-            reattached_message_id: value.reattached_message_id,
+            reattached_message_id: value.reattached_message_id.to_string(),
         })
     }
 }
