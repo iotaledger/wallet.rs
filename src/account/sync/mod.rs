@@ -766,16 +766,12 @@ impl AccountSynchronizer {
                                     &account_ref,
                                     address_after_sync.address(),
                                     None,
-                                     if balance_change > 0 {
+                                    if balance_change > 0 {
                                         // balance_change is positive; subtract the already emitted balance.
-                                        BalanceChange::received(
-                                            (balance_change - output_change_balance) as u64,
-                                        )
+                                        BalanceChange::received((balance_change - output_change_balance) as u64)
                                     } else {
                                         // balance_change is negative; get the absolute diff.
-                                        BalanceChange::spent(
-                                            (balance_change - output_change_balance).abs() as u64,
-                                        )
+                                        BalanceChange::spent((balance_change - output_change_balance).abs() as u64)
                                     },
                                     self.account_handle.account_options.persist_events,
                                 )
