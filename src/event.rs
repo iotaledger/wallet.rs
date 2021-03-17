@@ -27,7 +27,7 @@ fn generate_indexation_id() -> String {
 }
 
 /// The balance change event payload.
-#[derive(Debug, Clone, PartialEq, Eq, Getters, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Getters, Serialize, Deserialize)]
 pub struct BalanceChange {
     /// The change amount if it was a spent event.
     pub spent: u64,
