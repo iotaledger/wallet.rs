@@ -147,19 +147,6 @@ async fn process_output(
 
     let client_options_ = client_options.clone();
 
-    crate::event::emit_balance_change(
-        &account,
-        &address_wrapper,
-        Some(message_id),
-        if new_balance > old_balance {
-            crate::event::BalanceChange::received(new_balance - old_balance)
-        } else {
-            crate::event::BalanceChange::spent(old_balance - new_balance)
-        },
-        account_handle.account_options.persist_events,
-    )
-    .await?;
-
     if address_wrapper == latest_address {
         account_handle.generate_address_internal(&mut account).await?;
     }
@@ -171,7 +158,7 @@ async fn process_output(
             let message = message.clone();
             crate::event::emit_confirmation_state_change(
                 &account,
-                &message,
+                message.clone(),
                 true,
                 account_handle.account_options.persist_events,
             )
@@ -208,6 +195,19 @@ async fn process_output(
             }
         }
     }
+
+    crate::event::emit_balance_change(
+        &account,
+        &address_wrapper,
+        Some(message_id),
+        if new_balance > old_balance {
+            crate::event::BalanceChange::received(new_balance - old_balance)
+        } else {
+            crate::event::BalanceChange::spent(old_balance - new_balance)
+        },
+        account_handle.account_options.persist_events,
+    )
+    .await?;
 
     account.save().await?;
 
@@ -285,7 +285,7 @@ async fn process_metadata(
 
             crate::event::emit_confirmation_state_change(
                 &account,
-                &message,
+                message.clone(),
                 confirmed,
                 account_handle.account_options.persist_events,
             )
