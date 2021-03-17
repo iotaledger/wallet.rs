@@ -56,4 +56,3 @@ impl MigratedFundsEntry {
         self.payload.output().clone()
     }
 }
-
