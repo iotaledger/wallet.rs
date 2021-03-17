@@ -294,9 +294,6 @@
 <span id="291">291</span>
 <span id="292">292</span>
 <span id="293">293</span>
-<span id="294">294</span>
-<span id="295">295</span>
-<span id="296">296</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -309,12 +306,9 @@
 };
 
 <span class="kw">use</span> <span class="ident">iota</span>::{
-    <span class="ident">bee_rest_api</span>::<span class="ident">endpoints</span>::<span class="ident">api</span>::<span class="ident">v1</span>::{
-        <span class="ident">message_metadata</span>::{<span class="ident">LedgerInclusionStateDto</span>, <span class="ident">MessageMetadataResponse</span>},
-        <span class="ident">output</span>::<span class="ident">OutputResponse</span>,
-    },
+    <span class="ident">bee_rest_api</span>::<span class="ident">types</span>::{<span class="ident">dtos</span>::<span class="ident">LedgerInclusionStateDto</span>, <span class="ident">responses</span>::<span class="ident">MessageMetadataResponse</span>},
     <span class="ident">message</span>::<span class="ident">prelude</span>::<span class="ident">MessageId</span>,
-    <span class="ident">Topic</span>, <span class="ident">TopicEvent</span>,
+    <span class="ident">OutputResponse</span>, <span class="ident">Topic</span>, <span class="ident">TopicEvent</span>,
 };
 
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::{<span class="ident">atomic</span>::<span class="ident">AtomicBool</span>, <span class="ident">Arc</span>};

@@ -470,9 +470,6 @@
 <span id="467">467</span>
 <span id="468">468</span>
 <span id="469">469</span>
-<span id="470">470</span>
-<span id="471">471</span>
-<span id="472">472</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -484,11 +481,8 @@
 };
 <span class="kw">use</span> <span class="ident">getset</span>::{<span class="ident">Getters</span>, <span class="ident">Setters</span>};
 <span class="kw">use</span> <span class="ident">iota</span>::{
-    <span class="ident">bee_rest_api</span>::{
-        <span class="ident">endpoints</span>::<span class="ident">api</span>::<span class="ident">v1</span>::<span class="ident">output</span>::<span class="ident">OutputResponse</span>,
-        <span class="ident">types</span>::{<span class="ident">AddressDto</span>, <span class="ident">OutputDto</span>},
-    },
-    <span class="ident">MessageId</span>, <span class="ident">OutputId</span>, <span class="ident">TransactionId</span>,
+    <span class="ident">bee_rest_api</span>::<span class="ident">types</span>::<span class="ident">dtos</span>::{<span class="ident">AddressDto</span>, <span class="ident">OutputDto</span>},
+    <span class="ident">MessageId</span>, <span class="ident">OutputId</span>, <span class="ident">OutputResponse</span>, <span class="ident">TransactionId</span>,
 };
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">iota</span>::{<span class="ident">Address</span> <span class="kw">as</span> <span class="ident">IotaAddress</span>, <span class="ident">Ed25519Address</span>, <span class="ident">Input</span>, <span class="ident">UTXOInput</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
