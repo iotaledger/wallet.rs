@@ -1,14 +1,9 @@
-use iota_wallet::{
-    message::{
-        MessagePayload as MessagePayloadRust,
-    },
-};
+// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 
-use crate::bee_types::index::*;
-use crate::bee_types::milestone::*;
-use crate::bee_types::transaction::*;
-use crate::bee_types::receipt::*;
-use crate::bee_types::treasury::*;
+use iota_wallet::message::MessagePayload as MessagePayloadRust;
+
+use crate::bee_types::{index::*, milestone::*, receipt::*, transaction::*, treasury::*};
 
 pub enum MessagePayloadType {
     Transaction = 1,
@@ -28,10 +23,8 @@ impl MessagePayload {
     }
 
     pub fn new_with_internal(payload: MessagePayloadRust) -> Self {
-        MessagePayload {
-            payload: payload,
-        }
-    } 
+        MessagePayload { payload: payload }
+    }
 
     pub fn payload_type(&self) -> MessagePayloadType {
         match self.payload {
@@ -68,10 +61,7 @@ impl MessagePayload {
 
     pub fn get_as_milestone(&self) -> Option<MilestonePayload> {
         if let MessagePayloadRust::Milestone(payload) = &self.payload {
-            match MilestonePayload::new_with(
-                payload.essence().to_owned(),
-                payload.signatures().to_owned()
-            ) {
+            match MilestonePayload::new_with(payload.essence().to_owned(), payload.signatures().to_owned()) {
                 Ok(i) => Some(i),
                 Err(_) => None,
             }

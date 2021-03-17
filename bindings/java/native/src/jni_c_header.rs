@@ -1,4 +1,7 @@
-  #![allow(
+// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+#![allow(
     non_upper_case_globals,
     dead_code,
     non_camel_case_types,

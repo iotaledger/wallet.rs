@@ -1,24 +1,17 @@
-use iota_wallet::{
-    message::{
-        TreasuryTransactionPayload as TreasuryTransactionPayloadRust,
-        MessageId,
-    }
-};
+// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 
-use iota::{
-    Input, Output,
-};
+use iota_wallet::message::{MessageId, TreasuryTransactionPayload as TreasuryTransactionPayloadRust};
+
+use iota::{Input, Output};
 
 pub struct TreasuryTransactionPayload {
     payload: TreasuryTransactionPayloadRust,
 }
 
 impl TreasuryTransactionPayload {
-
     pub fn new_with_rust(payload: TreasuryTransactionPayloadRust) -> Self {
-        Self {
-            payload: payload
-        }
+        Self { payload: payload }
     }
 
     pub fn input(&self) -> MessageId {

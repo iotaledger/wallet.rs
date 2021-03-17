@@ -1,3 +1,6 @@
+// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use std::time::{UNIX_EPOCH};
 
 //ANCHOR: foreign_typemap_chrono_example

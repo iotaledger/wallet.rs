@@ -1,11 +1,10 @@
-use anyhow::anyhow;
-use crate::Result;
+// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 
-use iota_wallet::{
-    message::{
-        IndexationPayload as IndexationPayloadRust,
-    }
-};
+use crate::Result;
+use anyhow::anyhow;
+
+use iota_wallet::message::IndexationPayload as IndexationPayloadRust;
 
 pub struct IndexationPayload {
     payload: IndexationPayloadRust,
@@ -20,9 +19,7 @@ impl IndexationPayload {
         let index = IndexationPayloadRust::new(&index, &data);
         match index {
             Err(e) => Err(anyhow!(e.to_string())),
-            Ok(i) => Ok(IndexationPayload {
-                payload: i
-            })
+            Ok(i) => Ok(IndexationPayload { payload: i }),
         }
     }
 

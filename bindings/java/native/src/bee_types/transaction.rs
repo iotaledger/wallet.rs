@@ -1,20 +1,16 @@
+// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use iota_wallet::{
+    address::OutputKind as RustOutputKind,
     message::{
-        MessageTransactionPayload as MessageTransactionPayloadRust,
-        TransactionRegularEssence as TransactionRegularEssenceRust, 
-        TransactionEssence as TransactionEssenceRust,
-        TransactionInput as RustWalletInput,
-        TransactionOutput as RustWalletOutput,
-    },
-    address::{
-        OutputKind as RustOutputKind,
+        MessageTransactionPayload as MessageTransactionPayloadRust, TransactionEssence as TransactionEssenceRust,
+        TransactionInput as RustWalletInput, TransactionOutput as RustWalletOutput,
+        TransactionRegularEssence as TransactionRegularEssenceRust,
     },
 };
 
-use iota::{
-    Payload as RustPayload,
-    UnlockBlock as RustUnlockBlock,
-};
+use iota::{Payload as RustPayload, UnlockBlock as RustUnlockBlock};
 
 pub enum InputKind {
     UTXO = 0,
@@ -25,7 +21,7 @@ pub enum UnlockBlockKind {
     Reference = 0,
     Ed25519 = 1,
 }
-        
+
 pub struct MessageTransactionPayload {
     essence: Essence,
     unlock_blocks: Vec<UnlockBlock>,
@@ -35,16 +31,16 @@ impl MessageTransactionPayload {
     pub fn new_with_rust(payload: &Box<MessageTransactionPayloadRust>) -> MessageTransactionPayload {
         Self {
             essence: Essence {
-                essence: payload.essence().to_owned()
+                essence: payload.essence().to_owned(),
             },
             unlock_blocks: payload
                 .unlock_blocks()
                 .iter()
                 .cloned()
                 .map(|unlock_block| UnlockBlock {
-                    unlock_block: unlock_block
+                    unlock_block: unlock_block,
                 })
-                .collect()
+                .collect(),
         }
     }
 
@@ -53,10 +49,7 @@ impl MessageTransactionPayload {
     }
 
     pub fn unlock_blocks(&self) -> Vec<UnlockBlock> {
-        self.unlock_blocks
-            .iter()
-            .cloned()
-            .collect()
+        self.unlock_blocks.iter().cloned().collect()
     }
 }
 #[derive(Clone)]
@@ -65,16 +58,15 @@ pub struct Essence {
 }
 
 impl Essence {
-    
     #[allow(irrefutable_let_patterns)]
     pub fn get_as_regular(&self) -> Option<RegularEssence> {
         if let TransactionEssenceRust::Regular(essence) = &self.essence {
-            return Some(RegularEssence { 
-                essence: essence.clone()
-            })
+            return Some(RegularEssence {
+                essence: essence.clone(),
+            });
         };
         None
-    } 
+    }
 }
 
 #[derive(Clone)]
@@ -84,21 +76,21 @@ pub struct RegularEssence {
 
 impl RegularEssence {
     pub fn inputs(&self) -> Vec<TransactionInput> {
-        self.essence.inputs().iter()
+        self.essence
+            .inputs()
+            .iter()
             .cloned()
-            .map(|input| TransactionInput {
-                input: input
-            })
+            .map(|input| TransactionInput { input: input })
             .collect()
     }
 
     /// Gets the transaction outputs.
     pub fn outputs(&self) -> Vec<TransactionOutput> {
-        self.essence.outputs().iter()
+        self.essence
+            .outputs()
+            .iter()
             .cloned()
-            .map(|output| TransactionOutput {
-                output: output
-            })
+            .map(|output| TransactionOutput { output: output })
             .collect()
     }
 
@@ -175,7 +167,7 @@ impl UnlockBlock {
         match self.unlock_block {
             RustUnlockBlock::Signature(_) => UnlockBlockKind::Ed25519,
             RustUnlockBlock::Reference(_) => UnlockBlockKind::Reference,
-            _ => panic!("Found unknown unlock block")
+            _ => panic!("Found unknown unlock block"),
         }
     }
 
@@ -184,28 +176,26 @@ impl UnlockBlock {
     }
 }
 
-/*
-pub struct TransactionPayloadBuilder {
-    builder: Rc<RefCell<Option<TransactionPayloadBuilderRust>>>
-}
-
-impl Default for TransactionPayloadBuilder {
-    fn default() -> Self {
-        Self {
-            builder: Rc::new(RefCell::new(Option::from(TransactionPayloadBuilderRust::default())))
-        }
-    }
-}
-
-impl TransactionPayloadBuilder {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    fn new_with_builder(builder: TransactionPayloadBuilder) -> Self {
-        Self {
-            builder: Rc::new(RefCell::new(Option::from(builder)))
-        }
-    }
-}
-*/
+// pub struct TransactionPayloadBuilder {
+// builder: Rc<RefCell<Option<TransactionPayloadBuilderRust>>>
+// }
+//
+// impl Default for TransactionPayloadBuilder {
+// fn default() -> Self {
+// Self {
+// builder: Rc::new(RefCell::new(Option::from(TransactionPayloadBuilderRust::default())))
+// }
+// }
+// }
+//
+// impl TransactionPayloadBuilder {
+// pub fn new() -> Self {
+// Self::default()
+// }
+//
+// fn new_with_builder(builder: TransactionPayloadBuilder) -> Self {
+// Self {
+// builder: Rc::new(RefCell::new(Option::from(builder)))
+// }
+// }
+// }

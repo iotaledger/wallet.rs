@@ -1,4 +1,7 @@
-pub fn class_partial_eq(code: &mut Vec<u8>, class_name: &str){
+// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+pub fn class_partial_eq(code: &mut Vec<u8>, class_name: &str) {
     let needle = format!("class {} {{", class_name);
     let class_pos = code
         .windows(needle.len())
@@ -8,7 +11,7 @@ pub fn class_partial_eq(code: &mut Vec<u8>, class_name: &str){
     code.splice(
         insert_pos..insert_pos,
         format!(
-                r#"
+            r#"
     public boolean equals(Object obj) {{
         boolean equal = false;
         if (obj instanceof {class})
@@ -28,7 +31,7 @@ pub fn class_partial_eq(code: &mut Vec<u8>, class_name: &str){
     );
 }
 
-pub fn class_to_string(code: &mut Vec<u8>, class_name: &str){
+pub fn class_to_string(code: &mut Vec<u8>, class_name: &str) {
     let needle = format!("class {} {{", class_name);
     let class_pos = code
         .windows(needle.len())
@@ -38,24 +41,23 @@ pub fn class_to_string(code: &mut Vec<u8>, class_name: &str){
     code.splice(
         insert_pos..insert_pos,
         format!(
-                r#"
+            r#"
     @Override
     public String toString() {{
         return this.to_string();
     }}
-"#)
+"#
+        )
         .as_bytes()
         .iter()
         .copied(),
     );
 }
 
-/*
-pub fn class_getters(code: &mut Vec<u8>, class_name: &str){
-    
-}
-
-pub fn class_setters(code: &mut Vec<u8>, class_name: &str){
-    
-}
-*/
+// pub fn class_getters(code: &mut Vec<u8>, class_name: &str){
+//
+// }
+//
+// pub fn class_setters(code: &mut Vec<u8>, class_name: &str){
+//
+// }

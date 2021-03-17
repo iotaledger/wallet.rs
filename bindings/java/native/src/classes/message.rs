@@ -1,27 +1,20 @@
-use std::{
-    cell::RefCell,
-    rc::Rc,
-};
+// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+use std::{cell::RefCell, rc::Rc};
 
 use iota_wallet::{
+    address::AddressWrapper,
     message::{
-        RemainderValueStrategy as RemainderValueStrategyRust,
-        Message as MessageRust,
-        Transfer as TransferRust,
-        TransferBuilder as TransferBuilderRust,
-        MessageId,
+        Message as MessageRust, MessageId, RemainderValueStrategy as RemainderValueStrategyRust,
+        Transfer as TransferRust, TransferBuilder as TransferBuilderRust,
     },
-    address::{
-        AddressWrapper
-    }
 };
 
-use crate::bee_types::{
-    IndexationPayload, MessagePayload,
-};
+use crate::bee_types::{IndexationPayload, MessagePayload};
 
-use std::num::NonZeroU64;
 use chrono::prelude::{DateTime, Utc};
+use std::num::NonZeroU64;
 
 pub enum RemainderValueStrategy {
     ReuseAddress = 1,
@@ -31,13 +24,14 @@ pub enum RemainderValueStrategy {
 pub fn remainder_type_enum_to_type(strategy: RemainderValueStrategy) -> RemainderValueStrategyRust {
     match strategy {
         RemainderValueStrategy::ReuseAddress => RemainderValueStrategyRust::ReuseAddress,
-        RemainderValueStrategy::ChangeAddress => RemainderValueStrategyRust::ChangeAddress
-        // TODO: Add strategy for sending to an address from an account
+        RemainderValueStrategy::ChangeAddress => RemainderValueStrategyRust::ChangeAddress, /* TODO: Add strategy for
+                                                                                             * sending to an address
+                                                                                             * from an account */
     }
 }
 
 pub struct Transfer {
-    transfer: TransferRust
+    transfer: TransferRust,
 }
 
 impl Transfer {
@@ -51,68 +45,72 @@ impl Transfer {
 }
 
 pub struct TransferBuilder {
-    builder: Rc<RefCell<Option<TransferBuilderRust>>>
+    builder: Rc<RefCell<Option<TransferBuilderRust>>>,
 }
 
 impl TransferBuilder {
     pub fn new(address: AddressWrapper, amount: u64) -> Self {
         Self {
-            builder: Rc::new(RefCell::new(Option::from(
-                TransferBuilderRust::new(address, NonZeroU64::new(amount).unwrap()
-            ))))
+            builder: Rc::new(RefCell::new(Option::from(TransferBuilderRust::new(
+                address,
+                NonZeroU64::new(amount).unwrap(),
+            )))),
         }
     }
 
     pub fn new_with_builder(builder: TransferBuilderRust) -> Self {
         Self {
-            builder: Rc::new(RefCell::new(Option::from(builder)))
+            builder: Rc::new(RefCell::new(Option::from(builder))),
         }
     }
 
     pub fn with_remainder_value_strategy(&mut self, strategy: RemainderValueStrategy) -> Self {
-        let new_builder = self.builder.borrow_mut().take().unwrap().with_remainder_value_strategy(
-            remainder_type_enum_to_type(strategy)
-        );
+        let new_builder = self
+            .builder
+            .borrow_mut()
+            .take()
+            .unwrap()
+            .with_remainder_value_strategy(remainder_type_enum_to_type(strategy));
         TransferBuilder::new_with_builder(new_builder)
     }
 
     pub fn with_indexation(&mut self, indexation: IndexationPayload) -> Self {
-        let new_builder = self.builder.borrow_mut().take().unwrap().with_indexation(
-            indexation.get_internal()
-        );
+        let new_builder = self
+            .builder
+            .borrow_mut()
+            .take()
+            .unwrap()
+            .with_indexation(indexation.get_internal());
         TransferBuilder::new_with_builder(new_builder)
     }
 
     /// Builds the transfer.
     pub fn finish(&self) -> Transfer {
         Transfer {
-            transfer: self.builder.borrow_mut().take().unwrap().finish()
+            transfer: self.builder.borrow_mut().take().unwrap().finish(),
         }
     }
 }
 
 #[derive(PartialEq)]
 pub struct Message {
-    message: MessageRust
+    message: MessageRust,
 }
 
 impl Clone for Message {
     fn clone(&self) -> Self {
         Message {
-            message: self.message.clone()
+            message: self.message.clone(),
         }
     }
 }
 
 impl Message {
-
     pub fn new_with_internal(msg: MessageRust) -> Self {
-        Message {
-            message: msg,
-        }
-    } 
+        Message { message: msg }
+    }
 
-    pub fn id(&self) -> MessageId{
+    pub fn id(&self) -> MessageId {
         self.message.id().clone()
     }
     pub fn version(&self) -> u64 {
@@ -134,7 +132,7 @@ impl Message {
     pub fn timestamp(&self) -> DateTime<Utc> {
         *(self.message.timestamp())
     }
-    pub fn nonce(&self) -> u64{
+    pub fn nonce(&self) -> u64 {
         *(self.message.nonce())
     }
     pub fn confirmed(&self) -> Option<bool> {

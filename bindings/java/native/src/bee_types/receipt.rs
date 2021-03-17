@@ -1,24 +1,17 @@
-use iota_wallet::{
-    message::{
-        ReceiptPayload as ReceiptPayloadRust,
-        SignatureLockedSingleOutput,
-    }
-};
+// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 
-use iota::{
-    MigratedFundsEntry as MigratedFundsEntryRust,
-};
+use iota_wallet::message::{ReceiptPayload as ReceiptPayloadRust, SignatureLockedSingleOutput};
+
+use iota::MigratedFundsEntry as MigratedFundsEntryRust;
 
 pub struct ReceiptPayload {
     payload: ReceiptPayloadRust,
 }
 
 impl ReceiptPayload {
-
     pub fn new_with_rust(payload: ReceiptPayloadRust) -> Self {
-        Self {
-            payload: payload
-        }
+        Self { payload: payload }
     }
 
     pub fn index(&self) -> u32 {
@@ -29,14 +22,16 @@ impl ReceiptPayload {
         self.payload.last()
     }
 
-    
     pub fn funds(&self) -> Vec<MigratedFundsEntry> {
-        self.payload.funds().into_iter().map(|m| MigratedFundsEntry { payload: m.clone()}).collect()
+        self.payload
+            .funds()
+            .into_iter()
+            .map(|m| MigratedFundsEntry { payload: m.clone() })
+            .collect()
     }
-    /*
-    pub fn transaction(&self) -> Payload {
-        self.payload.transaction().clone()
-    }*/
+    // pub fn transaction(&self) -> Payload {
+    // self.payload.transaction().clone()
+    // }
 
     pub fn amount(&self) -> u64 {
         self.payload.amount()

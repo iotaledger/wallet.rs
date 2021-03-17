@@ -9,5 +9,5 @@ pub use account::*;
 pub use account_manager::*;
 pub use event_listener::*;
 
-pub mod message;
 pub mod address;
+pub mod message;

@@ -1,18 +1,16 @@
-use std::fmt::{
-    Display, Formatter
-};
+// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+use std::fmt::{Display, Formatter};
 
 use iota_wallet::{
-    address::{
-        Address as AddressRust,
-        AddressOutput, AddressWrapper,
-    },
     account::Account,
+    address::{Address as AddressRust, AddressOutput, AddressWrapper},
 };
 
 #[derive(Clone, PartialEq)]
 pub struct Address {
-    address: AddressRust
+    address: AddressRust,
 }
 
 impl Display for Address {
@@ -20,12 +18,10 @@ impl Display for Address {
         write!(f, "({})", self.readable())
     }
 }
-    
+
 impl Address {
     pub fn new_with_internal(addr: AddressRust) -> Self {
-        Address {
-            address: addr,
-        }
+        Address { address: addr }
     }
 
     pub fn readable(&self) -> String {

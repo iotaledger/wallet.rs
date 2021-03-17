@@ -1,3 +1,6 @@
+// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 foreign_typemap!(
     ($p:r_type) &[u8] => Vec<i16> {
         $out = $p.iter().cloned().map(|x| x as i16).collect();

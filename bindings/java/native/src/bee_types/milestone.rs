@@ -1,15 +1,11 @@
+// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::Result;
 
-use iota_wallet::{
-    message::{
-        MilestonePayload as MilestonePayloadRust,
-        MessageId,
-    }
-};
+use iota_wallet::message::{MessageId, MilestonePayload as MilestonePayloadRust};
 
-use iota::{
-    MilestonePayloadEssence as RustMilestonePayloadEssence,
-};
+use iota::MilestonePayloadEssence as RustMilestonePayloadEssence;
 
 use anyhow::anyhow;
 
@@ -21,9 +17,7 @@ impl MilestonePayload {
     pub fn new_with(essence: RustMilestonePayloadEssence, signatures: Vec<Box<[u8]>>) -> Result<MilestonePayload> {
         let res = MilestonePayloadRust::new(essence, signatures);
         match res {
-            Ok(index) => Ok(MilestonePayload {
-                payload: index
-            }),
+            Ok(index) => Ok(MilestonePayload { payload: index }),
             Err(err) => Err(anyhow!(err.to_string())),
         }
     }
@@ -36,7 +30,7 @@ impl MilestonePayload {
         let ess_ref = self.payload.essence();
 
         MilestonePayloadEssence {
-            essence: ess_ref.clone()
+            essence: ess_ref.clone(),
         }
     }
 

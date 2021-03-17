@@ -1,20 +1,17 @@
-use std::{
-    time::Duration,
-    cell::RefCell,
-    rc::Rc,
-};
+// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+use std::{cell::RefCell, rc::Rc, time::Duration};
 
 use iota_wallet::client::{
+    Api, BrokerOptions as BrokerOptionsRust, ClientOptions as ClientOptionsRust,
     ClientOptionsBuilder as ClientOptionsBuilderRust,
-    ClientOptions as ClientOptionsRust,
-    BrokerOptions as BrokerOptionsRust,
-    Api,
 };
 
 use crate::Result;
 
 pub struct BrokerOptions {
-    builder: Rc<RefCell<Option<BrokerOptionsRust>>>
+    builder: Rc<RefCell<Option<BrokerOptionsRust>>>,
 }
 
 impl BrokerOptions {
@@ -23,23 +20,23 @@ impl BrokerOptions {
             builder: Rc::new(RefCell::new(Option::from(BrokerOptionsRust {
                 automatic_disconnect: None,
                 timeout: None,
-            })))
+            }))),
         }
     }
 
-    fn new_with(options: BrokerOptionsRust) -> BrokerOptions{
+    fn new_with(options: BrokerOptionsRust) -> BrokerOptions {
         Self {
-            builder: Rc::new(RefCell::new(Option::from(options)))
+            builder: Rc::new(RefCell::new(Option::from(options))),
         }
     }
 
-    pub fn automatic_disconnect(&self, disconnect: bool) -> BrokerOptions  {
+    pub fn automatic_disconnect(&self, disconnect: bool) -> BrokerOptions {
         let mut builder = self.builder.borrow_mut().take().unwrap();
         builder.automatic_disconnect = Some(disconnect);
         BrokerOptions::new_with(builder)
     }
 
-    pub fn timeout(&self, timeout: Duration) -> BrokerOptions  {
+    pub fn timeout(&self, timeout: Duration) -> BrokerOptions {
         let mut builder = self.builder.borrow_mut().take().unwrap();
         builder.timeout = Some(timeout);
         BrokerOptions::new_with(builder)
@@ -47,7 +44,7 @@ impl BrokerOptions {
 }
 
 pub struct ClientOptions {
-    options: ClientOptionsRust
+    options: ClientOptionsRust,
 }
 
 impl ClientOptions {
@@ -58,13 +55,13 @@ impl ClientOptions {
 }
 
 pub struct ClientOptionsBuilder {
-    builder: Rc<RefCell<Option<ClientOptionsBuilderRust>>>
+    builder: Rc<RefCell<Option<ClientOptionsBuilderRust>>>,
 }
 
 impl Default for ClientOptionsBuilder {
     fn default() -> Self {
         Self {
-            builder: Rc::new(RefCell::new(Option::from(ClientOptionsBuilderRust::default())))
+            builder: Rc::new(RefCell::new(Option::from(ClientOptionsBuilderRust::default()))),
         }
     }
 }
@@ -76,7 +73,7 @@ impl ClientOptionsBuilder {
 
     fn new_with_builder(builder: ClientOptionsBuilderRust) -> Self {
         Self {
-            builder: Rc::new(RefCell::new(Option::from(builder)))
+            builder: Rc::new(RefCell::new(Option::from(builder))),
         }
     }
 
@@ -87,7 +84,13 @@ impl ClientOptionsBuilder {
 
     pub fn with_node_pool_urls(&mut self, node_pool_urls: Vec<String>) -> ClientOptionsBuilder {
         let nodes_urls: Vec<&str> = node_pool_urls.iter().map(|x| &**x).collect();
-        let new_builder = self.builder.borrow_mut().take().unwrap().with_node_pool_urls(&nodes_urls).unwrap();
+        let new_builder = self
+            .builder
+            .borrow_mut()
+            .take()
+            .unwrap()
+            .with_node_pool_urls(&nodes_urls)
+            .unwrap();
         ClientOptionsBuilder::new_with_builder(new_builder)
     }
 
@@ -97,7 +100,12 @@ impl ClientOptionsBuilder {
     }
 
     pub fn with_node_sync_interval(&mut self, node_sync_interval: Duration) -> ClientOptionsBuilder {
-        let new_builder = self.builder.borrow_mut().take().unwrap().with_node_sync_interval(node_sync_interval);
+        let new_builder = self
+            .builder
+            .borrow_mut()
+            .take()
+            .unwrap()
+            .with_node_sync_interval(node_sync_interval);
         ClientOptionsBuilder::new_with_builder(new_builder)
     }
 
@@ -108,9 +116,12 @@ impl ClientOptionsBuilder {
 
     /// Sets the MQTT broker options.
     pub fn with_mqtt_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientOptionsBuilder {
-        let new_builder = self.builder.borrow_mut().take().unwrap().with_mqtt_mqtt_broker_options(
-            options.builder.borrow_mut().take().unwrap()
-        );
+        let new_builder = self
+            .builder
+            .borrow_mut()
+            .take()
+            .unwrap()
+            .with_mqtt_mqtt_broker_options(options.builder.borrow_mut().take().unwrap());
         ClientOptionsBuilder::new_with_builder(new_builder)
     }
 
@@ -131,7 +142,7 @@ impl ClientOptionsBuilder {
 
     pub fn build(&mut self) -> Result<ClientOptions> {
         Ok(ClientOptions {
-            options: self.builder.borrow_mut().take().unwrap().build().unwrap()
+            options: self.builder.borrow_mut().take().unwrap().build().unwrap(),
         })
     }
 }
