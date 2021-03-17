@@ -426,7 +426,7 @@ impl AccountHandle {
     }
 
     pub(crate) fn enable_mqtt(&self) {
-        self.is_mqtt_enabled.store(false, Ordering::Relaxed);
+        self.is_mqtt_enabled.store(true, Ordering::Relaxed);
     }
 }
 
