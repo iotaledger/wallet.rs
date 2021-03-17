@@ -6,6 +6,7 @@
 use crypto::hashes::{blake2b::Blake2b256, Digest};
 
 use crypto::keys::slip10::Chain;
+use getset::Getters;
 use iota::{Address, Ed25519Address, Ed25519Signature};
 use iota_stronghold::{
     Location, ProcResult, Procedure, RecordHint, ResultMessage, SLIP10DeriveInput, Stronghold, StrongholdFlags,
@@ -13,12 +14,6 @@ use iota_stronghold::{
 use once_cell::sync::{Lazy, OnceCell};
 use riker::actors::*;
 use serde::Serialize;
-use tokio::{
-    sync::Mutex,
-    time::{sleep, Duration},
-};
-use zeroize::Zeroize;
-use getset::Getters;
 use std::{
     collections::{HashMap, HashSet},
     convert::TryInto,
@@ -28,6 +23,11 @@ use std::{
     thread,
     time::Instant,
 };
+use tokio::{
+    sync::Mutex,
+    time::{sleep, Duration},
+};
+use zeroize::Zeroize;
 
 #[derive(PartialEq, Eq, Zeroize)]
 #[zeroize(drop)]
