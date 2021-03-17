@@ -44,6 +44,7 @@ use iota_wallet::{
         AddressConsolidationNeeded as WalletAddressConsolidationNeeded,
         TransferProgress as WalletTransferProgress,
         BalanceEvent as WalletBalanceEvent,
+        TransactionReattachmentEvent as WalletTransactionReattachmentEvent
     },
 };
 
@@ -379,9 +380,7 @@ foreign_class!(
     class AddressConsolidationNeededEvent {
         self_type WalletAddressConsolidationNeeded;
         private constructor = empty;
-        fn WalletAddressConsolidationNeeded::accountId(&self) -> &str {
-            this.account_id()
-        }
+        fn WalletAddressConsolidationNeeded::account_id(&self) -> &str; alias accountId;
         fn WalletAddressConsolidationNeeded::address(&self) -> AddressWrapper {
             this.address().clone()
         }
@@ -392,9 +391,8 @@ foreign_class!(
     class TransactionEvent {
         self_type WalletTransactionEvent;
         private constructor = empty;
-        fn WalletTransactionEvent::accountId(&self) -> &str {
-            this.account_id()
-        }
+        fn WalletTransactionEvent::indexation_id(&self) -> &str; alias indexationId;
+        fn WalletTransactionEvent::account_id(&self) -> &str; alias accountId;
         fn WalletTransactionEvent::message(&self) -> Message {
             Message::new_with_internal(this.message().clone())
         }
@@ -405,9 +403,8 @@ foreign_class!(
     class TransactionConfirmationChangeEvent {
         self_type WalletTransactionConfirmationChangeEvent;
         private constructor = empty;
-        fn WalletTransactionConfirmationChangeEvent::accountId(&self) -> &str {
-            this.account_id()
-        }
+        fn WalletTransactionConfirmationChangeEvent::indexation_id(&self) -> &str; alias indexationId;
+        fn WalletTransactionConfirmationChangeEvent::account_id(&self) -> &str; alias accountId;
         fn WalletTransactionConfirmationChangeEvent::message(&self) -> Message {
             Message::new_with_internal(this.message().clone())
         }
@@ -421,9 +418,7 @@ foreign_class!(
     class TransferProgressEvent {
         self_type WalletTransferProgress;
         private constructor = empty;
-        fn WalletTransferProgress::accountId(&self) -> &str {
-            this.account_id()
-        }
+        fn WalletTransferProgress::account_id(&self) -> &str; alias accountId;
         fn WalletTransferProgress::event(&self) -> TransferProgressType {
             this.event().clone()
         }
@@ -450,14 +445,34 @@ foreign_class!(
     class BalanceEvent {
         self_type WalletBalanceEvent;
         private constructor = empty;
-        fn WalletBalanceEvent::accountId(&self) -> &str {
-            this.account_id()
+        fn WalletBalanceEvent::indexation_id(&self) -> &str; alias indexationId;
+        fn WalletBalanceEvent::account_id(&self) -> &str; alias accountId;
+        fn WalletBalanceEvent::messageId(&self) -> Option<MessageId> {
+            this.message_id().clone()
         }
         fn WalletBalanceEvent::address(&self) -> AddressWrapper {
             this.address().clone()
         }
+        fn WalletBalanceEvent::remainder(&self) -> Option<bool> {
+            this.remainder().clone()
+        }
         fn WalletBalanceEvent::balanceChange(&self) -> BalanceChange {
             this.balance_change().clone()
+        }
+    }
+);
+
+foreign_class!(
+    class TransactionReattachmentEvent {
+        self_type WalletTransactionReattachmentEvent;
+        private constructor = empty;
+        fn WalletTransactionReattachmentEvent::indexation_id(&self) -> &str; alias indexationId;
+        fn WalletTransactionReattachmentEvent::account_id(&self) -> &str; alias accountId;
+        fn WalletTransactionReattachmentEvent::message(&self) -> Message {
+            Message::new_with_internal(this.message().clone())
+        }
+        fn WalletTransactionReattachmentEvent::reattachedMessageId(&self) -> MessageId {
+            this.reattached_message_id().clone()
         }
     }
 );
@@ -481,7 +496,7 @@ foreign_callback!(callback NewTransactionListener {
 
 foreign_callback!(callback ReattachTransactionListener {
     self_type ReattachTransactionListener + Send + 'static;
-    onReattachTransaction = ReattachTransactionListener::on_reattachment(&self, event: WalletTransactionEvent);
+    onReattachTransaction = ReattachTransactionListener::on_reattachment(&self, event: WalletTransactionReattachmentEvent);
 });
 
 foreign_callback!(callback BroadcastTransactionListener {
@@ -592,7 +607,7 @@ foreign_class!(
         self_type MessageTransactionPayload;
         private constructor = empty;
         fn MessageTransactionPayload::essence(&self) -> Essence;
-        fn MessageTransactionPayload::unlock_blocks(&self) -> Vec<UnlockBlock>;
+        fn MessageTransactionPayload::unlock_blocks(&self) -> Vec<UnlockBlock>; alias unlockBlocks;
     }
 );
 
@@ -600,7 +615,7 @@ foreign_class!(
     class Essence {
         self_type Essence;
         private constructor = empty;
-        fn Essence::get_as_regular(&self) -> Option<RegularEssence>;
+        fn Essence::get_as_regular(&self) -> Option<RegularEssence>; alias getAsRegular;
     }
 );
 
@@ -610,6 +625,15 @@ foreign_class!(
         private constructor = empty;
         fn RegularEssence::inputs(&self) -> Vec<TransactionInput>;
         fn RegularEssence::outputs(&self) -> Vec<TransactionOutput>;
+        fn RegularEssence::internal(&self) -> bool;
+    
+        fn RegularEssence::incoming(&self) -> bool;
+    
+        /// The transactions's value.
+        fn RegularEssence::value(&self) -> u64;
+    
+        /// The transactions's remainder value sum.
+        fn RegularEssence::remainder_value(&self) -> u64; alias remainderValue;
     }
 );
 
@@ -666,7 +690,7 @@ foreign_class!(
     class MigratedFundsEntry {
         self_type MigratedFundsEntry;
         private constructor = empty;
-        fn MigratedFundsEntry::tail_transaction_hash(&self) -> Vec<u8>;
+        fn MigratedFundsEntry::tail_transaction_hash(&self) -> Vec<u8>; alias tailTransactionHash;
         fn MigratedFundsEntry::output(&self) -> SignatureLockedSingleOutput;
     }
 );

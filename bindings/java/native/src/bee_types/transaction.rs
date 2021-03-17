@@ -65,14 +65,15 @@ pub struct Essence {
 }
 
 impl Essence {
+    
+    #[allow(irrefutable_let_patterns)]
     pub fn get_as_regular(&self) -> Option<RegularEssence> {
         if let TransactionEssenceRust::Regular(essence) = &self.essence {
-            Some(RegularEssence { 
+            return Some(RegularEssence { 
                 essence: essence.clone()
             })
-        } else {
-            None
-        }
+        };
+        None
     } 
 }
 
@@ -104,6 +105,26 @@ impl RegularEssence {
     /// Gets the transaction chained payload.
     pub fn payload(&self) -> &Option<RustPayload> {
         self.essence.payload()
+    }
+
+    /// Whether the transaction is between the mnemonic accounts or not.
+    pub fn internal(&self) -> bool {
+        self.essence.internal()
+    }
+
+    /// Whether the transaction is incoming or outgoing.
+    pub fn incoming(&self) -> bool {
+        self.essence.incoming()
+    }
+
+    /// The transactions's value.
+    pub fn value(&self) -> u64 {
+        self.essence.value()
+    }
+
+    /// The transactions's remainder value sum.
+    pub fn remainder_value(&self) -> u64 {
+        self.essence.remainder_value()
     }
 }
 

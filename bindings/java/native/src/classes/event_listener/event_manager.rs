@@ -14,6 +14,7 @@ use iota_wallet::{
         TransferProgress as WalletTransferProgress,
         BalanceEvent as WalletBalanceEvent,
         AddressConsolidationNeeded as WalletAddressConsolidationNeeded,
+        TransactionReattachmentEvent as WalletTransactionReattachmentEvent,
     },
     StrongholdStatus as StrongholdStatusWallet, 
     StrongholdSnapshotStatus as SnapshotStatus,
@@ -59,7 +60,7 @@ pub trait NewTransactionListener {
 }
 
 pub trait ReattachTransactionListener {
-    fn on_reattachment(&self, error: WalletTransactionEvent);
+    fn on_reattachment(&self, error: WalletTransactionReattachmentEvent);
 }
 
 pub trait BroadcastTransactionListener {
@@ -184,6 +185,7 @@ impl EventManager {
         iota_wallet::event::remove_error_listener(&event)
     }
 
+    #[allow(unreachable_code)]
     pub fn subscribe_stronghold_status_change(cb: Box<dyn StrongholdStatusListener + Send + 'static>) -> Result<EventId> {
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         {
@@ -208,6 +210,7 @@ impl EventManager {
         }
     }
     
+    #[allow(unreachable_code)]
     pub fn subscribe_address_consolidation_needed(_cb: Box<dyn AddressConsolidationNeededListener + Send + 'static>) -> Result<EventId> {
         #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
         {

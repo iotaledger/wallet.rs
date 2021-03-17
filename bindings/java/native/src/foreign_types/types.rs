@@ -94,6 +94,13 @@ foreign_typemap!(
         "swig_foreign_from_i_type!(T, $p)";
 );
 
+// Auto clone
+foreign_typemap!(
+    ($p:r_type) <T: SwigForeignClass + Clone> &T => swig_i_type!(T) {
+        $out = swig_from_rust_to_i_type(T, $p.clone(), ret);
+    };
+);
+
 // Duration
 foreign_typemap!(
     ($p:r_type) Duration => jfloat {
