@@ -550,7 +550,7 @@ impl AccountHandle {
         sync::sync_address(
             account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect(),
             account.client_options().clone(),
-            Some(latest_address.outputs().to_vec()),
+            latest_address.outputs().clone(),
             &mut latest_address,
             bech32_hrp,
             self.account_options,
@@ -915,6 +915,7 @@ mod tests {
         message::{Message, MessagePayload, MessageType, TransactionEssence},
     };
     use iota::{MessageId, TransactionId};
+    use std::collections::HashMap;
 
     // asserts that the `set_alias` function updates the account alias in storage
     #[tokio::test]
@@ -1080,7 +1081,10 @@ mod tests {
         let first_address = {
             let mut account = account_handle.write().await;
             let address = account.addresses_mut().iter_mut().next().unwrap();
-            address.outputs = vec![_generate_address_output(15)];
+            let mut outputs = HashMap::new();
+            let output = _generate_address_output(15);
+            outputs.insert(output.id().unwrap(), output);
+            address.outputs = outputs;
             address.clone()
         };
         let second_address = {
@@ -1089,20 +1093,23 @@ mod tests {
             let mut iter = addresses.iter_mut();
             iter.next();
             let address = iter.next().unwrap();
-            address.outputs = vec![_generate_address_output(15)];
+            let mut outputs = HashMap::new();
+            let output = _generate_address_output(15);
+            outputs.insert(output.id().unwrap(), output);
+            address.outputs = outputs;
             address.clone()
         };
 
         let unconfirmed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(first_address.clone())
             .value(15)
-            .input_transaction_id(first_address.outputs[0].transaction_id)
+            .input_transaction_id(first_address.outputs.values().next().unwrap().transaction_id)
             .build()
             .await;
         let confirmed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(second_address.clone())
             .value(10)
-            .input_transaction_id(second_address.outputs[0].transaction_id)
+            .input_transaction_id(second_address.outputs.values().next().unwrap().transaction_id)
             .confirmed(Some(true))
             .build()
             .await;

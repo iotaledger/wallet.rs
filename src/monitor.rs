@@ -140,7 +140,7 @@ async fn process_output(
             .find(|a| a.address() == &address)
             .unwrap();
         let old_balance = *address_to_update.balance();
-        address_to_update.handle_new_output(address_output);
+        address_to_update.handle_new_output(address_output)?;
         let new_balance = *address_to_update.balance();
         (old_balance, new_balance)
     };

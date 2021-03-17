@@ -417,9 +417,7 @@ impl TransactionRegularEssence {
                     let metadata = {
                         let mut output = None;
                         for address in metadata.account_addresses {
-                            if let Some(found_output) = address.outputs().iter().find(|o| {
-                                &o.transaction_id == i.output_id().transaction_id() && o.index == i.output_id().index()
-                            }) {
+                            if let Some(found_output) = address.outputs().get(i.output_id()) {
                                 output = Some(found_output.clone());
                                 break;
                             }

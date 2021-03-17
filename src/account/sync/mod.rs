@@ -26,13 +26,16 @@ use iota::{
             SignatureLockedSingleOutput, TransactionPayload, UTXOInput, UnlockBlocks,
         },
     },
-    Bech32Address,
+    Bech32Address, OutputId,
 };
 use serde::Serialize;
 use slip10::BIP32Path;
 use tokio::sync::MutexGuard;
 
-use std::{collections::HashSet, convert::TryInto, num::NonZeroU64};
+use std::{
+    collections::{HashMap, HashSet},
+    num::NonZeroU64,
+};
 
 mod input_selection;
 
@@ -76,7 +79,7 @@ async fn get_address_outputs(
 pub(crate) async fn sync_address(
     account_messages: Vec<(MessageId, Option<bool>)>,
     client_options: ClientOptions,
-    existing_outputs: Option<Vec<AddressOutput>>,
+    mut outputs: HashMap<OutputId, AddressOutput>,
     address: &mut Address,
     bech32_hrp: String,
     options: AccountOptions,
@@ -103,18 +106,12 @@ pub(crate) async fn sync_address(
     );
 
     let mut tasks = Vec::new();
-    let mut found_outputs: Vec<AddressOutput> = vec![];
-    for output in address_outputs.iter() {
-        let output = output.clone();
+    for utxo_input in address_outputs.iter() {
+        let utxo_input = utxo_input.clone();
         // if we already have the output and it is spent, we don't need to get the info from the node
-        if let Some(existing_outputs) = &existing_outputs {
-            let existing_output = existing_outputs.iter().find(|o| {
-                &o.transaction_id == output.output_id().transaction_id()
-                    && o.index == output.output_id().index()
-                    && o.is_spent
-            });
-            if let Some(existing_output) = existing_output {
-                found_outputs.push(existing_output.clone());
+        let existing_output = outputs.get(utxo_input.output_id()).cloned();
+        if let Some(existing_output) = &existing_output {
+            if existing_output.is_spent {
                 continue;
             }
         }
@@ -125,13 +122,13 @@ pub(crate) async fn sync_address(
         tasks.push(async move {
             tokio::spawn(async move {
                 let client = client_guard.read().await;
-                let output = client.get_output(&output).await?;
-                let message_id = MessageId::new(
-                    hex::decode(&output.message_id).map_err(|_| crate::Error::InvalidMessageId)?[..]
-                        .try_into()
-                        .map_err(|_| crate::Error::InvalidMessageIdLength)?,
-                );
-                let found_output = AddressOutput::from_output_response(output, bech32_hrp.to_string())?;
+                let found_output = if let Some(existing_output) = existing_output {
+                    existing_output.clone()
+                } else {
+                    let output = client.get_output(&utxo_input).await?;
+                    AddressOutput::from_output_response(output, bech32_hrp.to_string())?
+                };
+                let message_id = *found_output.message_id();
 
                 // if we already have the message stored
                 // and the confirmation state is known
@@ -144,18 +141,17 @@ pub(crate) async fn sync_address(
                 }
 
                 if let Ok(message) = client.get_message().data(&message_id).await {
-                    if let Ok(metadata) = client.get_message().metadata(&message_id).await {
-                        return Ok((
-                            found_output,
-                            Some((
-                                message_id,
-                                metadata
-                                    .ledger_inclusion_state
-                                    .map(|l| l == LedgerInclusionStateDto::Included),
-                                message,
-                            )),
-                        ));
-                    }
+                    // if the output is spent, the message is confirmed
+                    let confirmed = if found_output.is_spent {
+                        Some(true)
+                    } else if let Ok(metadata) = client.get_message().metadata(&message_id).await {
+                        metadata
+                            .ledger_inclusion_state
+                            .map(|l| l == LedgerInclusionStateDto::Included)
+                    } else {
+                        None
+                    };
+                    return Ok((found_output, Some((message_id, confirmed, message))));
                 }
 
                 Ok((found_output, None))
@@ -169,14 +165,14 @@ pub(crate) async fn sync_address(
         .expect("failed to sync address")
     {
         let (found_output, found_message) = res?;
-        found_outputs.push(found_output);
+        outputs.insert(found_output.id()?, found_output);
         if let Some(m) = found_message {
             found_messages.push(m);
         }
     }
 
     address.set_balance(balance);
-    address.set_outputs(found_outputs);
+    address.set_outputs(outputs);
 
     crate::Result::Ok(found_messages)
 }
@@ -272,10 +268,10 @@ async fn sync_addresses(
         let mut curr_generated_addresses = vec![];
         let mut curr_found_messages = vec![];
 
-        let account_addresses: Vec<(AddressWrapper, Vec<AddressOutput>)> = account
+        let account_addresses: Vec<(AddressWrapper, HashMap<OutputId, AddressOutput>)> = account
             .addresses()
             .iter()
-            .map(|a| (a.address().clone(), a.outputs().to_vec()))
+            .map(|a| (a.address().clone(), a.outputs().clone()))
             .collect();
         let account_messages: Vec<(MessageId, Option<bool>)> =
             account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
@@ -296,14 +292,15 @@ async fn sync_addresses(
                         .outputs(Vec::new())
                         .internal(iota_address_internal)
                         .build()?;
-                    let existing_outputs = account_addresses
+                    let outputs = account_addresses
                         .into_iter()
                         .find(|(a, _)| a == &iota_address)
-                        .map(|(_, outputs)| outputs);
+                        .map(|(_, outputs)| outputs)
+                        .unwrap_or_default();
                     let messages = sync_address(
                         account_messages,
                         client_options,
-                        existing_outputs,
+                        outputs,
                         &mut address,
                         bech32_hrp_,
                         options,
@@ -382,6 +379,12 @@ async fn sync_messages(
         }
         let client = client.clone();
         let messages_with_known_confirmation = messages_with_known_confirmation.clone();
+        let mut outputs = account
+            .addresses()
+            .iter()
+            .find(|a| a == &&address)
+            .map(|a| a.outputs().clone())
+            .unwrap_or_default();
         tasks.push(async move {
             tokio::spawn(async move {
                 let client = client.read().await;
@@ -405,25 +408,23 @@ async fn sync_messages(
                     balance
                 );
 
-                let mut outputs = vec![];
                 let mut messages = vec![];
-                for output in address_outputs.iter() {
-                    // if we already have the output and it is spent, we don't need to get the info from the node
-                    if let Some(output) = address.outputs().iter().find(|o| {
-                        &o.transaction_id == output.output_id().transaction_id()
-                            && o.index == output.output_id().index()
-                            && o.is_spent
-                    }) {
-                        outputs.push(output.clone());
-                        continue;
-                    }
+                for utxo_input in address_outputs.iter() {
+                    let output = if let Some(output) = address.outputs().get(utxo_input.output_id()) {
+                        // if we already have the output and it is spent, we don't need to get the info from the node
+                        if output.is_spent {
+                            continue;
+                        }
+                        output.clone()
+                    } else {
+                        let output = client.get_output(utxo_input).await?;
+                        AddressOutput::from_output_response(output, address.address().bech32_hrp().to_string())?
+                    };
 
-                    let output = client.get_output(output).await?;
-                    let output =
-                        AddressOutput::from_output_response(output, address.address().bech32_hrp().to_string())?;
                     let output_message_id = *output.message_id();
+                    let is_spent = output.is_spent;
 
-                    outputs.push(output);
+                    outputs.insert(output.id()?, output);
 
                     // if we already have the message stored
                     // and the confirmation state is known
@@ -433,15 +434,17 @@ async fn sync_messages(
                     }
 
                     if let Ok(message) = client.get_message().data(&output_message_id).await {
-                        if let Ok(metadata) = client.get_message().metadata(&output_message_id).await {
-                            messages.push((
-                                output_message_id,
-                                metadata
-                                    .ledger_inclusion_state
-                                    .map(|l| l == LedgerInclusionStateDto::Included),
-                                message,
-                            ));
-                        }
+                        // if the output is spent, the message is confirmed
+                        let confirmed = if is_spent {
+                            Some(true)
+                        } else if let Ok(metadata) = client.get_message().metadata(&output_message_id).await {
+                            metadata
+                                .ledger_inclusion_state
+                                .map(|l| l == LedgerInclusionStateDto::Included)
+                        } else {
+                            None
+                        };
+                        messages.push((output_message_id, confirmed, message));
                     }
                 }
 
@@ -671,10 +674,10 @@ impl AccountSynchronizer {
                     .iter()
                     .map(|m| (*m.id(), *m.confirmed()))
                     .collect();
-                let addresses_before_sync: Vec<(String, u64, Vec<AddressOutput>)> = account_ref
+                let addresses_before_sync: Vec<(String, u64, HashMap<OutputId, AddressOutput>)> = account_ref
                     .addresses()
                     .iter()
-                    .map(|a| (a.address().to_bech32(), *a.balance(), a.outputs().to_vec()))
+                    .map(|a| (a.address().to_bech32(), *a.balance(), a.outputs().clone()))
                     .collect();
 
                 if !self.skip_persistence {
@@ -746,8 +749,8 @@ impl AccountSynchronizer {
                         // note that this is unreliable if we're not syncing spent outputs,
                         // since not all information are collected.
                         if self.account_handle.account_options.sync_spent_outputs {
-                            for output in address_after_sync.outputs() {
-                                if !before_sync_outputs.contains(&output) {
+                            for (output_id, output) in address_after_sync.outputs() {
+                                if !before_sync_outputs.contains_key(output_id) {
                                     let balance_change = if output.is_spent {
                                         BalanceChange::spent(output.amount)
                                     } else {
@@ -1593,7 +1596,7 @@ async fn is_dust_allowed(
     {
         address
             .outputs()
-            .iter()
+            .values()
             .map(|output| (output.amount, output.kind.clone()))
             .collect()
     } else {
@@ -1720,7 +1723,7 @@ mod tests {
 
         // first we create an address with balance - the source address
         let mut address1 = crate::test_utils::generate_random_address();
-        address1.outputs.push(crate::address::AddressOutput {
+        let output = crate::address::AddressOutput {
             transaction_id: iota::TransactionId::from([0; 32]),
             message_id: iota::MessageId::from([0; 32]),
             index: 0,
@@ -1728,7 +1731,8 @@ mod tests {
             is_spent: false,
             address: address1.address().clone(),
             kind: crate::address::OutputKind::SignatureLockedSingle,
-        });
+        };
+        address1.outputs.insert(output.id().unwrap(), output);
         address1.set_balance(10000000);
 
         // then we create an address without balance - the deposit address
@@ -1737,7 +1741,7 @@ mod tests {
         let mut address3 = crate::test_utils::generate_random_address();
         address3.set_key_index(0);
         address3.set_internal(true);
-        address3.outputs.push(crate::address::AddressOutput {
+        let output = crate::address::AddressOutput {
             transaction_id: iota::TransactionId::from([0; 32]),
             message_id: iota::MessageId::from([0; 32]),
             index: 0,
@@ -1745,7 +1749,8 @@ mod tests {
             is_spent: false,
             address: address3.address().clone(),
             kind: crate::address::OutputKind::SignatureLockedDustAllowance,
-        });
+        };
+        address3.outputs.insert(output.id().unwrap(), output);
 
         println!(
             "{}\n{}\n{}",
