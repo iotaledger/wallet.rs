@@ -8,11 +8,8 @@ use crate::{
 };
 use getset::{Getters, Setters};
 use iota::{
-    bee_rest_api::{
-        endpoints::api::v1::output::OutputResponse,
-        types::{AddressDto, OutputDto},
-    },
-    MessageId, OutputId, TransactionId,
+    bee_rest_api::types::dtos::{AddressDto, OutputDto},
+    MessageId, OutputId, OutputResponse, TransactionId,
 };
 pub use iota::{Address as IotaAddress, Ed25519Address, Input, UTXOInput};
 use serde::{Deserialize, Serialize};

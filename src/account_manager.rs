@@ -35,7 +35,7 @@ use std::{
 use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
-use iota::{bee_rest_api::endpoints::api::v1::message_metadata::LedgerInclusionStateDto, MessageId};
+use iota::{bee_rest_api::types::dtos::LedgerInclusionStateDto, MessageId};
 use serde::Deserialize;
 use tokio::{
     sync::{
