@@ -1550,7 +1550,7 @@ async fn perform_transfer(
         // ignore errors because we fallback to the polling system
         let _ = crate::monitor::monitor_address_balance(account_handle.clone(), &address);
     }
-    crate::monitor::monitor_confirmation_state_change(account_handle.clone(), &message_id).await;
+    crate::monitor::monitor_confirmation_state_change(account_handle.clone(), message_id).await;
 
     Ok(message)
 }
