@@ -28,7 +28,7 @@ env_logger = "0.7"
 bindgen = "0.55.1"
 
 [features]
-default = ["stronghold", "sqlite-storage"]
+default = ["stronghold", "stronghold-storage", "sqlite-storage"]
 stronghold = ["iota-wallet/stronghold"]
 stronghold-storage = ["iota-wallet/stronghold-storage"]
 sqlite-storage = ["iota-wallet/sqlite-storage"]
