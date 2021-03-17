@@ -102,7 +102,7 @@ pub(crate) async fn sync_address(
         balance,
     );
 
-    let mut futures_ = Vec::new();
+    let mut tasks = Vec::new();
     let mut found_outputs: Vec<AddressOutput> = vec![];
     for output in address_outputs.iter() {
         let output = output.clone();
@@ -122,7 +122,7 @@ pub(crate) async fn sync_address(
         let client_guard = client_guard.clone();
         let bech32_hrp = bech32_hrp.clone();
         let account_messages = account_messages.clone();
-        futures_.push(async move {
+        tasks.push(async move {
             tokio::spawn(async move {
                 let client = client_guard.read().await;
                 let output = client.get_output(&output).await?;
@@ -164,10 +164,10 @@ pub(crate) async fn sync_address(
         });
     }
 
-    let results = futures::future::try_join_all(futures_)
+    for res in futures::future::try_join_all(tasks)
         .await
-        .expect("failed to sync address");
-    for res in results {
+        .expect("failed to sync address")
+    {
         let (found_output, found_message) = res?;
         found_outputs.push(found_output);
         if let Some(m) = found_message {
@@ -281,13 +281,13 @@ async fn sync_addresses(
             account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
         let client_options = account.client_options().clone();
 
-        let mut futures_ = Vec::new();
+        let mut tasks = Vec::new();
         for (iota_address_index, iota_address_internal, iota_address) in generated_iota_addresses.to_vec() {
             let bech32_hrp_ = bech32_hrp.clone();
             let account_addresses = account_addresses.clone();
             let account_messages = account_messages.clone();
             let client_options = client_options.clone();
-            futures_.push(async move {
+            tasks.push(async move {
                 tokio::spawn(async move {
                     let mut address = AddressBuilder::new()
                         .address(iota_address.clone())
@@ -315,7 +315,7 @@ async fn sync_addresses(
             });
         }
 
-        let results = futures::future::try_join_all(futures_)
+        let results = futures::future::try_join_all(tasks)
             .await
             .expect("failed to sync addresses");
         for res in results {
@@ -374,7 +374,7 @@ async fn sync_messages(
 
     let client = crate::client::get_client(&client_options).await?;
 
-    let mut futures_ = Vec::new();
+    let mut tasks = Vec::new();
     for mut address in account.addresses().to_vec() {
         if skip_addresses.contains(&address) {
             addresses.push(address);
@@ -382,7 +382,7 @@ async fn sync_messages(
         }
         let client = client.clone();
         let messages_with_known_confirmation = messages_with_known_confirmation.clone();
-        futures_.push(async move {
+        tasks.push(async move {
             tokio::spawn(async move {
                 let client = client.read().await;
 
@@ -454,7 +454,7 @@ async fn sync_messages(
         });
     }
 
-    for res in futures::future::try_join_all(futures_)
+    for res in futures::future::try_join_all(tasks)
         .await
         .expect("failed to sync messages")
     {
@@ -535,13 +535,13 @@ async fn perform_sync(
 
     account.append_addresses(addresses_to_save);
 
-    let mut futures_ = Vec::new();
+    let mut tasks = Vec::new();
     for (id, confirmed, message) in new_messages {
         let client_options = account.client_options().clone();
         let account_id = account.id().to_string();
         let account_addresses = account.addresses().to_vec();
         let accounts = accounts.clone();
-        futures_.push(async move {
+        tasks.push(async move {
             tokio::spawn(async move {
                 Message::from_iota_message(id, message, accounts, &account_id, &account_addresses, &client_options)
                     .with_confirmed(confirmed)
@@ -552,7 +552,7 @@ async fn perform_sync(
         });
     }
     let mut parsed_messages = Vec::new();
-    for message in futures::future::try_join_all(futures_)
+    for message in futures::future::try_join_all(tasks)
         .await
         .expect("failed to parse messages")
     {

@@ -1132,23 +1132,44 @@ impl AccountsSynchronizer {
     /// Syncs the accounts with the Tangle.
     pub async fn execute(self) -> crate::Result<Vec<SyncedAccount>> {
         let _lock = self.mutex.lock().await;
+
+        let mut tasks = Vec::new();
+        {
+            let accounts = self.accounts.read().await;
+            let address_index = self.address_index;
+            let gap_limit = self.gap_limit;
+            for account_handle in accounts.values() {
+                let account_handle = account_handle.clone();
+                tasks.push(async move {
+                    tokio::spawn(async move {
+                        let mut sync = account_handle.sync().await.skip_events();
+                        if let Some(index) = address_index {
+                            sync = sync.address_index(index);
+                        }
+                        if let Some(limit) = gap_limit {
+                            sync = sync.gap_limit(limit);
+                        }
+                        let synced_account = sync.execute().await?;
+                        crate::Result::Ok(synced_account)
+                    })
+                    .await
+                });
+            }
+        }
+
         let mut synced_accounts = vec![];
         let mut last_account = None;
         let mut last_account_index = 0;
-
+        for res in futures::future::try_join_all(tasks)
+            .await
+            .expect("failed to sync accounts")
         {
-            let accounts = self.accounts.read().await;
-            for account_handle in accounts.values() {
-                let mut sync = account_handle.sync().await.skip_events();
-                if let Some(index) = self.address_index {
-                    sync = sync.address_index(index);
-                }
-                if let Some(limit) = self.gap_limit {
-                    sync = sync.gap_limit(limit);
-                }
-                let synced_account = sync.execute().await?;
-
+            let synced_account = res?;
+            {
+                let account_handle = synced_account.account_handle();
+                let persist_events = account_handle.account_options.persist_events;
                 let account = account_handle.read().await;
+
                 if *account.index() >= last_account_index {
                     last_account_index = *account.index();
                     last_account = Some((
@@ -1157,36 +1178,32 @@ impl AccountsSynchronizer {
                         account.signer_type().clone(),
                     ));
                 }
-                synced_accounts.push(synced_account);
-            }
-        }
 
-        for synced_account in &synced_accounts {
-            let account_handle = synced_account.account_handle();
-            let persist_events = account_handle.account_options.persist_events;
-            let account = account_handle.read().await;
-            for balance_change_event in synced_account.skipped_balance_change_events() {
-                emit_balance_change(
-                    &account,
-                    &balance_change_event.address,
-                    balance_change_event.message_id,
-                    balance_change_event.balance_change,
-                    persist_events,
-                )
-                .await?;
+                for balance_change_event in synced_account.skipped_balance_change_events() {
+                    emit_balance_change(
+                        &account,
+                        &balance_change_event.address,
+                        balance_change_event.message_id,
+                        balance_change_event.balance_change,
+                        persist_events,
+                    )
+                    .await?;
+                }
+                for message in synced_account.skipped_new_transaction_events() {
+                    emit_transaction_event(TransactionEventType::NewTransaction, &account, message, persist_events)
+                        .await?;
+                }
+                for confirmation_change_event in synced_account.skipped_confirmation_change_events() {
+                    emit_confirmation_state_change(
+                        &account,
+                        confirmation_change_event.message.clone(),
+                        confirmation_change_event.confirmed,
+                        persist_events,
+                    )
+                    .await?;
+                }
             }
-            for message in synced_account.skipped_new_transaction_events() {
-                emit_transaction_event(TransactionEventType::NewTransaction, &account, message, persist_events).await?;
-            }
-            for confirmation_change_event in synced_account.skipped_confirmation_change_events() {
-                emit_confirmation_state_change(
-                    &account,
-                    confirmation_change_event.message.clone(),
-                    confirmation_change_event.confirmed,
-                    persist_events,
-                )
-                .await?;
-            }
+            synced_accounts.push(synced_account);
         }
 
         let discovered_accounts_res = match last_account {
