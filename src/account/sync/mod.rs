@@ -640,7 +640,7 @@ impl AccountSynchronizer {
         self
     }
 
-    /// Do not emit events and return then on the SyncedAccount object instead.
+    /// Do not emit events and return them on the SyncedAccount object instead.
     /// Useful on account discovery or polling.
     pub(crate) fn skip_events(mut self) -> Self {
         self.emit_events = false;
