@@ -1510,7 +1510,7 @@ mod tests {
         message::Message,
     };
     use iota::{Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Parents, Payload, TransactionId};
-    use std::path::PathBuf;
+    use std::{collections::HashMap, path::PathBuf};
 
     #[tokio::test]
     async fn store_accounts() {
@@ -1591,16 +1591,19 @@ mod tests {
         {
             // update address balance so we can create the next account
             let mut account = account_handle1.write().await;
+            let mut outputs = HashMap::default();
+            let output = AddressOutput {
+                transaction_id: TransactionId::new([0; 32]),
+                message_id: MessageId::new([0; 32]),
+                index: 0,
+                amount: 5,
+                is_spent: false,
+                address: crate::test_utils::generate_random_iota_address(),
+                kind: OutputKind::SignatureLockedSingle,
+            };
+            outputs.insert(output.id().unwrap(), output);
             for address in account.addresses_mut() {
-                address.set_outputs(vec![AddressOutput {
-                    transaction_id: TransactionId::new([0; 32]),
-                    message_id: MessageId::new([0; 32]),
-                    index: 0,
-                    amount: 5,
-                    is_spent: false,
-                    address: crate::test_utils::generate_random_iota_address(),
-                    kind: OutputKind::SignatureLockedSingle,
-                }]);
+                address.set_outputs(outputs.clone());
             }
         }
 
