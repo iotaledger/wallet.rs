@@ -9,12 +9,9 @@ use crate::{
 };
 
 use iota::{
-    bee_rest_api::endpoints::api::v1::{
-        message_metadata::{LedgerInclusionStateDto, MessageMetadataResponse},
-        output::OutputResponse,
-    },
+    bee_rest_api::types::{dtos::LedgerInclusionStateDto, responses::MessageMetadataResponse},
     message::prelude::MessageId,
-    Topic, TopicEvent,
+    OutputResponse, Topic, TopicEvent,
 };
 
 use std::sync::{atomic::AtomicBool, Arc};

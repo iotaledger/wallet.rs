@@ -17,7 +17,7 @@ use crate::{
 use bee_common::packable::Packable;
 use getset::Getters;
 use iota::{
-    bee_rest_api::endpoints::api::v1::message_metadata::LedgerInclusionStateDto,
+    bee_rest_api::types::dtos::LedgerInclusionStateDto,
     client::{api::finish_pow, AddressOutputsOptions, Client},
     message::{
         constants::INPUT_OUTPUT_COUNT_MAX,
