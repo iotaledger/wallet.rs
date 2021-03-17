@@ -2122,6 +2122,9 @@
 <span id="2119">2119</span>
 <span id="2120">2120</span>
 <span id="2121">2121</span>
+<span id="2122">2122</span>
+<span id="2123">2123</span>
+<span id="2124">2124</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -3635,7 +3638,7 @@
         <span class="ident">message</span>::<span class="ident">Message</span>,
     };
     <span class="kw">use</span> <span class="ident">iota</span>::{<span class="ident">Ed25519Address</span>, <span class="ident">IndexationPayload</span>, <span class="ident">MessageBuilder</span>, <span class="ident">MessageId</span>, <span class="ident">Parents</span>, <span class="ident">Payload</span>, <span class="ident">TransactionId</span>};
-    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">PathBuf</span>;
+    <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections</span>::<span class="ident">HashMap</span>, <span class="ident">path</span>::<span class="ident">PathBuf</span>};
 
     <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">store_accounts</span>() {
@@ -3716,16 +3719,19 @@
         {
             <span class="comment">// update address balance so we can create the next account</span>
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle1</span>.<span class="ident">write</span>().<span class="kw">await</span>;
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">outputs</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">default</span>();
+            <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">AddressOutput</span> {
+                <span class="ident">transaction_id</span>: <span class="ident">TransactionId</span>::<span class="ident">new</span>([<span class="number">0</span>; <span class="number">32</span>]),
+                <span class="ident">message_id</span>: <span class="ident">MessageId</span>::<span class="ident">new</span>([<span class="number">0</span>; <span class="number">32</span>]),
+                <span class="ident">index</span>: <span class="number">0</span>,
+                <span class="ident">amount</span>: <span class="number">5</span>,
+                <span class="ident">is_spent</span>: <span class="bool-val">false</span>,
+                <span class="ident">address</span>: <span class="kw">crate</span>::<span class="ident">test_utils</span>::<span class="ident">generate_random_iota_address</span>(),
+                <span class="ident">kind</span>: <span class="ident">OutputKind</span>::<span class="ident">SignatureLockedSingle</span>,
+            };
+            <span class="ident">outputs</span>.<span class="ident">insert</span>(<span class="ident">output</span>.<span class="ident">id</span>().<span class="ident">unwrap</span>(), <span class="ident">output</span>);
             <span class="kw">for</span> <span class="ident">address</span> <span class="kw">in</span> <span class="ident">account</span>.<span class="ident">addresses_mut</span>() {
-                <span class="ident">address</span>.<span class="ident">set_outputs</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">AddressOutput</span> {
-                    <span class="ident">transaction_id</span>: <span class="ident">TransactionId</span>::<span class="ident">new</span>([<span class="number">0</span>; <span class="number">32</span>]),
-                    <span class="ident">message_id</span>: <span class="ident">MessageId</span>::<span class="ident">new</span>([<span class="number">0</span>; <span class="number">32</span>]),
-                    <span class="ident">index</span>: <span class="number">0</span>,
-                    <span class="ident">amount</span>: <span class="number">5</span>,
-                    <span class="ident">is_spent</span>: <span class="bool-val">false</span>,
-                    <span class="ident">address</span>: <span class="kw">crate</span>::<span class="ident">test_utils</span>::<span class="ident">generate_random_iota_address</span>(),
-                    <span class="ident">kind</span>: <span class="ident">OutputKind</span>::<span class="ident">SignatureLockedSingle</span>,
-                }]);
+                <span class="ident">address</span>.<span class="ident">set_outputs</span>(<span class="ident">outputs</span>.<span class="ident">clone</span>());
             }
         }
 

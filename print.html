@@ -1972,7 +1972,7 @@ The account can be initialised with locally stored address history.</p>
     'balance': int,
     'key_index': int,
     'internal': bool,
-    'outputs': list[WalletAddressOutput],
+    'outputs': dict[(string, WalletAddressOutput)],
 }
 </code></pre>
 <p>Please refer to <a href="libraries/python/api_reference.html#walletaddressoutput">WalletAddressOutput</a> for the details of this type.</p>

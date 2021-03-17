@@ -461,6 +461,18 @@
 <span id="458">458</span>
 <span id="459">459</span>
 <span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -476,12 +488,13 @@
         <span class="ident">endpoints</span>::<span class="ident">api</span>::<span class="ident">v1</span>::<span class="ident">output</span>::<span class="ident">OutputResponse</span>,
         <span class="ident">types</span>::{<span class="ident">AddressDto</span>, <span class="ident">OutputDto</span>},
     },
-    <span class="ident">MessageId</span>, <span class="ident">TransactionId</span>,
+    <span class="ident">MessageId</span>, <span class="ident">OutputId</span>, <span class="ident">TransactionId</span>,
 };
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">iota</span>::{<span class="ident">Address</span> <span class="kw">as</span> <span class="ident">IotaAddress</span>, <span class="ident">Ed25519Address</span>, <span class="ident">Input</span>, <span class="ident">UTXOInput</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">cmp</span>::<span class="ident">Ordering</span>,
+    <span class="ident">collections</span>::<span class="ident">HashMap</span>,
     <span class="ident">convert</span>::<span class="ident">TryInto</span>,
     <span class="ident">hash</span>::{<span class="ident">Hash</span>, <span class="ident">Hasher</span>},
     <span class="ident">str</span>::<span class="ident">FromStr</span>,
@@ -537,6 +550,11 @@
 }
 
 <span class="kw">impl</span> <span class="ident">AddressOutput</span> {
+    <span class="doccomment">/// The output identifier.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">OutputId</span><span class="op">&gt;</span> {
+        <span class="ident">OutputId</span>::<span class="ident">new</span>(<span class="self">self</span>.<span class="ident">transaction_id</span>, <span class="self">self</span>.<span class="ident">index</span>).<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
+    }
+
     <span class="doccomment">/// Checks if the output is referenced on a pending message or a confirmed message</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">is_used</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Account</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">let</span> <span class="ident">output_id</span> <span class="op">=</span> <span class="ident">UTXOInput</span>::<span class="ident">new</span>(<span class="self">self</span>.<span class="ident">transaction_id</span>, <span class="self">self</span>.<span class="ident">index</span>).<span class="ident">unwrap</span>();
@@ -664,6 +682,13 @@
         <span class="kw">let</span> <span class="ident">iota_address</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">address</span>.<span class="ident">ok_or</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">AddressBuildRequiredField</span>(
             <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">AddressBuildRequiredField</span>::<span class="ident">Address</span>,
         ))<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">address_outputs</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">outputs</span>.<span class="ident">ok_or</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">AddressBuildRequiredField</span>(
+            <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">AddressBuildRequiredField</span>::<span class="ident">Outputs</span>,
+        ))<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">outputs</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();
+        <span class="kw">for</span> <span class="ident">output</span> <span class="kw">in</span> <span class="ident">address_outputs</span> {
+            <span class="ident">outputs</span>.<span class="ident">insert</span>(<span class="ident">output</span>.<span class="ident">id</span>()<span class="question-mark">?</span>, <span class="ident">output</span>);
+        }
         <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">Address</span> {
             <span class="ident">address</span>: <span class="ident">iota_address</span>,
             <span class="ident">balance</span>: <span class="self">self</span>.<span class="ident">balance</span>.<span class="ident">ok_or</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">AddressBuildRequiredField</span>(
@@ -673,9 +698,7 @@
                 <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">AddressBuildRequiredField</span>::<span class="ident">KeyIndex</span>,
             ))<span class="question-mark">?</span>,
             <span class="ident">internal</span>: <span class="self">self</span>.<span class="ident">internal</span>,
-            <span class="ident">outputs</span>: <span class="self">self</span>.<span class="ident">outputs</span>.<span class="ident">ok_or</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">AddressBuildRequiredField</span>(
-                <span class="kw">crate</span>::<span class="ident">error</span>::<span class="ident">AddressBuildRequiredField</span>::<span class="ident">Outputs</span>,
-            ))<span class="question-mark">?</span>,
+            <span class="ident">outputs</span>,
         };
         <span class="prelude-val">Ok</span>(<span class="ident">address</span>)
     }
@@ -732,7 +755,7 @@
     <span class="ident">internal</span>: <span class="ident">bool</span>,
     <span class="doccomment">/// The address outputs.</span>
     <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">set</span> <span class="op">=</span> <span class="string">&quot;pub(crate)&quot;</span>)]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">outputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressOutput</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">outputs</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">OutputId</span>, <span class="ident">AddressOutput</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">PartialOrd</span> <span class="kw">for</span> <span class="ident">Address</span> {
@@ -766,9 +789,9 @@
         <span class="ident">AddressBuilder</span>::<span class="ident">new</span>()
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">handle_new_output</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">output</span>: <span class="ident">AddressOutput</span>) {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">outputs</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">o</span><span class="op">|</span> <span class="ident">o</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">output</span>) {
-            <span class="kw">let</span> <span class="ident">spent_existing_output</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">outputs</span>.<span class="ident">iter_mut</span>().<span class="ident">find</span>(<span class="op">|</span><span class="ident">o</span><span class="op">|</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">handle_new_output</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">output</span>: <span class="ident">AddressOutput</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">outputs</span>.<span class="ident">values</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">o</span><span class="op">|</span> <span class="ident">o</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">output</span>) {
+            <span class="kw">let</span> <span class="ident">spent_existing_output</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">outputs</span>.<span class="ident">values_mut</span>().<span class="ident">find</span>(<span class="op">|</span><span class="ident">o</span><span class="op">|</span> {
                 <span class="ident">o</span>.<span class="ident">message_id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">output</span>.<span class="ident">message_id</span>
                     <span class="op">&amp;&amp;</span> <span class="ident">o</span>.<span class="ident">transaction_id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">output</span>.<span class="ident">transaction_id</span>
                     <span class="op">&amp;&amp;</span> <span class="ident">o</span>.<span class="ident">index</span> <span class="op">=</span><span class="op">=</span> <span class="ident">output</span>.<span class="ident">index</span>
@@ -782,15 +805,16 @@
             } <span class="kw">else</span> {
                 <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;[ADDRESS] got new output {:?}&quot;</span>, <span class="ident">output</span>);
                 <span class="self">self</span>.<span class="ident">balance</span> <span class="op">+</span><span class="op">=</span> <span class="ident">output</span>.<span class="ident">amount</span>;
-                <span class="self">self</span>.<span class="ident">outputs</span>.<span class="ident">push</span>(<span class="ident">output</span>);
+                <span class="self">self</span>.<span class="ident">outputs</span>.<span class="ident">insert</span>(<span class="ident">output</span>.<span class="ident">id</span>()<span class="question-mark">?</span>, <span class="ident">output</span>);
             }
         }
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// Gets the list of outputs that aren&#39;t spent or pending.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">available_outputs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Account</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">AddressOutput</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">outputs</span>
-            .<span class="ident">iter</span>()
+            .<span class="ident">values</span>()
             .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">o</span><span class="op">|</span> <span class="op">!</span>(<span class="ident">o</span>.<span class="ident">is_spent</span> <span class="op">|</span><span class="op">|</span> <span class="ident">o</span>.<span class="ident">is_used</span>(<span class="ident">account</span>)))
             .<span class="ident">collect</span>()
     }
@@ -805,7 +829,7 @@
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_bech32_hrp</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">hrp</span>: <span class="ident">String</span>) {
         <span class="self">self</span>.<span class="ident">address</span>.<span class="ident">bech32_hrp</span> <span class="op">=</span> <span class="ident">hrp</span>.<span class="ident">to_string</span>();
-        <span class="kw">for</span> <span class="ident">output</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">outputs</span>.<span class="ident">iter_mut</span>() {
+        <span class="kw">for</span> <span class="ident">output</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">outputs</span>.<span class="ident">values_mut</span>() {
             <span class="ident">output</span>.<span class="ident">address</span>.<span class="ident">bech32_hrp</span> <span class="op">=</span> <span class="ident">hrp</span>.<span class="ident">to_string</span>();
         }
     }
@@ -856,7 +880,7 @@
         <span class="ident">balance</span>: <span class="number">0</span>,
         <span class="ident">key_index</span>,
         <span class="ident">internal</span>: <span class="bool-val">false</span>,
-        <span class="ident">outputs</span>: <span class="macro">vec</span><span class="macro">!</span>[],
+        <span class="ident">outputs</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
     };
     <span class="prelude-val">Ok</span>(<span class="ident">address</span>)
 }
@@ -881,7 +905,7 @@
         <span class="ident">balance</span>: <span class="number">0</span>,
         <span class="ident">key_index</span>,
         <span class="ident">internal</span>: <span class="bool-val">true</span>,
-        <span class="ident">outputs</span>: <span class="macro">vec</span><span class="macro">!</span>[],
+        <span class="ident">outputs</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
     };
     <span class="prelude-val">Ok</span>(<span class="ident">address</span>)
 }
