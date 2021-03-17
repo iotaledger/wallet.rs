@@ -785,30 +785,45 @@ impl PartialOrd for Message {
     }
 }
 
-fn transaction_inputs_belongs_to_account(essence: &TransactionRegularEssence, account_addresses: &[Address]) -> bool {
-    return essence.inputs().iter().all(|input| {
+fn transaction_inputs_belonging_to_account(
+    essence: &TransactionRegularEssence,
+    account_addresses: &[Address],
+) -> Vec<TransactionInput> {
+    let mut inputs = Vec::new();
+    for input in essence.inputs() {
         if let TransactionInput::UTXO(i) = input {
             if let Some(metadata) = &i.metadata {
-                return account_addresses
+                if account_addresses
                     .iter()
-                    .any(|address| address.address() == &metadata.address);
+                    .any(|address| address.address() == &metadata.address)
+                {
+                    inputs.push(input.clone());
+                }
             }
         }
-        false
-    });
+    }
+    inputs
 }
 
-fn transaction_outputs_belongs_to_account(essence: &TransactionRegularEssence, account_addresses: &[Address]) -> bool {
-    return essence.outputs().iter().all(|output| {
+fn transaction_outputs_belonging_to_account(
+    essence: &TransactionRegularEssence,
+    account_addresses: &[Address],
+) -> Vec<TransactionOutput> {
+    let mut outputs = Vec::new();
+    for output in essence.outputs() {
         let output_address = match output {
             TransactionOutput::SignatureLockedDustAllowance(o) => o.address(),
             TransactionOutput::SignatureLockedSingle(o) => o.address(),
             _ => unimplemented!(),
         };
-        return account_addresses
+        if account_addresses
             .iter()
-            .any(|address| address.address() == output_address);
-    });
+            .any(|address| address.address() == output_address)
+        {
+            outputs.push(output.clone());
+        }
+    }
+    outputs
 }
 
 async fn is_internal(
@@ -817,27 +832,25 @@ async fn is_internal(
     account_id: &str,
     account_addresses: &[Address],
 ) -> bool {
-    let mut inputs_belongs_to_account = false;
-    let mut outputs_belongs_to_account = false;
+    let mut inputs_belonging_to_account = Vec::new();
+    let mut outputs_belonging_to_account = Vec::new();
     for (id, account_handle) in accounts.read().await.iter() {
         if id == account_id {
-            if !inputs_belongs_to_account {
-                inputs_belongs_to_account = transaction_inputs_belongs_to_account(&essence, &account_addresses);
-            }
-            if !outputs_belongs_to_account {
-                outputs_belongs_to_account = transaction_outputs_belongs_to_account(&essence, &account_addresses);
-            }
+            inputs_belonging_to_account.extend(transaction_inputs_belonging_to_account(&essence, &account_addresses));
+            outputs_belonging_to_account.extend(transaction_outputs_belonging_to_account(&essence, &account_addresses));
         } else {
             let account = account_handle.read().await;
-            if !inputs_belongs_to_account {
-                inputs_belongs_to_account = transaction_inputs_belongs_to_account(&essence, account.addresses());
-            }
-            if !outputs_belongs_to_account {
-                outputs_belongs_to_account = transaction_outputs_belongs_to_account(&essence, account.addresses());
-            }
+            inputs_belonging_to_account.extend(transaction_inputs_belonging_to_account(&essence, account.addresses()));
+            outputs_belonging_to_account
+                .extend(transaction_outputs_belonging_to_account(&essence, account.addresses()));
         }
 
-        if inputs_belongs_to_account && outputs_belongs_to_account {
+        if essence.inputs().iter().all(|i| inputs_belonging_to_account.contains(i))
+            && essence
+                .outputs()
+                .iter()
+                .all(|o| outputs_belonging_to_account.contains(o))
+        {
             return true;
         }
     }
