@@ -17,6 +17,7 @@ use std::{
     collections::{hash_map::DefaultHasher, HashMap},
     hash::{Hash, Hasher},
     ops::Range,
+    time::Duration,
 };
 
 /// Migration data.
@@ -120,6 +121,7 @@ pub(crate) async fn create_bundle(
     seed: TernarySeed,
     address_inputs: Vec<&InputData>,
     bundle_mine: bool,
+    timeout: Duration,
 ) -> crate::Result<Vec<BundledTransaction>> {
     let legacy_client = iota_migration::ClientBuilder::new().node(&data.node)?.build()?;
 
@@ -149,7 +151,14 @@ pub(crate) async fn create_bundle(
                 spent_bundle_hashes.extend(bundle_hashes);
             }
         }
-        let mining_result = mine(prepared_bundle, data.security_level, false, spent_bundle_hashes, 40).await?;
+        let mining_result = mine(
+            prepared_bundle,
+            data.security_level,
+            false,
+            spent_bundle_hashes,
+            timeout.as_secs(),
+        )
+        .await?;
         prepared_bundle = mining_result.1;
     }
 

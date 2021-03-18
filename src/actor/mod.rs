@@ -16,6 +16,7 @@ use std::{
     convert::TryInto,
     num::NonZeroU64,
     panic::{catch_unwind, AssertUnwindSafe},
+    time::Duration,
 };
 
 mod message;
@@ -236,11 +237,12 @@ impl WalletMessageHandler {
                 seed,
                 input_indexes,
                 mine,
+                timeout_secs,
             } => {
                 convert_async_panics(|| async {
                     let hash = self
                         .account_manager
-                        .create_migration_bundle(&seed, &input_indexes, *mine)
+                        .create_migration_bundle(&seed, &input_indexes, *mine, Duration::from_secs(*timeout_secs))
                         .await?;
                     seed.zeroize();
                     Ok(ResponseType::CreatedMigrationBundle(hash))

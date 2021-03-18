@@ -232,6 +232,9 @@ pub enum MessageType {
         input_indexes: Vec<usize>,
         /// Whether we should perform bundle mining or not.
         mine: bool,
+        /// Timeout in seconds for the bundle mining process.
+        #[serde(rename = "timeoutSeconds")]
+        timeout_secs: u64,
     },
     /// Sends the migration bundle associated with the hash.
     SendMigrationBundle {
@@ -331,6 +334,7 @@ impl Serialize for MessageType {
                 seed: _,
                 input_indexes: _,
                 mine: _,
+                timeout_secs: _,
             } => serializer.serialize_unit_variant("MessageType", 25, "CreateMigrationBundle"),
             MessageType::SendMigrationBundle {
                 node: _,

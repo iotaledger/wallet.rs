@@ -399,6 +399,7 @@ impl AccountManager {
         seed: &str,
         input_indexes: &[usize],
         mine: bool,
+        timeout: Duration,
     ) -> crate::Result<String> {
         let mut hasher = DefaultHasher::new();
         seed.hash(&mut hasher);
@@ -421,7 +422,7 @@ impl AccountManager {
         }
 
         let account_handle = self.get_account(0).await?;
-        let bundle = migration::create_bundle(account_handle, &data, seed, address_inputs, mine).await?;
+        let bundle = migration::create_bundle(account_handle, &data, seed, address_inputs, mine, timeout).await?;
         let bundle_hash = bundle.first().unwrap().bundle().to_inner().to_string();
 
         self.cached_migration_bundles.insert(bundle_hash.clone(), bundle);
