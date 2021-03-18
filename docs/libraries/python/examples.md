@@ -1,5 +1,7 @@
 # Examples
 
+> Please note: In is not recommended to store passwords on host's environment variables or in the source code in a production setup! Please make sure you follow our [backup and security](https://chrysalis.docs.iota.org/guides/backup_security.html) recommendations for production use!
+
 ## Account manager and individual accounts
 First of all, let's initialize (open) a secure storage for individual accounts (backed up by Stronghold by default) using `AccountManager` instance:
 
@@ -20,7 +22,7 @@ One of the key principle behind the `stronghold`-based storage is that no one ca
 
 In case one would like to store a seed also somewhere else, there is a method `AccountManager.generate_mnemonic()` that generates random seed and it can be leveraged before the actual account initialization.
 
-Please note, it is highly recommended to store `stronghold` password and `stronghold` database on separate devices.
+Please note: it is highly recommended to store `stronghold` password encrypted on rest and separated from `stronghold` snapshots.
 
 ### Accounts
 The library uses a model of individual accounts to separate individual users/clients from each other. It is possible to generate multiple addresses for each account deterministically. 

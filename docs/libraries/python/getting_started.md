@@ -1,5 +1,8 @@
 # Getting Started with IOTA Wallet Python binding
 
+## Security
+Please note: In is not recommended to store passwords on host's environment variables or in the source code in a production setup! Please make sure you follow our [backup and security](https://chrysalis.docs.iota.org/guides/backup_security.html) recommendations for production use!
+
 ## Installation
 Easiest way how to get python binding up and running is to leverage pre-built python libraries for linux/macos/windows that can be installed to your python environment (3.6+) via `pip`. The binding is automagically generated using github [actions](https://github.com/iotaledger/wallet.rs/actions/workflows/python_binding_publish.yml).
 

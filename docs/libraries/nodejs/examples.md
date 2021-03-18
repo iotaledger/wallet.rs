@@ -6,6 +6,7 @@ All examples below expect your custom password in the `.env` file:
 ```bash
 SH_PASSWORD="here is your super secure password"
 ```
+> Please note: In is not recommended to store passwords on host's environment variables or in the source code in a production setup! Please make sure you follow our [backup and security](https://chrysalis.docs.iota.org/guides/backup_security.html) recommendations for production use!
 
 ## Account manager and individual accounts
 First of all, let's initialize (open) a secure storage for individual accounts (backed up by Stronghold by default) using `AccountManager` instance:
@@ -17,7 +18,7 @@ First of all, let's initialize (open) a secure storage for individual accounts (
 * Only during the initialization new database: stronghold mnemonic (seed) is automatically generated and stored by default (`manager.storeMnemonic(SignerType.Stronghold)`)
 * Needless to say, the seed should be set only for the first time. In order to open already initialized database, just a password is enough
 
-The storage is encrypted at rest and so you need a strong password and location where to put your storage. 
+The storage is encrypted at rest and so you need a strong password and location where to put your storage. Please note: it is highly recommended to store `stronghold` password encrypted on rest and separated from `stronghold` snapshots.
 
 > Please note: deal with the password with utmost care
 
@@ -26,8 +27,6 @@ Technically speaking, the storage means a single file called `wallet.stronghold`
 One of the key principle behind the `stronghold`-based storage is that no one can get a seed from the storage. You deal with all accounts purely via `AccountManager` instance and all complexities are hidden under the hood and are dealt with in a secure way.
 
 In case one would like to store a seed also somewhere else, there is a method `AccountManager.generateMnemonic()` that generates random seed and it can be leveraged before the actual account initialization.
-
-Please note, it is highly recommended to store `stronghold` password and `stronghold` database on separate devices.
 
 ### Accounts
 The library uses a model of individual accounts to separate individual users/clients from each other. It is possible to generate multiple addresses for each account deterministically. 
