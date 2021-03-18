@@ -181,8 +181,8 @@ pub enum Error {
     NodesNotSynced(String),
     /// iota 1.0 client error
     // #[cfg(feature = "migration")]
-    #[error("nodes {0} not synced")]
-    OldIotaError(#[from] iota_migration::client::Error),
+    #[error(transparent)]
+    LegacyClientError(Box<iota_migration::client::Error>),
     /// Invalid legacy seed.
     #[error("invalid seed")]
     InvalidSeed,
@@ -216,6 +216,12 @@ impl Drop for Error {
 impl From<iota::client::Error> for Error {
     fn from(error: iota::client::Error) -> Self {
         Self::ClientError(Box::new(error))
+    }
+}
+
+impl From<iota_migration::client::Error> for Error {
+    fn from(error: iota_migration::client::Error) -> Self {
+        Self::LegacyClientError(Box::new(error))
     }
 }
 
@@ -324,7 +330,7 @@ impl serde::Serialize for Error {
             Self::InvalidOutputKind(_) => serialize_variant(self, serializer, "InvalidOutputKind"),
             Self::NodesNotSynced(_) => serialize_variant(self, serializer, "NodesNotSynced"),
             // #[cfg(feature = "migration")]
-            Self::OldIotaError(_) => serialize_variant(self, serializer, "OldIotaError"),
+            Self::LegacyClientError(_) => serialize_variant(self, serializer, "LegacyClientError"),
             Self::InvalidSeed => serialize_variant(self, serializer, "InvalidSeed"),
             Self::MigrationDataNotFound => serialize_variant(self, serializer, "MigrationDataNotFound"),
             Self::MigrationBundleNotFound => serialize_variant(self, serializer, "MigrationBundleNotFound"),

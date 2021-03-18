@@ -145,7 +145,7 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
     let mut prepared_bundle = create_migration_bundle(
         &legacy_client,
         deposit_address,
-        address_inputs.clone().into_iter().map(|i| i.clone()).collect(),
+        address_inputs.clone().into_iter().cloned().collect(),
     )
     .await?;
     if bundle_mine && address_inputs.iter().any(|i| i.spent) {
@@ -169,7 +169,7 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
     let bundle = sign_migration_bundle(
         seed,
         prepared_bundle,
-        address_inputs.clone().into_iter().map(|i| i.clone()).collect(),
+        address_inputs.clone().into_iter().cloned().collect(),
     )?;
 
     let mut log = OpenOptions::new().write(true).create(true).open(log_file_path)?;
