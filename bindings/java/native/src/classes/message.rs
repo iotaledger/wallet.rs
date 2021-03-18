@@ -35,7 +35,7 @@ pub struct Transfer {
 }
 
 impl Transfer {
-    pub fn get_internal(self) -> TransferRust {
+    pub fn to_inner(self) -> TransferRust {
         self.transfer
     }
 
@@ -80,7 +80,7 @@ impl TransferBuilder {
             .borrow_mut()
             .take()
             .unwrap()
-            .with_indexation(indexation.get_internal());
+            .with_indexation(indexation.to_inner());
         TransferBuilder::new_with_builder(new_builder)
     }
 
@@ -105,11 +105,13 @@ impl Clone for Message {
     }
 }
 
-impl Message {
-    pub fn new_with_internal(msg: MessageRust) -> Self {
-        Message { message: msg }
+impl From<MessageRust> for Message {
+    fn from(message: MessageRust) -> Self {
+        Self { message }
     }
+}
 
+impl Message {
     pub fn id(&self) -> MessageId {
         self.message.id().clone()
     }
@@ -126,7 +128,7 @@ impl Message {
     pub fn payload(&self) -> Option<MessagePayload> {
         match self.message.payload() {
             None => None,
-            Some(e) => Some(MessagePayload::new_with_internal(e.clone())),
+            Some(e) => Some(e.clone().into()),
         }
     }
     pub fn timestamp(&self) -> DateTime<Utc> {
@@ -142,7 +144,7 @@ impl Message {
         *(self.message.broadcasted())
     }
 
-    pub fn get_internal(self) -> MessageRust {
+    pub fn to_inner(self) -> MessageRust {
         // TODO: Find a way to not need clone
         self.message
     }

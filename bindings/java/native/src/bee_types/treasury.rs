@@ -9,11 +9,13 @@ pub struct TreasuryTransactionPayload {
     payload: TreasuryTransactionPayloadRust,
 }
 
-impl TreasuryTransactionPayload {
-    pub fn new_with_rust(payload: TreasuryTransactionPayloadRust) -> Self {
-        Self { payload: payload }
+impl From<TreasuryTransactionPayloadRust> for TreasuryTransactionPayload {
+    fn from(payload: TreasuryTransactionPayloadRust) -> Self {
+        Self { payload }
     }
+}
 
+impl TreasuryTransactionPayload {
     pub fn input(&self) -> MessageId {
         if let Input::Treasury(payload) = self.payload.input() {
             return payload.message_id().clone();

@@ -19,11 +19,13 @@ impl Display for Address {
     }
 }
 
-impl Address {
-    pub fn new_with_internal(addr: AddressRust) -> Self {
-        Address { address: addr }
+impl From<AddressRust> for Address {
+    fn from(address: AddressRust) -> Self {
+        Self { address }
     }
+}
 
+impl Address {
     pub fn readable(&self) -> String {
         self.address.address().to_bech32()
     }
@@ -37,7 +39,7 @@ impl Address {
         self.address.available_outputs(account)
     }
 
-    pub fn get_internal(self) -> AddressRust {
+    pub fn to_inner(self) -> AddressRust {
         // TODO: Find a way to not need clone
         self.address.clone()
     }

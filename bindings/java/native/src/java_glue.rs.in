@@ -13,6 +13,7 @@ use crate::{
     bee_types::*,
     acc::*,
     client_options::*,
+    sync::*,
     acc_manager::*,
     event_manager::*,
     message::*,
@@ -152,17 +153,22 @@ foreign_class!(class RustHex {
     }
 });
 
-foreign_class!(class ManagerOptions {
-    self_type ManagerOptions;
-    constructor ManagerOptions::default() -> ManagerOptions;
-    fn ManagerOptions::set_storage_path(&mut self, storage_path: PathBuf); alias setStoragePath;
-    fn ManagerOptions::set_storage_type(&mut self, storage_type: ManagerStorage); alias setStorageType;
-    fn ManagerOptions::set_storage_password(&mut self, storage_password: String); alias setStoragePassword;
+foreign_class!(class AccountManagerBuilder {
+    self_type AccountManagerBuilder;
+    constructor AccountManagerBuilder::new() -> AccountManagerBuilder;
+    fn AccountManagerBuilder::with_storage(&mut self, storage_path: PathBuf, storage: ManagerStorage, password: Option<&str>) -> Result<AccountManagerBuilder>; alias withStorage;
+    fn AccountManagerBuilder::with_polling_interval(&mut self, polling_interval: Duration) -> AccountManagerBuilder; alias withPollingInterval;
+    fn AccountManagerBuilder::with_output_consolidation_threshold(&mut self, threshold: usize) -> AccountManagerBuilder; alias withOutputConsolidationThreshold;
+    fn AccountManagerBuilder::with_automatic_output_consolidation_disabled(&mut self) -> AccountManagerBuilder; alias withAutomaticOutputConsolidationDisabled;
+    fn AccountManagerBuilder::with_sync_spent_outputs(&mut self) -> AccountManagerBuilder; alias withSyncSpentOutputs;
+    fn AccountManagerBuilder::with_event_persistence(&mut self) -> AccountManagerBuilder; alias withEventPersistence;
+    fn AccountManagerBuilder::finish(&mut self) -> Result<AccountManager>;
 });
 
 foreign_class!(class AccountManager {
     self_type AccountManager;
-    constructor AccountManager::new(options: ManagerOptions) -> AccountManager;
+    private constructor = empty;
+    fn AccountManagerBuilder::new() -> AccountManagerBuilder; alias Builder;
     fn AccountManager::stop_background_sync(&mut self,) -> Result<()>; alias stopBackgroundSync;
     fn AccountManager::set_storage_password(&mut self, password: &str) -> Result<()>; alias setStoragePassword;
     fn AccountManager::set_stronghold_password(&mut self, password: &str) -> Result<()>; alias setStrongholdPassword;
@@ -180,7 +186,40 @@ foreign_class!(class AccountManager {
     fn AccountManager::internal_transfer(&self, from_account_id: String, to_account_id: String, amount: u64) -> Result<Message>; alias internalTransfer;
     fn AccountManager::backup(&self, destination: PathBuf) -> Result<PathBuf>;
     fn AccountManager::import_accounts(&mut self, source: PathBuf, stronghold_password: String) -> Result<()>; alias importAccounts;
+    fn AccountManager::sync_accounts(&self) -> Result<AccountsSynchronizer>; alias syncAccounts;
 });
+
+foreign_class!(
+    class AccountSynchronizer {
+        self_type AccountSynchronizer;
+        private constructor = empty;
+
+        fn AccountSynchronizer::gap_limit(&mut self, limit: usize) -> AccountSynchronizer; alias gapLimit;
+        fn AccountSynchronizer::skip_persistence(&mut self) -> AccountSynchronizer; alias skipPersistence;
+        fn AccountSynchronizer::address_index(&mut self, address_index: usize) -> AccountSynchronizer; alias addressIndex;
+        fn AccountSynchronizer::execute(&mut self) -> Result<SyncedAccount>;
+    }
+);
+
+foreign_class!(
+    class AccountsSynchronizer {
+        self_type AccountsSynchronizer;
+        private constructor = empty;
+
+        fn AccountsSynchronizer::gap_limit(&mut self, limit: usize) -> AccountsSynchronizer; alias gapLimit;
+        fn AccountsSynchronizer::address_index(&mut self, address_index: usize) -> AccountsSynchronizer; alias addressIndex;
+        fn AccountsSynchronizer::execute(&mut self) -> Result<Vec<SyncedAccount>>;
+    }
+);
+
+foreign_class!(
+    class SyncedAccount {
+        self_type SyncedAccount;
+        private constructor = empty;
+
+        fn SyncedAccount::deposit_address(&mut self) -> Address;
+    }
+);
 
 foreign_class!(class BrokerOptions {
     self_type BrokerOptions;
@@ -394,7 +433,7 @@ foreign_class!(
         fn WalletTransactionEvent::indexation_id(&self) -> &str; alias indexationId;
         fn WalletTransactionEvent::account_id(&self) -> &str; alias accountId;
         fn WalletTransactionEvent::message(&self) -> Message {
-            Message::new_with_internal(this.message().clone())
+            this.message().clone().into()
         }
     }
 );
@@ -406,7 +445,7 @@ foreign_class!(
         fn WalletTransactionConfirmationChangeEvent::indexation_id(&self) -> &str; alias indexationId;
         fn WalletTransactionConfirmationChangeEvent::account_id(&self) -> &str; alias accountId;
         fn WalletTransactionConfirmationChangeEvent::message(&self) -> Message {
-            Message::new_with_internal(this.message().clone())
+            this.message().clone().into()
         }
         fn WalletTransactionConfirmationChangeEvent::confirmed(&self) -> bool {
             *this.confirmed()
@@ -469,7 +508,7 @@ foreign_class!(
         fn WalletTransactionReattachmentEvent::indexation_id(&self) -> &str; alias indexationId;
         fn WalletTransactionReattachmentEvent::account_id(&self) -> &str; alias accountId;
         fn WalletTransactionReattachmentEvent::message(&self) -> Message {
-            Message::new_with_internal(this.message().clone())
+            this.message().clone().into()
         }
         fn WalletTransactionReattachmentEvent::reattachedMessageId(&self) -> MessageId {
             this.reattached_message_id().clone()
@@ -533,25 +572,25 @@ foreign_class!(
     class EventManager {
         self_type EventManager;
         private constructor = empty;
-        fn EventManager::subscribe_errors(cb: Box<dyn ErrorListener + Send + 'static>) -> EventId;
-        fn EventManager::subscribe_new_transaction(cb: Box<dyn NewTransactionListener + Send + 'static>) -> EventId;
-        fn EventManager::subscribe_confirmation_state_change(cb: Box<dyn TransactionConfirmationChangeListener + Send + 'static>) -> EventId;
-        fn EventManager::subscribe_reattachment(cb: Box<dyn ReattachTransactionListener + Send + 'static>) -> EventId;
-        fn EventManager::subscribe_broadcast(cb: Box<dyn BroadcastTransactionListener + Send + 'static>) -> EventId;
-        fn EventManager::subscribe_transfer_progress(cb: Box<dyn TransferProgressListener + Send + 'static>) -> EventId;
-        fn EventManager::subscribe_balance_change(cb: Box<dyn BalanceChangeListener + Send + 'static>) -> EventId;
-        fn EventManager::subscribe_stronghold_status_change(cb: Box<dyn StrongholdStatusListener + Send + 'static>) -> Result<EventId>;
-        fn EventManager::subscribe_address_consolidation_needed(cb: Box<dyn AddressConsolidationNeededListener + Send + 'static>) -> Result<EventId>;
+        fn EventManager::subscribe_errors(cb: Box<dyn ErrorListener + Send + 'static>) -> EventId; alias subscribeErrors;
+        fn EventManager::subscribe_new_transaction(cb: Box<dyn NewTransactionListener + Send + 'static>) -> EventId; alias subscribeNewTransaction;
+        fn EventManager::subscribe_confirmation_state_change(cb: Box<dyn TransactionConfirmationChangeListener + Send + 'static>) -> EventId; alias subscribeConfirmationStateChange;
+        fn EventManager::subscribe_reattachment(cb: Box<dyn ReattachTransactionListener + Send + 'static>) -> EventId; alias subscribeReattachement;
+        fn EventManager::subscribe_broadcast(cb: Box<dyn BroadcastTransactionListener + Send + 'static>) -> EventId; alias subscribeBroadcast;
+        fn EventManager::subscribe_transfer_progress(cb: Box<dyn TransferProgressListener + Send + 'static>) -> EventId; alias subscribeTransferProgress;
+        fn EventManager::subscribe_balance_change(cb: Box<dyn BalanceChangeListener + Send + 'static>) -> EventId; alias subscribeBalanceChange;
+        fn EventManager::subscribe_stronghold_status_change(cb: Box<dyn StrongholdStatusListener + Send + 'static>) -> Result<EventId>; alias subscribeStrongholdStatusChange;
+        fn EventManager::subscribe_address_consolidation_needed(cb: Box<dyn AddressConsolidationNeededListener + Send + 'static>) -> Result<EventId>; alias subscribeAddressConsolidationNeeded;
     
-        fn EventManager::remove_error_listener(event: EventId);
-        fn EventManager::remove_new_transaction_listener(event: EventId);
-        fn EventManager::remove_confirmation_state_change_listener(event: EventId);
-        fn EventManager::remove_reattachment_listener(event: EventId);
-        fn EventManager::remove_broadcast_listener(event: EventId);
-        fn EventManager::remove_transfer_progress_listener(event: EventId);
-        fn EventManager::remove_balance_change_listener(event: EventId);
-        fn EventManager::remove_stronghold_status_change_listener(event: EventId);
-        fn EventManager::remove_address_consolidation_needed_listener(event: EventId);
+        fn EventManager::remove_error_listener(event: EventId); alias removeErrorListener;
+        fn EventManager::remove_new_transaction_listener(event: EventId); alias removeNewTransactionListener;
+        fn EventManager::remove_confirmation_state_change_listener(event: EventId); alias removeConfirmationStateChangeListener;
+        fn EventManager::remove_reattachment_listener(event: EventId); alias removeReattachementListener;
+        fn EventManager::remove_broadcast_listener(event: EventId); alias removeBroadcastListener;
+        fn EventManager::remove_transfer_progress_listener(event: EventId); alias removeTransferProgressListener;
+        fn EventManager::remove_balance_change_listener(event: EventId); alias removeBalanceChangeListener;
+        fn EventManager::remove_stronghold_status_change_listener(event: EventId); alias removeStrongholdStatusChangeListener;
+        fn EventManager::remove_address_consolidation_needed_listener(event: EventId); alias removeAddressConsolidationNeededListener;
     }
 );
 
@@ -572,7 +611,7 @@ foreign_class!(
     class IndexationPayload {
         self_type IndexationPayload;
         private constructor = empty;
-        fn IndexationPayload::new_with(index: &[u8], data: &[u8]) -> Result<IndexationPayload>;
+        fn IndexationPayload::new(index: &[u8], data: &[u8]) -> Result<IndexationPayload>; alias new_with;
         fn IndexationPayload::index(&self) -> &[u8];
         fn IndexationPayload::data(&self) -> &[u8];
     }

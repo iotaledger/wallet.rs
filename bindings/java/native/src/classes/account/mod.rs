@@ -3,3 +3,4 @@
 
 pub mod acc;
 pub mod client_options;
+pub mod sync;

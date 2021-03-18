@@ -2,26 +2,23 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::anyhow;
-use std::{num::NonZeroU64, path::PathBuf};
-
 use iota_wallet::{
     account_manager::{
-        AccountManager as AccountManagerRust, ManagerStorage as ManagerStorageRust, DEFAULT_STORAGE_FOLDER,
+        AccountManager as AccountManagerRust, AccountManagerBuilder as AccountManagerBuilderRust,
+        ManagerStorage as ManagerStorageRust,
     },
     message::MessageId,
     signing::SignerType,
 };
+use std::{cell::RefCell, num::NonZeroU64, path::PathBuf, rc::Rc, time::Duration};
 
 use crate::{
     acc::{Account, AccountInitialiser},
     client_options::ClientOptions,
     message::Message,
+    sync::AccountsSynchronizer,
     Result,
 };
-
-fn default_storage_path() -> PathBuf {
-    DEFAULT_STORAGE_FOLDER.into()
-}
 
 #[derive(Debug)]
 pub enum AccountSignerType {
@@ -41,9 +38,8 @@ pub fn signer_type_enum_to_type(signer_type: AccountSignerType) -> SignerType {
         #[cfg(feature = "ledger-nano-simulator")]
         AccountSignerType::LedgerNanoSimulator => SignerType::LedgerNanoSimulator,
 
-        // Default to Stringhold
-        // TODO: Will break
-        _ => SignerType::Stronghold,
+        // Default will only happen when we compile without any features...
+        _ => panic!("No signer type found during compilation"),
     }
 }
 
@@ -63,42 +59,87 @@ fn storage_enum_to_storage(storage: ManagerStorage) -> ManagerStorageRust {
     }
 }
 
-pub struct ManagerOptions {
-    storage_path: PathBuf,
-    storage_type: Option<ManagerStorageRust>,
-    storage_password: Option<String>,
+pub struct AccountManagerBuilder {
+    builder: Rc<RefCell<Option<AccountManagerBuilderRust>>>,
 }
 
-impl Default for ManagerOptions {
-    fn default() -> Self {
-        #[allow(unused_variables)]
-        let default_storage: Option<ManagerStorageRust> = None;
-        #[cfg(all(feature = "stronghold-storage", not(feature = "sqlite-storage")))]
-        let default_storage = Some(ManagerStorageRust::Stronghold);
-        #[cfg(all(feature = "sqlite-storage", not(feature = "stronghold-storage")))]
-        let default_storage = Some(ManagerStorageRust::Sqlite);
+impl AccountManagerBuilder {
+    pub fn new() -> Self {
+        AccountManagerBuilder::new_with_builder(AccountManagerBuilderRust::new())
+    }
 
+    fn new_with_builder(builder: AccountManagerBuilderRust) -> Self {
         Self {
-            storage_path: default_storage_path(),
-            storage_type: default_storage,
-            // polling_interval: Duration::from_millis(30_000),
-            // skip_polling: false,
-            storage_password: None,
+            builder: Rc::new(RefCell::new(Option::from(builder))),
         }
     }
-}
 
-impl ManagerOptions {
-    pub fn set_storage_path(&mut self, storage_path: PathBuf) {
-        self.storage_path = storage_path;
+    pub fn with_storage(
+        &mut self,
+        storage_path: PathBuf,
+        storage: ManagerStorage,
+        password: Option<&str>,
+    ) -> Result<Self> {
+        match self.builder.borrow_mut().take().unwrap().with_storage(
+            storage_path,
+            storage_enum_to_storage(storage),
+            password,
+        ) {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(new_builder) => Ok(AccountManagerBuilder::new_with_builder(new_builder)),
+        }
     }
 
-    pub fn set_storage_type(&mut self, storage_type: ManagerStorage) {
-        self.storage_type = Option::Some(storage_enum_to_storage(storage_type));
+    pub fn with_polling_interval(&mut self, polling_interval: Duration) -> Self {
+        let new_builder = self
+            .builder
+            .borrow_mut()
+            .take()
+            .unwrap()
+            .with_polling_interval(polling_interval);
+        AccountManagerBuilder::new_with_builder(new_builder)
     }
 
-    pub fn set_storage_password(&mut self, storage_password: String) {
-        self.storage_password = Option::Some(storage_password);
+    /// Sets the number of outputs an address must have to trigger the automatic consolidation process.
+    pub fn with_output_consolidation_threshold(&mut self, threshold: usize) -> Self {
+        let new_builder = self
+            .builder
+            .borrow_mut()
+            .take()
+            .unwrap()
+            .with_output_consolidation_threshold(threshold);
+        AccountManagerBuilder::new_with_builder(new_builder)
+    }
+
+    /// Disables the automatic output consolidation process.
+    pub fn with_automatic_output_consolidation_disabled(&mut self) -> Self {
+        let new_builder = self
+            .builder
+            .borrow_mut()
+            .take()
+            .unwrap()
+            .with_automatic_output_consolidation_disabled();
+        AccountManagerBuilder::new_with_builder(new_builder)
+    }
+
+    /// Enables fetching spent output history on sync.
+    pub fn with_sync_spent_outputs(&mut self) -> Self {
+        let new_builder = self.builder.borrow_mut().take().unwrap().with_sync_spent_outputs();
+        AccountManagerBuilder::new_with_builder(new_builder)
+    }
+
+    /// Enables event persistence.
+    pub fn with_event_persistence(&mut self) -> Self {
+        let new_builder = self.builder.borrow_mut().take().unwrap().with_event_persistence();
+        AccountManagerBuilder::new_with_builder(new_builder)
+    }
+
+    /// Builds the manager.
+    pub fn finish(&mut self) -> Result<AccountManager> {
+        match crate::block_on(async move { self.builder.borrow_mut().take().unwrap().finish().await }) {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(manager) => Ok(AccountManager { manager }),
+        }
     }
 }
 
@@ -107,22 +148,6 @@ pub struct AccountManager {
 }
 
 impl AccountManager {
-    pub fn new(options: ManagerOptions) -> AccountManager {
-        let manager = crate::block_on(
-            AccountManagerRust::builder()
-                .with_storage(
-                    PathBuf::from(options.storage_path),
-                    options.storage_type.unwrap_or(ManagerStorageRust::Stronghold),
-                    options.storage_password.as_deref(),
-                )
-                .expect("failed to init storage")
-                .finish(),
-        )
-        .expect("error initializing account manager");
-
-        AccountManager { manager: manager }
-    }
-
     pub fn storage_path(&self) -> &PathBuf {
         self.manager.storage_path()
     }
@@ -166,8 +191,6 @@ impl AccountManager {
 
     pub fn store_mnemonic(&mut self, signer_type_enum: AccountSignerType, mnemonic: String) -> Result<()> {
         let signer_type = signer_type_enum_to_type(signer_type_enum);
-
-        // TODO: Make optional from java possible
         let opt_mnemonic = match mnemonic.as_str() {
             "" => None,
             _ => Some(mnemonic),
@@ -187,7 +210,7 @@ impl AccountManager {
     }
 
     pub fn create_account(&self, client_options: ClientOptions) -> Result<AccountInitialiser> {
-        match self.manager.create_account(client_options.get_internal()) {
+        match self.manager.create_account(client_options.to_inner()) {
             Err(e) => Err(anyhow!(e.to_string())),
             Ok(initialiser) => Ok(AccountInitialiser::new(initialiser)),
         }
@@ -203,40 +226,42 @@ impl AccountManager {
     pub fn get_account(&self, account_id: String) -> Result<Account> {
         match crate::block_on(async move { self.manager.get_account(account_id).await }) {
             Err(e) => Err(anyhow!(e.to_string())),
-            Ok(acc) => Ok(Account::new_with_internal(acc)),
+            Ok(acc) => Ok(acc.into()),
         }
     }
 
     pub fn get_accounts(&self) -> Result<Vec<Account>> {
         match crate::block_on(async move { self.manager.get_accounts().await }) {
             Err(e) => Err(anyhow!(e.to_string())),
-            Ok(accs) => Ok(accs.iter().map(|acc| Account::new_with_internal(acc.clone())).collect()),
+            Ok(accs) => Ok(accs.iter().map(|acc| acc.clone().into()).collect()),
         }
     }
 
-    // TODO: Do we still need synchronisers?
-    // pub fn sync_accounts(&self) -> Result<AccountsSynchronizer> {
-    // self.manager.sync_accounts()
-    // }
+    pub fn sync_accounts(&self) -> Result<AccountsSynchronizer> {
+        match self.manager.sync_accounts() {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(s) => Ok(s.into()),
+        }
+    }
 
     pub fn reattach(&self, account_id: String, message_id: MessageId) -> Result<Message> {
         match crate::block_on(async move { self.manager.reattach(account_id, &message_id).await }) {
             Err(e) => Err(anyhow!(e.to_string())),
-            Ok(msg) => Ok(Message::new_with_internal(msg)),
+            Ok(msg) => Ok(msg.into()),
         }
     }
 
     pub fn promote(&self, account_id: String, message_id: MessageId) -> Result<Message> {
         match crate::block_on(async move { self.manager.promote(account_id, &message_id).await }) {
             Err(e) => Err(anyhow!(e.to_string())),
-            Ok(msg) => Ok(Message::new_with_internal(msg)),
+            Ok(msg) => Ok(msg.into()),
         }
     }
 
     pub fn retry(&self, account_id: String, message_id: MessageId) -> Result<Message> {
         match crate::block_on(async move { self.manager.retry(account_id, &message_id).await }) {
             Err(e) => Err(anyhow!(e.to_string())),
-            Ok(msg) => Ok(Message::new_with_internal(msg)),
+            Ok(msg) => Ok(msg.into()),
         }
     }
 
@@ -247,7 +272,7 @@ impl AccountManager {
                 .await
         }) {
             Err(e) => Err(anyhow!(e.to_string())),
-            Ok(msg) => Ok(Message::new_with_internal(msg)),
+            Ok(msg) => Ok(msg.into()),
         }
     }
 

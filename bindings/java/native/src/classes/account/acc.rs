@@ -53,14 +53,14 @@ impl AccountInitialiser {
     }
 
     pub fn messages(&mut self, messages: Vec<Message>) -> Self {
-        let rust_msgs = messages.into_iter().map(|m| m.get_internal()).collect();
+        let rust_msgs = messages.into_iter().map(|m| m.to_inner()).collect();
 
         let new_initialiser = self.initialiser.borrow_mut().take().unwrap().messages(rust_msgs);
         AccountInitialiser::new_with_initialiser(Rc::new(RefCell::new(Option::from(new_initialiser))))
     }
 
     pub fn addresses(&mut self, addresses: Vec<Address>) -> Self {
-        let rust_addrs = addresses.into_iter().map(|a| a.get_internal()).collect();
+        let rust_addrs = addresses.into_iter().map(|a| a.to_inner()).collect();
 
         let new_initialiser = self.initialiser.borrow_mut().take().unwrap().addresses(rust_addrs);
         AccountInitialiser::new_with_initialiser(Rc::new(RefCell::new(Option::from(new_initialiser))))
@@ -73,7 +73,11 @@ impl AccountInitialiser {
 
     pub fn initialise(&self) -> Result<Account> {
         let acc_handle_res =
-            crate::block_on(async move { self.initialiser.borrow_mut().take().unwrap().initialise().await });
+        tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(async move { self.initialiser.borrow_mut().take().unwrap().initialise().await });
 
         match acc_handle_res {
             Err(e) => Err(anyhow!(e.to_string())),
@@ -86,11 +90,13 @@ pub struct Account {
     handle: AccountHandleRust,
 }
 
-impl Account {
-    pub fn new_with_internal(handle: AccountHandleRust) -> Account {
-        Account { handle: handle }
+impl From<AccountHandleRust> for Account {
+    fn from(handle: AccountHandleRust) -> Self {
+        Self { handle }
     }
+}
 
+impl Account {
     pub fn consolidate_outputs(&self) -> Result<Vec<Message>> {
         let msgs_res = tokio::runtime::Builder::new_current_thread()
             .enable_all()
@@ -100,7 +106,7 @@ impl Account {
 
         match msgs_res {
             Err(e) => Err(anyhow!(e.to_string())),
-            Ok(msgs) => Ok(msgs.into_iter().map(|m| Message::new_with_internal(m)).collect()),
+            Ok(msgs) => Ok(msgs.into_iter().map(|m| m.into()).collect()),
         }
     }
 
@@ -109,11 +115,11 @@ impl Account {
             .enable_all()
             .build()
             .unwrap()
-            .block_on(async move { self.handle.transfer(transfer.get_internal()).await });
+            .block_on(async move { self.handle.transfer(transfer.to_inner()).await });
 
         match msg_res {
             Err(e) => Err(anyhow!(e.to_string())),
-            Ok(msg) => Ok(Message::new_with_internal(msg)),
+            Ok(msg) => Ok(msg.into()),
         }
     }
 
@@ -122,7 +128,7 @@ impl Account {
 
         match addr_res {
             Err(e) => Err(anyhow!(e.to_string())),
-            Ok(addr) => Ok(Address::new_with_internal(addr)),
+            Ok(addr) => Ok(addr.into()),
         }
     }
 
@@ -131,7 +137,7 @@ impl Account {
 
         match addr_res {
             Err(e) => Err(anyhow!(e.to_string())),
-            Ok(addr) => Ok(Address::new_with_internal(addr)),
+            Ok(addr) => Ok(addr.into()),
         }
     }
 
@@ -146,7 +152,7 @@ impl Account {
 
     pub fn latest_address(&self) -> Address {
         let latest_address = crate::block_on(async move { self.handle.latest_address().await });
-        Address::new_with_internal(latest_address)
+        latest_address.into()
     }
 
     pub fn set_alias(&self, alias: String) -> Result<()> {
@@ -159,7 +165,7 @@ impl Account {
     }
 
     pub fn set_client_options(&self, options: ClientOptions) -> Result<()> {
-        let opts = crate::block_on(async move { self.handle.set_client_options(options.get_internal()).await });
+        let opts = crate::block_on(async move { self.handle.set_client_options(options.to_inner()).await });
 
         match opts {
             Err(e) => Err(anyhow!(e.to_string())),
@@ -170,19 +176,19 @@ impl Account {
     pub fn list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<Message> {
         let msgs = crate::block_on(async move { self.handle.list_messages(count, from, message_type).await });
 
-        msgs.into_iter().map(|m| Message::new_with_internal(m)).collect()
+        msgs.into_iter().map(|m| m.into()).collect()
     }
 
     pub fn list_spent_addresses(&self) -> Vec<Address> {
         let addrs = crate::block_on(async move { self.handle.list_spent_addresses().await });
 
-        addrs.into_iter().map(|a| Address::new_with_internal(a)).collect()
+        addrs.into_iter().map(|a| a.into()).collect()
     }
 
     pub fn list_unspent_addresses(&self) -> Vec<Address> {
         let addrs = crate::block_on(async move { self.handle.list_unspent_addresses().await });
 
-        addrs.into_iter().map(|a| Address::new_with_internal(a)).collect()
+        addrs.into_iter().map(|a| a.into()).collect()
     }
 
     pub fn get_message(&self, message_id: MessageId) -> Option<Message> {
@@ -190,7 +196,7 @@ impl Account {
 
         match msg {
             None => None,
-            Some(x) => Some(Message::new_with_internal(x)),
+            Some(m) => Some(m.into()),
         }
     }
 

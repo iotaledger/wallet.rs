@@ -27,8 +27,8 @@ pub struct MessageTransactionPayload {
     unlock_blocks: Vec<UnlockBlock>,
 }
 
-impl MessageTransactionPayload {
-    pub fn new_with_rust(payload: &Box<MessageTransactionPayloadRust>) -> MessageTransactionPayload {
+impl From<&Box<MessageTransactionPayloadRust>> for MessageTransactionPayload {
+    fn from(payload: &Box<MessageTransactionPayloadRust>) -> Self {
         Self {
             essence: Essence {
                 essence: payload.essence().to_owned(),
@@ -43,7 +43,9 @@ impl MessageTransactionPayload {
                 .collect(),
         }
     }
+}
 
+impl MessageTransactionPayload {
     pub fn essence(&self) -> Essence {
         self.essence.clone()
     }
@@ -175,27 +177,3 @@ impl UnlockBlock {
         format!("{:?}", self.unlock_block)
     }
 }
-
-// pub struct TransactionPayloadBuilder {
-// builder: Rc<RefCell<Option<TransactionPayloadBuilderRust>>>
-// }
-//
-// impl Default for TransactionPayloadBuilder {
-// fn default() -> Self {
-// Self {
-// builder: Rc::new(RefCell::new(Option::from(TransactionPayloadBuilderRust::default())))
-// }
-// }
-// }
-//
-// impl TransactionPayloadBuilder {
-// pub fn new() -> Self {
-// Self::default()
-// }
-//
-// fn new_with_builder(builder: TransactionPayloadBuilder) -> Self {
-// Self {
-// builder: Rc::new(RefCell::new(Option::from(builder)))
-// }
-// }
-// }

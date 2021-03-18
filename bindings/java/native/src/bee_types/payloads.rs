@@ -17,13 +17,15 @@ pub struct MessagePayload {
     payload: MessagePayloadRust,
 }
 
-impl MessagePayload {
-    pub fn get_internal(self) -> MessagePayloadRust {
-        self.payload
+impl From<MessagePayloadRust> for MessagePayload {
+    fn from(payload: MessagePayloadRust) -> Self {
+        Self { payload }
     }
+}
 
-    pub fn new_with_internal(payload: MessagePayloadRust) -> Self {
-        MessagePayload { payload: payload }
+impl MessagePayload {
+    pub fn to_inner(self) -> MessagePayloadRust {
+        self.payload
     }
 
     pub fn payload_type(&self) -> MessagePayloadType {
@@ -42,7 +44,7 @@ impl MessagePayload {
 
     pub fn get_as_transaction(&self) -> Option<MessageTransactionPayload> {
         if let MessagePayloadRust::Transaction(payload) = &self.payload {
-            Some(MessageTransactionPayload::new_with_rust(payload))
+            Some(payload.into())
         } else {
             None
         }
@@ -50,7 +52,7 @@ impl MessagePayload {
 
     pub fn get_as_indexation(&self) -> Option<IndexationPayload> {
         if let MessagePayloadRust::Indexation(index) = &self.payload {
-            match IndexationPayload::new_with(index.index(), index.data()) {
+            match IndexationPayload::new(index.index(), index.data()) {
                 Ok(i) => Some(i),
                 Err(_) => None,
             }
@@ -61,7 +63,7 @@ impl MessagePayload {
 
     pub fn get_as_milestone(&self) -> Option<MilestonePayload> {
         if let MessagePayloadRust::Milestone(payload) = &self.payload {
-            match MilestonePayload::new_with(payload.essence().to_owned(), payload.signatures().to_owned()) {
+            match MilestonePayload::new(payload.essence().to_owned(), payload.signatures().to_owned()) {
                 Ok(i) => Some(i),
                 Err(_) => None,
             }
@@ -72,7 +74,7 @@ impl MessagePayload {
 
     pub fn get_as_receipt(&self) -> Option<ReceiptPayload> {
         if let MessagePayloadRust::Receipt(payload) = &self.payload {
-            Some(ReceiptPayload::new_with_rust(*payload.clone()))
+            Some((*payload.clone()).into())
         } else {
             None
         }
@@ -80,7 +82,7 @@ impl MessagePayload {
 
     pub fn get_as_treasury(&self) -> Option<TreasuryTransactionPayload> {
         if let MessagePayloadRust::TreasuryTransaction(payload) = &self.payload {
-            Some(TreasuryTransactionPayload::new_with_rust(*payload.clone()))
+            Some((*payload.clone()).into())
         } else {
             None
         }

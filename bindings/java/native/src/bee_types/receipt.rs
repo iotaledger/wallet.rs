@@ -9,11 +9,13 @@ pub struct ReceiptPayload {
     payload: ReceiptPayloadRust,
 }
 
-impl ReceiptPayload {
-    pub fn new_with_rust(payload: ReceiptPayloadRust) -> Self {
-        Self { payload: payload }
+impl From<ReceiptPayloadRust> for ReceiptPayload {
+    fn from(payload: ReceiptPayloadRust) -> Self {
+        Self { payload }
     }
+}
 
+impl ReceiptPayload {
     pub fn index(&self) -> u32 {
         self.payload.index()
     }
@@ -29,9 +31,6 @@ impl ReceiptPayload {
             .map(|m| MigratedFundsEntry { payload: m.clone() })
             .collect()
     }
-    // pub fn transaction(&self) -> Payload {
-    // self.payload.transaction().clone()
-    // }
 
     pub fn amount(&self) -> u64 {
         self.payload.amount()

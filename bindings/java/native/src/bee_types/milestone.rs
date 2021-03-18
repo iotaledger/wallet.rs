@@ -14,7 +14,7 @@ pub struct MilestonePayload {
 }
 
 impl MilestonePayload {
-    pub fn new_with(essence: RustMilestonePayloadEssence, signatures: Vec<Box<[u8]>>) -> Result<MilestonePayload> {
+    pub fn new(essence: RustMilestonePayloadEssence, signatures: Vec<Box<[u8]>>) -> Result<MilestonePayload> {
         let res = MilestonePayloadRust::new(essence, signatures);
         match res {
             Ok(index) => Ok(MilestonePayload { payload: index }),

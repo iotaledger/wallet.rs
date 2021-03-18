@@ -48,9 +48,8 @@ pub struct ClientOptions {
 }
 
 impl ClientOptions {
-    pub fn get_internal(self) -> ClientOptionsRust {
-        // TODO: Find a way to not need clone
-        self.options.clone()
+    pub fn to_inner(self) -> ClientOptionsRust {
+        self.options
     }
 }
 

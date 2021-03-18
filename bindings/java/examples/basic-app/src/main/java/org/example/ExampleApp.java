@@ -20,16 +20,28 @@ public class ExampleApp implements ErrorListener, StrongholdStatusListener {
     public ExampleApp() {
         NativeAPI.verifyLink();
 
-        EventManager.subscribe_errors(this);
-        EventManager.subscribe_stronghold_status_change(this);
+        EventManager.subscribeErrors(this);
+        EventManager.subscribeStrongholdStatusChange(this);
 
         Path storageFolder = Paths.get("./my-db");
 
-        ManagerOptions options = new ManagerOptions();
-        options.setStorageType(ManagerStorage.STRONGHOLD);
-        options.setStoragePath(storageFolder.toString());
+        // Beware: All builder patterns return NEW instances on each method call.
+        // Mutating the old builder after a builder call will not result in a change on
+        // the second call
+        // This is due to the JNI bindings not beeing able to call non-reference methods
+        // in rust
+        // Examble that doesnt work:
+        // AccountManagerBuilder builder = AccountManager.Builder();
+        // builder.withStorage(storageFolder.toString(), ManagerStorage.STRONGHOLD,
+        // null);
+        // AccountManager manager = builder.finish();
+        //
+        // Explanation: builder.withStorage returns a new builder instance, and .finish
+        // is called on the old one
+        AccountManagerBuilder builder = AccountManager.Builder().withStorage(storageFolder.toString(),
+                ManagerStorage.STRONGHOLD, null);
 
-        AccountManager manager = new AccountManager(options);
+        AccountManager manager = builder.finish();
         manager.setStrongholdPassword("YepThisISSecure");
 
         // Generate your own for peristance:

@@ -11,11 +11,11 @@ pub struct IndexationPayload {
 }
 
 impl IndexationPayload {
-    pub fn get_internal(self) -> IndexationPayloadRust {
+    pub fn to_inner(self) -> IndexationPayloadRust {
         self.payload
     }
 
-    pub fn new_with(index: &[u8], data: &[u8]) -> Result<IndexationPayload> {
+    pub fn new(index: &[u8], data: &[u8]) -> Result<IndexationPayload> {
         let index = IndexationPayloadRust::new(&index, &data);
         match index {
             Err(e) => Err(anyhow!(e.to_string())),

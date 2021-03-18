@@ -7,10 +7,9 @@ pub mod verifylink;
 
 mod bee_types;
 mod classes;
-mod foreign_types;
 mod java_glue;
 
-pub use crate::{bee_types::*, classes::*, foreign_types::*, java_glue::*};
+pub use crate::{bee_types::*, classes::*, java_glue::*};
 
 pub use smol::block_on;
 

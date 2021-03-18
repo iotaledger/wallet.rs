@@ -118,7 +118,6 @@ foreign_typemap!(
 "#;
 );
 
-//TODO: Make sure duration doenst cross the i64 limit
 foreign_typemap!(
     ($p:r_type) jfloat => Duration {
         $out = Duration::from_secs_f32($p);
