@@ -4,23 +4,18 @@
 
 import iota_wallet as iw
 
-# This example checks the account balance.
+# This example sends IOTA toens to an address.
 account_manager = iw.AccountManager(
     storage='Stronghold', storage_path='./alice-database'
 )
 account_manager.set_stronghold_password("password")
 
-# get a specific instance of some account
 account = account_manager.get_account('Alice')
-print(f'Account: {account.alias()}')
+print(f'Account: {account.alias()} selected')
 
 # Always sync before doing anything with the account
 print('Syncing...')
 synced = account.sync().execute()
 
-# get total balance for the account
-print("Total balance:")
-print(account.balance())
-
-print("Balance per individual addresses:")
-print(account.addresses())
+for ac in account.list_messages():
+    print(f"message {ac['id']}; confirmation status = {ac['confirmed']}'")

@@ -28,8 +28,8 @@ impl AccountSynchronizer {
 
     /// Skip saving new messages and addresses on the account object.
     /// The found data is returned on the `execute` call but won't be persisted on the database.
-    fn skip_persistance(&mut self) {
-        self.account_synchronizer = Some(self.account_synchronizer.take().unwrap().skip_persistance());
+    fn skip_persistence(&mut self) {
+        self.account_synchronizer = Some(self.account_synchronizer.take().unwrap().skip_persistence());
     }
 
     /// Initial address index to start syncing.
@@ -243,6 +243,7 @@ impl AccountHandle {
             Some("Failed") => Some(RustMessageType::Failed),
             Some("Unconfirmed") => Some(RustMessageType::Unconfirmed),
             Some("Value") => Some(RustMessageType::Value),
+            Some("Confirmed") => Some(RustMessageType::Confirmed),
             _ => None,
         };
         crate::block_on(async {
@@ -270,6 +271,7 @@ impl AccountHandle {
             Some("Failed") => Some(RustMessageType::Failed),
             Some("Unconfirmed") => Some(RustMessageType::Unconfirmed),
             Some("Value") => Some(RustMessageType::Value),
+            Some("Confirmed") => Some(RustMessageType::Confirmed),
             _ => None,
         };
         let messages = crate::block_on(async {
@@ -391,8 +393,8 @@ impl AccountInitialiser {
     }
 
     /// Skips storing the account to the database.
-    fn skip_persistance(&mut self) {
-        self.account_initialiser = Some(self.account_initialiser.take().unwrap().skip_persistance());
+    fn skip_persistence(&mut self) {
+        self.account_initialiser = Some(self.account_initialiser.take().unwrap().skip_persistence());
     }
 
     /// Initialises the account.

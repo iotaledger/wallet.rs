@@ -84,8 +84,6 @@ pub struct BrokerOptions {
     pub automatic_disconnect: Option<bool>,
     /// broker timeout in secs
     pub timeout: Option<u64>,
-    /// use websockets or not
-    pub use_websockets: Option<bool>,
 }
 
 impl From<BrokerOptions> for RustBrokerOptions {
@@ -97,7 +95,6 @@ impl From<BrokerOptions> for RustBrokerOptions {
             } else {
                 None
             },
-            use_websockets: broker_options.use_websockets.unwrap_or(false),
         }
     }
 }
@@ -155,7 +152,6 @@ impl From<&RustBrokerOptions> for BrokerOptions {
         Self {
             automatic_disconnect: broker_options.automatic_disconnect,
             timeout: broker_options.timeout.map(|s| s.as_secs()),
-            use_websockets: Some(broker_options.use_websockets),
         }
     }
 }

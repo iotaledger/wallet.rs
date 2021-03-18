@@ -41,8 +41,8 @@ pub struct AccountToCreate {
     pub created_at: Option<DateTime<Local>>,
     #[serde(rename = "signerType", default)]
     pub signer_type: AccountSignerType,
-    #[serde(rename = "skipPersistance", default)]
-    pub skip_persistance: bool,
+    #[serde(rename = "skipPersistence", default)]
+    pub skip_persistence: bool,
 }
 
 fn js_value_to_account_id(
@@ -290,8 +290,8 @@ declare_types! {
                 if let Some(created_at) = &account_to_create.created_at {
                     builder = builder.created_at(*created_at);
                 }
-                if account_to_create.skip_persistance {
-                    builder = builder.skip_persistance();
+                if account_to_create.skip_persistence {
+                    builder = builder.skip_persistence();
                 }
 
                 crate::block_on(builder.initialise()).expect("error creating account")

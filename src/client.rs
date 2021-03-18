@@ -24,7 +24,7 @@ fn instances() -> &'static ClientInstanceMap {
     &INSTANCES
 }
 
-pub(crate) async fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
+pub(crate) async fn get_client(options: &ClientOptions) -> crate::Result<Arc<RwLock<Client>>> {
     let mut map = instances().lock().await;
 
     if !map.contains_key(&options) {
@@ -34,11 +34,7 @@ pub(crate) async fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
                     .mqtt_broker_options()
                     .as_ref()
                     .map(|options| options.clone().into())
-                    .unwrap_or_else(|| {
-                        iota::BrokerOptions::new()
-                            .automatic_disconnect(false)
-                            .use_websockets(false)
-                    }),
+                    .unwrap_or_else(|| iota::BrokerOptions::new().automatic_disconnect(false)),
             )
             .with_local_pow(*options.local_pow())
             .with_node_pool_urls(
@@ -57,23 +53,19 @@ pub(crate) async fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
         }
 
         for node in options.nodes() {
-            // safe to unwrap since we're sure we have valid URLs
             if let Some(auth) = &node.auth {
-                client_builder = client_builder
-                    .with_node_auth(node.url.as_str(), &auth.username, &auth.password)
-                    .unwrap();
+                client_builder = client_builder.with_node_auth(node.url.as_str(), &auth.username, &auth.password)?;
             } else {
+                // safe to unwrap since we're sure we have valid URLs
                 client_builder = client_builder.with_node(node.url.as_str()).unwrap();
             }
         }
 
         if let Some(node) = options.node() {
-            // safe to unwrap since we're sure we have valid URLs
             if let Some(auth) = &node.auth {
-                client_builder = client_builder
-                    .with_node_auth(node.url.as_str(), &auth.username, &auth.password)
-                    .unwrap();
+                client_builder = client_builder.with_node_auth(node.url.as_str(), &auth.username, &auth.password)?;
             } else {
+                // safe to unwrap since we're sure we have valid URLs
                 client_builder = client_builder.with_node(node.url.as_str()).unwrap();
             }
         }
@@ -94,16 +86,14 @@ pub(crate) async fn get_client(options: &ClientOptions) -> Arc<RwLock<Client>> {
             client_builder = client_builder.with_api_timeout(api.clone().into(), *timeout);
         }
 
-        let client = client_builder
-            .finish()
-            .await
-            .expect("failed to initialise ClientBuilder");
+        let client = client_builder.finish().await?;
 
         map.insert(options.clone(), Arc::new(RwLock::new(client)));
     }
 
-    let client = map.get(&options).expect("client not initialised");
-    client.clone()
+    // safe to unwrap since we make sure the client exists on the block above
+    let client = map.get(&options).unwrap();
+    Ok(client.clone())
 }
 
 /// The options builder for a client connected to multiple nodes.
@@ -134,6 +124,7 @@ fn convert_urls(urls: &[&str]) -> crate::Result<Vec<Url>> {
     if let Some(err) = err {
         Err(err.into())
     } else {
+        // safe to unwrap: all URLs were parsed above
         let urls = urls.iter().map(|url| url.clone().unwrap()).collect();
         Ok(urls)
     }
@@ -352,14 +343,11 @@ pub struct BrokerOptions {
     pub automatic_disconnect: Option<bool>,
     /// timeout of the mqtt broker.
     pub timeout: Option<Duration>,
-    #[serde(rename = "useWebsockets", default)]
-    /// use websockets or not.
-    pub use_websockets: bool,
 }
 
 impl Into<iota::BrokerOptions> for BrokerOptions {
     fn into(self) -> iota::BrokerOptions {
-        let mut options = iota::BrokerOptions::new().use_websockets(self.use_websockets);
+        let mut options = iota::BrokerOptions::new();
         if let Some(automatic_disconnect) = self.automatic_disconnect {
             options = options.automatic_disconnect(automatic_disconnect);
         }
@@ -597,14 +585,14 @@ mod tests {
         // assert that each different client_options create a new client instance
         for case in &test_cases {
             let len = super::instances().lock().await.len();
-            super::get_client(&case).await;
+            super::get_client(&case).await.unwrap();
             assert_eq!(super::instances().lock().await.len() - len, 1);
         }
 
         // assert that subsequent calls with options already initialized doesn't create new clients
         let len = super::instances().lock().await.len();
         for case in &test_cases {
-            super::get_client(&case).await;
+            super::get_client(&case).await.unwrap();
             assert_eq!(super::instances().lock().await.len(), len);
         }
     }

@@ -9,6 +9,8 @@ export declare enum MessageType {
   Unconfirmed = 4,
   /// A value message.
   Value = 5,
+  /// Message confirmed.
+  Confirmed = 6,
 }
 
 export declare interface RegularEssence {
@@ -162,7 +164,7 @@ export declare interface AccountToCreate {
   alias?: string;
   createdAt?: string;
   signerType?: SignerType;
-  skipPersistance?: boolean;
+  skipPersistence?: boolean;
 }
 
 export declare enum StorageType {
@@ -184,7 +186,7 @@ export declare interface BalanceChangeEvent {
   indexationId: string
   accountId: string
   address: string
-  messageIds: string[]
+  messageId?: string
   balanceChange: { spent: number, received: number }
 }
 

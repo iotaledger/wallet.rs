@@ -9,18 +9,17 @@ use crate::{
 };
 
 use iota::{
-    bee_rest_api::endpoints::api::v1::{
-        message_metadata::{LedgerInclusionStateDto, MessageMetadataResponse},
-        output::OutputResponse,
-    },
+    bee_rest_api::types::{dtos::LedgerInclusionStateDto, responses::MessageMetadataResponse},
     message::prelude::MessageId,
-    Topic, TopicEvent,
+    OutputResponse, Topic, TopicEvent,
 };
+
+use std::sync::{atomic::AtomicBool, Arc};
 
 /// Unsubscribe from all topics associated with the account.
 pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
     let account = account_handle.read().await;
-    let client = crate::client::get_client(account.client_options()).await;
+    let client = crate::client::get_client(account.client_options()).await?;
     let mut client = client.write().await;
 
     let mut topics = Vec::new();
@@ -40,61 +39,72 @@ pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
 
 #[cfg(test)]
 async fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
-    _client_options: &ClientOptions,
+    _client_options: ClientOptions,
     _topic: String,
+    _is_monitoring: Arc<AtomicBool>,
     _handler: C,
-) -> crate::Result<()> {
-    Ok(())
+) {
 }
 
 #[cfg(not(test))]
 async fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
-    client_options: &ClientOptions,
+    client_options: ClientOptions,
     topic: String,
+    is_monitoring: Arc<AtomicBool>,
     handler: C,
-) -> crate::Result<()> {
-    let client = crate::client::get_client(&client_options).await;
-    let mut client = client.write().await;
-    client
-        .subscriber()
-        .with_topic(Topic::new(topic)?)
-        .subscribe(handler)
-        .await?;
-    Ok(())
+) {
+    tokio::spawn(async move {
+        let client = crate::client::get_client(&client_options).await?;
+        let mut client = client.write().await;
+        if client
+            .subscriber()
+            .with_topic(Topic::new(topic)?)
+            .subscribe(handler)
+            .await
+            .is_err()
+        {
+            is_monitoring.store(false, std::sync::atomic::Ordering::Relaxed);
+        }
+        crate::Result::Ok(())
+    });
 }
 
 /// Monitor account addresses for balance changes.
-pub async fn monitor_account_addresses_balance(account_handle: AccountHandle) -> crate::Result<()> {
+pub async fn monitor_account_addresses_balance(account_handle: AccountHandle) {
     let account = account_handle.read().await;
     for address in account.addresses() {
-        monitor_address_balance(account_handle.clone(), address.address()).await?;
+        monitor_address_balance(account_handle.clone(), address.address()).await;
     }
-    Ok(())
 }
 
 /// Monitor address for balance changes.
-pub async fn monitor_address_balance(account_handle: AccountHandle, address: &AddressWrapper) -> crate::Result<()> {
+pub async fn monitor_address_balance(account_handle: AccountHandle, address: &AddressWrapper) {
     let client_options = account_handle.client_options().await;
     let client_options_ = client_options.clone();
     let address = address.clone();
 
     subscribe_to_topic(
-        &client_options_,
+        client_options_,
         format!("addresses/{}/outputs", address.to_bech32()),
+        account_handle.is_monitoring.clone(),
         move |topic_event| {
             log::info!("[MQTT] got {:?}", topic_event);
-            let topic_event = topic_event.clone();
-            let address = address.clone();
-            let client_options = client_options.clone();
-            let account_handle = account_handle.clone();
+            if account_handle.is_mqtt_enabled() {
+                let topic_event = topic_event.clone();
+                let address = address.clone();
+                let client_options = client_options.clone();
+                let account_handle = account_handle.clone();
 
-            crate::spawn(async move {
-                if let Err(e) =
-                    process_output(topic_event.payload.clone(), account_handle, address, client_options).await
-                {
-                    log::error!("[MQTT] error processing output: {:?}", e);
-                }
-            });
+                crate::spawn(async move {
+                    if let Err(e) =
+                        process_output(topic_event.payload.clone(), account_handle, address, client_options).await
+                    {
+                        log::error!("[MQTT] error processing output: {:?}", e);
+                    }
+                });
+            } else {
+                log::info!("[MQTT] event ignored because account disabled mqtt");
+            }
         },
     )
     .await
@@ -127,25 +137,12 @@ async fn process_output(
             .find(|a| a.address() == &address)
             .unwrap();
         let old_balance = *address_to_update.balance();
-        address_to_update.handle_new_output(address_output);
+        address_to_update.handle_new_output(address_output)?;
         let new_balance = *address_to_update.balance();
         (old_balance, new_balance)
     };
 
     let client_options_ = client_options.clone();
-
-    crate::event::emit_balance_change(
-        &account,
-        &address_wrapper,
-        vec![message_id],
-        if new_balance > old_balance {
-            crate::event::BalanceChange::received(new_balance - old_balance)
-        } else {
-            crate::event::BalanceChange::spent(old_balance - new_balance)
-        },
-        account_handle.account_options.persist_events,
-    )
-    .await?;
 
     if address_wrapper == latest_address {
         account_handle.generate_address_internal(&mut account).await?;
@@ -154,19 +151,22 @@ async fn process_output(
     match account.messages_mut().iter().position(|m| m.id() == &message_id) {
         Some(message_index) => {
             let message = &mut account.messages_mut()[message_index];
-            message.set_confirmed(Some(true));
-            let message = message.clone();
-            crate::event::emit_confirmation_state_change(
-                &account,
-                &message,
-                true,
-                account_handle.account_options.persist_events,
-            )
-            .await?;
+            if !message.confirmed().unwrap_or(false) {
+                message.set_confirmed(Some(true));
+                let message = message.clone();
+                crate::event::emit_confirmation_state_change(
+                    &account,
+                    message.clone(),
+                    true,
+                    account_handle.account_options.persist_events,
+                )
+                .await?;
+                account.save().await?;
+            }
         }
         None => {
             if let Ok(message) = crate::client::get_client(&client_options_)
-                .await
+                .await?
                 .read()
                 .await
                 .get_message()
@@ -192,9 +192,23 @@ async fn process_output(
                 )
                 .await?;
                 account.messages_mut().push(message);
+                account.save().await?;
             }
         }
     }
+
+    crate::event::emit_balance_change(
+        &account,
+        &address_wrapper,
+        Some(message_id),
+        if new_balance > old_balance {
+            crate::event::BalanceChange::received(new_balance - old_balance)
+        } else {
+            crate::event::BalanceChange::spent(old_balance - new_balance)
+        },
+        account_handle.account_options.persist_events,
+    )
+    .await?;
 
     account.save().await?;
 
@@ -202,75 +216,55 @@ async fn process_output(
 }
 
 /// Monitor the account's unconfirmed messages for confirmation state change.
-pub async fn monitor_unconfirmed_messages(account_handle: AccountHandle) -> crate::Result<()> {
+pub async fn monitor_unconfirmed_messages(account_handle: AccountHandle) {
     let account = account_handle.read().await;
     for message in account.list_messages(0, 0, Some(MessageType::Unconfirmed)) {
-        monitor_confirmation_state_change(account_handle.clone(), message.id()).await?;
+        monitor_confirmation_state_change(account_handle.clone(), *message.id()).await;
     }
-    Ok(())
 }
 
 /// Monitor message for confirmation state.
-pub async fn monitor_confirmation_state_change(
-    account_handle: AccountHandle,
-    message_id: &MessageId,
-) -> crate::Result<()> {
-    let (message, client_options) = {
-        let account = account_handle.read().await;
-        let message = account
-            .messages()
-            .iter()
-            .find(|message| message.id() == message_id)
-            .unwrap()
-            .clone();
-        (message, account.client_options().clone())
-    };
-    let message_id = *message_id;
+pub async fn monitor_confirmation_state_change(account_handle: AccountHandle, message_id: MessageId) {
+    let client_options = account_handle.client_options().await;
 
     subscribe_to_topic(
-        &client_options,
+        client_options,
         format!("messages/{}/metadata", message_id.to_string()),
+        account_handle.is_monitoring.clone(),
         move |topic_event| {
-            let topic_event = topic_event.clone();
-            let message = message.clone();
-            let account_handle = account_handle.clone();
-            crate::spawn(async move {
-                if let Err(e) =
-                    process_metadata(topic_event.payload.clone(), account_handle, message_id, &message).await
-                {
-                    log::error!("[MQTT] error processing metadata: {:?}", e);
-                }
-            });
+            log::info!("[MQTT] got {:?}", topic_event);
+            if account_handle.is_mqtt_enabled() {
+                let topic_event = topic_event.clone();
+                let account_handle = account_handle.clone();
+                crate::spawn(async move {
+                    if let Err(e) = process_metadata(topic_event.payload.clone(), account_handle, message_id).await {
+                        log::error!("[MQTT] error processing metadata: {:?}", e);
+                    }
+                });
+            } else {
+                log::info!("[MQTT] event ignored because account disabled mqtt");
+            }
         },
     )
     .await
 }
 
-async fn process_metadata(
-    payload: String,
-    account_handle: AccountHandle,
-    message_id: MessageId,
-    message: &Message,
-) -> crate::Result<()> {
+async fn process_metadata(payload: String, account_handle: AccountHandle, message_id: MessageId) -> crate::Result<()> {
     let metadata: MessageMetadataResponse = serde_json::from_str(&payload)?;
 
     if let Some(inclusion_state) = metadata.ledger_inclusion_state {
         let confirmed = inclusion_state == LedgerInclusionStateDto::Included;
+        let mut account = account_handle.write().await;
+        let messages = account.messages_mut();
+        let message = messages.iter_mut().find(|m| m.id() == &message_id).unwrap();
         if message.confirmed().is_none() || confirmed != message.confirmed().unwrap() {
-            let mut account = account_handle.write().await;
-
-            account
-                .do_mut(|account| {
-                    let messages = account.messages_mut();
-                    let account_message = messages.iter_mut().find(|m| m.id() == &message_id).unwrap();
-                    account_message.set_confirmed(Some(confirmed));
-                    Ok(())
-                })
-                .await?;
+            let message_ = message.clone();
+            message.set_confirmed(Some(confirmed));
+            account.save().await?;
 
             crate::event::emit_confirmation_state_change(
                 &account,
-                &message,
+                message_,
                 confirmed,
                 account_handle.account_options.persist_events,
             )
