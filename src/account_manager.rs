@@ -9,8 +9,9 @@ use crate::{
     address::IotaAddress,
     client::ClientOptions,
     event::{
-        emit_transaction_event, BalanceEvent, TransactionConfirmationChangeEvent, TransactionEvent,
-        TransactionEventType,
+        emit_balance_change, emit_confirmation_state_change, emit_reattachment_event, emit_transaction_event,
+        BalanceEvent, TransactionConfirmationChangeEvent, TransactionEvent, TransactionEventType,
+        TransactionReattachmentEvent,
     },
     message::{Message, MessagePayload, MessageType, Transfer},
     signing::SignerType,
@@ -37,7 +38,7 @@ use std::{
 use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
-use iota::{bee_rest_api::endpoints::api::v1::message_metadata::LedgerInclusionStateDto, MessageId};
+use iota::{bee_rest_api::types::dtos::LedgerInclusionStateDto, MessageId};
 use serde::Deserialize;
 use tokio::{
     sync::{
@@ -233,7 +234,8 @@ impl AccountManagerBuilder {
 
         crate::storage::set(&storage_file_path, self.storage_encryption_key, storage).await;
 
-        let is_monitoring = Arc::new(AtomicBool::new(false));
+        // is_monitoring is set to false if an mqtt error happens, so we can initialize it with `true`.
+        let is_monitoring = Arc::new(AtomicBool::new(true));
 
         // with the stronghold storage feature, the accounts are loaded when the password is set
         #[cfg(feature = "stronghold-storage")]
@@ -836,15 +838,12 @@ impl AccountManager {
     #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
     pub async fn backup<P: AsRef<Path>>(&self, destination: P) -> crate::Result<PathBuf> {
         let destination = destination.as_ref().to_path_buf();
-        if !(destination.is_dir() && destination.exists()) {
+        if !(destination.is_dir() || destination.parent().map(|parent| parent.is_dir()).unwrap_or_default()) {
             return Err(crate::Error::InvalidBackupDestination);
         }
 
         #[allow(unused_variables)]
-        let (storage_path, backup_entire_directory) = (
-            &self.storage_path,
-            cfg!(feature = "stronghold") && cfg!(feature = "sqlite-storage"),
-        );
+        let storage_path = self.storage_path.clone();
 
         // if we're using SQLite for storage and stronghold for seed,
         // we'll backup only the stronghold file, copying SQLite data to its snapshot
@@ -852,10 +851,10 @@ impl AccountManager {
             feature = "sqlite-storage",
             any(feature = "stronghold", feature = "stronghold-storage")
         ))]
-        let (storage_path, backup_entire_directory) = {
+        let storage_path = {
             let storage_id = crate::storage::get(&self.storage_path).await?.lock().await.id();
             // if we're actually using the SQLite storage adapter
-            let storage_path = if storage_id == crate::storage::sqlite::STORAGE_ID {
+            if storage_id == crate::storage::sqlite::STORAGE_ID {
                 // create a account manager to setup the stronghold storage for the backup
                 let _ = Self::builder()
                     .with_storage(
@@ -878,16 +877,16 @@ impl AccountManager {
                 self.storage_folder.join(STRONGHOLD_FILENAME)
             } else {
                 self.storage_path.clone()
-            };
-            (storage_path, false)
+            }
         };
 
         if storage_path.exists() {
-            let destination = if backup_entire_directory {
-                backup_dir(&self.storage_folder, &destination)?;
-                destination
-            } else if let Some(filename) = storage_path.file_name() {
-                let destination = destination.join(backup_filename(filename.to_str().unwrap()));
+            let destination = if let Some(filename) = storage_path.file_name() {
+                let destination = if destination.is_dir() {
+                    destination.join(backup_filename(filename.to_str().unwrap()))
+                } else {
+                    destination
+                };
                 let res = fs::copy(storage_path, &destination);
 
                 // if we're using SQLite for storage and stronghold for seed,
@@ -1155,7 +1154,11 @@ event_getters_impl!(
     get_new_transaction_events,
     get_new_transaction_event_count
 );
-event_getters_impl!(TransactionEvent, get_reattachment_events, get_reattachment_event_count);
+event_getters_impl!(
+    TransactionReattachmentEvent,
+    get_reattachment_events,
+    get_reattachment_event_count
+);
 event_getters_impl!(TransactionEvent, get_broadcast_events, get_broadcast_event_count);
 
 /// The accounts synchronizer.
@@ -1203,23 +1206,44 @@ impl AccountsSynchronizer {
     /// Syncs the accounts with the Tangle.
     pub async fn execute(self) -> crate::Result<Vec<SyncedAccount>> {
         let _lock = self.mutex.lock().await;
+
+        let mut tasks = Vec::new();
+        {
+            let accounts = self.accounts.read().await;
+            let address_index = self.address_index;
+            let gap_limit = self.gap_limit;
+            for account_handle in accounts.values() {
+                let account_handle = account_handle.clone();
+                tasks.push(async move {
+                    tokio::spawn(async move {
+                        let mut sync = account_handle.sync().await.skip_events();
+                        if let Some(index) = address_index {
+                            sync = sync.address_index(index);
+                        }
+                        if let Some(limit) = gap_limit {
+                            sync = sync.gap_limit(limit);
+                        }
+                        let synced_account = sync.execute().await?;
+                        crate::Result::Ok(synced_account)
+                    })
+                    .await
+                });
+            }
+        }
+
         let mut synced_accounts = vec![];
         let mut last_account = None;
         let mut last_account_index = 0;
-
+        for res in futures::future::try_join_all(tasks)
+            .await
+            .expect("failed to sync accounts")
         {
-            let accounts = self.accounts.read().await;
-            for account_handle in accounts.values() {
-                let mut sync = account_handle.sync().await;
-                if let Some(index) = self.address_index {
-                    sync = sync.address_index(index);
-                }
-                if let Some(limit) = self.gap_limit {
-                    sync = sync.gap_limit(limit);
-                }
-                let synced_account = sync.execute().await?;
-
+            let synced_account = res?;
+            {
+                let account_handle = synced_account.account_handle();
+                let persist_events = account_handle.account_options.persist_events;
                 let account = account_handle.read().await;
+
                 if *account.index() >= last_account_index {
                     last_account_index = *account.index();
                     last_account = Some((
@@ -1228,8 +1252,32 @@ impl AccountsSynchronizer {
                         account.signer_type().clone(),
                     ));
                 }
-                synced_accounts.push(synced_account);
+
+                for balance_change_event in synced_account.skipped_balance_change_events() {
+                    emit_balance_change(
+                        &account,
+                        &balance_change_event.address,
+                        balance_change_event.message_id,
+                        balance_change_event.balance_change,
+                        persist_events,
+                    )
+                    .await?;
+                }
+                for message in synced_account.skipped_new_transaction_events() {
+                    emit_transaction_event(TransactionEventType::NewTransaction, &account, message, persist_events)
+                        .await?;
+                }
+                for confirmation_change_event in synced_account.skipped_confirmation_change_events() {
+                    emit_confirmation_state_change(
+                        &account,
+                        confirmation_change_event.message.clone(),
+                        confirmation_change_event.confirmed,
+                        persist_events,
+                    )
+                    .await?;
+                }
             }
+            synced_accounts.push(synced_account);
         }
 
         let discovered_accounts_res = match last_account {
@@ -1319,7 +1367,7 @@ async fn poll(
                 match repost_message(account_handle.clone(), &message_id, RepostAction::Retry).await {
                     Ok(new_message) => {
                         if new_message.payload() == &payload {
-                            reattachments.push(new_message);
+                            reattachments.push((message_id, new_message));
                         } else {
                             log::info!("[POLLING] promoted and new message is {:?}", new_message.id());
                             promotions.push(new_message);
@@ -1351,24 +1399,39 @@ async fn poll(
         let mut account = retried_data.account_handle.write().await;
         let client = crate::client::get_client(account.client_options()).await?;
 
-        for message in &retried_data.reattached {
-            emit_transaction_event(
-                TransactionEventType::Reattachment,
+        for (reattached_message_id, message) in &retried_data.reattached {
+            emit_reattachment_event(
                 &account,
+                *reattached_message_id,
                 &message,
                 retried_data.account_handle.account_options.persist_events,
             )
             .await?;
         }
 
-        account.append_messages(retried_data.reattached);
+        account.append_messages(
+            retried_data
+                .reattached
+                .into_iter()
+                .map(|(_, message)| message)
+                .collect(),
+        );
         account.append_messages(retried_data.promoted);
 
         for message_id in retried_data.no_need_promote_or_reattach {
             let message = account.get_message_mut(&message_id).unwrap();
             if let Ok(metadata) = client.read().await.get_message().metadata(&message_id).await {
                 if let Some(ledger_inclusion_state) = metadata.ledger_inclusion_state {
-                    message.set_confirmed(Some(ledger_inclusion_state == LedgerInclusionStateDto::Included));
+                    let confirmed = ledger_inclusion_state == LedgerInclusionStateDto::Included;
+                    message.set_confirmed(Some(confirmed));
+                    let message = message.clone();
+                    emit_confirmation_state_change(
+                        &account,
+                        message,
+                        confirmed,
+                        retried_data.account_handle.account_options.persist_events,
+                    )
+                    .await?;
                 }
             }
         }
@@ -1422,7 +1485,7 @@ async fn discover_accounts(
 struct RetriedData {
     #[allow(dead_code)]
     promoted: Vec<Message>,
-    reattached: Vec<Message>,
+    reattached: Vec<(MessageId, Message)>,
     no_need_promote_or_reattach: Vec<MessageId>,
     account_handle: AccountHandle,
 }
@@ -1474,7 +1537,7 @@ async fn retry_unconfirmed_transactions(synced_accounts: &[SyncedAccount]) -> cr
                     // if the payload is the same, it was reattached; otherwise it was promoted
                     if new_message.payload() == &message_payload {
                         log::debug!("[POLLING] rettached and new message is {:?}", new_message);
-                        reattachments.push(new_message);
+                        reattachments.push((message_id, new_message));
                     } else {
                         log::debug!("[POLLING] promoted and new message is {:?}", new_message);
                         promotions.push(new_message);
@@ -1496,40 +1559,6 @@ async fn retry_unconfirmed_transactions(synced_accounts: &[SyncedAccount]) -> cr
         });
     }
     Ok(retried_messages)
-}
-
-fn backup_dir<U: AsRef<Path>, V: AsRef<Path>>(from: U, to: V) -> Result<(), std::io::Error> {
-    let mut stack = Vec::new();
-    stack.push(PathBuf::from(from.as_ref()));
-
-    let output_root = PathBuf::from(to.as_ref());
-    let input_root = PathBuf::from(from.as_ref()).components().count();
-
-    while let Some(working_path) = stack.pop() {
-        let src: PathBuf = working_path.components().skip(input_root).collect();
-
-        let dest = if src.components().count() == 0 {
-            output_root.clone()
-        } else {
-            output_root.join(&src)
-        };
-        if fs::metadata(&dest).is_err() {
-            fs::create_dir_all(&dest)?;
-        }
-
-        for entry in fs::read_dir(working_path)? {
-            let entry = entry?;
-            let path = entry.path();
-            if path.is_dir() {
-                stack.push(path);
-            } else if let Some(filename) = path.file_name() {
-                let dest_path = dest.join(backup_filename(filename.to_str().unwrap()));
-                fs::copy(&path, &dest_path)?;
-            }
-        }
-    }
-
-    Ok(())
 }
 
 fn backup_filename(original: &str) -> String {
@@ -1555,6 +1584,7 @@ mod tests {
         message::Message,
     };
     use iota::{Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Parents, Payload, TransactionId};
+    use std::{collections::HashMap, path::PathBuf};
 
     #[tokio::test]
     async fn store_accounts() {
@@ -1635,16 +1665,19 @@ mod tests {
         {
             // update address balance so we can create the next account
             let mut account = account_handle1.write().await;
+            let mut outputs = HashMap::default();
+            let output = AddressOutput {
+                transaction_id: TransactionId::new([0; 32]),
+                message_id: MessageId::new([0; 32]),
+                index: 0,
+                amount: 5,
+                is_spent: false,
+                address: crate::test_utils::generate_random_iota_address(),
+                kind: OutputKind::SignatureLockedSingle,
+            };
+            outputs.insert(output.id().unwrap(), output);
             for address in account.addresses_mut() {
-                address.set_outputs(vec![AddressOutput {
-                    transaction_id: TransactionId::new([0; 32]),
-                    message_id: MessageId::new([0; 32]),
-                    index: 0,
-                    amount: 5,
-                    is_spent: false,
-                    address: crate::test_utils::generate_random_iota_address(),
-                    kind: OutputKind::SignatureLockedSingle,
-                }]);
+                address.set_outputs(outputs.clone());
             }
         }
 
@@ -1928,10 +1961,10 @@ mod tests {
 
     #[tokio::test]
     async fn backup_and_restore_storage_already_exists() {
-        let backup_path = "./backup/account-exists";
-        let _ = std::fs::remove_dir_all(backup_path);
-        std::fs::create_dir_all(backup_path).unwrap();
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |mut manager, _| async move {
+            let backup_path = PathBuf::from("./backup/account-exists");
+            let _ = std::fs::remove_dir_all(&backup_path);
+            std::fs::create_dir_all(&backup_path).unwrap();
             // first we'll create an example account
             let address = crate::test_utils::generate_random_iota_address();
             let address = AddressBuilder::new()
@@ -1946,25 +1979,18 @@ mod tests {
                 .create()
                 .await;
 
-            let backup_path = manager.backup(backup_path).await.unwrap();
-            let backup_file_path = if backup_path.is_dir() {
-                std::fs::read_dir(backup_path).unwrap().next().unwrap().unwrap().path()
-            } else {
-                backup_path
-            };
+            let backup_file_path = backup_path.join("wallet.bk");
+            let backup_path = manager.backup(&backup_file_path).await.unwrap();
+            assert_eq!(backup_path, backup_file_path);
 
             #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-            let response = manager.import_accounts(backup_file_path, "password".to_string()).await;
+            let response = manager.import_accounts(&backup_file_path, "password".to_string()).await;
 
             #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-            let response = manager.import_accounts(backup_file_path).await;
+            let response = manager.import_accounts(&backup_file_path).await;
 
             assert!(response.is_err());
-            let err = response.unwrap_err();
-            assert_eq!(
-                err.to_string(),
-                "failed to restore backup: storage file already exists".to_string()
-            );
+            assert!(matches!(response.unwrap_err(), crate::Error::StorageExists));
         })
         .await;
     }
@@ -1998,7 +2024,7 @@ mod tests {
                 BalanceChange::spent(3),
             ];
             for change in &change_events {
-                emit_balance_change(&account, account.latest_address().address(), None, change.clone(), true)
+                emit_balance_change(&account, account.latest_address().address(), None, *change, true)
                     .await
                     .unwrap();
             }
@@ -2044,7 +2070,7 @@ mod tests {
                 (m3, true),
             ];
             for (message, change) in &confirmation_change_events {
-                emit_confirmation_state_change(&account, message, *change, true)
+                emit_confirmation_state_change(&account, message.clone(), *change, true)
                     .await
                     .unwrap();
             }
@@ -2067,6 +2093,49 @@ mod tests {
                     .skip(*skip)
                     .take(*take)
                     .collect::<Vec<(Message, bool)>>();
+                assert!(found == expected, true);
+            }
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn get_reattachment_events() {
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
+            let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+            let account = account_handle.read().await;
+            let m1 = crate::test_utils::GenerateMessageBuilder::default().build().await;
+            let m2 = crate::test_utils::GenerateMessageBuilder::default().build().await;
+            let m3 = crate::test_utils::GenerateMessageBuilder::default().build().await;
+            let reattachment_events = vec![
+                m1,
+                crate::test_utils::GenerateMessageBuilder::default().build().await,
+                m2,
+                m3,
+            ];
+            for message in &reattachment_events {
+                emit_reattachment_event(&account, *message.id(), message, true)
+                    .await
+                    .unwrap();
+            }
+            assert!(
+                manager.get_reattachment_event_count(None).await.unwrap() == reattachment_events.len(),
+                true
+            );
+            for (take, skip) in &[(2, 0), (2, 2)] {
+                let found = manager
+                    .get_reattachment_events(*take, *skip, None)
+                    .await
+                    .unwrap()
+                    .into_iter()
+                    .map(|e| e.message)
+                    .collect::<Vec<Message>>();
+                let expected = reattachment_events
+                    .clone()
+                    .into_iter()
+                    .skip(*skip)
+                    .take(*take)
+                    .collect::<Vec<Message>>();
                 assert!(found == expected, true);
             }
         })
@@ -2120,11 +2189,6 @@ mod tests {
         TransactionEventType::NewTransaction,
         get_new_transaction_event_count,
         get_new_transaction_events
-    );
-    transaction_event_test!(
-        TransactionEventType::Reattachment,
-        get_reattachment_event_count,
-        get_reattachment_events
     );
     transaction_event_test!(
         TransactionEventType::Broadcast,

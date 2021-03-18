@@ -9,12 +9,9 @@ use crate::{
 };
 
 use iota::{
-    bee_rest_api::endpoints::api::v1::{
-        message_metadata::{LedgerInclusionStateDto, MessageMetadataResponse},
-        output::OutputResponse,
-    },
+    bee_rest_api::types::{dtos::LedgerInclusionStateDto, responses::MessageMetadataResponse},
     message::prelude::MessageId,
-    Topic, TopicEvent,
+    OutputResponse, Topic, TopicEvent,
 };
 
 use std::sync::{atomic::AtomicBool, Arc};
@@ -140,25 +137,12 @@ async fn process_output(
             .find(|a| a.address() == &address)
             .unwrap();
         let old_balance = *address_to_update.balance();
-        address_to_update.handle_new_output(address_output);
+        address_to_update.handle_new_output(address_output)?;
         let new_balance = *address_to_update.balance();
         (old_balance, new_balance)
     };
 
     let client_options_ = client_options.clone();
-
-    crate::event::emit_balance_change(
-        &account,
-        &address_wrapper,
-        Some(message_id),
-        if new_balance > old_balance {
-            crate::event::BalanceChange::received(new_balance - old_balance)
-        } else {
-            crate::event::BalanceChange::spent(old_balance - new_balance)
-        },
-        account_handle.account_options.persist_events,
-    )
-    .await?;
 
     if address_wrapper == latest_address {
         account_handle.generate_address_internal(&mut account).await?;
@@ -167,15 +151,18 @@ async fn process_output(
     match account.messages_mut().iter().position(|m| m.id() == &message_id) {
         Some(message_index) => {
             let message = &mut account.messages_mut()[message_index];
-            message.set_confirmed(Some(true));
-            let message = message.clone();
-            crate::event::emit_confirmation_state_change(
-                &account,
-                &message,
-                true,
-                account_handle.account_options.persist_events,
-            )
-            .await?;
+            if !message.confirmed().unwrap_or(false) {
+                message.set_confirmed(Some(true));
+                let message = message.clone();
+                crate::event::emit_confirmation_state_change(
+                    &account,
+                    message.clone(),
+                    true,
+                    account_handle.account_options.persist_events,
+                )
+                .await?;
+                account.save().await?;
+            }
         }
         None => {
             if let Ok(message) = crate::client::get_client(&client_options_)
@@ -205,9 +192,23 @@ async fn process_output(
                 )
                 .await?;
                 account.messages_mut().push(message);
+                account.save().await?;
             }
         }
     }
+
+    crate::event::emit_balance_change(
+        &account,
+        &address_wrapper,
+        Some(message_id),
+        if new_balance > old_balance {
+            crate::event::BalanceChange::received(new_balance - old_balance)
+        } else {
+            crate::event::BalanceChange::spent(old_balance - new_balance)
+        },
+        account_handle.account_options.persist_events,
+    )
+    .await?;
 
     account.save().await?;
 
@@ -218,23 +219,13 @@ async fn process_output(
 pub async fn monitor_unconfirmed_messages(account_handle: AccountHandle) {
     let account = account_handle.read().await;
     for message in account.list_messages(0, 0, Some(MessageType::Unconfirmed)) {
-        monitor_confirmation_state_change(account_handle.clone(), message.id()).await;
+        monitor_confirmation_state_change(account_handle.clone(), *message.id()).await;
     }
 }
 
 /// Monitor message for confirmation state.
-pub async fn monitor_confirmation_state_change(account_handle: AccountHandle, message_id: &MessageId) {
-    let (message, client_options) = {
-        let account = account_handle.read().await;
-        let message = account
-            .messages()
-            .iter()
-            .find(|message| message.id() == message_id)
-            .unwrap()
-            .clone();
-        (message, account.client_options().clone())
-    };
-    let message_id = *message_id;
+pub async fn monitor_confirmation_state_change(account_handle: AccountHandle, message_id: MessageId) {
+    let client_options = account_handle.client_options().await;
 
     subscribe_to_topic(
         client_options,
@@ -244,12 +235,9 @@ pub async fn monitor_confirmation_state_change(account_handle: AccountHandle, me
             log::info!("[MQTT] got {:?}", topic_event);
             if account_handle.is_mqtt_enabled() {
                 let topic_event = topic_event.clone();
-                let message = message.clone();
                 let account_handle = account_handle.clone();
                 crate::spawn(async move {
-                    if let Err(e) =
-                        process_metadata(topic_event.payload.clone(), account_handle, message_id, &message).await
-                    {
+                    if let Err(e) = process_metadata(topic_event.payload.clone(), account_handle, message_id).await {
                         log::error!("[MQTT] error processing metadata: {:?}", e);
                     }
                 });
@@ -261,31 +249,22 @@ pub async fn monitor_confirmation_state_change(account_handle: AccountHandle, me
     .await
 }
 
-async fn process_metadata(
-    payload: String,
-    account_handle: AccountHandle,
-    message_id: MessageId,
-    message: &Message,
-) -> crate::Result<()> {
+async fn process_metadata(payload: String, account_handle: AccountHandle, message_id: MessageId) -> crate::Result<()> {
     let metadata: MessageMetadataResponse = serde_json::from_str(&payload)?;
 
     if let Some(inclusion_state) = metadata.ledger_inclusion_state {
         let confirmed = inclusion_state == LedgerInclusionStateDto::Included;
+        let mut account = account_handle.write().await;
+        let messages = account.messages_mut();
+        let message = messages.iter_mut().find(|m| m.id() == &message_id).unwrap();
         if message.confirmed().is_none() || confirmed != message.confirmed().unwrap() {
-            let mut account = account_handle.write().await;
-
-            account
-                .do_mut(|account| {
-                    let messages = account.messages_mut();
-                    let account_message = messages.iter_mut().find(|m| m.id() == &message_id).unwrap();
-                    account_message.set_confirmed(Some(confirmed));
-                    Ok(())
-                })
-                .await?;
+            let message_ = message.clone();
+            message.set_confirmed(Some(confirmed));
+            account.save().await?;
 
             crate::event::emit_confirmation_state_change(
                 &account,
-                &message,
+                message_,
                 confirmed,
                 account_handle.account_options.persist_events,
             )

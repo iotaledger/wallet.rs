@@ -297,9 +297,13 @@ event_getters_impl!(
     get_transaction_confirmation_event_count
 );
 event_getters_impl!(
+    TransactionReattachmentEvent,
+    get_reattachment_events,
+    get_reattachment_event_count
+);
+event_getters_impl!(
     TransactionEvent,
     get_new_transaction_events,
     get_new_transaction_event_count
 );
-event_getters_impl!(TransactionEvent, get_reattachment_events, get_reattachment_event_count);
 event_getters_impl!(TransactionEvent, get_broadcast_events, get_broadcast_event_count);

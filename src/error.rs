@@ -113,7 +113,7 @@ pub enum Error {
     #[error("provided backup path isn't a valid file")]
     InvalidBackupFile,
     /// Backup `destination` argument is invalid
-    #[error("backup destination must be a directory and it must exist")]
+    #[error("backup destination must be an existing directory or a file on an existing directory")]
     InvalidBackupDestination,
     /// the storage adapter isn't set
     #[error("the storage adapter isn't set; use the AccountManagerBuilder's `with_storage` method or one of the default storages with the crate features `sqlite-storage` and `stronghold-storage`.")]

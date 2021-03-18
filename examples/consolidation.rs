@@ -1,9 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota::{
-    bee_rest_api::endpoints::api::v1::message_metadata::LedgerInclusionStateDto, Client, ClientBuilder, MessageId,
-};
+use iota::{bee_rest_api::types::dtos::LedgerInclusionStateDto, Client, ClientBuilder, MessageId};
 use iota_wallet::{
     account_manager::{AccountManager, ManagerStorage},
     address::Address,

@@ -773,7 +773,7 @@ wallet_address = {
     'balance': int,
     'key_index': int,
     'internal': bool,
-    'outputs': list[WalletAddressOutput],
+    'outputs': dict[(string, WalletAddressOutput)],
 }
 ```
 
