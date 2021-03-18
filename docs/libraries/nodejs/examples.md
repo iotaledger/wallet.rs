@@ -47,7 +47,7 @@ Any account can be then referred to via `index`, `alias` or one of its generated
 
 Several api calls can be performed via `account` instance.
 
-> Note: it is a good practice to sync the given account with the Tangle every time you work with `account` instance to rely on the latest information available: `account.sync()`.
+> Note: it is a good practice to sync the given account with the Tangle every time you work with `account` instance to rely on the latest information available: `account.sync()`. By default, `account.sync()` is performed automatically on `send`, `retry`, `reattach` and `promote` api calls.
 
 Once an account has been created you get an instance of it using the following methods: `AccountManager.getAccount(accountId)`, `AccountManager.getAccountByAlias(alias)` or `AccountManager.getAccounts()`.
 

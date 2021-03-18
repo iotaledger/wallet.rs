@@ -46,7 +46,9 @@ Get the instance of a specific account:
 account = account_manager.get_account("Alice")
 ```
 
-Several api calls can be performed via `account` instance. Note: it is a good practice to sync the given account with the Tangle every time you work with `account` instance to rely on the latest information available: `account.sync().execute()`.
+Several api calls can be performed via `account` instance.
+
+> Note: it is a good practice to sync the given account with the Tangle every time you work with `account` instance to rely on the latest information available: `account.sync().execute()`. By default, `account.sync().execute()` is performed automatically on `send`, `retry`, `reattach` and `promote` api calls.
 
 The most common methods:
 * `account.alias()`: returns an alias of the given account
