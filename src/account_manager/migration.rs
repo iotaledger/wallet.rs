@@ -44,8 +44,13 @@ impl<'a> MigrationDataFinder<'a> {
         let mut hasher = DefaultHasher::new();
         seed.hash(&mut hasher);
         let seed_hash = hasher.finish();
-        let seed = TernarySeed::from_trits(TryteBuf::try_from_str(&seed).unwrap().as_trits().encode::<T1B1Buf>())
-            .map_err(|_| crate::Error::InvalidSeed)?;
+        let seed = TernarySeed::from_trits(
+            TryteBuf::try_from_str(&seed)
+                .map_err(|_| crate::Error::InvalidSeed)?
+                .as_trits()
+                .encode::<T1B1Buf>(),
+        )
+        .map_err(|_| crate::Error::InvalidSeed)?;
         Ok(Self {
             node,
             seed,
