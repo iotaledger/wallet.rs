@@ -118,19 +118,17 @@ pub(crate) async fn create_bundle(
     account_handle: AccountHandle,
     data: &super::CachedMigrationData,
     seed: TernarySeed,
-    address: &str,
+    address_inputs: Vec<&InputData>,
+    bundle_mine: bool,
 ) -> crate::Result<Vec<BundledTransaction>> {
-    let mut address_inputs: Vec<&InputData> = Default::default();
-    for (_, inputs) in &data.inputs {
-        for input in inputs {
-            let address_key = input.address.to_inner().to_string();
-            if address == &address_key {
-                address_inputs.push(input);
-            }
-        }
-    }
-
     let legacy_client = iota_migration::ClientBuilder::new().node(&data.node)?.build()?;
+
+    match address_inputs.len() {
+        0 => return Err(crate::Error::EmptyInputList),
+        1 => {}
+        _ if address_inputs.iter().any(|input| input.spent) => return Err(crate::Error::SpentAddressOnBundle),
+        _ => {}
+    }
 
     let deposit_address = account_handle.latest_address().await;
     let deposit_address = match MigrationAddress::try_from_bech32(&deposit_address.address().to_bech32()) {
@@ -144,7 +142,7 @@ pub(crate) async fn create_bundle(
         address_inputs.clone().into_iter().map(|i| i.clone()).collect(),
     )
     .await?;
-    if address_inputs.iter().any(|i| i.spent) {
+    if bundle_mine && address_inputs.iter().any(|i| i.spent) {
         let mut spent_bundle_hashes = Vec::new();
         for input in &address_inputs {
             if let Some(bundle_hashes) = input.spent_bundlehashes.clone() {

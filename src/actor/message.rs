@@ -227,8 +227,11 @@ pub enum MessageType {
     CreateMigrationBundle {
         /// The legacy seed.
         seed: String,
-        /// The associated address.
-        address: String,
+        /// The bundle input indexes.
+        #[serde(rename = "inputIndexes")]
+        input_indexes: Vec<usize>,
+        /// Whether we should perform bundle mining or not.
+        mine: bool,
     },
     /// Sends the migration bundle associated with the hash.
     SendMigrationBundle {
@@ -324,9 +327,11 @@ impl Serialize for MessageType {
                 initial_address_index: _,
                 security_level: _,
             } => serializer.serialize_unit_variant("MessageType", 24, "GetMigrationData"),
-            MessageType::CreateMigrationBundle { seed: _, address: _ } => {
-                serializer.serialize_unit_variant("MessageType", 25, "CreateMigrationBundle")
-            }
+            MessageType::CreateMigrationBundle {
+                seed: _,
+                input_indexes: _,
+                mine: _,
+            } => serializer.serialize_unit_variant("MessageType", 25, "CreateMigrationBundle"),
             MessageType::SendMigrationBundle {
                 node: _,
                 bundle_hash: _,

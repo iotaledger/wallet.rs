@@ -232,9 +232,16 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            MessageType::CreateMigrationBundle { seed, address } => {
+            MessageType::CreateMigrationBundle {
+                seed,
+                input_indexes,
+                mine,
+            } => {
                 convert_async_panics(|| async {
-                    let hash = self.account_manager.create_migration_bundle(&seed, &address).await?;
+                    let hash = self
+                        .account_manager
+                        .create_migration_bundle(&seed, &input_indexes, *mine)
+                        .await?;
                     seed.zeroize();
                     Ok(ResponseType::CreatedMigrationBundle(hash))
                 })

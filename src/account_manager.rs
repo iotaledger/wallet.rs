@@ -294,6 +294,7 @@ pub(crate) struct CachedMigrationData {
     node: String,
     security_level: u8,
     inputs: HashMap<Range<u64>, Vec<InputData>>,
+    bundled_input_indexes: Vec<usize>,
 }
 
 /// The account manager.
@@ -374,6 +375,7 @@ impl AccountManager {
                 node: finder.node.to_string(),
                 security_level: finder.security_level,
                 inputs: Default::default(),
+                bundled_input_indexes: Default::default(),
             });
         let balance = finder.finish(&mut stored_data.inputs).await?;
 
@@ -389,11 +391,15 @@ impl AccountManager {
         })
     }
 
-    /// Creates the bundle for migration associated with the given address.
-    /// Performs bundle mining if the address is spent.
-    /// And signs the bundle.
-    /// Returns the bundle hash.
-    pub async fn create_migration_bundle(&mut self, seed: &str, address: &str) -> crate::Result<String> {
+    /// Creates the bundle for migration associated with the given input indexes,
+    /// Performs bundle mining if the address is spent and `mine` is true,
+    /// And signs the bundle. Returns the bundle hash.
+    pub async fn create_migration_bundle(
+        &mut self,
+        seed: &str,
+        input_indexes: &[usize],
+        mine: bool,
+    ) -> crate::Result<String> {
         let mut hasher = DefaultHasher::new();
         seed.hash(&mut hasher);
         let seed_hash = hasher.finish();
@@ -404,10 +410,24 @@ impl AccountManager {
             .cached_migration_data
             .get(&seed_hash)
             .ok_or(crate::Error::MigrationDataNotFound)?;
+
+        let all_inputs: Vec<InputData> = data.inputs.clone().into_iter().map(|(_, v)| v).flatten().collect();
+        let mut address_inputs: Vec<&InputData> = Default::default();
+        for index in input_indexes {
+            if data.bundled_input_indexes.contains(index) {
+                return Err(crate::Error::InputAlreadyBundled(*index));
+            }
+            address_inputs.push(all_inputs.get(*index).ok_or(crate::Error::InputNotFound)?);
+        }
+
         let account_handle = self.get_account(0).await?;
-        let bundle = migration::create_bundle(account_handle, &data, seed, address).await?;
+        let bundle = migration::create_bundle(account_handle, &data, seed, address_inputs, mine).await?;
         let bundle_hash = bundle.first().unwrap().bundle().to_inner().to_string();
+
         self.cached_migration_bundles.insert(bundle_hash.clone(), bundle);
+        let data = self.cached_migration_data.get_mut(&seed_hash).unwrap(); // safe to unwrap since we already validated it
+        data.bundled_input_indexes.extend(input_indexes);
+
         Ok(bundle_hash)
     }
 
