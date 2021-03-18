@@ -364,8 +364,16 @@ impl Response {
 /// Spent address data.
 #[derive(Debug, Serialize)]
 pub struct MigrationInputDto {
+    /// Input address.
     address: String,
+    /// Security level.
+    #[serde(rename = "securityLevel")]
+    security_level: u8,
+    /// Balance of the address.
     balance: u64,
+    /// Index of the address.
+    index: u64,
+    /// Spent status.
     spent: bool,
     #[serde(rename = "spentBundleHashes")]
     spent_bundle_hashes: Option<Vec<String>>,
@@ -385,7 +393,9 @@ impl From<MigrationData> for MigrationDataDto {
             let address = input.address.to_inner().to_string();
             inputs.push(MigrationInputDto {
                 address,
+                security_level: input.security_lvl,
                 balance: input.balance,
+                index: input.index,
                 spent: input.spent,
                 spent_bundle_hashes: input.spent_bundlehashes,
             });
