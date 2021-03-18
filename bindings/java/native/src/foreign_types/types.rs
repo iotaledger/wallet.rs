@@ -28,10 +28,19 @@ foreign_typemap!(
     };
 );
 
-//TODO: Properly wrap error
 foreign_typemap!(
     ($p:r_type) Result<bool> => bool {
-        $out = $p.unwrap();
+        $out = match $p {
+            Ok(x) => x,
+            Err(err) => {
+                let msg = err.to_string();
+                let exception_class = match err {
+                    _ => swig_jni_find_class!(WALLET_BASE_EXCEPTION, "org/iota/wallet/local/WalletException"),
+                };
+                jni_throw(env, exception_class, &msg);
+                return <swig_i_type!(T)>::jni_invalid_value();
+            }
+        };
     };
 );
 
