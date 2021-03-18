@@ -82,17 +82,17 @@ Before we continue further, go to [IOTA testnet faucet service](https://faucet.t
 ```
 
 ## Sending tokens
-Sending tokens is performed via `SyncedAccount` instance that is a results of `account.sync()` function:
+Sending tokens is performed via `Account` instance:
 
 ```javascript
 {{ #include ../../../bindings/nodejs/examples/4-send.js }}
 ```
-The full function signature is `SyncedAccount.send(address, amount[, options])`.
+The full function signature is `Account.send(address, amount[, options])`.
 Default options are perfectly fine and do the job done, however additional options can be provided, such as `remainderValueStrategy`:
 * `changeAddress`: Send the remainder value to an internal address
 * `reuseAddress`: Send the remainder value back to its original address
 
-`SyncedAccount.send()` function returns a `wallet message` that fully describes the given transaction. Especially `messageId` can later be used for checking a confirmation status. Individual messages related to the given account can be obtained via `account.listMessages()` function.
+`Account.send()` function returns a `wallet message` that fully describes the given transaction. Especially `messageId` can later be used for checking a confirmation status. Individual messages related to the given account can be obtained via `Account.listMessages()` function.
 
 ### Dust protection
 Please note, there is also implemented a [dust protection](https://chrysalis.docs.iota.org/guides/dev_guide.html#dust-protection) mechanism in the network protocol to avoid malicious actors to spam network in order to decrease node performance while keeping track of unspent amount (`UTXO`):
