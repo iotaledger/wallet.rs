@@ -9,14 +9,17 @@ pub(crate) use iota_migration::{
         response::InputData,
     },
     signing::ternary::seed::Seed as TernarySeed,
-    ternary::{T1B1Buf, TryteBuf},
+    ternary::{T1B1Buf, T3B1Buf, TritBuf, TryteBuf},
     transaction::bundled::{BundledTransaction, BundledTransactionField},
 };
 
 use std::{
     collections::{hash_map::DefaultHasher, HashMap},
+    fs::OpenOptions,
     hash::{Hash, Hasher},
+    io::Write,
     ops::Range,
+    path::Path,
     time::Duration,
 };
 
@@ -115,13 +118,14 @@ impl<'a> MigrationDataFinder<'a> {
     }
 }
 
-pub(crate) async fn create_bundle(
+pub(crate) async fn create_bundle<P: AsRef<Path>>(
     account_handle: AccountHandle,
     data: &super::CachedMigrationData,
     seed: TernarySeed,
     address_inputs: Vec<&InputData>,
     bundle_mine: bool,
     timeout: Duration,
+    log_file_path: P,
 ) -> crate::Result<Vec<BundledTransaction>> {
     let legacy_client = iota_migration::ClientBuilder::new().node(&data.node)?.build()?;
 
@@ -167,6 +171,22 @@ pub(crate) async fn create_bundle(
         prepared_bundle,
         address_inputs.clone().into_iter().map(|i| i.clone()).collect(),
     )?;
+
+    let mut log = OpenOptions::new().write(true).create(true).open(log_file_path)?;
+    for i in 0..bundle.len() {
+        let mut trits = TritBuf::<T1B1Buf>::zeros(8019);
+        bundle.get(i).unwrap().as_trits_allocated(&mut trits);
+        log.write_all(
+            trits
+                .encode::<T3B1Buf>()
+                .iter_trytes()
+                .map(char::from)
+                .collect::<String>()
+                .as_bytes(),
+        )?;
+        log.write_all(b"\n")?;
+    }
+    log.write_all(b"\n\n")?;
 
     Ok(bundle)
 }

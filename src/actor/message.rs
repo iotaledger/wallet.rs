@@ -15,7 +15,7 @@ use iota_migration::transaction::bundled::BundledTransactionField;
 use serde::{ser::Serializer, Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
 
-use std::{num::NonZeroU64, time::Duration};
+use std::{num::NonZeroU64, path::PathBuf, time::Duration};
 
 /// An account to create.
 #[derive(Clone, Debug, Deserialize)]
@@ -235,6 +235,9 @@ pub enum MessageType {
         /// Timeout in seconds for the bundle mining process.
         #[serde(rename = "timeoutSeconds")]
         timeout_secs: u64,
+        /// The path to the file to log the bundle.
+        #[serde(rename = "logFilePath")]
+        log_file_path: PathBuf,
     },
     /// Sends the migration bundle associated with the hash.
     SendMigrationBundle {
@@ -335,6 +338,7 @@ impl Serialize for MessageType {
                 input_indexes: _,
                 mine: _,
                 timeout_secs: _,
+                log_file_path: _,
             } => serializer.serialize_unit_variant("MessageType", 25, "CreateMigrationBundle"),
             MessageType::SendMigrationBundle {
                 node: _,

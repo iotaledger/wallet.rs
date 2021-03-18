@@ -238,11 +238,18 @@ impl WalletMessageHandler {
                 input_indexes,
                 mine,
                 timeout_secs,
+                log_file_path,
             } => {
                 convert_async_panics(|| async {
                     let hash = self
                         .account_manager
-                        .create_migration_bundle(&seed, &input_indexes, *mine, Duration::from_secs(*timeout_secs))
+                        .create_migration_bundle(
+                            &seed,
+                            &input_indexes,
+                            *mine,
+                            Duration::from_secs(*timeout_secs),
+                            log_file_path,
+                        )
                         .await?;
                     seed.zeroize();
                     Ok(ResponseType::CreatedMigrationBundle(hash))
