@@ -1487,17 +1487,26 @@ async fn discover_accounts(
             account_handle.read().await.alias(),
             account_handle.read().await.signer_type()
         );
-        let synced_account_data = account_handle.sync().await.get_new_history().await?;
-        let is_empty = synced_account_data
-            .addresses
-            .iter()
-            .all(|a| *a.balance() == 0 && a.outputs().is_empty());
-        log::debug!("[SYNC] account is empty? {}", is_empty);
-        if is_empty {
-            break;
-        } else {
-            index += 1;
-            synced_accounts.push((account_handle, synced_account_data));
+        match account_handle.sync().await.get_new_history().await {
+            Ok(synced_account_data) => {
+                let is_empty = synced_account_data
+                    .addresses
+                    .iter()
+                    .all(|a| *a.balance() == 0 && a.outputs().is_empty());
+                log::debug!("[SYNC] discovered account is empty? {}", is_empty);
+                if is_empty {
+                    break;
+                } else {
+                    index += 1;
+                    synced_accounts.push((account_handle, synced_account_data));
+                }
+            }
+            Err(e) => {
+                log::error!("[SYNC] failed to sync to discover account: {:?}", e);
+                // break if the account failed to sync
+                // this ensures that the previously discovered accounts get stored.
+                break;
+            }
         }
     }
     Ok(synced_accounts)
