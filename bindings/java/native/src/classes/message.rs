@@ -26,9 +26,7 @@ pub enum RemainderValueStrategy {
 pub fn remainder_type_enum_to_type(strategy: RemainderValueStrategy) -> RemainderValueStrategyRust {
     match strategy {
         RemainderValueStrategy::ReuseAddress => RemainderValueStrategyRust::ReuseAddress,
-        RemainderValueStrategy::ChangeAddress => RemainderValueStrategyRust::ChangeAddress, /* TODO: Add strategy for
-                                                                                             * sending to an address
-                                                                                             * from an account */
+        RemainderValueStrategy::ChangeAddress => RemainderValueStrategyRust::ChangeAddress,
     }
 }
 
