@@ -41,6 +41,13 @@ mod input_selection;
 
 const DUST_ALLOWANCE_VALUE: u64 = 1_000_000;
 
+#[derive(Debug, Clone)]
+pub(crate) struct SyncedMessage {
+    pub(crate) id: MessageId,
+    pub(crate) confirmed: Option<bool>,
+    pub(crate) inner: IotaMessage,
+}
+
 async fn get_address_outputs(
     address: Bech32Address,
     client: &Client,
@@ -83,7 +90,7 @@ pub(crate) async fn sync_address(
     address: &mut Address,
     bech32_hrp: String,
     options: AccountOptions,
-) -> crate::Result<Vec<(MessageId, Option<bool>, IotaMessage)>> {
+) -> crate::Result<Vec<SyncedMessage>> {
     let client_guard = crate::client::get_client(&client_options).await?;
     let client = client_guard.read().await;
 
@@ -151,7 +158,14 @@ pub(crate) async fn sync_address(
                     } else {
                         None
                     };
-                    return Ok((found_output, Some((message_id, confirmed, message))));
+                    return Ok((
+                        found_output,
+                        Some(SyncedMessage {
+                            id: message_id,
+                            confirmed,
+                            inner: message,
+                        }),
+                    ));
                 }
 
                 Ok((found_output, None))
@@ -240,7 +254,7 @@ async fn sync_addresses(
     address_index: usize,
     gap_limit: usize,
     options: AccountOptions,
-) -> crate::Result<(Vec<Address>, Vec<(MessageId, Option<bool>, IotaMessage)>)> {
+) -> crate::Result<(Vec<Address>, Vec<SyncedMessage>)> {
     let mut address_index = address_index;
 
     let mut generated_addresses = vec![];
@@ -353,10 +367,10 @@ async fn sync_addresses(
 /// Syncs messages with the tangle.
 /// The method should ensures that the wallet local state has messages associated with the address history.
 async fn sync_messages(
-    account: &mut Account,
+    account: &Account,
     skip_addresses: &[Address],
     options: AccountOptions,
-) -> crate::Result<Vec<(MessageId, Option<bool>, IotaMessage)>> {
+) -> crate::Result<(Vec<Address>, Vec<SyncedMessage>)> {
     let mut messages = vec![];
     let client_options = account.client_options().clone();
 
@@ -374,7 +388,6 @@ async fn sync_messages(
     let mut tasks = Vec::new();
     for mut address in account.addresses().to_vec() {
         if skip_addresses.contains(&address) {
-            addresses.push(address);
             continue;
         }
         let client = client.clone();
@@ -444,7 +457,11 @@ async fn sync_messages(
                         } else {
                             None
                         };
-                        messages.push((output_message_id, confirmed, message));
+                        messages.push(SyncedMessage {
+                            id: output_message_id,
+                            confirmed,
+                            inner: message,
+                        });
                     }
                 }
 
@@ -465,43 +482,42 @@ async fn sync_messages(
         addresses.push(address);
         messages.extend(found_messages);
     }
-    account.set_addresses(addresses);
 
-    Ok(messages)
+    Ok((addresses, messages))
 }
 
 async fn perform_sync(
-    mut account: &mut Account,
-    accounts: AccountStore,
+    account: &Account,
     address_index: usize,
     gap_limit: usize,
-    steps: Vec<AccountSynchronizeStep>,
+    steps: &[AccountSynchronizeStep],
     options: AccountOptions,
-) -> crate::Result<bool> {
+) -> crate::Result<SyncedAccountData> {
     log::debug!(
         "[SYNC] syncing with address_index = {}, gap_limit = {}",
         address_index,
         gap_limit
     );
-    let (found_addresses, found_messages) = if steps.contains(&AccountSynchronizeStep::SyncAddresses) {
+    let (mut found_addresses, found_messages) = if steps.contains(&AccountSynchronizeStep::SyncAddresses) {
         sync_addresses(&account, address_index, gap_limit, options).await?
     } else {
         (Vec::new(), Vec::new())
     };
 
     let mut new_messages = vec![];
-    for (found_message_id, confirmed, found_message) in found_messages {
+    for found_message in found_messages {
         if !account
             .messages()
             .iter()
-            .any(|message| message.id() == &found_message_id && message.confirmed() == &confirmed)
+            .any(|message| message.id() == &found_message.id && message.confirmed() == &found_message.confirmed)
         {
-            new_messages.push((found_message_id, confirmed, found_message));
+            new_messages.push(found_message);
         }
     }
 
     if steps.contains(&AccountSynchronizeStep::SyncMessages) {
-        let synced_messages = sync_messages(&mut account, &found_addresses, options).await?;
+        let (synced_addresses, synced_messages) = sync_messages(&account, &found_addresses, options).await?;
+        found_addresses.extend(synced_addresses);
         new_messages.extend(synced_messages.into_iter());
     }
 
@@ -532,41 +548,11 @@ async fn perform_sync(
         }
         previous_address_is_unused = address_is_unused;
     }
-    log::debug!("[SYNC] new addresses: {:#?}", addresses_to_save);
 
-    let is_empty = new_messages.is_empty() && addresses_to_save.iter().all(|address| address.outputs().is_empty());
-
-    account.append_addresses(addresses_to_save);
-
-    let mut tasks = Vec::new();
-    for (id, confirmed, message) in new_messages {
-        let client_options = account.client_options().clone();
-        let account_id = account.id().to_string();
-        let account_addresses = account.addresses().to_vec();
-        let accounts = accounts.clone();
-        tasks.push(async move {
-            tokio::spawn(async move {
-                Message::from_iota_message(id, message, accounts, &account_id, &account_addresses, &client_options)
-                    .with_confirmed(confirmed)
-                    .finish()
-                    .await
-            })
-            .await
-        });
-    }
-    let mut parsed_messages = Vec::new();
-    for message in futures::future::try_join_all(tasks)
-        .await
-        .expect("failed to parse messages")
-    {
-        parsed_messages.push(message?);
-    }
-    log::debug!("[SYNC] new messages: {:#?}", parsed_messages);
-    account.append_messages(parsed_messages);
-
-    log::debug!("[SYNC] is empty: {}", is_empty);
-
-    Ok(is_empty)
+    Ok(SyncedAccountData {
+        messages: new_messages,
+        addresses: addresses_to_save,
+    })
 }
 
 #[derive(PartialEq)]
@@ -596,6 +582,52 @@ pub struct AccountSynchronizer {
     skip_persistence: bool,
     steps: Vec<AccountSynchronizeStep>,
     emit_events: bool,
+}
+
+#[derive(Debug)]
+pub(crate) struct SyncedAccountData {
+    pub(crate) messages: Vec<SyncedMessage>,
+    pub(crate) addresses: Vec<Address>,
+}
+
+impl SyncedAccountData {
+    pub(crate) async fn parse_messages(
+        &self,
+        accounts: AccountStore,
+        account: &Account,
+    ) -> crate::Result<Vec<Message>> {
+        let mut tasks = Vec::new();
+        for new_message in self.messages.to_vec() {
+            let client_options = account.client_options().clone();
+            let account_id = account.id().to_string();
+            let account_addresses = account.addresses().to_vec();
+            let accounts = accounts.clone();
+            tasks.push(async move {
+                tokio::spawn(async move {
+                    Message::from_iota_message(
+                        new_message.id,
+                        new_message.inner,
+                        accounts,
+                        &account_id,
+                        &account_addresses,
+                        &client_options,
+                    )
+                    .with_confirmed(new_message.confirmed)
+                    .finish()
+                    .await
+                })
+                .await
+            });
+        }
+        let mut parsed_messages = Vec::new();
+        for message in futures::future::try_join_all(tasks)
+            .await
+            .expect("failed to parse messages")
+        {
+            parsed_messages.push(message?);
+        }
+        Ok(parsed_messages)
+    }
 }
 
 impl AccountSynchronizer {
@@ -650,218 +682,227 @@ impl AccountSynchronizer {
         self
     }
 
+    pub(crate) async fn get_new_history(&self) -> crate::Result<SyncedAccountData> {
+        self.account_handle.disable_mqtt();
+        let res = perform_sync(
+            &*self.account_handle.read().await,
+            self.address_index,
+            self.gap_limit,
+            &self.steps,
+            self.account_handle.account_options,
+        )
+        .await;
+        self.account_handle.enable_mqtt();
+        res
+    }
+
+    pub(crate) async fn get_events(
+        account_options: AccountOptions,
+        addresses_before_sync: &[(String, u64, HashMap<OutputId, AddressOutput>)],
+        addresses: &[Address],
+        new_messages: &[Message],
+        confirmation_changed_messages: &[Message],
+    ) -> crate::Result<SyncedAccountEvents> {
+        // balance event
+        let mut balance_change_events = Vec::new();
+        for address_after_sync in addresses.iter() {
+            let address_bech32 = address_after_sync.address().to_bech32();
+            let (address_before_sync, before_sync_balance, before_sync_outputs) = addresses_before_sync
+                .iter()
+                .find(|(address, _, _)| &address_bech32 == address)
+                .cloned()
+                .unwrap_or_else(|| (address_bech32, 0, HashMap::new()));
+            if *address_after_sync.balance() != before_sync_balance {
+                log::debug!(
+                    "[SYNC] address {} balance changed from {} to {}",
+                    address_before_sync,
+                    before_sync_balance,
+                    address_after_sync.balance()
+                );
+
+                let mut output_change_balance = 0i64;
+                // we use this flag in case the new balance is 0
+                let mut emitted_event = false;
+                // check new and updated outputs to find message ids
+                // note that this is unreliable if we're not syncing spent outputs,
+                // since not all information are collected.
+                if account_options.sync_spent_outputs {
+                    for (output_id, output) in address_after_sync.outputs() {
+                        if !before_sync_outputs.contains_key(output_id) {
+                            let balance_change = if output.is_spent {
+                                BalanceChange::spent(output.amount)
+                            } else {
+                                BalanceChange::received(output.amount)
+                            };
+                            if output.is_spent {
+                                output_change_balance -= output.amount as i64;
+                            } else {
+                                output_change_balance += output.amount as i64;
+                            }
+                            balance_change_events.push(BalanceChangeEventData {
+                                address: address_after_sync.address().clone(),
+                                balance_change,
+                                message_id: Some(output.message_id),
+                            });
+                            emitted_event = true;
+                        }
+                    }
+                }
+
+                // we can't guarantee we picked up all output changes since querying spent outputs is
+                // optional so we handle it here; if not all balance change has
+                // been emitted, we emit the remainder value with `None` as
+                // message_id
+                let balance_change = *address_after_sync.balance() as i64 - before_sync_balance as i64;
+                if !emitted_event || output_change_balance != balance_change {
+                    let balance_change = if balance_change > 0 {
+                        // balance_change is positive; subtract the already emitted balance.
+                        BalanceChange::received((balance_change - output_change_balance) as u64)
+                    } else {
+                        // balance_change is negative; get the absolute diff.
+                        BalanceChange::spent((balance_change - output_change_balance).abs() as u64)
+                    };
+                    balance_change_events.push(BalanceChangeEventData {
+                        address: address_after_sync.address().clone(),
+                        balance_change,
+                        message_id: None,
+                    });
+                }
+            }
+        }
+
+        // new messages event
+        let mut new_transaction_events = Vec::new();
+        for message in new_messages.iter() {
+            log::info!("[SYNC] new message: {:?}", message.id());
+            new_transaction_events.push(message.clone());
+        }
+
+        // confirmation state change event
+        let mut confirmation_change_events = Vec::new();
+        for message in confirmation_changed_messages.iter() {
+            log::info!("[SYNC] message confirmation state changed: {:?}", message.id());
+            confirmation_change_events.push(ConfirmationChangeEventData {
+                message: message.clone(),
+                confirmed: message.confirmed().unwrap_or(false),
+            });
+        }
+
+        Ok(SyncedAccountEvents {
+            balance_change_events,
+            new_transaction_events,
+            confirmation_change_events,
+        })
+    }
+
     /// Syncs account with the tangle.
     /// The account syncing process ensures that the latest metadata (balance, transactions)
     /// associated with an account is fetched from the tangle and is stored locally.
     pub async fn execute(self) -> crate::Result<SyncedAccount> {
-        self.account_handle.disable_mqtt();
-
-        let mut account_to_sync = self.account_handle.read().await.clone();
-        let return_value = match perform_sync(
-            &mut account_to_sync,
-            self.account_handle.accounts.clone(),
-            self.address_index,
-            self.gap_limit,
-            self.steps,
-            self.account_handle.account_options,
-        )
-        .await
-        {
-            Ok(is_empty) => {
-                let mut account_ref = self.account_handle.write().await;
-                let messages_before_sync: Vec<(MessageId, Option<bool>)> = account_ref
-                    .messages()
-                    .iter()
-                    .map(|m| (*m.id(), *m.confirmed()))
-                    .collect();
-                let addresses_before_sync: Vec<(String, u64, HashMap<OutputId, AddressOutput>)> = account_ref
+        let return_value = match self.get_new_history().await {
+            Ok(data) => {
+                self.account_handle.disable_mqtt();
+                let is_empty =
+                    data.messages.is_empty() && data.addresses.iter().all(|address| address.outputs().is_empty());
+                log::debug!("[SYNC] is empty: {}", is_empty);
+                let mut account = self.account_handle.write().await;
+                let messages_before_sync: Vec<(MessageId, Option<bool>)> =
+                    account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
+                let addresses_before_sync: Vec<(String, u64, HashMap<OutputId, AddressOutput>)> = account
                     .addresses()
                     .iter()
                     .map(|a| (a.address().to_bech32(), *a.balance(), a.outputs().clone()))
                     .collect();
 
+                let parsed_messages = data
+                    .parse_messages(self.account_handle.accounts.clone(), &account)
+                    .await?;
+                log::debug!("[SYNC] new messages: {:#?}", parsed_messages);
+                let new_addresses = data.addresses;
+
                 if !self.skip_persistence {
-                    account_ref
-                        .do_mut(|account| {
-                            for address in account_to_sync.addresses() {
-                                match account.addresses().iter().position(|a| a == address) {
-                                    Some(index) => {
-                                        account.addresses_mut()[index] = address.clone();
-                                    }
-                                    None => {
-                                        account.addresses_mut().push(address.clone());
-                                    }
-                                }
+                    for address in &new_addresses {
+                        match account.addresses().iter().position(|a| a == address) {
+                            Some(index) => {
+                                account.addresses_mut()[index] = address.clone();
                             }
-                            for message in account_to_sync.messages() {
-                                match account.messages().iter().position(|m| m == message) {
-                                    Some(index) => {
-                                        account.messages_mut()[index] = message.clone();
-                                    }
-                                    None => {
-                                        account.messages_mut().push(message.clone());
-                                    }
-                                }
+                            None => {
+                                account.addresses_mut().push(address.clone());
                             }
-                            account.set_last_synced_at(Some(chrono::Local::now()));
-                            Ok(())
-                        })
-                        .await?;
+                        }
+                    }
+                    for message in &parsed_messages {
+                        match account.messages().iter().position(|m| m == message) {
+                            Some(index) => {
+                                account.messages_mut()[index] = message.clone();
+                            }
+                            None => {
+                                account.messages_mut().push(message.clone());
+                            }
+                        }
+                    }
+                    account.set_last_synced_at(Some(chrono::Local::now()));
+                    account.save().await?;
                 }
 
-                let new_messages = account_ref
-                    .messages()
-                    .iter()
-                    .filter(|m| !messages_before_sync.iter().any(|(id, _)| id == m.id()))
-                    .cloned()
-                    .collect::<Vec<Message>>();
-                let confirmation_changed_messages = account_ref
-                    .messages()
-                    .iter()
-                    .filter(|m| {
-                        messages_before_sync
-                            .iter()
-                            .any(|(id, confirmed)| id == m.id() && confirmed != m.confirmed())
-                    })
-                    .cloned()
-                    .collect::<Vec<Message>>();
-
-                // balance event
-                let mut skipped_balance_change_events = Vec::new();
-                for address_after_sync in account_ref.addresses() {
-                    let address_bech32 = address_after_sync.address().to_bech32();
-                    let (address_before_sync, before_sync_balance, before_sync_outputs) = addresses_before_sync
+                let mut new_messages = Vec::new();
+                let mut confirmation_changed_messages = Vec::new();
+                for message in parsed_messages {
+                    if !messages_before_sync.iter().any(|(id, _)| id == message.id()) {
+                        new_messages.push(message.clone());
+                    }
+                    if messages_before_sync
                         .iter()
-                        .find(|(address, _, _)| &address_bech32 == address)
-                        .cloned()
-                        .unwrap_or_else(|| (address_bech32, 0, HashMap::new()));
-                    if *address_after_sync.balance() != before_sync_balance {
-                        log::debug!(
-                            "[SYNC] address {} balance changed from {} to {}",
-                            address_before_sync,
-                            before_sync_balance,
-                            address_after_sync.balance()
-                        );
-
-                        let mut output_change_balance = 0i64;
-                        // we use this flag in case the new balance is 0
-                        let mut emitted_event = false;
-                        // check new and updated outputs to find message ids
-                        // note that this is unreliable if we're not syncing spent outputs,
-                        // since not all information are collected.
-                        if self.account_handle.account_options.sync_spent_outputs {
-                            for (output_id, output) in address_after_sync.outputs() {
-                                if !before_sync_outputs.contains_key(output_id) {
-                                    let balance_change = if output.is_spent {
-                                        BalanceChange::spent(output.amount)
-                                    } else {
-                                        BalanceChange::received(output.amount)
-                                    };
-                                    if self.emit_events {
-                                        emit_balance_change(
-                                            &account_ref,
-                                            address_after_sync.address(),
-                                            Some(output.message_id),
-                                            balance_change,
-                                            self.account_handle.account_options.persist_events,
-                                        )
-                                        .await?;
-                                        if output.is_spent {
-                                            output_change_balance -= output.amount as i64;
-                                        } else {
-                                            output_change_balance += output.amount as i64;
-                                        }
-                                    } else {
-                                        skipped_balance_change_events.push(BalanceChangeEventData {
-                                            address: address_after_sync.address().clone(),
-                                            balance_change,
-                                            message_id: Some(output.message_id),
-                                        });
-                                    }
-                                    emitted_event = true;
-                                }
-                            }
-                        }
-
-                        // we can't guarantee we picked up all output changes since querying spent outputs is
-                        // optional so we handle it here; if not all balance change has
-                        // been emitted, we emit the remainder value with `None` as
-                        // message_id
-                        let balance_change = *address_after_sync.balance() as i64 - before_sync_balance as i64;
-                        if !emitted_event || output_change_balance != balance_change {
-                            let balance_change = if balance_change > 0 {
-                                // balance_change is positive; subtract the already emitted balance.
-                                BalanceChange::received((balance_change - output_change_balance) as u64)
-                            } else {
-                                // balance_change is negative; get the absolute diff.
-                                BalanceChange::spent((balance_change - output_change_balance).abs() as u64)
-                            };
-                            if self.emit_events {
-                                emit_balance_change(
-                                    &account_ref,
-                                    address_after_sync.address(),
-                                    None,
-                                    balance_change,
-                                    self.account_handle.account_options.persist_events,
-                                )
-                                .await?;
-                            } else {
-                                skipped_balance_change_events.push(BalanceChangeEventData {
-                                    address: address_after_sync.address().clone(),
-                                    balance_change,
-                                    message_id: None,
-                                });
-                            }
-                        }
+                        .any(|(id, confirmed)| id == message.id() && confirmed != message.confirmed())
+                    {
+                        confirmation_changed_messages.push(message);
                     }
                 }
 
-                // new messages event
-                let mut skipped_new_transaction_events = Vec::new();
-                for message in &new_messages {
-                    log::info!("[SYNC] new message: {:?}", message.id());
-                    if self.emit_events {
-                        emit_transaction_event(
-                            TransactionEventType::NewTransaction,
-                            &account_ref,
-                            message,
-                            self.account_handle.account_options.persist_events,
+                if self.emit_events {
+                    let persist_events = self.account_handle.account_options.persist_events;
+                    let events = Self::get_events(
+                        self.account_handle.account_options,
+                        &addresses_before_sync,
+                        account.addresses(),
+                        &new_messages,
+                        &confirmation_changed_messages,
+                    )
+                    .await?;
+                    for balance_change_event in events.balance_change_events {
+                        emit_balance_change(
+                            &account,
+                            &balance_change_event.address,
+                            balance_change_event.message_id,
+                            balance_change_event.balance_change,
+                            persist_events,
                         )
                         .await?;
-                    } else {
-                        skipped_new_transaction_events.push(message.clone());
                     }
-                }
-
-                // confirmation state change event
-                let mut skipped_confirmation_change_events = Vec::new();
-                for message in &confirmation_changed_messages {
-                    log::info!("[POLLING] message confirmation state changed: {:?}", message.id());
-                    if self.emit_events {
+                    for message in events.new_transaction_events {
+                        emit_transaction_event(TransactionEventType::NewTransaction, &account, message, persist_events)
+                            .await?;
+                    }
+                    for confirmation_change_event in events.confirmation_change_events {
                         emit_confirmation_state_change(
-                            &account_ref,
-                            message.clone(),
-                            message.confirmed().unwrap_or(false),
-                            self.account_handle.account_options.persist_events,
+                            &account,
+                            confirmation_change_event.message,
+                            confirmation_change_event.confirmed,
+                            persist_events,
                         )
                         .await?;
-                    } else {
-                        skipped_confirmation_change_events.push(ConfirmationChangeEventData {
-                            message: message.clone(),
-                            confirmed: message.confirmed().unwrap_or(false),
-                        });
                     }
                 }
 
                 let mut updated_messages = new_messages;
                 updated_messages.extend(confirmation_changed_messages);
                 let synced_account = SyncedAccount {
-                    id: account_ref.id().to_string(),
-                    index: *account_ref.index(),
+                    id: account.id().to_string(),
+                    index: *account.index(),
                     account_handle: self.account_handle.clone(),
-                    deposit_address: account_ref.latest_address().clone(),
+                    deposit_address: account.latest_address().clone(),
                     is_empty,
-                    addresses: account_ref
+                    addresses: account
                         .addresses()
                         .iter()
                         .filter(|a| {
@@ -876,9 +917,6 @@ impl AccountSynchronizer {
                         .cloned()
                         .collect(),
                     messages: updated_messages,
-                    skipped_balance_change_events,
-                    skipped_new_transaction_events,
-                    skipped_confirmation_change_events,
                 };
                 Ok(synced_account)
             }
@@ -912,19 +950,17 @@ pub struct SyncedAccount {
     is_empty: bool,
     /// The newly found and updated account messages.
     #[getset(get = "pub")]
-    messages: Vec<Message>,
+    pub(crate) messages: Vec<Message>,
     /// The newly generated and updated account addresses.
     #[getset(get = "pub")]
-    addresses: Vec<Address>,
-    #[getset(get = "pub(crate)")]
-    #[serde(skip)]
-    skipped_balance_change_events: Vec<BalanceChangeEventData>,
-    #[getset(get = "pub(crate)")]
-    #[serde(skip)]
-    skipped_new_transaction_events: Vec<Message>,
-    #[getset(get = "pub(crate)")]
-    #[serde(skip)]
-    skipped_confirmation_change_events: Vec<ConfirmationChangeEventData>,
+    pub(crate) addresses: Vec<Address>,
+}
+
+#[derive(Debug, Clone, Getters)]
+pub(crate) struct SyncedAccountEvents {
+    pub(crate) balance_change_events: Vec<BalanceChangeEventData>,
+    pub(crate) new_transaction_events: Vec<Message>,
+    pub(crate) confirmation_change_events: Vec<ConfirmationChangeEventData>,
 }
 
 impl SyncedAccount {
@@ -942,9 +978,6 @@ impl SyncedAccount {
             is_empty: false,
             messages: Default::default(),
             addresses: Default::default(),
-            skipped_balance_change_events: Default::default(),
-            skipped_new_transaction_events: Default::default(),
-            skipped_confirmation_change_events: Default::default(),
         }
     }
 
@@ -1774,9 +1807,6 @@ mod tests {
             is_empty: false,
             messages: Vec::new(),
             addresses: Vec::new(),
-            skipped_balance_change_events: Vec::new(),
-            skipped_new_transaction_events: Vec::new(),
-            skipped_confirmation_change_events: Vec::new(),
         };
         let res = synced
             .transfer(
