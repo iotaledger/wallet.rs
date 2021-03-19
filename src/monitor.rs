@@ -187,7 +187,7 @@ async fn process_output(
                 crate::event::emit_transaction_event(
                     crate::event::TransactionEventType::NewTransaction,
                     &account,
-                    &message,
+                    message.clone(),
                     account_handle.account_options.persist_events,
                 )
                 .await?;
