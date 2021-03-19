@@ -1278,7 +1278,7 @@ impl AccountsSynchronizer {
             if *account.index() >= last_account_index {
                 last_account_index = *account.index();
                 last_account = Some((
-                    account.messages().is_empty() || account.addresses().iter().all(|addr| *addr.balance() == 0),
+                    account.messages().is_empty() && account.addresses().iter().all(|addr| *addr.balance() == 0),
                     account.client_options().clone(),
                     account.signer_type().clone(),
                 ));
