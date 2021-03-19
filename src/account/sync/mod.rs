@@ -83,6 +83,34 @@ async fn get_address_outputs(
     Ok(address_outputs)
 }
 
+#[derive(Default)]
+struct MessageMetadata {
+    confirmed: Option<bool>,
+}
+
+async fn get_message_and_metadata(
+    client: &Client,
+    message_id: &MessageId,
+) -> crate::Result<Option<(IotaMessage, MessageMetadata)>> {
+    match client.get_message().data(message_id).await {
+        Ok(message) => {
+            let metadata = client
+                .get_message()
+                .metadata(message_id)
+                .await
+                .map(|metadata| MessageMetadata {
+                    confirmed: metadata
+                        .ledger_inclusion_state
+                        .map(|l| l == LedgerInclusionStateDto::Included),
+                })
+                .unwrap_or_default();
+            Ok(Some((message, metadata)))
+        }
+        Err(iota::client::Error::ResponseError(status_code, _)) if status_code == 404 => Ok(None),
+        Err(e) => Err(e.into()),
+    }
+}
+
 pub(crate) async fn sync_address(
     account_messages: Vec<(MessageId, Option<bool>)>,
     client_options: ClientOptions,
@@ -147,16 +175,12 @@ pub(crate) async fn sync_address(
                     return crate::Result::Ok((found_output, None));
                 }
 
-                if let Ok(message) = client.get_message().data(&message_id).await {
+                if let Some((message, metadata)) = get_message_and_metadata(&client, &message_id).await? {
                     // if the output is spent, the message is confirmed
                     let confirmed = if found_output.is_spent {
                         Some(true)
-                    } else if let Ok(metadata) = client.get_message().metadata(&message_id).await {
-                        metadata
-                            .ledger_inclusion_state
-                            .map(|l| l == LedgerInclusionStateDto::Included)
                     } else {
-                        None
+                        metadata.confirmed
                     };
                     return Ok((
                         found_output,
@@ -446,17 +470,9 @@ async fn sync_messages(
                         continue;
                     }
 
-                    if let Ok(message) = client.get_message().data(&output_message_id).await {
+                    if let Some((message, metadata)) = get_message_and_metadata(&client, &output_message_id).await? {
                         // if the output is spent, the message is confirmed
-                        let confirmed = if is_spent {
-                            Some(true)
-                        } else if let Ok(metadata) = client.get_message().metadata(&output_message_id).await {
-                            metadata
-                                .ledger_inclusion_state
-                                .map(|l| l == LedgerInclusionStateDto::Included)
-                        } else {
-                            None
-                        };
+                        let confirmed = if is_spent { Some(true) } else { metadata.confirmed };
                         messages.push(SyncedMessage {
                             id: output_message_id,
                             confirmed,
