@@ -818,8 +818,10 @@ impl AccountSynchronizer {
         let return_value = match self.get_new_history().await {
             Ok(data) => {
                 self.account_handle.disable_mqtt();
-                let is_empty =
-                    data.messages.is_empty() && data.addresses.iter().all(|address| address.outputs().is_empty());
+                let is_empty = data
+                    .addresses
+                    .iter()
+                    .all(|address| *address.balance() == 0 && address.outputs().is_empty());
                 log::debug!("[SYNC] is empty: {}", is_empty);
                 let mut account = self.account_handle.write().await;
                 let messages_before_sync: Vec<(MessageId, Option<bool>)> =

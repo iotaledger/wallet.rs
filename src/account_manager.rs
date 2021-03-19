@@ -5,7 +5,7 @@
 use crate::{
     account::{
         repost_message, Account, AccountHandle, AccountIdentifier, AccountInitialiser, AccountSynchronizer,
-        RepostAction, SyncedAccount,
+        RepostAction, SyncedAccount, SyncedAccountData,
     },
     address::AddressOutput,
     client::ClientOptions,
@@ -1188,9 +1188,57 @@ impl AccountsSynchronizer {
         let mut synced_accounts = Vec::new();
         let mut last_account = None;
         let mut last_account_index = 0;
+        for (account_handle, _, _) in &synced_data {
+            let account = account_handle.read().await;
+            if *account.index() >= last_account_index {
+                last_account_index = *account.index();
+                last_account = Some((
+                    account
+                        .addresses()
+                        .iter()
+                        .all(|addr| *addr.balance() == 0 && addr.outputs().is_empty()),
+                    account.client_options().clone(),
+                    account.signer_type().clone(),
+                ));
+            }
+        }
+
+        let discovered_accounts_res = match last_account {
+            Some((is_empty, client_options, signer_type)) => {
+                if !is_empty {
+                    log::debug!("[SYNC] running account discovery because the latest account is not empty");
+                    discover_accounts(
+                        self.accounts.clone(),
+                        &self.storage_file_path,
+                        &client_options,
+                        Some(signer_type),
+                        self.account_options,
+                        self.is_monitoring.clone(),
+                    )
+                    .await
+                } else {
+                    log::debug!("[SYNC] skipping account discovery because the latest account is empty");
+                    Ok(vec![])
+                }
+            }
+            None => Ok(vec![]),
+        };
+        if let Ok(discovered_accounts) = discovered_accounts_res {
+            if !discovered_accounts.is_empty() {
+                let mut accounts = self.accounts.write().await;
+                for (account_handle, synced_account_data) in discovered_accounts {
+                    let account_handle_ = account_handle.clone();
+                    let mut account = account_handle_.write().await;
+                    account.set_skip_persistence(false);
+                    account.save().await?;
+                    accounts.insert(account.id().clone(), account_handle.clone());
+                    synced_data.push((account_handle, Vec::new(), synced_account_data));
+                }
+            }
+        }
+
         for (account_handle, addresses_before_sync, data) in synced_data {
             let mut account = account_handle.write().await;
-
             let messages_before_sync: Vec<(MessageId, Option<bool>)> =
                 account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
 
@@ -1253,11 +1301,13 @@ impl AccountsSynchronizer {
                 .await?;
             }
 
+            // drop the account so SyncedAccount::from doesn't deadlock
             drop(account);
             let mut synced_account = SyncedAccount::from(account_handle.clone()).await;
             let mut updated_messages = new_messages;
             updated_messages.extend(confirmation_changed_messages);
             synced_account.messages = updated_messages;
+
             let account = account_handle.read().await;
             synced_account.addresses = account
                 .addresses()
@@ -1274,48 +1324,6 @@ impl AccountsSynchronizer {
                 .cloned()
                 .collect();
             synced_accounts.push(synced_account);
-
-            if *account.index() >= last_account_index {
-                last_account_index = *account.index();
-                last_account = Some((
-                    account.messages().is_empty() && account.addresses().iter().all(|addr| *addr.balance() == 0),
-                    account.client_options().clone(),
-                    account.signer_type().clone(),
-                ));
-            }
-        }
-
-        let discovered_accounts_res = match last_account {
-            Some((is_empty, client_options, signer_type)) => {
-                if !is_empty {
-                    log::debug!("[SYNC] running account discovery because the latest account is not empty");
-                    discover_accounts(
-                        self.accounts.clone(),
-                        &self.storage_file_path,
-                        &client_options,
-                        Some(signer_type),
-                        self.account_options,
-                        self.is_monitoring.clone(),
-                    )
-                    .await
-                } else {
-                    log::debug!("[SYNC] skipping account discovery because the latest account is empty");
-                    Ok(vec![])
-                }
-            }
-            None => Ok(vec![]),
-        };
-        if let Ok(discovered_accounts) = discovered_accounts_res {
-            if !discovered_accounts.is_empty() {
-                let mut accounts = self.accounts.write().await;
-                for (account_handle, synced_account) in discovered_accounts {
-                    let mut account = account_handle.write().await;
-                    account.set_skip_persistence(false);
-                    account.save().await?;
-                    accounts.insert(account.id().clone(), account_handle.clone());
-                    synced_accounts.push(synced_account);
-                }
-            }
         }
 
         Ok(synced_accounts)
@@ -1451,7 +1459,7 @@ async fn discover_accounts(
     signer_type: Option<SignerType>,
     account_options: AccountOptions,
     is_monitoring: Arc<AtomicBool>,
-) -> crate::Result<Vec<(AccountHandle, SyncedAccount)>> {
+) -> crate::Result<Vec<(AccountHandle, SyncedAccountData)>> {
     let mut synced_accounts = vec![];
     let mut index = accounts.read().await.len();
     loop {
@@ -1473,14 +1481,17 @@ async fn discover_accounts(
             account_handle.read().await.alias(),
             account_handle.read().await.signer_type()
         );
-        let synced_account = account_handle.sync().await.skip_events().execute().await?;
-        let is_empty = *synced_account.is_empty();
+        let synced_account_data = account_handle.sync().await.get_new_history().await?;
+        let is_empty = synced_account_data
+            .addresses
+            .iter()
+            .all(|a| *a.balance() == 0 && a.outputs().is_empty());
         log::debug!("[SYNC] account is empty? {}", is_empty);
         if is_empty {
             break;
         } else {
             index += 1;
-            synced_accounts.push((account_handle, synced_account));
+            synced_accounts.push((account_handle, synced_account_data));
         }
     }
     Ok(synced_accounts)
