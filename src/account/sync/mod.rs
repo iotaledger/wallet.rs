@@ -728,13 +728,14 @@ impl AccountSynchronizer {
 
                 // balance event
                 let mut skipped_balance_change_events = Vec::new();
-                for (address_before_sync, before_sync_balance, before_sync_outputs) in &addresses_before_sync {
-                    let address_after_sync = account_ref
-                        .addresses()
+                for address_after_sync in account_ref.addresses() {
+                    let address_bech32 = address_after_sync.address().to_bech32();
+                    let (address_before_sync, before_sync_balance, before_sync_outputs) = addresses_before_sync
                         .iter()
-                        .find(|addr| &addr.address().to_bech32() == address_before_sync)
-                        .unwrap();
-                    if address_after_sync.balance() != before_sync_balance {
+                        .find(|(address, _, _)| &address_bech32 == address)
+                        .cloned()
+                        .unwrap_or_else(|| (address_bech32, 0, HashMap::new()));
+                    if *address_after_sync.balance() != before_sync_balance {
                         log::debug!(
                             "[SYNC] address {} balance changed from {} to {}",
                             address_before_sync,
@@ -786,7 +787,7 @@ impl AccountSynchronizer {
                         // optional so we handle it here; if not all balance change has
                         // been emitted, we emit the remainder value with `None` as
                         // message_id
-                        let balance_change = *address_after_sync.balance() as i64 - *before_sync_balance as i64;
+                        let balance_change = *address_after_sync.balance() as i64 - before_sync_balance as i64;
                         if !emitted_event || output_change_balance != balance_change {
                             let balance_change = if balance_change > 0 {
                                 // balance_change is positive; subtract the already emitted balance.
