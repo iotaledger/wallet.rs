@@ -1794,6 +1794,43 @@
 <span id="1791">1791</span>
 <span id="1792">1792</span>
 <span id="1793">1793</span>
+<span id="1794">1794</span>
+<span id="1795">1795</span>
+<span id="1796">1796</span>
+<span id="1797">1797</span>
+<span id="1798">1798</span>
+<span id="1799">1799</span>
+<span id="1800">1800</span>
+<span id="1801">1801</span>
+<span id="1802">1802</span>
+<span id="1803">1803</span>
+<span id="1804">1804</span>
+<span id="1805">1805</span>
+<span id="1806">1806</span>
+<span id="1807">1807</span>
+<span id="1808">1808</span>
+<span id="1809">1809</span>
+<span id="1810">1810</span>
+<span id="1811">1811</span>
+<span id="1812">1812</span>
+<span id="1813">1813</span>
+<span id="1814">1814</span>
+<span id="1815">1815</span>
+<span id="1816">1816</span>
+<span id="1817">1817</span>
+<span id="1818">1818</span>
+<span id="1819">1819</span>
+<span id="1820">1820</span>
+<span id="1821">1821</span>
+<span id="1822">1822</span>
+<span id="1823">1823</span>
+<span id="1824">1824</span>
+<span id="1825">1825</span>
+<span id="1826">1826</span>
+<span id="1827">1827</span>
+<span id="1828">1828</span>
+<span id="1829">1829</span>
+<span id="1830">1830</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1838,6 +1875,13 @@
 
 <span class="kw">const</span> <span class="ident">DUST_ALLOWANCE_VALUE</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">1_000_000</span>;
 
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">SyncedMessage</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">id</span>: <span class="ident">MessageId</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">confirmed</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">inner</span>: <span class="ident">IotaMessage</span>,
+}
+
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_address_outputs</span>(
     <span class="ident">address</span>: <span class="ident">Bech32Address</span>,
     <span class="ident">client</span>: <span class="kw-2">&amp;</span><span class="ident">Client</span>,
@@ -1873,6 +1917,34 @@
     <span class="prelude-val">Ok</span>(<span class="ident">address_outputs</span>)
 }
 
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
+<span class="kw">struct</span> <span class="ident">MessageMetadata</span> {
+    <span class="ident">confirmed</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
+}
+
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_message_and_metadata</span>(
+    <span class="ident">client</span>: <span class="kw-2">&amp;</span><span class="ident">Client</span>,
+    <span class="ident">message_id</span>: <span class="kw-2">&amp;</span><span class="ident">MessageId</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">IotaMessage</span>, <span class="ident">MessageMetadata</span>)<span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">match</span> <span class="ident">client</span>.<span class="ident">get_message</span>().<span class="ident">data</span>(<span class="ident">message_id</span>).<span class="kw">await</span> {
+        <span class="prelude-val">Ok</span>(<span class="ident">message</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="ident">client</span>
+                .<span class="ident">get_message</span>()
+                .<span class="ident">metadata</span>(<span class="ident">message_id</span>)
+                .<span class="kw">await</span>
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">metadata</span><span class="op">|</span> <span class="ident">MessageMetadata</span> {
+                    <span class="ident">confirmed</span>: <span class="ident">metadata</span>
+                        .<span class="ident">ledger_inclusion_state</span>
+                        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span> <span class="op">=</span><span class="op">=</span> <span class="ident">LedgerInclusionStateDto</span>::<span class="ident">Included</span>),
+                })
+                .<span class="ident">unwrap_or_default</span>();
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>((<span class="ident">message</span>, <span class="ident">metadata</span>)))
+        }
+        <span class="prelude-val">Err</span>(<span class="ident">iota</span>::<span class="ident">client</span>::<span class="ident">Error</span>::<span class="ident">ResponseError</span>(<span class="ident">status_code</span>, <span class="kw">_</span>)) <span class="kw">if</span> <span class="ident">status_code</span> <span class="op">=</span><span class="op">=</span> <span class="number">404</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+        <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>.<span class="ident">into</span>()),
+    }
+}
+
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">sync_address</span>(
     <span class="ident">account_messages</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">MessageId</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
     <span class="ident">client_options</span>: <span class="ident">ClientOptions</span>,
@@ -1880,7 +1952,7 @@
     <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Address</span>,
     <span class="ident">bech32_hrp</span>: <span class="ident">String</span>,
     <span class="ident">options</span>: <span class="ident">AccountOptions</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">MessageId</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>, <span class="ident">IotaMessage</span>)<span class="op">&gt;</span><span class="op">&gt;</span> {
+) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SyncedMessage</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">client_guard</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">client</span>::<span class="ident">get_client</span>(<span class="kw-2">&amp;</span><span class="ident">client_options</span>).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">client_guard</span>.<span class="ident">read</span>().<span class="kw">await</span>;
 
@@ -1937,18 +2009,21 @@
                     <span class="kw">return</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span>::<span class="prelude-val">Ok</span>((<span class="ident">found_output</span>, <span class="prelude-val">None</span>));
                 }
 
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">message</span>) <span class="op">=</span> <span class="ident">client</span>.<span class="ident">get_message</span>().<span class="ident">data</span>(<span class="kw-2">&amp;</span><span class="ident">message_id</span>).<span class="kw">await</span> {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">message</span>, <span class="ident">metadata</span>)) <span class="op">=</span> <span class="ident">get_message_and_metadata</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">message_id</span>).<span class="kw">await</span><span class="question-mark">?</span> {
                     <span class="comment">// if the output is spent, the message is confirmed</span>
                     <span class="kw">let</span> <span class="ident">confirmed</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">found_output</span>.<span class="ident">is_spent</span> {
                         <span class="prelude-val">Some</span>(<span class="bool-val">true</span>)
-                    } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">metadata</span>) <span class="op">=</span> <span class="ident">client</span>.<span class="ident">get_message</span>().<span class="ident">metadata</span>(<span class="kw-2">&amp;</span><span class="ident">message_id</span>).<span class="kw">await</span> {
-                        <span class="ident">metadata</span>
-                            .<span class="ident">ledger_inclusion_state</span>
-                            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span> <span class="op">=</span><span class="op">=</span> <span class="ident">LedgerInclusionStateDto</span>::<span class="ident">Included</span>)
                     } <span class="kw">else</span> {
-                        <span class="prelude-val">None</span>
+                        <span class="ident">metadata</span>.<span class="ident">confirmed</span>
                     };
-                    <span class="kw">return</span> <span class="prelude-val">Ok</span>((<span class="ident">found_output</span>, <span class="prelude-val">Some</span>((<span class="ident">message_id</span>, <span class="ident">confirmed</span>, <span class="ident">message</span>))));
+                    <span class="kw">return</span> <span class="prelude-val">Ok</span>((
+                        <span class="ident">found_output</span>,
+                        <span class="prelude-val">Some</span>(<span class="ident">SyncedMessage</span> {
+                            <span class="ident">id</span>: <span class="ident">message_id</span>,
+                            <span class="ident">confirmed</span>,
+                            <span class="ident">inner</span>: <span class="ident">message</span>,
+                        }),
+                    ));
                 }
 
                 <span class="prelude-val">Ok</span>((<span class="ident">found_output</span>, <span class="prelude-val">None</span>))
@@ -2037,7 +2112,7 @@
     <span class="ident">address_index</span>: <span class="ident">usize</span>,
     <span class="ident">gap_limit</span>: <span class="ident">usize</span>,
     <span class="ident">options</span>: <span class="ident">AccountOptions</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">MessageId</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>, <span class="ident">IotaMessage</span>)<span class="op">&gt;</span>)<span class="op">&gt;</span> {
+) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SyncedMessage</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">address_index</span> <span class="op">=</span> <span class="ident">address_index</span>;
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">generated_addresses</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
@@ -2150,10 +2225,10 @@
 <span class="doccomment">/// Syncs messages with the tangle.</span>
 <span class="doccomment">/// The method should ensures that the wallet local state has messages associated with the address history.</span>
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">sync_messages</span>(
-    <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Account</span>,
+    <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Account</span>,
     <span class="ident">skip_addresses</span>: <span class="kw-2">&amp;</span>[<span class="ident">Address</span>],
     <span class="ident">options</span>: <span class="ident">AccountOptions</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">MessageId</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>, <span class="ident">IotaMessage</span>)<span class="op">&gt;</span><span class="op">&gt;</span> {
+) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SyncedMessage</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">messages</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
     <span class="kw">let</span> <span class="ident">client_options</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">client_options</span>().<span class="ident">clone</span>();
 
@@ -2171,7 +2246,6 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tasks</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
     <span class="kw">for</span> <span class="kw-2">mut</span> <span class="ident">address</span> <span class="kw">in</span> <span class="ident">account</span>.<span class="ident">addresses</span>().<span class="ident">to_vec</span>() {
         <span class="kw">if</span> <span class="ident">skip_addresses</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">address</span>) {
-            <span class="ident">addresses</span>.<span class="ident">push</span>(<span class="ident">address</span>);
             <span class="kw">continue</span>;
         }
         <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">clone</span>();
@@ -2230,18 +2304,14 @@
                         <span class="kw">continue</span>;
                     }
 
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">message</span>) <span class="op">=</span> <span class="ident">client</span>.<span class="ident">get_message</span>().<span class="ident">data</span>(<span class="kw-2">&amp;</span><span class="ident">output_message_id</span>).<span class="kw">await</span> {
+                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">message</span>, <span class="ident">metadata</span>)) <span class="op">=</span> <span class="ident">get_message_and_metadata</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="kw-2">&amp;</span><span class="ident">output_message_id</span>).<span class="kw">await</span><span class="question-mark">?</span> {
                         <span class="comment">// if the output is spent, the message is confirmed</span>
-                        <span class="kw">let</span> <span class="ident">confirmed</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">is_spent</span> {
-                            <span class="prelude-val">Some</span>(<span class="bool-val">true</span>)
-                        } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">metadata</span>) <span class="op">=</span> <span class="ident">client</span>.<span class="ident">get_message</span>().<span class="ident">metadata</span>(<span class="kw-2">&amp;</span><span class="ident">output_message_id</span>).<span class="kw">await</span> {
-                            <span class="ident">metadata</span>
-                                .<span class="ident">ledger_inclusion_state</span>
-                                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span> <span class="op">=</span><span class="op">=</span> <span class="ident">LedgerInclusionStateDto</span>::<span class="ident">Included</span>)
-                        } <span class="kw">else</span> {
-                            <span class="prelude-val">None</span>
-                        };
-                        <span class="ident">messages</span>.<span class="ident">push</span>((<span class="ident">output_message_id</span>, <span class="ident">confirmed</span>, <span class="ident">message</span>));
+                        <span class="kw">let</span> <span class="ident">confirmed</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">is_spent</span> { <span class="prelude-val">Some</span>(<span class="bool-val">true</span>) } <span class="kw">else</span> { <span class="ident">metadata</span>.<span class="ident">confirmed</span> };
+                        <span class="ident">messages</span>.<span class="ident">push</span>(<span class="ident">SyncedMessage</span> {
+                            <span class="ident">id</span>: <span class="ident">output_message_id</span>,
+                            <span class="ident">confirmed</span>,
+                            <span class="ident">inner</span>: <span class="ident">message</span>,
+                        });
                     }
                 }
 
@@ -2262,43 +2332,42 @@
         <span class="ident">addresses</span>.<span class="ident">push</span>(<span class="ident">address</span>);
         <span class="ident">messages</span>.<span class="ident">extend</span>(<span class="ident">found_messages</span>);
     }
-    <span class="ident">account</span>.<span class="ident">set_addresses</span>(<span class="ident">addresses</span>);
 
-    <span class="prelude-val">Ok</span>(<span class="ident">messages</span>)
+    <span class="prelude-val">Ok</span>((<span class="ident">addresses</span>, <span class="ident">messages</span>))
 }
 
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">perform_sync</span>(
-    <span class="kw-2">mut</span> <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Account</span>,
-    <span class="ident">accounts</span>: <span class="ident">AccountStore</span>,
+    <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Account</span>,
     <span class="ident">address_index</span>: <span class="ident">usize</span>,
     <span class="ident">gap_limit</span>: <span class="ident">usize</span>,
-    <span class="ident">steps</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AccountSynchronizeStep</span><span class="op">&gt;</span>,
+    <span class="ident">steps</span>: <span class="kw-2">&amp;</span>[<span class="ident">AccountSynchronizeStep</span>],
     <span class="ident">options</span>: <span class="ident">AccountOptions</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SyncedAccountData</span><span class="op">&gt;</span> {
     <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(
         <span class="string">&quot;[SYNC] syncing with address_index = {}, gap_limit = {}&quot;</span>,
         <span class="ident">address_index</span>,
         <span class="ident">gap_limit</span>
     );
-    <span class="kw">let</span> (<span class="ident">found_addresses</span>, <span class="ident">found_messages</span>) <span class="op">=</span> <span class="kw">if</span> <span class="ident">steps</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">AccountSynchronizeStep</span>::<span class="ident">SyncAddresses</span>) {
+    <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">found_addresses</span>, <span class="ident">found_messages</span>) <span class="op">=</span> <span class="kw">if</span> <span class="ident">steps</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">AccountSynchronizeStep</span>::<span class="ident">SyncAddresses</span>) {
         <span class="ident">sync_addresses</span>(<span class="kw-2">&amp;</span><span class="ident">account</span>, <span class="ident">address_index</span>, <span class="ident">gap_limit</span>, <span class="ident">options</span>).<span class="kw">await</span><span class="question-mark">?</span>
     } <span class="kw">else</span> {
         (<span class="ident">Vec</span>::<span class="ident">new</span>(), <span class="ident">Vec</span>::<span class="ident">new</span>())
     };
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_messages</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
-    <span class="kw">for</span> (<span class="ident">found_message_id</span>, <span class="ident">confirmed</span>, <span class="ident">found_message</span>) <span class="kw">in</span> <span class="ident">found_messages</span> {
+    <span class="kw">for</span> <span class="ident">found_message</span> <span class="kw">in</span> <span class="ident">found_messages</span> {
         <span class="kw">if</span> <span class="op">!</span><span class="ident">account</span>
             .<span class="ident">messages</span>()
             .<span class="ident">iter</span>()
-            .<span class="ident">any</span>(<span class="op">|</span><span class="ident">message</span><span class="op">|</span> <span class="ident">message</span>.<span class="ident">id</span>() <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">found_message_id</span> <span class="op">&amp;&amp;</span> <span class="ident">message</span>.<span class="ident">confirmed</span>() <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">confirmed</span>)
+            .<span class="ident">any</span>(<span class="op">|</span><span class="ident">message</span><span class="op">|</span> <span class="ident">message</span>.<span class="ident">id</span>() <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">found_message</span>.<span class="ident">id</span> <span class="op">&amp;&amp;</span> <span class="ident">message</span>.<span class="ident">confirmed</span>() <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">found_message</span>.<span class="ident">confirmed</span>)
         {
-            <span class="ident">new_messages</span>.<span class="ident">push</span>((<span class="ident">found_message_id</span>, <span class="ident">confirmed</span>, <span class="ident">found_message</span>));
+            <span class="ident">new_messages</span>.<span class="ident">push</span>(<span class="ident">found_message</span>);
         }
     }
 
     <span class="kw">if</span> <span class="ident">steps</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">AccountSynchronizeStep</span>::<span class="ident">SyncMessages</span>) {
-        <span class="kw">let</span> <span class="ident">synced_messages</span> <span class="op">=</span> <span class="ident">sync_messages</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">account</span>, <span class="kw-2">&amp;</span><span class="ident">found_addresses</span>, <span class="ident">options</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let</span> (<span class="ident">synced_addresses</span>, <span class="ident">synced_messages</span>) <span class="op">=</span> <span class="ident">sync_messages</span>(<span class="kw-2">&amp;</span><span class="ident">account</span>, <span class="kw-2">&amp;</span><span class="ident">found_addresses</span>, <span class="ident">options</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="ident">found_addresses</span>.<span class="ident">extend</span>(<span class="ident">synced_addresses</span>);
         <span class="ident">new_messages</span>.<span class="ident">extend</span>(<span class="ident">synced_messages</span>.<span class="ident">into_iter</span>());
     }
 
@@ -2329,41 +2398,11 @@
         }
         <span class="ident">previous_address_is_unused</span> <span class="op">=</span> <span class="ident">address_is_unused</span>;
     }
-    <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;[SYNC] new addresses: {:#?}&quot;</span>, <span class="ident">addresses_to_save</span>);
 
-    <span class="kw">let</span> <span class="ident">is_empty</span> <span class="op">=</span> <span class="ident">new_messages</span>.<span class="ident">is_empty</span>() <span class="op">&amp;&amp;</span> <span class="ident">addresses_to_save</span>.<span class="ident">iter</span>().<span class="ident">all</span>(<span class="op">|</span><span class="ident">address</span><span class="op">|</span> <span class="ident">address</span>.<span class="ident">outputs</span>().<span class="ident">is_empty</span>());
-
-    <span class="ident">account</span>.<span class="ident">append_addresses</span>(<span class="ident">addresses_to_save</span>);
-
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tasks</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
-    <span class="kw">for</span> (<span class="ident">id</span>, <span class="ident">confirmed</span>, <span class="ident">message</span>) <span class="kw">in</span> <span class="ident">new_messages</span> {
-        <span class="kw">let</span> <span class="ident">client_options</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">client_options</span>().<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">account_id</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">id</span>().<span class="ident">to_string</span>();
-        <span class="kw">let</span> <span class="ident">account_addresses</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">addresses</span>().<span class="ident">to_vec</span>();
-        <span class="kw">let</span> <span class="ident">accounts</span> <span class="op">=</span> <span class="ident">accounts</span>.<span class="ident">clone</span>();
-        <span class="ident">tasks</span>.<span class="ident">push</span>(<span class="kw">async</span> <span class="kw">move</span> {
-            <span class="ident">tokio</span>::<span class="ident">spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
-                <span class="ident">Message</span>::<span class="ident">from_iota_message</span>(<span class="ident">id</span>, <span class="ident">message</span>, <span class="ident">accounts</span>, <span class="kw-2">&amp;</span><span class="ident">account_id</span>, <span class="kw-2">&amp;</span><span class="ident">account_addresses</span>, <span class="kw-2">&amp;</span><span class="ident">client_options</span>)
-                    .<span class="ident">with_confirmed</span>(<span class="ident">confirmed</span>)
-                    .<span class="ident">finish</span>()
-                    .<span class="kw">await</span>
-            })
-            .<span class="kw">await</span>
-        });
-    }
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">parsed_messages</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
-    <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">try_join_all</span>(<span class="ident">tasks</span>)
-        .<span class="kw">await</span>
-        .<span class="ident">expect</span>(<span class="string">&quot;failed to parse messages&quot;</span>)
-    {
-        <span class="ident">parsed_messages</span>.<span class="ident">push</span>(<span class="ident">message</span><span class="question-mark">?</span>);
-    }
-    <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;[SYNC] new messages: {:#?}&quot;</span>, <span class="ident">parsed_messages</span>);
-    <span class="ident">account</span>.<span class="ident">append_messages</span>(<span class="ident">parsed_messages</span>);
-
-    <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;[SYNC] is empty: {}&quot;</span>, <span class="ident">is_empty</span>);
-
-    <span class="prelude-val">Ok</span>(<span class="ident">is_empty</span>)
+    <span class="prelude-val">Ok</span>(<span class="ident">SyncedAccountData</span> {
+        <span class="ident">messages</span>: <span class="ident">new_messages</span>,
+        <span class="ident">addresses</span>: <span class="ident">addresses_to_save</span>,
+    })
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>)]</span>
@@ -2392,7 +2431,52 @@
     <span class="ident">gap_limit</span>: <span class="ident">usize</span>,
     <span class="ident">skip_persistence</span>: <span class="ident">bool</span>,
     <span class="ident">steps</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AccountSynchronizeStep</span><span class="op">&gt;</span>,
-    <span class="ident">emit_events</span>: <span class="ident">bool</span>,
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">SyncedAccountData</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">messages</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SyncedMessage</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">addresses</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">SyncedAccountData</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">parse_messages</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">accounts</span>: <span class="ident">AccountStore</span>,
+        <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Account</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tasks</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+        <span class="kw">for</span> <span class="ident">new_message</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">messages</span>.<span class="ident">to_vec</span>() {
+            <span class="kw">let</span> <span class="ident">client_options</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">client_options</span>().<span class="ident">clone</span>();
+            <span class="kw">let</span> <span class="ident">account_id</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">id</span>().<span class="ident">to_string</span>();
+            <span class="kw">let</span> <span class="ident">account_addresses</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">addresses</span>().<span class="ident">to_vec</span>();
+            <span class="kw">let</span> <span class="ident">accounts</span> <span class="op">=</span> <span class="ident">accounts</span>.<span class="ident">clone</span>();
+            <span class="ident">tasks</span>.<span class="ident">push</span>(<span class="kw">async</span> <span class="kw">move</span> {
+                <span class="ident">tokio</span>::<span class="ident">spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
+                    <span class="ident">Message</span>::<span class="ident">from_iota_message</span>(
+                        <span class="ident">new_message</span>.<span class="ident">id</span>,
+                        <span class="ident">new_message</span>.<span class="ident">inner</span>,
+                        <span class="ident">accounts</span>,
+                        <span class="kw-2">&amp;</span><span class="ident">account_id</span>,
+                        <span class="kw-2">&amp;</span><span class="ident">account_addresses</span>,
+                        <span class="kw-2">&amp;</span><span class="ident">client_options</span>,
+                    )
+                    .<span class="ident">with_confirmed</span>(<span class="ident">new_message</span>.<span class="ident">confirmed</span>)
+                    .<span class="ident">finish</span>()
+                    .<span class="kw">await</span>
+                })
+                .<span class="kw">await</span>
+            });
+        }
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">parsed_messages</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+        <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="ident">futures</span>::<span class="ident">future</span>::<span class="ident">try_join_all</span>(<span class="ident">tasks</span>)
+            .<span class="kw">await</span>
+            .<span class="ident">expect</span>(<span class="string">&quot;failed to parse messages&quot;</span>)
+        {
+            <span class="ident">parsed_messages</span>.<span class="ident">push</span>(<span class="ident">message</span><span class="question-mark">?</span>);
+        }
+        <span class="prelude-val">Ok</span>(<span class="ident">parsed_messages</span>)
+    }
 }
 
 <span class="kw">impl</span> <span class="ident">AccountSynchronizer</span> {
@@ -2409,7 +2493,6 @@
                 <span class="ident">AccountSynchronizeStep</span>::<span class="ident">SyncAddresses</span>,
                 <span class="ident">AccountSynchronizeStep</span>::<span class="ident">SyncMessages</span>,
             ],
-            <span class="ident">emit_events</span>: <span class="bool-val">true</span>,
         }
     }
 
@@ -2440,225 +2523,227 @@
         <span class="self">self</span>
     }
 
-    <span class="doccomment">/// Do not emit events and return them on the SyncedAccount object instead.</span>
-    <span class="doccomment">/// Useful on account discovery or polling.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">skip_events</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">emit_events</span> <span class="op">=</span> <span class="bool-val">false</span>;
-        <span class="self">self</span>
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_new_history</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SyncedAccountData</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">disable_mqtt</span>();
+        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">perform_sync</span>(
+            <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>,
+            <span class="self">self</span>.<span class="ident">address_index</span>,
+            <span class="self">self</span>.<span class="ident">gap_limit</span>,
+            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">steps</span>,
+            <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">account_options</span>,
+        )
+        .<span class="kw">await</span>;
+        <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">enable_mqtt</span>();
+        <span class="ident">res</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_events</span>(
+        <span class="ident">account_options</span>: <span class="ident">AccountOptions</span>,
+        <span class="ident">addresses_before_sync</span>: <span class="kw-2">&amp;</span>[(<span class="ident">String</span>, <span class="ident">u64</span>, <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">OutputId</span>, <span class="ident">AddressOutput</span><span class="op">&gt;</span>)],
+        <span class="ident">addresses</span>: <span class="kw-2">&amp;</span>[<span class="ident">Address</span>],
+        <span class="ident">new_messages</span>: <span class="kw-2">&amp;</span>[<span class="ident">Message</span>],
+        <span class="ident">confirmation_changed_messages</span>: <span class="kw-2">&amp;</span>[<span class="ident">Message</span>],
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SyncedAccountEvents</span><span class="op">&gt;</span> {
+        <span class="comment">// balance event</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">balance_change_events</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+        <span class="kw">for</span> <span class="ident">address_after_sync</span> <span class="kw">in</span> <span class="ident">addresses</span>.<span class="ident">iter</span>() {
+            <span class="kw">let</span> <span class="ident">address_bech32</span> <span class="op">=</span> <span class="ident">address_after_sync</span>.<span class="ident">address</span>().<span class="ident">to_bech32</span>();
+            <span class="kw">let</span> (<span class="ident">address_before_sync</span>, <span class="ident">before_sync_balance</span>, <span class="ident">before_sync_outputs</span>) <span class="op">=</span> <span class="ident">addresses_before_sync</span>
+                .<span class="ident">iter</span>()
+                .<span class="ident">find</span>(<span class="op">|</span>(<span class="ident">address</span>, <span class="kw">_</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">address_bech32</span> <span class="op">=</span><span class="op">=</span> <span class="ident">address</span>)
+                .<span class="ident">cloned</span>()
+                .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> (<span class="ident">address_bech32</span>, <span class="number">0</span>, <span class="ident">HashMap</span>::<span class="ident">new</span>()));
+            <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">address_after_sync</span>.<span class="ident">balance</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">before_sync_balance</span> {
+                <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(
+                    <span class="string">&quot;[SYNC] address {} balance changed from {} to {}&quot;</span>,
+                    <span class="ident">address_before_sync</span>,
+                    <span class="ident">before_sync_balance</span>,
+                    <span class="ident">address_after_sync</span>.<span class="ident">balance</span>()
+                );
+
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output_change_balance</span> <span class="op">=</span> <span class="number">0i64</span>;
+                <span class="comment">// we use this flag in case the new balance is 0</span>
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">emitted_event</span> <span class="op">=</span> <span class="bool-val">false</span>;
+                <span class="comment">// check new and updated outputs to find message ids</span>
+                <span class="comment">// note that this is unreliable if we&#39;re not syncing spent outputs,</span>
+                <span class="comment">// since not all information are collected.</span>
+                <span class="kw">if</span> <span class="ident">account_options</span>.<span class="ident">sync_spent_outputs</span> {
+                    <span class="kw">for</span> (<span class="ident">output_id</span>, <span class="ident">output</span>) <span class="kw">in</span> <span class="ident">address_after_sync</span>.<span class="ident">outputs</span>() {
+                        <span class="kw">if</span> <span class="op">!</span><span class="ident">before_sync_outputs</span>.<span class="ident">contains_key</span>(<span class="ident">output_id</span>) {
+                            <span class="kw">let</span> <span class="ident">balance_change</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">output</span>.<span class="ident">is_spent</span> {
+                                <span class="ident">BalanceChange</span>::<span class="ident">spent</span>(<span class="ident">output</span>.<span class="ident">amount</span>)
+                            } <span class="kw">else</span> {
+                                <span class="ident">BalanceChange</span>::<span class="ident">received</span>(<span class="ident">output</span>.<span class="ident">amount</span>)
+                            };
+                            <span class="kw">if</span> <span class="ident">output</span>.<span class="ident">is_spent</span> {
+                                <span class="ident">output_change_balance</span> <span class="op">-</span><span class="op">=</span> <span class="ident">output</span>.<span class="ident">amount</span> <span class="kw">as</span> <span class="ident">i64</span>;
+                            } <span class="kw">else</span> {
+                                <span class="ident">output_change_balance</span> <span class="op">+</span><span class="op">=</span> <span class="ident">output</span>.<span class="ident">amount</span> <span class="kw">as</span> <span class="ident">i64</span>;
+                            }
+                            <span class="ident">balance_change_events</span>.<span class="ident">push</span>(<span class="ident">BalanceChangeEventData</span> {
+                                <span class="ident">address</span>: <span class="ident">address_after_sync</span>.<span class="ident">address</span>().<span class="ident">clone</span>(),
+                                <span class="ident">balance_change</span>,
+                                <span class="ident">message_id</span>: <span class="prelude-val">Some</span>(<span class="ident">output</span>.<span class="ident">message_id</span>),
+                            });
+                            <span class="ident">emitted_event</span> <span class="op">=</span> <span class="bool-val">true</span>;
+                        }
+                    }
+                }
+
+                <span class="comment">// we can&#39;t guarantee we picked up all output changes since querying spent outputs is</span>
+                <span class="comment">// optional so we handle it here; if not all balance change has</span>
+                <span class="comment">// been emitted, we emit the remainder value with `None` as</span>
+                <span class="comment">// message_id</span>
+                <span class="kw">let</span> <span class="ident">balance_change</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">address_after_sync</span>.<span class="ident">balance</span>() <span class="kw">as</span> <span class="ident">i64</span> <span class="op">-</span> <span class="ident">before_sync_balance</span> <span class="kw">as</span> <span class="ident">i64</span>;
+                <span class="kw">if</span> <span class="op">!</span><span class="ident">emitted_event</span> <span class="op">|</span><span class="op">|</span> <span class="ident">output_change_balance</span> <span class="op">!</span><span class="op">=</span> <span class="ident">balance_change</span> {
+                    <span class="kw">let</span> <span class="ident">balance_change</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">balance_change</span> <span class="op">&gt;</span> <span class="number">0</span> {
+                        <span class="comment">// balance_change is positive; subtract the already emitted balance.</span>
+                        <span class="ident">BalanceChange</span>::<span class="ident">received</span>((<span class="ident">balance_change</span> <span class="op">-</span> <span class="ident">output_change_balance</span>) <span class="kw">as</span> <span class="ident">u64</span>)
+                    } <span class="kw">else</span> {
+                        <span class="comment">// balance_change is negative; get the absolute diff.</span>
+                        <span class="ident">BalanceChange</span>::<span class="ident">spent</span>((<span class="ident">balance_change</span> <span class="op">-</span> <span class="ident">output_change_balance</span>).<span class="ident">abs</span>() <span class="kw">as</span> <span class="ident">u64</span>)
+                    };
+                    <span class="ident">balance_change_events</span>.<span class="ident">push</span>(<span class="ident">BalanceChangeEventData</span> {
+                        <span class="ident">address</span>: <span class="ident">address_after_sync</span>.<span class="ident">address</span>().<span class="ident">clone</span>(),
+                        <span class="ident">balance_change</span>,
+                        <span class="ident">message_id</span>: <span class="prelude-val">None</span>,
+                    });
+                }
+            }
+        }
+
+        <span class="comment">// new messages event</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_transaction_events</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+        <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="ident">new_messages</span>.<span class="ident">iter</span>() {
+            <span class="ident">log</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;[SYNC] new message: {:?}&quot;</span>, <span class="ident">message</span>.<span class="ident">id</span>());
+            <span class="ident">new_transaction_events</span>.<span class="ident">push</span>(<span class="ident">message</span>.<span class="ident">clone</span>());
+        }
+
+        <span class="comment">// confirmation state change event</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">confirmation_change_events</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+        <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="ident">confirmation_changed_messages</span>.<span class="ident">iter</span>() {
+            <span class="ident">log</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;[SYNC] message confirmation state changed: {:?}&quot;</span>, <span class="ident">message</span>.<span class="ident">id</span>());
+            <span class="ident">confirmation_change_events</span>.<span class="ident">push</span>(<span class="ident">ConfirmationChangeEventData</span> {
+                <span class="ident">message</span>: <span class="ident">message</span>.<span class="ident">clone</span>(),
+                <span class="ident">confirmed</span>: <span class="ident">message</span>.<span class="ident">confirmed</span>().<span class="ident">unwrap_or</span>(<span class="bool-val">false</span>),
+            });
+        }
+
+        <span class="prelude-val">Ok</span>(<span class="ident">SyncedAccountEvents</span> {
+            <span class="ident">balance_change_events</span>,
+            <span class="ident">new_transaction_events</span>,
+            <span class="ident">confirmation_change_events</span>,
+        })
     }
 
     <span class="doccomment">/// Syncs account with the tangle.</span>
     <span class="doccomment">/// The account syncing process ensures that the latest metadata (balance, transactions)</span>
     <span class="doccomment">/// associated with an account is fetched from the tangle and is stored locally.</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">execute</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SyncedAccount</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">disable_mqtt</span>();
-
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account_to_sync</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">return_value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">perform_sync</span>(
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">account_to_sync</span>,
-            <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>(),
-            <span class="self">self</span>.<span class="ident">address_index</span>,
-            <span class="self">self</span>.<span class="ident">gap_limit</span>,
-            <span class="self">self</span>.<span class="ident">steps</span>,
-            <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">account_options</span>,
-        )
-        .<span class="kw">await</span>
-        {
-            <span class="prelude-val">Ok</span>(<span class="ident">is_empty</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account_ref</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">write</span>().<span class="kw">await</span>;
-                <span class="kw">let</span> <span class="ident">messages_before_sync</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">MessageId</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">account_ref</span>
-                    .<span class="ident">messages</span>()
+        <span class="kw">let</span> <span class="ident">return_value</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">get_new_history</span>().<span class="kw">await</span> {
+            <span class="prelude-val">Ok</span>(<span class="ident">data</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">disable_mqtt</span>();
+                <span class="kw">let</span> <span class="ident">is_empty</span> <span class="op">=</span> <span class="ident">data</span>
+                    .<span class="ident">addresses</span>
                     .<span class="ident">iter</span>()
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> (<span class="kw-2">*</span><span class="ident">m</span>.<span class="ident">id</span>(), <span class="kw-2">*</span><span class="ident">m</span>.<span class="ident">confirmed</span>()))
-                    .<span class="ident">collect</span>();
-                <span class="kw">let</span> <span class="ident">addresses_before_sync</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">u64</span>, <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">OutputId</span>, <span class="ident">AddressOutput</span><span class="op">&gt;</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">account_ref</span>
+                    .<span class="ident">all</span>(<span class="op">|</span><span class="ident">address</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">address</span>.<span class="ident">balance</span>() <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">address</span>.<span class="ident">outputs</span>().<span class="ident">is_empty</span>());
+                <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;[SYNC] is empty: {}&quot;</span>, <span class="ident">is_empty</span>);
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">write</span>().<span class="kw">await</span>;
+                <span class="kw">let</span> <span class="ident">messages_before_sync</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">MessageId</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>)<span class="op">&gt;</span> <span class="op">=</span>
+                    <span class="ident">account</span>.<span class="ident">messages</span>().<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> (<span class="kw-2">*</span><span class="ident">m</span>.<span class="ident">id</span>(), <span class="kw-2">*</span><span class="ident">m</span>.<span class="ident">confirmed</span>())).<span class="ident">collect</span>();
+                <span class="kw">let</span> <span class="ident">addresses_before_sync</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">u64</span>, <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">OutputId</span>, <span class="ident">AddressOutput</span><span class="op">&gt;</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">account</span>
                     .<span class="ident">addresses</span>()
                     .<span class="ident">iter</span>()
                     .<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> (<span class="ident">a</span>.<span class="ident">address</span>().<span class="ident">to_bech32</span>(), <span class="kw-2">*</span><span class="ident">a</span>.<span class="ident">balance</span>(), <span class="ident">a</span>.<span class="ident">outputs</span>().<span class="ident">clone</span>()))
                     .<span class="ident">collect</span>();
 
+                <span class="kw">let</span> <span class="ident">parsed_messages</span> <span class="op">=</span> <span class="ident">data</span>
+                    .<span class="ident">parse_messages</span>(<span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident">account</span>)
+                    .<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;[SYNC] new messages: {:#?}&quot;</span>, <span class="ident">parsed_messages</span>);
+                <span class="kw">let</span> <span class="ident">new_addresses</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">addresses</span>;
+
                 <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">skip_persistence</span> {
-                    <span class="ident">account_ref</span>
-                        .<span class="ident">do_mut</span>(<span class="op">|</span><span class="ident">account</span><span class="op">|</span> {
-                            <span class="kw">for</span> <span class="ident">address</span> <span class="kw">in</span> <span class="ident">account_to_sync</span>.<span class="ident">addresses</span>() {
-                                <span class="kw">match</span> <span class="ident">account</span>.<span class="ident">addresses</span>().<span class="ident">iter</span>().<span class="ident">position</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span> <span class="op">=</span><span class="op">=</span> <span class="ident">address</span>) {
-                                    <span class="prelude-val">Some</span>(<span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                                        <span class="ident">account</span>.<span class="ident">addresses_mut</span>()[<span class="ident">index</span>] <span class="op">=</span> <span class="ident">address</span>.<span class="ident">clone</span>();
-                                    }
-                                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                                        <span class="ident">account</span>.<span class="ident">addresses_mut</span>().<span class="ident">push</span>(<span class="ident">address</span>.<span class="ident">clone</span>());
-                                    }
-                                }
+                    <span class="kw">for</span> <span class="ident">address</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">new_addresses</span> {
+                        <span class="kw">match</span> <span class="ident">account</span>.<span class="ident">addresses</span>().<span class="ident">iter</span>().<span class="ident">position</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span> <span class="op">=</span><span class="op">=</span> <span class="ident">address</span>) {
+                            <span class="prelude-val">Some</span>(<span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="ident">account</span>.<span class="ident">addresses_mut</span>()[<span class="ident">index</span>] <span class="op">=</span> <span class="ident">address</span>.<span class="ident">clone</span>();
                             }
-                            <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="ident">account_to_sync</span>.<span class="ident">messages</span>() {
-                                <span class="kw">match</span> <span class="ident">account</span>.<span class="ident">messages</span>().<span class="ident">iter</span>().<span class="ident">position</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">m</span> <span class="op">=</span><span class="op">=</span> <span class="ident">message</span>) {
-                                    <span class="prelude-val">Some</span>(<span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                                        <span class="ident">account</span>.<span class="ident">messages_mut</span>()[<span class="ident">index</span>] <span class="op">=</span> <span class="ident">message</span>.<span class="ident">clone</span>();
-                                    }
-                                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                                        <span class="ident">account</span>.<span class="ident">messages_mut</span>().<span class="ident">push</span>(<span class="ident">message</span>.<span class="ident">clone</span>());
-                                    }
-                                }
+                            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="ident">account</span>.<span class="ident">addresses_mut</span>().<span class="ident">push</span>(<span class="ident">address</span>.<span class="ident">clone</span>());
                             }
-                            <span class="ident">account</span>.<span class="ident">set_last_synced_at</span>(<span class="prelude-val">Some</span>(<span class="ident">chrono</span>::<span class="ident">Local</span>::<span class="ident">now</span>()));
-                            <span class="prelude-val">Ok</span>(())
-                        })
-                        .<span class="kw">await</span><span class="question-mark">?</span>;
+                        }
+                    }
+                    <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">parsed_messages</span> {
+                        <span class="kw">match</span> <span class="ident">account</span>.<span class="ident">messages</span>().<span class="ident">iter</span>().<span class="ident">position</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">m</span> <span class="op">=</span><span class="op">=</span> <span class="ident">message</span>) {
+                            <span class="prelude-val">Some</span>(<span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="ident">account</span>.<span class="ident">messages_mut</span>()[<span class="ident">index</span>] <span class="op">=</span> <span class="ident">message</span>.<span class="ident">clone</span>();
+                            }
+                            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="ident">account</span>.<span class="ident">messages_mut</span>().<span class="ident">push</span>(<span class="ident">message</span>.<span class="ident">clone</span>());
+                            }
+                        }
+                    }
+                    <span class="ident">account</span>.<span class="ident">set_last_synced_at</span>(<span class="prelude-val">Some</span>(<span class="ident">chrono</span>::<span class="ident">Local</span>::<span class="ident">now</span>()));
+                    <span class="ident">account</span>.<span class="ident">save</span>().<span class="kw">await</span><span class="question-mark">?</span>;
                 }
 
-                <span class="kw">let</span> <span class="ident">new_messages</span> <span class="op">=</span> <span class="ident">account_ref</span>
-                    .<span class="ident">messages</span>()
-                    .<span class="ident">iter</span>()
-                    .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="op">!</span><span class="ident">messages_before_sync</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span>(<span class="ident">id</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">m</span>.<span class="ident">id</span>()))
-                    .<span class="ident">cloned</span>()
-                    .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-                <span class="kw">let</span> <span class="ident">confirmation_changed_messages</span> <span class="op">=</span> <span class="ident">account_ref</span>
-                    .<span class="ident">messages</span>()
-                    .<span class="ident">iter</span>()
-                    .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> {
-                        <span class="ident">messages_before_sync</span>
-                            .<span class="ident">iter</span>()
-                            .<span class="ident">any</span>(<span class="op">|</span>(<span class="ident">id</span>, <span class="ident">confirmed</span>)<span class="op">|</span> <span class="ident">id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">m</span>.<span class="ident">id</span>() <span class="op">&amp;&amp;</span> <span class="ident">confirmed</span> <span class="op">!</span><span class="op">=</span> <span class="ident">m</span>.<span class="ident">confirmed</span>())
-                    })
-                    .<span class="ident">cloned</span>()
-                    .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-
-                <span class="comment">// balance event</span>
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">skipped_balance_change_events</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
-                <span class="kw">for</span> <span class="ident">address_after_sync</span> <span class="kw">in</span> <span class="ident">account_ref</span>.<span class="ident">addresses</span>() {
-                    <span class="kw">let</span> <span class="ident">address_bech32</span> <span class="op">=</span> <span class="ident">address_after_sync</span>.<span class="ident">address</span>().<span class="ident">to_bech32</span>();
-                    <span class="kw">let</span> (<span class="ident">address_before_sync</span>, <span class="ident">before_sync_balance</span>, <span class="ident">before_sync_outputs</span>) <span class="op">=</span> <span class="ident">addresses_before_sync</span>
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_messages</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">confirmation_changed_messages</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+                <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="ident">parsed_messages</span> {
+                    <span class="kw">if</span> <span class="op">!</span><span class="ident">messages_before_sync</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span>(<span class="ident">id</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">message</span>.<span class="ident">id</span>()) {
+                        <span class="ident">new_messages</span>.<span class="ident">push</span>(<span class="ident">message</span>.<span class="ident">clone</span>());
+                    }
+                    <span class="kw">if</span> <span class="ident">messages_before_sync</span>
                         .<span class="ident">iter</span>()
-                        .<span class="ident">find</span>(<span class="op">|</span>(<span class="ident">address</span>, <span class="kw">_</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">address_bech32</span> <span class="op">=</span><span class="op">=</span> <span class="ident">address</span>)
-                        .<span class="ident">cloned</span>()
-                        .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> (<span class="ident">address_bech32</span>, <span class="number">0</span>, <span class="ident">HashMap</span>::<span class="ident">new</span>()));
-                    <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">address_after_sync</span>.<span class="ident">balance</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">before_sync_balance</span> {
-                        <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(
-                            <span class="string">&quot;[SYNC] address {} balance changed from {} to {}&quot;</span>,
-                            <span class="ident">address_before_sync</span>,
-                            <span class="ident">before_sync_balance</span>,
-                            <span class="ident">address_after_sync</span>.<span class="ident">balance</span>()
-                        );
-
-                        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output_change_balance</span> <span class="op">=</span> <span class="number">0i64</span>;
-                        <span class="comment">// we use this flag in case the new balance is 0</span>
-                        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">emitted_event</span> <span class="op">=</span> <span class="bool-val">false</span>;
-                        <span class="comment">// check new and updated outputs to find message ids</span>
-                        <span class="comment">// note that this is unreliable if we&#39;re not syncing spent outputs,</span>
-                        <span class="comment">// since not all information are collected.</span>
-                        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">account_options</span>.<span class="ident">sync_spent_outputs</span> {
-                            <span class="kw">for</span> (<span class="ident">output_id</span>, <span class="ident">output</span>) <span class="kw">in</span> <span class="ident">address_after_sync</span>.<span class="ident">outputs</span>() {
-                                <span class="kw">if</span> <span class="op">!</span><span class="ident">before_sync_outputs</span>.<span class="ident">contains_key</span>(<span class="ident">output_id</span>) {
-                                    <span class="kw">let</span> <span class="ident">balance_change</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">output</span>.<span class="ident">is_spent</span> {
-                                        <span class="ident">BalanceChange</span>::<span class="ident">spent</span>(<span class="ident">output</span>.<span class="ident">amount</span>)
-                                    } <span class="kw">else</span> {
-                                        <span class="ident">BalanceChange</span>::<span class="ident">received</span>(<span class="ident">output</span>.<span class="ident">amount</span>)
-                                    };
-                                    <span class="kw">if</span> <span class="self">self</span>.<span class="ident">emit_events</span> {
-                                        <span class="ident">emit_balance_change</span>(
-                                            <span class="kw-2">&amp;</span><span class="ident">account_ref</span>,
-                                            <span class="ident">address_after_sync</span>.<span class="ident">address</span>(),
-                                            <span class="prelude-val">Some</span>(<span class="ident">output</span>.<span class="ident">message_id</span>),
-                                            <span class="ident">balance_change</span>,
-                                            <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">account_options</span>.<span class="ident">persist_events</span>,
-                                        )
-                                        .<span class="kw">await</span><span class="question-mark">?</span>;
-                                        <span class="kw">if</span> <span class="ident">output</span>.<span class="ident">is_spent</span> {
-                                            <span class="ident">output_change_balance</span> <span class="op">-</span><span class="op">=</span> <span class="ident">output</span>.<span class="ident">amount</span> <span class="kw">as</span> <span class="ident">i64</span>;
-                                        } <span class="kw">else</span> {
-                                            <span class="ident">output_change_balance</span> <span class="op">+</span><span class="op">=</span> <span class="ident">output</span>.<span class="ident">amount</span> <span class="kw">as</span> <span class="ident">i64</span>;
-                                        }
-                                    } <span class="kw">else</span> {
-                                        <span class="ident">skipped_balance_change_events</span>.<span class="ident">push</span>(<span class="ident">BalanceChangeEventData</span> {
-                                            <span class="ident">address</span>: <span class="ident">address_after_sync</span>.<span class="ident">address</span>().<span class="ident">clone</span>(),
-                                            <span class="ident">balance_change</span>,
-                                            <span class="ident">message_id</span>: <span class="prelude-val">Some</span>(<span class="ident">output</span>.<span class="ident">message_id</span>),
-                                        });
-                                    }
-                                    <span class="ident">emitted_event</span> <span class="op">=</span> <span class="bool-val">true</span>;
-                                }
-                            }
-                        }
-
-                        <span class="comment">// we can&#39;t guarantee we picked up all output changes since querying spent outputs is</span>
-                        <span class="comment">// optional so we handle it here; if not all balance change has</span>
-                        <span class="comment">// been emitted, we emit the remainder value with `None` as</span>
-                        <span class="comment">// message_id</span>
-                        <span class="kw">let</span> <span class="ident">balance_change</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">address_after_sync</span>.<span class="ident">balance</span>() <span class="kw">as</span> <span class="ident">i64</span> <span class="op">-</span> <span class="ident">before_sync_balance</span> <span class="kw">as</span> <span class="ident">i64</span>;
-                        <span class="kw">if</span> <span class="op">!</span><span class="ident">emitted_event</span> <span class="op">|</span><span class="op">|</span> <span class="ident">output_change_balance</span> <span class="op">!</span><span class="op">=</span> <span class="ident">balance_change</span> {
-                            <span class="kw">let</span> <span class="ident">balance_change</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">balance_change</span> <span class="op">&gt;</span> <span class="number">0</span> {
-                                <span class="comment">// balance_change is positive; subtract the already emitted balance.</span>
-                                <span class="ident">BalanceChange</span>::<span class="ident">received</span>((<span class="ident">balance_change</span> <span class="op">-</span> <span class="ident">output_change_balance</span>) <span class="kw">as</span> <span class="ident">u64</span>)
-                            } <span class="kw">else</span> {
-                                <span class="comment">// balance_change is negative; get the absolute diff.</span>
-                                <span class="ident">BalanceChange</span>::<span class="ident">spent</span>((<span class="ident">balance_change</span> <span class="op">-</span> <span class="ident">output_change_balance</span>).<span class="ident">abs</span>() <span class="kw">as</span> <span class="ident">u64</span>)
-                            };
-                            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">emit_events</span> {
-                                <span class="ident">emit_balance_change</span>(
-                                    <span class="kw-2">&amp;</span><span class="ident">account_ref</span>,
-                                    <span class="ident">address_after_sync</span>.<span class="ident">address</span>(),
-                                    <span class="prelude-val">None</span>,
-                                    <span class="ident">balance_change</span>,
-                                    <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">account_options</span>.<span class="ident">persist_events</span>,
-                                )
-                                .<span class="kw">await</span><span class="question-mark">?</span>;
-                            } <span class="kw">else</span> {
-                                <span class="ident">skipped_balance_change_events</span>.<span class="ident">push</span>(<span class="ident">BalanceChangeEventData</span> {
-                                    <span class="ident">address</span>: <span class="ident">address_after_sync</span>.<span class="ident">address</span>().<span class="ident">clone</span>(),
-                                    <span class="ident">balance_change</span>,
-                                    <span class="ident">message_id</span>: <span class="prelude-val">None</span>,
-                                });
-                            }
-                        }
+                        .<span class="ident">any</span>(<span class="op">|</span>(<span class="ident">id</span>, <span class="ident">confirmed</span>)<span class="op">|</span> <span class="ident">id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">message</span>.<span class="ident">id</span>() <span class="op">&amp;&amp;</span> <span class="ident">confirmed</span> <span class="op">!</span><span class="op">=</span> <span class="ident">message</span>.<span class="ident">confirmed</span>())
+                    {
+                        <span class="ident">confirmation_changed_messages</span>.<span class="ident">push</span>(<span class="ident">message</span>);
                     }
                 }
 
-                <span class="comment">// new messages event</span>
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">skipped_new_transaction_events</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
-                <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">new_messages</span> {
-                    <span class="ident">log</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;[SYNC] new message: {:?}&quot;</span>, <span class="ident">message</span>.<span class="ident">id</span>());
-                    <span class="kw">if</span> <span class="self">self</span>.<span class="ident">emit_events</span> {
-                        <span class="ident">emit_transaction_event</span>(
-                            <span class="ident">TransactionEventType</span>::<span class="ident">NewTransaction</span>,
-                            <span class="kw-2">&amp;</span><span class="ident">account_ref</span>,
-                            <span class="ident">message</span>,
-                            <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">account_options</span>.<span class="ident">persist_events</span>,
-                        )
-                        .<span class="kw">await</span><span class="question-mark">?</span>;
-                    } <span class="kw">else</span> {
-                        <span class="ident">skipped_new_transaction_events</span>.<span class="ident">push</span>(<span class="ident">message</span>.<span class="ident">clone</span>());
-                    }
+                <span class="kw">let</span> <span class="ident">persist_events</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">account_options</span>.<span class="ident">persist_events</span>;
+                <span class="kw">let</span> <span class="ident">events</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">get_events</span>(
+                    <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">account_options</span>,
+                    <span class="kw-2">&amp;</span><span class="ident">addresses_before_sync</span>,
+                    <span class="ident">account</span>.<span class="ident">addresses</span>(),
+                    <span class="kw-2">&amp;</span><span class="ident">new_messages</span>,
+                    <span class="kw-2">&amp;</span><span class="ident">confirmation_changed_messages</span>,
+                )
+                .<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="kw">for</span> <span class="ident">balance_change_event</span> <span class="kw">in</span> <span class="ident">events</span>.<span class="ident">balance_change_events</span> {
+                    <span class="ident">emit_balance_change</span>(
+                        <span class="kw-2">&amp;</span><span class="ident">account</span>,
+                        <span class="kw-2">&amp;</span><span class="ident">balance_change_event</span>.<span class="ident">address</span>,
+                        <span class="ident">balance_change_event</span>.<span class="ident">message_id</span>,
+                        <span class="ident">balance_change_event</span>.<span class="ident">balance_change</span>,
+                        <span class="ident">persist_events</span>,
+                    )
+                    .<span class="kw">await</span><span class="question-mark">?</span>;
                 }
-
-                <span class="comment">// confirmation state change event</span>
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">skipped_confirmation_change_events</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
-                <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">confirmation_changed_messages</span> {
-                    <span class="ident">log</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;[POLLING] message confirmation state changed: {:?}&quot;</span>, <span class="ident">message</span>.<span class="ident">id</span>());
-                    <span class="kw">if</span> <span class="self">self</span>.<span class="ident">emit_events</span> {
-                        <span class="ident">emit_confirmation_state_change</span>(
-                            <span class="kw-2">&amp;</span><span class="ident">account_ref</span>,
-                            <span class="ident">message</span>.<span class="ident">clone</span>(),
-                            <span class="ident">message</span>.<span class="ident">confirmed</span>().<span class="ident">unwrap_or</span>(<span class="bool-val">false</span>),
-                            <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">account_options</span>.<span class="ident">persist_events</span>,
-                        )
+                <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="ident">events</span>.<span class="ident">new_transaction_events</span> {
+                    <span class="ident">emit_transaction_event</span>(<span class="ident">TransactionEventType</span>::<span class="ident">NewTransaction</span>, <span class="kw-2">&amp;</span><span class="ident">account</span>, <span class="ident">message</span>, <span class="ident">persist_events</span>)
                         .<span class="kw">await</span><span class="question-mark">?</span>;
-                    } <span class="kw">else</span> {
-                        <span class="ident">skipped_confirmation_change_events</span>.<span class="ident">push</span>(<span class="ident">ConfirmationChangeEventData</span> {
-                            <span class="ident">message</span>: <span class="ident">message</span>.<span class="ident">clone</span>(),
-                            <span class="ident">confirmed</span>: <span class="ident">message</span>.<span class="ident">confirmed</span>().<span class="ident">unwrap_or</span>(<span class="bool-val">false</span>),
-                        });
-                    }
+                }
+                <span class="kw">for</span> <span class="ident">confirmation_change_event</span> <span class="kw">in</span> <span class="ident">events</span>.<span class="ident">confirmation_change_events</span> {
+                    <span class="ident">emit_confirmation_state_change</span>(
+                        <span class="kw-2">&amp;</span><span class="ident">account</span>,
+                        <span class="ident">confirmation_change_event</span>.<span class="ident">message</span>,
+                        <span class="ident">confirmation_change_event</span>.<span class="ident">confirmed</span>,
+                        <span class="ident">persist_events</span>,
+                    )
+                    .<span class="kw">await</span><span class="question-mark">?</span>;
                 }
 
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">updated_messages</span> <span class="op">=</span> <span class="ident">new_messages</span>;
                 <span class="ident">updated_messages</span>.<span class="ident">extend</span>(<span class="ident">confirmation_changed_messages</span>);
                 <span class="kw">let</span> <span class="ident">synced_account</span> <span class="op">=</span> <span class="ident">SyncedAccount</span> {
-                    <span class="ident">id</span>: <span class="ident">account_ref</span>.<span class="ident">id</span>().<span class="ident">to_string</span>(),
-                    <span class="ident">index</span>: <span class="kw-2">*</span><span class="ident">account_ref</span>.<span class="ident">index</span>(),
+                    <span class="ident">id</span>: <span class="ident">account</span>.<span class="ident">id</span>().<span class="ident">to_string</span>(),
+                    <span class="ident">index</span>: <span class="kw-2">*</span><span class="ident">account</span>.<span class="ident">index</span>(),
                     <span class="ident">account_handle</span>: <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">clone</span>(),
-                    <span class="ident">deposit_address</span>: <span class="ident">account_ref</span>.<span class="ident">latest_address</span>().<span class="ident">clone</span>(),
+                    <span class="ident">deposit_address</span>: <span class="ident">account</span>.<span class="ident">latest_address</span>().<span class="ident">clone</span>(),
                     <span class="ident">is_empty</span>,
-                    <span class="ident">addresses</span>: <span class="ident">account_ref</span>
+                    <span class="ident">addresses</span>: <span class="ident">account</span>
                         .<span class="ident">addresses</span>()
                         .<span class="ident">iter</span>()
                         .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> {
@@ -2673,9 +2758,6 @@
                         .<span class="ident">cloned</span>()
                         .<span class="ident">collect</span>(),
                     <span class="ident">messages</span>: <span class="ident">updated_messages</span>,
-                    <span class="ident">skipped_balance_change_events</span>,
-                    <span class="ident">skipped_new_transaction_events</span>,
-                    <span class="ident">skipped_confirmation_change_events</span>,
                 };
                 <span class="prelude-val">Ok</span>(<span class="ident">synced_account</span>)
             }
@@ -2709,19 +2791,17 @@
     <span class="ident">is_empty</span>: <span class="ident">bool</span>,
     <span class="doccomment">/// The newly found and updated account messages.</span>
     <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">get</span> <span class="op">=</span> <span class="string">&quot;pub&quot;</span>)]</span>
-    <span class="ident">messages</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">messages</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The newly generated and updated account addresses.</span>
     <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">get</span> <span class="op">=</span> <span class="string">&quot;pub&quot;</span>)]</span>
-    <span class="ident">addresses</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">get</span> <span class="op">=</span> <span class="string">&quot;pub(crate)&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">skip</span>)]</span>
-    <span class="ident">skipped_balance_change_events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BalanceChangeEventData</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">get</span> <span class="op">=</span> <span class="string">&quot;pub(crate)&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">skip</span>)]</span>
-    <span class="ident">skipped_new_transaction_events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">get</span> <span class="op">=</span> <span class="string">&quot;pub(crate)&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">skip</span>)]</span>
-    <span class="ident">skipped_confirmation_change_events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ConfirmationChangeEventData</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">addresses</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Getters</span>)]</span>
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">SyncedAccountEvents</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">balance_change_events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BalanceChangeEventData</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">new_transaction_events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">confirmation_change_events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ConfirmationChangeEventData</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">SyncedAccount</span> {
@@ -2739,9 +2819,6 @@
             <span class="ident">is_empty</span>: <span class="bool-val">false</span>,
             <span class="ident">messages</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
             <span class="ident">addresses</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">skipped_balance_change_events</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">skipped_new_transaction_events</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">skipped_confirmation_change_events</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
         }
     }
 
@@ -3571,9 +3648,6 @@
             <span class="ident">is_empty</span>: <span class="bool-val">false</span>,
             <span class="ident">messages</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
             <span class="ident">addresses</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">skipped_balance_change_events</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">skipped_new_transaction_events</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">skipped_confirmation_change_events</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
         };
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">synced</span>
             .<span class="ident">transfer</span>(

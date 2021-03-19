@@ -1206,14 +1206,14 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">emit_transaction_event</span>(
     <span class="ident">event_type</span>: <span class="ident">TransactionEventType</span>,
     <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Account</span>,
-    <span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">Message</span>,
+    <span class="ident">message</span>: <span class="ident">Message</span>,
     <span class="ident">persist</span>: <span class="ident">bool</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">listeners</span> <span class="op">=</span> <span class="ident">transaction_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">TransactionEvent</span> {
         <span class="ident">indexation_id</span>: <span class="ident">generate_indexation_id</span>(),
         <span class="ident">account_id</span>: <span class="ident">account</span>.<span class="ident">id</span>().<span class="ident">to_string</span>(),
-        <span class="ident">message</span>: <span class="ident">message</span>.<span class="ident">clone</span>(),
+        <span class="ident">message</span>,
     };
 
     <span class="kw">if</span> <span class="ident">persist</span> {
@@ -1548,7 +1548,7 @@
                 })
                 .<span class="kw">await</span>;
 
-                <span class="ident">emit_transaction_event</span>(<span class="ident">TransactionEventType</span>::<span class="ident">NewTransaction</span>, <span class="kw-2">&amp;</span><span class="ident">account</span>, <span class="kw-2">&amp;</span><span class="ident">message</span>, <span class="bool-val">true</span>)
+                <span class="ident">emit_transaction_event</span>(<span class="ident">TransactionEventType</span>::<span class="ident">NewTransaction</span>, <span class="kw-2">&amp;</span><span class="ident">account</span>, <span class="ident">message</span>, <span class="bool-val">true</span>)
                     .<span class="kw">await</span>
                     .<span class="ident">unwrap</span>();
             });
@@ -1594,7 +1594,7 @@
                 })
                 .<span class="kw">await</span>;
 
-                <span class="ident">emit_transaction_event</span>(<span class="ident">TransactionEventType</span>::<span class="ident">Broadcast</span>, <span class="kw-2">&amp;</span><span class="ident">account</span>, <span class="kw-2">&amp;</span><span class="ident">message</span>, <span class="bool-val">true</span>)
+                <span class="ident">emit_transaction_event</span>(<span class="ident">TransactionEventType</span>::<span class="ident">Broadcast</span>, <span class="kw-2">&amp;</span><span class="ident">account</span>, <span class="ident">message</span>, <span class="bool-val">true</span>)
                     .<span class="kw">await</span>
                     .<span class="ident">unwrap</span>();
             });
