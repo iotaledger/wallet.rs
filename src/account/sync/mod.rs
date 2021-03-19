@@ -597,7 +597,6 @@ pub struct AccountSynchronizer {
     gap_limit: usize,
     skip_persistence: bool,
     steps: Vec<AccountSynchronizeStep>,
-    emit_events: bool,
 }
 
 #[derive(Debug)]
@@ -660,7 +659,6 @@ impl AccountSynchronizer {
                 AccountSynchronizeStep::SyncAddresses,
                 AccountSynchronizeStep::SyncMessages,
             ],
-            emit_events: true,
         }
     }
 
@@ -688,13 +686,6 @@ impl AccountSynchronizer {
     /// but the library can pick what to run here.
     pub(crate) fn steps(mut self, steps: Vec<AccountSynchronizeStep>) -> Self {
         self.steps = steps;
-        self
-    }
-
-    /// Do not emit events and return them on the SyncedAccount object instead.
-    /// Useful on account discovery or polling.
-    pub(crate) fn skip_events(mut self) -> Self {
-        self.emit_events = false;
         self
     }
 
@@ -877,39 +868,37 @@ impl AccountSynchronizer {
                     }
                 }
 
-                if self.emit_events {
-                    let persist_events = self.account_handle.account_options.persist_events;
-                    let events = Self::get_events(
-                        self.account_handle.account_options,
-                        &addresses_before_sync,
-                        account.addresses(),
-                        &new_messages,
-                        &confirmation_changed_messages,
+                let persist_events = self.account_handle.account_options.persist_events;
+                let events = Self::get_events(
+                    self.account_handle.account_options,
+                    &addresses_before_sync,
+                    account.addresses(),
+                    &new_messages,
+                    &confirmation_changed_messages,
+                )
+                .await?;
+                for balance_change_event in events.balance_change_events {
+                    emit_balance_change(
+                        &account,
+                        &balance_change_event.address,
+                        balance_change_event.message_id,
+                        balance_change_event.balance_change,
+                        persist_events,
                     )
                     .await?;
-                    for balance_change_event in events.balance_change_events {
-                        emit_balance_change(
-                            &account,
-                            &balance_change_event.address,
-                            balance_change_event.message_id,
-                            balance_change_event.balance_change,
-                            persist_events,
-                        )
+                }
+                for message in events.new_transaction_events {
+                    emit_transaction_event(TransactionEventType::NewTransaction, &account, message, persist_events)
                         .await?;
-                    }
-                    for message in events.new_transaction_events {
-                        emit_transaction_event(TransactionEventType::NewTransaction, &account, message, persist_events)
-                            .await?;
-                    }
-                    for confirmation_change_event in events.confirmation_change_events {
-                        emit_confirmation_state_change(
-                            &account,
-                            confirmation_change_event.message,
-                            confirmation_change_event.confirmed,
-                            persist_events,
-                        )
-                        .await?;
-                    }
+                }
+                for confirmation_change_event in events.confirmation_change_events {
+                    emit_confirmation_state_change(
+                        &account,
+                        confirmation_change_event.message,
+                        confirmation_change_event.confirmed,
+                        persist_events,
+                    )
+                    .await?;
                 }
 
                 let mut updated_messages = new_messages;

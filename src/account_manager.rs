@@ -1144,7 +1144,7 @@ impl AccountsSynchronizer {
                 let account_handle = account_handle.clone();
                 tasks.push(async move {
                     tokio::spawn(async move {
-                        let mut sync = account_handle.sync().await.skip_events();
+                        let mut sync = account_handle.sync().await;
                         if let Some(index) = address_index {
                             sync = sync.address_index(index);
                         }
