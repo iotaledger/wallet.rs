@@ -1231,6 +1231,7 @@ impl AccountsSynchronizer {
                     let account_handle_ = account_handle.clone();
                     let mut account = account_handle_.write().await;
                     account.set_skip_persistence(false);
+                    account.set_addresses(synced_account_data.addresses.to_vec());
                     account.save().await?;
                     accounts.insert(account.id().clone(), account_handle.clone());
                     discovered_account_ids.push(account.id().clone());
