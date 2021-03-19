@@ -1223,6 +1223,7 @@ impl AccountsSynchronizer {
             }
             None => Ok(vec![]),
         };
+        let mut discovered_account_ids = Vec::new();
         if let Ok(discovered_accounts) = discovered_accounts_res {
             if !discovered_accounts.is_empty() {
                 let mut accounts = self.accounts.write().await;
@@ -1232,6 +1233,7 @@ impl AccountsSynchronizer {
                     account.set_skip_persistence(false);
                     account.save().await?;
                     accounts.insert(account.id().clone(), account_handle.clone());
+                    discovered_account_ids.push(account.id().clone());
                     synced_data.push((account_handle, Vec::new(), synced_account_data));
                 }
             }
@@ -1269,36 +1271,39 @@ impl AccountsSynchronizer {
                     confirmation_changed_messages.push(message);
                 }
             }
-            let persist_events = account_handle.account_options.persist_events;
-            let events = AccountSynchronizer::get_events(
-                account_handle.account_options,
-                &addresses_before_sync,
-                account.addresses(),
-                &new_messages,
-                &confirmation_changed_messages,
-            )
-            .await?;
-            for balance_change_event in events.balance_change_events {
-                emit_balance_change(
-                    &account,
-                    &balance_change_event.address,
-                    balance_change_event.message_id,
-                    balance_change_event.balance_change,
-                    persist_events,
+            if !discovered_account_ids.contains(account.id()) {
+                let persist_events = account_handle.account_options.persist_events;
+                let events = AccountSynchronizer::get_events(
+                    account_handle.account_options,
+                    &addresses_before_sync,
+                    account.addresses(),
+                    &new_messages,
+                    &confirmation_changed_messages,
                 )
                 .await?;
-            }
-            for message in events.new_transaction_events {
-                emit_transaction_event(TransactionEventType::NewTransaction, &account, message, persist_events).await?;
-            }
-            for confirmation_change_event in events.confirmation_change_events {
-                emit_confirmation_state_change(
-                    &account,
-                    confirmation_change_event.message,
-                    confirmation_change_event.confirmed,
-                    persist_events,
-                )
-                .await?;
+                for balance_change_event in events.balance_change_events {
+                    emit_balance_change(
+                        &account,
+                        &balance_change_event.address,
+                        balance_change_event.message_id,
+                        balance_change_event.balance_change,
+                        persist_events,
+                    )
+                    .await?;
+                }
+                for message in events.new_transaction_events {
+                    emit_transaction_event(TransactionEventType::NewTransaction, &account, message, persist_events)
+                        .await?;
+                }
+                for confirmation_change_event in events.confirmation_change_events {
+                    emit_confirmation_state_change(
+                        &account,
+                        confirmation_change_event.message,
+                        confirmation_change_event.confirmed,
+                        persist_events,
+                    )
+                    .await?;
+                }
             }
 
             // drop the account so SyncedAccount::from doesn't deadlock
