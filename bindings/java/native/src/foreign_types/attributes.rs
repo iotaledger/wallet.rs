@@ -53,11 +53,3 @@ pub fn class_to_string(code: &mut Vec<u8>, class_name: &str) {
         .copied(),
     );
 }
-
-// pub fn class_getters(code: &mut Vec<u8>, class_name: &str){
-//
-// }
-//
-// pub fn class_setters(code: &mut Vec<u8>, class_name: &str){
-//
-// }

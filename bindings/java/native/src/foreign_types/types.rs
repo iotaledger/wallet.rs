@@ -38,7 +38,8 @@ foreign_typemap!(
                     _ => swig_jni_find_class!(WALLET_BASE_EXCEPTION, "org/iota/wallet/local/WalletException"),
                 };
                 jni_throw(env, exception_class, &msg);
-                return <swig_i_type!(T)>::jni_invalid_value();
+                // We gotta return a value, but this never reaches the client side
+                false
             }
         };
     };

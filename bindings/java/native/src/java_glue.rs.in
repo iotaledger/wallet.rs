@@ -33,7 +33,7 @@ use iota_wallet::{
         MessageType, Value, ValueUnit, MessageId
     },
     address::{
-        OutputKind, AddressWrapper
+        OutputKind, AddressWrapper, IotaAddress,
     },
     client::{
         Api,
@@ -306,6 +306,12 @@ foreign_class!(
     class AddressWrapper {
         self_type AddressWrapper;
         private constructor = empty;
+        fn AddressWrapper::from(address: &str, bech32_hrp: String) -> Result<AddressWrapper> {
+            match IotaAddress::try_from_bech32(address) {
+                Ok(addr) => Ok(AddressWrapper::new(addr, bech32_hrp)),
+                Err(e) => Err(anyhow!(e)),
+            }
+        }
         fn AddressWrapper::to_bech32(&self) -> String; alias toBech32;
     }
 );
@@ -380,6 +386,7 @@ foreign_class!(
         self_type TransferBuilder;
         constructor TransferBuilder::new(address: AddressWrapper, amount: u64) -> TransferBuilder;
         fn TransferBuilder::with_remainder_value_strategy(&mut self, strategy: RemainderValueStrategy) -> TransferBuilder; alias withRemainderValueStrategy;
+        fn TransferBuilder::with_remainder_to_account_with_address(&mut self, address: AddressWrapper) -> TransferBuilder; alias withRemainderToAccountWithAddress;
         fn TransferBuilder::with_indexation(&mut self, indexation: IndexationPayload) -> TransferBuilder; alias withIndexation;
         fn TransferBuilder::finish(&self) -> Transfer;
     }

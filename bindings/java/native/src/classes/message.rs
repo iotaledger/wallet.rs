@@ -11,7 +11,9 @@ use iota_wallet::{
     },
 };
 
-use crate::bee_types::{IndexationPayload, MessagePayload};
+use crate::{
+    bee_types::{IndexationPayload, MessagePayload},
+};
 
 use chrono::prelude::{DateTime, Utc};
 use std::num::NonZeroU64;
@@ -71,6 +73,16 @@ impl TransferBuilder {
             .take()
             .unwrap()
             .with_remainder_value_strategy(remainder_type_enum_to_type(strategy));
+        TransferBuilder::new_with_builder(new_builder)
+    }
+
+    pub fn with_remainder_to_account_with_address(&mut self, address: AddressWrapper) -> Self {
+        let new_builder = self
+            .builder
+            .borrow_mut()
+            .take()
+            .unwrap()
+            .with_remainder_value_strategy(RemainderValueStrategyRust::AccountAddress(address));
         TransferBuilder::new_with_builder(new_builder)
     }
 
@@ -145,7 +157,6 @@ impl Message {
     }
 
     pub fn to_inner(self) -> MessageRust {
-        // TODO: Find a way to not need clone
         self.message
     }
 }
