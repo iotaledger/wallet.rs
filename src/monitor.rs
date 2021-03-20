@@ -145,7 +145,7 @@ async fn process_output(
     let client_options_ = client_options.clone();
 
     if address_wrapper == latest_address {
-        account_handle.generate_address_internal(&mut account).await?;
+        let _ = account_handle.generate_address_internal(&mut account).await;
     }
 
     match account.messages_mut().iter().position(|m| m.id() == &message_id) {

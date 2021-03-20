@@ -522,9 +522,17 @@ impl AccountHandle {
             })
             .await?;
 
-        let _ = crate::monitor::monitor_address_balance(self.clone(), address.address());
+        // monitor on a non-async function to prevent cycle computing the `monitor_address_balance` fn type
+        self.monitor_address(address.address().clone());
 
         Ok(address)
+    }
+
+    pub(crate) fn monitor_address(&self, address: AddressWrapper) {
+        let handle = self.clone();
+        crate::spawn(async move {
+            let _ = crate::monitor::monitor_address_balance(handle, &address).await;
+        });
     }
 
     /// Synchronizes the account addresses with the Tangle and returns the latest address in the account,
