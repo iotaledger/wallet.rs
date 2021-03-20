@@ -448,7 +448,7 @@ impl AccountManager {
             thread::spawn(move || {
                 crate::block_on(async move {
                     for account_handle in accounts.read().await.values() {
-                        let _ = crate::monitor::unsubscribe(account_handle.clone());
+                        let _ = crate::monitor::unsubscribe(account_handle.clone()).await;
                     }
                 });
             })
@@ -481,10 +481,6 @@ impl AccountManager {
             for account_handle in self.accounts.read().await.values() {
                 account_handle.write().await.save().await?;
             }
-        }
-
-        for account_handle in self.accounts.read().await.values() {
-            let _ = crate::monitor::unsubscribe(account_handle.clone());
         }
 
         Ok(())
