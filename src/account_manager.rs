@@ -1411,7 +1411,11 @@ async fn poll(
 
     for retried_data in retried {
         let mut account = retried_data.account_handle.write().await;
-        let client = crate::client::get_client(account.client_options()).await?;
+        let client = crate::client::get_client(
+            account.client_options(),
+            Some(retried_data.account_handle.is_monitoring.clone()),
+        )
+        .await?;
 
         for (reattached_message_id, message) in &retried_data.reattached {
             emit_reattachment_event(

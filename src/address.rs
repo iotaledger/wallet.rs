@@ -386,7 +386,7 @@ pub(crate) async fn get_new_address(account: &Account, metadata: GenerateAddress
     let bech32_hrp = match account.addresses().first() {
         Some(address) => address.address().bech32_hrp().to_string(),
         None => {
-            crate::client::get_client(account.client_options())
+            crate::client::get_client(account.client_options(), None)
                 .await?
                 .read()
                 .await

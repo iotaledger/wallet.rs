@@ -35,6 +35,7 @@ use tokio::sync::MutexGuard;
 use std::{
     collections::{HashMap, HashSet},
     num::NonZeroU64,
+    sync::{atomic::AtomicBool, Arc},
 };
 
 mod input_selection;
@@ -118,8 +119,9 @@ pub(crate) async fn sync_address(
     address: &mut Address,
     bech32_hrp: String,
     options: AccountOptions,
+    is_monitoring: Arc<AtomicBool>,
 ) -> crate::Result<Vec<SyncedMessage>> {
-    let client_guard = crate::client::get_client(&client_options).await?;
+    let client_guard = crate::client::get_client(&client_options, Some(is_monitoring)).await?;
     let client = client_guard.read().await;
 
     let iota_address = address.address();
@@ -278,6 +280,7 @@ async fn sync_addresses(
     address_index: usize,
     gap_limit: usize,
     options: AccountOptions,
+    is_monitoring: Arc<AtomicBool>,
 ) -> crate::Result<(Vec<Address>, Vec<SyncedMessage>)> {
     let mut address_index = address_index;
 
@@ -321,6 +324,7 @@ async fn sync_addresses(
             let account_addresses = account_addresses.clone();
             let account_messages = account_messages.clone();
             let client_options = client_options.clone();
+            let is_monitoring = is_monitoring.clone();
             tasks.push(async move {
                 tokio::spawn(async move {
                     let mut address = AddressBuilder::new()
@@ -342,6 +346,7 @@ async fn sync_addresses(
                         &mut address,
                         bech32_hrp_,
                         options,
+                        is_monitoring,
                     )
                     .await?;
                     crate::Result::Ok((messages, address))
@@ -407,7 +412,7 @@ async fn sync_messages(
 
     let mut addresses = Vec::new();
 
-    let client = crate::client::get_client(&client_options).await?;
+    let client = crate::client::get_client(&client_options, None).await?;
 
     let mut tasks = Vec::new();
     for mut address in account.addresses().to_vec() {
@@ -508,6 +513,7 @@ async fn perform_sync(
     gap_limit: usize,
     steps: &[AccountSynchronizeStep],
     options: AccountOptions,
+    is_monitoring: Arc<AtomicBool>,
 ) -> crate::Result<SyncedAccountData> {
     log::debug!(
         "[SYNC] syncing with address_index = {}, gap_limit = {}",
@@ -515,7 +521,7 @@ async fn perform_sync(
         gap_limit
     );
     let (mut found_addresses, found_messages) = if steps.contains(&AccountSynchronizeStep::SyncAddresses) {
-        sync_addresses(&account, address_index, gap_limit, options).await?
+        sync_addresses(&account, address_index, gap_limit, options, is_monitoring).await?
     } else {
         (Vec::new(), Vec::new())
     };
@@ -697,6 +703,7 @@ impl AccountSynchronizer {
             self.gap_limit,
             &self.steps,
             self.account_handle.account_options,
+            self.account_handle.is_monitoring.clone(),
         )
         .await;
         self.account_handle.enable_mqtt();
@@ -1469,7 +1476,8 @@ async fn perform_transfer(
         }
     }
 
-    let client = crate::client::get_client(account_.client_options()).await?;
+    let client =
+        crate::client::get_client(account_.client_options(), Some(account_handle.is_monitoring.clone())).await?;
     let client = client.read().await;
 
     // Check if we would let dust on an address behind or send new dust, which would make the tx unconfirmable
@@ -1702,7 +1710,8 @@ pub(crate) async fn repost_message(
                 )));
             }
 
-            let client = crate::client::get_client(account.client_options()).await?;
+            let client =
+                crate::client::get_client(account.client_options(), Some(account_handle.is_monitoring.clone())).await?;
             let client = client.read().await;
 
             let (id, message) = match action {
