@@ -1129,6 +1129,18 @@ impl AccountsSynchronizer {
 
     /// Syncs the accounts with the Tangle.
     pub async fn execute(self) -> crate::Result<Vec<SyncedAccount>> {
+        let accounts = self.accounts.clone();
+        for account_handle in accounts.read().await.values() {
+            account_handle.disable_mqtt();
+        }
+        let result = self.execute_internal().await;
+        for account_handle in accounts.read().await.values() {
+            account_handle.enable_mqtt();
+        }
+        result
+    }
+
+    async fn execute_internal(self) -> crate::Result<Vec<SyncedAccount>> {
         let _lock = self.mutex.lock().await;
 
         let mut tasks = Vec::new();

@@ -157,6 +157,7 @@ async fn process_output(
             if !message.confirmed().unwrap_or(false) {
                 message.set_confirmed(Some(true));
                 let message = message.clone();
+                log::info!("[MQTT] message confirmed: {:?}", message.id());
                 crate::event::emit_confirmation_state_change(
                     &account,
                     message.clone(),
@@ -187,6 +188,7 @@ async fn process_output(
                 .with_confirmed(Some(true))
                 .finish()
                 .await?;
+                log::info!("[MQTT] new transaction: {:?}", message.id());
                 crate::event::emit_transaction_event(
                     crate::event::TransactionEventType::NewTransaction,
                     &account,
@@ -200,15 +202,21 @@ async fn process_output(
         }
     }
 
+    let balance_change = if new_balance > old_balance {
+        crate::event::BalanceChange::received(new_balance - old_balance)
+    } else {
+        crate::event::BalanceChange::spent(old_balance - new_balance)
+    };
+    log::info!(
+        "[MQTT] balance change on {} {:?}",
+        address_wrapper.to_bech32(),
+        balance_change
+    );
     crate::event::emit_balance_change(
         &account,
         &address_wrapper,
         Some(message_id),
-        if new_balance > old_balance {
-            crate::event::BalanceChange::received(new_balance - old_balance)
-        } else {
-            crate::event::BalanceChange::spent(old_balance - new_balance)
-        },
+        balance_change,
         account_handle.account_options.persist_events,
     )
     .await?;
@@ -265,6 +273,11 @@ async fn process_metadata(payload: String, account_handle: AccountHandle, messag
             message.set_confirmed(Some(confirmed));
             account.save().await?;
 
+            log::info!(
+                "[MQTT] confirmation state change: {:?} - confirmed: {}",
+                message_.id(),
+                confirmed
+            );
             crate::event::emit_confirmation_state_change(
                 &account,
                 message_,

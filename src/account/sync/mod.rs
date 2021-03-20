@@ -696,8 +696,7 @@ impl AccountSynchronizer {
     }
 
     pub(crate) async fn get_new_history(&self) -> crate::Result<SyncedAccountData> {
-        self.account_handle.disable_mqtt();
-        let res = perform_sync(
+        perform_sync(
             &*self.account_handle.read().await,
             self.address_index,
             self.gap_limit,
@@ -705,9 +704,7 @@ impl AccountSynchronizer {
             self.account_handle.account_options,
             self.account_handle.is_monitoring.clone(),
         )
-        .await;
-        self.account_handle.enable_mqtt();
-        res
+        .await
     }
 
     pub(crate) async fn get_events(
@@ -753,6 +750,11 @@ impl AccountSynchronizer {
                             } else {
                                 output_change_balance += output.amount as i64;
                             }
+                            log::info!(
+                                "[SYNC] balance change on {} {:?}",
+                                address_after_sync.address().to_bech32(),
+                                balance_change
+                            );
                             balance_change_events.push(BalanceChangeEventData {
                                 address: address_after_sync.address().clone(),
                                 balance_change,
@@ -776,6 +778,11 @@ impl AccountSynchronizer {
                         // balance_change is negative; get the absolute diff.
                         BalanceChange::spent((balance_change - output_change_balance).abs() as u64)
                     };
+                    log::info!(
+                        "[SYNC] remaining balance change on {} {:?}",
+                        address_after_sync.address().to_bech32(),
+                        balance_change
+                    );
                     balance_change_events.push(BalanceChangeEventData {
                         address: address_after_sync.address().clone(),
                         balance_change,
@@ -813,9 +820,9 @@ impl AccountSynchronizer {
     /// The account syncing process ensures that the latest metadata (balance, transactions)
     /// associated with an account is fetched from the tangle and is stored locally.
     pub async fn execute(self) -> crate::Result<SyncedAccount> {
+        self.account_handle.disable_mqtt();
         let return_value = match self.get_new_history().await {
             Ok(data) => {
-                self.account_handle.disable_mqtt();
                 let is_empty = data
                     .addresses
                     .iter()
