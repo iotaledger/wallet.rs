@@ -859,7 +859,7 @@
     <span class="kw">let</span> <span class="ident">bech32_hrp</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">account</span>.<span class="ident">addresses</span>().<span class="ident">first</span>() {
         <span class="prelude-val">Some</span>(<span class="ident">address</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">address</span>.<span class="ident">address</span>().<span class="ident">bech32_hrp</span>().<span class="ident">to_string</span>(),
         <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="kw">crate</span>::<span class="ident">client</span>::<span class="ident">get_client</span>(<span class="ident">account</span>.<span class="ident">client_options</span>())
+            <span class="kw">crate</span>::<span class="ident">client</span>::<span class="ident">get_client</span>(<span class="ident">account</span>.<span class="ident">client_options</span>(), <span class="prelude-val">None</span>)
                 .<span class="kw">await</span><span class="question-mark">?</span>
                 .<span class="ident">read</span>()
                 .<span class="kw">await</span>

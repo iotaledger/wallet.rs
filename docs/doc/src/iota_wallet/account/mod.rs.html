@@ -1308,6 +1308,7 @@
 <span id="1305">1305</span>
 <span id="1306">1306</span>
 <span id="1307">1307</span>
+<span id="1308">1308</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1560,7 +1561,7 @@
             <span class="ident">skip_persistence</span>: <span class="self">self</span>.<span class="ident">skip_persistence</span>,
         };
 
-        <span class="kw">let</span> <span class="ident">bech32_hrp</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">client</span>::<span class="ident">get_client</span>(<span class="kw-2">&amp;</span><span class="ident">account</span>.<span class="ident">client_options</span>)
+        <span class="kw">let</span> <span class="ident">bech32_hrp</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">client</span>::<span class="ident">get_client</span>(<span class="kw-2">&amp;</span><span class="ident">account</span>.<span class="ident">client_options</span>, <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">is_monitoring</span>.<span class="ident">clone</span>()))
             .<span class="kw">await</span><span class="question-mark">?</span>
             .<span class="ident">read</span>()
             .<span class="kw">await</span>
@@ -1874,6 +1875,7 @@
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">latest_address</span>,
             <span class="ident">bech32_hrp</span>,
             <span class="self">self</span>.<span class="ident">account_options</span>,
+            <span class="self">self</span>.<span class="ident">is_monitoring</span>.<span class="ident">clone</span>(),
         )
         .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="kw-2">*</span><span class="ident">latest_address</span>.<span class="ident">balance</span>() <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">latest_address</span>.<span class="ident">outputs</span>().<span class="ident">is_empty</span>())
@@ -2035,7 +2037,7 @@
 
     <span class="doccomment">/// Updates the account&#39;s client options.</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_client_options</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">options</span>: <span class="ident">ClientOptions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">client_guard</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">client</span>::<span class="ident">get_client</span>(<span class="kw-2">&amp;</span><span class="ident">options</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">client_guard</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">client</span>::<span class="ident">get_client</span>(<span class="kw-2">&amp;</span><span class="ident">options</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">client_guard</span>.<span class="ident">read</span>().<span class="kw">await</span>;
 
         <span class="kw">let</span> <span class="ident">unsynced_nodes</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">unsynced_nodes</span>().<span class="kw">await</span>;

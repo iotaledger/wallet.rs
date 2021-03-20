@@ -1433,7 +1433,7 @@
                         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">output</span>) <span class="op">=</span> <span class="ident">output</span> {
                             <span class="prelude-val">Some</span>(<span class="ident">output</span>)
                         } <span class="kw">else</span> {
-                            <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">client</span>::<span class="ident">get_client</span>(<span class="ident">metadata</span>.<span class="ident">client_options</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+                            <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">client</span>::<span class="ident">get_client</span>(<span class="ident">metadata</span>.<span class="ident">client_options</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
                             <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">read</span>().<span class="kw">await</span>;
                             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">output</span>) <span class="op">=</span> <span class="ident">client</span>.<span class="ident">get_output</span>(<span class="kw-2">&amp;</span><span class="ident">i</span>).<span class="kw">await</span> {
                                 <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">AddressOutput</span>::<span class="ident">from_output_response</span>(<span class="ident">output</span>, <span class="ident">metadata</span>.<span class="ident">bech32_hrp</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
@@ -1935,7 +1935,7 @@
         <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">Message</span> {
             <span class="ident">id</span>: <span class="self">self</span>.<span class="ident">id</span>,
             <span class="ident">version</span>: <span class="number">1</span>,
-            <span class="ident">parents</span>: <span class="self">self</span>.<span class="ident">iota_message</span>.<span class="ident">parents</span>().<span class="ident">copied</span>().<span class="ident">collect</span>(),
+            <span class="ident">parents</span>: (<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">iota_message</span>.<span class="ident">parents</span>()).<span class="ident">to_vec</span>(),
             <span class="ident">payload_length</span>: <span class="ident">packed_payload</span>.<span class="ident">len</span>(),
             <span class="ident">payload</span>,
             <span class="ident">timestamp</span>: <span class="ident">Utc</span>::<span class="ident">now</span>(),
