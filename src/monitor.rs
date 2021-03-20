@@ -145,6 +145,8 @@ async fn process_output(
     let client_options_ = client_options.clone();
 
     if address_wrapper == latest_address {
+        // we ignore errors in case stronghold is locked
+        // because it's more important to process the event
         let _ = account_handle.generate_address_internal(&mut account).await;
     }
 

@@ -531,6 +531,7 @@ impl AccountHandle {
     pub(crate) fn monitor_address(&self, address: AddressWrapper) {
         let handle = self.clone();
         crate::spawn(async move {
+            // ignore errors because we fallback to the polling system
             let _ = crate::monitor::monitor_address_balance(handle, &address).await;
         });
     }
