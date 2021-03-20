@@ -249,7 +249,7 @@ impl AccountInitialiser {
             skip_persistence: self.skip_persistence,
         };
 
-        let bech32_hrp = crate::client::get_client(&account.client_options)
+        let bech32_hrp = crate::client::get_client(&account.client_options, Some(self.is_monitoring.clone()))
             .await?
             .read()
             .await
@@ -563,6 +563,7 @@ impl AccountHandle {
             &mut latest_address,
             bech32_hrp,
             self.account_options,
+            self.is_monitoring.clone(),
         )
         .await?;
         Ok(*latest_address.balance() == 0 && latest_address.outputs().is_empty())
@@ -724,7 +725,7 @@ impl Account {
 
     /// Updates the account's client options.
     pub async fn set_client_options(&mut self, options: ClientOptions) -> crate::Result<()> {
-        let client_guard = crate::client::get_client(&options).await?;
+        let client_guard = crate::client::get_client(&options, None).await?;
         let client = client_guard.read().await;
 
         let unsynced_nodes = client.unsynced_nodes().await;
