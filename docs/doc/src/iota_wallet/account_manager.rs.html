@@ -2225,10 +2225,6 @@
 <span id="2222">2222</span>
 <span id="2223">2223</span>
 <span id="2224">2224</span>
-<span id="2225">2225</span>
-<span id="2226">2226</span>
-<span id="2227">2227</span>
-<span id="2228">2228</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2680,7 +2676,7 @@
             <span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
                 <span class="kw">crate</span>::<span class="ident">block_on</span>(<span class="kw">async</span> <span class="kw">move</span> {
                     <span class="kw">for</span> <span class="ident">account_handle</span> <span class="kw">in</span> <span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">values</span>() {
-                        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">monitor</span>::<span class="ident">unsubscribe</span>(<span class="ident">account_handle</span>.<span class="ident">clone</span>());
+                        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">monitor</span>::<span class="ident">unsubscribe</span>(<span class="ident">account_handle</span>.<span class="ident">clone</span>()).<span class="kw">await</span>;
                     }
                 });
             })
@@ -2713,10 +2709,6 @@
             <span class="kw">for</span> <span class="ident">account_handle</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">values</span>() {
                 <span class="ident">account_handle</span>.<span class="ident">write</span>().<span class="kw">await</span>.<span class="ident">save</span>().<span class="kw">await</span><span class="question-mark">?</span>;
             }
-        }
-
-        <span class="kw">for</span> <span class="ident">account_handle</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">values</span>() {
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">monitor</span>::<span class="ident">unsubscribe</span>(<span class="ident">account_handle</span>.<span class="ident">clone</span>());
         }
 
         <span class="prelude-val">Ok</span>(())
