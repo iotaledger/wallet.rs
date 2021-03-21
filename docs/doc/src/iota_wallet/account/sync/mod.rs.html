@@ -1840,6 +1840,13 @@
 <span id="1837">1837</span>
 <span id="1838">1838</span>
 <span id="1839">1839</span>
+<span id="1840">1840</span>
+<span id="1841">1841</span>
+<span id="1842">1842</span>
+<span id="1843">1843</span>
+<span id="1844">1844</span>
+<span id="1845">1845</span>
+<span id="1846">1846</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2539,8 +2546,7 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_new_history</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SyncedAccountData</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">disable_mqtt</span>();
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">perform_sync</span>(
+        <span class="ident">perform_sync</span>(
             <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>,
             <span class="self">self</span>.<span class="ident">address_index</span>,
             <span class="self">self</span>.<span class="ident">gap_limit</span>,
@@ -2548,9 +2554,7 @@
             <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">account_options</span>,
             <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">is_monitoring</span>.<span class="ident">clone</span>(),
         )
-        .<span class="kw">await</span>;
-        <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">enable_mqtt</span>();
-        <span class="ident">res</span>
+        .<span class="kw">await</span>
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_events</span>(
@@ -2596,6 +2600,11 @@
                             } <span class="kw">else</span> {
                                 <span class="ident">output_change_balance</span> <span class="op">+</span><span class="op">=</span> <span class="ident">output</span>.<span class="ident">amount</span> <span class="kw">as</span> <span class="ident">i64</span>;
                             }
+                            <span class="ident">log</span>::<span class="macro">info</span><span class="macro">!</span>(
+                                <span class="string">&quot;[SYNC] balance change on {} {:?}&quot;</span>,
+                                <span class="ident">address_after_sync</span>.<span class="ident">address</span>().<span class="ident">to_bech32</span>(),
+                                <span class="ident">balance_change</span>
+                            );
                             <span class="ident">balance_change_events</span>.<span class="ident">push</span>(<span class="ident">BalanceChangeEventData</span> {
                                 <span class="ident">address</span>: <span class="ident">address_after_sync</span>.<span class="ident">address</span>().<span class="ident">clone</span>(),
                                 <span class="ident">balance_change</span>,
@@ -2619,6 +2628,11 @@
                         <span class="comment">// balance_change is negative; get the absolute diff.</span>
                         <span class="ident">BalanceChange</span>::<span class="ident">spent</span>((<span class="ident">balance_change</span> <span class="op">-</span> <span class="ident">output_change_balance</span>).<span class="ident">abs</span>() <span class="kw">as</span> <span class="ident">u64</span>)
                     };
+                    <span class="ident">log</span>::<span class="macro">info</span><span class="macro">!</span>(
+                        <span class="string">&quot;[SYNC] remaining balance change on {} {:?}&quot;</span>,
+                        <span class="ident">address_after_sync</span>.<span class="ident">address</span>().<span class="ident">to_bech32</span>(),
+                        <span class="ident">balance_change</span>
+                    );
                     <span class="ident">balance_change_events</span>.<span class="ident">push</span>(<span class="ident">BalanceChangeEventData</span> {
                         <span class="ident">address</span>: <span class="ident">address_after_sync</span>.<span class="ident">address</span>().<span class="ident">clone</span>(),
                         <span class="ident">balance_change</span>,
@@ -2656,9 +2670,9 @@
     <span class="doccomment">/// The account syncing process ensures that the latest metadata (balance, transactions)</span>
     <span class="doccomment">/// associated with an account is fetched from the tangle and is stored locally.</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">execute</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SyncedAccount</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">disable_mqtt</span>();
         <span class="kw">let</span> <span class="ident">return_value</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">get_new_history</span>().<span class="kw">await</span> {
             <span class="prelude-val">Ok</span>(<span class="ident">data</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">disable_mqtt</span>();
                 <span class="kw">let</span> <span class="ident">is_empty</span> <span class="op">=</span> <span class="ident">data</span>
                     .<span class="ident">addresses</span>
                     .<span class="ident">iter</span>()
