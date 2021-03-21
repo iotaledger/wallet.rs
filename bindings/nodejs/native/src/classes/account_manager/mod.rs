@@ -8,6 +8,8 @@ use std::{num::NonZeroU64, path::PathBuf, sync::Arc};
 use iota_wallet::{
     account::AccountIdentifier,
     account_manager::{AccountManager, ManagerStorage, DEFAULT_STORAGE_FOLDER},
+    address::parse as parse_address,
+    iota_migration::client::migration::{add_tryte_checksum, encode_migration_address},
     signing::SignerType,
     DateTime, Local,
 };
@@ -467,6 +469,20 @@ declare_types! {
             }
 
             Ok(cx.undefined().upcast())
+        }
+
+        method generateMigrationAddress(mut cx) {
+            let address_wrapper = parse_address(cx.argument::<JsString>(0)?.value()).expect("invalid address");
+            crate::block_on(async move {
+                let address = iota_wallet::Address::try_from_bech32(&address_wrapper.to_bech32()).unwrap();
+                let ed25519_address = match address {
+                    iota_wallet::Address::Ed25519(a) => a,
+                    _ => panic!("Unsupported address type"),
+                };
+                let migration_address = encode_migration_address(ed25519_address).unwrap();
+                let migration_address = add_tryte_checksum(migration_address).unwrap();
+                Ok(neon_serde::to_value(&mut cx, &migration_address)?)
+            })
         }
 
         method getBalanceChangeEvents(mut cx) {
