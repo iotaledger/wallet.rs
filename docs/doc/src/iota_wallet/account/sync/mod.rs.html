@@ -1841,12 +1841,6 @@
 <span id="1838">1838</span>
 <span id="1839">1839</span>
 <span id="1840">1840</span>
-<span id="1841">1841</span>
-<span id="1842">1842</span>
-<span id="1843">1843</span>
-<span id="1844">1844</span>
-<span id="1845">1845</span>
-<span id="1846">1846</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2009,12 +2003,8 @@
         <span class="ident">tasks</span>.<span class="ident">push</span>(<span class="kw">async</span> <span class="kw">move</span> {
             <span class="ident">tokio</span>::<span class="ident">spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
                 <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">client_guard</span>.<span class="ident">read</span>().<span class="kw">await</span>;
-                <span class="kw">let</span> <span class="ident">found_output</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">existing_output</span>) <span class="op">=</span> <span class="ident">existing_output</span> {
-                    <span class="ident">existing_output</span>.<span class="ident">clone</span>()
-                } <span class="kw">else</span> {
-                    <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">get_output</span>(<span class="kw-2">&amp;</span><span class="ident">utxo_input</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-                    <span class="ident">AddressOutput</span>::<span class="ident">from_output_response</span>(<span class="ident">output</span>, <span class="ident">bech32_hrp</span>.<span class="ident">to_string</span>())<span class="question-mark">?</span>
-                };
+                <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">get_output</span>(<span class="kw-2">&amp;</span><span class="ident">utxo_input</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">found_output</span> <span class="op">=</span> <span class="ident">AddressOutput</span>::<span class="ident">from_output_response</span>(<span class="ident">output</span>, <span class="ident">bech32_hrp</span>.<span class="ident">to_string</span>())<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">message_id</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">found_output</span>.<span class="ident">message_id</span>();
 
                 <span class="comment">// if we already have the message stored</span>
@@ -2302,15 +2292,13 @@
 
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">messages</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
                 <span class="kw">for</span> <span class="ident">utxo_input</span> <span class="kw">in</span> <span class="ident">address_outputs</span>.<span class="ident">iter</span>() {
-                    <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">output</span>) <span class="op">=</span> <span class="ident">address</span>.<span class="ident">outputs</span>().<span class="ident">get</span>(<span class="ident">utxo_input</span>.<span class="ident">output_id</span>()) {
+                    <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">address</span>.<span class="ident">outputs</span>().<span class="ident">get</span>(<span class="ident">utxo_input</span>.<span class="ident">output_id</span>()) {
                         <span class="comment">// if we already have the output and it is spent, we don&#39;t need to get the info from the node</span>
-                        <span class="kw">if</span> <span class="ident">output</span>.<span class="ident">is_spent</span> {
-                            <span class="kw">continue</span>;
+                        <span class="prelude-val">Some</span>(<span class="ident">output</span>) <span class="kw">if</span> <span class="ident">output</span>.<span class="ident">is_spent</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">output</span>.<span class="ident">clone</span>(),
+                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">get_output</span>(<span class="ident">utxo_input</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+                            <span class="ident">AddressOutput</span>::<span class="ident">from_output_response</span>(<span class="ident">output</span>, <span class="ident">address</span>.<span class="ident">address</span>().<span class="ident">bech32_hrp</span>().<span class="ident">to_string</span>())<span class="question-mark">?</span>
                         }
-                        <span class="ident">output</span>.<span class="ident">clone</span>()
-                    } <span class="kw">else</span> {
-                        <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">get_output</span>(<span class="ident">utxo_input</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-                        <span class="ident">AddressOutput</span>::<span class="ident">from_output_response</span>(<span class="ident">output</span>, <span class="ident">address</span>.<span class="ident">address</span>().<span class="ident">bech32_hrp</span>().<span class="ident">to_string</span>())<span class="question-mark">?</span>
                     };
 
                     <span class="kw">let</span> <span class="ident">output_message_id</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">output</span>.<span class="ident">message_id</span>();
