@@ -390,14 +390,14 @@ pub(crate) async fn emit_balance_change(
 pub(crate) async fn emit_transaction_event(
     event_type: TransactionEventType,
     account: &Account,
-    message: &Message,
+    message: Message,
     persist: bool,
 ) -> crate::Result<()> {
     let listeners = transaction_listeners().lock().await;
     let event = TransactionEvent {
         indexation_id: generate_indexation_id(),
         account_id: account.id().to_string(),
-        message: message.clone(),
+        message,
     };
 
     if persist {
@@ -732,7 +732,7 @@ mod tests {
                 })
                 .await;
 
-                emit_transaction_event(TransactionEventType::NewTransaction, &account, &message, true)
+                emit_transaction_event(TransactionEventType::NewTransaction, &account, message, true)
                     .await
                     .unwrap();
             });
@@ -778,7 +778,7 @@ mod tests {
                 })
                 .await;
 
-                emit_transaction_event(TransactionEventType::Broadcast, &account, &message, true)
+                emit_transaction_event(TransactionEventType::Broadcast, &account, message, true)
                     .await
                     .unwrap();
             });

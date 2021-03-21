@@ -27,7 +27,7 @@ use std::{
 };
 
 mod sync;
-pub(crate) use sync::{repost_message, AccountSynchronizeStep, RepostAction};
+pub(crate) use sync::{repost_message, AccountSynchronizeStep, RepostAction, SyncedAccountData};
 pub use sync::{AccountSynchronizer, SyncedAccount};
 
 const ACCOUNT_ID_PREFIX: &str = "wallet-account://";
@@ -249,7 +249,7 @@ impl AccountInitialiser {
             skip_persistence: self.skip_persistence,
         };
 
-        let bech32_hrp = crate::client::get_client(&account.client_options)
+        let bech32_hrp = crate::client::get_client(&account.client_options, Some(self.is_monitoring.clone()))
             .await?
             .read()
             .await
@@ -522,9 +522,18 @@ impl AccountHandle {
             })
             .await?;
 
-        let _ = crate::monitor::monitor_address_balance(self.clone(), address.address());
+        // monitor on a non-async function to prevent cycle computing the `monitor_address_balance` fn type
+        self.monitor_address(address.address().clone());
 
         Ok(address)
+    }
+
+    pub(crate) fn monitor_address(&self, address: AddressWrapper) {
+        let handle = self.clone();
+        crate::spawn(async move {
+            // ignore errors because we fallback to the polling system
+            let _ = crate::monitor::monitor_address_balance(handle, &address).await;
+        });
     }
 
     /// Synchronizes the account addresses with the Tangle and returns the latest address in the account,
@@ -554,6 +563,7 @@ impl AccountHandle {
             &mut latest_address,
             bech32_hrp,
             self.account_options,
+            self.is_monitoring.clone(),
         )
         .await?;
         Ok(*latest_address.balance() == 0 && latest_address.outputs().is_empty())
@@ -715,7 +725,7 @@ impl Account {
 
     /// Updates the account's client options.
     pub async fn set_client_options(&mut self, options: ClientOptions) -> crate::Result<()> {
-        let client_guard = crate::client::get_client(&options).await?;
+        let client_guard = crate::client::get_client(&options, None).await?;
         let client = client_guard.read().await;
 
         let unsynced_nodes = client.unsynced_nodes().await;
