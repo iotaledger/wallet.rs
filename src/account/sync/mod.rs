@@ -159,12 +159,8 @@ pub(crate) async fn sync_address(
         tasks.push(async move {
             tokio::spawn(async move {
                 let client = client_guard.read().await;
-                let found_output = if let Some(existing_output) = existing_output {
-                    existing_output.clone()
-                } else {
-                    let output = client.get_output(&utxo_input).await?;
-                    AddressOutput::from_output_response(output, bech32_hrp.to_string())?
-                };
+                let output = client.get_output(&utxo_input).await?;
+                let found_output = AddressOutput::from_output_response(output, bech32_hrp.to_string())?;
                 let message_id = *found_output.message_id();
 
                 // if we already have the message stored
@@ -452,15 +448,13 @@ async fn sync_messages(
 
                 let mut messages = vec![];
                 for utxo_input in address_outputs.iter() {
-                    let output = if let Some(output) = address.outputs().get(utxo_input.output_id()) {
+                    let output = match address.outputs().get(utxo_input.output_id()) {
                         // if we already have the output and it is spent, we don't need to get the info from the node
-                        if output.is_spent {
-                            continue;
+                        Some(output) if output.is_spent => output.clone(),
+                        _ => {
+                            let output = client.get_output(utxo_input).await?;
+                            AddressOutput::from_output_response(output, address.address().bech32_hrp().to_string())?
                         }
-                        output.clone()
-                    } else {
-                        let output = client.get_output(utxo_input).await?;
-                        AddressOutput::from_output_response(output, address.address().bech32_hrp().to_string())?
                     };
 
                     let output_message_id = *output.message_id();
