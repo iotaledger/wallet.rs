@@ -425,7 +425,7 @@ impl TransactionRegularEssence {
                         if let Some(output) = output {
                             Some(output)
                         } else {
-                            let client = crate::client::get_client(metadata.client_options).await?;
+                            let client = crate::client::get_client(metadata.client_options, None).await?;
                             let client = client.read().await;
                             if let Ok(output) = client.get_output(&i).await {
                                 let output = AddressOutput::from_output_response(output, metadata.bech32_hrp.clone())?;
@@ -927,7 +927,7 @@ impl<'a> MessageBuilder<'a> {
         let message = Message {
             id: self.id,
             version: 1,
-            parents: self.iota_message.parents().copied().collect(),
+            parents: (*self.iota_message.parents()).to_vec(),
             payload_length: packed_payload.len(),
             payload,
             timestamp: Utc::now(),

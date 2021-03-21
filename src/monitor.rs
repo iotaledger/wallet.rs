@@ -19,7 +19,8 @@ use std::sync::{atomic::AtomicBool, Arc};
 /// Unsubscribe from all topics associated with the account.
 pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
     let account = account_handle.read().await;
-    let client = crate::client::get_client(account.client_options()).await?;
+    let client =
+        crate::client::get_client(account.client_options(), Some(account_handle.is_monitoring.clone())).await?;
     let mut client = client.write().await;
 
     let mut topics = Vec::new();
@@ -54,7 +55,7 @@ async fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
     handler: C,
 ) {
     tokio::spawn(async move {
-        let client = crate::client::get_client(&client_options).await?;
+        let client = crate::client::get_client(&client_options, Some(is_monitoring.clone())).await?;
         let mut client = client.write().await;
         if client
             .subscriber()
@@ -145,7 +146,9 @@ async fn process_output(
     let client_options_ = client_options.clone();
 
     if address_wrapper == latest_address {
-        account_handle.generate_address_internal(&mut account).await?;
+        // we ignore errors in case stronghold is locked
+        // because it's more important to process the event
+        let _ = account_handle.generate_address_internal(&mut account).await;
     }
 
     match account.messages_mut().iter().position(|m| m.id() == &message_id) {
@@ -154,6 +157,7 @@ async fn process_output(
             if !message.confirmed().unwrap_or(false) {
                 message.set_confirmed(Some(true));
                 let message = message.clone();
+                log::info!("[MQTT] message confirmed: {:?}", message.id());
                 crate::event::emit_confirmation_state_change(
                     &account,
                     message.clone(),
@@ -165,7 +169,7 @@ async fn process_output(
             }
         }
         None => {
-            if let Ok(message) = crate::client::get_client(&client_options_)
+            if let Ok(message) = crate::client::get_client(&client_options_, Some(account_handle.is_monitoring.clone()))
                 .await?
                 .read()
                 .await
@@ -184,10 +188,11 @@ async fn process_output(
                 .with_confirmed(Some(true))
                 .finish()
                 .await?;
+                log::info!("[MQTT] new transaction: {:?}", message.id());
                 crate::event::emit_transaction_event(
                     crate::event::TransactionEventType::NewTransaction,
                     &account,
-                    &message,
+                    message.clone(),
                     account_handle.account_options.persist_events,
                 )
                 .await?;
@@ -197,15 +202,21 @@ async fn process_output(
         }
     }
 
+    let balance_change = if new_balance > old_balance {
+        crate::event::BalanceChange::received(new_balance - old_balance)
+    } else {
+        crate::event::BalanceChange::spent(old_balance - new_balance)
+    };
+    log::info!(
+        "[MQTT] balance change on {} {:?}",
+        address_wrapper.to_bech32(),
+        balance_change
+    );
     crate::event::emit_balance_change(
         &account,
         &address_wrapper,
         Some(message_id),
-        if new_balance > old_balance {
-            crate::event::BalanceChange::received(new_balance - old_balance)
-        } else {
-            crate::event::BalanceChange::spent(old_balance - new_balance)
-        },
+        balance_change,
         account_handle.account_options.persist_events,
     )
     .await?;
@@ -262,6 +273,11 @@ async fn process_metadata(payload: String, account_handle: AccountHandle, messag
             message.set_confirmed(Some(confirmed));
             account.save().await?;
 
+            log::info!(
+                "[MQTT] confirmation state change: {:?} - confirmed: {}",
+                message_.id(),
+                confirmed
+            );
             crate::event::emit_confirmation_state_change(
                 &account,
                 message_,

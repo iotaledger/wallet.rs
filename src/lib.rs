@@ -45,14 +45,13 @@ pub use stronghold::{
 pub type Result<T> = std::result::Result<T, Error>;
 pub use chrono::prelude::{DateTime, Local, Utc};
 use once_cell::sync::OnceCell;
-use std::sync::Mutex;
 use tokio::runtime::Runtime;
 
-static RUNTIME: OnceCell<Mutex<Runtime>> = OnceCell::new();
+static RUNTIME: OnceCell<Runtime> = OnceCell::new();
 
 pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
-    let runtime = RUNTIME.get_or_init(|| Mutex::new(Runtime::new().unwrap()));
-    runtime.lock().unwrap().block_on(cb)
+    let runtime = RUNTIME.get_or_init(|| Runtime::new().unwrap());
+    runtime.block_on(cb)
 }
 
 pub(crate) fn spawn<F>(future: F)
@@ -60,8 +59,8 @@ where
     F: futures::Future + Send + 'static,
     F::Output: Send + 'static,
 {
-    let runtime = RUNTIME.get_or_init(|| Mutex::new(Runtime::new().unwrap()));
-    runtime.lock().unwrap().spawn(future);
+    let runtime = RUNTIME.get_or_init(|| Runtime::new().unwrap());
+    runtime.spawn(future);
 }
 
 /// Access the stronghold's actor system.
