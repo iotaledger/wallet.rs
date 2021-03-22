@@ -8,16 +8,14 @@ use crate::{
 };
 use getset::{Getters, Setters};
 use iota::{
-    bee_rest_api::{
-        endpoints::api::v1::output::OutputResponse,
-        types::{AddressDto, OutputDto},
-    },
-    MessageId, TransactionId,
+    bee_rest_api::types::dtos::{AddressDto, OutputDto},
+    MessageId, OutputId, OutputResponse, TransactionId,
 };
 pub use iota::{Address as IotaAddress, Ed25519Address, Input, UTXOInput};
 use serde::{Deserialize, Serialize};
 use std::{
     cmp::Ordering,
+    collections::HashMap,
     convert::TryInto,
     hash::{Hash, Hasher},
     str::FromStr,
@@ -73,6 +71,11 @@ pub struct AddressOutput {
 }
 
 impl AddressOutput {
+    /// The output identifier.
+    pub fn id(&self) -> crate::Result<OutputId> {
+        OutputId::new(self.transaction_id, self.index).map_err(Into::into)
+    }
+
     /// Checks if the output is referenced on a pending message or a confirmed message
     pub(crate) fn is_used(&self, account: &Account) -> bool {
         let output_id = UTXOInput::new(self.transaction_id, self.index).unwrap();
@@ -200,6 +203,13 @@ impl AddressBuilder {
         let iota_address = self.address.ok_or(crate::Error::AddressBuildRequiredField(
             crate::error::AddressBuildRequiredField::Address,
         ))?;
+        let address_outputs = self.outputs.ok_or(crate::Error::AddressBuildRequiredField(
+            crate::error::AddressBuildRequiredField::Outputs,
+        ))?;
+        let mut outputs = HashMap::new();
+        for output in address_outputs {
+            outputs.insert(output.id()?, output);
+        }
         let address = Address {
             address: iota_address,
             balance: self.balance.ok_or(crate::Error::AddressBuildRequiredField(
@@ -209,9 +219,7 @@ impl AddressBuilder {
                 crate::error::AddressBuildRequiredField::KeyIndex,
             ))?,
             internal: self.internal,
-            outputs: self.outputs.ok_or(crate::Error::AddressBuildRequiredField(
-                crate::error::AddressBuildRequiredField::Outputs,
-            ))?,
+            outputs,
         };
         Ok(address)
     }
@@ -268,7 +276,7 @@ pub struct Address {
     internal: bool,
     /// The address outputs.
     #[getset(set = "pub(crate)")]
-    pub(crate) outputs: Vec<AddressOutput>,
+    pub(crate) outputs: HashMap<OutputId, AddressOutput>,
 }
 
 impl PartialOrd for Address {
@@ -302,9 +310,9 @@ impl Address {
         AddressBuilder::new()
     }
 
-    pub(crate) fn handle_new_output(&mut self, output: AddressOutput) {
-        if !self.outputs.iter().any(|o| o == &output) {
-            let spent_existing_output = self.outputs.iter_mut().find(|o| {
+    pub(crate) fn handle_new_output(&mut self, output: AddressOutput) -> crate::Result<()> {
+        if !self.outputs.values().any(|o| o == &output) {
+            let spent_existing_output = self.outputs.values_mut().find(|o| {
                 o.message_id == output.message_id
                     && o.transaction_id == output.transaction_id
                     && o.index == output.index
@@ -318,15 +326,16 @@ impl Address {
             } else {
                 log::debug!("[ADDRESS] got new output {:?}", output);
                 self.balance += output.amount;
-                self.outputs.push(output);
+                self.outputs.insert(output.id()?, output);
             }
         }
+        Ok(())
     }
 
     /// Gets the list of outputs that aren't spent or pending.
     pub fn available_outputs(&self, account: &Account) -> Vec<&AddressOutput> {
         self.outputs
-            .iter()
+            .values()
             .filter(|o| !(o.is_spent || o.is_used(account)))
             .collect()
     }
@@ -341,7 +350,7 @@ impl Address {
     #[doc(hidden)]
     pub fn set_bech32_hrp(&mut self, hrp: String) {
         self.address.bech32_hrp = hrp.to_string();
-        for output in self.outputs.iter_mut() {
+        for output in self.outputs.values_mut() {
             output.address.bech32_hrp = hrp.to_string();
         }
     }
@@ -377,7 +386,7 @@ pub(crate) async fn get_new_address(account: &Account, metadata: GenerateAddress
     let bech32_hrp = match account.addresses().first() {
         Some(address) => address.address().bech32_hrp().to_string(),
         None => {
-            crate::client::get_client(account.client_options())
+            crate::client::get_client(account.client_options(), None)
                 .await?
                 .read()
                 .await
@@ -392,7 +401,7 @@ pub(crate) async fn get_new_address(account: &Account, metadata: GenerateAddress
         balance: 0,
         key_index,
         internal: false,
-        outputs: vec![],
+        outputs: Default::default(),
     };
     Ok(address)
 }
@@ -417,7 +426,7 @@ pub(crate) async fn get_new_change_address(
         balance: 0,
         key_index,
         internal: true,
-        outputs: vec![],
+        outputs: Default::default(),
     };
     Ok(address)
 }

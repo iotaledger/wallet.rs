@@ -20,11 +20,14 @@ use std::{
     hash::{Hash, Hasher},
     ops::Deref,
     path::PathBuf,
-    sync::Arc,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
 };
 
 mod sync;
-pub(crate) use sync::{repost_message, AccountSynchronizeStep, RepostAction};
+pub(crate) use sync::{repost_message, AccountSynchronizeStep, RepostAction, SyncedAccountData};
 pub use sync::{AccountSynchronizer, SyncedAccount};
 
 const ACCOUNT_ID_PREFIX: &str = "wallet-account://";
@@ -104,6 +107,7 @@ pub struct AccountInitialiser {
     accounts: AccountStore,
     storage_path: PathBuf,
     account_options: AccountOptions,
+    is_monitoring: Arc<AtomicBool>,
     alias: Option<String>,
     created_at: Option<DateTime<Local>>,
     messages: Vec<Message>,
@@ -122,11 +126,13 @@ impl AccountInitialiser {
         accounts: AccountStore,
         storage_path: PathBuf,
         account_options: AccountOptions,
+        is_monitoring: Arc<AtomicBool>,
     ) -> Self {
         Self {
             accounts,
             storage_path,
             account_options,
+            is_monitoring,
             alias: None,
             created_at: None,
             messages: vec![],
@@ -243,7 +249,7 @@ impl AccountInitialiser {
             skip_persistence: self.skip_persistence,
         };
 
-        let bech32_hrp = crate::client::get_client(&account.client_options)
+        let bech32_hrp = crate::client::get_client(&account.client_options, Some(self.is_monitoring.clone()))
             .await?
             .read()
             .await
@@ -305,11 +311,21 @@ impl AccountInitialiser {
         account.set_id(format!("{}{}", ACCOUNT_ID_PREFIX, hex::encode(digest)));
 
         let guard = if self.skip_persistence {
-            AccountHandle::new(account, self.accounts.clone(), self.account_options)
+            AccountHandle::new(
+                account,
+                self.accounts.clone(),
+                self.account_options,
+                self.is_monitoring.clone(),
+            )
         } else {
             account.save().await?;
             let account_id = account.id().clone();
-            let guard = AccountHandle::new(account, self.accounts.clone(), self.account_options);
+            let guard = AccountHandle::new(
+                account,
+                self.accounts.clone(),
+                self.account_options,
+                self.is_monitoring.clone(),
+            );
             drop(accounts);
             self.accounts.write().await.insert(account_id, guard.clone());
             let _ = crate::monitor::monitor_account_addresses_balance(guard.clone()).await;
@@ -367,15 +383,24 @@ pub struct AccountHandle {
     pub(crate) accounts: AccountStore,
     pub(crate) locked_addresses: Arc<Mutex<Vec<AddressWrapper>>>,
     pub(crate) account_options: AccountOptions,
+    pub(crate) is_monitoring: Arc<AtomicBool>,
+    is_mqtt_enabled: Arc<AtomicBool>,
 }
 
 impl AccountHandle {
-    pub(crate) fn new(account: Account, accounts: AccountStore, account_options: AccountOptions) -> Self {
+    pub(crate) fn new(
+        account: Account,
+        accounts: AccountStore,
+        account_options: AccountOptions,
+        is_monitoring: Arc<AtomicBool>,
+    ) -> Self {
         Self {
             inner: Arc::new(RwLock::new(account)),
             accounts,
             locked_addresses: Default::default(),
             account_options,
+            is_monitoring,
+            is_mqtt_enabled: Arc::new(AtomicBool::new(true)),
         }
     }
 
@@ -390,6 +415,18 @@ impl AccountHandle {
             }
         }
         addresses
+    }
+
+    pub(crate) fn is_mqtt_enabled(&self) -> bool {
+        self.is_mqtt_enabled.load(Ordering::Relaxed)
+    }
+
+    pub(crate) fn disable_mqtt(&self) {
+        self.is_mqtt_enabled.store(false, Ordering::Relaxed);
+    }
+
+    pub(crate) fn enable_mqtt(&self) {
+        self.is_mqtt_enabled.store(true, Ordering::Relaxed);
     }
 }
 
@@ -485,9 +522,18 @@ impl AccountHandle {
             })
             .await?;
 
-        let _ = crate::monitor::monitor_address_balance(self.clone(), address.address());
+        // monitor on a non-async function to prevent cycle computing the `monitor_address_balance` fn type
+        self.monitor_address(address.address().clone());
 
         Ok(address)
+    }
+
+    pub(crate) fn monitor_address(&self, address: AddressWrapper) {
+        let handle = self.clone();
+        crate::spawn(async move {
+            // ignore errors because we fallback to the polling system
+            let _ = crate::monitor::monitor_address_balance(handle, &address).await;
+        });
     }
 
     /// Synchronizes the account addresses with the Tangle and returns the latest address in the account,
@@ -513,10 +559,11 @@ impl AccountHandle {
         sync::sync_address(
             account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect(),
             account.client_options().clone(),
-            Some(latest_address.outputs().to_vec()),
+            latest_address.outputs().clone(),
             &mut latest_address,
             bech32_hrp,
             self.account_options,
+            self.is_monitoring.clone(),
         )
         .await?;
         Ok(*latest_address.balance() == 0 && latest_address.outputs().is_empty())
@@ -641,22 +688,22 @@ impl Account {
 
     /// Gets the account balance information.
     pub fn balance(&self) -> AccountBalance {
-        let (incoming, outgoing) =
-            self.list_messages(0, 0, None)
-                .iter()
-                .fold((0, 0), |(incoming, outgoing), message| {
-                    if let Some(MessagePayload::Transaction(tx)) = message.payload() {
-                        let TransactionEssence::Regular(essence) = tx.essence();
-                        if !essence.internal() {
-                            if essence.incoming() {
-                                return (incoming + essence.value(), outgoing);
-                            } else {
-                                return (incoming, outgoing + essence.value());
-                            }
+        let (incoming, outgoing) = self.list_messages(0, 0, Some(MessageType::Confirmed)).iter().fold(
+            (0, 0),
+            |(incoming, outgoing), message| {
+                if let Some(MessagePayload::Transaction(tx)) = message.payload() {
+                    let TransactionEssence::Regular(essence) = tx.essence();
+                    if !essence.internal() {
+                        if essence.incoming() {
+                            return (incoming + essence.value(), outgoing);
+                        } else {
+                            return (incoming, outgoing + essence.value());
                         }
                     }
-                    (incoming, outgoing)
-                });
+                }
+                (incoming, outgoing)
+            },
+        );
         AccountBalance {
             total: self.addresses.iter().fold(0, |acc, address| acc + address.balance()),
             available: self
@@ -678,7 +725,7 @@ impl Account {
 
     /// Updates the account's client options.
     pub async fn set_client_options(&mut self, options: ClientOptions) -> crate::Result<()> {
-        let client_guard = crate::client::get_client(&options).await?;
+        let client_guard = crate::client::get_client(&options, None).await?;
         let client = client_guard.read().await;
 
         let unsynced_nodes = client.unsynced_nodes().await;
@@ -790,6 +837,7 @@ impl Account {
                     MessageType::Failed => !message.broadcasted(),
                     MessageType::Unconfirmed => message.confirmed().is_none(),
                     MessageType::Value => matches!(message.payload(), Some(MessagePayload::Transaction(_))),
+                    MessageType::Confirmed => message.confirmed().unwrap_or_default(),
                 }
             } else {
                 true
@@ -877,6 +925,7 @@ mod tests {
         message::{Message, MessagePayload, MessageType, TransactionEssence},
     };
     use iota::{MessageId, TransactionId};
+    use std::collections::HashMap;
 
     // asserts that the `set_alias` function updates the account alias in storage
     #[tokio::test]
@@ -1042,7 +1091,10 @@ mod tests {
         let first_address = {
             let mut account = account_handle.write().await;
             let address = account.addresses_mut().iter_mut().next().unwrap();
-            address.outputs = vec![_generate_address_output(15)];
+            let mut outputs = HashMap::new();
+            let output = _generate_address_output(15);
+            outputs.insert(output.id().unwrap(), output);
+            address.outputs = outputs;
             address.clone()
         };
         let second_address = {
@@ -1051,20 +1103,23 @@ mod tests {
             let mut iter = addresses.iter_mut();
             iter.next();
             let address = iter.next().unwrap();
-            address.outputs = vec![_generate_address_output(15)];
+            let mut outputs = HashMap::new();
+            let output = _generate_address_output(15);
+            outputs.insert(output.id().unwrap(), output);
+            address.outputs = outputs;
             address.clone()
         };
 
         let unconfirmed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(first_address.clone())
             .value(15)
-            .input_transaction_id(first_address.outputs[0].transaction_id)
+            .input_transaction_id(first_address.outputs.values().next().unwrap().transaction_id)
             .build()
             .await;
         let confirmed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(second_address.clone())
             .value(10)
-            .input_transaction_id(second_address.outputs[0].transaction_id)
+            .input_transaction_id(second_address.outputs.values().next().unwrap().transaction_id)
             .confirmed(Some(true))
             .build()
             .await;
@@ -1185,6 +1240,7 @@ mod tests {
             (MessageType::Sent, &sent_message),
             (MessageType::Unconfirmed, &unconfirmed_message),
             (MessageType::Value, &received_message),
+            (MessageType::Confirmed, &received_message),
         ];
         for (tx_type, expected) in cases {
             let messages = account_handle.list_messages(0, 0, Some(tx_type.clone())).await;
@@ -1192,6 +1248,7 @@ mod tests {
                 messages.len(),
                 match tx_type {
                     MessageType::Sent => 4,
+                    MessageType::Confirmed => 4,
                     MessageType::Value => 5,
                     _ => 1,
                 }

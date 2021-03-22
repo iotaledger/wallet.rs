@@ -54,7 +54,7 @@ $ brew install cmake openssl@1.1
 
 ### Linux
 
-Install `cmake`, `clang` and `openssl` with your distro's package manager or download from their websites. On Debian and Ubuntu you will also need `build-essential`.
+Install `cmake`, `clang` and `openssl` with your distro's package manager or download from their websites. On Debian and Ubuntu you will also need `build-essential` and `libudev-dev` .
 
 ## Usage
 

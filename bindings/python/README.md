@@ -797,7 +797,7 @@ wallet_address = {
     'balance': int,
     'key_index': int,
     'internal': bool,
-    'outputs': list[WalletAddressOutput],
+    'outputs': dict[(string, WalletAddressOutput)],
 }
 ```
 
@@ -929,8 +929,7 @@ A dict with the following key/value pairs.
 ```python
 broker_options = {
     'automatic_disconnect': bool (optional),
-    'timeout': int (optional),
-    'use_websockets': bool (optional)
+    'timeout': int (optional)
 }
 ```
 
