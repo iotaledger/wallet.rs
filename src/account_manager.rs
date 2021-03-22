@@ -1817,7 +1817,7 @@ mod tests {
                 .unwrap();
 
             let remove_response = manager.remove_account(account_handle.read().await.id()).await;
-            assert!(remove_response.is_err());
+            assert!(remove_response.is_ok());
         })
         .await;
     }
