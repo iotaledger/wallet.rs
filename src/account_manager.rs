@@ -694,7 +694,7 @@ impl AccountManager {
             let account_handle = self.get_account(account_id).await?;
             let account = account_handle.read().await;
 
-            if !(account.messages().is_empty() && account.addresses().iter().all(|a| a.outputs.is_empty())) {
+            if account.balance().total > 0 {
                 return Err(crate::Error::AccountNotEmpty);
             }
 
@@ -1817,7 +1817,7 @@ mod tests {
                 .unwrap();
 
             let remove_response = manager.remove_account(account_handle.read().await.id()).await;
-            assert!(remove_response.is_err());
+            assert!(remove_response.is_ok());
         })
         .await;
     }
