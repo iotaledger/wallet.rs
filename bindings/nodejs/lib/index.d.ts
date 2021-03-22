@@ -220,6 +220,8 @@ export declare class AccountManager {
   importAccounts(source: string, password: string): void
   isLatestAddressUnused(): Promise<boolean>
   setClientOptions(options: ClientOptions): void
+  // migration
+  generateMigrationAddress(bech32Address: string): string
   // events
   getBalanceChangeEvents(count?: number, skip?: number, fromTimestamp?: number): BalanceChangeEvent[]
   getBalanceChangeEventCount(fromTimestamp?: number): number
