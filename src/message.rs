@@ -143,7 +143,7 @@ impl TransferBuilder {
 
     /// (Optional) message indexation.
     pub fn with_indexation(mut self, indexation: IndexationPayload) -> Self {
-        self.indexation = Some(indexation);
+        self.indexation.replace(indexation);
         self
     }
 
@@ -418,7 +418,7 @@ impl TransactionRegularEssence {
                         let mut output = None;
                         for address in metadata.account_addresses {
                             if let Some(found_output) = address.outputs().get(i.output_id()) {
-                                output = Some(found_output.clone());
+                                output.replace(found_output.clone());
                                 break;
                             }
                         }
@@ -498,7 +498,7 @@ impl TransactionRegularEssence {
                             }
                             _ => false,
                         }) {
-                            remainder = Some(account_address);
+                            remainder.replace(account_address);
                             break;
                         }
                         match remainder {
@@ -509,11 +509,11 @@ impl TransactionRegularEssence {
                                 if address_index > *remainder_address.key_index()
                                     || (address_index == *remainder_address.key_index() && *account_address.internal())
                                 {
-                                    remainder = Some(account_address);
+                                    remainder.replace(account_address);
                                 }
                             }
                             None => {
-                                remainder = Some(account_address);
+                                remainder.replace(account_address);
                             }
                         }
                     }

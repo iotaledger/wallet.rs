@@ -368,7 +368,7 @@ impl AccountInitialiser {
             })
             .collect();
         account_initialiser = account_initialiser.messages(messages);
-        self.account_initialiser = Some(account_initialiser);
+        self.account_initialiser.replace(account_initialiser);
     }
 
     /// Address history associated with the seed.

@@ -170,25 +170,25 @@ impl AddressBuilder {
 
     /// Defines the address.
     pub fn address(mut self, address: AddressWrapper) -> Self {
-        self.address = Some(address);
+        self.address.replace(address);
         self
     }
 
     /// Sets the address balance.
     pub fn balance(mut self, balance: u64) -> Self {
-        self.balance = Some(balance);
+        self.balance.replace(balance);
         self
     }
 
     /// Sets the address key index.
     pub fn key_index(mut self, key_index: usize) -> Self {
-        self.key_index = Some(key_index);
+        self.key_index.replace(key_index);
         self
     }
 
     /// Sets the address outputs.
     pub fn outputs(mut self, outputs: Vec<AddressOutput>) -> Self {
-        self.outputs = Some(outputs);
+        self.outputs.replace(outputs);
         self
     }
 

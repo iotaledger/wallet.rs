@@ -155,13 +155,13 @@ impl AccountInitialiser {
 
     /// Defines the account alias. If not defined, we'll generate one.
     pub fn alias(mut self, alias: impl AsRef<str>) -> Self {
-        self.alias = Some(alias.as_ref().to_string());
+        self.alias.replace(alias.as_ref().to_string());
         self
     }
 
     /// Time of account creation.
     pub fn created_at(mut self, created_at: DateTime<Local>) -> Self {
-        self.created_at = Some(created_at);
+        self.created_at.replace(created_at);
         self
     }
 
@@ -223,7 +223,7 @@ impl AccountInitialiser {
             }
             if *account.index() >= latest_account_index {
                 latest_account_index = *account.index();
-                latest_account_handle = Some(account_handle.clone());
+                latest_account_handle.replace(account_handle.clone());
             }
         }
         if let Some(latest_account_handle) = latest_account_handle {

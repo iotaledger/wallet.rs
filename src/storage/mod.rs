@@ -177,7 +177,7 @@ macro_rules! event_manager_impl {
                         let mut indexation: Vec<EventIndexation> =
                             load_optional_data(&self.storage, $index_key).await?;
                         indexation.push(index);
-                        self.$index_vec = Some(indexation);
+                        self.$index_vec.replace(indexation);
                     }
                 }
                 self.storage.set($index_key, &self.$index_vec).await?;
@@ -193,7 +193,8 @@ macro_rules! event_manager_impl {
                 let indexation = match &self.$index_vec {
                     Some(indexation) => indexation,
                     None => {
-                        self.$index_vec = Some(load_optional_data(&self.storage, $index_key).await?);
+                        self.$index_vec
+                            .replace(load_optional_data(&self.storage, $index_key).await?);
                         self.$index_vec.as_ref().unwrap()
                     }
                 };
@@ -221,7 +222,8 @@ macro_rules! event_manager_impl {
                 let indexation = match &self.$index_vec {
                     Some(indexation) => indexation,
                     None => {
-                        self.$index_vec = Some(load_optional_data(&self.storage, $index_key).await?);
+                        self.$index_vec
+                            .replace(load_optional_data(&self.storage, $index_key).await?);
                         self.$index_vec.as_ref().unwrap()
                     }
                 };
@@ -333,7 +335,7 @@ pub(crate) async fn set_encryption_key(storage_path: &PathBuf, encryption_key: [
     let instances = INSTANCES.get_or_init(Default::default).read().await;
     if let Some(instance) = instances.get(storage_path) {
         let mut storage_manager = instance.lock().await;
-        storage_manager.storage.encryption_key = Some(encryption_key);
+        storage_manager.storage.encryption_key.replace(encryption_key);
         Ok(())
     } else {
         Err(crate::Error::StorageAdapterNotSet(storage_path.clone()))
@@ -432,7 +434,7 @@ fn parse_accounts(
                 match decrypt_record(account, key) {
                     Ok(json) => Some(json),
                     Err(e) => {
-                        err = Some(e);
+                        err.replace(e);
                         None
                     }
                 }
@@ -446,12 +448,12 @@ fn parse_accounts(
                         Some(acc)
                     }
                     Err(e) => {
-                        err = Some(e.into());
+                        err.replace(e.into());
                         None
                     }
                 }
             } else {
-                err = Some(crate::Error::StorageIsEncrypted);
+                err.replace(crate::Error::StorageIsEncrypted);
                 None
             }
         })

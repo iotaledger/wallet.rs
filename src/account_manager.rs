@@ -155,11 +155,8 @@ impl AccountManagerBuilder {
         password: Option<&str>,
     ) -> crate::Result<Self> {
         self.storage_path = storage_path.as_ref().to_path_buf();
-        self.storage = Some(storage);
-        self.storage_encryption_key = match password {
-            Some(p) => Some(storage_password_to_encryption_key(p)),
-            None => None,
-        };
+        self.storage.replace(storage);
+        self.storage_encryption_key = password.map(|p| storage_password_to_encryption_key(p));
         Ok(self)
     }
 
@@ -432,7 +429,7 @@ impl AccountManager {
         Self::start_monitoring(self.accounts.clone()).await;
         let (stop_polling_sender, stop_polling_receiver) = broadcast_channel(1);
         self.start_polling(polling_interval, stop_polling_receiver, automatic_output_consolidation);
-        self.stop_polling_sender = Some(stop_polling_sender);
+        self.stop_polling_sender.replace(stop_polling_sender);
     }
 
     /// Stops the background polling and MQTT monitoring.
@@ -620,7 +617,7 @@ impl AccountManager {
                 }
             });
         });
-        self.polling_handle = Some(handle);
+        self.polling_handle.replace(handle);
     }
 
     /// Stores a mnemonic for the given signer type.
@@ -651,7 +648,7 @@ impl AccountManager {
         crypto::utils::rand::fill(&mut entropy).map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
         let mnemonic = crypto::keys::bip39::wordlist::encode(&entropy, &crypto::keys::bip39::wordlist::ENGLISH)
             .map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
-        self.generated_mnemonic = Some(mnemonic.clone());
+        self.generated_mnemonic.replace(mnemonic.clone());
         Ok(mnemonic)
     }
 
@@ -960,7 +957,7 @@ impl AccountManager {
                         if associated_account.is_some() {
                             return Err(crate::Error::CannotUseIndexIdentifier);
                         }
-                        associated_account = Some(account_handle);
+                        associated_account.replace(account_handle);
                     }
                 }
                 associated_account
@@ -970,7 +967,7 @@ impl AccountManager {
                 for account_handle in accounts.values() {
                     let account = account_handle.read().await;
                     if account.alias() == &alias {
-                        associated_account = Some(account_handle);
+                        associated_account.replace(account_handle);
                         break;
                     }
                 }
@@ -981,7 +978,7 @@ impl AccountManager {
                 for account_handle in accounts.values() {
                     let account = account_handle.read().await;
                     if account.addresses().iter().any(|a| a.address() == &address) {
-                        associated_account = Some(account_handle);
+                        associated_account.replace(account_handle);
                         break;
                     }
                 }
@@ -1200,7 +1197,7 @@ impl AccountsSynchronizer {
             let account = account_handle.read().await;
             if *account.index() >= last_account_index {
                 last_account_index = *account.index();
-                last_account = Some((
+                last_account.replace((
                     account
                         .addresses()
                         .iter()
