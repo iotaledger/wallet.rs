@@ -1615,11 +1615,11 @@ async fn is_dust_allowed(
 
     // Add outputs from this transaction
     for (dust, add_outputs) in outputs {
-        let balance_to_add = if add_outputs { 1 } else { -1 };
+        let sign = if add_outputs { 1 } else { -1 };
         if dust >= DUST_ALLOWANCE_VALUE {
-            dust_allowance_balance += balance_to_add * dust as i64;
+            dust_allowance_balance += sign * dust as i64;
         } else {
-            dust_outputs_amount += balance_to_add;
+            dust_outputs_amount += sign;
         }
     }
 
