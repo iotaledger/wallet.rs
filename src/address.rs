@@ -310,30 +310,6 @@ impl Address {
         AddressBuilder::new()
     }
 
-    pub(crate) fn handle_new_output(&mut self, output: AddressOutput) -> crate::Result<bool> {
-        if !self.outputs.values().any(|o| o == &output) {
-            let spent_existing_output = self.outputs.values_mut().find(|o| {
-                o.message_id == output.message_id
-                    && o.transaction_id == output.transaction_id
-                    && o.index == output.index
-                    && o.amount == output.amount
-                    && (!o.is_spent && output.is_spent)
-            });
-            if let Some(spent_existing_output) = spent_existing_output {
-                log::debug!("[ADDRESS] got spent of {:?}", spent_existing_output);
-                self.balance -= output.amount;
-                spent_existing_output.is_spent = true;
-            } else {
-                log::debug!("[ADDRESS] got new output {:?}", output);
-                self.balance += output.amount;
-                self.outputs.insert(output.id()?, output);
-            }
-            Ok(true)
-        } else {
-            Ok(false)
-        }
-    }
-
     /// Gets the list of outputs that aren't spent or pending.
     pub fn available_outputs(&self, account: &Account) -> Vec<&AddressOutput> {
         self.outputs
