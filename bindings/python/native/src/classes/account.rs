@@ -47,6 +47,37 @@ impl AccountSynchronizer {
 }
 
 #[pymethods]
+impl SyncedAccount {
+    /// Get the `AccountHandle` of this account
+    fn account_handle(&self) -> AccountHandle {
+        AccountHandle {
+            account_handle: self.synced_account.account_handle().clone(),
+        }
+    }
+
+    /// Get the deposit_address of this account
+    fn deposit_address(&self) -> Address {
+        self.synced_account.deposit_address().clone().into()
+    }
+
+    /// Get the messages of this account
+    fn messages(&self) -> Result<Vec<WalletMessage>> {
+        let mut parsed_messages = Vec::new();
+        for message in self.synced_account.messages().clone() {
+            parsed_messages.push(message.try_into()?);
+        }
+
+        Ok(parsed_messages)
+    }
+
+    /// Get the addresses of this account
+    fn addresses(&self) -> Vec<Address> {
+        let addresses = self.synced_account.addresses().clone();
+        addresses.into_iter().map(|address| address.into()).collect()
+    }
+}
+
+#[pymethods]
 impl Transfer {
     #[new]
     fn new(
