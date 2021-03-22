@@ -885,16 +885,6 @@ impl AccountSynchronizer {
                     &confirmation_changed_messages,
                 )
                 .await?;
-                for balance_change_event in events.balance_change_events {
-                    emit_balance_change(
-                        &account,
-                        &balance_change_event.address,
-                        balance_change_event.message_id,
-                        balance_change_event.balance_change,
-                        persist_events,
-                    )
-                    .await?;
-                }
                 for message in events.new_transaction_events {
                     emit_transaction_event(TransactionEventType::NewTransaction, &account, message, persist_events)
                         .await?;
@@ -904,6 +894,16 @@ impl AccountSynchronizer {
                         &account,
                         confirmation_change_event.message,
                         confirmation_change_event.confirmed,
+                        persist_events,
+                    )
+                    .await?;
+                }
+                for balance_change_event in events.balance_change_events {
+                    emit_balance_change(
+                        &account,
+                        &balance_change_event.address,
+                        balance_change_event.message_id,
+                        balance_change_event.balance_change,
                         persist_events,
                     )
                     .await?;
