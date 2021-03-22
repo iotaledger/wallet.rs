@@ -2241,6 +2241,7 @@
 <span id="2238">2238</span>
 <span id="2239">2239</span>
 <span id="2240">2240</span>
+<span id="2241">2241</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -4136,6 +4137,7 @@
             <span class="kw">let</span> <span class="ident">client_options</span> <span class="op">=</span> <span class="ident">ClientOptionsBuilder</span>::<span class="ident">new</span>()
                 .<span class="ident">with_node</span>(<span class="string">&quot;https://api.lb-0.testnet.chrysalis2.com&quot;</span>)
                 .<span class="ident">expect</span>(<span class="string">&quot;invalid node URL&quot;</span>)
+                .<span class="ident">with_network</span>(<span class="string">&quot;testnet&quot;</span>)
                 .<span class="ident">build</span>()
                 .<span class="ident">unwrap</span>();
 
