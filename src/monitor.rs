@@ -61,20 +61,23 @@ async fn subscribe_to_topics<C: Fn(&TopicEvent) + Send + Sync + 'static>(
     is_monitoring: Arc<AtomicBool>,
     handler: C,
 ) {
-    tokio::spawn(async move {
-        let client = crate::client::get_client(&client_options, Some(is_monitoring.clone())).await?;
-        let mut client = client.write().await;
-        if client
-            .subscriber()
-            .with_topics(topics)
-            .subscribe(handler)
-            .await
-            .is_err()
-        {
-            is_monitoring.store(false, std::sync::atomic::Ordering::Relaxed);
-        }
-        crate::Result::Ok(())
-    });
+    if !topics.is_empty() {
+        log::debug!("[MQTT] subscribe: {:?}", topics);
+        tokio::spawn(async move {
+            let client = crate::client::get_client(&client_options, Some(is_monitoring.clone())).await?;
+            let mut client = client.write().await;
+            if client
+                .subscriber()
+                .with_topics(topics)
+                .subscribe(handler)
+                .await
+                .is_err()
+            {
+                is_monitoring.store(false, std::sync::atomic::Ordering::Relaxed);
+            }
+            crate::Result::Ok(())
+        });
+    }
 }
 
 /// Monitor account addresses for balance changes.
@@ -134,6 +137,7 @@ async fn process_output(
             (&output.address).try_into().map_err(|_| crate::Error::InvalidAddress)?
         }
         _ => {
+            log::debug!("[MQTT] ignoring output type");
             return Ok(());
         }
     };
@@ -145,6 +149,7 @@ async fn process_output(
     {
         Some(address) => address.address().clone(),
         None => {
+            log::debug!("[MQTT] address not found");
             return Ok(());
         }
     };
@@ -170,6 +175,7 @@ async fn process_output(
         let handled = address_to_update.handle_new_output(address_output)?;
         if !handled {
             // output was already handled; ignore this process
+            log::debug!("[MQTT] output already handled");
             return Ok(());
         }
         let new_balance = *address_to_update.balance();
