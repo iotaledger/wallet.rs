@@ -1892,6 +1892,7 @@ mod tests {
             let client_options = ClientOptionsBuilder::new()
                 .with_node("https://api.lb-0.testnet.chrysalis2.com")
                 .expect("invalid node URL")
+                .with_network("testnet")
                 .build()
                 .unwrap();
 
