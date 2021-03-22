@@ -127,6 +127,11 @@ pub(crate) async fn get_client(
     Ok(client.clone())
 }
 
+/// Drops all clients.
+pub async fn drop_all() {
+    instances().lock().await.clear();
+}
+
 /// The options builder for a client connected to multiple nodes.
 pub struct ClientOptionsBuilder {
     nodes: Vec<Node>,

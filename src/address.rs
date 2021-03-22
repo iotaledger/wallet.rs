@@ -310,7 +310,7 @@ impl Address {
         AddressBuilder::new()
     }
 
-    pub(crate) fn handle_new_output(&mut self, output: AddressOutput) -> crate::Result<()> {
+    pub(crate) fn handle_new_output(&mut self, output: AddressOutput) -> crate::Result<bool> {
         if !self.outputs.values().any(|o| o == &output) {
             let spent_existing_output = self.outputs.values_mut().find(|o| {
                 o.message_id == output.message_id
@@ -328,8 +328,10 @@ impl Address {
                 self.balance += output.amount;
                 self.outputs.insert(output.id()?, output);
             }
+            Ok(true)
+        } else {
+            Ok(false)
         }
-        Ok(())
     }
 
     /// Gets the list of outputs that aren't spent or pending.

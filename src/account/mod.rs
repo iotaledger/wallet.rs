@@ -532,7 +532,7 @@ impl AccountHandle {
         let handle = self.clone();
         crate::spawn(async move {
             // ignore errors because we fallback to the polling system
-            let _ = crate::monitor::monitor_address_balance(handle, &address).await;
+            let _ = crate::monitor::monitor_address_balance(handle, vec![address]).await;
         });
     }
 
