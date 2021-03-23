@@ -13,7 +13,7 @@ use chrono::{DateTime, Local};
 use serde::{ser::Serializer, Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
 
-use std::{num::NonZeroU64, time::Duration};
+use std::{num::NonZeroU64, path::PathBuf, time::Duration};
 
 /// An account to create.
 #[derive(Clone, Debug, Deserialize)]
@@ -125,14 +125,14 @@ pub enum MessageType {
     /// Backup storage.
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))))]
-    Backup(String),
+    Backup(PathBuf),
     /// Import accounts from storage.
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))))]
     RestoreBackup {
         /// The path to the backed up storage.
         #[serde(rename = "backupPath")]
-        backup_path: String,
+        backup_path: PathBuf,
         /// The backup stronghold password.
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]

@@ -16,6 +16,7 @@ use std::{
     convert::TryInto,
     num::NonZeroU64,
     panic::{catch_unwind, AssertUnwindSafe},
+    path::Path,
 };
 
 mod message;
@@ -224,7 +225,7 @@ impl WalletMessageHandler {
     }
 
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    async fn backup(&self, destination_path: &str) -> Result<ResponseType> {
+    async fn backup(&self, destination_path: &Path) -> Result<ResponseType> {
         self.account_manager.backup(destination_path).await?;
         Ok(ResponseType::BackupSuccessful)
     }
@@ -232,7 +233,7 @@ impl WalletMessageHandler {
     #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
     async fn restore_backup(
         &mut self,
-        backup_path: &str,
+        backup_path: &Path,
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))] password: String,
     ) -> Result<ResponseType> {
         #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
