@@ -889,16 +889,6 @@ impl AccountSynchronizer {
                     &confirmation_changed_messages,
                 )
                 .await?;
-                for balance_change_event in events.balance_change_events {
-                    emit_balance_change(
-                        &account,
-                        &balance_change_event.address,
-                        balance_change_event.message_id,
-                        balance_change_event.balance_change,
-                        persist_events,
-                    )
-                    .await?;
-                }
                 for message in events.new_transaction_events {
                     emit_transaction_event(TransactionEventType::NewTransaction, &account, message, persist_events)
                         .await?;
@@ -908,6 +898,16 @@ impl AccountSynchronizer {
                         &account,
                         confirmation_change_event.message,
                         confirmation_change_event.confirmed,
+                        persist_events,
+                    )
+                    .await?;
+                }
+                for balance_change_event in events.balance_change_events {
+                    emit_balance_change(
+                        &account,
+                        &balance_change_event.address,
+                        balance_change_event.message_id,
+                        balance_change_event.balance_change,
                         persist_events,
                     )
                     .await?;
@@ -1592,9 +1592,9 @@ async fn perform_transfer(
 
     for address in addresses_to_watch {
         // ignore errors because we fallback to the polling system
-        let _ = crate::monitor::monitor_address_balance(account_handle.clone(), &address).await;
+        let _ = crate::monitor::monitor_address_balance(account_handle.clone(), vec![address]).await;
     }
-    crate::monitor::monitor_confirmation_state_change(account_handle.clone(), message_id).await;
+    crate::monitor::monitor_confirmation_state_change(account_handle.clone(), vec![message_id]).await;
 
     Ok(message)
 }
