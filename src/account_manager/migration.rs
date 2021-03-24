@@ -78,11 +78,11 @@ impl<'a> MigrationDataFinder<'a> {
     }
 
     pub(crate) async fn finish(&self, inputs: &mut HashMap<Range<u64>, Vec<InputData>>) -> crate::Result<u64> {
-        let mut previous_balance = 0;
-
         let mut address_index = self.initial_address_index;
         let legacy_client = iota_migration::ClientBuilder::new().node(self.node)?.build()?;
-        let balance = loop {
+        let mut balance = 0;
+
+        loop {
             let migration_inputs = legacy_client
                 .get_account_data_for_migration()
                 .with_seed(&self.seed)
@@ -101,18 +101,16 @@ impl<'a> MigrationDataFinder<'a> {
                 .into_iter()
                 .map(|(_, input)| input)
                 .collect::<Vec<InputData>>();
-            // Get total available balance
-            let balance = current_inputs.iter().map(|d| d.balance).sum();
+            let current_balance: u64 = current_inputs.iter().map(|d| d.balance).sum();
+            balance += current_balance;
             inputs.insert(address_index..address_index + self.gap_limit, current_inputs);
 
             // if balance didn't change, we stop searching for balance
-            if balance == previous_balance {
-                break balance;
+            if current_balance == 0 {
+                break;
             }
-
-            previous_balance = balance;
             address_index += self.gap_limit;
-        };
+        }
 
         Ok(balance)
     }
