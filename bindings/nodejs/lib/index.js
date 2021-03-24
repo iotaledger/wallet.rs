@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 const addon = require('../build/Release')
-let { AccountManager, Account, EventListener, initLogger } = addon
+let { AccountManager, Account, SyncedAccount, EventListener, initLogger } = addon
 
 function promisify (fn) {
   return function () {
@@ -56,25 +56,30 @@ class RemainderValueStrategy {
 Account.prototype.sync = promisify(Account.prototype.sync)
 Account.prototype.isLatestAddressUnused = promisify(Account.prototype.isLatestAddressUnused)
 
-const send = Account.prototype.send
-Account.prototype.send = function (address, amount, options) {
-  if (options && (typeof options === 'object') && options.indexation) {
-    let index = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.index) :  options.indexation.index
-    let data = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.data) :  options.indexation.data
-    const formattedOptions = {
-      indexation: {
-        index: Array.from(index),
-        data: data ? Array.from(data) : null,
+function rewriteSend(classT) {
+  const send = classT.prototype.send
+  classT.prototype.send = function (address, amount, options) {
+    if (options && (typeof options === 'object') && options.indexation) {
+      let index = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.index) :  options.indexation.index
+      let data = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.data) :  options.indexation.data
+      const formattedOptions = {
+        indexation: {
+          index: Array.from(index),
+          data: data ? Array.from(data) : null,
+        }
       }
+      if (options.remainderValueStrategy) {
+        formattedOptions.remainderValueStrategy = options.remainderValueStrategy
+      }
+      return promisify(send).apply(this, [address, amount, formattedOptions])
+    } else {
+      return promisify(send).apply(this, options ? [address, amount, options] : [address, amount])
     }
-    if (options.remainderValueStrategy) {
-      formattedOptions.remainderValueStrategy = options.remainderValueStrategy
-    }
-    return promisify(send).apply(this, [address, amount, formattedOptions])
-  } else {
-    return promisify(send).apply(this, options ? [address, amount, options] : [address, amount])
-  }
 }
+}
+
+rewriteSend(Account)
+rewriteSend(SyncedAccount)
 
 Account.prototype.retry = promisify(Account.prototype.retry)
 Account.prototype.reattach = promisify(Account.prototype.reattach)
