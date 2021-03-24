@@ -226,7 +226,7 @@ impl AccountInitialiser {
                 latest_account_handle = Some(account_handle.clone());
             }
         }
-        if let Some(latest_account_handle) = latest_account_handle {
+        if let Some(ref latest_account_handle) = latest_account_handle {
             let latest_account = latest_account_handle.read().await;
             if latest_account.messages().is_empty() && latest_account.addresses().iter().all(|a| a.outputs.is_empty()) {
                 return Err(crate::Error::LatestAccountIsEmpty);
@@ -249,25 +249,46 @@ impl AccountInitialiser {
             skip_persistence: self.skip_persistence,
         };
 
-        let bech32_hrp = crate::client::get_client(&account.client_options, Some(self.is_monitoring.clone()))
-            .await?
-            .read()
-            .await
-            .get_network_info()
-            .await
-            .map_err(|e| match e {
-                iota::client::Error::SyncedNodePoolEmpty => crate::Error::NodesNotSynced(
-                    account
-                        .client_options
-                        .nodes()
-                        .iter()
-                        .map(|node| node.url.as_str())
-                        .collect::<Vec<&str>>()
-                        .join(", "),
-                ),
-                _ => e.into(),
-            })?
-            .bech32_hrp;
+        let bech32_hrp = match account.client_options.network().as_deref() {
+            Some("testnet") => "atoi".to_string(),
+            Some("mainnet") => "iota".to_string(),
+            _ => {
+                let client_options = account.client_options.clone();
+                let is_monitoring = self.is_monitoring.clone();
+                let get_from_client_task = async {
+                    let hrp = crate::client::get_client(&client_options, Some(is_monitoring))
+                        .await?
+                        .read()
+                        .await
+                        .get_network_info()
+                        .await
+                        .map_err(|e| match e {
+                            iota::client::Error::SyncedNodePoolEmpty => crate::Error::NodesNotSynced(
+                                client_options
+                                    .nodes()
+                                    .iter()
+                                    .map(|node| node.url.as_str())
+                                    .collect::<Vec<&str>>()
+                                    .join(", "),
+                            ),
+                            _ => e.into(),
+                        })?
+                        .bech32_hrp;
+                    crate::Result::Ok(hrp)
+                };
+                match latest_account_handle {
+                    Some(handle) => {
+                        let latest_account = handle.read().await;
+                        if latest_account.client_options == account.client_options {
+                            latest_account.bech32_hrp()
+                        } else {
+                            get_from_client_task.await?
+                        }
+                    }
+                    None => get_from_client_task.await?,
+                }
+            }
+        };
 
         for address in account.addresses.iter_mut() {
             address.set_bech32_hrp(bech32_hrp.to_string());
@@ -532,7 +553,7 @@ impl AccountHandle {
         let handle = self.clone();
         crate::spawn(async move {
             // ignore errors because we fallback to the polling system
-            let _ = crate::monitor::monitor_address_balance(handle, &address).await;
+            let _ = crate::monitor::monitor_address_balance(handle, vec![address]).await;
         });
     }
 

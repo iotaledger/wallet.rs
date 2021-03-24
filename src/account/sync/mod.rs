@@ -159,12 +159,8 @@ pub(crate) async fn sync_address(
         tasks.push(async move {
             tokio::spawn(async move {
                 let client = client_guard.read().await;
-                let found_output = if let Some(existing_output) = existing_output {
-                    existing_output.clone()
-                } else {
-                    let output = client.get_output(&utxo_input).await?;
-                    AddressOutput::from_output_response(output, bech32_hrp.to_string())?
-                };
+                let output = client.get_output(&utxo_input).await?;
+                let found_output = AddressOutput::from_output_response(output, bech32_hrp.to_string())?;
                 let message_id = *found_output.message_id();
 
                 // if we already have the message stored
@@ -452,15 +448,13 @@ async fn sync_messages(
 
                 let mut messages = vec![];
                 for utxo_input in address_outputs.iter() {
-                    let output = if let Some(output) = address.outputs().get(utxo_input.output_id()) {
+                    let output = match address.outputs().get(utxo_input.output_id()) {
                         // if we already have the output and it is spent, we don't need to get the info from the node
-                        if output.is_spent {
-                            continue;
+                        Some(output) if output.is_spent => output.clone(),
+                        _ => {
+                            let output = client.get_output(utxo_input).await?;
+                            AddressOutput::from_output_response(output, address.address().bech32_hrp().to_string())?
                         }
-                        output.clone()
-                    } else {
-                        let output = client.get_output(utxo_input).await?;
-                        AddressOutput::from_output_response(output, address.address().bech32_hrp().to_string())?
                     };
 
                     let output_message_id = *output.message_id();
@@ -891,16 +885,6 @@ impl AccountSynchronizer {
                     &confirmation_changed_messages,
                 )
                 .await?;
-                for balance_change_event in events.balance_change_events {
-                    emit_balance_change(
-                        &account,
-                        &balance_change_event.address,
-                        balance_change_event.message_id,
-                        balance_change_event.balance_change,
-                        persist_events,
-                    )
-                    .await?;
-                }
                 for message in events.new_transaction_events {
                     emit_transaction_event(TransactionEventType::NewTransaction, &account, message, persist_events)
                         .await?;
@@ -910,6 +894,16 @@ impl AccountSynchronizer {
                         &account,
                         confirmation_change_event.message,
                         confirmation_change_event.confirmed,
+                        persist_events,
+                    )
+                    .await?;
+                }
+                for balance_change_event in events.balance_change_events {
+                    emit_balance_change(
+                        &account,
+                        &balance_change_event.address,
+                        balance_change_event.message_id,
+                        balance_change_event.balance_change,
                         persist_events,
                     )
                     .await?;
@@ -1604,9 +1598,9 @@ async fn perform_transfer(
 
     for address in addresses_to_watch {
         // ignore errors because we fallback to the polling system
-        let _ = crate::monitor::monitor_address_balance(account_handle.clone(), &address).await;
+        let _ = crate::monitor::monitor_address_balance(account_handle.clone(), vec![address]).await;
     }
-    crate::monitor::monitor_confirmation_state_change(account_handle.clone(), message_id).await;
+    crate::monitor::monitor_confirmation_state_change(account_handle.clone(), vec![message_id]).await;
 
     Ok(message)
 }

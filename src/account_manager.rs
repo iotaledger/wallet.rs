@@ -799,7 +799,7 @@ impl AccountManager {
             let account_handle = self.get_account(account_id).await?;
             let account = account_handle.read().await;
 
-            if !(account.messages().is_empty() && account.addresses().iter().all(|a| a.outputs.is_empty())) {
+            if account.balance().total > 0 {
                 return Err(crate::Error::AccountNotEmpty);
             }
 
@@ -1395,16 +1395,6 @@ impl AccountsSynchronizer {
                     &confirmation_changed_messages,
                 )
                 .await?;
-                for balance_change_event in events.balance_change_events {
-                    emit_balance_change(
-                        &account,
-                        &balance_change_event.address,
-                        balance_change_event.message_id,
-                        balance_change_event.balance_change,
-                        persist_events,
-                    )
-                    .await?;
-                }
                 for message in events.new_transaction_events {
                     emit_transaction_event(TransactionEventType::NewTransaction, &account, message, persist_events)
                         .await?;
@@ -1414,6 +1404,16 @@ impl AccountsSynchronizer {
                         &account,
                         confirmation_change_event.message,
                         confirmation_change_event.confirmed,
+                        persist_events,
+                    )
+                    .await?;
+                }
+                for balance_change_event in events.balance_change_events {
+                    emit_balance_change(
+                        &account,
+                        &balance_change_event.address,
+                        balance_change_event.message_id,
+                        balance_change_event.balance_change,
                         persist_events,
                     )
                     .await?;
@@ -1922,7 +1922,7 @@ mod tests {
                 .unwrap();
 
             let remove_response = manager.remove_account(account_handle.read().await.id()).await;
-            assert!(remove_response.is_err());
+            assert!(remove_response.is_ok());
         })
         .await;
     }
@@ -1997,6 +1997,7 @@ mod tests {
             let client_options = ClientOptionsBuilder::new()
                 .with_node("https://api.lb-0.testnet.chrysalis2.com")
                 .expect("invalid node URL")
+                .with_network("testnet")
                 .build()
                 .unwrap();
 
