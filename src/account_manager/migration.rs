@@ -24,7 +24,7 @@ use std::{
 };
 
 /// Migration data.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct MigrationData {
     /// Total seed balance.
     pub balance: u64,

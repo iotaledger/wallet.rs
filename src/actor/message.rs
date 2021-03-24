@@ -11,7 +11,7 @@ use crate::{
     Error,
 };
 use chrono::{DateTime, Local};
-use iota_migration::transaction::bundled::BundledTransactionField;
+use iota_migration::{ternary::T3B1Buf, transaction::bundled::BundledTransactionField};
 use serde::{ser::Serializer, Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -403,7 +403,13 @@ impl From<MigrationData> for MigrationDataDto {
     fn from(data: MigrationData) -> Self {
         let mut inputs: Vec<MigrationInputDto> = Vec::new();
         for input in data.inputs {
-            let address = input.address.to_inner().to_string();
+            let address = input
+                .address
+                .to_inner()
+                .encode::<T3B1Buf>()
+                .iter_trytes()
+                .map(char::from)
+                .collect::<String>();
             inputs.push(MigrationInputDto {
                 address,
                 security_level: input.security_lvl,
