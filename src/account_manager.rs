@@ -431,7 +431,7 @@ impl AccountManager {
     async fn start_background_sync(&mut self, polling_interval: Duration, automatic_output_consolidation: bool) {
         Self::start_monitoring(self.accounts.clone()).await;
         let (stop_polling_sender, stop_polling_receiver) = broadcast_channel(1);
-        // self.start_polling(polling_interval, stop_polling_receiver, automatic_output_consolidation);
+        self.start_polling(polling_interval, stop_polling_receiver, automatic_output_consolidation);
         self.stop_polling_sender = Some(stop_polling_sender);
     }
 
@@ -586,7 +586,7 @@ impl AccountManager {
                                         accounts.clone(),
                                         storage_file_path_,
                                         account_options,
-                                        should_sync,
+                                        (should_sync, !synced),
                                         is_monitoring.clone(),
                                         automatic_output_consolidation)
                                     )
@@ -1094,6 +1094,7 @@ pub struct AccountsSynchronizer {
     gap_limit: Option<usize>,
     account_options: AccountOptions,
     is_monitoring: Arc<AtomicBool>,
+    discover_accounts: bool,
 }
 
 impl AccountsSynchronizer {
@@ -1112,6 +1113,7 @@ impl AccountsSynchronizer {
             gap_limit: None,
             account_options,
             is_monitoring,
+            discover_accounts: true,
         }
     }
 
@@ -1124,6 +1126,12 @@ impl AccountsSynchronizer {
     /// Initial address index to start syncing.
     pub fn address_index(mut self, address_index: usize) -> Self {
         self.address_index.replace(address_index);
+        self
+    }
+
+    /// Skips the account discovery process.
+    pub fn skip_account_discovery(mut self) -> Self {
+        self.discover_accounts = false;
         self
     }
 
@@ -1214,16 +1222,20 @@ impl AccountsSynchronizer {
         let discovered_accounts_res = match last_account {
             Some((is_empty, client_options, signer_type)) => {
                 if !is_empty {
-                    log::debug!("[SYNC] running account discovery because the latest account is not empty");
-                    discover_accounts(
-                        self.accounts.clone(),
-                        &self.storage_file_path,
-                        &client_options,
-                        Some(signer_type),
-                        self.account_options,
-                        self.is_monitoring.clone(),
-                    )
-                    .await
+                    if self.discover_accounts {
+                        log::debug!("[SYNC] running account discovery because the latest account is not empty");
+                        discover_accounts(
+                            self.accounts.clone(),
+                            &self.storage_file_path,
+                            &client_options,
+                            Some(signer_type),
+                            self.account_options,
+                            self.is_monitoring.clone(),
+                        )
+                        .await
+                    } else {
+                        Ok(vec![])
+                    }
                 } else {
                     log::debug!("[SYNC] skipping account discovery because the latest account is empty");
                     Ok(vec![])
@@ -1249,23 +1261,26 @@ impl AccountsSynchronizer {
         }
 
         for (account_handle, addresses_before_sync, data) in synced_data {
-            let mut account = account_handle.write().await;
-            let messages_before_sync: Vec<(MessageId, Option<bool>)> =
-                account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
+            let (messages_before_sync, parsed_messages) = {
+                let mut account = account_handle.write().await;
+                let messages_before_sync: Vec<(MessageId, Option<bool>)> =
+                    account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
 
-            let parsed_messages = data.parse_messages(account_handle.accounts.clone(), &account).await?;
-            for message in &parsed_messages {
-                match account.messages().iter().position(|m| m == message) {
-                    Some(index) => {
-                        account.messages_mut()[index] = message.clone();
-                    }
-                    None => {
-                        account.messages_mut().push(message.clone());
+                let parsed_messages = data.parse_messages(account_handle.accounts.clone(), &account).await?;
+                for message in &parsed_messages {
+                    match account.messages().iter().position(|m| m == message) {
+                        Some(index) => {
+                            account.messages_mut()[index] = message.clone();
+                        }
+                        None => {
+                            account.messages_mut().push(message.clone());
+                        }
                     }
                 }
-            }
-            account.set_last_synced_at(Some(chrono::Local::now()));
-            account.save().await?;
+                account.set_last_synced_at(Some(chrono::Local::now()));
+                account.save().await?;
+                (messages_before_sync, parsed_messages)
+            };
 
             let mut new_messages = Vec::new();
             let mut confirmation_changed_messages = Vec::new();
@@ -1280,43 +1295,46 @@ impl AccountsSynchronizer {
                     confirmation_changed_messages.push(message);
                 }
             }
-            if !discovered_account_ids.contains(account.id()) {
-                let persist_events = account_handle.account_options.persist_events;
-                let events = AccountSynchronizer::get_events(
-                    account_handle.account_options,
-                    &addresses_before_sync,
-                    account.addresses(),
-                    &new_messages,
-                    &confirmation_changed_messages,
-                )
-                .await?;
-                for message in events.new_transaction_events {
-                    emit_transaction_event(TransactionEventType::NewTransaction, &account, message, persist_events)
+
+            {
+                let account = account_handle.read().await;
+
+                if !discovered_account_ids.contains(account.id()) {
+                    let persist_events = account_handle.account_options.persist_events;
+                    let events = AccountSynchronizer::get_events(
+                        account_handle.account_options,
+                        &addresses_before_sync,
+                        account.addresses(),
+                        &new_messages,
+                        &confirmation_changed_messages,
+                    )
+                    .await?;
+                    for message in events.new_transaction_events {
+                        emit_transaction_event(TransactionEventType::NewTransaction, &account, message, persist_events)
+                            .await?;
+                    }
+                    for confirmation_change_event in events.confirmation_change_events {
+                        emit_confirmation_state_change(
+                            &account,
+                            confirmation_change_event.message,
+                            confirmation_change_event.confirmed,
+                            persist_events,
+                        )
                         .await?;
-                }
-                for confirmation_change_event in events.confirmation_change_events {
-                    emit_confirmation_state_change(
-                        &account,
-                        confirmation_change_event.message,
-                        confirmation_change_event.confirmed,
-                        persist_events,
-                    )
-                    .await?;
-                }
-                for balance_change_event in events.balance_change_events {
-                    emit_balance_change(
-                        &account,
-                        &balance_change_event.address,
-                        balance_change_event.message_id,
-                        balance_change_event.balance_change,
-                        persist_events,
-                    )
-                    .await?;
+                    }
+                    for balance_change_event in events.balance_change_events {
+                        emit_balance_change(
+                            &account,
+                            &balance_change_event.address,
+                            balance_change_event.message_id,
+                            balance_change_event.balance_change,
+                            persist_events,
+                        )
+                        .await?;
+                    }
                 }
             }
 
-            // drop the account so SyncedAccount::from doesn't deadlock
-            drop(account);
             let mut synced_account = SyncedAccount::from(account_handle.clone()).await;
             let mut updated_messages = new_messages;
             updated_messages.extend(confirmation_changed_messages);
@@ -1349,20 +1367,22 @@ async fn poll(
     accounts: AccountStore,
     storage_file_path: PathBuf,
     account_options: AccountOptions,
-    should_sync: bool,
+    (should_sync, should_discover_accounts): (bool, bool),
     is_monitoring: Arc<AtomicBool>,
     automatic_output_consolidation: bool,
 ) -> crate::Result<()> {
     let retried = if should_sync {
-        let synced_accounts = AccountsSynchronizer::new(
+        let mut synchronizer = AccountsSynchronizer::new(
             sync_accounts_lock,
             accounts.clone(),
             storage_file_path,
             account_options,
             is_monitoring,
-        )
-        .execute()
-        .await?;
+        );
+        if !should_discover_accounts {
+            synchronizer = synchronizer.skip_account_discovery();
+        }
+        let synced_accounts = synchronizer.execute().await?;
 
         log::debug!("[POLLING] synced accounts");
 

@@ -502,7 +502,7 @@ async fn sync_messages(
 }
 
 async fn perform_sync(
-    account: &Account,
+    account: Account,
     address_index: usize,
     gap_limit: usize,
     steps: &[AccountSynchronizeStep],
@@ -691,7 +691,7 @@ impl AccountSynchronizer {
 
     pub(crate) async fn get_new_history(&self) -> crate::Result<SyncedAccountData> {
         perform_sync(
-            &*self.account_handle.read().await,
+            self.account_handle.read().await.clone(),
             self.address_index,
             self.gap_limit,
             &self.steps,
