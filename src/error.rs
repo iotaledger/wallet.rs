@@ -115,9 +115,6 @@ pub enum Error {
     /// Backup `destination` argument is invalid
     #[error("backup destination must be an existing directory or a file on an existing directory")]
     InvalidBackupDestination,
-    /// the storage adapter isn't set
-    #[error("the storage adapter isn't set; use the AccountManagerBuilder's `with_storage` method or one of the default storages with the crate features `sqlite-storage` and `stronghold-storage`.")]
-    StorageAdapterNotDefined,
     /// Mnemonic generation error.
     #[error("mnemonic encode error: {0}")]
     MnemonicEncode(String),
@@ -276,7 +273,6 @@ impl serde::Serialize for Error {
             Self::InvalidMnemonic(_) => serialize_variant(self, serializer, "InvalidMnemonic"),
             Self::InvalidBackupFile => serialize_variant(self, serializer, "InvalidBackupFile"),
             Self::InvalidBackupDestination => serialize_variant(self, serializer, "InvalidBackupDestination"),
-            Self::StorageAdapterNotDefined => serialize_variant(self, serializer, "StorageAdapterNotDefined"),
             Self::StorageExists => serialize_variant(self, serializer, "StorageExists"),
             Self::StorageAdapterNotSet(_) => serialize_variant(self, serializer, "StorageAdapterNotSet"),
             Self::RecordDecrypt(_) => serialize_variant(self, serializer, "RecordDecrypt"),

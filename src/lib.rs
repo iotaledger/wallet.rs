@@ -204,15 +204,8 @@ mod test_utils {
             }
         };
 
-        #[cfg(all(feature = "stronghold-storage", feature = "sqlite-storage"))]
-        let default_storage = ManagerStorage::Stronghold;
-        #[cfg(all(feature = "stronghold-storage", not(feature = "sqlite-storage")))]
-        let default_storage = ManagerStorage::Stronghold;
-        #[cfg(all(feature = "sqlite-storage", not(feature = "stronghold-storage")))]
-        let default_storage = ManagerStorage::Sqlite;
-
         let mut manager = AccountManager::builder()
-            .with_storage(storage_path, default_storage, None)
+            .with_storage(storage_path, None)
             .unwrap()
             .skip_polling()
             .finish()
@@ -264,33 +257,10 @@ mod test_utils {
         }
 
         if test_type == TestType::Storage || test_type == TestType::SigningAndStorage {
-            // ---- Stronghold storage ----
-            #[cfg(feature = "stronghold-storage")]
-            {
-                test_cases.push(ManagerTestCase::Storage(StorageTestCase {
-                    storage_password: None,
-                    storage: ManagerStorage::Stronghold,
-                }));
-
-                test_cases.push(ManagerTestCase::Storage(StorageTestCase {
-                    storage_password: Some("password".to_string()),
-                    storage: ManagerStorage::Stronghold,
-                }));
-            }
-
-            // ---- SQLite storage ----
-            #[cfg(feature = "sqlite-storage")]
-            {
-                test_cases.push(ManagerTestCase::Storage(StorageTestCase {
-                    storage_password: None,
-                    storage: ManagerStorage::Sqlite,
-                }));
-
-                test_cases.push(ManagerTestCase::Storage(StorageTestCase {
-                    storage_password: Some("password".to_string()),
-                    storage: ManagerStorage::Sqlite,
-                }));
-            }
+            test_cases.push(ManagerTestCase::Storage(StorageTestCase { storage_password: None }));
+            test_cases.push(ManagerTestCase::Storage(StorageTestCase {
+                storage_password: Some("password".to_string()),
+            }));
         }
 
         for test_case in test_cases {

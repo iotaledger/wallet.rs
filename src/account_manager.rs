@@ -480,9 +480,9 @@ impl AccountManager {
         Ok(())
     }
 
-    /// Sets the stronghold password.
+    /// Changes the stronghold password.
     #[cfg(feature = "stronghold")]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     pub async fn change_stronghold_password<C: Into<String>, N: Into<String>>(
         &self,
         current_password: C,
@@ -787,26 +787,10 @@ impl AccountManager {
         stronghold_password: String,
     ) -> crate::Result<()> {
         let source = source.as_ref();
-        if source.is_dir() || !source.exists() {
+        if source.is_dir() || !source.exists() || source.extension().unwrap_or_default() != "stronghold" {
             return Err(crate::Error::InvalidBackupFile);
         }
 
-        #[allow(unused_variables)]
-        #[cfg(feature = "stronghold")]
-        let storage_file_path = {
-            let storage_file_path = self.storage_folder.join(STRONGHOLD_FILENAME);
-            let storage_id = crate::storage::get(&self.storage_path).await?.lock().await.id();
-            if storage_id == crate::storage::stronghold::STORAGE_ID && storage_file_path.exists() {
-                return Err(crate::Error::StorageExists);
-            }
-            storage_file_path
-        };
-
-        #[allow(unused_variables)]
-        #[cfg(feature = "stronghold")]
-        let stronghold_file_path = storage_file_path.clone();
-
-        #[cfg(feature = "sqlite-storage")]
         let storage_file_path = {
             if !self.accounts.read().await.is_empty() {
                 return Err(crate::Error::StorageExists);
@@ -817,49 +801,27 @@ impl AccountManager {
 
         fs::create_dir_all(&self.storage_folder)?;
 
-        if source.extension().unwrap_or_default() == "stronghold" {
-            #[cfg(feature = "stronghold")]
-            {
-                #[cfg(feature = "sqlite-storage")]
-                {
-                    let mut stronghold_manager = Self::builder()
-                        .with_storage(&source, ManagerStorage::Stronghold, None)
-                        .unwrap() // safe to unwrap - password is None
-                        .skip_polling()
-                        .finish()
-                        .await?;
-                    stronghold_manager
-                        .set_stronghold_password(stronghold_password.clone())
-                        .await?;
-                    for account_handle in stronghold_manager.accounts.read().await.values() {
-                        account_handle.write().await.set_storage_path(self.storage_path.clone());
-                    }
-                    self.accounts = stronghold_manager.accounts.clone();
-                    self.set_stronghold_password(stronghold_password.clone()).await?;
-                    for account in self.accounts.read().await.values() {
-                        account.write().await.save().await?;
-                    }
-                }
-                // wait for stronghold to finish its tasks
-                let _ = crate::stronghold::actor_runtime().lock().await;
-                fs::copy(source, &stronghold_file_path)?;
-            }
-            #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-            return Err(crate::Error::InvalidBackupFile);
+        let mut stronghold_manager = Self::builder()
+            .with_storage(&source, None)
+            .unwrap() // safe to unwrap - password is None
+            .skip_polling()
+            .with_stronghold_storage()
+            .finish()
+            .await?;
+        stronghold_manager
+            .set_stronghold_password(stronghold_password.clone())
+            .await?;
+        for account_handle in stronghold_manager.accounts.read().await.values() {
+            account_handle.write().await.set_storage_path(self.storage_path.clone());
         }
-
-        // the accounts map isn't empty when restoring SQLite from a stronghold snapshot
-        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-        if self.accounts.read().await.is_empty() {
-            let accounts = Self::load_accounts(&self.storage_path, self.account_options).await?;
-            self.loaded_accounts = true;
-            let mut accounts_store = self.accounts.write().await;
-            for (id, account) in &*accounts.read().await {
-                accounts_store.insert(id.clone(), account.clone());
-            }
-
-            crate::spawn(Self::start_monitoring(self.accounts.clone()));
+        self.accounts = stronghold_manager.accounts.clone();
+        self.set_stronghold_password(stronghold_password.clone()).await?;
+        for account in self.accounts.read().await.values() {
+            account.write().await.save().await?;
         }
+        // wait for stronghold to finish its tasks
+        let _ = crate::stronghold::actor_runtime().lock().await;
+        fs::copy(source, self.storage_folder.join(STRONGHOLD_FILENAME))?;
 
         #[cfg(feature = "stronghold")]
         {
