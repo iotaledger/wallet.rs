@@ -135,13 +135,14 @@ Transfers an amount from one subaccount to another.
 
 **Returns** A promise resolving to the transfer's Message.
 
-#### backup(destination)
+#### backup(destination, password)
 
 Backups the database.
 
-| Param       | Type                | Default                | Description                 |
-| ----------- | ------------------- | ---------------------- | --------------------------- |
-| destination | <code>string</code> | <code>undefined</code> | The path to the backup file |
+| Param       | Type                | Default                | Description                    |
+| ----------- | ------------------- | ---------------------- | ------------------------------ |
+| destination | <code>string</code> | <code>undefined</code> | The path to the backup file    |
+| password    | <code>string</code> | <code>undefined</code> | The backup stronghold password |
 
 **Returns** The full path to the backup file.
 

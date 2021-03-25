@@ -38,7 +38,6 @@ use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
 use iota::{bee_rest_api::types::dtos::LedgerInclusionStateDto, MessageId, OutputId};
-use serde::Deserialize;
 use tokio::{
     sync::{
         broadcast::{channel as broadcast_channel, Receiver as BroadcastReceiver, Sender as BroadcastSender},
@@ -65,8 +64,6 @@ pub const SQLITE_FILENAME: &str = "wallet.db";
 pub type AccountStore = Arc<RwLock<HashMap<String, AccountHandle>>>;
 
 /// The storage used by the manager.
-#[derive(Deserialize)]
-#[serde(tag = "type", content = "data")]
 enum ManagerStorage {
     /// Stronghold storage.
     Stronghold,
@@ -148,7 +145,8 @@ impl AccountManagerBuilder {
         self
     }
 
-    pub(crate) fn with_stronghold_storage(mut self) -> Self {
+    /// Use stronghold as storage system.
+    pub fn with_stronghold_storage(mut self) -> Self {
         self.storage = ManagerStorage::Stronghold;
         self
     }

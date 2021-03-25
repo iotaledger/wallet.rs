@@ -3,11 +3,8 @@
 
 use crate::types::*;
 use iota::MessageId as RustMessageId;
-use iota_wallet::{
-    account_manager::{AccountManager as RustAccountManager, ManagerStorage as RustManagerStorage},
-    signing::SignerType as RustSingerType,
-};
-use pyo3::{exceptions, prelude::*};
+use iota_wallet::{account_manager::AccountManager as RustAccountManager, signing::SignerType as RustSingerType};
+use pyo3::prelude::*;
 use std::{
     convert::{Into, TryInto},
     num::NonZeroU64,
@@ -86,28 +83,11 @@ impl AccountManager {
         persist_events: Option<bool>,
     ) -> Result<Self> {
         let mut account_manager = RustAccountManager::builder();
-        if storage_path.is_some() & storage.is_some() {
-            match storage {
-                Some("Stronghold") => {
-                    account_manager = account_manager.with_storage(
-                        storage_path.unwrap_or_else(|| panic!("invalid Stronghold storage path: {:?}", storage_path)),
-                        RustManagerStorage::Stronghold,
-                        storage_password,
-                    )?
-                }
-                Some("Sqlite") => {
-                    account_manager = account_manager.with_storage(
-                        storage_path.unwrap_or_else(|| panic!("invalid Sqlite storage path: {:?}", storage_path)),
-                        RustManagerStorage::Sqlite,
-                        storage_password,
-                    )?
-                }
-                _ => {
-                    return Err(Error {
-                        error: PyErr::new::<exceptions::PyValueError, _>("Unsupported storage type!"),
-                    })
-                }
-            }
+        if let Some(storage_path) = storage_path {
+            account_manager = account_manager.with_storage(storage_path, storage_password)?;
+        }
+        if storage == Some("Stronghold") {
+            account_manager = account_manager.with_stronghold_storage();
         }
         if !automatic_output_consolidation.unwrap_or(true) {
             account_manager = account_manager.with_automatic_output_consolidation_disabled();
@@ -216,9 +196,9 @@ impl AccountManager {
     }
 
     /// Backups the storage to the given destination
-    fn backup(&self, destination: &str) -> Result<String> {
+    fn backup(&self, destination: &str, password: &str) -> Result<String> {
         Ok(
-            crate::block_on(async { self.account_manager.backup(destination).await })?
+            crate::block_on(async { self.account_manager.backup(destination, password.to_string()).await })?
                 .into_os_string()
                 .into_string()
                 .unwrap_or_else(|os_string| {

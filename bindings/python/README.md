@@ -185,13 +185,14 @@ Transfers an amount from an account to another.
 
 **Returns** The transfer's [WalletMessage](#walletmessage).
 
-#### backup(destination): str
+#### backup(destination, stronghold_password): str
 
 Backups the storage to the given destination.
 
-| Param       | Type             | Default                | Description                 |
-| ----------- | ---------------- | ---------------------- | --------------------------- |
-| destination | <code>str</code> | <code>undefined</code> | The path to the backup file |
+| Param               | Type             | Default                | Description                    |
+| ------------------- | ---------------- | ---------------------- | ------------------------------ |
+| destination         | <code>str</code> | <code>undefined</code> | The path to the backup file    |
+| stronghold_password | <code>str</code> | <code>undefined</code> | The backup stronghold password |
 
 **Returns** The full path to the backup file.
 
