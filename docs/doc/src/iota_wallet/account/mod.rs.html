@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/account/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../iota_wallet/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../iota_wallet/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
@@ -1330,6 +1330,18 @@
 <span id="1327">1327</span>
 <span id="1328">1328</span>
 <span id="1329">1329</span>
+<span id="1330">1330</span>
+<span id="1331">1331</span>
+<span id="1332">1332</span>
+<span id="1333">1333</span>
+<span id="1334">1334</span>
+<span id="1335">1335</span>
+<span id="1336">1336</span>
+<span id="1337">1337</span>
+<span id="1338">1338</span>
+<span id="1339">1339</span>
+<span id="1340">1340</span>
+<span id="1341">1341</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1712,12 +1724,9 @@
     <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">set</span> <span class="op">=</span> <span class="string">&quot;pub(crate)&quot;</span>)]</span>
     <span class="ident">last_synced_at</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Local</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Messages associated with the seed.</span>
-    <span class="doccomment">/// The account can be initialised with locally stored messages.</span>
-    <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">set</span> <span class="op">=</span> <span class="string">&quot;pub&quot;</span>)]</span>
     <span class="ident">messages</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Address history associated with the seed.</span>
-    <span class="doccomment">/// The account can be initialised with locally stored address history.</span>
-    <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">set</span> <span class="op">=</span> <span class="string">&quot;pub&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">set</span> <span class="op">=</span> <span class="string">&quot;pub(crate)&quot;</span>)]</span>
     <span class="ident">addresses</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The client options.</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;clientOptions&quot;</span>)]</span>
@@ -1895,7 +1904,7 @@
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_unused_address</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">sync</span>()
             .<span class="kw">await</span>
-            .<span class="ident">steps</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">AccountSynchronizeStep</span>::<span class="ident">SyncAddresses</span>])
+            .<span class="ident">steps</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">AccountSynchronizeStep</span>::<span class="ident">SyncAddresses</span>(<span class="prelude-val">None</span>)])
             .<span class="ident">execute</span>()
             .<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="comment">// safe to clone since the `sync` guarantees a latest unused address</span>
@@ -1907,20 +1916,25 @@
     <span class="doccomment">/// Note that such address might have been used in the past, because the message history might have been pruned by</span>
     <span class="doccomment">/// the node.</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">is_latest_address_unused</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">latest_address</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">latest_address</span>().<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">write</span>().<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">client_options</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">client_options</span>().<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">messages</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">messages</span>().<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> (<span class="kw-2">*</span><span class="ident">m</span>.<span class="ident">id</span>(), <span class="kw-2">*</span><span class="ident">m</span>.<span class="ident">confirmed</span>())).<span class="ident">collect</span>();
+        <span class="kw">let</span> <span class="ident">latest_address</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">latest_address_mut</span>();
         <span class="kw">let</span> <span class="ident">bech32_hrp</span> <span class="op">=</span> <span class="ident">latest_address</span>.<span class="ident">address</span>().<span class="ident">bech32_hrp</span>().<span class="ident">to_string</span>();
-        <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">read</span>().<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">address_wrapper</span> <span class="op">=</span> <span class="ident">latest_address</span>.<span class="ident">address</span>().<span class="ident">clone</span>();
         <span class="ident">sync</span>::<span class="ident">sync_address</span>(
-            <span class="ident">account</span>.<span class="ident">messages</span>().<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> (<span class="kw-2">*</span><span class="ident">m</span>.<span class="ident">id</span>(), <span class="kw-2">*</span><span class="ident">m</span>.<span class="ident">confirmed</span>())).<span class="ident">collect</span>(),
-            <span class="ident">account</span>.<span class="ident">client_options</span>().<span class="ident">clone</span>(),
-            <span class="ident">latest_address</span>.<span class="ident">outputs</span>().<span class="ident">clone</span>(),
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">latest_address</span>,
+            <span class="ident">messages</span>,
+            <span class="kw-2">&amp;</span><span class="ident">client_options</span>,
+            <span class="ident">latest_address</span>.<span class="ident">outputs_mut</span>(),
+            <span class="ident">address_wrapper</span>,
             <span class="ident">bech32_hrp</span>,
             <span class="self">self</span>.<span class="ident">account_options</span>,
             <span class="self">self</span>.<span class="ident">is_monitoring</span>.<span class="ident">clone</span>(),
         )
         .<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="kw-2">*</span><span class="ident">latest_address</span>.<span class="ident">balance</span>() <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">latest_address</span>.<span class="ident">outputs</span>().<span class="ident">is_empty</span>())
+        <span class="kw">let</span> <span class="ident">is_unused</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">latest_address</span>.<span class="ident">balance</span>() <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">latest_address</span>.<span class="ident">outputs</span>().<span class="ident">is_empty</span>();
+        <span class="ident">account</span>.<span class="ident">save</span>().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="ident">is_unused</span>)
     }
 
     <span class="doccomment">/// Bridge to [Account#latest_address](struct.Account.html#method.latest_address).</span>
@@ -2037,6 +2051,15 @@
             .<span class="ident">iter</span>()
             .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="op">!</span><span class="ident">a</span>.<span class="ident">internal</span>())
             .<span class="ident">max_by_key</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">key_index</span>())
+            .<span class="ident">unwrap</span>()
+    }
+
+    <span class="kw">fn</span> <span class="ident">latest_address_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Address</span> {
+        <span class="comment">// the addresses list is never empty because we generate an address on the account creation</span>
+        <span class="self">self</span>.<span class="ident">addresses</span>
+            .<span class="ident">iter_mut</span>()
+            .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="op">!</span><span class="ident">a</span>.<span class="ident">internal</span>())
+            .<span class="ident">max_by_key</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">a</span>.<span class="ident">key_index</span>())
             .<span class="ident">unwrap</span>()
     }
 
@@ -2250,6 +2273,7 @@
             });
     }
 
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">addresses_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> {
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">addresses</span>
     }
