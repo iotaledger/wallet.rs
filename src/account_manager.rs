@@ -67,7 +67,7 @@ pub type AccountStore = Arc<RwLock<HashMap<String, AccountHandle>>>;
 /// The storage used by the manager.
 #[derive(Deserialize)]
 #[serde(tag = "type", content = "data")]
-pub enum ManagerStorage {
+enum ManagerStorage {
     /// Stronghold storage.
     Stronghold,
     /// Sqlite storage.
@@ -790,14 +790,11 @@ impl AccountManager {
         if source.is_dir() || !source.exists() || source.extension().unwrap_or_default() != "stronghold" {
             return Err(crate::Error::InvalidBackupFile);
         }
+        if !self.accounts.read().await.is_empty() {
+            return Err(crate::Error::StorageExists);
+        }
 
-        let storage_file_path = {
-            if !self.accounts.read().await.is_empty() {
-                return Err(crate::Error::StorageExists);
-            }
-
-            self.storage_folder.join(SQLITE_FILENAME)
-        };
+        let storage_file_path = self.storage_folder.join(SQLITE_FILENAME);
 
         fs::create_dir_all(&self.storage_folder)?;
 
@@ -1802,7 +1799,7 @@ mod tests {
             let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
 
             // backup the stored accounts to ./backup/happy-path/${backup_name}
-            let backup_path = manager.backup(backup_path).await.unwrap();
+            let backup_path = manager.backup(backup_path, "password".to_string()).await.unwrap();
             let backup_file_path = if backup_path.is_dir() {
                 std::fs::read_dir(backup_path)
                     .unwrap()
@@ -1814,6 +1811,7 @@ mod tests {
             } else {
                 backup_path
             };
+            assert_eq!(backup_file_path.extension().unwrap_or_default(), "stronghold");
 
             let is_encrypted = crate::storage::get(manager.storage_path())
                 .await
@@ -1851,23 +1849,14 @@ mod tests {
             }
 
             // import the accounts from the backup and assert that it's the same
-
-            #[cfg(feature = "stronghold")]
-            {
-                manager
-                    .import_accounts(&backup_file_path, "password".to_string())
-                    .await
-                    .unwrap();
-                if backup_file_path.extension().unwrap_or_default() == "stronghold" {
-                    assert!(
-                        super::storage_file_path(&Some(ManagerStorage::Stronghold), manager.storage_path()).exists(),
-                        true
-                    );
-                }
-            }
-
-            #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-            manager.import_accounts(&backup_file_path).await.unwrap();
+            manager
+                .import_accounts(&backup_file_path, "password".to_string())
+                .await
+                .unwrap();
+            assert!(
+                super::storage_file_path(&ManagerStorage::Stronghold, manager.storage_path()).exists(),
+                true
+            );
 
             let imported_account = manager.get_account(account_handle.read().await.id()).await.unwrap();
             // set the account storage path field so the assert works
@@ -1900,15 +1889,11 @@ mod tests {
                 .create()
                 .await;
 
-            let backup_file_path = backup_path.join("wallet.bk");
-            let backup_path = manager.backup(&backup_file_path).await.unwrap();
+            let backup_file_path = backup_path.join("wallet.stronghold");
+            let backup_path = manager.backup(&backup_file_path, "password".to_string()).await.unwrap();
             assert_eq!(backup_path, backup_file_path);
 
-            #[cfg(feature = "stronghold")]
             let response = manager.import_accounts(&backup_file_path, "password".to_string()).await;
-
-            #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-            let response = manager.import_accounts(&backup_file_path).await;
 
             assert!(response.is_err());
             assert!(matches!(response.unwrap_err(), crate::Error::StorageExists));

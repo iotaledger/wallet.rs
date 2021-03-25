@@ -100,7 +100,7 @@ pub fn get_ledger_status(is_simulator: bool) -> LedgerStatus {
 mod test_utils {
     use super::{
         account::AccountHandle,
-        account_manager::{AccountManager, ManagerStorage},
+        account_manager::AccountManager,
         address::{Address, AddressBuilder, AddressWrapper},
         client::ClientOptionsBuilder,
         message::{Message, MessagePayload, TransactionBuilderMetadata, TransactionEssence},
@@ -227,7 +227,6 @@ mod test_utils {
 
     struct StorageTestCase {
         storage_password: Option<String>,
-        storage: ManagerStorage,
     }
 
     enum ManagerTestCase {
@@ -282,18 +281,12 @@ mod test_utils {
             let signer_type = match test_case {
                 ManagerTestCase::Signer(signer_type) => {
                     crate::signing::set_signer(signer_type.clone(), TestSigner::default()).await;
-                    manager_builder = manager_builder
-                        .with_storage(
-                            storage_path,
-                            ManagerStorage::Custom(Box::new(TestStorage::default())),
-                            None,
-                        )
-                        .unwrap();
+                    manager_builder = manager_builder.with_storage(storage_path, None).unwrap();
                     signer_type
                 }
                 ManagerTestCase::Storage(config) => {
                     manager_builder = manager_builder
-                        .with_storage(storage_path, config.storage, config.storage_password.as_deref())
+                        .with_storage(storage_path, config.storage_password.as_deref())
                         .unwrap();
                     #[cfg(feature = "stronghold")]
                     let signer_type = SignerType::Stronghold;

@@ -295,14 +295,11 @@ pub(crate) async fn set<P: AsRef<Path>>(
     let storage = Storage {
         storage_path: storage_path.as_ref().to_path_buf(),
         inner: storage,
-        #[cfg(feature = "stronghold")]
         encryption_key: if storage_id == stronghold::STORAGE_ID {
             None
         } else {
             encryption_key
         },
-        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-        encryption_key,
     };
     let storage_manager = StorageManager {
         storage,
