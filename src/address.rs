@@ -324,6 +324,10 @@ impl Address {
             .fold(0, |acc, o| acc + *o.amount())
     }
 
+    pub(crate) fn outputs_mut(&mut self) -> &mut HashMap<OutputId, AddressOutput> {
+        &mut self.outputs
+    }
+
     /// Updates the Bech32 human readable part.
     #[doc(hidden)]
     pub fn set_bech32_hrp(&mut self, hrp: String) {

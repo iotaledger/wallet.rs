@@ -423,7 +423,6 @@ impl AccountManager {
     async fn start_monitoring(accounts: AccountStore) {
         for account in accounts.read().await.values() {
             crate::monitor::monitor_account_addresses_balance(account.clone()).await;
-            crate::monitor::monitor_unconfirmed_messages(account.clone()).await;
         }
     }
 
@@ -1180,16 +1179,7 @@ impl AccountsSynchronizer {
                 .iter()
                 .map(|a| (a.address().to_bech32(), *a.balance(), a.outputs().clone()))
                 .collect();
-            for address in &data.addresses {
-                match account.addresses().iter().position(|a| a == address) {
-                    Some(index) => {
-                        account.addresses_mut()[index] = address.clone();
-                    }
-                    None => {
-                        account.addresses_mut().push(address.clone());
-                    }
-                }
-            }
+            account.append_addresses(data.addresses.to_vec());
             synced_data.push((account_handle, addresses_before_sync, data));
         }
 
@@ -1254,16 +1244,7 @@ impl AccountsSynchronizer {
                 account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
 
             let parsed_messages = data.parse_messages(account_handle.accounts.clone(), &account).await?;
-            for message in &parsed_messages {
-                match account.messages().iter().position(|m| m == message) {
-                    Some(index) => {
-                        account.messages_mut()[index] = message.clone();
-                    }
-                    None => {
-                        account.messages_mut().push(message.clone());
-                    }
-                }
-            }
+            account.append_messages(parsed_messages.to_vec());
             account.set_last_synced_at(Some(chrono::Local::now()));
             account.save().await?;
 
