@@ -41,7 +41,7 @@ import iota_wallet
 
 # Create a AccountManager
 manager = iota_wallet.AccountManager(
-    storage='Stronghold', storage_path='./storage')
+    storage_path='./storage')
 manager.set_stronghold_password("password")
 manager.store_mnemonic("Stronghold")
 

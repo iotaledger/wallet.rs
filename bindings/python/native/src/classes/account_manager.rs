@@ -74,7 +74,6 @@ impl AccountManager {
     /// The constructor of account manager.
     fn new(
         storage_path: Option<&str>,
-        storage: Option<&str>, // 'Stronghold' or 'Sqlite'
         storage_password: Option<&str>,
         polling_interval: Option<u64>,
         automatic_output_consolidation: Option<bool>,
@@ -85,9 +84,6 @@ impl AccountManager {
         let mut account_manager = RustAccountManager::builder();
         if let Some(storage_path) = storage_path {
             account_manager = account_manager.with_storage(storage_path, storage_password)?;
-        }
-        if storage == Some("Stronghold") {
-            account_manager = account_manager.with_stronghold_storage();
         }
         if !automatic_output_consolidation.unwrap_or(true) {
             account_manager = account_manager.with_automatic_output_consolidation_disabled();

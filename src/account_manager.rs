@@ -146,7 +146,7 @@ impl AccountManagerBuilder {
     }
 
     /// Use stronghold as storage system.
-    pub fn with_stronghold_storage(mut self) -> Self {
+    pub(crate) fn with_stronghold_storage(mut self) -> Self {
         self.storage = ManagerStorage::Stronghold;
         self
     }

@@ -67,19 +67,10 @@ fn default_storage_path() -> PathBuf {
     DEFAULT_STORAGE_FOLDER.into()
 }
 
-#[derive(PartialEq, Deserialize)]
-#[serde(tag = "type", content = "data")]
-enum ManagerStorage {
-    Stronghold,
-    Sqlite,
-}
-
 #[derive(Default, Deserialize)]
 struct ManagerOptions {
     #[serde(rename = "storagePath", default = "default_storage_path")]
     storage_path: PathBuf,
-    #[serde(rename = "storageType")]
-    storage_type: Option<ManagerStorage>,
     #[serde(rename = "storagePassword")]
     storage_password: Option<String>,
     #[serde(rename = "outputConsolidationThreshold")]
@@ -171,9 +162,6 @@ declare_types! {
                     options.storage_password.as_deref(),
                 )
                 .expect("failed to init storage");
-            if options.storage_type == Some(ManagerStorage::Stronghold) {
-                manager = manager.with_stronghold_storage();
-            }
             if !options.automatic_output_consolidation {
                 manager = manager.with_automatic_output_consolidation_disabled();
             }
