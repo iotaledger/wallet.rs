@@ -79,7 +79,7 @@ impl<'a> MigrationDataFinder<'a> {
 
     pub(crate) async fn finish(&self, inputs: &mut HashMap<Range<u64>, Vec<InputData>>) -> crate::Result<u64> {
         let mut address_index = self.initial_address_index;
-        let legacy_client = iota_migration::ClientBuilder::new().node(self.node)?.build()?;
+        let mut legacy_client = iota_migration::ClientBuilder::new().node(self.node)?.build()?;
         let mut balance = 0;
 
         loop {

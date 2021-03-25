@@ -39,7 +39,7 @@ zeroize = { version = "1.2", features = ["zeroize_derive"] }
 iota-ledger = { git = "https://github.com/iotaledger/ledger.rs", branch = "develop", optional = true  }
 
 # migration
-iota-migration = { git = "https://github.com/iotaledger/iota.rs", rev = "72f1e200525a74089a277419490e90e5b3f6a05a", package = "iota-core" }
+iota-migration = { git = "https://github.com/iotaledger/iota.rs", rev = "60b7dd8feb66ec1c3dc8bfc954f54ca9aff14a38", package = "iota-core" }
 
 [dependencies.iota-crypto]
 git = "https://github.com/iotaledger/crypto.rs"

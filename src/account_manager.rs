@@ -7,8 +7,8 @@ use crate::{
         repost_message, Account, AccountHandle, AccountIdentifier, AccountInitialiser, AccountSynchronizer,
         RepostAction, SyncedAccount, SyncedAccountData,
     },
-    address::IotaAddress,
     address::AddressOutput,
+    address::IotaAddress,
     client::ClientOptions,
     event::{
         emit_balance_change, emit_confirmation_state_change, emit_reattachment_event, emit_transaction_event,
