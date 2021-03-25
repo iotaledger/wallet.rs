@@ -28,14 +28,14 @@ pub(crate) mod serde;
 pub mod signing;
 /// The storage module.
 pub mod storage;
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+#[cfg(feature = "stronghold")]
+#[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
 pub(crate) mod stronghold;
 
 pub use error::Error;
 
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+#[cfg(feature = "stronghold")]
+#[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
 pub use stronghold::{
     get_status as get_stronghold_status, set_password_clear_interval as set_stronghold_password_clear_interval,
     unload_snapshot as lock_stronghold, SnapshotStatus as StrongholdSnapshotStatus, Status as StrongholdStatus,
@@ -64,8 +64,8 @@ where
 }
 
 /// Access the stronghold's actor system.
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+#[cfg(feature = "stronghold")]
+#[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
 pub async fn with_actor_system<F: FnOnce(&riker::actors::ActorSystem)>(cb: F) {
     let runtime = self::stronghold::actor_runtime().lock().await;
     cb(&runtime.stronghold.system)
@@ -223,7 +223,7 @@ mod test_utils {
         crate::signing::set_signer(signer_type.clone(), TestSigner::default()).await;
         manager.store_mnemonic(signer_type, None).await.unwrap();
 
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        #[cfg(feature = "stronghold")]
         manager.set_stronghold_password("password").await.unwrap();
 
         #[cfg(feature = "stronghold")]
@@ -339,7 +339,7 @@ mod test_utils {
 
             let mut manager = manager_builder.skip_polling().finish().await.unwrap();
 
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             manager.set_stronghold_password("password").await.unwrap();
 
             manager.store_mnemonic(signer_type.clone(), None).await.unwrap();

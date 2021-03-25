@@ -54,13 +54,11 @@ pub const DEFAULT_STORAGE_FOLDER: &str = "./storage";
 const DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD: usize = 100;
 
 /// The default stronghold storage file name.
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+#[cfg(feature = "stronghold")]
+#[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
 pub const STRONGHOLD_FILENAME: &str = "wallet.stronghold";
 
 /// The default SQLite storage file name.
-#[cfg(feature = "sqlite-storage")]
-#[cfg_attr(docsrs, doc(cfg(feature = "sqlite-storage")))]
 pub const SQLITE_FILENAME: &str = "wallet.db";
 
 #[doc(hidden)]
@@ -71,29 +69,18 @@ pub type AccountStore = Arc<RwLock<HashMap<String, AccountHandle>>>;
 #[serde(tag = "type", content = "data")]
 pub enum ManagerStorage {
     /// Stronghold storage.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
     Stronghold,
     /// Sqlite storage.
-    #[cfg(feature = "sqlite-storage")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "sqlite-storage")))]
     Sqlite,
-    /// Custom storage.
-    #[serde(skip)]
-    Custom(Box<dyn StorageAdapter + Send + Sync + 'static>),
 }
 
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage", feature = "sqlite-storage"))]
-fn storage_file_path(storage: &Option<ManagerStorage>, storage_path: &PathBuf) -> PathBuf {
-    if storage_path.is_file() || storage_path.extension().is_some() || storage.is_none() {
+fn storage_file_path(storage: &ManagerStorage, storage_path: &PathBuf) -> PathBuf {
+    if storage_path.is_file() || storage_path.extension().is_some() {
         storage_path.clone()
     } else {
         match storage {
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-            Some(ManagerStorage::Stronghold) => storage_path.join(STRONGHOLD_FILENAME),
-            #[cfg(feature = "sqlite-storage")]
-            Some(ManagerStorage::Sqlite) => storage_path.join(SQLITE_FILENAME),
-            _ => storage_path.clone(),
+            ManagerStorage::Stronghold => storage_path.join(STRONGHOLD_FILENAME),
+            ManagerStorage::Sqlite => storage_path.join(SQLITE_FILENAME),
         }
     }
 }
@@ -109,7 +96,7 @@ fn storage_password_to_encryption_key(password: &str) -> [u8; 32] {
 /// Account manager builder.
 pub struct AccountManagerBuilder {
     storage_path: PathBuf,
-    storage: Option<ManagerStorage>,
+    storage: ManagerStorage,
     polling_interval: Duration,
     skip_polling: bool,
     storage_encryption_key: Option<[u8; 32]>,
@@ -118,16 +105,9 @@ pub struct AccountManagerBuilder {
 
 impl Default for AccountManagerBuilder {
     fn default() -> Self {
-        #[allow(unused_variables)]
-        let default_storage: Option<ManagerStorage> = None;
-        #[cfg(all(feature = "stronghold-storage", not(feature = "sqlite-storage")))]
-        let default_storage = Some(ManagerStorage::Stronghold);
-        #[cfg(all(feature = "sqlite-storage", not(feature = "stronghold-storage")))]
-        let default_storage = Some(ManagerStorage::Sqlite);
-
         Self {
             storage_path: PathBuf::from(DEFAULT_STORAGE_FOLDER),
-            storage: default_storage,
+            storage: ManagerStorage::Sqlite,
             polling_interval: Duration::from_millis(30_000),
             skip_polling: false,
             storage_encryption_key: None,
@@ -147,15 +127,9 @@ impl AccountManagerBuilder {
         Default::default()
     }
 
-    /// Sets the storage to be used.
-    pub fn with_storage(
-        mut self,
-        storage_path: impl AsRef<Path>,
-        storage: ManagerStorage,
-        password: Option<&str>,
-    ) -> crate::Result<Self> {
+    /// Sets the storage config to be used.
+    pub fn with_storage(mut self, storage_path: impl AsRef<Path>, password: Option<&str>) -> crate::Result<Self> {
         self.storage_path = storage_path.as_ref().to_path_buf();
-        self.storage = Some(storage);
         self.storage_encryption_key = match password {
             Some(p) => Some(storage_password_to_encryption_key(p)),
             None => None,
@@ -169,9 +143,13 @@ impl AccountManagerBuilder {
         self
     }
 
-    #[allow(dead_code)]
     pub(crate) fn skip_polling(mut self) -> Self {
         self.skip_polling = true;
+        self
+    }
+
+    pub(crate) fn with_stronghold_storage(mut self) -> Self {
+        self.storage = ManagerStorage::Stronghold;
         self
     }
 
@@ -201,31 +179,24 @@ impl AccountManagerBuilder {
 
     /// Builds the manager.
     pub async fn finish(self) -> crate::Result<AccountManager> {
-        let (storage, storage_file_path): (Box<dyn StorageAdapter + Send + Sync>, PathBuf) =
-            if let Some(storage) = self.storage {
-                match storage {
-                    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-                    ManagerStorage::Stronghold => {
-                        let path = storage_file_path(&Some(ManagerStorage::Stronghold), &self.storage_path);
-                        if let Some(parent) = path.parent() {
-                            fs::create_dir_all(&parent)?;
-                        }
-                        let storage = crate::storage::stronghold::StrongholdStorageAdapter::new(&path)?;
-                        (Box::new(storage) as Box<dyn StorageAdapter + Send + Sync>, path)
+        let (storage, storage_file_path, is_stronghold): (Box<dyn StorageAdapter + Send + Sync>, PathBuf, bool) =
+            match self.storage {
+                ManagerStorage::Stronghold => {
+                    let path = storage_file_path(&ManagerStorage::Stronghold, &self.storage_path);
+                    if let Some(parent) = path.parent() {
+                        fs::create_dir_all(&parent)?;
                     }
-                    #[cfg(feature = "sqlite-storage")]
-                    ManagerStorage::Sqlite => {
-                        let path = storage_file_path(&Some(ManagerStorage::Sqlite), &self.storage_path);
-                        if let Some(parent) = path.parent() {
-                            fs::create_dir_all(&parent)?;
-                        }
-                        let storage = crate::storage::sqlite::SqliteStorageAdapter::new(&path)?;
-                        (Box::new(storage) as Box<dyn StorageAdapter + Send + Sync>, path)
-                    }
-                    ManagerStorage::Custom(storage) => (storage, self.storage_path.clone()),
+                    let storage = crate::storage::stronghold::StrongholdStorageAdapter::new(&path)?;
+                    (Box::new(storage) as Box<dyn StorageAdapter + Send + Sync>, path, true)
                 }
-            } else {
-                return Err(crate::Error::StorageAdapterNotDefined);
+                ManagerStorage::Sqlite => {
+                    let path = storage_file_path(&ManagerStorage::Sqlite, &self.storage_path);
+                    if let Some(parent) = path.parent() {
+                        fs::create_dir_all(&parent)?;
+                    }
+                    let storage = crate::storage::sqlite::SqliteStorageAdapter::new(&path)?;
+                    (Box::new(storage) as Box<dyn StorageAdapter + Send + Sync>, path, false)
+                }
             };
 
         crate::storage::set(&storage_file_path, self.storage_encryption_key, storage).await;
@@ -233,16 +204,15 @@ impl AccountManagerBuilder {
         // is_monitoring is set to false if an mqtt error happens, so we can initialize it with `true`.
         let is_monitoring = Arc::new(AtomicBool::new(true));
 
-        // with the stronghold storage feature, the accounts are loaded when the password is set
-        #[cfg(feature = "stronghold-storage")]
-        let (accounts, loaded_accounts) = (Default::default(), false);
-        #[cfg(not(feature = "stronghold-storage"))]
-        let (accounts, loaded_accounts) =
+        // with the stronghold storage, the accounts are loaded when the password is set
+        let (accounts, loaded_accounts) = if is_stronghold {
+            (Default::default(), false)
+        } else {
             AccountManager::load_accounts(&storage_file_path, self.account_options, is_monitoring.clone())
                 .await
                 .map(|accounts| (accounts, true))
-                .unwrap_or_else(|_| (AccountStore::default(), false));
-
+                .unwrap_or_else(|_| (AccountStore::default(), false))
+        };
         let mut instance = AccountManager {
             storage_folder: if self.storage_path.is_file() || self.storage_path.extension().is_some() {
                 match self.storage_path.parent() {
@@ -333,7 +303,7 @@ impl Drop for AccountManager {
     }
 }
 
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg(feature = "stronghold")]
 fn stronghold_password<P: Into<String>>(password: P) -> Vec<u8> {
     let mut password = password.into();
     let mut dk = [0; 64];
@@ -385,7 +355,7 @@ impl AccountManager {
             std::fs::remove_file(&self.storage_path)?;
         }
 
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        #[cfg(feature = "stronghold")]
         {
             crate::stronghold::unload_snapshot(&self.storage_path, false).await?;
             let _ = std::fs::remove_file(self.stronghold_snapshot_path_internal(&storage_id).await?);
@@ -394,13 +364,13 @@ impl AccountManager {
         Ok(())
     }
 
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg(feature = "stronghold")]
     pub(crate) async fn stronghold_snapshot_path(&self) -> crate::Result<PathBuf> {
         let storage_id = crate::storage::get(&self.storage_path).await?.lock().await.id();
         self.stronghold_snapshot_path_internal(storage_id).await
     }
 
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg(feature = "stronghold")]
     pub(crate) async fn stronghold_snapshot_path_internal(&self, storage_id: &str) -> crate::Result<PathBuf> {
         let stronghold_snapshot_path = if storage_id == crate::storage::stronghold::STORAGE_ID {
             self.storage_path.clone()
@@ -486,8 +456,6 @@ impl AccountManager {
     }
 
     /// Sets the stronghold password.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
     pub async fn set_stronghold_password<P: Into<String>>(&mut self, password: P) -> crate::Result<()> {
         let stronghold_path = if self.storage_path.extension().unwrap_or_default() == "stronghold" {
             self.storage_path.clone()
@@ -513,7 +481,7 @@ impl AccountManager {
     }
 
     /// Sets the stronghold password.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    #[cfg(feature = "stronghold")]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
     pub async fn change_stronghold_password<C: Into<String>, N: Into<String>>(
         &self,
@@ -757,50 +725,31 @@ impl AccountManager {
     }
 
     /// Backups the storage to the given destination
-    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
-    pub async fn backup<P: AsRef<Path>>(&self, destination: P) -> crate::Result<PathBuf> {
+    pub async fn backup<P: AsRef<Path>>(&self, destination: P, stronghold_password: String) -> crate::Result<PathBuf> {
         let destination = destination.as_ref().to_path_buf();
         if !(destination.is_dir() || destination.parent().map(|parent| parent.is_dir()).unwrap_or_default()) {
             return Err(crate::Error::InvalidBackupDestination);
         }
 
-        #[allow(unused_variables)]
-        let storage_path = self.storage_path.clone();
-
-        // if we're using SQLite for storage and stronghold for seed,
-        // we'll backup only the stronghold file, copying SQLite data to its snapshot
-        #[cfg(all(
-            feature = "sqlite-storage",
-            any(feature = "stronghold", feature = "stronghold-storage")
-        ))]
         let storage_path = {
-            let storage_id = crate::storage::get(&self.storage_path).await?.lock().await.id();
-            // if we're actually using the SQLite storage adapter
-            if storage_id == crate::storage::sqlite::STORAGE_ID {
-                // create a account manager to setup the stronghold storage for the backup
-                let _ = Self::builder()
-                    .with_storage(
-                        &self.storage_folder.join(STRONGHOLD_FILENAME),
-                        ManagerStorage::Stronghold,
-                        None,
-                    )
-                    .unwrap() // safe to unwrap - password is None
-                    .skip_polling()
-                    .finish()
-                    .await?;
-                let stronghold_storage = crate::storage::get(&self.storage_folder.join(STRONGHOLD_FILENAME)).await?;
-                let mut stronghold_storage = stronghold_storage.lock().await;
+            // create a account manager to setup the stronghold storage for the backup
+            let mut manager = Self::builder()
+                .with_storage(&self.storage_folder.join(STRONGHOLD_FILENAME), None)
+                .unwrap() // safe to unwrap - password is None
+                .skip_polling()
+                .with_stronghold_storage()
+                .finish()
+                .await?;
+            manager.set_stronghold_password(stronghold_password).await?;
+            let stronghold_storage = crate::storage::get(&self.storage_folder.join(STRONGHOLD_FILENAME)).await?;
+            let mut stronghold_storage = stronghold_storage.lock().await;
 
-                for account_handle in self.accounts.read().await.values() {
-                    stronghold_storage
-                        .save_account(&account_handle.read().await.id(), &*account_handle.read().await)
-                        .await?;
-                }
-                self.storage_folder.join(STRONGHOLD_FILENAME)
-            } else {
-                self.storage_path.clone()
+            for account_handle in self.accounts.read().await.values() {
+                stronghold_storage
+                    .save_account(&account_handle.read().await.id(), &*account_handle.read().await)
+                    .await?;
             }
+            self.storage_folder.join(STRONGHOLD_FILENAME)
         };
 
         if storage_path.exists() {
@@ -812,24 +761,12 @@ impl AccountManager {
                 };
                 let res = fs::copy(storage_path, &destination);
 
-                // if we're using SQLite for storage and stronghold for seed,
-                // we'll remove the accounts from stronghold after the backup
-                #[cfg(all(
-                    feature = "sqlite-storage",
-                    any(feature = "stronghold", feature = "stronghold-storage")
-                ))]
-                {
-                    let storage_id = crate::storage::get(&self.storage_path).await?.lock().await.id();
-                    // if we're actually using the SQLite storage adapter
-                    if storage_id == crate::storage::sqlite::STORAGE_ID {
-                        let mut stronghold_storage = crate::storage::stronghold::StrongholdStorageAdapter::new(
-                            &self.storage_folder.join(STRONGHOLD_FILENAME),
-                        )
-                        .unwrap();
-                        for account_handle in self.accounts.read().await.values() {
-                            stronghold_storage.remove(&account_handle.read().await.id()).await?;
-                        }
-                    }
+                let mut stronghold_storage = crate::storage::stronghold::StrongholdStorageAdapter::new(
+                    &self.storage_folder.join(STRONGHOLD_FILENAME),
+                )
+                .unwrap();
+                for account_handle in self.accounts.read().await.values() {
+                    stronghold_storage.remove(&account_handle.read().await.id()).await?;
                 }
 
                 res?;
@@ -844,12 +781,10 @@ impl AccountManager {
     }
 
     /// Import backed up accounts.
-    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite-storage", feature = "stronghold-storage"))))]
     pub async fn import_accounts<S: AsRef<Path>>(
         &mut self,
         source: S,
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))] stronghold_password: String,
+        stronghold_password: String,
     ) -> crate::Result<()> {
         let source = source.as_ref();
         if source.is_dir() || !source.exists() {
@@ -857,7 +792,7 @@ impl AccountManager {
         }
 
         #[allow(unused_variables)]
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        #[cfg(feature = "stronghold")]
         let storage_file_path = {
             let storage_file_path = self.storage_folder.join(STRONGHOLD_FILENAME);
             let storage_id = crate::storage::get(&self.storage_path).await?.lock().await.id();
@@ -868,7 +803,7 @@ impl AccountManager {
         };
 
         #[allow(unused_variables)]
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        #[cfg(feature = "stronghold")]
         let stronghold_file_path = storage_file_path.clone();
 
         #[cfg(feature = "sqlite-storage")]
@@ -883,7 +818,7 @@ impl AccountManager {
         fs::create_dir_all(&self.storage_folder)?;
 
         if source.extension().unwrap_or_default() == "stronghold" {
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             {
                 #[cfg(feature = "sqlite-storage")]
                 {
@@ -926,7 +861,7 @@ impl AccountManager {
             crate::spawn(Self::start_monitoring(self.accounts.clone()));
         }
 
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        #[cfg(feature = "stronghold")]
         {
             // force stronghold to read the snapshot again, ignoring any previous cached value
             crate::stronghold::unload_snapshot(&self.storage_path, false).await?;
@@ -1929,7 +1864,7 @@ mod tests {
             #[allow(unused_mut)]
             let mut manager = crate::test_utils::get_account_manager().await;
 
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             {
                 // wait for stronghold to finish pending operations and delete the storage file
                 crate::stronghold::unload_snapshot(&manager.stronghold_snapshot_path().await.unwrap(), false)
@@ -1955,7 +1890,7 @@ mod tests {
 
             // import the accounts from the backup and assert that it's the same
 
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             {
                 manager
                     .import_accounts(&backup_file_path, "password".to_string())
@@ -2007,7 +1942,7 @@ mod tests {
             let backup_path = manager.backup(&backup_file_path).await.unwrap();
             assert_eq!(backup_path, backup_file_path);
 
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             let response = manager.import_accounts(&backup_file_path, "password".to_string()).await;
 
             #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]

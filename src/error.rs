@@ -47,8 +47,8 @@ pub enum Error {
     #[error("`{0}`")]
     JsonError(#[from] serde_json::error::Error),
     /// stronghold client error.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     #[error("`{0}`")]
     StrongholdError(crate::stronghold::Error),
     /// iota.rs error.
@@ -199,7 +199,7 @@ impl From<iota::message::Error> for Error {
     }
 }
 
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg(feature = "stronghold")]
 impl From<crate::stronghold::Error> for Error {
     fn from(error: crate::stronghold::Error) -> Self {
         match error {
@@ -249,7 +249,7 @@ impl serde::Serialize for Error {
         match self {
             Self::IoError(_) => serialize_variant(self, serializer, "IoError"),
             Self::JsonError(_) => serialize_variant(self, serializer, "JsonError"),
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             Self::StrongholdError(_) => serialize_variant(self, serializer, "StrongholdError"),
             Self::ClientError(_) => serialize_variant(self, serializer, "ClientError"),
             Self::UrlError(_) => serialize_variant(self, serializer, "UrlError"),
