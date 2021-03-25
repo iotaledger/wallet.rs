@@ -379,12 +379,9 @@ pub struct Account {
     #[getset(set = "pub(crate)")]
     last_synced_at: Option<DateTime<Local>>,
     /// Messages associated with the seed.
-    /// The account can be initialised with locally stored messages.
-    #[getset(set = "pub")]
     messages: Vec<Message>,
     /// Address history associated with the seed.
-    /// The account can be initialised with locally stored address history.
-    #[getset(set = "pub")]
+    #[getset(set = "pub(crate)")]
     addresses: Vec<Address>,
     /// The client options.
     #[serde(rename = "clientOptions")]
@@ -562,7 +559,7 @@ impl AccountHandle {
     pub async fn get_unused_address(&self) -> crate::Result<Address> {
         self.sync()
             .await
-            .steps(vec![AccountSynchronizeStep::SyncAddresses])
+            .steps(vec![AccountSynchronizeStep::SyncAddresses(None)])
             .execute()
             .await?;
         // safe to clone since the `sync` guarantees a latest unused address
@@ -574,20 +571,25 @@ impl AccountHandle {
     /// Note that such address might have been used in the past, because the message history might have been pruned by
     /// the node.
     pub async fn is_latest_address_unused(&self) -> crate::Result<bool> {
-        let mut latest_address = self.latest_address().await;
+        let mut account = self.inner.write().await;
+        let client_options = account.client_options().clone();
+        let messages = account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
+        let latest_address = account.latest_address_mut();
         let bech32_hrp = latest_address.address().bech32_hrp().to_string();
-        let account = self.inner.read().await;
+        let address_wrapper = latest_address.address().clone();
         sync::sync_address(
-            account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect(),
-            account.client_options().clone(),
-            latest_address.outputs().clone(),
-            &mut latest_address,
+            messages,
+            &client_options,
+            latest_address.outputs_mut(),
+            address_wrapper,
             bech32_hrp,
             self.account_options,
             self.is_monitoring.clone(),
         )
         .await?;
-        Ok(*latest_address.balance() == 0 && latest_address.outputs().is_empty())
+        let is_unused = *latest_address.balance() == 0 && latest_address.outputs().is_empty();
+        account.save().await?;
+        Ok(is_unused)
     }
 
     /// Bridge to [Account#latest_address](struct.Account.html#method.latest_address).
@@ -704,6 +706,15 @@ impl Account {
             .iter()
             .filter(|a| !a.internal())
             .max_by_key(|a| a.key_index())
+            .unwrap()
+    }
+
+    fn latest_address_mut(&mut self) -> &mut Address {
+        // the addresses list is never empty because we generate an address on the account creation
+        self.addresses
+            .iter_mut()
+            .filter(|a| !a.internal())
+            .max_by_key(|a| *a.key_index())
             .unwrap()
     }
 
@@ -917,6 +928,7 @@ impl Account {
             });
     }
 
+    #[cfg(test)]
     pub(crate) fn addresses_mut(&mut self) -> &mut Vec<Address> {
         &mut self.addresses
     }

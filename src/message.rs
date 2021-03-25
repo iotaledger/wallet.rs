@@ -979,7 +979,6 @@ impl Message {
                     })
                     .collect(),
             },
-
             _ => vec![],
         }
     }
