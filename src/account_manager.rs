@@ -448,12 +448,12 @@ impl AccountManager {
     }
 
     /// Sends the migration bundle to the given node.
-    pub async fn send_migration_bundle(&mut self, node: &str, hash: &str, mwm: u8) -> crate::Result<()> {
+    pub async fn send_migration_bundle(&mut self, nodes: &[&str], hash: &str, mwm: u8) -> crate::Result<()> {
         let bundle = self
             .cached_migration_bundles
             .get(hash)
             .ok_or(crate::Error::MigrationBundleNotFound)?;
-        migration::send_bundle(node, bundle.to_vec(), mwm).await?;
+        migration::send_bundle(nodes, bundle.to_vec(), mwm).await?;
         self.cached_migration_bundles.remove(hash);
         Ok(())
     }

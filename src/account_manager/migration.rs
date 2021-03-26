@@ -226,8 +226,12 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
     Ok(bundle)
 }
 
-pub(crate) async fn send_bundle(node: &str, bundle: Vec<BundledTransaction>, mwm: u8) -> crate::Result<()> {
-    let legacy_client = iota_migration::ClientBuilder::new().node(node)?.build()?;
+pub(crate) async fn send_bundle(nodes: &[&str], bundle: Vec<BundledTransaction>, mwm: u8) -> crate::Result<()> {
+    let mut builder = iota_migration::ClientBuilder::new();
+    for node in nodes {
+        builder = builder.node(node)?;
+    }
+    let legacy_client = builder.build()?;
     let _send_trytes = legacy_client
         .send_trytes()
         .with_trytes(bundle)

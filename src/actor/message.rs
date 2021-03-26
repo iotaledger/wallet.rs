@@ -243,8 +243,8 @@ pub enum MessageType {
     },
     /// Sends the migration bundle associated with the hash.
     SendMigrationBundle {
-        /// Node URL.
-        node: String,
+        /// Node URLs.
+        nodes: Vec<String>,
         /// Bundle hash returned on `CreateMigrationBundle`.
         #[serde(rename = "bundleHash")]
         bundle_hash: String,
@@ -344,7 +344,7 @@ impl Serialize for MessageType {
                 log_file_path: _,
             } => serializer.serialize_unit_variant("MessageType", 25, "CreateMigrationBundle"),
             MessageType::SendMigrationBundle {
-                node: _,
+                nodes: _,
                 bundle_hash: _,
                 mwm: _,
             } => serializer.serialize_unit_variant("MessageType", 26, "SendMigrationBundle"),
