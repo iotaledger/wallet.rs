@@ -212,8 +212,8 @@ pub enum MessageType {
     SetClientOptions(Box<ClientOptions>),
     /// Get legacy network balance for the seed.
     GetMigrationData {
-        /// The node to connect to.
-        node: String,
+        /// The nodes to connect to.
+        nodes: Vec<String>,
         /// The legacy seed.
         seed: String,
         /// The WOTS address security level.
@@ -328,7 +328,7 @@ impl Serialize for MessageType {
                 serializer.serialize_unit_variant("MessageType", 23, "SetClientOptions")
             }
             MessageType::GetMigrationData {
-                node: _,
+                nodes: _,
                 seed: _,
                 initial_address_index: _,
                 security_level: _,

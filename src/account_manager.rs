@@ -293,7 +293,7 @@ pub(crate) struct AccountOptions {
 }
 
 pub(crate) struct CachedMigrationData {
-    node: String,
+    nodes: Vec<String>,
     security_level: u8,
     inputs: HashMap<Range<u64>, Vec<InputData>>,
     bundled_input_indexes: Vec<usize>,
@@ -374,7 +374,7 @@ impl AccountManager {
             .cached_migration_data
             .entry(finder.seed_hash)
             .or_insert(CachedMigrationData {
-                node: finder.node.to_string(),
+                nodes: finder.nodes.iter().map(|node| node.to_string()).collect(),
                 security_level: finder.security_level,
                 inputs: Default::default(),
                 bundled_input_indexes: Default::default(),

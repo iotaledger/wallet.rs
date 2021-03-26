@@ -34,7 +34,7 @@ pub struct MigrationData {
 
 /// Finds account data for the migration from legacy network.
 pub struct MigrationDataFinder<'a> {
-    pub(crate) node: &'a str,
+    pub(crate) nodes: &'a [&'a str],
     seed: TernarySeed,
     pub(crate) seed_hash: u64,
     pub(crate) security_level: u8,
@@ -44,7 +44,7 @@ pub struct MigrationDataFinder<'a> {
 
 impl<'a> MigrationDataFinder<'a> {
     /// Creates a new migration accoutn data finder.
-    pub fn new(node: &'a str, seed: &'a str) -> crate::Result<Self> {
+    pub fn new(nodes: &'a [&'a str], seed: &'a str) -> crate::Result<Self> {
         let mut hasher = DefaultHasher::new();
         seed.hash(&mut hasher);
         let seed_hash = hasher.finish();
@@ -56,7 +56,7 @@ impl<'a> MigrationDataFinder<'a> {
         )
         .map_err(|_| crate::Error::InvalidSeed)?;
         Ok(Self {
-            node,
+            nodes,
             seed,
             seed_hash,
             security_level: 2,
@@ -79,7 +79,11 @@ impl<'a> MigrationDataFinder<'a> {
 
     pub(crate) async fn finish(&self, inputs: &mut HashMap<Range<u64>, Vec<InputData>>) -> crate::Result<u64> {
         let mut address_index = self.initial_address_index;
-        let mut legacy_client = iota_migration::ClientBuilder::new().node(self.node)?.build()?;
+        let mut legacy_client_builder = iota_migration::ClientBuilder::new();
+        for node in self.nodes {
+            legacy_client_builder = legacy_client_builder.node(node)?;
+        }
+        let mut legacy_client = legacy_client_builder.build()?;
         let mut balance = 0;
 
         loop {
@@ -125,7 +129,11 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
     timeout: Duration,
     log_file_path: P,
 ) -> crate::Result<Vec<BundledTransaction>> {
-    let legacy_client = iota_migration::ClientBuilder::new().node(&data.node)?.build()?;
+    let mut legacy_client_builder = iota_migration::ClientBuilder::new();
+    for node in &data.nodes {
+        legacy_client_builder = legacy_client_builder.node(node)?;
+    }
+    let legacy_client = legacy_client_builder.build()?;
 
     match address_inputs.len() {
         0 => return Err(crate::Error::EmptyInputList),

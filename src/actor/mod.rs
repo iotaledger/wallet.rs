@@ -214,13 +214,14 @@ impl WalletMessageHandler {
                 .await
             }
             MessageType::GetMigrationData {
-                node,
+                nodes,
                 seed,
                 security_level,
                 initial_address_index,
             } => {
                 convert_async_panics(|| async {
-                    let mut finder = MigrationDataFinder::new(&node, &seed)?;
+                    let nodes = nodes.iter().map(String::as_ref).collect::<Vec<&str>>();
+                    let mut finder = MigrationDataFinder::new(&nodes, &seed)?;
                     if let Some(level) = security_level {
                         finder = finder.with_security_level(*level);
                     }
