@@ -227,13 +227,13 @@ struct TransactionReattachmentEventHandler {
 
 event_handler_impl!(TransactionReattachmentEventHandler);
 
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg(feature = "stronghold")]
 struct StrongholdStatusChangeEventHandler {
     id: EventId,
     on_event: Box<dyn Fn(&crate::StrongholdStatus) + Send>,
 }
 
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg(feature = "stronghold")]
 event_handler_impl!(StrongholdStatusChangeEventHandler);
 
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
@@ -259,7 +259,7 @@ type TransactionListeners = Arc<Mutex<Vec<TransactionEventHandler>>>;
 type TransactionConfirmationChangeListeners = Arc<Mutex<Vec<TransactionConfirmationChangeEventHandler>>>;
 type TransactionReattachmentListeners = Arc<Mutex<Vec<TransactionReattachmentEventHandler>>>;
 type ErrorListeners = Arc<StdMutex<Vec<ErrorHandler>>>;
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg(feature = "stronghold")]
 type StrongholdStatusChangeListeners = Arc<Mutex<Vec<StrongholdStatusChangeEventHandler>>>;
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 type AddressConsolidationNeededListeners = Arc<Mutex<Vec<AddressConsolidationNeededHandler>>>;
@@ -309,7 +309,7 @@ fn error_listeners() -> &'static ErrorListeners {
 }
 
 /// Gets the stronghold status change listeners array.
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg(feature = "stronghold")]
 fn stronghold_status_change_listeners() -> &'static StrongholdStatusChangeListeners {
     static LISTENERS: Lazy<StrongholdStatusChangeListeners> = Lazy::new(Default::default);
     &LISTENERS
@@ -390,14 +390,14 @@ pub(crate) async fn emit_balance_change(
 pub(crate) async fn emit_transaction_event(
     event_type: TransactionEventType,
     account: &Account,
-    message: &Message,
+    message: Message,
     persist: bool,
 ) -> crate::Result<()> {
     let listeners = transaction_listeners().lock().await;
     let event = TransactionEvent {
         indexation_id: generate_indexation_id(),
         account_id: account.id().to_string(),
-        message: message.clone(),
+        message,
     };
 
     if persist {
@@ -579,7 +579,7 @@ pub fn remove_error_listener(id: &EventId) {
     }
 }
 
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg(feature = "stronghold")]
 pub(crate) async fn emit_stronghold_status_change(status: &crate::StrongholdStatus) {
     let listeners = stronghold_status_change_listeners().lock().await;
     for listener in listeners.deref() {
@@ -588,8 +588,8 @@ pub(crate) async fn emit_stronghold_status_change(status: &crate::StrongholdStat
 }
 
 /// Listen to stronghold status change events.
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+#[cfg(feature = "stronghold")]
+#[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
 pub async fn on_stronghold_status_change<F: Fn(&crate::StrongholdStatus) + Send + 'static>(cb: F) -> EventId {
     let mut l = stronghold_status_change_listeners().lock().await;
     let id = generate_event_id();
@@ -601,8 +601,8 @@ pub async fn on_stronghold_status_change<F: Fn(&crate::StrongholdStatus) + Send 
 }
 
 /// Removes the stronghold status change listener associated with the given identifier.
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+#[cfg(feature = "stronghold")]
+#[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
 pub async fn remove_stronghold_status_change_listener(id: &EventId) {
     remove_event_listener(id, stronghold_status_change_listeners()).await;
 }
@@ -732,7 +732,7 @@ mod tests {
                 })
                 .await;
 
-                emit_transaction_event(TransactionEventType::NewTransaction, &account, &message, true)
+                emit_transaction_event(TransactionEventType::NewTransaction, &account, message, true)
                     .await
                     .unwrap();
             });
@@ -778,7 +778,7 @@ mod tests {
                 })
                 .await;
 
-                emit_transaction_event(TransactionEventType::Broadcast, &account, &message, true)
+                emit_transaction_event(TransactionEventType::Broadcast, &account, message, true)
                     .await
                     .unwrap();
             });

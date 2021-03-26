@@ -310,28 +310,6 @@ impl Address {
         AddressBuilder::new()
     }
 
-    pub(crate) fn handle_new_output(&mut self, output: AddressOutput) -> crate::Result<()> {
-        if !self.outputs.values().any(|o| o == &output) {
-            let spent_existing_output = self.outputs.values_mut().find(|o| {
-                o.message_id == output.message_id
-                    && o.transaction_id == output.transaction_id
-                    && o.index == output.index
-                    && o.amount == output.amount
-                    && (!o.is_spent && output.is_spent)
-            });
-            if let Some(spent_existing_output) = spent_existing_output {
-                log::debug!("[ADDRESS] got spent of {:?}", spent_existing_output);
-                self.balance -= output.amount;
-                spent_existing_output.is_spent = true;
-            } else {
-                log::debug!("[ADDRESS] got new output {:?}", output);
-                self.balance += output.amount;
-                self.outputs.insert(output.id()?, output);
-            }
-        }
-        Ok(())
-    }
-
     /// Gets the list of outputs that aren't spent or pending.
     pub fn available_outputs(&self, account: &Account) -> Vec<&AddressOutput> {
         self.outputs
@@ -344,6 +322,10 @@ impl Address {
         self.available_outputs(account)
             .iter()
             .fold(0, |acc, o| acc + *o.amount())
+    }
+
+    pub(crate) fn outputs_mut(&mut self) -> &mut HashMap<OutputId, AddressOutput> {
+        &mut self.outputs
     }
 
     /// Updates the Bech32 human readable part.
@@ -386,7 +368,7 @@ pub(crate) async fn get_new_address(account: &Account, metadata: GenerateAddress
     let bech32_hrp = match account.addresses().first() {
         Some(address) => address.address().bech32_hrp().to_string(),
         None => {
-            crate::client::get_client(account.client_options())
+            crate::client::get_client(account.client_options(), None)
                 .await?
                 .read()
                 .await

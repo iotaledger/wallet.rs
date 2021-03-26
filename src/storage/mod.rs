@@ -1,13 +1,9 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(feature = "sqlite-storage")]
-#[cfg_attr(docsrs, doc(cfg(feature = "sqlite-storage")))]
 /// Sqlite storage.
 pub mod sqlite;
 
-#[cfg(any(feature = "stronghold-storage", feature = "stronghold"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold-storage", feature = "stronghold"))))]
 /// Stronghold storage.
 pub mod stronghold;
 
@@ -299,14 +295,11 @@ pub(crate) async fn set<P: AsRef<Path>>(
     let storage = Storage {
         storage_path: storage_path.as_ref().to_path_buf(),
         inner: storage,
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         encryption_key: if storage_id == stronghold::STORAGE_ID {
             None
         } else {
             encryption_key
         },
-        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-        encryption_key,
     };
     let storage_manager = StorageManager {
         storage,

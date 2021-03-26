@@ -12,7 +12,7 @@ def balance_changed_event_processing(event):
 
 # This example shows some events.
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 )
 account_manager.set_stronghold_password("password")
 

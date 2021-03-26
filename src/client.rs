@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use getset::Getters;
-use iota::client::{Client, ClientBuilder};
+use iota::client::{Client, ClientBuilder, MqttEvent};
 use once_cell::sync::Lazy;
 use serde::{de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
 use tokio::sync::{Mutex, RwLock};
@@ -12,11 +12,14 @@ use std::{
     collections::HashMap,
     hash::{Hash, Hasher},
     str::FromStr,
-    sync::Arc,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
     time::Duration,
 };
 
-type ClientInstanceMap = Arc<Mutex<HashMap<ClientOptions, Arc<RwLock<Client>>>>>;
+type ClientInstanceMap = Arc<Mutex<HashMap<ClientOptions, (bool, Arc<RwLock<Client>>)>>>;
 
 /// Gets the client instances map.
 fn instances() -> &'static ClientInstanceMap {
@@ -24,7 +27,22 @@ fn instances() -> &'static ClientInstanceMap {
     &INSTANCES
 }
 
-pub(crate) async fn get_client(options: &ClientOptions) -> crate::Result<Arc<RwLock<Client>>> {
+fn check_mqtt_events(client: &Client, is_monitoring: Arc<AtomicBool>) {
+    let mut event_rx = client.mqtt_event_receiver();
+    tokio::spawn(async move {
+        while event_rx.changed().await.is_ok() {
+            let event = event_rx.borrow();
+            if *event == MqttEvent::Disconnected {
+                is_monitoring.store(false, Ordering::Relaxed);
+            }
+        }
+    });
+}
+
+pub(crate) async fn get_client(
+    options: &ClientOptions,
+    is_monitoring: Option<Arc<AtomicBool>>,
+) -> crate::Result<Arc<RwLock<Client>>> {
     let mut map = instances().lock().await;
 
     if !map.contains_key(&options) {
@@ -87,13 +105,31 @@ pub(crate) async fn get_client(options: &ClientOptions) -> crate::Result<Arc<RwL
         }
 
         let client = client_builder.finish().await?;
+        if let Some(is_monitoring) = is_monitoring.clone() {
+            check_mqtt_events(&client, is_monitoring);
+        }
 
-        map.insert(options.clone(), Arc::new(RwLock::new(client)));
+        map.insert(
+            options.clone(),
+            (is_monitoring.is_some(), Arc::new(RwLock::new(client))),
+        );
     }
 
     // safe to unwrap since we make sure the client exists on the block above
-    let client = map.get(&options).unwrap();
+    let (is_checking_mqtt_events, client) = map.get(&options).unwrap();
+
+    if !is_checking_mqtt_events {
+        if let Some(is_monitoring) = is_monitoring {
+            check_mqtt_events(&*client.read().await, is_monitoring);
+        }
+    }
+
     Ok(client.clone())
+}
+
+/// Drops all clients.
+pub async fn drop_all() {
+    instances().lock().await.clear();
 }
 
 /// The options builder for a client connected to multiple nodes.
@@ -585,14 +621,14 @@ mod tests {
         // assert that each different client_options create a new client instance
         for case in &test_cases {
             let len = super::instances().lock().await.len();
-            super::get_client(&case).await.unwrap();
+            super::get_client(&case, None).await.unwrap();
             assert_eq!(super::instances().lock().await.len() - len, 1);
         }
 
         // assert that subsequent calls with options already initialized doesn't create new clients
         let len = super::instances().lock().await.len();
         for case in &test_cases {
-            super::get_client(&case).await.unwrap();
+            super::get_client(&case, None).await.unwrap();
             assert_eq!(super::instances().lock().await.len(), len);
         }
     }

@@ -27,7 +27,7 @@ use std::{
 };
 
 mod sync;
-pub(crate) use sync::{repost_message, AccountSynchronizeStep, RepostAction};
+pub(crate) use sync::{repost_message, AccountSynchronizeStep, RepostAction, SyncedAccountData};
 pub use sync::{AccountSynchronizer, SyncedAccount};
 
 const ACCOUNT_ID_PREFIX: &str = "wallet-account://";
@@ -226,7 +226,7 @@ impl AccountInitialiser {
                 latest_account_handle = Some(account_handle.clone());
             }
         }
-        if let Some(latest_account_handle) = latest_account_handle {
+        if let Some(ref latest_account_handle) = latest_account_handle {
             let latest_account = latest_account_handle.read().await;
             if latest_account.messages().is_empty() && latest_account.addresses().iter().all(|a| a.outputs.is_empty()) {
                 return Err(crate::Error::LatestAccountIsEmpty);
@@ -249,25 +249,46 @@ impl AccountInitialiser {
             skip_persistence: self.skip_persistence,
         };
 
-        let bech32_hrp = crate::client::get_client(&account.client_options)
-            .await?
-            .read()
-            .await
-            .get_network_info()
-            .await
-            .map_err(|e| match e {
-                iota::client::Error::SyncedNodePoolEmpty => crate::Error::NodesNotSynced(
-                    account
-                        .client_options
-                        .nodes()
-                        .iter()
-                        .map(|node| node.url.as_str())
-                        .collect::<Vec<&str>>()
-                        .join(", "),
-                ),
-                _ => e.into(),
-            })?
-            .bech32_hrp;
+        let bech32_hrp = match account.client_options.network().as_deref() {
+            Some("testnet") => "atoi".to_string(),
+            Some("mainnet") => "iota".to_string(),
+            _ => {
+                let client_options = account.client_options.clone();
+                let is_monitoring = self.is_monitoring.clone();
+                let get_from_client_task = async {
+                    let hrp = crate::client::get_client(&client_options, Some(is_monitoring))
+                        .await?
+                        .read()
+                        .await
+                        .get_network_info()
+                        .await
+                        .map_err(|e| match e {
+                            iota::client::Error::SyncedNodePoolEmpty => crate::Error::NodesNotSynced(
+                                client_options
+                                    .nodes()
+                                    .iter()
+                                    .map(|node| node.url.as_str())
+                                    .collect::<Vec<&str>>()
+                                    .join(", "),
+                            ),
+                            _ => e.into(),
+                        })?
+                        .bech32_hrp;
+                    crate::Result::Ok(hrp)
+                };
+                match latest_account_handle {
+                    Some(handle) => {
+                        let latest_account = handle.read().await;
+                        if latest_account.client_options == account.client_options {
+                            latest_account.bech32_hrp()
+                        } else {
+                            get_from_client_task.await?
+                        }
+                    }
+                    None => get_from_client_task.await?,
+                }
+            }
+        };
 
         for address in account.addresses.iter_mut() {
             address.set_bech32_hrp(bech32_hrp.to_string());
@@ -358,12 +379,9 @@ pub struct Account {
     #[getset(set = "pub(crate)")]
     last_synced_at: Option<DateTime<Local>>,
     /// Messages associated with the seed.
-    /// The account can be initialised with locally stored messages.
-    #[getset(set = "pub")]
     messages: Vec<Message>,
     /// Address history associated with the seed.
-    /// The account can be initialised with locally stored address history.
-    #[getset(set = "pub")]
+    #[getset(set = "pub(crate)")]
     addresses: Vec<Address>,
     /// The client options.
     #[serde(rename = "clientOptions")]
@@ -522,9 +540,18 @@ impl AccountHandle {
             })
             .await?;
 
-        let _ = crate::monitor::monitor_address_balance(self.clone(), address.address());
+        // monitor on a non-async function to prevent cycle computing the `monitor_address_balance` fn type
+        self.monitor_address(address.address().clone());
 
         Ok(address)
+    }
+
+    pub(crate) fn monitor_address(&self, address: AddressWrapper) {
+        let handle = self.clone();
+        crate::spawn(async move {
+            // ignore errors because we fallback to the polling system
+            let _ = crate::monitor::monitor_address_balance(handle, vec![address]).await;
+        });
     }
 
     /// Synchronizes the account addresses with the Tangle and returns the latest address in the account,
@@ -532,7 +559,7 @@ impl AccountHandle {
     pub async fn get_unused_address(&self) -> crate::Result<Address> {
         self.sync()
             .await
-            .steps(vec![AccountSynchronizeStep::SyncAddresses])
+            .steps(vec![AccountSynchronizeStep::SyncAddresses(None)])
             .execute()
             .await?;
         // safe to clone since the `sync` guarantees a latest unused address
@@ -544,19 +571,25 @@ impl AccountHandle {
     /// Note that such address might have been used in the past, because the message history might have been pruned by
     /// the node.
     pub async fn is_latest_address_unused(&self) -> crate::Result<bool> {
-        let mut latest_address = self.latest_address().await;
+        let mut account = self.inner.write().await;
+        let client_options = account.client_options().clone();
+        let messages = account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
+        let latest_address = account.latest_address_mut();
         let bech32_hrp = latest_address.address().bech32_hrp().to_string();
-        let account = self.inner.read().await;
+        let address_wrapper = latest_address.address().clone();
         sync::sync_address(
-            account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect(),
-            account.client_options().clone(),
-            latest_address.outputs().clone(),
-            &mut latest_address,
+            messages,
+            &client_options,
+            latest_address.outputs_mut(),
+            address_wrapper,
             bech32_hrp,
             self.account_options,
+            self.is_monitoring.clone(),
         )
         .await?;
-        Ok(*latest_address.balance() == 0 && latest_address.outputs().is_empty())
+        let is_unused = *latest_address.balance() == 0 && latest_address.outputs().is_empty();
+        account.save().await?;
+        Ok(is_unused)
     }
 
     /// Bridge to [Account#latest_address](struct.Account.html#method.latest_address).
@@ -676,6 +709,15 @@ impl Account {
             .unwrap()
     }
 
+    fn latest_address_mut(&mut self) -> &mut Address {
+        // the addresses list is never empty because we generate an address on the account creation
+        self.addresses
+            .iter_mut()
+            .filter(|a| !a.internal())
+            .max_by_key(|a| *a.key_index())
+            .unwrap()
+    }
+
     /// Gets the account balance information.
     pub fn balance(&self) -> AccountBalance {
         let (incoming, outgoing) = self.list_messages(0, 0, Some(MessageType::Confirmed)).iter().fold(
@@ -715,7 +757,7 @@ impl Account {
 
     /// Updates the account's client options.
     pub async fn set_client_options(&mut self, options: ClientOptions) -> crate::Result<()> {
-        let client_guard = crate::client::get_client(&options).await?;
+        let client_guard = crate::client::get_client(&options, None).await?;
         let client = client_guard.read().await;
 
         let unsynced_nodes = client.unsynced_nodes().await;
@@ -755,29 +797,25 @@ impl Account {
     ///
     /// # Example
     ///
-    /// ```
-    /// use iota_wallet::{account_manager::AccountManager, client::ClientOptionsBuilder, message::MessageType, signing::SignerType};
-    /// # use rand::{distributions::Alphanumeric, thread_rng, Rng};
+    /// ```no_run
+    /// use iota_wallet::{
+    ///     account_manager::AccountManager, client::ClientOptionsBuilder, message::MessageType, signing::SignerType,
+    /// };
     ///
     /// #[tokio::main]
     /// async fn main() {
-    ///     # let storage_path: String = thread_rng().sample_iter(&Alphanumeric).map(char::from).take(10).collect();
-    ///     # let storage_path = std::path::PathBuf::from(format!("./test-storage/{}", storage_path));
     ///     // gets 10 received messages, skipping the first 5 most recent messages.
     ///     let client_options = ClientOptionsBuilder::new()
     ///         .with_node("https://api.lb-0.testnet.chrysalis2.com")
     ///         .expect("invalid node URL")
     ///         .build()
     ///         .unwrap();
-    ///     let mut manager = AccountManager::builder().with_storage("./test-storage", ManagerStorage::Stronghold, None).unwrap().finish().await.unwrap();
-    ///     # use iota_wallet::account_manager::ManagerStorage;
-    ///     # #[cfg(all(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    ///     # let default_storage = ManagerStorage::Stronghold;
-    ///     # #[cfg(all(feature = "stronghold-storage", not(feature = "sqlite-storage")))]
-    ///     # let default_storage = ManagerStorage::Stronghold;
-    ///     # #[cfg(all(feature = "sqlite-storage", not(feature = "stronghold-storage")))]
-    ///     # let default_storage = ManagerStorage::Sqlite;
-    ///     # let mut manager = AccountManager::builder().with_storage(storage_path, default_storage, None).unwrap().finish().await.unwrap();
+    ///     let mut manager = AccountManager::builder()
+    ///         .with_storage("./test-storage", None)
+    ///         .unwrap()
+    ///         .finish()
+    ///         .await
+    ///         .unwrap();
     ///     manager.set_stronghold_password("password").await.unwrap();
     ///     manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
     ///
@@ -886,6 +924,7 @@ impl Account {
             });
     }
 
+    #[cfg(test)]
     pub(crate) fn addresses_mut(&mut self) -> &mut Vec<Address> {
         &mut self.addresses
     }
