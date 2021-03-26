@@ -214,6 +214,8 @@ pub enum MessageType {
     GetMigrationData {
         /// The nodes to connect to.
         nodes: Vec<String>,
+        /// The permanode to use.
+        permanode: Option<String>,
         /// The legacy seed.
         seed: String,
         /// The WOTS address security level.
@@ -329,6 +331,7 @@ impl Serialize for MessageType {
             }
             MessageType::GetMigrationData {
                 nodes: _,
+                permanode: _,
                 seed: _,
                 initial_address_index: _,
                 security_level: _,

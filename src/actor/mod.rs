@@ -215,6 +215,7 @@ impl WalletMessageHandler {
             }
             MessageType::GetMigrationData {
                 nodes,
+                permanode,
                 seed,
                 security_level,
                 initial_address_index,
@@ -224,6 +225,9 @@ impl WalletMessageHandler {
                     let mut finder = MigrationDataFinder::new(&nodes, &seed)?;
                     if let Some(level) = security_level {
                         finder = finder.with_security_level(*level);
+                    }
+                    if let Some(permanode) = permanode {
+                        finder = finder.with_permanode(permanode);
                     }
                     if let Some(initial_address_index) = initial_address_index {
                         finder = finder.with_initial_address_index(*initial_address_index);

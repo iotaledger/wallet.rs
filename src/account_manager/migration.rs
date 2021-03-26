@@ -35,6 +35,7 @@ pub struct MigrationData {
 /// Finds account data for the migration from legacy network.
 pub struct MigrationDataFinder<'a> {
     pub(crate) nodes: &'a [&'a str],
+    pub(crate) permanode: Option<&'a str>,
     seed: TernarySeed,
     pub(crate) seed_hash: u64,
     pub(crate) security_level: u8,
@@ -57,12 +58,19 @@ impl<'a> MigrationDataFinder<'a> {
         .map_err(|_| crate::Error::InvalidSeed)?;
         Ok(Self {
             nodes,
+            permanode: None,
             seed,
             seed_hash,
             security_level: 2,
             gap_limit: 30,
             initial_address_index: 0,
         })
+    }
+
+    /// Sets the permanode to use.
+    pub fn with_permanode(mut self, permanode: &'a str) -> Self {
+        self.permanode.replace(permanode);
+        self
     }
 
     /// Sets the security level.
@@ -80,6 +88,9 @@ impl<'a> MigrationDataFinder<'a> {
     pub(crate) async fn finish(&self, inputs: &mut HashMap<Range<u64>, Vec<InputData>>) -> crate::Result<u64> {
         let mut address_index = self.initial_address_index;
         let mut legacy_client_builder = iota_migration::ClientBuilder::new().quorum(true);
+        if let Some(permanode) = self.permanode {
+            legacy_client_builder = legacy_client_builder.permanode(permanode)?;
+        }
         for node in self.nodes {
             legacy_client_builder = legacy_client_builder.node(node)?;
         }
@@ -130,6 +141,9 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
     log_file_path: P,
 ) -> crate::Result<Vec<BundledTransaction>> {
     let mut legacy_client_builder = iota_migration::ClientBuilder::new().quorum(true);
+    if let Some(permanode) = &data.permanode {
+            legacy_client_builder = legacy_client_builder.permanode(&permanode)?;
+        }
     for node in &data.nodes {
         legacy_client_builder = legacy_client_builder.node(node)?;
     }
