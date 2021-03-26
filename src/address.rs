@@ -62,6 +62,7 @@ pub struct AddressOutput {
     pub amount: u64,
     /// Spend status of the output,
     #[serde(rename = "isSpent")]
+    #[getset(set = "pub(crate)")]
     pub is_spent: bool,
     /// Associated address.
     #[serde(with = "crate::serde::iota_address_serde")]
@@ -156,7 +157,6 @@ impl AddressOutput {
 #[derive(Default)]
 pub struct AddressBuilder {
     address: Option<AddressWrapper>,
-    balance: Option<u64>,
     key_index: Option<usize>,
     internal: bool,
     outputs: Option<Vec<AddressOutput>>,
@@ -171,12 +171,6 @@ impl AddressBuilder {
     /// Defines the address.
     pub fn address(mut self, address: AddressWrapper) -> Self {
         self.address = Some(address);
-        self
-    }
-
-    /// Sets the address balance.
-    pub fn balance(mut self, balance: u64) -> Self {
-        self.balance = Some(balance);
         self
     }
 
@@ -212,9 +206,6 @@ impl AddressBuilder {
         }
         let address = Address {
             address: iota_address,
-            balance: self.balance.ok_or(crate::Error::AddressBuildRequiredField(
-                crate::error::AddressBuildRequiredField::Balance,
-            ))?,
             key_index: self.key_index.ok_or(crate::Error::AddressBuildRequiredField(
                 crate::error::AddressBuildRequiredField::KeyIndex,
             ))?,
@@ -264,9 +255,6 @@ pub struct Address {
     /// The address.
     #[serde(with = "crate::serde::iota_address_serde")]
     address: AddressWrapper,
-    /// The address balance.
-    #[getset(set = "pub")]
-    balance: u64,
     /// The address key index.
     #[serde(rename = "keyIndex")]
     #[getset(set = "pub(crate)")]
@@ -316,6 +304,13 @@ impl Address {
             .values()
             .filter(|o| !(o.is_spent || o.is_used(account)))
             .collect()
+    }
+
+    /// Address total balance
+    pub fn balance(&self) -> u64 {
+        self.outputs
+            .values()
+            .fold(0, |acc, o| acc + if o.is_spent { 0 } else { *o.amount() })
     }
 
     pub(crate) fn available_balance(&self, account: &Account) -> u64 {
@@ -380,7 +375,6 @@ pub(crate) async fn get_new_address(account: &Account, metadata: GenerateAddress
     let iota_address = get_iota_address(&account, key_index, false, bech32_hrp, metadata).await?;
     let address = Address {
         address: iota_address,
-        balance: 0,
         key_index,
         internal: false,
         outputs: Default::default(),
@@ -405,7 +399,6 @@ pub(crate) async fn get_new_change_address(
     .await?;
     let address = Address {
         address: iota_address,
-        balance: 0,
         key_index,
         internal: true,
         outputs: Default::default(),

@@ -315,7 +315,6 @@ impl AccountInitialiser {
                         .key_index(0)
                         .internal(false)
                         .outputs(Vec::new())
-                        .balance(0)
                         .build()
                         .unwrap(), // safe to unwrap since we provide all required fields
                 );
@@ -587,7 +586,7 @@ impl AccountHandle {
             self.is_monitoring.clone(),
         )
         .await?;
-        let is_unused = *latest_address.balance() == 0 && latest_address.outputs().is_empty();
+        let is_unused = latest_address.balance() == 0 && latest_address.outputs().is_empty();
         account.save().await?;
         Ok(is_unused)
     }
@@ -1051,14 +1050,12 @@ mod tests {
         let first_address = AddressBuilder::new()
             .address(crate::test_utils::generate_random_iota_address())
             .key_index(0)
-            .balance(balance / 2_u64)
             .outputs(vec![_generate_address_output(balance / 2_u64)])
             .build()
             .unwrap();
         let second_address = AddressBuilder::new()
             .address(crate::test_utils::generate_random_iota_address())
             .key_index(1)
-            .balance(balance / 2_u64)
             .outputs(vec![_generate_address_output(balance / 2_u64)])
             .build()
             .unwrap();

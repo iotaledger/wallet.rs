@@ -1077,7 +1077,7 @@ impl AccountsSynchronizer {
             let addresses_before_sync: Vec<(String, u64, HashMap<OutputId, AddressOutput>)> = account
                 .addresses()
                 .iter()
-                .map(|a| (a.address().to_bech32(), *a.balance(), a.outputs().clone()))
+                .map(|a| (a.address().to_bech32(), a.balance(), a.outputs().clone()))
                 .collect();
             account.append_addresses(data.addresses.to_vec());
             synced_data.push((account_handle, addresses_before_sync, data));
@@ -1094,7 +1094,7 @@ impl AccountsSynchronizer {
                     account
                         .addresses()
                         .iter()
-                        .all(|addr| *addr.balance() == 0 && addr.outputs().is_empty()),
+                        .all(|addr| addr.balance() == 0 && addr.outputs().is_empty()),
                     account.client_options().clone(),
                     account.signer_type().clone(),
                 ));
@@ -1219,7 +1219,7 @@ impl AccountsSynchronizer {
                         .iter()
                         .find(|(addr, _, _)| addr == &a.address().to_bech32())
                     {
-                        Some((_, balance, outputs)) => balance != a.balance() || outputs != a.outputs(),
+                        Some((_, balance, outputs)) => *balance != a.balance() || outputs != a.outputs(),
                         None => true,
                     }
                 })
@@ -1394,7 +1394,7 @@ async fn discover_accounts(
                 let is_empty = synced_account_data
                     .addresses
                     .iter()
-                    .all(|a| *a.balance() == 0 && a.outputs().is_empty());
+                    .all(|a| a.balance() == 0 && a.outputs().is_empty());
                 log::debug!("[SYNC] discovered account is empty? {}", is_empty);
                 if is_empty {
                     break;
@@ -1725,7 +1725,6 @@ mod tests {
                 .create_account(client_options)
                 .unwrap()
                 .addresses(vec![AddressBuilder::new()
-                    .balance(5)
                     .key_index(0)
                     .address(AddressWrapper::new(
                         IotaAddress::Ed25519(Ed25519Address::new([0; 32])),
@@ -1895,7 +1894,6 @@ mod tests {
             let address = AddressBuilder::new()
                 .address(address.clone())
                 .key_index(0)
-                .balance(0)
                 .outputs(vec![])
                 .build()
                 .unwrap();

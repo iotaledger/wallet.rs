@@ -105,7 +105,7 @@ impl From<RustWalletAddress> for Address {
     fn from(wallet_address: RustWalletAddress) -> Self {
         Self {
             address: wallet_address.address().into(),
-            balance: *wallet_address.balance(),
+            balance: wallet_address.balance(),
             key_index: *wallet_address.key_index(),
             internal: *wallet_address.internal(),
             outputs: wallet_address

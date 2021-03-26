@@ -82,7 +82,6 @@ export declare interface Message {
 
 export declare interface Address {
   address: string;
-  balance: number;
   keyIndex: number;
 }
 

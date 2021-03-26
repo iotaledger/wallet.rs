@@ -408,7 +408,6 @@ mod test_utils {
         AddressBuilder::new()
             .key_index(0)
             .address(generate_random_iota_address())
-            .balance(0)
             .outputs(Vec::new())
             .build()
             .unwrap()

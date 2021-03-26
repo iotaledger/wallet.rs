@@ -74,7 +74,6 @@ impl TryFrom<WalletAddressOutput> for RustWalletAddressOutput {
 #[derive(Debug, Clone, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct WalletAddress {
     pub address: String,
-    pub balance: u64,
     pub key_index: usize,
     pub internal: bool,
     pub outputs: Vec<WalletAddressOutput>,
@@ -93,7 +92,6 @@ impl TryFrom<WalletAddress> for RustWalletAddress {
                 IotaAddress::try_from_bech32(&address.address)?,
                 "".to_string(),
             ))
-            .balance(address.balance)
             .key_index(address.key_index)
             .internal(address.internal)
             .outputs(outputs)
