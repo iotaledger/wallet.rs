@@ -381,10 +381,11 @@ impl AccountManager {
                 inputs: Default::default(),
                 bundled_input_indexes: Default::default(),
             });
-        let balance = finder.finish(&mut stored_data.inputs).await?;
+        let metadata = finder.finish(&mut stored_data.inputs).await?;
 
         Ok(MigrationData {
-            balance,
+            balance: metadata.balance,
+            last_checked_address_index: metadata.last_checked_address_index,
             inputs: stored_data
                 .inputs
                 .clone()

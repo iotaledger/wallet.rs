@@ -28,6 +28,9 @@ use std::{
 pub struct MigrationData {
     /// Total seed balance.
     pub balance: u64,
+    /// The index of the last checked address.
+    /// Useful if you want to call the finder again.
+    pub last_checked_address_index: u64,
     /// Migration inputs.
     pub inputs: Vec<InputData>,
 }
@@ -41,6 +44,12 @@ pub struct MigrationDataFinder<'a> {
     pub(crate) security_level: u8,
     gap_limit: u64,
     initial_address_index: u64,
+}
+
+/// Migration metadata.
+pub(crate) struct MigrationMetadata {
+    pub(crate) balance: u64,
+    pub(crate) last_checked_address_index: u64,
 }
 
 impl<'a> MigrationDataFinder<'a> {
@@ -85,7 +94,10 @@ impl<'a> MigrationDataFinder<'a> {
         self
     }
 
-    pub(crate) async fn finish(&self, inputs: &mut HashMap<Range<u64>, Vec<InputData>>) -> crate::Result<u64> {
+    pub(crate) async fn finish(
+        &self,
+        inputs: &mut HashMap<Range<u64>, Vec<InputData>>,
+    ) -> crate::Result<MigrationMetadata> {
         let mut address_index = self.initial_address_index;
         let mut legacy_client_builder = iota_migration::ClientBuilder::new().quorum(true);
         if let Some(permanode) = self.permanode {
@@ -127,7 +139,10 @@ impl<'a> MigrationDataFinder<'a> {
             address_index += self.gap_limit;
         }
 
-        Ok(balance)
+        Ok(MigrationMetadata {
+            balance,
+            last_checked_address_index: address_index,
+        })
     }
 }
 
@@ -142,8 +157,8 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
 ) -> crate::Result<Vec<BundledTransaction>> {
     let mut legacy_client_builder = iota_migration::ClientBuilder::new().quorum(true);
     if let Some(permanode) = &data.permanode {
-            legacy_client_builder = legacy_client_builder.permanode(&permanode)?;
-        }
+        legacy_client_builder = legacy_client_builder.permanode(&permanode)?;
+    }
     for node in &data.nodes {
         legacy_client_builder = legacy_client_builder.node(node)?;
     }
