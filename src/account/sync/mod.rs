@@ -50,7 +50,7 @@ pub(crate) struct SyncedMessage {
 }
 
 async fn get_address_outputs(
-    address: Bech32Address,
+    address: &Bech32Address,
     client: &Client,
     fetch_spent_outputs: bool,
 ) -> crate::Result<Vec<UTXOInput>> {
@@ -114,25 +114,20 @@ async fn get_message_and_metadata(
 
 pub(crate) async fn sync_address(
     account_messages: Vec<(MessageId, Option<bool>)>,
-    client_options: ClientOptions,
-    mut outputs: HashMap<OutputId, AddressOutput>,
-    address: &mut Address,
+    client_options: &ClientOptions,
+    outputs: &mut HashMap<OutputId, AddressOutput>,
+    iota_address: AddressWrapper,
     bech32_hrp: String,
     options: AccountOptions,
     is_monitoring: Arc<AtomicBool>,
-) -> crate::Result<Vec<SyncedMessage>> {
-    let client_guard = crate::client::get_client(&client_options, Some(is_monitoring)).await?;
+) -> crate::Result<(u64, Vec<SyncedMessage>)> {
+    let client_guard = crate::client::get_client(client_options, Some(is_monitoring)).await?;
     let client = client_guard.read().await;
 
-    let iota_address = address.address();
+    let bech32_address = iota_address.to_bech32().into();
 
-    let address_outputs =
-        get_address_outputs(iota_address.to_bech32().into(), &client, options.sync_spent_outputs).await?;
-    let balance = client
-        .get_address()
-        .balance(&iota_address.to_bech32().into())
-        .await?
-        .balance;
+    let address_outputs = get_address_outputs(&bech32_address, &client, options.sync_spent_outputs).await?;
+    let balance = client.get_address().balance(&bech32_address).await?.balance;
     let mut found_messages = vec![];
 
     log::debug!(
@@ -207,10 +202,7 @@ pub(crate) async fn sync_address(
         }
     }
 
-    address.set_balance(balance);
-    address.set_outputs(outputs);
-
-    crate::Result::Ok(found_messages)
+    crate::Result::Ok((balance, found_messages))
 }
 
 // Gets an address for the sync process.
@@ -253,6 +245,54 @@ async fn get_address_for_sync(
         .await?;
         Ok(Some(generated_address))
     }
+}
+
+async fn sync_address_list(
+    addresses: Vec<Address>,
+    account_messages: Vec<(MessageId, Option<bool>)>,
+    is_monitoring: Arc<AtomicBool>,
+    options: AccountOptions,
+    client_options: ClientOptions,
+) -> crate::Result<(Vec<Address>, Vec<SyncedMessage>)> {
+    let mut tasks = Vec::new();
+    for mut address in addresses {
+        let account_messages = account_messages.clone();
+        let mut outputs = address.outputs().clone();
+        let is_monitoring = is_monitoring.clone();
+        let client_options = client_options.clone();
+        tasks.push(async move {
+            tokio::spawn(async move {
+                let (balance, messages) = sync_address(
+                    account_messages,
+                    &client_options,
+                    &mut outputs,
+                    address.address().clone(),
+                    address.address().bech32_hrp.clone(),
+                    options,
+                    is_monitoring,
+                )
+                .await?;
+                address.set_balance(balance);
+                address.set_outputs(outputs);
+                crate::Result::Ok((messages, address))
+            })
+            .await
+        });
+    }
+    let mut found_addresses = Vec::new();
+    let mut found_messages = Vec::new();
+    let results = futures::future::try_join_all(tasks)
+        .await
+        .expect("failed to sync addresses");
+    for res in results {
+        let (messages, address) = res?;
+        // if the address is a change address and has no outputs, we ignore it
+        if !(*address.internal() && address.outputs().is_empty()) {
+            found_addresses.push(address);
+        }
+        found_messages.extend(messages);
+    }
+    Ok((found_addresses, found_messages))
 }
 
 /// Syncs addresses with the tangle.
@@ -314,54 +354,33 @@ async fn sync_addresses(
             account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
         let client_options = account.client_options().clone();
 
-        let mut tasks = Vec::new();
+        let mut addresses_to_sync = Vec::new();
         for (iota_address_index, iota_address_internal, iota_address) in generated_iota_addresses.to_vec() {
-            let bech32_hrp_ = bech32_hrp.clone();
-            let account_addresses = account_addresses.clone();
-            let account_messages = account_messages.clone();
-            let client_options = client_options.clone();
-            let is_monitoring = is_monitoring.clone();
-            tasks.push(async move {
-                tokio::spawn(async move {
-                    let mut address = AddressBuilder::new()
-                        .address(iota_address.clone())
-                        .key_index(iota_address_index)
-                        .balance(0)
-                        .outputs(Vec::new())
-                        .internal(iota_address_internal)
-                        .build()?;
-                    let outputs = account_addresses
-                        .into_iter()
-                        .find(|(a, _)| a == &iota_address)
-                        .map(|(_, outputs)| outputs)
-                        .unwrap_or_default();
-                    let messages = sync_address(
-                        account_messages,
-                        client_options,
-                        outputs,
-                        &mut address,
-                        bech32_hrp_,
-                        options,
-                        is_monitoring,
-                    )
-                    .await?;
-                    crate::Result::Ok((messages, address))
-                })
-                .await
-            });
+            let outputs = account_addresses
+                .iter()
+                .find(|(a, _)| a == &iota_address)
+                .map(|(_, outputs)| outputs.clone())
+                .unwrap_or_default();
+            let address = AddressBuilder::new()
+                .address(iota_address.clone())
+                .key_index(iota_address_index)
+                .balance(0)
+                .outputs(outputs.values().cloned().collect())
+                .internal(iota_address_internal)
+                .build()?;
+            addresses_to_sync.push(address);
         }
 
-        let results = futures::future::try_join_all(tasks)
-            .await
-            .expect("failed to sync addresses");
-        for res in results {
-            let (found_messages, address) = res?;
-            // if the address is a change address and has no outputs, we ignore it
-            if !(*address.internal() && address.outputs().is_empty()) {
-                curr_generated_addresses.push(address);
-            }
-            curr_found_messages.extend(found_messages);
-        }
+        let (found_addresses_, found_messages_) = sync_address_list(
+            addresses_to_sync,
+            account_messages,
+            is_monitoring.clone(),
+            options,
+            client_options.clone(),
+        )
+        .await?;
+        curr_generated_addresses.extend(found_addresses_);
+        curr_found_messages.extend(found_messages_);
 
         address_index += gap_limit;
 
@@ -428,7 +447,7 @@ async fn sync_messages(
                 let client = client.read().await;
 
                 let address_outputs = get_address_outputs(
-                    address.address().to_bech32().into(),
+                    &address.address().to_bech32().into(),
                     &client,
                     options.sync_spent_outputs,
                 )
@@ -514,8 +533,46 @@ async fn perform_sync(
         address_index,
         gap_limit
     );
-    let (mut found_addresses, found_messages) = if steps.contains(&AccountSynchronizeStep::SyncAddresses) {
-        sync_addresses(&account, address_index, gap_limit, options, is_monitoring).await?
+    let (mut found_addresses, found_messages) = if let Some(index) = steps
+        .iter()
+        .position(|s| matches!(s, AccountSynchronizeStep::SyncAddresses(_)))
+    {
+        if let AccountSynchronizeStep::SyncAddresses(addresses) = &steps[index] {
+            if let Some(addresses) = addresses {
+                log::debug!(
+                    "[SYNC] syncing specific addresses: {:?}",
+                    addresses.iter().map(|a| a.to_bech32()).collect::<Vec<String>>()
+                );
+                let account_messages: Vec<(MessageId, Option<bool>)> =
+                    account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
+                let mut addresses_to_sync = Vec::new();
+                for address in account.addresses() {
+                    if !addresses.contains(address.address()) {
+                        continue;
+                    }
+                    let address = AddressBuilder::new()
+                        .address(address.address().clone())
+                        .key_index(*address.key_index())
+                        .balance(0)
+                        .outputs(Vec::new())
+                        .internal(*address.internal())
+                        .build()?;
+                    addresses_to_sync.push(address);
+                }
+                sync_address_list(
+                    addresses_to_sync,
+                    account_messages,
+                    is_monitoring,
+                    options,
+                    account.client_options().clone(),
+                )
+                .await?
+            } else {
+                sync_addresses(&account, address_index, gap_limit, options, is_monitoring).await?
+            }
+        } else {
+            unreachable!()
+        }
     } else {
         (Vec::new(), Vec::new())
     };
@@ -573,7 +630,7 @@ async fn perform_sync(
 
 #[derive(PartialEq)]
 pub(crate) enum AccountSynchronizeStep {
-    SyncAddresses,
+    SyncAddresses(Option<Vec<AddressWrapper>>),
     SyncMessages,
 }
 
@@ -656,7 +713,7 @@ impl AccountSynchronizer {
             gap_limit: if latest_address_index == 0 { 10 } else { 1 },
             skip_persistence: false,
             steps: vec![
-                AccountSynchronizeStep::SyncAddresses,
+                AccountSynchronizeStep::SyncAddresses(None),
                 AccountSynchronizeStep::SyncMessages,
             ],
         }
@@ -838,26 +895,8 @@ impl AccountSynchronizer {
                 let new_addresses = data.addresses;
 
                 if !self.skip_persistence {
-                    for address in &new_addresses {
-                        match account.addresses().iter().position(|a| a == address) {
-                            Some(index) => {
-                                account.addresses_mut()[index] = address.clone();
-                            }
-                            None => {
-                                account.addresses_mut().push(address.clone());
-                            }
-                        }
-                    }
-                    for message in &parsed_messages {
-                        match account.messages().iter().position(|m| m == message) {
-                            Some(index) => {
-                                account.messages_mut()[index] = message.clone();
-                            }
-                            None => {
-                                account.messages_mut().push(message.clone());
-                            }
-                        }
-                    }
+                    account.append_addresses(new_addresses.to_vec());
+                    account.append_messages(parsed_messages.to_vec());
                     account.set_last_synced_at(Some(chrono::Local::now()));
                     account.save().await?;
                 }
@@ -1595,12 +1634,7 @@ async fn perform_transfer(
 
     // drop the  account_ ref so it doesn't lock the monitor system
     drop(account_);
-
-    for address in addresses_to_watch {
-        // ignore errors because we fallback to the polling system
-        let _ = crate::monitor::monitor_address_balance(account_handle.clone(), vec![address]).await;
-    }
-    crate::monitor::monitor_confirmation_state_change(account_handle.clone(), vec![message_id]).await;
+    crate::monitor::monitor_address_balance(account_handle.clone(), addresses_to_watch).await;
 
     Ok(message)
 }

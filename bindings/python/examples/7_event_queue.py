@@ -31,7 +31,7 @@ def balance_changed_event_processing(event):
 
 # Get the acount manager
 manager = iota_wallet.AccountManager(
-    storage='Stronghold', storage_path='./alice-database')
+    storage_path='./alice-database')
 manager.set_stronghold_password("password")
 
 # Get the account

@@ -98,10 +98,6 @@ module.exports = {
   SignerType: {
     Stronghold: 1
   },
-  StorageType: {
-    Sqlite: { type: 'Sqlite' },
-    Stronghold: { type: 'Stronghold' }
-  },
   MessageType: {
     Received: 1,
     Sent: 2,

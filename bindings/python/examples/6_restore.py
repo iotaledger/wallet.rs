@@ -6,7 +6,7 @@ import iota_wallet as iw
 
 # This example restores a secured backup file.
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database-restored'
+    storage_path='./alice-database-restored'
 )
 account_manager.set_stronghold_password("password")
 
