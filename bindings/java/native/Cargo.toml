@@ -28,9 +28,7 @@ env_logger = "0.7"
 bindgen = "0.55.1"
 
 [features]
-default = ["stronghold", "stronghold-storage", "sqlite-storage"]
+default = ["stronghold"]
 stronghold = ["iota-wallet/stronghold"]
-stronghold-storage = ["iota-wallet/stronghold-storage"]
-sqlite-storage = ["iota-wallet/sqlite-storage"]
 ledger-nano = ["iota-wallet/ledger-nano"]
 ledger-nano-simulator = ["iota-wallet/ledger-nano-simulator"]

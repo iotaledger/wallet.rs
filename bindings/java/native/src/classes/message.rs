@@ -11,9 +11,7 @@ use iota_wallet::{
     },
 };
 
-use crate::{
-    bee_types::{IndexationPayload, MessagePayload},
-};
+use crate::bee_types::{IndexationPayload, MessagePayload};
 
 use chrono::prelude::{DateTime, Utc};
 use std::num::NonZeroU64;

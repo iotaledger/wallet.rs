@@ -72,8 +72,7 @@ impl AccountInitialiser {
     }
 
     pub fn initialise(&self) -> Result<Account> {
-        let acc_handle_res =
-            tokio::runtime::Builder::new_current_thread()
+        let acc_handle_res = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
             .unwrap()

@@ -3,10 +3,7 @@
 
 use anyhow::anyhow;
 use iota_wallet::{
-    account_manager::{
-        AccountManager as AccountManagerRust, AccountManagerBuilder as AccountManagerBuilderRust,
-        ManagerStorage as ManagerStorageRust,
-    },
+    account_manager::{AccountManager as AccountManagerRust, AccountManagerBuilder as AccountManagerBuilderRust},
     message::MessageId,
     signing::SignerType,
 };
@@ -43,22 +40,6 @@ pub fn signer_type_enum_to_type(signer_type: AccountSignerType) -> SignerType {
     }
 }
 
-#[derive(Debug)]
-pub enum ManagerStorage {
-    Stronghold = 1,
-    Sqlite = 2,
-}
-
-fn storage_enum_to_storage(storage: ManagerStorage) -> ManagerStorageRust {
-    match storage {
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-        ManagerStorage::Stronghold => ManagerStorageRust::Stronghold,
-
-        #[cfg(feature = "sqlite-storage")]
-        ManagerStorage::Sqlite => ManagerStorageRust::Sqlite,
-    }
-}
-
 pub struct AccountManagerBuilder {
     builder: Rc<RefCell<Option<AccountManagerBuilderRust>>>,
 }
@@ -74,17 +55,14 @@ impl AccountManagerBuilder {
         }
     }
 
-    pub fn with_storage(
-        &mut self,
-        storage_path: PathBuf,
-        storage: ManagerStorage,
-        password: Option<&str>,
-    ) -> Result<Self> {
-        match self.builder.borrow_mut().take().unwrap().with_storage(
-            storage_path,
-            storage_enum_to_storage(storage),
-            password,
-        ) {
+    pub fn with_storage(&mut self, storage_path: PathBuf, password: Option<&str>) -> Result<Self> {
+        match self
+            .builder
+            .borrow_mut()
+            .take()
+            .unwrap()
+            .with_storage(storage_path, password)
+        {
             Err(e) => Err(anyhow!(e.to_string())),
             Ok(new_builder) => Ok(AccountManagerBuilder::new_with_builder(new_builder)),
         }
@@ -276,12 +254,6 @@ impl AccountManager {
         }
     }
 
-    #[cfg(not(any(feature = "stronghold-storage", feature = "sqlite-storage")))]
-    pub fn backup(&self, _: PathBuf) -> Result<PathBuf> {
-        Err(anyhow!("No storage found during compilation"))
-    }
-
-    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
     pub fn backup(&self, destination: PathBuf) -> Result<PathBuf> {
         match crate::block_on(async move { self.manager.backup(destination).await }) {
             Err(e) => Err(anyhow!(e.to_string())),
@@ -289,12 +261,6 @@ impl AccountManager {
         }
     }
 
-    #[cfg(not(any(feature = "stronghold-storage", feature = "sqlite-storage")))]
-    pub fn import_accounts(&self, _: PathBuf, _: String) -> Result<()> {
-        Err(anyhow!("No storage found during compilation"))
-    }
-
-    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
     pub fn import_accounts(&mut self, source: PathBuf, stronghold_password: String) -> Result<()> {
         match crate::block_on(async move { self.manager.import_accounts(source, stronghold_password).await }) {
             Err(e) => Err(anyhow!(e.to_string())),

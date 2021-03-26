@@ -67,13 +67,6 @@ foreign_enum!(
 );
 
 foreign_enum!(
-    enum ManagerStorage {
-        STRONGHOLD = ManagerStorage::Stronghold,
-        SQLITE = ManagerStorage::Sqlite,
-    }
-);
-
-foreign_enum!(
     enum AccountSignerType {
         STRONGHOLD = AccountSignerType::Stronghold,
         LEDGER_NANO = AccountSignerType::LedgerNano,
@@ -156,7 +149,7 @@ foreign_class!(class RustHex {
 foreign_class!(class AccountManagerBuilder {
     self_type AccountManagerBuilder;
     constructor AccountManagerBuilder::new() -> AccountManagerBuilder;
-    fn AccountManagerBuilder::with_storage(&mut self, storage_path: PathBuf, storage: ManagerStorage, password: Option<&str>) -> Result<AccountManagerBuilder>; alias withStorage;
+    fn AccountManagerBuilder::with_storage(&mut self, storage_path: PathBuf, password: Option<&str>) -> Result<AccountManagerBuilder>; alias withStorage;
     fn AccountManagerBuilder::with_polling_interval(&mut self, polling_interval: Duration) -> AccountManagerBuilder; alias withPollingInterval;
     fn AccountManagerBuilder::with_output_consolidation_threshold(&mut self, threshold: usize) -> AccountManagerBuilder; alias withOutputConsolidationThreshold;
     fn AccountManagerBuilder::with_automatic_output_consolidation_disabled(&mut self) -> AccountManagerBuilder; alias withAutomaticOutputConsolidationDisabled;

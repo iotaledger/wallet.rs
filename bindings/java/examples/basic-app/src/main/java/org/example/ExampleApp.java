@@ -32,14 +32,12 @@ public class ExampleApp implements ErrorListener, StrongholdStatusListener {
         // in rust
         // Examble that doesnt work:
         // AccountManagerBuilder builder = AccountManager.Builder();
-        // builder.withStorage(storageFolder.toString(), ManagerStorage.STRONGHOLD,
-        // null);
+        // builder.withStorage(storageFolder.toString(), null);
         // AccountManager manager = builder.finish();
         //
         // Explanation: builder.withStorage returns a new builder instance, and .finish
         // is called on the old one
-        AccountManagerBuilder builder = AccountManager.Builder().withStorage(storageFolder.toString(),
-                ManagerStorage.STRONGHOLD, null);
+        AccountManagerBuilder builder = AccountManager.Builder().withStorage(storageFolder.toString(), null);
 
         AccountManager manager = builder.finish();
         manager.setStrongholdPassword("YepThisISSecure");

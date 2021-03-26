@@ -178,7 +178,7 @@ impl EventManager {
     pub fn subscribe_stronghold_status_change(
         cb: Box<dyn StrongholdStatusListener + Send + 'static>,
     ) -> Result<EventId> {
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        #[cfg(feature = "stronghold")]
         {
             let id = crate::block_on(async move {
                 iota_wallet::event::on_stronghold_status_change(move |event| {
@@ -192,7 +192,7 @@ impl EventManager {
     }
 
     pub fn remove_stronghold_status_change_listener(event: EventId) {
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        #[cfg(feature = "stronghold")]
         {
             crate::block_on(async move { iota_wallet::event::remove_stronghold_status_change_listener(&event).await })
         }
