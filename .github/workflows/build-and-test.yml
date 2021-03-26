@@ -141,7 +141,9 @@ jobs:
       - name: Cache nodejs binding cargo target
         uses: actions/cache@v2.1.4
         with:
-          path: bindings/nodejs/native/target
+          path: |
+            bindings/nodejs/native/target
+            bindings/nodejs/native/artifacts.json
           # Add date to the cache to keep it up to date
           key: ${{ matrix.os }}-stable-cargo-build-node-target-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
           # Restore from outdated cache for speed
