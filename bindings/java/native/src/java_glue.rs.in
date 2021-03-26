@@ -177,7 +177,7 @@ foreign_class!(class AccountManager {
     fn AccountManager::promote(&self, account_id: String, message_id: MessageId) -> Result<Message>; 
     fn AccountManager::retry(&self, account_id: String, message_id: MessageId) -> Result<Message>;
     fn AccountManager::internal_transfer(&self, from_account_id: String, to_account_id: String, amount: u64) -> Result<Message>; alias internalTransfer;
-    fn AccountManager::backup(&self, destination: PathBuf) -> Result<PathBuf>;
+    fn AccountManager::backup(&self, destination: PathBuf, stronghold_password: String) -> Result<PathBuf>;
     fn AccountManager::import_accounts(&mut self, source: PathBuf, stronghold_password: String) -> Result<()>; alias importAccounts;
     fn AccountManager::sync_accounts(&self) -> Result<AccountsSynchronizer>; alias syncAccounts;
 });

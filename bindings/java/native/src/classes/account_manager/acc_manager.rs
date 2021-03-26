@@ -254,8 +254,8 @@ impl AccountManager {
         }
     }
 
-    pub fn backup(&self, destination: PathBuf) -> Result<PathBuf> {
-        match crate::block_on(async move { self.manager.backup(destination).await }) {
+    pub fn backup(&self, destination: PathBuf, stronghold_password: String) -> Result<PathBuf> {
+        match crate::block_on(async move { self.manager.backup(destination, stronghold_password).await }) {
             Err(e) => Err(anyhow!(e.to_string())),
             Ok(path) => Ok(path),
         }

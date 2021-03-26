@@ -7,7 +7,7 @@ build = "build.rs"
 
 [dependencies]
 iota-wallet = { path = "../../../", version = "0.1.0" }
-iota-core = { git = "https://github.com/iotaledger/iota.rs", rev = "f837a9df7c0f3cecbff87eb6ac3d458d1e50dee0", features = ["mqtt"] }
+iota-core = { git = "https://github.com/iotaledger/iota.rs", rev = "b3c6016b5f6bb28701cfed7a8ee768bbf476a8cc", features = ["mqtt"] }
 bee-message = { git = "https://github.com/iotaledger/bee.git", branch = "chrysalis-pt-2" }
 log = "0.4.6"
 chrono = "0.4.6"
