@@ -132,11 +132,11 @@ impl<'a> MigrationDataFinder<'a> {
             balance += current_balance;
             inputs.insert(address_index..address_index + self.gap_limit, current_inputs);
 
+            address_index += self.gap_limit;
             // if balance didn't change, we stop searching for balance
             if current_balance == 0 {
                 break;
             }
-            address_index += self.gap_limit;
         }
 
         Ok(MigrationMetadata {
