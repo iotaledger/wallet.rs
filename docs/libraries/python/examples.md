@@ -221,7 +221,7 @@ The process of restoring underlying database via `wallet.rs` can be described as
 Since the backup file is just a copy of the original database it can be alternatively also renamed to `wallet.stronghold` and opened in a standard way:
 ```python
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 )
 account_manager.set_stronghold_password("password")
 ```

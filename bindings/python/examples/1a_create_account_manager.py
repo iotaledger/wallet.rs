@@ -1,7 +1,7 @@
 import iota_wallet as iw
 
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 ) #note: `storage` and `storage_path` have to be declared together
 
 account_manager.set_stronghold_password("password")

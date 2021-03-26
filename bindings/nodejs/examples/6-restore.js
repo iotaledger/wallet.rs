@@ -6,10 +6,9 @@ require('dotenv').config();
 
 async function run() {
 
-    const { AccountManager, StorageType } = require('@iota/wallet')
+    const { AccountManager } = require('@iota/wallet')
     const manager = new AccountManager({
-        storagePath: './alice-database',
-        storageType: StorageType.Stronghold
+        storagePath: './alice-database'
     })
 
     // Add the path to the file from example 5-backup.js

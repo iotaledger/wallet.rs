@@ -6,7 +6,7 @@ import iota_wallet as iw
 
 # This example checks the account balance.
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 )
 account_manager.set_stronghold_password("password")
 

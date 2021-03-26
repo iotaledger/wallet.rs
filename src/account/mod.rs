@@ -797,29 +797,25 @@ impl Account {
     ///
     /// # Example
     ///
-    /// ```
-    /// use iota_wallet::{account_manager::AccountManager, client::ClientOptionsBuilder, message::MessageType, signing::SignerType};
-    /// # use rand::{distributions::Alphanumeric, thread_rng, Rng};
+    /// ```no_run
+    /// use iota_wallet::{
+    ///     account_manager::AccountManager, client::ClientOptionsBuilder, message::MessageType, signing::SignerType,
+    /// };
     ///
     /// #[tokio::main]
     /// async fn main() {
-    ///     # let storage_path: String = thread_rng().sample_iter(&Alphanumeric).map(char::from).take(10).collect();
-    ///     # let storage_path = std::path::PathBuf::from(format!("./test-storage/{}", storage_path));
     ///     // gets 10 received messages, skipping the first 5 most recent messages.
     ///     let client_options = ClientOptionsBuilder::new()
     ///         .with_node("https://api.lb-0.testnet.chrysalis2.com")
     ///         .expect("invalid node URL")
     ///         .build()
     ///         .unwrap();
-    ///     let mut manager = AccountManager::builder().with_storage("./test-storage", ManagerStorage::Stronghold, None).unwrap().finish().await.unwrap();
-    ///     # use iota_wallet::account_manager::ManagerStorage;
-    ///     # #[cfg(all(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    ///     # let default_storage = ManagerStorage::Stronghold;
-    ///     # #[cfg(all(feature = "stronghold-storage", not(feature = "sqlite-storage")))]
-    ///     # let default_storage = ManagerStorage::Stronghold;
-    ///     # #[cfg(all(feature = "sqlite-storage", not(feature = "stronghold-storage")))]
-    ///     # let default_storage = ManagerStorage::Sqlite;
-    ///     # let mut manager = AccountManager::builder().with_storage(storage_path, default_storage, None).unwrap().finish().await.unwrap();
+    ///     let mut manager = AccountManager::builder()
+    ///         .with_storage("./test-storage", None)
+    ///         .unwrap()
+    ///         .finish()
+    ///         .await
+    ///         .unwrap();
     ///     manager.set_stronghold_password("password").await.unwrap();
     ///     manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
     ///

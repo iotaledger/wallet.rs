@@ -80,7 +80,7 @@ async fn main() -> iota_wallet::Result<()> {
     let storage_folder: PathBuf = "./my-db".into();
     let manager =
         AccountManager::builder()
-            .with_storage_path(&storage_folder)
+            .with_storage(&storage_folder, None)
             .finish()
             .await?;
     let client_options = ClientOptionsBuilder::new().with_node("http://api.lb-0.testnet.chrysalis2.com")?.build();

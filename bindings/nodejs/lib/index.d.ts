@@ -167,14 +167,8 @@ export declare interface AccountToCreate {
   skipPersistence?: boolean;
 }
 
-export declare enum StorageType {
-  Sqlite,
-  Stronghold
-}
-
 export declare interface ManagerOptions {
   storagePath?: string
-  storageType?: StorageType
   storagePassword?: string
   outputConsolidationThreshold?: number
   automaticOutputConsolidation?: boolean
