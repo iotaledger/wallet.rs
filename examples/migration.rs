@@ -37,7 +37,11 @@ async fn main() -> iota_wallet::Result<()> {
     let mut migration_data = None;
     while !yes.contains(&user_input.chars().next().unwrap_or('N')) {
         let account_migration_data = manager
-            .get_migration_data(MigrationDataFinder::new(legacy_node, seed)?.with_initial_address_index(address_index))
+            .get_migration_data(
+                MigrationDataFinder::new(&[legacy_node], seed)?
+                    .with_initial_address_index(address_index)
+                    .with_permanode("https://chronicle.iota.org/api"),
+            )
             .await?;
         println!(
             "Is {}i the correct balance? Type Y to continue or N to search for more balance",
@@ -61,7 +65,7 @@ async fn main() -> iota_wallet::Result<()> {
 
     for hash in bundle_hashes {
         manager
-            .send_migration_bundle(legacy_node, &hash, min_weight_magnitude)
+            .send_migration_bundle(&[legacy_node], &hash, min_weight_magnitude)
             .await?;
         println!("Bundle sent, hash: {}", hash);
     }
