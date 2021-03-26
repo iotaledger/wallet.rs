@@ -165,7 +165,7 @@
 <pre><code class="language-python">import iota_wallet as iw
 
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 ) #note: `storage` and `storage_path` have to be declared together
 
 account_manager.set_stronghold_password(&quot;password&quot;)
@@ -245,7 +245,7 @@ import iota_wallet as iw
 
 # This example generates a new address.
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 )
 account_manager.set_stronghold_password(&quot;password&quot;)
 
@@ -293,7 +293,7 @@ import iota_wallet as iw
 
 # This example checks the account balance.
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 )
 account_manager.set_stronghold_password(&quot;password&quot;)
 
@@ -356,7 +356,7 @@ import iota_wallet as iw
 
 # This example sends IOTA toens to an address.
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 )
 account_manager.set_stronghold_password(&quot;password&quot;)
 
@@ -436,7 +436,7 @@ import iota_wallet as iw
 
 # This example sends IOTA toens to an address.
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 )
 account_manager.set_stronghold_password(&quot;password&quot;)
 
@@ -469,7 +469,7 @@ import os
 # This example backups your data in a secure file.
 # You can move this file to another app or device and restore it.
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 )
 account_manager.set_stronghold_password(&quot;password&quot;)
 
@@ -497,7 +497,7 @@ import iota_wallet as iw
 
 # This example restores a secured backup file.
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database-restored'
+    storage_path='./alice-database-restored'
 )
 account_manager.set_stronghold_password(&quot;password&quot;)
 
@@ -511,7 +511,7 @@ print(f'Account: {account.alias()}')
 </code></pre>
 <p>Since the backup file is just a copy of the original database it can be alternatively also renamed to <code>wallet.stronghold</code> and opened in a standard way:</p>
 <pre><code class="language-python">account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 )
 account_manager.set_stronghold_password(&quot;password&quot;)
 </code></pre>
@@ -552,7 +552,7 @@ def balance_changed_event_processing(event):
 
 # This example shows some events.
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 )
 account_manager.set_stronghold_password(&quot;password&quot;)
 
@@ -622,7 +622,7 @@ def balance_changed_event_processing(event):
 
 # Get the acount manager
 manager = iota_wallet.AccountManager(
-    storage='Stronghold', storage_path='./alice-database')
+    storage_path='./alice-database')
 manager.set_stronghold_password(&quot;password&quot;)
 
 # Get the account

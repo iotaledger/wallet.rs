@@ -501,10 +501,9 @@ run()
 require('dotenv').config()
 
 async function run() {
-	const { AccountManager, StorageType } = require('@iota/wallet')
+	const { AccountManager } = require('@iota/wallet')
     const manager = new AccountManager({
-        storagePath: './alice-database',
-        storageType: StorageType.Stronghold
+        storagePath: './alice-database'
     })
 
     manager.setStrongholdPassword(process.env.SH_PASSWORD)
@@ -541,10 +540,9 @@ run()
 require('dotenv').config()
 
 async function run() {
-	const { AccountManager, StorageType } = require('@iota/wallet')
+	const { AccountManager } = require('@iota/wallet')
     const manager = new AccountManager({
-        storagePath: './alice-database',
-        storageType: StorageType.Stronghold
+        storagePath: './alice-database'
     })
 
     manager.setStrongholdPassword(process.env.SH_PASSWORD)
@@ -575,10 +573,9 @@ run()
  require('dotenv').config();
 
 async function run() {
-	const { AccountManager, StorageType } = require('@iota/wallet')
+	const { AccountManager } = require('@iota/wallet')
     const manager = new AccountManager({
-        storagePath: './alice-database',
-        storageType: StorageType.Stronghold
+        storagePath: './alice-database'
     })
 
     manager.setStrongholdPassword(process.env.SH_PASSWORD)
@@ -618,10 +615,9 @@ require('dotenv').config();
 
 async function run() {
 
-    const { AccountManager, StorageType } = require('@iota/wallet')
+    const { AccountManager } = require('@iota/wallet')
     const manager = new AccountManager({
-        storagePath: './alice-database',
-        storageType: StorageType.Stronghold
+        storagePath: './alice-database'
     })
 
     manager.setStrongholdPassword(process.env.SH_PASSWORD)
@@ -646,10 +642,9 @@ require('dotenv').config();
 
 async function run() {
 
-    const { AccountManager, StorageType } = require('@iota/wallet')
+    const { AccountManager } = require('@iota/wallet')
     const manager = new AccountManager({
-        storagePath: './alice-database',
-        storageType: StorageType.Stronghold
+        storagePath: './alice-database'
     })
 
     // Add the path to the file from example 5-backup.js
@@ -675,10 +670,9 @@ run()
 require('dotenv').config()
 
 async function run() {
-	const { AccountManager, StorageType, addEventListener } = require('@iota/wallet')
+	const { AccountManager, addEventListener } = require('@iota/wallet')
     const manager = new AccountManager({
-        storagePath: './alice-database',
-        storageType: StorageType.Stronghold
+        storagePath: './alice-database'
     })
 
     manager.setStrongholdPassword(process.env.SH_PASSWORD)
@@ -750,7 +744,6 @@ Supported event names:</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>[options]</td><td><code>object</code></td><td><code>undefined</code></td><td>The options to configure the account manager</td></tr>
 <tr><td>[storagePath]</td><td><code>string</code></td><td><code>undefined</code></td><td>The path where the database file will be saved</td></tr>
-<tr><td>[storageType]</td><td><code>number</code></td><td><code>undefined</code></td><td>The type of the database.  Stronghold = 1, Sqlite = 2</td></tr>
 <tr><td>[storagePassword]</td><td><code>string</code></td><td><code>undefined</code></td><td>The storage password</td></tr>
 <tr><td>[outputConsolidationThreshold]</td><td><code>number</code></td><td><code>100</code></td><td>The number of outputs an address must have to trigger the automatic consolidation process</td></tr>
 <tr><td>[automaticOutputConsolidation]</td><td><code>boolean</code></td><td><code>true</code></td><td>Disables the automatic output consolidation if false</td></tr>
@@ -814,10 +807,11 @@ Supported event names:</p>
 <tr><td>amount</td><td><code>number</code></td><td><code>undefined</code></td><td>The transfer amount</td></tr>
 </tbody></table>
 <p><strong>Returns</strong> A promise resolving to the transfer's Message.</p>
-<h4 id="backupdestination"><a class="header" href="#backupdestination">backup(destination)</a></h4>
+<h4 id="backupdestination-password"><a class="header" href="#backupdestination-password">backup(destination, password)</a></h4>
 <p>Backups the database.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>destination</td><td><code>string</code></td><td><code>undefined</code></td><td>The path to the backup file</td></tr>
+<tr><td>password</td><td><code>string</code></td><td><code>undefined</code></td><td>The backup stronghold password</td></tr>
 </tbody></table>
 <p><strong>Returns</strong> The full path to the backup file.</p>
 <h4 id="importaccountssource"><a class="header" href="#importaccountssource">importAccounts(source)</a></h4>
@@ -1059,7 +1053,7 @@ print(iota_wallet.__doc__)
 <pre><code class="language-python">import iota_wallet as iw
 
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 ) #note: `storage` and `storage_path` have to be declared together
 
 account_manager.set_stronghold_password(&quot;password&quot;)
@@ -1139,7 +1133,7 @@ import iota_wallet as iw
 
 # This example generates a new address.
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 )
 account_manager.set_stronghold_password(&quot;password&quot;)
 
@@ -1187,7 +1181,7 @@ import iota_wallet as iw
 
 # This example checks the account balance.
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 )
 account_manager.set_stronghold_password(&quot;password&quot;)
 
@@ -1250,7 +1244,7 @@ import iota_wallet as iw
 
 # This example sends IOTA toens to an address.
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 )
 account_manager.set_stronghold_password(&quot;password&quot;)
 
@@ -1330,7 +1324,7 @@ import iota_wallet as iw
 
 # This example sends IOTA toens to an address.
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 )
 account_manager.set_stronghold_password(&quot;password&quot;)
 
@@ -1363,7 +1357,7 @@ import os
 # This example backups your data in a secure file.
 # You can move this file to another app or device and restore it.
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 )
 account_manager.set_stronghold_password(&quot;password&quot;)
 
@@ -1391,7 +1385,7 @@ import iota_wallet as iw
 
 # This example restores a secured backup file.
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database-restored'
+    storage_path='./alice-database-restored'
 )
 account_manager.set_stronghold_password(&quot;password&quot;)
 
@@ -1405,7 +1399,7 @@ print(f'Account: {account.alias()}')
 </code></pre>
 <p>Since the backup file is just a copy of the original database it can be alternatively also renamed to <code>wallet.stronghold</code> and opened in a standard way:</p>
 <pre><code class="language-python">account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 )
 account_manager.set_stronghold_password(&quot;password&quot;)
 </code></pre>
@@ -1446,7 +1440,7 @@ def balance_changed_event_processing(event):
 
 # This example shows some events.
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 )
 account_manager.set_stronghold_password(&quot;password&quot;)
 
@@ -1516,7 +1510,7 @@ def balance_changed_event_processing(event):
 
 # Get the acount manager
 manager = iota_wallet.AccountManager(
-    storage='Stronghold', storage_path='./alice-database')
+    storage_path='./alice-database')
 manager.set_stronghold_password(&quot;password&quot;)
 
 # Get the account
@@ -1616,10 +1610,11 @@ If the mnemonic is not provided, we'll generate one.</p>
 <tr><td>amount</td><td><code>int</code></td><td><code>undefined</code></td><td>The transfer amount</td></tr>
 </tbody></table>
 <p><strong>Returns</strong> The transfer's <a href="libraries/python/api_reference.html#walletmessage">WalletMessage</a>.</p>
-<h4 id="backupdestination-str"><a class="header" href="#backupdestination-str">backup(destination): str</a></h4>
+<h4 id="backupdestination-stronghold_password-str"><a class="header" href="#backupdestination-stronghold_password-str">backup(destination, stronghold_password): str</a></h4>
 <p>Backups the storage to the given destination.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>destination</td><td><code>str</code></td><td><code>undefined</code></td><td>The path to the backup file</td></tr>
+<tr><td>stronghold_password</td><td><code>str</code></td><td><code>undefined</code></td><td>The backup stronghold password</td></tr>
 </tbody></table>
 <p><strong>Returns</strong> The full path to the backup file.</p>
 <h4 id="import_accountssource-stronghold_password-void"><a class="header" href="#import_accountssource-stronghold_password-void">import_accounts(source, stronghold_password): void</a></h4>

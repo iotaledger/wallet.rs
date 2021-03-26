@@ -1338,10 +1338,6 @@
 <span id="1335">1335</span>
 <span id="1336">1336</span>
 <span id="1337">1337</span>
-<span id="1338">1338</span>
-<span id="1339">1339</span>
-<span id="1340">1340</span>
-<span id="1341">1341</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2142,29 +2138,25 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Example</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// use iota_wallet::{account_manager::AccountManager, client::ClientOptionsBuilder, message::MessageType, signing::SignerType};</span>
-    <span class="doccomment">/// # use rand::{distributions::Alphanumeric, thread_rng, Rng};</span>
+    <span class="doccomment">/// ```no_run</span>
+    <span class="doccomment">/// use iota_wallet::{</span>
+    <span class="doccomment">///     account_manager::AccountManager, client::ClientOptionsBuilder, message::MessageType, signing::SignerType,</span>
+    <span class="doccomment">/// };</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// #[tokio::main]</span>
     <span class="doccomment">/// async fn main() {</span>
-    <span class="doccomment">///     # let storage_path: String = thread_rng().sample_iter(&amp;Alphanumeric).map(char::from).take(10).collect();</span>
-    <span class="doccomment">///     # let storage_path = std::path::PathBuf::from(format!(&quot;./test-storage/{}&quot;, storage_path));</span>
     <span class="doccomment">///     // gets 10 received messages, skipping the first 5 most recent messages.</span>
     <span class="doccomment">///     let client_options = ClientOptionsBuilder::new()</span>
     <span class="doccomment">///         .with_node(&quot;https://api.lb-0.testnet.chrysalis2.com&quot;)</span>
     <span class="doccomment">///         .expect(&quot;invalid node URL&quot;)</span>
     <span class="doccomment">///         .build()</span>
     <span class="doccomment">///         .unwrap();</span>
-    <span class="doccomment">///     let mut manager = AccountManager::builder().with_storage(&quot;./test-storage&quot;, ManagerStorage::Stronghold, None).unwrap().finish().await.unwrap();</span>
-    <span class="doccomment">///     # use iota_wallet::account_manager::ManagerStorage;</span>
-    <span class="doccomment">///     # #[cfg(all(feature = &quot;stronghold-storage&quot;, feature = &quot;sqlite-storage&quot;))]</span>
-    <span class="doccomment">///     # let default_storage = ManagerStorage::Stronghold;</span>
-    <span class="doccomment">///     # #[cfg(all(feature = &quot;stronghold-storage&quot;, not(feature = &quot;sqlite-storage&quot;)))]</span>
-    <span class="doccomment">///     # let default_storage = ManagerStorage::Stronghold;</span>
-    <span class="doccomment">///     # #[cfg(all(feature = &quot;sqlite-storage&quot;, not(feature = &quot;stronghold-storage&quot;)))]</span>
-    <span class="doccomment">///     # let default_storage = ManagerStorage::Sqlite;</span>
-    <span class="doccomment">///     # let mut manager = AccountManager::builder().with_storage(storage_path, default_storage, None).unwrap().finish().await.unwrap();</span>
+    <span class="doccomment">///     let mut manager = AccountManager::builder()</span>
+    <span class="doccomment">///         .with_storage(&quot;./test-storage&quot;, None)</span>
+    <span class="doccomment">///         .unwrap()</span>
+    <span class="doccomment">///         .finish()</span>
+    <span class="doccomment">///         .await</span>
+    <span class="doccomment">///         .unwrap();</span>
     <span class="doccomment">///     manager.set_stronghold_password(&quot;password&quot;).await.unwrap();</span>
     <span class="doccomment">///     manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();</span>
     <span class="doccomment">///</span>

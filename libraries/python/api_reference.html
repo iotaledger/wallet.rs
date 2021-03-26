@@ -228,10 +228,11 @@ If the mnemonic is not provided, we'll generate one.</p>
 <tr><td>amount</td><td><code>int</code></td><td><code>undefined</code></td><td>The transfer amount</td></tr>
 </tbody></table>
 <p><strong>Returns</strong> The transfer's <a href="#walletmessage">WalletMessage</a>.</p>
-<h4 id="backupdestination-str"><a class="header" href="#backupdestination-str">backup(destination): str</a></h4>
+<h4 id="backupdestination-stronghold_password-str"><a class="header" href="#backupdestination-stronghold_password-str">backup(destination, stronghold_password): str</a></h4>
 <p>Backups the storage to the given destination.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>destination</td><td><code>str</code></td><td><code>undefined</code></td><td>The path to the backup file</td></tr>
+<tr><td>stronghold_password</td><td><code>str</code></td><td><code>undefined</code></td><td>The backup stronghold password</td></tr>
 </tbody></table>
 <p><strong>Returns</strong> The full path to the backup file.</p>
 <h4 id="import_accountssource-stronghold_password-void"><a class="header" href="#import_accountssource-stronghold_password-void">import_accounts(source, stronghold_password): void</a></h4>

@@ -523,43 +523,6 @@
 <span id="520">520</span>
 <span id="521">521</span>
 <span id="522">522</span>
-<span id="523">523</span>
-<span id="524">524</span>
-<span id="525">525</span>
-<span id="526">526</span>
-<span id="527">527</span>
-<span id="528">528</span>
-<span id="529">529</span>
-<span id="530">530</span>
-<span id="531">531</span>
-<span id="532">532</span>
-<span id="533">533</span>
-<span id="534">534</span>
-<span id="535">535</span>
-<span id="536">536</span>
-<span id="537">537</span>
-<span id="538">538</span>
-<span id="539">539</span>
-<span id="540">540</span>
-<span id="541">541</span>
-<span id="542">542</span>
-<span id="543">543</span>
-<span id="544">544</span>
-<span id="545">545</span>
-<span id="546">546</span>
-<span id="547">547</span>
-<span id="548">548</span>
-<span id="549">549</span>
-<span id="550">550</span>
-<span id="551">551</span>
-<span id="552">552</span>
-<span id="553">553</span>
-<span id="554">554</span>
-<span id="555">555</span>
-<span id="556">556</span>
-<span id="557">557</span>
-<span id="558">558</span>
-<span id="559">559</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -591,14 +554,14 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">signing</span>;
 <span class="doccomment">/// The storage module.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">storage</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>))]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>))))]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)))]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">stronghold</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">error</span>::<span class="ident">Error</span>;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>))]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>))))]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)))]</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">stronghold</span>::{
     <span class="ident">get_status</span> <span class="kw">as</span> <span class="ident">get_stronghold_status</span>, <span class="ident">set_password_clear_interval</span> <span class="kw">as</span> <span class="ident">set_stronghold_password_clear_interval</span>,
     <span class="ident">unload_snapshot</span> <span class="kw">as</span> <span class="ident">lock_stronghold</span>, <span class="ident">SnapshotStatus</span> <span class="kw">as</span> <span class="ident">StrongholdSnapshotStatus</span>, <span class="ident">Status</span> <span class="kw">as</span> <span class="ident">StrongholdStatus</span>,
@@ -627,8 +590,8 @@
 }
 
 <span class="doccomment">/// Access the stronghold&#39;s actor system.</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>))]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>))))]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)))]</span>
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">with_actor_system</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">FnOnce</span>(<span class="kw-2">&amp;</span><span class="ident">riker</span>::<span class="ident">actors</span>::<span class="ident">ActorSystem</span>)<span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) {
     <span class="kw">let</span> <span class="ident">runtime</span> <span class="op">=</span> <span class="self">self</span>::<span class="ident">stronghold</span>::<span class="ident">actor_runtime</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="ident">cb</span>(<span class="kw-2">&amp;</span><span class="ident">runtime</span>.<span class="ident">stronghold</span>.<span class="ident">system</span>)
@@ -663,7 +626,7 @@
 <span class="kw">mod</span> <span class="ident">test_utils</span> {
     <span class="kw">use</span> <span class="kw">super</span>::{
         <span class="ident">account</span>::<span class="ident">AccountHandle</span>,
-        <span class="ident">account_manager</span>::{<span class="ident">AccountManager</span>, <span class="ident">ManagerStorage</span>},
+        <span class="ident">account_manager</span>::<span class="ident">AccountManager</span>,
         <span class="ident">address</span>::{<span class="ident">Address</span>, <span class="ident">AddressBuilder</span>, <span class="ident">AddressWrapper</span>},
         <span class="ident">client</span>::<span class="ident">ClientOptionsBuilder</span>,
         <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessagePayload</span>, <span class="ident">TransactionBuilderMetadata</span>, <span class="ident">TransactionEssence</span>},
@@ -767,15 +730,8 @@
             }
         };
 
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;sqlite-storage&quot;</span>))]</span>
-        <span class="kw">let</span> <span class="ident">default_storage</span> <span class="op">=</span> <span class="ident">ManagerStorage</span>::<span class="ident">Stronghold</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>, <span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;sqlite-storage&quot;</span>)))]</span>
-        <span class="kw">let</span> <span class="ident">default_storage</span> <span class="op">=</span> <span class="ident">ManagerStorage</span>::<span class="ident">Stronghold</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;sqlite-storage&quot;</span>, <span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>)))]</span>
-        <span class="kw">let</span> <span class="ident">default_storage</span> <span class="op">=</span> <span class="ident">ManagerStorage</span>::<span class="ident">Sqlite</span>;
-
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">manager</span> <span class="op">=</span> <span class="ident">AccountManager</span>::<span class="ident">builder</span>()
-            .<span class="ident">with_storage</span>(<span class="ident">storage_path</span>, <span class="ident">default_storage</span>, <span class="prelude-val">None</span>)
+            .<span class="ident">with_storage</span>(<span class="ident">storage_path</span>, <span class="prelude-val">None</span>)
             .<span class="ident">unwrap</span>()
             .<span class="ident">skip_polling</span>()
             .<span class="ident">finish</span>()
@@ -786,7 +742,7 @@
         <span class="kw">crate</span>::<span class="ident">signing</span>::<span class="ident">set_signer</span>(<span class="ident">signer_type</span>.<span class="ident">clone</span>(), <span class="ident">TestSigner</span>::<span class="ident">default</span>()).<span class="kw">await</span>;
         <span class="ident">manager</span>.<span class="ident">store_mnemonic</span>(<span class="ident">signer_type</span>, <span class="prelude-val">None</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
 
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>))]</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
         <span class="ident">manager</span>.<span class="ident">set_stronghold_password</span>(<span class="string">&quot;password&quot;</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
@@ -797,7 +753,6 @@
 
     <span class="kw">struct</span> <span class="ident">StorageTestCase</span> {
         <span class="ident">storage_password</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-        <span class="ident">storage</span>: <span class="ident">ManagerStorage</span>,
     }
 
     <span class="kw">enum</span> <span class="ident">ManagerTestCase</span> {
@@ -827,33 +782,10 @@
         }
 
         <span class="kw">if</span> <span class="ident">test_type</span> <span class="op">=</span><span class="op">=</span> <span class="ident">TestType</span>::<span class="ident">Storage</span> <span class="op">|</span><span class="op">|</span> <span class="ident">test_type</span> <span class="op">=</span><span class="op">=</span> <span class="ident">TestType</span>::<span class="ident">SigningAndStorage</span> {
-            <span class="comment">// ---- Stronghold storage ----</span>
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>)]</span>
-            {
-                <span class="ident">test_cases</span>.<span class="ident">push</span>(<span class="ident">ManagerTestCase</span>::<span class="ident">Storage</span>(<span class="ident">StorageTestCase</span> {
-                    <span class="ident">storage_password</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">storage</span>: <span class="ident">ManagerStorage</span>::<span class="ident">Stronghold</span>,
-                }));
-
-                <span class="ident">test_cases</span>.<span class="ident">push</span>(<span class="ident">ManagerTestCase</span>::<span class="ident">Storage</span>(<span class="ident">StorageTestCase</span> {
-                    <span class="ident">storage_password</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;password&quot;</span>.<span class="ident">to_string</span>()),
-                    <span class="ident">storage</span>: <span class="ident">ManagerStorage</span>::<span class="ident">Stronghold</span>,
-                }));
-            }
-
-            <span class="comment">// ---- SQLite storage ----</span>
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;sqlite-storage&quot;</span>)]</span>
-            {
-                <span class="ident">test_cases</span>.<span class="ident">push</span>(<span class="ident">ManagerTestCase</span>::<span class="ident">Storage</span>(<span class="ident">StorageTestCase</span> {
-                    <span class="ident">storage_password</span>: <span class="prelude-val">None</span>,
-                    <span class="ident">storage</span>: <span class="ident">ManagerStorage</span>::<span class="ident">Sqlite</span>,
-                }));
-
-                <span class="ident">test_cases</span>.<span class="ident">push</span>(<span class="ident">ManagerTestCase</span>::<span class="ident">Storage</span>(<span class="ident">StorageTestCase</span> {
-                    <span class="ident">storage_password</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;password&quot;</span>.<span class="ident">to_string</span>()),
-                    <span class="ident">storage</span>: <span class="ident">ManagerStorage</span>::<span class="ident">Sqlite</span>,
-                }));
-            }
+            <span class="ident">test_cases</span>.<span class="ident">push</span>(<span class="ident">ManagerTestCase</span>::<span class="ident">Storage</span>(<span class="ident">StorageTestCase</span> { <span class="ident">storage_password</span>: <span class="prelude-val">None</span> }));
+            <span class="ident">test_cases</span>.<span class="ident">push</span>(<span class="ident">ManagerTestCase</span>::<span class="ident">Storage</span>(<span class="ident">StorageTestCase</span> {
+                <span class="ident">storage_password</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;password&quot;</span>.<span class="ident">to_string</span>()),
+            }));
         }
 
         <span class="kw">for</span> <span class="ident">test_case</span> <span class="kw">in</span> <span class="ident">test_cases</span> {
@@ -875,18 +807,12 @@
             <span class="kw">let</span> <span class="ident">signer_type</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">test_case</span> {
                 <span class="ident">ManagerTestCase</span>::<span class="ident">Signer</span>(<span class="ident">signer_type</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">crate</span>::<span class="ident">signing</span>::<span class="ident">set_signer</span>(<span class="ident">signer_type</span>.<span class="ident">clone</span>(), <span class="ident">TestSigner</span>::<span class="ident">default</span>()).<span class="kw">await</span>;
-                    <span class="ident">manager_builder</span> <span class="op">=</span> <span class="ident">manager_builder</span>
-                        .<span class="ident">with_storage</span>(
-                            <span class="ident">storage_path</span>,
-                            <span class="ident">ManagerStorage</span>::<span class="ident">Custom</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">TestStorage</span>::<span class="ident">default</span>())),
-                            <span class="prelude-val">None</span>,
-                        )
-                        .<span class="ident">unwrap</span>();
+                    <span class="ident">manager_builder</span> <span class="op">=</span> <span class="ident">manager_builder</span>.<span class="ident">with_storage</span>(<span class="ident">storage_path</span>, <span class="prelude-val">None</span>).<span class="ident">unwrap</span>();
                     <span class="ident">signer_type</span>
                 }
                 <span class="ident">ManagerTestCase</span>::<span class="ident">Storage</span>(<span class="ident">config</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">manager_builder</span> <span class="op">=</span> <span class="ident">manager_builder</span>
-                        .<span class="ident">with_storage</span>(<span class="ident">storage_path</span>, <span class="ident">config</span>.<span class="ident">storage</span>, <span class="ident">config</span>.<span class="ident">storage_password</span>.<span class="ident">as_deref</span>())
+                        .<span class="ident">with_storage</span>(<span class="ident">storage_path</span>, <span class="ident">config</span>.<span class="ident">storage_password</span>.<span class="ident">as_deref</span>())
                         .<span class="ident">unwrap</span>();
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
                     <span class="kw">let</span> <span class="ident">signer_type</span> <span class="op">=</span> <span class="ident">SignerType</span>::<span class="ident">Stronghold</span>;
@@ -902,7 +828,7 @@
 
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">manager</span> <span class="op">=</span> <span class="ident">manager_builder</span>.<span class="ident">skip_polling</span>().<span class="ident">finish</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
 
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
             <span class="ident">manager</span>.<span class="ident">set_stronghold_password</span>(<span class="string">&quot;password&quot;</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
 
             <span class="ident">manager</span>.<span class="ident">store_mnemonic</span>(<span class="ident">signer_type</span>.<span class="ident">clone</span>(), <span class="prelude-val">None</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();

@@ -528,24 +528,13 @@
 <span id="525">525</span>
 <span id="526">526</span>
 <span id="527">527</span>
-<span id="528">528</span>
-<span id="529">529</span>
-<span id="530">530</span>
-<span id="531">531</span>
-<span id="532">532</span>
-<span id="533">533</span>
-<span id="534">534</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;sqlite-storage&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;sqlite-storage&quot;</span>)))]</span>
 <span class="doccomment">/// Sqlite storage.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">sqlite</span>;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>))]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>))))]</span>
 <span class="doccomment">/// Stronghold storage.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">stronghold</span>;
 
@@ -837,14 +826,11 @@
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">Storage</span> {
         <span class="ident">storage_path</span>: <span class="ident">storage_path</span>.<span class="ident">as_ref</span>().<span class="ident">to_path_buf</span>(),
         <span class="ident">inner</span>: <span class="ident">storage</span>,
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>))]</span>
         <span class="ident">encryption_key</span>: <span class="kw">if</span> <span class="ident">storage_id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">stronghold</span>::<span class="ident">STORAGE_ID</span> {
             <span class="prelude-val">None</span>
         } <span class="kw">else</span> {
             <span class="ident">encryption_key</span>
         },
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>)))]</span>
-        <span class="ident">encryption_key</span>,
     };
     <span class="kw">let</span> <span class="ident">storage_manager</span> <span class="op">=</span> <span class="ident">StorageManager</span> {
         <span class="ident">storage</span>,

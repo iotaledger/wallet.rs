@@ -299,10 +299,6 @@
 <span id="296">296</span>
 <span id="297">297</span>
 <span id="298">298</span>
-<span id="299">299</span>
-<span id="300">300</span>
-<span id="301">301</span>
-<span id="302">302</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -353,8 +349,8 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;`{0}`&quot;</span>)]</span>
     <span class="ident">JsonError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">serde_json</span>::<span class="ident">error</span>::<span class="ident">Error</span>),
     <span class="doccomment">/// stronghold client error.</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>))]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>))))]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)))]</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;`{0}`&quot;</span>)]</span>
     <span class="ident">StrongholdError</span>(<span class="kw">crate</span>::<span class="ident">stronghold</span>::<span class="ident">Error</span>),
     <span class="doccomment">/// iota.rs error.</span>
@@ -421,9 +417,6 @@
     <span class="doccomment">/// Backup `destination` argument is invalid</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;backup destination must be an existing directory or a file on an existing directory&quot;</span>)]</span>
     <span class="ident">InvalidBackupDestination</span>,
-    <span class="doccomment">/// the storage adapter isn&#39;t set</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;the storage adapter isn&#39;t set; use the AccountManagerBuilder&#39;s `with_storage` method or one of the default storages with the crate features `sqlite-storage` and `stronghold-storage`.&quot;</span>)]</span>
-    <span class="ident">StorageAdapterNotDefined</span>,
     <span class="doccomment">/// Mnemonic generation error.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;mnemonic encode error: {0}&quot;</span>)]</span>
     <span class="ident">MnemonicEncode</span>(<span class="ident">String</span>),
@@ -505,7 +498,7 @@
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">stronghold</span>::<span class="ident">Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">error</span>: <span class="kw">crate</span>::<span class="ident">stronghold</span>::<span class="ident">Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">error</span> {
@@ -555,7 +548,7 @@
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="self">Self</span>::<span class="ident">IoError</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;IoError&quot;</span>),
             <span class="self">Self</span>::<span class="ident">JsonError</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;JsonError&quot;</span>),
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold-storage&quot;</span>))]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
             <span class="self">Self</span>::<span class="ident">StrongholdError</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;StrongholdError&quot;</span>),
             <span class="self">Self</span>::<span class="ident">ClientError</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;ClientError&quot;</span>),
             <span class="self">Self</span>::<span class="ident">UrlError</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;UrlError&quot;</span>),
@@ -582,7 +575,6 @@
             <span class="self">Self</span>::<span class="ident">InvalidMnemonic</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;InvalidMnemonic&quot;</span>),
             <span class="self">Self</span>::<span class="ident">InvalidBackupFile</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;InvalidBackupFile&quot;</span>),
             <span class="self">Self</span>::<span class="ident">InvalidBackupDestination</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;InvalidBackupDestination&quot;</span>),
-            <span class="self">Self</span>::<span class="ident">StorageAdapterNotDefined</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;StorageAdapterNotDefined&quot;</span>),
             <span class="self">Self</span>::<span class="ident">StorageExists</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;StorageExists&quot;</span>),
             <span class="self">Self</span>::<span class="ident">StorageAdapterNotSet</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;StorageAdapterNotSet&quot;</span>),
             <span class="self">Self</span>::<span class="ident">RecordDecrypt</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;RecordDecrypt&quot;</span>),

@@ -191,7 +191,6 @@ Supported event names:</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>[options]</td><td><code>object</code></td><td><code>undefined</code></td><td>The options to configure the account manager</td></tr>
 <tr><td>[storagePath]</td><td><code>string</code></td><td><code>undefined</code></td><td>The path where the database file will be saved</td></tr>
-<tr><td>[storageType]</td><td><code>number</code></td><td><code>undefined</code></td><td>The type of the database.  Stronghold = 1, Sqlite = 2</td></tr>
 <tr><td>[storagePassword]</td><td><code>string</code></td><td><code>undefined</code></td><td>The storage password</td></tr>
 <tr><td>[outputConsolidationThreshold]</td><td><code>number</code></td><td><code>100</code></td><td>The number of outputs an address must have to trigger the automatic consolidation process</td></tr>
 <tr><td>[automaticOutputConsolidation]</td><td><code>boolean</code></td><td><code>true</code></td><td>Disables the automatic output consolidation if false</td></tr>
@@ -255,10 +254,11 @@ Supported event names:</p>
 <tr><td>amount</td><td><code>number</code></td><td><code>undefined</code></td><td>The transfer amount</td></tr>
 </tbody></table>
 <p><strong>Returns</strong> A promise resolving to the transfer's Message.</p>
-<h4 id="backupdestination"><a class="header" href="#backupdestination">backup(destination)</a></h4>
+<h4 id="backupdestination-password"><a class="header" href="#backupdestination-password">backup(destination, password)</a></h4>
 <p>Backups the database.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>destination</td><td><code>string</code></td><td><code>undefined</code></td><td>The path to the backup file</td></tr>
+<tr><td>password</td><td><code>string</code></td><td><code>undefined</code></td><td>The backup stronghold password</td></tr>
 </tbody></table>
 <p><strong>Returns</strong> The full path to the backup file.</p>
 <h4 id="importaccountssource"><a class="header" href="#importaccountssource">importAccounts(source)</a></h4>
