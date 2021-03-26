@@ -79,7 +79,7 @@ impl<'a> MigrationDataFinder<'a> {
 
     pub(crate) async fn finish(&self, inputs: &mut HashMap<Range<u64>, Vec<InputData>>) -> crate::Result<u64> {
         let mut address_index = self.initial_address_index;
-        let mut legacy_client_builder = iota_migration::ClientBuilder::new();
+        let mut legacy_client_builder = iota_migration::ClientBuilder::new().quorum(true);
         for node in self.nodes {
             legacy_client_builder = legacy_client_builder.node(node)?;
         }
@@ -129,7 +129,7 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
     timeout: Duration,
     log_file_path: P,
 ) -> crate::Result<Vec<BundledTransaction>> {
-    let mut legacy_client_builder = iota_migration::ClientBuilder::new();
+    let mut legacy_client_builder = iota_migration::ClientBuilder::new().quorum(true);
     for node in &data.nodes {
         legacy_client_builder = legacy_client_builder.node(node)?;
     }
