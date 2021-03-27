@@ -3,7 +3,7 @@
 
 use crate::{
     account::Account,
-    message::{MessagePayload, MessageType, TransactionEssence, TransactionInput},
+    message::{Message, MessagePayload, MessageType, TransactionEssence, TransactionInput},
     signing::GenerateAddressMetadata,
 };
 use getset::{Getters, Setters};
@@ -78,9 +78,9 @@ impl AddressOutput {
     }
 
     /// Checks if the output is referenced on a pending message or a confirmed message
-    pub(crate) fn is_used(&self, account: &Account) -> bool {
+    pub(crate) fn is_used(&self, messages: &[&Message]) -> bool {
         let output_id = UTXOInput::new(self.transaction_id, self.index).unwrap();
-        account.list_messages(0, 0, Some(MessageType::Sent)).iter().any(|m| {
+        messages.iter().any(|m| {
             // message is pending or confirmed
             if m.confirmed().unwrap_or(true) {
                 match m.payload() {
@@ -300,9 +300,14 @@ impl Address {
 
     /// Gets the list of outputs that aren't spent or pending.
     pub fn available_outputs(&self, account: &Account) -> Vec<&AddressOutput> {
+        let messages = account.list_messages(0, 0, Some(MessageType::Sent));
+        self.available_outputs_internal(&messages)
+    }
+
+    pub(crate) fn available_outputs_internal(&self, messages: &[&Message]) -> Vec<&AddressOutput> {
         self.outputs
             .values()
-            .filter(|o| !(o.is_spent || o.is_used(account)))
+            .filter(|o| !(o.is_spent || o.is_used(&messages)))
             .collect()
     }
 

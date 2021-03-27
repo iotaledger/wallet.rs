@@ -10,7 +10,7 @@ use crate::{
         emit_balance_change, emit_confirmation_state_change, emit_transaction_event, BalanceChange,
         TransactionEventType, TransferProgressType,
     },
-    message::{Message, RemainderValueStrategy, Transfer},
+    message::{Message, MessageType, RemainderValueStrategy, Transfer},
     signing::{GenerateAddressMetadata, SignMessageMetadata},
 };
 
@@ -1105,23 +1105,26 @@ impl SyncedAccount {
         // collect the transactions we need to make
         {
             let account = self.account_handle.read().await;
+            let messages = account.list_messages(0, 0, Some(MessageType::Sent));
             for address in account.addresses() {
-                let address_outputs = address.available_outputs(&account);
-                // the address outputs exceed the threshold, so we push a transfer to our vector
-                if address_outputs.len() >= self.account_handle.account_options.output_consolidation_threshold {
-                    for outputs in address_outputs.chunks(INPUT_OUTPUT_COUNT_MAX) {
-                        transfers.push(
-                            Transfer::builder(
-                                address.address().clone(),
-                                NonZeroU64::new(address.available_balance(&account)).unwrap(),
-                            )
-                            .with_input(
-                                address.address().clone(),
-                                outputs.iter().map(|o| (*o).clone()).collect(),
-                            )
-                            .with_events(false)
-                            .finish(),
-                        );
+                if address.outputs().len() >= self.account_handle.account_options.output_consolidation_threshold {
+                    let address_outputs = address.available_outputs_internal(&messages);
+                    // the address outputs exceed the threshold, so we push a transfer to our vector
+                    if address_outputs.len() >= self.account_handle.account_options.output_consolidation_threshold {
+                        for outputs in address_outputs.chunks(INPUT_OUTPUT_COUNT_MAX) {
+                            transfers.push(
+                                Transfer::builder(
+                                    address.address().clone(),
+                                    NonZeroU64::new(address.available_balance(&account)).unwrap(),
+                                )
+                                .with_input(
+                                    address.address().clone(),
+                                    outputs.iter().map(|o| (*o).clone()).collect(),
+                                )
+                                .with_events(false)
+                                .finish(),
+                            );
+                        }
                     }
                 }
             }
