@@ -1125,6 +1125,7 @@ impl AccountsSynchronizer {
             }
             None => Ok(vec![]),
         };
+
         let mut discovered_account_ids = Vec::new();
         if let Ok(discovered_accounts) = discovered_accounts_res {
             if !discovered_accounts.is_empty() {
@@ -1143,14 +1144,17 @@ impl AccountsSynchronizer {
         }
 
         for (account_handle, addresses_before_sync, data) in synced_data {
-            let mut account = account_handle.write().await;
-            let messages_before_sync: Vec<(MessageId, Option<bool>)> =
-                account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
+            let (parsed_messages, messages_before_sync) = {
+                let mut account = account_handle.write().await;
+                let messages_before_sync: Vec<(MessageId, Option<bool>)> =
+                    account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
 
-            let parsed_messages = data.parse_messages(account_handle.accounts.clone(), &account).await?;
-            account.append_messages(parsed_messages.to_vec());
-            account.set_last_synced_at(Some(chrono::Local::now()));
-            account.save().await?;
+                let parsed_messages = data.parse_messages(account_handle.accounts.clone(), &account).await?;
+                account.append_messages(parsed_messages.to_vec());
+                account.set_last_synced_at(Some(chrono::Local::now()));
+                account.save().await?;
+                (parsed_messages, messages_before_sync)
+            };
 
             let mut new_messages = Vec::new();
             let mut confirmation_changed_messages = Vec::new();
@@ -1166,42 +1170,40 @@ impl AccountsSynchronizer {
                 }
             }
 
-            {
-                let account = account_handle.read().await;
+            let account = account_handle.read().await;
 
-                if !discovered_account_ids.contains(account.id()) {
-                    let persist_events = account_handle.account_options.persist_events;
-                    let events = AccountSynchronizer::get_events(
-                        account_handle.account_options,
-                        &addresses_before_sync,
-                        account.addresses(),
-                        &new_messages,
-                        &confirmation_changed_messages,
+            if !discovered_account_ids.contains(account.id()) {
+                let persist_events = account_handle.account_options.persist_events;
+                let events = AccountSynchronizer::get_events(
+                    account_handle.account_options,
+                    &addresses_before_sync,
+                    account.addresses(),
+                    &new_messages,
+                    &confirmation_changed_messages,
+                )
+                .await?;
+                for message in events.new_transaction_events {
+                    emit_transaction_event(TransactionEventType::NewTransaction, &account, message, persist_events)
+                        .await?;
+                }
+                for confirmation_change_event in events.confirmation_change_events {
+                    emit_confirmation_state_change(
+                        &account,
+                        confirmation_change_event.message,
+                        confirmation_change_event.confirmed,
+                        persist_events,
                     )
                     .await?;
-                    for message in events.new_transaction_events {
-                        emit_transaction_event(TransactionEventType::NewTransaction, &account, message, persist_events)
-                            .await?;
-                    }
-                    for confirmation_change_event in events.confirmation_change_events {
-                        emit_confirmation_state_change(
-                            &account,
-                            confirmation_change_event.message,
-                            confirmation_change_event.confirmed,
-                            persist_events,
-                        )
-                        .await?;
-                    }
-                    for balance_change_event in events.balance_change_events {
-                        emit_balance_change(
-                            &account,
-                            &balance_change_event.address,
-                            balance_change_event.message_id,
-                            balance_change_event.balance_change,
-                            persist_events,
-                        )
-                        .await?;
-                    }
+                }
+                for balance_change_event in events.balance_change_events {
+                    emit_balance_change(
+                        &account,
+                        &balance_change_event.address,
+                        balance_change_event.message_id,
+                        balance_change_event.balance_change,
+                        persist_events,
+                    )
+                    .await?;
                 }
             }
 
@@ -1210,7 +1212,6 @@ impl AccountsSynchronizer {
             updated_messages.extend(confirmation_changed_messages);
             synced_account.messages = updated_messages;
 
-            let account = account_handle.read().await;
             synced_account.addresses = account
                 .addresses()
                 .iter()
