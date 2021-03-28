@@ -26,10 +26,7 @@ use std::{
     num::NonZeroU64,
     panic::AssertUnwindSafe,
     path::{Path, PathBuf},
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc,
-    },
+    sync::{atomic::AtomicBool, Arc},
     thread,
     time::Duration,
 };
@@ -535,6 +532,7 @@ impl AccountManager {
             runtime.block_on(async {
                 let mut interval = interval(polling_interval);
                 let mut synced = false;
+                let mut discovered_accounts = false;
                 loop {
                     tokio::select! {
                         _ = async {
@@ -544,21 +542,25 @@ impl AccountManager {
                             let account_options = account_options;
 
                             if !accounts.read().await.is_empty() {
-                                let should_sync = !(synced && is_monitoring.load(Ordering::Relaxed));
                                 match AssertUnwindSafe(
                                     poll(
                                         sync_accounts_lock.clone(),
                                         accounts.clone(),
                                         storage_file_path_,
                                         account_options,
-                                        (should_sync, !synced),
+                                        !(synced && discovered_accounts),
                                         is_monitoring.clone(),
                                         automatic_output_consolidation)
                                     )
                                     .catch_unwind()
                                     .await {
-                                        Ok(_) => {
-                                            synced = true;
+                                        Ok(response) => {
+                                            if let Ok(response) = response {
+                                                if response.ran_account_discovery {
+                                                    discovered_accounts = true;
+                                                }
+                                                synced = response.synced_accounts_len > 0;
+                                            }
                                         }
                                         Err(error) => {
                                             // if the error isn't a crate::Error type
@@ -986,6 +988,8 @@ pub struct AccountsSynchronizer {
     account_options: AccountOptions,
     is_monitoring: Arc<AtomicBool>,
     discover_accounts: bool,
+    skip_change_addresses: bool,
+    ran_account_discovery: bool,
 }
 
 impl AccountsSynchronizer {
@@ -1005,6 +1009,8 @@ impl AccountsSynchronizer {
             account_options,
             is_monitoring,
             discover_accounts: true,
+            skip_change_addresses: true,
+            ran_account_discovery: false,
         }
     }
 
@@ -1026,20 +1032,28 @@ impl AccountsSynchronizer {
         self
     }
 
+    /// Skip syncing existing change addresses.
+    pub fn skip_change_addresses(mut self) -> Self {
+        self.skip_change_addresses = true;
+        self
+    }
+
     /// Syncs the accounts with the Tangle.
-    pub async fn execute(self) -> crate::Result<Vec<SyncedAccount>> {
+    pub async fn execute(&mut self) -> crate::Result<Vec<SyncedAccount>> {
         let accounts = self.accounts.clone();
         for account_handle in accounts.read().await.values() {
             account_handle.disable_mqtt();
         }
+        let inst = std::time::Instant::now();
         let result = self.execute_internal().await;
+        println!("{:?}", inst.elapsed());
         for account_handle in accounts.read().await.values() {
             account_handle.enable_mqtt();
         }
         result
     }
 
-    async fn execute_internal(self) -> crate::Result<Vec<SyncedAccount>> {
+    async fn execute_internal(&mut self) -> crate::Result<Vec<SyncedAccount>> {
         let _lock = self.mutex.lock().await;
 
         let mut tasks = Vec::new();
@@ -1047,11 +1061,15 @@ impl AccountsSynchronizer {
             let accounts = self.accounts.read().await;
             let address_index = self.address_index;
             let gap_limit = self.gap_limit;
+            let skip_change_addresses = self.skip_change_addresses;
             for account_handle in accounts.values() {
                 let account_handle = account_handle.clone();
                 tasks.push(async move {
                     tokio::spawn(async move {
                         let mut sync = account_handle.sync().await;
+                        if skip_change_addresses {
+                            sync = sync.skip_change_addresses();
+                        }
                         if let Some(index) = address_index {
                             sync = sync.address_index(index);
                         }
@@ -1127,6 +1145,7 @@ impl AccountsSynchronizer {
         };
 
         let mut discovered_account_ids = Vec::new();
+        self.ran_account_discovery = discovered_accounts_res.is_ok();
         if let Ok(discovered_accounts) = discovered_accounts_res {
             if !discovered_accounts.is_empty() {
                 let mut accounts = self.accounts.write().await;
@@ -1233,84 +1252,36 @@ impl AccountsSynchronizer {
     }
 }
 
+struct PollResponse {
+    ran_account_discovery: bool,
+    synced_accounts_len: usize,
+}
+
 async fn poll(
     sync_accounts_lock: Arc<Mutex<()>>,
     accounts: AccountStore,
     storage_file_path: PathBuf,
     account_options: AccountOptions,
-    (should_sync, should_discover_accounts): (bool, bool),
+    first_iteration: bool,
     is_monitoring: Arc<AtomicBool>,
     automatic_output_consolidation: bool,
-) -> crate::Result<()> {
-    let retried = if should_sync {
-        let mut synchronizer = AccountsSynchronizer::new(
-            sync_accounts_lock,
-            accounts.clone(),
-            storage_file_path,
-            account_options,
-            is_monitoring,
-        );
-        if !should_discover_accounts {
-            synchronizer = synchronizer.skip_account_discovery();
-        }
-        let synced_accounts = synchronizer.execute().await?;
+) -> crate::Result<PollResponse> {
+    let mut synchronizer = AccountsSynchronizer::new(
+        sync_accounts_lock,
+        accounts.clone(),
+        storage_file_path,
+        account_options,
+        is_monitoring,
+    );
+    if !first_iteration {
+        synchronizer = synchronizer.skip_account_discovery().skip_change_addresses();
+    }
+    let synced_accounts = synchronizer.execute().await?;
 
-        log::debug!("[POLLING] synced accounts");
+    log::debug!("[POLLING] synced accounts");
 
-        let retried_messages = retry_unconfirmed_transactions(&synced_accounts).await?;
-        consolidate_outputs_if_needed(automatic_output_consolidation, &synced_accounts).await?;
-        retried_messages
-    } else {
-        log::info!("[POLLING] skipping syncing process because MQTT is running");
-        let mut retried_messages = Vec::new();
-        let mut synced_accounts = Vec::new();
-        for account_handle in accounts.read().await.values() {
-            synced_accounts.push(SyncedAccount::from(account_handle.clone()).await);
-            let (account_handle, unconfirmed_messages): (AccountHandle, Vec<(MessageId, Option<MessagePayload>)>) = {
-                let unconfirmed_messages = account_handle
-                    .read()
-                    .await
-                    .list_messages(0, 0, Some(MessageType::Unconfirmed))
-                    .iter()
-                    .map(|m| (*m.id(), m.payload().clone()))
-                    .collect();
-                (account_handle.clone(), unconfirmed_messages)
-            };
-
-            let mut reattachments = Vec::new();
-            let mut promotions = Vec::new();
-            let mut no_need_promote_or_reattach = Vec::new();
-            for (message_id, payload) in unconfirmed_messages {
-                match repost_message(account_handle.clone(), &message_id, RepostAction::Retry).await {
-                    Ok(new_message) => {
-                        if new_message.payload() == &payload {
-                            reattachments.push((message_id, new_message));
-                        } else {
-                            log::info!("[POLLING] promoted and new message is {:?}", new_message.id());
-                            promotions.push(new_message);
-                        }
-                    }
-                    Err(crate::Error::ClientError(ref e)) => {
-                        if let iota::client::Error::NoNeedPromoteOrReattach(_) = e.as_ref() {
-                            no_need_promote_or_reattach.push(message_id);
-                        }
-                    }
-                    _ => {}
-                }
-            }
-
-            retried_messages.push(RetriedData {
-                promoted: promotions,
-                reattached: reattachments,
-                no_need_promote_or_reattach,
-                account_handle,
-            });
-        }
-
-        consolidate_outputs_if_needed(automatic_output_consolidation, &synced_accounts).await?;
-
-        retried_messages
-    };
+    let retried = retry_unconfirmed_transactions(&synced_accounts).await?;
+    consolidate_outputs_if_needed(automatic_output_consolidation, &synced_accounts).await?;
 
     for retried_data in retried {
         let mut account = retried_data.account_handle.write().await;
@@ -1358,7 +1329,10 @@ async fn poll(
         }
         account.save().await?;
     }
-    Ok(())
+    Ok(PollResponse {
+        ran_account_discovery: synchronizer.ran_account_discovery,
+        synced_accounts_len: synced_accounts.len(),
+    })
 }
 
 async fn discover_accounts(
