@@ -401,6 +401,7 @@ async fn sync_messages(
     account: &Account,
     skip_addresses: &[Address],
     options: AccountOptions,
+    skip_change_addresses: bool,
 ) -> crate::Result<(Vec<Address>, Vec<SyncedMessage>)> {
     let mut messages = vec![];
     let client_options = account.client_options().clone();
@@ -418,7 +419,7 @@ async fn sync_messages(
 
     let mut tasks = Vec::new();
     for mut address in account.addresses().to_vec() {
-        if skip_addresses.contains(&address) {
+        if skip_addresses.contains(&address) || (*address.internal() && skip_change_addresses) {
             continue;
         }
         let client = client.clone();
@@ -513,6 +514,7 @@ async fn perform_sync(
     account: Account,
     address_index: usize,
     gap_limit: usize,
+    skip_change_addresses: bool,
     steps: &[AccountSynchronizeStep],
     options: AccountOptions,
     is_monitoring: Arc<AtomicBool>,
@@ -577,7 +579,8 @@ async fn perform_sync(
     }
 
     if steps.contains(&AccountSynchronizeStep::SyncMessages) {
-        let (synced_addresses, synced_messages) = sync_messages(&account, &found_addresses, options).await?;
+        let (synced_addresses, synced_messages) =
+            sync_messages(&account, &found_addresses, options, skip_change_addresses).await?;
         found_addresses.extend(synced_addresses);
         new_messages.extend(synced_messages.into_iter());
     }
@@ -641,6 +644,7 @@ pub struct AccountSynchronizer {
     address_index: usize,
     gap_limit: usize,
     skip_persistence: bool,
+    skip_change_addresses: bool,
     steps: Vec<AccountSynchronizeStep>,
 }
 
@@ -700,6 +704,7 @@ impl AccountSynchronizer {
             address_index: latest_address_index,
             gap_limit: if latest_address_index == 0 { 10 } else { 1 },
             skip_persistence: false,
+            skip_change_addresses: false,
             steps: vec![
                 AccountSynchronizeStep::SyncAddresses(None),
                 AccountSynchronizeStep::SyncMessages,
@@ -717,6 +722,12 @@ impl AccountSynchronizer {
     /// The found data is returned on the `execute` call but won't be persisted on the database.
     pub fn skip_persistence(mut self) -> Self {
         self.skip_persistence = true;
+        self
+    }
+
+    /// Skip syncing existing change addresses.
+    pub fn skip_change_addresses(mut self) -> Self {
+        self.skip_change_addresses = true;
         self
     }
 
@@ -739,6 +750,7 @@ impl AccountSynchronizer {
             self.account_handle.read().await.clone(),
             self.address_index,
             self.gap_limit,
+            self.skip_change_addresses,
             &self.steps,
             self.account_handle.account_options,
             self.account_handle.is_monitoring.clone(),

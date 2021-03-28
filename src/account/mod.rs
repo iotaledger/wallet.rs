@@ -489,9 +489,13 @@ impl AccountHandle {
         AccountSynchronizer::new(self.clone()).await
     }
 
+    async fn sync_internal(&self) -> AccountSynchronizer {
+        AccountSynchronizer::new(self.clone()).await.skip_change_addresses()
+    }
+
     /// Consolidate account outputs.
     pub async fn consolidate_outputs(&self) -> crate::Result<Vec<Message>> {
-        self.sync().await.execute().await?.consolidate_outputs().await
+        self.sync_internal().await.execute().await?.consolidate_outputs().await
     }
 
     /// Send messages.
@@ -500,23 +504,23 @@ impl AccountHandle {
         transfer_obj
             .emit_event_if_needed(account_id.clone(), TransferProgressType::SyncingAccount)
             .await;
-        let synced = self.sync().await.execute().await?;
+        let synced = self.sync_internal().await.execute().await?;
         synced.transfer(transfer_obj).await
     }
 
     /// Retry message.
     pub async fn retry(&self, message_id: &MessageId) -> crate::Result<Message> {
-        self.sync().await.execute().await?.retry(message_id).await
+        self.sync_internal().await.execute().await?.retry(message_id).await
     }
 
     /// Promote message.
     pub async fn promote(&self, message_id: &MessageId) -> crate::Result<Message> {
-        self.sync().await.execute().await?.promote(message_id).await
+        self.sync_internal().await.execute().await?.promote(message_id).await
     }
 
     /// Reattach message.
     pub async fn reattach(&self, message_id: &MessageId) -> crate::Result<Message> {
-        self.sync().await.execute().await?.reattach(message_id).await
+        self.sync_internal().await.execute().await?.reattach(message_id).await
     }
 
     /// Gets a new unused address and links it to this account.
@@ -556,7 +560,7 @@ impl AccountHandle {
     /// Synchronizes the account addresses with the Tangle and returns the latest address in the account,
     /// which is an address without balance.
     pub async fn get_unused_address(&self) -> crate::Result<Address> {
-        self.sync()
+        self.sync_internal()
             .await
             .steps(vec![AccountSynchronizeStep::SyncAddresses(None)])
             .execute()
