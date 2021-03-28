@@ -16,8 +16,8 @@ impl From<ReceiptPayloadRust> for ReceiptPayload {
 }
 
 impl ReceiptPayload {
-    pub fn index(&self) -> u32 {
-        self.payload.index()
+    pub fn migrated_at(&self) -> u32 {
+        self.payload.migrated_at()
     }
 
     pub fn last(&self) -> bool {

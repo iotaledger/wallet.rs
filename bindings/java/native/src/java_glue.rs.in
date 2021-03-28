@@ -718,7 +718,7 @@ foreign_class!(
     class ReceiptPayload {
         self_type ReceiptPayload;
         private constructor = empty;
-        fn ReceiptPayload::index(&self) -> u32;
+        fn ReceiptPayload::migrated_at(&self) -> u32; alias migratedAt;
         fn ReceiptPayload::last(&self) -> bool;
         fn ReceiptPayload::funds(&self) -> Vec<MigratedFundsEntry>;
         fn ReceiptPayload::amount(&self) -> u64;

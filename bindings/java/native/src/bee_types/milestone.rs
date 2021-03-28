@@ -60,7 +60,7 @@ impl MilestonePayloadEssence {
     }
 
     pub fn parents(&self) -> Vec<MessageId> {
-        self.essence.parents().map(|e| e.clone()).collect()
+        self.essence.parents().iter().map(|e| e.clone()).collect()
     }
 
     pub fn merkle_proof(&self) -> Vec<u8> {
