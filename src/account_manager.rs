@@ -1044,9 +1044,7 @@ impl AccountsSynchronizer {
         for account_handle in accounts.read().await.values() {
             account_handle.disable_mqtt();
         }
-        let inst = std::time::Instant::now();
         let result = self.execute_internal().await;
-        println!("{:?}", inst.elapsed());
         for account_handle in accounts.read().await.values() {
             account_handle.enable_mqtt();
         }
