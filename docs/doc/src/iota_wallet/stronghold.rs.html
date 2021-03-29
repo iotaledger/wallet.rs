@@ -888,6 +888,7 @@
 <span id="885">885</span>
 <span id="886">886</span>
 <span id="887">887</span>
+<span id="888">888</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -897,6 +898,7 @@
 <span class="kw">use</span> <span class="ident">crypto</span>::<span class="ident">hashes</span>::{<span class="ident">blake2b</span>::<span class="ident">Blake2b256</span>, <span class="ident">Digest</span>};
 
 <span class="kw">use</span> <span class="ident">crypto</span>::<span class="ident">keys</span>::<span class="ident">slip10</span>::<span class="ident">Chain</span>;
+<span class="kw">use</span> <span class="ident">getset</span>::<span class="ident">Getters</span>;
 <span class="kw">use</span> <span class="ident">iota</span>::{<span class="ident">Address</span>, <span class="ident">Ed25519Address</span>, <span class="ident">Ed25519Signature</span>};
 <span class="kw">use</span> <span class="ident">iota_stronghold</span>::{
     <span class="ident">Location</span>, <span class="ident">ProcResult</span>, <span class="ident">Procedure</span>, <span class="ident">RecordHint</span>, <span class="ident">ResultMessage</span>, <span class="ident">SLIP10DeriveInput</span>, <span class="ident">Stronghold</span>, <span class="ident">StrongholdFlags</span>,
@@ -904,12 +906,6 @@
 <span class="kw">use</span> <span class="ident">once_cell</span>::<span class="ident">sync</span>::{<span class="ident">Lazy</span>, <span class="ident">OnceCell</span>};
 <span class="kw">use</span> <span class="ident">riker</span>::<span class="ident">actors</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::<span class="ident">Serialize</span>;
-<span class="kw">use</span> <span class="ident">tokio</span>::{
-    <span class="ident">sync</span>::<span class="ident">Mutex</span>,
-    <span class="ident">time</span>::{<span class="ident">sleep</span>, <span class="ident">Duration</span>},
-};
-<span class="kw">use</span> <span class="ident">zeroize</span>::<span class="ident">Zeroize</span>;
-
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>},
     <span class="ident">convert</span>::<span class="ident">TryInto</span>,
@@ -919,6 +915,11 @@
     <span class="ident">thread</span>,
     <span class="ident">time</span>::<span class="ident">Instant</span>,
 };
+<span class="kw">use</span> <span class="ident">tokio</span>::{
+    <span class="ident">sync</span>::<span class="ident">Mutex</span>,
+    <span class="ident">time</span>::{<span class="ident">sleep</span>, <span class="ident">Duration</span>},
+};
+<span class="kw">use</span> <span class="ident">zeroize</span>::<span class="ident">Zeroize</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Zeroize</span>)]</span>
 <span class="attribute">#[<span class="ident">zeroize</span>(<span class="ident">drop</span>)]</span>
@@ -1046,7 +1047,7 @@
 }
 
 <span class="doccomment">/// Snapshot status.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Serialize</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Serialize</span>)]</span>
 <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">tag</span> <span class="op">=</span> <span class="string">&quot;status&quot;</span>, <span class="ident">content</span> <span class="op">=</span> <span class="string">&quot;data&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SnapshotStatus</span> {
     <span class="doccomment">/// Snapshot is locked. This means that the password must be set again.</span>
@@ -1055,7 +1056,8 @@
     <span class="ident">Unlocked</span>(<span class="ident">Duration</span>),
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Getters</span>, <span class="ident">Debug</span>, <span class="ident">Serialize</span>)]</span>
+<span class="attribute">#[<span class="ident">getset</span>(<span class="ident">get</span> <span class="op">=</span> <span class="string">&quot;pub&quot;</span>)]</span>
 <span class="doccomment">/// Stronghold status.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Status</span> {
     <span class="doccomment">/// The snapshot path.</span>
