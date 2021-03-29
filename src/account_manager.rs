@@ -1297,6 +1297,9 @@ async fn poll(
                 retried_data.account_handle.account_options.persist_events,
             )
             .await?;
+            // safe to unwrap since we're sure we have the message
+            let reattached_message = account.get_message_mut(reattached_message_id).unwrap();
+            reattached_message.set_reattachment_message_id(Some(*message.id()));
         }
 
         account.append_messages(

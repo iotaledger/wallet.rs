@@ -834,18 +834,9 @@ impl Account {
     /// ```
     pub fn list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<&Message> {
         let mut messages: Vec<&Message> = vec![];
-        for message in self.messages.iter() {
-            // if we already found a message with the same payload,
-            // this is a reattachment message
-            if let Some(original_message_index) = messages.iter().position(|m| m.payload() == message.payload()) {
-                let original_message = messages[original_message_index];
-                // if the original message was confirmed, we ignore this reattachment
-                if original_message.confirmed().unwrap_or(false) {
-                    continue;
-                } else {
-                    // remove the original message otherwise
-                    messages.remove(original_message_index);
-                }
+        for message in &self.messages {
+            if message.reattachment_message_id.is_some() {
+                continue;
             }
             let should_push = if let Some(message_type) = message_type.clone() {
                 match message_type {

@@ -715,6 +715,10 @@ pub struct Message {
     /// Whether the transaction is broadcasted or not.
     #[getset(set = "pub")]
     pub broadcasted: bool,
+    /// The message id that reattached this message if any.
+    #[serde(rename = "reattachmentMessageId")]
+    #[getset(set = "pub(crate)")]
+    pub reattachment_message_id: Option<MessageId>,
 }
 
 impl Message {
@@ -934,6 +938,7 @@ impl<'a> MessageBuilder<'a> {
             nonce: self.iota_message.nonce(),
             confirmed: self.confirmed,
             broadcasted: true,
+            reattachment_message_id: None,
         };
         Ok(message)
     }
