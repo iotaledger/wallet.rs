@@ -1,11 +1,11 @@
-// Copyright 2021 IOTA Stiftung
+// Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::types::*;
 use chrono::prelude::{Local, TimeZone};
-use iota::{Address as IotaAddress, MessageId as RustMessageId};
+use iota::MessageId as RustMessageId;
 use iota_wallet::{
-    address::AddressWrapper as RustAddressWrapper,
+    address::parse as parse_address,
     message::{
         Message as RustWalletMessage, MessageType as RustMessageType,
         RemainderValueStrategy as RustRemainderValueStrategy, Transfer as RustTransfer,
@@ -52,23 +52,23 @@ impl Transfer {
     fn new(
         amount: u64,
         address: &str, // IotaAddress
-        bench32_hrp: &str,
         indexation: Option<Indexation>,
-        remainder_value_strategy: &str,
+        remainder_value_strategy: Option<&str>,
+        skip_sync: Option<bool>,
     ) -> Result<Self> {
-        let address_wrapper = RustAddressWrapper::new(IotaAddress::try_from_bech32(address)?, bench32_hrp.to_string());
+        let address_wrapper = parse_address(address)?;
         let mut builder = RustTransfer::builder(address_wrapper, NonZeroU64::new(amount).unwrap());
         let strategy = match remainder_value_strategy {
-            "ReuseAddress" => RustRemainderValueStrategy::ReuseAddress,
-            "ChangeAddress" => RustRemainderValueStrategy::ChangeAddress,
-            _ => RustRemainderValueStrategy::AccountAddress(RustAddressWrapper::new(
-                IotaAddress::try_from_bech32(address)?,
-                bench32_hrp.to_string(),
-            )),
+            Some("ReuseAddress") => RustRemainderValueStrategy::ReuseAddress,
+            Some("ChangeAddress") => RustRemainderValueStrategy::ChangeAddress,
+            _ => RustRemainderValueStrategy::ChangeAddress,
         };
         builder = builder.with_remainder_value_strategy(strategy);
         if let Some(indexation) = indexation {
             builder = builder.with_indexation(indexation.try_into()?);
+        }
+        if skip_sync.unwrap_or_default() {
+            builder = builder.with_skip_sync();
         }
         Ok(Transfer {
             transfer: builder.finish(),

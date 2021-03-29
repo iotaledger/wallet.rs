@@ -3,7 +3,7 @@
 
 use crate::{
     account::Account,
-    message::{MessagePayload, MessageType, TransactionEssence, TransactionInput},
+    message::{Message, MessagePayload, MessageType, TransactionEssence, TransactionInput},
     signing::GenerateAddressMetadata,
 };
 use getset::{Getters, Setters};
@@ -62,6 +62,7 @@ pub struct AddressOutput {
     pub amount: u64,
     /// Spend status of the output,
     #[serde(rename = "isSpent")]
+    #[getset(set = "pub(crate)")]
     pub is_spent: bool,
     /// Associated address.
     #[serde(with = "crate::serde::iota_address_serde")]
@@ -77,9 +78,9 @@ impl AddressOutput {
     }
 
     /// Checks if the output is referenced on a pending message or a confirmed message
-    pub(crate) fn is_used(&self, account: &Account) -> bool {
+    pub(crate) fn is_used(&self, messages: &[&Message]) -> bool {
         let output_id = UTXOInput::new(self.transaction_id, self.index).unwrap();
-        account.list_messages(0, 0, Some(MessageType::Sent)).iter().any(|m| {
+        messages.iter().any(|m| {
             // message is pending or confirmed
             if m.confirmed().unwrap_or(true) {
                 match m.payload() {
@@ -156,7 +157,6 @@ impl AddressOutput {
 #[derive(Default)]
 pub struct AddressBuilder {
     address: Option<AddressWrapper>,
-    balance: Option<u64>,
     key_index: Option<usize>,
     internal: bool,
     outputs: Option<Vec<AddressOutput>>,
@@ -171,12 +171,6 @@ impl AddressBuilder {
     /// Defines the address.
     pub fn address(mut self, address: AddressWrapper) -> Self {
         self.address = Some(address);
-        self
-    }
-
-    /// Sets the address balance.
-    pub fn balance(mut self, balance: u64) -> Self {
-        self.balance = Some(balance);
         self
     }
 
@@ -212,9 +206,6 @@ impl AddressBuilder {
         }
         let address = Address {
             address: iota_address,
-            balance: self.balance.ok_or(crate::Error::AddressBuildRequiredField(
-                crate::error::AddressBuildRequiredField::Balance,
-            ))?,
             key_index: self.key_index.ok_or(crate::Error::AddressBuildRequiredField(
                 crate::error::AddressBuildRequiredField::KeyIndex,
             ))?,
@@ -264,9 +255,6 @@ pub struct Address {
     /// The address.
     #[serde(with = "crate::serde::iota_address_serde")]
     address: AddressWrapper,
-    /// The address balance.
-    #[getset(set = "pub")]
-    balance: u64,
     /// The address key index.
     #[serde(rename = "keyIndex")]
     #[getset(set = "pub(crate)")]
@@ -312,16 +300,32 @@ impl Address {
 
     /// Gets the list of outputs that aren't spent or pending.
     pub fn available_outputs(&self, account: &Account) -> Vec<&AddressOutput> {
+        let messages = account.list_messages(0, 0, Some(MessageType::Sent));
+        self.available_outputs_internal(&messages)
+    }
+
+    pub(crate) fn available_outputs_internal(&self, messages: &[&Message]) -> Vec<&AddressOutput> {
         self.outputs
             .values()
-            .filter(|o| !(o.is_spent || o.is_used(account)))
+            .filter(|o| !(o.is_spent || o.is_used(&messages)))
             .collect()
+    }
+
+    /// Address total balance
+    pub fn balance(&self) -> u64 {
+        self.outputs
+            .values()
+            .fold(0, |acc, o| acc + if o.is_spent { 0 } else { *o.amount() })
     }
 
     pub(crate) fn available_balance(&self, account: &Account) -> u64 {
         self.available_outputs(account)
             .iter()
             .fold(0, |acc, o| acc + *o.amount())
+    }
+
+    pub(crate) fn outputs_mut(&mut self) -> &mut HashMap<OutputId, AddressOutput> {
+        &mut self.outputs
     }
 
     /// Updates the Bech32 human readable part.
@@ -364,7 +368,7 @@ pub(crate) async fn get_new_address(account: &Account, metadata: GenerateAddress
     let bech32_hrp = match account.addresses().first() {
         Some(address) => address.address().bech32_hrp().to_string(),
         None => {
-            crate::client::get_client(account.client_options(), None)
+            crate::client::get_client(account.client_options())
                 .await?
                 .read()
                 .await
@@ -376,7 +380,6 @@ pub(crate) async fn get_new_address(account: &Account, metadata: GenerateAddress
     let iota_address = get_iota_address(&account, key_index, false, bech32_hrp, metadata).await?;
     let address = Address {
         address: iota_address,
-        balance: 0,
         key_index,
         internal: false,
         outputs: Default::default(),
@@ -401,7 +404,6 @@ pub(crate) async fn get_new_change_address(
     .await?;
     let address = Address {
         address: iota_address,
-        balance: 0,
         key_index,
         internal: true,
         outputs: Default::default(),

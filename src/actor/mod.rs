@@ -16,6 +16,7 @@ use std::{
     convert::TryInto,
     num::NonZeroU64,
     panic::{catch_unwind, AssertUnwindSafe},
+    path::Path,
     time::Duration,
 };
 
@@ -93,11 +94,14 @@ impl WalletMessageHandler {
             MessageType::Reattach { account_id, message_id } => {
                 convert_async_panics(|| async { self.reattach(account_id, message_id).await }).await
             }
-            #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-            MessageType::Backup(destination_path) => {
-                convert_async_panics(|| async { self.backup(destination_path).await }).await
+            MessageType::Backup { destination, password } => {
+                convert_async_panics(|| async {
+                    let res = self.backup(destination, password.to_string()).await;
+                    password.zeroize();
+                    res
+                })
+                .await
             }
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
             MessageType::RestoreBackup { backup_path, password } => {
                 let res =
                     convert_async_panics(|| async { self.restore_backup(backup_path, password.to_string()).await })
@@ -105,18 +109,14 @@ impl WalletMessageHandler {
                 password.zeroize();
                 res
             }
-            #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-            MessageType::RestoreBackup { backup_path } => {
-                convert_async_panics(|| async { self.restore_backup(backup_path).await }).await
-            }
             MessageType::SetStoragePassword(password) => {
                 convert_async_panics(|| async { self.set_storage_password(password).await }).await
             }
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             MessageType::SetStrongholdPassword(password) => {
                 convert_async_panics(|| async { self.set_stronghold_password(password).await }).await
             }
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             MessageType::SetStrongholdPasswordClearInterval(interval) => {
                 convert_async_panics(|| async {
                     crate::set_stronghold_password_clear_interval(*interval).await;
@@ -124,7 +124,7 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             MessageType::GetStrongholdStatus => {
                 convert_async_panics(|| async {
                     let status =
@@ -133,7 +133,7 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             MessageType::LockStronghold => {
                 convert_async_panics(|| async {
                     crate::lock_stronghold(&self.account_manager.stronghold_snapshot_path().await?, true).await?;
@@ -191,7 +191,7 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async { self.internal_transfer(from_account_id, to_account_id, *amount).await })
                     .await
             }
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             MessageType::ChangeStrongholdPassword {
                 current_password,
                 new_password,
@@ -286,22 +286,13 @@ impl WalletMessageHandler {
             .send(Response::new(message.id().to_string(), message.message_type, response));
     }
 
-    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    async fn backup(&self, destination_path: &str) -> Result<ResponseType> {
-        self.account_manager.backup(destination_path).await?;
+    async fn backup(&self, destination_path: &Path, password: String) -> Result<ResponseType> {
+        self.account_manager.backup(destination_path, password).await?;
         Ok(ResponseType::BackupSuccessful)
     }
 
-    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    async fn restore_backup(
-        &mut self,
-        backup_path: &str,
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))] password: String,
-    ) -> Result<ResponseType> {
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+    async fn restore_backup(&mut self, backup_path: &str, password: String) -> Result<ResponseType> {
         self.account_manager.import_accounts(backup_path, password).await?;
-        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-        self.account_manager.import_accounts(backup_path).await?;
         Ok(ResponseType::BackupRestored)
     }
 
@@ -588,7 +579,7 @@ mod tests {
                     skip_persistence: false,
                     signer_type: Some(signer_type.clone()),
                 };
-                #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+                #[cfg(feature = "stronghold")]
                 send_message(&tx, MessageType::SetStrongholdPassword("password".to_string())).await;
                 send_message(
                     &tx,

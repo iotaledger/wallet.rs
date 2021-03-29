@@ -41,7 +41,7 @@ import iota_wallet
 
 # Create a AccountManager
 manager = iota_wallet.AccountManager(
-    storage='Stronghold', storage_path='./storage')
+    storage_path='./storage')
 manager.set_stronghold_password("password")
 manager.store_mnemonic("Stronghold")
 
@@ -185,13 +185,14 @@ Transfers an amount from an account to another.
 
 **Returns** The transfer's [WalletMessage](#walletmessage).
 
-#### backup(destination): str
+#### backup(destination, stronghold_password): str
 
 Backups the storage to the given destination.
 
-| Param       | Type             | Default                | Description                 |
-| ----------- | ---------------- | ---------------------- | --------------------------- |
-| destination | <code>str</code> | <code>undefined</code> | The path to the backup file |
+| Param               | Type             | Default                | Description                    |
+| ------------------- | ---------------- | ---------------------- | ------------------------------ |
+| destination         | <code>str</code> | <code>undefined</code> | The path to the backup file    |
+| stronghold_password | <code>str</code> | <code>undefined</code> | The backup stronghold password |
 
 **Returns** The full path to the backup file.
 
@@ -305,17 +306,17 @@ Syncs the accounts with the tangle.
 
 ### Transfer
 
-#### constructor(amount, address, bench32_hrp, indexation (optional), remainder_value_strategy: str): [Transfer](#transfer)
+#### constructor(amount, address, indexation (optional), remainder_value_strategy (optional), skip_sync (optional)): [Transfer](#transfer)
 
 The `Transfer` object used in [SyncedAccount](#syncedaccount)
 
-| Param                    | Type                                   | Default                | Description                                 |
-| ------------------------ | -------------------------------------- | ---------------------- | ------------------------------------------- |
-| amount                   | <code>int</code>                       | <code>undefined</code> | The amount to transfer                      |
-| address                  | <code>str</code>                       | <code>undefined</code> | The addree to send                          |
-| bench32_hrp              | <code>str</code>                       | <code>undefined</code> | the bench32_hrp of the address              |
-| indexation               | <code>[Indexation](#indexation)</code> | <code>undefined</code> | The indexation payload                      |
-| remainder_value_strategy | <code>str</code>                       | <code>undefined</code> | Should be `ReuseAddress` or `ChangeAddress` |
+| Param                    | Type                                   | Default                | Description                                   |
+| ------------------------ | -------------------------------------- | ---------------------- | --------------------------------------------- |
+| amount                   | <code>int</code>                       | <code>undefined</code> | The amount to transfer                        |
+| address                  | <code>str</code>                       | <code>undefined</code> | The addree to send                            |
+| indexation               | <code>[Indexation](#indexation)</code> | <code>undefined</code> | The indexation payload                        |
+| remainder_value_strategy | <code>str</code>                       | <code>undefined</code> | Should be `ReuseAddress` or `ChangeAddress`   |
+| skip_sync                | <code>bool</code>                      | <code>false</code>     | Skip syncing account before transfering funds |
 
 ### SyncedAccount
 

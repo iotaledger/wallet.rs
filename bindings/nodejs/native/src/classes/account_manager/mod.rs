@@ -7,7 +7,7 @@ use std::{num::NonZeroU64, path::PathBuf, sync::Arc};
 
 use iota_wallet::{
     account::AccountIdentifier,
-    account_manager::{AccountManager, ManagerStorage, DEFAULT_STORAGE_FOLDER},
+    account_manager::{AccountManager, DEFAULT_STORAGE_FOLDER},
     address::parse as parse_address,
     iota_migration::client::migration::{add_tryte_checksum, encode_migration_address},
     signing::SignerType,
@@ -73,8 +73,6 @@ fn default_storage_path() -> PathBuf {
 struct ManagerOptions {
     #[serde(rename = "storagePath", default = "default_storage_path")]
     storage_path: PathBuf,
-    #[serde(rename = "storageType")]
-    storage_type: Option<ManagerStorage>,
     #[serde(rename = "storagePassword")]
     storage_password: Option<String>,
     #[serde(rename = "outputConsolidationThreshold")]
@@ -163,7 +161,6 @@ declare_types! {
             let mut manager = AccountManager::builder()
                 .with_storage(
                     &options.storage_path,
-                    options.storage_type.unwrap_or(ManagerStorage::Stronghold),
                     options.storage_password.as_deref(),
                 )
                 .expect("failed to init storage");
@@ -415,13 +412,14 @@ declare_types! {
 
         method backup(mut cx) {
             let backup_path = cx.argument::<JsString>(0)?.value();
+            let password = cx.argument::<JsString>(1)?.value();
             let destination = {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
                 crate::block_on(async move {
                     let manager = ref_.read().await;
-                    manager.backup(backup_path).await
+                    manager.backup(backup_path, password).await
                 }).expect("error performing backup").display().to_string()
             };
             Ok(cx.string(destination).upcast())
