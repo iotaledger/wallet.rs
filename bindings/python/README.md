@@ -306,7 +306,7 @@ Syncs the accounts with the tangle.
 
 ### Transfer
 
-#### constructor(amount, address, bench32_hrp, indexation (optional), remainder_value_strategy: str): [Transfer](#transfer)
+#### constructor(amount, address, bech32_hrp, indexation (optional), remainder_value_strategy: str): [Transfer](#transfer)
 
 The `Transfer` object used in [SyncedAccount](#syncedaccount)
 
@@ -314,7 +314,7 @@ The `Transfer` object used in [SyncedAccount](#syncedaccount)
 | ------------------------ | -------------------------------------- | ---------------------- | ------------------------------------------- |
 | amount                   | <code>int</code>                       | <code>undefined</code> | The amount to transfer                      |
 | address                  | <code>str</code>                       | <code>undefined</code> | The addree to send                          |
-| bench32_hrp              | <code>str</code>                       | <code>undefined</code> | the bench32_hrp of the address              |
+| bech32_hrp              | <code>str</code>                       | <code>undefined</code> | the bech32_hrp of the address              |
 | indexation               | <code>[Indexation](#indexation)</code> | <code>undefined</code> | The indexation payload                      |
 | remainder_value_strategy | <code>str</code>                       | <code>undefined</code> | Should be `ReuseAddress` or `ChangeAddress` |
 
