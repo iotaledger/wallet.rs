@@ -3,9 +3,9 @@
 
 use crate::types::*;
 use chrono::prelude::{Local, TimeZone};
-use iota::{Address as IotaAddress, MessageId as RustMessageId};
+use iota::MessageId as RustMessageId;
 use iota_wallet::{
-    address::AddressWrapper as RustAddressWrapper,
+    address::parse as parse_address,
     message::{
         Message as RustWalletMessage, MessageType as RustMessageType,
         RemainderValueStrategy as RustRemainderValueStrategy, Transfer as RustTransfer,
@@ -56,8 +56,7 @@ impl Transfer {
         remainder_value_strategy: Option<&str>,
         skip_sync: Option<bool>,
     ) -> Result<Self> {
-        let bench32_hrp = address.split('1').next().unwrap();
-        let address_wrapper = RustAddressWrapper::new(IotaAddress::try_from_bech32(address)?, bench32_hrp.to_string());
+        let address_wrapper = parse_address(address)?;
         let mut builder = RustTransfer::builder(address_wrapper, NonZeroU64::new(amount).unwrap());
         let strategy = match remainder_value_strategy {
             Some("ReuseAddress") => RustRemainderValueStrategy::ReuseAddress,
