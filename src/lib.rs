@@ -27,7 +27,7 @@ pub(crate) mod serde;
 /// Signing interfaces.
 pub mod signing;
 /// The storage module.
-pub mod storage;
+pub(crate) mod storage;
 #[cfg(feature = "stronghold")]
 #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
 pub(crate) mod stronghold;

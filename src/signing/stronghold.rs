@@ -14,12 +14,10 @@ pub(crate) async fn stronghold_path(storage_path: &PathBuf) -> crate::Result<Pat
     let storage_id = crate::storage::get(&storage_path).await?.lock().await.id();
     let path = if storage_id == crate::storage::stronghold::STORAGE_ID {
         storage_path.clone()
-    } else if storage_path.is_dir() {
-        storage_path.join(crate::account_manager::STRONGHOLD_FILENAME)
     } else if let Some(parent) = storage_path.parent() {
         parent.join(crate::account_manager::STRONGHOLD_FILENAME)
     } else {
-        storage_path.clone()
+        storage_path.join(crate::account_manager::STRONGHOLD_FILENAME)
     };
     Ok(path)
 }

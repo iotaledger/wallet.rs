@@ -880,10 +880,12 @@ impl AccountSynchronizer {
                 let new_addresses = data.addresses;
 
                 if !self.skip_persistence {
-                    account.append_addresses(new_addresses.to_vec());
-                    account.append_messages(parsed_messages.to_vec());
-                    account.set_last_synced_at(Some(chrono::Local::now()));
-                    account.save().await?;
+                    if !(new_addresses.is_empty() && parsed_messages.is_empty()) {
+                        account.append_addresses(new_addresses.to_vec());
+                        account.append_messages(parsed_messages.to_vec());
+                        account.set_last_synced_at(Some(chrono::Local::now()));
+                        account.save().await?;
+                    }
                 }
 
                 let mut new_messages = Vec::new();

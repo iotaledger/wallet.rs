@@ -25,7 +25,7 @@ crate_type = ["cdylib"]
 [build-dependencies]
 flapigen = { git = "https://github.com/Dushistov/flapigen-rs" }
 env_logger = "0.7"
-bindgen = "0.55.1"
+bindgen = "0.54"
 
 [features]
 default = ["stronghold"]

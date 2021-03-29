@@ -1,8 +1,8 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-/// Sqlite storage.
-pub mod sqlite;
+/// RocksDB storage.
+pub mod rocksdb;
 
 /// Stronghold storage.
 pub mod stronghold;
