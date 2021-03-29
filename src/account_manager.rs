@@ -269,7 +269,8 @@ pub struct MigrationBundle {
     /// The bundle crackability if it was mined.
     crackability: f64,
     /// The bundle hash.
-    hash: String,
+    #[serde(rename = "bundleHash")]
+    bundle_hash: String,
 }
 
 /// The account manager.
@@ -418,7 +419,7 @@ impl AccountManager {
 
         Ok(MigrationBundle {
             crackability,
-            hash: bundle_hash,
+            bundle_hash,
         })
     }
 
