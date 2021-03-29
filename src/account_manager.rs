@@ -26,7 +26,7 @@ use std::{
     num::NonZeroU64,
     panic::AssertUnwindSafe,
     path::{Path, PathBuf},
-    sync::{atomic::AtomicBool, Arc},
+    sync::Arc,
     thread,
     time::Duration,
 };
@@ -196,14 +196,11 @@ impl AccountManagerBuilder {
 
         crate::storage::set(&storage_file_path, self.storage_encryption_key, storage).await;
 
-        // is_monitoring is set to false if an mqtt error happens, so we can initialize it with `true`.
-        let is_monitoring = Arc::new(AtomicBool::new(true));
-
         // with the stronghold storage, the accounts are loaded when the password is set
         let (accounts, loaded_accounts) = if is_stronghold {
             (Default::default(), false)
         } else {
-            AccountManager::load_accounts(&storage_file_path, self.account_options, is_monitoring.clone())
+            AccountManager::load_accounts(&storage_file_path, self.account_options)
                 .await
                 .map(|accounts| (accounts, true))
                 .unwrap_or_else(|_| (AccountStore::default(), false))
@@ -222,7 +219,6 @@ impl AccountManagerBuilder {
             accounts,
             stop_polling_sender: None,
             polling_handle: None,
-            is_monitoring,
             generated_mnemonic: None,
             account_options: self.account_options,
             sync_accounts_lock: Arc::new(Mutex::new(())),
@@ -264,7 +260,6 @@ pub struct AccountManager {
     accounts: AccountStore,
     stop_polling_sender: Option<BroadcastSender<()>>,
     polling_handle: Option<thread::JoinHandle<()>>,
-    is_monitoring: Arc<AtomicBool>,
     generated_mnemonic: Option<String>,
     account_options: AccountOptions,
     sync_accounts_lock: Arc<Mutex<()>>,
@@ -284,7 +279,6 @@ impl Clone for AccountManager {
             accounts: self.accounts.clone(),
             stop_polling_sender: self.stop_polling_sender.clone(),
             polling_handle: None,
-            is_monitoring: self.is_monitoring.clone(),
             generated_mnemonic: None,
             account_options: self.account_options,
             sync_accounts_lock: self.sync_accounts_lock.clone(),
@@ -318,7 +312,6 @@ impl AccountManager {
     async fn load_accounts(
         storage_file_path: &PathBuf,
         account_options: AccountOptions,
-        is_monitoring: Arc<AtomicBool>,
     ) -> crate::Result<AccountStore> {
         let parsed_accounts = Arc::new(RwLock::new(HashMap::new()));
 
@@ -331,7 +324,7 @@ impl AccountManager {
         for account in accounts {
             parsed_accounts.write().await.insert(
                 account.id().clone(),
-                AccountHandle::new(account, parsed_accounts.clone(), account_options, is_monitoring.clone()),
+                AccountHandle::new(account, parsed_accounts.clone(), account_options),
             );
         }
 
@@ -430,8 +423,7 @@ impl AccountManager {
             .unwrap();
 
         if self.accounts.read().await.is_empty() {
-            let accounts =
-                Self::load_accounts(&self.storage_path, self.account_options, self.is_monitoring.clone()).await?;
+            let accounts = Self::load_accounts(&self.storage_path, self.account_options).await?;
             self.loaded_accounts = true;
             {
                 let mut accounts_store = self.accounts.write().await;
@@ -460,8 +452,7 @@ impl AccountManager {
         crate::stronghold::load_snapshot(&stronghold_path, stronghold_password(password)).await?;
 
         if self.accounts.read().await.is_empty() {
-            let accounts =
-                Self::load_accounts(&self.storage_path, self.account_options, self.is_monitoring.clone()).await?;
+            let accounts = Self::load_accounts(&self.storage_path, self.account_options).await?;
             self.loaded_accounts = true;
             {
                 let mut accounts_store = self.accounts.write().await;
@@ -520,7 +511,6 @@ impl AccountManager {
     ) {
         let storage_file_path = self.storage_path.clone();
         let accounts = self.accounts.clone();
-        let is_monitoring = self.is_monitoring.clone();
         let account_options = self.account_options;
         let sync_accounts_lock = self.sync_accounts_lock.clone();
 
@@ -549,7 +539,6 @@ impl AccountManager {
                                         storage_file_path_,
                                         account_options,
                                         !(synced && discovered_accounts),
-                                        is_monitoring.clone(),
                                         automatic_output_consolidation)
                                     )
                                     .catch_unwind()
@@ -649,7 +638,6 @@ impl AccountManager {
             self.accounts.clone(),
             self.storage_path.clone(),
             self.account_options,
-            self.is_monitoring.clone(),
         ))
     }
 
@@ -688,7 +676,6 @@ impl AccountManager {
             self.accounts.clone(),
             self.storage_path.clone(),
             self.account_options,
-            self.is_monitoring.clone(),
         ))
     }
 
@@ -986,7 +973,6 @@ pub struct AccountsSynchronizer {
     address_index: Option<usize>,
     gap_limit: Option<usize>,
     account_options: AccountOptions,
-    is_monitoring: Arc<AtomicBool>,
     discover_accounts: bool,
     skip_change_addresses: bool,
     ran_account_discovery: bool,
@@ -998,7 +984,6 @@ impl AccountsSynchronizer {
         accounts: AccountStore,
         storage_file_path: PathBuf,
         account_options: AccountOptions,
-        is_monitoring: Arc<AtomicBool>,
     ) -> Self {
         Self {
             mutex,
@@ -1007,7 +992,6 @@ impl AccountsSynchronizer {
             address_index: None,
             gap_limit: None,
             account_options,
-            is_monitoring,
             discover_accounts: true,
             skip_change_addresses: true,
             ran_account_discovery: false,
@@ -1128,7 +1112,6 @@ impl AccountsSynchronizer {
                             &client_options,
                             Some(signer_type),
                             self.account_options,
-                            self.is_monitoring.clone(),
                         )
                         .await
                     } else {
@@ -1261,16 +1244,10 @@ async fn poll(
     storage_file_path: PathBuf,
     account_options: AccountOptions,
     first_iteration: bool,
-    is_monitoring: Arc<AtomicBool>,
     automatic_output_consolidation: bool,
 ) -> crate::Result<PollResponse> {
-    let mut synchronizer = AccountsSynchronizer::new(
-        sync_accounts_lock,
-        accounts.clone(),
-        storage_file_path,
-        account_options,
-        is_monitoring,
-    );
+    let mut synchronizer =
+        AccountsSynchronizer::new(sync_accounts_lock, accounts.clone(), storage_file_path, account_options);
     if !first_iteration {
         synchronizer = synchronizer.skip_account_discovery().skip_change_addresses();
     }
@@ -1283,11 +1260,7 @@ async fn poll(
 
     for retried_data in retried {
         let mut account = retried_data.account_handle.write().await;
-        let client = crate::client::get_client(
-            account.client_options(),
-            Some(retried_data.account_handle.is_monitoring.clone()),
-        )
-        .await?;
+        let client = crate::client::get_client(account.client_options()).await?;
 
         for (reattached_message_id, message) in &retried_data.reattached {
             emit_reattachment_event(
@@ -1342,7 +1315,6 @@ async fn discover_accounts(
     client_options: &ClientOptions,
     signer_type: Option<SignerType>,
     account_options: AccountOptions,
-    is_monitoring: Arc<AtomicBool>,
 ) -> crate::Result<Vec<(AccountHandle, SyncedAccountData)>> {
     let mut synced_accounts = vec![];
     let mut index = accounts.read().await.len();
@@ -1352,7 +1324,6 @@ async fn discover_accounts(
             accounts.clone(),
             storage_path.clone(),
             account_options,
-            is_monitoring.clone(),
         )
         .skip_persistence()
         .index(index);
@@ -1895,13 +1866,9 @@ mod tests {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |mut manager, _| async move {
             crate::test_utils::AccountCreator::new(&manager).create().await;
             manager.set_storage_password("new-password").await.unwrap();
-            let account_store = super::AccountManager::load_accounts(
-                manager.storage_path(),
-                manager.account_options,
-                manager.is_monitoring.clone(),
-            )
-            .await
-            .unwrap();
+            let account_store = super::AccountManager::load_accounts(manager.storage_path(), manager.account_options)
+                .await
+                .unwrap();
             assert_eq!(account_store.read().await.len(), 1);
         })
         .await;

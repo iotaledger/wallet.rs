@@ -107,7 +107,6 @@ pub struct AccountInitialiser {
     accounts: AccountStore,
     storage_path: PathBuf,
     account_options: AccountOptions,
-    is_monitoring: Arc<AtomicBool>,
     alias: Option<String>,
     created_at: Option<DateTime<Local>>,
     messages: Vec<Message>,
@@ -126,13 +125,11 @@ impl AccountInitialiser {
         accounts: AccountStore,
         storage_path: PathBuf,
         account_options: AccountOptions,
-        is_monitoring: Arc<AtomicBool>,
     ) -> Self {
         Self {
             accounts,
             storage_path,
             account_options,
-            is_monitoring,
             alias: None,
             created_at: None,
             messages: vec![],
@@ -254,9 +251,8 @@ impl AccountInitialiser {
             Some("mainnet") => "iota".to_string(),
             _ => {
                 let client_options = account.client_options.clone();
-                let is_monitoring = self.is_monitoring.clone();
                 let get_from_client_task = async {
-                    let hrp = crate::client::get_client(&client_options, Some(is_monitoring))
+                    let hrp = crate::client::get_client(&client_options)
                         .await?
                         .read()
                         .await
@@ -331,21 +327,11 @@ impl AccountInitialiser {
         account.set_id(format!("{}{}", ACCOUNT_ID_PREFIX, hex::encode(digest)));
 
         let guard = if self.skip_persistence {
-            AccountHandle::new(
-                account,
-                self.accounts.clone(),
-                self.account_options,
-                self.is_monitoring.clone(),
-            )
+            AccountHandle::new(account, self.accounts.clone(), self.account_options)
         } else {
             account.save().await?;
             let account_id = account.id().clone();
-            let guard = AccountHandle::new(
-                account,
-                self.accounts.clone(),
-                self.account_options,
-                self.is_monitoring.clone(),
-            );
+            let guard = AccountHandle::new(account, self.accounts.clone(), self.account_options);
             drop(accounts);
             self.accounts.write().await.insert(account_id, guard.clone());
             let _ = crate::monitor::monitor_account_addresses_balance(guard.clone()).await;
@@ -400,23 +386,16 @@ pub struct AccountHandle {
     pub(crate) accounts: AccountStore,
     pub(crate) locked_addresses: Arc<Mutex<Vec<AddressWrapper>>>,
     pub(crate) account_options: AccountOptions,
-    pub(crate) is_monitoring: Arc<AtomicBool>,
     is_mqtt_enabled: Arc<AtomicBool>,
 }
 
 impl AccountHandle {
-    pub(crate) fn new(
-        account: Account,
-        accounts: AccountStore,
-        account_options: AccountOptions,
-        is_monitoring: Arc<AtomicBool>,
-    ) -> Self {
+    pub(crate) fn new(account: Account, accounts: AccountStore, account_options: AccountOptions) -> Self {
         Self {
             inner: Arc::new(RwLock::new(account)),
             accounts,
             locked_addresses: Default::default(),
             account_options,
-            is_monitoring,
             is_mqtt_enabled: Arc::new(AtomicBool::new(true)),
         }
     }
@@ -587,7 +566,6 @@ impl AccountHandle {
             address_wrapper,
             bech32_hrp,
             self.account_options,
-            self.is_monitoring.clone(),
         )
         .await?;
         let is_unused = latest_address.balance() == 0 && latest_address.outputs().is_empty();
@@ -760,7 +738,7 @@ impl Account {
 
     /// Updates the account's client options.
     pub async fn set_client_options(&mut self, options: ClientOptions) -> crate::Result<()> {
-        let client_guard = crate::client::get_client(&options, None).await?;
+        let client_guard = crate::client::get_client(&options).await?;
         let client = client_guard.read().await;
 
         let unsynced_nodes = client.unsynced_nodes().await;

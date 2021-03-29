@@ -425,7 +425,7 @@ impl TransactionRegularEssence {
                         if let Some(output) = output {
                             Some(output)
                         } else {
-                            let client = crate::client::get_client(metadata.client_options, None).await?;
+                            let client = crate::client::get_client(metadata.client_options).await?;
                             let client = client.read().await;
                             if let Ok(output) = client.get_output(&i).await {
                                 let output = AddressOutput::from_output_response(output, metadata.bech32_hrp.clone())?;
