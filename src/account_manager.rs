@@ -38,6 +38,7 @@ use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
 use iota::{bee_rest_api::types::dtos::LedgerInclusionStateDto, MessageId, OutputId};
+use serde::Serialize;
 use tokio::{
     sync::{
         broadcast::{channel as broadcast_channel, Receiver as BroadcastReceiver, Sender as BroadcastSender},
@@ -261,6 +262,16 @@ pub(crate) struct CachedMigrationData {
     bundled_input_indexes: Vec<usize>,
 }
 
+/// Created migration bundle data.
+#[derive(Debug, Clone, Getters, Serialize)]
+#[getset(get = "pub")]
+pub struct MigrationBundle {
+    /// The bundle crackability if it was mined.
+    crackability: f64,
+    /// The bundle hash.
+    hash: String,
+}
+
 /// The account manager.
 ///
 /// Used to manage multiple accounts.
@@ -365,7 +376,7 @@ impl AccountManager {
         mine: bool,
         timeout: Duration,
         log_file_path: P,
-    ) -> crate::Result<String> {
+    ) -> crate::Result<MigrationBundle> {
         let mut hasher = DefaultHasher::new();
         seed.hash(&mut hasher);
         let seed_hash = hasher.finish();
@@ -387,7 +398,7 @@ impl AccountManager {
         }
 
         let account_handle = self.get_account(0).await?;
-        let bundle = migration::create_bundle(
+        let bundle_data = migration::create_bundle(
             account_handle,
             &data,
             seed,
@@ -397,13 +408,18 @@ impl AccountManager {
             log_file_path,
         )
         .await?;
-        let bundle_hash = bundle.first().unwrap().bundle().to_inner().to_string();
+        let crackability = bundle_data.crackability;
+        let bundle_hash = bundle_data.bundle.first().unwrap().bundle().to_inner().to_string();
 
-        self.cached_migration_bundles.insert(bundle_hash.clone(), bundle);
+        self.cached_migration_bundles
+            .insert(bundle_hash.clone(), bundle_data.bundle);
         let data = self.cached_migration_data.get_mut(&seed_hash).unwrap(); // safe to unwrap since we already validated it
         data.bundled_input_indexes.extend(input_indexes);
 
-        Ok(bundle_hash)
+        Ok(MigrationBundle {
+            crackability,
+            hash: bundle_hash,
+        })
     }
 
     /// Sends the migration bundle to the given node.

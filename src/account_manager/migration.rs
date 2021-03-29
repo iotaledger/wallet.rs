@@ -35,6 +35,12 @@ pub struct MigrationData {
     pub inputs: Vec<InputData>,
 }
 
+#[derive(Debug, Clone)]
+pub struct MigrationBundle {
+    pub crackability: f64,
+    pub bundle: Vec<BundledTransaction>,
+}
+
 /// Finds account data for the migration from legacy network.
 pub struct MigrationDataFinder<'a> {
     pub(crate) nodes: &'a [&'a str],
@@ -154,7 +160,7 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
     bundle_mine: bool,
     timeout: Duration,
     log_file_path: P,
-) -> crate::Result<Vec<BundledTransaction>> {
+) -> crate::Result<MigrationBundle> {
     let mut legacy_client_builder = iota_migration::ClientBuilder::new().quorum(true);
     if let Some(permanode) = &data.permanode {
         legacy_client_builder = legacy_client_builder.permanode(&permanode)?;
@@ -183,6 +189,7 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
         address_inputs.clone().into_iter().cloned().collect(),
     )
     .await?;
+    let mut crackability = 0f64;
     if bundle_mine && address_inputs.iter().any(|i| i.spent) {
         let mut spent_bundle_hashes = Vec::new();
         for input in &address_inputs {
@@ -198,6 +205,7 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
             timeout.as_secs(),
         )
         .await?;
+        crackability = mining_result.0.crackability;
         prepared_bundle = mining_result.1;
     }
 
@@ -223,7 +231,7 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
     }
     log.write_all(b"\n\n")?;
 
-    Ok(bundle)
+    Ok(MigrationBundle { crackability, bundle })
 }
 
 pub(crate) async fn send_bundle(nodes: &[&str], bundle: Vec<BundledTransaction>, mwm: u8) -> crate::Result<()> {

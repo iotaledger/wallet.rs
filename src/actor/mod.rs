@@ -246,7 +246,7 @@ impl WalletMessageHandler {
                 log_file_path,
             } => {
                 convert_async_panics(|| async {
-                    let hash = self
+                    let bundle = self
                         .account_manager
                         .create_migration_bundle(
                             &seed,
@@ -257,7 +257,7 @@ impl WalletMessageHandler {
                         )
                         .await?;
                     seed.zeroize();
-                    Ok(ResponseType::CreatedMigrationBundle(hash))
+                    Ok(ResponseType::CreatedMigrationBundle(bundle))
                 })
                 .await
             }

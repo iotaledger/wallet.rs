@@ -3,7 +3,7 @@
 
 use crate::{
     account::{Account, AccountBalance, AccountIdentifier, SyncedAccount},
-    account_manager::MigrationData,
+    account_manager::{MigrationBundle, MigrationData},
     address::Address,
     client::ClientOptions,
     message::{Message as WalletMessage, MessageType as WalletMessageType, TransferBuilder},
@@ -518,7 +518,7 @@ pub enum ResponseType {
     /// GetMigrationData response.
     MigrationData(MigrationDataDto),
     /// CreateMigrationBundle response (bundle hash).
-    CreatedMigrationBundle(String),
+    CreatedMigrationBundle(MigrationBundle),
     /// SendMigrationBundle response.
     SentMigrationBundle,
 }
