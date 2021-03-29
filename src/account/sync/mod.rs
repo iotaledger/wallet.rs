@@ -1147,7 +1147,7 @@ impl SyncedAccount {
     }
 
     /// Send messages.
-    pub async fn transfer(&self, mut transfer_obj: Transfer) -> crate::Result<Message> {
+    pub(crate) async fn transfer(&self, mut transfer_obj: Transfer) -> crate::Result<Message> {
         let account_ = self.account_handle.read().await;
 
         // if the deposit address belongs to the account, we'll reuse the input address
@@ -1275,17 +1275,17 @@ impl SyncedAccount {
     }
 
     /// Retry message.
-    pub async fn retry(&self, message_id: &MessageId) -> crate::Result<Message> {
+    pub(crate) async fn retry(&self, message_id: &MessageId) -> crate::Result<Message> {
         repost_message(self.account_handle.clone(), message_id, RepostAction::Retry).await
     }
 
     /// Promote message.
-    pub async fn promote(&self, message_id: &MessageId) -> crate::Result<Message> {
+    pub(crate) async fn promote(&self, message_id: &MessageId) -> crate::Result<Message> {
         repost_message(self.account_handle.clone(), message_id, RepostAction::Promote).await
     }
 
     /// Reattach message.
-    pub async fn reattach(&self, message_id: &MessageId) -> crate::Result<Message> {
+    pub(crate) async fn reattach(&self, message_id: &MessageId) -> crate::Result<Message> {
         repost_message(self.account_handle.clone(), message_id, RepostAction::Reattach).await
     }
 }

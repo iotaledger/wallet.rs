@@ -130,6 +130,7 @@ export declare class RemainderValueStrategy {
 export declare class TransferOptions {
   remainderValueStrategy?: RemainderValueStrategy
   indexation?: { index: string | number[] | Uint8Array, data?: string | number[] | Uint8Array }
+  skipSync?: boolean
 }
 
 export declare class SyncedAccount { }

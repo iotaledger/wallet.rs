@@ -52,23 +52,24 @@ impl Transfer {
     fn new(
         amount: u64,
         address: &str, // IotaAddress
-        bench32_hrp: &str,
         indexation: Option<Indexation>,
-        remainder_value_strategy: &str,
+        remainder_value_strategy: Option<&str>,
+        skip_sync: Option<bool>,
     ) -> Result<Self> {
+        let bench32_hrp = address.split('1').first().unwrap();
         let address_wrapper = RustAddressWrapper::new(IotaAddress::try_from_bech32(address)?, bench32_hrp.to_string());
         let mut builder = RustTransfer::builder(address_wrapper, NonZeroU64::new(amount).unwrap());
         let strategy = match remainder_value_strategy {
-            "ReuseAddress" => RustRemainderValueStrategy::ReuseAddress,
-            "ChangeAddress" => RustRemainderValueStrategy::ChangeAddress,
-            _ => RustRemainderValueStrategy::AccountAddress(RustAddressWrapper::new(
-                IotaAddress::try_from_bech32(address)?,
-                bench32_hrp.to_string(),
-            )),
+            Some("ReuseAddress") => RustRemainderValueStrategy::ReuseAddress,
+            Some("ChangeAddress") => RustRemainderValueStrategy::ChangeAddress,
+            _ => RustRemainderValueStrategy::ChangeAddress,
         };
         builder = builder.with_remainder_value_strategy(strategy);
         if let Some(indexation) = indexation {
             builder = builder.with_indexation(indexation.try_into()?);
+        }
+        if skip_sync.unwrap_or_default() {
+            builder = builder.with_skip_sync();
         }
         Ok(Transfer {
             transfer: builder.finish(),

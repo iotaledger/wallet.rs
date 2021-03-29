@@ -480,10 +480,14 @@ impl AccountHandle {
     /// Send messages.
     pub async fn transfer(&self, transfer_obj: Transfer) -> crate::Result<Message> {
         let account_id = self.id().await;
-        transfer_obj
-            .emit_event_if_needed(account_id.clone(), TransferProgressType::SyncingAccount)
-            .await;
-        let synced = self.sync_internal().await.execute().await?;
+        let synced = if transfer_obj.skip_sync {
+            SyncedAccount::from(self.clone()).await
+        } else {
+            transfer_obj
+                .emit_event_if_needed(account_id.clone(), TransferProgressType::SyncingAccount)
+                .await;
+            self.sync_internal().await.execute().await?
+        };
         synced.transfer(transfer_obj).await
     }
 
