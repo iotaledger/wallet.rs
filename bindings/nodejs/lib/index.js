@@ -58,11 +58,12 @@ Account.prototype.isLatestAddressUnused = promisify(Account.prototype.isLatestAd
 
 const send = Account.prototype.send
 Account.prototype.send = function (address, amount, options) {
-  if (options && (typeof options === 'object') && options.indexation) {
-    let index = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.index) :  options.indexation.index
-    let data = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.data) :  options.indexation.data
-    const formattedOptions = {
-      indexation: {
+  if (options && (typeof options === 'object')) {
+    const formattedOptions = options
+    if (options.indexation) {
+      let index = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.index) :  options.indexation.index
+      let data = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.data) :  options.indexation.data
+      formattedOptions.indexation = {
         index: Array.from(index),
         data: data ? Array.from(data) : null,
       }

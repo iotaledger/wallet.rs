@@ -1,4 +1,4 @@
-// Copyright 2021 IOTA Stiftung
+// Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use super::{
@@ -74,7 +74,6 @@ impl TryFrom<WalletAddressOutput> for RustWalletAddressOutput {
 #[derive(Debug, Clone, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct WalletAddress {
     pub address: String,
-    pub balance: u64,
     pub key_index: usize,
     pub internal: bool,
     pub outputs: Vec<WalletAddressOutput>,
@@ -93,7 +92,6 @@ impl TryFrom<WalletAddress> for RustWalletAddress {
                 IotaAddress::try_from_bech32(&address.address)?,
                 "".to_string(),
             ))
-            .balance(address.balance)
             .key_index(address.key_index)
             .internal(address.internal)
             .outputs(outputs)
@@ -346,6 +344,7 @@ pub async fn to_rust_message(
         nonce: msg.nonce,
         confirmed: msg.confirmed,
         broadcasted: msg.broadcasted,
+        reattachment_message_id: None,
     })
 }
 

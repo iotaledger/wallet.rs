@@ -31,7 +31,7 @@ impl Address {
     }
 
     pub fn balance(&self) -> u64 {
-        *self.address.balance()
+        self.address.balance()
     }
 
     /// Gets the list of outputs that aren't spent or pending.

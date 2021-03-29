@@ -408,7 +408,6 @@ mod test_utils {
         AddressBuilder::new()
             .key_index(0)
             .address(generate_random_iota_address())
-            .balance(0)
             .outputs(Vec::new())
             .build()
             .unwrap()
@@ -516,6 +515,7 @@ mod test_utils {
                 nonce: 0,
                 confirmed: self.confirmed,
                 broadcasted: self.broadcasted,
+                reattachment_message_id: None,
             }
         }
     }

@@ -381,6 +381,7 @@ foreign_class!(
         fn TransferBuilder::with_remainder_value_strategy(&mut self, strategy: RemainderValueStrategy) -> TransferBuilder; alias withRemainderValueStrategy;
         fn TransferBuilder::with_remainder_to_account_with_address(&mut self, address: AddressWrapper) -> TransferBuilder; alias withRemainderToAccountWithAddress;
         fn TransferBuilder::with_indexation(&mut self, indexation: IndexationPayload) -> TransferBuilder; alias withIndexation;
+        fn TransferBuilder::with_skip_sync(&mut self) -> TransferBuilder; alias withSkipSync;
         fn TransferBuilder::finish(&self) -> Transfer;
     }
 );
