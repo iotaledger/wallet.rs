@@ -515,6 +515,7 @@ mod test_utils {
                 nonce: 0,
                 confirmed: self.confirmed,
                 broadcasted: self.broadcasted,
+                reattachment_message_id: None,
             }
         }
     }

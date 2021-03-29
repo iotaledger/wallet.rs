@@ -344,6 +344,7 @@ pub async fn to_rust_message(
         nonce: msg.nonce,
         confirmed: msg.confirmed,
         broadcasted: msg.broadcasted,
+        reattachment_message_id: None,
     })
 }
 
