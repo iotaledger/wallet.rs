@@ -923,7 +923,7 @@ Supported event names:</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>[unspent]</td><td><code>boolean</code></td><td><code>null</code></td><td>The <code>unspent</code> status filter</td></tr>
 </tbody></table>
-<p>Address object: { address: string, balance: number, keyIndex: number }</p>
+<p>Address object: { address: string, keyIndex: number }</p>
 <h4 id="syncoptions"><a class="header" href="#syncoptions">sync([options])</a></h4>
 <p>Synchronizes the account with the Tangle.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
@@ -1230,8 +1230,7 @@ Balance per individual addresses:
 <h2 id="sending-tokens"><a class="header" href="#sending-tokens">Sending tokens</a></h2>
 <p>The process of sending tokens via <code>wallet.rs</code> can be described as follows:</p>
 <ul>
-<li>Create instance of <code>iota_wallet.Transfer()</code> class with the following mandatory arguments: <code>amount</code>, <code>address</code>, <code>bench32_hrp</code> and <code>remainder_value_strategy</code></li>
-<li><code>bench32_hrp</code> indicates which network should be used to send tokens thru, and can be gotten from <code>account.bech32_hrp()</code> function</li>
+<li>Create instance of <code>iota_wallet.Transfer()</code> class with the following mandatory arguments: <code>amount</code>, <code>address</code> and <code>remainder_value_strategy</code></li>
 <li><code>remainder_value_strategy</code> can be: <code>ReuseAddress</code> or <code>ChangeAddress</code>. You may be familiar with a concept <code>changing address with every spent</code> in IOTA 1.0. It is not an issue in IOTA 1.5 world but it may still become handy depending on your use case</li>
 <li>once instance of <code>iota_wallet.Transfer()</code> is created, it can be sent via <code>transfer()</code> function of the <code>Account</code> instance</li>
 <li>needless to repeat, always sync the account information with the Tangle before do anything with the account</li>
@@ -1262,7 +1261,6 @@ print(f&quot;Available balance {account.balance()['available']}&quot;)
 transfer = iw.Transfer(
     amount=1_000_000,
     address='atoi1qzt0nhsf38nh6rs4p6zs5knqp6psgha9wsv74uajqgjmwc75ugupx3y7x0r',
-    bench32_hrp=account.bech32_hrp(),
     remainder_value_strategy='ReuseAddress'
 )
 
@@ -1684,14 +1682,14 @@ The account syncing process ensures that the latest metadata (balance, transacti
 <h4 id="execute-lista-hreflibrariespythonapi_referencehtmlsyncedaccountsyncedaccounta"><a class="header" href="#execute-lista-hreflibrariespythonapi_referencehtmlsyncedaccountsyncedaccounta">execute(): list<a href="libraries/python/api_reference.html#syncedaccount">SyncedAccount</a></a></h4>
 <p>Syncs the accounts with the tangle.</p>
 <h3 id="transfer"><a class="header" href="#transfer">Transfer</a></h3>
-<h4 id="constructoramount-address-bench32_hrp-indexation-optional-remainder_value_strategy-str-a-hreflibrariespythonapi_referencehtmltransfertransfera"><a class="header" href="#constructoramount-address-bench32_hrp-indexation-optional-remainder_value_strategy-str-a-hreflibrariespythonapi_referencehtmltransfertransfera">constructor(amount, address, bench32_hrp, indexation (optional), remainder_value_strategy: str): <a href="libraries/python/api_reference.html#transfer">Transfer</a></a></h4>
+<h4 id="constructoramount-address-indexation-optional-remainder_value_strategy-optional-skip_sync-optional-a-hreflibrariespythonapi_referencehtmltransfertransfera"><a class="header" href="#constructoramount-address-indexation-optional-remainder_value_strategy-optional-skip_sync-optional-a-hreflibrariespythonapi_referencehtmltransfertransfera">constructor(amount, address, indexation (optional), remainder_value_strategy (optional), skip_sync (optional)): <a href="libraries/python/api_reference.html#transfer">Transfer</a></a></h4>
 <p>The <code>Transfer</code> object used in <a href="libraries/python/api_reference.html#syncedaccount">SyncedAccount</a></p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>amount</td><td><code>int</code></td><td><code>undefined</code></td><td>The amount to transfer</td></tr>
 <tr><td>address</td><td><code>str</code></td><td><code>undefined</code></td><td>The addree to send</td></tr>
-<tr><td>bench32_hrp</td><td><code>str</code></td><td><code>undefined</code></td><td>the bench32_hrp of the address</td></tr>
 <tr><td>indexation</td><td><code><a href="libraries/python/api_reference.html#indexation">Indexation</a></code></td><td><code>undefined</code></td><td>The indexation payload</td></tr>
 <tr><td>remainder_value_strategy</td><td><code>str</code></td><td><code>undefined</code></td><td>Should be <code>ReuseAddress</code> or <code>ChangeAddress</code></td></tr>
+<tr><td>skip_sync</td><td><code>bool</code></td><td><code>false</code></td><td>Skip syncing account before transfering funds</td></tr>
 </tbody></table>
 <h3 id="syncedaccount-1"><a class="header" href="#syncedaccount-1">SyncedAccount</a></h3>
 <p>The result of a <code>sync</code> operation on an Account.</p>

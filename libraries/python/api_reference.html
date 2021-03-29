@@ -302,14 +302,14 @@ The account syncing process ensures that the latest metadata (balance, transacti
 <h4 id="execute-lista-hrefsyncedaccountsyncedaccounta"><a class="header" href="#execute-lista-hrefsyncedaccountsyncedaccounta">execute(): list<a href="#syncedaccount">SyncedAccount</a></a></h4>
 <p>Syncs the accounts with the tangle.</p>
 <h3 id="transfer"><a class="header" href="#transfer">Transfer</a></h3>
-<h4 id="constructoramount-address-bench32_hrp-indexation-optional-remainder_value_strategy-str-a-hreftransfertransfera"><a class="header" href="#constructoramount-address-bench32_hrp-indexation-optional-remainder_value_strategy-str-a-hreftransfertransfera">constructor(amount, address, bench32_hrp, indexation (optional), remainder_value_strategy: str): <a href="#transfer">Transfer</a></a></h4>
+<h4 id="constructoramount-address-indexation-optional-remainder_value_strategy-optional-skip_sync-optional-a-hreftransfertransfera"><a class="header" href="#constructoramount-address-indexation-optional-remainder_value_strategy-optional-skip_sync-optional-a-hreftransfertransfera">constructor(amount, address, indexation (optional), remainder_value_strategy (optional), skip_sync (optional)): <a href="#transfer">Transfer</a></a></h4>
 <p>The <code>Transfer</code> object used in <a href="#syncedaccount">SyncedAccount</a></p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>amount</td><td><code>int</code></td><td><code>undefined</code></td><td>The amount to transfer</td></tr>
 <tr><td>address</td><td><code>str</code></td><td><code>undefined</code></td><td>The addree to send</td></tr>
-<tr><td>bench32_hrp</td><td><code>str</code></td><td><code>undefined</code></td><td>the bench32_hrp of the address</td></tr>
 <tr><td>indexation</td><td><code><a href="#indexation">Indexation</a></code></td><td><code>undefined</code></td><td>The indexation payload</td></tr>
 <tr><td>remainder_value_strategy</td><td><code>str</code></td><td><code>undefined</code></td><td>Should be <code>ReuseAddress</code> or <code>ChangeAddress</code></td></tr>
+<tr><td>skip_sync</td><td><code>bool</code></td><td><code>false</code></td><td>Skip syncing account before transfering funds</td></tr>
 </tbody></table>
 <h3 id="syncedaccount"><a class="header" href="#syncedaccount">SyncedAccount</a></h3>
 <p>The result of a <code>sync</code> operation on an Account.</p>

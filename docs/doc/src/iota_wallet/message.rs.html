@@ -1004,6 +1004,24 @@
 <span id="1001">1001</span>
 <span id="1002">1002</span>
 <span id="1003">1003</span>
+<span id="1004">1004</span>
+<span id="1005">1005</span>
+<span id="1006">1006</span>
+<span id="1007">1007</span>
+<span id="1008">1008</span>
+<span id="1009">1009</span>
+<span id="1010">1010</span>
+<span id="1011">1011</span>
+<span id="1012">1012</span>
+<span id="1013">1013</span>
+<span id="1014">1014</span>
+<span id="1015">1015</span>
+<span id="1016">1016</span>
+<span id="1017">1017</span>
+<span id="1018">1018</span>
+<span id="1019">1019</span>
+<span id="1020">1020</span>
+<span id="1021">1021</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1066,6 +1084,8 @@
     <span class="ident">input</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">AddressWrapper</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressOutput</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
     <span class="doccomment">/// Whether the transfer should emit events or not.</span>
     <span class="ident">with_events</span>: <span class="ident">bool</span>,
+    <span class="doccomment">/// Whether the transfer should skip account syncing or not.</span>
+    <span class="ident">skip_sync</span>: <span class="ident">bool</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TransferBuilder</span> {
@@ -1124,6 +1144,7 @@
                 <span class="ident">remainder_value_strategy</span>: <span class="ident">builder</span>.<span class="ident">remainder_value_strategy</span>,
                 <span class="ident">input</span>: <span class="prelude-val">None</span>,
                 <span class="ident">with_events</span>: <span class="bool-val">true</span>,
+                <span class="ident">skip_sync</span>: <span class="bool-val">false</span>,
             })
         })
     }
@@ -1139,6 +1160,7 @@
             <span class="ident">remainder_value_strategy</span>: <span class="ident">RemainderValueStrategy</span>::<span class="ident">ChangeAddress</span>,
             <span class="ident">input</span>: <span class="prelude-val">None</span>,
             <span class="ident">with_events</span>: <span class="bool-val">true</span>,
+            <span class="ident">skip_sync</span>: <span class="bool-val">false</span>,
         }
     }
 
@@ -1165,6 +1187,12 @@
         <span class="self">self</span>
     }
 
+    <span class="doccomment">/// Skip account syncing before transferring.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_skip_sync</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">skip_sync</span> <span class="op">=</span> <span class="bool-val">true</span>;
+        <span class="self">self</span>
+    }
+
     <span class="doccomment">/// Builds the transfer.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finish</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Transfer</span> {
         <span class="ident">Transfer</span> {
@@ -1174,6 +1202,7 @@
             <span class="ident">remainder_value_strategy</span>: <span class="self">self</span>.<span class="ident">remainder_value_strategy</span>,
             <span class="ident">input</span>: <span class="self">self</span>.<span class="ident">input</span>,
             <span class="ident">with_events</span>: <span class="self">self</span>.<span class="ident">with_events</span>,
+            <span class="ident">skip_sync</span>: <span class="self">self</span>.<span class="ident">skip_sync</span>,
         }
     }
 }
@@ -1193,6 +1222,8 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">input</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">AddressWrapper</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressOutput</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
     <span class="doccomment">/// Whether the transfer should emit events or not.</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">with_events</span>: <span class="ident">bool</span>,
+    <span class="doccomment">/// Whether the transfer should skip account syncing or not.</span>
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">skip_sync</span>: <span class="ident">bool</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Transfer</span> {
@@ -1432,7 +1463,7 @@
                         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">output</span>) <span class="op">=</span> <span class="ident">output</span> {
                             <span class="prelude-val">Some</span>(<span class="ident">output</span>)
                         } <span class="kw">else</span> {
-                            <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">client</span>::<span class="ident">get_client</span>(<span class="ident">metadata</span>.<span class="ident">client_options</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+                            <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">client</span>::<span class="ident">get_client</span>(<span class="ident">metadata</span>.<span class="ident">client_options</span>).<span class="kw">await</span><span class="question-mark">?</span>;
                             <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">read</span>().<span class="kw">await</span>;
                             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">output</span>) <span class="op">=</span> <span class="ident">client</span>.<span class="ident">get_output</span>(<span class="kw-2">&amp;</span><span class="ident">i</span>).<span class="kw">await</span> {
                                 <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">AddressOutput</span>::<span class="ident">from_output_response</span>(<span class="ident">output</span>, <span class="ident">metadata</span>.<span class="ident">bech32_hrp</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
@@ -1722,6 +1753,10 @@
     <span class="doccomment">/// Whether the transaction is broadcasted or not.</span>
     <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">set</span> <span class="op">=</span> <span class="string">&quot;pub&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">broadcasted</span>: <span class="ident">bool</span>,
+    <span class="doccomment">/// The message id that reattached this message if any.</span>
+    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;reattachmentMessageId&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">set</span> <span class="op">=</span> <span class="string">&quot;pub(crate)&quot;</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">reattachment_message_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MessageId</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Message</span> {
@@ -1941,6 +1976,7 @@
             <span class="ident">nonce</span>: <span class="self">self</span>.<span class="ident">iota_message</span>.<span class="ident">nonce</span>(),
             <span class="ident">confirmed</span>: <span class="self">self</span>.<span class="ident">confirmed</span>,
             <span class="ident">broadcasted</span>: <span class="bool-val">true</span>,
+            <span class="ident">reattachment_message_id</span>: <span class="prelude-val">None</span>,
         };
         <span class="prelude-val">Ok</span>(<span class="ident">message</span>)
     }

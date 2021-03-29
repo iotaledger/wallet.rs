@@ -342,8 +342,7 @@ Balance per individual addresses:
 <h2 id="sending-tokens"><a class="header" href="#sending-tokens">Sending tokens</a></h2>
 <p>The process of sending tokens via <code>wallet.rs</code> can be described as follows:</p>
 <ul>
-<li>Create instance of <code>iota_wallet.Transfer()</code> class with the following mandatory arguments: <code>amount</code>, <code>address</code>, <code>bench32_hrp</code> and <code>remainder_value_strategy</code></li>
-<li><code>bench32_hrp</code> indicates which network should be used to send tokens thru, and can be gotten from <code>account.bech32_hrp()</code> function</li>
+<li>Create instance of <code>iota_wallet.Transfer()</code> class with the following mandatory arguments: <code>amount</code>, <code>address</code> and <code>remainder_value_strategy</code></li>
 <li><code>remainder_value_strategy</code> can be: <code>ReuseAddress</code> or <code>ChangeAddress</code>. You may be familiar with a concept <code>changing address with every spent</code> in IOTA 1.0. It is not an issue in IOTA 1.5 world but it may still become handy depending on your use case</li>
 <li>once instance of <code>iota_wallet.Transfer()</code> is created, it can be sent via <code>transfer()</code> function of the <code>Account</code> instance</li>
 <li>needless to repeat, always sync the account information with the Tangle before do anything with the account</li>
@@ -374,7 +373,6 @@ print(f&quot;Available balance {account.balance()['available']}&quot;)
 transfer = iw.Transfer(
     amount=1_000_000,
     address='atoi1qzt0nhsf38nh6rs4p6zs5knqp6psgha9wsv74uajqgjmwc75ugupx3y7x0r',
-    bench32_hrp=account.bech32_hrp(),
     remainder_value_strategy='ReuseAddress'
 )
 

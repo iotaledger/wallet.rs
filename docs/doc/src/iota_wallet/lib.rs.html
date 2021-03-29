@@ -934,7 +934,6 @@
         <span class="ident">AddressBuilder</span>::<span class="ident">new</span>()
             .<span class="ident">key_index</span>(<span class="number">0</span>)
             .<span class="ident">address</span>(<span class="ident">generate_random_iota_address</span>())
-            .<span class="ident">balance</span>(<span class="number">0</span>)
             .<span class="ident">outputs</span>(<span class="ident">Vec</span>::<span class="ident">new</span>())
             .<span class="ident">build</span>()
             .<span class="ident">unwrap</span>()
@@ -1042,6 +1041,7 @@
                 <span class="ident">nonce</span>: <span class="number">0</span>,
                 <span class="ident">confirmed</span>: <span class="self">self</span>.<span class="ident">confirmed</span>,
                 <span class="ident">broadcasted</span>: <span class="self">self</span>.<span class="ident">broadcasted</span>,
+                <span class="ident">reattachment_message_id</span>: <span class="prelude-val">None</span>,
             }
         }
     }
