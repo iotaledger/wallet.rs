@@ -92,6 +92,11 @@ impl TransferBuilder {
         TransferBuilder::new_with_builder(new_builder)
     }
 
+    pub fn with_skip_sync(&mut self) -> Self {
+        let new_builder = self.builder.borrow_mut().take().unwrap().with_skip_sync();
+        TransferBuilder::new_with_builder(new_builder)
+    }
+
     /// Builds the transfer.
     pub fn finish(&self) -> Transfer {
         Transfer {
@@ -100,17 +105,9 @@ impl TransferBuilder {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct Message {
     message: MessageRust,
-}
-
-impl Clone for Message {
-    fn clone(&self) -> Self {
-        Message {
-            message: self.message.clone(),
-        }
-    }
 }
 
 impl From<MessageRust> for Message {
