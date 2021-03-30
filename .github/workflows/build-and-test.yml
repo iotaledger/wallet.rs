@@ -140,6 +140,9 @@ jobs:
      
       - name: Cache nodejs binding cargo target
         uses: actions/cache@v2.1.4
+        if: matrix.os != 'windows-latest'
+        # We get a linker error on Windows when using the cache (LNK1181: cannot open input file 'node.lib')
+        # https://github.com/iotaledger/wallet.rs/pull/467/checks?check_run_id=2214108362#step:11:41
         with:
           path: |
             bindings/nodejs/native/target
