@@ -118,7 +118,7 @@ impl Account {
 
         match msgs_res {
             Err(e) => Err(anyhow!(e.to_string())),
-            Ok(msgs) => Ok(msgs.into_iter().map(|m| m.into()).collect()),
+            Ok(info) => Ok(info.into()),
         }
     }
 

@@ -11,7 +11,7 @@ use chrono::prelude::{
 use crate::{
     jni_c_header::*,
     bee_types::*,
-    bee_rest_api::types::*,
+    iota::bee_rest_api::types::*,
     acc::*,
     client_options::*,
     sync::*,
