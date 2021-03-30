@@ -319,7 +319,7 @@ Returns the account's addresses.
 | --------- | -------------------- | ----------------- | --------------------------- |
 | [unspent] | <code>boolean</code> | <code>null</code> | The `unspent` status filter |
 
-Address object: { address: string, balance: number, keyIndex: number }
+Address object: { address: string, keyIndex: number }
 
 #### sync([options])
 

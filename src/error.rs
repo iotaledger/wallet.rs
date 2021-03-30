@@ -23,8 +23,6 @@ impl std::fmt::Display for AccountInitialiseRequiredField {
 pub enum AddressBuildRequiredField {
     /// address field.
     Address,
-    /// balance field.
-    Balance,
     /// key_index field.
     KeyIndex,
     /// outputs field.

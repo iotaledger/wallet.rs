@@ -59,6 +59,8 @@ pub struct TransferBuilder {
     input: Option<(AddressWrapper, Vec<AddressOutput>)>,
     /// Whether the transfer should emit events or not.
     with_events: bool,
+    /// Whether the transfer should skip account syncing or not.
+    skip_sync: bool,
 }
 
 impl<'de> Deserialize<'de> for TransferBuilder {
@@ -117,6 +119,7 @@ impl<'de> Deserialize<'de> for TransferBuilder {
                 remainder_value_strategy: builder.remainder_value_strategy,
                 input: None,
                 with_events: true,
+                skip_sync: false,
             })
         })
     }
@@ -132,6 +135,7 @@ impl TransferBuilder {
             remainder_value_strategy: RemainderValueStrategy::ChangeAddress,
             input: None,
             with_events: true,
+            skip_sync: false,
         }
     }
 
@@ -143,7 +147,7 @@ impl TransferBuilder {
 
     /// (Optional) message indexation.
     pub fn with_indexation(mut self, indexation: IndexationPayload) -> Self {
-        self.indexation = Some(indexation);
+        self.indexation.replace(indexation);
         self
     }
 
@@ -158,6 +162,12 @@ impl TransferBuilder {
         self
     }
 
+    /// Skip account syncing before transferring.
+    pub fn with_skip_sync(mut self) -> Self {
+        self.skip_sync = true;
+        self
+    }
+
     /// Builds the transfer.
     pub fn finish(self) -> Transfer {
         Transfer {
@@ -167,6 +177,7 @@ impl TransferBuilder {
             remainder_value_strategy: self.remainder_value_strategy,
             input: self.input,
             with_events: self.with_events,
+            skip_sync: self.skip_sync,
         }
     }
 }
@@ -186,6 +197,8 @@ pub struct Transfer {
     pub(crate) input: Option<(AddressWrapper, Vec<AddressOutput>)>,
     /// Whether the transfer should emit events or not.
     pub(crate) with_events: bool,
+    /// Whether the transfer should skip account syncing or not.
+    pub(crate) skip_sync: bool,
 }
 
 impl Transfer {
@@ -338,7 +351,7 @@ impl TransactionOutput {
 
 /// UTXO input.
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
-pub struct TransactionUTXOInput {
+pub struct TransactionUtxoInput {
     /// UTXO input.
     pub input: UTXOInput,
     /// Metadata.
@@ -350,7 +363,7 @@ pub struct TransactionUTXOInput {
 #[serde(tag = "type", content = "data")]
 pub enum TransactionInput {
     /// UTXO input.
-    UTXO(TransactionUTXOInput),
+    Utxo(TransactionUtxoInput),
     /// Treasury input.
     Treasury(TreasuryInput),
 }
@@ -418,14 +431,14 @@ impl TransactionRegularEssence {
                         let mut output = None;
                         for address in metadata.account_addresses {
                             if let Some(found_output) = address.outputs().get(i.output_id()) {
-                                output = Some(found_output.clone());
+                                output.replace(found_output.clone());
                                 break;
                             }
                         }
                         if let Some(output) = output {
                             Some(output)
                         } else {
-                            let client = crate::client::get_client(metadata.client_options, None).await?;
+                            let client = crate::client::get_client(metadata.client_options).await?;
                             let client = client.read().await;
                             if let Ok(output) = client.get_output(&i).await {
                                 let output = AddressOutput::from_output_response(output, metadata.bech32_hrp.clone())?;
@@ -435,7 +448,7 @@ impl TransactionRegularEssence {
                             }
                         }
                     };
-                    TransactionInput::UTXO(TransactionUTXOInput { input: i, metadata })
+                    TransactionInput::Utxo(TransactionUtxoInput { input: i, metadata })
                 }
                 Input::Treasury(treasury) => TransactionInput::Treasury(treasury),
                 _ => unimplemented!(),
@@ -489,7 +502,7 @@ impl TransactionRegularEssence {
 
                         // if the output is listed on the inputs, it's the remainder output.
                         if inputs.iter().any(|input| match input {
-                            TransactionInput::UTXO(input) => {
+                            TransactionInput::Utxo(input) => {
                                 if let Some(metadata) = &input.metadata {
                                     &metadata.address().as_ref() == output_address
                                 } else {
@@ -498,7 +511,7 @@ impl TransactionRegularEssence {
                             }
                             _ => false,
                         }) {
-                            remainder = Some(account_address);
+                            remainder.replace(account_address);
                             break;
                         }
                         match remainder {
@@ -509,11 +522,11 @@ impl TransactionRegularEssence {
                                 if address_index > *remainder_address.key_index()
                                     || (address_index == *remainder_address.key_index() && *account_address.internal())
                                 {
-                                    remainder = Some(account_address);
+                                    remainder.replace(account_address);
                                 }
                             }
                             None => {
-                                remainder = Some(account_address);
+                                remainder.replace(account_address);
                             }
                         }
                     }
@@ -527,7 +540,7 @@ impl TransactionRegularEssence {
                     }
                 } else {
                     let sent = inputs.iter().any(|i| match i {
-                        TransactionInput::UTXO(input) => match input.metadata {
+                        TransactionInput::Utxo(input) => match input.metadata {
                             Some(ref input_metadata) => metadata
                                 .account_addresses
                                 .iter()
@@ -579,7 +592,7 @@ impl TransactionRegularEssence {
         };
 
         let sent = essence.inputs().iter().any(|i| match i {
-            TransactionInput::UTXO(input) => match input.metadata {
+            TransactionInput::Utxo(input) => match input.metadata {
                 Some(ref input_metadata) => metadata
                     .account_addresses
                     .iter()
@@ -715,6 +728,10 @@ pub struct Message {
     /// Whether the transaction is broadcasted or not.
     #[getset(set = "pub")]
     pub broadcasted: bool,
+    /// The message id that reattached this message if any.
+    #[serde(rename = "reattachmentMessageId")]
+    #[getset(set = "pub(crate)")]
+    pub reattachment_message_id: Option<MessageId>,
 }
 
 impl Message {
@@ -789,7 +806,7 @@ fn transaction_inputs_belonging_to_account(
 ) -> Vec<TransactionInput> {
     let mut inputs = Vec::new();
     for input in essence.inputs() {
-        if let TransactionInput::UTXO(i) = input {
+        if let TransactionInput::Utxo(i) = input {
             if let Some(metadata) = &i.metadata {
                 if account_addresses
                     .iter()
@@ -934,6 +951,7 @@ impl<'a> MessageBuilder<'a> {
             nonce: self.iota_message.nonce(),
             confirmed: self.confirmed,
             broadcasted: true,
+            reattachment_message_id: None,
         };
         Ok(message)
     }

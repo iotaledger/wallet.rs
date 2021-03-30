@@ -116,7 +116,7 @@ mod test_utils {
     use rand::{distributions::Alphanumeric, thread_rng, Rng};
     use std::{
         collections::HashMap,
-        path::PathBuf,
+        path::{Path, PathBuf},
         sync::{atomic::AtomicBool, Arc},
     };
     use tokio::sync::Mutex;
@@ -129,7 +129,7 @@ mod test_utils {
 
     #[async_trait::async_trait]
     impl crate::signing::Signer for TestSigner {
-        async fn store_mnemonic(&mut self, _: &PathBuf, _mnemonic: String) -> crate::Result<()> {
+        async fn store_mnemonic(&mut self, _: &Path, _mnemonic: String) -> crate::Result<()> {
             Ok(())
         }
 
@@ -408,7 +408,6 @@ mod test_utils {
         AddressBuilder::new()
             .key_index(0)
             .address(generate_random_iota_address())
-            .balance(0)
             .outputs(Vec::new())
             .build()
             .unwrap()
@@ -516,6 +515,7 @@ mod test_utils {
                 nonce: 0,
                 confirmed: self.confirmed,
                 broadcasted: self.broadcasted,
+                reattachment_message_id: None,
             }
         }
     }

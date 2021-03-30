@@ -1,4 +1,4 @@
-// Copyright 2021 IOTA Stiftung
+// Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use super::{
@@ -42,7 +42,7 @@ use std::{
 pub const MILESTONE_MERKLE_PROOF_LENGTH: usize = 32;
 pub const MILESTONE_PUBLIC_KEY_LENGTH: usize = 32;
 
-type Bech32HRP = String;
+type Bech32Hrp = String;
 
 #[derive(Debug, Clone, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct WalletAddressOutput {
@@ -74,7 +74,6 @@ impl TryFrom<WalletAddressOutput> for RustWalletAddressOutput {
 #[derive(Debug, Clone, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct WalletAddress {
     pub address: String,
-    pub balance: u64,
     pub key_index: usize,
     pub internal: bool,
     pub outputs: Vec<WalletAddressOutput>,
@@ -93,7 +92,6 @@ impl TryFrom<WalletAddress> for RustWalletAddress {
                 IotaAddress::try_from_bech32(&address.address)?,
                 "".to_string(),
             ))
-            .balance(address.balance)
             .key_index(address.key_index)
             .internal(address.internal)
             .outputs(outputs)
@@ -196,7 +194,7 @@ impl TryFrom<RustWalletTransactionEssence> for Essence {
                     .iter()
                     .cloned()
                     .map(|input| {
-                        if let RustWalletInput::UTXO(input) = input {
+                        if let RustWalletInput::Utxo(input) = input {
                             Input {
                                 transaction_id: input.input.output_id().transaction_id().to_string(),
                                 index: input.input.output_id().index(),
@@ -346,6 +344,7 @@ pub async fn to_rust_message(
         nonce: msg.nonce,
         confirmed: msg.confirmed,
         broadcasted: msg.broadcasted,
+        reattachment_message_id: None,
     })
 }
 
@@ -461,7 +460,7 @@ impl TryFrom<UnlockBlock> for RustUnlockBlock {
 pub async fn to_rust_payload(
     message_id: &MessageId,
     payload: Payload,
-    bech32_hrp: Bech32HRP,
+    bech32_hrp: Bech32Hrp,
     accounts: AccountStore,
     account_id: &str,
     account_addresses: &[RustWalletAddress],

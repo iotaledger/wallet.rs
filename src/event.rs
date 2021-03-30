@@ -52,7 +52,7 @@ impl BalanceChange {
 }
 
 /// The balance change event data.
-#[derive(Debug, Getters, Serialize, Deserialize)]
+#[derive(Clone, Debug, Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct BalanceEvent {
     /// Event unique identifier.
@@ -91,7 +91,7 @@ pub struct AddressConsolidationNeeded {
 }
 
 /// A transaction-related event data.
-#[derive(Getters, Serialize, Deserialize)]
+#[derive(Clone, Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct TransactionEvent {
     /// Event unique identifier.
@@ -105,7 +105,7 @@ pub struct TransactionEvent {
 }
 
 /// A transaction confirmation state change event data.
-#[derive(Getters, Serialize, Deserialize)]
+#[derive(Clone, Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct TransactionConfirmationChangeEvent {
     /// Event unique identifier.
@@ -121,7 +121,7 @@ pub struct TransactionConfirmationChangeEvent {
 }
 
 /// Transaction reattachment event data.
-#[derive(Getters, Serialize, Deserialize)]
+#[derive(Clone, Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct TransactionReattachmentEvent {
     /// Event unique identifier.
@@ -138,7 +138,7 @@ pub struct TransactionReattachmentEvent {
 }
 
 /// Transfer event type.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum TransferProgressType {
     /// Syncing account.
@@ -156,7 +156,7 @@ pub enum TransferProgressType {
 }
 
 /// Transfer event data.
-#[derive(Getters, Serialize, Deserialize)]
+#[derive(Clone, Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct TransferProgress {
     #[serde(rename = "accountId")]

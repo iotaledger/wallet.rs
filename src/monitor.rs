@@ -11,16 +11,12 @@ use crate::{
 
 use iota::{bee_rest_api::types::dtos::OutputDto, OutputResponse, Topic, TopicEvent};
 
-use std::{
-    convert::TryInto,
-    sync::{atomic::AtomicBool, Arc},
-};
+use std::convert::TryInto;
 
 /// Unsubscribe from all topics associated with the account.
 pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
     let account = account_handle.read().await;
-    let client =
-        crate::client::get_client(account.client_options(), Some(account_handle.is_monitoring.clone())).await?;
+    let client = crate::client::get_client(account.client_options()).await?;
     let mut client = client.write().await;
 
     let mut topics = Vec::new();
@@ -42,7 +38,6 @@ pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
 async fn subscribe_to_topics<C: Fn(&TopicEvent) + Send + Sync + 'static>(
     _client_options: ClientOptions,
     _topic: Vec<Topic>,
-    _is_monitoring: Arc<AtomicBool>,
     _handler: C,
 ) {
 }
@@ -51,23 +46,14 @@ async fn subscribe_to_topics<C: Fn(&TopicEvent) + Send + Sync + 'static>(
 async fn subscribe_to_topics<C: Fn(&TopicEvent) + Send + Sync + 'static>(
     client_options: ClientOptions,
     topics: Vec<Topic>,
-    is_monitoring: Arc<AtomicBool>,
     handler: C,
 ) {
     if !topics.is_empty() {
         log::debug!("[MQTT] subscribe: {:?}", topics);
         tokio::spawn(async move {
-            let client = crate::client::get_client(&client_options, Some(is_monitoring.clone())).await?;
+            let client = crate::client::get_client(&client_options).await?;
             let mut client = client.write().await;
-            if client
-                .subscriber()
-                .with_topics(topics)
-                .subscribe(handler)
-                .await
-                .is_err()
-            {
-                is_monitoring.store(false, std::sync::atomic::Ordering::Relaxed);
-            }
+            client.subscriber().with_topics(topics).subscribe(handler).await?;
             crate::Result::Ok(())
         });
     }
@@ -95,7 +81,6 @@ pub async fn monitor_address_balance(account_handle: AccountHandle, addresses: V
             .into_iter()
             .map(|address| Topic::new(format!("addresses/{}/outputs", address.to_bech32())).unwrap())
             .collect(),
-        account_handle.is_monitoring.clone(),
         move |topic_event| {
             log::info!("[MQTT] got {:?}", topic_event);
             if account_handle.is_mqtt_enabled() {
@@ -155,14 +140,13 @@ async fn process_output(payload: String, account_handle: AccountHandle) -> crate
                 }
             }
             None => {
-                if let Ok(message) =
-                    crate::client::get_client(account.client_options(), Some(account_handle.is_monitoring.clone()))
-                        .await?
-                        .read()
-                        .await
-                        .get_message()
-                        .data(&output.message_id)
-                        .await
+                if let Ok(message) = crate::client::get_client(account.client_options())
+                    .await?
+                    .read()
+                    .await
+                    .get_message()
+                    .data(&output.message_id)
+                    .await
                 {
                     let message = Message::from_iota_message(
                         output.message_id,
@@ -199,10 +183,10 @@ async fn process_output(payload: String, account_handle: AccountHandle) -> crate
                         .inputs()
                         .iter()
                         .map(|input| match input {
-                            TransactionInput::UTXO(i) => i.metadata.as_ref().map(|m| m.address.clone()),
+                            TransactionInput::Utxo(i) => i.metadata.as_ref().map(|m| m.address.clone()),
                             _ => unimplemented!(),
                         })
-                        .filter_map(|address| address)
+                        .flatten()
                         .collect();
                     let mut addresses = output_addresses;
                     addresses.extend(input_addresses);
