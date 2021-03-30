@@ -7,7 +7,13 @@ use iota_wallet::{
     message::MessageId,
     signing::SignerType,
 };
-use std::{cell::RefCell, num::NonZeroU64, path::PathBuf, rc::Rc, time::Duration};
+use std::{
+    cell::RefCell,
+    num::NonZeroU64,
+    path::{Path, PathBuf},
+    rc::Rc,
+    time::Duration,
+};
 
 use crate::{
     acc::{Account, AccountInitialiser},
