@@ -86,7 +86,7 @@ impl AddressOutput {
                 match m.payload() {
                     Some(MessagePayload::Transaction(tx)) => match tx.essence() {
                         TransactionEssence::Regular(essence) => essence.inputs().iter().any(|input| {
-                            if let TransactionInput::UTXO(x) = input {
+                            if let TransactionInput::Utxo(x) = input {
                                 x.input == output_id
                             } else {
                                 false
