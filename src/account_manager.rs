@@ -68,9 +68,9 @@ enum ManagerStorage {
     Sqlite,
 }
 
-fn storage_file_path(storage: &ManagerStorage, storage_path: &PathBuf) -> PathBuf {
+fn storage_file_path(storage: &ManagerStorage, storage_path: &Path) -> PathBuf {
     if storage_path.is_file() || storage_path.extension().is_some() {
-        storage_path.clone()
+        storage_path.to_path_buf()
     } else {
         match storage {
             ManagerStorage::Stronghold => storage_path.join(STRONGHOLD_FILENAME),
@@ -307,10 +307,7 @@ impl AccountManager {
         AccountManagerBuilder::new()
     }
 
-    async fn load_accounts(
-        storage_file_path: &PathBuf,
-        account_options: AccountOptions,
-    ) -> crate::Result<AccountStore> {
+    async fn load_accounts(storage_file_path: &Path, account_options: AccountOptions) -> crate::Result<AccountStore> {
         let parsed_accounts = Arc::new(RwLock::new(HashMap::new()));
 
         let accounts = crate::storage::get(&storage_file_path)
@@ -1309,7 +1306,7 @@ async fn poll(
 
 async fn discover_accounts(
     accounts: AccountStore,
-    storage_path: &PathBuf,
+    storage_path: &Path,
     client_options: &ClientOptions,
     signer_type: Option<SignerType>,
     account_options: AccountOptions,
@@ -1320,7 +1317,7 @@ async fn discover_accounts(
         let mut account_initialiser = AccountInitialiser::new(
             client_options.clone(),
             accounts.clone(),
-            storage_path.clone(),
+            storage_path.to_path_buf(),
             account_options,
         )
         .skip_persistence()

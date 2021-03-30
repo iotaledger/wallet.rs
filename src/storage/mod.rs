@@ -318,30 +318,30 @@ pub(crate) async fn set<P: AsRef<Path>>(
     );
 }
 
-pub(crate) async fn remove(storage_path: &PathBuf) -> String {
+pub(crate) async fn remove(storage_path: &Path) -> String {
     let mut instances = INSTANCES.get_or_init(Default::default).write().await;
     let storage = instances.remove(storage_path);
     storage.unwrap().lock().await.id().to_string()
 }
 
-pub(crate) async fn set_encryption_key(storage_path: &PathBuf, encryption_key: [u8; 32]) -> crate::Result<()> {
+pub(crate) async fn set_encryption_key(storage_path: &Path, encryption_key: [u8; 32]) -> crate::Result<()> {
     let instances = INSTANCES.get_or_init(Default::default).read().await;
     if let Some(instance) = instances.get(storage_path) {
         let mut storage_manager = instance.lock().await;
         storage_manager.storage.encryption_key.replace(encryption_key);
         Ok(())
     } else {
-        Err(crate::Error::StorageAdapterNotSet(storage_path.clone()))
+        Err(crate::Error::StorageAdapterNotSet(storage_path.to_path_buf()))
     }
 }
 
 /// gets the storage adapter
-pub(crate) async fn get(storage_path: &PathBuf) -> crate::Result<StorageHandle> {
+pub(crate) async fn get(storage_path: &Path) -> crate::Result<StorageHandle> {
     let instances = INSTANCES.get_or_init(Default::default).read().await;
     if let Some(instance) = instances.get(storage_path) {
         Ok(instance.clone())
     } else {
-        Err(crate::Error::StorageAdapterNotSet(storage_path.clone()))
+        Err(crate::Error::StorageAdapterNotSet(storage_path.to_path_buf()))
     }
 }
 
@@ -413,7 +413,7 @@ pub(crate) fn decrypt_record(record: &str, encryption_key: &[u8; 32]) -> crate::
 }
 
 fn parse_accounts(
-    storage_path: &PathBuf,
+    storage_path: &Path,
     accounts: &[String],
     encryption_key: &Option<[u8; 32]>,
 ) -> crate::Result<Vec<Account>> {
@@ -437,7 +437,7 @@ fn parse_accounts(
             if let Some(json) = account_json {
                 match serde_json::from_str::<Account>(&json) {
                     Ok(mut acc) => {
-                        acc.set_storage_path(storage_path.clone());
+                        acc.set_storage_path(storage_path.to_path_buf());
                         Some(acc)
                     }
                     Err(e) => {
@@ -484,7 +484,7 @@ mod tests {
 
         let path = "./the-storage-path";
         super::set(path, None, Box::new(MyAdapter {})).await;
-        let adapter = super::get(&std::path::PathBuf::from(path)).await.unwrap();
+        let adapter = super::get(&PathBuf::from(path)).await.unwrap();
         let adapter = adapter.lock().await;
         assert_eq!(adapter.get("").await.unwrap(), "MY_ADAPTER_GET_RESPONSE".to_string());
     }
@@ -495,7 +495,7 @@ mod tests {
         assert!(response.is_err());
     }
 
-    async fn _create_account() -> (std::path::PathBuf, crate::account::AccountHandle) {
+    async fn _create_account() -> (PathBuf, crate::account::AccountHandle) {
         let manager = crate::test_utils::get_account_manager().await;
 
         let client_options = crate::client::ClientOptionsBuilder::new()

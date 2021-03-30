@@ -330,9 +330,9 @@ impl<'de> Deserialize<'de> for Api {
     }
 }
 
-impl Into<iota::Api> for Api {
-    fn into(self) -> iota::Api {
-        match self {
+impl From<Api> for iota::Api {
+    fn from(api: Api) -> iota::Api {
+        match api {
             Api::GetTips => iota::Api::GetTips,
             Api::PostMessage => iota::Api::PostMessage,
             Api::GetOutput => iota::Api::GetOutput,
@@ -351,13 +351,13 @@ pub struct BrokerOptions {
     pub timeout: Option<Duration>,
 }
 
-impl Into<iota::BrokerOptions> for BrokerOptions {
-    fn into(self) -> iota::BrokerOptions {
+impl From<BrokerOptions> for iota::BrokerOptions {
+    fn from(value: BrokerOptions) -> iota::BrokerOptions {
         let mut options = iota::BrokerOptions::new();
-        if let Some(automatic_disconnect) = self.automatic_disconnect {
+        if let Some(automatic_disconnect) = value.automatic_disconnect {
             options = options.automatic_disconnect(automatic_disconnect);
         }
-        if let Some(timeout) = self.timeout {
+        if let Some(timeout) = value.timeout {
             options = options.timeout(timeout);
         }
         options

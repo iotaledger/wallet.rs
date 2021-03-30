@@ -1,7 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{collections::HashMap, path::PathBuf, sync::Arc};
+use std::{collections::HashMap, path::Path, sync::Arc};
 
 use crate::{
     account::Account,
@@ -76,7 +76,7 @@ pub struct SignMessageMetadata<'a> {
 #[async_trait::async_trait]
 pub trait Signer {
     /// Initialises a mnemonic.
-    async fn store_mnemonic(&mut self, storage_path: &PathBuf, mnemonic: String) -> crate::Result<()>;
+    async fn store_mnemonic(&mut self, storage_path: &Path, mnemonic: String) -> crate::Result<()>;
     /// Generates an address.
     async fn generate_address(
         &mut self,

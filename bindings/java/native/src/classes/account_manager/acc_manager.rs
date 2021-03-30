@@ -126,7 +126,7 @@ pub struct AccountManager {
 }
 
 impl AccountManager {
-    pub fn storage_path(&self) -> &PathBuf {
+    pub fn storage_path(&self) -> &Path {
         self.manager.storage_path()
     }
 
