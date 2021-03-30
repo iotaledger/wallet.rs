@@ -125,7 +125,7 @@ impl AccountManagerBuilder {
     pub fn with_storage(mut self, storage_path: impl AsRef<Path>, password: Option<&str>) -> crate::Result<Self> {
         self.storage_path = storage_path.as_ref().to_path_buf();
         self.storage_encryption_key = password.map(|p| storage_password_to_encryption_key(p));
-      
+
         Ok(self)
     }
 
@@ -1739,7 +1739,7 @@ mod tests {
                 .expect("failed to add account");
 
             let account_get_res = manager.get_account(account_handle.read().await.id()).await;
-            assert!(account_get_res.is_err(), true);
+            assert!(account_get_res.is_err(), "{}", true);
             match account_get_res.unwrap_err() {
                 crate::Error::RecordNotFound => {}
                 _ => panic!("unexpected get_account response; expected RecordNotFound"),
@@ -1814,7 +1814,7 @@ mod tests {
                 .unwrap();
             assert!(
                 super::storage_file_path(&ManagerStorage::Stronghold, manager.storage_path()).exists(),
-                true
+                "{}", true
             );
 
             let imported_account = manager.get_account(account_handle.read().await.id()).await.unwrap();
@@ -1890,7 +1890,7 @@ mod tests {
             }
             assert!(
                 manager.get_balance_change_event_count(None).await.unwrap() == change_events.len(),
-                true
+                "{}", true
             );
             for (take, skip) in &[(2, 0), (2, 2)] {
                 let found = manager
@@ -1906,7 +1906,7 @@ mod tests {
                     .skip(*skip)
                     .take(*take)
                     .collect::<Vec<BalanceChange>>();
-                assert!(found == expected, true);
+                assert!(found == expected, "{}", true);
             }
         })
         .await;
@@ -1937,7 +1937,7 @@ mod tests {
             assert!(
                 manager.get_transaction_confirmation_event_count(None).await.unwrap()
                     == confirmation_change_events.len(),
-                true
+                "{}", true
             );
             for (take, skip) in &[(2, 0), (2, 2)] {
                 let found = manager
@@ -1953,7 +1953,7 @@ mod tests {
                     .skip(*skip)
                     .take(*take)
                     .collect::<Vec<(Message, bool)>>();
-                assert!(found == expected, true);
+                assert!(found == expected, "{}", true);
             }
         })
         .await;
@@ -1980,7 +1980,7 @@ mod tests {
             }
             assert!(
                 manager.get_reattachment_event_count(None).await.unwrap() == reattachment_events.len(),
-                true
+                "{}", true
             );
             for (take, skip) in &[(2, 0), (2, 2)] {
                 let found = manager
@@ -1996,7 +1996,7 @@ mod tests {
                     .skip(*skip)
                     .take(*take)
                     .collect::<Vec<Message>>();
-                assert!(found == expected, true);
+                assert!(found == expected, "{}", true);
             }
         })
         .await;
@@ -2021,7 +2021,7 @@ mod tests {
                                 .await
                                 .unwrap();
                         }
-                        assert!(manager.$count_get_fn(None).await.unwrap() == events.len(), true);
+                        assert!(manager.$count_get_fn(None).await.unwrap() == events.len(), "{}", true);
                         for (take, skip) in &[(2, 0), (2, 2)] {
                             let found = manager
                                 .$get_fn(*take, *skip, None)
@@ -2036,7 +2036,7 @@ mod tests {
                                 .skip(*skip)
                                 .take(*take)
                                 .collect::<Vec<Message>>();
-                            assert!(found == expected, true);
+                            assert!(found == expected, "{}", true);
                         }
                     },
                 )

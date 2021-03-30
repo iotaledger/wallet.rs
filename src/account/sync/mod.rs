@@ -82,7 +82,7 @@ async fn get_address_outputs(
             .collect();
 
         let mut outputs: Vec<(UTXOInput, bool)> = unspent_address_outputs
-            .into_iter()
+            .iter()
             .map(|o| (o.clone(), false))
             .collect();
         outputs.extend(spent_address_outputs);
