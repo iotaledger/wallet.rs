@@ -370,13 +370,14 @@ impl AccountManager {
     /// Creates the bundle for migration associated with the given input indexes,
     /// Performs bundle mining if the address is spent and `mine` is true,
     /// And signs the bundle. Returns the bundle hash.
-    pub async fn create_migration_bundle<P: AsRef<Path>>(
+    /// It logs the operations to `$storage_path.join(log_file_name)`.
+    pub async fn create_migration_bundle(
         &mut self,
         seed: &str,
         input_address_indexes: &[u64],
         mine: bool,
         timeout: Duration,
-        log_file_path: P,
+        log_file_name: &str,
     ) -> crate::Result<MigrationBundle> {
         let mut hasher = DefaultHasher::new();
         seed.hash(&mut hasher);
@@ -410,7 +411,7 @@ impl AccountManager {
             address_inputs,
             mine,
             timeout,
-            log_file_path,
+            self.storage_folder.join(log_file_name),
         )
         .await?;
         let crackability = bundle_data.crackability;

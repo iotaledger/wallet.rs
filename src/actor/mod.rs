@@ -243,7 +243,7 @@ impl WalletMessageHandler {
                 input_address_indexes,
                 mine,
                 timeout_secs,
-                log_file_path,
+                log_file_name,
             } => {
                 convert_async_panics(|| async {
                     let bundle = self
@@ -253,7 +253,7 @@ impl WalletMessageHandler {
                             &input_address_indexes,
                             *mine,
                             Duration::from_secs(*timeout_secs),
-                            log_file_path,
+                            &log_file_name,
                         )
                         .await?;
                     seed.zeroize();
