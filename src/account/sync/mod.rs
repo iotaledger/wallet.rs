@@ -1112,7 +1112,7 @@ impl SyncedAccount {
                             transfers.push(
                                 Transfer::builder(
                                     address.address().clone(),
-                                    NonZeroU64::new(address.available_balance(&account)).unwrap(),
+                                    NonZeroU64::new(outputs.iter().map(|o| o.amount).sum()).unwrap(),
                                 )
                                 .with_input(
                                     address.address().clone(),
