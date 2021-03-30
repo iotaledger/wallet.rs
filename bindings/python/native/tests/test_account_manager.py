@@ -153,7 +153,8 @@ def test_account_manager_backup_and_restore():
     backup_dir_path = pat['backup_restore']['backup_dir_path']
     if not os.path.exists(backup_dir_path):
         os.makedirs(backup_dir_path)
-    backup_file_path = manager.backup(backup_dir_path)
+    backup_file_path = manager.backup(
+        backup_dir_path, pat['backup_restore']['account_manager']['password'])
 
     # Restore
     manager = iw.AccountManager(

@@ -47,6 +47,7 @@
         },
         "account_manager": {
             "storage_path": "./david-database",
+            "store_mnemonic": "Stronghold",
             "password": "password"
         },
         "signer_type": "Stronghold",
