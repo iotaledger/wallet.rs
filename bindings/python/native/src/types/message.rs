@@ -42,7 +42,7 @@ use std::{
 pub const MILESTONE_MERKLE_PROOF_LENGTH: usize = 32;
 pub const MILESTONE_PUBLIC_KEY_LENGTH: usize = 32;
 
-type Bech32HRP = String;
+type Bech32Hrp = String;
 
 #[derive(Debug, Clone, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct WalletAddressOutput {
@@ -194,7 +194,7 @@ impl TryFrom<RustWalletTransactionEssence> for Essence {
                     .iter()
                     .cloned()
                     .map(|input| {
-                        if let RustWalletInput::UTXO(input) = input {
+                        if let RustWalletInput::Utxo(input) = input {
                             Input {
                                 transaction_id: input.input.output_id().transaction_id().to_string(),
                                 index: input.input.output_id().index(),
@@ -460,7 +460,7 @@ impl TryFrom<UnlockBlock> for RustUnlockBlock {
 pub async fn to_rust_payload(
     message_id: &MessageId,
     payload: Payload,
-    bech32_hrp: Bech32HRP,
+    bech32_hrp: Bech32Hrp,
     accounts: AccountStore,
     account_id: &str,
     account_addresses: &[RustWalletAddress],

@@ -183,10 +183,10 @@ async fn process_output(payload: String, account_handle: AccountHandle) -> crate
                         .inputs()
                         .iter()
                         .map(|input| match input {
-                            TransactionInput::UTXO(i) => i.metadata.as_ref().map(|m| m.address.clone()),
+                            TransactionInput::Utxo(i) => i.metadata.as_ref().map(|m| m.address.clone()),
                             _ => unimplemented!(),
                         })
-                        .filter_map(|address| address)
+                        .flatten()
                         .collect();
                     let mut addresses = output_addresses;
                     addresses.extend(input_addresses);

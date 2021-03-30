@@ -100,7 +100,7 @@ async fn wait_for_message_confirmation(client: &Client, message_id: MessageId) {
             if state == &LedgerInclusionStateDto::Included {
                 break;
             } else {
-                panic!(format!("message wasn't confirmed; {:?}", metadata));
+                panic!("message wasn't confirmed; {:?}", metadata);
             }
         } else {
             tokio::time::sleep(Duration::from_secs(2)).await;

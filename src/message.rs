@@ -147,7 +147,7 @@ impl TransferBuilder {
 
     /// (Optional) message indexation.
     pub fn with_indexation(mut self, indexation: IndexationPayload) -> Self {
-        self.indexation = Some(indexation);
+        self.indexation.replace(indexation);
         self
     }
 
@@ -351,7 +351,7 @@ impl TransactionOutput {
 
 /// UTXO input.
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
-pub struct TransactionUTXOInput {
+pub struct TransactionUtxoInput {
     /// UTXO input.
     pub input: UTXOInput,
     /// Metadata.
@@ -363,7 +363,7 @@ pub struct TransactionUTXOInput {
 #[serde(tag = "type", content = "data")]
 pub enum TransactionInput {
     /// UTXO input.
-    UTXO(TransactionUTXOInput),
+    Utxo(TransactionUtxoInput),
     /// Treasury input.
     Treasury(TreasuryInput),
 }
@@ -431,7 +431,7 @@ impl TransactionRegularEssence {
                         let mut output = None;
                         for address in metadata.account_addresses {
                             if let Some(found_output) = address.outputs().get(i.output_id()) {
-                                output = Some(found_output.clone());
+                                output.replace(found_output.clone());
                                 break;
                             }
                         }
@@ -448,7 +448,7 @@ impl TransactionRegularEssence {
                             }
                         }
                     };
-                    TransactionInput::UTXO(TransactionUTXOInput { input: i, metadata })
+                    TransactionInput::Utxo(TransactionUtxoInput { input: i, metadata })
                 }
                 Input::Treasury(treasury) => TransactionInput::Treasury(treasury),
                 _ => unimplemented!(),
@@ -502,7 +502,7 @@ impl TransactionRegularEssence {
 
                         // if the output is listed on the inputs, it's the remainder output.
                         if inputs.iter().any(|input| match input {
-                            TransactionInput::UTXO(input) => {
+                            TransactionInput::Utxo(input) => {
                                 if let Some(metadata) = &input.metadata {
                                     &metadata.address().as_ref() == output_address
                                 } else {
@@ -511,7 +511,7 @@ impl TransactionRegularEssence {
                             }
                             _ => false,
                         }) {
-                            remainder = Some(account_address);
+                            remainder.replace(account_address);
                             break;
                         }
                         match remainder {
@@ -522,11 +522,11 @@ impl TransactionRegularEssence {
                                 if address_index > *remainder_address.key_index()
                                     || (address_index == *remainder_address.key_index() && *account_address.internal())
                                 {
-                                    remainder = Some(account_address);
+                                    remainder.replace(account_address);
                                 }
                             }
                             None => {
-                                remainder = Some(account_address);
+                                remainder.replace(account_address);
                             }
                         }
                     }
@@ -540,7 +540,7 @@ impl TransactionRegularEssence {
                     }
                 } else {
                     let sent = inputs.iter().any(|i| match i {
-                        TransactionInput::UTXO(input) => match input.metadata {
+                        TransactionInput::Utxo(input) => match input.metadata {
                             Some(ref input_metadata) => metadata
                                 .account_addresses
                                 .iter()
@@ -592,7 +592,7 @@ impl TransactionRegularEssence {
         };
 
         let sent = essence.inputs().iter().any(|i| match i {
-            TransactionInput::UTXO(input) => match input.metadata {
+            TransactionInput::Utxo(input) => match input.metadata {
                 Some(ref input_metadata) => metadata
                     .account_addresses
                     .iter()
@@ -806,7 +806,7 @@ fn transaction_inputs_belonging_to_account(
 ) -> Vec<TransactionInput> {
     let mut inputs = Vec::new();
     for input in essence.inputs() {
-        if let TransactionInput::UTXO(i) = input {
+        if let TransactionInput::Utxo(i) = input {
             if let Some(metadata) = &i.metadata {
                 if account_addresses
                     .iter()

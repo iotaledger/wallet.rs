@@ -121,7 +121,7 @@ fn convert_urls(urls: &[&str]) -> crate::Result<Vec<Url>> {
         .iter()
         .map(|node| {
             Url::parse(node).map(Some).unwrap_or_else(|e| {
-                err = Some(e);
+                err.replace(e);
                 None
             })
         })
@@ -212,13 +212,13 @@ impl ClientOptionsBuilder {
     /// let client_options = ClientOptionsBuilder::new().with_network("testnet2").build();
     /// ```
     pub fn with_network<N: Into<String>>(mut self, network: N) -> Self {
-        self.network = Some(network.into());
+        self.network.replace(network.into());
         self
     }
 
     /// Set the node sync interval
     pub fn with_node_sync_interval(mut self, node_sync_interval: Duration) -> Self {
-        self.node_sync_interval = Some(node_sync_interval);
+        self.node_sync_interval.replace(node_sync_interval);
         self
     }
 
@@ -231,7 +231,7 @@ impl ClientOptionsBuilder {
 
     /// Sets the MQTT broker options.
     pub fn with_mqtt_mqtt_broker_options(mut self, options: BrokerOptions) -> Self {
-        self.mqtt_broker_options = Some(options);
+        self.mqtt_broker_options.replace(options);
         self
     }
 
@@ -243,7 +243,7 @@ impl ClientOptionsBuilder {
 
     /// Sets the request timeout.
     pub fn with_request_timeout(mut self, timeout: Duration) -> Self {
-        self.request_timeout = Some(timeout);
+        self.request_timeout.replace(timeout);
         self
     }
 
@@ -330,9 +330,9 @@ impl<'de> Deserialize<'de> for Api {
     }
 }
 
-impl Into<iota::Api> for Api {
-    fn into(self) -> iota::Api {
-        match self {
+impl From<Api> for iota::Api {
+    fn from(api: Api) -> iota::Api {
+        match api {
             Api::GetTips => iota::Api::GetTips,
             Api::PostMessage => iota::Api::PostMessage,
             Api::GetOutput => iota::Api::GetOutput,
@@ -351,13 +351,13 @@ pub struct BrokerOptions {
     pub timeout: Option<Duration>,
 }
 
-impl Into<iota::BrokerOptions> for BrokerOptions {
-    fn into(self) -> iota::BrokerOptions {
+impl From<BrokerOptions> for iota::BrokerOptions {
+    fn from(value: BrokerOptions) -> iota::BrokerOptions {
         let mut options = iota::BrokerOptions::new();
-        if let Some(automatic_disconnect) = self.automatic_disconnect {
+        if let Some(automatic_disconnect) = value.automatic_disconnect {
             options = options.automatic_disconnect(automatic_disconnect);
         }
-        if let Some(timeout) = self.timeout {
+        if let Some(timeout) = value.timeout {
             options = options.timeout(timeout);
         }
         options
