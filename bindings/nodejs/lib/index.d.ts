@@ -82,7 +82,6 @@ export declare interface Message {
 
 export declare interface Address {
   address: string;
-  balance: number;
   keyIndex: number;
 }
 
@@ -131,6 +130,7 @@ export declare class RemainderValueStrategy {
 export declare class TransferOptions {
   remainderValueStrategy?: RemainderValueStrategy
   indexation?: { index: string | number[] | Uint8Array, data?: string | number[] | Uint8Array }
+  skipSync?: boolean
 }
 
 export declare class SyncedAccount { }
@@ -167,14 +167,8 @@ export declare interface AccountToCreate {
   skipPersistence?: boolean;
 }
 
-export declare enum StorageType {
-  Sqlite,
-  Stronghold
-}
-
 export declare interface ManagerOptions {
   storagePath?: string
-  storageType?: StorageType
   storagePassword?: string
   outputConsolidationThreshold?: number
   automaticOutputConsolidation?: boolean

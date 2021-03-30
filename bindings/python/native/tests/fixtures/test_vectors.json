@@ -13,7 +13,6 @@
             }
         },
         "account_manager": {
-            "storage": "Stronghold",
             "storage_path": "./alice-database",
             "password": "password",
             "store_mnemonic": "Stronghold"
@@ -22,7 +21,6 @@
         "message_id": "f541e53e98ccffdd94036f08af07f9eb060449ee7838c2279f230acc933de6d8",
         "backup_restore": {
             "account_manager": {
-                "storage": "Stronghold",
                 "storage_path": "./alice-database",
                 "storage_path_backup": "./alice-database_backup",
                 "storage_path_2nd_backup": "./alice-database_2nd_backup",
@@ -48,10 +46,8 @@
             }
         },
         "account_manager": {
-            "storage": "Stronghold",
             "storage_path": "./david-database",
-            "password": "password",
-            "store_mnemonic": "Stronghold"
+            "password": "password"
         },
         "signer_type": "Stronghold",
         "alias": "David"

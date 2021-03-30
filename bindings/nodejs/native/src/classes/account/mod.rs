@@ -28,6 +28,8 @@ struct TransferOptions {
     #[serde(rename = "remainderValueStrategy", default)]
     remainder_value_strategy: RemainderValueStrategy,
     indexation: Option<IndexationDto>,
+    #[serde(rename = "skipSync", default)]
+    skip_sync: bool,
 }
 
 pub struct AccountWrapper(pub String);
@@ -332,6 +334,9 @@ declare_types! {
                 transfer_builder = transfer_builder.with_indexation(
                     IndexationPayload::new(&indexation.index, &indexation.data.unwrap_or_default()).expect("index can't be empty")
                 );
+            }
+            if options.skip_sync {
+                transfer_builder = transfer_builder.with_skip_sync();
             }
 
             let this = cx.this();

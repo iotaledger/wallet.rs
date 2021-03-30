@@ -107,7 +107,6 @@ pub struct AccountInitialiser {
     accounts: AccountStore,
     storage_path: PathBuf,
     account_options: AccountOptions,
-    is_monitoring: Arc<AtomicBool>,
     alias: Option<String>,
     created_at: Option<DateTime<Local>>,
     messages: Vec<Message>,
@@ -126,13 +125,11 @@ impl AccountInitialiser {
         accounts: AccountStore,
         storage_path: PathBuf,
         account_options: AccountOptions,
-        is_monitoring: Arc<AtomicBool>,
     ) -> Self {
         Self {
             accounts,
             storage_path,
             account_options,
-            is_monitoring,
             alias: None,
             created_at: None,
             messages: vec![],
@@ -226,7 +223,7 @@ impl AccountInitialiser {
                 latest_account_handle = Some(account_handle.clone());
             }
         }
-        if let Some(latest_account_handle) = latest_account_handle {
+        if let Some(ref latest_account_handle) = latest_account_handle {
             let latest_account = latest_account_handle.read().await;
             if latest_account.messages().is_empty() && latest_account.addresses().iter().all(|a| a.outputs.is_empty()) {
                 return Err(crate::Error::LatestAccountIsEmpty);
@@ -249,25 +246,45 @@ impl AccountInitialiser {
             skip_persistence: self.skip_persistence,
         };
 
-        let bech32_hrp = crate::client::get_client(&account.client_options, Some(self.is_monitoring.clone()))
-            .await?
-            .read()
-            .await
-            .get_network_info()
-            .await
-            .map_err(|e| match e {
-                iota::client::Error::SyncedNodePoolEmpty => crate::Error::NodesNotSynced(
-                    account
-                        .client_options
-                        .nodes()
-                        .iter()
-                        .map(|node| node.url.as_str())
-                        .collect::<Vec<&str>>()
-                        .join(", "),
-                ),
-                _ => e.into(),
-            })?
-            .bech32_hrp;
+        let bech32_hrp = match account.client_options.network().as_deref() {
+            Some("testnet") => "atoi".to_string(),
+            Some("mainnet") => "iota".to_string(),
+            _ => {
+                let client_options = account.client_options.clone();
+                let get_from_client_task = async {
+                    let hrp = crate::client::get_client(&client_options)
+                        .await?
+                        .read()
+                        .await
+                        .get_network_info()
+                        .await
+                        .map_err(|e| match e {
+                            iota::client::Error::SyncedNodePoolEmpty => crate::Error::NodesNotSynced(
+                                client_options
+                                    .nodes()
+                                    .iter()
+                                    .map(|node| node.url.as_str())
+                                    .collect::<Vec<&str>>()
+                                    .join(", "),
+                            ),
+                            _ => e.into(),
+                        })?
+                        .bech32_hrp;
+                    crate::Result::Ok(hrp)
+                };
+                match latest_account_handle {
+                    Some(handle) => {
+                        let latest_account = handle.read().await;
+                        if latest_account.client_options == account.client_options {
+                            latest_account.bech32_hrp()
+                        } else {
+                            get_from_client_task.await?
+                        }
+                    }
+                    None => get_from_client_task.await?,
+                }
+            }
+        };
 
         for address in account.addresses.iter_mut() {
             address.set_bech32_hrp(bech32_hrp.to_string());
@@ -294,7 +311,6 @@ impl AccountInitialiser {
                         .key_index(0)
                         .internal(false)
                         .outputs(Vec::new())
-                        .balance(0)
                         .build()
                         .unwrap(), // safe to unwrap since we provide all required fields
                 );
@@ -311,21 +327,11 @@ impl AccountInitialiser {
         account.set_id(format!("{}{}", ACCOUNT_ID_PREFIX, hex::encode(digest)));
 
         let guard = if self.skip_persistence {
-            AccountHandle::new(
-                account,
-                self.accounts.clone(),
-                self.account_options,
-                self.is_monitoring.clone(),
-            )
+            AccountHandle::new(account, self.accounts.clone(), self.account_options)
         } else {
             account.save().await?;
             let account_id = account.id().clone();
-            let guard = AccountHandle::new(
-                account,
-                self.accounts.clone(),
-                self.account_options,
-                self.is_monitoring.clone(),
-            );
+            let guard = AccountHandle::new(account, self.accounts.clone(), self.account_options);
             drop(accounts);
             self.accounts.write().await.insert(account_id, guard.clone());
             let _ = crate::monitor::monitor_account_addresses_balance(guard.clone()).await;
@@ -358,12 +364,9 @@ pub struct Account {
     #[getset(set = "pub(crate)")]
     last_synced_at: Option<DateTime<Local>>,
     /// Messages associated with the seed.
-    /// The account can be initialised with locally stored messages.
-    #[getset(set = "pub")]
     messages: Vec<Message>,
     /// Address history associated with the seed.
-    /// The account can be initialised with locally stored address history.
-    #[getset(set = "pub")]
+    #[getset(set = "pub(crate)")]
     addresses: Vec<Address>,
     /// The client options.
     #[serde(rename = "clientOptions")]
@@ -383,23 +386,16 @@ pub struct AccountHandle {
     pub(crate) accounts: AccountStore,
     pub(crate) locked_addresses: Arc<Mutex<Vec<AddressWrapper>>>,
     pub(crate) account_options: AccountOptions,
-    pub(crate) is_monitoring: Arc<AtomicBool>,
     is_mqtt_enabled: Arc<AtomicBool>,
 }
 
 impl AccountHandle {
-    pub(crate) fn new(
-        account: Account,
-        accounts: AccountStore,
-        account_options: AccountOptions,
-        is_monitoring: Arc<AtomicBool>,
-    ) -> Self {
+    pub(crate) fn new(account: Account, accounts: AccountStore, account_options: AccountOptions) -> Self {
         Self {
             inner: Arc::new(RwLock::new(account)),
             accounts,
             locked_addresses: Default::default(),
             account_options,
-            is_monitoring,
             is_mqtt_enabled: Arc::new(AtomicBool::new(true)),
         }
     }
@@ -472,34 +468,42 @@ impl AccountHandle {
         AccountSynchronizer::new(self.clone()).await
     }
 
+    async fn sync_internal(&self) -> AccountSynchronizer {
+        AccountSynchronizer::new(self.clone()).await.skip_change_addresses()
+    }
+
     /// Consolidate account outputs.
     pub async fn consolidate_outputs(&self) -> crate::Result<Vec<Message>> {
-        self.sync().await.execute().await?.consolidate_outputs().await
+        self.sync_internal().await.execute().await?.consolidate_outputs().await
     }
 
     /// Send messages.
     pub async fn transfer(&self, transfer_obj: Transfer) -> crate::Result<Message> {
         let account_id = self.id().await;
-        transfer_obj
-            .emit_event_if_needed(account_id.clone(), TransferProgressType::SyncingAccount)
-            .await;
-        let synced = self.sync().await.execute().await?;
+        let synced = if transfer_obj.skip_sync {
+            SyncedAccount::from(self.clone()).await
+        } else {
+            transfer_obj
+                .emit_event_if_needed(account_id.clone(), TransferProgressType::SyncingAccount)
+                .await;
+            self.sync_internal().await.execute().await?
+        };
         synced.transfer(transfer_obj).await
     }
 
     /// Retry message.
     pub async fn retry(&self, message_id: &MessageId) -> crate::Result<Message> {
-        self.sync().await.execute().await?.retry(message_id).await
+        self.sync_internal().await.execute().await?.retry(message_id).await
     }
 
     /// Promote message.
     pub async fn promote(&self, message_id: &MessageId) -> crate::Result<Message> {
-        self.sync().await.execute().await?.promote(message_id).await
+        self.sync_internal().await.execute().await?.promote(message_id).await
     }
 
     /// Reattach message.
     pub async fn reattach(&self, message_id: &MessageId) -> crate::Result<Message> {
-        self.sync().await.execute().await?.reattach(message_id).await
+        self.sync_internal().await.execute().await?.reattach(message_id).await
     }
 
     /// Gets a new unused address and links it to this account.
@@ -532,16 +536,16 @@ impl AccountHandle {
         let handle = self.clone();
         crate::spawn(async move {
             // ignore errors because we fallback to the polling system
-            let _ = crate::monitor::monitor_address_balance(handle, &address).await;
+            let _ = crate::monitor::monitor_address_balance(handle, vec![address]).await;
         });
     }
 
     /// Synchronizes the account addresses with the Tangle and returns the latest address in the account,
     /// which is an address without balance.
     pub async fn get_unused_address(&self) -> crate::Result<Address> {
-        self.sync()
+        self.sync_internal()
             .await
-            .steps(vec![AccountSynchronizeStep::SyncAddresses])
+            .steps(vec![AccountSynchronizeStep::SyncAddresses(None)])
             .execute()
             .await?;
         // safe to clone since the `sync` guarantees a latest unused address
@@ -553,20 +557,24 @@ impl AccountHandle {
     /// Note that such address might have been used in the past, because the message history might have been pruned by
     /// the node.
     pub async fn is_latest_address_unused(&self) -> crate::Result<bool> {
-        let mut latest_address = self.latest_address().await;
+        let mut account = self.inner.write().await;
+        let client_options = account.client_options().clone();
+        let messages = account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
+        let latest_address = account.latest_address_mut();
         let bech32_hrp = latest_address.address().bech32_hrp().to_string();
-        let account = self.inner.read().await;
+        let address_wrapper = latest_address.address().clone();
         sync::sync_address(
-            account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect(),
-            account.client_options().clone(),
-            latest_address.outputs().clone(),
-            &mut latest_address,
+            messages,
+            &client_options,
+            latest_address.outputs_mut(),
+            address_wrapper,
             bech32_hrp,
             self.account_options,
-            self.is_monitoring.clone(),
         )
         .await?;
-        Ok(*latest_address.balance() == 0 && latest_address.outputs().is_empty())
+        let is_unused = latest_address.balance() == 0 && latest_address.outputs().is_empty();
+        account.save().await?;
+        Ok(is_unused)
     }
 
     /// Bridge to [Account#latest_address](struct.Account.html#method.latest_address).
@@ -686,6 +694,15 @@ impl Account {
             .unwrap()
     }
 
+    fn latest_address_mut(&mut self) -> &mut Address {
+        // the addresses list is never empty because we generate an address on the account creation
+        self.addresses
+            .iter_mut()
+            .filter(|a| !a.internal())
+            .max_by_key(|a| *a.key_index())
+            .unwrap()
+    }
+
     /// Gets the account balance information.
     pub fn balance(&self) -> AccountBalance {
         let (incoming, outgoing) = self.list_messages(0, 0, Some(MessageType::Confirmed)).iter().fold(
@@ -725,7 +742,7 @@ impl Account {
 
     /// Updates the account's client options.
     pub async fn set_client_options(&mut self, options: ClientOptions) -> crate::Result<()> {
-        let client_guard = crate::client::get_client(&options, None).await?;
+        let client_guard = crate::client::get_client(&options).await?;
         let client = client_guard.read().await;
 
         let unsynced_nodes = client.unsynced_nodes().await;
@@ -765,29 +782,25 @@ impl Account {
     ///
     /// # Example
     ///
-    /// ```
-    /// use iota_wallet::{account_manager::AccountManager, client::ClientOptionsBuilder, message::MessageType, signing::SignerType};
-    /// # use rand::{distributions::Alphanumeric, thread_rng, Rng};
+    /// ```no_run
+    /// use iota_wallet::{
+    ///     account_manager::AccountManager, client::ClientOptionsBuilder, message::MessageType, signing::SignerType,
+    /// };
     ///
     /// #[tokio::main]
     /// async fn main() {
-    ///     # let storage_path: String = thread_rng().sample_iter(&Alphanumeric).map(char::from).take(10).collect();
-    ///     # let storage_path = std::path::PathBuf::from(format!("./test-storage/{}", storage_path));
     ///     // gets 10 received messages, skipping the first 5 most recent messages.
     ///     let client_options = ClientOptionsBuilder::new()
     ///         .with_node("https://api.lb-0.testnet.chrysalis2.com")
     ///         .expect("invalid node URL")
     ///         .build()
     ///         .unwrap();
-    ///     let mut manager = AccountManager::builder().with_storage("./test-storage", ManagerStorage::Stronghold, None).unwrap().finish().await.unwrap();
-    ///     # use iota_wallet::account_manager::ManagerStorage;
-    ///     # #[cfg(all(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    ///     # let default_storage = ManagerStorage::Stronghold;
-    ///     # #[cfg(all(feature = "stronghold-storage", not(feature = "sqlite-storage")))]
-    ///     # let default_storage = ManagerStorage::Stronghold;
-    ///     # #[cfg(all(feature = "sqlite-storage", not(feature = "stronghold-storage")))]
-    ///     # let default_storage = ManagerStorage::Sqlite;
-    ///     # let mut manager = AccountManager::builder().with_storage(storage_path, default_storage, None).unwrap().finish().await.unwrap();
+    ///     let mut manager = AccountManager::builder()
+    ///         .with_storage("./test-storage", None)
+    ///         .unwrap()
+    ///         .finish()
+    ///         .await
+    ///         .unwrap();
     ///     manager.set_stronghold_password("password").await.unwrap();
     ///     manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
     ///
@@ -803,18 +816,9 @@ impl Account {
     /// ```
     pub fn list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<&Message> {
         let mut messages: Vec<&Message> = vec![];
-        for message in self.messages.iter() {
-            // if we already found a message with the same payload,
-            // this is a reattachment message
-            if let Some(original_message_index) = messages.iter().position(|m| m.payload() == message.payload()) {
-                let original_message = messages[original_message_index];
-                // if the original message was confirmed, we ignore this reattachment
-                if original_message.confirmed().unwrap_or(false) {
-                    continue;
-                } else {
-                    // remove the original message otherwise
-                    messages.remove(original_message_index);
-                }
+        for message in &self.messages {
+            if message.reattachment_message_id.is_some() {
+                continue;
             }
             let should_push = if let Some(message_type) = message_type.clone() {
                 match message_type {
@@ -896,6 +900,7 @@ impl Account {
             });
     }
 
+    #[cfg(test)]
     pub(crate) fn addresses_mut(&mut self) -> &mut Vec<Address> {
         &mut self.addresses
     }
@@ -1022,14 +1027,12 @@ mod tests {
         let first_address = AddressBuilder::new()
             .address(crate::test_utils::generate_random_iota_address())
             .key_index(0)
-            .balance(balance / 2_u64)
             .outputs(vec![_generate_address_output(balance / 2_u64)])
             .build()
             .unwrap();
         let second_address = AddressBuilder::new()
             .address(crate::test_utils::generate_random_iota_address())
             .key_index(1)
-            .balance(balance / 2_u64)
             .outputs(vec![_generate_address_output(balance / 2_u64)])
             .build()
             .unwrap();

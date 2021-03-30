@@ -3,11 +3,7 @@
 
 use iota::{bee_rest_api::types::dtos::LedgerInclusionStateDto, Client, ClientBuilder, MessageId};
 use iota_wallet::{
-    account_manager::{AccountManager, ManagerStorage},
-    address::Address,
-    client::ClientOptionsBuilder,
-    signing::SignerType,
-    Result,
+    account_manager::AccountManager, address::Address, client::ClientOptionsBuilder, signing::SignerType, Result,
 };
 use serde::Deserialize;
 
@@ -35,7 +31,7 @@ async fn main() -> Result<()> {
 
     // setup the account manager
     let mut manager = AccountManager::builder()
-        .with_storage(storage_path, ManagerStorage::Stronghold, None)?
+        .with_storage(storage_path, None)?
         .with_output_consolidation_threshold(OUTPUT_CONSOLIDATION_THRESHOLD)
         .with_automatic_output_consolidation_disabled()
         .finish()

@@ -18,7 +18,7 @@ created_time = int(datetime.datetime.now().timestamp())
 def test_account_manager_basic_operations():
     global account, manager
     manager = iw.AccountManager(
-        storage=pat['account_manager']['storage'], storage_path=pat['account_manager']['storage_path'])
+        storage_path=pat['account_manager']['storage_path'])
 
     # NOTE: In real use cases, it is necessary to get the password form the env variables or other safer ways!
     manager.set_stronghold_password(pat['account_manager']['password'])
@@ -144,7 +144,7 @@ def test_account_manager_backup_and_restore():
 
     # Backup
     manager = iw.AccountManager(
-        storage=pat['backup_restore']['account_manager']['store_mnemonic'], storage_path=pat['backup_restore']['account_manager']['storage_path'])
+        storage_path=pat['backup_restore']['account_manager']['storage_path'])
 
     # NOTE: In real use cases, it is necessary to get the password form the env variables or other safer ways!
     manager.set_stronghold_password(
@@ -157,7 +157,6 @@ def test_account_manager_backup_and_restore():
 
     # Restore
     manager = iw.AccountManager(
-        storage=pat['backup_restore']['account_manager']['storage'],
         storage_path=pat['backup_restore']['account_manager']['storage_path_backup'])
 
     # NOTE: In real use cases, it is necessary to get the password form the env variables or other safer ways!
@@ -172,7 +171,6 @@ def test_account_manager_backup_and_restore():
 
 def test_account_manager_set_storage_password():
     manager = iw.AccountManager(
-        storage=pat['backup_restore']['account_manager']['storage'],
         storage_path=pat['backup_restore']['account_manager']['storage_path_2nd_backup'])
 
     # NOTE: In real use cases, it is necessary to get the password form the env variables or other safer ways!

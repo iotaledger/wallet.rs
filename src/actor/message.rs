@@ -13,7 +13,7 @@ use chrono::{DateTime, Local};
 use serde::{ser::Serializer, Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
 
-use std::{num::NonZeroU64, time::Duration};
+use std::{num::NonZeroU64, path::PathBuf, time::Duration};
 
 /// An account to create.
 #[derive(Clone, Debug, Deserialize)]
@@ -123,38 +123,37 @@ pub enum MessageType {
         message_id: String,
     },
     /// Backup storage.
-    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))))]
-    Backup(String),
+    Backup {
+        /// The backup destination.
+        destination: PathBuf,
+        /// Stronghold file password.
+        password: String,
+    },
     /// Import accounts from storage.
-    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))))]
     RestoreBackup {
         /// The path to the backed up storage.
         #[serde(rename = "backupPath")]
         backup_path: String,
-        /// The backup stronghold password.
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-        #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+        /// Stronghold file password.
         password: String,
     },
     /// Sets the password used to encrypt/decrypt the storage.
     SetStoragePassword(String),
     /// Set stronghold snapshot password.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     SetStrongholdPassword(String),
     /// Sets the password clear interval.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     SetStrongholdPasswordClearInterval(Duration),
     /// Get stronghold status.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     GetStrongholdStatus,
     /// Lock the stronghold snapshot (clears password and unload snapshot from memory).
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     LockStronghold,
     /// Send funds.
     SendTransfer {
@@ -196,8 +195,8 @@ pub enum MessageType {
     /// Deletes the storage.
     DeleteStorage,
     /// Changes stronghold snapshot password.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     ChangeStrongholdPassword {
         /// The current stronghold password.
         #[serde(rename = "currentPassword")]
@@ -232,30 +231,30 @@ impl Serialize for MessageType {
                 account_id: _,
                 message_id: _,
             } => serializer.serialize_unit_variant("MessageType", 6, "Reattach"),
-            #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-            MessageType::Backup(_) => serializer.serialize_unit_variant("MessageType", 7, "Backup"),
-            #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
+            MessageType::Backup {
+                destination: _,
+                password: _,
+            } => serializer.serialize_unit_variant("MessageType", 7, "Backup"),
             MessageType::RestoreBackup {
                 backup_path: _,
-                #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-                    password: _,
+                password: _,
             } => serializer.serialize_unit_variant("MessageType", 8, "RestoreBackup"),
             MessageType::SetStoragePassword(_) => {
                 serializer.serialize_unit_variant("MessageType", 9, "SetStoragePassword")
             }
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             MessageType::SetStrongholdPassword(_) => {
                 serializer.serialize_unit_variant("MessageType", 10, "SetStrongholdPassword")
             }
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             MessageType::SetStrongholdPasswordClearInterval(_) => {
                 serializer.serialize_unit_variant("MessageType", 11, "SetStrongholdPasswordClearInterval")
             }
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             MessageType::GetStrongholdStatus => {
                 serializer.serialize_unit_variant("MessageType", 12, "GetStrongholdStatus")
             }
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             MessageType::LockStronghold => serializer.serialize_unit_variant("MessageType", 13, "LockStronghold"),
             MessageType::SendTransfer {
                 account_id: _,
@@ -278,7 +277,7 @@ impl Serialize for MessageType {
             #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
             MessageType::GetLedgerStatus(_) => serializer.serialize_unit_variant("MessageType", 20, "GetLedgerStatus"),
             MessageType::DeleteStorage => serializer.serialize_unit_variant("MessageType", 21, "DeleteStorage"),
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             MessageType::ChangeStrongholdPassword {
                 current_password: _,
                 new_password: _,
@@ -346,30 +345,26 @@ pub enum ResponseType {
     /// Reattach response.
     Reattached(String),
     /// Backup response.
-    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))))]
     BackupSuccessful,
     /// ImportAccounts response.
-    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))))]
     BackupRestored,
     /// SetStoragePassword response.
     StoragePasswordSet,
     /// SetStrongholdPassword response.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     StrongholdPasswordSet,
     /// SetStrongholdPasswordClearInterval response.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     StrongholdPasswordClearIntervalSet,
     /// GetStrongholdStatus response.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     StrongholdStatus(crate::stronghold::Status),
     /// LockStronghold response.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     LockedStronghold,
     /// SendTransfer and InternalTransfer response.
     SentTransfer(WalletMessage),
@@ -398,8 +393,8 @@ pub enum ResponseType {
     /// DeleteStorage response.
     DeletedStorage,
     /// ChangeStrongholdPassword response.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     StrongholdPasswordChanged,
     /// SetClientOptions response.
     UpdatedAllClientOptions,

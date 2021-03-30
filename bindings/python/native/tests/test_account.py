@@ -22,7 +22,7 @@ def test_account_initialiser():
     global manager, account
     pat = tv['account_initialiser']
     manager = iw.AccountManager(
-        storage=pat['account_manager']['storage'], storage_path=pat['account_manager']['storage_path'])
+        storage_path=pat['account_manager']['storage_path'])
 
     # NOTE: In real use cases, it is necessary to get the password form the env variables or other safer ways!
     manager.set_stronghold_password(pat['account_manager']['password'])
