@@ -81,6 +81,7 @@ Account.prototype.retry = promisify(Account.prototype.retry)
 Account.prototype.reattach = promisify(Account.prototype.reattach)
 Account.prototype.promote = promisify(Account.prototype.promote)
 Account.prototype.consolidateOutputs = promisify(Account.prototype.consolidateOutputs)
+Account.prototype.getNodeInfo = promisify(Account.prototype.getNodeInfo)
 
 AccountManager.prototype.syncAccounts = promisify(AccountManager.prototype.syncAccounts)
 AccountManager.prototype.internalTransfer = promisify(AccountManager.prototype.internalTransfer)

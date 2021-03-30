@@ -10,7 +10,7 @@ use chrono::prelude::{
 
 use crate::{
     jni_c_header::*,
-    bee_types::*,
+    types::*,
     acc::*,
     client_options::*,
     sync::*,
@@ -21,7 +21,7 @@ use crate::{
 };
 
 use anyhow::{
-    Result as Result,
+    Result,
     anyhow,
 };
 
@@ -279,6 +279,24 @@ foreign_class!(
         fn Message::nonce(&self) -> u64;
         fn Message::confirmed(&self) -> Option<bool>;
         fn Message::broadcasted(&self) -> bool;
+    }
+);
+
+foreign_class!(
+    #[derive(PartialEq)]
+    class InfoResponse {
+        self_type InfoResponse;
+        private constructor = empty;
+        private fn InfoResponse::eq(&self, o: &InfoResponse) -> bool; alias rustEq;
+        fn InfoResponse::name(&self) -> &str;
+        fn InfoResponse::version(&self) -> &str;
+        fn InfoResponse::network_id(&self) -> &str; alias networkId;
+        fn InfoResponse::bech32_hrp(&self) -> &str; alias bech32HRP;
+        fn InfoResponse::min_pow_score(&self) -> f64; alias minPoWScore;
+        fn InfoResponse::latest_milestone_index(&self) -> u32; alias latestMilestoneIndex;
+        fn InfoResponse::confirmed_milestone_index(&self) -> u32; alias confirmedMilestoneIndex;
+        fn InfoResponse::pruning_index(&self) -> u32; alias pruningIndex;
+        fn InfoResponse::features(&self) -> Vec<String>;
     }
 );
 

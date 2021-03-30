@@ -109,11 +109,25 @@ export declare interface AccountBalance {
   outgoing: number
 }
 
+export declare interface NodeInfo {
+  name: string
+  version: string
+  isHealthy: boolean
+  networkId: string
+  bech32HRP: string
+  minPoWScore: number
+  latestMilestoneIndex: number
+  confirmedMilestoneIndex: number
+  pruningIndex: number
+  features: string[]
+}
+
 export declare class Account {
   id(): string;
   index(): number;
   alias(): string;
   balance(): AccountBalance;
+  getNodeInfo(): Promise<NodeInfo>;
   messageCount(messageType?: MessageType): number;
   listMessages(count?: number, from?: number, messageType?: MessageType): Message[]
   listAddresses(unspent?: boolean): Address[]
