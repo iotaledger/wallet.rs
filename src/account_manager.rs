@@ -259,7 +259,7 @@ pub(crate) struct CachedMigrationData {
     permanode: Option<String>,
     security_level: u8,
     inputs: HashMap<Range<u64>, Vec<InputData>>,
-    bundled_input_indexes: Vec<usize>,
+    bundled_input_address_indexes: Vec<u64>,
 }
 
 /// Created migration bundle data.
@@ -350,7 +350,7 @@ impl AccountManager {
                 permanode: finder.permanode.map(|node| node.to_string()),
                 security_level: finder.security_level,
                 inputs: Default::default(),
-                bundled_input_indexes: Default::default(),
+                bundled_input_address_indexes: Default::default(),
             });
         let metadata = finder.finish(&mut stored_data.inputs).await?;
 
@@ -373,7 +373,7 @@ impl AccountManager {
     pub async fn create_migration_bundle<P: AsRef<Path>>(
         &mut self,
         seed: &str,
-        input_indexes: &[usize],
+        input_address_indexes: &[u64],
         mine: bool,
         timeout: Duration,
         log_file_path: P,
@@ -389,13 +389,17 @@ impl AccountManager {
             .get(&seed_hash)
             .ok_or(crate::Error::MigrationDataNotFound)?;
 
-        let all_inputs: Vec<InputData> = data.inputs.clone().into_iter().map(|(_, v)| v).flatten().collect();
         let mut address_inputs: Vec<&InputData> = Default::default();
-        for index in input_indexes {
-            if data.bundled_input_indexes.contains(index) {
+        for index in input_address_indexes {
+            if data.bundled_input_address_indexes.contains(index) {
                 return Err(crate::Error::InputAlreadyBundled(*index));
             }
-            address_inputs.push(all_inputs.get(*index).ok_or(crate::Error::InputNotFound)?);
+            for (_, inputs) in &data.inputs {
+                if let Some(input) = inputs.iter().find(|i| &i.index == index) {
+                    address_inputs.push(input);
+                    break;
+                }
+            }
         }
 
         let account_handle = self.get_account(0).await?;
@@ -415,7 +419,7 @@ impl AccountManager {
         self.cached_migration_bundles
             .insert(bundle_hash.clone(), bundle_data.bundle);
         let data = self.cached_migration_data.get_mut(&seed_hash).unwrap(); // safe to unwrap since we already validated it
-        data.bundled_input_indexes.extend(input_indexes);
+        data.bundled_input_address_indexes.extend(input_address_indexes);
 
         Ok(MigrationBundle {
             crackability,

@@ -228,9 +228,9 @@ pub enum MessageType {
     CreateMigrationBundle {
         /// The legacy seed.
         seed: String,
-        /// The bundle input indexes.
-        #[serde(rename = "inputIndexes")]
-        input_indexes: Vec<usize>,
+        /// The bundle input address indexes.
+        #[serde(rename = "inputAddressIndexes")]
+        input_address_indexes: Vec<u64>,
         /// Whether we should perform bundle mining or not.
         mine: bool,
         /// Timeout in seconds for the bundle mining process.
@@ -337,7 +337,7 @@ impl Serialize for MessageType {
             } => serializer.serialize_unit_variant("MessageType", 24, "GetMigrationData"),
             MessageType::CreateMigrationBundle {
                 seed: _,
-                input_indexes: _,
+                input_address_indexes: _,
                 mine: _,
                 timeout_secs: _,
                 log_file_path: _,

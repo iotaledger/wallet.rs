@@ -191,8 +191,8 @@ pub enum Error {
     #[error("input not found with the provided index")]
     InputNotFound,
     /// The provided input index was already bundled.
-    #[error("input with index {0} is already part of a created bundle")]
-    InputAlreadyBundled(usize),
+    #[error("input with address index {0} is already part of a created bundle")]
+    InputAlreadyBundled(u64),
     /// Empty input list on migration bundle creation.
     #[error("can't create migration bundle: input list is empty")]
     EmptyInputList,

@@ -240,7 +240,7 @@ impl WalletMessageHandler {
             }
             MessageType::CreateMigrationBundle {
                 seed,
-                input_indexes,
+                input_address_indexes,
                 mine,
                 timeout_secs,
                 log_file_path,
@@ -250,7 +250,7 @@ impl WalletMessageHandler {
                         .account_manager
                         .create_migration_bundle(
                             &seed,
-                            &input_indexes,
+                            &input_address_indexes,
                             *mine,
                             Duration::from_secs(*timeout_secs),
                             log_file_path,
