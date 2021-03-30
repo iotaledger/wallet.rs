@@ -38,9 +38,9 @@ slog = "2.7"
 iota-ledger = { git = "https://github.com/iotaledger/ledger.rs", branch = "develop", optional = true  }
 
 [dependencies.iota-crypto]
-features = ["random", "sha", "pbkdf", "hmac", "bip39", "bip39-en", "chacha", "blake2b", "slip10"]
 git = "https://github.com/iotaledger/crypto.rs"
 rev = "b849861b86c3f7357b7477de4253b7352b363627"
+features = ["random", "sha", "pbkdf", "hmac", "bip39", "bip39-en", "chacha", "blake2b", "slip10"]
 
 [dev-dependencies]
 anyhow = "1.0"
@@ -51,9 +51,6 @@ tokio = { version = "1.0", features = ["full"] }
 
 [features]
 default = ["stronghold"]
-stronghold = []
 ledger-nano = ["iota-ledger"]
 ledger-nano-simulator = ["iota-ledger"]
-sqlite-storage = ["rusqlite"]
-stronghold = ["iota-stronghold", "riker", "slog"]
-stronghold-storage = ["iota-stronghold", "riker", "slog"]
+stronghold = []
