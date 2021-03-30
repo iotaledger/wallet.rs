@@ -93,6 +93,17 @@ declare_types! {
             Ok(neon_serde::to_value(&mut cx, &balance)?.upcast())
         }
 
+        method get_node_indo(mut cx) {
+            let cb = cx.argument::<JsFunction>(0)?;
+            let this = cx.this();
+            let account_id = cx.borrow(&this, |r| r.0.clone());
+            let task = tasks::NodeInfoTask {
+                account_id,
+            };
+            task.schedule(cb);
+            Ok(cx.undefined().upcast())
+        }
+
         method messageCount(mut cx) {
             let message_type = match cx.argument_opt(0) {
                 Some(arg) => {

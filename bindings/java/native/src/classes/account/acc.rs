@@ -3,18 +3,18 @@
 
 use std::{cell::RefCell, rc::Rc};
 
-use iota_wallet::{
-    account::{AccountBalance, AccountHandle as AccountHandleRust, AccountInitialiser as AccountInitialiserRust},
-    message::{MessageId, MessageType},
-    DateTime, Local,
-};
-
 use crate::{
     acc_manager::AccountSignerType,
     address::Address,
     client_options::ClientOptions,
     message::{Message, Transfer},
     Result,
+};
+use iota::bee_rest_api::types::responses::InfoResponse;
+use iota_wallet::{
+    account::{AccountBalance, AccountHandle as AccountHandleRust, AccountInitialiser as AccountInitialiserRust},
+    message::{MessageId, MessageType},
+    DateTime, Local,
 };
 
 use anyhow::anyhow;
@@ -102,6 +102,19 @@ impl Account {
             .build()
             .unwrap()
             .block_on(async move { self.handle.consolidate_outputs().await });
+
+        match msgs_res {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(msgs) => Ok(msgs.into_iter().map(|m| m.into()).collect()),
+        }
+    }
+
+    pub fn get_node_info(&self) -> Result<InfoResponse> {
+        let msgs_res = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async move { self.handle.get_node_info().await });
 
         match msgs_res {
             Err(e) => Err(anyhow!(e.to_string())),

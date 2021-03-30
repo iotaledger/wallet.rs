@@ -10,6 +10,8 @@ use crate::{
     signing::{GenerateAddressMetadata, SignerType},
 };
 
+use iota::bee_rest_api::types::responses::InfoResponse as NodeInfoResponse;
+
 use chrono::prelude::{DateTime, Local};
 use getset::{Getters, Setters};
 use iota::message::prelude::MessageId;
@@ -640,6 +642,11 @@ impl AccountHandle {
     pub async fn get_message(&self, message_id: &MessageId) -> Option<Message> {
         self.inner.read().await.get_message(message_id).cloned()
     }
+
+    /// Bridge to [Account#get_node_info](struct.Account.html#method.get_node_info).
+    pub async fn get_node_info(&self) -> crate::Result<NodeInfoResponse> {
+        self.inner.read().await.get_node_info().await
+    }
 }
 
 /// Account balance information.
@@ -898,6 +905,17 @@ impl Account {
                     self.addresses.push(address);
                 }
             });
+    }
+
+    // Gets the node info from /api/v1/info endpoint
+    pub(crate) async fn get_node_info(&self) -> crate::Result<NodeInfoResponse> {
+        let client_guard = crate::client::get_client(self.client_options(), None).await?;
+        let client = client_guard.read().await;
+
+        client
+            .get_info()
+            .await
+            .map_err(|e| crate::Error::ClientError(Box::new(e)))
     }
 
     #[cfg(test)]
@@ -1307,5 +1325,17 @@ mod tests {
             },
         )
         .await;
+    }
+
+    #[tokio::test]
+    async fn test_get_info() {
+        let manager = crate::test_utils::get_account_manager().await;
+        let account_handle = crate::test_utils::AccountCreator::new(&manager)
+            .addresses(vec![crate::test_utils::generate_random_address()])
+            .create()
+            .await;
+
+        let node_info = account_handle.get_node_info().await.unwrap();
+        println!("{:#?}", node_info);
     }
 }

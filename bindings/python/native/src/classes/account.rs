@@ -318,6 +318,11 @@ impl AccountHandle {
             Ok(None)
         }
     }
+
+    /// Bridge to [Account#get_node_info](struct.Account.html#method.get_node_info).
+    fn get_node_info(&self) -> Result<InfoResponse> {
+        Ok(crate::block_on(async { self.account_handle.get_node_info().await })?.into())
+    }
 }
 
 #[pymethods]
