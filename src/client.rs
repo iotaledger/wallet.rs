@@ -53,20 +53,26 @@ pub(crate) async fn get_client(options: &ClientOptions) -> crate::Result<Arc<RwL
         }
 
         for node in options.nodes() {
-            if let Some(auth) = &node.auth {
-                client_builder = client_builder.with_node_auth(node.url.as_str(), &auth.username, &auth.password)?;
-            } else {
-                // safe to unwrap since we're sure we have valid URLs
-                client_builder = client_builder.with_node(node.url.as_str()).unwrap();
+            if !node.disabled {
+                if let Some(auth) = &node.auth {
+                    client_builder =
+                        client_builder.with_node_auth(node.url.as_str(), &auth.username, &auth.password)?;
+                } else {
+                    // safe to unwrap since we're sure we have valid URLs
+                    client_builder = client_builder.with_node(node.url.as_str()).unwrap();
+                }
             }
         }
 
         if let Some(node) = options.node() {
-            if let Some(auth) = &node.auth {
-                client_builder = client_builder.with_node_auth(node.url.as_str(), &auth.username, &auth.password)?;
-            } else {
-                // safe to unwrap since we're sure we have valid URLs
-                client_builder = client_builder.with_node(node.url.as_str()).unwrap();
+            if !node.disabled {
+                if let Some(auth) = &node.auth {
+                    client_builder =
+                        client_builder.with_node_auth(node.url.as_str(), &auth.username, &auth.password)?;
+                } else {
+                    // safe to unwrap since we're sure we have valid URLs
+                    client_builder = client_builder.with_node(node.url.as_str()).unwrap();
+                }
             }
         }
 
@@ -193,6 +199,7 @@ impl ClientOptionsBuilder {
                 password: password.into(),
             }
             .into(),
+            disabled: false,
         });
         Ok(self)
     }
@@ -381,11 +388,18 @@ pub struct Node {
     pub url: Url,
     /// Node auth options.
     pub auth: Option<NodeAuth>,
+    /// Whether the node is disabled or not.
+    #[serde(default)]
+    pub disabled: bool,
 }
 
 impl From<Url> for Node {
     fn from(url: Url) -> Self {
-        Self { url, auth: None }
+        Self {
+            url,
+            auth: None,
+            disabled: false,
+        }
     }
 }
 
@@ -394,10 +408,9 @@ impl From<Url> for Node {
 /// Need to set the get methods to be public for binding
 #[getset(get = "pub")]
 pub struct ClientOptions {
-    /// this option is here just to simplify usage from consumers using the deserialization
-    /// The node.
+    /// The primary node to connect to.
     node: Option<Node>,
-    /// The nodes vector.
+    /// The nodes to connect to.
     #[serde(default)]
     nodes: Vec<Node>,
     /// The node pool urls.

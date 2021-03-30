@@ -155,11 +155,12 @@ export declare interface Node {
     username: string
     password: string
   }
+  disabled?: boolean
 }
 
 export declare interface ClientOptions {
   node?: NodeUrl | Node;
-  nodes?: string[];
+  nodes?: Array<NodeUrl | Node>;
   network?: string;
   quorumSize?: number;
   quorumThreshold?: number;
