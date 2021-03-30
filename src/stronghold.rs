@@ -6,6 +6,7 @@
 use crypto::hashes::{blake2b::Blake2b256, Digest};
 
 use crypto::keys::slip10::Chain;
+use getset::Getters;
 use iota::{Address, Ed25519Address, Ed25519Signature};
 use iota_stronghold::{
     Location, ProcResult, Procedure, RecordHint, ResultMessage, SLIP10DeriveInput, Stronghold, StrongholdFlags,
@@ -13,12 +14,6 @@ use iota_stronghold::{
 use once_cell::sync::{Lazy, OnceCell};
 use riker::actors::*;
 use serde::Serialize;
-use tokio::{
-    sync::Mutex,
-    time::{sleep, Duration},
-};
-use zeroize::Zeroize;
-
 use std::{
     collections::{HashMap, HashSet},
     convert::TryInto,
@@ -28,6 +23,11 @@ use std::{
     thread,
     time::Instant,
 };
+use tokio::{
+    sync::Mutex,
+    time::{sleep, Duration},
+};
+use zeroize::Zeroize;
 
 #[derive(PartialEq, Eq, Zeroize)]
 #[zeroize(drop)]
@@ -155,7 +155,7 @@ pub async fn set_password_clear_interval(interval: Duration) {
 }
 
 /// Snapshot status.
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 #[serde(tag = "status", content = "data")]
 pub enum SnapshotStatus {
     /// Snapshot is locked. This means that the password must be set again.
@@ -164,7 +164,8 @@ pub enum SnapshotStatus {
     Unlocked(Duration),
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Getters, Debug, Serialize)]
+#[getset(get = "pub")]
 /// Stronghold status.
 pub struct Status {
     /// The snapshot path.

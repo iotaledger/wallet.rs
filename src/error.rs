@@ -23,8 +23,6 @@ impl std::fmt::Display for AccountInitialiseRequiredField {
 pub enum AddressBuildRequiredField {
     /// address field.
     Address,
-    /// balance field.
-    Balance,
     /// key_index field.
     KeyIndex,
     /// outputs field.
@@ -47,8 +45,8 @@ pub enum Error {
     #[error("`{0}`")]
     JsonError(#[from] serde_json::error::Error),
     /// stronghold client error.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     #[error("`{0}`")]
     StrongholdError(crate::stronghold::Error),
     /// iota.rs error.
@@ -115,9 +113,6 @@ pub enum Error {
     /// Backup `destination` argument is invalid
     #[error("backup destination must be an existing directory or a file on an existing directory")]
     InvalidBackupDestination,
-    /// the storage adapter isn't set
-    #[error("the storage adapter isn't set; use the AccountManagerBuilder's `with_storage` method or one of the default storages with the crate features `sqlite-storage` and `stronghold-storage`.")]
-    StorageAdapterNotDefined,
     /// Mnemonic generation error.
     #[error("mnemonic encode error: {0}")]
     MnemonicEncode(String),
@@ -199,7 +194,7 @@ impl From<iota::message::Error> for Error {
     }
 }
 
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg(feature = "stronghold")]
 impl From<crate::stronghold::Error> for Error {
     fn from(error: crate::stronghold::Error) -> Self {
         match error {
@@ -249,7 +244,7 @@ impl serde::Serialize for Error {
         match self {
             Self::IoError(_) => serialize_variant(self, serializer, "IoError"),
             Self::JsonError(_) => serialize_variant(self, serializer, "JsonError"),
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             Self::StrongholdError(_) => serialize_variant(self, serializer, "StrongholdError"),
             Self::ClientError(_) => serialize_variant(self, serializer, "ClientError"),
             Self::UrlError(_) => serialize_variant(self, serializer, "UrlError"),
@@ -276,7 +271,6 @@ impl serde::Serialize for Error {
             Self::InvalidMnemonic(_) => serialize_variant(self, serializer, "InvalidMnemonic"),
             Self::InvalidBackupFile => serialize_variant(self, serializer, "InvalidBackupFile"),
             Self::InvalidBackupDestination => serialize_variant(self, serializer, "InvalidBackupDestination"),
-            Self::StorageAdapterNotDefined => serialize_variant(self, serializer, "StorageAdapterNotDefined"),
             Self::StorageExists => serialize_variant(self, serializer, "StorageExists"),
             Self::StorageAdapterNotSet(_) => serialize_variant(self, serializer, "StorageAdapterNotSet"),
             Self::RecordDecrypt(_) => serialize_variant(self, serializer, "RecordDecrypt"),

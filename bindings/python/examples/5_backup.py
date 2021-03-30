@@ -8,7 +8,7 @@ import os
 # This example backups your data in a secure file.
 # You can move this file to another app or device and restore it.
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 )
 account_manager.set_stronghold_password("password")
 

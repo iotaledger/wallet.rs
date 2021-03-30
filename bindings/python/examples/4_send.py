@@ -6,7 +6,7 @@ import iota_wallet as iw
 
 # This example sends IOTA toens to an address.
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 )
 account_manager.set_stronghold_password("password")
 
@@ -24,7 +24,6 @@ print(f"Available balance {account.balance()['available']}")
 transfer = iw.Transfer(
     amount=1_000_000,
     address='atoi1qzt0nhsf38nh6rs4p6zs5knqp6psgha9wsv74uajqgjmwc75ugupx3y7x0r',
-    bench32_hrp=account.bech32_hrp(),
     remainder_value_strategy='ReuseAddress'
 )
 

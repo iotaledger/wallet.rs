@@ -59,6 +59,8 @@ pub struct TransferBuilder {
     input: Option<(AddressWrapper, Vec<AddressOutput>)>,
     /// Whether the transfer should emit events or not.
     with_events: bool,
+    /// Whether the transfer should skip account syncing or not.
+    skip_sync: bool,
 }
 
 impl<'de> Deserialize<'de> for TransferBuilder {
@@ -117,6 +119,7 @@ impl<'de> Deserialize<'de> for TransferBuilder {
                 remainder_value_strategy: builder.remainder_value_strategy,
                 input: None,
                 with_events: true,
+                skip_sync: false,
             })
         })
     }
@@ -132,6 +135,7 @@ impl TransferBuilder {
             remainder_value_strategy: RemainderValueStrategy::ChangeAddress,
             input: None,
             with_events: true,
+            skip_sync: false,
         }
     }
 
@@ -158,6 +162,12 @@ impl TransferBuilder {
         self
     }
 
+    /// Skip account syncing before transferring.
+    pub fn with_skip_sync(mut self) -> Self {
+        self.skip_sync = true;
+        self
+    }
+
     /// Builds the transfer.
     pub fn finish(self) -> Transfer {
         Transfer {
@@ -167,6 +177,7 @@ impl TransferBuilder {
             remainder_value_strategy: self.remainder_value_strategy,
             input: self.input,
             with_events: self.with_events,
+            skip_sync: self.skip_sync,
         }
     }
 }
@@ -186,6 +197,8 @@ pub struct Transfer {
     pub(crate) input: Option<(AddressWrapper, Vec<AddressOutput>)>,
     /// Whether the transfer should emit events or not.
     pub(crate) with_events: bool,
+    /// Whether the transfer should skip account syncing or not.
+    pub(crate) skip_sync: bool,
 }
 
 impl Transfer {
@@ -425,7 +438,7 @@ impl TransactionRegularEssence {
                         if let Some(output) = output {
                             Some(output)
                         } else {
-                            let client = crate::client::get_client(metadata.client_options, None).await?;
+                            let client = crate::client::get_client(metadata.client_options).await?;
                             let client = client.read().await;
                             if let Ok(output) = client.get_output(&i).await {
                                 let output = AddressOutput::from_output_response(output, metadata.bech32_hrp.clone())?;
@@ -715,6 +728,10 @@ pub struct Message {
     /// Whether the transaction is broadcasted or not.
     #[getset(set = "pub")]
     pub broadcasted: bool,
+    /// The message id that reattached this message if any.
+    #[serde(rename = "reattachmentMessageId")]
+    #[getset(set = "pub(crate)")]
+    pub reattachment_message_id: Option<MessageId>,
 }
 
 impl Message {
@@ -934,6 +951,7 @@ impl<'a> MessageBuilder<'a> {
             nonce: self.iota_message.nonce(),
             confirmed: self.confirmed,
             broadcasted: true,
+            reattachment_message_id: None,
         };
         Ok(message)
     }
@@ -979,7 +997,6 @@ impl Message {
                     })
                     .collect(),
             },
-
             _ => vec![],
         }
     }
