@@ -1821,6 +1821,9 @@ Note that such address might have been used in the past, because the message his
 <h4 id="balance-a-hreflibrariespythonapi_referencehtmlaccountbalanceaccountbalancea"><a class="header" href="#balance-a-hreflibrariespythonapi_referencehtmlaccountbalanceaccountbalancea">balance(): <a href="libraries/python/api_reference.html#accountbalance">AccountBalance</a></a></h4>
 <p>Gets the account balance information.</p>
 <p><strong>Returns</strong> the <a href="libraries/python/api_reference.html#accountbalance">AccountBalance</a> in this account.</p>
+<h4 id="get_node_info-inforesponse"><a class="header" href="#get_node_info-inforesponse">get_node_info(): InfoResponse</a></h4>
+<p>Gets information about the node.</p>
+<p><strong>Returns</strong> the <a href="libraries/python/api_reference.html#inforesponse">InfoResponse</a></p>
 <h4 id="set_aliasalias-void"><a class="header" href="#set_aliasalias-void">set_alias(alias): void</a></h4>
 <p>Updates the account alias.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
@@ -2026,7 +2029,7 @@ The account can be initialised with locally stored address history.</p>
     'nodes': list[[Node](#node)] (optional),
     'node_pool_urls': list[str] (optional),
     'network': str (optional),
-    'mqtt_broker_options': [BrokerOptions](#brokeroptions) (optional), 
+    'mqtt_broker_options': [BrokerOptions](#brokeroptions) (optional),
     'local_pow': bool (optional),
     'node_sync_interval': int (optional), # in milliseconds
     'node_sync_enabled': bool (optional),
