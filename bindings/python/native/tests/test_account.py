@@ -53,7 +53,6 @@ def test_account_handle_transfer():
     pat = tv['transfer']
     transfer = iw.Transfer(amount=pat['amount'],
                            address=pat['address'],
-                           bench32_hrp=account.bech32_hrp(),
                            remainder_value_strategy=pat['remainder_value_strategy'])
 
     try:
