@@ -351,7 +351,7 @@ impl TransactionOutput {
 
 /// UTXO input.
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
-pub struct TransactionUTXOInput {
+pub struct TransactionUtxoInput {
     /// UTXO input.
     pub input: UTXOInput,
     /// Metadata.
@@ -363,7 +363,7 @@ pub struct TransactionUTXOInput {
 #[serde(tag = "type", content = "data")]
 pub enum TransactionInput {
     /// UTXO input.
-    UTXO(TransactionUTXOInput),
+    UTXO(TransactionUtxoInput),
     /// Treasury input.
     Treasury(TreasuryInput),
 }
@@ -448,7 +448,7 @@ impl TransactionRegularEssence {
                             }
                         }
                     };
-                    TransactionInput::UTXO(TransactionUTXOInput { input: i, metadata })
+                    TransactionInput::UTXO(TransactionUtxoInput { input: i, metadata })
                 }
                 Input::Treasury(treasury) => TransactionInput::Treasury(treasury),
                 _ => unimplemented!(),
