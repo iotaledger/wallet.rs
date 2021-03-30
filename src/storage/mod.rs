@@ -403,9 +403,9 @@ pub(crate) fn decrypt_record(record: &str, encryption_key: &[u8; 32]) -> crate::
         encryption_key.try_into().unwrap(),
         &nonce.try_into().unwrap(),
         &[],
-        tag.as_slice().try_into().unwrap(),
-        &ct,
         &mut pt,
+        &ct,
+        tag.as_slice().try_into().unwrap(),
     )
     .map_err(|e| crate::Error::RecordDecrypt(format!("{:?}", e)))?;
 

@@ -30,7 +30,7 @@ url = { version = "2.2", features = [ "serde" ] }
 zeroize = { version = "1.2", features = ["zeroize_derive"] }
 
 # stronghold
-iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "b8904ff0df9c963980ae148815ad56c40588d84a" }
+iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "7e3c02412b4d8657e62bc0b14862443d2f1f1f63" }
 riker = "0.4"
 slog = "2.7"
 
@@ -39,7 +39,7 @@ iota-ledger = { git = "https://github.com/iotaledger/ledger.rs", branch = "devel
 
 [dependencies.iota-crypto]
 git = "https://github.com/iotaledger/crypto.rs"
-rev = "b849861b86c3f7357b7477de4253b7352b363627"
+branch = "dev"
 features = ["random", "sha", "pbkdf", "hmac", "bip39", "bip39-en", "chacha", "blake2b", "slip10"]
 
 [dev-dependencies]
