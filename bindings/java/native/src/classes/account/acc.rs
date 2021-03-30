@@ -8,9 +8,9 @@ use crate::{
     address::Address,
     client_options::ClientOptions,
     message::{Message, Transfer},
+    types::InfoResponse,
     Result,
 };
-use iota::bee_rest_api::types::responses::InfoResponse;
 use iota_wallet::{
     account::{AccountBalance, AccountHandle as AccountHandleRust, AccountInitialiser as AccountInitialiserRust},
     message::{MessageId, MessageType},

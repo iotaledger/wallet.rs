@@ -10,8 +10,7 @@ use chrono::prelude::{
 
 use crate::{
     jni_c_header::*,
-    bee_types::*,
-    iota::bee_rest_api::types::*,
+    types::*,
     acc::*,
     client_options::*,
     sync::*,
@@ -22,7 +21,7 @@ use crate::{
 };
 
 use anyhow::{
-    Result as Result,
+    Result,
     anyhow,
 };
 
@@ -289,14 +288,14 @@ foreign_class!(
         self_type InfoResponse;
         private constructor = empty;
         private fn InfoResponse::eq(&self, o: &InfoResponse) -> bool; alias rustEq;
-        fn InfoResponse::name(&self) -> String;
-        fn InfoResponse::version(&self) -> String;
-        fn InfoResponse::networkId(&self) -> bool;
-        fn InfoResponse::bech32HRP(&self) -> String;
-        fn InfoResponse::minPoWScore(&self) -> u64;
-        fn InfoResponse::latestMilestoneIndex(&self) -> u64;
-        fn InfoResponse::confirmedMilestoneIndex(&self) -> u64;
-        fn InfoResponse::pruningIndex(&self) -> u64;
+        fn InfoResponse::name(&self) -> &str;
+        fn InfoResponse::version(&self) -> &str;
+        fn InfoResponse::network_id(&self) -> &str; alias networkId;
+        fn InfoResponse::bech32_hrp(&self) -> &str; alias bech32HRP;
+        fn InfoResponse::min_pow_score(&self) -> f64; alias minPoWScore;
+        fn InfoResponse::latest_milestone_index(&self) -> u32; alias latestMilestoneIndex;
+        fn InfoResponse::confirmed_milestone_index(&self) -> u32; alias confirmedMilestoneIndex;
+        fn InfoResponse::pruning_index(&self) -> u32; alias pruningIndex;
         fn InfoResponse::features(&self) -> Vec<String>;
     }
 );
