@@ -1814,7 +1814,8 @@ mod tests {
                 .unwrap();
             assert!(
                 super::storage_file_path(&ManagerStorage::Stronghold, manager.storage_path()).exists(),
-                "{}", true
+                "{}",
+                true
             );
 
             let imported_account = manager.get_account(account_handle.read().await.id()).await.unwrap();
@@ -1890,7 +1891,8 @@ mod tests {
             }
             assert!(
                 manager.get_balance_change_event_count(None).await.unwrap() == change_events.len(),
-                "{}", true
+                "{}",
+                true
             );
             for (take, skip) in &[(2, 0), (2, 2)] {
                 let found = manager
@@ -1937,7 +1939,8 @@ mod tests {
             assert!(
                 manager.get_transaction_confirmation_event_count(None).await.unwrap()
                     == confirmation_change_events.len(),
-                "{}", true
+                "{}",
+                true
             );
             for (take, skip) in &[(2, 0), (2, 2)] {
                 let found = manager
@@ -1980,7 +1983,8 @@ mod tests {
             }
             assert!(
                 manager.get_reattachment_event_count(None).await.unwrap() == reattachment_events.len(),
-                "{}", true
+                "{}",
+                true
             );
             for (take, skip) in &[(2, 0), (2, 2)] {
                 let found = manager
@@ -2021,7 +2025,11 @@ mod tests {
                                 .await
                                 .unwrap();
                         }
-                        assert!(manager.$count_get_fn(None).await.unwrap() == events.len(), "{}", true);
+                        assert!(
+                            manager.$count_get_fn(None).await.unwrap() == events.len(),
+                            "{}",
+                            true
+                        );
                         for (take, skip) in &[(2, 0), (2, 2)] {
                             let found = manager
                                 .$get_fn(*take, *skip, None)

@@ -81,10 +81,7 @@ async fn get_address_outputs(
             .map(|o| (o, true))
             .collect();
 
-        let mut outputs: Vec<(UTXOInput, bool)> = unspent_address_outputs
-            .iter()
-            .map(|o| (o.clone(), false))
-            .collect();
+        let mut outputs: Vec<(UTXOInput, bool)> = unspent_address_outputs.iter().map(|o| (o.clone(), false)).collect();
         outputs.extend(spent_address_outputs);
         Ok(outputs)
     } else {
