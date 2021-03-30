@@ -909,7 +909,7 @@ impl Account {
 
     // Gets the node info from /api/v1/info endpoint
     pub(crate) async fn get_node_info(&self) -> crate::Result<NodeInfoResponse> {
-        let client_guard = crate::client::get_client(self.client_options(), None).await?;
+        let client_guard = crate::client::get_client(self.client_options()).await?;
         let client = client_guard.read().await;
 
         client
