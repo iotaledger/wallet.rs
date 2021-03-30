@@ -42,6 +42,7 @@ impl From<RustNodeAuth> for NodeAuth {
 pub struct Node {
     url: String,
     auth: Option<NodeAuth>,
+    disabled: bool,
 }
 
 impl From<Node> for RustNode {
@@ -49,6 +50,7 @@ impl From<Node> for RustNode {
         Self {
             url: Url::parse(&node.url).expect("invalid url"),
             auth: node.auth.map(|a| a.into()),
+            disabled: node.disabled,
         }
     }
 }
@@ -58,6 +60,7 @@ impl From<RustNode> for Node {
         Self {
             url: node.url.as_str().to_string(),
             auth: node.auth.map(|auth| auth.into()),
+            disabled: node.disabled,
         }
     }
 }
