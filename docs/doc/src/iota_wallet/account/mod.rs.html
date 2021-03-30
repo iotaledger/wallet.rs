@@ -1467,13 +1467,13 @@
 
     <span class="doccomment">/// Defines the account alias. If not defined, we&#39;ll generate one.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">alias</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">alias</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">alias</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">alias</span>.<span class="ident">as_ref</span>().<span class="ident">to_string</span>());
+        <span class="self">self</span>.<span class="ident">alias</span>.<span class="ident">replace</span>(<span class="ident">alias</span>.<span class="ident">as_ref</span>().<span class="ident">to_string</span>());
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Time of account creation.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">created_at</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">created_at</span>: <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Local</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">created_at</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">created_at</span>);
+        <span class="self">self</span>.<span class="ident">created_at</span>.<span class="ident">replace</span>(<span class="ident">created_at</span>);
         <span class="self">self</span>
     }
 
@@ -1535,7 +1535,7 @@
             }
             <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">account</span>.<span class="ident">index</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">latest_account_index</span> {
                 <span class="ident">latest_account_index</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">account</span>.<span class="ident">index</span>();
-                <span class="ident">latest_account_handle</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">account_handle</span>.<span class="ident">clone</span>());
+                <span class="ident">latest_account_handle</span>.<span class="ident">replace</span>(<span class="ident">account_handle</span>.<span class="ident">clone</span>());
             }
         }
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">latest_account_handle</span>) <span class="op">=</span> <span class="ident">latest_account_handle</span> {

@@ -730,7 +730,7 @@
         .<span class="ident">iter</span>()
         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">node</span><span class="op">|</span> {
             <span class="ident">Url</span>::<span class="ident">parse</span>(<span class="ident">node</span>).<span class="ident">map</span>(<span class="prelude-val">Some</span>).<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                <span class="ident">err</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">e</span>);
+                <span class="ident">err</span>.<span class="ident">replace</span>(<span class="ident">e</span>);
                 <span class="prelude-val">None</span>
             })
         })
@@ -821,13 +821,13 @@
     <span class="doccomment">/// let client_options = ClientOptionsBuilder::new().with_network(&quot;testnet2&quot;).build();</span>
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_network</span><span class="op">&lt;</span><span class="ident">N</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">network</span>: <span class="ident">N</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">network</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">network</span>.<span class="ident">into</span>());
+        <span class="self">self</span>.<span class="ident">network</span>.<span class="ident">replace</span>(<span class="ident">network</span>.<span class="ident">into</span>());
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Set the node sync interval</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_node_sync_interval</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">node_sync_interval</span>: <span class="ident">Duration</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">node_sync_interval</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">node_sync_interval</span>);
+        <span class="self">self</span>.<span class="ident">node_sync_interval</span>.<span class="ident">replace</span>(<span class="ident">node_sync_interval</span>);
         <span class="self">self</span>
     }
 
@@ -840,7 +840,7 @@
 
     <span class="doccomment">/// Sets the MQTT broker options.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_mqtt_mqtt_broker_options</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">options</span>: <span class="ident">BrokerOptions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">mqtt_broker_options</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">options</span>);
+        <span class="self">self</span>.<span class="ident">mqtt_broker_options</span>.<span class="ident">replace</span>(<span class="ident">options</span>);
         <span class="self">self</span>
     }
 
@@ -852,7 +852,7 @@
 
     <span class="doccomment">/// Sets the request timeout.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_request_timeout</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">timeout</span>: <span class="ident">Duration</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">request_timeout</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">timeout</span>);
+        <span class="self">self</span>.<span class="ident">request_timeout</span>.<span class="ident">replace</span>(<span class="ident">timeout</span>);
         <span class="self">self</span>
     }
 
@@ -939,9 +939,9 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">iota</span>::<span class="ident">Api</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Api</span> {
-    <span class="kw">fn</span> <span class="ident">into</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">iota</span>::<span class="ident">Api</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Api</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">iota</span>::<span class="ident">Api</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">api</span>: <span class="ident">Api</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">iota</span>::<span class="ident">Api</span> {
+        <span class="kw">match</span> <span class="ident">api</span> {
             <span class="ident">Api</span>::<span class="ident">GetTips</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">iota</span>::<span class="ident">Api</span>::<span class="ident">GetTips</span>,
             <span class="ident">Api</span>::<span class="ident">PostMessage</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">iota</span>::<span class="ident">Api</span>::<span class="ident">PostMessage</span>,
             <span class="ident">Api</span>::<span class="ident">GetOutput</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">iota</span>::<span class="ident">Api</span>::<span class="ident">GetOutput</span>,
@@ -960,13 +960,13 @@
     <span class="kw">pub</span> <span class="ident">timeout</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">iota</span>::<span class="ident">BrokerOptions</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BrokerOptions</span> {
-    <span class="kw">fn</span> <span class="ident">into</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">iota</span>::<span class="ident">BrokerOptions</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">BrokerOptions</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">iota</span>::<span class="ident">BrokerOptions</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">BrokerOptions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">iota</span>::<span class="ident">BrokerOptions</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">iota</span>::<span class="ident">BrokerOptions</span>::<span class="ident">new</span>();
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">automatic_disconnect</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">automatic_disconnect</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">automatic_disconnect</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">automatic_disconnect</span> {
             <span class="ident">options</span> <span class="op">=</span> <span class="ident">options</span>.<span class="ident">automatic_disconnect</span>(<span class="ident">automatic_disconnect</span>);
         }
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">timeout</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">timeout</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">timeout</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">timeout</span> {
             <span class="ident">options</span> <span class="op">=</span> <span class="ident">options</span>.<span class="ident">timeout</span>(<span class="ident">timeout</span>);
         }
         <span class="ident">options</span>

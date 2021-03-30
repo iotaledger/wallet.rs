@@ -642,7 +642,7 @@
     <span class="kw">use</span> <span class="ident">rand</span>::{<span class="ident">distributions</span>::<span class="ident">Alphanumeric</span>, <span class="ident">thread_rng</span>, <span class="ident">Rng</span>};
     <span class="kw">use</span> <span class="ident">std</span>::{
         <span class="ident">collections</span>::<span class="ident">HashMap</span>,
-        <span class="ident">path</span>::<span class="ident">PathBuf</span>,
+        <span class="ident">path</span>::{<span class="ident">Path</span>, <span class="ident">PathBuf</span>},
         <span class="ident">sync</span>::{<span class="ident">atomic</span>::<span class="ident">AtomicBool</span>, <span class="ident">Arc</span>},
     };
     <span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">sync</span>::<span class="ident">Mutex</span>;
@@ -655,7 +655,7 @@
 
     <span class="attribute">#[<span class="ident">async_trait</span>::<span class="ident">async_trait</span>]</span>
     <span class="kw">impl</span> <span class="kw">crate</span>::<span class="ident">signing</span>::<span class="ident">Signer</span> <span class="kw">for</span> <span class="ident">TestSigner</span> {
-        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">store_mnemonic</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">PathBuf</span>, <span class="ident">_mnemonic</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">store_mnemonic</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">_mnemonic</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
             <span class="prelude-val">Ok</span>(())
         }
 

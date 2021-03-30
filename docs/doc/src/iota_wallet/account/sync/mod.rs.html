@@ -1839,27 +1839,6 @@
 <span id="1836">1836</span>
 <span id="1837">1837</span>
 <span id="1838">1838</span>
-<span id="1839">1839</span>
-<span id="1840">1840</span>
-<span id="1841">1841</span>
-<span id="1842">1842</span>
-<span id="1843">1843</span>
-<span id="1844">1844</span>
-<span id="1845">1845</span>
-<span id="1846">1846</span>
-<span id="1847">1847</span>
-<span id="1848">1848</span>
-<span id="1849">1849</span>
-<span id="1850">1850</span>
-<span id="1851">1851</span>
-<span id="1852">1852</span>
-<span id="1853">1853</span>
-<span id="1854">1854</span>
-<span id="1855">1855</span>
-<span id="1856">1856</span>
-<span id="1857">1857</span>
-<span id="1858">1858</span>
-<span id="1859">1859</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1891,7 +1870,6 @@
     <span class="ident">Bech32Address</span>, <span class="ident">OutputId</span>,
 };
 <span class="kw">use</span> <span class="ident">serde</span>::<span class="ident">Serialize</span>;
-<span class="kw">use</span> <span class="ident">slip10</span>::<span class="ident">BIP32Path</span>;
 <span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">sync</span>::<span class="ident">MutexGuard</span>;
 
 <span class="kw">use</span> <span class="ident">std</span>::{
@@ -1902,6 +1880,7 @@
 <span class="kw">mod</span> <span class="ident">input_selection</span>;
 
 <span class="kw">const</span> <span class="ident">DUST_ALLOWANCE_VALUE</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">1_000_000</span>;
+<span class="kw">const</span> <span class="ident">DEFAULT_GAP_LIMIT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">10</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">SyncedMessage</span> {
@@ -1944,10 +1923,7 @@
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">o</span><span class="op">|</span> (<span class="ident">o</span>, <span class="bool-val">true</span>))
             .<span class="ident">collect</span>();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">outputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">UTXOInput</span>, <span class="ident">bool</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">unspent_address_outputs</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">o</span><span class="op">|</span> (<span class="ident">o</span>.<span class="ident">clone</span>(), <span class="bool-val">false</span>))
-            .<span class="ident">collect</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">outputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">UTXOInput</span>, <span class="ident">bool</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">unspent_address_outputs</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">o</span><span class="op">|</span> (<span class="ident">o</span>.<span class="ident">clone</span>(), <span class="bool-val">false</span>)).<span class="ident">collect</span>();
         <span class="ident">outputs</span>.<span class="ident">extend</span>(<span class="ident">spent_address_outputs</span>);
         <span class="prelude-val">Ok</span>(<span class="ident">outputs</span>)
     } <span class="kw">else</span> {
@@ -2551,7 +2527,11 @@
             <span class="ident">account_handle</span>,
             <span class="comment">// by default we synchronize from the latest address (supposedly unspent)</span>
             <span class="ident">address_index</span>: <span class="ident">latest_address_index</span>,
-            <span class="ident">gap_limit</span>: <span class="kw">if</span> <span class="ident">latest_address_index</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> { <span class="number">10</span> } <span class="kw">else</span> { <span class="number">1</span> },
+            <span class="ident">gap_limit</span>: <span class="kw">if</span> <span class="ident">latest_address_index</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+                <span class="ident">DEFAULT_GAP_LIMIT</span>
+            } <span class="kw">else</span> {
+                <span class="number">1</span>
+            },
             <span class="ident">skip_persistence</span>: <span class="bool-val">false</span>,
             <span class="ident">skip_change_addresses</span>: <span class="bool-val">false</span>,
             <span class="ident">steps</span>: <span class="macro">vec</span><span class="macro">!</span>[
@@ -3178,33 +3158,24 @@
             .<span class="ident">unwrap</span>();
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">outputs</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
-        <span class="kw">let</span> <span class="ident">address_path</span> <span class="op">=</span> <span class="ident">BIP32Path</span>::<span class="ident">from_str</span>(<span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(
-            <span class="string">&quot;m/44H/4218H/{}H/{}H/{}H&quot;</span>,
-            <span class="kw-2">*</span><span class="ident">account_</span>.<span class="ident">index</span>(),
-            <span class="kw-2">*</span><span class="ident">account_address</span>.<span class="ident">internal</span>() <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="kw-2">*</span><span class="ident">account_address</span>.<span class="ident">key_index</span>()
-        ))
-        .<span class="ident">unwrap</span>();
 
         <span class="kw">for</span> <span class="ident">address_output</span> <span class="kw">in</span> <span class="ident">address_outputs</span> {
             <span class="ident">outputs</span>.<span class="ident">push</span>((
                 (<span class="kw-2">*</span><span class="ident">address_output</span>).<span class="ident">clone</span>(),
                 <span class="kw-2">*</span><span class="ident">account_address</span>.<span class="ident">key_index</span>(),
                 <span class="kw-2">*</span><span class="ident">account_address</span>.<span class="ident">internal</span>(),
-                <span class="ident">address_path</span>.<span class="ident">clone</span>(),
             ));
         }
         <span class="ident">utxos</span>.<span class="ident">extend</span>(<span class="ident">outputs</span>.<span class="ident">into_iter</span>());
     }
 
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">outputs_for_essence</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Output</span><span class="op">&gt;</span> <span class="op">=</span>
+        <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">SignatureLockedSingleOutput</span>::<span class="ident">new</span>(<span class="kw-2">*</span><span class="ident">transfer_obj</span>.<span class="ident">address</span>.<span class="ident">as_ref</span>(), <span class="ident">transfer_obj</span>.<span class="ident">amount</span>.<span class="ident">get</span>())<span class="question-mark">?</span>.<span class="ident">into</span>()];
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inputs_for_essence</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Input</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">outputs_for_essence</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Output</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
-    <span class="ident">outputs_for_essence</span>
-        .<span class="ident">push</span>(<span class="ident">SignatureLockedSingleOutput</span>::<span class="ident">new</span>(<span class="kw-2">*</span><span class="ident">transfer_obj</span>.<span class="ident">address</span>.<span class="ident">as_ref</span>(), <span class="ident">transfer_obj</span>.<span class="ident">amount</span>.<span class="ident">get</span>())<span class="question-mark">?</span>.<span class="ident">into</span>());
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current_output_sum</span> <span class="op">=</span> <span class="number">0</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">remainder_value</span> <span class="op">=</span> <span class="number">0</span>;
 
-    <span class="kw">for</span> (<span class="ident">utxo</span>, <span class="ident">address_index</span>, <span class="ident">address_internal</span>, <span class="ident">address_path</span>) <span class="kw">in</span> <span class="ident">utxos</span> {
+    <span class="kw">for</span> (<span class="ident">utxo</span>, <span class="ident">address_index</span>, <span class="ident">address_internal</span>) <span class="kw">in</span> <span class="ident">utxos</span> {
         <span class="kw">match</span> <span class="ident">utxo</span>.<span class="ident">kind</span> {
             <span class="ident">OutputKind</span>::<span class="ident">SignatureLockedSingle</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="ident">utxo</span>.<span class="ident">amount</span> <span class="op">&lt;</span> <span class="ident">DUST_ALLOWANCE_VALUE</span> {
@@ -3222,7 +3193,6 @@
         <span class="ident">transaction_inputs</span>.<span class="ident">push</span>(<span class="kw">crate</span>::<span class="ident">signing</span>::<span class="ident">TransactionInput</span> {
             <span class="ident">input</span>,
             <span class="ident">address_index</span>,
-            <span class="ident">address_path</span>,
             <span class="ident">address_internal</span>,
         });
         <span class="kw">if</span> <span class="ident">current_output_sum</span> <span class="op">=</span><span class="op">=</span> <span class="ident">transfer_obj</span>.<span class="ident">amount</span>.<span class="ident">get</span>() {
@@ -3353,7 +3323,7 @@
                 <span class="ident">address</span>
             }
         };
-        <span class="ident">remainder_value_deposit_address</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">remainder_deposit_address</span>.<span class="ident">clone</span>());
+        <span class="ident">remainder_value_deposit_address</span>.<span class="ident">replace</span>(<span class="ident">remainder_deposit_address</span>.<span class="ident">clone</span>());
         <span class="ident">outputs_for_essence</span>
             .<span class="ident">push</span>(<span class="ident">SignatureLockedSingleOutput</span>::<span class="ident">new</span>(<span class="kw-2">*</span><span class="ident">remainder_deposit_address</span>.<span class="ident">as_ref</span>(), <span class="ident">remainder_value</span>)<span class="question-mark">?</span>.<span class="ident">into</span>());
         <span class="prelude-val">Some</span>(<span class="ident">remainder_deposit_address</span>)
@@ -3504,24 +3474,12 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dust_outputs_amount</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="number">0</span>;
 
     <span class="comment">// Add outputs from this transaction</span>
-    <span class="kw">for</span> <span class="ident">output</span> <span class="kw">in</span> <span class="ident">outputs</span> {
-        <span class="kw">match</span> <span class="ident">output</span>.<span class="number">1</span> {
-            <span class="comment">// add newly created outputs</span>
-            <span class="bool-val">true</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="ident">output</span>.<span class="number">0</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">DUST_ALLOWANCE_VALUE</span> {
-                    <span class="ident">dust_allowance_balance</span> <span class="op">+</span><span class="op">=</span> <span class="ident">output</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">i64</span>;
-                } <span class="kw">else</span> {
-                    <span class="ident">dust_outputs_amount</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>
-                }
-            }
-            <span class="comment">// remove consumed outputs</span>
-            <span class="bool-val">false</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="ident">output</span>.<span class="number">0</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">DUST_ALLOWANCE_VALUE</span> {
-                    <span class="ident">dust_allowance_balance</span> <span class="op">-</span><span class="op">=</span> <span class="ident">output</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">i64</span>;
-                } <span class="kw">else</span> {
-                    <span class="ident">dust_outputs_amount</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
-                }
-            }
+    <span class="kw">for</span> (<span class="ident">dust</span>, <span class="ident">add_outputs</span>) <span class="kw">in</span> <span class="ident">outputs</span> {
+        <span class="kw">let</span> <span class="ident">sign</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">add_outputs</span> { <span class="number">1</span> } <span class="kw">else</span> { <span class="op">-</span><span class="number">1</span> };
+        <span class="kw">if</span> <span class="ident">dust</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">DUST_ALLOWANCE_VALUE</span> {
+            <span class="ident">dust_allowance_balance</span> <span class="op">+</span><span class="op">=</span> <span class="ident">sign</span> <span class="op">*</span> <span class="ident">dust</span> <span class="kw">as</span> <span class="ident">i64</span>;
+        } <span class="kw">else</span> {
+            <span class="ident">dust_outputs_amount</span> <span class="op">+</span><span class="op">=</span> <span class="ident">sign</span>;
         }
     }
 

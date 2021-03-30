@@ -2061,6 +2061,9 @@
 <span id="2058">2058</span>
 <span id="2059">2059</span>
 <span id="2060">2060</span>
+<span id="2061">2061</span>
+<span id="2062">2062</span>
+<span id="2063">2063</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2132,9 +2135,9 @@
     <span class="ident">Sqlite</span>,
 }
 
-<span class="kw">fn</span> <span class="ident">storage_file_path</span>(<span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">ManagerStorage</span>, <span class="ident">storage_path</span>: <span class="kw-2">&amp;</span><span class="ident">PathBuf</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PathBuf</span> {
+<span class="kw">fn</span> <span class="ident">storage_file_path</span>(<span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">ManagerStorage</span>, <span class="ident">storage_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PathBuf</span> {
     <span class="kw">if</span> <span class="ident">storage_path</span>.<span class="ident">is_file</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">storage_path</span>.<span class="ident">extension</span>().<span class="ident">is_some</span>() {
-        <span class="ident">storage_path</span>.<span class="ident">clone</span>()
+        <span class="ident">storage_path</span>.<span class="ident">to_path_buf</span>()
     } <span class="kw">else</span> {
         <span class="kw">match</span> <span class="ident">storage</span> {
             <span class="ident">ManagerStorage</span>::<span class="ident">Stronghold</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">storage_path</span>.<span class="ident">join</span>(<span class="ident">STRONGHOLD_FILENAME</span>),
@@ -2188,10 +2191,8 @@
     <span class="doccomment">/// Sets the storage config to be used.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_storage</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">storage_path</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span>, <span class="ident">password</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">storage_path</span> <span class="op">=</span> <span class="ident">storage_path</span>.<span class="ident">as_ref</span>().<span class="ident">to_path_buf</span>();
-        <span class="self">self</span>.<span class="ident">storage_encryption_key</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">password</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">p</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">storage_password_to_encryption_key</span>(<span class="ident">p</span>)),
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
-        };
+        <span class="self">self</span>.<span class="ident">storage_encryption_key</span> <span class="op">=</span> <span class="ident">password</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">storage_password_to_encryption_key</span>(<span class="ident">p</span>));
+
         <span class="prelude-val">Ok</span>(<span class="self">self</span>)
     }
 
@@ -2373,10 +2374,7 @@
         <span class="ident">AccountManagerBuilder</span>::<span class="ident">new</span>()
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">load_accounts</span>(
-        <span class="ident">storage_file_path</span>: <span class="kw-2">&amp;</span><span class="ident">PathBuf</span>,
-        <span class="ident">account_options</span>: <span class="ident">AccountOptions</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">AccountStore</span><span class="op">&gt;</span> {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">load_accounts</span>(<span class="ident">storage_file_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">account_options</span>: <span class="ident">AccountOptions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">AccountStore</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">parsed_accounts</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">RwLock</span>::<span class="ident">new</span>(<span class="ident">HashMap</span>::<span class="ident">new</span>()));
 
         <span class="kw">let</span> <span class="ident">accounts</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">storage</span>::<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">storage_file_path</span>)
@@ -2453,7 +2451,7 @@
         <span class="self">Self</span>::<span class="ident">start_monitoring</span>(<span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>()).<span class="kw">await</span>;
         <span class="kw">let</span> (<span class="ident">stop_polling_sender</span>, <span class="ident">stop_polling_receiver</span>) <span class="op">=</span> <span class="ident">broadcast_channel</span>(<span class="number">1</span>);
         <span class="self">self</span>.<span class="ident">start_polling</span>(<span class="ident">polling_interval</span>, <span class="ident">stop_polling_receiver</span>, <span class="ident">automatic_output_consolidation</span>);
-        <span class="self">self</span>.<span class="ident">stop_polling_sender</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">stop_polling_sender</span>);
+        <span class="self">self</span>.<span class="ident">stop_polling_sender</span>.<span class="ident">replace</span>(<span class="ident">stop_polling_sender</span>);
     }
 
     <span class="doccomment">/// Stops the background polling and MQTT monitoring.</span>
@@ -2640,7 +2638,7 @@
                 }
             });
         });
-        <span class="self">self</span>.<span class="ident">polling_handle</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">handle</span>);
+        <span class="self">self</span>.<span class="ident">polling_handle</span>.<span class="ident">replace</span>(<span class="ident">handle</span>);
     }
 
     <span class="doccomment">/// Stores a mnemonic for the given signer type.</span>
@@ -2671,7 +2669,7 @@
         <span class="ident">crypto</span>::<span class="ident">utils</span>::<span class="ident">rand</span>::<span class="ident">fill</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">entropy</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">MnemonicEncode</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">mnemonic</span> <span class="op">=</span> <span class="ident">crypto</span>::<span class="ident">keys</span>::<span class="ident">bip39</span>::<span class="ident">wordlist</span>::<span class="ident">encode</span>(<span class="kw-2">&amp;</span><span class="ident">entropy</span>, <span class="kw-2">&amp;</span><span class="ident">crypto</span>::<span class="ident">keys</span>::<span class="ident">bip39</span>::<span class="ident">wordlist</span>::<span class="ident">ENGLISH</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">MnemonicEncode</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">generated_mnemonic</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">mnemonic</span>.<span class="ident">clone</span>());
+        <span class="self">self</span>.<span class="ident">generated_mnemonic</span>.<span class="ident">replace</span>(<span class="ident">mnemonic</span>.<span class="ident">clone</span>());
         <span class="prelude-val">Ok</span>(<span class="ident">mnemonic</span>)
     }
 
@@ -2904,7 +2902,7 @@
                         <span class="kw">if</span> <span class="ident">associated_account</span>.<span class="ident">is_some</span>() {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">CannotUseIndexIdentifier</span>);
                         }
-                        <span class="ident">associated_account</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">account_handle</span>);
+                        <span class="ident">associated_account</span>.<span class="ident">replace</span>(<span class="ident">account_handle</span>);
                     }
                 }
                 <span class="ident">associated_account</span>
@@ -2914,7 +2912,7 @@
                 <span class="kw">for</span> <span class="ident">account_handle</span> <span class="kw">in</span> <span class="ident">accounts</span>.<span class="ident">values</span>() {
                     <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>;
                     <span class="kw">if</span> <span class="ident">account</span>.<span class="ident">alias</span>() <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">alias</span> {
-                        <span class="ident">associated_account</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">account_handle</span>);
+                        <span class="ident">associated_account</span>.<span class="ident">replace</span>(<span class="ident">account_handle</span>);
                         <span class="kw">break</span>;
                     }
                 }
@@ -2925,7 +2923,7 @@
                 <span class="kw">for</span> <span class="ident">account_handle</span> <span class="kw">in</span> <span class="ident">accounts</span>.<span class="ident">values</span>() {
                     <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>;
                     <span class="kw">if</span> <span class="ident">account</span>.<span class="ident">addresses</span>().<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">address</span>() <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">address</span>) {
-                        <span class="ident">associated_account</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">account_handle</span>);
+                        <span class="ident">associated_account</span>.<span class="ident">replace</span>(<span class="ident">account_handle</span>);
                         <span class="kw">break</span>;
                     }
                 }
@@ -3154,7 +3152,7 @@
             <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>;
             <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">account</span>.<span class="ident">index</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">last_account_index</span> {
                 <span class="ident">last_account_index</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">account</span>.<span class="ident">index</span>();
-                <span class="ident">last_account</span> <span class="op">=</span> <span class="prelude-val">Some</span>((
+                <span class="ident">last_account</span>.<span class="ident">replace</span>((
                     <span class="ident">account</span>
                         .<span class="ident">addresses</span>()
                         .<span class="ident">iter</span>()
@@ -3375,7 +3373,7 @@
 
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">discover_accounts</span>(
     <span class="ident">accounts</span>: <span class="ident">AccountStore</span>,
-    <span class="ident">storage_path</span>: <span class="kw-2">&amp;</span><span class="ident">PathBuf</span>,
+    <span class="ident">storage_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
     <span class="ident">client_options</span>: <span class="kw-2">&amp;</span><span class="ident">ClientOptions</span>,
     <span class="ident">signer_type</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SignerType</span><span class="op">&gt;</span>,
     <span class="ident">account_options</span>: <span class="ident">AccountOptions</span>,
@@ -3386,7 +3384,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account_initialiser</span> <span class="op">=</span> <span class="ident">AccountInitialiser</span>::<span class="ident">new</span>(
             <span class="ident">client_options</span>.<span class="ident">clone</span>(),
             <span class="ident">accounts</span>.<span class="ident">clone</span>(),
-            <span class="ident">storage_path</span>.<span class="ident">clone</span>(),
+            <span class="ident">storage_path</span>.<span class="ident">to_path_buf</span>(),
             <span class="ident">account_options</span>,
         )
         .<span class="ident">skip_persistence</span>()
@@ -3805,7 +3803,7 @@
                 .<span class="ident">expect</span>(<span class="string">&quot;failed to add account&quot;</span>);
 
             <span class="kw">let</span> <span class="ident">account_get_res</span> <span class="op">=</span> <span class="ident">manager</span>.<span class="ident">get_account</span>(<span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">id</span>()).<span class="kw">await</span>;
-            <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">account_get_res</span>.<span class="ident">is_err</span>(), <span class="bool-val">true</span>);
+            <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">account_get_res</span>.<span class="ident">is_err</span>(), <span class="string">&quot;{}&quot;</span>, <span class="bool-val">true</span>);
             <span class="kw">match</span> <span class="ident">account_get_res</span>.<span class="ident">unwrap_err</span>() {
                 <span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">RecordNotFound</span> <span class="op">=</span><span class="op">&gt;</span> {}
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;unexpected get_account response; expected RecordNotFound&quot;</span>),
@@ -3880,6 +3878,7 @@
                 .<span class="ident">unwrap</span>();
             <span class="macro">assert</span><span class="macro">!</span>(
                 <span class="kw">super</span>::<span class="ident">storage_file_path</span>(<span class="kw-2">&amp;</span><span class="ident">ManagerStorage</span>::<span class="ident">Stronghold</span>, <span class="ident">manager</span>.<span class="ident">storage_path</span>()).<span class="ident">exists</span>(),
+                <span class="string">&quot;{}&quot;</span>,
                 <span class="bool-val">true</span>
             );
 
@@ -3956,6 +3955,7 @@
             }
             <span class="macro">assert</span><span class="macro">!</span>(
                 <span class="ident">manager</span>.<span class="ident">get_balance_change_event_count</span>(<span class="prelude-val">None</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">change_events</span>.<span class="ident">len</span>(),
+                <span class="string">&quot;{}&quot;</span>,
                 <span class="bool-val">true</span>
             );
             <span class="kw">for</span> (<span class="ident">take</span>, <span class="ident">skip</span>) <span class="kw">in</span> <span class="kw-2">&amp;</span>[(<span class="number">2</span>, <span class="number">0</span>), (<span class="number">2</span>, <span class="number">2</span>)] {
@@ -3972,7 +3972,7 @@
                     .<span class="ident">skip</span>(<span class="kw-2">*</span><span class="ident">skip</span>)
                     .<span class="ident">take</span>(<span class="kw-2">*</span><span class="ident">take</span>)
                     .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BalanceChange</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-                <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">found</span> <span class="op">=</span><span class="op">=</span> <span class="ident">expected</span>, <span class="bool-val">true</span>);
+                <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">found</span> <span class="op">=</span><span class="op">=</span> <span class="ident">expected</span>, <span class="string">&quot;{}&quot;</span>, <span class="bool-val">true</span>);
             }
         })
         .<span class="kw">await</span>;
@@ -4003,6 +4003,7 @@
             <span class="macro">assert</span><span class="macro">!</span>(
                 <span class="ident">manager</span>.<span class="ident">get_transaction_confirmation_event_count</span>(<span class="prelude-val">None</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>()
                     <span class="op">=</span><span class="op">=</span> <span class="ident">confirmation_change_events</span>.<span class="ident">len</span>(),
+                <span class="string">&quot;{}&quot;</span>,
                 <span class="bool-val">true</span>
             );
             <span class="kw">for</span> (<span class="ident">take</span>, <span class="ident">skip</span>) <span class="kw">in</span> <span class="kw-2">&amp;</span>[(<span class="number">2</span>, <span class="number">0</span>), (<span class="number">2</span>, <span class="number">2</span>)] {
@@ -4019,7 +4020,7 @@
                     .<span class="ident">skip</span>(<span class="kw-2">*</span><span class="ident">skip</span>)
                     .<span class="ident">take</span>(<span class="kw-2">*</span><span class="ident">take</span>)
                     .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Message</span>, <span class="ident">bool</span>)<span class="op">&gt;</span><span class="op">&gt;</span>();
-                <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">found</span> <span class="op">=</span><span class="op">=</span> <span class="ident">expected</span>, <span class="bool-val">true</span>);
+                <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">found</span> <span class="op">=</span><span class="op">=</span> <span class="ident">expected</span>, <span class="string">&quot;{}&quot;</span>, <span class="bool-val">true</span>);
             }
         })
         .<span class="kw">await</span>;
@@ -4046,6 +4047,7 @@
             }
             <span class="macro">assert</span><span class="macro">!</span>(
                 <span class="ident">manager</span>.<span class="ident">get_reattachment_event_count</span>(<span class="prelude-val">None</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">reattachment_events</span>.<span class="ident">len</span>(),
+                <span class="string">&quot;{}&quot;</span>,
                 <span class="bool-val">true</span>
             );
             <span class="kw">for</span> (<span class="ident">take</span>, <span class="ident">skip</span>) <span class="kw">in</span> <span class="kw-2">&amp;</span>[(<span class="number">2</span>, <span class="number">0</span>), (<span class="number">2</span>, <span class="number">2</span>)] {
@@ -4062,7 +4064,7 @@
                     .<span class="ident">skip</span>(<span class="kw-2">*</span><span class="ident">skip</span>)
                     .<span class="ident">take</span>(<span class="kw-2">*</span><span class="ident">take</span>)
                     .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-                <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">found</span> <span class="op">=</span><span class="op">=</span> <span class="ident">expected</span>, <span class="bool-val">true</span>);
+                <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">found</span> <span class="op">=</span><span class="op">=</span> <span class="ident">expected</span>, <span class="string">&quot;{}&quot;</span>, <span class="bool-val">true</span>);
             }
         })
         .<span class="kw">await</span>;
@@ -4087,7 +4089,11 @@
                                 .<span class="kw">await</span>
                                 .<span class="ident">unwrap</span>();
                         }
-                        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">manager</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">count_get_fn</span>(<span class="prelude-val">None</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">events</span>.<span class="ident">len</span>(), <span class="bool-val">true</span>);
+                        <span class="macro">assert</span><span class="macro">!</span>(
+                            <span class="ident">manager</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">count_get_fn</span>(<span class="prelude-val">None</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">events</span>.<span class="ident">len</span>(),
+                            <span class="string">&quot;{}&quot;</span>,
+                            <span class="bool-val">true</span>
+                        );
                         <span class="kw">for</span> (<span class="ident">take</span>, <span class="ident">skip</span>) <span class="kw">in</span> <span class="kw-2">&amp;</span>[(<span class="number">2</span>, <span class="number">0</span>), (<span class="number">2</span>, <span class="number">2</span>)] {
                             <span class="kw">let</span> <span class="ident">found</span> <span class="op">=</span> <span class="ident">manager</span>
                                 .<span class="macro-nonterminal">$</span><span class="macro-nonterminal">get_fn</span>(<span class="kw-2">*</span><span class="ident">take</span>, <span class="kw-2">*</span><span class="ident">skip</span>, <span class="prelude-val">None</span>)
@@ -4102,7 +4108,7 @@
                                 .<span class="ident">skip</span>(<span class="kw-2">*</span><span class="ident">skip</span>)
                                 .<span class="ident">take</span>(<span class="kw-2">*</span><span class="ident">take</span>)
                                 .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-                            <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">found</span> <span class="op">=</span><span class="op">=</span> <span class="ident">expected</span>, <span class="bool-val">true</span>);
+                            <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">found</span> <span class="op">=</span><span class="op">=</span> <span class="ident">expected</span>, <span class="string">&quot;{}&quot;</span>, <span class="bool-val">true</span>);
                         }
                     },
                 )
