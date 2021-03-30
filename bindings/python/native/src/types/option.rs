@@ -90,11 +90,7 @@ impl From<BrokerOptions> for RustBrokerOptions {
     fn from(broker_options: BrokerOptions) -> Self {
         Self {
             automatic_disconnect: broker_options.automatic_disconnect,
-            timeout: if let Some(timeout) = broker_options.timeout {
-                Some(Duration::from_secs(timeout))
-            } else {
-                None
-            },
+            timeout: broker_options.timeout.map(Duration::from_secs),
         }
     }
 }
