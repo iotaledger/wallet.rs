@@ -194,7 +194,7 @@ impl TryFrom<RustWalletTransactionEssence> for Essence {
                     .iter()
                     .cloned()
                     .map(|input| {
-                        if let RustWalletInput::UTXO(input) = input {
+                        if let RustWalletInput::Utxo(input) = input {
                             Input {
                                 transaction_id: input.input.output_id().transaction_id().to_string(),
                                 index: input.input.output_id().index(),

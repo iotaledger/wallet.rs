@@ -46,7 +46,6 @@ features = ["random", "sha", "pbkdf", "hmac", "bip39", "bip39-en", "chacha", "bl
 anyhow = "1.0"
 reqwest = { version = "0.11", features = ["json"] }
 rusty-fork = "0.3"
-sled = "0.34"
 tokio = { version = "1.0", features = ["full"] }
 
 [features]
