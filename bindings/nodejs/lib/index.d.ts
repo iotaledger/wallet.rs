@@ -80,9 +80,21 @@ export declare interface Message {
   broadcasted: boolean;
 }
 
+export declare interface AddressOutput {
+  transactionId: string;
+  messageId: string;
+  index: number;
+  amount: number;
+  isSpent: boolean;
+  address: string;
+}
+
 export declare interface Address {
   address: string;
+  balance: number;
   keyIndex: number;
+  internal: boolean;
+  outputs: AddressOutput[];
 }
 
 export declare interface SyncOptions {
