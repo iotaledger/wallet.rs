@@ -6,7 +6,7 @@ use crate::{
     address::{Address, AddressBuilder, AddressWrapper},
     client::{ClientOptions, Node},
     event::TransferProgressType,
-    message::{Message, MessageType, Transfer},
+    message::{Message, MessagePayload, MessageType, TransactionEssence, Transfer},
     signing::{GenerateAddressMetadata, SignerType},
     storage::{MessageIndexation, MessageQueryFilter},
 };
@@ -18,12 +18,13 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::{Mutex, RwLock, RwLockWriteGuard};
 
 use std::{
+    collections::HashMap,
     hash::{Hash, Hasher},
     ops::Deref,
     path::PathBuf,
     sync::{
         atomic::{AtomicBool, Ordering},
-        Arc,
+        Arc, Mutex as StdMutex,
     },
 };
 
@@ -246,6 +247,7 @@ impl AccountInitialiser {
             client_options: self.client_options,
             storage_path: self.storage_path,
             skip_persistence: self.skip_persistence,
+            cached_messages: Default::default(),
         };
 
         let bech32_hrp = match account.client_options.network().as_deref() {
@@ -348,7 +350,7 @@ impl AccountInitialiser {
 }
 
 /// Account definition.
-#[derive(Debug, Getters, Setters, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Getters, Setters, Serialize, Deserialize, Clone)]
 #[getset(get = "pub")]
 pub struct Account {
     /// The account identifier.
@@ -380,6 +382,15 @@ pub struct Account {
     #[getset(set = "pub(crate)", get = "pub(crate)")]
     #[serde(skip)]
     skip_persistence: bool,
+    #[getset(get = "pub(crate)")]
+    #[serde(skip)]
+    cached_messages: Arc<StdMutex<HashMap<MessageId, Message>>>,
+}
+
+impl PartialEq for Account {
+    fn eq(&self, other: &Self) -> bool {
+        self.id() == other.id()
+    }
 }
 
 /// A thread guard over an account.
@@ -688,13 +699,17 @@ impl Account {
 
     /// Do something with the indexed messages.
     pub(crate) async fn with_messages<T, C: FnOnce(&Vec<MessageIndexation>) -> T>(&self, f: C) -> T {
-        f(crate::storage::get(&self.storage_path)
-            .await
-            .expect("storage adapter not set")
-            .lock()
-            .await
-            .message_indexation(&self)
-            .expect("message indexation not found"))
+        if self.skip_persistence {
+            f(&Vec::new())
+        } else {
+            f(crate::storage::get(&self.storage_path)
+                .await
+                .expect("storage adapter not set")
+                .lock()
+                .await
+                .message_indexation(&self)
+                .expect("message indexation not set"))
+        }
     }
 
     /// Returns the address bech32 human readable part.
@@ -845,13 +860,64 @@ impl Account {
         from: usize,
         message_type: Option<MessageType>,
     ) -> crate::Result<Vec<Message>> {
-        crate::storage::get(&self.storage_path)
+        let messages = crate::storage::get(&self.storage_path)
             .await
             .expect("storage adapter not set")
             .lock()
             .await
-            .get_messages(&self, count, from, MessageQueryFilter::message_type(message_type))
-            .await
+            .get_messages(
+                &self,
+                count,
+                from,
+                MessageQueryFilter::message_type(message_type.clone())
+                    .with_ignore_ids(self.cached_messages.lock().unwrap().keys().copied().collect()),
+            )
+            .await?;
+
+        let mut cached_messages = self.cached_messages.lock().unwrap();
+        // we cache messages with known confirmation since they'll never be updated
+        for message in &messages {
+            if message.confirmed().is_some() {
+                cached_messages.insert(*message.id(), message.clone());
+            }
+        }
+
+        let mut message_list: Vec<Message> = if let Some(message_type) = message_type {
+            let mut list = Vec::new();
+            for message in cached_messages.values() {
+                let matches = match message_type {
+                    MessageType::Received => {
+                        if let Some(MessagePayload::Transaction(tx)) = message.payload() {
+                            let TransactionEssence::Regular(essence) = tx.essence();
+                            essence.incoming()
+                        } else {
+                            false
+                        }
+                    }
+                    MessageType::Sent => {
+                        if let Some(MessagePayload::Transaction(tx)) = message.payload() {
+                            let TransactionEssence::Regular(essence) = tx.essence();
+                            !essence.incoming()
+                        } else {
+                            false
+                        }
+                    }
+                    MessageType::Failed => !message.broadcasted(),
+                    MessageType::Unconfirmed => message.confirmed().is_none(),
+                    MessageType::Value => matches!(message.payload(), Some(MessagePayload::Transaction(_))),
+                    MessageType::Confirmed => message.confirmed().unwrap_or_default(),
+                };
+                if matches {
+                    list.push(message.clone());
+                }
+            }
+            list
+        } else {
+            cached_messages.values().cloned().collect()
+        };
+        message_list.extend(messages);
+
+        Ok(message_list)
     }
 
     /// Gets the spent addresses.
@@ -913,6 +979,11 @@ impl Account {
             .get_message(&self, message_id)
             .await
             .ok()
+    }
+
+    /// Gets the available balance on the given address.
+    pub async fn address_available_balance(&self, address: &Address) -> crate::Result<u64> {
+        Ok(address.available_balance(&self.list_messages(0, 0, Some(MessageType::Sent)).await?))
     }
 }
 

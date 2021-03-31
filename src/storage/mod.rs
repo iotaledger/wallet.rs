@@ -66,11 +66,20 @@ pub struct MessageIndexation {
 #[derive(Default)]
 pub struct MessageQueryFilter {
     message_type: Option<MessageType>,
+    ignore_ids: Vec<MessageId>,
 }
 
 impl MessageQueryFilter {
     pub fn message_type(message_type: Option<MessageType>) -> Self {
-        Self { message_type }
+        Self {
+            message_type,
+            ignore_ids: Default::default(),
+        }
+    }
+
+    pub fn with_ignore_ids(mut self, ignore_ids: Vec<MessageId>) -> Self {
+        self.ignore_ids = ignore_ids;
+        self
     }
 }
 
@@ -242,7 +251,7 @@ impl StorageManager {
             if message.reattachment_message_id.is_some() {
                 continue;
             }
-            let should_push = if let Some(message_type) = filter.message_type.clone() {
+            let message_type_matches = if let Some(message_type) = filter.message_type.clone() {
                 match message_type {
                     MessageType::Received => message.incoming == Some(true),
                     MessageType::Sent => message.incoming == Some(false),
@@ -254,7 +263,7 @@ impl StorageManager {
             } else {
                 true
             };
-            if should_push {
+            if message_type_matches && !filter.ignore_ids.contains(&message.key) {
                 filtered_message_indexation.push(message);
             }
         }
