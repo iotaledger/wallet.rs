@@ -5,11 +5,11 @@
 mod jni_c_header;
 pub mod verifylink;
 
-mod bee_types;
 mod classes;
 mod java_glue;
+mod types;
 
-pub use crate::{bee_types::*, classes::*, java_glue::*};
+pub use crate::{classes::*, java_glue::*, types::*};
 
 pub use smol::block_on;
 

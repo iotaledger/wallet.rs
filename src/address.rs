@@ -12,7 +12,7 @@ use iota::{
     MessageId, OutputId, OutputResponse, TransactionId,
 };
 pub use iota::{Address as IotaAddress, Ed25519Address, Input, UTXOInput};
-use serde::{Deserialize, Serialize};
+use serde::{ser::Serializer, Deserialize, Serialize};
 use std::{
     cmp::Ordering,
     collections::HashMap,
@@ -86,7 +86,7 @@ impl AddressOutput {
                 match m.payload() {
                     Some(MessagePayload::Transaction(tx)) => match tx.essence() {
                         TransactionEssence::Regular(essence) => essence.inputs().iter().any(|input| {
-                            if let TransactionInput::UTXO(x) = input {
+                            if let TransactionInput::Utxo(x) = input {
                                 x.input == output_id
                             } else {
                                 false
@@ -170,19 +170,19 @@ impl AddressBuilder {
 
     /// Defines the address.
     pub fn address(mut self, address: AddressWrapper) -> Self {
-        self.address = Some(address);
+        self.address.replace(address);
         self
     }
 
     /// Sets the address key index.
     pub fn key_index(mut self, key_index: usize) -> Self {
-        self.key_index = Some(key_index);
+        self.key_index.replace(key_index);
         self
     }
 
     /// Sets the address outputs.
     pub fn outputs(mut self, outputs: Vec<AddressOutput>) -> Self {
-        self.outputs = Some(outputs);
+        self.outputs.replace(outputs);
         self
     }
 
@@ -249,7 +249,7 @@ impl AddressWrapper {
 }
 
 /// An address.
-#[derive(Debug, Getters, Setters, Clone, Eq, Serialize, Deserialize)]
+#[derive(Debug, Getters, Setters, Clone, Eq, Deserialize)]
 #[getset(get = "pub")]
 pub struct Address {
     /// The address.
@@ -265,6 +265,29 @@ pub struct Address {
     /// The address outputs.
     #[getset(set = "pub(crate)")]
     pub(crate) outputs: HashMap<OutputId, AddressOutput>,
+}
+
+impl Serialize for Address {
+    fn serialize<S: Serializer>(&self, s: S) -> std::result::Result<S::Ok, S::Error> {
+        #[derive(Serialize)]
+        struct AddressDto<'a> {
+            #[serde(with = "crate::serde::iota_address_serde")]
+            address: &'a AddressWrapper,
+            balance: u64,
+            #[serde(rename = "keyIndex")]
+            key_index: usize,
+            internal: bool,
+            outputs: &'a HashMap<OutputId, AddressOutput>,
+        }
+        let address = AddressDto {
+            address: &self.address,
+            balance: self.balance(),
+            key_index: self.key_index,
+            internal: self.internal,
+            outputs: &self.outputs,
+        };
+        address.serialize(s)
+    }
 }
 
 impl PartialOrd for Address {

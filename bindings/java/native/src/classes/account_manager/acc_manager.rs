@@ -7,7 +7,13 @@ use iota_wallet::{
     message::MessageId,
     signing::SignerType,
 };
-use std::{cell::RefCell, num::NonZeroU64, path::PathBuf, rc::Rc, time::Duration};
+use std::{
+    cell::RefCell,
+    num::NonZeroU64,
+    path::{Path, PathBuf},
+    rc::Rc,
+    time::Duration,
+};
 
 use crate::{
     acc::{Account, AccountInitialiser},
@@ -126,7 +132,7 @@ pub struct AccountManager {
 }
 
 impl AccountManager {
-    pub fn storage_path(&self) -> &PathBuf {
+    pub fn storage_path(&self) -> &Path {
         self.manager.storage_path()
     }
 

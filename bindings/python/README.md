@@ -30,7 +30,7 @@ To use the pre-built libraries for linux/macos/windows, please check the `Artifa
 
 The following shows an exmaple to use the python library.
 
-### Example 
+### Example
 
 ```python
 # Copyright 2020 IOTA Stiftung
@@ -561,6 +561,12 @@ Gets the account balance information.
 
 **Returns** the [AccountBalance](#accountbalance) in this account.
 
+#### get_node_info(): InfoResponse
+
+Gets information about the node.
+
+**Returns** the [InfoResponse](#inforesponse)
+
 #### set_alias(alias): void
 
 Updates the account alias.
@@ -885,7 +891,7 @@ client_options = {
     'nodes': list[[Node](#node)] (optional),
     'node_pool_urls': list[str] (optional),
     'network': str (optional),
-    'mqtt_broker_options': [BrokerOptions](#brokeroptions) (optional), 
+    'mqtt_broker_options': [BrokerOptions](#brokeroptions) (optional),
     'local_pow': bool (optional),
     'node_sync_interval': int (optional), # in milliseconds
     'node_sync_enabled': bool (optional),

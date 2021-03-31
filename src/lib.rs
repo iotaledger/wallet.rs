@@ -116,7 +116,7 @@ mod test_utils {
     use rand::{distributions::Alphanumeric, thread_rng, Rng};
     use std::{
         collections::HashMap,
-        path::PathBuf,
+        path::{Path, PathBuf},
         sync::{atomic::AtomicBool, Arc},
     };
     use tokio::sync::Mutex;
@@ -129,7 +129,7 @@ mod test_utils {
 
     #[async_trait::async_trait]
     impl crate::signing::Signer for TestSigner {
-        async fn store_mnemonic(&mut self, _: &PathBuf, _mnemonic: String) -> crate::Result<()> {
+        async fn store_mnemonic(&mut self, _: &Path, _mnemonic: String) -> crate::Result<()> {
             Ok(())
         }
 
