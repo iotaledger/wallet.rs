@@ -642,7 +642,7 @@ impl AccountManager {
             let account_handle = self.get_account(account_id).await?;
             let account = account_handle.read().await;
 
-            if account.balance().total > 0 {
+            if account.balance().await?.total > 0 {
                 return Err(crate::Error::AccountNotEmpty);
             }
 
@@ -1399,6 +1399,7 @@ async fn retry_unconfirmed_transactions(synced_accounts: &[SyncedAccount]) -> cr
             .read()
             .await
             .list_messages(0, 0, Some(MessageType::Unconfirmed))
+            .await?
             .iter()
             .map(|message| (*message.id(), message.payload().clone()))
             .collect();

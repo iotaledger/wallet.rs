@@ -6,8 +6,9 @@ use crate::{
     address::{Address, AddressBuilder, AddressWrapper},
     client::{ClientOptions, Node},
     event::TransferProgressType,
-    message::{Message, MessagePayload, MessageType, TransactionEssence, Transfer},
+    message::{Message, MessageType, Transfer},
     signing::{GenerateAddressMetadata, SignerType},
+    storage::{MessageIndexation, MessageQueryFilter},
 };
 
 use chrono::prelude::{DateTime, Local};
@@ -583,8 +584,8 @@ impl AccountHandle {
     }
 
     /// Bridge to [Account#balance](struct.Account.html#method.balance).
-    pub async fn balance(&self) -> AccountBalance {
-        self.inner.read().await.balance()
+    pub async fn balance(&self) -> crate::Result<AccountBalance> {
+        self.inner.read().await.balance().await
     }
 
     /// Bridge to [Account#set_alias](struct.Account.html#method.set_alias).
@@ -600,40 +601,43 @@ impl AccountHandle {
     /// Bridge to [Account#list_messages](struct.Account.html#method.list_messages).
     /// This method clones the account's messages so when querying a large list of messages
     /// prefer using the `read` method to access the account instance.
-    pub async fn list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<Message> {
-        self.inner
-            .read()
-            .await
-            .list_messages(count, from, message_type)
-            .into_iter()
-            .cloned()
-            .collect()
+    pub async fn list_messages(
+        &self,
+        count: usize,
+        from: usize,
+        message_type: Option<MessageType>,
+    ) -> crate::Result<Vec<Message>> {
+        self.inner.read().await.list_messages(count, from, message_type).await
     }
 
     /// Bridge to [Account#list_spent_addresses](struct.Account.html#method.list_spent_addresses).
     /// This method clones the account's addresses so when querying a large list of addresses
     /// prefer using the `read` method to access the account instance.
-    pub async fn list_spent_addresses(&self) -> Vec<Address> {
-        self.inner
+    pub async fn list_spent_addresses(&self) -> crate::Result<Vec<Address>> {
+        Ok(self
+            .inner
             .read()
             .await
             .list_spent_addresses()
+            .await?
             .into_iter()
             .cloned()
-            .collect()
+            .collect())
     }
 
     /// Bridge to [Account#list_unspent_addresses](struct.Account.html#method.list_unspent_addresses).
     /// This method clones the account's addresses so when querying a large list of addresses
     /// prefer using the `read` method to access the account instance.
-    pub async fn list_unspent_addresses(&self) -> Vec<Address> {
-        self.inner
+    pub async fn list_unspent_addresses(&self) -> crate::Result<Vec<Address>> {
+        Ok(self
+            .inner
             .read()
             .await
             .list_unspent_addresses()
+            .await?
             .into_iter()
             .cloned()
-            .collect()
+            .collect())
     }
 
     /// Bridge to [Account#get_message](struct.Account.html#method.get_message).
@@ -679,6 +683,17 @@ impl Account {
         Ok(res)
     }
 
+    /// Do something with the indexed messages.
+    pub(crate) async fn with_messages<T, C: FnOnce(&Vec<MessageIndexation>) -> T>(&self, f: C) -> T {
+        f(crate::storage::get(&self.storage_path)
+            .await
+            .expect("storage adapter not set")
+            .lock()
+            .await
+            .message_indexation(&self)
+            .expect("message indexation not found"))
+    }
+
     /// Returns the address bech32 human readable part.
     pub fn bech32_hrp(&self) -> String {
         self.addresses().first().unwrap().address().bech32_hrp().to_string()
@@ -703,33 +718,40 @@ impl Account {
             .unwrap()
     }
 
-    /// Gets the account balance information.
-    pub fn balance(&self) -> AccountBalance {
-        let (incoming, outgoing) = self.list_messages(0, 0, Some(MessageType::Confirmed)).iter().fold(
-            (0, 0),
-            |(incoming, outgoing), message| {
-                if let Some(MessagePayload::Transaction(tx)) = message.payload() {
-                    let TransactionEssence::Regular(essence) = tx.essence();
-                    if !essence.internal() {
-                        if essence.incoming() {
-                            return (incoming + essence.value(), outgoing);
-                        } else {
-                            return (incoming, outgoing + essence.value());
+    pub(crate) async fn balance_internal(&self, sent_messages: &[Message]) -> AccountBalance {
+        let (incoming, outgoing) = self
+            .with_messages(|messages| {
+                messages.iter().filter(|m| m.confirmed == Some(true)).fold(
+                    (0, 0),
+                    |(incoming, outgoing), message: &MessageIndexation| {
+                        if message.internal == Some(false) {
+                            if message.incoming.unwrap_or(false) {
+                                return (incoming + message.value, outgoing);
+                            } else {
+                                return (incoming, outgoing + message.value);
+                            }
                         }
-                    }
-                }
-                (incoming, outgoing)
-            },
-        );
+                        (incoming, outgoing)
+                    },
+                )
+            })
+            .await;
+
         AccountBalance {
             total: self.addresses.iter().fold(0, |acc, address| acc + address.balance()),
             available: self
                 .addresses()
                 .iter()
-                .fold(0, |acc, addr| acc + addr.available_balance(&self)),
+                .fold(0, |acc, addr| acc + addr.available_balance(&sent_messages)),
             incoming,
             outgoing,
         }
+    }
+
+    /// Gets the account balance information.
+    pub async fn balance(&self) -> crate::Result<AccountBalance> {
+        let sent_messages = self.list_messages(0, 0, Some(MessageType::Sent)).await?;
+        Ok(self.balance_internal(&sent_messages).await)
     }
 
     /// Updates the account alias.
@@ -814,64 +836,41 @@ impl Account {
     ///     account.list_messages(10, 5, Some(MessageType::Received));
     /// }
     /// ```
-    pub fn list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<&Message> {
-        let mut messages: Vec<&Message> = vec![];
-        for message in &self.messages {
-            if message.reattachment_message_id.is_some() {
-                continue;
-            }
-            let should_push = if let Some(message_type) = message_type.clone() {
-                match message_type {
-                    MessageType::Received => {
-                        if let Some(MessagePayload::Transaction(tx)) = message.payload() {
-                            let TransactionEssence::Regular(essence) = tx.essence();
-                            essence.incoming()
-                        } else {
-                            false
-                        }
-                    }
-                    MessageType::Sent => {
-                        if let Some(MessagePayload::Transaction(tx)) = message.payload() {
-                            let TransactionEssence::Regular(essence) = tx.essence();
-                            !essence.incoming()
-                        } else {
-                            false
-                        }
-                    }
-                    MessageType::Failed => !message.broadcasted(),
-                    MessageType::Unconfirmed => message.confirmed().is_none(),
-                    MessageType::Value => matches!(message.payload(), Some(MessagePayload::Transaction(_))),
-                    MessageType::Confirmed => message.confirmed().unwrap_or_default(),
-                }
-            } else {
-                true
-            };
-            if should_push {
-                messages.push(message);
-            }
-        }
-        let messages_iter = messages.into_iter().skip(from);
-        if count == 0 {
-            messages_iter.collect()
-        } else {
-            messages_iter.take(count).collect()
-        }
+    pub async fn list_messages(
+        &self,
+        count: usize,
+        from: usize,
+        message_type: Option<MessageType>,
+    ) -> crate::Result<Vec<Message>> {
+        crate::storage::get(&self.storage_path)
+            .await
+            .expect("storage adapter not set")
+            .lock()
+            .await
+            .get_messages(&self, count, from, MessageQueryFilter::message_type(message_type))
+            .await
     }
 
     /// Gets the spent addresses.
-    pub fn list_spent_addresses(&self) -> Vec<&Address> {
-        self.addresses
+    pub async fn list_spent_addresses(&self) -> crate::Result<Vec<&Address>> {
+        let sent_messages = self.list_messages(0, 0, Some(MessageType::Sent)).await?;
+        let spent_addresses = self
+            .addresses
             .iter()
-            .filter(|address| !crate::address::is_unspent(&self, address.address()))
-            .collect()
+            .filter(|address| !crate::address::is_unspent(&sent_messages, address.address()))
+            .collect();
+        Ok(spent_addresses)
     }
 
     /// Gets the spent addresses.
-    pub fn list_unspent_addresses(&self) -> Vec<&Address> {
-        self.addresses
+    pub async fn list_unspent_addresses(&self) -> crate::Result<Vec<&Address>> {
+        let sent_messages = self.list_messages(0, 0, Some(MessageType::Sent)).await?;
+        let unspent_addresses = self
+            .addresses
             .iter()
-            .filter(|address| crate::address::is_unspent(&self, address.address()))
-            .collect()
+            .filter(|address| crate::address::is_unspent(&sent_messages, address.address()))
+            .collect();
+        Ok(unspent_addresses)
     }
 
     pub(crate) fn append_messages(&mut self, messages: Vec<Message>) {

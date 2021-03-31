@@ -19,10 +19,10 @@ use serde::{de::Deserializer, Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
 use std::{
     cmp::Ordering,
+    collections::hash_map::DefaultHasher,
     fmt,
     hash::{Hash, Hasher},
     num::NonZeroU64,
-    unimplemented,
 };
 
 /// The strategy to use for the remainder value management when sending funds.
@@ -699,6 +699,12 @@ impl MessagePayload {
             _ => unimplemented!(),
         };
         Ok(payload)
+    }
+
+    pub(crate) fn storage_hash(&self) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        serde_json::to_string(&self).unwrap().hash(&mut hasher);
+        hasher.finish()
     }
 }
 

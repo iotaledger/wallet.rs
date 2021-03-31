@@ -3,7 +3,7 @@
 
 use crate::{
     account::Account,
-    message::{Message, MessagePayload, MessageType, TransactionEssence, TransactionInput},
+    message::{Message, MessagePayload, TransactionEssence, TransactionInput},
     signing::GenerateAddressMetadata,
 };
 use getset::{Getters, Setters};
@@ -78,7 +78,7 @@ impl AddressOutput {
     }
 
     /// Checks if the output is referenced on a pending message or a confirmed message
-    pub(crate) fn is_used(&self, messages: &[&Message]) -> bool {
+    pub(crate) fn is_used(&self, messages: &[Message]) -> bool {
         let output_id = UTXOInput::new(self.transaction_id, self.index).unwrap();
         messages.iter().any(|m| {
             // message is pending or confirmed
@@ -298,16 +298,10 @@ impl Address {
         AddressBuilder::new()
     }
 
-    /// Gets the list of outputs that aren't spent or pending.
-    pub fn available_outputs(&self, account: &Account) -> Vec<&AddressOutput> {
-        let messages = account.list_messages(0, 0, Some(MessageType::Sent));
-        self.available_outputs_internal(&messages)
-    }
-
-    pub(crate) fn available_outputs_internal(&self, messages: &[&Message]) -> Vec<&AddressOutput> {
+    pub(crate) fn available_outputs(&self, sent_messages: &[Message]) -> Vec<&AddressOutput> {
         self.outputs
             .values()
-            .filter(|o| !(o.is_spent || o.is_used(&messages)))
+            .filter(|o| !(o.is_spent || o.is_used(&sent_messages)))
             .collect()
     }
 
@@ -318,8 +312,8 @@ impl Address {
             .fold(0, |acc, o| acc + if o.is_spent { 0 } else { *o.amount() })
     }
 
-    pub(crate) fn available_balance(&self, account: &Account) -> u64 {
-        self.available_outputs(account)
+    pub(crate) fn available_balance(&self, sent_messages: &[Message]) -> u64 {
+        self.available_outputs(sent_messages)
             .iter()
             .fold(0, |acc, o| acc + *o.amount())
     }
@@ -411,9 +405,8 @@ pub(crate) async fn get_new_change_address(
     Ok(address)
 }
 
-pub(crate) fn is_unspent(account: &Account, address: &AddressWrapper) -> bool {
-    !account
-        .list_messages(0, 0, Some(MessageType::Sent))
+pub(crate) fn is_unspent(sent_messages: &[Message], address: &AddressWrapper) -> bool {
+    !sent_messages
         .iter()
         .any(|message| message.addresses().contains(&address))
 }

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use super::StorageAdapter;
-use rocksdb::DB;
-use std::{path::Path, sync::Arc};
+use rocksdb::{WriteBatch, DB};
+use std::{collections::HashMap, path::Path, sync::Arc};
 use tokio::sync::Mutex;
 
 /// The storage id.
@@ -48,6 +48,15 @@ impl StorageAdapter for RocksdbStorageAdapter {
             .await
             .put(key.as_bytes(), record.as_bytes())
             .map_err(storage_err)?;
+        Ok(())
+    }
+
+    async fn batch_set(&mut self, records: HashMap<String, String>) -> crate::Result<()> {
+        let mut batch = WriteBatch::default();
+        for (key, value) in records {
+            batch.put(key.as_bytes(), value.as_bytes());
+        }
+        self.db.lock().await.write(batch).map_err(storage_err)?;
         Ok(())
     }
 

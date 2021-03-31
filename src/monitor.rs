@@ -6,7 +6,7 @@ use crate::{
     address::{AddressOutput, AddressWrapper, IotaAddress},
     client::ClientOptions,
     event::{emit_confirmation_state_change, emit_transaction_event, TransactionEventType},
-    message::{Message, MessagePayload, MessageType, TransactionEssence, TransactionInput, TransactionOutput},
+    message::{Message, MessagePayload, TransactionEssence, TransactionInput, TransactionOutput},
 };
 
 use iota::{bee_rest_api::types::dtos::OutputDto, OutputResponse, Topic, TopicEvent};
@@ -26,9 +26,18 @@ pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
             address.address().to_bech32()
         ))?);
     }
-    for message in account.list_messages(0, 0, Some(MessageType::Unconfirmed)) {
-        topics.push(Topic::new(format!("messages/{}/metadata", message.id().to_string()))?);
-    }
+    let message_topics = account
+        .with_messages(|messages| {
+            let mut topics = Vec::new();
+            for m in messages {
+                if m.confirmed.is_none() {
+                    topics.push(Topic::new(format!("messages/{}/metadata", m.key.to_string()))?);
+                }
+            }
+            crate::Result::Ok(topics)
+        })
+        .await?;
+    topics.extend(message_topics);
 
     client.subscriber().with_topics(topics).unsubscribe().await?;
     Ok(())
