@@ -147,8 +147,14 @@ macro_rules! load_account_dependency_index {
     ($self: ident, $account_id: expr, $key: expr, $indexation: ident) => {
         if let Ok(record) = $self.storage.get($key).await {
             $self.$indexation.insert($account_id, serde_json::from_str(&record)?);
-        } else {
-            $self.$indexation.insert($account_id, Default::default());
+        }
+    };
+}
+
+macro_rules! init_account_dependency_index {
+    ($self: ident, $account_id: expr, $indexation: ident) => {
+        if !$self.$indexation.contains_key($account_id) {
+            $self.$indexation.insert($account_id.to_string(), Default::default());
         }
     };
 }
@@ -195,6 +201,7 @@ impl StorageManager {
         let index = AccountIndexation { key: key.to_string() };
         self.storage.set(key, account).await?;
         if !self.account_indexation.contains(&index) {
+            init_account_dependency_index!(self, key, message_indexation);
             self.account_indexation.push(index);
             self.storage
                 .set(ACCOUNT_INDEXATION_KEY, &self.account_indexation)
