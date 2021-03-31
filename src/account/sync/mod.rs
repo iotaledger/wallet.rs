@@ -1722,12 +1722,12 @@ pub(crate) async fn repost_message(
 ) -> crate::Result<Message> {
     let mut account = account_handle.write().await;
 
-    let message = match account.get_message(message_id) {
+    let message = match account.get_message(message_id).await {
         Some(message_to_repost) => {
             let mut message_to_repost = message_to_repost.clone();
             // check all reattachments of the message we want to promote/rettry/reattach
             while let Some(reattachment_message_id) = message_to_repost.reattachment_message_id {
-                match account.get_message(&reattachment_message_id) {
+                match account.get_message(&reattachment_message_id).await {
                     Some(m) => {
                         message_to_repost = m.clone();
                         if message_to_repost.confirmed().unwrap_or(false) {

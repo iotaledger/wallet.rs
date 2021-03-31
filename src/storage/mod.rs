@@ -255,16 +255,11 @@ impl StorageManager {
         Ok(filtered_message_indexation)
     }
 
-    pub async fn save_messages(
-        &mut self,
-        account: &Account,
-        messages: &[Message],
-    ) -> crate::Result<Vec<MessageIndexation>> {
+    pub async fn save_messages(&mut self, account: &Account, messages: &[Message]) -> crate::Result<()> {
         let message_indexation = self
             .message_indexation
             .get_mut(account.id())
             .ok_or(crate::Error::RecordNotFound)?;
-        let mut indexation = Vec::new();
         let mut messages_map = HashMap::new();
         for message in messages.iter() {
             messages_map.insert(message.id().to_string(), serde_json::to_string(&message)?);
@@ -285,7 +280,6 @@ impl StorageManager {
                 value,
                 reattachment_message_id: None,
             };
-            indexation.push(index.clone());
             if let Some(position) = message_indexation.iter().position(|i| i == &index) {
                 message_indexation[position] = index.clone();
             } else {
@@ -296,7 +290,7 @@ impl StorageManager {
             .set(&account_message_index_key(account.id()), &message_indexation)
             .await?;
         self.storage.batch_set(messages_map).await?;
-        Ok(indexation)
+        Ok(())
     }
 
     pub async fn get_message(&self, account: &Account, message_id: &MessageId) -> crate::Result<Message> {

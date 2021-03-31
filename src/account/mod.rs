@@ -642,7 +642,7 @@ impl AccountHandle {
 
     /// Bridge to [Account#get_message](struct.Account.html#method.get_message).
     pub async fn get_message(&self, message_id: &MessageId) -> Option<Message> {
-        self.inner.read().await.get_message(message_id).cloned()
+        self.inner.read().await.get_message(message_id).await
     }
 }
 
@@ -908,9 +908,25 @@ impl Account {
         &mut self.messages
     }
 
+    pub(crate) async fn save_messages(&mut self, messages: Vec<Message>) -> crate::Result<()> {
+        crate::storage::get(&self.storage_path)
+            .await?
+            .lock()
+            .await
+            .save_messages(&self, &messages)
+            .await
+    }
+
     /// Gets a message with the given id associated with this account.
-    pub fn get_message(&self, message_id: &MessageId) -> Option<&Message> {
-        self.messages.iter().find(|tx| tx.id() == message_id)
+    pub async fn get_message(&self, message_id: &MessageId) -> Option<Message> {
+        crate::storage::get(&self.storage_path)
+            .await
+            .expect("storage adapter not set")
+            .lock()
+            .await
+            .get_message(&self, message_id)
+            .await
+            .ok()
     }
 
     /// Gets a message with the given id associated with this account.
