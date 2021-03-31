@@ -137,12 +137,11 @@ async fn process_output(payload: String, account_handle: AccountHandle) -> crate
     let (addresses_to_sync, message_data) = if output.is_spent {
         (vec![address], None)
     } else {
-        let (message, is_new) = match account.messages_mut().iter().position(|m| m.id() == &output.message_id) {
-            Some(message_index) => {
-                let message = &mut account.messages_mut()[message_index];
+        let (message, is_new) = match account.get_message(&output.message_id).await {
+            Some(mut message) => {
                 if !message.confirmed().unwrap_or(false) {
                     message.set_confirmed(Some(true));
-                    let message = message.clone();
+                    account.save_messages(vec![message.clone()]).await?;
                     (message, false)
                 } else {
                     return Ok(false);
@@ -168,7 +167,7 @@ async fn process_output(payload: String, account_handle: AccountHandle) -> crate
                     .with_confirmed(Some(true))
                     .finish()
                     .await?;
-                    account.messages_mut().push(message.clone());
+                    account.save_messages(vec![message.clone()]).await?;
                     (message, true)
                 } else {
                     return Ok(false);

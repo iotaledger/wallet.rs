@@ -240,12 +240,16 @@ impl AccountInitialiser {
             alias,
             created_at,
             last_synced_at: None,
-            messages: self.messages,
+            messages: vec![],
             addresses: self.addresses,
             client_options: self.client_options,
             storage_path: self.storage_path,
             skip_persistence: self.skip_persistence,
         };
+
+        if !self.messages.is_empty() {
+            account.save_messages(self.messages).await?;
+        }
 
         let bech32_hrp = match account.client_options.network().as_deref() {
             Some("testnet") => "atoi".to_string(),
@@ -902,10 +906,6 @@ impl Account {
     #[cfg(test)]
     pub(crate) fn addresses_mut(&mut self) -> &mut Vec<Address> {
         &mut self.addresses
-    }
-
-    pub(crate) fn messages_mut(&mut self) -> &mut Vec<Message> {
-        &mut self.messages
     }
 
     pub(crate) async fn save_messages(&mut self, messages: Vec<Message>) -> crate::Result<()> {
