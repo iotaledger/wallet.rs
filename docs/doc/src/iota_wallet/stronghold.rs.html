@@ -885,6 +885,13 @@
 <span id="882">882</span>
 <span id="883">883</span>
 <span id="884">884</span>
+<span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
+<span id="891">891</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1181,6 +1188,8 @@
     <span class="ident">PasswordNotSet</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;invalid address or account index {0}&quot;</span>)]</span>
     <span class="ident">TryFromIntError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">TryFromIntError</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;the mnemonic was already stored&quot;</span>)]</span>
+    <span class="ident">MnemonicAlreadyStored</span>,
 }
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
@@ -1403,12 +1412,17 @@
     <span class="ident">check_snapshot</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="ident">load_private_data_actor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
 
+    <span class="kw">let</span> <span class="ident">mnemonic_location</span> <span class="op">=</span> <span class="ident">Location</span>::<span class="ident">generic</span>(<span class="ident">SECRET_VAULT_PATH</span>, <span class="ident">SEED_RECORD_PATH</span>);
+    <span class="kw">if</span> <span class="ident">runtime</span>.<span class="ident">stronghold</span>.<span class="ident">record_exists</span>(<span class="ident">mnemonic_location</span>.<span class="ident">clone</span>()).<span class="kw">await</span> {
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">MnemonicAlreadyStored</span>);
+    }
+
     <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">runtime</span>
         .<span class="ident">stronghold</span>
         .<span class="ident">runtime_exec</span>(<span class="ident">Procedure</span>::<span class="ident">BIP39Recover</span> {
             <span class="ident">mnemonic</span>,
             <span class="ident">passphrase</span>: <span class="prelude-val">None</span>,
-            <span class="ident">output</span>: <span class="ident">Location</span>::<span class="ident">generic</span>(<span class="ident">SECRET_VAULT_PATH</span>, <span class="ident">SEED_RECORD_PATH</span>),
+            <span class="ident">output</span>: <span class="ident">mnemonic_location</span>,
             <span class="ident">hint</span>: <span class="ident">RecordHint</span>::<span class="ident">new</span>(<span class="string">&quot;wallet.rs-seed&quot;</span>).<span class="ident">unwrap</span>(),
         })
         .<span class="kw">await</span>;
