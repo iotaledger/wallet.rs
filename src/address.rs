@@ -424,7 +424,12 @@ mod tests {
             .build()
             .await;
 
-        account_handle.write().await.append_messages(vec![spent_tx]);
+        account_handle
+            .write()
+            .await
+            .save_messages(vec![spent_tx])
+            .await
+            .unwrap();
 
         let response = super::is_unspent(&*account_handle.read().await, address.address());
         assert_eq!(response, false);

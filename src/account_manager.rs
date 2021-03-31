@@ -692,14 +692,7 @@ impl AccountManager {
 
         // store the message on the receive account
         let message_ = message.clone();
-        to_account_handle
-            .write()
-            .await
-            .do_mut(|account| {
-                account.append_messages(vec![message_]);
-                Ok(())
-            })
-            .await?;
+        to_account_handle.write().await.save_messages(vec![message_]).await?;
 
         Ok(message)
     }
@@ -1142,11 +1135,12 @@ impl AccountsSynchronizer {
         for (account_handle, addresses_before_sync, data) in synced_data {
             let (parsed_messages, messages_before_sync) = {
                 let mut account = account_handle.write().await;
-                let messages_before_sync: Vec<(MessageId, Option<bool>)> =
-                    account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
+                let messages_before_sync: Vec<(MessageId, Option<bool>)> = account
+                    .with_messages(|messages| messages.iter().map(|m| (m.key, m.confirmed)).collect())
+                    .await;
 
                 let parsed_messages = data.parse_messages(account_handle.accounts.clone(), &account).await?;
-                account.append_messages(parsed_messages.to_vec());
+                account.save_messages(parsed_messages.to_vec()).await?;
                 account.set_last_synced_at(Some(chrono::Local::now()));
                 account.save().await?;
                 (parsed_messages, messages_before_sync)
@@ -1266,27 +1260,26 @@ async fn poll(
                 retried_data.account_handle.account_options.persist_events,
             )
             .await?;
-            // safe to unwrap since we're sure we have the message
-            let reattached_message = account.get_message_mut(reattached_message_id).unwrap();
+            let mut reattached_message = account.get_message(reattached_message_id).await.unwrap();
             reattached_message.set_reattachment_message_id(Some(*message.id()));
+            account.save_messages(vec![reattached_message]).await?;
         }
 
-        account.append_messages(
-            retried_data
-                .reattached
-                .into_iter()
-                .map(|(_, message)| message)
-                .collect(),
-        );
-        account.append_messages(retried_data.promoted);
+        let mut messages_to_save: Vec<Message> = retried_data
+            .reattached
+            .into_iter()
+            .map(|(_, message)| message)
+            .collect();
+        messages_to_save.extend(retried_data.promoted);
+        account.save_messages(messages_to_save).await?;
 
         for message_id in retried_data.no_need_promote_or_reattach {
-            let message = account.get_message_mut(&message_id).unwrap();
+            let mut message = account.get_message(&message_id).await.unwrap();
             if let Ok(metadata) = client.read().await.get_message().metadata(&message_id).await {
                 if let Some(ledger_inclusion_state) = metadata.ledger_inclusion_state {
                     let confirmed = ledger_inclusion_state == LedgerInclusionStateDto::Included;
                     message.set_confirmed(Some(confirmed));
-                    let message = message.clone();
+                    account.save_messages(vec![message.clone()]).await?;
                     emit_confirmation_state_change(
                         &account,
                         message,

@@ -332,8 +332,9 @@ async fn sync_addresses(
             .iter()
             .map(|a| (a.address().clone(), a.outputs().clone()))
             .collect();
-        let account_messages: Vec<(MessageId, Option<bool>)> =
-            account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
+        let account_messages: Vec<(MessageId, Option<bool>)> = account
+            .with_messages(|messages| messages.iter().map(|m| (m.key, m.confirmed)).collect())
+            .await;
         let client_options = account.client_options().clone();
 
         let mut addresses_to_sync = Vec::new();
@@ -395,11 +396,14 @@ async fn sync_messages(
     let client_options = account.client_options().clone();
 
     let messages_with_known_confirmation: Vec<MessageId> = account
-        .messages()
-        .iter()
-        .filter(|m| m.confirmed().is_some())
-        .map(|m| *m.id())
-        .collect();
+        .with_messages(|messages| {
+            messages
+                .iter()
+                .filter(|m| m.confirmed.is_some())
+                .map(|m| m.key)
+                .collect()
+        })
+        .await;
 
     let mut addresses = Vec::new();
 
@@ -521,8 +525,9 @@ async fn perform_sync(
                     "[SYNC] syncing specific addresses: {:?}",
                     addresses.iter().map(|a| a.to_bech32()).collect::<Vec<String>>()
                 );
-                let account_messages: Vec<(MessageId, Option<bool>)> =
-                    account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
+                let account_messages: Vec<(MessageId, Option<bool>)> = account
+                    .with_messages(|messages| messages.iter().map(|m| (m.key, m.confirmed)).collect())
+                    .await;
                 let mut addresses_to_sync = Vec::new();
                 for address in account.addresses() {
                     if !addresses.contains(address.address()) {
@@ -556,9 +561,12 @@ async fn perform_sync(
     let mut new_messages = vec![];
     for found_message in found_messages {
         if !account
-            .messages()
-            .iter()
-            .any(|message| message.id() == &found_message.id && message.confirmed() == &Some(true))
+            .with_messages(|messages| {
+                messages
+                    .iter()
+                    .any(|message| message.key == found_message.id && message.confirmed == Some(true))
+            })
+            .await
         {
             new_messages.push(found_message);
         }
@@ -865,8 +873,9 @@ impl AccountSynchronizer {
                     .all(|address| address.balance() == 0 && address.outputs().is_empty());
                 log::debug!("[SYNC] is empty: {}", is_empty);
                 let mut account = self.account_handle.write().await;
-                let messages_before_sync: Vec<(MessageId, Option<bool>)> =
-                    account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
+                let messages_before_sync: Vec<(MessageId, Option<bool>)> = account
+                    .with_messages(|messages| messages.iter().map(|m| (m.key, m.confirmed)).collect())
+                    .await;
                 let addresses_before_sync: Vec<(String, u64, HashMap<OutputId, AddressOutput>)> = account
                     .addresses()
                     .iter()
@@ -882,7 +891,7 @@ impl AccountSynchronizer {
                 if !self.skip_persistence {
                     if !(new_addresses.is_empty() && parsed_messages.is_empty()) {
                         account.append_addresses(new_addresses.to_vec());
-                        account.append_messages(parsed_messages.to_vec());
+                        account.save_messages(parsed_messages.to_vec()).await?;
                         account.set_last_synced_at(Some(chrono::Local::now()));
                         account.save().await?;
                     }
@@ -1619,9 +1628,12 @@ async fn perform_transfer(
     )
     .finish()
     .await?;
-    account_.append_messages(vec![message.clone()]);
+    account_.save_messages(vec![message.clone()]).await?;
 
-    account_.save().await?;
+    // if we generated an address, we need to save the account
+    if !addresses_to_watch.is_empty() {
+        account_.save().await?;
+    }
 
     // drop the  account_ ref so it doesn't lock the monitor system
     drop(account_);
@@ -1759,7 +1771,7 @@ pub(crate) async fn repost_message(
             .finish()
             .await?;
 
-            account.append_messages(vec![message.clone()]);
+            account.save_messages(vec![message.clone()]).await?;
 
             Ok(message)
         }

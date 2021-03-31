@@ -226,7 +226,9 @@ impl AccountInitialiser {
         }
         if let Some(ref latest_account_handle) = latest_account_handle {
             let latest_account = latest_account_handle.read().await;
-            if latest_account.messages().is_empty() && latest_account.addresses().iter().all(|a| a.outputs.is_empty()) {
+            if latest_account.with_messages(|messages| messages.is_empty()).await
+                && latest_account.addresses().iter().all(|a| a.outputs.is_empty())
+            {
                 return Err(crate::Error::LatestAccountIsEmpty);
             }
         }
@@ -240,16 +242,11 @@ impl AccountInitialiser {
             alias,
             created_at,
             last_synced_at: None,
-            messages: vec![],
             addresses: self.addresses,
             client_options: self.client_options,
             storage_path: self.storage_path,
             skip_persistence: self.skip_persistence,
         };
-
-        if !self.messages.is_empty() {
-            account.save_messages(self.messages).await?;
-        }
 
         let bech32_hrp = match account.client_options.network().as_deref() {
             Some("testnet") => "atoi".to_string(),
@@ -294,8 +291,11 @@ impl AccountInitialiser {
         for address in account.addresses.iter_mut() {
             address.set_bech32_hrp(bech32_hrp.to_string());
         }
-        for message in account.messages.iter_mut() {
+        for message in self.messages.iter_mut() {
             message.set_bech32_hrp(bech32_hrp.to_string());
+        }
+        if !self.messages.is_empty() {
+            account.save_messages(self.messages).await?;
         }
 
         let address = match account.addresses.first() {
@@ -368,8 +368,6 @@ pub struct Account {
     #[serde(rename = "lastSyncedAt")]
     #[getset(set = "pub(crate)")]
     last_synced_at: Option<DateTime<Local>>,
-    /// Messages associated with the seed.
-    messages: Vec<Message>,
     /// Address history associated with the seed.
     #[getset(set = "pub(crate)")]
     addresses: Vec<Address>,
@@ -459,8 +457,6 @@ guard_field_getters!(
     #[doc = "Bridge to [Account#alias](struct.Account.html#method.alias)."] => alias => String,
     #[doc = "Bridge to [Account#created_at](struct.Account.html#method.created_at)."] => created_at => DateTime<Local>,
     #[doc = "Bridge to [Account#last_synced_at](struct.Account.html#method.last_synced_at)."] => last_synced_at => Option<DateTime<Local>>,
-    #[doc = "Bridge to [Account#messages](struct.Account.html#method.messages).
-    This method clones the messages so prefer the using the `read` method to access the account instance."] => messages => Vec<Message>,
     #[doc = "Bridge to [Account#addresses](struct.Account.html#method.addresses).
     This method clones the addresses so prefer the using the `read` method to access the account instance."] => addresses => Vec<Address>,
     #[doc = "Bridge to [Account#client_options](struct.Account.html#method.client_options)."] => client_options => ClientOptions,
@@ -564,7 +560,9 @@ impl AccountHandle {
     pub async fn is_latest_address_unused(&self) -> crate::Result<bool> {
         let mut account = self.inner.write().await;
         let client_options = account.client_options().clone();
-        let messages = account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
+        let messages: Vec<(MessageId, Option<bool>)> = account
+            .with_messages(|messages| messages.iter().map(|m| (m.key, m.confirmed)).collect())
+            .await;
         let latest_address = account.latest_address_mut();
         let bech32_hrp = latest_address.address().bech32_hrp().to_string();
         let address_wrapper = latest_address.address().clone();
@@ -877,19 +875,6 @@ impl Account {
         Ok(unspent_addresses)
     }
 
-    pub(crate) fn append_messages(&mut self, messages: Vec<Message>) {
-        messages.into_iter().for_each(
-            |message| match self.messages.iter().position(|m| m.id() == message.id()) {
-                Some(index) => {
-                    self.messages[index] = message;
-                }
-                None => {
-                    self.messages.push(message);
-                }
-            },
-        );
-    }
-
     pub(crate) fn append_addresses(&mut self, addresses: Vec<Address>) {
         addresses
             .into_iter()
@@ -927,11 +912,6 @@ impl Account {
             .get_message(&self, message_id)
             .await
             .ok()
-    }
-
-    /// Gets a message with the given id associated with this account.
-    pub(crate) fn get_message_mut(&mut self, message_id: &MessageId) -> Option<&mut Message> {
-        self.messages.iter_mut().find(|tx| tx.id() == message_id)
     }
 }
 
@@ -1145,7 +1125,9 @@ mod tests {
         account_handle
             .write()
             .await
-            .append_messages(vec![unconfirmed_message.clone(), confirmed_message]);
+            .save_messages(vec![unconfirmed_message.clone(), confirmed_message])
+            .await
+            .unwrap();
 
         assert_eq!(
             account_handle.read().await.balance().available,
@@ -1186,12 +1168,17 @@ mod tests {
             .address(latest_address.clone())
             .build()
             .await;
-        account_handle.write().await.append_messages(vec![
-            received_message,
-            failed_message,
-            unconfirmed_message,
-            value_message,
-        ]);
+        account_handle
+            .write()
+            .await
+            .save_messages(vec![
+                received_message,
+                failed_message,
+                unconfirmed_message,
+                value_message,
+            ])
+            .await
+            .unwrap();
 
         let txs = account_handle.list_messages(4, 0, None).await;
         assert_eq!(txs.len(), 4);
@@ -1244,13 +1231,18 @@ mod tests {
             .build()
             .await;
 
-        account_handle.write().await.append_messages(vec![
-            received_message.clone(),
-            sent_message.clone(),
-            failed_message.clone(),
-            unconfirmed_message.clone(),
-            value_message.clone(),
-        ]);
+        account_handle
+            .write()
+            .await
+            .save_messages(vec![
+                received_message.clone(),
+                sent_message.clone(),
+                failed_message.clone(),
+                unconfirmed_message.clone(),
+                value_message.clone(),
+            ])
+            .await
+            .unwrap();
 
         let cases = vec![
             (MessageType::Failed, &failed_message),
@@ -1282,7 +1274,12 @@ mod tests {
 
         let m1 = crate::test_utils::GenerateMessageBuilder::default().build().await;
         let m2 = crate::test_utils::GenerateMessageBuilder::default().build().await;
-        account_handle.write().await.append_messages(vec![m1, m2.clone()]);
+        account_handle
+            .write()
+            .await
+            .save_messages(vec![m1, m2.clone()])
+            .await
+            .unwrap();
         assert_eq!(account_handle.read().await.get_message(m2.id()).unwrap(), &m2);
     }
 
@@ -1306,7 +1303,12 @@ mod tests {
                     .build()
                     .await;
 
-                account_handle.write().await.append_messages(vec![spent_tx]);
+                account_handle
+                    .write()
+                    .await
+                    .save_messages(vec![spent_tx])
+                    .await
+                    .unwrap();
 
                 assert_eq!(
                     account_handle.read().await.list_unspent_addresses(),
