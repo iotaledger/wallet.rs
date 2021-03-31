@@ -562,7 +562,7 @@
                 <span class="kw">match</span> <span class="ident">m</span>.<span class="ident">payload</span>() {
                     <span class="prelude-val">Some</span>(<span class="ident">MessagePayload</span>::<span class="ident">Transaction</span>(<span class="ident">tx</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">tx</span>.<span class="ident">essence</span>() {
                         <span class="ident">TransactionEssence</span>::<span class="ident">Regular</span>(<span class="ident">essence</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">essence</span>.<span class="ident">inputs</span>().<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">input</span><span class="op">|</span> {
-                            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">TransactionInput</span>::<span class="ident">Utxo</span>(<span class="ident">x</span>) <span class="op">=</span> <span class="ident">input</span> {
+                            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">TransactionInput</span>::<span class="ident">UTXO</span>(<span class="ident">x</span>) <span class="op">=</span> <span class="ident">input</span> {
                                 <span class="ident">x</span>.<span class="ident">input</span> <span class="op">=</span><span class="op">=</span> <span class="ident">output_id</span>
                             } <span class="kw">else</span> {
                                 <span class="bool-val">false</span>
