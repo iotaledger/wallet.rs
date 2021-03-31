@@ -3,7 +3,9 @@
         "client_options": {
             "nodes": [
                 {
-                    "url": "https://api.hornet-0.testnet.chrysalis2.com"
+                    "url": "https://api.hornet-0.testnet.chrysalis2.com",
+                    "auth": null,
+                    "disabled": false
                 }
             ],
             "local_pow": true,
@@ -36,7 +38,9 @@
         "client_options": {
             "nodes": [
                 {
-                    "url": "https://api.hornet-0.testnet.chrysalis2.com"
+                    "url": "https://api.hornet-0.testnet.chrysalis2.com",
+                    "auth": null,
+                    "disabled": false
                 }
             ],
             "local_pow": true,
@@ -62,7 +66,8 @@
             "nodes": [
                 {
                     "url": "https://api.hornet-0.testnet.chrysalis2.com/",
-                    "auth": null
+                    "auth": null,
+                    "disabled": false
                 }
             ],
             "local_pow": true,
@@ -80,7 +85,8 @@
             "nodes": [
                 {
                     "url": "https://api.hornet-2.testnet.chrysalis2.com/",
-                    "auth": null
+                    "auth": null,
+                    "disabled": false
                 }
             ],
             "local_pow": true,
