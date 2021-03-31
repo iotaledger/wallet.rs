@@ -359,11 +359,12 @@ pub struct TransactionUtxoInput {
 }
 
 /// Transaction input.
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(tag = "type", content = "data")]
 pub enum TransactionInput {
     /// UTXO input.
-    Utxo(TransactionUtxoInput),
+    UTXO(TransactionUtxoInput),
     /// Treasury input.
     Treasury(TreasuryInput),
 }
@@ -448,7 +449,7 @@ impl TransactionRegularEssence {
                             }
                         }
                     };
-                    TransactionInput::Utxo(TransactionUtxoInput { input: i, metadata })
+                    TransactionInput::UTXO(TransactionUtxoInput { input: i, metadata })
                 }
                 Input::Treasury(treasury) => TransactionInput::Treasury(treasury),
                 _ => unimplemented!(),
@@ -502,7 +503,7 @@ impl TransactionRegularEssence {
 
                         // if the output is listed on the inputs, it's the remainder output.
                         if inputs.iter().any(|input| match input {
-                            TransactionInput::Utxo(input) => {
+                            TransactionInput::UTXO(input) => {
                                 if let Some(metadata) = &input.metadata {
                                     &metadata.address().as_ref() == output_address
                                 } else {
@@ -540,7 +541,7 @@ impl TransactionRegularEssence {
                     }
                 } else {
                     let sent = inputs.iter().any(|i| match i {
-                        TransactionInput::Utxo(input) => match input.metadata {
+                        TransactionInput::UTXO(input) => match input.metadata {
                             Some(ref input_metadata) => metadata
                                 .account_addresses
                                 .iter()
@@ -592,7 +593,7 @@ impl TransactionRegularEssence {
         };
 
         let sent = essence.inputs().iter().any(|i| match i {
-            TransactionInput::Utxo(input) => match input.metadata {
+            TransactionInput::UTXO(input) => match input.metadata {
                 Some(ref input_metadata) => metadata
                     .account_addresses
                     .iter()
@@ -806,7 +807,7 @@ fn transaction_inputs_belonging_to_account(
 ) -> Vec<TransactionInput> {
     let mut inputs = Vec::new();
     for input in essence.inputs() {
-        if let TransactionInput::Utxo(i) = input {
+        if let TransactionInput::UTXO(i) = input {
             if let Some(metadata) = &i.metadata {
                 if account_addresses
                     .iter()
