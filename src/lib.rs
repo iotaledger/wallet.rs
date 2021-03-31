@@ -173,20 +173,27 @@ mod test_utils {
 
     #[async_trait::async_trait]
     impl crate::storage::StorageAdapter for TestStorage {
-        async fn get(&self, account_id: &str) -> crate::Result<String> {
-            match self.cache.get(account_id) {
+        async fn get(&self, id: &str) -> crate::Result<String> {
+            match self.cache.get(id) {
                 Some(value) => Ok(value.to_string()),
                 None => Err(crate::Error::RecordNotFound),
             }
         }
 
-        async fn set(&mut self, account_id: &str, account: String) -> crate::Result<()> {
-            self.cache.insert(account_id.to_string(), account);
+        async fn set(&mut self, id: &str, record: String) -> crate::Result<()> {
+            self.cache.insert(id.to_string(), record);
             Ok(())
         }
 
-        async fn remove(&mut self, account_id: &str) -> crate::Result<()> {
-            self.cache.remove(account_id).ok_or(crate::Error::RecordNotFound)?;
+        async fn batch_set(&mut self, records: HashMap<String, String>) -> crate::Result<()> {
+            for (id, record) in records {
+                self.cache.insert(id, record);
+            }
+            Ok(())
+        }
+
+        async fn remove(&mut self, id: &str) -> crate::Result<()> {
+            self.cache.remove(id).ok_or(crate::Error::RecordNotFound)?;
             Ok(())
         }
     }

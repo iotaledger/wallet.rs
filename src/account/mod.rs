@@ -405,15 +405,16 @@ impl AccountHandle {
 
     /// Returns the addresses that need output consolidation.
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-    pub(crate) async fn output_consolidation_addresses(&self) -> Vec<AddressWrapper> {
+    pub(crate) async fn output_consolidation_addresses(&self) -> crate::Result<Vec<AddressWrapper>> {
         let mut addresses = Vec::new();
         let account = self.inner.read().await;
+        let sent_messages = account.list_messages(0, 0, Some(MessageType::Sent)).await?;
         for address in account.addresses() {
-            if address.available_outputs(&account).len() >= self.account_options.output_consolidation_threshold {
+            if address.available_outputs(&sent_messages).len() >= self.account_options.output_consolidation_threshold {
                 addresses.push(address.address().clone());
             }
         }
-        addresses
+        Ok(addresses)
     }
 
     pub(crate) fn is_mqtt_enabled(&self) -> bool {
@@ -991,16 +992,7 @@ mod tests {
             };
         }
 
-        assert_bridge_method!(
-            id,
-            signer_type,
-            index,
-            alias,
-            created_at,
-            messages,
-            addresses,
-            client_options
-        );
+        assert_bridge_method!(id, signer_type, index, alias, created_at, addresses, client_options);
     }
 
     fn _generate_address_output(value: u64) -> AddressOutput {
@@ -1077,14 +1069,14 @@ mod tests {
     async fn total_balance() {
         let manager = crate::test_utils::get_account_manager().await;
         let (account_handle, _, balance) = _generate_account(&manager, vec![]).await;
-        assert_eq!(account_handle.read().await.balance().total, balance);
+        assert_eq!(account_handle.read().await.balance().await.unwrap().total, balance);
     }
 
     #[tokio::test]
     async fn available_balance() {
         let manager = crate::test_utils::get_account_manager().await;
         let (account_handle, _, balance) = _generate_account(&manager, vec![]).await;
-        assert_eq!(account_handle.read().await.balance().available, balance);
+        assert_eq!(account_handle.read().await.balance().await.unwrap().available, balance);
 
         let first_address = {
             let mut account = account_handle.write().await;
@@ -1130,7 +1122,7 @@ mod tests {
             .unwrap();
 
         assert_eq!(
-            account_handle.read().await.balance().available,
+            account_handle.read().await.balance().await.unwrap().available,
             balance
                 - if let Some(MessagePayload::Transaction(tx)) = unconfirmed_message.payload() {
                     let TransactionEssence::Regular(essence) = tx.essence();
@@ -1180,7 +1172,7 @@ mod tests {
             .await
             .unwrap();
 
-        let txs = account_handle.list_messages(4, 0, None).await;
+        let txs = account_handle.list_messages(4, 0, None).await.unwrap();
         assert_eq!(txs.len(), 4);
     }
 
@@ -1253,7 +1245,7 @@ mod tests {
             (MessageType::Confirmed, &received_message),
         ];
         for (tx_type, expected) in cases {
-            let messages = account_handle.list_messages(0, 0, Some(tx_type.clone())).await;
+            let messages = account_handle.list_messages(0, 0, Some(tx_type.clone())).await.unwrap();
             assert_eq!(
                 messages.len(),
                 match tx_type {
@@ -1280,7 +1272,7 @@ mod tests {
             .save_messages(vec![m1, m2.clone()])
             .await
             .unwrap();
-        assert_eq!(account_handle.read().await.get_message(m2.id()).unwrap(), &m2);
+        assert_eq!(account_handle.read().await.get_message(m2.id()).await.unwrap(), m2);
     }
 
     #[tokio::test]
@@ -1311,11 +1303,14 @@ mod tests {
                     .unwrap();
 
                 assert_eq!(
-                    account_handle.read().await.list_unspent_addresses(),
+                    account_handle.read().await.list_unspent_addresses().await.unwrap(),
                     vec![&unspent_address1, &unspent_address2]
                 );
 
-                assert_eq!(account_handle.read().await.list_spent_addresses(), vec![&spent_address]);
+                assert_eq!(
+                    account_handle.read().await.list_spent_addresses().await.unwrap(),
+                    vec![&spent_address]
+                );
 
                 assert_eq!(
                     account_handle.read().await.addresses(),

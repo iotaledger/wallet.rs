@@ -1369,7 +1369,7 @@ async fn consolidate_outputs_if_needed(
             let account = synced.account_handle.read().await;
             let signer_type = account.signer_type();
             if signer_type == &SignerType::LedgerNano || signer_type == &SignerType::LedgerNanoSimulator {
-                let addresses = synced.account_handle.output_consolidation_addresses().await;
+                let addresses = synced.account_handle.output_consolidation_addresses().await?;
                 for address in addresses {
                     crate::event::emit_address_consolidation_needed(&account, address).await;
                 }

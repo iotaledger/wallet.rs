@@ -642,7 +642,7 @@ fn parse_accounts(
 #[cfg(test)]
 mod tests {
     use super::StorageAdapter;
-    use std::path::PathBuf;
+    use std::{collections::HashMap, path::PathBuf};
 
     #[tokio::test]
     // asserts that the adapter defined by `set` is globally available with `get`
@@ -654,6 +654,9 @@ mod tests {
                 Ok("MY_ADAPTER_GET_RESPONSE".to_string())
             }
             async fn set(&mut self, _key: &str, _record: String) -> crate::Result<()> {
+                Ok(())
+            }
+            async fn batch_set(&mut self, _records: HashMap<String, String>) -> crate::Result<()> {
                 Ok(())
             }
             async fn remove(&mut self, _key: &str) -> crate::Result<()> {

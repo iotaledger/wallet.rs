@@ -413,6 +413,8 @@ pub(crate) fn is_unspent(sent_messages: &[Message], address: &AddressWrapper) ->
 
 #[cfg(test)]
 mod tests {
+    use crate::message::MessageType;
+
     #[tokio::test]
     async fn is_unspent_false() {
         let manager = crate::test_utils::get_account_manager().await;
@@ -431,7 +433,13 @@ mod tests {
             .await
             .unwrap();
 
-        let response = super::is_unspent(&*account_handle.read().await, address.address());
+        let response = super::is_unspent(
+            &account_handle
+                .list_messages(0, 0, Some(MessageType::Sent))
+                .await
+                .unwrap(),
+            address.address(),
+        );
         assert_eq!(response, false);
     }
 
@@ -441,7 +449,13 @@ mod tests {
         let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
         let address = crate::test_utils::generate_random_iota_address();
 
-        let response = super::is_unspent(&*account_handle.read().await, &address);
+        let response = super::is_unspent(
+            &account_handle
+                .list_messages(0, 0, Some(MessageType::Sent))
+                .await
+                .unwrap(),
+            &address,
+        );
         assert_eq!(response, true);
     }
 }
