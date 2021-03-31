@@ -293,6 +293,8 @@ pub enum Error {
     PasswordNotSet,
     #[error("invalid address or account index {0}")]
     TryFromIntError(#[from] TryFromIntError),
+    #[error("the mnemonic was already stored")]
+    MnemonicAlreadyStored,
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -515,12 +517,17 @@ pub async fn store_mnemonic(snapshot_path: &Path, mnemonic: String) -> Result<()
     check_snapshot(&mut runtime, snapshot_path, None).await?;
     load_private_data_actor(&mut runtime, snapshot_path, None).await?;
 
+    let mnemonic_location = Location::generic(SECRET_VAULT_PATH, SEED_RECORD_PATH);
+    if runtime.stronghold.record_exists(mnemonic_location.clone()).await {
+        return Err(Error::MnemonicAlreadyStored);
+    }
+
     let res = runtime
         .stronghold
         .runtime_exec(Procedure::BIP39Recover {
             mnemonic,
             passphrase: None,
-            output: Location::generic(SECRET_VAULT_PATH, SEED_RECORD_PATH),
+            output: mnemonic_location,
             hint: RecordHint::new("wallet.rs-seed").unwrap(),
         })
         .await;
