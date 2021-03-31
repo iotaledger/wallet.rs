@@ -1745,7 +1745,7 @@ dependencies = [
 [[package]]
 name = "iota-bundle-miner"
 version = "0.1.0-alpha.0"
-source = "git+https://github.com/iotaledger/iota.rs?rev=c143988153ce6e74cb6e00df5c219c210bd74e0f#c143988153ce6e74cb6e00df5c219c210bd74e0f"
+source = "git+https://github.com/iotaledger/iota.rs?rev=11289a09f8f0505e952093b0b9ae4a8c3ad5f5f7#11289a09f8f0505e952093b0b9ae4a8c3ad5f5f7"
 dependencies = [
  "bee-crypto 0.2.0-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
  "bee-signing",
@@ -1755,6 +1755,36 @@ dependencies = [
  "futures",
  "thiserror",
  "tokio",
+]
+
+[[package]]
+name = "iota-client"
+version = "0.5.0-alpha.3"
+source = "git+https://github.com/iotaledger/iota.rs?rev=11289a09f8f0505e952093b0b9ae4a8c3ad5f5f7#11289a09f8f0505e952093b0b9ae4a8c3ad5f5f7"
+dependencies = [
+ "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
+ "bee-common-derive",
+ "bee-crypto 0.2.0-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
+ "bee-message",
+ "bee-signing",
+ "bee-ternary 0.4.2-alpha",
+ "bee-transaction 0.1.0-alpha (git+https://github.com/Alex6323/bee-p.git?rev=02965e78a5cd43d0fb773771470ab3d891066562)",
+ "blake2",
+ "chrono",
+ "crossbeam",
+ "failure",
+ "hex",
+ "iota-bundle-miner",
+ "iota-conversion 0.5.1",
+ "iota-crypto 0.2.0",
+ "iota-model",
+ "num_cpus",
+ "once_cell",
+ "serde 1.0.125",
+ "serde_json",
+ "slip10",
+ "tokio",
+ "ureq",
 ]
 
 [[package]]
@@ -1783,36 +1813,6 @@ dependencies = [
  "thiserror",
  "tokio",
  "url",
-]
-
-[[package]]
-name = "iota-client"
-version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=c143988153ce6e74cb6e00df5c219c210bd74e0f#c143988153ce6e74cb6e00df5c219c210bd74e0f"
-dependencies = [
- "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
- "bee-common-derive",
- "bee-crypto 0.2.0-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
- "bee-message",
- "bee-signing",
- "bee-ternary 0.4.2-alpha",
- "bee-transaction 0.1.0-alpha (git+https://github.com/Alex6323/bee-p.git?rev=02965e78a5cd43d0fb773771470ab3d891066562)",
- "blake2",
- "chrono",
- "crossbeam",
- "failure",
- "hex",
- "iota-bundle-miner",
- "iota-conversion 0.5.1",
- "iota-crypto 0.2.0",
- "iota-model",
- "num_cpus",
- "once_cell",
- "serde 1.0.125",
- "serde_json",
- "slip10",
- "tokio",
- "ureq",
 ]
 
 [[package]]
@@ -1850,25 +1850,25 @@ dependencies = [
 [[package]]
 name = "iota-core"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=b3c6016b5f6bb28701cfed7a8ee768bbf476a8cc#b3c6016b5f6bb28701cfed7a8ee768bbf476a8cc"
-dependencies = [
- "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?rev=c42171ff33c80cc2efb183e244dc79b7f58d9ac4)",
- "bee-message",
- "bee-pow",
- "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=b3c6016b5f6bb28701cfed7a8ee768bbf476a8cc)",
-]
-
-[[package]]
-name = "iota-core"
-version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=c143988153ce6e74cb6e00df5c219c210bd74e0f#c143988153ce6e74cb6e00df5c219c210bd74e0f"
+source = "git+https://github.com/iotaledger/iota.rs?rev=11289a09f8f0505e952093b0b9ae4a8c3ad5f5f7#11289a09f8f0505e952093b0b9ae4a8c3ad5f5f7"
 dependencies = [
  "bee-crypto 0.2.0-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
  "bee-signing",
  "bee-ternary 0.4.2-alpha",
  "bee-transaction 0.1.0-alpha (git+https://github.com/Alex6323/bee-p.git?rev=02965e78a5cd43d0fb773771470ab3d891066562)",
  "iota-bundle-miner",
- "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=c143988153ce6e74cb6e00df5c219c210bd74e0f)",
+ "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=11289a09f8f0505e952093b0b9ae4a8c3ad5f5f7)",
+]
+
+[[package]]
+name = "iota-core"
+version = "0.2.0-alpha.3"
+source = "git+https://github.com/iotaledger/iota.rs?rev=b3c6016b5f6bb28701cfed7a8ee768bbf476a8cc#b3c6016b5f6bb28701cfed7a8ee768bbf476a8cc"
+dependencies = [
+ "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?rev=c42171ff33c80cc2efb183e244dc79b7f58d9ac4)",
+ "bee-message",
+ "bee-pow",
+ "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=b3c6016b5f6bb28701cfed7a8ee768bbf476a8cc)",
 ]
 
 [[package]]
@@ -1988,8 +1988,8 @@ dependencies = [
  "futures",
  "getset",
  "hex",
+ "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=11289a09f8f0505e952093b0b9ae4a8c3ad5f5f7)",
  "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=b3c6016b5f6bb28701cfed7a8ee768bbf476a8cc)",
- "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=c143988153ce6e74cb6e00df5c219c210bd74e0f)",
  "iota-crypto 0.3.0 (git+https://github.com/iotaledger/crypto.rs?rev=b849861b86c3f7357b7477de4253b7352b363627)",
  "iota-ledger",
  "iota-stronghold",
