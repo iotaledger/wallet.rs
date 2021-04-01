@@ -387,6 +387,7 @@ async fn sync_messages(
     skip_addresses: &[Address],
     options: AccountOptions,
     skip_change_addresses: bool,
+    change_addresses_to_sync: HashSet<AddressWrapper>,
 ) -> crate::Result<(Vec<Address>, Vec<SyncedMessage>)> {
     let mut messages = vec![];
     let client_options = account.client_options().clone();
@@ -404,7 +405,9 @@ async fn sync_messages(
 
     let mut tasks = Vec::new();
     for mut address in account.addresses().to_vec() {
-        if skip_addresses.contains(&address) || (*address.internal() && skip_change_addresses) {
+        if skip_addresses.contains(&address)
+            || (*address.internal() && skip_change_addresses && !change_addresses_to_sync.contains(address.address()))
+        {
             continue;
         }
         let client = client.clone();
@@ -500,6 +503,7 @@ async fn perform_sync(
     address_index: usize,
     gap_limit: usize,
     skip_change_addresses: bool,
+    change_addresses_to_sync: HashSet<AddressWrapper>,
     steps: &[AccountSynchronizeStep],
     options: AccountOptions,
 ) -> crate::Result<SyncedAccountData> {
@@ -562,8 +566,14 @@ async fn perform_sync(
     }
 
     if steps.contains(&AccountSynchronizeStep::SyncMessages) {
-        let (synced_addresses, synced_messages) =
-            sync_messages(&account, &found_addresses, options, skip_change_addresses).await?;
+        let (synced_addresses, synced_messages) = sync_messages(
+            &account,
+            &found_addresses,
+            options,
+            skip_change_addresses,
+            change_addresses_to_sync,
+        )
+        .await?;
         found_addresses.extend(synced_addresses);
         new_messages.extend(synced_messages.into_iter());
     }
@@ -738,6 +748,7 @@ impl AccountSynchronizer {
             self.address_index,
             self.gap_limit,
             self.skip_change_addresses,
+            self.account_handle.change_addresses_to_sync.lock().await.clone(),
             &self.steps,
             self.account_handle.account_options,
         )
@@ -1450,6 +1461,11 @@ async fn perform_transfer(
                     .iter()
                     .find(|a| *a.internal() && a.key_index() == remainder_address.key_index())
                 {
+                    account_handle
+                        .change_addresses_to_sync
+                        .lock()
+                        .await
+                        .insert(address.address().clone());
                     address.address().clone()
                 } else {
                     transfer_obj
@@ -1465,6 +1481,11 @@ async fn perform_transfer(
                     )
                     .await?;
                     let addr = change_address.address().clone();
+                    account_handle
+                        .change_addresses_to_sync
+                        .lock()
+                        .await
+                        .insert(addr.clone());
                     log::debug!(
                         "[TRANSFER] generated new change address as remainder target: {}",
                         addr.to_bech32()
