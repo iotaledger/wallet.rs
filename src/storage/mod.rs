@@ -154,8 +154,14 @@ pub(crate) struct StorageManager {
 
 macro_rules! load_account_dependency_index {
     ($self: ident, $account_id: expr, $key: expr, $indexation: ident) => {
-        if let Ok(record) = $self.storage.get($key).await {
-            $self.$indexation.insert($account_id, serde_json::from_str(&record)?);
+        match $self.storage.get($key).await {
+            Ok(record) => {
+                $self.$indexation.insert($account_id, serde_json::from_str(&record)?);
+            }
+            Err(crate::Error::RecordNotFound) => {
+                $self.$indexation.insert($account_id, Default::default());
+            }
+            Err(e) => return Err(e),
         }
     };
 }
