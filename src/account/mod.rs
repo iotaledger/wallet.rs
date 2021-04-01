@@ -19,6 +19,7 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::{Mutex, RwLock, RwLockWriteGuard};
 
 use std::{
+    collections::HashSet,
     hash::{Hash, Hasher},
     ops::Deref,
     path::PathBuf,
@@ -389,6 +390,7 @@ pub struct AccountHandle {
     pub(crate) locked_addresses: Arc<Mutex<Vec<AddressWrapper>>>,
     pub(crate) account_options: AccountOptions,
     is_mqtt_enabled: Arc<AtomicBool>,
+    pub(crate) change_addresses_to_sync: Arc<Mutex<HashSet<AddressWrapper>>>,
 }
 
 impl AccountHandle {
@@ -399,6 +401,7 @@ impl AccountHandle {
             locked_addresses: Default::default(),
             account_options,
             is_mqtt_enabled: Arc::new(AtomicBool::new(true)),
+            change_addresses_to_sync: Default::default(),
         }
     }
 
