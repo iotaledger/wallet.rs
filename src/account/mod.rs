@@ -860,6 +860,8 @@ impl Account {
         from: usize,
         message_type: Option<MessageType>,
     ) -> crate::Result<Vec<Message>> {
+        let mut cached_messages = self.cached_messages.lock().unwrap();
+
         let messages = crate::storage::get(&self.storage_path)
             .await
             .expect("storage adapter not set")
@@ -869,12 +871,10 @@ impl Account {
                 &self,
                 count,
                 from,
-                MessageQueryFilter::message_type(message_type.clone())
-                    .with_ignore_ids(self.cached_messages.lock().unwrap().keys().copied().collect()),
+                MessageQueryFilter::message_type(message_type.clone()).with_ignore_ids(&*cached_messages),
             )
             .await?;
 
-        let mut cached_messages = self.cached_messages.lock().unwrap();
         // we cache messages with known confirmation since they'll never be updated
         for message in &messages {
             if message.confirmed().is_some() {

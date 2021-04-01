@@ -64,12 +64,12 @@ pub struct MessageIndexation {
 }
 
 #[derive(Default)]
-pub struct MessageQueryFilter {
+pub struct MessageQueryFilter<'a> {
     message_type: Option<MessageType>,
-    ignore_ids: Vec<MessageId>,
+    ignore_ids: Option<&'a HashMap<MessageId, Message>>,
 }
 
-impl MessageQueryFilter {
+impl<'a> MessageQueryFilter<'a> {
     pub fn message_type(message_type: Option<MessageType>) -> Self {
         Self {
             message_type,
@@ -77,8 +77,8 @@ impl MessageQueryFilter {
         }
     }
 
-    pub fn with_ignore_ids(mut self, ignore_ids: Vec<MessageId>) -> Self {
-        self.ignore_ids = ignore_ids;
+    pub fn with_ignore_ids(mut self, ignore_ids: &'a HashMap<MessageId, Message>) -> Self {
+        self.ignore_ids.replace(ignore_ids);
         self
     }
 }
@@ -242,7 +242,7 @@ impl StorageManager {
     pub fn query_message_indexation(
         &self,
         account: &Account,
-        filter: MessageQueryFilter,
+        filter: MessageQueryFilter<'_>,
     ) -> crate::Result<Vec<&MessageIndexation>> {
         let message_indexation = self.message_indexation(account)?;
 
@@ -263,8 +263,17 @@ impl StorageManager {
             } else {
                 true
             };
-            if message_type_matches && !filter.ignore_ids.contains(&message.key) {
-                filtered_message_indexation.push(message);
+            if message_type_matches {
+                match &filter.ignore_ids {
+                    Some(ignore_ids) => {
+                        if !ignore_ids.contains_key(&message.key) {
+                            filtered_message_indexation.push(message);
+                        }
+                    }
+                    None => {
+                        filtered_message_indexation.push(message);
+                    }
+                }
             }
         }
 
@@ -324,7 +333,7 @@ impl StorageManager {
         account: &Account,
         count: usize,
         skip: usize,
-        filter: MessageQueryFilter,
+        filter: MessageQueryFilter<'_>,
     ) -> crate::Result<Vec<Message>> {
         let filtered_message_indexation = self.query_message_indexation(account, filter)?;
 
