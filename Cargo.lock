@@ -1745,7 +1745,7 @@ dependencies = [
 [[package]]
 name = "iota-bundle-miner"
 version = "0.1.0-alpha.0"
-source = "git+https://github.com/iotaledger/iota.rs?rev=11289a09f8f0505e952093b0b9ae4a8c3ad5f5f7#11289a09f8f0505e952093b0b9ae4a8c3ad5f5f7"
+source = "git+https://github.com/iotaledger/iota.rs?rev=5dfea13e0e4c48a8f899f47db8327df76ef903f4#5dfea13e0e4c48a8f899f47db8327df76ef903f4"
 dependencies = [
  "bee-crypto 0.2.0-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
  "bee-signing",
@@ -1760,7 +1760,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=11289a09f8f0505e952093b0b9ae4a8c3ad5f5f7#11289a09f8f0505e952093b0b9ae4a8c3ad5f5f7"
+source = "git+https://github.com/iotaledger/iota.rs?rev=5dfea13e0e4c48a8f899f47db8327df76ef903f4#5dfea13e0e4c48a8f899f47db8327df76ef903f4"
 dependencies = [
  "bee-common 0.3.1-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
  "bee-common-derive",
@@ -1850,14 +1850,14 @@ dependencies = [
 [[package]]
 name = "iota-core"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=11289a09f8f0505e952093b0b9ae4a8c3ad5f5f7#11289a09f8f0505e952093b0b9ae4a8c3ad5f5f7"
+source = "git+https://github.com/iotaledger/iota.rs?rev=5dfea13e0e4c48a8f899f47db8327df76ef903f4#5dfea13e0e4c48a8f899f47db8327df76ef903f4"
 dependencies = [
  "bee-crypto 0.2.0-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
  "bee-signing",
  "bee-ternary 0.4.2-alpha",
  "bee-transaction 0.1.0-alpha (git+https://github.com/Alex6323/bee-p.git?rev=02965e78a5cd43d0fb773771470ab3d891066562)",
  "iota-bundle-miner",
- "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=11289a09f8f0505e952093b0b9ae4a8c3ad5f5f7)",
+ "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=5dfea13e0e4c48a8f899f47db8327df76ef903f4)",
 ]
 
 [[package]]
@@ -1988,7 +1988,7 @@ dependencies = [
  "futures",
  "getset",
  "hex",
- "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=11289a09f8f0505e952093b0b9ae4a8c3ad5f5f7)",
+ "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=5dfea13e0e4c48a8f899f47db8327df76ef903f4)",
  "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=b3c6016b5f6bb28701cfed7a8ee768bbf476a8cc)",
  "iota-crypto 0.3.0 (git+https://github.com/iotaledger/crypto.rs?rev=b849861b86c3f7357b7477de4253b7352b363627)",
  "iota-ledger",
