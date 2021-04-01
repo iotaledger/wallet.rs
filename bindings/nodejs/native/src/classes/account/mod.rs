@@ -93,7 +93,7 @@ declare_types! {
             Ok(neon_serde::to_value(&mut cx, &balance)?.upcast())
         }
 
-        method get_node_indo(mut cx) {
+        method getNodeInfo(mut cx) {
             let cb = cx.argument::<JsFunction>(0)?;
             let this = cx.this();
             let account_id = cx.borrow(&this, |r| r.0.clone());
