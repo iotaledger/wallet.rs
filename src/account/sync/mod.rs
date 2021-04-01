@@ -743,12 +743,13 @@ impl AccountSynchronizer {
     }
 
     pub(crate) async fn get_new_history(&self) -> crate::Result<SyncedAccountData> {
+        let change_addresses_to_sync = self.account_handle.change_addresses_to_sync.lock().await.clone();
         perform_sync(
             self.account_handle.read().await.clone(),
             self.address_index,
             self.gap_limit,
             self.skip_change_addresses,
-            self.account_handle.change_addresses_to_sync.lock().await.clone(),
+            change_addresses_to_sync,
             &self.steps,
             self.account_handle.account_options,
         )
