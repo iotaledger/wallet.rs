@@ -1,5 +1,10 @@
 # Changelog
 
+## \[0.1.1]
+
+- Adds Node v15 support.
+  - [5fd13b4](https://github.com/iotaledger/wallet.rs/commit/5fd13b43e0af8ce59a671238e00ef42647cb28fd) feat(ci): prebuild for node v15 ([#494](https://github.com/iotaledger/wallet.rs/pull/494)) on 2021-04-02
+
 ## \[0.1.0]
 
 - Adds a `password` field on the `backup` API.
