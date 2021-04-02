@@ -721,6 +721,8 @@ impl AccountManager {
                 stronghold_storage
                     .save_account(&account_handle.read().await.id(), &*account_handle.read().await)
                     .await?;
+                let messages = account_handle.list_messages(0, 0, None).await?;
+                account_handle.write().await.save_messages(messages).await?;
             }
             self.storage_folder.join(STRONGHOLD_FILENAME)
         };
