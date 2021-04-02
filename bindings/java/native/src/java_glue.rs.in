@@ -10,7 +10,7 @@ use chrono::prelude::{
 
 use crate::{
     jni_c_header::*,
-    bee_types::*,
+    types::*,
     acc::*,
     client_options::*,
     sync::*,
@@ -21,7 +21,7 @@ use crate::{
 };
 
 use anyhow::{
-    Result as Result,
+    Result,
     anyhow,
 };
 
@@ -124,7 +124,7 @@ foreign_enum!(
 
 foreign_enum!(
     enum InputKind {
-        UTXO = InputKind::UTXO,
+        UTXO = InputKind::Utxo,
         TREASURY = InputKind::Treasury,
     }
 );
@@ -174,7 +174,7 @@ foreign_class!(class AccountManager {
     fn AccountManager::get_account(&self, account_id: String) -> Result<Account>; alias getAccount;
     fn AccountManager::get_accounts(&self) -> Result<Vec<Account>>; alias getAccounts;
     fn AccountManager::reattach(&self, account_id: String, message_id: MessageId) -> Result<Message>;
-    fn AccountManager::promote(&self, account_id: String, message_id: MessageId) -> Result<Message>; 
+    fn AccountManager::promote(&self, account_id: String, message_id: MessageId) -> Result<Message>;
     fn AccountManager::retry(&self, account_id: String, message_id: MessageId) -> Result<Message>;
     fn AccountManager::internal_transfer(&self, from_account_id: String, to_account_id: String, amount: u64) -> Result<Message>; alias internalTransfer;
     fn AccountManager::backup(&self, destination: PathBuf, stronghold_password: String) -> Result<PathBuf>;
@@ -279,6 +279,24 @@ foreign_class!(
         fn Message::nonce(&self) -> u64;
         fn Message::confirmed(&self) -> Option<bool>;
         fn Message::broadcasted(&self) -> bool;
+    }
+);
+
+foreign_class!(
+    #[derive(PartialEq)]
+    class InfoResponse {
+        self_type InfoResponse;
+        private constructor = empty;
+        private fn InfoResponse::eq(&self, o: &InfoResponse) -> bool; alias rustEq;
+        fn InfoResponse::name(&self) -> &str;
+        fn InfoResponse::version(&self) -> &str;
+        fn InfoResponse::network_id(&self) -> &str; alias networkId;
+        fn InfoResponse::bech32_hrp(&self) -> &str; alias bech32HRP;
+        fn InfoResponse::min_pow_score(&self) -> f64; alias minPoWScore;
+        fn InfoResponse::latest_milestone_index(&self) -> u32; alias latestMilestoneIndex;
+        fn InfoResponse::confirmed_milestone_index(&self) -> u32; alias confirmedMilestoneIndex;
+        fn InfoResponse::pruning_index(&self) -> u32; alias pruningIndex;
+        fn InfoResponse::features(&self) -> Vec<String>;
     }
 );
 
@@ -582,7 +600,7 @@ foreign_class!(
         fn EventManager::subscribe_balance_change(cb: Box<dyn BalanceChangeListener + Send + 'static>) -> EventId; alias subscribeBalanceChange;
         fn EventManager::subscribe_stronghold_status_change(cb: Box<dyn StrongholdStatusListener + Send + 'static>) -> Result<EventId>; alias subscribeStrongholdStatusChange;
         fn EventManager::subscribe_address_consolidation_needed(cb: Box<dyn AddressConsolidationNeededListener + Send + 'static>) -> Result<EventId>; alias subscribeAddressConsolidationNeeded;
-    
+
         fn EventManager::remove_error_listener(event: EventId); alias removeErrorListener;
         fn EventManager::remove_new_transaction_listener(event: EventId); alias removeNewTransactionListener;
         fn EventManager::remove_confirmation_state_change_listener(event: EventId); alias removeConfirmationStateChangeListener;
@@ -666,12 +684,12 @@ foreign_class!(
         fn RegularEssence::inputs(&self) -> Vec<TransactionInput>;
         fn RegularEssence::outputs(&self) -> Vec<TransactionOutput>;
         fn RegularEssence::internal(&self) -> bool;
-    
+
         fn RegularEssence::incoming(&self) -> bool;
-    
+
         /// The transactions's value.
         fn RegularEssence::value(&self) -> u64;
-    
+
         /// The transactions's remainder value sum.
         fn RegularEssence::remainder_value(&self) -> u64; alias remainderValue;
     }

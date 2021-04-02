@@ -154,8 +154,13 @@ jobs:
      
       - name: Cache nodejs binding cargo target
         uses: actions/cache@v2.1.4
+        if: matrix.os != 'windows-latest'
+        # We get a linker error on Windows when using the cache (LNK1181: cannot open input file 'node.lib')
+        # https://github.com/iotaledger/wallet.rs/pull/467/checks?check_run_id=2214108362#step:11:41
         with:
-          path: bindings/nodejs/native/target
+          path: |
+            bindings/nodejs/native/target
+            bindings/nodejs/native/artifacts.json
           # Add date to the cache to keep it up to date
           key: ${{ matrix.os }}-stable-cargo-build-node-target-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
           # Restore from outdated cache for speed
@@ -277,10 +282,6 @@ jobs:
         with:
             java-version: 11.0.x
             architecture: x64
-
-      - name: Get current date
-        if: matrix.os == 'windows-latest'
-        run: echo "CURRENT_DATE=$(Get-Date -Format "yyyy-MM-dd")" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Get current date
         run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV

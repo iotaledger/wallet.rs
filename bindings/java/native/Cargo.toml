@@ -17,7 +17,8 @@ anyhow = "1.0.38"
 hex = "0.4"
 jni = "0.19" # Used in directly verifying binding linkage
 flapigen = { git = "https://github.com/Dushistov/flapigen-rs" }
-tokio = { version = "1.2" }
+tokio = { version = "1.4" }
+getset = "0.1"
 
 [lib]
 crate_type = ["cdylib"]
