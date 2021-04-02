@@ -219,8 +219,8 @@ impl AccountHandle {
     }
 
     /// Bridge to [Account#balance](struct.Account.html#method.balance).
-    fn balance(&self) -> AccountBalance {
-        crate::block_on(async { self.account_handle.balance().await }).into()
+    fn balance(&self) -> Result<AccountBalance> {
+        Ok(crate::block_on(async { self.account_handle.balance().await })?.into())
     }
 
     /// Bridge to [Account#set_alias](struct.Account.html#method.set_alias).
@@ -236,7 +236,7 @@ impl AccountHandle {
     }
 
     /// The number of messages associated with the account.
-    fn message_count(&self, message_type: Option<&str>) -> usize {
+    fn message_count(&self, message_type: Option<&str>) -> Result<usize> {
         let message_type = match message_type {
             Some("Received") => Some(RustMessageType::Received),
             Some("Sent") => Some(RustMessageType::Sent),
@@ -247,12 +247,14 @@ impl AccountHandle {
             _ => None,
         };
         crate::block_on(async {
-            self.account_handle
+            Ok(self
+                .account_handle
                 .read()
                 .await
                 .list_messages(0, 0, message_type)
+                .await?
                 .iter()
-                .len()
+                .len())
         })
     }
 
@@ -281,7 +283,7 @@ impl AccountHandle {
         });
 
         let mut parsed_messages = Vec::new();
-        for message in messages {
+        for message in messages? {
             parsed_messages.push(message.try_into()?);
         }
 
@@ -291,17 +293,17 @@ impl AccountHandle {
     /// Bridge to [Account#list_spent_addresses](struct.Account.html#method.list_spent_addresses).
     /// This method clones the account's addresses so when querying a large list of addresses
     /// prefer using the `read` method to access the account instance.
-    fn list_spent_addresses(&self) -> Vec<Address> {
+    fn list_spent_addresses(&self) -> Result<Vec<Address>> {
         let addresses = crate::block_on(async { self.account_handle.list_spent_addresses().await });
-        addresses.into_iter().map(|addr| addr.into()).collect()
+        Ok(addresses?.into_iter().map(|addr| addr.into()).collect())
     }
 
     /// Bridge to [Account#list_unspent_addresses](struct.Account.html#method.list_unspent_addresses).
     /// This method clones the account's addresses so when querying a large list of addresses
     /// prefer using the `read` method to access the account instance.
-    fn list_unspent_addresses(&self) -> Vec<Address> {
+    fn list_unspent_addresses(&self) -> Result<Vec<Address>> {
         let addresses = crate::block_on(async { self.account_handle.list_unspent_addresses().await });
-        addresses.into_iter().map(|addr| addr.into()).collect()
+        Ok(addresses?.into_iter().map(|addr| addr.into()).collect())
     }
 
     /// Bridge to [Account#get_message](struct.Account.html#method.get_message).

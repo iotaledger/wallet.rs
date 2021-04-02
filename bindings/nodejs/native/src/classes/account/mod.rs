@@ -106,7 +106,7 @@ declare_types! {
             crate::block_on(async move {
                 let account_handle = crate::get_account(&id).await;
                 let account = account_handle.read().await;
-                let count = account.list_messages(0, 0, message_type).iter().len();
+                let count = account.list_messages(0, 0, message_type).await.expect("failed to list messages").iter().len();
                 Ok(cx.number(count as f64).upcast())
             })
         }
@@ -133,7 +133,7 @@ declare_types! {
             crate::block_on(async move {
                 let account_handle = crate::get_account(&id).await;
                 let account = account_handle.read().await;
-                let messages = account.list_messages(count, from, filter);
+                let messages = account.list_messages(count, from, filter).await.expect("failed to list messages");
 
                 let js_array = JsArray::new(&mut cx, messages.len() as u32);
                 for (index, message) in messages.iter().enumerate() {
@@ -169,7 +169,7 @@ declare_types! {
             crate::block_on(async move {
                 let account_handle = crate::get_account(&id).await;
                 let account = account_handle.read().await;
-                let addresses = account.list_spent_addresses();
+                let addresses = account.list_spent_addresses().await.expect("failed to list addresses");
 
                 let js_array = JsArray::new(&mut cx, addresses.len() as u32);
                 for (index, address) in addresses.iter().enumerate() {
@@ -187,7 +187,7 @@ declare_types! {
             crate::block_on(async move {
                 let account_handle = crate::get_account(&id).await;
                 let account = account_handle.read().await;
-                let addresses = account.list_unspent_addresses();
+                let addresses = account.list_unspent_addresses().await.expect("failed to list addresses");
 
                 let js_array = JsArray::new(&mut cx, addresses.len() as u32);
                 for (index, address) in addresses.iter().enumerate() {
@@ -235,7 +235,7 @@ declare_types! {
             crate::block_on(async move {
                 let account_handle = crate::get_account(&id).await;
                 let account = account_handle.read().await;
-                let message = account.get_message(&message_id);
+                let message = account.get_message(&message_id).await;
                 match message {
                     Some(m) => Ok(neon_serde::to_value(&mut cx, &m)?),
                     None => Ok(cx.undefined().upcast())

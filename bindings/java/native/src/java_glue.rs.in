@@ -353,12 +353,12 @@ foreign_class!(
         fn Account::latest_address(&self) -> Address; alias latestAddress;
         fn Account::set_alias(&self, alias: String) -> Result<()>; alias setAlias;
         fn Account::set_client_options(&self, options: ClientOptions) -> Result<()>; alias setClientOptions;
-        fn Account::list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<Message>; alias listMessages;
-        fn Account::list_spent_addresses(&self) -> Vec<Address>; alias listSpentAddresses;
-        fn Account::list_unspent_addresses(&self) -> Vec<Address>; alias listUnspentAddresses;
+        fn Account::list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Result<Vec<Message>>; alias listMessages;
+        fn Account::list_spent_addresses(&self) -> Result<Vec<Address>>; alias listSpentAddresses;
+        fn Account::list_unspent_addresses(&self) -> Result<Vec<Address>>; alias listUnspentAddresses;
         fn Account::get_message(&self, message_id: MessageId) -> Option<Message>; alias getMessage;
         fn Account::alias(&self) -> String;
-        fn Account::balance(&self) -> AccountBalance;
+        fn Account::balance(&self) -> Result<AccountBalance>;
 
         fn Account::id(&self) -> String;
         fn Account::created_at(&self) -> DateTime<Local>; alias createdAt;

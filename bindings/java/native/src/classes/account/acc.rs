@@ -172,22 +172,19 @@ impl Account {
         }
     }
 
-    pub fn list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Vec<Message> {
-        let msgs = crate::block_on(async move { self.handle.list_messages(count, from, message_type).await });
-
-        msgs.into_iter().map(|m| m.into()).collect()
+    pub fn list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Result<Vec<Message>> {
+        let msgs = crate::block_on(async move { self.handle.list_messages(count, from, message_type).await })?;
+        Ok(msgs.into_iter().map(|m| m.into()).collect())
     }
 
-    pub fn list_spent_addresses(&self) -> Vec<Address> {
-        let addrs = crate::block_on(async move { self.handle.list_spent_addresses().await });
-
-        addrs.into_iter().map(|a| a.into()).collect()
+    pub fn list_spent_addresses(&self) -> Result<Vec<Address>> {
+        let addrs = crate::block_on(async move { self.handle.list_spent_addresses().await })?;
+        Ok(addrs.into_iter().map(|a| a.into()).collect())
     }
 
-    pub fn list_unspent_addresses(&self) -> Vec<Address> {
-        let addrs = crate::block_on(async move { self.handle.list_unspent_addresses().await });
-
-        addrs.into_iter().map(|a| a.into()).collect()
+    pub fn list_unspent_addresses(&self) -> Result<Vec<Address>> {
+        let addrs = crate::block_on(async move { self.handle.list_unspent_addresses().await })?;
+        Ok(addrs.into_iter().map(|a| a.into()).collect())
     }
 
     pub fn get_message(&self, message_id: MessageId) -> Option<Message> {
@@ -203,8 +200,8 @@ impl Account {
         crate::block_on(async move { self.handle.alias().await })
     }
 
-    pub fn balance(&self) -> AccountBalance {
-        crate::block_on(async move { self.handle.balance().await })
+    pub fn balance(&self) -> Result<AccountBalance> {
+        crate::block_on(async move { self.handle.balance().await.map_err(|e| anyhow!(e.to_string())) })
     }
 
     pub fn id(&self) -> String {
