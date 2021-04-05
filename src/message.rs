@@ -8,7 +8,7 @@ use crate::{
     event::{emit_transfer_progress, TransferProgressType},
 };
 use bee_common::packable::Packable;
-use chrono::prelude::{DateTime, Utc};
+use chrono::prelude::{DateTime, NaiveDateTime, Utc};
 use getset::{Getters, Setters};
 pub use iota::{
     Essence, IndexationPayload, Input, Message as IotaMessage, MessageId, MilestonePayload, Output, Payload,
@@ -946,6 +946,17 @@ impl<'a> MessageBuilder<'a> {
             ),
             None => None,
         };
+        let client_guard = crate::client::get_client(self.client_options).await?;
+        let client = client_guard.read().await;
+        let metadata = client.get_message().metadata(&self.id).await?;
+
+        let timestamp = match metadata.referenced_by_milestone_index {
+            Some(ms_index) => {
+                let ms = client.get_milestone(ms_index).await.unwrap();
+                DateTime::from_utc(NaiveDateTime::from_timestamp(ms.timestamp as i64, 0), Utc)
+            }
+            _ => Utc::now(),
+        };
 
         let message = Message {
             id: self.id,
@@ -953,7 +964,7 @@ impl<'a> MessageBuilder<'a> {
             parents: (*self.iota_message.parents()).to_vec(),
             payload_length: packed_payload.len(),
             payload,
-            timestamp: Utc::now(),
+            timestamp,
             nonce: self.iota_message.nonce(),
             confirmed: self.confirmed,
             broadcasted: true,
