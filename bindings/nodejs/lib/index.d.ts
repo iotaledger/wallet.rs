@@ -80,9 +80,21 @@ export declare interface Message {
   broadcasted: boolean;
 }
 
+export declare interface AddressOutput {
+  transactionId: string;
+  messageId: string;
+  index: number;
+  amount: number;
+  isSpent: boolean;
+  address: string;
+}
+
 export declare interface Address {
   address: string;
+  balance: number;
   keyIndex: number;
+  internal: boolean;
+  outputs: AddressOutput[];
 }
 
 export declare interface SyncOptions {
@@ -97,11 +109,25 @@ export declare interface AccountBalance {
   outgoing: number
 }
 
+export declare interface NodeInfo {
+  name: string
+  version: string
+  isHealthy: boolean
+  networkId: string
+  bech32HRP: string
+  minPoWScore: number
+  latestMilestoneIndex: number
+  confirmedMilestoneIndex: number
+  pruningIndex: number
+  features: string[]
+}
+
 export declare class Account {
   id(): string;
   index(): number;
   alias(): string;
   balance(): AccountBalance;
+  getNodeInfo(): Promise<NodeInfo>;
   messageCount(messageType?: MessageType): number;
   listMessages(count?: number, from?: number, messageType?: MessageType): Message[]
   listAddresses(unspent?: boolean): Address[]
@@ -143,11 +169,12 @@ export declare interface Node {
     username: string
     password: string
   }
+  disabled?: boolean
 }
 
 export declare interface ClientOptions {
   node?: NodeUrl | Node;
-  nodes?: string[];
+  nodes?: Array<NodeUrl | Node>;
   network?: string;
   quorumSize?: number;
   quorumThreshold?: number;

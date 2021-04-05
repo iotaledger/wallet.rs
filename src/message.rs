@@ -147,7 +147,7 @@ impl TransferBuilder {
 
     /// (Optional) message indexation.
     pub fn with_indexation(mut self, indexation: IndexationPayload) -> Self {
-        self.indexation = Some(indexation);
+        self.indexation.replace(indexation);
         self
     }
 
@@ -351,7 +351,7 @@ impl TransactionOutput {
 
 /// UTXO input.
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
-pub struct TransactionUTXOInput {
+pub struct TransactionUtxoInput {
     /// UTXO input.
     pub input: UTXOInput,
     /// Metadata.
@@ -359,11 +359,12 @@ pub struct TransactionUTXOInput {
 }
 
 /// Transaction input.
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(tag = "type", content = "data")]
 pub enum TransactionInput {
     /// UTXO input.
-    UTXO(TransactionUTXOInput),
+    UTXO(TransactionUtxoInput),
     /// Treasury input.
     Treasury(TreasuryInput),
 }
@@ -431,7 +432,7 @@ impl TransactionRegularEssence {
                         let mut output = None;
                         for address in metadata.account_addresses {
                             if let Some(found_output) = address.outputs().get(i.output_id()) {
-                                output = Some(found_output.clone());
+                                output.replace(found_output.clone());
                                 break;
                             }
                         }
@@ -448,7 +449,7 @@ impl TransactionRegularEssence {
                             }
                         }
                     };
-                    TransactionInput::UTXO(TransactionUTXOInput { input: i, metadata })
+                    TransactionInput::UTXO(TransactionUtxoInput { input: i, metadata })
                 }
                 Input::Treasury(treasury) => TransactionInput::Treasury(treasury),
                 _ => unimplemented!(),
@@ -511,7 +512,7 @@ impl TransactionRegularEssence {
                             }
                             _ => false,
                         }) {
-                            remainder = Some(account_address);
+                            remainder.replace(account_address);
                             break;
                         }
                         match remainder {
@@ -522,11 +523,11 @@ impl TransactionRegularEssence {
                                 if address_index > *remainder_address.key_index()
                                     || (address_index == *remainder_address.key_index() && *account_address.internal())
                                 {
-                                    remainder = Some(account_address);
+                                    remainder.replace(account_address);
                                 }
                             }
                             None => {
-                                remainder = Some(account_address);
+                                remainder.replace(account_address);
                             }
                         }
                     }

@@ -3,7 +3,7 @@
 
 use crate::account::Account;
 
-use std::{collections::HashMap, fmt, path::PathBuf};
+use std::{collections::HashMap, fmt, path::Path};
 
 use bee_common::packable::Packable;
 use iota::UnlockBlock;
@@ -48,7 +48,7 @@ impl fmt::Display for AddressPoolEntry {
 
 #[async_trait::async_trait]
 impl super::Signer for LedgerNanoSigner {
-    async fn store_mnemonic(&mut self, _: &PathBuf, _mnemonic: String) -> crate::Result<()> {
+    async fn store_mnemonic(&mut self, _: &Path, _mnemonic: String) -> crate::Result<()> {
         Err(crate::Error::InvalidMnemonic(String::from("")))
     }
 

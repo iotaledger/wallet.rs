@@ -28,7 +28,6 @@ use iota::{
     Bech32Address, OutputId,
 };
 use serde::Serialize;
-use slip10::BIP32Path;
 use tokio::sync::MutexGuard;
 
 use std::{
@@ -39,6 +38,7 @@ use std::{
 mod input_selection;
 
 const DUST_ALLOWANCE_VALUE: u64 = 1_000_000;
+const DEFAULT_GAP_LIMIT: usize = 10;
 
 #[derive(Debug, Clone)]
 pub(crate) struct SyncedMessage {
@@ -81,10 +81,7 @@ async fn get_address_outputs(
             .map(|o| (o, true))
             .collect();
 
-        let mut outputs: Vec<(UTXOInput, bool)> = unspent_address_outputs
-            .into_iter()
-            .map(|o| (o.clone(), false))
-            .collect();
+        let mut outputs: Vec<(UTXOInput, bool)> = unspent_address_outputs.iter().map(|o| (o.clone(), false)).collect();
         outputs.extend(spent_address_outputs);
         Ok(outputs)
     } else {
@@ -390,6 +387,7 @@ async fn sync_messages(
     skip_addresses: &[Address],
     options: AccountOptions,
     skip_change_addresses: bool,
+    change_addresses_to_sync: HashSet<AddressWrapper>,
 ) -> crate::Result<(Vec<Address>, Vec<SyncedMessage>)> {
     let mut messages = vec![];
     let client_options = account.client_options().clone();
@@ -407,7 +405,9 @@ async fn sync_messages(
 
     let mut tasks = Vec::new();
     for mut address in account.addresses().to_vec() {
-        if skip_addresses.contains(&address) || (*address.internal() && skip_change_addresses) {
+        if skip_addresses.contains(&address)
+            || (*address.internal() && skip_change_addresses && !change_addresses_to_sync.contains(address.address()))
+        {
             continue;
         }
         let client = client.clone();
@@ -503,6 +503,7 @@ async fn perform_sync(
     address_index: usize,
     gap_limit: usize,
     skip_change_addresses: bool,
+    change_addresses_to_sync: HashSet<AddressWrapper>,
     steps: &[AccountSynchronizeStep],
     options: AccountOptions,
 ) -> crate::Result<SyncedAccountData> {
@@ -565,8 +566,14 @@ async fn perform_sync(
     }
 
     if steps.contains(&AccountSynchronizeStep::SyncMessages) {
-        let (synced_addresses, synced_messages) =
-            sync_messages(&account, &found_addresses, options, skip_change_addresses).await?;
+        let (synced_addresses, synced_messages) = sync_messages(
+            &account,
+            &found_addresses,
+            options,
+            skip_change_addresses,
+            change_addresses_to_sync,
+        )
+        .await?;
         found_addresses.extend(synced_addresses);
         new_messages.extend(synced_messages.into_iter());
     }
@@ -688,7 +695,11 @@ impl AccountSynchronizer {
             account_handle,
             // by default we synchronize from the latest address (supposedly unspent)
             address_index: latest_address_index,
-            gap_limit: if latest_address_index == 0 { 10 } else { 1 },
+            gap_limit: if latest_address_index == 0 {
+                DEFAULT_GAP_LIMIT
+            } else {
+                1
+            },
             skip_persistence: false,
             skip_change_addresses: false,
             steps: vec![
@@ -732,11 +743,13 @@ impl AccountSynchronizer {
     }
 
     pub(crate) async fn get_new_history(&self) -> crate::Result<SyncedAccountData> {
+        let change_addresses_to_sync = self.account_handle.change_addresses_to_sync.lock().await.clone();
         perform_sync(
             self.account_handle.read().await.clone(),
             self.address_index,
             self.gap_limit,
             self.skip_change_addresses,
+            change_addresses_to_sync,
             &self.steps,
             self.account_handle.account_options,
         )
@@ -1315,33 +1328,24 @@ async fn perform_transfer(
             .unwrap();
 
         let mut outputs = vec![];
-        let address_path = BIP32Path::from_str(&format!(
-            "m/44H/4218H/{}H/{}H/{}H",
-            *account_.index(),
-            *account_address.internal() as u32,
-            *account_address.key_index()
-        ))
-        .unwrap();
 
         for address_output in address_outputs {
             outputs.push((
                 (*address_output).clone(),
                 *account_address.key_index(),
                 *account_address.internal(),
-                address_path.clone(),
             ));
         }
         utxos.extend(outputs.into_iter());
     }
 
+    let mut outputs_for_essence: Vec<Output> =
+        vec![SignatureLockedSingleOutput::new(*transfer_obj.address.as_ref(), transfer_obj.amount.get())?.into()];
     let mut inputs_for_essence: Vec<Input> = Vec::new();
-    let mut outputs_for_essence: Vec<Output> = Vec::new();
-    outputs_for_essence
-        .push(SignatureLockedSingleOutput::new(*transfer_obj.address.as_ref(), transfer_obj.amount.get())?.into());
     let mut current_output_sum = 0;
     let mut remainder_value = 0;
 
-    for (utxo, address_index, address_internal, address_path) in utxos {
+    for (utxo, address_index, address_internal) in utxos {
         match utxo.kind {
             OutputKind::SignatureLockedSingle => {
                 if utxo.amount < DUST_ALLOWANCE_VALUE {
@@ -1359,7 +1363,6 @@ async fn perform_transfer(
         transaction_inputs.push(crate::signing::TransactionInput {
             input,
             address_index,
-            address_path,
             address_internal,
         });
         if current_output_sum == transfer_obj.amount.get() {
@@ -1459,6 +1462,11 @@ async fn perform_transfer(
                     .iter()
                     .find(|a| *a.internal() && a.key_index() == remainder_address.key_index())
                 {
+                    account_handle
+                        .change_addresses_to_sync
+                        .lock()
+                        .await
+                        .insert(address.address().clone());
                     address.address().clone()
                 } else {
                     transfer_obj
@@ -1474,6 +1482,11 @@ async fn perform_transfer(
                     )
                     .await?;
                     let addr = change_address.address().clone();
+                    account_handle
+                        .change_addresses_to_sync
+                        .lock()
+                        .await
+                        .insert(addr.clone());
                     log::debug!(
                         "[TRANSFER] generated new change address as remainder target: {}",
                         addr.to_bech32()
@@ -1490,7 +1503,7 @@ async fn perform_transfer(
                 address
             }
         };
-        remainder_value_deposit_address = Some(remainder_deposit_address.clone());
+        remainder_value_deposit_address.replace(remainder_deposit_address.clone());
         outputs_for_essence
             .push(SignatureLockedSingleOutput::new(*remainder_deposit_address.as_ref(), remainder_value)?.into());
         Some(remainder_deposit_address)
@@ -1641,24 +1654,12 @@ async fn is_dust_allowed(
     let mut dust_outputs_amount: i64 = 0;
 
     // Add outputs from this transaction
-    for output in outputs {
-        match output.1 {
-            // add newly created outputs
-            true => {
-                if output.0 >= DUST_ALLOWANCE_VALUE {
-                    dust_allowance_balance += output.0 as i64;
-                } else {
-                    dust_outputs_amount += 1
-                }
-            }
-            // remove consumed outputs
-            false => {
-                if output.0 >= DUST_ALLOWANCE_VALUE {
-                    dust_allowance_balance -= output.0 as i64;
-                } else {
-                    dust_outputs_amount -= 1;
-                }
-            }
+    for (dust, add_outputs) in outputs {
+        let sign = if add_outputs { 1 } else { -1 };
+        if dust >= DUST_ALLOWANCE_VALUE {
+            dust_allowance_balance += sign * dust as i64;
+        } else {
+            dust_outputs_amount += sign;
         }
     }
 

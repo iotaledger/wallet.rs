@@ -42,6 +42,7 @@ impl From<RustNodeAuth> for NodeAuth {
 pub struct Node {
     url: String,
     auth: Option<NodeAuth>,
+    disabled: bool,
 }
 
 impl From<Node> for RustNode {
@@ -49,6 +50,7 @@ impl From<Node> for RustNode {
         Self {
             url: Url::parse(&node.url).expect("invalid url"),
             auth: node.auth.map(|a| a.into()),
+            disabled: node.disabled,
         }
     }
 }
@@ -58,6 +60,7 @@ impl From<RustNode> for Node {
         Self {
             url: node.url.as_str().to_string(),
             auth: node.auth.map(|auth| auth.into()),
+            disabled: node.disabled,
         }
     }
 }
@@ -90,11 +93,7 @@ impl From<BrokerOptions> for RustBrokerOptions {
     fn from(broker_options: BrokerOptions) -> Self {
         Self {
             automatic_disconnect: broker_options.automatic_disconnect,
-            timeout: if let Some(timeout) = broker_options.timeout {
-                Some(Duration::from_secs(timeout))
-            } else {
-                None
-            },
+            timeout: broker_options.timeout.map(Duration::from_secs),
         }
     }
 }
