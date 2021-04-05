@@ -946,17 +946,26 @@ impl<'a> MessageBuilder<'a> {
             ),
             None => None,
         };
+
+        let mut timestamp = Utc::now();
         let client_guard = crate::client::get_client(self.client_options).await?;
         let client = client_guard.read().await;
-        let metadata = client.get_message().metadata(&self.id).await?;
+        let metadata = client.get_message().metadata(&self.id).await;
+        if metadata.is_ok() {
+            timestamp = match metadata.unwrap().referenced_by_milestone_index {
+                Some(ms_index) => {
+                    let ms = client.get_milestone(ms_index).await;
+                    let mut date_time = Utc::now();
+                    if ms.is_ok() {
+                        date_time =
+                            DateTime::from_utc(NaiveDateTime::from_timestamp(ms.unwrap().timestamp as i64, 0), Utc);
+                    }
 
-        let timestamp = match metadata.referenced_by_milestone_index {
-            Some(ms_index) => {
-                let ms = client.get_milestone(ms_index).await.unwrap();
-                DateTime::from_utc(NaiveDateTime::from_timestamp(ms.timestamp as i64, 0), Utc)
-            }
-            _ => Utc::now(),
-        };
+                    date_time
+                }
+                _ => Utc::now(),
+            };
+        }
 
         let message = Message {
             id: self.id,
