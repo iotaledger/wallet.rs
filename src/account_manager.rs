@@ -352,18 +352,13 @@ impl AccountManager {
                 inputs: Default::default(),
                 bundled_input_address_indexes: Default::default(),
             });
-        let metadata = finder.finish(&mut stored_data.inputs).await?;
+        let metadata = finder.finish().await?;
+        stored_data.inputs.extend(metadata.inputs.clone().into_iter());
 
         Ok(MigrationData {
             balance: metadata.balance,
             last_checked_address_index: metadata.last_checked_address_index,
-            inputs: stored_data
-                .inputs
-                .clone()
-                .into_iter()
-                .map(|(_, v)| v)
-                .flatten()
-                .collect(),
+            inputs: metadata.inputs.into_iter().map(|(_, v)| v).flatten().collect(),
         })
     }
 

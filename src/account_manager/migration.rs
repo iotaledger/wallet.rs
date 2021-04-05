@@ -56,6 +56,7 @@ pub struct MigrationDataFinder<'a> {
 pub(crate) struct MigrationMetadata {
     pub(crate) balance: u64,
     pub(crate) last_checked_address_index: u64,
+    pub(crate) inputs: HashMap<Range<u64>, Vec<InputData>>,
 }
 
 impl<'a> MigrationDataFinder<'a> {
@@ -100,10 +101,8 @@ impl<'a> MigrationDataFinder<'a> {
         self
     }
 
-    pub(crate) async fn finish(
-        &self,
-        inputs: &mut HashMap<Range<u64>, Vec<InputData>>,
-    ) -> crate::Result<MigrationMetadata> {
+    pub(crate) async fn finish(&self) -> crate::Result<MigrationMetadata> {
+        let mut inputs = HashMap::new();
         let mut address_index = self.initial_address_index;
         let mut legacy_client_builder = iota_migration::ClientBuilder::new().quorum(true);
         if let Some(permanode) = self.permanode {
@@ -148,6 +147,7 @@ impl<'a> MigrationDataFinder<'a> {
         Ok(MigrationMetadata {
             balance,
             last_checked_address_index: address_index,
+            inputs,
         })
     }
 }
