@@ -1861,6 +1861,19 @@
 <span id="1858">1858</span>
 <span id="1859">1859</span>
 <span id="1860">1860</span>
+<span id="1861">1861</span>
+<span id="1862">1862</span>
+<span id="1863">1863</span>
+<span id="1864">1864</span>
+<span id="1865">1865</span>
+<span id="1866">1866</span>
+<span id="1867">1867</span>
+<span id="1868">1868</span>
+<span id="1869">1869</span>
+<span id="1870">1870</span>
+<span id="1871">1871</span>
+<span id="1872">1872</span>
+<span id="1873">1873</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2293,7 +2306,7 @@
                 )
                 .<span class="kw">await</span><span class="question-mark">?</span>;
 
-                <span class="kw">for</span> (<span class="ident">output_id</span>, <span class="ident">output</span>) <span class="kw">in</span> <span class="ident">address</span>.<span class="ident">outputs_mut</span>() {
+                <span class="kw">for</span> (<span class="ident">output_id</span>, <span class="ident">output</span>) <span class="kw">in</span> <span class="ident">outputs</span>.<span class="ident">iter_mut</span>() {
                     <span class="comment">// if we previously had an output that wasn&#39;t returned by the node, mark it as spent</span>
                     <span class="kw">if</span> <span class="op">!</span><span class="ident">address_outputs</span>
                         .<span class="ident">iter</span>()
@@ -2441,12 +2454,25 @@
         <span class="ident">found_addresses</span>.<span class="ident">extend</span>(<span class="ident">synced_addresses</span>);
         <span class="ident">new_messages</span>.<span class="ident">extend</span>(<span class="ident">synced_messages</span>.<span class="ident">into_iter</span>());
     }
+    <span class="ident">log</span>::<span class="macro">debug!</span>(<span class="string">&quot;FOUND {:?}&quot;</span>, <span class="ident">found_addresses</span>);
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addresses_to_save</span> <span class="op">=</span> <span class="macro">vec!</span>[];
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ignored_addresses</span> <span class="op">=</span> <span class="macro">vec!</span>[];
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">previous_address_is_unused</span> <span class="op">=</span> <span class="bool-val">false</span>;
     <span class="kw">for</span> <span class="ident">found_address</span> <span class="kw">in</span> <span class="ident">found_addresses</span>.<span class="ident">into_iter</span>() {
         <span class="kw">let</span> <span class="ident">address_is_unused</span> <span class="op">=</span> <span class="ident">found_address</span>.<span class="ident">outputs</span>().<span class="ident">is_empty</span>();
+
+        <span class="comment">// if the address was updated, we need to save it</span>
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">existing_address</span>) <span class="op">=</span> <span class="ident">account</span>
+            .<span class="ident">addresses</span>()
+            .<span class="ident">iter</span>()
+            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">address</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">found_address</span>.<span class="ident">address</span>())
+        {
+            <span class="kw">if</span> <span class="ident">existing_address</span>.<span class="ident">outputs</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">found_address</span>.<span class="ident">outputs</span>() {
+                <span class="ident">addresses_to_save</span>.<span class="ident">push</span>(<span class="ident">found_address</span>);
+                <span class="kw">continue</span>;
+            }
+        }
 
         <span class="comment">// if the previous address is unused, we&#39;ll keep checking to see if an used address was found on the gap limit</span>
         <span class="kw">if</span> <span class="ident">previous_address_is_unused</span> {
