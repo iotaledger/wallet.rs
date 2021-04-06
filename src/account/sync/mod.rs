@@ -905,7 +905,7 @@ impl AccountSynchronizer {
                 log::debug!("[SYNC] new messages: {:#?}", parsed_messages);
                 let new_addresses = data.addresses;
 
-                if !self.skip_persistence {
+                if !self.skip_persistence && (!new_addresses.is_empty() || !parsed_messages.is_empty()) {
                     account.append_addresses(new_addresses.to_vec());
                     account.append_messages(parsed_messages.to_vec());
                     account.set_last_synced_at(Some(chrono::Local::now()));

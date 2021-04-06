@@ -64,7 +64,6 @@ In order to use the library you first need to create an `AccountManager`:
 ```rust
 use iota_wallet::{
     account_manager::AccountManager, client::ClientOptionsBuilder, signing::SignerType,
-    storage::sqlite::SqliteStorageAdapter,
 };
 use std::path::PathBuf;
 
@@ -73,7 +72,7 @@ async fn main() -> iota_wallet::Result<()> {
     let storage_folder: PathBuf = "./my-db".into();
     let manager =
         AccountManager::builder()
-            .with_storage(&storage_folder, SqliteStorageAdapter::new(&storage_folder, "accounts")?)
+            .with_storage(&storage_folder, None)
             .finish()
             .await?;
     let client_options = ClientOptionsBuilder::new().with_node("http://api.lb-0.testnet.chrysalis2.com")?.build();
