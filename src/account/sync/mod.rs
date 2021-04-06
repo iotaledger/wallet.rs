@@ -561,14 +561,14 @@ async fn perform_sync(
 
     let mut new_messages = vec![];
     for found_message in found_messages {
-        if !account
+        let message_exists = account
             .with_messages(|messages| {
                 messages
                     .iter()
                     .any(|message| message.key == found_message.id && message.confirmed == Some(true))
             })
-            .await
-        {
+            .await;
+        if !message_exists {
             new_messages.push(found_message);
         }
     }
@@ -903,7 +903,7 @@ impl AccountSynchronizer {
 
                 if !self.skip_persistence && (!new_addresses.is_empty() || !parsed_messages.is_empty()) {
                     account.append_addresses(new_addresses.to_vec());
-                    account.append_messages(parsed_messages.to_vec());
+                    account.save_messages(parsed_messages.to_vec()).await?;
                     account.set_last_synced_at(Some(chrono::Local::now()));
                     account.save().await?;
                 }

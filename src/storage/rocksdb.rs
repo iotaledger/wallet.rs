@@ -3,7 +3,7 @@
 
 use super::StorageAdapter;
 use rocksdb::{DBCompressionType, Options, WriteBatch, DB};
-use std::{path::Path, sync::Arc};
+use std::{collections::HashMap, path::Path, sync::Arc};
 use tokio::sync::Mutex;
 
 /// The storage id.
