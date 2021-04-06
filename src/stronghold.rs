@@ -40,10 +40,7 @@ static CURRENT_SNAPSHOT_PATH: OnceCell<Arc<Mutex<Option<PathBuf>>>> = OnceCell::
 static PASSWORD_CLEAR_INTERVAL: OnceCell<Arc<Mutex<Duration>>> = OnceCell::new();
 static PRIVATE_DATA_CLIENT_PATH: &[u8] = b"iota_seed";
 
-#[cfg(test)]
 const DEFAULT_PASSWORD_CLEAR_INTERVAL: Duration = Duration::from_secs(0);
-#[cfg(not(test))]
-const DEFAULT_PASSWORD_CLEAR_INTERVAL: Duration = Duration::from_secs(8 * 60);
 const SECRET_VAULT_PATH: &str = "iota-wallet-secret";
 const SEED_RECORD_PATH: &str = "iota-wallet-seed";
 const DERIVE_OUTPUT_RECORD_PATH: &str = "iota-wallet-derived";
