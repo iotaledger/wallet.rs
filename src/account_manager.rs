@@ -988,7 +988,7 @@ impl AccountsSynchronizer {
             gap_limit: None,
             account_options,
             discover_accounts: true,
-            skip_change_addresses: true,
+            skip_change_addresses: false,
             ran_account_discovery: false,
         }
     }
