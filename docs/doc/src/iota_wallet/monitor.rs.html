@@ -231,6 +231,14 @@
 <span id="228">228</span>
 <span id="229">229</span>
 <span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -240,7 +248,7 @@
     <span class="ident">address</span>::{<span class="ident">AddressOutput</span>, <span class="ident">AddressWrapper</span>, <span class="ident">IotaAddress</span>},
     <span class="ident">client</span>::<span class="ident">ClientOptions</span>,
     <span class="ident">event</span>::{<span class="ident">emit_confirmation_state_change</span>, <span class="ident">emit_transaction_event</span>, <span class="ident">TransactionEventType</span>},
-    <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessagePayload</span>, <span class="ident">MessageType</span>, <span class="ident">TransactionEssence</span>, <span class="ident">TransactionInput</span>, <span class="ident">TransactionOutput</span>},
+    <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessagePayload</span>, <span class="ident">TransactionEssence</span>, <span class="ident">TransactionInput</span>, <span class="ident">TransactionOutput</span>},
 };
 
 <span class="kw">use</span> <span class="ident">iota</span>::{<span class="ident">bee_rest_api</span>::<span class="ident">types</span>::<span class="ident">dtos</span>::<span class="ident">OutputDto</span>, <span class="ident">OutputResponse</span>, <span class="ident">Topic</span>, <span class="ident">TopicEvent</span>};
@@ -260,9 +268,18 @@
             <span class="ident">address</span>.<span class="ident">address</span>().<span class="ident">to_bech32</span>()
         ))<span class="question-mark">?</span>);
     }
-    <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="ident">account</span>.<span class="ident">list_messages</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="ident">MessageType</span>::<span class="ident">Unconfirmed</span>)) {
-        <span class="ident">topics</span>.<span class="ident">push</span>(<span class="ident">Topic</span>::<span class="ident">new</span>(<span class="macro">format!</span>(<span class="string">&quot;messages/{}/metadata&quot;</span>, <span class="ident">message</span>.<span class="ident">id</span>().<span class="ident">to_string</span>()))<span class="question-mark">?</span>);
-    }
+    <span class="kw">let</span> <span class="ident">message_topics</span> <span class="op">=</span> <span class="ident">account</span>
+        .<span class="ident">with_messages</span>(<span class="op">|</span><span class="ident">messages</span><span class="op">|</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">topics</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+            <span class="kw">for</span> <span class="ident">m</span> <span class="kw">in</span> <span class="ident">messages</span> {
+                <span class="kw">if</span> <span class="ident">m</span>.<span class="ident">confirmed</span>.<span class="ident">is_none</span>() {
+                    <span class="ident">topics</span>.<span class="ident">push</span>(<span class="ident">Topic</span>::<span class="ident">new</span>(<span class="macro">format!</span>(<span class="string">&quot;messages/{}/metadata&quot;</span>, <span class="ident">m</span>.<span class="ident">key</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>);
+                }
+            }
+            <span class="kw">crate</span>::<span class="prelude-ty">Result</span>::<span class="prelude-val">Ok</span>(<span class="ident">topics</span>)
+        })
+        .<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="ident">topics</span>.<span class="ident">extend</span>(<span class="ident">message_topics</span>);
 
     <span class="ident">client</span>.<span class="ident">subscriber</span>().<span class="ident">with_topics</span>(<span class="ident">topics</span>).<span class="ident">unsubscribe</span>().<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
@@ -362,12 +379,11 @@
     <span class="kw">let</span> (<span class="ident">addresses_to_sync</span>, <span class="ident">message_data</span>) <span class="op">=</span> <span class="kw">if</span> <span class="ident">output</span>.<span class="ident">is_spent</span> {
         (<span class="macro">vec!</span>[<span class="ident">address</span>], <span class="prelude-val">None</span>)
     } <span class="kw">else</span> {
-        <span class="kw">let</span> (<span class="ident">message</span>, <span class="ident">is_new</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">account</span>.<span class="ident">messages_mut</span>().<span class="ident">iter</span>().<span class="ident">position</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">m</span>.<span class="ident">id</span>() <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">output</span>.<span class="ident">message_id</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">message_index</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">account</span>.<span class="ident">messages_mut</span>()[<span class="ident">message_index</span>];
+        <span class="kw">let</span> (<span class="ident">message</span>, <span class="ident">is_new</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">account</span>.<span class="ident">get_message</span>(<span class="kw-2">&amp;</span><span class="ident">output</span>.<span class="ident">message_id</span>).<span class="kw">await</span> {
+            <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">message</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="op">!</span><span class="ident">message</span>.<span class="ident">confirmed</span>().<span class="ident">unwrap_or</span>(<span class="bool-val">false</span>) {
                     <span class="ident">message</span>.<span class="ident">set_confirmed</span>(<span class="prelude-val">Some</span>(<span class="bool-val">true</span>));
-                    <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">clone</span>();
+                    <span class="ident">account</span>.<span class="ident">save_messages</span>(<span class="macro">vec!</span>[<span class="ident">message</span>.<span class="ident">clone</span>()]).<span class="kw">await</span><span class="question-mark">?</span>;
                     (<span class="ident">message</span>, <span class="bool-val">false</span>)
                 } <span class="kw">else</span> {
                     <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
@@ -393,7 +409,7 @@
                     .<span class="ident">with_confirmed</span>(<span class="prelude-val">Some</span>(<span class="bool-val">true</span>))
                     .<span class="ident">finish</span>()
                     .<span class="kw">await</span><span class="question-mark">?</span>;
-                    <span class="ident">account</span>.<span class="ident">messages_mut</span>().<span class="ident">push</span>(<span class="ident">message</span>.<span class="ident">clone</span>());
+                    <span class="ident">account</span>.<span class="ident">save_messages</span>(<span class="macro">vec!</span>[<span class="ident">message</span>.<span class="ident">clone</span>()]).<span class="kw">await</span><span class="question-mark">?</span>;
                     (<span class="ident">message</span>, <span class="bool-val">true</span>)
                 } <span class="kw">else</span> {
                     <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);

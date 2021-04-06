@@ -547,8 +547,6 @@
 <span id="544">544</span>
 <span id="545">545</span>
 <span id="546">546</span>
-<span id="547">547</span>
-<span id="548">548</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -834,9 +832,7 @@
                     .<span class="ident">read</span>()
                     .<span class="kw">await</span>
                     .<span class="ident">list_messages</span>(<span class="kw-2">*</span><span class="ident">count</span>, <span class="kw-2">*</span><span class="ident">from</span>, <span class="ident">message_type</span>.<span class="ident">clone</span>())
-                    .<span class="ident">into_iter</span>()
-                    .<span class="ident">cloned</span>()
-                    .<span class="ident">collect</span>();
+                    .<span class="kw">await</span><span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">Messages</span>(<span class="ident">messages</span>))
             }
             <span class="ident">AccountMethod</span>::<span class="ident">ListAddresses</span> <span class="op">=</span><span class="op">&gt;</span> {
@@ -844,14 +840,14 @@
                 <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">Addresses</span>(<span class="ident">addresses</span>))
             }
             <span class="ident">AccountMethod</span>::<span class="ident">ListSpentAddresses</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">addresses</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">list_spent_addresses</span>().<span class="kw">await</span>;
+                <span class="kw">let</span> <span class="ident">addresses</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">list_spent_addresses</span>().<span class="kw">await</span><span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">Addresses</span>(<span class="ident">addresses</span>))
             }
             <span class="ident">AccountMethod</span>::<span class="ident">ListUnspentAddresses</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">addresses</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">list_unspent_addresses</span>().<span class="kw">await</span>;
+                <span class="kw">let</span> <span class="ident">addresses</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">list_unspent_addresses</span>().<span class="kw">await</span><span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">Addresses</span>(<span class="ident">addresses</span>))
             }
-            <span class="ident">AccountMethod</span>::<span class="ident">GetBalance</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">Balance</span>(<span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">balance</span>())),
+            <span class="ident">AccountMethod</span>::<span class="ident">GetBalance</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">Balance</span>(<span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">balance</span>().<span class="kw">await</span><span class="question-mark">?</span>)),
             <span class="ident">AccountMethod</span>::<span class="ident">GetLatestAddress</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">LatestAddress</span>(
                 <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">latest_address</span>().<span class="ident">clone</span>(),
             )),

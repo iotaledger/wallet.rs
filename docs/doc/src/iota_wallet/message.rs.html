@@ -1023,6 +1023,12 @@
 <span id="1020">1020</span>
 <span id="1021">1021</span>
 <span id="1022">1022</span>
+<span id="1023">1023</span>
+<span id="1024">1024</span>
+<span id="1025">1025</span>
+<span id="1026">1026</span>
+<span id="1027">1027</span>
+<span id="1028">1028</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1045,10 +1051,10 @@
 <span class="kw">use</span> <span class="ident">serde_repr</span>::<span class="ident">Deserialize_repr</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">cmp</span>::<span class="ident">Ordering</span>,
+    <span class="ident">collections</span>::<span class="ident">hash_map</span>::<span class="ident">DefaultHasher</span>,
     <span class="ident">fmt</span>,
     <span class="ident">hash</span>::{<span class="ident">Hash</span>, <span class="ident">Hasher</span>},
     <span class="ident">num</span>::<span class="ident">NonZeroU64</span>,
-    <span class="ident">unimplemented</span>,
 };
 
 <span class="doccomment">/// The strategy to use for the remainder value management when sending funds.</span>
@@ -1726,6 +1732,12 @@
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented!</span>(),
         };
         <span class="prelude-val">Ok</span>(<span class="ident">payload</span>)
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">storage_hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">DefaultHasher</span>::<span class="ident">new</span>();
+        <span class="ident">serde_json</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>).<span class="ident">unwrap</span>().<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">hasher</span>);
+        <span class="ident">hasher</span>.<span class="ident">finish</span>()
     }
 }
 
