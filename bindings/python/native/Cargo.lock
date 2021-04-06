@@ -1667,6 +1667,7 @@ dependencies = [
  "slog",
  "thiserror",
  "tokio",
+ "url",
  "zeroize",
 ]
 
@@ -3672,6 +3673,7 @@ dependencies = [
  "idna",
  "matches",
  "percent-encoding",
+ "serde 1.0.125",
 ]
 
 [[package]]
