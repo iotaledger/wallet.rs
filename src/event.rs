@@ -355,11 +355,13 @@ pub(crate) async fn emit_balance_change(
     let remainder = if balance_change.spent > 0 {
         Some(false)
     } else {
-        message_id.and_then(|id| {
-            account
+        match message_id {
+            Some(id) => account
                 .get_message(&id)
-                .and_then(|message| message.is_remainder(&address))
-        })
+                .await
+                .and_then(|message| message.is_remainder(&address)),
+            None => None,
+        }
     };
     let event = BalanceEvent {
         indexation_id: generate_indexation_id(),

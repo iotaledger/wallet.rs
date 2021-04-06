@@ -3,10 +3,7 @@
 
 use std::fmt::{Display, Formatter};
 
-use iota_wallet::{
-    account::Account,
-    address::{Address as AddressRust, AddressOutput, AddressWrapper},
-};
+use iota_wallet::address::{Address as AddressRust, AddressWrapper};
 
 #[derive(Clone, PartialEq)]
 pub struct Address {
@@ -32,11 +29,6 @@ impl Address {
 
     pub fn balance(&self) -> u64 {
         self.address.balance()
-    }
-
-    /// Gets the list of outputs that aren't spent or pending.
-    pub fn available_outputs(&self, account: &Account) -> Vec<&AddressOutput> {
-        self.address.available_outputs(account)
     }
 
     pub fn to_inner(self) -> AddressRust {

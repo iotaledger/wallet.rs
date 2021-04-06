@@ -282,9 +282,7 @@ impl WalletMessageHandler {
                     .read()
                     .await
                     .list_messages(*count, *from, message_type.clone())
-                    .into_iter()
-                    .cloned()
-                    .collect();
+                    .await?;
                 Ok(ResponseType::Messages(messages))
             }
             AccountMethod::ListAddresses => {
@@ -292,14 +290,14 @@ impl WalletMessageHandler {
                 Ok(ResponseType::Addresses(addresses))
             }
             AccountMethod::ListSpentAddresses => {
-                let addresses = account_handle.list_spent_addresses().await;
+                let addresses = account_handle.list_spent_addresses().await?;
                 Ok(ResponseType::Addresses(addresses))
             }
             AccountMethod::ListUnspentAddresses => {
-                let addresses = account_handle.list_unspent_addresses().await;
+                let addresses = account_handle.list_unspent_addresses().await?;
                 Ok(ResponseType::Addresses(addresses))
             }
-            AccountMethod::GetBalance => Ok(ResponseType::Balance(account_handle.read().await.balance())),
+            AccountMethod::GetBalance => Ok(ResponseType::Balance(account_handle.read().await.balance().await?)),
             AccountMethod::GetLatestAddress => Ok(ResponseType::LatestAddress(
                 account_handle.read().await.latest_address().clone(),
             )),

@@ -329,8 +329,9 @@ async fn sync_addresses(
             .iter()
             .map(|a| (a.address().clone(), a.outputs().clone()))
             .collect();
-        let account_messages: Vec<(MessageId, Option<bool>)> =
-            account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
+        let account_messages: Vec<(MessageId, Option<bool>)> = account
+            .with_messages(|messages| messages.iter().map(|m| (m.key, m.confirmed)).collect())
+            .await;
         let client_options = account.client_options().clone();
 
         let mut addresses_to_sync = Vec::new();
@@ -393,11 +394,14 @@ async fn sync_messages(
     let client_options = account.client_options().clone();
 
     let messages_with_known_confirmation: Vec<MessageId> = account
-        .messages()
-        .iter()
-        .filter(|m| m.confirmed().is_some())
-        .map(|m| *m.id())
-        .collect();
+        .with_messages(|messages| {
+            messages
+                .iter()
+                .filter(|m| m.confirmed.is_some())
+                .map(|m| m.key)
+                .collect()
+        })
+        .await;
 
     let mut addresses = Vec::new();
 
@@ -522,8 +526,9 @@ async fn perform_sync(
                     "[SYNC] syncing specific addresses: {:?}",
                     addresses.iter().map(|a| a.to_bech32()).collect::<Vec<String>>()
                 );
-                let account_messages: Vec<(MessageId, Option<bool>)> =
-                    account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
+                let account_messages: Vec<(MessageId, Option<bool>)> = account
+                    .with_messages(|messages| messages.iter().map(|m| (m.key, m.confirmed)).collect())
+                    .await;
                 let mut addresses_to_sync = Vec::new();
                 for address in account.addresses() {
                     if !addresses.contains(address.address()) {
@@ -556,11 +561,14 @@ async fn perform_sync(
 
     let mut new_messages = vec![];
     for found_message in found_messages {
-        if !account
-            .messages()
-            .iter()
-            .any(|message| message.id() == &found_message.id && message.confirmed() == &Some(true))
-        {
+        let message_exists = account
+            .with_messages(|messages| {
+                messages
+                    .iter()
+                    .any(|message| message.key == found_message.id && message.confirmed == Some(true))
+            })
+            .await;
+        if !message_exists {
             new_messages.push(found_message);
         }
     }
@@ -891,8 +899,9 @@ impl AccountSynchronizer {
                     .all(|address| address.balance() == 0 && address.outputs().is_empty());
                 log::debug!("[SYNC] is empty: {}", is_empty);
                 let mut account = self.account_handle.write().await;
-                let messages_before_sync: Vec<(MessageId, Option<bool>)> =
-                    account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
+                let messages_before_sync: Vec<(MessageId, Option<bool>)> = account
+                    .with_messages(|messages| messages.iter().map(|m| (m.key, m.confirmed)).collect())
+                    .await;
                 let addresses_before_sync: Vec<(String, u64, HashMap<OutputId, AddressOutput>)> = account
                     .addresses()
                     .iter()
@@ -907,7 +916,7 @@ impl AccountSynchronizer {
 
                 if !self.skip_persistence && (!new_addresses.is_empty() || !parsed_messages.is_empty()) {
                     account.append_addresses(new_addresses.to_vec());
-                    account.append_messages(parsed_messages.to_vec());
+                    account.save_messages(parsed_messages.to_vec()).await?;
                     account.set_last_synced_at(Some(chrono::Local::now()));
                     account.save().await?;
                 }
@@ -1062,7 +1071,7 @@ impl SyncedAccount {
         &self,
         locked_addresses: &'a mut MutexGuard<'_, Vec<AddressWrapper>>,
         transfer_obj: &Transfer,
-        account: &'a Account,
+        sent_messages: &'a [Message],
         addresses: &'a [Address],
         address: &'a AddressWrapper,
     ) -> crate::Result<(Vec<input_selection::Input>, Option<input_selection::Input>)> {
@@ -1070,14 +1079,14 @@ impl SyncedAccount {
             .iter()
             .filter(|a| {
                 // we allow an input equal to the deposit address only if it has more than one output
-                (a.address() != address || a.available_outputs(&account).len() > 1)
-                    && a.available_balance(&account) > 0
+                (a.address() != address || a.available_outputs(&sent_messages).len() > 1)
+                    && a.available_balance(&sent_messages) > 0
                     && !locked_addresses.contains(a.address())
             })
             .map(|a| input_selection::Input {
                 address: a.address().clone(),
                 internal: *a.internal(),
-                balance: a.available_balance(&account),
+                balance: a.available_balance(&sent_messages),
             })
             .collect();
         let mut selected_addresses = input_selection::select_input(transfer_obj.amount.get(), available_addresses)?;
@@ -1095,13 +1104,13 @@ impl SyncedAccount {
                 .filter(|a| {
                     // we do not allow the deposit address as input address
                     a.address() != address
-                        && a.available_balance(&account) > 0
+                        && a.available_balance(&sent_messages) > 0
                         && !locked_addresses.contains(a.address())
                 })
                 .map(|a| input_selection::Input {
                     address: a.address().clone(),
                     internal: *a.internal(),
-                    balance: a.available_balance(&account),
+                    balance: a.available_balance(&sent_messages),
                 })
                 .collect();
             selected_addresses = input_selection::select_input(transfer_obj.amount.get(), available_addresses)?;
@@ -1128,10 +1137,10 @@ impl SyncedAccount {
         // collect the transactions we need to make
         {
             let account = self.account_handle.read().await;
-            let messages = account.list_messages(0, 0, Some(MessageType::Sent));
+            let sent_messages = account.list_messages(0, 0, Some(MessageType::Sent)).await?;
             for address in account.addresses() {
                 if address.outputs().len() >= self.account_handle.account_options.output_consolidation_threshold {
-                    let address_outputs = address.available_outputs_internal(&messages);
+                    let address_outputs = address.available_outputs(&sent_messages);
                     // the address outputs exceed the threshold, so we push a transfer to our vector
                     if address_outputs.len() >= self.account_handle.account_options.output_consolidation_threshold {
                         for outputs in address_outputs.chunks(INPUT_OUTPUT_COUNT_MAX) {
@@ -1196,7 +1205,9 @@ impl SyncedAccount {
         // prepare the transfer getting some needed objects and values
         let value = transfer_obj.amount.get();
 
-        let balance = account_.balance();
+        let sent_messages = account_.list_messages(0, 0, Some(MessageType::Sent)).await?;
+
+        let balance = account_.balance_internal(&sent_messages).await;
 
         if value > balance.total {
             return Err(crate::Error::InsufficientFunds);
@@ -1245,7 +1256,7 @@ impl SyncedAccount {
                 let (input_addresses, remainder_address) = self.select_inputs(
                     &mut locked_addresses,
                     &transfer_obj,
-                    &account_,
+                    &sent_messages,
                     account_.addresses(),
                     &transfer_obj.address,
                 )?;
@@ -1258,7 +1269,7 @@ impl SyncedAccount {
                                 .iter()
                                 .find(|a| a.address() == &input_address.address)
                                 .unwrap() // safe to unwrap since we know the address belongs to the account
-                                .available_outputs(&account_)
+                                .available_outputs(&sent_messages)
                                 .iter()
                                 .map(|o| (*o).clone())
                                 .collect();
@@ -1641,9 +1652,12 @@ async fn perform_transfer(
     )
     .finish()
     .await?;
-    account_.append_messages(vec![message.clone()]);
+    account_.save_messages(vec![message.clone()]).await?;
 
-    account_.save().await?;
+    // if we generated an address, we need to save the account
+    if !addresses_to_watch.is_empty() {
+        account_.save().await?;
+    }
 
     // drop the  account_ ref so it doesn't lock the monitor system
     drop(account_);
@@ -1732,18 +1746,22 @@ pub(crate) async fn repost_message(
 ) -> crate::Result<Message> {
     let mut account = account_handle.write().await;
 
-    let message = match account.get_message(message_id) {
+    let message = match account.get_message(message_id).await {
         Some(message_to_repost) => {
-            // get the latest reattachment of the message we want to promote/rettry/reattach
-            let messages = account.list_messages(0, 0, None);
-            let message_to_repost = messages
-                .iter()
-                .find(|m| m.payload() == message_to_repost.payload())
-                .unwrap();
-            if message_to_repost.confirmed().unwrap_or(false) {
-                return Err(crate::Error::ClientError(Box::new(
-                    iota::client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
-                )));
+            let mut message_to_repost = message_to_repost.clone();
+            // check all reattachments of the message we want to promote/rettry/reattach
+            while let Some(reattachment_message_id) = message_to_repost.reattachment_message_id {
+                match account.get_message(&reattachment_message_id).await {
+                    Some(m) => {
+                        message_to_repost = m.clone();
+                        if message_to_repost.confirmed().unwrap_or(false) {
+                            return Err(crate::Error::ClientError(Box::new(
+                                iota::client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
+                            )));
+                        }
+                    }
+                    None => break,
+                }
             }
 
             let client = crate::client::get_client(account.client_options()).await?;
@@ -1765,7 +1783,7 @@ pub(crate) async fn repost_message(
             .finish()
             .await?;
 
-            account.append_messages(vec![message.clone()]);
+            account.save_messages(vec![message.clone()]).await?;
 
             Ok(message)
         }
