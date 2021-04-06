@@ -743,6 +743,7 @@ impl AccountManager {
             let mut stronghold_storage = crate::storage::stronghold::StrongholdStorageAdapter::new(
                 &self.storage_folder.join(STRONGHOLD_FILENAME),
             )
+            // stronghold adapter `new` never fails
             .unwrap();
             for account_handle in self.accounts.read().await.values() {
                 stronghold_storage.remove(&account_handle.read().await.id()).await?;
