@@ -16,7 +16,7 @@ pub struct StrongholdSigner;
 pub(crate) async fn stronghold_path(storage_path: &Path) -> crate::Result<PathBuf> {
     let storage_id = crate::storage::get(&storage_path).await?.lock().await.id();
     let path = if storage_id == crate::storage::stronghold::STORAGE_ID {
-        storage_path.clone()
+        storage_path.to_path_buf()
     } else if let Some(parent) = storage_path.parent() {
         parent.join(crate::account_manager::STRONGHOLD_FILENAME)
     } else {
