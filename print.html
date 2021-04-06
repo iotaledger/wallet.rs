@@ -227,7 +227,7 @@
 <li>Get in touch, join the community and become part of the X-Team!</li>
 </ol>
 <h1 id="overview"><a class="header" href="#overview">Overview</a></h1>
-<p>The wallet library is a stateful package with a standardized interface for developers to build applications involving IOTA value transactions. It provides abstractions to handle IOTA payments and can optionally interact with <a href="https://github.com/iotaledger/stronghold.rs/">IOTA Stronghold enclave</a> for seed handling, seed storage and state backup. Alternatively you can use the <code>EnvMnemonic SignerType</code> and a <code>SQLite</code> database.</p>
+<p>The wallet library is a stateful package with a standardized interface for developers to build applications involving IOTA value transactions. It provides abstractions to handle IOTA payments and can optionally interact with <a href="https://github.com/iotaledger/stronghold.rs/">IOTA Stronghold enclave</a> for seed handling, seed storage and state backup. </p>
 <p>See the full specification <a href="https://github.com/iotaledger/wallet.rs/blob/master/specs/wallet-ENGINEERING-SPEC-0000.md">here</a>.</p>
 <h2 id="high-level-layered-overview"><a class="header" href="#high-level-layered-overview">High level layered overview:</a></h2>
 <p><img src="overview/iota_layers_overview.svg" alt="iota layers overview" /></p>
@@ -301,7 +301,6 @@ iota-wallet = { git = &quot;https://github.com/iotaledger/wallet.rs&quot; }
 <p>In order to use the library you first need to create an <code>AccountManager</code>:</p>
 <pre><pre class="playground"><code class="language-rust">use iota_wallet::{
     account_manager::AccountManager, client::ClientOptionsBuilder, signing::SignerType,
-    storage::sqlite::SqliteStorageAdapter,
 };
 use std::path::PathBuf;
 
@@ -310,7 +309,7 @@ async fn main() -&gt; iota_wallet::Result&lt;()&gt; {
     let storage_folder: PathBuf = &quot;./my-db&quot;.into();
     let manager =
         AccountManager::builder()
-            .with_storage(&amp;storage_folder, SqliteStorageAdapter::new(&amp;storage_folder, &quot;accounts&quot;)?)
+            .with_storage(&amp;storage_folder, None)
             .finish()
             .await?;
     let client_options = ClientOptionsBuilder::new().with_node(&quot;http://api.lb-0.testnet.chrysalis2.com&quot;)?.build();
@@ -1543,11 +1542,10 @@ print('All work completed')
 <p>Note that in the following APIs, the corresponding exception will be returned if an error occurs.
 Also for all the optional values, the default values are the same as the ones in the Rust version.</p>
 <h3 id="accountmanager-1"><a class="header" href="#accountmanager-1">AccountManager</a></h3>
-<h4 id="constructorstorage_path-optional-storage-optional-password-optional-polling_interval-optional-automatic_output_consolidationoptional-output_consolidation_thresholdoptional-sync_spent_outputsoptional-persist_eventsoptional-a-hreflibrariespythonapi_referencehtmlaccountmanageraccountmanagera"><a class="header" href="#constructorstorage_path-optional-storage-optional-password-optional-polling_interval-optional-automatic_output_consolidationoptional-output_consolidation_thresholdoptional-sync_spent_outputsoptional-persist_eventsoptional-a-hreflibrariespythonapi_referencehtmlaccountmanageraccountmanagera">constructor(storage_path (optional), storage (optional), password (optional), polling_interval (optional), automatic_output_consolidation(optional), output_consolidation_threshold(optional), sync_spent_outputs(optional), persist_events(optional)): <a href="libraries/python/api_reference.html#accountmanager">AccountManager</a></a></h4>
+<h4 id="constructorstorage_path-optional-password-optional-polling_interval-optional-automatic_output_consolidationoptional-output_consolidation_thresholdoptional-sync_spent_outputsoptional-persist_eventsoptional-a-hreflibrariespythonapi_referencehtmlaccountmanageraccountmanagera"><a class="header" href="#constructorstorage_path-optional-password-optional-polling_interval-optional-automatic_output_consolidationoptional-output_consolidation_thresholdoptional-sync_spent_outputsoptional-persist_eventsoptional-a-hreflibrariespythonapi_referencehtmlaccountmanageraccountmanagera">constructor(storage_path (optional), password (optional), polling_interval (optional), automatic_output_consolidation(optional), output_consolidation_threshold(optional), sync_spent_outputs(optional), persist_events(optional)): <a href="libraries/python/api_reference.html#accountmanager">AccountManager</a></a></h4>
 <p>Creates a new instance of the AccountManager.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>[storage_path]</td><td><code>str</code></td><td><code><code>./storage</code></code></td><td>The path where the database file will be saved</td></tr>
-<tr><td>[storage]</td><td><code>str</code></td><td><code><code>Stronghold</code></code></td><td>The storage implementation to use. Should be <code>Stronghold</code> or <code>Sqlite</code></td></tr>
 <tr><td>[storage_password]</td><td><code>str</code></td><td><code>undefined</code></td><td>The storage password to encrypt/decrypt accounts</td></tr>
 <tr><td>[polling_interval]</td><td><code>int</code></td><td><code>30000</code></td><td>The polling interval in milliseconds</td></tr>
 <tr><td>[automatic_output_consolidation]</td><td><code>bool</code></td><td><code>true</code></td><td>Disables the automatic output consolidation process</td></tr>

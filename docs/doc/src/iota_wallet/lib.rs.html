@@ -553,7 +553,7 @@
 <span class="doccomment">/// Signing interfaces.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">signing</span>;
 <span class="doccomment">/// The storage module.</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">storage</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">storage</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)))]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">stronghold</span>;

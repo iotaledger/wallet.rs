@@ -201,7 +201,6 @@ iota-wallet = { git = &quot;https://github.com/iotaledger/wallet.rs&quot; }
 <p>In order to use the library you first need to create an <code>AccountManager</code>:</p>
 <pre><pre class="playground"><code class="language-rust">use iota_wallet::{
     account_manager::AccountManager, client::ClientOptionsBuilder, signing::SignerType,
-    storage::sqlite::SqliteStorageAdapter,
 };
 use std::path::PathBuf;
 
@@ -210,7 +209,7 @@ async fn main() -&gt; iota_wallet::Result&lt;()&gt; {
     let storage_folder: PathBuf = &quot;./my-db&quot;.into();
     let manager =
         AccountManager::builder()
-            .with_storage(&amp;storage_folder, SqliteStorageAdapter::new(&amp;storage_folder, &quot;accounts&quot;)?)
+            .with_storage(&amp;storage_folder, None)
             .finish()
             .await?;
     let client_options = ClientOptionsBuilder::new().with_node(&quot;http://api.lb-0.testnet.chrysalis2.com&quot;)?.build();
