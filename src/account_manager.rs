@@ -329,7 +329,8 @@ impl AccountManager {
     }
 
     pub(crate) async fn delete_internal(&self) -> crate::Result<()> {
-        let storage_id = crate::storage::remove(&self.storage_path).await;
+        // safe to unwrap: we know the storage exists
+        let storage_id = crate::storage::remove(&self.storage_path).await.unwrap();
 
         if self.storage_path.exists() {
             if self.storage_path.is_file() {

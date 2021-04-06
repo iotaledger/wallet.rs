@@ -318,10 +318,14 @@ pub(crate) async fn set<P: AsRef<Path>>(
     );
 }
 
-pub(crate) async fn remove(storage_path: &Path) -> String {
+pub(crate) async fn remove(storage_path: &Path) -> Option<String> {
     let mut instances = INSTANCES.get_or_init(Default::default).write().await;
     let storage = instances.remove(storage_path);
-    storage.unwrap().lock().await.id().to_string()
+    if let Some(s) = storage {
+        Some(s.lock().await.id().to_string())
+    } else {
+        None
+    }
 }
 
 pub(crate) async fn set_encryption_key(storage_path: &Path, encryption_key: [u8; 32]) -> crate::Result<()> {
