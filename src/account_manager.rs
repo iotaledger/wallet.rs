@@ -278,6 +278,12 @@ impl Clone for AccountManager {
 impl Drop for AccountManager {
     fn drop(&mut self) {
         self.stop_background_sync();
+        let storage_path = self.storage_path.clone();
+        thread::spawn(move || {
+            crate::block_on(crate::storage::remove(&storage_path));
+        })
+        .join()
+        .expect("failed to drop manager storage");
     }
 }
 
@@ -323,7 +329,8 @@ impl AccountManager {
     }
 
     pub(crate) async fn delete_internal(&self) -> crate::Result<()> {
-        let storage_id = crate::storage::remove(&self.storage_path).await;
+        // safe to unwrap: we know the storage exists
+        let storage_id = crate::storage::remove(&self.storage_path).await.unwrap();
 
         if self.storage_path.exists() {
             if self.storage_path.is_file() {
