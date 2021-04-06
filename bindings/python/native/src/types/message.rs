@@ -257,7 +257,7 @@ impl TryFrom<RustMilestonePayloadEssence> for MilestonePayloadEssence {
     type Error = Error;
     fn try_from(essence: RustMilestonePayloadEssence) -> Result<Self> {
         Ok(MilestonePayloadEssence {
-            index: essence.index(),
+            index: *essence.index(),
             timestamp: essence.timestamp(),
             parents: essence.parents().iter().map(|parent| parent.to_string()).collect(),
             merkle_proof: essence.merkle_proof().try_into()?,
