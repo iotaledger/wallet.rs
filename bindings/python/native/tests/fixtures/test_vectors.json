@@ -23,7 +23,7 @@
         "message_id": "f541e53e98ccffdd94036f08af07f9eb060449ee7838c2279f230acc933de6d8",
         "backup_restore": {
             "account_manager": {
-                "storage_path": "./alice-database",
+                "storage_path": "./backup-test-database",
                 "storage_path_backup": "./alice-database_backup",
                 "storage_path_2nd_backup": "./alice-database_2nd_backup",
                 "storage_password": "storage_password",

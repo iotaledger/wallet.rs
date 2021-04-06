@@ -128,10 +128,6 @@ def test_account_manager_get_broadcast_event_count():
     assert isinstance(manager.get_broadcast_event_count(), int)
 
 
-def test_account_manager_set_storage_password():
-    assert isinstance(manager.get_broadcast_event_count(), int)
-
-
 def test_account_manager_internal_transfer():
     try:
         manager.internal_transfer('Alice', 'Jason', 100)
@@ -170,7 +166,7 @@ def test_account_manager_backup_and_restore():
     assert account.alias() == pat['backup_restore']['alias']
 
 
-def test_account_manager_set_storage_password():
+def test_account_manager_import_accounts():
     manager = iw.AccountManager(
         storage_path=pat['backup_restore']['account_manager']['storage_path_2nd_backup'])
 
