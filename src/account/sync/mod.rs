@@ -433,7 +433,7 @@ async fn sync_messages(
                 )
                 .await?;
 
-                for (output_id, output) in address.outputs_mut() {
+                for (output_id, output) in outputs.iter_mut() {
                     // if we previously had an output that wasn't returned by the node, mark it as spent
                     if !address_outputs
                         .iter()
@@ -585,12 +585,25 @@ async fn perform_sync(
         found_addresses.extend(synced_addresses);
         new_messages.extend(synced_messages.into_iter());
     }
+    log::debug!("FOUND {:?}", found_addresses);
 
     let mut addresses_to_save = vec![];
     let mut ignored_addresses = vec![];
     let mut previous_address_is_unused = false;
     for found_address in found_addresses.into_iter() {
         let address_is_unused = found_address.outputs().is_empty();
+
+        // if the address was updated, we need to save it
+        if let Some(existing_address) = account
+            .addresses()
+            .iter()
+            .find(|a| a.address() == found_address.address())
+        {
+            if existing_address.outputs() != found_address.outputs() {
+                addresses_to_save.push(found_address);
+                continue;
+            }
+        }
 
         // if the previous address is unused, we'll keep checking to see if an used address was found on the gap limit
         if previous_address_is_unused {

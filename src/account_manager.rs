@@ -333,7 +333,7 @@ impl AccountManager {
         #[cfg(feature = "stronghold")]
         {
             crate::stronghold::unload_snapshot(&self.storage_path, false).await?;
-            let _ = std::fs::remove_file(self.stronghold_snapshot_path_internal(&storage_id).await?);
+            std::fs::remove_file(self.stronghold_snapshot_path_internal(&storage_id).await?)?;
         }
 
         Ok(())
@@ -979,7 +979,7 @@ impl AccountsSynchronizer {
             gap_limit: None,
             account_options,
             discover_accounts: true,
-            skip_change_addresses: true,
+            skip_change_addresses: false,
             ran_account_discovery: false,
         }
     }

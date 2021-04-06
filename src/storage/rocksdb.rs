@@ -23,6 +23,8 @@ impl RocksdbStorageAdapter {
     pub fn new(path: impl AsRef<Path>) -> crate::Result<Self> {
         let mut opts = Options::default();
         opts.set_compression_type(DBCompressionType::Lz4);
+        opts.create_if_missing(true);
+        opts.create_missing_column_families(true);
         let db = DB::open(&opts, path).map_err(storage_err)?;
         Ok(Self {
             db: Arc::new(Mutex::new(db)),
