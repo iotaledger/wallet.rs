@@ -308,7 +308,7 @@
         .<span class="kw">await</span>
         .<span class="ident">get</span>(<span class="ident">signer_type</span>)
         .<span class="ident">cloned</span>()
-        .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;signer not initialized for type {:?}&quot;</span>, <span class="ident">signer_type</span>))
+        .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="macro">panic!</span>(<span class="string">&quot;signer not initialized for type {:?}&quot;</span>, <span class="ident">signer_type</span>))
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="iota_wallet" data-search-js="../../../search-index.js"></div>

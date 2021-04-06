@@ -1260,12 +1260,12 @@
 <span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Display</span> <span class="kw">for</span> <span class="ident">ValueUnit</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">ValueUnit</span>::<span class="ident">I</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;i&quot;</span>),
-            <span class="ident">ValueUnit</span>::<span class="ident">Ki</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;Ki&quot;</span>),
-            <span class="ident">ValueUnit</span>::<span class="ident">Mi</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;Mi&quot;</span>),
-            <span class="ident">ValueUnit</span>::<span class="ident">Gi</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;Gi&quot;</span>),
-            <span class="ident">ValueUnit</span>::<span class="ident">Ti</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;Ti&quot;</span>),
-            <span class="ident">ValueUnit</span>::<span class="ident">Pi</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;Pi&quot;</span>),
+            <span class="ident">ValueUnit</span>::<span class="ident">I</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;i&quot;</span>),
+            <span class="ident">ValueUnit</span>::<span class="ident">Ki</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Ki&quot;</span>),
+            <span class="ident">ValueUnit</span>::<span class="ident">Mi</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Mi&quot;</span>),
+            <span class="ident">ValueUnit</span>::<span class="ident">Gi</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Gi&quot;</span>),
+            <span class="ident">ValueUnit</span>::<span class="ident">Ti</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Ti&quot;</span>),
+            <span class="ident">ValueUnit</span>::<span class="ident">Pi</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Pi&quot;</span>),
         }
     }
 }
@@ -1288,7 +1288,7 @@
 
     <span class="doccomment">/// Formats the value with its unit.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_denomination</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
-        <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{} {}&quot;</span>, <span class="self">self</span>.<span class="ident">value</span>, <span class="self">self</span>.<span class="ident">unit</span>)
+        <span class="macro">format!</span>(<span class="string">&quot;{} {}&quot;</span>, <span class="self">self</span>.<span class="ident">value</span>, <span class="self">self</span>.<span class="ident">unit</span>)
     }
 
     <span class="doccomment">/// The transaction value without its unit.</span>
@@ -1370,7 +1370,7 @@
                 <span class="ident">TransactionSignatureLockedDustAllowanceOutput</span>::<span class="ident">new</span>(<span class="ident">output</span>, <span class="ident">bech32_hrp</span>),
             ),
             <span class="ident">Output</span>::<span class="ident">Treasury</span>(<span class="ident">output</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Treasury</span>(<span class="ident">output</span>.<span class="ident">clone</span>()),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented!</span>(),
         }
     }
 }
@@ -1478,7 +1478,7 @@
                     <span class="ident">TransactionInput</span>::<span class="ident">UTXO</span>(<span class="ident">TransactionUtxoInput</span> { <span class="ident">input</span>: <span class="ident">i</span>, <span class="ident">metadata</span> })
                 }
                 <span class="ident">Input</span>::<span class="ident">Treasury</span>(<span class="ident">treasury</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">TransactionInput</span>::<span class="ident">Treasury</span>(<span class="ident">treasury</span>),
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented!</span>(),
             };
             <span class="ident">inputs</span>.<span class="ident">push</span>(<span class="ident">input</span>);
         }
@@ -1503,7 +1503,7 @@
                         <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">output</span> {
                             <span class="ident">Output</span>::<span class="ident">SignatureLockedDustAllowance</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">o</span>.<span class="ident">address</span>(),
                             <span class="ident">Output</span>::<span class="ident">SignatureLockedSingle</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">o</span>.<span class="ident">address</span>(),
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
+                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented!</span>(),
                         };
                         (<span class="ident">address</span>, <span class="ident">output</span>)
                     })
@@ -1656,7 +1656,7 @@
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">essence</span>: <span class="kw-2">&amp;</span><span class="ident">Essence</span>, <span class="ident">metadata</span>: <span class="kw-2">&amp;</span><span class="ident">TransactionBuilderMetadata</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">essence</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">essence</span> {
             <span class="ident">Essence</span>::<span class="ident">Regular</span>(<span class="ident">regular</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Regular</span>(<span class="ident">TransactionRegularEssence</span>::<span class="ident">new</span>(<span class="ident">regular</span>, <span class="ident">metadata</span>).<span class="kw">await</span><span class="question-mark">?</span>),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented!</span>(),
         };
         <span class="prelude-val">Ok</span>(<span class="ident">essence</span>)
     }
@@ -1723,7 +1723,7 @@
             <span class="ident">Payload</span>::<span class="ident">Indexation</span>(<span class="ident">indexation</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Indexation</span>(<span class="ident">indexation</span>),
             <span class="ident">Payload</span>::<span class="ident">Receipt</span>(<span class="ident">receipt</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Receipt</span>(<span class="ident">receipt</span>),
             <span class="ident">Payload</span>::<span class="ident">TreasuryTransaction</span>(<span class="ident">treasury_tx</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">TreasuryTransaction</span>(<span class="ident">treasury_tx</span>),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented!</span>(),
         };
         <span class="prelude-val">Ok</span>(<span class="ident">payload</span>)
     }
@@ -1790,7 +1790,7 @@
                         <span class="kw">let</span> (<span class="ident">output_address</span>, <span class="ident">remainder</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">output</span> {
                             <span class="ident">TransactionOutput</span>::<span class="ident">SignatureLockedSingle</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">o</span>.<span class="ident">address</span>(), <span class="ident">o</span>.<span class="ident">remainder</span>),
                             <span class="ident">TransactionOutput</span>::<span class="ident">SignatureLockedDustAllowance</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">o</span>.<span class="ident">address</span>(), <span class="bool-val">false</span>),
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
+                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented!</span>(),
                         };
                         <span class="kw">if</span> <span class="ident">output_address</span> <span class="op">=</span><span class="op">=</span> <span class="ident">address</span> {
                             <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">remainder</span>);
@@ -1856,7 +1856,7 @@
         <span class="kw">let</span> <span class="ident">output_address</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">output</span> {
             <span class="ident">TransactionOutput</span>::<span class="ident">SignatureLockedDustAllowance</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">o</span>.<span class="ident">address</span>(),
             <span class="ident">TransactionOutput</span>::<span class="ident">SignatureLockedSingle</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">o</span>.<span class="ident">address</span>(),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented!</span>(),
         };
         <span class="kw">if</span> <span class="ident">account_addresses</span>
             .<span class="ident">iter</span>()
@@ -2020,11 +2020,11 @@
                     .<span class="ident">map</span>(<span class="op">|</span><span class="ident">output</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">output</span> {
                         <span class="ident">TransactionOutput</span>::<span class="ident">SignatureLockedDustAllowance</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">o</span>.<span class="ident">address</span>(),
                         <span class="ident">TransactionOutput</span>::<span class="ident">SignatureLockedSingle</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">o</span>.<span class="ident">address</span>(),
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
+                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented!</span>(),
                     })
                     .<span class="ident">collect</span>(),
             },
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">vec</span><span class="macro">!</span>[],
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">vec!</span>[],
         }
     }
 }

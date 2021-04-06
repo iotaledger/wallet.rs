@@ -255,13 +255,13 @@
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">topics</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
     <span class="kw">for</span> <span class="ident">address</span> <span class="kw">in</span> <span class="ident">account</span>.<span class="ident">addresses</span>() {
-        <span class="ident">topics</span>.<span class="ident">push</span>(<span class="ident">Topic</span>::<span class="ident">new</span>(<span class="macro">format</span><span class="macro">!</span>(
+        <span class="ident">topics</span>.<span class="ident">push</span>(<span class="ident">Topic</span>::<span class="ident">new</span>(<span class="macro">format!</span>(
             <span class="string">&quot;addresses/{}/outputs&quot;</span>,
             <span class="ident">address</span>.<span class="ident">address</span>().<span class="ident">to_bech32</span>()
         ))<span class="question-mark">?</span>);
     }
     <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="ident">account</span>.<span class="ident">list_messages</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="ident">MessageType</span>::<span class="ident">Unconfirmed</span>)) {
-        <span class="ident">topics</span>.<span class="ident">push</span>(<span class="ident">Topic</span>::<span class="ident">new</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;messages/{}/metadata&quot;</span>, <span class="ident">message</span>.<span class="ident">id</span>().<span class="ident">to_string</span>()))<span class="question-mark">?</span>);
+        <span class="ident">topics</span>.<span class="ident">push</span>(<span class="ident">Topic</span>::<span class="ident">new</span>(<span class="macro">format!</span>(<span class="string">&quot;messages/{}/metadata&quot;</span>, <span class="ident">message</span>.<span class="ident">id</span>().<span class="ident">to_string</span>()))<span class="question-mark">?</span>);
     }
 
     <span class="ident">client</span>.<span class="ident">subscriber</span>().<span class="ident">with_topics</span>(<span class="ident">topics</span>).<span class="ident">unsubscribe</span>().<span class="kw">await</span><span class="question-mark">?</span>;
@@ -283,7 +283,7 @@
     <span class="ident">handler</span>: <span class="ident">C</span>,
 ) {
     <span class="kw">if</span> <span class="op">!</span><span class="ident">topics</span>.<span class="ident">is_empty</span>() {
-        <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;[MQTT] subscribe: {:?}&quot;</span>, <span class="ident">topics</span>);
+        <span class="ident">log</span>::<span class="macro">debug!</span>(<span class="string">&quot;[MQTT] subscribe: {:?}&quot;</span>, <span class="ident">topics</span>);
         <span class="ident">tokio</span>::<span class="ident">spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
             <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">client</span>::<span class="ident">get_client</span>(<span class="kw-2">&amp;</span><span class="ident">client_options</span>).<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">write</span>().<span class="kw">await</span>;
@@ -313,10 +313,10 @@
         <span class="comment">// safe to unwrap: we know the topics are valid</span>
         <span class="ident">addresses</span>
             .<span class="ident">into_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">address</span><span class="op">|</span> <span class="ident">Topic</span>::<span class="ident">new</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;addresses/{}/outputs&quot;</span>, <span class="ident">address</span>.<span class="ident">to_bech32</span>())).<span class="ident">unwrap</span>())
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">address</span><span class="op">|</span> <span class="ident">Topic</span>::<span class="ident">new</span>(<span class="macro">format!</span>(<span class="string">&quot;addresses/{}/outputs&quot;</span>, <span class="ident">address</span>.<span class="ident">to_bech32</span>())).<span class="ident">unwrap</span>())
             .<span class="ident">collect</span>(),
         <span class="kw">move</span> <span class="op">|</span><span class="ident">topic_event</span><span class="op">|</span> {
-            <span class="ident">log</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;[MQTT] got {:?}&quot;</span>, <span class="ident">topic_event</span>);
+            <span class="ident">log</span>::<span class="macro">info!</span>(<span class="string">&quot;[MQTT] got {:?}&quot;</span>, <span class="ident">topic_event</span>);
             <span class="kw">if</span> <span class="ident">account_handle</span>.<span class="ident">is_mqtt_enabled</span>() {
                 <span class="kw">let</span> <span class="ident">payload</span> <span class="op">=</span> <span class="ident">topic_event</span>.<span class="ident">payload</span>.<span class="ident">clone</span>();
                 <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">clone</span>();
@@ -324,7 +324,7 @@
                     <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">process_output</span>(<span class="ident">payload</span>, <span class="ident">account_handle</span>.<span class="ident">clone</span>()).<span class="kw">await</span>;
                 });
             } <span class="kw">else</span> {
-                <span class="ident">log</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;[MQTT] event ignored because account disabled mqtt&quot;</span>);
+                <span class="ident">log</span>::<span class="macro">info!</span>(<span class="string">&quot;[MQTT] event ignored because account disabled mqtt&quot;</span>);
             }
         },
     )
@@ -343,7 +343,7 @@
             (<span class="kw-2">&amp;</span><span class="ident">output</span>.<span class="ident">address</span>).<span class="ident">try_into</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">InvalidAddress</span>)<span class="question-mark">?</span>
         }
         <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;[MQTT] ignoring output type&quot;</span>);
+            <span class="ident">log</span>::<span class="macro">debug!</span>(<span class="string">&quot;[MQTT] ignoring output type&quot;</span>);
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
         }
     };
@@ -354,13 +354,13 @@
     {
         <span class="prelude-val">Some</span>(<span class="ident">address</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">address</span>.<span class="ident">address</span>().<span class="ident">clone</span>(),
         <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-            <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;[MQTT] address not found&quot;</span>);
+            <span class="ident">log</span>::<span class="macro">debug!</span>(<span class="string">&quot;[MQTT] address not found&quot;</span>);
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
         }
     };
     <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">AddressOutput</span>::<span class="ident">from_output_response</span>(<span class="ident">output</span>, <span class="ident">address</span>.<span class="ident">bech32_hrp</span>().<span class="ident">to_string</span>())<span class="question-mark">?</span>;
     <span class="kw">let</span> (<span class="ident">addresses_to_sync</span>, <span class="ident">message_data</span>) <span class="op">=</span> <span class="kw">if</span> <span class="ident">output</span>.<span class="ident">is_spent</span> {
-        (<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">address</span>], <span class="prelude-val">None</span>)
+        (<span class="macro">vec!</span>[<span class="ident">address</span>], <span class="prelude-val">None</span>)
     } <span class="kw">else</span> {
         <span class="kw">let</span> (<span class="ident">message</span>, <span class="ident">is_new</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">account</span>.<span class="ident">messages_mut</span>().<span class="ident">iter</span>().<span class="ident">position</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">m</span>.<span class="ident">id</span>() <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">output</span>.<span class="ident">message_id</span>) {
             <span class="prelude-val">Some</span>(<span class="ident">message_index</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -410,7 +410,7 @@
                         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">output</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">output</span> {
                             <span class="ident">TransactionOutput</span>::<span class="ident">SignatureLockedDustAllowance</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">o</span>.<span class="ident">address</span>().<span class="ident">clone</span>(),
                             <span class="ident">TransactionOutput</span>::<span class="ident">SignatureLockedSingle</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">o</span>.<span class="ident">address</span>().<span class="ident">clone</span>(),
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
+                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented!</span>(),
                         })
                         .<span class="ident">collect</span>();
                     <span class="kw">let</span> <span class="ident">input_addresses</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressWrapper</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">essence</span>
@@ -418,7 +418,7 @@
                         .<span class="ident">iter</span>()
                         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">input</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">input</span> {
                             <span class="ident">TransactionInput</span>::<span class="ident">UTXO</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">metadata</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">m</span>.<span class="ident">address</span>.<span class="ident">clone</span>()),
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
+                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented!</span>(),
                         })
                         .<span class="ident">flatten</span>()
                         .<span class="ident">collect</span>();
@@ -427,7 +427,7 @@
                     <span class="ident">addresses</span>
                 }
             },
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">vec</span><span class="macro">!</span>[],
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">vec!</span>[],
         };
         (<span class="ident">message_addresses</span>, <span class="prelude-val">Some</span>((<span class="ident">message</span>, <span class="ident">is_new</span>)))
     };
@@ -436,7 +436,7 @@
     <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">account_handle</span>
         .<span class="ident">sync</span>()
         .<span class="kw">await</span>
-        .<span class="ident">steps</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">AccountSynchronizeStep</span>::<span class="ident">SyncAddresses</span>(<span class="prelude-val">Some</span>(<span class="ident">addresses_to_sync</span>))])
+        .<span class="ident">steps</span>(<span class="macro">vec!</span>[<span class="ident">AccountSynchronizeStep</span>::<span class="ident">SyncAddresses</span>(<span class="prelude-val">Some</span>(<span class="ident">addresses_to_sync</span>))])
         .<span class="ident">execute</span>()
         .<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>;

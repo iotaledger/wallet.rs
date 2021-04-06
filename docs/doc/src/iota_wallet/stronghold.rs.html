@@ -1007,7 +1007,7 @@
         <span class="ident">runtime</span>,
         <span class="ident">snapshot_path</span>,
         <span class="ident">PRIVATE_DATA_CLIENT_PATH</span>.<span class="ident">to_vec</span>(),
-        <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">StrongholdFlags</span>::<span class="ident">IsReadable</span>(<span class="bool-val">false</span>)],
+        <span class="macro">vec!</span>[<span class="ident">StrongholdFlags</span>::<span class="ident">IsReadable</span>(<span class="bool-val">false</span>)],
         <span class="ident">password</span>,
     )
     .<span class="kw">await</span>
@@ -1022,7 +1022,7 @@
         <span class="ident">runtime</span>,
         <span class="ident">snapshot_path</span>,
         <span class="ident">records_client_path</span>(),
-        <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">StrongholdFlags</span>::<span class="ident">IsReadable</span>(<span class="bool-val">true</span>)],
+        <span class="macro">vec!</span>[<span class="ident">StrongholdFlags</span>::<span class="ident">IsReadable</span>(<span class="bool-val">true</span>)],
         <span class="ident">password</span>,
     )
     .<span class="kw">await</span>
@@ -1203,13 +1203,13 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">actor_runtime</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">ActorRuntime</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">static</span> <span class="ident">SYSTEM</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">ActorRuntime</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy</span>::<span class="ident">new</span>(<span class="op">|</span><span class="op">|</span> {
         <span class="kw">let</span> <span class="ident">system</span> <span class="op">=</span> <span class="ident">SystemBuilder</span>::<span class="ident">new</span>()
-            .<span class="ident">log</span>(<span class="ident">slog</span>::<span class="ident">Logger</span>::<span class="ident">root</span>(<span class="ident">slog</span>::<span class="ident">Discard</span>, <span class="ident">slog</span>::<span class="macro">o</span><span class="macro">!</span>()))
+            .<span class="ident">log</span>(<span class="ident">slog</span>::<span class="ident">Logger</span>::<span class="ident">root</span>(<span class="ident">slog</span>::<span class="ident">Discard</span>, <span class="ident">slog</span>::<span class="macro">o!</span>()))
             .<span class="ident">create</span>()
             .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">stronghold</span> <span class="op">=</span> <span class="ident">Stronghold</span>::<span class="ident">init_stronghold_system</span>(
             <span class="ident">system</span>,
             <span class="ident">PRIVATE_DATA_CLIENT_PATH</span>.<span class="ident">to_vec</span>(),
-            <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">StrongholdFlags</span>::<span class="ident">IsReadable</span>(<span class="bool-val">false</span>)],
+            <span class="macro">vec!</span>[<span class="ident">StrongholdFlags</span>::<span class="ident">IsReadable</span>(<span class="bool-val">false</span>)],
         );
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">spawned_client_paths</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="ident">new</span>();
@@ -1431,7 +1431,7 @@
         <span class="ident">stronghold_response_to_result</span>(<span class="ident">status</span>)<span class="question-mark">?</span>;
         <span class="ident">save_snapshot</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>).<span class="kw">await</span>
     } <span class="kw">else</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">FailedToPerformAction</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">res</span>)))
+        <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">FailedToPerformAction</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">res</span>)))
     }
 }
 
@@ -1450,7 +1450,7 @@
         <span class="ident">stronghold_response_to_result</span>(<span class="ident">response</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">derive_output</span>)
     } <span class="kw">else</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">FailedToPerformAction</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">res</span>)))
+        <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">FailedToPerformAction</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">res</span>)))
     }
 }
 
@@ -1464,7 +1464,7 @@
     <span class="kw">if</span> <span class="kw">let</span> <span class="ident">ProcResult</span>::<span class="ident">Ed25519PublicKey</span>(<span class="ident">response</span>) <span class="op">=</span> <span class="ident">res</span> {
         <span class="ident">stronghold_response_to_result</span>(<span class="ident">response</span>)
     } <span class="kw">else</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">FailedToPerformAction</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">res</span>)))
+        <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">FailedToPerformAction</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">res</span>)))
     }
 }
 
@@ -1478,7 +1478,7 @@
     <span class="ident">check_snapshot</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="ident">load_private_data_actor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">chain</span> <span class="op">=</span> <span class="ident">Chain</span>::<span class="ident">from_u32_hardened</span>(<span class="macro">vec</span><span class="macro">!</span>[
+    <span class="kw">let</span> <span class="ident">chain</span> <span class="op">=</span> <span class="ident">Chain</span>::<span class="ident">from_u32_hardened</span>(<span class="macro">vec!</span>[
         <span class="number">44</span>,
         <span class="number">4218</span>,
         <span class="ident">account_index</span>.<span class="ident">try_into</span>()<span class="question-mark">?</span>,
@@ -1508,7 +1508,7 @@
     <span class="ident">check_snapshot</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="ident">load_private_data_actor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">chain</span> <span class="op">=</span> <span class="ident">Chain</span>::<span class="ident">from_u32_hardened</span>(<span class="macro">vec</span><span class="macro">!</span>[
+    <span class="kw">let</span> <span class="ident">chain</span> <span class="op">=</span> <span class="ident">Chain</span>::<span class="ident">from_u32_hardened</span>(<span class="macro">vec!</span>[
         <span class="number">44</span>,
         <span class="number">4218</span>,
         <span class="ident">account_index</span>.<span class="ident">try_into</span>()<span class="question-mark">?</span>,
@@ -1530,7 +1530,7 @@
         <span class="kw">let</span> <span class="ident">signature</span> <span class="op">=</span> <span class="ident">stronghold_response_to_result</span>(<span class="ident">response</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">Ed25519Signature</span>::<span class="ident">new</span>(<span class="ident">public_key</span>, <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">signature</span>)))
     } <span class="kw">else</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">FailedToPerformAction</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">res</span>)))
+        <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">FailedToPerformAction</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">res</span>)))
     }
 }
 
@@ -1580,7 +1580,7 @@
     <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">PathBuf</span>;
     <span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">time</span>::<span class="ident">Duration</span>;
 
-    <span class="macro">rusty_fork_test</span><span class="macro">!</span> {
+    <span class="macro">rusty_fork_test!</span> {
         <span class="attribute">#[<span class="ident">test</span>]</span>
         <span class="kw">fn</span> <span class="ident">password_expires</span>() {
             <span class="kw">let</span> <span class="ident">runtime</span> <span class="op">=</span> <span class="ident">tokio</span>::<span class="ident">runtime</span>::<span class="ident">Runtime</span>::<span class="ident">new</span>().<span class="ident">unwrap</span>();
@@ -1589,26 +1589,26 @@
                 <span class="kw">super</span>::<span class="ident">set_password_clear_interval</span>(<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="ident">interval</span>)).<span class="kw">await</span>;
                 <span class="kw">let</span> <span class="ident">snapshot_path</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">thread_rng</span>().<span class="ident">sample_iter</span>(<span class="kw-2">&amp;</span><span class="ident">Alphanumeric</span>).<span class="ident">map</span>(<span class="ident">char</span>::<span class="ident">from</span>).<span class="ident">take</span>(<span class="number">10</span>).<span class="ident">collect</span>();
                 <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">create_dir_all</span>(<span class="string">&quot;./test-storage&quot;</span>).<span class="ident">unwrap</span>();
-                <span class="kw">let</span> <span class="ident">snapshot_path</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;./test-storage/{}.stronghold&quot;</span>, <span class="ident">snapshot_path</span>));
+                <span class="kw">let</span> <span class="ident">snapshot_path</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="macro">format!</span>(<span class="string">&quot;./test-storage/{}.stronghold&quot;</span>, <span class="ident">snapshot_path</span>));
                 <span class="kw">super</span>::<span class="ident">load_snapshot</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, [<span class="number">0</span>; <span class="number">32</span>].<span class="ident">to_vec</span>()).<span class="kw">await</span>.<span class="ident">unwrap</span>();
 
                 <span class="ident">std</span>::<span class="ident">thread</span>::<span class="ident">sleep</span>(<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="ident">interval</span> <span class="op">*</span> <span class="number">3</span>));
                 <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">get_record</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="string">&quot;passwordexpires&quot;</span>).<span class="kw">await</span>;
-                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">res</span>.<span class="ident">is_err</span>(), <span class="bool-val">true</span>);
+                <span class="macro">assert_eq!</span>(<span class="ident">res</span>.<span class="ident">is_err</span>(), <span class="bool-val">true</span>);
                 <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">unwrap_err</span>();
                 <span class="kw">if</span> <span class="kw">let</span> <span class="kw">super</span>::<span class="ident">Error</span>::<span class="ident">PasswordNotSet</span> <span class="op">=</span> <span class="ident">error</span> {
                     <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">get_status</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>).<span class="kw">await</span>;
                     <span class="kw">if</span> <span class="kw">let</span> <span class="kw">super</span>::<span class="ident">SnapshotStatus</span>::<span class="ident">Unlocked</span>(<span class="kw">_</span>) <span class="op">=</span> <span class="ident">status</span>.<span class="ident">snapshot</span> {
-                        <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;unexpected snapshot status&quot;</span>);
+                        <span class="macro">panic!</span>(<span class="string">&quot;unexpected snapshot status&quot;</span>);
                     }
                 } <span class="kw">else</span> {
-                    <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;unexpected error: {:?}&quot;</span>, <span class="ident">error</span>);
+                    <span class="macro">panic!</span>(<span class="string">&quot;unexpected error: {:?}&quot;</span>, <span class="ident">error</span>);
                 }
             });
         }
     }
 
-    <span class="macro">rusty_fork_test</span><span class="macro">!</span> {
+    <span class="macro">rusty_fork_test!</span> {
         <span class="attribute">#[<span class="ident">test</span>]</span>
         <span class="kw">fn</span> <span class="ident">action_keeps_password</span>() {
             <span class="kw">let</span> <span class="ident">runtime</span> <span class="op">=</span> <span class="ident">tokio</span>::<span class="ident">runtime</span>::<span class="ident">Runtime</span>::<span class="ident">new</span>().<span class="ident">unwrap</span>();
@@ -1617,14 +1617,14 @@
                 <span class="kw">super</span>::<span class="ident">set_password_clear_interval</span>(<span class="ident">interval</span>).<span class="kw">await</span>;
                 <span class="kw">let</span> <span class="ident">snapshot_path</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">thread_rng</span>().<span class="ident">sample_iter</span>(<span class="kw-2">&amp;</span><span class="ident">Alphanumeric</span>).<span class="ident">map</span>(<span class="ident">char</span>::<span class="ident">from</span>).<span class="ident">take</span>(<span class="number">10</span>).<span class="ident">collect</span>();
                 <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">create_dir_all</span>(<span class="string">&quot;./test-storage&quot;</span>).<span class="ident">unwrap</span>();
-                <span class="kw">let</span> <span class="ident">snapshot_path</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;./test-storage/{}.stronghold&quot;</span>, <span class="ident">snapshot_path</span>));
+                <span class="kw">let</span> <span class="ident">snapshot_path</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="macro">format!</span>(<span class="string">&quot;./test-storage/{}.stronghold&quot;</span>, <span class="ident">snapshot_path</span>));
                 <span class="kw">super</span>::<span class="ident">load_snapshot</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, [<span class="number">0</span>; <span class="number">32</span>].<span class="ident">to_vec</span>()).<span class="kw">await</span>.<span class="ident">unwrap</span>();
 
                 <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">1</span>..<span class="number">6</span> {
                     <span class="kw">let</span> <span class="ident">instant</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Instant</span>::<span class="ident">now</span>();
                     <span class="kw">super</span>::<span class="ident">store_record</span>(
                         <span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>,
-                        <span class="kw-2">&amp;</span><span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;actionkeepspassword{}&quot;</span>, <span class="ident">i</span>),
+                        <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;actionkeepspassword{}&quot;</span>, <span class="ident">i</span>),
                         <span class="string">&quot;data&quot;</span>.<span class="ident">to_string</span>(),
                     )
                     .<span class="kw">await</span>
@@ -1632,7 +1632,7 @@
 
                     <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">get_status</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>).<span class="kw">await</span>;
                     <span class="kw">if</span> <span class="kw">let</span> <span class="kw">super</span>::<span class="ident">SnapshotStatus</span>::<span class="ident">Locked</span> <span class="op">=</span> <span class="ident">status</span>.<span class="ident">snapshot</span> {
-                        <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;unexpected snapshot status&quot;</span>);
+                        <span class="macro">panic!</span>(<span class="string">&quot;unexpected snapshot status&quot;</span>);
                     }
 
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">sleep_duration</span>) <span class="op">=</span> <span class="ident">interval</span>.<span class="ident">checked_sub</span>(<span class="ident">instant</span>.<span class="ident">elapsed</span>()) {
@@ -1646,19 +1646,19 @@
 
                 <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="string">&quot;actionkeepspassword1&quot;</span>.<span class="ident">to_string</span>();
                 <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">get_record</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>).<span class="kw">await</span>;
-                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">res</span>.<span class="ident">is_ok</span>(), <span class="bool-val">true</span>);
+                <span class="macro">assert_eq!</span>(<span class="ident">res</span>.<span class="ident">is_ok</span>(), <span class="bool-val">true</span>);
 
                 <span class="ident">std</span>::<span class="ident">thread</span>::<span class="ident">sleep</span>(<span class="ident">interval</span> <span class="op">*</span> <span class="number">2</span>);
 
                 <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">get_record</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>).<span class="kw">await</span>;
-                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">res</span>.<span class="ident">is_err</span>(), <span class="bool-val">true</span>);
+                <span class="macro">assert_eq!</span>(<span class="ident">res</span>.<span class="ident">is_err</span>(), <span class="bool-val">true</span>);
                 <span class="kw">if</span> <span class="kw">let</span> <span class="kw">super</span>::<span class="ident">Error</span>::<span class="ident">PasswordNotSet</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">unwrap_err</span>() {
                     <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">get_status</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>).<span class="kw">await</span>;
                     <span class="kw">if</span> <span class="kw">let</span> <span class="kw">super</span>::<span class="ident">SnapshotStatus</span>::<span class="ident">Unlocked</span>(<span class="kw">_</span>) <span class="op">=</span> <span class="ident">status</span>.<span class="ident">snapshot</span> {
-                        <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;unexpected snapshot status&quot;</span>);
+                        <span class="macro">panic!</span>(<span class="string">&quot;unexpected snapshot status&quot;</span>);
                     }
                 } <span class="kw">else</span> {
-                    <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;unexpected error&quot;</span>);
+                    <span class="macro">panic!</span>(<span class="string">&quot;unexpected error&quot;</span>);
                 }
             });
         }
@@ -1672,14 +1672,14 @@
             .<span class="ident">take</span>(<span class="number">10</span>)
             .<span class="ident">collect</span>();
         <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">create_dir_all</span>(<span class="string">&quot;./test-storage&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">snapshot_path</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;./test-storage/{}.stronghold&quot;</span>, <span class="ident">snapshot_path</span>));
+        <span class="kw">let</span> <span class="ident">snapshot_path</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="macro">format!</span>(<span class="string">&quot;./test-storage/{}.stronghold&quot;</span>, <span class="ident">snapshot_path</span>));
         <span class="kw">super</span>::<span class="ident">load_snapshot</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, [<span class="number">0</span>; <span class="number">32</span>].<span class="ident">to_vec</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="string">&quot;writeandreadtest&quot;</span>.<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;record data&quot;</span>;
         <span class="kw">super</span>::<span class="ident">store_record</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>, <span class="ident">data</span>.<span class="ident">to_string</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">stored_data</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">get_record</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">id</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">stored_data</span>, <span class="ident">data</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">stored_data</span>, <span class="ident">data</span>);
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -1692,7 +1692,7 @@
             .<span class="ident">take</span>(<span class="number">10</span>)
             .<span class="ident">collect</span>();
         <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">create_dir_all</span>(<span class="string">&quot;./test-storage&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">snapshot_path</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;./test-storage/{}.stronghold&quot;</span>, <span class="ident">snapshot_path</span>));
+        <span class="kw">let</span> <span class="ident">snapshot_path</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="macro">format!</span>(<span class="string">&quot;./test-storage/{}.stronghold&quot;</span>, <span class="ident">snapshot_path</span>));
         <span class="kw">super</span>::<span class="ident">load_snapshot</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, [<span class="number">0</span>; <span class="number">32</span>].<span class="ident">to_vec</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="string">&quot;writeanddeleteid&quot;</span>.<span class="ident">to_string</span>();
@@ -1705,7 +1705,7 @@
 
     <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">write_and_read_multiple_snapshots</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">snapshot_saves</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">snapshot_saves</span> <span class="op">=</span> <span class="macro">vec!</span>[];
 
         <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">1</span>..<span class="number">3</span> {
             <span class="kw">let</span> <span class="ident">snapshot_path</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">thread_rng</span>()
@@ -1714,10 +1714,10 @@
                 .<span class="ident">take</span>(<span class="number">10</span>)
                 .<span class="ident">collect</span>();
             <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">create_dir_all</span>(<span class="string">&quot;./test-storage&quot;</span>).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">snapshot_path</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;./test-storage/{}.stronghold&quot;</span>, <span class="ident">snapshot_path</span>));
+            <span class="kw">let</span> <span class="ident">snapshot_path</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="macro">format!</span>(<span class="string">&quot;./test-storage/{}.stronghold&quot;</span>, <span class="ident">snapshot_path</span>));
             <span class="kw">super</span>::<span class="ident">load_snapshot</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, [<span class="number">0</span>; <span class="number">32</span>].<span class="ident">to_vec</span>()).<span class="kw">await</span>.<span class="ident">unwrap</span>();
 
-            <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;multiplesnapshots{}&quot;</span>, <span class="ident">i</span>);
+            <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;multiplesnapshots{}&quot;</span>, <span class="ident">i</span>);
             <span class="kw">let</span> <span class="ident">data</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">thread_rng</span>()
                 .<span class="ident">sample_iter</span>(<span class="kw-2">&amp;</span><span class="ident">Alphanumeric</span>)
                 .<span class="ident">map</span>(<span class="ident">char</span>::<span class="ident">from</span>)
@@ -1733,7 +1733,7 @@
             <span class="kw">let</span> <span class="ident">stored_data</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">get_record</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="kw-2">&amp;</span><span class="ident">key</span>)
                 .<span class="kw">await</span>
                 .<span class="ident">expect</span>(<span class="string">&quot;failed to read record&quot;</span>);
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">stored_data</span>, <span class="ident">data</span>);
+            <span class="macro">assert_eq!</span>(<span class="ident">stored_data</span>, <span class="ident">data</span>);
         }
     }
 
@@ -1745,7 +1745,7 @@
             .<span class="ident">take</span>(<span class="number">10</span>)
             .<span class="ident">collect</span>();
         <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">create_dir_all</span>(<span class="string">&quot;./test-storage&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">snapshot_path</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;./test-storage/{}.stronghold&quot;</span>, <span class="ident">snapshot_path</span>));
+        <span class="kw">let</span> <span class="ident">snapshot_path</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="macro">format!</span>(<span class="string">&quot;./test-storage/{}.stronghold&quot;</span>, <span class="ident">snapshot_path</span>));
         <span class="kw">let</span> <span class="ident">old_password</span> <span class="op">=</span> [<span class="number">5</span>; <span class="number">32</span>].<span class="ident">to_vec</span>();
         <span class="kw">super</span>::<span class="ident">load_snapshot</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="ident">old_password</span>.<span class="ident">to_vec</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="string">&quot;writeanddeleteid&quot;</span>.<span class="ident">to_string</span>();
@@ -1768,7 +1768,7 @@
             .<span class="ident">take</span>(<span class="number">10</span>)
             .<span class="ident">collect</span>();
         <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">create_dir_all</span>(<span class="string">&quot;./test-storage&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">snapshot_path</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;./test-storage/{}.stronghold&quot;</span>, <span class="ident">snapshot_path</span>));
+        <span class="kw">let</span> <span class="ident">snapshot_path</span> <span class="op">=</span> <span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="macro">format!</span>(<span class="string">&quot;./test-storage/{}.stronghold&quot;</span>, <span class="ident">snapshot_path</span>));
         <span class="kw">super</span>::<span class="ident">load_snapshot</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, [<span class="number">5</span>; <span class="number">32</span>].<span class="ident">to_vec</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="string">&quot;writeanddeleteid&quot;</span>.<span class="ident">to_string</span>();
         <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">&quot;record data&quot;</span>;
@@ -1778,7 +1778,7 @@
         <span class="kw">let</span> <span class="ident">new_password</span> <span class="op">=</span> [<span class="number">6</span>; <span class="number">32</span>].<span class="ident">to_vec</span>();
         <span class="kw">match</span> <span class="kw">super</span>::<span class="ident">change_password</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="ident">wrong_password</span>, <span class="ident">new_password</span>.<span class="ident">to_vec</span>()).<span class="kw">await</span> {
             <span class="prelude-val">Err</span>(<span class="kw">super</span>::<span class="ident">Error</span>::<span class="ident">FailedToPerformAction</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> {}
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;expected a stronghold error when changing password&quot;</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;expected a stronghold error when changing password&quot;</span>),
         }
 
         <span class="prelude-val">Ok</span>(())

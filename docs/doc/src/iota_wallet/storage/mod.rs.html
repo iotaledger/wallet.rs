@@ -690,7 +690,7 @@
     <span class="prelude-val">Ok</span>(<span class="ident">record</span>)
 }
 
-<span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">event_manager_impl</span> {
+<span class="macro">macro_rules!</span> <span class="ident">event_manager_impl</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">event_ty</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">index_vec</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">index_key</span>: <span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">save_fn_name</span>: <span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">get_fn_name</span>: <span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">get_count_fn_name</span>: <span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">impl</span> <span class="ident">StorageManager</span> {
             <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">save_fn_name</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">event_ty</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
@@ -773,7 +773,7 @@
     };
 }
 
-<span class="macro">event_manager_impl</span><span class="macro">!</span>(
+<span class="macro">event_manager_impl!</span>(
     <span class="ident">BalanceEvent</span>,
     <span class="ident">balance_change_indexation</span>,
     <span class="string">&quot;iota-wallet-balance-change-events&quot;</span>,
@@ -781,7 +781,7 @@
     <span class="ident">get_balance_change_events</span>,
     <span class="ident">get_balance_change_event_count</span>
 );
-<span class="macro">event_manager_impl</span><span class="macro">!</span>(
+<span class="macro">event_manager_impl!</span>(
     <span class="ident">TransactionConfirmationChangeEvent</span>,
     <span class="ident">transaction_confirmation_indexation</span>,
     <span class="string">&quot;iota-wallet-tx-confirmation-events&quot;</span>,
@@ -789,7 +789,7 @@
     <span class="ident">get_transaction_confirmation_events</span>,
     <span class="ident">get_transaction_confirmation_event_count</span>
 );
-<span class="macro">event_manager_impl</span><span class="macro">!</span>(
+<span class="macro">event_manager_impl!</span>(
     <span class="ident">TransactionEvent</span>,
     <span class="ident">new_transaction_indexation</span>,
     <span class="string">&quot;iota-wallet-new-tx-events&quot;</span>,
@@ -797,7 +797,7 @@
     <span class="ident">get_new_transaction_events</span>,
     <span class="ident">get_new_transaction_event_count</span>
 );
-<span class="macro">event_manager_impl</span><span class="macro">!</span>(
+<span class="macro">event_manager_impl!</span>(
     <span class="ident">TransactionReattachmentEvent</span>,
     <span class="ident">reattachment_indexation</span>,
     <span class="string">&quot;iota-wallet-tx-reattachment-events&quot;</span>,
@@ -805,7 +805,7 @@
     <span class="ident">get_reattachment_events</span>,
     <span class="ident">get_reattachment_event_count</span>
 );
-<span class="macro">event_manager_impl</span><span class="macro">!</span>(
+<span class="macro">event_manager_impl!</span>(
     <span class="ident">TransactionEvent</span>,
     <span class="ident">broadcast_indexation</span>,
     <span class="string">&quot;iota-wallet-tx-broadcast-events&quot;</span>,
@@ -895,10 +895,10 @@
 
 <span class="kw">fn</span> <span class="ident">encrypt_record</span><span class="op">&lt;</span><span class="ident">O</span>: <span class="ident">Write</span><span class="op">&gt;</span>(<span class="ident">record</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">encryption_key</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>; <span class="number">32</span>], <span class="ident">output</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">O</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">nonce</span> <span class="op">=</span> [<span class="number">0</span>; <span class="ident">XChaCha20Poly1305</span>::<span class="ident">NONCE_LENGTH</span>];
-    <span class="ident">crypto</span>::<span class="ident">utils</span>::<span class="ident">rand</span>::<span class="ident">fill</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">nonce</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">RecordEncrypt</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+    <span class="ident">crypto</span>::<span class="ident">utils</span>::<span class="ident">rand</span>::<span class="ident">fill</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">nonce</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">RecordEncrypt</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tag</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="number">0</span>; <span class="ident">XChaCha20Poly1305</span>::<span class="ident">TAG_LENGTH</span>];
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ciphertext</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="number">0</span>; <span class="ident">record</span>.<span class="ident">len</span>()];
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tag</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0</span>; <span class="ident">XChaCha20Poly1305</span>::<span class="ident">TAG_LENGTH</span>];
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ciphertext</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0</span>; <span class="ident">record</span>.<span class="ident">len</span>()];
     <span class="comment">// we can unwrap here since we know the lengths are valid</span>
     <span class="ident">XChaCha20Poly1305</span>::<span class="ident">encrypt</span>(
         <span class="ident">encryption_key</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>(),
@@ -908,7 +908,7 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ciphertext</span>,
         <span class="ident">tag</span>.<span class="ident">as_mut_slice</span>().<span class="ident">try_into</span>().<span class="ident">unwrap</span>(),
     )
-    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">RecordEncrypt</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">RecordEncrypt</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
     <span class="ident">output</span>.<span class="ident">write_all</span>(<span class="kw-2">&amp;</span><span class="ident">nonce</span>)<span class="question-mark">?</span>;
     <span class="ident">output</span>.<span class="ident">write_all</span>(<span class="kw-2">&amp;</span><span class="ident">tag</span>)<span class="question-mark">?</span>;
@@ -924,13 +924,13 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">nonce</span> <span class="op">=</span> [<span class="number">0</span>; <span class="ident">XChaCha20Poly1305</span>::<span class="ident">NONCE_LENGTH</span>];
     <span class="ident">record</span>.<span class="ident">read_exact</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">nonce</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tag</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="number">0</span>; <span class="ident">XChaCha20Poly1305</span>::<span class="ident">TAG_LENGTH</span>];
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tag</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0</span>; <span class="ident">XChaCha20Poly1305</span>::<span class="ident">TAG_LENGTH</span>];
     <span class="ident">record</span>.<span class="ident">read_exact</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tag</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ct</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
     <span class="ident">record</span>.<span class="ident">read_to_end</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ct</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pt</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="number">0</span>; <span class="ident">ct</span>.<span class="ident">len</span>()];
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pt</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0</span>; <span class="ident">ct</span>.<span class="ident">len</span>()];
     <span class="comment">// we can unwrap here since we know the lengths are valid</span>
     <span class="ident">XChaCha20Poly1305</span>::<span class="ident">decrypt</span>(
         <span class="ident">encryption_key</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>(),
@@ -940,7 +940,7 @@
         <span class="kw-2">&amp;</span><span class="ident">ct</span>,
         <span class="ident">tag</span>.<span class="ident">as_slice</span>().<span class="ident">try_into</span>().<span class="ident">unwrap</span>(),
     )
-    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">RecordDecrypt</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">RecordDecrypt</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(<span class="ident">String</span>::<span class="ident">from_utf8_lossy</span>(<span class="kw-2">&amp;</span><span class="ident">pt</span>).<span class="ident">to_string</span>())
 }
@@ -1019,13 +1019,13 @@
         <span class="kw">super</span>::<span class="ident">set</span>(<span class="ident">path</span>, <span class="prelude-val">None</span>, <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">MyAdapter</span> {})).<span class="kw">await</span>;
         <span class="kw">let</span> <span class="ident">adapter</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="ident">path</span>)).<span class="kw">await</span>.<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">adapter</span> <span class="op">=</span> <span class="ident">adapter</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">adapter</span>.<span class="ident">get</span>(<span class="string">&quot;&quot;</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>(), <span class="string">&quot;MY_ADAPTER_GET_RESPONSE&quot;</span>.<span class="ident">to_string</span>());
+        <span class="macro">assert_eq!</span>(<span class="ident">adapter</span>.<span class="ident">get</span>(<span class="string">&quot;&quot;</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>(), <span class="string">&quot;MY_ADAPTER_GET_RESPONSE&quot;</span>.<span class="ident">to_string</span>());
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">parse_accounts_invalid</span>() {
         <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">parse_accounts</span>(<span class="kw-2">&amp;</span><span class="ident">PathBuf</span>::<span class="ident">new</span>(), <span class="kw-2">&amp;</span>[<span class="string">&quot;{}&quot;</span>.<span class="ident">to_string</span>()], <span class="kw-2">&amp;</span><span class="prelude-val">None</span>);
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">response</span>.<span class="ident">is_err</span>());
+        <span class="macro">assert!</span>(<span class="ident">response</span>.<span class="ident">is_err</span>());
     }
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">_create_account</span>() <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">PathBuf</span>, <span class="kw">crate</span>::<span class="ident">account</span>::<span class="ident">AccountHandle</span>) {
@@ -1054,10 +1054,10 @@
             <span class="kw-2">&amp;</span>[<span class="ident">serde_json</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>).<span class="ident">unwrap</span>()],
             <span class="kw-2">&amp;</span><span class="prelude-val">None</span>,
         );
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">response</span>.<span class="ident">is_ok</span>());
+        <span class="macro">assert!</span>(<span class="ident">response</span>.<span class="ident">is_ok</span>());
         <span class="kw">let</span> <span class="ident">parsed_accounts</span> <span class="op">=</span> <span class="ident">response</span>.<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">parsed_account</span> <span class="op">=</span> <span class="ident">parsed_accounts</span>.<span class="ident">first</span>().<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">parsed_account</span>, <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">parsed_account</span>, <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>);
     }
 }
 </pre></div>
