@@ -717,6 +717,7 @@ impl AccountManager {
                 .with_stronghold_storage()
                 .finish()
                 .await?;
+            manager.accounts = self.accounts.clone(); // force manager to skip loading accounts
             manager.set_stronghold_password(stronghold_password).await?;
             let stronghold_storage = crate::storage::get(&self.storage_folder.join(STRONGHOLD_FILENAME)).await?;
             let mut stronghold_storage = stronghold_storage.lock().await;
