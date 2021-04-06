@@ -248,7 +248,7 @@ impl StorageManager {
     pub fn query_message_indexation(
         &self,
         account: &Account,
-        filter: MessageQueryFilter<'_>,
+        filter: &MessageQueryFilter<'_>,
     ) -> crate::Result<Vec<&MessageIndexation>> {
         let message_indexation = self.message_indexation(account)?;
 
@@ -270,16 +270,7 @@ impl StorageManager {
                 true
             };
             if message_type_matches {
-                match &filter.ignore_ids {
-                    Some(ignore_ids) => {
-                        if !ignore_ids.contains_key(&message.key) {
-                            filtered_message_indexation.push(message);
-                        }
-                    }
-                    None => {
-                        filtered_message_indexation.push(message);
-                    }
-                }
+                filtered_message_indexation.push(message);
             }
         }
 
@@ -341,7 +332,7 @@ impl StorageManager {
         skip: usize,
         filter: MessageQueryFilter<'_>,
     ) -> crate::Result<Vec<Message>> {
-        let filtered_message_indexation = self.query_message_indexation(account, filter)?;
+        let filtered_message_indexation = self.query_message_indexation(account, &filter)?;
 
         let mut messages = Vec::new();
         let iter = filtered_message_indexation.into_iter().skip(skip);
@@ -350,8 +341,18 @@ impl StorageManager {
         } else {
             iter.take(count).collect::<Vec<&MessageIndexation>>()
         } {
-            let message = self.get(&index.key.to_string()).await?;
-            messages.push(serde_json::from_str(&message)?);
+            match &filter.ignore_ids {
+                Some(ignore_ids) => {
+                    if !ignore_ids.contains_key(&index.key) {
+                        let message = self.get(&index.key.to_string()).await?;
+                        messages.push(serde_json::from_str(&message)?);
+                    }
+                }
+                None => {
+                    let message = self.get(&index.key.to_string()).await?;
+                    messages.push(serde_json::from_str(&message)?);
+                }
+            }
         }
         Ok(messages)
     }

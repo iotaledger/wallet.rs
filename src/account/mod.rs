@@ -298,9 +298,6 @@ impl AccountInitialiser {
         for message in self.messages.iter_mut() {
             message.set_bech32_hrp(bech32_hrp.to_string());
         }
-        if !self.messages.is_empty() {
-            account.save_messages(self.messages).await?;
-        }
 
         let address = match account.addresses.first() {
             Some(address) => address.address().clone(),
@@ -339,6 +336,9 @@ impl AccountInitialiser {
             AccountHandle::new(account, self.accounts.clone(), self.account_options)
         } else {
             account.save().await?;
+            if !self.messages.is_empty() {
+                account.save_messages(self.messages).await?;
+            }
             let account_id = account.id().clone();
             let guard = AccountHandle::new(account, self.accounts.clone(), self.account_options);
             drop(accounts);
@@ -884,13 +884,6 @@ impl Account {
             )
             .await?;
 
-        // we cache messages with known confirmation since they'll never be updated
-        for message in &messages {
-            if message.confirmed().is_some() {
-                cached_messages.insert(*message.id(), message.clone());
-            }
-        }
-
         let mut message_list: Vec<Message> = if let Some(message_type) = message_type {
             let mut list = Vec::new();
             for message in cached_messages.values() {
@@ -924,7 +917,16 @@ impl Account {
         } else {
             cached_messages.values().cloned().collect()
         };
+
+        // we cache messages with known confirmation since they'll never be updated
+        for message in &messages {
+            if message.confirmed().is_some() {
+                cached_messages.insert(*message.id(), message.clone());
+            }
+        }
+
         message_list.extend(messages);
+        message_list.sort_unstable_by(|a, b| a.timestamp().cmp(b.timestamp()));
 
         Ok(message_list)
     }
@@ -1264,6 +1266,7 @@ mod tests {
             .unwrap();
 
         let txs = account_handle.list_messages(4, 0, None).await.unwrap();
+        println!("{:?}", txs);
         assert_eq!(txs.len(), 4);
     }
 
@@ -1346,6 +1349,7 @@ mod tests {
                     _ => 1,
                 }
             );
+            println!("{:?}", tx_type);
             assert_eq!(messages.first().unwrap(), expected);
         }
     }
