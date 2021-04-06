@@ -14,7 +14,7 @@ use iota::{
     MilestonePayloadEssence as RustMilestonePayloadEssence, Output as RustOutput, Payload as RustPayload,
     ReferenceUnlock as RustReferenceUnlock, RegularEssence as RustRegularEssence,
     SignatureLockedSingleOutput as RustSignatureLockedSingleOutput, SignatureUnlock as RustSignatureUnlock,
-    TransactionId as RustTransationId, TransactionPayload as RustTransactionPayload, UTXOInput as RustUTXOInput,
+    TransactionId as RustTransationId, TransactionPayload as RustTransactionPayload, UtxoInput as RustUtxoInput,
     UnlockBlock as RustUnlockBlock, UnlockBlocks as RustUnlockBlocks,
 };
 // use iota::MessageId as RustMessageId,
@@ -194,7 +194,7 @@ impl TryFrom<RustWalletTransactionEssence> for Essence {
                     .iter()
                     .cloned()
                     .map(|input| {
-                        if let RustWalletInput::UTXO(input) = input {
+                        if let RustWalletInput::Utxo(input) = input {
                             Input {
                                 transaction_id: input.input.output_id().transaction_id().to_string(),
                                 index: input.input.output_id().index(),
@@ -358,10 +358,10 @@ impl TryFrom<Essence> for RustEssence {
                 .inputs
                 .iter()
                 .map(|input| {
-                    RustUTXOInput::new(
+                    RustUtxoInput::new(
                         RustTransationId::from_str(&input.transaction_id[..]).unwrap_or_else(|_| {
                             panic!(
-                                "invalid UTXOInput transaction_id: {} with input index {}",
+                                "invalid UtxoInput transaction_id: {} with input index {}",
                                 input.transaction_id, input.index
                             )
                         }),
@@ -369,7 +369,7 @@ impl TryFrom<Essence> for RustEssence {
                     )
                     .unwrap_or_else(|_| {
                         panic!(
-                            "invalid UTXOInput transaction_id: {} with input index {}",
+                            "invalid UtxoInput transaction_id: {} with input index {}",
                             input.transaction_id, input.index
                         )
                     })

@@ -28,7 +28,7 @@ export declare type Essence = {
   data: RegularEssence
 }
 
-export declare interface UTXOInput {
+export declare interface UtxoInput {
   input: string
   metadata?: {
     transactionId: string
@@ -40,7 +40,7 @@ export declare interface UTXOInput {
   }
 }
 
-export declare type Input = { type: 'UTXO', data: UTXOInput }
+export declare type Input = { type: 'Utxo', data: UtxoInput }
 
 export declare interface SignatureLockedSingleOutput {
   address: string
