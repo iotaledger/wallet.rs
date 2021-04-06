@@ -1807,7 +1807,7 @@ mod tests {
                 .import_accounts(&backup_file_path, "password".to_string())
                 .await
                 .unwrap();
-            assert!(manager.stronghold_snapshot_path().await.unwrap().exists(), true);
+            assert!(manager.stronghold_snapshot_path().await.unwrap().exists(), "{}", true);
 
             let imported_account = manager.get_account(account_handle.read().await.id()).await.unwrap();
             // set the account storage path field so the assert works
