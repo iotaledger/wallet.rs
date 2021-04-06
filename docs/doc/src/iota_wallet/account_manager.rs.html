@@ -2058,6 +2058,7 @@
 <span id="2055">2055</span>
 <span id="2056">2056</span>
 <span id="2057">2057</span>
+<span id="2058">2058</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2778,6 +2779,7 @@
                 .<span class="ident">with_stronghold_storage</span>()
                 .<span class="ident">finish</span>()
                 .<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="ident">manager</span>.<span class="ident">accounts</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>(); <span class="comment">// force manager to skip loading accounts</span>
             <span class="ident">manager</span>.<span class="ident">set_stronghold_password</span>(<span class="ident">stronghold_password</span>).<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">stronghold_storage</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">storage</span>::<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_folder</span>.<span class="ident">join</span>(<span class="ident">STRONGHOLD_FILENAME</span>)).<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stronghold_storage</span> <span class="op">=</span> <span class="ident">stronghold_storage</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
