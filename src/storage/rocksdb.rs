@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use super::StorageAdapter;
-use rocksdb::{WriteBatch, DB};
-use std::{collections::HashMap, path::Path, sync::Arc};
+use rocksdb::{DBCompressionType, Options, WriteBatch, DB};
+use std::{path::Path, sync::Arc};
 use tokio::sync::Mutex;
 
 /// The storage id.
@@ -21,7 +21,9 @@ fn storage_err<E: ToString>(error: E) -> crate::Error {
 impl RocksdbStorageAdapter {
     /// Initialises the storage adapter.
     pub fn new(path: impl AsRef<Path>) -> crate::Result<Self> {
-        let db = DB::open_default(path).map_err(storage_err)?;
+        let mut opts = Options::default();
+        opts.set_compression_type(DBCompressionType::Lz4);
+        let db = DB::open(&opts, path).map_err(storage_err)?;
         Ok(Self {
             db: Arc::new(Mutex::new(db)),
         })

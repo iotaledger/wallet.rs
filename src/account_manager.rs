@@ -116,7 +116,6 @@ impl AccountManagerBuilder {
     pub fn with_storage(mut self, storage_folder: impl AsRef<Path>, password: Option<&str>) -> crate::Result<Self> {
         self.storage_folder = storage_folder.as_ref().to_path_buf();
         self.storage_encryption_key = password.map(|p| storage_password_to_encryption_key(p));
-
         Ok(self)
     }
 
@@ -733,6 +732,7 @@ impl AccountManager {
             let mut stronghold_storage = crate::storage::stronghold::StrongholdStorageAdapter::new(
                 &self.storage_folder.join(STRONGHOLD_FILENAME),
             )
+            // stronghold adapter `new` never fails
             .unwrap();
             for account_handle in self.accounts.read().await.values() {
                 stronghold_storage.remove(&account_handle.read().await.id()).await?;

@@ -909,6 +909,16 @@ dependencies = [
 
 [[package]]
 name = "crypto-mac"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "58bcd97a54c7ca5ce2f6eb16f6bede5b0ab5f0055fedc17d2f0b4466e21671ca"
+dependencies = [
+ "generic-array 0.14.4",
+ "subtle 2.4.0",
+]
+
+[[package]]
+name = "crypto-mac"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4857fd85a0c34b3c3297875b747c1e02e06b6a0ea32dd892d8192b9ce0813ea6"
@@ -1120,7 +1130,7 @@ checksum = "37ab347416e802de484e4d03c7316c48f1ecb56574dfd4a46a80f173ce1de04d"
 [[package]]
 name = "flapigen"
 version = "0.6.0-pre8"
-source = "git+https://github.com/Dushistov/flapigen-rs#8a62f79f0fc3896230de448d22635dfc9686008d"
+source = "git+https://github.com/Dushistov/flapigen-rs#132fb7d8e84003d10b6731c9a78d7a6c95916bf1"
 dependencies = [
  "bitflags",
  "heck",
@@ -1410,6 +1420,16 @@ checksum = "5dcb5e64cda4c23119ab41ba960d1e170a774c8e4b9d9e6a9bc18aabf5e59695"
 dependencies = [
  "crypto-mac 0.7.0",
  "digest 0.8.1",
+]
+
+[[package]]
+name = "hmac"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "deae6d9dbb35ec2c502d62b8f7b1c000a0822c3b0794ba36b3149c0a1c840dff"
+dependencies = [
+ "crypto-mac 0.9.1",
+ "digest 0.9.0",
 ]
 
 [[package]]
@@ -1725,10 +1745,10 @@ dependencies = [
  "serde 1.0.125",
  "serde_json",
  "serde_repr",
+ "slip10",
  "slog",
  "thiserror",
  "tokio",
- "url",
  "zeroize",
 ]
 
@@ -2147,9 +2167,9 @@ checksum = "7fb9b38af92608140b86b693604b9ffcc5824240a484d1ecd4795bacb2fe88f3"
 
 [[package]]
 name = "lock_api"
-version = "0.4.2"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd96ffd135b2fd7b973ac026d28085defbe8983df057ced3eb4f2130b0831312"
+checksum = "5a3c91c24eae6777794bb1997ad98bbb87daf92890acab859f7eaa4320333176"
 dependencies = [
  "scopeguard",
 ]
@@ -3187,9 +3207,9 @@ checksum = "7fdf1b9db47230893d76faad238fd6097fd6d6a9245cd7a4d90dbd639536bbd2"
 
 [[package]]
 name = "signal-hook"
-version = "0.3.7"
+version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6aa894ef3fade0ee7243422f4fbbd6c2b48e6de767e621d37ef65f2310f53cea"
+checksum = "ef33d6d0cd06e0840fba9985aab098c147e67e05cee14d412d3345ed14ff30ac"
 dependencies = [
  "libc",
  "signal-hook-registry",
@@ -3215,6 +3235,17 @@ name = "slab"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c111b5bd5695e56cffe5129854aa230b39c93a305372fdbb2668ca2394eea9f8"
+
+[[package]]
+name = "slip10"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00606a5ef176f987d1d4c8dd59b5e8554d5ff27749730d58d656c7741d96a2a8"
+dependencies = [
+ "ed25519-dalek",
+ "hmac 0.9.0",
+ "sha2 0.9.3",
+]
 
 [[package]]
 name = "slog"
@@ -3523,9 +3554,9 @@ dependencies = [
 
 [[package]]
 name = "tinyvec"
-version = "1.1.1"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "317cca572a0e89c3ce0ca1f1bdc9369547fe318a683418e42ac8f59d14701023"
+checksum = "5b5220f05bb7de7f3f53c7c065e1199b3172696fe2db9f9c4d8ad9b4ee74c342"
 dependencies = [
  "tinyvec_macros",
 ]
@@ -3745,7 +3776,6 @@ dependencies = [
  "idna",
  "matches",
  "percent-encoding",
- "serde 1.0.125",
 ]
 
 [[package]]
