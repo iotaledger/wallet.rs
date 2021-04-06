@@ -9,29 +9,28 @@ all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
-thiserror = "1.0"
+async-trait = "0.1"
+backtrace = "0.3"
+bee-common = { git = "https://github.com/iotaledger/bee.git", branch = "dev" }
 chrono = { version = "0.4", features = ["serde"] }
+futures = "0.3"
 getset = "0.1"
+hex = "0.4"
+iota-core = { git = "https://github.com/iotaledger/iota.rs", rev = "b3c6016b5f6bb28701cfed7a8ee768bbf476a8cc", features = ["mqtt"] }
+log = "0.4"
+once_cell = "1.5"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_repr = "0.1"
-once_cell = "1.5"
-iota-core = { git = "https://github.com/iotaledger/iota.rs", rev = "b3c6016b5f6bb28701cfed7a8ee768bbf476a8cc", features = ["mqtt"] }
-bee-common = { git = "https://github.com/iotaledger/bee.git", branch = "dev" }
-url = { version = "2.2", features = [ "serde" ] }
+thiserror = "1.0"
 tokio = { version = "1.3", features = ["macros", "sync", "time", "rt", "rt-multi-thread"] }
 rand = "0.8"
 rocksdb = { version = "0.15", default-features = false, features = ["lz4"] }
 slip10 = "0.4"
-hex = "0.4"
-futures = "0.3"
-backtrace = "0.3"
-async-trait = "0.1"
-log = "0.4"
 zeroize = { version = "1.2", features = ["zeroize_derive"] }
 
 # stronghold
-iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "b8904ff0df9c963980ae148815ad56c40588d84a" }
+iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "7e3c02412b4d8657e62bc0b14862443d2f1f1f63" }
 riker = "0.4"
 slog = "2.7"
 
@@ -40,18 +39,17 @@ iota-ledger = { git = "https://github.com/iotaledger/ledger.rs", branch = "devel
 
 [dependencies.iota-crypto]
 git = "https://github.com/iotaledger/crypto.rs"
-rev = "b849861b86c3f7357b7477de4253b7352b363627"
+branch = "dev"
 features = ["random", "sha", "pbkdf", "hmac", "bip39", "bip39-en", "chacha", "blake2b", "slip10"]
 
 [dev-dependencies]
-tokio = { version = "1.0", features = ["full"] }
-sled = "0.34"
-rusty-fork = "0.3"
 anyhow = "1.0"
 reqwest = { version = "0.11", features = ["json"] }
+rusty-fork = "0.3"
+tokio = { version = "1.0", features = ["full"] }
 
 [features]
 default = ["stronghold"]
-stronghold = []
 ledger-nano = ["iota-ledger"]
 ledger-nano-simulator = ["iota-ledger"]
+stronghold = []

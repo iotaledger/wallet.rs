@@ -3,7 +3,7 @@
 
 use iota_wallet::message::MessagePayload as MessagePayloadRust;
 
-use crate::bee_types::{index::*, milestone::*, receipt::*, transaction::*, treasury::*};
+use crate::types::{index::*, milestone::*, receipt::*, transaction::*, treasury::*};
 
 pub enum MessagePayloadType {
     Transaction = 1,

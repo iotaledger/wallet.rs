@@ -10,6 +10,8 @@ use crate::{
     signing::{GenerateAddressMetadata, SignerType},
 };
 
+use iota::bee_rest_api::types::responses::InfoResponse as NodeInfoResponse;
+
 use chrono::prelude::{DateTime, Local};
 use getset::{Getters, Setters};
 use iota::message::prelude::MessageId;
@@ -17,6 +19,7 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::{Mutex, RwLock, RwLockWriteGuard};
 
 use std::{
+    collections::HashSet,
     hash::{Hash, Hasher},
     ops::Deref,
     path::PathBuf,
@@ -152,13 +155,13 @@ impl AccountInitialiser {
 
     /// Defines the account alias. If not defined, we'll generate one.
     pub fn alias(mut self, alias: impl AsRef<str>) -> Self {
-        self.alias = Some(alias.as_ref().to_string());
+        self.alias.replace(alias.as_ref().to_string());
         self
     }
 
     /// Time of account creation.
     pub fn created_at(mut self, created_at: DateTime<Local>) -> Self {
-        self.created_at = Some(created_at);
+        self.created_at.replace(created_at);
         self
     }
 
@@ -220,7 +223,7 @@ impl AccountInitialiser {
             }
             if *account.index() >= latest_account_index {
                 latest_account_index = *account.index();
-                latest_account_handle = Some(account_handle.clone());
+                latest_account_handle.replace(account_handle.clone());
             }
         }
         if let Some(ref latest_account_handle) = latest_account_handle {
@@ -387,6 +390,7 @@ pub struct AccountHandle {
     pub(crate) locked_addresses: Arc<Mutex<Vec<AddressWrapper>>>,
     pub(crate) account_options: AccountOptions,
     is_mqtt_enabled: Arc<AtomicBool>,
+    pub(crate) change_addresses_to_sync: Arc<Mutex<HashSet<AddressWrapper>>>,
 }
 
 impl AccountHandle {
@@ -397,6 +401,7 @@ impl AccountHandle {
             locked_addresses: Default::default(),
             account_options,
             is_mqtt_enabled: Arc::new(AtomicBool::new(true)),
+            change_addresses_to_sync: Default::default(),
         }
     }
 
@@ -639,6 +644,11 @@ impl AccountHandle {
     /// Bridge to [Account#get_message](struct.Account.html#method.get_message).
     pub async fn get_message(&self, message_id: &MessageId) -> Option<Message> {
         self.inner.read().await.get_message(message_id).cloned()
+    }
+
+    /// Bridge to [Account#get_node_info](struct.Account.html#method.get_node_info).
+    pub async fn get_node_info(&self) -> crate::Result<NodeInfoResponse> {
+        self.inner.read().await.get_node_info().await
     }
 }
 
@@ -898,6 +908,17 @@ impl Account {
                     self.addresses.push(address);
                 }
             });
+    }
+
+    // Gets the node info from /api/v1/info endpoint
+    pub(crate) async fn get_node_info(&self) -> crate::Result<NodeInfoResponse> {
+        let client_guard = crate::client::get_client(self.client_options()).await?;
+        let client = client_guard.read().await;
+
+        client
+            .get_info()
+            .await
+            .map_err(|e| crate::Error::ClientError(Box::new(e)))
     }
 
     #[cfg(test)]
@@ -1307,5 +1328,17 @@ mod tests {
             },
         )
         .await;
+    }
+
+    #[tokio::test]
+    async fn test_get_info() {
+        let manager = crate::test_utils::get_account_manager().await;
+        let account_handle = crate::test_utils::AccountCreator::new(&manager)
+            .addresses(vec![crate::test_utils::generate_random_address()])
+            .create()
+            .await;
+
+        let node_info = account_handle.get_node_info().await.unwrap();
+        println!("{:#?}", node_info);
     }
 }

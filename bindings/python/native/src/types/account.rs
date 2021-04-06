@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use dict_derive::{FromPyObject as DeriveFromPyObject, IntoPyObject as DeriveIntoPyObject};
+use iota::bee_rest_api::types::responses::InfoResponse as RustInfoResponse;
 use iota_wallet::{
     account::{
         AccountBalance as RustAccountBalance, AccountHandle as RustAccountHandle,
@@ -78,6 +79,37 @@ impl From<RustAccountBalance> for AccountBalance {
             available: acount_balance.available,
             incoming: acount_balance.incoming,
             outgoing: acount_balance.outgoing,
+        }
+    }
+}
+
+#[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
+pub struct InfoResponse {
+    pub name: String,
+    pub version: String,
+    pub is_healthy: bool,
+    pub network_id: String,
+    pub bech32_hrp: String,
+    pub latest_milestone_index: u32,
+    pub confirmed_milestone_index: u32,
+    pub pruning_index: u32,
+    pub features: Vec<String>,
+    pub min_pow_score: f64,
+}
+
+impl From<RustInfoResponse> for InfoResponse {
+    fn from(info: RustInfoResponse) -> Self {
+        InfoResponse {
+            name: info.name,
+            version: info.version,
+            is_healthy: info.is_healthy,
+            network_id: info.network_id,
+            bech32_hrp: info.bech32_hrp,
+            latest_milestone_index: info.latest_milestone_index,
+            confirmed_milestone_index: info.confirmed_milestone_index,
+            pruning_index: info.pruning_index,
+            features: info.features,
+            min_pow_score: info.min_pow_score,
         }
     }
 }

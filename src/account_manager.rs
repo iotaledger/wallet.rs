@@ -298,10 +298,7 @@ impl AccountManager {
         AccountManagerBuilder::new()
     }
 
-    async fn load_accounts(
-        storage_file_path: &PathBuf,
-        account_options: AccountOptions,
-    ) -> crate::Result<AccountStore> {
+    async fn load_accounts(storage_file_path: &Path, account_options: AccountOptions) -> crate::Result<AccountStore> {
         let parsed_accounts = Arc::new(RwLock::new(HashMap::new()));
 
         let accounts = crate::storage::get(&storage_file_path)
@@ -382,7 +379,7 @@ impl AccountManager {
         Self::start_monitoring(self.accounts.clone()).await;
         let (stop_polling_sender, stop_polling_receiver) = broadcast_channel(1);
         self.start_polling(polling_interval, stop_polling_receiver, automatic_output_consolidation);
-        self.stop_polling_sender = Some(stop_polling_sender);
+        self.stop_polling_sender.replace(stop_polling_sender);
     }
 
     /// Stops the background polling and MQTT monitoring.
@@ -569,7 +566,7 @@ impl AccountManager {
                 }
             });
         });
-        self.polling_handle = Some(handle);
+        self.polling_handle.replace(handle);
     }
 
     /// Stores a mnemonic for the given signer type.
@@ -600,7 +597,7 @@ impl AccountManager {
         crypto::utils::rand::fill(&mut entropy).map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
         let mnemonic = crypto::keys::bip39::wordlist::encode(&entropy, &crypto::keys::bip39::wordlist::ENGLISH)
             .map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
-        self.generated_mnemonic = Some(mnemonic.clone());
+        self.generated_mnemonic.replace(mnemonic.clone());
         Ok(mnemonic)
     }
 
@@ -837,7 +834,7 @@ impl AccountManager {
                         if associated_account.is_some() {
                             return Err(crate::Error::CannotUseIndexIdentifier);
                         }
-                        associated_account = Some(account_handle);
+                        associated_account.replace(account_handle);
                     }
                 }
                 associated_account
@@ -847,7 +844,7 @@ impl AccountManager {
                 for account_handle in accounts.values() {
                     let account = account_handle.read().await;
                     if account.alias() == &alias {
-                        associated_account = Some(account_handle);
+                        associated_account.replace(account_handle);
                         break;
                     }
                 }
@@ -858,7 +855,7 @@ impl AccountManager {
                 for account_handle in accounts.values() {
                     let account = account_handle.read().await;
                     if account.addresses().iter().any(|a| a.address() == &address) {
-                        associated_account = Some(account_handle);
+                        associated_account.replace(account_handle);
                         break;
                     }
                 }
@@ -1087,7 +1084,7 @@ impl AccountsSynchronizer {
             let account = account_handle.read().await;
             if *account.index() >= last_account_index {
                 last_account_index = *account.index();
-                last_account = Some((
+                last_account.replace((
                     account
                         .addresses()
                         .iter()
@@ -1308,7 +1305,7 @@ async fn poll(
 
 async fn discover_accounts(
     accounts: AccountStore,
-    storage_path: &PathBuf,
+    storage_path: &Path,
     client_options: &ClientOptions,
     signer_type: Option<SignerType>,
     account_options: AccountOptions,
@@ -1319,7 +1316,7 @@ async fn discover_accounts(
         let mut account_initialiser = AccountInitialiser::new(
             client_options.clone(),
             accounts.clone(),
-            storage_path.clone(),
+            storage_path.to_path_buf(),
             account_options,
         )
         .skip_persistence()
@@ -1737,7 +1734,7 @@ mod tests {
                 .expect("failed to add account");
 
             let account_get_res = manager.get_account(account_handle.read().await.id()).await;
-            assert!(account_get_res.is_err(), true);
+            assert!(account_get_res.is_err(), "{}", true);
             match account_get_res.unwrap_err() {
                 crate::Error::RecordNotFound => {}
                 _ => panic!("unexpected get_account response; expected RecordNotFound"),
@@ -1885,6 +1882,7 @@ mod tests {
             }
             assert!(
                 manager.get_balance_change_event_count(None).await.unwrap() == change_events.len(),
+                "{}",
                 true
             );
             for (take, skip) in &[(2, 0), (2, 2)] {
@@ -1901,7 +1899,7 @@ mod tests {
                     .skip(*skip)
                     .take(*take)
                     .collect::<Vec<BalanceChange>>();
-                assert!(found == expected, true);
+                assert!(found == expected, "{}", true);
             }
         })
         .await;
@@ -1932,6 +1930,7 @@ mod tests {
             assert!(
                 manager.get_transaction_confirmation_event_count(None).await.unwrap()
                     == confirmation_change_events.len(),
+                "{}",
                 true
             );
             for (take, skip) in &[(2, 0), (2, 2)] {
@@ -1948,7 +1947,7 @@ mod tests {
                     .skip(*skip)
                     .take(*take)
                     .collect::<Vec<(Message, bool)>>();
-                assert!(found == expected, true);
+                assert!(found == expected, "{}", true);
             }
         })
         .await;
@@ -1975,6 +1974,7 @@ mod tests {
             }
             assert!(
                 manager.get_reattachment_event_count(None).await.unwrap() == reattachment_events.len(),
+                "{}",
                 true
             );
             for (take, skip) in &[(2, 0), (2, 2)] {
@@ -1991,7 +1991,7 @@ mod tests {
                     .skip(*skip)
                     .take(*take)
                     .collect::<Vec<Message>>();
-                assert!(found == expected, true);
+                assert!(found == expected, "{}", true);
             }
         })
         .await;
@@ -2016,7 +2016,11 @@ mod tests {
                                 .await
                                 .unwrap();
                         }
-                        assert!(manager.$count_get_fn(None).await.unwrap() == events.len(), true);
+                        assert!(
+                            manager.$count_get_fn(None).await.unwrap() == events.len(),
+                            "{}",
+                            true
+                        );
                         for (take, skip) in &[(2, 0), (2, 2)] {
                             let found = manager
                                 .$get_fn(*take, *skip, None)
@@ -2031,7 +2035,7 @@ mod tests {
                                 .skip(*skip)
                                 .take(*take)
                                 .collect::<Vec<Message>>();
-                            assert!(found == expected, true);
+                            assert!(found == expected, "{}", true);
                         }
                     },
                 )

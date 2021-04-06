@@ -13,7 +13,7 @@ use iota_wallet::{
 use iota::{Payload as RustPayload, UnlockBlock as RustUnlockBlock};
 
 pub enum InputKind {
-    UTXO = 0,
+    Utxo = 0,
     Treasury = 1,
 }
 
@@ -130,7 +130,7 @@ pub struct TransactionInput {
 impl TransactionInput {
     pub fn kind(&self) -> InputKind {
         match self.input {
-            RustWalletInput::UTXO(_) => InputKind::UTXO,
+            RustWalletInput::UTXO(_) => InputKind::Utxo,
             RustWalletInput::Treasury(_) => InputKind::Treasury,
         }
     }
