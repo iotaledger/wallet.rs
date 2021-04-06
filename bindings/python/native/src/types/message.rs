@@ -14,8 +14,8 @@ use iota::{
     MilestonePayloadEssence as RustMilestonePayloadEssence, Output as RustOutput, Payload as RustPayload,
     ReferenceUnlock as RustReferenceUnlock, RegularEssence as RustRegularEssence,
     SignatureLockedSingleOutput as RustSignatureLockedSingleOutput, SignatureUnlock as RustSignatureUnlock,
-    TransactionId as RustTransationId, TransactionPayload as RustTransactionPayload, UtxoInput as RustUtxoInput,
-    UnlockBlock as RustUnlockBlock, UnlockBlocks as RustUnlockBlocks,
+    TransactionId as RustTransationId, TransactionPayload as RustTransactionPayload, UnlockBlock as RustUnlockBlock,
+    UnlockBlocks as RustUnlockBlocks, UtxoInput as RustUtxoInput,
 };
 // use iota::MessageId as RustMessageId,
 use iota::{Address as IotaAddress, MessageId, TransactionId};
