@@ -10,6 +10,7 @@ pub mod stronghold;
 use crate::{
     account::Account,
     event::{BalanceEvent, TransactionConfirmationChangeEvent, TransactionEvent, TransactionReattachmentEvent},
+    message::{Message, MessageId, MessagePayload, MessageType, TransactionEssence},
 };
 
 use chrono::Utc;
@@ -39,6 +40,47 @@ pub(crate) type Timestamp = i64;
 struct EventIndexation {
     key: String,
     timestamp: Timestamp,
+}
+
+/// The indexation for account messages.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MessageIndexation {
+    /// The message id.
+    pub key: MessageId,
+    /// The payload hash.
+    pub payload_hash: Option<u64>,
+    pub internal: Option<bool>,
+    /// Whether the message is an incoming or an outgoing transaction.
+    pub incoming: Option<bool>,
+    /// Whether the message was broadcasted or not.
+    pub broadcasted: bool,
+    /// Whether the message was confirmed or not.
+    /// None means that it is still pending.
+    pub confirmed: Option<bool>,
+    /// Message value.
+    pub value: u64,
+    /// Id of the message that reattached this message.
+    pub reattachment_message_id: Option<MessageId>,
+}
+
+#[derive(Default)]
+pub struct MessageQueryFilter<'a> {
+    message_type: Option<MessageType>,
+    ignore_ids: Option<&'a HashMap<MessageId, Message>>,
+}
+
+impl<'a> MessageQueryFilter<'a> {
+    pub fn message_type(message_type: Option<MessageType>) -> Self {
+        Self {
+            message_type,
+            ignore_ids: Default::default(),
+        }
+    }
+
+    pub fn with_ignore_ids(mut self, ignore_ids: &'a HashMap<MessageId, Message>) -> Self {
+        self.ignore_ids.replace(ignore_ids);
+        self
+    }
 }
 
 struct Storage {
@@ -78,6 +120,22 @@ impl Storage {
             .await
     }
 
+    async fn batch_set(&mut self, records: HashMap<String, String>) -> crate::Result<()> {
+        self.inner
+            .batch_set(if let Some(key) = &self.encryption_key {
+                let mut encrypted_records = HashMap::new();
+                for (id, record) in records {
+                    let mut output = Vec::new();
+                    encrypt_record(record.as_bytes(), key, &mut output)?;
+                    encrypted_records.insert(id, serde_json::to_string(&output)?);
+                }
+                encrypted_records
+            } else {
+                records
+            })
+            .await
+    }
+
     async fn remove(&mut self, key: &str) -> crate::Result<()> {
         self.inner.remove(key).await
     }
@@ -86,11 +144,38 @@ impl Storage {
 pub(crate) struct StorageManager {
     storage: Storage,
     account_indexation: Vec<AccountIndexation>,
+    message_indexation: HashMap<String, Vec<MessageIndexation>>,
     balance_change_indexation: Option<Vec<EventIndexation>>,
     transaction_confirmation_indexation: Option<Vec<EventIndexation>>,
     new_transaction_indexation: Option<Vec<EventIndexation>>,
     reattachment_indexation: Option<Vec<EventIndexation>>,
     broadcast_indexation: Option<Vec<EventIndexation>>,
+}
+
+macro_rules! load_account_dependency_index {
+    ($self: ident, $account_id: expr, $key: expr, $indexation: ident) => {
+        match $self.storage.get($key).await {
+            Ok(record) => {
+                $self.$indexation.insert($account_id, serde_json::from_str(&record)?);
+            }
+            Err(crate::Error::RecordNotFound) => {
+                $self.$indexation.insert($account_id, Default::default());
+            }
+            Err(e) => return Err(e),
+        }
+    };
+}
+
+macro_rules! init_account_dependency_index {
+    ($self: ident, $account_id: expr, $indexation: ident) => {
+        if !$self.$indexation.contains_key($account_id) {
+            $self.$indexation.insert($account_id.to_string(), Default::default());
+        }
+    };
+}
+
+fn account_message_index_key(account_id: &str) -> String {
+    format!("iota-wallet-{}-messages", account_id)
 }
 
 impl StorageManager {
@@ -117,6 +202,12 @@ impl StorageManager {
         let mut accounts = Vec::new();
         for account_index in self.account_indexation.clone() {
             accounts.push(self.get(&account_index.key).await?);
+            load_account_dependency_index!(
+                self,
+                account_index.key.clone(),
+                &account_message_index_key(&account_index.key),
+                message_indexation
+            );
         }
         parse_accounts(&self.storage.storage_path, &accounts, &self.storage.encryption_key)
     }
@@ -125,6 +216,7 @@ impl StorageManager {
         let index = AccountIndexation { key: key.to_string() };
         self.storage.set(key, account).await?;
         if !self.account_indexation.contains(&index) {
+            init_account_dependency_index!(self, key, message_indexation);
             self.account_indexation.push(index);
             self.storage
                 .set(ACCOUNT_INDEXATION_KEY, &self.account_indexation)
@@ -145,6 +237,124 @@ impl StorageManager {
         } else {
             Err(crate::Error::RecordNotFound)
         }
+    }
+
+    pub fn message_indexation(&self, account: &Account) -> crate::Result<&Vec<MessageIndexation>> {
+        self.message_indexation
+            .get(account.id())
+            .ok_or(crate::Error::RecordNotFound)
+    }
+
+    pub fn query_message_indexation(
+        &self,
+        account: &Account,
+        filter: &MessageQueryFilter<'_>,
+    ) -> crate::Result<Vec<&MessageIndexation>> {
+        let message_indexation = self.message_indexation(account)?;
+
+        let mut filtered_message_indexation = Vec::new();
+        for message in message_indexation {
+            if message.reattachment_message_id.is_some() {
+                continue;
+            }
+            let message_type_matches = if let Some(message_type) = filter.message_type.clone() {
+                match message_type {
+                    MessageType::Received => message.incoming == Some(true),
+                    MessageType::Sent => message.incoming == Some(false),
+                    MessageType::Failed => !message.broadcasted,
+                    MessageType::Unconfirmed => message.confirmed.is_none(),
+                    MessageType::Value => message.value > 0,
+                    MessageType::Confirmed => message.confirmed.is_some(),
+                }
+            } else {
+                true
+            };
+            if message_type_matches {
+                filtered_message_indexation.push(message);
+            }
+        }
+
+        Ok(filtered_message_indexation)
+    }
+
+    pub async fn save_messages(&mut self, account: &Account, messages: &[Message]) -> crate::Result<()> {
+        let message_indexation = self
+            .message_indexation
+            .get_mut(account.id())
+            .ok_or(crate::Error::RecordNotFound)?;
+        let mut messages_map = HashMap::new();
+        for message in messages.iter() {
+            messages_map.insert(message.id().to_string(), serde_json::to_string(&message)?);
+            let (value, internal, incoming) = match message.payload() {
+                Some(MessagePayload::Transaction(tx)) => {
+                    let TransactionEssence::Regular(essence) = tx.essence();
+                    (essence.value(), Some(essence.internal()), Some(essence.incoming()))
+                }
+                _ => (0, None, None),
+            };
+            let index = MessageIndexation {
+                key: *message.id(),
+                payload_hash: message.payload().as_ref().map(|p| p.storage_hash()),
+                internal,
+                incoming,
+                broadcasted: message.broadcasted,
+                confirmed: message.confirmed,
+                value,
+                reattachment_message_id: None,
+            };
+            if let Some(position) = message_indexation.iter().position(|i| i == &index) {
+                message_indexation[position] = index.clone();
+            } else {
+                message_indexation.push(index.clone());
+            }
+        }
+        self.storage
+            .set(&account_message_index_key(account.id()), &message_indexation)
+            .await?;
+        self.storage.batch_set(messages_map).await?;
+        Ok(())
+    }
+
+    pub async fn get_message(&self, account: &Account, message_id: &MessageId) -> crate::Result<Message> {
+        let message_indexation = self.message_indexation(account)?;
+        let index = message_indexation
+            .iter()
+            .find(|i| &i.key == message_id)
+            .ok_or(crate::Error::RecordNotFound)?;
+        let message = self.get(&index.key.to_string()).await?;
+        serde_json::from_str(&message).map_err(Into::into)
+    }
+
+    pub async fn get_messages(
+        &self,
+        account: &Account,
+        count: usize,
+        skip: usize,
+        filter: MessageQueryFilter<'_>,
+    ) -> crate::Result<Vec<Message>> {
+        let filtered_message_indexation = self.query_message_indexation(account, &filter)?;
+
+        let mut messages = Vec::new();
+        let iter = filtered_message_indexation.into_iter().skip(skip);
+        for index in if count == 0 {
+            iter.collect::<Vec<&MessageIndexation>>()
+        } else {
+            iter.take(count).collect::<Vec<&MessageIndexation>>()
+        } {
+            match &filter.ignore_ids {
+                Some(ignore_ids) => {
+                    if !ignore_ids.contains_key(&index.key) {
+                        let message = self.get(&index.key.to_string()).await?;
+                        messages.push(serde_json::from_str(&message)?);
+                    }
+                }
+                None => {
+                    let message = self.get(&index.key.to_string()).await?;
+                    messages.push(serde_json::from_str(&message)?);
+                }
+            }
+        }
+        Ok(messages)
     }
 }
 
@@ -306,6 +516,7 @@ pub(crate) async fn set<P: AsRef<Path>>(
     let storage_manager = StorageManager {
         storage,
         account_indexation: Default::default(),
+        message_indexation: Default::default(),
         balance_change_indexation: Default::default(),
         transaction_confirmation_indexation: Default::default(),
         new_transaction_indexation: Default::default(),
@@ -360,6 +571,8 @@ pub trait StorageAdapter {
     async fn get(&self, key: &str) -> crate::Result<String>;
     /// Saves or updates a record on the storage.
     async fn set(&mut self, key: &str, record: String) -> crate::Result<()>;
+    /// Batch write.
+    async fn batch_set(&mut self, records: HashMap<String, String>) -> crate::Result<()>;
     /// Removes a record from the storage.
     async fn remove(&mut self, key: &str) -> crate::Result<()>;
 }
@@ -467,7 +680,7 @@ fn parse_accounts(
 #[cfg(test)]
 mod tests {
     use super::StorageAdapter;
-    use std::path::PathBuf;
+    use std::{collections::HashMap, path::PathBuf};
 
     #[tokio::test]
     // asserts that the adapter defined by `set` is globally available with `get`
@@ -479,6 +692,9 @@ mod tests {
                 Ok("MY_ADAPTER_GET_RESPONSE".to_string())
             }
             async fn set(&mut self, _key: &str, _record: String) -> crate::Result<()> {
+                Ok(())
+            }
+            async fn batch_set(&mut self, _records: HashMap<String, String>) -> crate::Result<()> {
                 Ok(())
             }
             async fn remove(&mut self, _key: &str) -> crate::Result<()> {

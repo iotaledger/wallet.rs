@@ -115,10 +115,7 @@ impl AccountManagerBuilder {
     /// Sets the storage config to be used.
     pub fn with_storage(mut self, storage_folder: impl AsRef<Path>, password: Option<&str>) -> crate::Result<Self> {
         self.storage_folder = storage_folder.as_ref().to_path_buf();
-        self.storage_encryption_key = match password {
-            Some(p) => Some(storage_password_to_encryption_key(p)),
-            None => None,
-        };
+        self.storage_encryption_key = password.map(|p| storage_password_to_encryption_key(p));
         Ok(self)
     }
 
@@ -646,7 +643,7 @@ impl AccountManager {
             let account_handle = self.get_account(account_id).await?;
             let account = account_handle.read().await;
 
-            if account.balance().total > 0 {
+            if account.balance().await?.total > 0 {
                 return Err(crate::Error::AccountNotEmpty);
             }
 
@@ -696,14 +693,7 @@ impl AccountManager {
 
         // store the message on the receive account
         let message_ = message.clone();
-        to_account_handle
-            .write()
-            .await
-            .do_mut(|account| {
-                account.append_messages(vec![message_]);
-                Ok(())
-            })
-            .await?;
+        to_account_handle.write().await.save_messages(vec![message_]).await?;
 
         Ok(message)
     }
@@ -733,6 +723,8 @@ impl AccountManager {
                 stronghold_storage
                     .save_account(&account_handle.read().await.id(), &*account_handle.read().await)
                     .await?;
+                let messages = account_handle.list_messages(0, 0, None).await?;
+                account_handle.write().await.save_messages(messages).await?;
             }
             self.storage_folder.join(STRONGHOLD_FILENAME)
         };
@@ -1148,11 +1140,12 @@ impl AccountsSynchronizer {
         for (account_handle, addresses_before_sync, data) in synced_data {
             let (parsed_messages, messages_before_sync) = {
                 let mut account = account_handle.write().await;
-                let messages_before_sync: Vec<(MessageId, Option<bool>)> =
-                    account.messages().iter().map(|m| (*m.id(), *m.confirmed())).collect();
+                let messages_before_sync: Vec<(MessageId, Option<bool>)> = account
+                    .with_messages(|messages| messages.iter().map(|m| (m.key, m.confirmed)).collect())
+                    .await;
 
                 let parsed_messages = data.parse_messages(account_handle.accounts.clone(), &account).await?;
-                account.append_messages(parsed_messages.to_vec());
+                account.save_messages(parsed_messages.to_vec()).await?;
                 account.set_last_synced_at(Some(chrono::Local::now()));
                 account.save().await?;
                 (parsed_messages, messages_before_sync)
@@ -1272,27 +1265,26 @@ async fn poll(
                 retried_data.account_handle.account_options.persist_events,
             )
             .await?;
-            // safe to unwrap since we're sure we have the message
-            let reattached_message = account.get_message_mut(reattached_message_id).unwrap();
+            let mut reattached_message = account.get_message(reattached_message_id).await.unwrap();
             reattached_message.set_reattachment_message_id(Some(*message.id()));
+            account.save_messages(vec![reattached_message]).await?;
         }
 
-        account.append_messages(
-            retried_data
-                .reattached
-                .into_iter()
-                .map(|(_, message)| message)
-                .collect(),
-        );
-        account.append_messages(retried_data.promoted);
+        let mut messages_to_save: Vec<Message> = retried_data
+            .reattached
+            .into_iter()
+            .map(|(_, message)| message)
+            .collect();
+        messages_to_save.extend(retried_data.promoted);
+        account.save_messages(messages_to_save).await?;
 
         for message_id in retried_data.no_need_promote_or_reattach {
-            let message = account.get_message_mut(&message_id).unwrap();
+            let mut message = account.get_message(&message_id).await.unwrap();
             if let Ok(metadata) = client.read().await.get_message().metadata(&message_id).await {
                 if let Some(ledger_inclusion_state) = metadata.ledger_inclusion_state {
                     let confirmed = ledger_inclusion_state == LedgerInclusionStateDto::Included;
                     message.set_confirmed(Some(confirmed));
-                    let message = message.clone();
+                    account.save_messages(vec![message.clone()]).await?;
                     emit_confirmation_state_change(
                         &account,
                         message,
@@ -1382,7 +1374,7 @@ async fn consolidate_outputs_if_needed(
             let account = synced.account_handle.read().await;
             let signer_type = account.signer_type();
             if signer_type == &SignerType::LedgerNano || signer_type == &SignerType::LedgerNanoSimulator {
-                let addresses = synced.account_handle.output_consolidation_addresses().await;
+                let addresses = synced.account_handle.output_consolidation_addresses().await?;
                 for address in addresses {
                     crate::event::emit_address_consolidation_needed(&account, address).await;
                 }
@@ -1405,6 +1397,7 @@ async fn retry_unconfirmed_transactions(synced_accounts: &[SyncedAccount]) -> cr
             .read()
             .await
             .list_messages(0, 0, Some(MessageType::Unconfirmed))
+            .await?
             .iter()
             .map(|message| (*message.id(), message.payload().clone()))
             .collect();
