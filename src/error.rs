@@ -190,9 +190,6 @@ pub enum Error {
     /// Input not found with given index.
     #[error("input not found with the provided index")]
     InputNotFound,
-    /// The provided input index was already bundled.
-    #[error("input with address index {0} is already part of a created bundle")]
-    InputAlreadyBundled(u64),
     /// Empty input list on migration bundle creation.
     #[error("can't create migration bundle: input list is empty")]
     EmptyInputList,
@@ -329,7 +326,6 @@ impl serde::Serialize for Error {
             Self::MigrationDataNotFound => serialize_variant(self, serializer, "MigrationDataNotFound"),
             Self::MigrationBundleNotFound => serialize_variant(self, serializer, "MigrationBundleNotFound"),
             Self::InputNotFound => serialize_variant(self, serializer, "InputNotFound"),
-            Self::InputAlreadyBundled(_) => serialize_variant(self, serializer, "InputAlreadyBundled"),
             Self::EmptyInputList => serialize_variant(self, serializer, "EmptyInputList"),
             Self::SpentAddressOnBundle => serialize_variant(self, serializer, "SpentAddressOnBundle"),
         }

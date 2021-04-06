@@ -257,7 +257,6 @@ pub(crate) struct CachedMigrationData {
     permanode: Option<String>,
     security_level: u8,
     inputs: HashMap<Range<u64>, Vec<InputData>>,
-    bundled_input_address_indexes: Vec<u64>,
 }
 
 /// Created migration bundle data.
@@ -348,7 +347,6 @@ impl AccountManager {
                 permanode: finder.permanode.map(|node| node.to_string()),
                 security_level: finder.security_level,
                 inputs: Default::default(),
-                bundled_input_address_indexes: Default::default(),
             });
         let metadata = finder.finish().await?;
         stored_data.inputs.extend(metadata.inputs.clone().into_iter());
@@ -385,9 +383,6 @@ impl AccountManager {
 
         let mut address_inputs: Vec<&InputData> = Default::default();
         for index in input_address_indexes {
-            if data.bundled_input_address_indexes.contains(index) {
-                return Err(crate::Error::InputAlreadyBundled(*index));
-            }
             for inputs in data.inputs.values() {
                 if let Some(input) = inputs.iter().find(|i| &i.index == index) {
                     address_inputs.push(input);
@@ -412,8 +407,6 @@ impl AccountManager {
 
         self.cached_migration_bundles
             .insert(bundle_hash.clone(), bundle_data.bundle);
-        let data = self.cached_migration_data.get_mut(&seed_hash).unwrap(); // safe to unwrap since we already validated it
-        data.bundled_input_address_indexes.extend(input_address_indexes);
 
         Ok(MigrationBundle {
             crackability,
