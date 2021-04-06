@@ -889,9 +889,6 @@
 <span id="886">886</span>
 <span id="887">887</span>
 <span id="888">888</span>
-<span id="889">889</span>
-<span id="890">890</span>
-<span id="891">891</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -935,10 +932,7 @@
 <span class="kw">static</span> <span class="ident">PASSWORD_CLEAR_INTERVAL</span>: <span class="ident">OnceCell</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">OnceCell</span>::<span class="ident">new</span>();
 <span class="kw">static</span> <span class="ident">PRIVATE_DATA_CLIENT_PATH</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="string">b&quot;iota_seed&quot;</span>;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">const</span> <span class="ident">DEFAULT_PASSWORD_CLEAR_INTERVAL</span>: <span class="ident">Duration</span> <span class="op">=</span> <span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="number">0</span>);
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">test</span>))]</span>
-<span class="kw">const</span> <span class="ident">DEFAULT_PASSWORD_CLEAR_INTERVAL</span>: <span class="ident">Duration</span> <span class="op">=</span> <span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="number">8</span> <span class="op">*</span> <span class="number">60</span>);
 <span class="kw">const</span> <span class="ident">SECRET_VAULT_PATH</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;iota-wallet-secret&quot;</span>;
 <span class="kw">const</span> <span class="ident">SEED_RECORD_PATH</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;iota-wallet-seed&quot;</span>;
 <span class="kw">const</span> <span class="ident">DERIVE_OUTPUT_RECORD_PATH</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;iota-wallet-derived&quot;</span>;
