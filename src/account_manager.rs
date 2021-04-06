@@ -341,7 +341,7 @@ impl AccountManager {
         #[cfg(feature = "stronghold")]
         {
             crate::stronghold::unload_snapshot(&self.storage_path, false).await?;
-            let _ = std::fs::remove_file(self.stronghold_snapshot_path_internal(&storage_id).await?);
+            std::fs::remove_file(self.stronghold_snapshot_path_internal(&storage_id).await?)?;
         }
 
         Ok(())
