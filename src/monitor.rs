@@ -3,9 +3,9 @@
 
 use crate::{
     account::{AccountHandle, AccountSynchronizeStep},
+    account_manager::AccountsSynchronizer,
     address::{AddressOutput, AddressWrapper, IotaAddress},
     client::ClientOptions,
-    event::{emit_confirmation_state_change, emit_transaction_event, TransactionEventType},
     message::{Message, MessagePayload, TransactionEssence, TransactionInput, TransactionOutput},
 };
 
@@ -13,8 +13,9 @@ use iota::{
     bee_rest_api::types::{dtos::OutputDto, responses::OutputResponse},
     Topic, TopicEvent,
 };
+use tokio::sync::RwLock;
 
-use std::convert::TryInto;
+use std::{collections::HashMap, convert::TryInto, sync::Arc};
 
 /// Unsubscribe from all topics associated with the account.
 pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
@@ -110,7 +111,7 @@ pub async fn monitor_address_balance(account_handle: AccountHandle, addresses: V
 }
 
 async fn process_output(payload: String, account_handle: AccountHandle) -> crate::Result<bool> {
-    let mut account = account_handle.write().await;
+    let account = account_handle.write().await;
 
     let output = serde_json::from_str::<OutputResponse>(&payload)?;
     let output_address: IotaAddress = match output.output.clone() {
@@ -125,6 +126,7 @@ async fn process_output(payload: String, account_handle: AccountHandle) -> crate
             return Ok(false);
         }
     };
+
     let address = match account
         .addresses()
         .iter()
@@ -136,106 +138,112 @@ async fn process_output(payload: String, account_handle: AccountHandle) -> crate
             return Ok(false);
         }
     };
-    let output = AddressOutput::from_output_response(output, address.bech32_hrp().to_string())?;
-    let (addresses_to_sync, message_data) = if output.is_spent {
-        (vec![address], None)
-    } else {
-        let (message, is_new) = match account.get_message(&output.message_id).await {
-            Some(mut message) => {
-                if !message.confirmed().unwrap_or(false) {
-                    message.set_confirmed(Some(true));
-                    account.save_messages(vec![message.clone()]).await?;
-                    (message, false)
-                } else {
-                    return Ok(false);
-                }
-            }
-            None => {
-                if let Ok(message) = crate::client::get_client(account.client_options())
-                    .await?
-                    .read()
-                    .await
-                    .get_message()
-                    .data(&output.message_id)
-                    .await
-                {
-                    let message = Message::from_iota_message(
-                        output.message_id,
-                        message,
-                        account_handle.accounts.clone(),
-                        account.id(),
-                        account.addresses(),
-                        account.client_options(),
-                    )
-                    .with_confirmed(Some(true))
-                    .finish()
-                    .await?;
-                    account.save_messages(vec![message.clone()]).await?;
-                    (message, true)
-                } else {
-                    return Ok(false);
-                }
-            }
-        };
 
-        let message_addresses = match message.payload() {
-            Some(MessagePayload::Transaction(tx)) => match tx.essence() {
-                TransactionEssence::Regular(essence) => {
-                    let output_addresses: Vec<AddressWrapper> = essence
-                        .outputs()
-                        .iter()
-                        .map(|output| match output {
-                            TransactionOutput::SignatureLockedDustAllowance(o) => o.address().clone(),
-                            TransactionOutput::SignatureLockedSingle(o) => o.address().clone(),
-                            _ => unimplemented!(),
-                        })
-                        .collect();
-                    let input_addresses: Vec<AddressWrapper> = essence
-                        .inputs()
-                        .iter()
-                        .map(|input| match input {
-                            TransactionInput::Utxo(i) => i.metadata.as_ref().map(|m| m.address.clone()),
-                            _ => unimplemented!(),
-                        })
-                        .flatten()
-                        .collect();
-                    let mut addresses = output_addresses;
-                    addresses.extend(input_addresses);
-                    addresses
-                }
-            },
-            _ => vec![],
-        };
-        (message_addresses, Some((message, is_new)))
+    let output = AddressOutput::from_output_response(output, address.bech32_hrp().to_string())?;
+    let message = match account.get_message(&output.message_id).await {
+        Some(message) => {
+            if !message.confirmed().unwrap_or(false) {
+                message
+            } else {
+                return Ok(false);
+            }
+        }
+        None => {
+            if let Ok(message) = crate::client::get_client(account.client_options())
+                .await?
+                .read()
+                .await
+                .get_message()
+                .data(&output.message_id)
+                .await
+            {
+                Message::from_iota_message(
+                    output.message_id,
+                    message,
+                    account_handle.accounts.clone(),
+                    account.id(),
+                    account.addresses(),
+                    account.client_options(),
+                )
+                .with_confirmed(Some(true))
+                .finish()
+                .await?
+            } else {
+                return Ok(false);
+            }
+        }
     };
 
-    drop(account);
-    let _ = account_handle
-        .sync()
-        .await
-        .steps(vec![AccountSynchronizeStep::SyncAddresses(Some(addresses_to_sync))])
-        .execute()
-        .await;
-    let account = account_handle.read().await;
+    let message_addresses = match message.payload() {
+        Some(MessagePayload::Transaction(tx)) => match tx.essence() {
+            TransactionEssence::Regular(essence) => {
+                let output_addresses: Vec<AddressWrapper> = essence
+                    .outputs()
+                    .iter()
+                    .map(|output| match output {
+                        TransactionOutput::SignatureLockedDustAllowance(o) => o.address().clone(),
+                        TransactionOutput::SignatureLockedSingle(o) => o.address().clone(),
+                        _ => unimplemented!(),
+                    })
+                    .collect();
+                let input_addresses: Vec<AddressWrapper> = essence
+                    .inputs()
+                    .iter()
+                    .map(|input| match input {
+                        TransactionInput::Utxo(i) => i.metadata.as_ref().map(|m| m.address.clone()),
+                        _ => unimplemented!(),
+                    })
+                    .flatten()
+                    .collect();
+                let mut addresses = output_addresses;
+                addresses.extend(input_addresses);
+                addresses
+            }
+        },
+        _ => vec![],
+    };
 
-    if let Some((message, is_new)) = message_data {
-        if is_new {
-            emit_transaction_event(
-                TransactionEventType::NewTransaction,
-                &account,
-                message.clone(),
-                account_handle.account_options.persist_events,
-            )
-            .await?;
-        } else {
-            emit_confirmation_state_change(
-                &account,
-                message.clone(),
-                true,
-                account_handle.account_options.persist_events,
-            )
-            .await?;
+    let message_is_internal = match message.payload() {
+        Some(MessagePayload::Transaction(tx)) => {
+            let TransactionEssence::Regular(essence) = tx.essence();
+            essence.internal()
         }
+        _ => false,
+    };
+
+    let storage_path = account.storage_path().clone();
+    let account_id = account.id().clone();
+    drop(account);
+
+    let mut accounts_to_sync = HashMap::new();
+
+    if message_is_internal {
+        for (account_id, account_handle) in account_handle.accounts.read().await.iter() {
+            if account_handle
+                .read()
+                .await
+                .addresses()
+                .iter()
+                .any(|a| message_addresses.contains(a.address()))
+            {
+                accounts_to_sync.insert(account_id.clone(), account_handle.clone());
+            }
+        }
+    } else {
+        accounts_to_sync.insert(account_id, account_handle.clone());
     }
+
+    // sync associated accounts
+    AccountsSynchronizer::new(
+        account_handle.sync_accounts_lock.clone(),
+        Arc::new(RwLock::new(accounts_to_sync)),
+        storage_path,
+        account_handle.account_options,
+    )
+    .skip_account_discovery()
+    .steps(vec![AccountSynchronizeStep::SyncAddresses(Some(message_addresses))])
+    .execute()
+    .await?;
+
     Ok(true)
 }

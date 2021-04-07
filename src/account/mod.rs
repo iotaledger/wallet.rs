@@ -111,6 +111,7 @@ pub struct AccountInitialiser {
     accounts: AccountStore,
     storage_path: PathBuf,
     account_options: AccountOptions,
+    sync_accounts_lock: Arc<Mutex<()>>,
     alias: Option<String>,
     created_at: Option<DateTime<Local>>,
     messages: Vec<Message>,
@@ -129,11 +130,13 @@ impl AccountInitialiser {
         accounts: AccountStore,
         storage_path: PathBuf,
         account_options: AccountOptions,
+        sync_accounts_lock: Arc<Mutex<()>>,
     ) -> Self {
         Self {
             accounts,
             storage_path,
             account_options,
+            sync_accounts_lock,
             alias: None,
             created_at: None,
             messages: vec![],
@@ -333,22 +336,40 @@ impl AccountInitialiser {
         account.set_id(format!("{}{}", ACCOUNT_ID_PREFIX, hex::encode(digest)));
 
         let guard = if self.skip_persistence {
-            AccountHandle::new(account, self.accounts.clone(), self.account_options)
+            AccountHandle::new(
+                account,
+                self.accounts.clone(),
+                self.account_options,
+                self.sync_accounts_lock.clone(),
+            )
         } else {
             account.save().await?;
             if !self.messages.is_empty() {
                 account.save_messages(self.messages).await?;
             }
             let account_id = account.id().clone();
-            let guard = AccountHandle::new(account, self.accounts.clone(), self.account_options);
+            let guard = AccountHandle::new(
+                account,
+                self.accounts.clone(),
+                self.account_options,
+                self.sync_accounts_lock.clone(),
+            );
             drop(accounts);
             self.accounts.write().await.insert(account_id, guard.clone());
-            let _ = crate::monitor::monitor_account_addresses_balance(guard.clone()).await;
+            // monitor on a non-async function to prevent cycle computing the `monitor_address_balance` fn type
+            monitor_address(guard.clone());
             guard
         };
 
         Ok(guard)
     }
+}
+
+fn monitor_address(account_handle: AccountHandle) {
+    crate::spawn(async move {
+        // ignore errors because we fallback to the polling system
+        let _ = crate::monitor::monitor_account_addresses_balance(account_handle).await;
+    });
 }
 
 /// Account definition.
@@ -404,10 +425,16 @@ pub struct AccountHandle {
     pub(crate) account_options: AccountOptions,
     is_mqtt_enabled: Arc<AtomicBool>,
     pub(crate) change_addresses_to_sync: Arc<Mutex<HashSet<AddressWrapper>>>,
+    pub(crate) sync_accounts_lock: Arc<Mutex<()>>,
 }
 
 impl AccountHandle {
-    pub(crate) fn new(account: Account, accounts: AccountStore, account_options: AccountOptions) -> Self {
+    pub(crate) fn new(
+        account: Account,
+        accounts: AccountStore,
+        account_options: AccountOptions,
+        sync_accounts_lock: Arc<Mutex<()>>,
+    ) -> Self {
         Self {
             inner: Arc::new(RwLock::new(account)),
             accounts,
@@ -415,6 +442,7 @@ impl AccountHandle {
             account_options,
             is_mqtt_enabled: Arc::new(AtomicBool::new(true)),
             change_addresses_to_sync: Default::default(),
+            sync_accounts_lock,
         }
     }
 
@@ -549,7 +577,7 @@ impl AccountHandle {
         Ok(address)
     }
 
-    pub(crate) fn monitor_address(&self, address: AddressWrapper) {
+    fn monitor_address(&self, address: AddressWrapper) {
         let handle = self.clone();
         crate::spawn(async move {
             // ignore errors because we fallback to the polling system
@@ -1266,7 +1294,6 @@ mod tests {
             .unwrap();
 
         let txs = account_handle.list_messages(4, 0, None).await.unwrap();
-        println!("{:?}", txs);
         assert_eq!(txs.len(), 4);
     }
 
@@ -1349,7 +1376,6 @@ mod tests {
                     _ => 1,
                 }
             );
-            println!("{:?}", tx_type);
             assert_eq!(messages.first().unwrap(), expected);
         }
     }
