@@ -1,12 +1,10 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::AccountSynchronizeStep;
-#[allow(unused_imports)]
 use crate::{
     account::{
-        repost_message, Account, AccountHandle, AccountIdentifier, AccountInitialiser, AccountSynchronizer,
-        RepostAction, SyncedAccount, SyncedAccountData,
+        AccountHandle, AccountIdentifier, AccountInitialiser, AccountSynchronizeStep, AccountSynchronizer,
+        SyncedAccount, SyncedAccountData,
     },
     address::AddressOutput,
     client::ClientOptions,
@@ -1398,7 +1396,6 @@ async fn discover_accounts(
 }
 
 struct RetriedData {
-    #[allow(dead_code)]
     promoted: Vec<Message>,
     reattached: Vec<(MessageId, Message)>,
     no_need_promote_or_reattach: Vec<MessageId>,

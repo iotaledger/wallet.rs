@@ -14,8 +14,8 @@ use iota::{
     MilestonePayloadEssence as RustMilestonePayloadEssence, Output as RustOutput, Payload as RustPayload,
     ReferenceUnlock as RustReferenceUnlock, RegularEssence as RustRegularEssence,
     SignatureLockedSingleOutput as RustSignatureLockedSingleOutput, SignatureUnlock as RustSignatureUnlock,
-    TransactionId as RustTransationId, TransactionPayload as RustTransactionPayload, UTXOInput as RustUTXOInput,
-    UnlockBlock as RustUnlockBlock, UnlockBlocks as RustUnlockBlocks,
+    TransactionId as RustTransationId, TransactionPayload as RustTransactionPayload, UnlockBlock as RustUnlockBlock,
+    UnlockBlocks as RustUnlockBlocks, UtxoInput as RustUtxoInput,
 };
 // use iota::MessageId as RustMessageId,
 use iota::{Address as IotaAddress, MessageId, TransactionId};
@@ -194,7 +194,7 @@ impl TryFrom<RustWalletTransactionEssence> for Essence {
                     .iter()
                     .cloned()
                     .map(|input| {
-                        if let RustWalletInput::UTXO(input) = input {
+                        if let RustWalletInput::Utxo(input) = input {
                             Input {
                                 transaction_id: input.input.output_id().transaction_id().to_string(),
                                 index: input.input.output_id().index(),
@@ -257,7 +257,7 @@ impl TryFrom<RustMilestonePayloadEssence> for MilestonePayloadEssence {
     type Error = Error;
     fn try_from(essence: RustMilestonePayloadEssence) -> Result<Self> {
         Ok(MilestonePayloadEssence {
-            index: essence.index(),
+            index: *essence.index(),
             timestamp: essence.timestamp(),
             parents: essence.parents().iter().map(|parent| parent.to_string()).collect(),
             merkle_proof: essence.merkle_proof().try_into()?,
@@ -358,10 +358,10 @@ impl TryFrom<Essence> for RustEssence {
                 .inputs
                 .iter()
                 .map(|input| {
-                    RustUTXOInput::new(
+                    RustUtxoInput::new(
                         RustTransationId::from_str(&input.transaction_id[..]).unwrap_or_else(|_| {
                             panic!(
-                                "invalid UTXOInput transaction_id: {} with input index {}",
+                                "invalid UtxoInput transaction_id: {} with input index {}",
                                 input.transaction_id, input.index
                             )
                         }),
@@ -369,7 +369,7 @@ impl TryFrom<Essence> for RustEssence {
                     )
                     .unwrap_or_else(|_| {
                         panic!(
-                            "invalid UTXOInput transaction_id: {} with input index {}",
+                            "invalid UtxoInput transaction_id: {} with input index {}",
                             input.transaction_id, input.index
                         )
                     })

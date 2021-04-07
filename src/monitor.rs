@@ -9,7 +9,10 @@ use crate::{
     message::{Message, MessagePayload, TransactionEssence, TransactionInput, TransactionOutput},
 };
 
-use iota::{bee_rest_api::types::dtos::OutputDto, OutputResponse, Topic, TopicEvent};
+use iota::{
+    bee_rest_api::types::{dtos::OutputDto, responses::OutputResponse},
+    Topic, TopicEvent,
+};
 use tokio::sync::RwLock;
 
 use std::{collections::HashMap, convert::TryInto, sync::Arc};
@@ -187,7 +190,7 @@ async fn process_output(payload: String, account_handle: AccountHandle) -> crate
                     .inputs()
                     .iter()
                     .map(|input| match input {
-                        TransactionInput::UTXO(i) => i.metadata.as_ref().map(|m| m.address.clone()),
+                        TransactionInput::Utxo(i) => i.metadata.as_ref().map(|m| m.address.clone()),
                         _ => unimplemented!(),
                     })
                     .flatten()

@@ -31,7 +31,7 @@ use std::{
 };
 
 mod sync;
-pub(crate) use sync::{repost_message, AccountSynchronizeStep, RepostAction, SyncedAccountData};
+pub(crate) use sync::{AccountSynchronizeStep, SyncedAccountData};
 pub use sync::{AccountSynchronizer, SyncedAccount};
 
 const ACCOUNT_ID_PREFIX: &str = "wallet-account://";

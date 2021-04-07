@@ -8,10 +8,13 @@ use crate::{
 };
 use getset::{Getters, Setters};
 use iota::{
-    bee_rest_api::types::dtos::{AddressDto, OutputDto},
-    MessageId, OutputId, OutputResponse, TransactionId,
+    bee_rest_api::types::{
+        dtos::{AddressDto, OutputDto},
+        responses::OutputResponse,
+    },
+    MessageId, OutputId, TransactionId,
 };
-pub use iota::{Address as IotaAddress, Ed25519Address, Input, UTXOInput};
+pub use iota::{Address as IotaAddress, Ed25519Address, Input, UtxoInput};
 use serde::{ser::Serializer, Deserialize, Serialize};
 use std::{
     cmp::Ordering,
@@ -79,14 +82,14 @@ impl AddressOutput {
 
     /// Checks if the output is referenced on a pending message or a confirmed message
     pub(crate) fn is_used(&self, messages: &[Message]) -> bool {
-        let output_id = UTXOInput::new(self.transaction_id, self.index).unwrap();
+        let output_id = UtxoInput::new(self.transaction_id, self.index).unwrap();
         messages.iter().any(|m| {
             // message is pending or confirmed
             if m.confirmed().unwrap_or(true) {
                 match m.payload() {
                     Some(MessagePayload::Transaction(tx)) => match tx.essence() {
                         TransactionEssence::Regular(essence) => essence.inputs().iter().any(|input| {
-                            if let TransactionInput::UTXO(x) = input {
+                            if let TransactionInput::Utxo(x) = input {
                                 x.input == output_id
                             } else {
                                 false
