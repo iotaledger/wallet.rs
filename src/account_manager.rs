@@ -403,8 +403,16 @@ impl AccountManager {
         )
         .await?;
         let crackability = bundle_data.crackability;
-        let bundle_hash = bundle_data.bundle.first().unwrap().bundle().to_inner().to_string();
-
+        let bundle_hash = bundle_data
+            .bundle
+            .first()
+            .unwrap()
+            .bundle()
+            .to_inner()
+            .encode::<T3B1Buf>()
+            .iter_trytes()
+            .map(char::from)
+            .collect::<String>();
         self.cached_migration_bundles
             .insert(bundle_hash.clone(), bundle_data.bundle);
 
