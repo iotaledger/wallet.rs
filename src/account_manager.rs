@@ -1896,9 +1896,13 @@ mod tests {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |mut manager, _| async move {
             crate::test_utils::AccountCreator::new(&manager).create().await;
             manager.set_storage_password("new-password").await.unwrap();
-            let account_store = super::AccountManager::load_accounts(manager.storage_path(), manager.account_options)
-                .await
-                .unwrap();
+            let account_store = super::AccountManager::load_accounts(
+                manager.storage_path(),
+                manager.account_options,
+                Default::default(),
+            )
+            .await
+            .unwrap();
             assert_eq!(account_store.read().await.len(), 1);
         })
         .await;
