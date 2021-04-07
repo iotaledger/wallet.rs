@@ -26,7 +26,7 @@ use std::{
     path::PathBuf,
     sync::{
         atomic::{AtomicBool, Ordering},
-        Arc, Mutex as StdMutex,
+        Arc,
     },
 };
 
@@ -407,7 +407,7 @@ pub struct Account {
     skip_persistence: bool,
     #[getset(get = "pub(crate)")]
     #[serde(skip)]
-    cached_messages: Arc<StdMutex<HashMap<MessageId, Message>>>,
+    cached_messages: Arc<Mutex<HashMap<MessageId, Message>>>,
 }
 
 impl PartialEq for Account {
@@ -897,7 +897,7 @@ impl Account {
         from: usize,
         message_type: Option<MessageType>,
     ) -> crate::Result<Vec<Message>> {
-        let mut cached_messages = self.cached_messages.lock().unwrap();
+        let mut cached_messages = self.cached_messages.lock().await;
 
         let messages = crate::storage::get(&self.storage_path)
             .await
@@ -908,7 +908,7 @@ impl Account {
                 &self,
                 count,
                 from,
-                MessageQueryFilter::message_type(message_type.clone()).with_ignore_ids(&*cached_messages),
+                MessageQueryFilter::message_type(message_type.clone()).with_ignore_ids(&cached_messages),
             )
             .await?;
 
