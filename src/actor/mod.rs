@@ -363,7 +363,10 @@ impl WalletMessageHandler {
         match builder.initialise().await {
             Ok(account_handle) => {
                 let account = account_handle.read().await;
-                Ok(ResponseType::CreatedAccount(account.clone()))
+                Ok(ResponseType::CreatedAccount(AccountDto::new(
+                    account.clone(),
+                    Vec::new(),
+                )))
             }
             Err(e) => Err(e),
         }
@@ -372,14 +375,17 @@ impl WalletMessageHandler {
     async fn get_account(&self, account_id: &AccountIdentifier) -> Result<ResponseType> {
         let account_handle = self.account_manager.get_account(account_id.clone()).await?;
         let account = account_handle.read().await;
-        Ok(ResponseType::ReadAccount(account.clone()))
+        let messages = account.list_messages(0, 0, None).await?;
+        Ok(ResponseType::ReadAccount(AccountDto::new(account.clone(), messages)))
     }
 
     async fn get_accounts(&self) -> Result<ResponseType> {
         let accounts = self.account_manager.get_accounts().await?;
         let mut accounts_ = Vec::new();
         for account_handle in accounts {
-            accounts_.push(account_handle.read().await.clone());
+            let account = account_handle.read().await;
+            let messages = account.list_messages(0, 0, None).await?;
+            accounts_.push(AccountDto::new(account.clone(), messages));
         }
         Ok(ResponseType::ReadAccounts(accounts_))
     }
@@ -527,7 +533,7 @@ mod tests {
                 let response = send_message(&tx, MessageType::CreateAccount(Box::new(account))).await;
                 match response.response() {
                     ResponseType::CreatedAccount(created_account) => {
-                        let id = created_account.id().clone();
+                        let id = created_account.account.id().clone();
                         std::thread::spawn(move || {
                             std::thread::sleep(std::time::Duration::from_secs(6));
                             // remove the created account
