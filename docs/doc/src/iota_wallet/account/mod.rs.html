@@ -1431,6 +1431,32 @@
 <span id="1428">1428</span>
 <span id="1429">1429</span>
 <span id="1430">1430</span>
+<span id="1431">1431</span>
+<span id="1432">1432</span>
+<span id="1433">1433</span>
+<span id="1434">1434</span>
+<span id="1435">1435</span>
+<span id="1436">1436</span>
+<span id="1437">1437</span>
+<span id="1438">1438</span>
+<span id="1439">1439</span>
+<span id="1440">1440</span>
+<span id="1441">1441</span>
+<span id="1442">1442</span>
+<span id="1443">1443</span>
+<span id="1444">1444</span>
+<span id="1445">1445</span>
+<span id="1446">1446</span>
+<span id="1447">1447</span>
+<span id="1448">1448</span>
+<span id="1449">1449</span>
+<span id="1450">1450</span>
+<span id="1451">1451</span>
+<span id="1452">1452</span>
+<span id="1453">1453</span>
+<span id="1454">1454</span>
+<span id="1455">1455</span>
+<span id="1456">1456</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1545,6 +1571,7 @@
     <span class="ident">accounts</span>: <span class="ident">AccountStore</span>,
     <span class="ident">storage_path</span>: <span class="ident">PathBuf</span>,
     <span class="ident">account_options</span>: <span class="ident">AccountOptions</span>,
+    <span class="ident">sync_accounts_lock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">alias</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="ident">created_at</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Local</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">messages</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span>,
@@ -1563,11 +1590,13 @@
         <span class="ident">accounts</span>: <span class="ident">AccountStore</span>,
         <span class="ident">storage_path</span>: <span class="ident">PathBuf</span>,
         <span class="ident">account_options</span>: <span class="ident">AccountOptions</span>,
+        <span class="ident">sync_accounts_lock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">accounts</span>,
             <span class="ident">storage_path</span>,
             <span class="ident">account_options</span>,
+            <span class="ident">sync_accounts_lock</span>,
             <span class="ident">alias</span>: <span class="prelude-val">None</span>,
             <span class="ident">created_at</span>: <span class="prelude-val">None</span>,
             <span class="ident">messages</span>: <span class="macro">vec!</span>[],
@@ -1767,22 +1796,40 @@
         <span class="ident">account</span>.<span class="ident">set_id</span>(<span class="macro">format!</span>(<span class="string">&quot;{}{}&quot;</span>, <span class="ident">ACCOUNT_ID_PREFIX</span>, <span class="ident">hex</span>::<span class="ident">encode</span>(<span class="ident">digest</span>)));
 
         <span class="kw">let</span> <span class="ident">guard</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">skip_persistence</span> {
-            <span class="ident">AccountHandle</span>::<span class="ident">new</span>(<span class="ident">account</span>, <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>(), <span class="self">self</span>.<span class="ident">account_options</span>)
+            <span class="ident">AccountHandle</span>::<span class="ident">new</span>(
+                <span class="ident">account</span>,
+                <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>(),
+                <span class="self">self</span>.<span class="ident">account_options</span>,
+                <span class="self">self</span>.<span class="ident">sync_accounts_lock</span>.<span class="ident">clone</span>(),
+            )
         } <span class="kw">else</span> {
             <span class="ident">account</span>.<span class="ident">save</span>().<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">messages</span>.<span class="ident">is_empty</span>() {
                 <span class="ident">account</span>.<span class="ident">save_messages</span>(<span class="self">self</span>.<span class="ident">messages</span>).<span class="kw">await</span><span class="question-mark">?</span>;
             }
             <span class="kw">let</span> <span class="ident">account_id</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">id</span>().<span class="ident">clone</span>();
-            <span class="kw">let</span> <span class="ident">guard</span> <span class="op">=</span> <span class="ident">AccountHandle</span>::<span class="ident">new</span>(<span class="ident">account</span>, <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>(), <span class="self">self</span>.<span class="ident">account_options</span>);
+            <span class="kw">let</span> <span class="ident">guard</span> <span class="op">=</span> <span class="ident">AccountHandle</span>::<span class="ident">new</span>(
+                <span class="ident">account</span>,
+                <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>(),
+                <span class="self">self</span>.<span class="ident">account_options</span>,
+                <span class="self">self</span>.<span class="ident">sync_accounts_lock</span>.<span class="ident">clone</span>(),
+            );
             <span class="ident">drop</span>(<span class="ident">accounts</span>);
             <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">write</span>().<span class="kw">await</span>.<span class="ident">insert</span>(<span class="ident">account_id</span>, <span class="ident">guard</span>.<span class="ident">clone</span>());
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">monitor</span>::<span class="ident">monitor_account_addresses_balance</span>(<span class="ident">guard</span>.<span class="ident">clone</span>()).<span class="kw">await</span>;
+            <span class="comment">// monitor on a non-async function to prevent cycle computing the `monitor_address_balance` fn type</span>
+            <span class="ident">monitor_address</span>(<span class="ident">guard</span>.<span class="ident">clone</span>());
             <span class="ident">guard</span>
         };
 
         <span class="prelude-val">Ok</span>(<span class="ident">guard</span>)
     }
+}
+
+<span class="kw">fn</span> <span class="ident">monitor_address</span>(<span class="ident">account_handle</span>: <span class="ident">AccountHandle</span>) {
+    <span class="kw">crate</span>::<span class="ident">spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
+        <span class="comment">// ignore errors because we fallback to the polling system</span>
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">monitor</span>::<span class="ident">monitor_account_addresses_balance</span>(<span class="ident">account_handle</span>).<span class="kw">await</span>;
+    });
 }
 
 <span class="doccomment">/// Account definition.</span>
@@ -1838,10 +1885,16 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">account_options</span>: <span class="ident">AccountOptions</span>,
     <span class="ident">is_mqtt_enabled</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">change_addresses_to_sync</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">AddressWrapper</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">sync_accounts_lock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">AccountHandle</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">account</span>: <span class="ident">Account</span>, <span class="ident">accounts</span>: <span class="ident">AccountStore</span>, <span class="ident">account_options</span>: <span class="ident">AccountOptions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(
+        <span class="ident">account</span>: <span class="ident">Account</span>,
+        <span class="ident">accounts</span>: <span class="ident">AccountStore</span>,
+        <span class="ident">account_options</span>: <span class="ident">AccountOptions</span>,
+        <span class="ident">sync_accounts_lock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">inner</span>: <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">RwLock</span>::<span class="ident">new</span>(<span class="ident">account</span>)),
             <span class="ident">accounts</span>,
@@ -1849,6 +1902,7 @@
             <span class="ident">account_options</span>,
             <span class="ident">is_mqtt_enabled</span>: <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">AtomicBool</span>::<span class="ident">new</span>(<span class="bool-val">true</span>)),
             <span class="ident">change_addresses_to_sync</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+            <span class="ident">sync_accounts_lock</span>,
         }
     }
 
@@ -1983,7 +2037,7 @@
         <span class="prelude-val">Ok</span>(<span class="ident">address</span>)
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">monitor_address</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address</span>: <span class="ident">AddressWrapper</span>) {
+    <span class="kw">fn</span> <span class="ident">monitor_address</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address</span>: <span class="ident">AddressWrapper</span>) {
         <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clone</span>();
         <span class="kw">crate</span>::<span class="ident">spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
             <span class="comment">// ignore errors because we fallback to the polling system</span>
@@ -2700,7 +2754,6 @@
             .<span class="ident">unwrap</span>();
 
         <span class="kw">let</span> <span class="ident">txs</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">list_messages</span>(<span class="number">4</span>, <span class="number">0</span>, <span class="prelude-val">None</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
-        <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">txs</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">txs</span>.<span class="ident">len</span>(), <span class="number">4</span>);
     }
 
@@ -2783,7 +2836,6 @@
                     <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
                 }
             );
-            <span class="macro">println!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">tx_type</span>);
             <span class="macro">assert_eq!</span>(<span class="ident">messages</span>.<span class="ident">first</span>().<span class="ident">unwrap</span>(), <span class="ident">expected</span>);
         }
     }
