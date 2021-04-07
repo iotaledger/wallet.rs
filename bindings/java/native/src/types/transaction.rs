@@ -130,7 +130,7 @@ pub struct TransactionInput {
 impl TransactionInput {
     pub fn kind(&self) -> InputKind {
         match self.input {
-            RustWalletInput::UTXO(_) => InputKind::Utxo,
+            RustWalletInput::Utxo(_) => InputKind::Utxo,
             RustWalletInput::Treasury(_) => InputKind::Treasury,
         }
     }

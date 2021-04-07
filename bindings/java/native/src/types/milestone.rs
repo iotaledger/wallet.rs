@@ -52,7 +52,7 @@ pub struct MilestonePayloadEssence {
 
 impl MilestonePayloadEssence {
     pub fn index(&self) -> u32 {
-        self.essence.index()
+        *self.essence.index()
     }
 
     pub fn timestamp(&self) -> u64 {

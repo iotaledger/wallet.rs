@@ -1,11 +1,10 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#[allow(unused_imports)]
 use crate::{
     account::{
-        repost_message, Account, AccountHandle, AccountIdentifier, AccountInitialiser, AccountSynchronizer,
-        RepostAction, SyncedAccount, SyncedAccountData,
+        AccountHandle, AccountIdentifier, AccountInitialiser, AccountSynchronizeStep, AccountSynchronizer,
+        SyncedAccount, SyncedAccountData,
     },
     address::AddressOutput,
     client::ClientOptions,
@@ -189,11 +188,13 @@ impl AccountManagerBuilder {
 
         crate::storage::set(&storage_file_path, self.storage_encryption_key, storage).await;
 
+        let sync_accounts_lock = Arc::new(Mutex::new(()));
+
         // with the stronghold storage, the accounts are loaded when the password is set
         let (accounts, loaded_accounts) = if is_stronghold {
             (Default::default(), false)
         } else {
-            AccountManager::load_accounts(&storage_file_path, self.account_options)
+            AccountManager::load_accounts(&storage_file_path, self.account_options, sync_accounts_lock.clone())
                 .await
                 .map(|accounts| (accounts, true))
                 .unwrap_or_else(|_| (AccountStore::default(), false))
@@ -207,7 +208,7 @@ impl AccountManagerBuilder {
             polling_handle: None,
             generated_mnemonic: None,
             account_options: self.account_options,
-            sync_accounts_lock: Arc::new(Mutex::new(())),
+            sync_accounts_lock,
         };
 
         if !self.skip_polling {
@@ -301,7 +302,11 @@ impl AccountManager {
         AccountManagerBuilder::new()
     }
 
-    async fn load_accounts(storage_file_path: &Path, account_options: AccountOptions) -> crate::Result<AccountStore> {
+    async fn load_accounts(
+        storage_file_path: &Path,
+        account_options: AccountOptions,
+        sync_accounts_lock: Arc<Mutex<()>>,
+    ) -> crate::Result<AccountStore> {
         let parsed_accounts = Arc::new(RwLock::new(HashMap::new()));
 
         let accounts = crate::storage::get(&storage_file_path)
@@ -313,7 +318,12 @@ impl AccountManager {
         for account in accounts {
             parsed_accounts.write().await.insert(
                 account.id().clone(),
-                AccountHandle::new(account, parsed_accounts.clone(), account_options),
+                AccountHandle::new(
+                    account,
+                    parsed_accounts.clone(),
+                    account_options,
+                    sync_accounts_lock.clone(),
+                ),
             );
         }
 
@@ -417,7 +427,12 @@ impl AccountManager {
             .unwrap();
 
         if self.accounts.read().await.is_empty() {
-            let accounts = Self::load_accounts(&self.storage_path, self.account_options).await?;
+            let accounts = Self::load_accounts(
+                &self.storage_path,
+                self.account_options,
+                self.sync_accounts_lock.clone(),
+            )
+            .await?;
             self.loaded_accounts = true;
             {
                 let mut accounts_store = self.accounts.write().await;
@@ -446,7 +461,12 @@ impl AccountManager {
         crate::stronghold::load_snapshot(&stronghold_path, stronghold_password(password)).await?;
 
         if self.accounts.read().await.is_empty() {
-            let accounts = Self::load_accounts(&self.storage_path, self.account_options).await?;
+            let accounts = Self::load_accounts(
+                &self.storage_path,
+                self.account_options,
+                self.sync_accounts_lock.clone(),
+            )
+            .await?;
             self.loaded_accounts = true;
             {
                 let mut accounts_store = self.accounts.write().await;
@@ -632,6 +652,7 @@ impl AccountManager {
             self.accounts.clone(),
             self.storage_path.clone(),
             self.account_options,
+            self.sync_accounts_lock.clone(),
         ))
     }
 
@@ -970,10 +991,11 @@ pub struct AccountsSynchronizer {
     discover_accounts: bool,
     skip_change_addresses: bool,
     ran_account_discovery: bool,
+    steps: Option<Vec<AccountSynchronizeStep>>,
 }
 
 impl AccountsSynchronizer {
-    fn new(
+    pub(crate) fn new(
         mutex: Arc<Mutex<()>>,
         accounts: AccountStore,
         storage_file_path: PathBuf,
@@ -989,6 +1011,7 @@ impl AccountsSynchronizer {
             discover_accounts: true,
             skip_change_addresses: false,
             ran_account_discovery: false,
+            steps: None,
         }
     }
 
@@ -1016,6 +1039,14 @@ impl AccountsSynchronizer {
         self
     }
 
+    /// Sets the steps to run on the sync process.
+    /// By default it runs all steps (sync_addresses and sync_messages),
+    /// but the library can pick what to run here.
+    pub(crate) fn steps(mut self, steps: Vec<AccountSynchronizeStep>) -> Self {
+        self.steps.replace(steps);
+        self
+    }
+
     /// Syncs the accounts with the Tangle.
     pub async fn execute(&mut self) -> crate::Result<Vec<SyncedAccount>> {
         let accounts = self.accounts.clone();
@@ -1040,6 +1071,7 @@ impl AccountsSynchronizer {
             let skip_change_addresses = self.skip_change_addresses;
             for account_handle in accounts.values() {
                 let account_handle = account_handle.clone();
+                let steps = self.steps.clone();
                 tasks.push(async move {
                     tokio::spawn(async move {
                         let mut sync = account_handle.sync().await;
@@ -1051,6 +1083,9 @@ impl AccountsSynchronizer {
                         }
                         if let Some(limit) = gap_limit {
                             sync = sync.gap_limit(limit);
+                        }
+                        if let Some(steps) = steps {
+                            sync = sync.steps(steps);
                         }
                         let synced_data = sync.get_new_history().await?;
                         crate::Result::Ok((account_handle, synced_data))
@@ -1106,6 +1141,7 @@ impl AccountsSynchronizer {
                             &client_options,
                             Some(signer_type),
                             self.account_options,
+                            self.mutex.clone(),
                         )
                         .await
                     } else {
@@ -1283,15 +1319,17 @@ async fn poll(
             if let Ok(metadata) = client.read().await.get_message().metadata(&message_id).await {
                 if let Some(ledger_inclusion_state) = metadata.ledger_inclusion_state {
                     let confirmed = ledger_inclusion_state == LedgerInclusionStateDto::Included;
-                    message.set_confirmed(Some(confirmed));
-                    account.save_messages(vec![message.clone()]).await?;
-                    emit_confirmation_state_change(
-                        &account,
-                        message,
-                        confirmed,
-                        retried_data.account_handle.account_options.persist_events,
-                    )
-                    .await?;
+                    if message.confirmed() != &Some(confirmed) {
+                        message.set_confirmed(Some(confirmed));
+                        account.save_messages(vec![message.clone()]).await?;
+                        emit_confirmation_state_change(
+                            &account,
+                            message,
+                            confirmed,
+                            retried_data.account_handle.account_options.persist_events,
+                        )
+                        .await?;
+                    }
                 }
             }
         }
@@ -1309,6 +1347,7 @@ async fn discover_accounts(
     client_options: &ClientOptions,
     signer_type: Option<SignerType>,
     account_options: AccountOptions,
+    sync_accounts_lock: Arc<Mutex<()>>,
 ) -> crate::Result<Vec<(AccountHandle, SyncedAccountData)>> {
     let mut synced_accounts = vec![];
     let mut index = accounts.read().await.len();
@@ -1318,6 +1357,7 @@ async fn discover_accounts(
             accounts.clone(),
             storage_path.to_path_buf(),
             account_options,
+            sync_accounts_lock.clone(),
         )
         .skip_persistence()
         .index(index);
@@ -1356,7 +1396,6 @@ async fn discover_accounts(
 }
 
 struct RetriedData {
-    #[allow(dead_code)]
     promoted: Vec<Message>,
     reattached: Vec<(MessageId, Message)>,
     no_need_promote_or_reattach: Vec<MessageId>,
@@ -1857,9 +1896,13 @@ mod tests {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |mut manager, _| async move {
             crate::test_utils::AccountCreator::new(&manager).create().await;
             manager.set_storage_password("new-password").await.unwrap();
-            let account_store = super::AccountManager::load_accounts(manager.storage_path(), manager.account_options)
-                .await
-                .unwrap();
+            let account_store = super::AccountManager::load_accounts(
+                manager.storage_path(),
+                manager.account_options,
+                Default::default(),
+            )
+            .await
+            .unwrap();
             assert_eq!(account_store.read().await.len(), 1);
         })
         .await;

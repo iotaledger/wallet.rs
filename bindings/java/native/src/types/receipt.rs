@@ -17,7 +17,7 @@ impl From<ReceiptPayloadRust> for ReceiptPayload {
 
 impl ReceiptPayload {
     pub fn migrated_at(&self) -> u32 {
-        self.payload.migrated_at()
+        *self.payload.migrated_at()
     }
 
     pub fn last(&self) -> bool {
@@ -43,7 +43,7 @@ pub struct MigratedFundsEntry {
 
 impl MigratedFundsEntry {
     pub fn tail_transaction_hash(&self) -> Vec<u8> {
-        self.payload.tail_transaction_hash().into_iter().map(|h| *h).collect()
+        self.payload.tail_transaction_hash().as_ref().to_vec()
     }
 
     pub fn output(&self) -> SignatureLockedSingleOutput {

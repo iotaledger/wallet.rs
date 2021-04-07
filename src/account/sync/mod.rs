@@ -22,10 +22,10 @@ use iota::{
         constants::INPUT_OUTPUT_COUNT_MAX,
         prelude::{
             Essence, Input, Message as IotaMessage, MessageId, Output, Payload, RegularEssence,
-            SignatureLockedSingleOutput, TransactionPayload, UTXOInput, UnlockBlocks,
+            SignatureLockedSingleOutput, TransactionPayload, UnlockBlocks, UtxoInput,
         },
     },
-    Bech32Address, OutputId,
+    OutputId,
 };
 use serde::Serialize;
 use tokio::sync::MutexGuard;
@@ -47,10 +47,10 @@ pub(crate) struct SyncedMessage {
 }
 
 async fn get_address_outputs(
-    address: &Bech32Address,
+    address: String,
     client: &Client,
     fetch_spent_outputs: bool,
-) -> crate::Result<Vec<(UTXOInput, bool)>> {
+) -> crate::Result<Vec<(UtxoInput, bool)>> {
     let address_outputs = client
         .get_address()
         .outputs(
@@ -75,13 +75,13 @@ async fn get_address_outputs(
                 },
             )
             .await?;
-        let spent_address_outputs: Vec<(UTXOInput, bool)> = address_outputs
+        let spent_address_outputs: Vec<(UtxoInput, bool)> = address_outputs
             .into_iter()
             .filter(|o| !unspent_address_outputs.contains(o))
             .map(|o| (o, true))
             .collect();
 
-        let mut outputs: Vec<(UTXOInput, bool)> = unspent_address_outputs.iter().map(|o| (o.clone(), false)).collect();
+        let mut outputs: Vec<(UtxoInput, bool)> = unspent_address_outputs.iter().map(|o| (o.clone(), false)).collect();
         outputs.extend(spent_address_outputs);
         Ok(outputs)
     } else {
@@ -108,9 +108,7 @@ pub(crate) async fn sync_address(
     let client_guard = crate::client::get_client(client_options).await?;
     let client = client_guard.read().await;
 
-    let bech32_address = iota_address.to_bech32().into();
-
-    let address_outputs = get_address_outputs(&bech32_address, &client, options.sync_spent_outputs).await?;
+    let address_outputs = get_address_outputs(iota_address.to_bech32(), &client, options.sync_spent_outputs).await?;
     let mut found_messages = vec![];
 
     log::debug!(
@@ -426,12 +424,8 @@ async fn sync_messages(
             tokio::spawn(async move {
                 let client = client.read().await;
 
-                let address_outputs = get_address_outputs(
-                    &address.address().to_bech32().into(),
-                    &client,
-                    options.sync_spent_outputs,
-                )
-                .await?;
+                let address_outputs =
+                    get_address_outputs(address.address().to_bech32(), &client, options.sync_spent_outputs).await?;
 
                 for (output_id, output) in outputs.iter_mut() {
                     // if we previously had an output that wasn't returned by the node, mark it as spent
@@ -633,7 +627,7 @@ async fn perform_sync(
     })
 }
 
-#[derive(PartialEq)]
+#[derive(Clone, PartialEq)]
 pub(crate) enum AccountSynchronizeStep {
     SyncAddresses(Option<Vec<AddressWrapper>>),
     SyncMessages,
@@ -1382,7 +1376,7 @@ async fn perform_transfer(
             OutputKind::Treasury => {}
         }
 
-        let input: Input = UTXOInput::new(*utxo.transaction_id(), *utxo.index())?.into();
+        let input: Input = UtxoInput::new(*utxo.transaction_id(), *utxo.index())?.into();
         inputs_for_essence.push(input.clone());
         transaction_inputs.push(crate::signing::TransactionInput {
             input,
@@ -1699,7 +1693,7 @@ async fn is_dust_allowed(
             .map(|output| (output.amount, output.kind.clone()))
             .collect()
     } else {
-        let outputs = client.find_outputs(&[], &[address.to_string().into()]).await?;
+        let outputs = client.find_outputs(&[], &[address.to_string()]).await?;
         let mut address_outputs = Vec::new();
         for output in outputs {
             let output = AddressOutput::from_output_response(output, "".to_string())?;

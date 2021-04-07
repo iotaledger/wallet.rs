@@ -109,8 +109,8 @@ mod test_utils {
     use iota::{
         pow::providers::{Provider as PowProvider, ProviderBuilder as PowProviderBuilder},
         Address as IotaAddress, Ed25519Address, Ed25519Signature, Essence, MessageId, Payload,
-        SignatureLockedSingleOutput, SignatureUnlock, TransactionId, TransactionPayloadBuilder, UTXOInput, UnlockBlock,
-        UnlockBlocks,
+        SignatureLockedSingleOutput, SignatureUnlock, TransactionId, TransactionPayloadBuilder, UnlockBlock,
+        UnlockBlocks, UtxoInput,
     };
     use once_cell::sync::OnceCell;
     use rand::{distributions::Alphanumeric, thread_rng, Rng};
@@ -490,7 +490,7 @@ mod test_utils {
                                         .unwrap()
                                         .into(),
                                 )
-                                .add_input(UTXOInput::new(self.input_transaction_id, 0).unwrap().into())
+                                .add_input(UtxoInput::new(self.input_transaction_id, 0).unwrap().into())
                                 .finish()
                                 .unwrap(),
                         ))

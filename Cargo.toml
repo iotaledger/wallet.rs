@@ -16,7 +16,7 @@ chrono = { version = "0.4", features = ["serde"] }
 futures = "0.3"
 getset = "0.1"
 hex = "0.4"
-iota-core = { git = "https://github.com/iotaledger/iota.rs", rev = "b3c6016b5f6bb28701cfed7a8ee768bbf476a8cc", features = ["mqtt"] }
+iota-core = { git = "https://github.com/iotaledger/iota.rs", rev = "261c6dbd34048af0a8f4d54dc66c9e7aa975ad39", features = ["mqtt"] }
 log = "0.4"
 once_cell = "1.5"
 serde = { version = "1.0", features = ["derive"] }
@@ -30,7 +30,7 @@ rocksdb = { version = "0.15", default-features = false, features = ["lz4"] }
 zeroize = { version = "1.2", features = ["zeroize_derive"] }
 
 # stronghold
-iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "7e3c02412b4d8657e62bc0b14862443d2f1f1f63" }
+iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "65ec786b9da4e084c719aac8eb8159e0ca118969" }
 riker = "0.4"
 slog = "2.7"
 
