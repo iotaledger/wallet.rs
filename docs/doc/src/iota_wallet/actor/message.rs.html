@@ -441,6 +441,23 @@
 <span id="438">438</span>
 <span id="439">439</span>
 <span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -526,6 +543,23 @@
     <span class="ident">SetAlias</span>(<span class="ident">String</span>),
     <span class="doccomment">/// Updates the account client options.</span>
     <span class="ident">SetClientOptions</span>(<span class="ident">Box</span><span class="op">&lt;</span><span class="ident">ClientOptions</span><span class="op">&gt;</span>),
+}
+
+<span class="doccomment">/// The returned account.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AccountDto</span> {
+    <span class="doccomment">/// Inner account object.</span>
+    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">flatten</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">account</span>: <span class="ident">Account</span>,
+    <span class="doccomment">/// Message history.</span>
+    <span class="kw">pub</span> <span class="ident">messages</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">WalletMessage</span><span class="op">&gt;</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">AccountDto</span> {
+    <span class="doccomment">/// Creates a new instance of the account DTO.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">account</span>: <span class="ident">Account</span>, <span class="ident">messages</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">WalletMessage</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span> { <span class="ident">account</span>, <span class="ident">messages</span> }
+    }
 }
 
 <span class="doccomment">/// The messages that can be sent to the actor.</span>
@@ -765,11 +799,11 @@
     <span class="doccomment">/// Account succesfully removed.</span>
     <span class="ident">RemovedAccount</span>(<span class="ident">AccountIdentifier</span>),
     <span class="doccomment">/// Account succesfully created.</span>
-    <span class="ident">CreatedAccount</span>(<span class="ident">Account</span>),
+    <span class="ident">CreatedAccount</span>(<span class="ident">AccountDto</span>),
     <span class="doccomment">/// GetAccount response.</span>
-    <span class="ident">ReadAccount</span>(<span class="ident">Account</span>),
+    <span class="ident">ReadAccount</span>(<span class="ident">AccountDto</span>),
     <span class="doccomment">/// GetAccounts response.</span>
-    <span class="ident">ReadAccounts</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&gt;</span>),
+    <span class="ident">ReadAccounts</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AccountDto</span><span class="op">&gt;</span>),
     <span class="doccomment">/// ListMessages response.</span>
     <span class="ident">Messages</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">WalletMessage</span><span class="op">&gt;</span>),
     <span class="doccomment">/// ListAddresses/ListSpentAddresses/ListUnspentAddresses response.</span>
