@@ -633,7 +633,7 @@ async fn perform_sync(
     })
 }
 
-#[derive(PartialEq)]
+#[derive(Clone, PartialEq)]
 pub(crate) enum AccountSynchronizeStep {
     SyncAddresses(Option<Vec<AddressWrapper>>),
     SyncMessages,
