@@ -84,6 +84,21 @@ pub enum AccountMethod {
     SetClientOptions(Box<ClientOptions>),
 }
 
+/// The returned account.
+#[derive(Debug, Serialize)]
+pub struct AccountDto {
+    #[serde(flatten)]
+    pub(crate) account: Account,
+    pub(crate) messages: Vec<WalletMessage>,
+}
+
+impl AccountDto {
+    /// Creates a new instance of the account DTO.
+    pub fn new(account: Account, messages: Vec<WalletMessage>) -> Self {
+        Self { account, messages }
+    }
+}
+
 /// The messages that can be sent to the actor.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(tag = "cmd", content = "payload")]
@@ -321,11 +336,11 @@ pub enum ResponseType {
     /// Account succesfully removed.
     RemovedAccount(AccountIdentifier),
     /// Account succesfully created.
-    CreatedAccount(Account),
+    CreatedAccount(AccountDto),
     /// GetAccount response.
-    ReadAccount(Account),
+    ReadAccount(AccountDto),
     /// GetAccounts response.
-    ReadAccounts(Vec<Account>),
+    ReadAccounts(Vec<AccountDto>),
     /// ListMessages response.
     Messages(Vec<WalletMessage>),
     /// ListAddresses/ListSpentAddresses/ListUnspentAddresses response.
