@@ -485,6 +485,9 @@
 <span id="482">482</span>
 <span id="483">483</span>
 <span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -496,10 +499,13 @@
 };
 <span class="kw">use</span> <span class="ident">getset</span>::{<span class="ident">Getters</span>, <span class="ident">Setters</span>};
 <span class="kw">use</span> <span class="ident">iota</span>::{
-    <span class="ident">bee_rest_api</span>::<span class="ident">types</span>::<span class="ident">dtos</span>::{<span class="ident">AddressDto</span>, <span class="ident">OutputDto</span>},
-    <span class="ident">MessageId</span>, <span class="ident">OutputId</span>, <span class="ident">OutputResponse</span>, <span class="ident">TransactionId</span>,
+    <span class="ident">bee_rest_api</span>::<span class="ident">types</span>::{
+        <span class="ident">dtos</span>::{<span class="ident">AddressDto</span>, <span class="ident">OutputDto</span>},
+        <span class="ident">responses</span>::<span class="ident">OutputResponse</span>,
+    },
+    <span class="ident">MessageId</span>, <span class="ident">OutputId</span>, <span class="ident">TransactionId</span>,
 };
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">iota</span>::{<span class="ident">Address</span> <span class="kw">as</span> <span class="ident">IotaAddress</span>, <span class="ident">Ed25519Address</span>, <span class="ident">Input</span>, <span class="ident">UTXOInput</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">iota</span>::{<span class="ident">Address</span> <span class="kw">as</span> <span class="ident">IotaAddress</span>, <span class="ident">Ed25519Address</span>, <span class="ident">Input</span>, <span class="ident">UtxoInput</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">ser</span>::<span class="ident">Serializer</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">cmp</span>::<span class="ident">Ordering</span>,
@@ -567,14 +573,14 @@
 
     <span class="doccomment">/// Checks if the output is referenced on a pending message or a confirmed message</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">is_used</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">messages</span>: <span class="kw-2">&amp;</span>[<span class="ident">Message</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">output_id</span> <span class="op">=</span> <span class="ident">UTXOInput</span>::<span class="ident">new</span>(<span class="self">self</span>.<span class="ident">transaction_id</span>, <span class="self">self</span>.<span class="ident">index</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">output_id</span> <span class="op">=</span> <span class="ident">UtxoInput</span>::<span class="ident">new</span>(<span class="self">self</span>.<span class="ident">transaction_id</span>, <span class="self">self</span>.<span class="ident">index</span>).<span class="ident">unwrap</span>();
         <span class="ident">messages</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> {
             <span class="comment">// message is pending or confirmed</span>
             <span class="kw">if</span> <span class="ident">m</span>.<span class="ident">confirmed</span>().<span class="ident">unwrap_or</span>(<span class="bool-val">true</span>) {
                 <span class="kw">match</span> <span class="ident">m</span>.<span class="ident">payload</span>() {
                     <span class="prelude-val">Some</span>(<span class="ident">MessagePayload</span>::<span class="ident">Transaction</span>(<span class="ident">tx</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">tx</span>.<span class="ident">essence</span>() {
                         <span class="ident">TransactionEssence</span>::<span class="ident">Regular</span>(<span class="ident">essence</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">essence</span>.<span class="ident">inputs</span>().<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">input</span><span class="op">|</span> {
-                            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">TransactionInput</span>::<span class="ident">UTXO</span>(<span class="ident">x</span>) <span class="op">=</span> <span class="ident">input</span> {
+                            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">TransactionInput</span>::<span class="ident">Utxo</span>(<span class="ident">x</span>) <span class="op">=</span> <span class="ident">input</span> {
                                 <span class="ident">x</span>.<span class="ident">input</span> <span class="op">=</span><span class="op">=</span> <span class="ident">output_id</span>
                             } <span class="kw">else</span> {
                                 <span class="bool-val">false</span>

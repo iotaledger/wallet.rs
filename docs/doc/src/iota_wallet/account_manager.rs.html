@@ -2056,18 +2056,13 @@
 <span id="2053">2053</span>
 <span id="2054">2054</span>
 <span id="2055">2055</span>
-<span id="2056">2056</span>
-<span id="2057">2057</span>
-<span id="2058">2058</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_imports</span>)]</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">account</span>::{
-        <span class="ident">repost_message</span>, <span class="ident">Account</span>, <span class="ident">AccountHandle</span>, <span class="ident">AccountIdentifier</span>, <span class="ident">AccountInitialiser</span>, <span class="ident">AccountSynchronizer</span>,
-        <span class="ident">RepostAction</span>, <span class="ident">SyncedAccount</span>, <span class="ident">SyncedAccountData</span>,
+        <span class="ident">AccountHandle</span>, <span class="ident">AccountIdentifier</span>, <span class="ident">AccountInitialiser</span>, <span class="ident">AccountSynchronizer</span>, <span class="ident">SyncedAccount</span>, <span class="ident">SyncedAccountData</span>,
     },
     <span class="ident">address</span>::<span class="ident">AddressOutput</span>,
     <span class="ident">client</span>::<span class="ident">ClientOptions</span>,
@@ -3418,7 +3413,6 @@
 }
 
 <span class="kw">struct</span> <span class="ident">RetriedData</span> {
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
     <span class="ident">promoted</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span>,
     <span class="ident">reattached</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">MessageId</span>, <span class="ident">Message</span>)<span class="op">&gt;</span>,
     <span class="ident">no_need_promote_or_reattach</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MessageId</span><span class="op">&gt;</span>,

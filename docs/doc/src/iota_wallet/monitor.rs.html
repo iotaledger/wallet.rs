@@ -239,6 +239,9 @@
 <span id="236">236</span>
 <span id="237">237</span>
 <span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -251,7 +254,10 @@
     <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessagePayload</span>, <span class="ident">TransactionEssence</span>, <span class="ident">TransactionInput</span>, <span class="ident">TransactionOutput</span>},
 };
 
-<span class="kw">use</span> <span class="ident">iota</span>::{<span class="ident">bee_rest_api</span>::<span class="ident">types</span>::<span class="ident">dtos</span>::<span class="ident">OutputDto</span>, <span class="ident">OutputResponse</span>, <span class="ident">Topic</span>, <span class="ident">TopicEvent</span>};
+<span class="kw">use</span> <span class="ident">iota</span>::{
+    <span class="ident">bee_rest_api</span>::<span class="ident">types</span>::{<span class="ident">dtos</span>::<span class="ident">OutputDto</span>, <span class="ident">responses</span>::<span class="ident">OutputResponse</span>},
+    <span class="ident">Topic</span>, <span class="ident">TopicEvent</span>,
+};
 
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::<span class="ident">TryInto</span>;
 
@@ -433,7 +439,7 @@
                         .<span class="ident">inputs</span>()
                         .<span class="ident">iter</span>()
                         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">input</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">input</span> {
-                            <span class="ident">TransactionInput</span>::<span class="ident">UTXO</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">metadata</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">m</span>.<span class="ident">address</span>.<span class="ident">clone</span>()),
+                            <span class="ident">TransactionInput</span>::<span class="ident">Utxo</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">metadata</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">m</span>.<span class="ident">address</span>.<span class="ident">clone</span>()),
                             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented!</span>(),
                         })
                         .<span class="ident">flatten</span>()
