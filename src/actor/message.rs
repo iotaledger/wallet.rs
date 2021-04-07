@@ -87,9 +87,11 @@ pub enum AccountMethod {
 /// The returned account.
 #[derive(Debug, Serialize)]
 pub struct AccountDto {
+    /// Inner account object.
     #[serde(flatten)]
-    pub(crate) account: Account,
-    pub(crate) messages: Vec<WalletMessage>,
+    pub account: Account,
+    /// Message history.
+    pub messages: Vec<WalletMessage>,
 }
 
 impl AccountDto {
