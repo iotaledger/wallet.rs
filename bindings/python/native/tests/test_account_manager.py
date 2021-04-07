@@ -145,6 +145,12 @@ def test_account_manager_backup_and_restore():
     # NOTE: In real use cases, it is necessary to get the password form the env variables or other safer ways!
     manager.set_stronghold_password(
         pat['backup_restore']['account_manager']['password'])
+    manager.store_mnemonic(pat['account_manager']['store_mnemonic'])
+
+    account_initialiser = manager.create_account(
+        tv['account_manager']['client_options'])
+    account_initialiser.alias(tv['account_manager']['alias'])
+    account = account_initialiser.initialise()
 
     backup_dir_path = pat['backup_restore']['backup_dir_path']
     if not os.path.exists(backup_dir_path):

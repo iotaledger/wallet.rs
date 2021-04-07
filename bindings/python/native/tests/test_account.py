@@ -34,7 +34,6 @@ def test_account_initialiser():
     account_initialiser.messages([])
     account_initialiser.addresses([])
 
-    account_initialiser.skip_persistence()
     account = account_initialiser.initialise()
     assert account.alias() == pat['alias']
     assert account.created_at() == created_time
