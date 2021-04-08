@@ -20,6 +20,7 @@ use crate::{
     client_options::ClientOptions,
     message::Message,
     sync::AccountsSynchronizer,
+    types::{MigrationBundle, MigrationData},
     Result,
 };
 
@@ -132,6 +133,19 @@ pub struct AccountManager {
 }
 
 impl AccountManager {
+    // migration APIs
+    pub fn get_migration_data(&mut self) -> Result<MigrationData> {
+        unimplemented!()
+    }
+
+    pub fn create_migration_bundle(&mut self) -> Result<MigrationBundle> {
+        unimplemented!()
+    }
+
+    pub fn send_migration_bundle(&mut self) -> Result<()> {
+        unimplemented!()
+    }
+
     pub fn storage_path(&self) -> &Path {
         self.manager.storage_path()
     }
