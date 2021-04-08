@@ -334,7 +334,16 @@ impl AccountManager {
 
     /// Gets the legacy migration data for the seed.
     pub async fn get_migration_data(&self, finder: MigrationDataFinder<'_>) -> crate::Result<MigrationData> {
-        let metadata = finder.finish().await?;
+        let metadata = finder
+            .finish(
+                self.cached_migration_data
+                    .lock()
+                    .await
+                    .get(&finder.seed_hash)
+                    .map(|c| c.inputs.clone())
+                    .unwrap_or_default(),
+            )
+            .await?;
         self.cached_migration_data
             .lock()
             .await

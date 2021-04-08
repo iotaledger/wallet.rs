@@ -110,8 +110,11 @@ impl<'a> MigrationDataFinder<'a> {
         self
     }
 
-    pub(crate) async fn finish(&self) -> crate::Result<MigrationMetadata> {
-        let mut inputs = HashMap::new();
+    pub(crate) async fn finish(
+        &self,
+        previous_inputs: HashMap<Range<u64>, Vec<InputData>>,
+    ) -> crate::Result<MigrationMetadata> {
+        let mut inputs: HashMap<Range<u64>, Vec<InputData>> = HashMap::new();
         let mut address_index = self.initial_address_index;
         let mut legacy_client_builder = iota_migration::ClientBuilder::new().quorum(true);
         if let Some(permanode) = self.permanode {
@@ -136,7 +139,26 @@ impl<'a> MigrationDataFinder<'a> {
             // Filter duplicates because when it's called another time it could return duplicated entries
             let mut unique_inputs = HashMap::new();
             for input in current_inputs {
-                unique_inputs.insert(input.index, input);
+                let mut exists = false;
+                // check inputs on previous executions
+                for previous_inputs in previous_inputs.values() {
+                    if previous_inputs.contains(&input) {
+                        exists = true;
+                        break;
+                    }
+                }
+                // check inputs on previous iterations
+                if !exists {
+                    for previous_inputs in inputs.values() {
+                        if previous_inputs.contains(&input) {
+                            exists = true;
+                            break;
+                        }
+                    }
+                }
+                if !exists {
+                    unique_inputs.insert(input.index, input);
+                }
             }
             current_inputs = unique_inputs
                 .into_iter()
