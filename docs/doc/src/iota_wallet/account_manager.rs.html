@@ -2132,8 +2132,6 @@
 <span id="2129">2129</span>
 <span id="2130">2130</span>
 <span id="2131">2131</span>
-<span id="2132">2132</span>
-<span id="2133">2133</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -3444,12 +3442,10 @@
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PollResponse</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">synchronizer</span> <span class="op">=</span>
         <span class="ident">AccountsSynchronizer</span>::<span class="ident">new</span>(<span class="ident">sync_accounts_lock</span>, <span class="ident">accounts</span>.<span class="ident">clone</span>(), <span class="ident">storage_file_path</span>, <span class="ident">account_options</span>);
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">first_iteration</span> {
-        <span class="ident">synchronizer</span> <span class="op">=</span> <span class="ident">synchronizer</span>
-            .<span class="ident">skip_account_discovery</span>()
-            .<span class="ident">skip_change_addresses</span>()
-            .<span class="ident">address_index</span>(<span class="number">0</span>)
-            .<span class="ident">gap_limit</span>(<span class="number">10</span>);
+    <span class="kw">if</span> <span class="ident">first_iteration</span> {
+        <span class="ident">synchronizer</span> <span class="op">=</span> <span class="ident">synchronizer</span>.<span class="ident">address_index</span>(<span class="number">0</span>).<span class="ident">gap_limit</span>(<span class="number">10</span>);
+    } <span class="kw">else</span> {
+        <span class="ident">synchronizer</span> <span class="op">=</span> <span class="ident">synchronizer</span>.<span class="ident">skip_account_discovery</span>().<span class="ident">skip_change_addresses</span>();
     }
     <span class="kw">let</span> <span class="ident">synced_accounts</span> <span class="op">=</span> <span class="ident">synchronizer</span>.<span class="ident">execute</span>().<span class="kw">await</span><span class="question-mark">?</span>;
 
