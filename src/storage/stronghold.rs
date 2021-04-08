@@ -3,7 +3,10 @@
 
 use super::StorageAdapter;
 
-use std::path::{Path, PathBuf};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+};
 
 /// The storage id.
 pub const STORAGE_ID: &str = "STRONGHOLD";
@@ -45,6 +48,13 @@ impl StorageAdapter for StrongholdStorageAdapter {
         crate::stronghold::store_record(&self.path, key, record)
             .await
             .map_err(storage_err)?;
+        Ok(())
+    }
+
+    async fn batch_set(&mut self, records: HashMap<String, String>) -> crate::Result<()> {
+        for (key, value) in records {
+            self.set(&key, value).await?;
+        }
         Ok(())
     }
 

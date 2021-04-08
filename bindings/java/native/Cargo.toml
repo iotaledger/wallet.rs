@@ -7,7 +7,7 @@ build = "build.rs"
 
 [dependencies]
 iota-wallet = { path = "../../../", version = "0.1.0" }
-iota-core = { git = "https://github.com/iotaledger/iota.rs", rev = "b3c6016b5f6bb28701cfed7a8ee768bbf476a8cc", features = ["mqtt"] }
+iota-core = { git = "https://github.com/iotaledger/iota.rs", rev = "a5321ea39f0aff337d50327020848d9fbdbadf9f", features = ["mqtt"] }
 bee-message = { git = "https://github.com/iotaledger/bee.git", branch = "chrysalis-pt-2" }
 log = "0.4.6"
 chrono = "0.4.6"
@@ -26,7 +26,7 @@ crate_type = ["cdylib"]
 [build-dependencies]
 flapigen = { git = "https://github.com/Dushistov/flapigen-rs" }
 env_logger = "0.7"
-bindgen = "0.55.1"
+bindgen = "0.54"
 
 [features]
 default = ["stronghold"]

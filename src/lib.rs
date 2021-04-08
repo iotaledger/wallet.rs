@@ -27,7 +27,7 @@ pub(crate) mod serde;
 /// Signing interfaces.
 pub mod signing;
 /// The storage module.
-pub mod storage;
+pub(crate) mod storage;
 #[cfg(feature = "stronghold")]
 #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
 pub(crate) mod stronghold;
@@ -114,8 +114,8 @@ mod test_utils {
     use iota::{
         pow::providers::{Provider as PowProvider, ProviderBuilder as PowProviderBuilder},
         Address as IotaAddress, Ed25519Address, Ed25519Signature, Essence, MessageId, Payload,
-        SignatureLockedSingleOutput, SignatureUnlock, TransactionId, TransactionPayloadBuilder, UTXOInput, UnlockBlock,
-        UnlockBlocks,
+        SignatureLockedSingleOutput, SignatureUnlock, TransactionId, TransactionPayloadBuilder, UnlockBlock,
+        UnlockBlocks, UtxoInput,
     };
     use once_cell::sync::OnceCell;
     use rand::{distributions::Alphanumeric, thread_rng, Rng};
@@ -178,20 +178,27 @@ mod test_utils {
 
     #[async_trait::async_trait]
     impl crate::storage::StorageAdapter for TestStorage {
-        async fn get(&self, account_id: &str) -> crate::Result<String> {
-            match self.cache.get(account_id) {
+        async fn get(&self, id: &str) -> crate::Result<String> {
+            match self.cache.get(id) {
                 Some(value) => Ok(value.to_string()),
                 None => Err(crate::Error::RecordNotFound),
             }
         }
 
-        async fn set(&mut self, account_id: &str, account: String) -> crate::Result<()> {
-            self.cache.insert(account_id.to_string(), account);
+        async fn set(&mut self, id: &str, record: String) -> crate::Result<()> {
+            self.cache.insert(id.to_string(), record);
             Ok(())
         }
 
-        async fn remove(&mut self, account_id: &str) -> crate::Result<()> {
-            self.cache.remove(account_id).ok_or(crate::Error::RecordNotFound)?;
+        async fn batch_set(&mut self, records: HashMap<String, String>) -> crate::Result<()> {
+            for (id, record) in records {
+                self.cache.insert(id, record);
+            }
+            Ok(())
+        }
+
+        async fn remove(&mut self, id: &str) -> crate::Result<()> {
+            self.cache.remove(id).ok_or(crate::Error::RecordNotFound)?;
             Ok(())
         }
     }
@@ -488,7 +495,7 @@ mod test_utils {
                                         .unwrap()
                                         .into(),
                                 )
-                                .add_input(UTXOInput::new(self.input_transaction_id, 0).unwrap().into())
+                                .add_input(UtxoInput::new(self.input_transaction_id, 0).unwrap().into())
                                 .finish()
                                 .unwrap(),
                         ))

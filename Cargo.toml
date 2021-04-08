@@ -16,21 +16,21 @@ chrono = { version = "0.4", features = ["serde"] }
 futures = "0.3"
 getset = "0.1"
 hex = "0.4"
-iota-core = { git = "https://github.com/iotaledger/iota.rs", rev = "b3c6016b5f6bb28701cfed7a8ee768bbf476a8cc", features = ["mqtt"] }
+iota-core = { git = "https://github.com/iotaledger/iota.rs", rev = "a5321ea39f0aff337d50327020848d9fbdbadf9f", features = ["mqtt"] }
 log = "0.4"
 once_cell = "1.5"
-rand = "0.8"
-rusqlite = { version = "0.24", features = ["bundled"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_repr = "0.1"
 thiserror = "1.0"
 tokio = { version = "1.3", features = ["macros", "sync", "time", "rt", "rt-multi-thread"] }
-url = { version = "2.2", features = [ "serde" ] }
+url = { version = "2.2", features = ["serde"] }
+rand = "0.8"
+rocksdb = { version = "0.15", default-features = false, features = ["lz4"] }
 zeroize = { version = "1.2", features = ["zeroize_derive"] }
 
 # stronghold
-iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "7e3c02412b4d8657e62bc0b14862443d2f1f1f63" }
+iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "65ec786b9da4e084c719aac8eb8159e0ca118969" }
 riker = "0.4"
 slog = "2.7"
 
@@ -38,7 +38,7 @@ slog = "2.7"
 iota-ledger = { git = "https://github.com/iotaledger/ledger.rs", branch = "develop", optional = true  }
 
 # migration
-iota-migration = { git = "https://github.com/iotaledger/iota.rs", rev = "5dfea13e0e4c48a8f899f47db8327df76ef903f4", package = "iota-core" }
+iota-migration = { git = "https://github.com/iotaledger/iota.rs", rev = "080282b6c7d9ea44a50ca89fbfaaa331ddc8030b", package = "iota-core" }
 
 [dependencies.iota-crypto]
 git = "https://github.com/iotaledger/crypto.rs"
