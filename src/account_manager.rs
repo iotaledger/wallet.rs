@@ -1452,12 +1452,10 @@ async fn poll(
 ) -> crate::Result<PollResponse> {
     let mut synchronizer =
         AccountsSynchronizer::new(sync_accounts_lock, accounts.clone(), storage_file_path, account_options);
-    if !first_iteration {
-        synchronizer = synchronizer
-            .skip_account_discovery()
-            .skip_change_addresses()
-            .address_index(0)
-            .gap_limit(10);
+    if first_iteration {
+        synchronizer = synchronizer.address_index(0).gap_limit(10);
+    } else {
+        synchronizer = synchronizer.skip_account_discovery().skip_change_addresses();
     }
     let synced_accounts = synchronizer.execute().await?;
 

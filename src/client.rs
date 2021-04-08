@@ -64,14 +64,16 @@ pub(crate) async fn get_client(options: &ClientOptions) -> crate::Result<Arc<RwL
             }
         }
 
-        if let Some(node) = options.node() {
-            if !node.disabled {
-                if let Some(auth) = &node.auth {
-                    client_builder =
-                        client_builder.with_node_auth(node.url.as_str(), &auth.username, &auth.password)?;
+        if let Some(primary_node) = options.primary_node() {
+            if !primary_node.disabled {
+                if let Some(auth) = &primary_node.auth {
+                    client_builder = client_builder
+                        .with_primary_node(primary_node.url.as_str(), Some((&auth.username, &auth.password)))?;
                 } else {
                     // safe to unwrap since we're sure we have valid URLs
-                    client_builder = client_builder.with_node(node.url.as_str()).unwrap();
+                    client_builder = client_builder
+                        .with_primary_node(primary_node.url.as_str(), None)
+                        .unwrap();
                 }
             }
         }
@@ -110,6 +112,7 @@ pub async fn drop_all() {
 
 /// The options builder for a client connected to multiple nodes.
 pub struct ClientOptionsBuilder {
+    primary_node: Option<Node>,
     nodes: Vec<Node>,
     node_pool_urls: Vec<Url>,
     network: Option<String>,
@@ -145,6 +148,7 @@ fn convert_urls(urls: &[&str]) -> crate::Result<Vec<Url>> {
 impl Default for ClientOptionsBuilder {
     fn default() -> Self {
         Self {
+            primary_node: None,
             nodes: Vec::new(),
             node_pool_urls: Vec::new(),
             network: None,
@@ -162,6 +166,26 @@ impl ClientOptionsBuilder {
     /// Initialises a new instance of the builder.
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Sets the primary node.
+    pub fn with_primary_node(mut self, node: &str) -> crate::Result<Self> {
+        self.primary_node.replace(Url::parse(node)?.into());
+        Ok(self)
+    }
+
+    /// Sets the primary node with authentication.
+    pub fn with_primary_node_auth(mut self, node: &str, username: &str, password: &str) -> crate::Result<Self> {
+        self.primary_node.replace(Node {
+            url: Url::parse(node)?,
+            auth: NodeAuth {
+                username: username.into(),
+                password: password.into(),
+            }
+            .into(),
+            disabled: false,
+        });
+        Ok(self)
     }
 
     /// ClientOptions connected to a list of nodes.
@@ -263,7 +287,7 @@ impl ClientOptionsBuilder {
     /// Builds the options.
     pub fn build(self) -> crate::Result<ClientOptions> {
         let options = ClientOptions {
-            node: None,
+            primary_node: self.primary_node,
             nodes: self.nodes,
             node_pool_urls: self.node_pool_urls,
             network: self.network,
@@ -409,7 +433,8 @@ impl From<Url> for Node {
 #[getset(get = "pub")]
 pub struct ClientOptions {
     /// The primary node to connect to.
-    node: Option<Node>,
+    #[serde(rename = "node")] // here just for DB compatibility; can be changed when migrations are implemented
+    primary_node: Option<Node>,
     /// The nodes to connect to.
     #[serde(default)]
     nodes: Vec<Node>,
@@ -447,7 +472,7 @@ impl ClientOptions {
 
 impl Hash for ClientOptions {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.node.hash(state);
+        self.primary_node.hash(state);
         self.nodes.hash(state);
         self.node_pool_urls.hash(state);
         self.network.hash(state);
@@ -459,7 +484,7 @@ impl Hash for ClientOptions {
 
 impl PartialEq for ClientOptions {
     fn eq(&self, other: &Self) -> bool {
-        self.node == other.node
+        self.primary_node == other.primary_node
             && self.nodes == other.nodes
             && self.node_pool_urls == other.node_pool_urls
             && self.network == other.network
@@ -480,6 +505,18 @@ fn default_node_sync_enabled() -> bool {
 #[cfg(test)]
 mod tests {
     use super::ClientOptionsBuilder;
+
+    #[test]
+    fn primary_node_valid_url() {
+        let builder_res = ClientOptionsBuilder::new().with_primary_node("https://api.lb-0.testnet.chrysalis2.com");
+        assert!(builder_res.is_ok());
+    }
+
+    #[test]
+    fn primary_node_invalid_url() {
+        let builder_res = ClientOptionsBuilder::new().with_primary_node("some.invalid url");
+        assert!(builder_res.is_err());
+    }
 
     #[test]
     fn single_node_valid_url() {

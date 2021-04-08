@@ -17,7 +17,7 @@ neon-build = "=0.4.0"
 [dependencies]
 neon = "=0.4.0"
 iota-wallet = { path = "../../../", version = "0.1.0", features = ["stronghold"] }
-iota-core = { git = "https://github.com/iotaledger/iota.rs", rev = "a5321ea39f0aff337d50327020848d9fbdbadf9f", features = ["mqtt"] }
+iota-core = { git = "https://github.com/iotaledger/iota.rs", rev = "52a6a02763f0faa5c0f75e6474950eccfd0e6efa", features = ["mqtt"] }
 serde = "1.0"
 serde_json = "1.0"
 serde_repr = "0.1"
