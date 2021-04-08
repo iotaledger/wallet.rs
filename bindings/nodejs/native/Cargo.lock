@@ -171,7 +171,7 @@ checksum = "6c7f7096bc256f5e5cb960f60dfc4f4ef979ca65abe7fb9d5a4f77150d3783d4"
 [[package]]
 name = "bee-common"
 version = "0.4.0"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#d5a25e9d227a078a5850d2d83867a8b5e5f84122"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#75579267995dd2b1728956d169092486f28e2e0e"
 dependencies = [
  "autocfg",
  "chrono",
@@ -196,7 +196,7 @@ dependencies = [
 [[package]]
 name = "bee-crypto"
 version = "0.2.1-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#d5a25e9d227a078a5850d2d83867a8b5e5f84122"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#75579267995dd2b1728956d169092486f28e2e0e"
 dependencies = [
  "bee-ternary 0.4.2-alpha",
  "byteorder",
@@ -287,7 +287,7 @@ dependencies = [
 [[package]]
 name = "bee-ternary"
 version = "0.4.2-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#d5a25e9d227a078a5850d2d83867a8b5e5f84122"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#75579267995dd2b1728956d169092486f28e2e0e"
 dependencies = [
  "autocfg",
  "num-traits 0.2.14",
@@ -1177,7 +1177,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=7a9ef60fea1c865d59c744e0f6cc54371a4cebda#7a9ef60fea1c865d59c744e0f6cc54371a4cebda"
+source = "git+https://github.com/iotaledger/iota.rs?rev=52a6a02763f0faa5c0f75e6474950eccfd0e6efa#52a6a02763f0faa5c0f75e6474950eccfd0e6efa"
 dependencies = [
  "async-trait",
  "bee-common",
@@ -1204,7 +1204,7 @@ dependencies = [
 [[package]]
 name = "iota-core"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=7a9ef60fea1c865d59c744e0f6cc54371a4cebda#7a9ef60fea1c865d59c744e0f6cc54371a4cebda"
+source = "git+https://github.com/iotaledger/iota.rs?rev=52a6a02763f0faa5c0f75e6474950eccfd0e6efa#52a6a02763f0faa5c0f75e6474950eccfd0e6efa"
 dependencies = [
  "iota-client",
 ]
@@ -1983,9 +1983,9 @@ checksum = "3831453b3449ceb48b6d9c7ad7c96d5ea673e9b470a1dc578c2ce6521230884c"
 
 [[package]]
 name = "pollster"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75721b4c756dd61e006f1d3fe1e44bda75ad3a3d8eaa45e9f32943cbe635e663"
+checksum = "6cce106fd2646acbe31a0e4006f75779d535c26a44f153ada196e9edcfc6d944"
 
 [[package]]
 name = "poly1305"
