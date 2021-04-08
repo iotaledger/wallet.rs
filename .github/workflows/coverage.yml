@@ -59,6 +59,7 @@ jobs:
 
     - name: Run tests and collect coverage
       run: bash ./coverage.sh
+      timeout-minutes: 40
     
     - name: Upload coverage data to Coveralls
       uses: coverallsapp/github-action@v1.1.2
