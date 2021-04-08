@@ -8,8 +8,6 @@ use std::{num::NonZeroU64, path::PathBuf, sync::Arc};
 use iota_wallet::{
     account::AccountIdentifier,
     account_manager::{AccountManager, DEFAULT_STORAGE_FOLDER},
-    address::parse as parse_address,
-    iota_migration::client::migration::{add_tryte_checksum, encode_migration_address},
     signing::SignerType,
     DateTime, Local,
 };
@@ -18,8 +16,11 @@ use serde::Deserialize;
 use serde_repr::Deserialize_repr;
 use tokio::sync::RwLock;
 
+mod create_migration_bundle;
+mod get_migration_data;
 mod internal_transfer;
 mod is_latest_address_unused;
+mod send_migration_bundle;
 mod sync;
 
 #[derive(Deserialize_repr)]
@@ -469,20 +470,6 @@ declare_types! {
             Ok(cx.undefined().upcast())
         }
 
-        method generateMigrationAddress(mut cx) {
-            let address_wrapper = parse_address(cx.argument::<JsString>(0)?.value()).expect("invalid address");
-            crate::block_on(async move {
-                let address = iota_wallet::Address::try_from_bech32(&address_wrapper.to_bech32()).unwrap();
-                let ed25519_address = match address {
-                    iota_wallet::Address::Ed25519(a) => a,
-                    _ => panic!("Unsupported address type"),
-                };
-                let migration_address = encode_migration_address(ed25519_address).unwrap();
-                let migration_address = add_tryte_checksum(migration_address).unwrap();
-                Ok(neon_serde::to_value(&mut cx, &migration_address)?)
-            })
-        }
-
         method getBalanceChangeEvents(mut cx) {
             event_getter!(cx, get_balance_change_events)
         }
@@ -521,6 +508,97 @@ declare_types! {
 
         method getBroadcastEventCount(mut cx) {
             event_count_getter!(cx, get_broadcast_event_count)
+        }
+
+        // migration
+        method getMigrationData(mut cx) {
+            let js_nodes: Vec<Handle<JsValue>> = cx.argument::<JsArray>(0)?.to_vec(&mut cx)?;
+            let mut nodes = vec![];
+            for js_node in js_nodes {
+                let node: Handle<JsString> = js_node.downcast_or_throw(&mut cx)?;
+                nodes.push(node.value());
+            }
+            let seed = cx.argument::<JsString>(1)?.value();
+            let (options, cb) = match cx.argument_opt(3) {
+                Some(arg) => {
+                    let cb = arg.downcast::<JsFunction>().or_throw(&mut cx)?;
+                    let options = cx.argument::<JsValue>(2)?;
+                    let options = neon_serde::from_value(&mut cx, options)?;
+                    (options, cb)
+                }
+                None => (get_migration_data::GetMigrationDataOptions::default(), cx.argument::<JsFunction>(2)?),
+            };
+
+            let this = cx.this();
+            let manager = cx.borrow(&this, |r| r.0.clone());
+            let task = get_migration_data::GetMigrationDataTask {
+                manager,
+                nodes,
+                seed,
+                options,
+            };
+            task.schedule(cb);
+            Ok(cx.undefined().upcast())
+        }
+
+        method createMigrationBundle(mut cx) {
+            let seed = cx.argument::<JsString>(0)?.value();
+            let js_input_address_indexes: Vec<Handle<JsValue>> = cx.argument::<JsArray>(1)?.to_vec(&mut cx)?;
+            let mut input_address_indexes = vec![];
+            for input_address_index in js_input_address_indexes {
+                let input_address_index: Handle<JsNumber> = input_address_index.downcast_or_throw(&mut cx)?;
+                input_address_indexes.push(input_address_index.value() as u64);
+            }
+            let (options, cb) = match cx.argument_opt(3) {
+                Some(arg) => {
+                    let cb = arg.downcast::<JsFunction>().or_throw(&mut cx)?;
+                    let options = cx.argument::<JsValue>(2)?;
+                    let options = neon_serde::from_value(&mut cx, options)?;
+                    (options, cb)
+                }
+                None => (create_migration_bundle::CreateMigrationBundleOptions::default(), cx.argument::<JsFunction>(2)?),
+            };
+
+            let this = cx.this();
+            let manager = cx.borrow(&this, |r| r.0.clone());
+            let task = create_migration_bundle::CreateMigrationBundleTask {
+                manager,
+                seed,
+                input_address_indexes,
+                options,
+            };
+            task.schedule(cb);
+            Ok(cx.undefined().upcast())
+        }
+
+        method sendMigrationBundle(mut cx) {
+            let js_nodes: Vec<Handle<JsValue>> = cx.argument::<JsArray>(0)?.to_vec(&mut cx)?;
+            let mut nodes = vec![];
+            for js_node in js_nodes {
+                let node: Handle<JsString> = js_node.downcast_or_throw(&mut cx)?;
+                nodes.push(node.value());
+            }
+            let bundle_hash = cx.argument::<JsString>(1)?.value();
+            let (options, cb) = match cx.argument_opt(3) {
+                Some(arg) => {
+                    let cb = arg.downcast::<JsFunction>().or_throw(&mut cx)?;
+                    let options = cx.argument::<JsValue>(2)?;
+                    let options = neon_serde::from_value(&mut cx, options)?;
+                    (options, cb)
+                }
+                None => (send_migration_bundle::SendMigrationBundleOptions::default(), cx.argument::<JsFunction>(2)?),
+            };
+
+            let this = cx.this();
+            let manager = cx.borrow(&this, |r| r.0.clone());
+            let task = send_migration_bundle::SendMigrationBundleTask {
+                manager,
+                nodes,
+                bundle_hash,
+                options,
+            };
+            task.schedule(cb);
+            Ok(cx.undefined().upcast())
         }
     }
 }

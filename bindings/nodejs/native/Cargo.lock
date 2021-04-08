@@ -227,11 +227,13 @@ dependencies = [
 [[package]]
 name = "bee-message"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=217b5944b5e17fe5800955d212cfe8dddd992482#217b5944b5e17fe5800955d212cfe8dddd992482"
+source = "git+https://github.com/iotaledger/bee.git?rev=28d5d866405ded9fe03bdd140113cff6a4d4deab#28d5d866405ded9fe03bdd140113cff6a4d4deab"
 dependencies = [
  "bech32",
  "bee-common",
- "bee-pow 0.1.0-alpha (git+https://github.com/iotaledger/bee.git?rev=217b5944b5e17fe5800955d212cfe8dddd992482)",
+ "bee-pow 0.1.0-alpha (git+https://github.com/iotaledger/bee.git?rev=28d5d866405ded9fe03bdd140113cff6a4d4deab)",
+ "bee-ternary 0.4.2-alpha",
+ "bytemuck",
  "digest 0.9.0",
  "hex",
  "iota-crypto 0.3.0 (git+https://github.com/iotaledger/crypto.rs?rev=c3bf565eba62d0b81144174c2ff917bfde282e49)",
@@ -268,7 +270,7 @@ dependencies = [
 [[package]]
 name = "bee-pow"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=217b5944b5e17fe5800955d212cfe8dddd992482#217b5944b5e17fe5800955d212cfe8dddd992482"
+source = "git+https://github.com/iotaledger/bee.git?rev=28d5d866405ded9fe03bdd140113cff6a4d4deab#28d5d866405ded9fe03bdd140113cff6a4d4deab"
 dependencies = [
  "bee-crypto 0.2.1-alpha",
  "bee-ternary 0.4.2-alpha",
@@ -1507,7 +1509,7 @@ dependencies = [
 [[package]]
 name = "iota-bundle-miner"
 version = "0.1.0-alpha.0"
-source = "git+https://github.com/iotaledger/iota.rs?rev=5dfea13e0e4c48a8f899f47db8327df76ef903f4#5dfea13e0e4c48a8f899f47db8327df76ef903f4"
+source = "git+https://github.com/iotaledger/iota.rs?rev=080282b6c7d9ea44a50ca89fbfaaa331ddc8030b#080282b6c7d9ea44a50ca89fbfaaa331ddc8030b"
 dependencies = [
  "bee-crypto 0.2.1-alpha",
  "bee-signing",
@@ -1522,12 +1524,12 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=5dfea13e0e4c48a8f899f47db8327df76ef903f4#5dfea13e0e4c48a8f899f47db8327df76ef903f4"
+source = "git+https://github.com/iotaledger/iota.rs?rev=080282b6c7d9ea44a50ca89fbfaaa331ddc8030b#080282b6c7d9ea44a50ca89fbfaaa331ddc8030b"
 dependencies = [
  "bee-common",
  "bee-common-derive",
  "bee-crypto 0.2.1-alpha",
- "bee-message 0.1.0-alpha (git+https://github.com/iotaledger/bee.git?rev=217b5944b5e17fe5800955d212cfe8dddd992482)",
+ "bee-message 0.1.0-alpha (git+https://github.com/iotaledger/bee.git?rev=28d5d866405ded9fe03bdd140113cff6a4d4deab)",
  "bee-signing",
  "bee-ternary 0.4.2-alpha",
  "bee-transaction 0.1.0-alpha (git+https://github.com/Alex6323/bee-p.git?rev=02965e78a5cd43d0fb773771470ab3d891066562)",
@@ -1538,7 +1540,7 @@ dependencies = [
  "hex",
  "iota-bundle-miner",
  "iota-conversion 0.5.1",
- "iota-crypto 0.2.0",
+ "iota-crypto 0.4.2 (git+https://github.com/iotaledger/crypto.rs.git?rev=5fea3481907da9bb333a31012aab0df01009cb37)",
  "iota-model",
  "num_cpus",
  "once_cell",
@@ -1611,14 +1613,14 @@ dependencies = [
 [[package]]
 name = "iota-core"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=5dfea13e0e4c48a8f899f47db8327df76ef903f4#5dfea13e0e4c48a8f899f47db8327df76ef903f4"
+source = "git+https://github.com/iotaledger/iota.rs?rev=080282b6c7d9ea44a50ca89fbfaaa331ddc8030b#080282b6c7d9ea44a50ca89fbfaaa331ddc8030b"
 dependencies = [
  "bee-crypto 0.2.1-alpha",
  "bee-signing",
  "bee-ternary 0.4.2-alpha",
  "bee-transaction 0.1.0-alpha (git+https://github.com/Alex6323/bee-p.git?rev=02965e78a5cd43d0fb773771470ab3d891066562)",
  "iota-bundle-miner",
- "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=5dfea13e0e4c48a8f899f47db8327df76ef903f4)",
+ "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=080282b6c7d9ea44a50ca89fbfaaa331ddc8030b)",
 ]
 
 [[package]]
@@ -1627,15 +1629,6 @@ version = "0.2.0-alpha.3"
 source = "git+https://github.com/iotaledger/iota.rs?rev=a5321ea39f0aff337d50327020848d9fbdbadf9f#a5321ea39f0aff337d50327020848d9fbdbadf9f"
 dependencies = [
  "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=a5321ea39f0aff337d50327020848d9fbdbadf9f)",
-]
-
-[[package]]
-name = "iota-crypto"
-version = "0.2.0"
-source = "git+https://github.com/iotaledger/crypto.rs.git?rev=6e67b652dd55df05877f575b9a09ccb5a7006694#6e67b652dd55df05877f575b9a09ccb5a7006694"
-dependencies = [
- "ed25519-zebra",
- "getrandom 0.2.2",
 ]
 
 [[package]]
@@ -1672,6 +1665,15 @@ dependencies = [
  "blake2",
  "digest 0.9.0",
  "ed25519-zebra",
+]
+
+[[package]]
+name = "iota-crypto"
+version = "0.4.2"
+source = "git+https://github.com/iotaledger/crypto.rs.git?rev=5fea3481907da9bb333a31012aab0df01009cb37#5fea3481907da9bb333a31012aab0df01009cb37"
+dependencies = [
+ "ed25519-zebra",
+ "getrandom 0.2.2",
 ]
 
 [[package]]
@@ -1715,7 +1717,7 @@ dependencies = [
  "anyhow",
  "bincode",
  "futures",
- "iota-crypto 0.4.2",
+ "iota-crypto 0.4.2 (git+https://github.com/iotaledger/crypto.rs?branch=dev)",
  "riker",
  "serde 1.0.125",
  "stronghold-engine",
@@ -1736,9 +1738,9 @@ dependencies = [
  "futures",
  "getset",
  "hex",
- "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=5dfea13e0e4c48a8f899f47db8327df76ef903f4)",
+ "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=080282b6c7d9ea44a50ca89fbfaaa331ddc8030b)",
  "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=a5321ea39f0aff337d50327020848d9fbdbadf9f)",
- "iota-crypto 0.4.2",
+ "iota-crypto 0.4.2 (git+https://github.com/iotaledger/crypto.rs?branch=dev)",
  "iota-stronghold",
  "log",
  "once_cell",
@@ -3274,7 +3276,7 @@ source = "git+https://github.com/iotaledger/stronghold.rs?rev=65ec786b9da4e084c7
 dependencies = [
  "dirs-next",
  "hex",
- "iota-crypto 0.4.2",
+ "iota-crypto 0.4.2 (git+https://github.com/iotaledger/crypto.rs?branch=dev)",
  "thiserror",
 ]
 
@@ -3698,7 +3700,7 @@ version = "0.3.0"
 source = "git+https://github.com/iotaledger/stronghold.rs?rev=65ec786b9da4e084c719aac8eb8159e0ca118969#65ec786b9da4e084c719aac8eb8159e0ca118969"
 dependencies = [
  "anyhow",
- "iota-crypto 0.4.2",
+ "iota-crypto 0.4.2 (git+https://github.com/iotaledger/crypto.rs?branch=dev)",
  "runtime",
  "serde 1.0.125",
  "thiserror",

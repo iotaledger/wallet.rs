@@ -44,6 +44,7 @@ pub use stronghold::{
 /// The wallet Result type.
 pub type Result<T> = std::result::Result<T, Error>;
 pub use chrono::prelude::{DateTime, Local, Utc};
+pub use iota_migration;
 use once_cell::sync::OnceCell;
 use tokio::runtime::Runtime;
 
@@ -95,11 +96,6 @@ pub fn get_ledger_status(is_simulator: bool) -> LedgerStatus {
         Err(_) => LedgerStatus::Disconnected,
     }
 }
-
-// #[cfg(feature = "migration")]
-pub use iota_migration;
-// #[cfg(feature = "migration")]
-pub use iota::Address;
 
 #[cfg(test)]
 mod test_utils {

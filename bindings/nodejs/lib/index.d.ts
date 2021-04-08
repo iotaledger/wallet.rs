@@ -224,6 +224,42 @@ export declare interface TransactionEvent {
   message: Message
 }
 
+export declare interface MigrationDataOptions {
+  permanode?: string
+  securityLevel?: number
+  initialAddressIndex?: number
+}
+
+export declare interface MigrationDataInput {
+  address: string
+  securityLevel: number
+  balance: number
+  index: number
+  spent: boolean
+  spentBundleHashes?: string[]
+}
+
+export declare interface MigrationData {
+  balance: number
+  lastCheckedAddressIndex: number
+  inputs: MigrationDataInput[]
+}
+
+export declare interface CreateMigrationBundleOptions {
+  mine?: boolean
+  timeoutSeconds?: number
+  logFileName?: string
+}
+
+export declare interface MigrationBundle {
+  crackability: number
+  bundleHash: string
+}
+
+export declare interface SendMigrationBundleOptions {
+  mwm?: string
+}
+
 export declare class AccountManager {
   constructor(options: ManagerOptions)
   setStoragePassword(password: string): void
@@ -242,7 +278,9 @@ export declare class AccountManager {
   isLatestAddressUnused(): Promise<boolean>
   setClientOptions(options: ClientOptions): void
   // migration
-  generateMigrationAddress(bech32Address: string): string
+  getMigrationData(nodes: string[], seed: string, options?: MigrationDataOptions): Promise<MigrationData>
+  createMigrationBundle(seed: string, inputAddressIndexes: number[], options?: CreateMigrationBundleOptions): Promise<MigrationBundle>
+  sendMigrationBundle(nodes: string[], bundleHash: string, options?: SendMigrationBundleOptions): Promise<void>
   // events
   getBalanceChangeEvents(count?: number, skip?: number, fromTimestamp?: number): BalanceChangeEvent[]
   getBalanceChangeEventCount(fromTimestamp?: number): number
