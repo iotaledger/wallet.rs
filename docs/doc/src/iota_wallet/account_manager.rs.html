@@ -2132,6 +2132,8 @@
 <span id="2129">2129</span>
 <span id="2130">2130</span>
 <span id="2131">2131</span>
+<span id="2132">2132</span>
+<span id="2133">2133</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2974,7 +2976,9 @@
         <span class="kw">for</span> <span class="ident">account_handle</span> <span class="kw">in</span> <span class="ident">stronghold_manager</span>.<span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">values</span>() {
             <span class="ident">account_handle</span>.<span class="ident">write</span>().<span class="kw">await</span>.<span class="ident">set_storage_path</span>(<span class="self">self</span>.<span class="ident">storage_path</span>.<span class="ident">clone</span>());
         }
-        <span class="self">self</span>.<span class="ident">accounts</span> <span class="op">=</span> <span class="ident">stronghold_manager</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>();
+        <span class="kw">for</span> (<span class="ident">id</span>, <span class="ident">account</span>) <span class="kw">in</span> <span class="ident">stronghold_manager</span>.<span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">iter</span>() {
+            <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">write</span>().<span class="kw">await</span>.<span class="ident">insert</span>(<span class="ident">id</span>.<span class="ident">clone</span>(), <span class="ident">account</span>.<span class="ident">clone</span>());
+        }
         <span class="self">self</span>.<span class="ident">set_stronghold_password</span>(<span class="ident">stronghold_password</span>.<span class="ident">clone</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">for</span> <span class="ident">account</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">values</span>() {
             <span class="ident">account</span>.<span class="ident">write</span>().<span class="kw">await</span>.<span class="ident">save</span>().<span class="kw">await</span><span class="question-mark">?</span>;
