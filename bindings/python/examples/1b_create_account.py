@@ -2,8 +2,14 @@
 
 # general Tangle specific options
 client_options = {
-    'node': 'https://api.lb-0.testnet.chrysalis2.com',
-    'local_pow': True
+    "nodes": [
+        {
+            "url": "https://api.hornet-0.testnet.chrysalis2.com",
+            "auth": None,
+            "disabled": False
+        }
+    ],
+    "local_pow": True
 }
 
 # an account is generated with the given alias via `account_initialiser`
