@@ -3,6 +3,9 @@
 
 use crate::account::AccountHandle;
 
+use chrono::prelude::Utc;
+use serde::Serialize;
+
 pub(crate) use iota_migration::{
     client::{
         migration::{create_migration_bundle, mine, sign_migration_bundle, Address as MigrationAddress},
@@ -57,6 +60,12 @@ pub(crate) struct MigrationMetadata {
     pub(crate) balance: u64,
     pub(crate) last_checked_address_index: u64,
     pub(crate) inputs: HashMap<Range<u64>, Vec<InputData>>,
+}
+
+#[derive(Serialize)]
+struct LogAddress {
+    address: String,
+    balance: u64,
 }
 
 impl<'a> MigrationDataFinder<'a> {
@@ -189,7 +198,7 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
         address_inputs.clone().into_iter().cloned().collect(),
     )
     .await?;
-    let mut crackability = 0f64;
+    let mut crackability = None;
     if bundle_mine && address_inputs.iter().any(|i| i.spent) {
         let mut spent_bundle_hashes = Vec::new();
         for input in &address_inputs {
@@ -205,7 +214,7 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
             timeout.as_secs(),
         )
         .await?;
-        crackability = mining_result.0.crackability;
+        crackability = Some(mining_result.0.crackability);
         prepared_bundle = mining_result.1;
     }
 
@@ -215,23 +224,72 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
         address_inputs.clone().into_iter().cloned().collect(),
     )?;
 
+    let bundle_hash = bundle
+        .first()
+        .unwrap()
+        .bundle()
+        .to_inner()
+        .encode::<T3B1Buf>()
+        .iter_trytes()
+        .map(char::from)
+        .collect::<String>();
+
     let mut log = OpenOptions::new().write(true).create(true).open(log_file_path)?;
+    let mut trytes = Vec::new();
     for i in 0..bundle.len() {
         let mut trits = TritBuf::<T1B1Buf>::zeros(8019);
         bundle.get(i).unwrap().as_trits_allocated(&mut trits);
-        log.write_all(
+        trytes.push(
             trits
                 .encode::<T3B1Buf>()
                 .iter_trytes()
                 .map(char::from)
-                .collect::<String>()
-                .as_bytes(),
-        )?;
-        log.write_all(b"\n")?;
+                .collect::<String>(),
+        );
     }
+    log.write_all(format!("bundleHash: {}\n", bundle_hash).as_bytes())?;
+    log.write_all(format!("trytes: {:?}\n", trytes).as_bytes())?;
+    log.write_all(format!("balance: {}\n", address_inputs.iter().map(|a| a.balance).sum::<u64>()).as_bytes())?;
+    log.write_all(format!("timestamp: {}\n", Utc::now().to_string()).as_bytes())?;
+    log.write_all(
+        format!(
+            "spentAddresses: {:?}\n",
+            address_inputs
+                .iter()
+                .filter(|i| i.spent)
+                .map(|i| serde_json::to_string_pretty(&LogAddress {
+                    address: i
+                        .address
+                        .to_inner()
+                        .encode::<T3B1Buf>()
+                        .iter_trytes()
+                        .map(char::from)
+                        .collect::<String>(),
+                    balance: i.balance
+                })
+                .unwrap())
+                .collect::<Vec<String>>()
+        )
+        .as_bytes(),
+    )?;
+    log.write_all(format!("mine: {}\n", bundle_mine).as_bytes())?;
+    log.write_all(
+        format!(
+            "crackability: {}\n",
+            if let Some(crackability) = crackability {
+                crackability.to_string()
+            } else {
+                "null".to_string()
+            }
+        )
+        .as_bytes(),
+    )?;
     log.write_all(b"\n\n")?;
 
-    Ok(MigrationBundle { crackability, bundle })
+    Ok(MigrationBundle {
+        crackability: crackability.unwrap_or_default(),
+        bundle,
+    })
 }
 
 pub(crate) async fn send_bundle(nodes: &[&str], bundle: Vec<BundledTransaction>, mwm: u8) -> crate::Result<()> {
