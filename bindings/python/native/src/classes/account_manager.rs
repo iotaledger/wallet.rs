@@ -111,7 +111,7 @@ impl AccountManager {
 
     // Migration APIs
     fn get_migration_data(
-        &mut self,
+        &self,
         nodes: Vec<&str>,
         seed: &str,
         permanode: Option<&str>,
@@ -134,7 +134,7 @@ impl AccountManager {
     }
 
     fn create_migration_bundle(
-        &mut self,
+        &self,
         seed: &str,
         input_address_indexes: Vec<u64>,
         mine: Option<bool>,
@@ -152,7 +152,7 @@ impl AccountManager {
         .map_err(Into::into)
     }
 
-    fn send_migration_bundle(&mut self, nodes: Vec<&str>, bundle_hash: &str, mwm: Option<u8>) -> Result<()> {
+    fn send_migration_bundle(&self, nodes: Vec<&str>, bundle_hash: &str, mwm: Option<u8>) -> Result<()> {
         crate::block_on(
             self.account_manager
                 .send_migration_bundle(&nodes, bundle_hash, mwm.unwrap_or(DEFAULT_MWM)),

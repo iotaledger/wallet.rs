@@ -240,6 +240,7 @@ pub(crate) struct AccountOptions {
     pub(crate) persist_events: bool,
 }
 
+#[derive(Clone)]
 pub(crate) struct CachedMigrationData {
     nodes: Vec<String>,
     permanode: Option<String>,
@@ -276,8 +277,8 @@ pub struct AccountManager {
     generated_mnemonic: Option<String>,
     account_options: AccountOptions,
     sync_accounts_lock: Arc<Mutex<()>>,
-    cached_migration_data: HashMap<u64, CachedMigrationData>,
-    cached_migration_bundles: HashMap<String, Vec<BundledTransaction>>,
+    cached_migration_data: Mutex<HashMap<u64, CachedMigrationData>>,
+    cached_migration_bundles: Mutex<HashMap<String, Vec<BundledTransaction>>>,
 }
 
 impl Clone for AccountManager {
@@ -332,18 +333,20 @@ impl AccountManager {
     }
 
     /// Gets the legacy migration data for the seed.
-    pub async fn get_migration_data(&mut self, finder: MigrationDataFinder<'_>) -> crate::Result<MigrationData> {
-        let stored_data = self
-            .cached_migration_data
+    pub async fn get_migration_data(&self, finder: MigrationDataFinder<'_>) -> crate::Result<MigrationData> {
+        let metadata = finder.finish().await?;
+        self.cached_migration_data
+            .lock()
+            .await
             .entry(finder.seed_hash)
             .or_insert(CachedMigrationData {
                 nodes: finder.nodes.iter().map(|node| node.to_string()).collect(),
                 permanode: finder.permanode.map(|node| node.to_string()),
                 security_level: finder.security_level,
                 inputs: Default::default(),
-            });
-        let metadata = finder.finish().await?;
-        stored_data.inputs.extend(metadata.inputs.clone().into_iter());
+            })
+            .inputs
+            .extend(metadata.inputs.clone().into_iter());
 
         Ok(MigrationData {
             balance: metadata.balance,
@@ -357,7 +360,7 @@ impl AccountManager {
     /// And signs the bundle. Returns the bundle hash.
     /// It logs the operations to `$storage_path.join(log_file_name)`.
     pub async fn create_migration_bundle(
-        &mut self,
+        &self,
         seed: &str,
         input_address_indexes: &[u64],
         mine: bool,
@@ -372,8 +375,11 @@ impl AccountManager {
             .map_err(|_| crate::Error::InvalidSeed)?;
         let data = self
             .cached_migration_data
+            .lock()
+            .await
             .get(&seed_hash)
-            .ok_or(crate::Error::MigrationDataNotFound)?;
+            .ok_or(crate::Error::MigrationDataNotFound)?
+            .clone();
 
         let mut address_inputs: Vec<&InputData> = Default::default();
         for index in input_address_indexes {
@@ -408,6 +414,8 @@ impl AccountManager {
             .map(char::from)
             .collect::<String>();
         self.cached_migration_bundles
+            .lock()
+            .await
             .insert(bundle_hash.clone(), bundle_data.bundle);
 
         Ok(MigrationBundle {
@@ -417,13 +425,16 @@ impl AccountManager {
     }
 
     /// Sends the migration bundle to the given node.
-    pub async fn send_migration_bundle(&mut self, nodes: &[&str], hash: &str, mwm: u8) -> crate::Result<()> {
+    pub async fn send_migration_bundle(&self, nodes: &[&str], hash: &str, mwm: u8) -> crate::Result<()> {
         let bundle = self
             .cached_migration_bundles
+            .lock()
+            .await
             .get(hash)
-            .ok_or(crate::Error::MigrationBundleNotFound)?;
+            .ok_or(crate::Error::MigrationBundleNotFound)?
+            .clone();
         migration::send_bundle(nodes, bundle.to_vec(), mwm).await?;
-        self.cached_migration_bundles.remove(hash);
+        self.cached_migration_bundles.lock().await.remove(hash);
         Ok(())
     }
 

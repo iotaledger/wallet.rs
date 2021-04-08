@@ -29,7 +29,7 @@ impl Task for SendMigrationBundleTask {
 
     fn perform(&self) -> Result<Self::Output, Self::Error> {
         crate::block_on(crate::convert_async_panics(|| async {
-            let mut manager = self.manager.write().await;
+            let manager = self.manager.read().await;
             let nodes: Vec<&str> = self.nodes.iter().map(AsRef::as_ref).collect();
             manager
                 .send_migration_bundle(&nodes, &self.bundle_hash, self.options.mwm.unwrap_or(DEFAULT_MWM))

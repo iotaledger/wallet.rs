@@ -83,7 +83,7 @@ impl Task for GetMigrationDataTask {
 
     fn perform(&self) -> Result<Self::Output, Self::Error> {
         crate::block_on(crate::convert_async_panics(|| async {
-            let mut manager = self.manager.write().await;
+            let manager = self.manager.read().await;
             let nodes: Vec<&str> = self.nodes.iter().map(AsRef::as_ref).collect();
             let mut finder = MigrationDataFinder::new(&nodes, &self.seed)?;
             if let Some(permanode) = &self.options.permanode {

@@ -134,15 +134,15 @@ pub struct AccountManager {
 
 impl AccountManager {
     // migration APIs
-    pub fn get_migration_data(&mut self) -> Result<MigrationData> {
+    pub fn get_migration_data(&self) -> Result<MigrationData> {
         unimplemented!()
     }
 
-    pub fn create_migration_bundle(&mut self) -> Result<MigrationBundle> {
+    pub fn create_migration_bundle(&self) -> Result<MigrationBundle> {
         unimplemented!()
     }
 
-    pub fn send_migration_bundle(&mut self) -> Result<()> {
+    pub fn send_migration_bundle(&self) -> Result<()> {
         unimplemented!()
     }
 

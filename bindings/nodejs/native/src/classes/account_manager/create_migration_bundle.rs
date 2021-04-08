@@ -35,7 +35,7 @@ impl Task for CreateMigrationBundleTask {
 
     fn perform(&self) -> Result<Self::Output, Self::Error> {
         crate::block_on(crate::convert_async_panics(|| async {
-            let mut manager = self.manager.write().await;
+            let manager = self.manager.read().await;
             manager
                 .create_migration_bundle(
                     &self.seed,
