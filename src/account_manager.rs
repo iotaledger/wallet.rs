@@ -813,7 +813,9 @@ impl AccountManager {
         for account_handle in stronghold_manager.accounts.read().await.values() {
             account_handle.write().await.set_storage_path(self.storage_path.clone());
         }
-        self.accounts = stronghold_manager.accounts.clone();
+        for (id, account) in stronghold_manager.accounts.read().await.iter() {
+            self.accounts.write().await.insert(id.clone(), account.clone());
+        }
         self.set_stronghold_password(stronghold_password.clone()).await?;
         for account in self.accounts.read().await.values() {
             account.write().await.save().await?;
