@@ -999,10 +999,12 @@ impl Account {
         let client_guard = crate::client::get_client(self.client_options()).await?;
         let client = client_guard.read().await;
 
-        client
+        let info = client
             .get_info()
             .await
-            .map_err(|e| crate::Error::ClientError(Box::new(e)))
+            .map_err(|e| crate::Error::ClientError(Box::new(e)))?
+            .nodeinfo;
+        Ok(info)
     }
 
     #[cfg(test)]
