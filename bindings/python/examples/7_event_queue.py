@@ -6,6 +6,14 @@ import iota_wallet
 import threading
 import queue
 import time
+import os
+from dotenv import load_dotenv
+
+# Load the env variables
+load_dotenv()
+
+# Get the stronghold password
+STRONGHOLD_PASSWORD = os.getenv('STRONGHOLD_PASSWORD')
 
 # This example shows how to listen to on_balance_change event.
 
@@ -32,7 +40,9 @@ def balance_changed_event_processing(event):
 # Get the acount manager
 manager = iota_wallet.AccountManager(
     storage_path='./alice-database')
-manager.set_stronghold_password("password")
+
+# NOTE: In real use cases you need to set the password in a safer way, like getting it from env variables
+manager.set_stronghold_password(STRONGHOLD_PASSWORD)
 
 # Get the account
 account = manager.get_account('Alice')
@@ -54,7 +64,7 @@ iota_wallet.on_balance_change(balance_changed_event_processing)
 
 # Use the Chrysalis Faucet to send testnet tokens to your address:
 print(
-    f"Fill your Address ({last_address_obj['address']['inner']}) with the Faucet: https://faucet.testnet.chrysalis2.com/")
+    f"Fill your Address ({last_address_obj['address']['inner']}) with the Faucet: https://faucet.tanglekit.de/")
 print("To see how the on_balance_change is called, please send tokens to the address in 1 min")
 time.sleep(60)
 
