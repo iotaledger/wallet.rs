@@ -270,6 +270,71 @@ If the mnemonic is not provided, we'll generate one.</p>
 <tr><td>message_id</td><td><code>str</code></td><td><code>undefined</code></td><td>The message's identifier</td></tr>
 </tbody></table>
 <p><strong>Returns</strong> the promoted <a href="#walletmessage">WalletMessage</a>.</p>
+<h4 id="get_balance_change_eventscount-optional-skip-optional-from_timestamp-optional"><a class="header" href="#get_balance_change_eventscount-optional-skip-optional-from_timestamp-optional">get_balance_change_events(count (optional), skip (optional), from_timestamp (optional))</a></h4>
+<p>Gets the persisted balance change events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>count</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to return (<code>0</code> to return all)</td></tr>
+<tr><td>skip</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to skip</td></tr>
+<tr><td>from_timestamp</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
+</tbody></table>
+<p>Event object: { accountId: string, address: string, balanceChange: { spent: number, received: number } }</p>
+<h4 id="get_balance_change_event_countfrom_timestamp-optional"><a class="header" href="#get_balance_change_event_countfrom_timestamp-optional">get_balance_change_event_count(from_timestamp (optional))</a></h4>
+<p>Gets the number of persisted balance change events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>from_timestamp</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
+</tbody></table>
+<h4 id="get_transaction_confirmation_eventscount-optional-skip-optional-from_timestamp-optional"><a class="header" href="#get_transaction_confirmation_eventscount-optional-skip-optional-from_timestamp-optional">get_transaction_confirmation_events(count (optional), skip (optional), from_timestamp (optional))</a></h4>
+<p>Gets the persisted transaction confirmation change events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>count</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to return (<code>0</code> to return all)</td></tr>
+<tr><td>skip</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to skip</td></tr>
+<tr><td>from_timestamp</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
+</tbody></table>
+<p>Event object: { accountId: string, message: Message, confirmed: boolean }</p>
+<h4 id="get_transaction_confirmation_event_countfrom_timestamp-optional"><a class="header" href="#get_transaction_confirmation_event_countfrom_timestamp-optional">get_transaction_confirmation_event_count(from_timestamp (optional))</a></h4>
+<p>Gets the number of persisted transaction confirmation change events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>from_timestamp</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
+</tbody></table>
+<h4 id="get_new_transaction_eventscount-optional-skip-optional-from_timestamp-optional"><a class="header" href="#get_new_transaction_eventscount-optional-skip-optional-from_timestamp-optional">get_new_transaction_events(count (optional), skip (optional), from_timestamp (optional))</a></h4>
+<p>Gets the persisted new transaction events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>count</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to return (<code>0</code> to return all)</td></tr>
+<tr><td>skip</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to skip</td></tr>
+<tr><td>from_timestamp</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
+</tbody></table>
+<p>Event object: { accountId: string, message: Message }</p>
+<h4 id="get_new_transaction_event_countfrom_timestamp-optional"><a class="header" href="#get_new_transaction_event_countfrom_timestamp-optional">get_new_transaction_event_count(from_timestamp (optional))</a></h4>
+<p>Gets the number of persisted new transaction events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>from_timestamp</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
+</tbody></table>
+<h4 id="get_reattachment_eventscount-optional-skip-optional-from_timestamp-optional"><a class="header" href="#get_reattachment_eventscount-optional-skip-optional-from_timestamp-optional">get_reattachment_events(count (optional), skip (optional), from_timestamp (optional))</a></h4>
+<p>Gets the persisted transaction reattachment events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>count</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to return (<code>0</code> to return all)</td></tr>
+<tr><td>skip</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to skip</td></tr>
+<tr><td>from_timestamp</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
+</tbody></table>
+<p>Event object: { accountId: string, message: Message }</p>
+<h4 id="get_reattachment_event_countfrom_timestamp-optional"><a class="header" href="#get_reattachment_event_countfrom_timestamp-optional">get_reattachment_event_count(from_timestamp (optional))</a></h4>
+<p>Gets the number of persisted transaction reattachment events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>from_timestamp</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
+</tbody></table>
+<h4 id="get_broadcast_eventscount-optional-skip-optional-from_timestamp-optional"><a class="header" href="#get_broadcast_eventscount-optional-skip-optional-from_timestamp-optional">get_broadcast_events(count (optional), skip (optional), from_timestamp (optional))</a></h4>
+<p>Gets the persisted transaction broadcast events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>count</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to return (<code>0</code> to return all)</td></tr>
+<tr><td>skip</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to skip</td></tr>
+<tr><td>from_timestamp</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
+</tbody></table>
+<p>Event object: { accountId: string, message: Message }</p>
+<h4 id="get_broadcast_event_countfrom_timestamp-optional"><a class="header" href="#get_broadcast_event_countfrom_timestamp-optional">get_broadcast_event_count(from_timestamp (optional))</a></h4>
+<p>Gets the number of persisted transaction broadcast events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>from_timestamp</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
+</tbody></table>
 <h3 id="accountsynchronizer"><a class="header" href="#accountsynchronizer">AccountSynchronizer</a></h3>
 <h4 id="gap_limitlimit-void"><a class="header" href="#gap_limitlimit-void">gap_limit(limit): void</a></h4>
 <p>Set the number of address indexes that are generated.</p>
@@ -301,82 +366,28 @@ The account syncing process ensures that the latest metadata (balance, transacti
 <h4 id="execute-lista-hrefsyncedaccountsyncedaccounta"><a class="header" href="#execute-lista-hrefsyncedaccountsyncedaccounta">execute(): list<a href="#syncedaccount">SyncedAccount</a></a></h4>
 <p>Syncs the accounts with the tangle.</p>
 <h3 id="transfer"><a class="header" href="#transfer">Transfer</a></h3>
-<h4 id="constructoramount-address-indexation-optional-remainder_value_strategy-optional-skip_sync-optional-a-hreftransfertransfera"><a class="header" href="#constructoramount-address-indexation-optional-remainder_value_strategy-optional-skip_sync-optional-a-hreftransfertransfera">constructor(amount, address, indexation (optional), remainder_value_strategy (optional), skip_sync (optional)): <a href="#transfer">Transfer</a></a></h4>
+<h4 id="constructoramount-address-indexation-optional-remainder_value_strategy-str-a-hreftransfertransfera"><a class="header" href="#constructoramount-address-indexation-optional-remainder_value_strategy-str-a-hreftransfertransfera">constructor(amount, address, indexation (optional), remainder_value_strategy: str): <a href="#transfer">Transfer</a></a></h4>
 <p>The <code>Transfer</code> object used in <a href="#syncedaccount">SyncedAccount</a></p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>amount</td><td><code>int</code></td><td><code>undefined</code></td><td>The amount to transfer</td></tr>
 <tr><td>address</td><td><code>str</code></td><td><code>undefined</code></td><td>The addree to send</td></tr>
 <tr><td>indexation</td><td><code><a href="#indexation">Indexation</a></code></td><td><code>undefined</code></td><td>The indexation payload</td></tr>
 <tr><td>remainder_value_strategy</td><td><code>str</code></td><td><code>undefined</code></td><td>Should be <code>ReuseAddress</code> or <code>ChangeAddress</code></td></tr>
-<tr><td>skip_sync</td><td><code>bool</code></td><td><code>false</code></td><td>Skip syncing account before transfering funds</td></tr>
 </tbody></table>
 <h3 id="syncedaccount"><a class="header" href="#syncedaccount">SyncedAccount</a></h3>
 <p>The result of a <code>sync</code> operation on an Account.</p>
-<h4 id="get_balance_change_eventscount-optional-skip-optional-from_timestamp-optional"><a class="header" href="#get_balance_change_eventscount-optional-skip-optional-from_timestamp-optional">get_balance_change_events(count (optional), skip (optional), from_timestamp (optional))</a></h4>
-<p>Gets the persisted balance change events.</p>
-<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
-<tr><td>count</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to return (<code>0</code> to return all)</td></tr>
-<tr><td>count</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to skip</td></tr>
-<tr><td>from_timestamp</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
-</tbody></table>
-<p>Event object: { accountId: string, address: string, balanceChange: { spent: number, received: number } }</p>
-<h4 id="get_balance_change_event_countfrom_timestamp-optional"><a class="header" href="#get_balance_change_event_countfrom_timestamp-optional">get_balance_change_event_count(from_timestamp (optional))</a></h4>
-<p>Gets the number of persisted balance change events.</p>
-<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
-<tr><td>from_timestamp</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
-</tbody></table>
-<h4 id="get_transaction_confirmation_eventscount-optional-skip-optional-from_timestamp-optional"><a class="header" href="#get_transaction_confirmation_eventscount-optional-skip-optional-from_timestamp-optional">get_transaction_confirmation_events(count (optional), skip (optional), from_timestamp (optional))</a></h4>
-<p>Gets the persisted transaction confirmation change events.</p>
-<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
-<tr><td>count</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to return (<code>0</code> to return all)</td></tr>
-<tr><td>count</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to skip</td></tr>
-<tr><td>from_timestamp</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
-</tbody></table>
-<p>Event object: { accountId: string, message: Message, confirmed: boolean }</p>
-<h4 id="get_transaction_confirmation_event_countfrom_timestamp-optional"><a class="header" href="#get_transaction_confirmation_event_countfrom_timestamp-optional">get_transaction_confirmation_event_count(from_timestamp (optional))</a></h4>
-<p>Gets the number of persisted transaction confirmation change events.</p>
-<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
-<tr><td>from_timestamp</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
-</tbody></table>
-<h4 id="get_new_transaction_eventscount-optional-skip-optional-from_timestamp-optional"><a class="header" href="#get_new_transaction_eventscount-optional-skip-optional-from_timestamp-optional">get_new_transaction_events(count (optional), skip (optional), from_timestamp (optional))</a></h4>
-<p>Gets the persisted new transaction events.</p>
-<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
-<tr><td>count</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to return (<code>0</code> to return all)</td></tr>
-<tr><td>count</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to skip</td></tr>
-<tr><td>from_timestamp</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
-</tbody></table>
-<p>Event object: { accountId: string, message: Message }</p>
-<h4 id="get_new_transaction_event_countfrom_timestamp-optional"><a class="header" href="#get_new_transaction_event_countfrom_timestamp-optional">get_new_transaction_event_count(from_timestamp (optional))</a></h4>
-<p>Gets the number of persisted new transaction events.</p>
-<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
-<tr><td>from_timestamp</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
-</tbody></table>
-<h4 id="get_reattachment_eventscount-optional-skip-optional-from_timestamp-optional"><a class="header" href="#get_reattachment_eventscount-optional-skip-optional-from_timestamp-optional">get_reattachment_events(count (optional), skip (optional), from_timestamp (optional))</a></h4>
-<p>Gets the persisted transaction reattachment events.</p>
-<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
-<tr><td>count</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to return (<code>0</code> to return all)</td></tr>
-<tr><td>count</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to skip</td></tr>
-<tr><td>from_timestamp</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
-</tbody></table>
-<p>Event object: { accountId: string, message: Message }</p>
-<h4 id="get_reattachment_event_countfrom_timestamp-optional"><a class="header" href="#get_reattachment_event_countfrom_timestamp-optional">get_reattachment_event_count(from_timestamp (optional))</a></h4>
-<p>Gets the number of persisted transaction reattachment events.</p>
-<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
-<tr><td>from_timestamp</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
-</tbody></table>
-<h4 id="get_broadcast_eventscount-optional-skip-optional-from_timestamp-optional"><a class="header" href="#get_broadcast_eventscount-optional-skip-optional-from_timestamp-optional">get_broadcast_events(count (optional), skip (optional), from_timestamp (optional))</a></h4>
-<p>Gets the persisted transaction broadcast events.</p>
-<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
-<tr><td>count</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to return (<code>0</code> to return all)</td></tr>
-<tr><td>count</td><td><code>number</code></td><td><code>0</code></td><td>The number of events to skip</td></tr>
-<tr><td>from_timestamp</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
-</tbody></table>
-<p>Event object: { accountId: string, message: Message }</p>
-<h4 id="get_broadcast_event_countfrom_timestamp-optional"><a class="header" href="#get_broadcast_event_countfrom_timestamp-optional">get_broadcast_event_count(from_timestamp (optional))</a></h4>
-<p>Gets the number of persisted transaction broadcast events.</p>
-<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
-<tr><td>from_timestamp</td><td><code>number</code></td><td><code>null</code></td><td>Filter events that were stored after the given UTC timestamp</td></tr>
-</tbody></table>
+<h4 id="account_handle-a-hrefaccounthandleaccounthandlea"><a class="header" href="#account_handle-a-hrefaccounthandleaccounthandlea">account_handle(): <a href="#accounthandle">AccountHandle</a></a></h4>
+<p>Get the <a href="#accounthandle">AccountHandle</a> of this account</p>
+<p><strong>Returns</strong> the <a href="#accounthandle">AccountHandle</a>.</p>
+<h4 id="deposit_address-a-hrefaddressaddressa"><a class="header" href="#deposit_address-a-hrefaddressaddressa">deposit_address(): <a href="#address">Address</a></a></h4>
+<p>Get the deposit_address of this account.</p>
+<p><strong>Returns</strong> the <a href="#address">Address</a>.</p>
+<h4 id="messages-a-hrefwalletmessagewalletmessagea"><a class="header" href="#messages-a-hrefwalletmessagewalletmessagea">messages(): <a href="#walletmessage">WalletMessage</a></a></h4>
+<p>Get the messages of this account.</p>
+<p><strong>Returns</strong> the <a href="#walletmessage">WalletMessage</a>.</p>
+<h4 id="addresses"><a class="header" href="#addresses">addresses()</a></h4>
+<p>Get the addresses of this account.</p>
+<p><strong>Returns</strong> the list of <a href="#walletmessage">WalletMessage</a>.</p>
 <h3 id="accounthandle"><a class="header" href="#accounthandle">AccountHandle</a></h3>
 <h4 id="id-str"><a class="header" href="#id-str">id(): str</a></h4>
 <p><strong>Returns</strong> the account ID.</p>
