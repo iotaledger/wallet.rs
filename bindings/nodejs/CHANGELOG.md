@@ -1,5 +1,12 @@
 # Changelog
 
+## \[0.2.0]
+
+- Refactor `Message` object storage for performance.
+  - [56fad662](https://github.com/iotaledger/wallet.rs/commit/56fad66285932d26052f147f1599ec2664fabb93) refactor(storage): separate Message list on db, closes [#480](https://github.com/iotaledger/wallet.rs/pull/480) ([#493](https://github.com/iotaledger/wallet.rs/pull/493)) on 2021-04-06
+- Use RocksDB instead of SQLite as database.
+  - [66831376](https://github.com/iotaledger/wallet.rs/commit/66831376b124e574829d0566f79879af8b23dde2) refactor(storage): use RocksDB instead of SQLite ([#471](https://github.com/iotaledger/wallet.rs/pull/471)) on 2021-04-06
+
 ## \[0.1.1]
 
 - Adds Node v15 support.
