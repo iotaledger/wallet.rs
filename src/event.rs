@@ -192,6 +192,7 @@ pub enum MigrationProgressType {
     /// Broadcasting the given bundle hash.
     BroadcastingBundle {
         /// The bundle hash.
+        #[serde(rename = "bundleHash")]
         bundle_hash: String,
     },
 }
