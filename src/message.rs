@@ -11,19 +11,29 @@ use bee_common::packable::Packable;
 use chrono::prelude::{DateTime, NaiveDateTime, Utc};
 use getset::{Getters, Setters};
 pub use iota::{
-    Essence, IndexationPayload, Input, Message as IotaMessage, MessageId, MilestonePayload, Output, Payload,
-    ReceiptPayload, RegularEssence, SignatureLockedDustAllowanceOutput, SignatureLockedSingleOutput,
+    Essence, IndexationPayload, Input, Message as IotaMessage, MessageId, MilestonePayload, MilestoneResponse, Output,
+    Payload, ReceiptPayload, RegularEssence, SignatureLockedDustAllowanceOutput, SignatureLockedSingleOutput,
     TransactionPayload, TreasuryInput, TreasuryOutput, TreasuryTransactionPayload, UnlockBlock, UtxoInput,
 };
 use serde::{de::Deserializer, Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
 use std::{
     cmp::Ordering,
-    collections::hash_map::DefaultHasher,
+    collections::{
+        hash_map::{DefaultHasher, Entry},
+        HashMap,
+    },
     fmt,
     hash::{Hash, Hasher},
     num::NonZeroU64,
 };
+use tokio::sync::RwLock;
+
+use lazy_static::lazy_static;
+type Data = HashMap<u32, MilestoneResponse>;
+lazy_static! {
+    static ref MILESTONE_CACHE: RwLock<Data> = RwLock::new(HashMap::new());
+}
 
 /// The strategy to use for the remainder value management when sending funds.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -954,13 +964,22 @@ impl<'a> MessageBuilder<'a> {
         if metadata.is_ok() {
             timestamp = match metadata.unwrap().referenced_by_milestone_index {
                 Some(ms_index) => {
-                    let ms = client.get_milestone(ms_index).await;
                     let mut date_time = Utc::now();
-                    if ms.is_ok() {
-                        date_time =
-                            DateTime::from_utc(NaiveDateTime::from_timestamp(ms.unwrap().timestamp as i64, 0), Utc);
+                    match MILESTONE_CACHE.write().await.entry(ms_index) {
+                        Entry::Vacant(entry) => {
+                            let ms = client.get_milestone(ms_index).await;
+                            if ms.is_ok() {
+                                let ms = ms.unwrap().clone();
+                                date_time =
+                                    DateTime::from_utc(NaiveDateTime::from_timestamp(ms.timestamp as i64, 0), Utc);
+                                *entry.insert(ms);
+                            }
+                        }
+                        Entry::Occupied(entry) => {
+                            let ms = *entry.get();
+                            date_time = DateTime::from_utc(NaiveDateTime::from_timestamp(ms.timestamp as i64, 0), Utc);
+                        }
                     }
-
                     date_time
                 }
                 _ => Utc::now(),
