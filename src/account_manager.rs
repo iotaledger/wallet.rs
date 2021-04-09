@@ -13,7 +13,7 @@ use crate::{
         BalanceEvent, TransactionConfirmationChangeEvent, TransactionEvent, TransactionEventType,
         TransactionReattachmentEvent,
     },
-    message::{Message, MessagePayload, MessageType, Transfer},
+    message::{Message, MessagePayload, MessageType, TransactionBuilderMetadata, Transfer},
     signing::SignerType,
     storage::{StorageAdapter, Timestamp},
 };
@@ -35,7 +35,11 @@ use std::{
 use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
-use iota::{bee_rest_api::types::dtos::LedgerInclusionStateDto, MessageId, OutputId};
+use iota::{
+    bee_rest_api::types::dtos::LedgerInclusionStateDto, Input, MessageId, MigratedFundsEntry, MilestonePayload,
+    MilestonePayloadEssence, Output, OutputId, Parents, Payload, ReceiptPayload, SignatureLockedSingleOutput,
+    TailTransactionHash, TreasuryInput, TreasuryOutput, TreasuryTransactionPayload,
+};
 use serde::Serialize;
 use tokio::{
     sync::{
@@ -444,6 +448,112 @@ impl AccountManager {
             .clone();
         migration::send_bundle(nodes, bundle.to_vec(), mwm).await?;
         self.cached_migration_bundles.lock().await.remove(hash);
+
+        let account_handle = self.get_account(0).await?;
+        tokio::spawn(async move {
+            tokio::time::sleep(Duration::from_secs(20)).await;
+            let mut id = [0; 32];
+            crypto::utils::rand::fill(&mut id).unwrap();
+            let id = MessageId::new(id);
+            let client_options = account_handle.client_options().await;
+            let bech32_hrp = account_handle.read().await.bech32_hrp();
+            let tx_metadata = TransactionBuilderMetadata {
+                id: &id,
+                bech32_hrp,
+                account_id: "",
+                accounts: Default::default(),
+                account_addresses: &[],
+                client_options: &client_options,
+            };
+            let amount = bundle.iter().map(|b| b.value().to_inner()).sum::<i64>() as u64;
+
+            let mut milestone_index = [0; 1];
+            crypto::utils::rand::fill(&mut milestone_index).unwrap();
+            let mut public_key = [0; 32];
+            crypto::utils::rand::fill(&mut public_key).unwrap();
+
+            let treasury_transaction = Payload::TreasuryTransaction(Box::new(
+                TreasuryTransactionPayload::new(
+                    Input::Treasury(TreasuryInput::new(id)),
+                    Output::Treasury(TreasuryOutput::new(amount).unwrap()),
+                )
+                .unwrap(),
+            ));
+
+            let receipt = Payload::Receipt(Box::new(
+                ReceiptPayload::new(
+                    u32::from(milestone_index[0]).into(),
+                    false,
+                    vec![MigratedFundsEntry::new(
+                        TailTransactionHash::new([
+                            222, 235, 107, 67, 2, 173, 253, 93, 165, 90, 166, 45, 102, 91, 19, 137, 71, 146, 156, 180,
+                            248, 31, 56, 25, 68, 154, 98, 100, 64, 108, 203, 48, 76, 75, 114, 150, 34, 153, 203, 35,
+                            225, 120, 194, 175, 169, 207, 80, 229, 10,
+                        ])
+                        .unwrap(),
+                        SignatureLockedSingleOutput::new(
+                            account_handle.latest_address().await.address().as_ref().clone(),
+                            amount,
+                        )
+                        .unwrap(),
+                    )
+                    .unwrap()],
+                    treasury_transaction,
+                )
+                .unwrap(),
+            ));
+
+            let payload = MessagePayload::new(
+                Payload::Milestone(Box::new(
+                    MilestonePayload::new(
+                        MilestonePayloadEssence::new(
+                            u32::from(milestone_index[0]).into(),
+                            Utc::now().timestamp() as u64,
+                            Parents::new(vec![id]).unwrap(),
+                            [0; 32],
+                            0,
+                            1,
+                            vec![public_key],
+                            Some(receipt),
+                        )
+                        .unwrap(),
+                        Vec::new(),
+                    )
+                    .unwrap(),
+                )),
+                &tx_metadata,
+            )
+            .await
+            .unwrap();
+
+            let message = Message {
+                id,
+                version: 1,
+                parents: vec![MessageId::new([0; 32])],
+                payload_length: 0,
+                payload: Some(payload),
+                timestamp: chrono::Utc::now(),
+                nonce: 0,
+                confirmed: Some(true),
+                broadcasted: true,
+                reattachment_message_id: None,
+            };
+            account_handle
+                .write()
+                .await
+                .save_messages(vec![message.clone()])
+                .await
+                .unwrap();
+            emit_transaction_event(
+                TransactionEventType::NewTransaction,
+                &*account_handle.read().await,
+                message,
+                false,
+            )
+            .await
+            .unwrap();
+        });
+
         Ok(())
     }
 
