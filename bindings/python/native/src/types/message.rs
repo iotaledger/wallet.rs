@@ -121,6 +121,8 @@ pub struct WalletMessage {
     pub confirmed: Option<bool>,
     /// Whether the transaction is broadcasted or not.
     pub broadcasted: bool,
+    /// Whether the message is a legacy migration transaction or not.
+    pub migrated_from_legacy: bool,
 }
 
 impl TryFrom<RustWalletMessage> for WalletMessage {
@@ -180,6 +182,7 @@ impl TryFrom<RustWalletMessage> for WalletMessage {
             nonce: *msg.nonce(),
             confirmed: *msg.confirmed(),
             broadcasted: *msg.broadcasted(),
+            migrated_from_legacy: *msg.migrated_from_legacy(),
         })
     }
 }
@@ -345,6 +348,7 @@ pub async fn to_rust_message(
         confirmed: msg.confirmed,
         broadcasted: msg.broadcasted,
         reattachment_message_id: None,
+        migrated_from_legacy: msg.migrated_from_legacy,
     })
 }
 

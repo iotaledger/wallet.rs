@@ -170,8 +170,8 @@ checksum = "6c7f7096bc256f5e5cb960f60dfc4f4ef979ca65abe7fb9d5a4f77150d3783d4"
 
 [[package]]
 name = "bee-common"
-version = "0.4.0"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#75579267995dd2b1728956d169092486f28e2e0e"
+version = "0.4.1"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#7d8898550fa05ed8949d7af074507b8fd87c2502"
 dependencies = [
  "autocfg",
  "chrono",
@@ -184,7 +184,7 @@ dependencies = [
 [[package]]
 name = "bee-common-derive"
 version = "0.1.1-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#75579267995dd2b1728956d169092486f28e2e0e"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#7d8898550fa05ed8949d7af074507b8fd87c2502"
 dependencies = [
  "quote 1.0.9",
  "syn 1.0.69",
@@ -205,7 +205,7 @@ dependencies = [
 [[package]]
 name = "bee-crypto"
 version = "0.2.1-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#75579267995dd2b1728956d169092486f28e2e0e"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#7d8898550fa05ed8949d7af074507b8fd87c2502"
 dependencies = [
  "bee-ternary 0.4.2-alpha",
  "byteorder",
@@ -315,7 +315,7 @@ dependencies = [
 [[package]]
 name = "bee-signing"
 version = "0.1.1-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#75579267995dd2b1728956d169092486f28e2e0e"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#7d8898550fa05ed8949d7af074507b8fd87c2502"
 dependencies = [
  "bee-common-derive",
  "bee-crypto 0.2.1-alpha",
@@ -338,7 +338,7 @@ dependencies = [
 [[package]]
 name = "bee-ternary"
 version = "0.4.2-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#75579267995dd2b1728956d169092486f28e2e0e"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#7d8898550fa05ed8949d7af074507b8fd87c2502"
 dependencies = [
  "autocfg",
  "num-traits 0.2.14",
@@ -1509,7 +1509,7 @@ dependencies = [
 [[package]]
 name = "iota-bundle-miner"
 version = "0.1.0-alpha.0"
-source = "git+https://github.com/iotaledger/iota.rs?rev=64d6cbf9b5d836236e62f152bf0db0a1013b0475#64d6cbf9b5d836236e62f152bf0db0a1013b0475"
+source = "git+https://github.com/iotaledger/iota.rs?rev=de1ecc81351be0b60852a080411a5ed394a6d18a#de1ecc81351be0b60852a080411a5ed394a6d18a"
 dependencies = [
  "bee-crypto 0.2.1-alpha",
  "bee-signing",
@@ -1551,7 +1551,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=64d6cbf9b5d836236e62f152bf0db0a1013b0475#64d6cbf9b5d836236e62f152bf0db0a1013b0475"
+source = "git+https://github.com/iotaledger/iota.rs?rev=de1ecc81351be0b60852a080411a5ed394a6d18a#de1ecc81351be0b60852a080411a5ed394a6d18a"
 dependencies = [
  "bee-common",
  "bee-common-derive",
@@ -1621,14 +1621,14 @@ dependencies = [
 [[package]]
 name = "iota-core"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=64d6cbf9b5d836236e62f152bf0db0a1013b0475#64d6cbf9b5d836236e62f152bf0db0a1013b0475"
+source = "git+https://github.com/iotaledger/iota.rs?rev=de1ecc81351be0b60852a080411a5ed394a6d18a#de1ecc81351be0b60852a080411a5ed394a6d18a"
 dependencies = [
  "bee-crypto 0.2.1-alpha",
  "bee-signing",
  "bee-ternary 0.4.2-alpha",
  "bee-transaction 0.1.0-alpha (git+https://github.com/Alex6323/bee-p.git?rev=02965e78a5cd43d0fb773771470ab3d891066562)",
  "iota-bundle-miner",
- "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=64d6cbf9b5d836236e62f152bf0db0a1013b0475)",
+ "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=de1ecc81351be0b60852a080411a5ed394a6d18a)",
 ]
 
 [[package]]
@@ -1739,7 +1739,7 @@ dependencies = [
  "getset",
  "hex",
  "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=52a6a02763f0faa5c0f75e6474950eccfd0e6efa)",
- "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=64d6cbf9b5d836236e62f152bf0db0a1013b0475)",
+ "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=de1ecc81351be0b60852a080411a5ed394a6d18a)",
  "iota-crypto 0.4.2 (git+https://github.com/iotaledger/crypto.rs?branch=dev)",
  "iota-stronghold",
  "log",

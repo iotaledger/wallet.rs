@@ -524,6 +524,7 @@ mod test_utils {
                 confirmed: self.confirmed,
                 broadcasted: self.broadcasted,
                 reattachment_message_id: None,
+                migrated_from_legacy: false,
             }
         }
     }

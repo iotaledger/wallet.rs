@@ -279,6 +279,7 @@ foreign_class!(
         fn Message::nonce(&self) -> u64;
         fn Message::confirmed(&self) -> Option<bool>;
         fn Message::broadcasted(&self) -> bool;
+        fn Message::migrated_from_legacy(&self) -> bool; alias migratedFromLegacy;
     }
 );
 

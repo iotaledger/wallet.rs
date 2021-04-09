@@ -738,6 +738,9 @@ pub struct Message {
     #[serde(rename = "reattachmentMessageId")]
     #[getset(set = "pub(crate)")]
     pub reattachment_message_id: Option<MessageId>,
+    /// Whether the message is a legacy migration transaction or not.
+    #[serde(rename = "migratedFromLegacy", default)]
+    pub migrated_from_legacy: bool,
 }
 
 impl Message {
@@ -947,6 +950,11 @@ impl<'a> MessageBuilder<'a> {
             None => None,
         };
 
+        let mut migrated_from_legacy = false;
+        if let Some(MessagePayload::Milestone(m)) = &payload {
+            migrated_from_legacy = m.essence().receipt().is_some();
+        }
+
         let message = Message {
             id: self.id,
             version: 1,
@@ -958,6 +966,7 @@ impl<'a> MessageBuilder<'a> {
             confirmed: self.confirmed,
             broadcasted: true,
             reattachment_message_id: None,
+            migrated_from_legacy,
         };
         Ok(message)
     }

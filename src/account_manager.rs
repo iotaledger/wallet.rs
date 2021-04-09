@@ -282,7 +282,7 @@ pub struct AccountManager {
     account_options: AccountOptions,
     sync_accounts_lock: Arc<Mutex<()>>,
     cached_migration_data: Mutex<HashMap<u64, CachedMigrationData>>,
-    cached_migration_bundles: Mutex<HashMap<String, Vec<BundledTransaction>>>,
+    cached_migration_bundles: Mutex<HashMap<String, (Vec<BundledTransaction>, u64)>>,
 }
 
 impl Clone for AccountManager {
@@ -395,9 +395,11 @@ impl AccountManager {
             .clone();
 
         let mut address_inputs: Vec<&InputData> = Default::default();
+        let mut value = 0;
         for index in input_address_indexes {
             for inputs in data.inputs.values() {
                 if let Some(input) = inputs.iter().find(|i| &i.index == index) {
+                    value += input.balance;
                     address_inputs.push(input);
                     break;
                 }
@@ -429,7 +431,7 @@ impl AccountManager {
         self.cached_migration_bundles
             .lock()
             .await
-            .insert(bundle_hash.clone(), bundle_data.bundle);
+            .insert(bundle_hash.clone(), (bundle_data.bundle, value));
 
         Ok(MigrationBundle {
             crackability,
@@ -439,7 +441,7 @@ impl AccountManager {
 
     /// Sends the migration bundle to the given node.
     pub async fn send_migration_bundle(&self, nodes: &[&str], hash: &str, mwm: u8) -> crate::Result<()> {
-        let bundle = self
+        let (bundle, value) = self
             .cached_migration_bundles
             .lock()
             .await
@@ -452,108 +454,99 @@ impl AccountManager {
         let account_handle = self.get_account(0).await?;
         tokio::spawn(async move {
             tokio::time::sleep(Duration::from_secs(20)).await;
-            let mut id = [0; 32];
-            crypto::utils::rand::fill(&mut id).unwrap();
-            let id = MessageId::new(id);
-            let client_options = account_handle.client_options().await;
-            let bech32_hrp = account_handle.read().await.bech32_hrp();
-            let tx_metadata = TransactionBuilderMetadata {
-                id: &id,
-                bech32_hrp,
-                account_id: "",
-                accounts: Default::default(),
-                account_addresses: &[],
-                client_options: &client_options,
+            if let Err(e) = Self::create_mocked_migration_message(account_handle, value).await {
+                log::error!("[MIGRATION] error creating mock message: `{:?}`", e.to_string());
             };
-            let amount = bundle.iter().map(|b| b.value().to_inner()).sum::<i64>() as u64;
-
-            let mut milestone_index = [0; 1];
-            crypto::utils::rand::fill(&mut milestone_index).unwrap();
-            let mut public_key = [0; 32];
-            crypto::utils::rand::fill(&mut public_key).unwrap();
-
-            let treasury_transaction = Payload::TreasuryTransaction(Box::new(
-                TreasuryTransactionPayload::new(
-                    Input::Treasury(TreasuryInput::new(id)),
-                    Output::Treasury(TreasuryOutput::new(amount).unwrap()),
-                )
-                .unwrap(),
-            ));
-
-            let receipt = Payload::Receipt(Box::new(
-                ReceiptPayload::new(
-                    u32::from(milestone_index[0]).into(),
-                    false,
-                    vec![MigratedFundsEntry::new(
-                        TailTransactionHash::new([
-                            222, 235, 107, 67, 2, 173, 253, 93, 165, 90, 166, 45, 102, 91, 19, 137, 71, 146, 156, 180,
-                            248, 31, 56, 25, 68, 154, 98, 100, 64, 108, 203, 48, 76, 75, 114, 150, 34, 153, 203, 35,
-                            225, 120, 194, 175, 169, 207, 80, 229, 10,
-                        ])
-                        .unwrap(),
-                        SignatureLockedSingleOutput::new(
-                            account_handle.latest_address().await.address().as_ref().clone(),
-                            amount,
-                        )
-                        .unwrap(),
-                    )
-                    .unwrap()],
-                    treasury_transaction,
-                )
-                .unwrap(),
-            ));
-
-            let payload = MessagePayload::new(
-                Payload::Milestone(Box::new(
-                    MilestonePayload::new(
-                        MilestonePayloadEssence::new(
-                            u32::from(milestone_index[0]).into(),
-                            Utc::now().timestamp() as u64,
-                            Parents::new(vec![id]).unwrap(),
-                            [0; 32],
-                            0,
-                            1,
-                            vec![public_key],
-                            Some(receipt),
-                        )
-                        .unwrap(),
-                        Vec::new(),
-                    )
-                    .unwrap(),
-                )),
-                &tx_metadata,
-            )
-            .await
-            .unwrap();
-
-            let message = Message {
-                id,
-                version: 1,
-                parents: vec![MessageId::new([0; 32])],
-                payload_length: 0,
-                payload: Some(payload),
-                timestamp: chrono::Utc::now(),
-                nonce: 0,
-                confirmed: Some(true),
-                broadcasted: true,
-                reattachment_message_id: None,
-            };
-            account_handle
-                .write()
-                .await
-                .save_messages(vec![message.clone()])
-                .await
-                .unwrap();
-            emit_transaction_event(
-                TransactionEventType::NewTransaction,
-                &*account_handle.read().await,
-                message,
-                false,
-            )
-            .await
-            .unwrap();
         });
 
+        Ok(())
+    }
+
+    async fn create_mocked_migration_message(account_handle: AccountHandle, value: u64) -> crate::Result<()> {
+        let mut id = [0; 32];
+        crypto::utils::rand::fill(&mut id).unwrap();
+        let id = MessageId::new(id);
+        let client_options = account_handle.client_options().await;
+        let bech32_hrp = account_handle.read().await.bech32_hrp();
+        let tx_metadata = TransactionBuilderMetadata {
+            id: &id,
+            bech32_hrp,
+            account_id: "",
+            accounts: Default::default(),
+            account_addresses: &[],
+            client_options: &client_options,
+        };
+
+        let mut milestone_index = [0; 1];
+        crypto::utils::rand::fill(&mut milestone_index).unwrap();
+        let mut public_key = [0; 32];
+        crypto::utils::rand::fill(&mut public_key).unwrap();
+
+        let treasury_transaction = Payload::TreasuryTransaction(Box::new(TreasuryTransactionPayload::new(
+            Input::Treasury(TreasuryInput::new(id)),
+            Output::Treasury(TreasuryOutput::new(value)?),
+        )?));
+
+        let receipt = Payload::Receipt(Box::new(ReceiptPayload::new(
+            u32::from(milestone_index[0]).into(),
+            false,
+            vec![MigratedFundsEntry::new(
+                TailTransactionHash::new([
+                    222, 235, 107, 67, 2, 173, 253, 93, 165, 90, 166, 45, 102, 91, 19, 137, 71, 146, 156, 180, 248, 31,
+                    56, 25, 68, 154, 98, 100, 64, 108, 203, 48, 76, 75, 114, 150, 34, 153, 203, 35, 225, 120, 194, 175,
+                    169, 207, 80, 229, 10,
+                ])?,
+                SignatureLockedSingleOutput::new(
+                    account_handle.latest_address().await.address().as_ref().clone(),
+                    value,
+                )?,
+            )?],
+            treasury_transaction,
+        )?));
+
+        let payload = MessagePayload::new(
+            Payload::Milestone(Box::new(MilestonePayload::new(
+                MilestonePayloadEssence::new(
+                    u32::from(milestone_index[0]).into(),
+                    Utc::now().timestamp() as u64,
+                    Parents::new(vec![id])?,
+                    [0; 32],
+                    0,
+                    0,
+                    vec![public_key],
+                    Some(receipt),
+                )?,
+                vec![Box::new([0; 64])],
+            )?)),
+            &tx_metadata,
+        )
+        .await?;
+
+        let message = Message {
+            id,
+            version: 1,
+            parents: vec![MessageId::new([0; 32])],
+            payload_length: 0,
+            payload: Some(payload),
+            timestamp: chrono::Utc::now(),
+            nonce: 0,
+            confirmed: Some(true),
+            broadcasted: true,
+            reattachment_message_id: None,
+            migrated_from_legacy: true,
+        };
+        account_handle
+            .write()
+            .await
+            .save_messages(vec![message.clone()])
+            .await?;
+        emit_transaction_event(
+            TransactionEventType::NewTransaction,
+            &*account_handle.read().await,
+            message,
+            false,
+        )
+        .await?;
         Ok(())
     }
 
