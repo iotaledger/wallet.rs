@@ -38,7 +38,7 @@ impl From<RustNodeInfoWrapper> for NodeInfoWrapper {
     }
 }
 
-#[derive(PartialEq, Getters, CopyGetters)]
+#[derive(PartialEq, Getters, CopyGetters, Copy)]
 pub struct InfoResponse {
     #[getset(get = "pub")]
     name: String,
