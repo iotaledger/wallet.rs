@@ -236,7 +236,7 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
                 spent_bundle_hashes.extend(bundle_hashes);
             }
         }
-        emit_migration_progress(MigrationProgressType::Mining {
+        emit_migration_progress(MigrationProgressType::MiningBundle {
             address: address_inputs
                 .iter()
                 .find(|i| i.spent)
@@ -261,7 +261,7 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
         prepared_bundle = mining_result.1;
     }
 
-    emit_migration_progress(MigrationProgressType::Signing {
+    emit_migration_progress(MigrationProgressType::SigningBundle {
         addresses: address_inputs
             .iter()
             .map(|i| {
@@ -366,7 +366,7 @@ pub(crate) async fn send_bundle(nodes: &[&str], bundle: Vec<BundledTransaction>,
         .map(char::from)
         .collect::<String>();
 
-    emit_migration_progress(MigrationProgressType::Broadcasting { bundle_hash }).await;
+    emit_migration_progress(MigrationProgressType::BroadcastingBundle { bundle_hash }).await;
 
     let _send_trytes = legacy_client
         .send_trytes()

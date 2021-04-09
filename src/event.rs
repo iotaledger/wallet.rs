@@ -180,17 +180,17 @@ pub enum MigrationProgressType {
         final_address_index: u64,
     },
     /// Mining the bundle with the given spent address.
-    Mining {
+    MiningBundle {
         /// The spent address.
         address: String,
     },
     /// Signing the bundle.
-    Signing {
+    SigningBundle {
         /// The addresses associated with the bundle.
         addresses: Vec<String>,
     },
     /// Broadcasting the given bundle hash.
-    Broadcasting {
+    BroadcastingBundle {
         /// The bundle hash.
         bundle_hash: String,
     },
