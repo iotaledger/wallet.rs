@@ -1,5 +1,12 @@
 # Changelog
 
+## \[0.2.1]
+
+- Fix Windows CI
+  - [df4e38f5](https://github.com/iotaledger/wallet.rs/commit/df4e38f539af44b24f2372d154b4533d9c5f80f1) fix(ci): Install LLVM and Clang on Windows ([#516](https://github.com/iotaledger/wallet.rs/pull/516)) on 2021-04-08
+- Reuse RocksDB storage instances.
+  - [d425e99f](https://github.com/iotaledger/wallet.rs/commit/d425e99fc7501656f6816f6cf8e03f1c8353104b) fix(manager): reuse existing rocksdb instances ([#524](https://github.com/iotaledger/wallet.rs/pull/524)) on 2021-04-09
+
 ## \[0.2.0]
 
 - Refactor `Message` object storage for performance.
