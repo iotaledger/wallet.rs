@@ -14,12 +14,6 @@ pub struct NodeInfoWrapper {
     nodeinfo: InfoResponse,
 }
 
-impl NodeInfoWrapper {
-    pub fn features(&self) -> Vec<String> {
-        self.features.to_vec()
-    }
-}
-
 impl From<RustNodeInfoWrapper> for NodeInfoWrapper {
     fn from(info: RustNodeInfoWrapper) -> Self {
         Self {
@@ -57,13 +51,15 @@ pub struct InfoResponse {
     #[getset(get = "pub")]
     bech32_hrp: String,
     #[getset(get_copy = "pub")]
-    messages_per_second: u32,
+    min_pow_score: f64,
     #[getset(get_copy = "pub")]
-    referenced_messages_per_second: u32,
+    messages_per_second: f64,
     #[getset(get_copy = "pub")]
-    referenced_rate: u32,
+    referenced_messages_per_second: f64,
     #[getset(get_copy = "pub")]
-    latest_milestone_timestamp: u32,
+    referenced_rate: f64,
+    #[getset(get_copy = "pub")]
+    latest_milestone_timestamp: u64,
     #[getset(get_copy = "pub")]
     latest_milestone_index: u32,
     #[getset(get_copy = "pub")]
@@ -71,8 +67,6 @@ pub struct InfoResponse {
     #[getset(get_copy = "pub")]
     pruning_index: u32,
     features: Vec<String>,
-    #[getset(get_copy = "pub")]
-    min_pow_score: f64,
 }
 
 impl InfoResponse {

@@ -8,7 +8,7 @@ use crate::{
     address::Address,
     client_options::ClientOptions,
     message::{Message, Transfer},
-    types::{InfoResponse, NodeInfoWrapper},
+    types::NodeInfoWrapper,
     Result,
 };
 use iota_wallet::{
