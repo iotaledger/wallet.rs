@@ -1,7 +1,10 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::AccountHandle;
+use crate::{
+    account::AccountHandle,
+    event::{emit_migration_progress, MigrationProgressType},
+};
 
 use chrono::prelude::Utc;
 use serde::Serialize;
@@ -127,6 +130,11 @@ impl<'a> MigrationDataFinder<'a> {
         let mut balance = 0;
 
         loop {
+            emit_migration_progress(MigrationProgressType::FetchingMigrationData {
+                initial_address_index: address_index,
+                final_address_index: address_index + self.gap_limit,
+            })
+            .await;
             let migration_inputs = legacy_client
                 .get_account_data_for_migration()
                 .with_seed(&self.seed)
@@ -228,6 +236,19 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
                 spent_bundle_hashes.extend(bundle_hashes);
             }
         }
+        emit_migration_progress(MigrationProgressType::Mining {
+            address: address_inputs
+                .iter()
+                .find(|i| i.spent)
+                .unwrap() // safe to unwrap: we checked that there's an spent address
+                .address
+                .to_inner()
+                .encode::<T3B1Buf>()
+                .iter_trytes()
+                .map(char::from)
+                .collect::<String>(),
+        })
+        .await;
         let mining_result = mine(
             prepared_bundle,
             data.security_level,
@@ -240,6 +261,20 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
         prepared_bundle = mining_result.1;
     }
 
+    emit_migration_progress(MigrationProgressType::Signing {
+        addresses: address_inputs
+            .iter()
+            .map(|i| {
+                i.address
+                    .to_inner()
+                    .encode::<T3B1Buf>()
+                    .iter_trytes()
+                    .map(char::from)
+                    .collect::<String>()
+            })
+            .collect(),
+    })
+    .await;
     let bundle = sign_migration_bundle(
         seed,
         prepared_bundle,
@@ -320,6 +355,19 @@ pub(crate) async fn send_bundle(nodes: &[&str], bundle: Vec<BundledTransaction>,
         builder = builder.node(node)?;
     }
     let legacy_client = builder.build()?;
+
+    let bundle_hash = bundle
+        .first()
+        .unwrap()
+        .bundle()
+        .to_inner()
+        .encode::<T3B1Buf>()
+        .iter_trytes()
+        .map(char::from)
+        .collect::<String>();
+
+    emit_migration_progress(MigrationProgressType::Broadcasting { bundle_hash }).await;
+
     let _send_trytes = legacy_client
         .send_trytes()
         .with_trytes(bundle)

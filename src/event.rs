@@ -166,6 +166,44 @@ pub struct TransferProgress {
     pub event: TransferProgressType,
 }
 
+/// Migration event type.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum MigrationProgressType {
+    /// Fetching migration data on the given address range.
+    FetchingMigrationData {
+        /// The initial address index on the fetch range.
+        #[serde(rename = "initialAddresIndex")]
+        initial_address_index: u64,
+        /// The final address index on the fetch range.
+        #[serde(rename = "finalAddressIndex")]
+        final_address_index: u64,
+    },
+    /// Mining the bundle with the given spent address.
+    Mining {
+        /// The spent address.
+        address: String,
+    },
+    /// Signing the bundle.
+    Signing {
+        /// The addresses associated with the bundle.
+        addresses: Vec<String>,
+    },
+    /// Broadcasting the given bundle hash.
+    Broadcasting {
+        /// The bundle hash.
+        bundle_hash: String,
+    },
+}
+
+/// Migration event data.
+#[derive(Clone, Getters, Serialize, Deserialize)]
+#[getset(get = "pub")]
+pub struct MigrationProgress {
+    /// The transfer event type.
+    pub event: MigrationProgressType,
+}
+
 trait EventHandler {
     fn id(&self) -> &EventId;
 }
@@ -254,6 +292,14 @@ struct TransferProgressHandler {
 
 event_handler_impl!(TransferProgressHandler);
 
+struct MigrationProgressHandler {
+    id: EventId,
+    /// The on event callback.
+    on_event: Box<dyn Fn(&MigrationProgress) + Send>,
+}
+
+event_handler_impl!(MigrationProgressHandler);
+
 type BalanceListeners = Arc<Mutex<Vec<BalanceEventHandler>>>;
 type TransactionListeners = Arc<Mutex<Vec<TransactionEventHandler>>>;
 type TransactionConfirmationChangeListeners = Arc<Mutex<Vec<TransactionConfirmationChangeEventHandler>>>;
@@ -264,6 +310,7 @@ type StrongholdStatusChangeListeners = Arc<Mutex<Vec<StrongholdStatusChangeEvent
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 type AddressConsolidationNeededListeners = Arc<Mutex<Vec<AddressConsolidationNeededHandler>>>;
 type TransferProgressListeners = Arc<Mutex<Vec<TransferProgressHandler>>>;
+type MigrationProgressListeners = Arc<Mutex<Vec<MigrationProgressHandler>>>;
 
 fn generate_event_id() -> EventId {
     let mut id = [0; 32];
@@ -324,6 +371,11 @@ fn address_consolidation_needed_listeners() -> &'static AddressConsolidationNeed
 
 fn transfer_progress_listeners() -> &'static TransferProgressListeners {
     static LISTENERS: Lazy<TransferProgressListeners> = Lazy::new(Default::default);
+    &LISTENERS
+}
+
+fn migration_progress_listeners() -> &'static MigrationProgressListeners {
+    static LISTENERS: Lazy<MigrationProgressListeners> = Lazy::new(Default::default);
     &LISTENERS
 }
 
@@ -663,6 +715,32 @@ pub async fn remove_transfer_progress_listener(id: &EventId) {
 pub(crate) async fn emit_transfer_progress(account_id: String, event: TransferProgressType) {
     let listeners = transfer_progress_listeners().lock().await;
     let event = TransferProgress { account_id, event };
+
+    for listener in listeners.deref() {
+        (listener.on_event)(&event);
+    }
+}
+
+/// Listen to a migration event.
+pub async fn on_migration_progress<F: Fn(&MigrationProgress) + Send + 'static>(cb: F) -> EventId {
+    let mut l = migration_progress_listeners().lock().await;
+    let id = generate_event_id();
+    l.push(MigrationProgressHandler {
+        id,
+        on_event: Box::new(cb),
+    });
+    id
+}
+
+/// Remove a migration event listener.
+pub async fn remove_migration_progress_listener(id: &EventId) {
+    remove_event_listener(id, migration_progress_listeners()).await;
+}
+
+/// Emit a migration event.
+pub(crate) async fn emit_migration_progress(event: MigrationProgressType) {
+    let listeners = migration_progress_listeners().lock().await;
+    let event = MigrationProgress { event };
 
     for listener in listeners.deref() {
         (listener.on_event)(&event);
