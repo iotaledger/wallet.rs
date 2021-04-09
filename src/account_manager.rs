@@ -778,15 +778,22 @@ impl AccountManager {
                 .await?;
             manager.accounts = self.accounts.clone(); // force manager to skip loading accounts
             manager.set_stronghold_password(stronghold_password).await?;
-            let stronghold_storage = crate::storage::get(&self.storage_folder.join(STRONGHOLD_FILENAME)).await?;
-            let mut stronghold_storage = stronghold_storage.lock().await;
+            let stronghold_storage_path = self.storage_folder.join(STRONGHOLD_FILENAME);
+            let stronghold_storage = crate::storage::get(&stronghold_storage_path).await?;
 
             for account_handle in self.accounts.read().await.values() {
                 stronghold_storage
+                    .lock()
+                    .await
                     .save_account(&account_handle.read().await.id(), &*account_handle.read().await)
                     .await?;
                 let messages = account_handle.list_messages(0, 0, None).await?;
-                account_handle.write().await.save_messages(messages).await?;
+                let mut account = account_handle.write().await;
+                // switch account storage_path to stronghold to save the messages
+                account.set_storage_path(stronghold_storage_path.clone());
+                account.save_messages(messages).await?;
+                // revert to original storage_path
+                account.set_storage_path(self.storage_path.clone());
             }
             self.storage_folder.join(STRONGHOLD_FILENAME)
         };
@@ -851,15 +858,17 @@ impl AccountManager {
         stronghold_manager
             .set_stronghold_password(stronghold_password.clone())
             .await?;
-        for account_handle in stronghold_manager.accounts.read().await.values() {
-            account_handle.write().await.set_storage_path(self.storage_path.clone());
-        }
+        let mut import_data = Vec::new();
         for (id, account) in stronghold_manager.accounts.read().await.iter() {
             self.accounts.write().await.insert(id.clone(), account.clone());
+            import_data.push((account.clone(), account.list_messages(0, 0, None).await?));
         }
         self.set_stronghold_password(stronghold_password.clone()).await?;
-        for account in self.accounts.read().await.values() {
-            account.write().await.save().await?;
+        for (account_handle, messages) in import_data {
+            let mut account = account_handle.write().await;
+            account.set_storage_path(self.storage_path.clone());
+            account.save().await?;
+            account.save_messages(messages).await?;
         }
         // wait for stronghold to finish its tasks
         let _ = crate::stronghold::actor_runtime().lock().await;
