@@ -166,27 +166,42 @@ impl AccountManagerBuilder {
 
     /// Builds the manager.
     pub async fn finish(self) -> crate::Result<AccountManager> {
-        let (storage, storage_file_path, is_stronghold): (Box<dyn StorageAdapter + Send + Sync>, PathBuf, bool) =
-            match self.storage {
-                ManagerStorage::Stronghold => {
-                    let path = self
-                        .storage_folder
-                        .join(self.storage_file_name.as_deref().unwrap_or(STRONGHOLD_FILENAME));
-                    fs::create_dir_all(&self.storage_folder)?;
-                    let storage = crate::storage::stronghold::StrongholdStorageAdapter::new(&path)?;
-                    (Box::new(storage) as Box<dyn StorageAdapter + Send + Sync>, path, true)
-                }
-                ManagerStorage::Rocksdb => {
-                    let path = self
-                        .storage_folder
-                        .join(self.storage_file_name.as_deref().unwrap_or(ROCKSDB_FILENAME));
-                    fs::create_dir_all(&self.storage_folder)?;
+        let (storage, storage_file_path, is_stronghold): (
+            Option<Box<dyn StorageAdapter + Send + Sync>>,
+            PathBuf,
+            bool,
+        ) = match self.storage {
+            ManagerStorage::Stronghold => {
+                let path = self
+                    .storage_folder
+                    .join(self.storage_file_name.as_deref().unwrap_or(STRONGHOLD_FILENAME));
+                fs::create_dir_all(&self.storage_folder)?;
+                let storage = crate::storage::stronghold::StrongholdStorageAdapter::new(&path)?;
+                (
+                    Some(Box::new(storage) as Box<dyn StorageAdapter + Send + Sync>),
+                    path,
+                    true,
+                )
+            }
+            ManagerStorage::Rocksdb => {
+                let path = self
+                    .storage_folder
+                    .join(self.storage_file_name.as_deref().unwrap_or(ROCKSDB_FILENAME));
+                fs::create_dir_all(&self.storage_folder)?;
+                // rocksdb storage already exists; no need to create a new instance
+                let storage = if crate::storage::get(&path).await.is_ok() {
+                    None
+                } else {
                     let storage = crate::storage::rocksdb::RocksdbStorageAdapter::new(&path)?;
-                    (Box::new(storage) as Box<dyn StorageAdapter + Send + Sync>, path, false)
-                }
-            };
+                    Some(Box::new(storage) as Box<dyn StorageAdapter + Send + Sync>)
+                };
+                (storage, path, false)
+            }
+        };
 
-        crate::storage::set(&storage_file_path, self.storage_encryption_key, storage).await;
+        if let Some(storage) = storage {
+            crate::storage::set(&storage_file_path, self.storage_encryption_key, storage).await;
+        }
 
         let sync_accounts_lock = Arc::new(Mutex::new(()));
 
