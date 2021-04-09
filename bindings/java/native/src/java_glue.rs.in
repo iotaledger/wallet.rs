@@ -284,6 +284,17 @@ foreign_class!(
 
 foreign_class!(
     #[derive(PartialEq)]
+    class NodeInfoWrapper {
+        self_type NodeInfoWrapper;
+        private constructor = empty;
+        private fn NodeInfoWrapper::eq(&self, o: &NodeInfoWrapper) -> bool; alias rustEq;
+        fn NodeInfoWrapper::url(&self) -> &str;
+        fn NodeInfoWrapper::nodeinfo(&self) -> InfoResponse; alias nodeinfo;
+    }
+);
+
+foreign_class!(
+    #[derive(PartialEq)]
     class InfoResponse {
         self_type InfoResponse;
         private constructor = empty;
@@ -292,6 +303,10 @@ foreign_class!(
         fn InfoResponse::version(&self) -> &str;
         fn InfoResponse::network_id(&self) -> &str; alias networkId;
         fn InfoResponse::bech32_hrp(&self) -> &str; alias bech32HRP;
+        fn InfoResponse::messages_per_second(&self) -> u32; alias messagesPerSecond;
+        fn InfoResponse::referenced_messages_per_second(&self) -> u32; alias referencedMessagesPerSecond;
+        fn InfoResponse::referenced_rate(&self) -> u32; alias referencedRate;
+        fn InfoResponse::latest_milestone_timestamp(&self) -> u32; alias latestMilestoneTimestamp;
         fn InfoResponse::min_pow_score(&self) -> f64; alias minPoWScore;
         fn InfoResponse::latest_milestone_index(&self) -> u32; alias latestMilestoneIndex;
         fn InfoResponse::confirmed_milestone_index(&self) -> u32; alias confirmedMilestoneIndex;

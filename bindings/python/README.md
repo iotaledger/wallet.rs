@@ -560,11 +560,15 @@ Gets the account balance information.
 
 **Returns** the [AccountBalance](#accountbalance) in this account.
 
-#### get_node_info(): InfoResponse
+#### get_node_info(url (optional)): NodeInfoWrapper
 
 Gets information about the node.
 
-**Returns** the [InfoResponse](#inforesponse)
+| Param        | Type             | Default                | Description  |
+| ------------ | ---------------- | ---------------------- | ------------ |
+| url          | <code>str</code> | <code>undefined</code> | Thr node url |
+
+**Returns** the [NodeInfoWrapper](#nodeinfowrapper)
 
 #### set_alias(alias): void
 

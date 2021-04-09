@@ -94,11 +94,19 @@ declare_types! {
         }
 
         method getNodeInfo(mut cx) {
-            let cb = cx.argument::<JsFunction>(0)?;
+            let url: Option<String> = match cx.argument_opt(0) {
+                Some(arg) => {
+                    Some(arg.downcast::<JsString>().or_throw(&mut cx)?.value())
+                },
+                None => Default::default(),
+            };
+
+            let cb = cx.argument::<JsFunction>(cx.len()-1)?;
             let this = cx.this();
             let account_id = cx.borrow(&this, |r| r.0.clone());
             let task = tasks::NodeInfoTask {
                 account_id,
+                url,
             };
             task.schedule(cb);
             Ok(cx.undefined().upcast())
