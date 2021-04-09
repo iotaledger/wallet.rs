@@ -33,7 +33,8 @@ impl Task for SendMigrationBundleTask {
             let nodes: Vec<&str> = self.nodes.iter().map(AsRef::as_ref).collect();
             manager
                 .send_migration_bundle(&nodes, &self.bundle_hash, self.options.mwm.unwrap_or(DEFAULT_MWM))
-                .await
+                .await?;
+            Ok(())
         }))
     }
 

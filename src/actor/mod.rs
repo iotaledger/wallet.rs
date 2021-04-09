@@ -268,10 +268,11 @@ impl WalletMessageHandler {
             } => {
                 convert_async_panics(|| async {
                     let nodes = nodes.iter().map(String::as_ref).collect::<Vec<&str>>();
-                    self.account_manager
+                    let migrated_bundle = self
+                        .account_manager
                         .send_migration_bundle(&nodes, bundle_hash, *mwm)
                         .await?;
-                    Ok(ResponseType::SentMigrationBundle)
+                    Ok(ResponseType::SentMigrationBundle(migrated_bundle))
                 })
                 .await
             }

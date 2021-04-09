@@ -157,6 +157,7 @@ impl AccountManager {
             self.account_manager
                 .send_migration_bundle(&nodes, bundle_hash, mwm.unwrap_or(DEFAULT_MWM)),
         )
+        .map(|_| ())
         .map_err(Into::into)
     }
 

@@ -6,7 +6,7 @@ use crate::{
         AccountHandle, AccountIdentifier, AccountInitialiser, AccountSynchronizeStep, AccountSynchronizer,
         SyncedAccount, SyncedAccountData,
     },
-    address::AddressOutput,
+    address::{AddressOutput, AddressWrapper},
     client::ClientOptions,
     event::{
         emit_balance_change, emit_confirmation_state_change, emit_reattachment_event, emit_transaction_event,
@@ -278,6 +278,17 @@ pub struct MigrationBundle {
     bundle_hash: String,
 }
 
+/// Response from `send_migration_bundle`.
+#[derive(Debug, Getters, Serialize)]
+#[getset(get = "pub")]
+pub struct MigratedBundle {
+    /// The deposit address.
+    #[serde(with = "crate::serde::iota_address_serde")]
+    address: AddressWrapper,
+    /// The bundle input value.
+    value: u64,
+}
+
 /// The account manager.
 ///
 /// Used to manage multiple accounts.
@@ -297,7 +308,7 @@ pub struct AccountManager {
     account_options: AccountOptions,
     sync_accounts_lock: Arc<Mutex<()>>,
     cached_migration_data: Mutex<HashMap<u64, CachedMigrationData>>,
-    cached_migration_bundles: Mutex<HashMap<String, (Vec<BundledTransaction>, u64)>>,
+    cached_migration_bundles: Mutex<HashMap<String, (Vec<BundledTransaction>, AddressWrapper, u64)>>,
 }
 
 impl Clone for AccountManager {
@@ -423,7 +434,7 @@ impl AccountManager {
 
         let account_handle = self.get_account(0).await?;
         let bundle_data = migration::create_bundle(
-            account_handle,
+            account_handle.clone(),
             &data,
             seed,
             address_inputs,
@@ -443,10 +454,14 @@ impl AccountManager {
             .iter_trytes()
             .map(char::from)
             .collect::<String>();
-        self.cached_migration_bundles
-            .lock()
-            .await
-            .insert(bundle_hash.clone(), (bundle_data.bundle, value));
+        self.cached_migration_bundles.lock().await.insert(
+            bundle_hash.clone(),
+            (
+                bundle_data.bundle,
+                account_handle.latest_address().await.address().clone(),
+                value,
+            ),
+        );
 
         Ok(MigrationBundle {
             crackability,
@@ -455,8 +470,8 @@ impl AccountManager {
     }
 
     /// Sends the migration bundle to the given node.
-    pub async fn send_migration_bundle(&self, nodes: &[&str], hash: &str, mwm: u8) -> crate::Result<()> {
-        let (bundle, value) = self
+    pub async fn send_migration_bundle(&self, nodes: &[&str], hash: &str, mwm: u8) -> crate::Result<MigratedBundle> {
+        let (bundle, address, value) = self
             .cached_migration_bundles
             .lock()
             .await
@@ -474,7 +489,7 @@ impl AccountManager {
             };
         });
 
-        Ok(())
+        Ok(MigratedBundle { address, value })
     }
 
     async fn create_mocked_migration_message(account_handle: AccountHandle, value: u64) -> crate::Result<()> {
