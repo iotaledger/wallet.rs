@@ -558,21 +558,21 @@
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">account</span>::<span class="ident">AccountIdentifier</span>,
-    <span class="ident">account_manager</span>::<span class="ident">AccountManager</span>,
+    <span class="ident">account::AccountIdentifier</span>,
+    <span class="ident">account_manager::AccountManager</span>,
     <span class="ident">message</span>::{<span class="ident">Message</span> <span class="kw">as</span> <span class="ident">WalletMessage</span>, <span class="ident">Transfer</span>},
     <span class="prelude-ty">Result</span>,
 };
 <span class="kw">use</span> <span class="ident">futures</span>::{<span class="ident">Future</span>, <span class="ident">FutureExt</span>};
-<span class="kw">use</span> <span class="ident">iota</span>::<span class="ident">message</span>::<span class="ident">prelude</span>::<span class="ident">MessageId</span>;
-<span class="kw">use</span> <span class="ident">zeroize</span>::<span class="ident">Zeroize</span>;
+<span class="kw">use</span> <span class="ident">iota::message::prelude::MessageId</span>;
+<span class="kw">use</span> <span class="ident">zeroize::Zeroize</span>;
 
 <span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">any</span>::<span class="ident">Any</span>,
-    <span class="ident">convert</span>::<span class="ident">TryInto</span>,
-    <span class="ident">num</span>::<span class="ident">NonZeroU64</span>,
+    <span class="ident">any::Any</span>,
+    <span class="ident">convert::TryInto</span>,
+    <span class="ident">num::NonZeroU64</span>,
     <span class="ident">panic</span>::{<span class="ident">catch_unwind</span>, <span class="ident">AssertUnwindSafe</span>},
-    <span class="ident">path</span>::<span class="ident">Path</span>,
+    <span class="ident">path::Path</span>,
 };
 
 <span class="kw">mod</span> <span class="ident">message</span>;
@@ -591,8 +591,8 @@
     } <span class="kw">else</span> {
         <span class="string">&quot;Internal error&quot;</span>.<span class="ident">to_string</span>()
     };
-    <span class="kw">let</span> <span class="ident">current_backtrace</span> <span class="op">=</span> <span class="ident">backtrace</span>::<span class="ident">Backtrace</span>::<span class="ident">new</span>();
-    <span class="ident">ResponseType</span>::<span class="ident">Panic</span>(<span class="macro">format!</span>(<span class="string">&quot;{}\n\n{:?}&quot;</span>, <span class="ident">msg</span>, <span class="ident">current_backtrace</span>))
+    <span class="kw">let</span> <span class="ident">current_backtrace</span> <span class="op">=</span> <span class="ident">backtrace::Backtrace::new</span>();
+    <span class="ident">ResponseType::Panic</span>(<span class="macro">format!</span>(<span class="string">&quot;{}\n\n{:?}&quot;</span>, <span class="ident">msg</span>, <span class="ident">current_backtrace</span>))
 }
 
 <span class="kw">fn</span> <span class="ident">convert_panics</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">FnOnce</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ResponseType</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">f</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ResponseType</span><span class="op">&gt;</span> {
@@ -616,7 +616,7 @@
     <span class="doccomment">/// Creates a new instance of the message handler with the default account manager.</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span> <span class="self">Self</span> {
-            <span class="ident">account_manager</span>: <span class="ident">AccountManager</span>::<span class="ident">builder</span>().<span class="ident">finish</span>().<span class="kw">await</span><span class="question-mark">?</span>,
+            <span class="ident">account_manager</span>: <span class="ident">AccountManager::builder</span>().<span class="ident">finish</span>().<span class="kw">await</span><span class="question-mark">?</span>,
         };
         <span class="prelude-val">Ok</span>(<span class="ident">instance</span>)
     }
@@ -629,27 +629,27 @@
     <span class="doccomment">/// Handles a message.</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">handle</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">message</span>: <span class="ident">Message</span>) {
         <span class="kw">let</span> <span class="ident">response</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ResponseType</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">message</span>.<span class="ident">message_type_mut</span>() {
-            <span class="ident">MessageType</span>::<span class="ident">RemoveAccount</span>(<span class="ident">account_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MessageType::RemoveAccount</span>(<span class="ident">account_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> { <span class="self">self</span>.<span class="ident">remove_account</span>(<span class="ident">account_id</span>).<span class="kw">await</span> }).<span class="kw">await</span>
             }
-            <span class="ident">MessageType</span>::<span class="ident">CreateAccount</span>(<span class="ident">account</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MessageType::CreateAccount</span>(<span class="ident">account</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> { <span class="self">self</span>.<span class="ident">create_account</span>(<span class="ident">account</span>).<span class="kw">await</span> }).<span class="kw">await</span>
             }
-            <span class="ident">MessageType</span>::<span class="ident">GetAccount</span>(<span class="ident">account_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MessageType::GetAccount</span>(<span class="ident">account_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> { <span class="self">self</span>.<span class="ident">get_account</span>(<span class="ident">account_id</span>).<span class="kw">await</span> }).<span class="kw">await</span>
             }
-            <span class="ident">MessageType</span>::<span class="ident">GetAccounts</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> { <span class="self">self</span>.<span class="ident">get_accounts</span>().<span class="kw">await</span> }).<span class="kw">await</span>,
-            <span class="ident">MessageType</span>::<span class="ident">CallAccountMethod</span> { <span class="ident">account_id</span>, <span class="ident">method</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MessageType::GetAccounts</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> { <span class="self">self</span>.<span class="ident">get_accounts</span>().<span class="kw">await</span> }).<span class="kw">await</span>,
+            <span class="ident">MessageType::CallAccountMethod</span> { <span class="ident">account_id</span>, <span class="ident">method</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> { <span class="self">self</span>.<span class="ident">call_account_method</span>(<span class="ident">account_id</span>, <span class="ident">method</span>).<span class="kw">await</span> }).<span class="kw">await</span>
             }
-            <span class="ident">MessageType</span>::<span class="ident">SyncAccounts</span> {
+            <span class="ident">MessageType::SyncAccounts</span> {
                 <span class="ident">address_index</span>,
                 <span class="ident">gap_limit</span>,
             } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> { <span class="self">self</span>.<span class="ident">sync_accounts</span>(<span class="ident">address_index</span>, <span class="ident">gap_limit</span>).<span class="kw">await</span> }).<span class="kw">await</span>,
-            <span class="ident">MessageType</span>::<span class="ident">Reattach</span> { <span class="ident">account_id</span>, <span class="ident">message_id</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MessageType::Reattach</span> { <span class="ident">account_id</span>, <span class="ident">message_id</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> { <span class="self">self</span>.<span class="ident">reattach</span>(<span class="ident">account_id</span>, <span class="ident">message_id</span>).<span class="kw">await</span> }).<span class="kw">await</span>
             }
-            <span class="ident">MessageType</span>::<span class="ident">Backup</span> { <span class="ident">destination</span>, <span class="ident">password</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MessageType::Backup</span> { <span class="ident">destination</span>, <span class="ident">password</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> {
                     <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">backup</span>(<span class="ident">destination</span>, <span class="ident">password</span>.<span class="ident">to_string</span>()).<span class="kw">await</span>;
                     <span class="ident">password</span>.<span class="ident">zeroize</span>();
@@ -657,88 +657,88 @@
                 })
                 .<span class="kw">await</span>
             }
-            <span class="ident">MessageType</span>::<span class="ident">RestoreBackup</span> { <span class="ident">backup_path</span>, <span class="ident">password</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MessageType::RestoreBackup</span> { <span class="ident">backup_path</span>, <span class="ident">password</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span>
                     <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> { <span class="self">self</span>.<span class="ident">restore_backup</span>(<span class="ident">backup_path</span>, <span class="ident">password</span>.<span class="ident">to_string</span>()).<span class="kw">await</span> })
                         .<span class="kw">await</span>;
                 <span class="ident">password</span>.<span class="ident">zeroize</span>();
                 <span class="ident">res</span>
             }
-            <span class="ident">MessageType</span>::<span class="ident">SetStoragePassword</span>(<span class="ident">password</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MessageType::SetStoragePassword</span>(<span class="ident">password</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> { <span class="self">self</span>.<span class="ident">set_storage_password</span>(<span class="ident">password</span>).<span class="kw">await</span> }).<span class="kw">await</span>
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
-            <span class="ident">MessageType</span>::<span class="ident">SetStrongholdPassword</span>(<span class="ident">password</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MessageType::SetStrongholdPassword</span>(<span class="ident">password</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> { <span class="self">self</span>.<span class="ident">set_stronghold_password</span>(<span class="ident">password</span>).<span class="kw">await</span> }).<span class="kw">await</span>
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
-            <span class="ident">MessageType</span>::<span class="ident">SetStrongholdPasswordClearInterval</span>(<span class="ident">interval</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MessageType::SetStrongholdPasswordClearInterval</span>(<span class="ident">interval</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> {
-                    <span class="kw">crate</span>::<span class="ident">set_stronghold_password_clear_interval</span>(<span class="kw-2">*</span><span class="ident">interval</span>).<span class="kw">await</span>;
-                    <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">StrongholdPasswordClearIntervalSet</span>)
+                    <span class="kw">crate</span><span class="ident">::set_stronghold_password_clear_interval</span>(<span class="kw-2">*</span><span class="ident">interval</span>).<span class="kw">await</span>;
+                    <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::StrongholdPasswordClearIntervalSet</span>)
                 })
                 .<span class="kw">await</span>
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
-            <span class="ident">MessageType</span>::<span class="ident">GetStrongholdStatus</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MessageType::GetStrongholdStatus</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> {
                     <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span>
-                        <span class="kw">crate</span>::<span class="ident">get_stronghold_status</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">stronghold_snapshot_path</span>().<span class="kw">await</span><span class="question-mark">?</span>).<span class="kw">await</span>;
-                    <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">StrongholdStatus</span>(<span class="ident">status</span>))
+                        <span class="kw">crate</span><span class="ident">::get_stronghold_status</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">stronghold_snapshot_path</span>().<span class="kw">await</span><span class="question-mark">?</span>).<span class="kw">await</span>;
+                    <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::StrongholdStatus</span>(<span class="ident">status</span>))
                 })
                 .<span class="kw">await</span>
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
-            <span class="ident">MessageType</span>::<span class="ident">LockStronghold</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MessageType::LockStronghold</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> {
-                    <span class="kw">crate</span>::<span class="ident">lock_stronghold</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">stronghold_snapshot_path</span>().<span class="kw">await</span><span class="question-mark">?</span>, <span class="bool-val">true</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-                    <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">LockedStronghold</span>)
+                    <span class="kw">crate</span><span class="ident">::lock_stronghold</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">stronghold_snapshot_path</span>().<span class="kw">await</span><span class="question-mark">?</span>, <span class="bool-val">true</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::LockedStronghold</span>)
                 })
                 .<span class="kw">await</span>
             }
-            <span class="ident">MessageType</span>::<span class="ident">GenerateMnemonic</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">convert_panics</span>(<span class="op">|</span><span class="op">|</span> {
+            <span class="ident">MessageType::GenerateMnemonic</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">convert_panics</span>(<span class="op">|</span><span class="op">|</span> {
                 <span class="self">self</span>.<span class="ident">account_manager</span>
                     .<span class="ident">generate_mnemonic</span>()
-                    .<span class="ident">map</span>(<span class="ident">ResponseType</span>::<span class="ident">GeneratedMnemonic</span>)
+                    .<span class="ident">map</span>(<span class="ident">ResponseType::GeneratedMnemonic</span>)
             }),
-            <span class="ident">MessageType</span>::<span class="ident">VerifyMnemonic</span>(<span class="ident">mnemonic</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">convert_panics</span>(<span class="op">|</span><span class="op">|</span> {
+            <span class="ident">MessageType::VerifyMnemonic</span>(<span class="ident">mnemonic</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">convert_panics</span>(<span class="op">|</span><span class="op">|</span> {
                 <span class="self">self</span>.<span class="ident">account_manager</span>
                     .<span class="ident">verify_mnemonic</span>(<span class="ident">mnemonic</span>)
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ResponseType</span>::<span class="ident">VerifiedMnemonic</span>)
+                    .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ResponseType::VerifiedMnemonic</span>)
             }),
-            <span class="ident">MessageType</span>::<span class="ident">StoreMnemonic</span> { <span class="ident">signer_type</span>, <span class="ident">mnemonic</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MessageType::StoreMnemonic</span> { <span class="ident">signer_type</span>, <span class="ident">mnemonic</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> {
                     <span class="self">self</span>.<span class="ident">account_manager</span>
                         .<span class="ident">store_mnemonic</span>(<span class="ident">signer_type</span>.<span class="ident">clone</span>(), <span class="ident">mnemonic</span>.<span class="ident">clone</span>())
                         .<span class="kw">await</span>
-                        .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ResponseType</span>::<span class="ident">StoredMnemonic</span>)
+                        .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ResponseType::StoredMnemonic</span>)
                 })
                 .<span class="kw">await</span>
             }
-            <span class="ident">MessageType</span>::<span class="ident">IsLatestAddressUnused</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MessageType::IsLatestAddressUnused</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> {
                     <span class="self">self</span>.<span class="ident">account_manager</span>
                         .<span class="ident">is_latest_address_unused</span>()
                         .<span class="kw">await</span>
-                        .<span class="ident">map</span>(<span class="ident">ResponseType</span>::<span class="ident">AreAllLatestAddressesUnused</span>)
+                        .<span class="ident">map</span>(<span class="ident">ResponseType::AreAllLatestAddressesUnused</span>)
                 })
                 .<span class="kw">await</span>
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
-            <span class="ident">MessageType</span>::<span class="ident">GetLedgerStatus</span>(<span class="ident">is_simulator</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">convert_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">LedgerStatus</span>(<span class="kw">crate</span>::<span class="ident">get_ledger_status</span>(<span class="kw-2">*</span><span class="ident">is_simulator</span>))))
+            <span class="ident">MessageType::GetLedgerStatus</span>(<span class="ident">is_simulator</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">convert_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::LedgerStatus</span>(<span class="kw">crate</span><span class="ident">::get_ledger_status</span>(<span class="kw-2">*</span><span class="ident">is_simulator</span>))))
             }
-            <span class="ident">MessageType</span>::<span class="ident">DeleteStorage</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MessageType::DeleteStorage</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
                     <span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">delete_internal</span>().<span class="kw">await</span><span class="question-mark">?</span>;
-                    <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">DeletedStorage</span>)
+                    <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::DeletedStorage</span>)
                 })
                 .<span class="kw">await</span>
             }
-            <span class="ident">MessageType</span>::<span class="ident">SendTransfer</span> { <span class="ident">account_id</span>, <span class="ident">transfer</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MessageType::SendTransfer</span> { <span class="ident">account_id</span>, <span class="ident">transfer</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> { <span class="self">self</span>.<span class="ident">send_transfer</span>(<span class="ident">account_id</span>, <span class="ident">transfer</span>.<span class="ident">clone</span>().<span class="ident">finish</span>()).<span class="kw">await</span> }).<span class="kw">await</span>
             }
-            <span class="ident">MessageType</span>::<span class="ident">InternalTransfer</span> {
+            <span class="ident">MessageType::InternalTransfer</span> {
                 <span class="ident">from_account_id</span>,
                 <span class="ident">to_account_id</span>,
                 <span class="ident">amount</span>,
@@ -747,7 +747,7 @@
                     .<span class="kw">await</span>
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
-            <span class="ident">MessageType</span>::<span class="ident">ChangeStrongholdPassword</span> {
+            <span class="ident">MessageType::ChangeStrongholdPassword</span> {
                 <span class="ident">current_password</span>,
                 <span class="ident">new_password</span>,
             } <span class="op">=</span><span class="op">&gt;</span> {
@@ -757,14 +757,14 @@
                         .<span class="kw">await</span><span class="question-mark">?</span>;
                     <span class="ident">current_password</span>.<span class="ident">zeroize</span>();
                     <span class="ident">new_password</span>.<span class="ident">zeroize</span>();
-                    <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">StrongholdPasswordChanged</span>)
+                    <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::StrongholdPasswordChanged</span>)
                 })
                 .<span class="kw">await</span>
             }
-            <span class="ident">MessageType</span>::<span class="ident">SetClientOptions</span>(<span class="ident">options</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MessageType::SetClientOptions</span>(<span class="ident">options</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> {
                     <span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">set_client_options</span>(<span class="kw-2">*</span><span class="ident">options</span>.<span class="ident">clone</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
-                    <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">UpdatedAllClientOptions</span>)
+                    <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::UpdatedAllClientOptions</span>)
                 })
                 .<span class="kw">await</span>
             }
@@ -772,33 +772,33 @@
 
         <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">response</span> {
             <span class="prelude-val">Ok</span>(<span class="ident">r</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">r</span>,
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ResponseType</span>::<span class="ident">Error</span>(<span class="ident">e</span>),
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ResponseType::Error</span>(<span class="ident">e</span>),
         };
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">message</span>
             .<span class="ident">response_tx</span>
-            .<span class="ident">send</span>(<span class="ident">Response</span>::<span class="ident">new</span>(<span class="ident">message</span>.<span class="ident">id</span>().<span class="ident">to_string</span>(), <span class="ident">message</span>.<span class="ident">message_type</span>, <span class="ident">response</span>));
+            .<span class="ident">send</span>(<span class="ident">Response::new</span>(<span class="ident">message</span>.<span class="ident">id</span>().<span class="ident">to_string</span>(), <span class="ident">message</span>.<span class="ident">message_type</span>, <span class="ident">response</span>));
     }
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">backup</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">destination_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">password</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ResponseType</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">backup</span>(<span class="ident">destination_path</span>, <span class="ident">password</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">BackupSuccessful</span>)
+        <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::BackupSuccessful</span>)
     }
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">restore_backup</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">backup_path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">password</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ResponseType</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">import_accounts</span>(<span class="ident">backup_path</span>, <span class="ident">password</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">BackupRestored</span>)
+        <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::BackupRestored</span>)
     }
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">reattach</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">account_id</span>: <span class="kw-2">&amp;</span><span class="ident">AccountIdentifier</span>, <span class="ident">message_id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ResponseType</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">parsed_message_id</span> <span class="op">=</span> <span class="ident">MessageId</span>::<span class="ident">new</span>(
+        <span class="kw">let</span> <span class="ident">parsed_message_id</span> <span class="op">=</span> <span class="ident">MessageId::new</span>(
             <span class="ident">message_id</span>.<span class="ident">as_bytes</span>()[..]
                 .<span class="ident">try_into</span>()
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">InvalidMessageId</span>)<span class="question-mark">?</span>,
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::Error::InvalidMessageId</span>)<span class="question-mark">?</span>,
         );
         <span class="self">self</span>.<span class="ident">account_manager</span>
             .<span class="ident">reattach</span>(<span class="ident">account_id</span>.<span class="ident">clone</span>(), <span class="kw-2">&amp;</span><span class="ident">parsed_message_id</span>)
             .<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">Reattached</span>(<span class="ident">message_id</span>.<span class="ident">to_string</span>()))
+        <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::Reattached</span>(<span class="ident">message_id</span>.<span class="ident">to_string</span>()))
     }
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">sync_accounts</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address_index</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>, <span class="ident">gap_limit</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ResponseType</span><span class="op">&gt;</span> {
@@ -810,7 +810,7 @@
             <span class="ident">synchronizer</span> <span class="op">=</span> <span class="ident">synchronizer</span>.<span class="ident">gap_limit</span>(<span class="kw-2">*</span><span class="ident">gap_limit</span>);
         }
         <span class="kw">let</span> <span class="ident">synced</span> <span class="op">=</span> <span class="ident">synchronizer</span>.<span class="ident">execute</span>().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">SyncedAccounts</span>(<span class="ident">synced</span>))
+        <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::SyncedAccounts</span>(<span class="ident">synced</span>))
     }
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">call_account_method</span>(
@@ -821,15 +821,15 @@
         <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">get_account</span>(<span class="ident">account_id</span>.<span class="ident">clone</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">match</span> <span class="ident">method</span> {
-            <span class="ident">AccountMethod</span>::<span class="ident">GenerateAddress</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">AccountMethod::GenerateAddress</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">generate_address</span>().<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">GeneratedAddress</span>(<span class="ident">address</span>))
+                <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::GeneratedAddress</span>(<span class="ident">address</span>))
             }
-            <span class="ident">AccountMethod</span>::<span class="ident">GetUnusedAddress</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">AccountMethod::GetUnusedAddress</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">get_unused_address</span>().<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">UnusedAddress</span>(<span class="ident">address</span>))
+                <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::UnusedAddress</span>(<span class="ident">address</span>))
             }
-            <span class="ident">AccountMethod</span>::<span class="ident">ListMessages</span> {
+            <span class="ident">AccountMethod::ListMessages</span> {
                 <span class="ident">count</span>,
                 <span class="ident">from</span>,
                 <span class="ident">message_type</span>,
@@ -839,25 +839,25 @@
                     .<span class="kw">await</span>
                     .<span class="ident">list_messages</span>(<span class="kw-2">*</span><span class="ident">count</span>, <span class="kw-2">*</span><span class="ident">from</span>, <span class="ident">message_type</span>.<span class="ident">clone</span>())
                     .<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">Messages</span>(<span class="ident">messages</span>))
+                <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::Messages</span>(<span class="ident">messages</span>))
             }
-            <span class="ident">AccountMethod</span>::<span class="ident">ListAddresses</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">AccountMethod::ListAddresses</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">addresses</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">addresses</span>().<span class="kw">await</span>;
-                <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">Addresses</span>(<span class="ident">addresses</span>))
+                <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::Addresses</span>(<span class="ident">addresses</span>))
             }
-            <span class="ident">AccountMethod</span>::<span class="ident">ListSpentAddresses</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">AccountMethod::ListSpentAddresses</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">addresses</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">list_spent_addresses</span>().<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">Addresses</span>(<span class="ident">addresses</span>))
+                <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::Addresses</span>(<span class="ident">addresses</span>))
             }
-            <span class="ident">AccountMethod</span>::<span class="ident">ListUnspentAddresses</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">AccountMethod::ListUnspentAddresses</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">addresses</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">list_unspent_addresses</span>().<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">Addresses</span>(<span class="ident">addresses</span>))
+                <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::Addresses</span>(<span class="ident">addresses</span>))
             }
-            <span class="ident">AccountMethod</span>::<span class="ident">GetBalance</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">Balance</span>(<span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">balance</span>().<span class="kw">await</span><span class="question-mark">?</span>)),
-            <span class="ident">AccountMethod</span>::<span class="ident">GetLatestAddress</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">LatestAddress</span>(
+            <span class="ident">AccountMethod::GetBalance</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::Balance</span>(<span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">balance</span>().<span class="kw">await</span><span class="question-mark">?</span>)),
+            <span class="ident">AccountMethod::GetLatestAddress</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::LatestAddress</span>(
                 <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">latest_address</span>().<span class="ident">clone</span>(),
             )),
-            <span class="ident">AccountMethod</span>::<span class="ident">SyncAccount</span> {
+            <span class="ident">AccountMethod::SyncAccount</span> {
                 <span class="ident">address_index</span>,
                 <span class="ident">gap_limit</span>,
                 <span class="ident">skip_persistence</span>,
@@ -875,18 +875,18 @@
                     }
                 }
                 <span class="kw">let</span> <span class="ident">synced</span> <span class="op">=</span> <span class="ident">synchronizer</span>.<span class="ident">execute</span>().<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">SyncedAccount</span>(<span class="ident">synced</span>))
+                <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::SyncedAccount</span>(<span class="ident">synced</span>))
             }
-            <span class="ident">AccountMethod</span>::<span class="ident">IsLatestAddressUnused</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">IsLatestAddressUnused</span>(
+            <span class="ident">AccountMethod::IsLatestAddressUnused</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::IsLatestAddressUnused</span>(
                 <span class="ident">account_handle</span>.<span class="ident">is_latest_address_unused</span>().<span class="kw">await</span><span class="question-mark">?</span>,
             )),
-            <span class="ident">AccountMethod</span>::<span class="ident">SetAlias</span>(<span class="ident">alias</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">AccountMethod::SetAlias</span>(<span class="ident">alias</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">account_handle</span>.<span class="ident">set_alias</span>(<span class="ident">alias</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">UpdatedAlias</span>)
+                <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::UpdatedAlias</span>)
             }
-            <span class="ident">AccountMethod</span>::<span class="ident">SetClientOptions</span>(<span class="ident">options</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">AccountMethod::SetClientOptions</span>(<span class="ident">options</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">account_handle</span>.<span class="ident">set_client_options</span>(<span class="kw-2">*</span><span class="ident">options</span>.<span class="ident">clone</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">UpdatedClientOptions</span>)
+                <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::UpdatedClientOptions</span>)
             }
         }
     }
@@ -896,7 +896,7 @@
         <span class="self">self</span>.<span class="ident">account_manager</span>
             .<span class="ident">remove_account</span>(<span class="ident">account_id</span>.<span class="ident">clone</span>())
             .<span class="kw">await</span>
-            .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ResponseType</span>::<span class="ident">RemovedAccount</span>(<span class="ident">account_id</span>.<span class="ident">clone</span>()))
+            .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ResponseType::RemovedAccount</span>(<span class="ident">account_id</span>.<span class="ident">clone</span>()))
     }
 
     <span class="doccomment">/// The create account message handler.</span>
@@ -919,9 +919,9 @@
         <span class="kw">match</span> <span class="ident">builder</span>.<span class="ident">initialise</span>().<span class="kw">await</span> {
             <span class="prelude-val">Ok</span>(<span class="ident">account_handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>;
-                <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">CreatedAccount</span>(<span class="ident">AccountDto</span>::<span class="ident">new</span>(
+                <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::CreatedAccount</span>(<span class="ident">AccountDto::new</span>(
                     <span class="ident">account</span>.<span class="ident">clone</span>(),
-                    <span class="ident">Vec</span>::<span class="ident">new</span>(),
+                    <span class="ident">Vec::new</span>(),
                 )))
             }
             <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>),
@@ -932,35 +932,35 @@
         <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">get_account</span>(<span class="ident">account_id</span>.<span class="ident">clone</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>;
         <span class="kw">let</span> <span class="ident">messages</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">list_messages</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">ReadAccount</span>(<span class="ident">AccountDto</span>::<span class="ident">new</span>(<span class="ident">account</span>.<span class="ident">clone</span>(), <span class="ident">messages</span>)))
+        <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::ReadAccount</span>(<span class="ident">AccountDto::new</span>(<span class="ident">account</span>.<span class="ident">clone</span>(), <span class="ident">messages</span>)))
     }
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_accounts</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ResponseType</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">accounts</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">get_accounts</span>().<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">accounts_</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">accounts_</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">for</span> <span class="ident">account_handle</span> <span class="kw">in</span> <span class="ident">accounts</span> {
             <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>;
             <span class="kw">let</span> <span class="ident">messages</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">list_messages</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-            <span class="ident">accounts_</span>.<span class="ident">push</span>(<span class="ident">AccountDto</span>::<span class="ident">new</span>(<span class="ident">account</span>.<span class="ident">clone</span>(), <span class="ident">messages</span>));
+            <span class="ident">accounts_</span>.<span class="ident">push</span>(<span class="ident">AccountDto::new</span>(<span class="ident">account</span>.<span class="ident">clone</span>(), <span class="ident">messages</span>));
         }
-        <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">ReadAccounts</span>(<span class="ident">accounts_</span>))
+        <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::ReadAccounts</span>(<span class="ident">accounts_</span>))
     }
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_storage_password</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">password</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ResponseType</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">set_storage_password</span>(<span class="ident">password</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">StoragePasswordSet</span>)
+        <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::StoragePasswordSet</span>)
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_stronghold_password</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">password</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ResponseType</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">set_stronghold_password</span>(<span class="ident">password</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">StrongholdPasswordSet</span>)
+        <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::StrongholdPasswordSet</span>)
     }
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_transfer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">account_id</span>: <span class="kw-2">&amp;</span><span class="ident">AccountIdentifier</span>, <span class="ident">transfer</span>: <span class="ident">Transfer</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ResponseType</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">get_account</span>(<span class="ident">account_id</span>.<span class="ident">clone</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">transfer</span>(<span class="ident">transfer</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">SentTransfer</span>(<span class="ident">message</span>))
+        <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::SentTransfer</span>(<span class="ident">message</span>))
     }
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">internal_transfer</span>(
@@ -973,15 +973,15 @@
             .<span class="ident">account_manager</span>
             .<span class="ident">internal_transfer</span>(<span class="ident">from_account_id</span>.<span class="ident">clone</span>(), <span class="ident">to_account_id</span>.<span class="ident">clone</span>(), <span class="ident">amount</span>)
             .<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">ResponseType</span>::<span class="ident">SentTransfer</span>(<span class="ident">message</span>))
+        <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::SentTransfer</span>(<span class="ident">message</span>))
     }
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
     <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">AccountToCreate</span>, <span class="ident">Message</span>, <span class="ident">MessageType</span>, <span class="ident">Response</span>, <span class="ident">ResponseType</span>, <span class="ident">WalletMessageHandler</span>};
-    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">account_manager</span>::<span class="ident">AccountManager</span>, <span class="ident">client</span>::<span class="ident">ClientOptionsBuilder</span>};
-    <span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">sync</span>::<span class="ident">mpsc</span>::{<span class="ident">unbounded_channel</span>, <span class="ident">UnboundedReceiver</span>, <span class="ident">UnboundedSender</span>};
+    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">account_manager::AccountManager</span>, <span class="ident">client::ClientOptionsBuilder</span>};
+    <span class="kw">use</span> <span class="ident">tokio::sync::mpsc</span>::{<span class="ident">unbounded_channel</span>, <span class="ident">UnboundedReceiver</span>, <span class="ident">UnboundedSender</span>};
 
     <span class="doccomment">/// The wallet actor builder.</span>
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
@@ -993,7 +993,7 @@
     <span class="kw">impl</span> <span class="ident">WalletBuilder</span> {
         <span class="doccomment">/// Creates a new wallet actor builder.</span>
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-            <span class="self">Self</span>::<span class="ident">default</span>()
+            <span class="self">Self</span><span class="ident">::default</span>()
         }
 
         <span class="doccomment">/// Sets the receiver for messages.</span>
@@ -1036,12 +1036,12 @@
 
     <span class="kw">fn</span> <span class="ident">spawn_actor</span>(<span class="ident">manager</span>: <span class="ident">AccountManager</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">UnboundedSender</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">tx</span>, <span class="ident">rx</span>) <span class="op">=</span> <span class="ident">unbounded_channel</span>();
-        <span class="ident">std</span>::<span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="op">|</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">runtime</span> <span class="op">=</span> <span class="ident">tokio</span>::<span class="ident">runtime</span>::<span class="ident">Runtime</span>::<span class="ident">new</span>().<span class="ident">unwrap</span>();
+        <span class="ident">std::thread::spawn</span>(<span class="op">|</span><span class="op">|</span> {
+            <span class="kw">let</span> <span class="ident">runtime</span> <span class="op">=</span> <span class="ident">tokio::runtime::Runtime::new</span>().<span class="ident">unwrap</span>();
             <span class="ident">runtime</span>.<span class="ident">block_on</span>(<span class="kw">async</span> <span class="kw">move</span> {
-                <span class="kw">let</span> <span class="ident">actor</span> <span class="op">=</span> <span class="ident">WalletBuilder</span>::<span class="ident">new</span>()
+                <span class="kw">let</span> <span class="ident">actor</span> <span class="op">=</span> <span class="ident">WalletBuilder::new</span>()
                     .<span class="ident">rx</span>(<span class="ident">rx</span>)
-                    .<span class="ident">message_handler</span>(<span class="ident">WalletMessageHandler</span>::<span class="ident">with_manager</span>(<span class="ident">manager</span>))
+                    .<span class="ident">message_handler</span>(<span class="ident">WalletMessageHandler::with_manager</span>(<span class="ident">manager</span>))
                     .<span class="ident">build</span>()
                     .<span class="kw">await</span>;
                 <span class="ident">actor</span>.<span class="ident">run</span>().<span class="kw">await</span>
@@ -1052,21 +1052,21 @@
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send_message</span>(<span class="ident">tx</span>: <span class="kw-2">&amp;</span><span class="ident">UnboundedSender</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span>, <span class="ident">message_type</span>: <span class="ident">MessageType</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Response</span> {
         <span class="kw">let</span> (<span class="ident">message_tx</span>, <span class="kw-2">mut</span> <span class="ident">message_rx</span>) <span class="op">=</span> <span class="ident">unbounded_channel</span>();
-        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">Message</span>::<span class="ident">new</span>(<span class="string">&quot;&quot;</span>.<span class="ident">to_string</span>(), <span class="ident">message_type</span>, <span class="ident">message_tx</span>);
+        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">Message::new</span>(<span class="string">&quot;&quot;</span>.<span class="ident">to_string</span>(), <span class="ident">message_type</span>, <span class="ident">message_tx</span>);
         <span class="ident">tx</span>.<span class="ident">send</span>(<span class="ident">message</span>).<span class="ident">unwrap</span>();
         <span class="ident">message_rx</span>.<span class="ident">recv</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>()
     }
 
-    <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
+    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">create_and_remove_account</span>() {
-        <span class="kw">crate</span>::<span class="ident">test_utils</span>::<span class="ident">with_account_manager</span>(
-            <span class="kw">crate</span>::<span class="ident">test_utils</span>::<span class="ident">TestType</span>::<span class="ident">SigningAndStorage</span>,
+        <span class="kw">crate</span><span class="ident">::test_utils::with_account_manager</span>(
+            <span class="kw">crate</span><span class="ident">::test_utils::TestType::SigningAndStorage</span>,
             <span class="op">|</span><span class="ident">manager</span>, <span class="ident">signer_type</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
                 <span class="kw">let</span> <span class="ident">tx</span> <span class="op">=</span> <span class="ident">spawn_actor</span>(<span class="ident">manager</span>);
 
                 <span class="comment">// create an account</span>
                 <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">AccountToCreate</span> {
-                    <span class="ident">client_options</span>: <span class="ident">ClientOptionsBuilder</span>::<span class="ident">new</span>()
+                    <span class="ident">client_options</span>: <span class="ident">ClientOptionsBuilder::new</span>()
                         .<span class="ident">with_node</span>(<span class="string">&quot;http://api.hornet-1.testnet.chrysalis2.com/&quot;</span>)
                         .<span class="ident">unwrap</span>()
                         .<span class="ident">build</span>()
@@ -1077,26 +1077,26 @@
                     <span class="ident">signer_type</span>: <span class="prelude-val">Some</span>(<span class="ident">signer_type</span>.<span class="ident">clone</span>()),
                 };
                 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
-                <span class="ident">send_message</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">MessageType</span>::<span class="ident">SetStrongholdPassword</span>(<span class="string">&quot;password&quot;</span>.<span class="ident">to_string</span>())).<span class="kw">await</span>;
+                <span class="ident">send_message</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">MessageType::SetStrongholdPassword</span>(<span class="string">&quot;password&quot;</span>.<span class="ident">to_string</span>())).<span class="kw">await</span>;
                 <span class="ident">send_message</span>(
                     <span class="kw-2">&amp;</span><span class="ident">tx</span>,
-                    <span class="ident">MessageType</span>::<span class="ident">StoreMnemonic</span> {
+                    <span class="ident">MessageType::StoreMnemonic</span> {
                         <span class="ident">signer_type</span>,
                         <span class="ident">mnemonic</span>: <span class="prelude-val">None</span>,
                     },
                 )
                 .<span class="kw">await</span>;
-                <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">send_message</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">MessageType</span>::<span class="ident">CreateAccount</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">account</span>))).<span class="kw">await</span>;
+                <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">send_message</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">MessageType::CreateAccount</span>(<span class="ident">Box::new</span>(<span class="ident">account</span>))).<span class="kw">await</span>;
                 <span class="kw">match</span> <span class="ident">response</span>.<span class="ident">response</span>() {
-                    <span class="ident">ResponseType</span>::<span class="ident">CreatedAccount</span>(<span class="ident">created_account</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">ResponseType::CreatedAccount</span>(<span class="ident">created_account</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">created_account</span>.<span class="ident">account</span>.<span class="ident">id</span>().<span class="ident">clone</span>();
-                        <span class="ident">std</span>::<span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-                            <span class="ident">std</span>::<span class="ident">thread</span>::<span class="ident">sleep</span>(<span class="ident">std</span>::<span class="ident">time</span>::<span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="number">6</span>));
+                        <span class="ident">std::thread::spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
+                            <span class="ident">std::thread::sleep</span>(<span class="ident">std::time::Duration::from_secs</span>(<span class="number">6</span>));
                             <span class="comment">// remove the created account</span>
-                            <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">block_on</span>(<span class="kw">async</span> <span class="kw">move</span> {
-                                <span class="ident">send_message</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">MessageType</span>::<span class="ident">RemoveAccount</span>(<span class="ident">id</span>.<span class="ident">into</span>())).<span class="kw">await</span>
+                            <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::block_on</span>(<span class="kw">async</span> <span class="kw">move</span> {
+                                <span class="ident">send_message</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">MessageType::RemoveAccount</span>(<span class="ident">id</span>.<span class="ident">into</span>())).<span class="kw">await</span>
                             });
-                            <span class="macro">assert!</span>(<span class="macro">matches!</span>(<span class="ident">response</span>.<span class="ident">response</span>(), <span class="ident">ResponseType</span>::<span class="ident">RemovedAccount</span>(<span class="kw">_</span>)));
+                            <span class="macro">assert!</span>(<span class="macro">matches!</span>(<span class="ident">response</span>.<span class="ident">response</span>(), <span class="ident">ResponseType::RemovedAccount</span>(<span class="kw">_</span>)));
                         });
                     }
                     <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;unexpected response {:?}&quot;</span>, <span class="ident">response</span>),

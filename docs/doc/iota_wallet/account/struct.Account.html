@@ -51,25 +51,25 @@ It’s fetched from the storage. To ensure the database is updated with the late
 <h1 id="example" class="section-header"><a href="#example">Example</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">iota_wallet</span>::{
-    <span class="ident">account_manager</span>::<span class="ident">AccountManager</span>, <span class="ident">client</span>::<span class="ident">ClientOptionsBuilder</span>, <span class="ident">message</span>::<span class="ident">MessageType</span>, <span class="ident">signing</span>::<span class="ident">SignerType</span>,
+    <span class="ident">account_manager::AccountManager</span>, <span class="ident">client::ClientOptionsBuilder</span>, <span class="ident">message::MessageType</span>, <span class="ident">signing::SignerType</span>,
 };
 
-<span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">main</span>]</span>
+<span class="attribute">#[<span class="ident">tokio::main</span>]</span>
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() {
     <span class="comment">// gets 10 received messages, skipping the first 5 most recent messages.</span>
-    <span class="kw">let</span> <span class="ident">client_options</span> <span class="op">=</span> <span class="ident">ClientOptionsBuilder</span>::<span class="ident">new</span>()
+    <span class="kw">let</span> <span class="ident">client_options</span> <span class="op">=</span> <span class="ident">ClientOptionsBuilder::new</span>()
         .<span class="ident">with_node</span>(<span class="string">&quot;https://api.lb-0.testnet.chrysalis2.com&quot;</span>)
         .<span class="ident">expect</span>(<span class="string">&quot;invalid node URL&quot;</span>)
         .<span class="ident">build</span>()
         .<span class="ident">unwrap</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">manager</span> <span class="op">=</span> <span class="ident">AccountManager</span>::<span class="ident">builder</span>()
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">manager</span> <span class="op">=</span> <span class="ident">AccountManager::builder</span>()
         .<span class="ident">with_storage</span>(<span class="string">&quot;./test-storage&quot;</span>, <span class="prelude-val">None</span>)
         .<span class="ident">unwrap</span>()
         .<span class="ident">finish</span>()
         .<span class="kw">await</span>
         .<span class="ident">unwrap</span>();
     <span class="ident">manager</span>.<span class="ident">set_stronghold_password</span>(<span class="string">&quot;password&quot;</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
-    <span class="ident">manager</span>.<span class="ident">store_mnemonic</span>(<span class="ident">SignerType</span>::<span class="ident">Stronghold</span>, <span class="prelude-val">None</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+    <span class="ident">manager</span>.<span class="ident">store_mnemonic</span>(<span class="ident">SignerType::Stronghold</span>, <span class="prelude-val">None</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
 
     <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="ident">manager</span>
         .<span class="ident">create_account</span>(<span class="ident">client_options</span>)
@@ -78,7 +78,7 @@ It’s fetched from the storage. To ensure the database is updated with the late
         .<span class="kw">await</span>
         .<span class="ident">expect</span>(<span class="string">&quot;failed to add account&quot;</span>);
     <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>;
-    <span class="ident">account</span>.<span class="ident">list_messages</span>(<span class="number">10</span>, <span class="number">5</span>, <span class="prelude-val">Some</span>(<span class="ident">MessageType</span>::<span class="ident">Received</span>));
+    <span class="ident">account</span>.<span class="ident">list_messages</span>(<span class="number">10</span>, <span class="number">5</span>, <span class="prelude-val">Some</span>(<span class="ident">MessageType::Received</span>));
 }</pre></div>
 </div><h4 id="method.list_spent_addresses" class="method"><code>pub async fn <a href="#method.list_spent_addresses" class="fnname">list_spent_addresses</a>(&amp;self) -&gt; <a class="type" href="../../iota_wallet/type.Result.html" title="type iota_wallet::Result">Result</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;&amp;<a class="struct" href="../../iota_wallet/address/struct.Address.html" title="struct iota_wallet::address::Address">Address</a>&gt;&gt;</code><a class="srclink" href="../../src/iota_wallet/account/mod.rs.html#963-971" title="goto source code">[src]</a></h4><div class="docblock"><p>Gets the spent addresses.</p>
 </div><h4 id="method.list_unspent_addresses" class="method"><code>pub async fn <a href="#method.list_unspent_addresses" class="fnname">list_unspent_addresses</a>(&amp;self) -&gt; <a class="type" href="../../iota_wallet/type.Result.html" title="type iota_wallet::Result">Result</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;&amp;<a class="struct" href="../../iota_wallet/address/struct.Address.html" title="struct iota_wallet::address::Address">Address</a>&gt;&gt;</code><a class="srclink" href="../../src/iota_wallet/account/mod.rs.html#974-982" title="goto source code">[src]</a></h4><div class="docblock"><p>Gets the spent addresses.</p>

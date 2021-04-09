@@ -20,8 +20,8 @@
 </div><h4 id="method.with_nodes" class="method"><code>pub fn <a href="#method.with_nodes" class="fnname">with_nodes</a>(self, nodes: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.slice.html">&amp;[</a>&amp;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.str.html">str</a><a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.slice.html">]</a>) -&gt; <a class="type" href="../../iota_wallet/type.Result.html" title="type iota_wallet::Result">Result</a>&lt;Self&gt;</code><a class="srclink" href="../../src/iota_wallet/client.rs.html#204-209" title="goto source code">[src]</a></h4><div class="docblock"><p>ClientOptions connected to a list of nodes.</p>
 <h1 id="examples" class="section-header"><a href="#examples">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">iota_wallet</span>::<span class="ident">client</span>::<span class="ident">ClientOptionsBuilder</span>;
-<span class="kw">let</span> <span class="ident">client_options</span> <span class="op">=</span> <span class="ident">ClientOptionsBuilder</span>::<span class="ident">new</span>()
+<span class="kw">use</span> <span class="ident">iota_wallet::client::ClientOptionsBuilder</span>;
+<span class="kw">let</span> <span class="ident">client_options</span> <span class="op">=</span> <span class="ident">ClientOptionsBuilder::new</span>()
     .<span class="ident">with_nodes</span>(<span class="kw-2">&amp;</span>[
         <span class="string">&quot;https://api.lb-0.testnet.chrysalis2.com&quot;</span>,
         <span class="string">&quot;https://api.hornet-1.testnet.chrysalis2.com/&quot;</span>,
@@ -34,8 +34,8 @@
 </div><h4 id="method.with_network" class="method"><code>pub fn <a href="#method.with_network" class="fnname">with_network</a>&lt;N:&nbsp;<a class="trait" href="https://doc.rust-lang.org/nightly/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;<a class="struct" href="https://doc.rust-lang.org/nightly/alloc/string/struct.String.html" title="struct alloc::string::String">String</a>&gt;&gt;(self, network: N) -&gt; Self</code><a class="srclink" href="../../src/iota_wallet/client.rs.html#245-248" title="goto source code">[src]</a></h4><div class="docblock"><p>ClientOptions connected to the default Network pool.</p>
 <h1 id="examples-1" class="section-header"><a href="#examples-1">Examples</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">iota_wallet</span>::<span class="ident">client</span>::<span class="ident">ClientOptionsBuilder</span>;
-<span class="kw">let</span> <span class="ident">client_options</span> <span class="op">=</span> <span class="ident">ClientOptionsBuilder</span>::<span class="ident">new</span>().<span class="ident">with_network</span>(<span class="string">&quot;testnet2&quot;</span>).<span class="ident">build</span>();</pre></div>
+<span class="kw">use</span> <span class="ident">iota_wallet::client::ClientOptionsBuilder</span>;
+<span class="kw">let</span> <span class="ident">client_options</span> <span class="op">=</span> <span class="ident">ClientOptionsBuilder::new</span>().<span class="ident">with_network</span>(<span class="string">&quot;testnet2&quot;</span>).<span class="ident">build</span>();</pre></div>
 </div><h4 id="method.with_node_sync_interval" class="method"><code>pub fn <a href="#method.with_node_sync_interval" class="fnname">with_node_sync_interval</a>(self, node_sync_interval: <a class="struct" href="https://doc.rust-lang.org/nightly/core/time/struct.Duration.html" title="struct core::time::Duration">Duration</a>) -&gt; Self</code><a class="srclink" href="../../src/iota_wallet/client.rs.html#251-254" title="goto source code">[src]</a></h4><div class="docblock"><p>Set the node sync interval</p>
 </div><h4 id="method.with_node_sync_disabled" class="method"><code>pub fn <a href="#method.with_node_sync_disabled" class="fnname">with_node_sync_disabled</a>(self) -&gt; Self</code><a class="srclink" href="../../src/iota_wallet/client.rs.html#258-261" title="goto source code">[src]</a></h4><div class="docblock"><p>Disables the node syncing process.
 Every node will be considered healthy and ready to use.</p>

@@ -245,14 +245,14 @@
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">account</span>::<span class="ident">Account</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::account::Account</span>;
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections</span>::<span class="ident">HashMap</span>, <span class="ident">fmt</span>, <span class="ident">path</span>::<span class="ident">Path</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">fmt</span>, <span class="ident">path::Path</span>};
 
-<span class="kw">use</span> <span class="ident">bee_common</span>::<span class="ident">packable</span>::<span class="ident">Packable</span>;
-<span class="kw">use</span> <span class="ident">iota</span>::<span class="ident">UnlockBlock</span>;
-<span class="kw">use</span> <span class="ident">iota_ledger</span>::<span class="ident">LedgerBIP32Index</span>;
-<span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">sync</span>::<span class="ident">Mutex</span>;
+<span class="kw">use</span> <span class="ident">bee_common::packable::Packable</span>;
+<span class="kw">use</span> <span class="ident">iota::UnlockBlock</span>;
+<span class="kw">use</span> <span class="ident">iota_ledger::LedgerBIP32Index</span>;
+<span class="kw">use</span> <span class="ident">tokio::sync::Mutex</span>;
 
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">HARDENED</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0x80000000</span>;
 
@@ -267,7 +267,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">struct</span> <span class="ident">AddressIndexRecorder</span> {
     <span class="doccomment">/// the input</span>
-    <span class="kw">pub</span> <span class="ident">input</span>: <span class="ident">iota</span>::<span class="ident">Input</span>,
+    <span class="kw">pub</span> <span class="ident">input</span>: <span class="ident">iota::Input</span>,
 
     <span class="doccomment">/// bip32 index</span>
     <span class="kw">pub</span> <span class="ident">bip32</span>: <span class="ident">LedgerBIP32Index</span>,
@@ -280,8 +280,8 @@
     <span class="ident">bip32_change</span>: <span class="ident">u32</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Display</span> <span class="kw">for</span> <span class="ident">AddressPoolEntry</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+<span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">AddressPoolEntry</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
         <span class="macro">write!</span>(
             <span class="ident">f</span>,
             <span class="string">&quot;{:08x}:{:08x}:{:08x}&quot;</span>,
@@ -290,10 +290,10 @@
     }
 }
 
-<span class="attribute">#[<span class="ident">async_trait</span>::<span class="ident">async_trait</span>]</span>
-<span class="kw">impl</span> <span class="kw">super</span>::<span class="ident">Signer</span> <span class="kw">for</span> <span class="ident">LedgerNanoSigner</span> {
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">store_mnemonic</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">_mnemonic</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">InvalidMnemonic</span>(<span class="ident">String</span>::<span class="ident">from</span>(<span class="string">&quot;&quot;</span>)))
+<span class="attribute">#[<span class="ident">async_trait::async_trait</span>]</span>
+<span class="kw">impl</span> <span class="kw">super</span><span class="ident">::Signer</span> <span class="kw">for</span> <span class="ident">LedgerNanoSigner</span> {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">store_mnemonic</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">_mnemonic</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::Error::InvalidMnemonic</span>(<span class="ident">String::from</span>(<span class="string">&quot;&quot;</span>)))
     }
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">generate_address</span>(
@@ -301,14 +301,14 @@
         <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Account</span>,
         <span class="ident">address_index</span>: <span class="ident">usize</span>,
         <span class="ident">internal</span>: <span class="ident">bool</span>,
-        <span class="ident">meta</span>: <span class="kw">super</span>::<span class="ident">GenerateAddressMetadata</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">iota</span>::<span class="ident">Address</span><span class="op">&gt;</span> {
+        <span class="ident">meta</span>: <span class="kw">super</span><span class="ident">::GenerateAddressMetadata</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">iota::Address</span><span class="op">&gt;</span> {
         <span class="comment">// lock the mutex</span>
         <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">mutex</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
 
         <span class="kw">let</span> <span class="ident">bip32_account</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">account</span>.<span class="ident">index</span>() <span class="kw">as</span> <span class="ident">u32</span> <span class="op">|</span> <span class="ident">HARDENED</span>;
 
-        <span class="kw">let</span> <span class="ident">bip32</span> <span class="op">=</span> <span class="ident">iota_ledger</span>::<span class="ident">LedgerBIP32Index</span> {
+        <span class="kw">let</span> <span class="ident">bip32</span> <span class="op">=</span> <span class="ident">iota_ledger::LedgerBIP32Index</span> {
             <span class="ident">bip32_index</span>: <span class="ident">address_index</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">|</span> <span class="ident">HARDENED</span>,
             <span class="ident">bip32_change</span>: <span class="kw">if</span> <span class="ident">internal</span> { <span class="number">1</span> } <span class="kw">else</span> { <span class="number">0</span> } <span class="op">|</span> <span class="ident">HARDENED</span>,
         };
@@ -316,14 +316,14 @@
         <span class="comment">// if it&#39;s not for syncing, then it&#39;s a new receiving / remainder address</span>
         <span class="comment">// that needs shown to the user</span>
         <span class="kw">if</span> <span class="op">!</span><span class="ident">meta</span>.<span class="ident">syncing</span> {
-            <span class="ident">log</span>::<span class="macro">info!</span>(<span class="string">&quot;Interactive address display - not using address pool&quot;</span>);
+            <span class="macro">log::info!</span>(<span class="string">&quot;Interactive address display - not using address pool&quot;</span>);
 
             <span class="comment">// get ledger</span>
-            <span class="kw">let</span> <span class="ident">ledger</span> <span class="op">=</span> <span class="ident">iota_ledger</span>::<span class="ident">get_ledger</span>(<span class="ident">bip32_account</span>, <span class="self">self</span>.<span class="ident">is_simulator</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">ledger</span> <span class="op">=</span> <span class="ident">iota_ledger::get_ledger</span>(<span class="ident">bip32_account</span>, <span class="self">self</span>.<span class="ident">is_simulator</span>)<span class="question-mark">?</span>;
 
             <span class="comment">// and generate a single address that is shown to the user</span>
             <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">ledger</span>.<span class="ident">get_addresses</span>(<span class="bool-val">true</span>, <span class="ident">bip32</span>, <span class="number">1</span>)<span class="question-mark">?</span>;
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">iota</span>::<span class="ident">Address</span>::<span class="ident">Ed25519</span>(<span class="ident">iota</span>::<span class="ident">Ed25519Address</span>::<span class="ident">new</span>(
+            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">iota::Address::Ed25519</span>(<span class="ident">iota::Ed25519Address::new</span>(
                 <span class="kw-2">*</span><span class="ident">addr</span>.<span class="ident">first</span>().<span class="ident">unwrap</span>(),
             )));
         }
@@ -336,15 +336,15 @@
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addr_pool</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">address_pool</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
         <span class="kw">if</span> <span class="op">!</span><span class="ident">addr_pool</span>.<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">pool_key</span>) {
-            <span class="ident">log</span>::<span class="macro">info!</span>(<span class="string">&quot;Adress {} not found in address pool&quot;</span>, <span class="ident">pool_key</span>);
+            <span class="macro">log::info!</span>(<span class="string">&quot;Adress {} not found in address pool&quot;</span>, <span class="ident">pool_key</span>);
             <span class="comment">// if not, we add new entries to the pool but limit the pool size</span>
             <span class="kw">if</span> <span class="ident">addr_pool</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">10000</span> {
-                <span class="ident">log</span>::<span class="macro">error!</span>(<span class="string">&quot;address pool has too many entries&quot;</span>);
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">LedgerMiscError</span>);
+                <span class="macro">log::error!</span>(<span class="string">&quot;address pool has too many entries&quot;</span>);
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::Error::LedgerMiscError</span>);
             }
 
             <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="number">15</span>;
-            <span class="kw">let</span> <span class="ident">ledger</span> <span class="op">=</span> <span class="ident">iota_ledger</span>::<span class="ident">get_ledger</span>(<span class="ident">bip32_account</span>, <span class="self">self</span>.<span class="ident">is_simulator</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">ledger</span> <span class="op">=</span> <span class="ident">iota_ledger::get_ledger</span>(<span class="ident">bip32_account</span>, <span class="self">self</span>.<span class="ident">is_simulator</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">addresses</span> <span class="op">=</span> <span class="ident">ledger</span>.<span class="ident">get_addresses</span>(<span class="bool-val">false</span>, <span class="ident">bip32</span>, <span class="ident">count</span>)<span class="question-mark">?</span>;
 
             <span class="comment">// now put all addresses into the pool</span>
@@ -358,37 +358,37 @@
                     <span class="kw-2">*</span><span class="ident">addresses</span>.<span class="ident">get</span>(<span class="ident">i</span>).<span class="ident">unwrap</span>(),
                 );
             }
-            <span class="ident">log</span>::<span class="macro">info!</span>(<span class="string">&quot;New address pool size is {}&quot;</span>, <span class="ident">addr_pool</span>.<span class="ident">len</span>());
+            <span class="macro">log::info!</span>(<span class="string">&quot;New address pool size is {}&quot;</span>, <span class="ident">addr_pool</span>.<span class="ident">len</span>());
 
-            <span class="ident">log</span>::<span class="macro">debug!</span>(<span class="string">&quot;addresses in pool:&quot;</span>);
+            <span class="macro">log::debug!</span>(<span class="string">&quot;addresses in pool:&quot;</span>);
             <span class="kw">for</span> <span class="ident">key</span> <span class="kw">in</span> <span class="ident">addr_pool</span>.<span class="ident">keys</span>() {
-                <span class="ident">log</span>::<span class="macro">debug!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">key</span>);
+                <span class="macro">log::debug!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">key</span>);
             }
         } <span class="kw">else</span> {
-            <span class="ident">log</span>::<span class="macro">info!</span>(<span class="string">&quot;Got {} from pool&quot;</span>, <span class="ident">pool_key</span>);
+            <span class="macro">log::info!</span>(<span class="string">&quot;Got {} from pool&quot;</span>, <span class="ident">pool_key</span>);
         }
-        <span class="prelude-val">Ok</span>(<span class="ident">iota</span>::<span class="ident">Address</span>::<span class="ident">Ed25519</span>(<span class="ident">iota</span>::<span class="ident">Ed25519Address</span>::<span class="ident">new</span>(<span class="ident">addr_pool</span>[<span class="kw-2">&amp;</span><span class="ident">pool_key</span>])))
+        <span class="prelude-val">Ok</span>(<span class="ident">iota::Address::Ed25519</span>(<span class="ident">iota::Ed25519Address::new</span>(<span class="ident">addr_pool</span>[<span class="kw-2">&amp;</span><span class="ident">pool_key</span>])))
     }
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">sign_message</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Account</span>,
-        <span class="ident">essence</span>: <span class="kw-2">&amp;</span><span class="ident">iota</span>::<span class="ident">Essence</span>,
-        <span class="ident">inputs</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">super</span>::<span class="ident">TransactionInput</span><span class="op">&gt;</span>,
-        <span class="ident">meta</span>: <span class="kw">super</span>::<span class="ident">SignMessageMetadata</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">iota</span>::<span class="ident">UnlockBlock</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="ident">essence</span>: <span class="kw-2">&amp;</span><span class="ident">iota::Essence</span>,
+        <span class="ident">inputs</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::TransactionInput</span><span class="op">&gt;</span>,
+        <span class="ident">meta</span>: <span class="kw">super</span><span class="ident">::SignMessageMetadata</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">iota::UnlockBlock</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="comment">// lock the mutex</span>
         <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">mutex</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
 
         <span class="kw">let</span> <span class="ident">bip32_account</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">account</span>.<span class="ident">index</span>() <span class="kw">as</span> <span class="ident">u32</span> <span class="op">|</span> <span class="ident">HARDENED</span>;
-        <span class="kw">let</span> <span class="ident">ledger</span> <span class="op">=</span> <span class="ident">iota_ledger</span>::<span class="ident">get_ledger</span>(<span class="ident">bip32_account</span>, <span class="self">self</span>.<span class="ident">is_simulator</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">ledger</span> <span class="op">=</span> <span class="ident">iota_ledger::get_ledger</span>(<span class="ident">bip32_account</span>, <span class="self">self</span>.<span class="ident">is_simulator</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">input_len</span> <span class="op">=</span> <span class="ident">inputs</span>.<span class="ident">len</span>();
 
         <span class="comment">// on essence finalization, inputs are sorted lexically before they are packed into bytes.</span>
         <span class="comment">// we need the correct order of the bip32 indices before we can call PrepareSigning, but</span>
         <span class="comment">// because inputs of the essence don&#39;t have bip32 indices, we need to sort it on our own too.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">address_index_recorders</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressIndexRecorder</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">address_index_recorders</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressIndexRecorder</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">for</span> <span class="ident">input</span> <span class="kw">in</span> <span class="ident">inputs</span> {
             <span class="ident">address_index_recorders</span>.<span class="ident">push</span>(<span class="ident">AddressIndexRecorder</span> {
                 <span class="ident">input</span>: <span class="ident">input</span>.<span class="ident">input</span>.<span class="ident">clone</span>(),
@@ -401,13 +401,13 @@
         <span class="ident">address_index_recorders</span>.<span class="ident">sort_by</span>(<span class="op">|</span><span class="ident">a</span>, <span class="ident">b</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">input</span>.<span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="ident">input</span>));
 
         <span class="comment">// now extract the bip32 indices in the right order</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">input_bip32_indices</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">LedgerBIP32Index</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">input_bip32_indices</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">LedgerBIP32Index</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">for</span> <span class="ident">recorder</span> <span class="kw">in</span> <span class="ident">address_index_recorders</span> {
             <span class="ident">input_bip32_indices</span>.<span class="ident">push</span>(<span class="ident">recorder</span>.<span class="ident">bip32</span>);
         }
 
         <span class="comment">// figure out the remainder address and bip32 index (if there is one)</span>
-        <span class="kw">let</span> (<span class="ident">has_remainder</span>, <span class="ident">remainder_address</span>, <span class="ident">remainder_bip32</span>): (<span class="ident">bool</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">iota</span>::<span class="ident">Address</span><span class="op">&gt;</span>, <span class="ident">LedgerBIP32Index</span>) <span class="op">=</span>
+        <span class="kw">let</span> (<span class="ident">has_remainder</span>, <span class="ident">remainder_address</span>, <span class="ident">remainder_bip32</span>): (<span class="ident">bool</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">iota::Address</span><span class="op">&gt;</span>, <span class="ident">LedgerBIP32Index</span>) <span class="op">=</span>
             <span class="kw">match</span> <span class="ident">meta</span>.<span class="ident">remainder_deposit_address</span> {
                 <span class="prelude-val">Some</span>(<span class="ident">a</span>) <span class="op">=</span><span class="op">&gt;</span> (
                     <span class="bool-val">true</span>,
@@ -417,13 +417,13 @@
                         <span class="ident">bip32_change</span>: <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">a</span>.<span class="ident">internal</span>() { <span class="number">1</span> } <span class="kw">else</span> { <span class="number">0</span> } <span class="op">|</span> <span class="ident">HARDENED</span>,
                     },
                 ),
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="bool-val">false</span>, <span class="prelude-val">None</span>, <span class="ident">LedgerBIP32Index</span>::<span class="ident">default</span>()),
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="bool-val">false</span>, <span class="prelude-val">None</span>, <span class="ident">LedgerBIP32Index::default</span>()),
             };
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">remainder_index</span> <span class="op">=</span> <span class="number">0u16</span>;
         <span class="kw">if</span> <span class="ident">has_remainder</span> {
             <span class="kw">match</span> <span class="ident">essence</span> {
-                <span class="ident">iota</span>::<span class="ident">Essence</span>::<span class="ident">Regular</span>(<span class="ident">essence</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">iota::Essence::Regular</span>(<span class="ident">essence</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="comment">// find the index of the remainder in the essence</span>
                     <span class="comment">// this has to be done because outputs in essences are sorted</span>
                     <span class="comment">// lexically and therefore the remainder is not always the last output.</span>
@@ -433,13 +433,13 @@
                     <span class="comment">// at this place, so we can rely on their order and don&#39;t have to sort it again.</span>
                     <span class="kw">for</span> <span class="ident">output</span> <span class="kw">in</span> <span class="ident">essence</span>.<span class="ident">outputs</span>().<span class="ident">iter</span>() {
                         <span class="kw">match</span> <span class="ident">output</span> {
-                            <span class="ident">iota</span>::<span class="ident">Output</span>::<span class="ident">SignatureLockedSingle</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="ident">iota::Output::SignatureLockedSingle</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> {
                                 <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">remainder_address</span>.<span class="ident">unwrap</span>() <span class="op">=</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">s</span>.<span class="ident">address</span>() {
                                     <span class="kw">break</span>;
                                 }
                             }
                             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">LedgerMiscError</span>);
+                                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::Error::LedgerMiscError</span>);
                             }
                         }
                         <span class="ident">remainder_index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
@@ -447,7 +447,7 @@
 
                     <span class="comment">// was index found?</span>
                     <span class="kw">if</span> <span class="ident">remainder_index</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">=</span><span class="op">=</span> <span class="ident">essence</span>.<span class="ident">outputs</span>().<span class="ident">len</span>() {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">LedgerMiscError</span>);
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::Error::LedgerMiscError</span>);
                     }
                 }
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented!</span>(),
@@ -474,9 +474,9 @@
         <span class="kw">let</span> <span class="ident">signature_bytes</span> <span class="op">=</span> <span class="ident">ledger</span>.<span class="ident">sign</span>(<span class="ident">input_len</span> <span class="kw">as</span> <span class="ident">u16</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">readable</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">signature_bytes</span>;
         <span class="comment">// unpack signature to unlockblocks</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">unlock_blocks</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">unlock_blocks</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">input_len</span> {
-            <span class="kw">let</span> <span class="ident">unlock_block</span> <span class="op">=</span> <span class="ident">UnlockBlock</span>::<span class="ident">unpack</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">readable</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">unlock_block</span> <span class="op">=</span> <span class="ident">UnlockBlock::unpack</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">readable</span>)<span class="question-mark">?</span>;
             <span class="ident">unlock_blocks</span>.<span class="ident">push</span>(<span class="ident">unlock_block</span>);
         }
         <span class="prelude-val">Ok</span>(<span class="ident">unlock_blocks</span>)

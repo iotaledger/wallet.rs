@@ -761,23 +761,23 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">stronghold</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">account</span>::<span class="ident">Account</span>,
+    <span class="ident">account::Account</span>,
     <span class="ident">event</span>::{<span class="ident">BalanceEvent</span>, <span class="ident">TransactionConfirmationChangeEvent</span>, <span class="ident">TransactionEvent</span>, <span class="ident">TransactionReattachmentEvent</span>},
     <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessageId</span>, <span class="ident">MessagePayload</span>, <span class="ident">MessageType</span>, <span class="ident">TransactionEssence</span>},
 };
 
-<span class="kw">use</span> <span class="ident">chrono</span>::<span class="ident">Utc</span>;
-<span class="kw">use</span> <span class="ident">crypto</span>::<span class="ident">ciphers</span>::{<span class="ident">chacha</span>::<span class="ident">XChaCha20Poly1305</span>, <span class="ident">traits</span>::<span class="ident">Aead</span>};
-<span class="kw">use</span> <span class="ident">once_cell</span>::<span class="ident">sync</span>::<span class="ident">OnceCell</span>;
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">de</span>::<span class="ident">DeserializeOwned</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
-<span class="kw">use</span> <span class="ident">tokio</span>::<span class="ident">sync</span>::{<span class="ident">Mutex</span>, <span class="ident">RwLock</span>};
+<span class="kw">use</span> <span class="ident">chrono::Utc</span>;
+<span class="kw">use</span> <span class="ident">crypto::ciphers</span>::{<span class="ident">chacha::XChaCha20Poly1305</span>, <span class="ident">traits::Aead</span>};
+<span class="kw">use</span> <span class="ident">once_cell::sync::OnceCell</span>;
+<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">de::DeserializeOwned</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
+<span class="kw">use</span> <span class="ident">tokio::sync</span>::{<span class="ident">Mutex</span>, <span class="ident">RwLock</span>};
 
 <span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">collections</span>::<span class="ident">HashMap</span>,
-    <span class="ident">convert</span>::<span class="ident">TryInto</span>,
+    <span class="ident">collections::HashMap</span>,
+    <span class="ident">convert::TryInto</span>,
     <span class="ident">io</span>::{<span class="ident">Read</span>, <span class="ident">Write</span>},
     <span class="ident">path</span>::{<span class="ident">Path</span>, <span class="ident">PathBuf</span>},
-    <span class="ident">sync</span>::<span class="ident">Arc</span>,
+    <span class="ident">sync::Arc</span>,
 };
 
 <span class="kw">const</span> <span class="ident">ACCOUNT_INDEXATION_KEY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;iota-wallet-account-indexation&quot;</span>;
@@ -826,7 +826,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">message_type</span>(<span class="ident">message_type</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MessageType</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">message_type</span>,
-            <span class="ident">ignore_ids</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+            <span class="ident">ignore_ids</span>: <span class="ident">Default::default</span>(),
         }
     }
 
@@ -847,7 +847,7 @@
         <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">id</span>()
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">get</span>(<span class="ident">key</span>).<span class="kw">await</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">record</span><span class="op">|</span> {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">key</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">encryption_key</span> {
                 <span class="ident">decrypt_record</span>(<span class="kw-2">&amp;</span><span class="ident">record</span>, <span class="ident">key</span>)
@@ -857,15 +857,15 @@
         })
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Serialize</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">record</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">record</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="ident">record</span>)<span class="question-mark">?</span>;
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Serialize</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">record</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">record</span> <span class="op">=</span> <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">record</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">inner</span>
             .<span class="ident">set</span>(
                 <span class="ident">key</span>,
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">key</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">encryption_key</span> {
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
                     <span class="ident">encrypt_record</span>(<span class="ident">record</span>.<span class="ident">as_bytes</span>(), <span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">output</span>)<span class="question-mark">?</span>;
-                    <span class="ident">serde_json</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="ident">output</span>)<span class="question-mark">?</span>
+                    <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">output</span>)<span class="question-mark">?</span>
                 } <span class="kw">else</span> {
                     <span class="ident">record</span>
                 },
@@ -873,14 +873,14 @@
             .<span class="kw">await</span>
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">batch_set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">records</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">batch_set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">records</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">inner</span>
             .<span class="ident">batch_set</span>(<span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">key</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">encryption_key</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">encrypted_records</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">encrypted_records</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
                 <span class="kw">for</span> (<span class="ident">id</span>, <span class="ident">record</span>) <span class="kw">in</span> <span class="ident">records</span> {
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
                     <span class="ident">encrypt_record</span>(<span class="ident">record</span>.<span class="ident">as_bytes</span>(), <span class="ident">key</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">output</span>)<span class="question-mark">?</span>;
-                    <span class="ident">encrypted_records</span>.<span class="ident">insert</span>(<span class="ident">id</span>, <span class="ident">serde_json</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="ident">output</span>)<span class="question-mark">?</span>);
+                    <span class="ident">encrypted_records</span>.<span class="ident">insert</span>(<span class="ident">id</span>, <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">output</span>)<span class="question-mark">?</span>);
                 }
                 <span class="ident">encrypted_records</span>
             } <span class="kw">else</span> {
@@ -889,7 +889,7 @@
             .<span class="kw">await</span>
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">remove</span>(<span class="ident">key</span>).<span class="kw">await</span>
     }
 }
@@ -909,10 +909,10 @@
     (<span class="macro-nonterminal">$</span><span class="self">self</span>: <span class="macro-nonterminal">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">account_id</span>: <span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">key</span>: <span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">indexation</span>: <span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="macro-nonterminal">$</span><span class="self">self</span>.<span class="macro-nonterminal">storage</span>.<span class="ident">get</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">key</span>).<span class="kw">await</span> {
             <span class="prelude-val">Ok</span>(<span class="ident">record</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro-nonterminal">$</span><span class="self">self</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">indexation</span>.<span class="ident">insert</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">account_id</span>, <span class="ident">serde_json</span>::<span class="ident">from_str</span>(<span class="kw-2">&amp;</span><span class="ident">record</span>)<span class="question-mark">?</span>);
+                <span class="macro-nonterminal">$</span><span class="self">self</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">indexation</span>.<span class="ident">insert</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">account_id</span>, <span class="ident">serde_json::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">record</span>)<span class="question-mark">?</span>);
             }
-            <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">RecordNotFound</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro-nonterminal">$</span><span class="self">self</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">indexation</span>.<span class="ident">insert</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">account_id</span>, <span class="ident">Default</span>::<span class="ident">default</span>());
+            <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::Error::RecordNotFound</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro-nonterminal">$</span><span class="self">self</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">indexation</span>.<span class="ident">insert</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">account_id</span>, <span class="ident">Default::default</span>());
             }
             <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>),
         }
@@ -922,7 +922,7 @@
 <span class="macro">macro_rules!</span> <span class="ident">init_account_dependency_index</span> {
     (<span class="macro-nonterminal">$</span><span class="self">self</span>: <span class="macro-nonterminal">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">account_id</span>: <span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">indexation</span>: <span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="op">!</span><span class="macro-nonterminal">$</span><span class="self">self</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">indexation</span>.<span class="ident">contains_key</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">account_id</span>) {
-            <span class="macro-nonterminal">$</span><span class="self">self</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">indexation</span>.<span class="ident">insert</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">account_id</span>.<span class="ident">to_string</span>(), <span class="ident">Default</span>::<span class="ident">default</span>());
+            <span class="macro-nonterminal">$</span><span class="self">self</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">indexation</span>.<span class="ident">insert</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">account_id</span>.<span class="ident">to_string</span>(), <span class="ident">Default::default</span>());
         }
     };
 }
@@ -941,18 +941,18 @@
         <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">encryption_key</span>.<span class="ident">is_some</span>()
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">get</span>(<span class="ident">key</span>).<span class="kw">await</span>
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_accounts</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_accounts</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">account_indexation</span>.<span class="ident">is_empty</span>() {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">record</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">get</span>(<span class="ident">ACCOUNT_INDEXATION_KEY</span>).<span class="kw">await</span> {
-                <span class="self">self</span>.<span class="ident">account_indexation</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">from_str</span>(<span class="kw-2">&amp;</span><span class="ident">record</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.<span class="ident">account_indexation</span> <span class="op">=</span> <span class="ident">serde_json::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">record</span>)<span class="question-mark">?</span>;
             }
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">accounts</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">accounts</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">for</span> <span class="ident">account_index</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">account_indexation</span>.<span class="ident">clone</span>() {
             <span class="ident">accounts</span>.<span class="ident">push</span>(<span class="self">self</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">account_index</span>.<span class="ident">key</span>).<span class="kw">await</span><span class="question-mark">?</span>);
             <span class="macro">load_account_dependency_index!</span>(
@@ -965,7 +965,7 @@
         <span class="ident">parse_accounts</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">storage_path</span>, <span class="kw-2">&amp;</span><span class="ident">accounts</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">encryption_key</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">save_account</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Account</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">save_account</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Account</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">AccountIndexation</span> { <span class="ident">key</span>: <span class="ident">key</span>.<span class="ident">to_string</span>() };
         <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">set</span>(<span class="ident">key</span>, <span class="ident">account</span>).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">account_indexation</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">index</span>) {
@@ -978,7 +978,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">remove_account</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">remove_account</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">AccountIndexation</span> { <span class="ident">key</span>: <span class="ident">key</span>.<span class="ident">to_string</span>() };
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">index</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">account_indexation</span>.<span class="ident">iter</span>().<span class="ident">position</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">index</span>) {
             <span class="self">self</span>.<span class="ident">account_indexation</span>.<span class="ident">remove</span>(<span class="ident">index</span>);
@@ -988,36 +988,36 @@
             <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">remove</span>(<span class="ident">key</span>).<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(())
         } <span class="kw">else</span> {
-            <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">RecordNotFound</span>)
+            <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::Error::RecordNotFound</span>)
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">message_indexation</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Account</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MessageIndexation</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">message_indexation</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Account</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MessageIndexation</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">message_indexation</span>
             .<span class="ident">get</span>(<span class="ident">account</span>.<span class="ident">id</span>())
-            .<span class="ident">ok_or</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">RecordNotFound</span>)
+            .<span class="ident">ok_or</span>(<span class="kw">crate</span><span class="ident">::Error::RecordNotFound</span>)
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">query_message_indexation</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Account</span>,
         <span class="ident">filter</span>: <span class="kw-2">&amp;</span><span class="ident">MessageQueryFilter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">MessageIndexation</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">MessageIndexation</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">message_indexation</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">message_indexation</span>(<span class="ident">account</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">filtered_message_indexation</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">filtered_message_indexation</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="ident">message_indexation</span> {
             <span class="kw">if</span> <span class="ident">message</span>.<span class="ident">reattachment_message_id</span>.<span class="ident">is_some</span>() {
                 <span class="kw">continue</span>;
             }
             <span class="kw">let</span> <span class="ident">message_type_matches</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">message_type</span>) <span class="op">=</span> <span class="ident">filter</span>.<span class="ident">message_type</span>.<span class="ident">clone</span>() {
                 <span class="kw">match</span> <span class="ident">message_type</span> {
-                    <span class="ident">MessageType</span>::<span class="ident">Received</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">message</span>.<span class="ident">incoming</span> <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="bool-val">true</span>),
-                    <span class="ident">MessageType</span>::<span class="ident">Sent</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">message</span>.<span class="ident">incoming</span> <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="bool-val">false</span>),
-                    <span class="ident">MessageType</span>::<span class="ident">Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">!</span><span class="ident">message</span>.<span class="ident">broadcasted</span>,
-                    <span class="ident">MessageType</span>::<span class="ident">Unconfirmed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">message</span>.<span class="ident">confirmed</span>.<span class="ident">is_none</span>(),
-                    <span class="ident">MessageType</span>::<span class="ident">Value</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">message</span>.<span class="ident">value</span> <span class="op">&gt;</span> <span class="number">0</span>,
-                    <span class="ident">MessageType</span>::<span class="ident">Confirmed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">message</span>.<span class="ident">confirmed</span>.<span class="ident">is_some</span>(),
+                    <span class="ident">MessageType::Received</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">message</span>.<span class="ident">incoming</span> <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="bool-val">true</span>),
+                    <span class="ident">MessageType::Sent</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">message</span>.<span class="ident">incoming</span> <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="bool-val">false</span>),
+                    <span class="ident">MessageType::Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">!</span><span class="ident">message</span>.<span class="ident">broadcasted</span>,
+                    <span class="ident">MessageType::Unconfirmed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">message</span>.<span class="ident">confirmed</span>.<span class="ident">is_none</span>(),
+                    <span class="ident">MessageType::Value</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">message</span>.<span class="ident">value</span> <span class="op">&gt;</span> <span class="number">0</span>,
+                    <span class="ident">MessageType::Confirmed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">message</span>.<span class="ident">confirmed</span>.<span class="ident">is_some</span>(),
                 }
             } <span class="kw">else</span> {
                 <span class="bool-val">true</span>
@@ -1030,17 +1030,17 @@
         <span class="prelude-val">Ok</span>(<span class="ident">filtered_message_indexation</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">save_messages</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Account</span>, <span class="ident">messages</span>: <span class="kw-2">&amp;</span>[<span class="ident">Message</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">save_messages</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Account</span>, <span class="ident">messages</span>: <span class="kw-2">&amp;</span>[<span class="ident">Message</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">message_indexation</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">message_indexation</span>
             .<span class="ident">get_mut</span>(<span class="ident">account</span>.<span class="ident">id</span>())
-            .<span class="ident">ok_or</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">RecordNotFound</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">messages_map</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();
+            .<span class="ident">ok_or</span>(<span class="kw">crate</span><span class="ident">::Error::RecordNotFound</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">messages_map</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
         <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="ident">messages</span>.<span class="ident">iter</span>() {
-            <span class="ident">messages_map</span>.<span class="ident">insert</span>(<span class="ident">message</span>.<span class="ident">id</span>().<span class="ident">to_string</span>(), <span class="ident">serde_json</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="ident">message</span>)<span class="question-mark">?</span>);
+            <span class="ident">messages_map</span>.<span class="ident">insert</span>(<span class="ident">message</span>.<span class="ident">id</span>().<span class="ident">to_string</span>(), <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="ident">message</span>)<span class="question-mark">?</span>);
             <span class="kw">let</span> (<span class="ident">value</span>, <span class="ident">internal</span>, <span class="ident">incoming</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">message</span>.<span class="ident">payload</span>() {
-                <span class="prelude-val">Some</span>(<span class="ident">MessagePayload</span>::<span class="ident">Transaction</span>(<span class="ident">tx</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">TransactionEssence</span>::<span class="ident">Regular</span>(<span class="ident">essence</span>) <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">essence</span>();
+                <span class="prelude-val">Some</span>(<span class="ident">MessagePayload::Transaction</span>(<span class="ident">tx</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">let</span> <span class="ident">TransactionEssence::Regular</span>(<span class="ident">essence</span>) <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">essence</span>();
                     (<span class="ident">essence</span>.<span class="ident">value</span>(), <span class="prelude-val">Some</span>(<span class="ident">essence</span>.<span class="ident">internal</span>()), <span class="prelude-val">Some</span>(<span class="ident">essence</span>.<span class="ident">incoming</span>()))
                 }
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="number">0</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
@@ -1068,14 +1068,14 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_message</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Account</span>, <span class="ident">message_id</span>: <span class="kw-2">&amp;</span><span class="ident">MessageId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_message</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Account</span>, <span class="ident">message_id</span>: <span class="kw-2">&amp;</span><span class="ident">MessageId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">message_indexation</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">message_indexation</span>(<span class="ident">account</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">message_indexation</span>
             .<span class="ident">iter</span>()
             .<span class="ident">find</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">i</span>.<span class="ident">key</span> <span class="op">=</span><span class="op">=</span> <span class="ident">message_id</span>)
-            .<span class="ident">ok_or</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">RecordNotFound</span>)<span class="question-mark">?</span>;
+            .<span class="ident">ok_or</span>(<span class="kw">crate</span><span class="ident">::Error::RecordNotFound</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">index</span>.<span class="ident">key</span>.<span class="ident">to_string</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
-        <span class="ident">serde_json</span>::<span class="ident">from_str</span>(<span class="kw-2">&amp;</span><span class="ident">message</span>).<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
+        <span class="ident">serde_json::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">message</span>).<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
     }
 
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_messages</span>(
@@ -1084,10 +1084,10 @@
         <span class="ident">count</span>: <span class="ident">usize</span>,
         <span class="ident">skip</span>: <span class="ident">usize</span>,
         <span class="ident">filter</span>: <span class="ident">MessageQueryFilter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">filtered_message_indexation</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">query_message_indexation</span>(<span class="ident">account</span>, <span class="kw-2">&amp;</span><span class="ident">filter</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">messages</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">messages</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">let</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">filtered_message_indexation</span>.<span class="ident">into_iter</span>().<span class="ident">skip</span>(<span class="ident">skip</span>);
         <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="kw">if</span> <span class="ident">count</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
             <span class="ident">iter</span>.<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">MessageIndexation</span><span class="op">&gt;</span><span class="op">&gt;</span>()
@@ -1098,12 +1098,12 @@
                 <span class="prelude-val">Some</span>(<span class="ident">ignore_ids</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">if</span> <span class="op">!</span><span class="ident">ignore_ids</span>.<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">index</span>.<span class="ident">key</span>) {
                         <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">index</span>.<span class="ident">key</span>.<span class="ident">to_string</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
-                        <span class="ident">messages</span>.<span class="ident">push</span>(<span class="ident">serde_json</span>::<span class="ident">from_str</span>(<span class="kw-2">&amp;</span><span class="ident">message</span>)<span class="question-mark">?</span>);
+                        <span class="ident">messages</span>.<span class="ident">push</span>(<span class="ident">serde_json::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">message</span>)<span class="question-mark">?</span>);
                     }
                 }
                 <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">index</span>.<span class="ident">key</span>.<span class="ident">to_string</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
-                    <span class="ident">messages</span>.<span class="ident">push</span>(<span class="ident">serde_json</span>::<span class="ident">from_str</span>(<span class="kw-2">&amp;</span><span class="ident">message</span>)<span class="question-mark">?</span>);
+                    <span class="ident">messages</span>.<span class="ident">push</span>(<span class="ident">serde_json::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">message</span>)<span class="question-mark">?</span>);
                 }
             }
         }
@@ -1111,10 +1111,10 @@
     }
 }
 
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">load_optional_data</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">DeserializeOwned</span> <span class="op">+</span> <span class="ident">Default</span><span class="op">&gt;</span>(<span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">load_optional_data</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">DeserializeOwned</span> <span class="op">+</span> <span class="ident">Default</span><span class="op">&gt;</span>(<span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">record</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">storage</span>.<span class="ident">get</span>(<span class="ident">key</span>).<span class="kw">await</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">record</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serde_json</span>::<span class="ident">from_str</span>(<span class="kw-2">&amp;</span><span class="ident">record</span>)<span class="question-mark">?</span>,
-        <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">RecordNotFound</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">T</span>::<span class="ident">default</span>(),
+        <span class="prelude-val">Ok</span>(<span class="ident">record</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serde_json::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">record</span>)<span class="question-mark">?</span>,
+        <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::Error::RecordNotFound</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">T::default</span>(),
         <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>),
     };
     <span class="prelude-val">Ok</span>(<span class="ident">record</span>)
@@ -1123,12 +1123,12 @@
 <span class="macro">macro_rules!</span> <span class="ident">event_manager_impl</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">event_ty</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">index_vec</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">index_key</span>: <span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">save_fn_name</span>: <span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">get_fn_name</span>: <span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">get_count_fn_name</span>: <span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">impl</span> <span class="ident">StorageManager</span> {
-            <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">save_fn_name</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">event_ty</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+            <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">save_fn_name</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">event_ty</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">indexation_id</span>.<span class="ident">clone</span>();
                 <span class="self">self</span>.<span class="ident">storage</span>.<span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>, <span class="ident">event</span>).<span class="kw">await</span><span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">EventIndexation</span> {
                     <span class="ident">key</span>: <span class="ident">key</span>.<span class="ident">to_string</span>(),
-                    <span class="ident">timestamp</span>: <span class="ident">Utc</span>::<span class="ident">now</span>().<span class="ident">timestamp</span>(),
+                    <span class="ident">timestamp</span>: <span class="ident">Utc::now</span>().<span class="ident">timestamp</span>(),
                 };
                 <span class="kw">match</span> <span class="self">self</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">index_vec</span> {
                     <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">indexation</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">indexation</span>.<span class="ident">push</span>(<span class="ident">index</span>),
@@ -1148,7 +1148,7 @@
                 <span class="ident">count</span>: <span class="ident">usize</span>,
                 <span class="ident">skip</span>: <span class="ident">usize</span>,
                 <span class="ident">from_timestamp</span>: <span class="ident">T</span>,
-            ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">event_ty</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+            ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">event_ty</span><span class="op">&gt;</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">indexation</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">index_vec</span> {
                     <span class="prelude-val">Some</span>(<span class="ident">indexation</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">indexation</span>,
                     <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
@@ -1157,7 +1157,7 @@
                         <span class="self">self</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">index_vec</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>()
                     }
                 };
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">events</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">events</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
                 <span class="kw">let</span> <span class="ident">from_timestamp</span> <span class="op">=</span> <span class="ident">from_timestamp</span>.<span class="ident">into</span>().<span class="ident">unwrap_or</span>(<span class="number">0</span>);
                 <span class="kw">let</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">indexation</span>
                     .<span class="ident">iter</span>()
@@ -1169,7 +1169,7 @@
                     <span class="ident">iter</span>.<span class="ident">take</span>(<span class="ident">count</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">EventIndexation</span><span class="op">&gt;</span><span class="op">&gt;</span>()
                 } {
                     <span class="kw">let</span> <span class="ident">event_json</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">index</span>.<span class="ident">key</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-                    <span class="ident">events</span>.<span class="ident">push</span>(<span class="ident">serde_json</span>::<span class="ident">from_str</span>(<span class="kw-2">&amp;</span><span class="ident">event_json</span>)<span class="question-mark">?</span>);
+                    <span class="ident">events</span>.<span class="ident">push</span>(<span class="ident">serde_json::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">event_json</span>)<span class="question-mark">?</span>);
                 }
                 <span class="prelude-val">Ok</span>(<span class="ident">events</span>)
             }
@@ -1177,7 +1177,7 @@
             <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">get_count_fn_name</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Timestamp</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
                 <span class="ident">from_timestamp</span>: <span class="ident">T</span>,
-            ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
+            ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">indexation</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">index_vec</span> {
                     <span class="prelude-val">Some</span>(<span class="ident">indexation</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">indexation</span>,
                     <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
@@ -1246,7 +1246,7 @@
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type</span> <span class="ident">StorageHandle</span> <span class="op">=</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">StorageManager</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 <span class="kw">type</span> <span class="ident">Storages</span> <span class="op">=</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">PathBuf</span>, <span class="ident">StorageHandle</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
-<span class="kw">static</span> <span class="ident">INSTANCES</span>: <span class="ident">OnceCell</span><span class="op">&lt;</span><span class="ident">Storages</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">OnceCell</span>::<span class="ident">new</span>();
+<span class="kw">static</span> <span class="ident">INSTANCES</span>: <span class="ident">OnceCell</span><span class="op">&lt;</span><span class="ident">Storages</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">OnceCell::new</span>();
 
 <span class="doccomment">/// Sets the storage adapter.</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span>(
@@ -1254,13 +1254,13 @@
     <span class="ident">encryption_key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">32</span>]<span class="op">&gt;</span>,
     <span class="ident">storage</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">StorageAdapter</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>,
 ) {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instances</span> <span class="op">=</span> <span class="ident">INSTANCES</span>.<span class="ident">get_or_init</span>(<span class="ident">Default</span>::<span class="ident">default</span>).<span class="ident">write</span>().<span class="kw">await</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instances</span> <span class="op">=</span> <span class="ident">INSTANCES</span>.<span class="ident">get_or_init</span>(<span class="ident">Default::default</span>).<span class="ident">write</span>().<span class="kw">await</span>;
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_variables</span>)]</span>
     <span class="kw">let</span> <span class="ident">storage_id</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">id</span>();
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">Storage</span> {
         <span class="ident">storage_path</span>: <span class="ident">storage_path</span>.<span class="ident">as_ref</span>().<span class="ident">to_path_buf</span>(),
         <span class="ident">inner</span>: <span class="ident">storage</span>,
-        <span class="ident">encryption_key</span>: <span class="kw">if</span> <span class="ident">storage_id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">stronghold</span>::<span class="ident">STORAGE_ID</span> {
+        <span class="ident">encryption_key</span>: <span class="kw">if</span> <span class="ident">storage_id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">stronghold::STORAGE_ID</span> {
             <span class="prelude-val">None</span>
         } <span class="kw">else</span> {
             <span class="ident">encryption_key</span>
@@ -1268,22 +1268,22 @@
     };
     <span class="kw">let</span> <span class="ident">storage_manager</span> <span class="op">=</span> <span class="ident">StorageManager</span> {
         <span class="ident">storage</span>,
-        <span class="ident">account_indexation</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-        <span class="ident">message_indexation</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-        <span class="ident">balance_change_indexation</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-        <span class="ident">transaction_confirmation_indexation</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-        <span class="ident">new_transaction_indexation</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-        <span class="ident">reattachment_indexation</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-        <span class="ident">broadcast_indexation</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+        <span class="ident">account_indexation</span>: <span class="ident">Default::default</span>(),
+        <span class="ident">message_indexation</span>: <span class="ident">Default::default</span>(),
+        <span class="ident">balance_change_indexation</span>: <span class="ident">Default::default</span>(),
+        <span class="ident">transaction_confirmation_indexation</span>: <span class="ident">Default::default</span>(),
+        <span class="ident">new_transaction_indexation</span>: <span class="ident">Default::default</span>(),
+        <span class="ident">reattachment_indexation</span>: <span class="ident">Default::default</span>(),
+        <span class="ident">broadcast_indexation</span>: <span class="ident">Default::default</span>(),
     };
     <span class="ident">instances</span>.<span class="ident">insert</span>(
         <span class="ident">storage_path</span>.<span class="ident">as_ref</span>().<span class="ident">to_path_buf</span>(),
-        <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="ident">storage_manager</span>)),
+        <span class="ident">Arc::new</span>(<span class="ident">Mutex::new</span>(<span class="ident">storage_manager</span>)),
     );
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">remove</span>(<span class="ident">storage_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instances</span> <span class="op">=</span> <span class="ident">INSTANCES</span>.<span class="ident">get_or_init</span>(<span class="ident">Default</span>::<span class="ident">default</span>).<span class="ident">write</span>().<span class="kw">await</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instances</span> <span class="op">=</span> <span class="ident">INSTANCES</span>.<span class="ident">get_or_init</span>(<span class="ident">Default::default</span>).<span class="ident">write</span>().<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">instances</span>.<span class="ident">remove</span>(<span class="ident">storage_path</span>);
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">s</span>) <span class="op">=</span> <span class="ident">storage</span> {
         <span class="prelude-val">Some</span>(<span class="ident">s</span>.<span class="ident">lock</span>().<span class="kw">await</span>.<span class="ident">id</span>().<span class="ident">to_string</span>())
@@ -1292,52 +1292,52 @@
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_encryption_key</span>(<span class="ident">storage_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">encryption_key</span>: [<span class="ident">u8</span>; <span class="number">32</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">instances</span> <span class="op">=</span> <span class="ident">INSTANCES</span>.<span class="ident">get_or_init</span>(<span class="ident">Default</span>::<span class="ident">default</span>).<span class="ident">read</span>().<span class="kw">await</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_encryption_key</span>(<span class="ident">storage_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">encryption_key</span>: [<span class="ident">u8</span>; <span class="number">32</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">instances</span> <span class="op">=</span> <span class="ident">INSTANCES</span>.<span class="ident">get_or_init</span>(<span class="ident">Default::default</span>).<span class="ident">read</span>().<span class="kw">await</span>;
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">instance</span>) <span class="op">=</span> <span class="ident">instances</span>.<span class="ident">get</span>(<span class="ident">storage_path</span>) {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage_manager</span> <span class="op">=</span> <span class="ident">instance</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
         <span class="ident">storage_manager</span>.<span class="ident">storage</span>.<span class="ident">encryption_key</span>.<span class="ident">replace</span>(<span class="ident">encryption_key</span>);
         <span class="prelude-val">Ok</span>(())
     } <span class="kw">else</span> {
-        <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">StorageAdapterNotSet</span>(<span class="ident">storage_path</span>.<span class="ident">to_path_buf</span>()))
+        <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::Error::StorageAdapterNotSet</span>(<span class="ident">storage_path</span>.<span class="ident">to_path_buf</span>()))
     }
 }
 
 <span class="doccomment">/// gets the storage adapter</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="ident">storage_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">StorageHandle</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">instances</span> <span class="op">=</span> <span class="ident">INSTANCES</span>.<span class="ident">get_or_init</span>(<span class="ident">Default</span>::<span class="ident">default</span>).<span class="ident">read</span>().<span class="kw">await</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="ident">storage_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">StorageHandle</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">instances</span> <span class="op">=</span> <span class="ident">INSTANCES</span>.<span class="ident">get_or_init</span>(<span class="ident">Default::default</span>).<span class="ident">read</span>().<span class="kw">await</span>;
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">instance</span>) <span class="op">=</span> <span class="ident">instances</span>.<span class="ident">get</span>(<span class="ident">storage_path</span>) {
         <span class="prelude-val">Ok</span>(<span class="ident">instance</span>.<span class="ident">clone</span>())
     } <span class="kw">else</span> {
-        <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">StorageAdapterNotSet</span>(<span class="ident">storage_path</span>.<span class="ident">to_path_buf</span>()))
+        <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::Error::StorageAdapterNotSet</span>(<span class="ident">storage_path</span>.<span class="ident">to_path_buf</span>()))
     }
 }
 
 <span class="doccomment">/// The storage adapter.</span>
-<span class="attribute">#[<span class="ident">async_trait</span>::<span class="ident">async_trait</span>]</span>
+<span class="attribute">#[<span class="ident">async_trait::async_trait</span>]</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">StorageAdapter</span> {
     <span class="doccomment">/// Gets the storage identifier (used internally on the default storage adapters)</span>
     <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
         <span class="string">&quot;custom-adapter&quot;</span>
     }
     <span class="doccomment">/// Gets the record associated with the given key from the storage.</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>;
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>;
     <span class="doccomment">/// Saves or updates a record on the storage.</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">record</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">record</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
     <span class="doccomment">/// Batch write.</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">batch_set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">records</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">batch_set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">records</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
     <span class="doccomment">/// Removes a record from the storage.</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
 }
 
-<span class="kw">fn</span> <span class="ident">encrypt_record</span><span class="op">&lt;</span><span class="ident">O</span>: <span class="ident">Write</span><span class="op">&gt;</span>(<span class="ident">record</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">encryption_key</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>; <span class="number">32</span>], <span class="ident">output</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">O</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">nonce</span> <span class="op">=</span> [<span class="number">0</span>; <span class="ident">XChaCha20Poly1305</span>::<span class="ident">NONCE_LENGTH</span>];
-    <span class="ident">crypto</span>::<span class="ident">utils</span>::<span class="ident">rand</span>::<span class="ident">fill</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">nonce</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">RecordEncrypt</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+<span class="kw">fn</span> <span class="ident">encrypt_record</span><span class="op">&lt;</span><span class="ident">O</span>: <span class="ident">Write</span><span class="op">&gt;</span>(<span class="ident">record</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">encryption_key</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>; <span class="number">32</span>], <span class="ident">output</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">O</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">nonce</span> <span class="op">=</span> [<span class="number">0</span>; <span class="ident">XChaCha20Poly1305::NONCE_LENGTH</span>];
+    <span class="ident">crypto::utils::rand::fill</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">nonce</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::Error::RecordEncrypt</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tag</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0</span>; <span class="ident">XChaCha20Poly1305</span>::<span class="ident">TAG_LENGTH</span>];
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tag</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0</span>; <span class="ident">XChaCha20Poly1305::TAG_LENGTH</span>];
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ciphertext</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0</span>; <span class="ident">record</span>.<span class="ident">len</span>()];
     <span class="comment">// we can unwrap here since we know the lengths are valid</span>
-    <span class="ident">XChaCha20Poly1305</span>::<span class="ident">encrypt</span>(
+    <span class="ident">XChaCha20Poly1305::encrypt</span>(
         <span class="ident">encryption_key</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>(),
         <span class="kw-2">&amp;</span><span class="ident">nonce</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>(),
         <span class="kw-2">&amp;</span>[],
@@ -1345,7 +1345,7 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ciphertext</span>,
         <span class="ident">tag</span>.<span class="ident">as_mut_slice</span>().<span class="ident">try_into</span>().<span class="ident">unwrap</span>(),
     )
-    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">RecordEncrypt</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::Error::RecordEncrypt</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
     <span class="ident">output</span>.<span class="ident">write_all</span>(<span class="kw-2">&amp;</span><span class="ident">nonce</span>)<span class="question-mark">?</span>;
     <span class="ident">output</span>.<span class="ident">write_all</span>(<span class="kw-2">&amp;</span><span class="ident">tag</span>)<span class="question-mark">?</span>;
@@ -1354,22 +1354,22 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">decrypt_record</span>(<span class="ident">record</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">encryption_key</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>; <span class="number">32</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">record</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">from_str</span>(<span class="kw-2">&amp;</span><span class="ident">record</span>)<span class="question-mark">?</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">decrypt_record</span>(<span class="ident">record</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">encryption_key</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>; <span class="number">32</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">record</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">serde_json::from_str</span>(<span class="kw-2">&amp;</span><span class="ident">record</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">record</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">record</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">nonce</span> <span class="op">=</span> [<span class="number">0</span>; <span class="ident">XChaCha20Poly1305</span>::<span class="ident">NONCE_LENGTH</span>];
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">nonce</span> <span class="op">=</span> [<span class="number">0</span>; <span class="ident">XChaCha20Poly1305::NONCE_LENGTH</span>];
     <span class="ident">record</span>.<span class="ident">read_exact</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">nonce</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tag</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0</span>; <span class="ident">XChaCha20Poly1305</span>::<span class="ident">TAG_LENGTH</span>];
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tag</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0</span>; <span class="ident">XChaCha20Poly1305::TAG_LENGTH</span>];
     <span class="ident">record</span>.<span class="ident">read_exact</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">tag</span>)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ct</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ct</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
     <span class="ident">record</span>.<span class="ident">read_to_end</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ct</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pt</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0</span>; <span class="ident">ct</span>.<span class="ident">len</span>()];
     <span class="comment">// we can unwrap here since we know the lengths are valid</span>
-    <span class="ident">XChaCha20Poly1305</span>::<span class="ident">decrypt</span>(
+    <span class="ident">XChaCha20Poly1305::decrypt</span>(
         <span class="ident">encryption_key</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>(),
         <span class="kw-2">&amp;</span><span class="ident">nonce</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>(),
         <span class="kw-2">&amp;</span>[],
@@ -1377,16 +1377,16 @@
         <span class="kw-2">&amp;</span><span class="ident">ct</span>,
         <span class="ident">tag</span>.<span class="ident">as_slice</span>().<span class="ident">try_into</span>().<span class="ident">unwrap</span>(),
     )
-    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">RecordDecrypt</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::Error::RecordDecrypt</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>(<span class="ident">String</span>::<span class="ident">from_utf8_lossy</span>(<span class="kw-2">&amp;</span><span class="ident">pt</span>).<span class="ident">to_string</span>())
+    <span class="prelude-val">Ok</span>(<span class="ident">String::from_utf8_lossy</span>(<span class="kw-2">&amp;</span><span class="ident">pt</span>).<span class="ident">to_string</span>())
 }
 
 <span class="kw">fn</span> <span class="ident">parse_accounts</span>(
     <span class="ident">storage_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
     <span class="ident">accounts</span>: <span class="kw-2">&amp;</span>[<span class="ident">String</span>],
     <span class="ident">encryption_key</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">32</span>]<span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err</span> <span class="op">=</span> <span class="prelude-val">None</span>;
     <span class="kw">let</span> <span class="ident">accounts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">accounts</span>
         .<span class="ident">iter</span>()
@@ -1405,7 +1405,7 @@
                 <span class="prelude-val">None</span>
             };
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">json</span>) <span class="op">=</span> <span class="ident">account_json</span> {
-                <span class="kw">match</span> <span class="ident">serde_json</span>::<span class="ident">from_str</span>::<span class="op">&lt;</span><span class="ident">Account</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">json</span>) {
+                <span class="kw">match</span> <span class="ident">serde_json::from_str</span>::<span class="op">&lt;</span><span class="ident">Account</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">json</span>) {
                     <span class="prelude-val">Ok</span>(<span class="kw-2">mut</span> <span class="ident">acc</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="ident">acc</span>.<span class="ident">set_storage_path</span>(<span class="ident">storage_path</span>.<span class="ident">to_path_buf</span>());
                         <span class="prelude-val">Some</span>(<span class="ident">acc</span>)
@@ -1416,7 +1416,7 @@
                     }
                 }
             } <span class="kw">else</span> {
-                <span class="ident">err</span>.<span class="ident">replace</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">StorageIsEncrypted</span>);
+                <span class="ident">err</span>.<span class="ident">replace</span>(<span class="kw">crate</span><span class="ident">::Error::StorageIsEncrypted</span>);
                 <span class="prelude-val">None</span>
             }
         })
@@ -1432,46 +1432,46 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">StorageAdapter</span>;
-    <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections</span>::<span class="ident">HashMap</span>, <span class="ident">path</span>::<span class="ident">PathBuf</span>};
+    <span class="kw">use</span> <span class="kw">super</span><span class="ident">::StorageAdapter</span>;
+    <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">path::PathBuf</span>};
 
-    <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
+    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="comment">// asserts that the adapter defined by `set` is globally available with `get`</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_adapter</span>() {
         <span class="kw">struct</span> <span class="ident">MyAdapter</span>;
-        <span class="attribute">#[<span class="ident">async_trait</span>::<span class="ident">async_trait</span>]</span>
+        <span class="attribute">#[<span class="ident">async_trait::async_trait</span>]</span>
         <span class="kw">impl</span> <span class="ident">StorageAdapter</span> <span class="kw">for</span> <span class="ident">MyAdapter</span> {
-            <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+            <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
                 <span class="prelude-val">Ok</span>(<span class="string">&quot;MY_ADAPTER_GET_RESPONSE&quot;</span>.<span class="ident">to_string</span>())
             }
-            <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">_record</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+            <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">_record</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
                 <span class="prelude-val">Ok</span>(())
             }
-            <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">batch_set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_records</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+            <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">batch_set</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_records</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
                 <span class="prelude-val">Ok</span>(())
             }
-            <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+            <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
                 <span class="prelude-val">Ok</span>(())
             }
         }
 
         <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="string">&quot;./the-storage-path&quot;</span>;
-        <span class="kw">super</span>::<span class="ident">set</span>(<span class="ident">path</span>, <span class="prelude-val">None</span>, <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">MyAdapter</span> {})).<span class="kw">await</span>;
-        <span class="kw">let</span> <span class="ident">adapter</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">PathBuf</span>::<span class="ident">from</span>(<span class="ident">path</span>)).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+        <span class="kw">super</span><span class="ident">::set</span>(<span class="ident">path</span>, <span class="prelude-val">None</span>, <span class="ident">Box::new</span>(<span class="ident">MyAdapter</span> {})).<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">adapter</span> <span class="op">=</span> <span class="kw">super</span><span class="ident">::get</span>(<span class="kw-2">&amp;</span><span class="ident">PathBuf::from</span>(<span class="ident">path</span>)).<span class="kw">await</span>.<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">adapter</span> <span class="op">=</span> <span class="ident">adapter</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
         <span class="macro">assert_eq!</span>(<span class="ident">adapter</span>.<span class="ident">get</span>(<span class="string">&quot;&quot;</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>(), <span class="string">&quot;MY_ADAPTER_GET_RESPONSE&quot;</span>.<span class="ident">to_string</span>());
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">parse_accounts_invalid</span>() {
-        <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">parse_accounts</span>(<span class="kw-2">&amp;</span><span class="ident">PathBuf</span>::<span class="ident">new</span>(), <span class="kw-2">&amp;</span>[<span class="string">&quot;{}&quot;</span>.<span class="ident">to_string</span>()], <span class="kw-2">&amp;</span><span class="prelude-val">None</span>);
+        <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="kw">super</span><span class="ident">::parse_accounts</span>(<span class="kw-2">&amp;</span><span class="ident">PathBuf::new</span>(), <span class="kw-2">&amp;</span>[<span class="string">&quot;{}&quot;</span>.<span class="ident">to_string</span>()], <span class="kw-2">&amp;</span><span class="prelude-val">None</span>);
         <span class="macro">assert!</span>(<span class="ident">response</span>.<span class="ident">is_err</span>());
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">_create_account</span>() <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">PathBuf</span>, <span class="kw">crate</span>::<span class="ident">account</span>::<span class="ident">AccountHandle</span>) {
-        <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">test_utils</span>::<span class="ident">get_account_manager</span>().<span class="kw">await</span>;
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">_create_account</span>() <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">PathBuf</span>, <span class="kw">crate</span><span class="ident">::account::AccountHandle</span>) {
+        <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::get_account_manager</span>().<span class="kw">await</span>;
 
-        <span class="kw">let</span> <span class="ident">client_options</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">client</span>::<span class="ident">ClientOptionsBuilder</span>::<span class="ident">new</span>()
+        <span class="kw">let</span> <span class="ident">client_options</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::client::ClientOptionsBuilder::new</span>()
             .<span class="ident">with_node</span>(<span class="string">&quot;https://api.lb-0.testnet.chrysalis2.com&quot;</span>)
             .<span class="ident">unwrap</span>()
             .<span class="ident">build</span>()
@@ -1486,12 +1486,12 @@
         (<span class="ident">manager</span>.<span class="ident">storage_path</span>().<span class="ident">clone</span>(), <span class="ident">account_handle</span>)
     }
 
-    <span class="attribute">#[<span class="ident">tokio</span>::<span class="ident">test</span>]</span>
+    <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">parse_accounts_valid</span>() {
         <span class="kw">let</span> (<span class="ident">storage_path</span>, <span class="ident">account_handle</span>) <span class="op">=</span> <span class="ident">_create_account</span>().<span class="kw">await</span>;
-        <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">parse_accounts</span>(
+        <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="kw">super</span><span class="ident">::parse_accounts</span>(
             <span class="kw-2">&amp;</span><span class="ident">storage_path</span>,
-            <span class="kw-2">&amp;</span>[<span class="ident">serde_json</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>).<span class="ident">unwrap</span>()],
+            <span class="kw-2">&amp;</span>[<span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>).<span class="ident">unwrap</span>()],
             <span class="kw-2">&amp;</span><span class="prelude-val">None</span>,
         );
         <span class="macro">assert!</span>(<span class="ident">response</span>.<span class="ident">is_ok</span>());
