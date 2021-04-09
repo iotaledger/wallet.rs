@@ -236,29 +236,31 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
                 spent_bundle_hashes.extend(bundle_hashes);
             }
         }
-        emit_migration_progress(MigrationProgressType::MiningBundle {
-            address: address_inputs
-                .iter()
-                .find(|i| i.spent)
-                .unwrap() // safe to unwrap: we checked that there's an spent address
-                .address
-                .to_inner()
-                .encode::<T3B1Buf>()
-                .iter_trytes()
-                .map(char::from)
-                .collect::<String>(),
-        })
-        .await;
-        let mining_result = mine(
-            prepared_bundle,
-            data.security_level,
-            false,
-            spent_bundle_hashes,
-            timeout.as_secs(),
-        )
-        .await?;
-        crackability = Some(mining_result.0.crackability);
-        prepared_bundle = mining_result.1;
+        if !spent_bundle_hashes.is_empty() {
+            emit_migration_progress(MigrationProgressType::MiningBundle {
+                address: address_inputs
+                    .iter()
+                    .find(|i| i.spent)
+                    .unwrap() // safe to unwrap: we checked that there's an spent address
+                    .address
+                    .to_inner()
+                    .encode::<T3B1Buf>()
+                    .iter_trytes()
+                    .map(char::from)
+                    .collect::<String>(),
+            })
+            .await;
+            let mining_result = mine(
+                prepared_bundle,
+                data.security_level,
+                false,
+                spent_bundle_hashes,
+                timeout.as_secs(),
+            )
+            .await?;
+            crackability = Some(mining_result.0.crackability);
+            prepared_bundle = mining_result.1;
+        }
     }
 
     emit_migration_progress(MigrationProgressType::SigningBundle {
