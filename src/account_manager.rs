@@ -1602,6 +1602,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore]
     async fn get_account() {
         let manager = crate::test_utils::get_account_manager().await;
 
