@@ -168,7 +168,7 @@ pub struct TransferProgress {
 
 /// Migration event type.
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(tag = "type")]
+#[serde(tag = "type", content = "data")]
 pub enum MigrationProgressType {
     /// Fetching migration data on the given address range.
     FetchingMigrationData {
