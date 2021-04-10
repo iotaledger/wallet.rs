@@ -97,7 +97,11 @@ impl Storage {
     async fn get(&self, key: &str) -> crate::Result<String> {
         self.inner.get(key).await.and_then(|record| {
             if let Some(key) = &self.encryption_key {
-                decrypt_record(&record, key)
+                if serde_json::from_str::<Vec<u8>>(&record).is_ok() {
+                    decrypt_record(&record, key)
+                } else {
+                    Ok(record)
+                }
             } else {
                 Ok(record)
             }
