@@ -492,12 +492,16 @@ impl AccountManager {
         Ok(MigratedBundle { address, value })
     }
 
-    async fn create_mocked_migration_message(account_handle: AccountHandle, value: u64) -> crate::Result<()> {
+    async fn create_mocked_migration_message(account_handle: AccountHandle, mut value: u64) -> crate::Result<()> {
         let mut id = [0; 32];
+        if value < 1_000_000 {
+            value = 1_000_000;
+        }
         crypto::utils::rand::fill(&mut id).unwrap();
         let id = MessageId::new(id);
         let client_options = account_handle.client_options().await;
         let bech32_hrp = account_handle.read().await.bech32_hrp();
+        let address = account_handle.latest_address().await.address().clone();
         let tx_metadata = TransactionBuilderMetadata {
             id: &id,
             bech32_hrp,
@@ -526,10 +530,7 @@ impl AccountManager {
                     56, 25, 68, 154, 98, 100, 64, 108, 203, 48, 76, 75, 114, 150, 34, 153, 203, 35, 225, 120, 194, 175,
                     169, 207, 80, 229, 10,
                 ])?,
-                SignatureLockedSingleOutput::new(
-                    account_handle.latest_address().await.address().as_ref().clone(),
-                    value,
-                )?,
+                SignatureLockedSingleOutput::new(address.as_ref().clone(), value)?,
             )?],
             treasury_transaction,
         )?));
@@ -574,6 +575,14 @@ impl AccountManager {
             TransactionEventType::NewTransaction,
             &*account_handle.read().await,
             message,
+            false,
+        )
+        .await?;
+        emit_balance_change(
+            &*account_handle.read().await,
+            &address,
+            Some(id),
+            crate::event::BalanceChange::received(value),
             false,
         )
         .await?;
