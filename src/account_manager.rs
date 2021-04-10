@@ -463,9 +463,12 @@ impl AccountManager {
             }
             crate::spawn(Self::start_monitoring(self.accounts.clone()));
         } else {
-            // save the accounts again to reencrypt with the new key
+            // save the accounts and messages again to reencrypt with the new key
             for account_handle in self.accounts.read().await.values() {
-                account_handle.write().await.save().await?;
+                let mut account = account_handle.write().await;
+                account.save().await?;
+                let messages = account.list_messages(0, 0, None).await?;
+                account.save_messages(messages).await?;
             }
         }
 
