@@ -788,7 +788,7 @@ impl AccountManager {
                     .await
                     .save_account(account_id, &account)
                     .await?;
-                let messages = account_handle.list_messages(0, 0, None).await?;
+                let messages = account.list_messages(0, 0, None).await?;
                 // switch account storage_path to stronghold to save the messages
                 account.set_storage_path(stronghold_storage_path.clone());
                 account.save_messages(messages).await?;
