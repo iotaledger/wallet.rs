@@ -280,8 +280,8 @@ impl StorageManager {
     pub async fn save_messages(&mut self, account: &Account, messages: &[Message]) -> crate::Result<()> {
         let message_indexation = self
             .message_indexation
-            .get_mut(account.id())
-            .ok_or(crate::Error::RecordNotFound)?;
+            .entry(account.id().clone())
+            .or_insert_with(Default::default);
         let mut messages_map = HashMap::new();
         for message in messages.iter() {
             messages_map.insert(message.id().to_string(), serde_json::to_string(&message)?);
