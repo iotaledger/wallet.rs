@@ -11,15 +11,18 @@ use bee_common::packable::Packable;
 use chrono::prelude::{DateTime, Utc};
 use getset::{Getters, Setters};
 pub use iota::{
-    Essence, IndexationPayload, Input, Message as IotaMessage, MessageId, MilestonePayload, Output, Payload,
-    ReceiptPayload, RegularEssence, SignatureLockedDustAllowanceOutput, SignatureLockedSingleOutput,
-    TransactionPayload, TreasuryInput, TreasuryOutput, TreasuryTransactionPayload, UnlockBlock, UtxoInput,
+    Essence, IndexationPayload, Input, Message as IotaMessage, MessageId, MigratedFundsEntry, MilestoneIndex,
+    MilestonePayload, MilestonePayloadEssence, Output, Parents, Payload, ReceiptPayload, RegularEssence,
+    SignatureLockedDustAllowanceOutput, SignatureLockedSingleOutput, TailTransactionHash, TransactionPayload,
+    TreasuryInput, TreasuryOutput, TreasuryTransactionPayload, UnlockBlock, UtxoInput, MILESTONE_MERKLE_PROOF_LENGTH,
+    MILESTONE_PUBLIC_KEY_LENGTH,
 };
 use serde::{de::Deserializer, Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
 use std::{
     cmp::Ordering,
     collections::hash_map::DefaultHasher,
+    convert::TryInto,
     fmt,
     hash::{Hash, Hasher},
     num::NonZeroU64,
@@ -670,6 +673,113 @@ impl MessageTransactionPayload {
     }
 }
 
+/// Milestone payload essence.
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+pub struct MessageMilestonePayloadEssence {
+    index: MilestoneIndex,
+    timestamp: u64,
+    parents: Parents,
+    merkle_proof: [u8; MILESTONE_MERKLE_PROOF_LENGTH],
+    next_pow_score: u32,
+    next_pow_score_milestone_index: u32,
+    public_keys: Vec<[u8; MILESTONE_PUBLIC_KEY_LENGTH]>,
+    receipt: Option<MessagePayload>,
+}
+
+impl MessageMilestonePayloadEssence {
+    async fn new(essence: &MilestonePayloadEssence, metadata: &TransactionBuilderMetadata<'_>) -> crate::Result<Self> {
+        Ok(Self {
+            index: essence.index(),
+            timestamp: essence.timestamp(),
+            parents: essence.parents().clone(),
+            merkle_proof: essence.merkle_proof().try_into().unwrap(),
+            next_pow_score: essence.next_pow_score(),
+            next_pow_score_milestone_index: essence.next_pow_score_milestone_index(),
+            public_keys: essence.public_keys().to_vec(),
+            receipt: match essence.receipt() {
+                Some(p) => {
+                    if let Payload::Receipt(receipt) = p {
+                        Some(MessagePayload::Receipt(Box::new(MessageReceiptPayload::new(
+                            &receipt, metadata,
+                        ))))
+                    } else {
+                        None
+                    }
+                }
+                None => None,
+            },
+        })
+    }
+}
+
+/// Message milestone payload.
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+pub struct MessageMilestonePayload {
+    essence: MessageMilestonePayloadEssence,
+    signatures: Vec<Box<[u8]>>,
+}
+
+impl MessageMilestonePayload {
+    /// The milestone essence.
+    pub fn essence(&self) -> &MessageMilestonePayloadEssence {
+        &self.essence
+    }
+
+    #[doc(hidden)]
+    pub async fn new(payload: &MilestonePayload, metadata: &TransactionBuilderMetadata<'_>) -> crate::Result<Self> {
+        Ok(Self {
+            essence: MessageMilestonePayloadEssence::new(payload.essence(), metadata).await?,
+            signatures: payload.signatures().to_vec(),
+        })
+    }
+}
+
+/// Migrated funds entry.
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+pub struct MessageMigratedFundsEntry {
+    tail_transaction_hash: TailTransactionHash,
+    output: TransactionSignatureLockedSingleOutput,
+}
+
+impl MessageMigratedFundsEntry {
+    #[doc(hidden)]
+    pub fn new(entry: &MigratedFundsEntry, metadata: &TransactionBuilderMetadata<'_>) -> Self {
+        Self {
+            tail_transaction_hash: entry.tail_transaction_hash().clone(),
+            output: TransactionSignatureLockedSingleOutput::new(entry.output(), metadata.bech32_hrp.clone(), false),
+        }
+    }
+}
+
+/// Receipt payload.
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+pub struct MessageReceiptPayload {
+    migrated_at: MilestoneIndex,
+    last: bool,
+    funds: Vec<MessageMigratedFundsEntry>,
+    transaction: MessagePayload,
+}
+
+impl MessageReceiptPayload {
+    #[doc(hidden)]
+    pub fn new(payload: &ReceiptPayload, metadata: &TransactionBuilderMetadata<'_>) -> Self {
+        Self {
+            migrated_at: payload.migrated_at(),
+            last: payload.last(),
+            funds: payload
+                .funds()
+                .iter()
+                .map(|e| MessageMigratedFundsEntry::new(e, metadata))
+                .collect(),
+            transaction: if let Payload::TreasuryTransaction(tx) = payload.transaction() {
+                MessagePayload::TreasuryTransaction(tx.clone())
+            } else {
+                unreachable!()
+            },
+        }
+    }
+}
+
 /// The message's payload.
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(tag = "type", content = "data")]
@@ -677,11 +787,11 @@ pub enum MessagePayload {
     /// Transaction payload.
     Transaction(Box<MessageTransactionPayload>),
     /// Milestone payload.
-    Milestone(Box<MilestonePayload>),
+    Milestone(Box<MessageMilestonePayload>),
     /// Indexation payload.
     Indexation(Box<IndexationPayload>),
     /// Receipt payload.
-    Receipt(Box<ReceiptPayload>),
+    Receipt(Box<MessageReceiptPayload>),
     /// Treasury Transaction payload.
     TreasuryTransaction(Box<TreasuryTransactionPayload>),
 }
@@ -692,9 +802,11 @@ impl MessagePayload {
             Payload::Transaction(tx) => {
                 Self::Transaction(Box::new(MessageTransactionPayload::new(&tx, metadata).await?))
             }
-            Payload::Milestone(milestone) => Self::Milestone(milestone),
+            Payload::Milestone(milestone) => {
+                Self::Milestone(Box::new(MessageMilestonePayload::new(&milestone, metadata).await?))
+            }
             Payload::Indexation(indexation) => Self::Indexation(indexation),
-            Payload::Receipt(receipt) => Self::Receipt(receipt),
+            Payload::Receipt(receipt) => Self::Receipt(Box::new(MessageReceiptPayload::new(&receipt, metadata))),
             Payload::TreasuryTransaction(treasury_tx) => Self::TreasuryTransaction(treasury_tx),
             _ => unimplemented!(),
         };
@@ -952,7 +1064,7 @@ impl<'a> MessageBuilder<'a> {
 
         let mut migrated_from_legacy = false;
         if let Some(MessagePayload::Milestone(m)) = &payload {
-            migrated_from_legacy = m.essence().receipt().is_some();
+            migrated_from_legacy = m.essence().receipt.is_some();
         }
 
         let message = Message {
