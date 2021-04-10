@@ -281,7 +281,7 @@ impl StorageManager {
         let message_indexation = self
             .message_indexation
             .entry(account.id().clone())
-            .or_insert(Default::default());
+            .or_insert_with(Default::default);
         let mut messages_map = HashMap::new();
         for message in messages.iter() {
             messages_map.insert(message.id().to_string(), serde_json::to_string(&message)?);

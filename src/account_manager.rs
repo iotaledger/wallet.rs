@@ -781,14 +781,14 @@ impl AccountManager {
             let stronghold_storage_path = self.storage_folder.join(STRONGHOLD_FILENAME);
             let stronghold_storage = crate::storage::get(&stronghold_storage_path).await?;
 
-            for account_handle in self.accounts.read().await.values() {
+            for (account_id, account_handle) in self.accounts.read().await.iter() {
+                let mut account = account_handle.write().await;
                 stronghold_storage
                     .lock()
                     .await
-                    .save_account(&account_handle.read().await.id(), &*account_handle.read().await)
+                    .save_account(account_id, &account)
                     .await?;
                 let messages = account_handle.list_messages(0, 0, None).await?;
-                let mut account = account_handle.write().await;
                 // switch account storage_path to stronghold to save the messages
                 account.set_storage_path(stronghold_storage_path.clone());
                 account.save_messages(messages).await?;
