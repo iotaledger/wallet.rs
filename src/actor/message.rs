@@ -253,6 +253,8 @@ pub enum MessageType {
         /// Timeout in seconds for the bundle mining process.
         #[serde(rename = "timeoutSeconds")]
         timeout_secs: u64,
+        /// Offset for the bundle mining process.
+        offset: i64,
         /// The name of the log file (stored on the storage folder).
         #[serde(rename = "logFileName")]
         log_file_name: String,
@@ -357,6 +359,7 @@ impl Serialize for MessageType {
                 input_address_indexes: _,
                 mine: _,
                 timeout_secs: _,
+                offset: _,
                 log_file_name: _,
             } => serializer.serialize_unit_variant("MessageType", 25, "CreateMigrationBundle"),
             MessageType::SendMigrationBundle {

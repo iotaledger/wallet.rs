@@ -139,6 +139,7 @@ impl AccountManager {
         input_address_indexes: Vec<u64>,
         mine: Option<bool>,
         timeout_seconds: Option<u64>,
+        offset: i64,
         log_file_name: Option<&str>,
     ) -> Result<MigrationBundle> {
         crate::block_on(self.account_manager.create_migration_bundle(
@@ -146,6 +147,7 @@ impl AccountManager {
             &input_address_indexes,
             mine.unwrap_or(true),
             Duration::from_secs(timeout_seconds.unwrap_or(10 * 60)),
+            offset,
             log_file_name.unwrap_or("migration.log"),
         ))
         .map(Into::into)
