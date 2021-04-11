@@ -836,7 +836,7 @@ impl AccountSynchronizer {
                 let balance_change = address_after_sync.balance() as i64 - before_sync_balance as i64;
                 if !emitted_event || output_change_balance != balance_change {
                     let change =
-                        address_after_sync.balance() as i64 as i64 - before_sync_balance as i64 - output_change_balance;
+                        address_after_sync.balance() as i64 - before_sync_balance as i64 - output_change_balance;
                     let balance_change = if change > 0 {
                         BalanceChange::received(change as u64)
                     } else {
