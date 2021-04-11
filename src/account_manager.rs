@@ -564,7 +564,6 @@ impl AccountManager {
             confirmed: Some(true),
             broadcasted: true,
             reattachment_message_id: None,
-            migrated_from_legacy: true,
         };
         account_handle
             .write()

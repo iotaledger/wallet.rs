@@ -148,9 +148,6 @@ impl Message {
     pub fn broadcasted(&self) -> bool {
         *(self.message.broadcasted())
     }
-    pub fn migrated_from_legacy(&self) -> bool {
-        *self.message.migrated_from_legacy()
-    }
 
     pub fn to_inner(self) -> MessageRust {
         self.message
