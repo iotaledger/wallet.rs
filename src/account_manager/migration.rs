@@ -26,7 +26,6 @@ use std::{
     io::Write,
     ops::Range,
     path::Path,
-    time::Duration,
 };
 
 /// Migration data.
@@ -66,9 +65,9 @@ pub(crate) struct MigrationMetadata {
 }
 
 #[derive(Serialize)]
-struct LogAddress {
-    address: String,
-    balance: u64,
+pub(crate) struct LogAddress {
+    pub(crate) address: String,
+    pub(crate) balance: u64,
 }
 
 impl<'a> MigrationDataFinder<'a> {
@@ -196,8 +195,6 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
     data: &super::CachedMigrationData,
     seed: TernarySeed,
     address_inputs: Vec<&InputData>,
-    bundle_mine: bool,
-    timeout: Duration,
     log_file_path: P,
 ) -> crate::Result<MigrationBundle> {
     let mut legacy_client_builder = iota_migration::ClientBuilder::new().quorum(true);
@@ -222,47 +219,12 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
         _ => return Err(crate::Error::InvalidAddress),
     };
 
-    let mut prepared_bundle = create_migration_bundle(
+    let prepared_bundle = create_migration_bundle(
         &legacy_client,
         deposit_address,
         address_inputs.clone().into_iter().cloned().collect(),
     )
     .await?;
-    let mut crackability = None;
-    if bundle_mine && address_inputs.iter().any(|i| i.spent) {
-        let mut spent_bundle_hashes = Vec::new();
-        for input in &address_inputs {
-            if let Some(bundle_hashes) = input.spent_bundlehashes.clone() {
-                spent_bundle_hashes.extend(bundle_hashes);
-            }
-        }
-        if !spent_bundle_hashes.is_empty() {
-            emit_migration_progress(MigrationProgressType::MiningBundle {
-                address: address_inputs
-                    .iter()
-                    .find(|i| i.spent)
-                    .unwrap() // safe to unwrap: we checked that there's an spent address
-                    .address
-                    .to_inner()
-                    .encode::<T3B1Buf>()
-                    .iter_trytes()
-                    .map(char::from)
-                    .collect::<String>(),
-            })
-            .await;
-            let mining_result = mine(
-                prepared_bundle,
-                data.security_level,
-                false,
-                spent_bundle_hashes,
-                timeout.as_secs(),
-            )
-            .await?;
-            crackability = Some(mining_result.0.crackability);
-            prepared_bundle = mining_result.1;
-        }
-    }
-
     emit_migration_progress(MigrationProgressType::SigningBundle {
         addresses: address_inputs
             .iter()
@@ -331,22 +293,12 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
         )
         .as_bytes(),
     )?;
-    log.write_all(format!("mine: {}\n", bundle_mine).as_bytes())?;
-    log.write_all(
-        format!(
-            "crackability: {}\n",
-            if let Some(crackability) = crackability {
-                crackability.to_string()
-            } else {
-                "null".to_string()
-            }
-        )
-        .as_bytes(),
-    )?;
+    log.write_all(format!("mine: {}\n", false).as_bytes())?;
+    log.write_all(format!("crackability: {}\n", "null".to_string()).as_bytes())?;
     log.write_all(b"\n\n")?;
 
     Ok(MigrationBundle {
-        crackability: crackability.unwrap_or_default(),
+        crackability: Default::default(),
         bundle,
     })
 }

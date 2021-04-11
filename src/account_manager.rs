@@ -23,6 +23,7 @@ use std::{
     convert::TryInto,
     fs,
     hash::{Hash, Hasher},
+    io::Write,
     num::NonZeroU64,
     ops::Range,
     panic::AssertUnwindSafe,
@@ -396,16 +397,218 @@ impl AccountManager {
         })
     }
 
+    /// Performs bundle mining if the address is spent
+    pub async fn mine_migration_bundle(
+        &self,
+        seed: &str,
+        timeout: Duration,
+        offset: i64,
+    ) -> crate::Result<(
+        tokio::sync::mpsc::Sender<iota_migration::bundle_miner::miner::MinerEvent>,
+        tokio::sync::mpsc::Receiver<iota_migration::bundle_miner::miner::CrackabilityMinerEvent>,
+        futures::future::AbortHandle,
+        Vec<BundledTransaction>,
+    )> {
+        let mut hasher = DefaultHasher::new();
+        seed.hash(&mut hasher);
+        let seed_hash = hasher.finish();
+
+        let data = self
+            .cached_migration_data
+            .lock()
+            .await
+            .get(&seed_hash)
+            .ok_or(crate::Error::MigrationDataNotFound)?
+            .clone();
+
+        let address_inputs: Vec<&InputData> = Default::default();
+
+        let account_handle = self.get_account(0).await?;
+        let mut legacy_client_builder = iota_migration::ClientBuilder::new().quorum(true);
+        if let Some(permanode) = &data.permanode {
+            legacy_client_builder = legacy_client_builder.permanode(&permanode)?;
+        }
+        for node in &data.nodes {
+            legacy_client_builder = legacy_client_builder.node(node)?;
+        }
+        let legacy_client = legacy_client_builder.build()?;
+
+        match address_inputs.len() {
+            0 => return Err(crate::Error::EmptyInputList),
+            1 => {}
+            _ if address_inputs.iter().any(|input| input.spent) => return Err(crate::Error::SpentAddressOnBundle),
+            _ => {}
+        }
+
+        let deposit_address = account_handle.latest_address().await;
+        let deposit_address = match MigrationAddress::try_from_bech32(&deposit_address.address().to_bech32()) {
+            Ok(MigrationAddress::Ed25519(a)) => a,
+            _ => return Err(crate::Error::InvalidAddress),
+        };
+
+        let prepared_bundle = create_migration_bundle(
+            &legacy_client,
+            deposit_address,
+            address_inputs.clone().into_iter().cloned().collect(),
+        )
+        .await?;
+
+        let mut spent_bundle_hashes = Vec::new();
+        for input in &address_inputs {
+            if let Some(bundle_hashes) = input.spent_bundlehashes.clone() {
+                spent_bundle_hashes.extend(bundle_hashes);
+            }
+        }
+        if !spent_bundle_hashes.is_empty() {
+            crate::event::emit_migration_progress(crate::event::MigrationProgressType::MiningBundle {
+                address: address_inputs
+                    .iter()
+                    .find(|i| i.spent)
+                    .unwrap() // safe to unwrap: we checked that there's an spent address
+                    .address
+                    .to_inner()
+                    .encode::<T3B1Buf>()
+                    .iter_trytes()
+                    .map(char::from)
+                    .collect::<String>(),
+            })
+            .await;
+            mine(
+                prepared_bundle,
+                data.security_level,
+                false,
+                spent_bundle_hashes,
+                timeout.as_secs(),
+                offset, /* Offset for the obsolete tag, increasing this by 10 million each time one reruns it should
+                         * be fine */
+            )
+            .await
+            .map_err(|e| crate::Error::LegacyClientError(e.into()))
+        } else {
+            Err(crate::Error::NoSpentAddress)
+        }
+    }
+
+    /// Finish a mined migration bundle
+    pub async fn finish_mined_bundle(
+        &self,
+        seed: &str,
+        input_address_indexes: &[u64],
+        mined_crackability: iota_migration::bundle_miner::miner::MinedCrackability,
+        bundle_txs: Vec<BundledTransaction>,
+        log_file_name: &str,
+    ) -> crate::Result<MigrationBundle> {
+        let updated_bundle = iota_migration::client::migration::update_essence_with_mined_essence(
+            bundle_txs,
+            mined_crackability.mined_essence.clone().expect("No essence mined"),
+        )?;
+
+        let mut hasher = DefaultHasher::new();
+        seed.hash(&mut hasher);
+        let seed_hash = hasher.finish();
+
+        let seed = TernarySeed::from_trits(TryteBuf::try_from_str(&seed).unwrap().as_trits().encode::<T1B1Buf>())
+            .map_err(|_| crate::Error::InvalidSeed)?;
+        let data = self
+            .cached_migration_data
+            .lock()
+            .await
+            .get(&seed_hash)
+            .ok_or(crate::Error::MigrationDataNotFound)?
+            .clone();
+
+        let mut address_inputs: Vec<&InputData> = Default::default();
+        let mut value = 0;
+        for index in input_address_indexes {
+            for inputs in data.inputs.values() {
+                if let Some(input) = inputs.iter().find(|i| &i.index == index) {
+                    value += input.balance;
+                    address_inputs.push(input);
+                    break;
+                }
+            }
+        }
+
+        let bundle = sign_migration_bundle(
+            seed,
+            updated_bundle,
+            address_inputs.clone().into_iter().cloned().collect(),
+        )?;
+
+        let bundle_hash = bundle
+            .first()
+            .unwrap()
+            .bundle()
+            .to_inner()
+            .encode::<T3B1Buf>()
+            .iter_trytes()
+            .map(char::from)
+            .collect::<String>();
+
+        let mut log = std::fs::OpenOptions::new()
+            .write(true)
+            .create(true)
+            .open(self.storage_folder.join(log_file_name))?;
+        let mut trytes = Vec::new();
+        for i in 0..bundle.len() {
+            let mut trits = TritBuf::<T1B1Buf>::zeros(8019);
+            bundle.get(i).unwrap().as_trits_allocated(&mut trits);
+            trytes.push(
+                trits
+                    .encode::<T3B1Buf>()
+                    .iter_trytes()
+                    .map(char::from)
+                    .collect::<String>(),
+            );
+        }
+        log.write_all(format!("bundleHash: {}\n", bundle_hash).as_bytes())?;
+        log.write_all(format!("trytes: {:?}\n", trytes).as_bytes())?;
+        log.write_all(format!("balance: {}\n", address_inputs.iter().map(|a| a.balance).sum::<u64>()).as_bytes())?;
+        log.write_all(format!("timestamp: {}\n", Utc::now().to_string()).as_bytes())?;
+        log.write_all(
+            format!(
+                "spentAddresses: {:?}\n",
+                address_inputs
+                    .iter()
+                    .filter(|i| i.spent)
+                    .map(|i| serde_json::to_string_pretty(&crate::account_manager::LogAddress {
+                        address: i
+                            .address
+                            .to_inner()
+                            .encode::<T3B1Buf>()
+                            .iter_trytes()
+                            .map(char::from)
+                            .collect::<String>(),
+                        balance: i.balance
+                    })
+                    .unwrap())
+                    .collect::<Vec<String>>()
+            )
+            .as_bytes(),
+        )?;
+        log.write_all(format!("mine: {}\n", true).as_bytes())?;
+        log.write_all(format!("crackability: {}\n", mined_crackability.crackability.to_string()).as_bytes())?;
+        log.write_all(b"\n\n")?;
+
+        let account_handle = self.get_account(0).await?;
+        let address = account_handle.latest_address().await.address().clone();
+        self.cached_migration_bundles
+            .lock()
+            .await
+            .insert(bundle_hash.clone(), (bundle, address, value));
+        Ok(MigrationBundle {
+            crackability: mined_crackability.crackability,
+            bundle_hash,
+        })
+    }
+
     /// Creates the bundle for migration associated with the given input indexes,
-    /// Performs bundle mining if the address is spent and `mine` is true,
     /// And signs the bundle. Returns the bundle hash.
     /// It logs the operations to `$storage_path.join(log_file_name)`.
     pub async fn create_migration_bundle(
         &self,
         seed: &str,
         input_address_indexes: &[u64],
-        mine: bool,
-        timeout: Duration,
         log_file_name: &str,
     ) -> crate::Result<MigrationBundle> {
         let mut hasher = DefaultHasher::new();
@@ -440,8 +643,6 @@ impl AccountManager {
             &data,
             seed,
             address_inputs,
-            mine,
-            timeout,
             self.storage_folder.join(log_file_name),
         )
         .await?;

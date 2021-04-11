@@ -17,7 +17,6 @@ use std::{
     num::NonZeroU64,
     panic::{catch_unwind, AssertUnwindSafe},
     path::Path,
-    time::Duration,
 };
 
 mod message;
@@ -241,8 +240,6 @@ impl WalletMessageHandler {
             MessageType::CreateMigrationBundle {
                 seed,
                 input_address_indexes,
-                mine,
-                timeout_secs,
                 log_file_name,
             } => {
                 convert_async_panics(|| async {
@@ -251,8 +248,6 @@ impl WalletMessageHandler {
                         .create_migration_bundle(
                             &seed,
                             &input_address_indexes,
-                            *mine,
-                            Duration::from_secs(*timeout_secs),
                             &log_file_name,
                         )
                         .await?;

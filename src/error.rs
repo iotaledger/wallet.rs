@@ -197,6 +197,9 @@ pub enum Error {
     /// Spent addresses must be the only input in a bundle.
     #[error("can't create migration bundle: the bundle has more than one input and one of them are spent")]
     SpentAddressOnBundle,
+    /// Can't mine bundle without spent address
+    #[error("can't mine migration bundle: there is no spent address")]
+    NoSpentAddress,
 }
 
 impl Drop for Error {
@@ -328,6 +331,7 @@ impl serde::Serialize for Error {
             Self::InputNotFound => serialize_variant(self, serializer, "InputNotFound"),
             Self::EmptyInputList => serialize_variant(self, serializer, "EmptyInputList"),
             Self::SpentAddressOnBundle => serialize_variant(self, serializer, "SpentAddressOnBundle"),
+            Self::NoSpentAddress => serialize_variant(self, serializer, "NoSpentAddress"),
         }
     }
 }

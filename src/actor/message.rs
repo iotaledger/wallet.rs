@@ -248,11 +248,6 @@ pub enum MessageType {
         /// The bundle input address indexes.
         #[serde(rename = "inputAddressIndexes")]
         input_address_indexes: Vec<u64>,
-        /// Whether we should perform bundle mining or not.
-        mine: bool,
-        /// Timeout in seconds for the bundle mining process.
-        #[serde(rename = "timeoutSeconds")]
-        timeout_secs: u64,
         /// The name of the log file (stored on the storage folder).
         #[serde(rename = "logFileName")]
         log_file_name: String,
@@ -355,8 +350,6 @@ impl Serialize for MessageType {
             MessageType::CreateMigrationBundle {
                 seed: _,
                 input_address_indexes: _,
-                mine: _,
-                timeout_secs: _,
                 log_file_name: _,
             } => serializer.serialize_unit_variant("MessageType", 25, "CreateMigrationBundle"),
             MessageType::SendMigrationBundle {
