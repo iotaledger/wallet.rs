@@ -830,17 +830,17 @@ impl AccountSynchronizer {
                 }
 
                 // we can't guarantee we picked up all output changes since querying spent outputs is
-                // optional so we handle it here; if not all balance change has
+                // optional and the node might prune it so we handle it here; if not all balance change has
                 // been emitted, we emit the remainder value with `None` as
                 // message_id
                 let balance_change = address_after_sync.balance() as i64 - before_sync_balance as i64;
                 if !emitted_event || output_change_balance != balance_change {
-                    let balance_change = if balance_change > 0 {
-                        // balance_change is positive; subtract the already emitted balance.
-                        BalanceChange::received((balance_change - output_change_balance) as u64)
+                    let change =
+                        address_after_sync.balance() as i64 - before_sync_balance as i64 - output_change_balance;
+                    let balance_change = if change > 0 {
+                        BalanceChange::received(change as u64)
                     } else {
-                        // balance_change is negative; get the absolute diff.
-                        BalanceChange::spent((balance_change - output_change_balance).abs() as u64)
+                        BalanceChange::spent(change.abs() as u64)
                     };
                     log::info!(
                         "[SYNC] remaining balance change on {} {:?}",
