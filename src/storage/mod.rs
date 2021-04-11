@@ -97,7 +97,11 @@ impl Storage {
     async fn get(&self, key: &str) -> crate::Result<String> {
         self.inner.get(key).await.and_then(|record| {
             if let Some(key) = &self.encryption_key {
-                decrypt_record(&record, key)
+                if serde_json::from_str::<Vec<u8>>(&record).is_ok() {
+                    decrypt_record(&record, key)
+                } else {
+                    Ok(record)
+                }
             } else {
                 Ok(record)
             }
@@ -280,8 +284,8 @@ impl StorageManager {
     pub async fn save_messages(&mut self, account: &Account, messages: &[Message]) -> crate::Result<()> {
         let message_indexation = self
             .message_indexation
-            .get_mut(account.id())
-            .ok_or(crate::Error::RecordNotFound)?;
+            .entry(account.id().clone())
+            .or_insert_with(Default::default);
         let mut messages_map = HashMap::new();
         for message in messages.iter() {
             messages_map.insert(message.id().to_string(), serde_json::to_string(&message)?);
