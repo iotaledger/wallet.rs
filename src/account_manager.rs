@@ -491,11 +491,9 @@ impl AccountManager {
         Ok(MigratedBundle { address, value })
     }
 
-    async fn create_mocked_migration_message(account_handle: AccountHandle, mut value: u64) -> crate::Result<()> {
+    async fn create_mocked_migration_message(account_handle: AccountHandle, value: u64) -> crate::Result<()> {
         let mut id = [0; 32];
-        if value < 1_000_000 {
-            value = 1_000_000;
-        }
+       
         crypto::utils::rand::fill(&mut id).unwrap();
         let id = MessageId::new(id);
         let client_options = account_handle.client_options().await;
