@@ -232,7 +232,7 @@ impl AccountManagerBuilder {
                     self.polling_interval,
                     self.account_options.automatic_output_consolidation,
                 )
-                .await?;
+                .await;
         }
 
         Ok(instance)
@@ -404,17 +404,11 @@ impl AccountManager {
     }
 
     /// Initialises the background polling and MQTT monitoring.
-    async fn start_background_sync(
-        &mut self,
-        polling_interval: Duration,
-        automatic_output_consolidation: bool,
-    ) -> crate::Result<()> {
+    async fn start_background_sync(&mut self, polling_interval: Duration, automatic_output_consolidation: bool) {
         Self::start_monitoring(self.accounts.clone()).await;
         let (stop_polling_sender, stop_polling_receiver) = broadcast_channel(1);
-        self.start_polling(polling_interval, stop_polling_receiver, automatic_output_consolidation)
-            .await?;
+        self.start_polling(polling_interval, stop_polling_receiver, automatic_output_consolidation);
         self.stop_polling_sender.replace(stop_polling_sender);
-        Ok(())
     }
 
     /// Stops the background polling and MQTT monitoring.
@@ -541,18 +535,17 @@ impl AccountManager {
     }
 
     /// Starts the polling mechanism.
-    async fn start_polling(
+    fn start_polling(
         &mut self,
         polling_interval: Duration,
         mut stop: BroadcastReceiver<()>,
         automatic_output_consolidation: bool,
-    ) -> crate::Result<()> {
+    ) {
         let storage_file_path = self.storage_path.clone();
         let accounts = self.accounts.clone();
         let account_options = self.account_options;
         let sync_accounts_lock = self.sync_accounts_lock.clone();
-        #[cfg(feature = "stronghold")]
-        let stronghold_snapshot_path = self.stronghold_snapshot_path().await?;
+
         let handle = thread::spawn(move || {
             let runtime = tokio::runtime::Builder::new_multi_thread()
                 .enable_all()
@@ -560,7 +553,7 @@ impl AccountManager {
                 .unwrap();
             runtime.block_on(async {
                 let mut interval = interval(polling_interval);
-                let mut did_full_sync = false;
+                let mut synced = false;
                 let mut discovered_accounts = false;
                 loop {
                     tokio::select! {
@@ -577,7 +570,7 @@ impl AccountManager {
                                         accounts.clone(),
                                         storage_file_path_,
                                         account_options,
-                                        !(did_full_sync && discovered_accounts),
+                                        !(synced && discovered_accounts),
                                         automatic_output_consolidation)
                                     )
                                     .catch_unwind()
@@ -587,25 +580,7 @@ impl AccountManager {
                                                 if response.ran_account_discovery {
                                                     discovered_accounts = true;
                                                 }
-                                                #[cfg(not(feature = "stronghold"))]
-                                                {
-                                                    if !did_full_sync {
-                                                        did_full_sync = response.synced_accounts_len > 0;
-                                                    }
-                                                }
-                                                #[cfg(feature = "stronghold")]
-                                                {
-                                                    if !did_full_sync {
-                                                        // safe to unwrap since we've checked that the hashmap isn't empty
-                                                        if accounts.read().await.values().next().unwrap().read().await.signer_type() == &SignerType::Stronghold {
-                                                            did_full_sync = response.synced_accounts_len > 0
-                                                                && matches!(
-                                                                    crate::stronghold::get_status(&stronghold_snapshot_path).await.snapshot,
-                                                                    crate::stronghold::SnapshotStatus::Unlocked(_)
-                                                                );
-                                                        }
-                                                    }
-                                                }
+                                                synced = response.synced_accounts_len > 0;
                                             }
                                         }
                                         Err(error) => {
@@ -634,7 +609,6 @@ impl AccountManager {
             });
         });
         self.polling_handle.replace(handle);
-        Ok(())
     }
 
     /// Stores a mnemonic for the given signer type.
