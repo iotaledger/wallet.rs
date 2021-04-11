@@ -570,7 +570,6 @@ impl AccountManager {
                                         accounts.clone(),
                                         storage_file_path_,
                                         account_options,
-                                        !(synced && discovered_accounts),
                                         automatic_output_consolidation)
                                     )
                                     .catch_unwind()
@@ -1303,16 +1302,11 @@ async fn poll(
     accounts: AccountStore,
     storage_file_path: PathBuf,
     account_options: AccountOptions,
-    first_iteration: bool,
     automatic_output_consolidation: bool,
 ) -> crate::Result<PollResponse> {
     let mut synchronizer =
         AccountsSynchronizer::new(sync_accounts_lock, accounts.clone(), storage_file_path, account_options);
-    if first_iteration {
-        synchronizer = synchronizer.address_index(0).gap_limit(10);
-    } else {
-        synchronizer = synchronizer.skip_account_discovery().skip_change_addresses();
-    }
+    synchronizer = synchronizer.skip_account_discovery().skip_change_addresses();
     let synced_accounts = synchronizer.execute().await?;
 
     log::debug!("[POLLING] synced accounts");
