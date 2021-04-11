@@ -480,14 +480,6 @@ impl AccountManager {
         migration::send_bundle(nodes, bundle.to_vec(), mwm).await?;
         self.cached_migration_bundles.lock().await.remove(hash);
 
-        let account_handle = self.get_account(0).await?;
-        tokio::spawn(async move {
-            tokio::time::sleep(Duration::from_secs(20)).await;
-            if let Err(e) = Self::create_mocked_migration_message(account_handle, value).await {
-                log::error!("[MIGRATION] error creating mock message: `{:?}`", e.to_string());
-            };
-        });
-
         Ok(MigratedBundle { address, value })
     }
 
