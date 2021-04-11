@@ -2,22 +2,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    account::AccountHandle,
-    address::{AddressOutput, AddressWrapper},
+    account::{AccountHandle, AccountSynchronizeStep},
+    account_manager::AccountsSynchronizer,
+    address::{AddressOutput, AddressWrapper, IotaAddress},
     client::ClientOptions,
-    message::{Message, MessageType},
+    message::{Message, MessagePayload, TransactionEssence, TransactionInput, TransactionOutput},
 };
 
 use iota::{
-    bee_rest_api::endpoints::api::v1::{
-        message_metadata::{LedgerInclusionStateDto, MessageMetadataResponse},
-        output::OutputResponse,
-    },
-    message::prelude::MessageId,
+    bee_rest_api::types::{dtos::OutputDto, responses::OutputResponse},
     Topic, TopicEvent,
 };
+use tokio::sync::RwLock;
 
-use std::sync::{atomic::AtomicBool, Arc};
+use std::{collections::HashMap, convert::TryInto, sync::Arc};
 
 /// Unsubscribe from all topics associated with the account.
 pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
@@ -32,78 +30,77 @@ pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
             address.address().to_bech32()
         ))?);
     }
-    for message in account.list_messages(0, 0, Some(MessageType::Unconfirmed)) {
-        topics.push(Topic::new(format!("messages/{}/metadata", message.id().to_string()))?);
-    }
+    let message_topics = account
+        .with_messages(|messages| {
+            let mut topics = Vec::new();
+            for m in messages {
+                if m.confirmed.is_none() {
+                    topics.push(Topic::new(format!("messages/{}/metadata", m.key.to_string()))?);
+                }
+            }
+            crate::Result::Ok(topics)
+        })
+        .await?;
+    topics.extend(message_topics);
 
     client.subscriber().with_topics(topics).unsubscribe().await?;
     Ok(())
 }
 
 #[cfg(test)]
-async fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
+async fn subscribe_to_topics<C: Fn(&TopicEvent) + Send + Sync + 'static>(
     _client_options: ClientOptions,
-    _topic: String,
-    _is_monitoring: Arc<AtomicBool>,
+    _topic: Vec<Topic>,
     _handler: C,
 ) {
 }
 
 #[cfg(not(test))]
-async fn subscribe_to_topic<C: Fn(&TopicEvent) + Send + Sync + 'static>(
+async fn subscribe_to_topics<C: Fn(&TopicEvent) + Send + Sync + 'static>(
     client_options: ClientOptions,
-    topic: String,
-    is_monitoring: Arc<AtomicBool>,
+    topics: Vec<Topic>,
     handler: C,
 ) {
-    tokio::spawn(async move {
-        let client = crate::client::get_client(&client_options).await?;
-        let mut client = client.write().await;
-        if client
-            .subscriber()
-            .with_topic(Topic::new(topic)?)
-            .subscribe(handler)
-            .await
-            .is_err()
-        {
-            is_monitoring.store(false, std::sync::atomic::Ordering::Relaxed);
-        }
-        crate::Result::Ok(())
-    });
+    if !topics.is_empty() {
+        log::debug!("[MQTT] subscribe: {:?}", topics);
+        tokio::spawn(async move {
+            let client = crate::client::get_client(&client_options).await?;
+            let mut client = client.write().await;
+            client.subscriber().with_topics(topics).subscribe(handler).await?;
+            crate::Result::Ok(())
+        });
+    }
 }
 
 /// Monitor account addresses for balance changes.
 pub async fn monitor_account_addresses_balance(account_handle: AccountHandle) {
     let account = account_handle.read().await;
-    for address in account.addresses() {
-        monitor_address_balance(account_handle.clone(), address.address()).await;
-    }
+    monitor_address_balance(
+        account_handle.clone(),
+        account.addresses().iter().map(|a| a.address().clone()).collect(),
+    )
+    .await;
 }
 
 /// Monitor address for balance changes.
-pub async fn monitor_address_balance(account_handle: AccountHandle, address: &AddressWrapper) {
+pub async fn monitor_address_balance(account_handle: AccountHandle, addresses: Vec<AddressWrapper>) {
     let client_options = account_handle.client_options().await;
     let client_options_ = client_options.clone();
-    let address = address.clone();
 
-    subscribe_to_topic(
+    subscribe_to_topics(
         client_options_,
-        format!("addresses/{}/outputs", address.to_bech32()),
-        account_handle.is_monitoring.clone(),
+        // safe to unwrap: we know the topics are valid
+        addresses
+            .into_iter()
+            .map(|address| Topic::new(format!("addresses/{}/outputs", address.to_bech32())).unwrap())
+            .collect(),
         move |topic_event| {
             log::info!("[MQTT] got {:?}", topic_event);
             if account_handle.is_mqtt_enabled() {
-                let topic_event = topic_event.clone();
-                let address = address.clone();
-                let client_options = client_options.clone();
+                let payload = topic_event.payload.clone();
                 let account_handle = account_handle.clone();
-
                 crate::spawn(async move {
-                    if let Err(e) =
-                        process_output(topic_event.payload.clone(), account_handle, address, client_options).await
-                    {
-                        log::error!("[MQTT] error processing output: {:?}", e);
-                    }
+                    let _ = process_output(payload, account_handle.clone()).await;
                 });
             } else {
                 log::info!("[MQTT] event ignored because account disabled mqtt");
@@ -113,68 +110,55 @@ pub async fn monitor_address_balance(account_handle: AccountHandle, address: &Ad
     .await
 }
 
-async fn process_output(
-    payload: String,
-    account_handle: AccountHandle,
-    address: AddressWrapper,
-    client_options: ClientOptions,
-) -> crate::Result<()> {
-    let output: OutputResponse = serde_json::from_str(&payload)?;
+async fn process_output(payload: String, account_handle: AccountHandle) -> crate::Result<bool> {
+    let account = account_handle.write().await;
 
-    let mut account = account_handle.write().await;
-    let latest_address = account.latest_address().address().clone();
-    let address_wrapper = account
-        .addresses()
-        .iter()
-        .find(|a| a.address() == &address)
-        .unwrap()
-        .address()
-        .clone();
-    let address_output = AddressOutput::from_output_response(output, address_wrapper.bech32_hrp().to_string())?;
-    let message_id = *address_output.message_id();
-
-    let (old_balance, new_balance) = {
-        let address_to_update = account
-            .addresses_mut()
-            .iter_mut()
-            .find(|a| a.address() == &address)
-            .unwrap();
-        let old_balance = *address_to_update.balance();
-        address_to_update.handle_new_output(address_output);
-        let new_balance = *address_to_update.balance();
-        (old_balance, new_balance)
+    let output = serde_json::from_str::<OutputResponse>(&payload)?;
+    let output_address: IotaAddress = match output.output.clone() {
+        OutputDto::SignatureLockedSingle(output) => {
+            (&output.address).try_into().map_err(|_| crate::Error::InvalidAddress)?
+        }
+        OutputDto::SignatureLockedDustAllowance(output) => {
+            (&output.address).try_into().map_err(|_| crate::Error::InvalidAddress)?
+        }
+        _ => {
+            log::debug!("[MQTT] ignoring output type");
+            return Ok(false);
+        }
     };
 
-    let client_options_ = client_options.clone();
+    let address = match account
+        .addresses()
+        .iter()
+        .find(|address| address.address().as_ref() == &output_address)
+    {
+        Some(address) => address.address().clone(),
+        None => {
+            log::debug!("[MQTT] address not found");
+            return Ok(false);
+        }
+    };
 
-    if address_wrapper == latest_address {
-        account_handle.generate_address_internal(&mut account).await?;
-    }
-
-    match account.messages_mut().iter().position(|m| m.id() == &message_id) {
-        Some(message_index) => {
-            let message = &mut account.messages_mut()[message_index];
-            message.set_confirmed(Some(true));
-            let message = message.clone();
-            crate::event::emit_confirmation_state_change(
-                &account,
-                &message,
-                true,
-                account_handle.account_options.persist_events,
-            )
-            .await?;
+    let output = AddressOutput::from_output_response(output, address.bech32_hrp().to_string())?;
+    let message = match account.get_message(&output.message_id).await {
+        Some(message) => {
+            if !message.confirmed().unwrap_or(false) {
+                message
+            } else {
+                return Ok(false);
+            }
         }
         None => {
-            if let Ok(message) = crate::client::get_client(&client_options_)
+            if let Ok(message) = crate::client::get_client(account.client_options())
                 .await?
                 .read()
                 .await
                 .get_message()
-                .data(&message_id)
+                .data(&output.message_id)
                 .await
             {
-                let message = Message::from_iota_message(
-                    message_id,
+                Message::from_iota_message(
+                    output.message_id,
                     message,
                     account_handle.accounts.clone(),
                     account.id(),
@@ -183,114 +167,83 @@ async fn process_output(
                 )
                 .with_confirmed(Some(true))
                 .finish()
-                .await?;
-                crate::event::emit_transaction_event(
-                    crate::event::TransactionEventType::NewTransaction,
-                    &account,
-                    &message,
-                    account_handle.account_options.persist_events,
-                )
-                .await?;
-                account.messages_mut().push(message);
+                .await?
+            } else {
+                return Ok(false);
             }
         }
+    };
+
+    let message_addresses = match message.payload() {
+        Some(MessagePayload::Transaction(tx)) => match tx.essence() {
+            TransactionEssence::Regular(essence) => {
+                let output_addresses: Vec<AddressWrapper> = essence
+                    .outputs()
+                    .iter()
+                    .map(|output| match output {
+                        TransactionOutput::SignatureLockedDustAllowance(o) => o.address().clone(),
+                        TransactionOutput::SignatureLockedSingle(o) => o.address().clone(),
+                        _ => unimplemented!(),
+                    })
+                    .collect();
+                let input_addresses: Vec<AddressWrapper> = essence
+                    .inputs()
+                    .iter()
+                    .map(|input| match input {
+                        TransactionInput::Utxo(i) => i.metadata.as_ref().map(|m| m.address.clone()),
+                        _ => unimplemented!(),
+                    })
+                    .flatten()
+                    .collect();
+                let mut addresses = output_addresses;
+                addresses.extend(input_addresses);
+                addresses
+            }
+        },
+        _ => vec![],
+    };
+
+    let message_is_internal = match message.payload() {
+        Some(MessagePayload::Transaction(tx)) => {
+            let TransactionEssence::Regular(essence) = tx.essence();
+            essence.internal()
+        }
+        _ => false,
+    };
+
+    let storage_path = account.storage_path().clone();
+    let account_id = account.id().clone();
+    drop(account);
+
+    let mut accounts_to_sync = HashMap::new();
+
+    if message_is_internal {
+        for (account_id, account_handle) in account_handle.accounts.read().await.iter() {
+            if account_handle
+                .read()
+                .await
+                .addresses()
+                .iter()
+                .any(|a| message_addresses.contains(a.address()))
+            {
+                accounts_to_sync.insert(account_id.clone(), account_handle.clone());
+            }
+        }
+    } else {
+        accounts_to_sync.insert(account_id, account_handle.clone());
     }
 
-    crate::event::emit_balance_change(
-        &account,
-        &address_wrapper,
-        Some(message_id),
-        if new_balance > old_balance {
-            crate::event::BalanceChange::received(new_balance - old_balance)
-        } else {
-            crate::event::BalanceChange::spent(old_balance - new_balance)
-        },
-        account_handle.account_options.persist_events,
+    // sync associated accounts
+    AccountsSynchronizer::new(
+        account_handle.sync_accounts_lock.clone(),
+        Arc::new(RwLock::new(accounts_to_sync)),
+        storage_path,
+        account_handle.account_options,
     )
+    .skip_account_discovery()
+    .steps(vec![AccountSynchronizeStep::SyncAddresses(Some(message_addresses))])
+    .execute()
     .await?;
 
-    account.save().await?;
-
-    Ok(())
-}
-
-/// Monitor the account's unconfirmed messages for confirmation state change.
-pub async fn monitor_unconfirmed_messages(account_handle: AccountHandle) {
-    let account = account_handle.read().await;
-    for message in account.list_messages(0, 0, Some(MessageType::Unconfirmed)) {
-        monitor_confirmation_state_change(account_handle.clone(), message.id()).await;
-    }
-}
-
-/// Monitor message for confirmation state.
-pub async fn monitor_confirmation_state_change(account_handle: AccountHandle, message_id: &MessageId) {
-    let (message, client_options) = {
-        let account = account_handle.read().await;
-        let message = account
-            .messages()
-            .iter()
-            .find(|message| message.id() == message_id)
-            .unwrap()
-            .clone();
-        (message, account.client_options().clone())
-    };
-    let message_id = *message_id;
-
-    subscribe_to_topic(
-        client_options,
-        format!("messages/{}/metadata", message_id.to_string()),
-        account_handle.is_monitoring.clone(),
-        move |topic_event| {
-            log::info!("[MQTT] got {:?}", topic_event);
-            if account_handle.is_mqtt_enabled() {
-                let topic_event = topic_event.clone();
-                let message = message.clone();
-                let account_handle = account_handle.clone();
-                crate::spawn(async move {
-                    if let Err(e) =
-                        process_metadata(topic_event.payload.clone(), account_handle, message_id, &message).await
-                    {
-                        log::error!("[MQTT] error processing metadata: {:?}", e);
-                    }
-                });
-            } else {
-                log::info!("[MQTT] event ignored because account disabled mqtt");
-            }
-        },
-    )
-    .await
-}
-
-async fn process_metadata(
-    payload: String,
-    account_handle: AccountHandle,
-    message_id: MessageId,
-    message: &Message,
-) -> crate::Result<()> {
-    let metadata: MessageMetadataResponse = serde_json::from_str(&payload)?;
-
-    if let Some(inclusion_state) = metadata.ledger_inclusion_state {
-        let confirmed = inclusion_state == LedgerInclusionStateDto::Included;
-        if message.confirmed().is_none() || confirmed != message.confirmed().unwrap() {
-            let mut account = account_handle.write().await;
-
-            account
-                .do_mut(|account| {
-                    let messages = account.messages_mut();
-                    let account_message = messages.iter_mut().find(|m| m.id() == &message_id).unwrap();
-                    account_message.set_confirmed(Some(confirmed));
-                    Ok(())
-                })
-                .await?;
-
-            crate::event::emit_confirmation_state_change(
-                &account,
-                &message,
-                confirmed,
-                account_handle.account_options.persist_events,
-            )
-            .await?;
-        }
-    }
-    Ok(())
+    Ok(true)
 }

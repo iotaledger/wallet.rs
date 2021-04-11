@@ -53,20 +53,28 @@ pub(crate) async fn get_client(options: &ClientOptions) -> crate::Result<Arc<RwL
         }
 
         for node in options.nodes() {
-            if let Some(auth) = &node.auth {
-                client_builder = client_builder.with_node_auth(node.url.as_str(), &auth.username, &auth.password)?;
-            } else {
-                // safe to unwrap since we're sure we have valid URLs
-                client_builder = client_builder.with_node(node.url.as_str()).unwrap();
+            if !node.disabled {
+                if let Some(auth) = &node.auth {
+                    client_builder =
+                        client_builder.with_node_auth(node.url.as_str(), &auth.username, &auth.password)?;
+                } else {
+                    // safe to unwrap since we're sure we have valid URLs
+                    client_builder = client_builder.with_node(node.url.as_str()).unwrap();
+                }
             }
         }
 
-        if let Some(node) = options.node() {
-            if let Some(auth) = &node.auth {
-                client_builder = client_builder.with_node_auth(node.url.as_str(), &auth.username, &auth.password)?;
-            } else {
-                // safe to unwrap since we're sure we have valid URLs
-                client_builder = client_builder.with_node(node.url.as_str()).unwrap();
+        if let Some(primary_node) = options.primary_node() {
+            if !primary_node.disabled {
+                if let Some(auth) = &primary_node.auth {
+                    client_builder = client_builder
+                        .with_primary_node(primary_node.url.as_str(), Some((&auth.username, &auth.password)))?;
+                } else {
+                    // safe to unwrap since we're sure we have valid URLs
+                    client_builder = client_builder
+                        .with_primary_node(primary_node.url.as_str(), None)
+                        .unwrap();
+                }
             }
         }
 
@@ -93,11 +101,18 @@ pub(crate) async fn get_client(options: &ClientOptions) -> crate::Result<Arc<RwL
 
     // safe to unwrap since we make sure the client exists on the block above
     let client = map.get(&options).unwrap();
+
     Ok(client.clone())
+}
+
+/// Drops all clients.
+pub async fn drop_all() {
+    instances().lock().await.clear();
 }
 
 /// The options builder for a client connected to multiple nodes.
 pub struct ClientOptionsBuilder {
+    primary_node: Option<Node>,
     nodes: Vec<Node>,
     node_pool_urls: Vec<Url>,
     network: Option<String>,
@@ -115,7 +130,7 @@ fn convert_urls(urls: &[&str]) -> crate::Result<Vec<Url>> {
         .iter()
         .map(|node| {
             Url::parse(node).map(Some).unwrap_or_else(|e| {
-                err = Some(e);
+                err.replace(e);
                 None
             })
         })
@@ -133,6 +148,7 @@ fn convert_urls(urls: &[&str]) -> crate::Result<Vec<Url>> {
 impl Default for ClientOptionsBuilder {
     fn default() -> Self {
         Self {
+            primary_node: None,
             nodes: Vec::new(),
             node_pool_urls: Vec::new(),
             network: None,
@@ -150,6 +166,26 @@ impl ClientOptionsBuilder {
     /// Initialises a new instance of the builder.
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Sets the primary node.
+    pub fn with_primary_node(mut self, node: &str) -> crate::Result<Self> {
+        self.primary_node.replace(Url::parse(node)?.into());
+        Ok(self)
+    }
+
+    /// Sets the primary node with authentication.
+    pub fn with_primary_node_auth(mut self, node: &str, username: &str, password: &str) -> crate::Result<Self> {
+        self.primary_node.replace(Node {
+            url: Url::parse(node)?,
+            auth: NodeAuth {
+                username: username.into(),
+                password: password.into(),
+            }
+            .into(),
+            disabled: false,
+        });
+        Ok(self)
     }
 
     /// ClientOptions connected to a list of nodes.
@@ -187,6 +223,7 @@ impl ClientOptionsBuilder {
                 password: password.into(),
             }
             .into(),
+            disabled: false,
         });
         Ok(self)
     }
@@ -206,13 +243,13 @@ impl ClientOptionsBuilder {
     /// let client_options = ClientOptionsBuilder::new().with_network("testnet2").build();
     /// ```
     pub fn with_network<N: Into<String>>(mut self, network: N) -> Self {
-        self.network = Some(network.into());
+        self.network.replace(network.into());
         self
     }
 
     /// Set the node sync interval
     pub fn with_node_sync_interval(mut self, node_sync_interval: Duration) -> Self {
-        self.node_sync_interval = Some(node_sync_interval);
+        self.node_sync_interval.replace(node_sync_interval);
         self
     }
 
@@ -225,7 +262,7 @@ impl ClientOptionsBuilder {
 
     /// Sets the MQTT broker options.
     pub fn with_mqtt_mqtt_broker_options(mut self, options: BrokerOptions) -> Self {
-        self.mqtt_broker_options = Some(options);
+        self.mqtt_broker_options.replace(options);
         self
     }
 
@@ -237,7 +274,7 @@ impl ClientOptionsBuilder {
 
     /// Sets the request timeout.
     pub fn with_request_timeout(mut self, timeout: Duration) -> Self {
-        self.request_timeout = Some(timeout);
+        self.request_timeout.replace(timeout);
         self
     }
 
@@ -250,7 +287,7 @@ impl ClientOptionsBuilder {
     /// Builds the options.
     pub fn build(self) -> crate::Result<ClientOptions> {
         let options = ClientOptions {
-            node: None,
+            primary_node: self.primary_node,
             nodes: self.nodes,
             node_pool_urls: self.node_pool_urls,
             network: self.network,
@@ -324,9 +361,9 @@ impl<'de> Deserialize<'de> for Api {
     }
 }
 
-impl Into<iota::Api> for Api {
-    fn into(self) -> iota::Api {
-        match self {
+impl From<Api> for iota::Api {
+    fn from(api: Api) -> iota::Api {
+        match api {
             Api::GetTips => iota::Api::GetTips,
             Api::PostMessage => iota::Api::PostMessage,
             Api::GetOutput => iota::Api::GetOutput,
@@ -345,13 +382,13 @@ pub struct BrokerOptions {
     pub timeout: Option<Duration>,
 }
 
-impl Into<iota::BrokerOptions> for BrokerOptions {
-    fn into(self) -> iota::BrokerOptions {
+impl From<BrokerOptions> for iota::BrokerOptions {
+    fn from(value: BrokerOptions) -> iota::BrokerOptions {
         let mut options = iota::BrokerOptions::new();
-        if let Some(automatic_disconnect) = self.automatic_disconnect {
+        if let Some(automatic_disconnect) = value.automatic_disconnect {
             options = options.automatic_disconnect(automatic_disconnect);
         }
-        if let Some(timeout) = self.timeout {
+        if let Some(timeout) = value.timeout {
             options = options.timeout(timeout);
         }
         options
@@ -375,11 +412,18 @@ pub struct Node {
     pub url: Url,
     /// Node auth options.
     pub auth: Option<NodeAuth>,
+    /// Whether the node is disabled or not.
+    #[serde(default)]
+    pub disabled: bool,
 }
 
 impl From<Url> for Node {
     fn from(url: Url) -> Self {
-        Self { url, auth: None }
+        Self {
+            url,
+            auth: None,
+            disabled: false,
+        }
     }
 }
 
@@ -388,10 +432,10 @@ impl From<Url> for Node {
 /// Need to set the get methods to be public for binding
 #[getset(get = "pub")]
 pub struct ClientOptions {
-    /// this option is here just to simplify usage from consumers using the deserialization
-    /// The node.
-    node: Option<Node>,
-    /// The nodes vector.
+    /// The primary node to connect to.
+    #[serde(rename = "node")] // here just for DB compatibility; can be changed when migrations are implemented
+    primary_node: Option<Node>,
+    /// The nodes to connect to.
     #[serde(default)]
     nodes: Vec<Node>,
     /// The node pool urls.
@@ -428,7 +472,7 @@ impl ClientOptions {
 
 impl Hash for ClientOptions {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.node.hash(state);
+        self.primary_node.hash(state);
         self.nodes.hash(state);
         self.node_pool_urls.hash(state);
         self.network.hash(state);
@@ -440,7 +484,7 @@ impl Hash for ClientOptions {
 
 impl PartialEq for ClientOptions {
     fn eq(&self, other: &Self) -> bool {
-        self.node == other.node
+        self.primary_node == other.primary_node
             && self.nodes == other.nodes
             && self.node_pool_urls == other.node_pool_urls
             && self.network == other.network
@@ -461,6 +505,18 @@ fn default_node_sync_enabled() -> bool {
 #[cfg(test)]
 mod tests {
     use super::ClientOptionsBuilder;
+
+    #[test]
+    fn primary_node_valid_url() {
+        let builder_res = ClientOptionsBuilder::new().with_primary_node("https://api.lb-0.testnet.chrysalis2.com");
+        assert!(builder_res.is_ok());
+    }
+
+    #[test]
+    fn primary_node_invalid_url() {
+        let builder_res = ClientOptionsBuilder::new().with_primary_node("some.invalid url");
+        assert!(builder_res.is_err());
+    }
 
     #[test]
     fn single_node_valid_url() {

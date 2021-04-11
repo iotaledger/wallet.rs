@@ -27,7 +27,7 @@ fn generate_indexation_id() -> String {
 }
 
 /// The balance change event payload.
-#[derive(Debug, Clone, PartialEq, Eq, Getters, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Getters, Serialize, Deserialize)]
 pub struct BalanceChange {
     /// The change amount if it was a spent event.
     pub spent: u64,
@@ -52,7 +52,7 @@ impl BalanceChange {
 }
 
 /// The balance change event data.
-#[derive(Debug, Getters, Serialize, Deserialize)]
+#[derive(Clone, Debug, Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct BalanceEvent {
     /// Event unique identifier.
@@ -91,7 +91,7 @@ pub struct AddressConsolidationNeeded {
 }
 
 /// A transaction-related event data.
-#[derive(Getters, Serialize, Deserialize)]
+#[derive(Clone, Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct TransactionEvent {
     /// Event unique identifier.
@@ -105,7 +105,7 @@ pub struct TransactionEvent {
 }
 
 /// A transaction confirmation state change event data.
-#[derive(Getters, Serialize, Deserialize)]
+#[derive(Clone, Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct TransactionConfirmationChangeEvent {
     /// Event unique identifier.
@@ -121,7 +121,7 @@ pub struct TransactionConfirmationChangeEvent {
 }
 
 /// Transaction reattachment event data.
-#[derive(Getters, Serialize, Deserialize)]
+#[derive(Clone, Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct TransactionReattachmentEvent {
     /// Event unique identifier.
@@ -138,7 +138,7 @@ pub struct TransactionReattachmentEvent {
 }
 
 /// Transfer event type.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum TransferProgressType {
     /// Syncing account.
@@ -156,7 +156,7 @@ pub enum TransferProgressType {
 }
 
 /// Transfer event data.
-#[derive(Getters, Serialize, Deserialize)]
+#[derive(Clone, Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct TransferProgress {
     #[serde(rename = "accountId")]
@@ -227,13 +227,13 @@ struct TransactionReattachmentEventHandler {
 
 event_handler_impl!(TransactionReattachmentEventHandler);
 
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg(feature = "stronghold")]
 struct StrongholdStatusChangeEventHandler {
     id: EventId,
     on_event: Box<dyn Fn(&crate::StrongholdStatus) + Send>,
 }
 
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg(feature = "stronghold")]
 event_handler_impl!(StrongholdStatusChangeEventHandler);
 
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
@@ -259,7 +259,7 @@ type TransactionListeners = Arc<Mutex<Vec<TransactionEventHandler>>>;
 type TransactionConfirmationChangeListeners = Arc<Mutex<Vec<TransactionConfirmationChangeEventHandler>>>;
 type TransactionReattachmentListeners = Arc<Mutex<Vec<TransactionReattachmentEventHandler>>>;
 type ErrorListeners = Arc<StdMutex<Vec<ErrorHandler>>>;
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg(feature = "stronghold")]
 type StrongholdStatusChangeListeners = Arc<Mutex<Vec<StrongholdStatusChangeEventHandler>>>;
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 type AddressConsolidationNeededListeners = Arc<Mutex<Vec<AddressConsolidationNeededHandler>>>;
@@ -309,7 +309,7 @@ fn error_listeners() -> &'static ErrorListeners {
 }
 
 /// Gets the stronghold status change listeners array.
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg(feature = "stronghold")]
 fn stronghold_status_change_listeners() -> &'static StrongholdStatusChangeListeners {
     static LISTENERS: Lazy<StrongholdStatusChangeListeners> = Lazy::new(Default::default);
     &LISTENERS
@@ -355,11 +355,13 @@ pub(crate) async fn emit_balance_change(
     let remainder = if balance_change.spent > 0 {
         Some(false)
     } else {
-        message_id.and_then(|id| {
-            account
+        match message_id {
+            Some(id) => account
                 .get_message(&id)
-                .and_then(|message| message.is_remainder(&address))
-        })
+                .await
+                .and_then(|message| message.is_remainder(&address)),
+            None => None,
+        }
     };
     let event = BalanceEvent {
         indexation_id: generate_indexation_id(),
@@ -390,14 +392,14 @@ pub(crate) async fn emit_balance_change(
 pub(crate) async fn emit_transaction_event(
     event_type: TransactionEventType,
     account: &Account,
-    message: &Message,
+    message: Message,
     persist: bool,
 ) -> crate::Result<()> {
     let listeners = transaction_listeners().lock().await;
     let event = TransactionEvent {
         indexation_id: generate_indexation_id(),
         account_id: account.id().to_string(),
-        message: message.clone(),
+        message,
     };
 
     if persist {
@@ -425,7 +427,7 @@ pub(crate) async fn emit_transaction_event(
 /// Emits a transaction confirmation state change event.
 pub(crate) async fn emit_confirmation_state_change(
     account: &Account,
-    message: &Message,
+    message: Message,
     confirmed: bool,
     persist: bool,
 ) -> crate::Result<()> {
@@ -433,7 +435,7 @@ pub(crate) async fn emit_confirmation_state_change(
     let event = TransactionConfirmationChangeEvent {
         indexation_id: generate_indexation_id(),
         account_id: account.id().to_string(),
-        message: message.clone(),
+        message,
         confirmed,
     };
 
@@ -579,7 +581,7 @@ pub fn remove_error_listener(id: &EventId) {
     }
 }
 
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg(feature = "stronghold")]
 pub(crate) async fn emit_stronghold_status_change(status: &crate::StrongholdStatus) {
     let listeners = stronghold_status_change_listeners().lock().await;
     for listener in listeners.deref() {
@@ -588,8 +590,8 @@ pub(crate) async fn emit_stronghold_status_change(status: &crate::StrongholdStat
 }
 
 /// Listen to stronghold status change events.
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+#[cfg(feature = "stronghold")]
+#[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
 pub async fn on_stronghold_status_change<F: Fn(&crate::StrongholdStatus) + Send + 'static>(cb: F) -> EventId {
     let mut l = stronghold_status_change_listeners().lock().await;
     let id = generate_event_id();
@@ -601,8 +603,8 @@ pub async fn on_stronghold_status_change<F: Fn(&crate::StrongholdStatus) + Send 
 }
 
 /// Removes the stronghold status change listener associated with the given identifier.
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+#[cfg(feature = "stronghold")]
+#[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
 pub async fn remove_stronghold_status_change_listener(id: &EventId) {
     remove_event_listener(id, stronghold_status_change_listeners()).await;
 }
@@ -732,7 +734,7 @@ mod tests {
                 })
                 .await;
 
-                emit_transaction_event(TransactionEventType::NewTransaction, &account, &message, true)
+                emit_transaction_event(TransactionEventType::NewTransaction, &account, message, true)
                     .await
                     .unwrap();
             });
@@ -778,7 +780,7 @@ mod tests {
                 })
                 .await;
 
-                emit_transaction_event(TransactionEventType::Broadcast, &account, &message, true)
+                emit_transaction_event(TransactionEventType::Broadcast, &account, message, true)
                     .await
                     .unwrap();
             });
@@ -803,7 +805,7 @@ mod tests {
                 })
                 .await;
 
-                emit_confirmation_state_change(&account, &message, confirmed, true)
+                emit_confirmation_state_change(&account, message.clone(), confirmed, true)
                     .await
                     .unwrap();
             });

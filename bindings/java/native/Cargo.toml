@@ -1,0 +1,35 @@
+[package]
+name = "iota-wallet-java"
+version = "0.1.0"
+authors = ["Brord van Wierst <brord@iota.org>"]
+edition = "2018"
+build = "build.rs"
+
+[dependencies]
+iota-wallet = { path = "../../../", version = "0.1.0" }
+iota-core = { git = "https://github.com/iotaledger/iota.rs", rev = "8f14d53075222c91560db24478695a7db2238f16", features = ["mqtt"] }
+bee-message = { git = "https://github.com/iotaledger/bee.git", branch = "chrysalis-pt-2" }
+log = "0.4.6"
+chrono = "0.4.6"
+env_logger = "0.7"
+smol = "1.2.5"
+anyhow = "1.0.38"
+hex = "0.4"
+jni = "0.19" # Used in directly verifying binding linkage
+flapigen = { git = "https://github.com/Dushistov/flapigen-rs" }
+tokio = { version = "1.4" }
+getset = "0.1"
+
+[lib]
+crate_type = ["cdylib"]
+
+[build-dependencies]
+flapigen = { git = "https://github.com/Dushistov/flapigen-rs" }
+env_logger = "0.7"
+bindgen = "0.54"
+
+[features]
+default = ["stronghold"]
+stronghold = ["iota-wallet/stronghold"]
+ledger-nano = ["iota-wallet/ledger-nano"]
+ledger-nano-simulator = ["iota-wallet/ledger-nano-simulator"]

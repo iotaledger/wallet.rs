@@ -3,15 +3,35 @@
 
 
 import iota_wallet
+import os
+from dotenv import load_dotenv
+
+# Load the env variables
+load_dotenv()
+
+# Get the stronghold password
+STRONGHOLD_PASSWORD = os.getenv('STRONGHOLD_PASSWORD')
+
 
 # Create a AccountManager
 manager = iota_wallet.AccountManager(
-    storage='Stronghold', storage_path='./storage')
-manager.set_stronghold_password("password")
+    storage_path='./storage')
+
+# NOTE: In real use cases you need to set the password in a safer way, like getting it from env variables
+manager.set_stronghold_password(STRONGHOLD_PASSWORD)
 manager.store_mnemonic("Stronghold")
 
 # First we'll create an example account and store it
-client_options = {'node': 'https://api.lb-0.testnet.chrysalis2.com'}
+client_options = {
+    "nodes": [
+        {
+            "url": "https://api.hornet-0.testnet.chrysalis2.com",
+            "auth": None,
+            "disabled": False
+        }
+    ],
+    "local_pow": True
+}
 account_initialiser = manager.create_account(client_options)
 account_initialiser.alias('alias')
 account = account_initialiser.initialise()

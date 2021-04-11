@@ -37,6 +37,8 @@ async function run() {
 
   const savedAccount = manager.getAccount('new alias')
   console.log(savedAccount)
+
+  account.getNodeInfo().then(value => { console.log(value) })
 }
 
 run()

@@ -130,8 +130,7 @@ In the detailed view per individual addresses, there is also `outputs` section t
 
 ## Sending tokens
 The process of sending tokens via `wallet.rs` can be described as follows:
-* Create instance of `iota_wallet.Transfer()` class with the following mandatory arguments: `amount`, `address`, `bench32_hrp` and `remainder_value_strategy`
-* `bench32_hrp` indicates which network should be used to send tokens thru, and can be gotten from `account.bech32_hrp()` function
+* Create instance of `iota_wallet.Transfer()` class with the following mandatory arguments: `amount`, `address` and `remainder_value_strategy`
 * `remainder_value_strategy` can be: `ReuseAddress` or `ChangeAddress`. You may be familiar with a concept `changing address with every spent` in IOTA 1.0. It is not an issue in IOTA 1.5 world but it may still become handy depending on your use case
 * once instance of `iota_wallet.Transfer()` is created, it can be sent via `transfer()` function of the `Account` instance
 * needless to repeat, always sync the account information with the Tangle before do anything with the account
@@ -225,7 +224,7 @@ The process of restoring underlying database via `wallet.rs` can be described as
 Since the backup file is just a copy of the original database it can be alternatively also renamed to `wallet.stronghold` and opened in a standard way:
 ```python
 account_manager = iw.AccountManager(
-    storage='Stronghold', storage_path='./alice-database'
+    storage_path='./alice-database'
 )
 account_manager.set_stronghold_password("password")
 ```

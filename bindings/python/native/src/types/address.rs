@@ -1,4 +1,4 @@
-// Copyright 2021 IOTA Stiftung
+// Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use dict_derive::{FromPyObject as DeriveFromPyObject, IntoPyObject as DeriveIntoPyObject};
@@ -6,7 +6,10 @@ use iota_wallet::{
     account::AccountBalance as RustAccountBalance,
     address::{Address as RustWalletAddress, AddressOutput as RustAddressOutput, AddressWrapper as RustAddressWrapper},
 };
-use std::convert::{From, Into};
+use std::{
+    collections::HashMap,
+    convert::{From, Into},
+};
 
 #[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct Address {
@@ -18,7 +21,7 @@ pub struct Address {
     /// Determines if an address is a public or an internal (change) address.
     internal: bool,
     /// The address outputs.
-    outputs: Vec<AddressOutput>,
+    outputs: HashMap<String, AddressOutput>,
 }
 
 #[derive(Debug, Clone, DeriveFromPyObject, DeriveIntoPyObject)]
@@ -102,10 +105,14 @@ impl From<RustWalletAddress> for Address {
     fn from(wallet_address: RustWalletAddress) -> Self {
         Self {
             address: wallet_address.address().into(),
-            balance: *wallet_address.balance(),
+            balance: wallet_address.balance(),
             key_index: *wallet_address.key_index(),
             internal: *wallet_address.internal(),
-            outputs: wallet_address.outputs().iter().map(|output| output.into()).collect(),
+            outputs: wallet_address
+                .outputs()
+                .iter()
+                .map(|(id, output)| (id.to_string(), output.into()))
+                .collect(),
         }
     }
 }

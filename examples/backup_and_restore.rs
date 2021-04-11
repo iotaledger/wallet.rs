@@ -22,7 +22,7 @@ async fn main() -> iota_wallet::Result<()> {
     let id = account_handle.id().await;
 
     // backup the stored accounts to ./backup/${backup_name}
-    let backup_path = manager.backup("./backup").await?;
+    let backup_path = manager.backup("./backup", "password".to_string()).await?;
 
     // delete the account on the current storage
     manager.remove_account(&id).await?;

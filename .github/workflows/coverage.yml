@@ -12,17 +12,17 @@ on:
 jobs:
   collect-coverage:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
 
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install stable toolchain
+    - name: Install nightly toolchain with llvm-tools-preview
       uses: actions-rs/toolchain@v1
       with:
-          toolchain: stable
+          profile: minimal
+          toolchain: nightly
           override: true
+          components: llvm-tools-preview
 
     - name: Get current date
       run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
@@ -37,50 +37,33 @@ jobs:
       with:
         path: ~/.cargo/registry
         # Add date to the cache to keep it up to date
-        key: ubuntu-latest-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+        key: ubuntu-latest-nightly-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
         # Restore from outdated cache for speed
         restore-keys: |
-          ubuntu-latest-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          ubuntu-latest-stable-cargo-registry-
+          ubuntu-latest-nightly-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          ubuntu-latest-nightly-cargo-registry-
+
     - name: Cache cargo index
       uses: actions/cache@v2.1.4
       with:
         path: ~/.cargo/git
         # Add date to the cache to keep it up to date
-        key: ubuntu-latest-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+        key: ubuntu-latest-nightly-cargo-index-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
         # Restore from outdated cache for speed
         restore-keys: |
-          ubuntu-latest-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-          ubuntu-latest-stable-cargo-index-
-    - name: Cache cargo target
-      uses: actions/cache@v2.1.4
-      with:
-        path: target
-        # Add date to the cache to keep it up to date
-        key: ubuntu-latest-stable-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
-        # Restore from outdated cache for speed
-        restore-keys: |
-          ubuntu-latest-stable-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-          ubuntu-latest-stable-cargo-build-target-
+          ubuntu-latest-nightly-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          ubuntu-latest-nightly-cargo-index-
+    
+    - name: Install binutils and rustfilt
+      run: cargo install cargo-binutils rustfilt
 
-    - name: Run tests
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --all-features --no-fail-fast
-      env:
-        CARGO_INCREMENTAL: 0
-        RUSTC_BOOTSTRAP: 1
-        RUSTFLAGS: "-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests"
-        RUSTDOCFLAGS: "-Cpanic=abort"
-
-    - name: Collect test coverage data
-      uses: actions-rs/grcov@v0.1
-      id: coverage
+    - name: Run tests and collect coverage
+      run: bash ./coverage.sh
+      timeout-minutes: 40
     
     - name: Upload coverage data to Coveralls
       uses: coverallsapp/github-action@v1.1.2
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ${{ steps.coverage.outputs.report }}
+        path-to-lcov: coverage/coverage.info
         flag-name: Unit

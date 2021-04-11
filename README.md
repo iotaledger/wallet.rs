@@ -5,7 +5,7 @@
 ## Introduction
 
 The wallet library is a stateful package with a standardised interface for developers to build applications involving IOTA value transactions.
-It offers abstractions to handle IOTA payments and can optionally interact with [IOTA Stronghold](https://github.com/iotaledger/stronghold.rs/) for seed handling, seed storage and state backup. Alternatively you can use a SQLite database. See the full specification [here](https://github.com/iotaledger/wallet.rs/blob/master/specs/wallet-ENGINEERING-SPEC-0000.md).
+It offers abstractions to handle IOTA payments and can optionally interact with [IOTA Stronghold](https://github.com/iotaledger/stronghold.rs/) for seed handling, seed storage and state backup. It uses RocksDB as a database. See the full specification [here](https://github.com/iotaledger/wallet.rs/blob/master/specs/wallet-ENGINEERING-SPEC-0000.md).
 
 ## Warning
 
@@ -54,7 +54,7 @@ $ brew install cmake openssl@1.1
 
 ### Linux
 
-Install `cmake`, `clang` and `openssl` with your distro's package manager or download from their websites. On Debian and Ubuntu you will also need `build-essential`.
+Install `cmake`, `clang` and `openssl` with your distro's package manager or download from their websites. On Debian and Ubuntu you will also need `build-essential` and `libudev-dev` .
 
 ## Usage
 
@@ -80,7 +80,7 @@ async fn main() -> iota_wallet::Result<()> {
     let storage_folder: PathBuf = "./my-db".into();
     let manager =
         AccountManager::builder()
-            .with_storage_path(&storage_folder)
+            .with_storage(&storage_folder, None)
             .finish()
             .await?;
     let client_options = ClientOptionsBuilder::new().with_node("http://api.lb-0.testnet.chrysalis2.com")?.build();

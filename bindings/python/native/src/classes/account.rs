@@ -1,11 +1,11 @@
-// Copyright 2021 IOTA Stiftung
+// Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::types::*;
 use chrono::prelude::{Local, TimeZone};
-use iota::{Address as IotaAddress, MessageId as RustMessageId};
+use iota::MessageId as RustMessageId;
 use iota_wallet::{
-    address::AddressWrapper as RustAddressWrapper,
+    address::parse as parse_address,
     message::{
         Message as RustWalletMessage, MessageType as RustMessageType,
         RemainderValueStrategy as RustRemainderValueStrategy, Transfer as RustTransfer,
@@ -47,28 +47,59 @@ impl AccountSynchronizer {
 }
 
 #[pymethods]
+impl SyncedAccount {
+    /// Get the `AccountHandle` of this account
+    fn account_handle(&self) -> AccountHandle {
+        AccountHandle {
+            account_handle: self.synced_account.account_handle().clone(),
+        }
+    }
+
+    /// Get the deposit_address of this account
+    fn deposit_address(&self) -> Address {
+        self.synced_account.deposit_address().clone().into()
+    }
+
+    /// Get the messages of this account
+    fn messages(&self) -> Result<Vec<WalletMessage>> {
+        let mut parsed_messages = Vec::new();
+        for message in self.synced_account.messages().clone() {
+            parsed_messages.push(message.try_into()?);
+        }
+
+        Ok(parsed_messages)
+    }
+
+    /// Get the addresses of this account
+    fn addresses(&self) -> Vec<Address> {
+        let addresses = self.synced_account.addresses().clone();
+        addresses.into_iter().map(|address| address.into()).collect()
+    }
+}
+
+#[pymethods]
 impl Transfer {
     #[new]
     fn new(
         amount: u64,
         address: &str, // IotaAddress
-        bench32_hrp: &str,
         indexation: Option<Indexation>,
-        remainder_value_strategy: &str,
+        remainder_value_strategy: Option<&str>,
+        skip_sync: Option<bool>,
     ) -> Result<Self> {
-        let address_wrapper = RustAddressWrapper::new(IotaAddress::try_from_bech32(address)?, bench32_hrp.to_string());
+        let address_wrapper = parse_address(address)?;
         let mut builder = RustTransfer::builder(address_wrapper, NonZeroU64::new(amount).unwrap());
         let strategy = match remainder_value_strategy {
-            "ReuseAddress" => RustRemainderValueStrategy::ReuseAddress,
-            "ChangeAddress" => RustRemainderValueStrategy::ChangeAddress,
-            _ => RustRemainderValueStrategy::AccountAddress(RustAddressWrapper::new(
-                IotaAddress::try_from_bech32(address)?,
-                bench32_hrp.to_string(),
-            )),
+            Some("ReuseAddress") => RustRemainderValueStrategy::ReuseAddress,
+            Some("ChangeAddress") => RustRemainderValueStrategy::ChangeAddress,
+            _ => RustRemainderValueStrategy::ChangeAddress,
         };
         builder = builder.with_remainder_value_strategy(strategy);
         if let Some(indexation) = indexation {
             builder = builder.with_indexation(indexation.try_into()?);
+        }
+        if skip_sync.unwrap_or_default() {
+            builder = builder.with_skip_sync();
         }
         Ok(Transfer {
             transfer: builder.finish(),
@@ -219,8 +250,8 @@ impl AccountHandle {
     }
 
     /// Bridge to [Account#balance](struct.Account.html#method.balance).
-    fn balance(&self) -> AccountBalance {
-        crate::block_on(async { self.account_handle.balance().await }).into()
+    fn balance(&self) -> Result<AccountBalance> {
+        Ok(crate::block_on(async { self.account_handle.balance().await })?.into())
     }
 
     /// Bridge to [Account#set_alias](struct.Account.html#method.set_alias).
@@ -236,7 +267,7 @@ impl AccountHandle {
     }
 
     /// The number of messages associated with the account.
-    fn message_count(&self, message_type: Option<&str>) -> usize {
+    fn message_count(&self, message_type: Option<&str>) -> Result<usize> {
         let message_type = match message_type {
             Some("Received") => Some(RustMessageType::Received),
             Some("Sent") => Some(RustMessageType::Sent),
@@ -247,12 +278,14 @@ impl AccountHandle {
             _ => None,
         };
         crate::block_on(async {
-            self.account_handle
+            Ok(self
+                .account_handle
                 .read()
                 .await
                 .list_messages(0, 0, message_type)
+                .await?
                 .iter()
-                .len()
+                .len())
         })
     }
 
@@ -281,7 +314,7 @@ impl AccountHandle {
         });
 
         let mut parsed_messages = Vec::new();
-        for message in messages {
+        for message in messages? {
             parsed_messages.push(message.try_into()?);
         }
 
@@ -291,17 +324,17 @@ impl AccountHandle {
     /// Bridge to [Account#list_spent_addresses](struct.Account.html#method.list_spent_addresses).
     /// This method clones the account's addresses so when querying a large list of addresses
     /// prefer using the `read` method to access the account instance.
-    fn list_spent_addresses(&self) -> Vec<Address> {
+    fn list_spent_addresses(&self) -> Result<Vec<Address>> {
         let addresses = crate::block_on(async { self.account_handle.list_spent_addresses().await });
-        addresses.into_iter().map(|addr| addr.into()).collect()
+        Ok(addresses?.into_iter().map(|addr| addr.into()).collect())
     }
 
     /// Bridge to [Account#list_unspent_addresses](struct.Account.html#method.list_unspent_addresses).
     /// This method clones the account's addresses so when querying a large list of addresses
     /// prefer using the `read` method to access the account instance.
-    fn list_unspent_addresses(&self) -> Vec<Address> {
+    fn list_unspent_addresses(&self) -> Result<Vec<Address>> {
         let addresses = crate::block_on(async { self.account_handle.list_unspent_addresses().await });
-        addresses.into_iter().map(|addr| addr.into()).collect()
+        Ok(addresses?.into_iter().map(|addr| addr.into()).collect())
     }
 
     /// Bridge to [Account#get_message](struct.Account.html#method.get_message).
@@ -317,6 +350,11 @@ impl AccountHandle {
         } else {
             Ok(None)
         }
+    }
+
+    /// Bridge to [Account#get_node_info](struct.Account.html#method.get_node_info).
+    fn get_node_info(&self) -> Result<InfoResponse> {
+        Ok(crate::block_on(async { self.account_handle.get_node_info().await })?.into())
     }
 }
 
@@ -368,7 +406,7 @@ impl AccountInitialiser {
             })
             .collect();
         account_initialiser = account_initialiser.messages(messages);
-        self.account_initialiser = Some(account_initialiser);
+        self.account_initialiser.replace(account_initialiser);
     }
 
     /// Address history associated with the seed.

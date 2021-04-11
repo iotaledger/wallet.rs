@@ -28,7 +28,7 @@ export declare type Essence = {
   data: RegularEssence
 }
 
-export declare interface UTXOInput {
+export declare interface UtxoInput {
   input: string
   metadata?: {
     transactionId: string
@@ -40,7 +40,7 @@ export declare interface UTXOInput {
   }
 }
 
-export declare type Input = { type: 'UTXO', data: UTXOInput }
+export declare type Input = { type: 'Utxo', data: UtxoInput }
 
 export declare interface SignatureLockedSingleOutput {
   address: string
@@ -80,10 +80,21 @@ export declare interface Message {
   broadcasted: boolean;
 }
 
+export declare interface AddressOutput {
+  transactionId: string;
+  messageId: string;
+  index: number;
+  amount: number;
+  isSpent: boolean;
+  address: string;
+}
+
 export declare interface Address {
   address: string;
   balance: number;
   keyIndex: number;
+  internal: boolean;
+  outputs: AddressOutput[];
 }
 
 export declare interface SyncOptions {
@@ -98,11 +109,25 @@ export declare interface AccountBalance {
   outgoing: number
 }
 
+export declare interface NodeInfo {
+  name: string
+  version: string
+  isHealthy: boolean
+  networkId: string
+  bech32HRP: string
+  minPoWScore: number
+  latestMilestoneIndex: number
+  confirmedMilestoneIndex: number
+  pruningIndex: number
+  features: string[]
+}
+
 export declare class Account {
   id(): string;
   index(): number;
   alias(): string;
   balance(): AccountBalance;
+  getNodeInfo(): Promise<NodeInfo>;
   messageCount(messageType?: MessageType): number;
   listMessages(count?: number, from?: number, messageType?: MessageType): Message[]
   listAddresses(unspent?: boolean): Address[]
@@ -131,6 +156,7 @@ export declare class RemainderValueStrategy {
 export declare class TransferOptions {
   remainderValueStrategy?: RemainderValueStrategy
   indexation?: { index: string | number[] | Uint8Array, data?: string | number[] | Uint8Array }
+  skipSync?: boolean
 }
 
 export declare class SyncedAccount { }
@@ -143,11 +169,12 @@ export declare interface Node {
     username: string
     password: string
   }
+  disabled?: boolean
 }
 
 export declare interface ClientOptions {
   node?: NodeUrl | Node;
-  nodes?: string[];
+  nodes?: Array<NodeUrl | Node>;
   network?: string;
   quorumSize?: number;
   quorumThreshold?: number;
@@ -167,14 +194,8 @@ export declare interface AccountToCreate {
   skipPersistence?: boolean;
 }
 
-export declare enum StorageType {
-  Sqlite,
-  Stronghold
-}
-
 export declare interface ManagerOptions {
   storagePath?: string
-  storageType?: StorageType
   storagePassword?: string
   outputConsolidationThreshold?: number
   automaticOutputConsolidation?: boolean

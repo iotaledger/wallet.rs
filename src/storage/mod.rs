@@ -1,19 +1,16 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(feature = "sqlite-storage")]
-#[cfg_attr(docsrs, doc(cfg(feature = "sqlite-storage")))]
-/// Sqlite storage.
-pub mod sqlite;
+/// RocksDB storage.
+pub mod rocksdb;
 
-#[cfg(any(feature = "stronghold-storage", feature = "stronghold"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold-storage", feature = "stronghold"))))]
 /// Stronghold storage.
 pub mod stronghold;
 
 use crate::{
     account::Account,
     event::{BalanceEvent, TransactionConfirmationChangeEvent, TransactionEvent, TransactionReattachmentEvent},
+    message::{Message, MessageId, MessagePayload, MessageType, TransactionEssence},
 };
 
 use chrono::Utc;
@@ -45,6 +42,47 @@ struct EventIndexation {
     timestamp: Timestamp,
 }
 
+/// The indexation for account messages.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MessageIndexation {
+    /// The message id.
+    pub key: MessageId,
+    /// The payload hash.
+    pub payload_hash: Option<u64>,
+    pub internal: Option<bool>,
+    /// Whether the message is an incoming or an outgoing transaction.
+    pub incoming: Option<bool>,
+    /// Whether the message was broadcasted or not.
+    pub broadcasted: bool,
+    /// Whether the message was confirmed or not.
+    /// None means that it is still pending.
+    pub confirmed: Option<bool>,
+    /// Message value.
+    pub value: u64,
+    /// Id of the message that reattached this message.
+    pub reattachment_message_id: Option<MessageId>,
+}
+
+#[derive(Default)]
+pub struct MessageQueryFilter<'a> {
+    message_type: Option<MessageType>,
+    ignore_ids: Option<&'a HashMap<MessageId, Message>>,
+}
+
+impl<'a> MessageQueryFilter<'a> {
+    pub fn message_type(message_type: Option<MessageType>) -> Self {
+        Self {
+            message_type,
+            ignore_ids: Default::default(),
+        }
+    }
+
+    pub fn with_ignore_ids(mut self, ignore_ids: &'a HashMap<MessageId, Message>) -> Self {
+        self.ignore_ids.replace(ignore_ids);
+        self
+    }
+}
+
 struct Storage {
     storage_path: PathBuf,
     inner: Box<dyn StorageAdapter + Sync + Send>,
@@ -59,7 +97,11 @@ impl Storage {
     async fn get(&self, key: &str) -> crate::Result<String> {
         self.inner.get(key).await.and_then(|record| {
             if let Some(key) = &self.encryption_key {
-                decrypt_record(&record, key)
+                if serde_json::from_str::<Vec<u8>>(&record).is_ok() {
+                    decrypt_record(&record, key)
+                } else {
+                    Ok(record)
+                }
             } else {
                 Ok(record)
             }
@@ -82,6 +124,22 @@ impl Storage {
             .await
     }
 
+    async fn batch_set(&mut self, records: HashMap<String, String>) -> crate::Result<()> {
+        self.inner
+            .batch_set(if let Some(key) = &self.encryption_key {
+                let mut encrypted_records = HashMap::new();
+                for (id, record) in records {
+                    let mut output = Vec::new();
+                    encrypt_record(record.as_bytes(), key, &mut output)?;
+                    encrypted_records.insert(id, serde_json::to_string(&output)?);
+                }
+                encrypted_records
+            } else {
+                records
+            })
+            .await
+    }
+
     async fn remove(&mut self, key: &str) -> crate::Result<()> {
         self.inner.remove(key).await
     }
@@ -90,11 +148,38 @@ impl Storage {
 pub(crate) struct StorageManager {
     storage: Storage,
     account_indexation: Vec<AccountIndexation>,
+    message_indexation: HashMap<String, Vec<MessageIndexation>>,
     balance_change_indexation: Option<Vec<EventIndexation>>,
     transaction_confirmation_indexation: Option<Vec<EventIndexation>>,
     new_transaction_indexation: Option<Vec<EventIndexation>>,
     reattachment_indexation: Option<Vec<EventIndexation>>,
     broadcast_indexation: Option<Vec<EventIndexation>>,
+}
+
+macro_rules! load_account_dependency_index {
+    ($self: ident, $account_id: expr, $key: expr, $indexation: ident) => {
+        match $self.storage.get($key).await {
+            Ok(record) => {
+                $self.$indexation.insert($account_id, serde_json::from_str(&record)?);
+            }
+            Err(crate::Error::RecordNotFound) => {
+                $self.$indexation.insert($account_id, Default::default());
+            }
+            Err(e) => return Err(e),
+        }
+    };
+}
+
+macro_rules! init_account_dependency_index {
+    ($self: ident, $account_id: expr, $indexation: ident) => {
+        if !$self.$indexation.contains_key($account_id) {
+            $self.$indexation.insert($account_id.to_string(), Default::default());
+        }
+    };
+}
+
+fn account_message_index_key(account_id: &str) -> String {
+    format!("iota-wallet-{}-messages", account_id)
 }
 
 impl StorageManager {
@@ -121,6 +206,12 @@ impl StorageManager {
         let mut accounts = Vec::new();
         for account_index in self.account_indexation.clone() {
             accounts.push(self.get(&account_index.key).await?);
+            load_account_dependency_index!(
+                self,
+                account_index.key.clone(),
+                &account_message_index_key(&account_index.key),
+                message_indexation
+            );
         }
         parse_accounts(&self.storage.storage_path, &accounts, &self.storage.encryption_key)
     }
@@ -129,6 +220,7 @@ impl StorageManager {
         let index = AccountIndexation { key: key.to_string() };
         self.storage.set(key, account).await?;
         if !self.account_indexation.contains(&index) {
+            init_account_dependency_index!(self, key, message_indexation);
             self.account_indexation.push(index);
             self.storage
                 .set(ACCOUNT_INDEXATION_KEY, &self.account_indexation)
@@ -149,6 +241,124 @@ impl StorageManager {
         } else {
             Err(crate::Error::RecordNotFound)
         }
+    }
+
+    pub fn message_indexation(&self, account: &Account) -> crate::Result<&Vec<MessageIndexation>> {
+        self.message_indexation
+            .get(account.id())
+            .ok_or(crate::Error::RecordNotFound)
+    }
+
+    pub fn query_message_indexation(
+        &self,
+        account: &Account,
+        filter: &MessageQueryFilter<'_>,
+    ) -> crate::Result<Vec<&MessageIndexation>> {
+        let message_indexation = self.message_indexation(account)?;
+
+        let mut filtered_message_indexation = Vec::new();
+        for message in message_indexation {
+            if message.reattachment_message_id.is_some() {
+                continue;
+            }
+            let message_type_matches = if let Some(message_type) = filter.message_type.clone() {
+                match message_type {
+                    MessageType::Received => message.incoming == Some(true),
+                    MessageType::Sent => message.incoming == Some(false),
+                    MessageType::Failed => !message.broadcasted,
+                    MessageType::Unconfirmed => message.confirmed.is_none(),
+                    MessageType::Value => message.value > 0,
+                    MessageType::Confirmed => message.confirmed.is_some(),
+                }
+            } else {
+                true
+            };
+            if message_type_matches {
+                filtered_message_indexation.push(message);
+            }
+        }
+
+        Ok(filtered_message_indexation)
+    }
+
+    pub async fn save_messages(&mut self, account: &Account, messages: &[Message]) -> crate::Result<()> {
+        let message_indexation = self
+            .message_indexation
+            .entry(account.id().clone())
+            .or_insert_with(Default::default);
+        let mut messages_map = HashMap::new();
+        for message in messages.iter() {
+            messages_map.insert(message.id().to_string(), serde_json::to_string(&message)?);
+            let (value, internal, incoming) = match message.payload() {
+                Some(MessagePayload::Transaction(tx)) => {
+                    let TransactionEssence::Regular(essence) = tx.essence();
+                    (essence.value(), Some(essence.internal()), Some(essence.incoming()))
+                }
+                _ => (0, None, None),
+            };
+            let index = MessageIndexation {
+                key: *message.id(),
+                payload_hash: message.payload().as_ref().map(|p| p.storage_hash()),
+                internal,
+                incoming,
+                broadcasted: message.broadcasted,
+                confirmed: message.confirmed,
+                value,
+                reattachment_message_id: None,
+            };
+            if let Some(position) = message_indexation.iter().position(|i| i == &index) {
+                message_indexation[position] = index.clone();
+            } else {
+                message_indexation.push(index.clone());
+            }
+        }
+        self.storage
+            .set(&account_message_index_key(account.id()), &message_indexation)
+            .await?;
+        self.storage.batch_set(messages_map).await?;
+        Ok(())
+    }
+
+    pub async fn get_message(&self, account: &Account, message_id: &MessageId) -> crate::Result<Message> {
+        let message_indexation = self.message_indexation(account)?;
+        let index = message_indexation
+            .iter()
+            .find(|i| &i.key == message_id)
+            .ok_or(crate::Error::RecordNotFound)?;
+        let message = self.get(&index.key.to_string()).await?;
+        serde_json::from_str(&message).map_err(Into::into)
+    }
+
+    pub async fn get_messages(
+        &self,
+        account: &Account,
+        count: usize,
+        skip: usize,
+        filter: MessageQueryFilter<'_>,
+    ) -> crate::Result<Vec<Message>> {
+        let filtered_message_indexation = self.query_message_indexation(account, &filter)?;
+
+        let mut messages = Vec::new();
+        let iter = filtered_message_indexation.into_iter().skip(skip);
+        for index in if count == 0 {
+            iter.collect::<Vec<&MessageIndexation>>()
+        } else {
+            iter.take(count).collect::<Vec<&MessageIndexation>>()
+        } {
+            match &filter.ignore_ids {
+                Some(ignore_ids) => {
+                    if !ignore_ids.contains_key(&index.key) {
+                        let message = self.get(&index.key.to_string()).await?;
+                        messages.push(serde_json::from_str(&message)?);
+                    }
+                }
+                None => {
+                    let message = self.get(&index.key.to_string()).await?;
+                    messages.push(serde_json::from_str(&message)?);
+                }
+            }
+        }
+        Ok(messages)
     }
 }
 
@@ -177,7 +387,7 @@ macro_rules! event_manager_impl {
                         let mut indexation: Vec<EventIndexation> =
                             load_optional_data(&self.storage, $index_key).await?;
                         indexation.push(index);
-                        self.$index_vec = Some(indexation);
+                        self.$index_vec.replace(indexation);
                     }
                 }
                 self.storage.set($index_key, &self.$index_vec).await?;
@@ -193,7 +403,8 @@ macro_rules! event_manager_impl {
                 let indexation = match &self.$index_vec {
                     Some(indexation) => indexation,
                     None => {
-                        self.$index_vec = Some(load_optional_data(&self.storage, $index_key).await?);
+                        self.$index_vec
+                            .replace(load_optional_data(&self.storage, $index_key).await?);
                         self.$index_vec.as_ref().unwrap()
                     }
                 };
@@ -221,7 +432,8 @@ macro_rules! event_manager_impl {
                 let indexation = match &self.$index_vec {
                     Some(indexation) => indexation,
                     None => {
-                        self.$index_vec = Some(load_optional_data(&self.storage, $index_key).await?);
+                        self.$index_vec
+                            .replace(load_optional_data(&self.storage, $index_key).await?);
                         self.$index_vec.as_ref().unwrap()
                     }
                 };
@@ -299,18 +511,16 @@ pub(crate) async fn set<P: AsRef<Path>>(
     let storage = Storage {
         storage_path: storage_path.as_ref().to_path_buf(),
         inner: storage,
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
         encryption_key: if storage_id == stronghold::STORAGE_ID {
             None
         } else {
             encryption_key
         },
-        #[cfg(not(any(feature = "stronghold", feature = "stronghold-storage")))]
-        encryption_key,
     };
     let storage_manager = StorageManager {
         storage,
         account_indexation: Default::default(),
+        message_indexation: Default::default(),
         balance_change_indexation: Default::default(),
         transaction_confirmation_indexation: Default::default(),
         new_transaction_indexation: Default::default(),
@@ -323,30 +533,34 @@ pub(crate) async fn set<P: AsRef<Path>>(
     );
 }
 
-pub(crate) async fn remove(storage_path: &PathBuf) -> String {
+pub(crate) async fn remove(storage_path: &Path) -> Option<String> {
     let mut instances = INSTANCES.get_or_init(Default::default).write().await;
     let storage = instances.remove(storage_path);
-    storage.unwrap().lock().await.id().to_string()
+    if let Some(s) = storage {
+        Some(s.lock().await.id().to_string())
+    } else {
+        None
+    }
 }
 
-pub(crate) async fn set_encryption_key(storage_path: &PathBuf, encryption_key: [u8; 32]) -> crate::Result<()> {
+pub(crate) async fn set_encryption_key(storage_path: &Path, encryption_key: [u8; 32]) -> crate::Result<()> {
     let instances = INSTANCES.get_or_init(Default::default).read().await;
     if let Some(instance) = instances.get(storage_path) {
         let mut storage_manager = instance.lock().await;
-        storage_manager.storage.encryption_key = Some(encryption_key);
+        storage_manager.storage.encryption_key.replace(encryption_key);
         Ok(())
     } else {
-        Err(crate::Error::StorageAdapterNotSet(storage_path.clone()))
+        Err(crate::Error::StorageAdapterNotSet(storage_path.to_path_buf()))
     }
 }
 
 /// gets the storage adapter
-pub(crate) async fn get(storage_path: &PathBuf) -> crate::Result<StorageHandle> {
+pub(crate) async fn get(storage_path: &Path) -> crate::Result<StorageHandle> {
     let instances = INSTANCES.get_or_init(Default::default).read().await;
     if let Some(instance) = instances.get(storage_path) {
         Ok(instance.clone())
     } else {
-        Err(crate::Error::StorageAdapterNotSet(storage_path.clone()))
+        Err(crate::Error::StorageAdapterNotSet(storage_path.to_path_buf()))
     }
 }
 
@@ -361,6 +575,8 @@ pub trait StorageAdapter {
     async fn get(&self, key: &str) -> crate::Result<String>;
     /// Saves or updates a record on the storage.
     async fn set(&mut self, key: &str, record: String) -> crate::Result<()>;
+    /// Batch write.
+    async fn batch_set(&mut self, records: HashMap<String, String>) -> crate::Result<()>;
     /// Removes a record from the storage.
     async fn remove(&mut self, key: &str) -> crate::Result<()>;
 }
@@ -408,9 +624,9 @@ pub(crate) fn decrypt_record(record: &str, encryption_key: &[u8; 32]) -> crate::
         encryption_key.try_into().unwrap(),
         &nonce.try_into().unwrap(),
         &[],
-        tag.as_slice().try_into().unwrap(),
-        &ct,
         &mut pt,
+        &ct,
+        tag.as_slice().try_into().unwrap(),
     )
     .map_err(|e| crate::Error::RecordDecrypt(format!("{:?}", e)))?;
 
@@ -418,7 +634,7 @@ pub(crate) fn decrypt_record(record: &str, encryption_key: &[u8; 32]) -> crate::
 }
 
 fn parse_accounts(
-    storage_path: &PathBuf,
+    storage_path: &Path,
     accounts: &[String],
     encryption_key: &Option<[u8; 32]>,
 ) -> crate::Result<Vec<Account>> {
@@ -432,7 +648,7 @@ fn parse_accounts(
                 match decrypt_record(account, key) {
                     Ok(json) => Some(json),
                     Err(e) => {
-                        err = Some(e);
+                        err.replace(e);
                         None
                     }
                 }
@@ -442,16 +658,16 @@ fn parse_accounts(
             if let Some(json) = account_json {
                 match serde_json::from_str::<Account>(&json) {
                     Ok(mut acc) => {
-                        acc.set_storage_path(storage_path.clone());
+                        acc.set_storage_path(storage_path.to_path_buf());
                         Some(acc)
                     }
                     Err(e) => {
-                        err = Some(e.into());
+                        err.replace(e.into());
                         None
                     }
                 }
             } else {
-                err = Some(crate::Error::StorageIsEncrypted);
+                err.replace(crate::Error::StorageIsEncrypted);
                 None
             }
         })
@@ -468,7 +684,7 @@ fn parse_accounts(
 #[cfg(test)]
 mod tests {
     use super::StorageAdapter;
-    use std::path::PathBuf;
+    use std::{collections::HashMap, path::PathBuf};
 
     #[tokio::test]
     // asserts that the adapter defined by `set` is globally available with `get`
@@ -482,6 +698,9 @@ mod tests {
             async fn set(&mut self, _key: &str, _record: String) -> crate::Result<()> {
                 Ok(())
             }
+            async fn batch_set(&mut self, _records: HashMap<String, String>) -> crate::Result<()> {
+                Ok(())
+            }
             async fn remove(&mut self, _key: &str) -> crate::Result<()> {
                 Ok(())
             }
@@ -489,7 +708,7 @@ mod tests {
 
         let path = "./the-storage-path";
         super::set(path, None, Box::new(MyAdapter {})).await;
-        let adapter = super::get(&std::path::PathBuf::from(path)).await.unwrap();
+        let adapter = super::get(&PathBuf::from(path)).await.unwrap();
         let adapter = adapter.lock().await;
         assert_eq!(adapter.get("").await.unwrap(), "MY_ADAPTER_GET_RESPONSE".to_string());
     }
@@ -500,7 +719,7 @@ mod tests {
         assert!(response.is_err());
     }
 
-    async fn _create_account() -> (std::path::PathBuf, crate::account::AccountHandle) {
+    async fn _create_account() -> (PathBuf, crate::account::AccountHandle) {
         let manager = crate::test_utils::get_account_manager().await;
 
         let client_options = crate::client::ClientOptionsBuilder::new()
