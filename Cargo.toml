@@ -16,7 +16,7 @@ chrono = { version = "0.4", features = ["serde"] }
 futures = "0.3"
 getset = "0.1"
 hex = "0.4"
-iota-core = { git = "https://github.com/iotaledger/iota.rs", rev = "52a6a02763f0faa5c0f75e6474950eccfd0e6efa", features = ["mqtt"] }
+iota-core = { git = "https://github.com/iotaledger/iota.rs", rev = "8f14d53075222c91560db24478695a7db2238f16", features = ["mqtt"] }
 log = "0.4"
 once_cell = "1.5"
 serde = { version = "1.0", features = ["derive"] }
