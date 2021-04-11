@@ -2719,17 +2719,17 @@
                 }
 
                 <span class="comment">// we can&#39;t guarantee we picked up all output changes since querying spent outputs is</span>
-                <span class="comment">// optional and the node might prune it so we handle it here; if not all balance change has</span>
+                <span class="comment">// optional so we handle it here; if not all balance change has</span>
                 <span class="comment">// been emitted, we emit the remainder value with `None` as</span>
                 <span class="comment">// message_id</span>
                 <span class="kw">let</span> <span class="ident">balance_change</span> <span class="op">=</span> <span class="ident">address_after_sync</span>.<span class="ident">balance</span>() <span class="kw">as</span> <span class="ident">i64</span> <span class="op">-</span> <span class="ident">before_sync_balance</span> <span class="kw">as</span> <span class="ident">i64</span>;
                 <span class="kw">if</span> <span class="op">!</span><span class="ident">emitted_event</span> <span class="op">|</span><span class="op">|</span> <span class="ident">output_change_balance</span> <span class="op">!</span><span class="op">=</span> <span class="ident">balance_change</span> {
-                    <span class="kw">let</span> <span class="ident">change</span> <span class="op">=</span>
-                        <span class="ident">address_after_sync</span>.<span class="ident">balance</span>() <span class="kw">as</span> <span class="ident">i64</span> <span class="op">-</span> <span class="ident">before_sync_balance</span> <span class="kw">as</span> <span class="ident">i64</span> <span class="op">-</span> <span class="ident">output_change_balance</span>;
-                    <span class="kw">let</span> <span class="ident">balance_change</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">change</span> <span class="op">&gt;</span> <span class="number">0</span> {
-                        <span class="ident">BalanceChange::received</span>(<span class="ident">change</span> <span class="kw">as</span> <span class="ident">u64</span>)
+                    <span class="kw">let</span> <span class="ident">balance_change</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">balance_change</span> <span class="op">&gt;</span> <span class="number">0</span> {
+                        <span class="comment">// balance_change is positive; subtract the already emitted balance.</span>
+                        <span class="ident">BalanceChange::received</span>((<span class="ident">balance_change</span> <span class="op">-</span> <span class="ident">output_change_balance</span>) <span class="kw">as</span> <span class="ident">u64</span>)
                     } <span class="kw">else</span> {
-                        <span class="ident">BalanceChange::spent</span>(<span class="ident">change</span>.<span class="ident">abs</span>() <span class="kw">as</span> <span class="ident">u64</span>)
+                        <span class="comment">// balance_change is negative; get the absolute diff.</span>
+                        <span class="ident">BalanceChange::spent</span>((<span class="ident">balance_change</span> <span class="op">-</span> <span class="ident">output_change_balance</span>).<span class="ident">abs</span>() <span class="kw">as</span> <span class="ident">u64</span>)
                     };
                     <span class="macro">log::info!</span>(
                         <span class="string">&quot;[SYNC] remaining balance change on {} {:?}&quot;</span>,
