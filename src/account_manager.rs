@@ -289,6 +289,8 @@ pub struct MigratedBundle {
     value: u64,
 }
 
+type CachedMigrationBundle = (Vec<BundledTransaction>, AddressWrapper, u64);
+
 /// The account manager.
 ///
 /// Used to manage multiple accounts.
@@ -308,7 +310,7 @@ pub struct AccountManager {
     account_options: AccountOptions,
     sync_accounts_lock: Arc<Mutex<()>>,
     cached_migration_data: Mutex<HashMap<u64, CachedMigrationData>>,
-    cached_migration_bundles: Mutex<HashMap<String, (Vec<BundledTransaction>, AddressWrapper, u64)>>,
+    cached_migration_bundles: Mutex<HashMap<String, CachedMigrationBundle>>,
 }
 
 impl Clone for AccountManager {
@@ -454,14 +456,11 @@ impl AccountManager {
             .iter_trytes()
             .map(char::from)
             .collect::<String>();
-        self.cached_migration_bundles.lock().await.insert(
-            bundle_hash.clone(),
-            (
-                bundle_data.bundle,
-                account_handle.latest_address().await.address().clone(),
-                value,
-            ),
-        );
+        let address = account_handle.latest_address().await.address().clone();
+        self.cached_migration_bundles
+            .lock()
+            .await
+            .insert(bundle_hash.clone(), (bundle_data.bundle, address, value));
 
         Ok(MigrationBundle {
             crackability,
@@ -530,7 +529,7 @@ impl AccountManager {
                     56, 25, 68, 154, 98, 100, 64, 108, 203, 48, 76, 75, 114, 150, 34, 153, 203, 35, 225, 120, 194, 175,
                     169, 207, 80, 229, 10,
                 ])?,
-                SignatureLockedSingleOutput::new(address.as_ref().clone(), value)?,
+                SignatureLockedSingleOutput::new(*address.as_ref(), value)?,
             )?],
             treasury_transaction,
         )?));

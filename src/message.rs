@@ -9,7 +9,7 @@ use crate::{
 };
 use bee_common::packable::Packable;
 use chrono::prelude::{DateTime, Utc};
-use getset::{Getters, Setters};
+use getset::{CopyGetters, Getters, Setters};
 pub use iota::{
     Essence, IndexationPayload, Input, Message as IotaMessage, MessageId, MigratedFundsEntry, MilestoneIndex,
     MilestonePayload, MilestonePayloadEssence, Output, Parents, Payload, ReceiptPayload, RegularEssence,
@@ -283,15 +283,17 @@ impl Value {
 }
 
 /// Signature locked single output.
-#[derive(Debug, Clone, Serialize, Deserialize, Getters, Eq, PartialEq)]
-#[getset(get = "pub")]
+#[derive(Debug, Clone, Serialize, Deserialize, Getters, CopyGetters, Eq, PartialEq)]
 pub struct TransactionSignatureLockedSingleOutput {
     /// The output adrress.
+    #[getset(get = "pub")]
     #[serde(with = "crate::serde::iota_address_serde")]
     address: AddressWrapper,
     /// The output amount.
+    #[getset(get_copy = "pub")]
     amount: u64,
     /// Whether the output is a remander value output or not.
+    #[getset(get_copy = "pub")]
     remainder: bool,
 }
 
@@ -674,19 +676,35 @@ impl MessageTransactionPayload {
 }
 
 /// Milestone payload essence.
-#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Getters, CopyGetters, Eq, PartialEq)]
 pub struct MessageMilestonePayloadEssence {
+    /// Milestone index.
+    #[getset(get_copy = "pub")]
     index: MilestoneIndex,
+    /// Milestone timestamp.
+    #[getset(get_copy = "pub")]
     timestamp: u64,
+    /// Message parents.
+    #[getset(get = "pub")]
     parents: Parents,
+    /// Milestone merkle proof.
+    #[getset(get = "pub")]
     #[serde(rename = "merkleProof")]
     merkle_proof: [u8; MILESTONE_MERKLE_PROOF_LENGTH],
+    /// Next PoW score.
+    #[getset(get_copy = "pub")]
     #[serde(rename = "nextPowScore")]
     next_pow_score: u32,
+    /// Milestone index where the PoW score will change.
+    #[getset(get_copy = "pub")]
     #[serde(rename = "nextPowScoreMilestone")]
     next_pow_score_milestone_index: u32,
+    /// Milestone public keys.
+    #[getset(get = "pub")]
     #[serde(rename = "publicKey")]
     public_keys: Vec<[u8; MILESTONE_PUBLIC_KEY_LENGTH]>,
+    /// Milestone receipt.
+    #[getset(get = "pub")]
     receipt: Option<MessagePayload>,
 }
 
@@ -729,6 +747,11 @@ impl MessageMilestonePayload {
         &self.essence
     }
 
+    /// The milestone signatures.
+    pub fn signatures(&self) -> &Vec<Box<[u8]>> {
+        &self.signatures
+    }
+
     #[doc(hidden)]
     pub async fn new(payload: &MilestonePayload, metadata: &TransactionBuilderMetadata<'_>) -> crate::Result<Self> {
         Ok(Self {
@@ -739,9 +762,12 @@ impl MessageMilestonePayload {
 }
 
 /// Migrated funds entry.
-#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Getters, Eq, PartialEq)]
+#[getset(get = "pub")]
 pub struct MessageMigratedFundsEntry {
+    /// Tail transaction hash.
     tail_transaction_hash: TailTransactionHash,
+    /// Output.
     output: TransactionSignatureLockedSingleOutput,
 }
 
@@ -756,11 +782,19 @@ impl MessageMigratedFundsEntry {
 }
 
 /// Receipt payload.
-#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Getters, CopyGetters, Eq, PartialEq)]
 pub struct MessageReceiptPayload {
+    /// Migrated at milestone index.
+    #[getset(get_copy = "pub")]
     migrated_at: MilestoneIndex,
+    /// Last flag.
+    #[getset(get_copy = "pub")]
     last: bool,
+    /// Funds.
+    #[getset(get = "pub")]
     funds: Vec<MessageMigratedFundsEntry>,
+    /// Receipt transaction.
+    #[getset(get = "pub")]
     transaction: MessagePayload,
 }
 

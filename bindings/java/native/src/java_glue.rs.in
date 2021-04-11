@@ -30,7 +30,7 @@ use iota_wallet::{
         AccountBalance,
     },
     message::{
-        MessageType, Value, ValueUnit, MessageId
+        MessageType, Value, ValueUnit, MessageId, TransactionSignatureLockedSingleOutput
     },
     address::{
         OutputKind, AddressWrapper, IotaAddress,
@@ -47,10 +47,6 @@ use iota_wallet::{
         BalanceEvent as WalletBalanceEvent,
         TransactionReattachmentEvent as WalletTransactionReattachmentEvent
     },
-};
-
-use iota::{
-    SignatureLockedSingleOutput,
 };
 
 foreign_class!(class RustLogging {
@@ -640,9 +636,7 @@ foreign_class!(
     class MilestonePayload {
         self_type MilestonePayload;
         private constructor = empty;
-        fn MilestonePayload::id(&self) -> String;
         fn MilestonePayload::essence(&self) -> MilestonePayloadEssence;
-        fn MilestonePayload::validate(&self, applicable_public_keys: &[String], min_threshold: usize) -> bool;
         //fn MilestonePayload::signatures(&self) -> Vec<Box<[u8]>>;
     }
 );
@@ -726,10 +720,10 @@ foreign_class!(
 );
 
 foreign_class!(
-    class SignatureLockedSingleOutput {
-        self_type SignatureLockedSingleOutput;
+    class TransactionSignatureLockedSingleOutput {
+        self_type TransactionSignatureLockedSingleOutput;
         private constructor = empty;
-        fn SignatureLockedSingleOutput::amount(&self) -> u64;
+        fn TransactionSignatureLockedSingleOutput::amount(&self) -> u64;
     }
 );
 
@@ -740,7 +734,6 @@ foreign_class!(
         fn ReceiptPayload::migrated_at(&self) -> u32; alias migratedAt;
         fn ReceiptPayload::last(&self) -> bool;
         fn ReceiptPayload::funds(&self) -> Vec<MigratedFundsEntry>;
-        fn ReceiptPayload::amount(&self) -> u64;
     }
 );
 
@@ -749,7 +742,7 @@ foreign_class!(
         self_type MigratedFundsEntry;
         private constructor = empty;
         fn MigratedFundsEntry::tail_transaction_hash(&self) -> Vec<u8>; alias tailTransactionHash;
-        fn MigratedFundsEntry::output(&self) -> SignatureLockedSingleOutput;
+        fn MigratedFundsEntry::output(&self) -> TransactionSignatureLockedSingleOutput;
     }
 );
 
