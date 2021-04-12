@@ -772,7 +772,7 @@ fn get_balance_change_events(
             balance_change
         );
         balance_change_events.push(BalanceChangeEventData {
-            address: address.clone(),
+            address,
             balance_change,
             message_id: None,
         });

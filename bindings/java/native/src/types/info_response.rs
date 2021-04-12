@@ -10,8 +10,13 @@ use iota::{
 pub struct NodeInfoWrapper {
     #[getset(get = "pub")]
     url: String,
-    #[getset(get_copy = "pub")]
     nodeinfo: InfoResponse,
+}
+
+impl NodeInfoWrapper {
+    pub fn nodeinfo(&self) -> InfoResponse {
+        self.nodeinfo.clone()
+    }
 }
 
 impl From<RustNodeInfoWrapper> for NodeInfoWrapper {
@@ -38,7 +43,7 @@ impl From<RustNodeInfoWrapper> for NodeInfoWrapper {
     }
 }
 
-#[derive(PartialEq, Getters, CopyGetters, Copy)]
+#[derive(Clone, PartialEq, Getters, CopyGetters)]
 pub struct InfoResponse {
     #[getset(get = "pub")]
     name: String,

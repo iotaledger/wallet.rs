@@ -772,7 +772,6 @@ foreign_class!(
     class TreasuryTransactionPayload {
         self_type TreasuryTransactionPayload;
         private constructor = empty;
-        fn TreasuryTransactionPayload::input(&self) -> MessageId;
         fn TreasuryTransactionPayload::output(&self) -> u64;
     }
 );
