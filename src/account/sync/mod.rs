@@ -1366,7 +1366,7 @@ async fn perform_transfer(
 
     let account_ = account_handle.read().await;
 
-    for (input_address, address_outputs) in input_addresses {
+    for (input_address, address_outputs) in input_addresses.iter() {
         let account_address = account_
             .addresses()
             .iter()
@@ -1650,6 +1650,15 @@ async fn perform_transfer(
     .finish()
     .await?;
     account_.save_messages(vec![message.clone()]).await?;
+    for (input_address, _) in input_addresses {
+        if input_address.internal {
+            account_handle
+                .change_addresses_to_sync
+                .lock()
+                .await
+                .insert(input_address.address.clone());
+        }
+    }
 
     // if we generated an address, we need to save the account
     if !addresses_to_watch.is_empty() {
