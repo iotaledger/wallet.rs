@@ -109,6 +109,11 @@ export declare interface AccountBalance {
   outgoing: number
 }
 
+export declare interface NodeInfoWrapper {
+  url: string
+  nodeinfo: NodeInfo
+}
+
 export declare interface NodeInfo {
   name: string
   version: string
@@ -116,6 +121,10 @@ export declare interface NodeInfo {
   networkId: string
   bech32HRP: string
   minPoWScore: number
+  messagesPerSecond: number
+  referencedMessagesPerSecond: number
+  referencedRate: number
+  latestMilestoneTimestamp: number
   latestMilestoneIndex: number
   confirmedMilestoneIndex: number
   pruningIndex: number
@@ -127,7 +136,7 @@ export declare class Account {
   index(): number;
   alias(): string;
   balance(): AccountBalance;
-  getNodeInfo(): Promise<NodeInfo>;
+  getNodeInfo(url?: string): Promise<NodeInfoWrapper>;
   messageCount(messageType?: MessageType): number;
   listMessages(count?: number, from?: number, messageType?: MessageType): Message[]
   listAddresses(unspent?: boolean): Address[]

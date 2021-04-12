@@ -2,9 +2,43 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use getset::{CopyGetters, Getters};
-use iota::bee_rest_api::types::responses::InfoResponse as RustInfoResponse;
+use iota::{
+    bee_rest_api::types::responses::InfoResponse as RustInfoResponse, client::NodeInfoWrapper as RustNodeInfoWrapper,
+};
 
 #[derive(PartialEq, Getters, CopyGetters)]
+pub struct NodeInfoWrapper {
+    #[getset(get = "pub")]
+    url: String,
+    #[getset(get_copy = "pub")]
+    nodeinfo: InfoResponse,
+}
+
+impl From<RustNodeInfoWrapper> for NodeInfoWrapper {
+    fn from(info: RustNodeInfoWrapper) -> Self {
+        Self {
+            url: info.url,
+            nodeinfo: InfoResponse {
+                name: info.nodeinfo.name,
+                version: info.nodeinfo.version,
+                is_healthy: info.nodeinfo.is_healthy,
+                network_id: info.nodeinfo.network_id,
+                bech32_hrp: info.nodeinfo.bech32_hrp,
+                min_pow_score: info.nodeinfo.min_pow_score,
+                messages_per_second: info.nodeinfo.messages_per_second,
+                referenced_messages_per_second: info.nodeinfo.referenced_messages_per_second,
+                referenced_rate: info.nodeinfo.referenced_rate,
+                latest_milestone_timestamp: info.nodeinfo.latest_milestone_timestamp,
+                latest_milestone_index: info.nodeinfo.latest_milestone_index,
+                confirmed_milestone_index: info.nodeinfo.confirmed_milestone_index,
+                pruning_index: info.nodeinfo.pruning_index,
+                features: info.nodeinfo.features,
+            },
+        }
+    }
+}
+
+#[derive(PartialEq, Getters, CopyGetters, Copy)]
 pub struct InfoResponse {
     #[getset(get = "pub")]
     name: String,
@@ -17,14 +51,22 @@ pub struct InfoResponse {
     #[getset(get = "pub")]
     bech32_hrp: String,
     #[getset(get_copy = "pub")]
+    min_pow_score: f64,
+    #[getset(get_copy = "pub")]
+    messages_per_second: f64,
+    #[getset(get_copy = "pub")]
+    referenced_messages_per_second: f64,
+    #[getset(get_copy = "pub")]
+    referenced_rate: f64,
+    #[getset(get_copy = "pub")]
+    latest_milestone_timestamp: u64,
+    #[getset(get_copy = "pub")]
     latest_milestone_index: u32,
     #[getset(get_copy = "pub")]
     confirmed_milestone_index: u32,
     #[getset(get_copy = "pub")]
     pruning_index: u32,
     features: Vec<String>,
-    #[getset(get_copy = "pub")]
-    min_pow_score: f64,
 }
 
 impl InfoResponse {
@@ -41,6 +83,10 @@ impl From<RustInfoResponse> for InfoResponse {
             is_healthy: info.is_healthy,
             network_id: info.network_id,
             bech32_hrp: info.bech32_hrp,
+            messages_per_second: info.messages_per_second,
+            referenced_messages_per_second: info.referenced_messages_per_second,
+            referenced_rate: info.referenced_rate,
+            latest_milestone_timestamp: info.latest_milestone_timestamp,
             latest_milestone_index: info.latest_milestone_index,
             confirmed_milestone_index: info.confirmed_milestone_index,
             pruning_index: info.pruning_index,
