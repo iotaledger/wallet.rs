@@ -15,6 +15,7 @@ pub use iota::{
     Payload, ReceiptPayload, RegularEssence, SignatureLockedDustAllowanceOutput, SignatureLockedSingleOutput,
     TransactionPayload, TreasuryInput, TreasuryOutput, TreasuryTransactionPayload, UnlockBlock, UtxoInput,
 };
+use once_cell::sync::Lazy;
 use serde::{de::Deserializer, Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
 use std::{
@@ -26,13 +27,16 @@ use std::{
     fmt,
     hash::{Hash, Hasher},
     num::NonZeroU64,
+    ops::Range,
 };
 use tokio::sync::RwLock;
 
-use lazy_static::lazy_static;
-type Data = HashMap<u32, MilestoneResponse>;
-lazy_static! {
-    static ref MILESTONE_CACHE: RwLock<Data> = RwLock::new(HashMap::new());
+const MILESTONE_CACHE_RANGE: u32 = 100;
+
+type MilestoneCache = RwLock<HashMap<Range<u32>, MilestoneResponse>>;
+fn milestone_cache() -> &'static MilestoneCache {
+    static MILESTONE_CACHE: Lazy<MilestoneCache> = Lazy::new(Default::default);
+    &MILESTONE_CACHE
 }
 
 /// The strategy to use for the remainder value management when sending funds.
@@ -960,24 +964,23 @@ impl<'a> MessageBuilder<'a> {
         let mut timestamp = Utc::now();
         let client_guard = crate::client::get_client(self.client_options).await?;
         let client = client_guard.read().await;
-        let metadata = client.get_message().metadata(&self.id).await;
-        if metadata.is_ok() {
-            timestamp = match metadata.unwrap().referenced_by_milestone_index {
+        if let Ok(metadata) = client.get_message().metadata(&self.id).await {
+            timestamp = match metadata.referenced_by_milestone_index {
                 Some(ms_index) => {
                     let mut date_time = Utc::now();
-                    match MILESTONE_CACHE.write().await.entry(ms_index) {
+                    let initial = ms_index / MILESTONE_CACHE_RANGE;
+                    let range = initial..initial + MILESTONE_CACHE_RANGE;
+                    match milestone_cache().write().await.entry(range) {
                         Entry::Vacant(entry) => {
-                            let ms = client.get_milestone(ms_index).await;
-                            if ms.is_ok() {
-                                let ms = ms.unwrap();
+                            if let Ok(milestone) = client.get_milestone(ms_index).await {
                                 date_time =
-                                    DateTime::from_utc(NaiveDateTime::from_timestamp(ms.timestamp as i64, 0), Utc);
-                                entry.insert(ms);
+                                    DateTime::from_utc(NaiveDateTime::from_timestamp(milestone.timestamp as i64, 0), Utc);
+                                entry.insert(milestone);
                             }
                         }
                         Entry::Occupied(entry) => {
-                            let ms = *entry.get();
-                            date_time = DateTime::from_utc(NaiveDateTime::from_timestamp(ms.timestamp as i64, 0), Utc);
+                            let milestone = *entry.get();
+                            date_time = DateTime::from_utc(NaiveDateTime::from_timestamp(milestone.timestamp as i64, 0), Utc);
                         }
                     }
                     date_time

@@ -214,7 +214,7 @@ dependencies = [
 [[package]]
 name = "bee-ledger"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=e8cafb6591ec0c29f80705ae51fb8cb890fa98b0#e8cafb6591ec0c29f80705ae51fb8cb890fa98b0"
+source = "git+https://github.com/iotaledger/bee.git?rev=25d05419389acdd2fbd9371976c7c3460685d5a0#25d05419389acdd2fbd9371976c7c3460685d5a0"
 dependencies = [
  "bee-common",
  "bee-message",
@@ -224,7 +224,7 @@ dependencies = [
 [[package]]
 name = "bee-message"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=e8cafb6591ec0c29f80705ae51fb8cb890fa98b0#e8cafb6591ec0c29f80705ae51fb8cb890fa98b0"
+source = "git+https://github.com/iotaledger/bee.git?rev=25d05419389acdd2fbd9371976c7c3460685d5a0#25d05419389acdd2fbd9371976c7c3460685d5a0"
 dependencies = [
  "bech32 0.8.0",
  "bee-common",
@@ -242,7 +242,7 @@ dependencies = [
 [[package]]
 name = "bee-network"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=e8cafb6591ec0c29f80705ae51fb8cb890fa98b0#e8cafb6591ec0c29f80705ae51fb8cb890fa98b0"
+source = "git+https://github.com/iotaledger/bee.git?rev=25d05419389acdd2fbd9371976c7c3460685d5a0#25d05419389acdd2fbd9371976c7c3460685d5a0"
 dependencies = [
  "libp2p",
 ]
@@ -250,7 +250,7 @@ dependencies = [
 [[package]]
 name = "bee-pow"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=e8cafb6591ec0c29f80705ae51fb8cb890fa98b0#e8cafb6591ec0c29f80705ae51fb8cb890fa98b0"
+source = "git+https://github.com/iotaledger/bee.git?rev=25d05419389acdd2fbd9371976c7c3460685d5a0#25d05419389acdd2fbd9371976c7c3460685d5a0"
 dependencies = [
  "bee-crypto 0.2.1-alpha",
  "bee-ternary 0.4.2-alpha",
@@ -261,7 +261,7 @@ dependencies = [
 [[package]]
 name = "bee-protocol"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=e8cafb6591ec0c29f80705ae51fb8cb890fa98b0#e8cafb6591ec0c29f80705ae51fb8cb890fa98b0"
+source = "git+https://github.com/iotaledger/bee.git?rev=25d05419389acdd2fbd9371976c7c3460685d5a0#25d05419389acdd2fbd9371976c7c3460685d5a0"
 dependencies = [
  "bee-message",
  "bee-network",
@@ -270,7 +270,7 @@ dependencies = [
 [[package]]
 name = "bee-rest-api"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=e8cafb6591ec0c29f80705ae51fb8cb890fa98b0#e8cafb6591ec0c29f80705ae51fb8cb890fa98b0"
+source = "git+https://github.com/iotaledger/bee.git?rev=25d05419389acdd2fbd9371976c7c3460685d5a0#25d05419389acdd2fbd9371976c7c3460685d5a0"
 dependencies = [
  "bee-ledger",
  "bee-message",
@@ -1241,7 +1241,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=9cf9ad74daa0ed158e303813a75598ca49094da1#9cf9ad74daa0ed158e303813a75598ca49094da1"
+source = "git+https://github.com/iotaledger/iota.rs?rev=f84c97ddccb4a4323d300b32cc6028ff9eabe98b#f84c97ddccb4a4323d300b32cc6028ff9eabe98b"
 dependencies = [
  "async-trait",
  "bee-common",
@@ -1268,7 +1268,7 @@ dependencies = [
 [[package]]
 name = "iota-core"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=9cf9ad74daa0ed158e303813a75598ca49094da1#9cf9ad74daa0ed158e303813a75598ca49094da1"
+source = "git+https://github.com/iotaledger/iota.rs?rev=f84c97ddccb4a4323d300b32cc6028ff9eabe98b#f84c97ddccb4a4323d300b32cc6028ff9eabe98b"
 dependencies = [
  "iota-client",
 ]
@@ -1370,7 +1370,6 @@ dependencies = [
  "iota-crypto 0.4.2",
  "iota-ledger",
  "iota-stronghold",
- "lazy_static",
  "log",
  "once_cell",
  "rand 0.8.3",
@@ -2975,9 +2974,9 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "1.4.0"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "134af885d758d645f0f0505c9a8b3f9bf8a348fd822e112ab5248138348f1722"
+checksum = "83f0c8e7c0addab50b663055baf787d0af7f413a46e6e7fb9559a4e4db7137a5"
 dependencies = [
  "autocfg",
  "bytes",
@@ -3027,9 +3026,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-util"
-version = "0.6.5"
+version = "0.6.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5143d049e85af7fbc36f5454d990e62c2df705b3589f123b71f441b6b59f443f"
+checksum = "940a12c99365c31ea8dd9ba04ec1be183ffe4920102bb7122c2f515437601e8e"
 dependencies = [
  "bytes",
  "futures-core",
