@@ -131,9 +131,8 @@ pub(crate) async fn sync_address(
     for (utxo_input, is_spent) in address_outputs.iter() {
         let utxo_input = utxo_input.clone();
         // if we already have the output we don't need to get the info from the node
-        let existing_output = outputs.get_mut(utxo_input.output_id()).cloned();
-        if let Some(mut output) = existing_output {
-            output.set_is_spent(*is_spent);
+        if let Some(existing_output) = outputs.get_mut(utxo_input.output_id()) {
+            existing_output.set_is_spent(*is_spent);
             continue;
         }
 
@@ -1366,7 +1365,7 @@ async fn perform_transfer(
 
     let account_ = account_handle.read().await;
 
-    for (input_address, address_outputs) in input_addresses {
+    for (input_address, address_outputs) in input_addresses.iter() {
         let account_address = account_
             .addresses()
             .iter()
@@ -1650,6 +1649,15 @@ async fn perform_transfer(
     .finish()
     .await?;
     account_.save_messages(vec![message.clone()]).await?;
+    for (input_address, _) in input_addresses {
+        if input_address.internal {
+            account_handle
+                .change_addresses_to_sync
+                .lock()
+                .await
+                .insert(input_address.address.clone());
+        }
+    }
 
     // if we generated an address, we need to save the account
     if !addresses_to_watch.is_empty() {
