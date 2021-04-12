@@ -410,18 +410,11 @@ pub(crate) async fn get_new_address(account: &Account, metadata: GenerateAddress
 /// Gets an unused change address for the given account and address.
 pub(crate) async fn get_new_change_address(
     account: &Account,
-    address: &Address,
+    key_index: usize,
+    bech32_hrp: String,
     metadata: GenerateAddressMetadata,
 ) -> crate::Result<Address> {
-    let key_index = *address.key_index();
-    let iota_address = get_iota_address(
-        &account,
-        key_index,
-        true,
-        address.address().bech32_hrp().to_string(),
-        metadata,
-    )
-    .await?;
+    let iota_address = get_iota_address(&account, key_index, true, bech32_hrp, metadata).await?;
     let address = Address {
         address: iota_address,
         key_index,

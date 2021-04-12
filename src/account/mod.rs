@@ -764,6 +764,14 @@ impl Account {
             .unwrap()
     }
 
+    /// Returns the most recent change address of the account.
+    pub(crate) fn latest_change_address(&self) -> Option<&Address> {
+        self.addresses
+            .iter()
+            .filter(|a| *a.internal())
+            .max_by_key(|a| a.key_index())
+    }
+
     fn latest_address_mut(&mut self) -> &mut Address {
         // the addresses list is never empty because we generate an address on the account creation
         self.addresses
