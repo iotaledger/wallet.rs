@@ -11,7 +11,9 @@ use serde::Serialize;
 
 pub(crate) use iota_migration::{
     client::{
-        migration::{create_migration_bundle, mine, sign_migration_bundle, Address as MigrationAddress},
+        migration::{
+            create_migration_bundle, encode_migration_address, mine, sign_migration_bundle, Address as MigrationAddress,
+        },
         response::InputData,
     },
     signing::ternary::seed::Seed as TernarySeed,
@@ -219,10 +221,12 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
     }
 
     let deposit_address = account_handle.latest_address().await;
+    let deposit_address_bech32 = deposit_address.address().to_bech32();
     let deposit_address = match MigrationAddress::try_from_bech32(&deposit_address.address().to_bech32()) {
         Ok(MigrationAddress::Ed25519(a)) => a,
         _ => return Err(crate::Error::InvalidAddress),
     };
+    let deposit_address_trytes = encode_migration_address(deposit_address.clone())?;
 
     let mut prepared_bundle = create_migration_bundle(
         &legacy_client,
@@ -311,6 +315,19 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
     }
     log.write_all(format!("bundleHash: {}\n", bundle_hash).as_bytes())?;
     log.write_all(format!("trytes: {:?}\n", trytes).as_bytes())?;
+    log.write_all(
+        format!(
+            "receiveAddressTrytes: {}\n",
+            deposit_address_trytes
+                .to_inner()
+                .encode::<T3B1Buf>()
+                .iter_trytes()
+                .map(char::from)
+                .collect::<String>()
+        )
+        .as_bytes(),
+    )?;
+    log.write_all(format!("receiveAddressBech32: {}\n", deposit_address_bech32).as_bytes())?;
     log.write_all(format!("balance: {}\n", address_inputs.iter().map(|a| a.balance).sum::<u64>()).as_bytes())?;
     log.write_all(format!("timestamp: {}\n", Utc::now().to_string()).as_bytes())?;
     log.write_all(

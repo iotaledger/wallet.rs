@@ -36,9 +36,9 @@ use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
 use iota::{
-    bee_rest_api::types::dtos::LedgerInclusionStateDto, Input, MessageId, MigratedFundsEntry, MilestonePayload,
-    MilestonePayloadEssence, Output, OutputId, Parents, Payload, ReceiptPayload, SignatureLockedSingleOutput,
-    TailTransactionHash, TreasuryInput, TreasuryOutput, TreasuryTransactionPayload, MilestoneId
+    bee_rest_api::types::dtos::LedgerInclusionStateDto, Input, MessageId, MigratedFundsEntry, MilestoneId,
+    MilestonePayload, MilestonePayloadEssence, Output, OutputId, Parents, Payload, ReceiptPayload,
+    SignatureLockedSingleOutput, TailTransactionHash, TreasuryInput, TreasuryOutput, TreasuryTransactionPayload,
 };
 use serde::Serialize;
 use tokio::{
@@ -487,7 +487,7 @@ impl AccountManager {
 
     async fn create_mocked_migration_message(account_handle: AccountHandle, value: u64) -> crate::Result<()> {
         let mut id_bytes = [0; 32];
-       
+
         crypto::utils::rand::fill(&mut id_bytes).unwrap();
         let id = MessageId::new(id_bytes);
         let client_options = account_handle.client_options().await;
