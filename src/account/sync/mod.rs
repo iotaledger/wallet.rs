@@ -264,10 +264,7 @@ async fn sync_address_list(
         .expect("failed to sync addresses");
     for res in results {
         let (messages, address) = res?;
-        // if the address is a change address and has no outputs, we ignore it
-        if !(*address.internal() && address.outputs().is_empty()) {
-            found_addresses.push(address);
-        }
+        found_addresses.push(address);
         found_messages.extend(messages);
     }
     Ok((found_addresses, found_messages))
@@ -291,6 +288,7 @@ async fn sync_address_list(
 /// and the messages associated with the addresses.
 async fn sync_addresses(
     account: &Account,
+    internal: bool,
     address_index: usize,
     gap_limit: usize,
     options: AccountOptions,
@@ -304,18 +302,14 @@ async fn sync_addresses(
 
     loop {
         let mut address_generation_locked = false;
-        let mut generated_iota_addresses = vec![]; // collection of (address_index, internal, address) pairs
+        let mut generated_iota_addresses = vec![]; // collection of (address_index, address) pairs
         for i in address_index..(address_index + gap_limit) {
-            // generate both `public` and `internal (change)` addresses
-            if let Some(public_address) = get_address_for_sync(&account, bech32_hrp.to_string(), i, false).await? {
-                generated_iota_addresses.push((i, false, public_address));
-                if let Some(change_address) = get_address_for_sync(&account, bech32_hrp.to_string(), i, true).await? {
-                    generated_iota_addresses.push((i, true, change_address));
-                } else {
-                    address_generation_locked = true;
-                }
+            // generate addresses
+            if let Some(address) = get_address_for_sync(&account, bech32_hrp.to_string(), i, internal).await? {
+                generated_iota_addresses.push((i, address));
             } else {
                 address_generation_locked = true;
+                break;
             }
         }
 
@@ -333,7 +327,7 @@ async fn sync_addresses(
         let client_options = account.client_options().clone();
 
         let mut addresses_to_sync = Vec::new();
-        for (iota_address_index, iota_address_internal, iota_address) in generated_iota_addresses.to_vec() {
+        for (iota_address_index, iota_address) in generated_iota_addresses.to_vec() {
             let outputs = account_addresses
                 .iter()
                 .find(|(a, _)| a == &iota_address)
@@ -343,7 +337,7 @@ async fn sync_addresses(
                 .address(iota_address.clone())
                 .key_index(iota_address_index)
                 .outputs(outputs.values().cloned().collect())
-                .internal(iota_address_internal)
+                .internal(internal)
                 .build()?;
             addresses_to_sync.push(address);
         }
@@ -544,7 +538,14 @@ async fn perform_sync(
                 )
                 .await?
             } else {
-                sync_addresses(&account, address_index, gap_limit, options).await?
+                let (found_public_addresses, mut messages) =
+                    sync_addresses(&account, false, address_index, gap_limit, options).await?;
+                let (found_change_addresses, synced_messages) =
+                    sync_addresses(&account, true, address_index, gap_limit, options).await?;
+                let mut found_addresses = found_public_addresses;
+                found_addresses.extend(found_change_addresses);
+                messages.extend(synced_messages);
+                (found_addresses, messages)
             }
         } else {
             unreachable!()
@@ -581,6 +582,23 @@ async fn perform_sync(
     }
     log::debug!("FOUND {:?}", found_addresses);
 
+    // we have two address spaces so we find change & public addresses to save separately
+    let mut addresses_to_save = find_addresses_to_save(
+        &account,
+        found_addresses.iter().filter(|a| *a.internal()).cloned().collect(),
+    );
+    addresses_to_save.extend(find_addresses_to_save(
+        &account,
+        found_addresses.iter().filter(|a| !a.internal()).cloned().collect(),
+    ));
+
+    Ok(SyncedAccountData {
+        messages: new_messages,
+        addresses: addresses_to_save,
+    })
+}
+
+fn find_addresses_to_save(account: &Account, found_addresses: Vec<Address>) -> Vec<Address> {
     let mut addresses_to_save = vec![];
     let mut ignored_addresses = vec![];
     let mut previous_address_is_unused = false;
@@ -620,11 +638,7 @@ async fn perform_sync(
         }
         previous_address_is_unused = address_is_unused;
     }
-
-    Ok(SyncedAccountData {
-        messages: new_messages,
-        addresses: addresses_to_save,
-    })
+    addresses_to_save
 }
 
 #[derive(Clone, PartialEq)]
@@ -700,6 +714,71 @@ impl SyncedAccountData {
         }
         Ok(parsed_messages)
     }
+}
+
+fn get_balance_change_events(
+    old_balance: u64,
+    new_balance: u64,
+    address: AddressWrapper,
+    account_options: AccountOptions,
+    before_sync_outputs: HashMap<OutputId, AddressOutput>,
+    outputs: &HashMap<OutputId, AddressOutput>,
+) -> Vec<BalanceChangeEventData> {
+    let mut balance_change_events = Vec::new();
+    let mut output_change_balance = 0i64;
+    // we use this flag in case the new balance is 0
+    let mut emitted_event = false;
+    // check new and updated outputs to find message ids
+    // note that this is unreliable if we're not syncing spent outputs,
+    // since not all information are collected.
+    if account_options.sync_spent_outputs {
+        for (output_id, output) in outputs {
+            if !before_sync_outputs.contains_key(output_id) {
+                let balance_change = if output.is_spent {
+                    BalanceChange::spent(output.amount)
+                } else {
+                    BalanceChange::received(output.amount)
+                };
+                if output.is_spent {
+                    output_change_balance -= output.amount as i64;
+                } else {
+                    output_change_balance += output.amount as i64;
+                }
+                log::info!("[SYNC] balance change on {} {:?}", address.to_bech32(), balance_change);
+                balance_change_events.push(BalanceChangeEventData {
+                    address: address.clone(),
+                    balance_change,
+                    message_id: Some(output.message_id),
+                });
+                emitted_event = true;
+            }
+        }
+    }
+
+    // we can't guarantee we picked up all output changes since querying spent outputs is
+    // optional and the node might prune it so we handle it here; if not all balance change has
+    // been emitted, we emit the remainder value with `None` as
+    // message_id
+    let balance_change = new_balance as i64 - old_balance as i64;
+    if !emitted_event || output_change_balance != balance_change {
+        let change = new_balance as i64 - old_balance as i64 - output_change_balance;
+        let balance_change = if change > 0 {
+            BalanceChange::received(change as u64)
+        } else {
+            BalanceChange::spent(change.abs() as u64)
+        };
+        log::info!(
+            "[SYNC] remaining balance change on {} {:?}",
+            address.to_bech32(),
+            balance_change
+        );
+        balance_change_events.push(BalanceChangeEventData {
+            address: address.clone(),
+            balance_change,
+            message_id: None,
+        });
+    }
+    balance_change_events
 }
 
 impl AccountSynchronizer {
@@ -794,65 +873,14 @@ impl AccountSynchronizer {
                     before_sync_balance,
                     address_after_sync.balance()
                 );
-
-                let mut output_change_balance = 0i64;
-                // we use this flag in case the new balance is 0
-                let mut emitted_event = false;
-                // check new and updated outputs to find message ids
-                // note that this is unreliable if we're not syncing spent outputs,
-                // since not all information are collected.
-                if account_options.sync_spent_outputs {
-                    for (output_id, output) in address_after_sync.outputs() {
-                        if !before_sync_outputs.contains_key(output_id) {
-                            let balance_change = if output.is_spent {
-                                BalanceChange::spent(output.amount)
-                            } else {
-                                BalanceChange::received(output.amount)
-                            };
-                            if output.is_spent {
-                                output_change_balance -= output.amount as i64;
-                            } else {
-                                output_change_balance += output.amount as i64;
-                            }
-                            log::info!(
-                                "[SYNC] balance change on {} {:?}",
-                                address_after_sync.address().to_bech32(),
-                                balance_change
-                            );
-                            balance_change_events.push(BalanceChangeEventData {
-                                address: address_after_sync.address().clone(),
-                                balance_change,
-                                message_id: Some(output.message_id),
-                            });
-                            emitted_event = true;
-                        }
-                    }
-                }
-
-                // we can't guarantee we picked up all output changes since querying spent outputs is
-                // optional so we handle it here; if not all balance change has
-                // been emitted, we emit the remainder value with `None` as
-                // message_id
-                let balance_change = address_after_sync.balance() as i64 - before_sync_balance as i64;
-                if !emitted_event || output_change_balance != balance_change {
-                    let balance_change = if balance_change > 0 {
-                        // balance_change is positive; subtract the already emitted balance.
-                        BalanceChange::received((balance_change - output_change_balance) as u64)
-                    } else {
-                        // balance_change is negative; get the absolute diff.
-                        BalanceChange::spent((balance_change - output_change_balance).abs() as u64)
-                    };
-                    log::info!(
-                        "[SYNC] remaining balance change on {} {:?}",
-                        address_after_sync.address().to_bech32(),
-                        balance_change
-                    );
-                    balance_change_events.push(BalanceChangeEventData {
-                        address: address_after_sync.address().clone(),
-                        balance_change,
-                        message_id: None,
-                    });
-                }
+                balance_change_events.extend(get_balance_change_events(
+                    before_sync_balance,
+                    address_after_sync.balance(),
+                    address_after_sync.address().clone(),
+                    account_options,
+                    before_sync_outputs,
+                    address_after_sync.outputs(),
+                ))
             }
         }
 
@@ -1457,34 +1485,7 @@ async fn perform_transfer(
             }
             // generate a new change address to send the remainder value
             RemainderValueStrategy::ChangeAddress => {
-                if *remainder_address.internal() {
-                    let mut deposit_address = account_.latest_address().address().clone();
-                    // if the latest address is the transfer's address, we'll generate a new one as remainder deposit
-                    if deposit_address == transfer_obj.address {
-                        transfer_obj
-                            .emit_event_if_needed(
-                                account_.id().to_string(),
-                                TransferProgressType::GeneratingRemainderDepositAddress,
-                            )
-                            .await;
-                        account_handle.generate_address_internal(&mut account_).await?;
-                        deposit_address = account_.latest_address().address().clone();
-                    }
-                    log::debug!(
-                        "[TRANSFER] the remainder address is internal, so using latest address as remainder target: {}",
-                        deposit_address.to_bech32()
-                    );
-                    deposit_address
-                } else if let Some(address) = account_
-                    .addresses()
-                    .iter()
-                    .find(|a| *a.internal() && a.key_index() == remainder_address.key_index())
-                {
-                    account_handle
-                        .change_addresses_to_sync
-                        .lock()
-                        .await
-                        .insert(address.address().clone());
+                let change_address = if let Some(address) = account_.latest_change_address() {
                     address.address().clone()
                 } else {
                     transfer_obj
@@ -1495,16 +1496,12 @@ async fn perform_transfer(
                         .await;
                     let change_address = crate::address::get_new_change_address(
                         &account_,
-                        &remainder_address,
+                        0,
+                        account_.bech32_hrp(),
                         GenerateAddressMetadata { syncing: false },
                     )
                     .await?;
                     let addr = change_address.address().clone();
-                    account_handle
-                        .change_addresses_to_sync
-                        .lock()
-                        .await
-                        .insert(addr.clone());
                     log::debug!(
                         "[TRANSFER] generated new change address as remainder target: {}",
                         addr.to_bech32()
@@ -1512,7 +1509,13 @@ async fn perform_transfer(
                     account_.append_addresses(vec![change_address]);
                     addresses_to_watch.push(addr.clone());
                     addr
-                }
+                };
+                account_handle
+                    .change_addresses_to_sync
+                    .lock()
+                    .await
+                    .insert(change_address.clone());
+                change_address
             }
             // keep the remainder value on the address
             RemainderValueStrategy::ReuseAddress => {
@@ -1789,7 +1792,13 @@ pub(crate) async fn repost_message(
 
 #[cfg(test)]
 mod tests {
-    use crate::client::ClientOptionsBuilder;
+    use crate::{
+        address::{AddressOutput, OutputKind},
+        client::ClientOptionsBuilder,
+    };
+    use iota::{MessageId, TransactionId};
+    use quickcheck_macros::quickcheck;
+    use std::collections::HashMap;
 
     #[tokio::test]
     async fn account_sync() {
@@ -1881,5 +1890,43 @@ mod tests {
             crate::Error::DustError(_) => {}
             _ => panic!("unexpected response"),
         }
+    }
+
+    fn _generate_address_output(amount: u64, is_spent: bool) -> AddressOutput {
+        let mut tx_id = [0; 32];
+        crypto::utils::rand::fill(&mut tx_id).unwrap();
+        AddressOutput {
+            transaction_id: TransactionId::new(tx_id),
+            message_id: MessageId::new([0; 32]),
+            index: 0,
+            amount,
+            is_spent,
+            address: crate::test_utils::generate_random_iota_address(),
+            kind: OutputKind::SignatureLockedSingle,
+        }
+    }
+
+    #[quickcheck]
+    fn balance_change_event(old_balance: u32, new_balance: u32, outputs: Vec<(u64, bool)>) {
+        let address = crate::test_utils::generate_random_iota_address();
+        let mut address_outputs = HashMap::new();
+        for (amount, is_spent) in outputs {
+            let output = _generate_address_output(amount, is_spent);
+            address_outputs.insert(output.id().unwrap(), output);
+        }
+        let events = super::get_balance_change_events(
+            old_balance.into(),
+            new_balance.into(),
+            address,
+            Default::default(),
+            Default::default(),
+            &address_outputs,
+        );
+        assert_eq!(
+            new_balance as i64,
+            old_balance as i64
+                + events.iter().fold(0i64, |a, c| a - (c.balance_change.spent as i64)
+                    + (c.balance_change.received as i64))
+        );
     }
 }
