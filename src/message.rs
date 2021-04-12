@@ -969,10 +969,10 @@ impl<'a> MessageBuilder<'a> {
                         Entry::Vacant(entry) => {
                             let ms = client.get_milestone(ms_index).await;
                             if ms.is_ok() {
-                                let ms = ms.unwrap().clone();
+                                let ms = ms.unwrap();
                                 date_time =
                                     DateTime::from_utc(NaiveDateTime::from_timestamp(ms.timestamp as i64, 0), Utc);
-                                *entry.insert(ms);
+                                entry.insert(ms);
                             }
                         }
                         Entry::Occupied(entry) => {

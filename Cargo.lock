@@ -176,8 +176,8 @@ checksum = "6c7f7096bc256f5e5cb960f60dfc4f4ef979ca65abe7fb9d5a4f77150d3783d4"
 
 [[package]]
 name = "bee-common"
-version = "0.4.0"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#75579267995dd2b1728956d169092486f28e2e0e"
+version = "0.4.1"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#fc4ba834e84b3312a2c48e0a9cc62a995ad1fd6d"
 dependencies = [
  "autocfg",
  "chrono",
@@ -202,7 +202,7 @@ dependencies = [
 [[package]]
 name = "bee-crypto"
 version = "0.2.1-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#75579267995dd2b1728956d169092486f28e2e0e"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#fc4ba834e84b3312a2c48e0a9cc62a995ad1fd6d"
 dependencies = [
  "bee-ternary 0.4.2-alpha",
  "byteorder",
@@ -293,7 +293,7 @@ dependencies = [
 [[package]]
 name = "bee-ternary"
 version = "0.4.2-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#75579267995dd2b1728956d169092486f28e2e0e"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#fc4ba834e84b3312a2c48e0a9cc62a995ad1fd6d"
 dependencies = [
  "autocfg",
  "num-traits 0.2.14",
@@ -2572,9 +2572,9 @@ checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
 
 [[package]]
 name = "sct"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3042af939fca8c3453b7af0f1c66e533a15a86169e39de2657310ade8f98d3c"
+checksum = "b362b83898e0e69f38515b82ee15aa80636befe47c3b6d3d89a911e78fc228ce"
 dependencies = [
  "ring",
  "untrusted",
