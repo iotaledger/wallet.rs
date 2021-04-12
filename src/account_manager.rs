@@ -38,7 +38,7 @@ use getset::Getters;
 use iota::{
     bee_rest_api::types::dtos::LedgerInclusionStateDto, Input, MessageId, MigratedFundsEntry, MilestonePayload,
     MilestonePayloadEssence, Output, OutputId, Parents, Payload, ReceiptPayload, SignatureLockedSingleOutput,
-    TailTransactionHash, TreasuryInput, TreasuryOutput, TreasuryTransactionPayload,
+    TailTransactionHash, TreasuryInput, TreasuryOutput, TreasuryTransactionPayload, MilestoneId
 };
 use serde::Serialize;
 use tokio::{
@@ -486,10 +486,10 @@ impl AccountManager {
     }
 
     async fn create_mocked_migration_message(account_handle: AccountHandle, value: u64) -> crate::Result<()> {
-        let mut id = [0; 32];
+        let mut id_bytes = [0; 32];
        
-        crypto::utils::rand::fill(&mut id).unwrap();
-        let id = MessageId::new(id);
+        crypto::utils::rand::fill(&mut id_bytes).unwrap();
+        let id = MessageId::new(id_bytes);
         let client_options = account_handle.client_options().await;
         let bech32_hrp = account_handle.read().await.bech32_hrp();
         let address = account_handle.latest_address().await.address().clone();
@@ -508,7 +508,7 @@ impl AccountManager {
         crypto::utils::rand::fill(&mut public_key).unwrap();
 
         let treasury_transaction = Payload::TreasuryTransaction(Box::new(TreasuryTransactionPayload::new(
-            Input::Treasury(TreasuryInput::new(id)),
+            Input::Treasury(TreasuryInput::new(MilestoneId::new(id_bytes))),
             Output::Treasury(TreasuryOutput::new(value)?),
         )?));
 
