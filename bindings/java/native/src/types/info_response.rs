@@ -38,38 +38,6 @@ impl From<RustNodeInfoWrapper> for NodeInfoWrapper {
     }
 }
 
-#[derive(PartialEq, Getters, CopyGetters)]
-pub struct NodeInfoWrapper {
-    #[getset(get = "pub")]
-    url: String,
-    #[getset(get_copy = "pub")]
-    nodeinfo: InfoResponse,
-}
-
-impl From<RustNodeInfoWrapper> for NodeInfoWrapper {
-    fn from(info: RustNodeInfoWrapper) -> Self {
-        Self {
-            url: info.url,
-            nodeinfo: InfoResponse {
-                name: info.nodeinfo.name,
-                version: info.nodeinfo.version,
-                is_healthy: info.nodeinfo.is_healthy,
-                network_id: info.nodeinfo.network_id,
-                bech32_hrp: info.nodeinfo.bech32_hrp,
-                min_pow_score: info.nodeinfo.min_pow_score,
-                messages_per_second: info.nodeinfo.messages_per_second,
-                referenced_messages_per_second: info.nodeinfo.referenced_messages_per_second,
-                referenced_rate: info.nodeinfo.referenced_rate,
-                latest_milestone_timestamp: info.nodeinfo.latest_milestone_timestamp,
-                latest_milestone_index: info.nodeinfo.latest_milestone_index,
-                confirmed_milestone_index: info.nodeinfo.confirmed_milestone_index,
-                pruning_index: info.nodeinfo.pruning_index,
-                features: info.nodeinfo.features,
-            },
-        }
-    }
-}
-
 #[derive(PartialEq, Getters, CopyGetters, Copy)]
 pub struct InfoResponse {
     #[getset(get = "pub")]
