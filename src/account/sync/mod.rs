@@ -264,10 +264,7 @@ async fn sync_address_list(
         .expect("failed to sync addresses");
     for res in results {
         let (messages, address) = res?;
-        // if the address is a change address and has no outputs, we ignore it
-        if !(*address.internal() && address.outputs().is_empty()) {
-            found_addresses.push(address);
-        }
+        found_addresses.push(address);
         found_messages.extend(messages);
     }
     Ok((found_addresses, found_messages))
@@ -291,6 +288,7 @@ async fn sync_address_list(
 /// and the messages associated with the addresses.
 async fn sync_addresses(
     account: &Account,
+    internal: bool,
     address_index: usize,
     gap_limit: usize,
     options: AccountOptions,
@@ -304,18 +302,14 @@ async fn sync_addresses(
 
     loop {
         let mut address_generation_locked = false;
-        let mut generated_iota_addresses = vec![]; // collection of (address_index, internal, address) pairs
+        let mut generated_iota_addresses = vec![]; // collection of (address_index, address) pairs
         for i in address_index..(address_index + gap_limit) {
-            // generate both `public` and `internal (change)` addresses
-            if let Some(public_address) = get_address_for_sync(&account, bech32_hrp.to_string(), i, false).await? {
-                generated_iota_addresses.push((i, false, public_address));
-                if let Some(change_address) = get_address_for_sync(&account, bech32_hrp.to_string(), i, true).await? {
-                    generated_iota_addresses.push((i, true, change_address));
-                } else {
-                    address_generation_locked = true;
-                }
+            // generate addresses
+            if let Some(address) = get_address_for_sync(&account, bech32_hrp.to_string(), i, internal).await? {
+                generated_iota_addresses.push((i, address));
             } else {
                 address_generation_locked = true;
+                break;
             }
         }
 
@@ -333,7 +327,7 @@ async fn sync_addresses(
         let client_options = account.client_options().clone();
 
         let mut addresses_to_sync = Vec::new();
-        for (iota_address_index, iota_address_internal, iota_address) in generated_iota_addresses.to_vec() {
+        for (iota_address_index, iota_address) in generated_iota_addresses.to_vec() {
             let outputs = account_addresses
                 .iter()
                 .find(|(a, _)| a == &iota_address)
@@ -343,7 +337,7 @@ async fn sync_addresses(
                 .address(iota_address.clone())
                 .key_index(iota_address_index)
                 .outputs(outputs.values().cloned().collect())
-                .internal(iota_address_internal)
+                .internal(internal)
                 .build()?;
             addresses_to_sync.push(address);
         }
@@ -544,7 +538,14 @@ async fn perform_sync(
                 )
                 .await?
             } else {
-                sync_addresses(&account, address_index, gap_limit, options).await?
+                let (found_public_addresses, mut messages) =
+                    sync_addresses(&account, false, address_index, gap_limit, options).await?;
+                let (found_change_addresses, synced_messages) =
+                    sync_addresses(&account, true, address_index, gap_limit, options).await?;
+                let mut found_addresses = found_public_addresses;
+                found_addresses.extend(found_change_addresses);
+                messages.extend(synced_messages);
+                (found_addresses, messages)
             }
         } else {
             unreachable!()
@@ -581,6 +582,23 @@ async fn perform_sync(
     }
     log::debug!("FOUND {:?}", found_addresses);
 
+    // we have two address spaces so we find change & public addresses to save separately
+    let mut addresses_to_save = find_addresses_to_save(
+        &account,
+        found_addresses.iter().filter(|a| *a.internal()).cloned().collect(),
+    );
+    addresses_to_save.extend(find_addresses_to_save(
+        &account,
+        found_addresses.iter().filter(|a| !a.internal()).cloned().collect(),
+    ));
+
+    Ok(SyncedAccountData {
+        messages: new_messages,
+        addresses: addresses_to_save,
+    })
+}
+
+fn find_addresses_to_save(account: &Account, found_addresses: Vec<Address>) -> Vec<Address> {
     let mut addresses_to_save = vec![];
     let mut ignored_addresses = vec![];
     let mut previous_address_is_unused = false;
@@ -620,11 +638,7 @@ async fn perform_sync(
         }
         previous_address_is_unused = address_is_unused;
     }
-
-    Ok(SyncedAccountData {
-        messages: new_messages,
-        addresses: addresses_to_save,
-    })
+    addresses_to_save
 }
 
 #[derive(Clone, PartialEq)]
@@ -1457,34 +1471,7 @@ async fn perform_transfer(
             }
             // generate a new change address to send the remainder value
             RemainderValueStrategy::ChangeAddress => {
-                if *remainder_address.internal() {
-                    let mut deposit_address = account_.latest_address().address().clone();
-                    // if the latest address is the transfer's address, we'll generate a new one as remainder deposit
-                    if deposit_address == transfer_obj.address {
-                        transfer_obj
-                            .emit_event_if_needed(
-                                account_.id().to_string(),
-                                TransferProgressType::GeneratingRemainderDepositAddress,
-                            )
-                            .await;
-                        account_handle.generate_address_internal(&mut account_).await?;
-                        deposit_address = account_.latest_address().address().clone();
-                    }
-                    log::debug!(
-                        "[TRANSFER] the remainder address is internal, so using latest address as remainder target: {}",
-                        deposit_address.to_bech32()
-                    );
-                    deposit_address
-                } else if let Some(address) = account_
-                    .addresses()
-                    .iter()
-                    .find(|a| *a.internal() && a.key_index() == remainder_address.key_index())
-                {
-                    account_handle
-                        .change_addresses_to_sync
-                        .lock()
-                        .await
-                        .insert(address.address().clone());
+                let change_address = if let Some(address) = account_.latest_change_address() {
                     address.address().clone()
                 } else {
                     transfer_obj
@@ -1495,16 +1482,12 @@ async fn perform_transfer(
                         .await;
                     let change_address = crate::address::get_new_change_address(
                         &account_,
-                        &remainder_address,
+                        0,
+                        account_.bech32_hrp(),
                         GenerateAddressMetadata { syncing: false },
                     )
                     .await?;
                     let addr = change_address.address().clone();
-                    account_handle
-                        .change_addresses_to_sync
-                        .lock()
-                        .await
-                        .insert(addr.clone());
                     log::debug!(
                         "[TRANSFER] generated new change address as remainder target: {}",
                         addr.to_bech32()
@@ -1512,7 +1495,13 @@ async fn perform_transfer(
                     account_.append_addresses(vec![change_address]);
                     addresses_to_watch.push(addr.clone());
                     addr
-                }
+                };
+                account_handle
+                    .change_addresses_to_sync
+                    .lock()
+                    .await
+                    .insert(change_address.clone());
+                change_address
             }
             // keep the remainder value on the address
             RemainderValueStrategy::ReuseAddress => {
