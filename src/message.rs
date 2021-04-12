@@ -766,6 +766,7 @@ impl MessageMilestonePayload {
 #[getset(get = "pub")]
 pub struct MessageMigratedFundsEntry {
     /// Tail transaction hash.
+    #[serde(rename = "tailTransactionHash")]
     tail_transaction_hash: TailTransactionHash,
     /// Output.
     output: TransactionSignatureLockedSingleOutput,
@@ -786,6 +787,7 @@ impl MessageMigratedFundsEntry {
 pub struct MessageReceiptPayload {
     /// Migrated at milestone index.
     #[getset(get_copy = "pub")]
+    #[serde(rename = "migratedAt")]
     migrated_at: MilestoneIndex,
     /// Last flag.
     #[getset(get_copy = "pub")]
