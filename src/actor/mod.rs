@@ -243,6 +243,7 @@ impl WalletMessageHandler {
                 input_address_indexes,
                 mine,
                 timeout_secs,
+                offset,
                 log_file_name,
             } => {
                 convert_async_panics(|| async {
@@ -253,6 +254,7 @@ impl WalletMessageHandler {
                             &input_address_indexes,
                             *mine,
                             Duration::from_secs(*timeout_secs),
+                            *offset,
                             &log_file_name,
                         )
                         .await?;

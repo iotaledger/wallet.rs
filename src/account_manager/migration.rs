@@ -191,6 +191,7 @@ impl<'a> MigrationDataFinder<'a> {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) async fn create_bundle<P: AsRef<Path>>(
     account_handle: AccountHandle,
     data: &super::CachedMigrationData,
@@ -198,6 +199,7 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
     address_inputs: Vec<&InputData>,
     bundle_mine: bool,
     timeout: Duration,
+    offset: i64,
     log_file_path: P,
 ) -> crate::Result<MigrationBundle> {
     let mut legacy_client_builder = iota_migration::ClientBuilder::new().quorum(true);
@@ -256,6 +258,7 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
                 false,
                 spent_bundle_hashes,
                 timeout.as_secs(),
+                offset,
             )
             .await?;
             crackability = Some(mining_result.0.crackability);

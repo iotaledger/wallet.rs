@@ -58,7 +58,14 @@ async fn main() -> iota_wallet::Result<()> {
     let mut bundle_hashes = Vec::new();
     for input in migration_data.inputs.into_iter() {
         let bundle = manager
-            .create_migration_bundle(seed, &[input.index], true, Duration::from_secs(40), "./migration.log")
+            .create_migration_bundle(
+                seed,
+                &[input.index],
+                true,
+                Duration::from_secs(40),
+                0,
+                "./migration.log",
+            )
             .await?;
         bundle_hashes.push(bundle.bundle_hash().to_string());
     }

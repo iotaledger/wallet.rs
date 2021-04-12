@@ -248,6 +248,7 @@ export declare interface MigrationData {
 export declare interface CreateMigrationBundleOptions {
   mine?: boolean
   timeoutSeconds?: number
+  offset?: number
   logFileName?: string
 }
 

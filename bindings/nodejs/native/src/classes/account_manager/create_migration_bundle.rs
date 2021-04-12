@@ -17,6 +17,7 @@ pub struct CreateMigrationBundleOptions {
     mine: bool,
     #[serde(rename = "timeoutSeconds")]
     timeout_secs: Option<u64>,
+    offset: Option<u64>,
     #[serde(rename = "logFileName")]
     log_file_name: Option<String>,
 }
@@ -42,6 +43,7 @@ impl Task for CreateMigrationBundleTask {
                     &self.input_address_indexes,
                     self.options.mine,
                     Duration::from_secs(self.options.timeout_secs.unwrap_or(10 * 60)),
+                    self.offset.unwrap_or(0),
                     self.options.log_file_name.as_deref().unwrap_or("migration.log"),
                 )
                 .await

@@ -406,6 +406,7 @@ impl AccountManager {
         input_address_indexes: &[u64],
         mine: bool,
         timeout: Duration,
+        offset: i64,
         log_file_name: &str,
     ) -> crate::Result<MigrationBundle> {
         let mut hasher = DefaultHasher::new();
@@ -442,6 +443,7 @@ impl AccountManager {
             address_inputs,
             mine,
             timeout,
+            offset,
             self.storage_folder.join(log_file_name),
         )
         .await?;
