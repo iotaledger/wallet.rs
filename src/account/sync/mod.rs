@@ -131,9 +131,8 @@ pub(crate) async fn sync_address(
     for (utxo_input, is_spent) in address_outputs.iter() {
         let utxo_input = utxo_input.clone();
         // if we already have the output we don't need to get the info from the node
-        let existing_output = outputs.get_mut(utxo_input.output_id()).cloned();
-        if let Some(mut output) = existing_output {
-            output.set_is_spent(*is_spent);
+        if let Some(existing_output) = outputs.get_mut(utxo_input.output_id()) {
+            existing_output.set_is_spent(*is_spent);
             continue;
         }
 
