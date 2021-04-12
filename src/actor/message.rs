@@ -10,6 +10,7 @@ use crate::{
     Error,
 };
 use chrono::{DateTime, Local};
+use iota::client::NodeInfoWrapper;
 use serde::{ser::Serializer, Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -82,6 +83,8 @@ pub enum AccountMethod {
     SetAlias(String),
     /// Updates the account client options.
     SetClientOptions(Box<ClientOptions>),
+    /// Gets the node information.
+    GetNodeInfo(Option<String>),
 }
 
 /// The returned account.
@@ -415,6 +418,8 @@ pub enum ResponseType {
     StrongholdPasswordChanged,
     /// SetClientOptions response.
     UpdatedAllClientOptions,
+    /// GetNodeInfo response.
+    NodeInfo(NodeInfoWrapper),
 }
 
 /// The message type.

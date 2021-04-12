@@ -11,7 +11,7 @@ use crate::{
     storage::{MessageIndexation, MessageQueryFilter},
 };
 
-use iota::bee_rest_api::types::responses::InfoResponse as NodeInfoResponse;
+use iota::client::NodeInfoWrapper;
 
 use chrono::prelude::{DateTime, Local};
 use getset::{Getters, Setters};
@@ -692,8 +692,8 @@ impl AccountHandle {
     }
 
     /// Bridge to [Account#get_node_info](struct.Account.html#method.get_node_info).
-    pub async fn get_node_info(&self) -> crate::Result<NodeInfoResponse> {
-        self.inner.read().await.get_node_info().await
+    pub async fn get_node_info(&self, url: Option<&str>) -> crate::Result<NodeInfoWrapper> {
+        self.inner.read().await.get_node_info(url).await
     }
 }
 
@@ -995,15 +995,25 @@ impl Account {
     }
 
     // Gets the node info from /api/v1/info endpoint
-    pub(crate) async fn get_node_info(&self) -> crate::Result<NodeInfoResponse> {
-        let client_guard = crate::client::get_client(self.client_options()).await?;
-        let client = client_guard.read().await;
+    pub(crate) async fn get_node_info(&self, url: Option<&str>) -> crate::Result<NodeInfoWrapper> {
+        let info = match url {
+            Some(url) => NodeInfoWrapper {
+                nodeinfo: iota::Client::get_node_info(url)
+                    .await
+                    .map_err(|e| crate::Error::ClientError(Box::new(e)))?,
+                url: url.to_string(),
+            },
+            None => {
+                let client_guard = crate::client::get_client(self.client_options()).await?;
+                let client = client_guard.read().await;
 
-        let info = client
-            .get_info()
-            .await
-            .map_err(|e| crate::Error::ClientError(Box::new(e)))?
-            .nodeinfo;
+                client
+                    .get_info()
+                    .await
+                    .map_err(|e| crate::Error::ClientError(Box::new(e)))?
+            }
+        };
+
         Ok(info)
     }
 
@@ -1454,7 +1464,7 @@ mod tests {
             .create()
             .await;
 
-        let node_info = account_handle.get_node_info().await.unwrap();
+        let node_info = account_handle.get_node_info(None).await.unwrap();
         println!("{:#?}", node_info);
     }
 }
