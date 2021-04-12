@@ -973,14 +973,17 @@ impl<'a> MessageBuilder<'a> {
                     match milestone_cache().write().await.entry(range) {
                         Entry::Vacant(entry) => {
                             if let Ok(milestone) = client.get_milestone(ms_index).await {
-                                date_time =
-                                    DateTime::from_utc(NaiveDateTime::from_timestamp(milestone.timestamp as i64, 0), Utc);
+                                date_time = DateTime::from_utc(
+                                    NaiveDateTime::from_timestamp(milestone.timestamp as i64, 0),
+                                    Utc,
+                                );
                                 entry.insert(milestone);
                             }
                         }
                         Entry::Occupied(entry) => {
                             let milestone = *entry.get();
-                            date_time = DateTime::from_utc(NaiveDateTime::from_timestamp(milestone.timestamp as i64, 0), Utc);
+                            date_time =
+                                DateTime::from_utc(NaiveDateTime::from_timestamp(milestone.timestamp as i64, 0), Utc);
                         }
                     }
                     date_time
