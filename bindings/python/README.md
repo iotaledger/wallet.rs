@@ -566,7 +566,7 @@ Gets information about the node.
 
 | Param        | Type             | Default                | Description  |
 | ------------ | ---------------- | ---------------------- | ------------ |
-| url          | <code>str</code> | <code>undefined</code> | Thr node url |
+| url          | <code>str</code> | <code>undefined</code> | The node url |
 
 **Returns** the [NodeInfoWrapper](#nodeinfowrapper)
 
