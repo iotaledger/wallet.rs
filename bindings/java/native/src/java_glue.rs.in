@@ -289,7 +289,7 @@ foreign_class!(
         private constructor = empty;
         private fn NodeInfoWrapper::eq(&self, o: &NodeInfoWrapper) -> bool; alias rustEq;
         fn NodeInfoWrapper::url(&self) -> &str;
-        fn NodeInfoWrapper::nodeinfo(&self) -> InfoResponse; alias nodeinfo;
+        fn NodeInfoWrapper::nodeinfo(&self) -> InfoResponse; alias nodeInfo;
     }
 );
 
