@@ -10,7 +10,7 @@ use iota::{
 pub struct NodeInfoWrapper {
     #[getset(get = "pub")]
     url: String,
-    #[getset(get_copy = "pub")]
+    #[getset(get = "pub")]
     nodeinfo: InfoResponse,
 }
 
@@ -38,7 +38,7 @@ impl From<RustNodeInfoWrapper> for NodeInfoWrapper {
     }
 }
 
-#[derive(PartialEq, Getters, CopyGetters, Copy)]
+#[derive(PartialEq, Getters, CopyGetters)]
 pub struct InfoResponse {
     #[getset(get = "pub")]
     name: String,
