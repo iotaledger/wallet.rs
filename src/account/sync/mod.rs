@@ -1094,13 +1094,13 @@ impl SyncedAccount {
         transfer_obj: &Transfer,
         sent_messages: &'a [Message],
         addresses: &'a [Address],
-        address: &'a AddressWrapper,
     ) -> crate::Result<(Vec<input_selection::Input>, Option<input_selection::Input>)> {
         let available_addresses: Vec<input_selection::Input> = addresses
             .iter()
             .filter(|a| {
                 // we allow an input equal to the deposit address only if it has more than one output
-                (a.address() != address || a.available_outputs(&sent_messages).len() > 1)
+                (!transfer_obj.outputs.iter().any(|o| &o.address == a.address())
+                    || a.available_outputs(&sent_messages).len() > 1)
                     && a.available_balance(&sent_messages) > 0
                     && !locked_addresses.contains(a.address())
             })
@@ -1110,21 +1110,24 @@ impl SyncedAccount {
                 balance: a.available_balance(&sent_messages),
             })
             .collect();
-        let mut selected_addresses = input_selection::select_input(transfer_obj.amount.get(), available_addresses)?;
-        let has_remainder = selected_addresses.iter().fold(0, |acc, a| acc + a.balance) > transfer_obj.amount.get();
+        let transfer_amount = transfer_obj.amount();
+        let mut selected_addresses = input_selection::select_input(transfer_amount, available_addresses)?;
+        let has_remainder = selected_addresses.iter().fold(0, |acc, a| acc + a.balance) > transfer_amount;
 
         // if we're reusing the input address for remainder output
         // and we have remainder value, we should run the input selection again
         // without the output address.
         if has_remainder
             && transfer_obj.remainder_value_strategy == RemainderValueStrategy::ReuseAddress
-            && addresses.iter().any(|input| input.address() == &transfer_obj.address)
+            && addresses
+                .iter()
+                .any(|input| transfer_obj.outputs.iter().any(|o| &o.address == input.address()))
         {
             let available_addresses: Vec<input_selection::Input> = addresses
                 .iter()
                 .filter(|a| {
                     // we do not allow the deposit address as input address
-                    a.address() != address
+                    !transfer_obj.outputs.iter().any(|o| &o.address == a.address())
                         && a.available_balance(&sent_messages) > 0
                         && !locked_addresses.contains(a.address())
                 })
@@ -1134,7 +1137,7 @@ impl SyncedAccount {
                     balance: a.available_balance(&sent_messages),
                 })
                 .collect();
-            selected_addresses = input_selection::select_input(transfer_obj.amount.get(), available_addresses)?;
+            selected_addresses = input_selection::select_input(transfer_obj.amount(), available_addresses)?;
         }
 
         locked_addresses.extend(
@@ -1206,13 +1209,13 @@ impl SyncedAccount {
     pub(crate) async fn transfer(&self, mut transfer_obj: Transfer) -> crate::Result<Message> {
         let account_ = self.account_handle.read().await;
 
-        // if the deposit address belongs to the account, we'll reuse the input address
+        // if any of the deposit addresses belongs to the account, we'll reuse the input address
         // for remainder value output. This is the only way to know the transaction value for
         // transactions between account addresses.
         if account_
             .addresses()
             .iter()
-            .any(|a| a.address() == &transfer_obj.address)
+            .any(|a| transfer_obj.outputs.iter().any(|o| &o.address == a.address()))
         {
             transfer_obj.remainder_value_strategy = RemainderValueStrategy::ReuseAddress;
         }
@@ -1224,7 +1227,7 @@ impl SyncedAccount {
         let mut locked_addresses = account_address_locker.lock().await;
 
         // prepare the transfer getting some needed objects and values
-        let value = transfer_obj.amount.get();
+        let value = transfer_obj.amount();
 
         let sent_messages = account_.list_messages(0, 0, Some(MessageType::Sent)).await?;
 
@@ -1279,7 +1282,6 @@ impl SyncedAccount {
                     &transfer_obj,
                     &sent_messages,
                     account_.addresses(),
-                    &transfer_obj.address,
                 )?;
                 (
                     input_addresses
@@ -1358,9 +1360,12 @@ async fn perform_transfer(
     let mut transaction_inputs = vec![];
     // store (amount, address, new_created) to check later if dust is allowed
     let mut dust_and_allowance_recorders = Vec::new();
+    let transfer_amount = transfer_obj.amount();
 
-    if transfer_obj.amount.get() < DUST_ALLOWANCE_VALUE {
-        dust_and_allowance_recorders.push((transfer_obj.amount.get(), transfer_obj.address.to_bech32(), true));
+    if transfer_amount < DUST_ALLOWANCE_VALUE {
+        for output in transfer_obj.outputs.iter() {
+            dust_and_allowance_recorders.push((output.amount.get(), output.address.to_bech32(), true));
+        }
     }
 
     let account_ = account_handle.read().await;
@@ -1384,8 +1389,11 @@ async fn perform_transfer(
         utxos.extend(outputs.into_iter());
     }
 
-    let mut outputs_for_essence: Vec<Output> =
-        vec![SignatureLockedSingleOutput::new(*transfer_obj.address.as_ref(), transfer_obj.amount.get())?.into()];
+    let mut outputs_for_essence: Vec<Output> = Vec::new();
+    for output in transfer_obj.outputs.iter() {
+        outputs_for_essence
+            .push(SignatureLockedSingleOutput::new(*output.address.as_ref(), output.amount.get())?.into());
+    }
     let mut inputs_for_essence: Vec<Input> = Vec::new();
     let mut current_output_sum = 0;
     let mut remainder_value = 0;
@@ -1410,7 +1418,7 @@ async fn perform_transfer(
             address_index,
             address_internal,
         });
-        if current_output_sum == transfer_obj.amount.get() {
+        if current_output_sum == transfer_amount {
             log::debug!(
                     "[TRANSFER] current output sum matches the transfer value, adding {} to the remainder value (currently at {})",
                     utxo.amount(),
@@ -1418,7 +1426,7 @@ async fn perform_transfer(
                 );
             // already filled the transfer value; just collect the output value as remainder
             remainder_value += *utxo.amount();
-        } else if current_output_sum + *utxo.amount() > transfer_obj.amount.get() {
+        } else if current_output_sum + *utxo.amount() > transfer_amount {
             log::debug!(
                 "[TRANSFER] current output sum ({}) would exceed the transfer value if added to the output amount ({})",
                 current_output_sum,
@@ -1426,7 +1434,7 @@ async fn perform_transfer(
             );
             // if the used UTXO amount is greater than the transfer value,
             // this is the last iteration and we'll have remainder value
-            let missing_value = transfer_obj.amount.get() - current_output_sum;
+            let missing_value = transfer_amount - current_output_sum;
             remainder_value += *utxo.amount() - missing_value;
             current_output_sum += missing_value;
             log::debug!(
@@ -1435,7 +1443,7 @@ async fn perform_transfer(
                 remainder_value
             );
 
-            let remaining_balance_on_source = current_output_sum - transfer_obj.amount.get();
+            let remaining_balance_on_source = current_output_sum - transfer_amount;
             if remaining_balance_on_source < DUST_ALLOWANCE_VALUE && remaining_balance_on_source != 0 {
                 dust_and_allowance_recorders.push((remaining_balance_on_source, utxo.address().to_bech32(), true));
             }
@@ -1447,8 +1455,8 @@ async fn perform_transfer(
             );
             current_output_sum += *utxo.amount();
 
-            if current_output_sum > transfer_obj.amount.get() {
-                let remaining_balance_on_source = current_output_sum - transfer_obj.amount.get();
+            if current_output_sum > transfer_amount {
+                let remaining_balance_on_source = current_output_sum - transfer_amount;
                 if remaining_balance_on_source < DUST_ALLOWANCE_VALUE && remaining_balance_on_source != 0 {
                     dust_and_allowance_recorders.push((remaining_balance_on_source, utxo.address().to_bech32(), true));
                 }
@@ -1619,13 +1627,14 @@ async fn perform_transfer(
     // if this is a transfer to the account's latest address or we used the latest as deposit of the remainder
     // value, we generate a new one to keep the latest address unused
     let latest_address = account_.latest_address().address();
-    if latest_address == &transfer_obj.address
+    let latest_address_in_transfer_output = transfer_obj.outputs.iter().any(|o| &o.address == latest_address);
+    if latest_address_in_transfer_output
         || (remainder_value_deposit_address.is_some() && &remainder_value_deposit_address.unwrap() == latest_address)
     {
         log::debug!(
             "[TRANSFER] generating new address since {}",
-            if latest_address == &transfer_obj.address {
-                "latest address equals the transfer address"
+            if latest_address_in_transfer_output {
+                "latest address is part of the transfer output"
             } else {
                 "latest address equals the remainder value deposit address"
             }
