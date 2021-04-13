@@ -31,7 +31,10 @@ use std::{
 };
 use tokio::sync::RwLock;
 
+// The library do not request a milestone from the node if we have one in the (x / 100, x/ 100 + 100) range
 const MILESTONE_CACHE_RANGE: u32 = 100;
+/// The node issue a milestone every 10 seconds.
+const MILESTONE_ISSUE_RATE_SECS: i64 = 10;
 
 type MilestoneCache = RwLock<HashMap<Range<u32>, MilestoneResponse>>;
 fn milestone_cache() -> &'static MilestoneCache {
@@ -982,8 +985,10 @@ impl<'a> MessageBuilder<'a> {
                         }
                         Entry::Occupied(entry) => {
                             let milestone = *entry.get();
-                            date_time =
-                                DateTime::from_utc(NaiveDateTime::from_timestamp(milestone.timestamp as i64, 0), Utc);
+                            let index_diff = ms_index as i64 - milestone.index as i64;
+                            let approx_timestamp =
+                                milestone.timestamp as i64 + (index_diff * MILESTONE_ISSUE_RATE_SECS);
+                            date_time = DateTime::from_utc(NaiveDateTime::from_timestamp(approx_timestamp, 0), Utc);
                         }
                     }
                     date_time
