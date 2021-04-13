@@ -362,6 +362,9 @@ impl AccountManager {
 
     /// Gets the legacy migration data for the seed.
     pub async fn get_migration_data(&self, finder: MigrationDataFinder<'_>) -> crate::Result<MigrationData> {
+        if finder.initial_address_index == 0 {
+            self.cached_migration_data.lock().await.remove(&finder.seed_hash);
+        }
         let metadata = finder
             .finish(
                 self.cached_migration_data

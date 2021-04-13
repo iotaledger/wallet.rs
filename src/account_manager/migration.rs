@@ -57,7 +57,7 @@ pub struct MigrationDataFinder<'a> {
     pub(crate) seed_hash: u64,
     pub(crate) security_level: u8,
     gap_limit: u64,
-    initial_address_index: u64,
+    pub(crate) initial_address_index: u64,
 }
 
 /// Migration metadata.
