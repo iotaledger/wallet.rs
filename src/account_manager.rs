@@ -23,6 +23,7 @@ use std::{
     convert::TryInto,
     fs,
     num::NonZeroU64,
+    ops::Deref,
     panic::AssertUnwindSafe,
     path::{Path, PathBuf},
     sync::Arc,
@@ -56,8 +57,24 @@ pub const STRONGHOLD_FILENAME: &str = "wallet.stronghold";
 /// The default RocksDB storage path.
 pub const ROCKSDB_FILENAME: &str = "db";
 
+type AccountsMap = HashMap<String, AccountHandle>;
+
 #[doc(hidden)]
-pub type AccountStore = Arc<RwLock<HashMap<String, AccountHandle>>>;
+#[derive(Debug, Clone)]
+pub struct AccountStore(Arc<RwLock<AccountsMap>>);
+
+impl AccountStore {
+    pub(crate) fn new(inner: Arc<RwLock<AccountsMap>>) -> Self {
+        Self(inner)
+    }
+}
+
+impl Deref for AccountStore {
+    type Target = RwLock<AccountsMap>;
+    fn deref(&self) -> &Self::Target {
+        &self.0.deref()
+    }
+}
 
 /// The storage used by the manager.
 enum ManagerStorage {
@@ -207,12 +224,17 @@ impl AccountManagerBuilder {
 
         // with the stronghold storage, the accounts are loaded when the password is set
         let (accounts, loaded_accounts) = if is_stronghold {
-            (Default::default(), false)
+            (AccountStore::new(Default::default()), false)
         } else {
-            AccountManager::load_accounts(&storage_file_path, self.account_options, sync_accounts_lock.clone())
-                .await
-                .map(|accounts| (accounts, true))
-                .unwrap_or_else(|_| (AccountStore::default(), false))
+            let accounts = AccountStore::new(Default::default());
+            let res = AccountManager::load_accounts(
+                &accounts,
+                &storage_file_path,
+                self.account_options,
+                sync_accounts_lock.clone(),
+            )
+            .await;
+            (accounts, res.is_ok())
         };
         let mut instance = AccountManager {
             storage_folder: self.storage_folder,
@@ -318,31 +340,25 @@ impl AccountManager {
     }
 
     async fn load_accounts(
+        accounts: &AccountStore,
         storage_file_path: &Path,
         account_options: AccountOptions,
         sync_accounts_lock: Arc<Mutex<()>>,
-    ) -> crate::Result<AccountStore> {
-        let parsed_accounts = Arc::new(RwLock::new(HashMap::new()));
-
-        let accounts = crate::storage::get(&storage_file_path)
+    ) -> crate::Result<()> {
+        let loaded_accounts = crate::storage::get(&storage_file_path)
             .await?
             .lock()
             .await
             .get_accounts()
             .await?;
-        for account in accounts {
-            parsed_accounts.write().await.insert(
+        for account in loaded_accounts {
+            accounts.write().await.insert(
                 account.id().clone(),
-                AccountHandle::new(
-                    account,
-                    parsed_accounts.clone(),
-                    account_options,
-                    sync_accounts_lock.clone(),
-                ),
+                AccountHandle::new(account, accounts.clone(), account_options, sync_accounts_lock.clone()),
             );
         }
 
-        Ok(parsed_accounts)
+        Ok(())
     }
 
     /// Deletes the storage.
@@ -442,19 +458,14 @@ impl AccountManager {
             .unwrap();
 
         if self.accounts.read().await.is_empty() {
-            let accounts = Self::load_accounts(
+            Self::load_accounts(
+                &self.accounts,
                 &self.storage_path,
                 self.account_options,
                 self.sync_accounts_lock.clone(),
             )
             .await?;
             self.loaded_accounts = true;
-            {
-                let mut accounts_store = self.accounts.write().await;
-                for (id, account) in &*accounts.read().await {
-                    accounts_store.insert(id.clone(), account.clone());
-                }
-            }
             crate::spawn(Self::start_monitoring(self.accounts.clone()));
         } else {
             // save the accounts and messages again to reencrypt with the new key
@@ -479,19 +490,14 @@ impl AccountManager {
         crate::stronghold::load_snapshot(&stronghold_path, stronghold_password(password)).await?;
 
         if self.accounts.read().await.is_empty() {
-            let accounts = Self::load_accounts(
+            Self::load_accounts(
+                &self.accounts,
                 &self.storage_path,
                 self.account_options,
                 self.sync_accounts_lock.clone(),
             )
             .await?;
             self.loaded_accounts = true;
-            {
-                let mut accounts_store = self.accounts.write().await;
-                for (id, account) in &*accounts.read().await {
-                    accounts_store.insert(id.clone(), account.clone());
-                }
-            }
             crate::spawn(Self::start_monitoring(self.accounts.clone()));
         }
 
