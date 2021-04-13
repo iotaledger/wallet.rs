@@ -398,6 +398,10 @@ impl WalletMessageHandler {
                 account_handle.set_client_options(*options.clone()).await?;
                 Ok(ResponseType::UpdatedClientOptions)
             }
+            AccountMethod::GetSeedChecksum(seed) => {
+                let checksum = AccountManager::get_seed_checksum(seed.clone())?;
+                Ok(ResponseType::SeedChecksum(checksum))
+            }
         }
     }
 

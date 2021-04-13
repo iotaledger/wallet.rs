@@ -84,6 +84,8 @@ pub enum AccountMethod {
     SetAlias(String),
     /// Updates the account client options.
     SetClientOptions(Box<ClientOptions>),
+    /// Get seed checksum.
+    GetSeedChecksum(String),
 }
 
 /// The returned account.
@@ -541,6 +543,8 @@ pub enum ResponseType {
     CreatedMigrationBundle(MigrationBundle),
     /// SendMigrationBundle response.
     SentMigrationBundle(MigratedBundle),
+    /// GetSeedChecksum response.
+    SeedChecksum(String),
 }
 
 /// The message type.

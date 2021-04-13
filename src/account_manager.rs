@@ -1144,6 +1144,12 @@ impl AccountManager {
     ) -> crate::Result<Message> {
         self.get_account(account_id).await?.retry(message_id).await
     }
+
+    /// Get seed checksum
+    pub fn get_seed_checksum(seed: String) -> crate::Result<String> {
+        iota_migration::client::migration::get_seed_checksum(seed)
+            .map_err(|e| crate::Error::ClientMigrationError(Box::new(e)))
+    }
 }
 
 macro_rules! event_getters_impl {
