@@ -276,7 +276,6 @@ impl serde::Serialize for Error {
             #[cfg(feature = "stronghold")]
             Self::StrongholdError(_) => serialize_variant(self, serializer, "StrongholdError"),
             Self::ClientError(_) => serialize_variant(self, serializer, "ClientError"),
-            Self::LegacyClientError(_) => serialize_variant(self, serializer, "LegacyClientError"),
             Self::UrlError(_) => serialize_variant(self, serializer, "UrlError"),
             Self::MessageNotFound => serialize_variant(self, serializer, "MessageNotFound"),
             Self::InvalidMessageIdLength => serialize_variant(self, serializer, "InvalidMessageIdLength"),
