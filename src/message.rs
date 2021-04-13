@@ -457,11 +457,14 @@ impl TransactionRegularEssence {
                         } else {
                             let client = crate::client::get_client(metadata.client_options).await?;
                             let client = client.read().await;
-                            if let Ok(output) = client.get_output(&i).await {
-                                let output = AddressOutput::from_output_response(output, metadata.bech32_hrp.clone())?;
-                                Some(output)
-                            } else {
-                                None
+                            match client.get_output(&i).await {
+                                Ok(output) => {
+                                    let output =
+                                        AddressOutput::from_output_response(output, metadata.bech32_hrp.clone())?;
+                                    Some(output)
+                                }
+                                Err(iota::client::Error::ResponseError(status_code, _)) if status_code == 404 => None,
+                                Err(e) => return Err(e.into()),
                             }
                         }
                     };
