@@ -226,7 +226,7 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
         Ok(MigrationAddress::Ed25519(a)) => a,
         _ => return Err(crate::Error::InvalidAddress),
     };
-    let deposit_address_trytes = encode_migration_address(deposit_address.clone())?;
+    let deposit_address_trytes = encode_migration_address(deposit_address)?;
 
     let mut prepared_bundle = create_migration_bundle(
         &legacy_client,
