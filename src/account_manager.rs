@@ -1705,7 +1705,7 @@ mod tests {
                         .with_network_id(0)
                         .finish()
                         .unwrap(),
-                    Default::default(),
+                    super::AccountStore::new(Default::default()),
                     "",
                     &[crate::test_utils::generate_random_address()],
                     &ClientOptionsBuilder::new().build().unwrap(),
@@ -1928,7 +1928,9 @@ mod tests {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |mut manager, _| async move {
             crate::test_utils::AccountCreator::new(&manager).create().await;
             manager.set_storage_password("new-password").await.unwrap();
-            let account_store = super::AccountManager::load_accounts(
+            let account_store = super::AccountStore::new(Default::default());
+            super::AccountManager::load_accounts(
+                &account_store,
                 manager.storage_path(),
                 manager.account_options,
                 Default::default(),
