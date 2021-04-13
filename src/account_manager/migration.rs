@@ -300,7 +300,11 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
         .map(char::from)
         .collect::<String>();
 
-    let mut log = OpenOptions::new().write(true).create(true).open(log_file_path)?;
+    let mut log = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .append(true)
+        .open(log_file_path)?;
     let mut trytes = Vec::new();
     for i in 0..bundle.len() {
         let mut trits = TritBuf::<T1B1Buf>::zeros(8019);
