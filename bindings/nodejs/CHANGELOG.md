@@ -1,5 +1,10 @@
 # Changelog
 
+## \[0.2.2]
+
+- Updates Testnet breaking changes and includes several fixes to syncing and change address management.
+  - [90ca9368](https://github.com/iotaledger/wallet.rs/commit/90ca9368c28a04ed9289bb10bc05d3800bc1a47e) chore: add change file ([#546](https://github.com/iotaledger/wallet.rs/pull/546)) on 2021-04-13
+
 ## \[0.2.1]
 
 - Fix Windows CI
