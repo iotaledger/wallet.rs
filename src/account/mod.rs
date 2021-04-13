@@ -355,6 +355,9 @@ impl AccountInitialiser {
                 self.sync_accounts_lock.clone(),
             );
             drop(accounts);
+            for (_, account) in self.accounts.read().await.iter(){
+                account.accounts.write().await.insert(account_id.clone(), guard.clone());
+            }
             self.accounts.write().await.insert(account_id, guard.clone());
             // monitor on a non-async function to prevent cycle computing the `monitor_address_balance` fn type
             monitor_address(guard.clone());
