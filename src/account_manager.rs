@@ -1148,7 +1148,7 @@ impl AccountManager {
     /// Get seed checksum
     pub fn get_seed_checksum(seed: String) -> crate::Result<String> {
         iota_migration::client::migration::get_seed_checksum(seed)
-            .map_err(|e| crate::Error::ClientMigrationError(Box::new(e)))
+            .map_err(|e| crate::Error::LegacyClientError(Box::new(e)))
     }
 }
 
