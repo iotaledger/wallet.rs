@@ -278,6 +278,10 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            MessageType::GetSeedChecksum(seed) => convert_panics(|| {
+                let checksum = AccountManager::get_seed_checksum(seed.clone())?;
+                Ok(ResponseType::SeedChecksum(checksum))
+            }),
         };
 
         let response = match response {
@@ -397,10 +401,6 @@ impl WalletMessageHandler {
             AccountMethod::SetClientOptions(options) => {
                 account_handle.set_client_options(*options.clone()).await?;
                 Ok(ResponseType::UpdatedClientOptions)
-            }
-            AccountMethod::GetSeedChecksum(seed) => {
-                let checksum = AccountManager::get_seed_checksum(seed.clone())?;
-                Ok(ResponseType::SeedChecksum(checksum))
             }
         }
     }

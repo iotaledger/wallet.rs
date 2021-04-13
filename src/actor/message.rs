@@ -84,8 +84,6 @@ pub enum AccountMethod {
     SetAlias(String),
     /// Updates the account client options.
     SetClientOptions(Box<ClientOptions>),
-    /// Get seed checksum.
-    GetSeedChecksum(String),
 }
 
 /// The returned account.
@@ -271,6 +269,8 @@ pub enum MessageType {
         /// Minimum weight magnitude.
         mwm: u8,
     },
+    /// Get seed checksum.
+    GetSeedChecksum(String),
 }
 
 impl Serialize for MessageType {
@@ -369,6 +369,7 @@ impl Serialize for MessageType {
                 bundle_hash: _,
                 mwm: _,
             } => serializer.serialize_unit_variant("MessageType", 26, "SendMigrationBundle"),
+            MessageType::GetSeedChecksum(_) => serializer.serialize_unit_variant("MessageType", 27, "GetSeedChecksum"),
         }
     }
 }
