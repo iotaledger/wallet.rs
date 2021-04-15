@@ -64,7 +64,7 @@ def test_account_handle_transfer():
 
 def test_account_handle_transfer_with_outputs():
     pat = tv['transfer']
-    transfer_outputs = iw.TransferOutputs(address=pat['address'], amount=pat['amount'])
+    transfer_outputs = { "address": pat['address'], "amount": pat['amount'] }
     transfer = iw.TransferWithOutputs(outputs=transfer_outputs,
                            remainder_value_strategy=pat['remainder_value_strategy'])
 
