@@ -5,6 +5,7 @@ use super::JsAccount;
 use crate::types::ClientOptionsDto;
 use std::{num::NonZeroU64, path::PathBuf, sync::Arc};
 
+use iota::Address;
 use iota_wallet::{
     account::AccountIdentifier,
     account_manager::{AccountManager, DEFAULT_STORAGE_FOLDER},
@@ -13,7 +14,6 @@ use iota_wallet::{
     signing::SignerType,
     DateTime, Local,
 };
-use iota::Address;
 use neon::prelude::*;
 use serde::Deserialize;
 use serde_repr::Deserialize_repr;
