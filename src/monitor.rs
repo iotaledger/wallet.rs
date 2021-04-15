@@ -74,12 +74,14 @@ async fn subscribe_to_topics<C: Fn(&TopicEvent) + Send + Sync + 'static>(
 
 /// Monitor account addresses for balance changes.
 pub async fn monitor_account_addresses_balance(account_handle: AccountHandle) {
-    let account = account_handle.read().await;
-    monitor_address_balance(
-        account_handle.clone(),
-        account.addresses().iter().map(|a| a.address().clone()).collect(),
-    )
-    .await;
+    let addresses = account_handle
+        .read()
+        .await
+        .addresses()
+        .iter()
+        .map(|a| a.address().clone())
+        .collect();
+    monitor_address_balance(account_handle.clone(), addresses).await;
 }
 
 /// Monitor address for balance changes.
