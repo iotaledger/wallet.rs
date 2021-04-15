@@ -8,7 +8,7 @@ use crate::{
     address::Address,
     client_options::ClientOptions,
     message::{Message, Transfer},
-    types::InfoResponse,
+    types::NodeInfoWrapper,
     Result,
 };
 use iota_wallet::{
@@ -109,12 +109,12 @@ impl Account {
         }
     }
 
-    pub fn get_node_info(&self) -> Result<InfoResponse> {
+    pub fn get_node_info(&self, url: Option<&str>) -> Result<NodeInfoWrapper> {
         let msgs_res = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
             .unwrap()
-            .block_on(async move { self.handle.get_node_info().await });
+            .block_on(async move { self.handle.get_node_info(url).await });
 
         match msgs_res {
             Err(e) => Err(anyhow!(e.to_string())),

@@ -402,6 +402,9 @@ impl WalletMessageHandler {
                 account_handle.set_client_options(*options.clone()).await?;
                 Ok(ResponseType::UpdatedClientOptions)
             }
+            AccountMethod::GetNodeInfo(options) => Ok(ResponseType::NodeInfo(
+                account_handle.get_node_info(options.as_deref()).await?,
+            )),
         }
     }
 

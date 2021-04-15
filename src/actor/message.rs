@@ -11,6 +11,7 @@ use crate::{
     Error,
 };
 use chrono::{DateTime, Local};
+use iota::client::NodeInfoWrapper;
 use iota_migration::{ternary::T3B1Buf, transaction::bundled::BundledTransactionField};
 use serde::{ser::Serializer, Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
@@ -84,6 +85,8 @@ pub enum AccountMethod {
     SetAlias(String),
     /// Updates the account client options.
     SetClientOptions(Box<ClientOptions>),
+    /// Gets the node information.
+    GetNodeInfo(Option<String>),
 }
 
 /// The returned account.
@@ -538,6 +541,8 @@ pub enum ResponseType {
     StrongholdPasswordChanged,
     /// SetClientOptions response.
     UpdatedAllClientOptions,
+    /// GetNodeInfo response.
+    NodeInfo(NodeInfoWrapper),
     /// GetMigrationData response.
     MigrationData(MigrationDataDto),
     /// CreateMigrationBundle response (bundle hash).

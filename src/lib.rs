@@ -101,7 +101,7 @@ pub fn get_ledger_status(is_simulator: bool) -> LedgerStatus {
 mod test_utils {
     use super::{
         account::AccountHandle,
-        account_manager::AccountManager,
+        account_manager::{AccountManager, AccountStore},
         address::{Address, AddressBuilder, AddressWrapper},
         client::ClientOptionsBuilder,
         message::{Message, MessagePayload, TransactionBuilderMetadata, TransactionEssence},
@@ -476,7 +476,7 @@ mod test_utils {
                 id: &id,
                 bech32_hrp,
                 account_id: "",
-                accounts: Default::default(),
+                accounts: AccountStore::new(Default::default()),
                 account_addresses: &[],
                 client_options: &ClientOptionsBuilder::new().build().unwrap(),
             };

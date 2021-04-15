@@ -8,25 +8,43 @@ use crate::{
     event::{emit_transfer_progress, TransferProgressType},
 };
 use bee_common::packable::Packable;
-use chrono::prelude::{DateTime, Utc};
 use getset::{CopyGetters, Getters, Setters};
+
+use chrono::prelude::{DateTime, NaiveDateTime, Utc};
 pub use iota::{
     Essence, IndexationPayload, Input, Message as IotaMessage, MessageId, MigratedFundsEntry, MilestoneIndex,
-    MilestonePayload, MilestonePayloadEssence, Output, Parents, Payload, ReceiptPayload, RegularEssence,
-    SignatureLockedDustAllowanceOutput, SignatureLockedSingleOutput, TailTransactionHash, TransactionPayload,
-    TreasuryInput, TreasuryOutput, TreasuryTransactionPayload, UnlockBlock, UtxoInput, MILESTONE_MERKLE_PROOF_LENGTH,
-    MILESTONE_PUBLIC_KEY_LENGTH,
+    MilestonePayload, MilestonePayloadEssence, MilestoneResponse, Output, Parents, Payload, ReceiptPayload,
+    RegularEssence, SignatureLockedDustAllowanceOutput, SignatureLockedSingleOutput, TailTransactionHash,
+    TransactionPayload, TreasuryInput, TreasuryOutput, TreasuryTransactionPayload, UnlockBlock, UtxoInput,
+    MILESTONE_MERKLE_PROOF_LENGTH, MILESTONE_PUBLIC_KEY_LENGTH,
 };
+use once_cell::sync::Lazy;
 use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
 use std::{
     cmp::Ordering,
-    collections::hash_map::DefaultHasher,
+    collections::{
+        hash_map::{DefaultHasher, Entry},
+        HashMap,
+    },
     convert::{TryFrom, TryInto},
     fmt,
     hash::{Hash, Hasher},
     num::NonZeroU64,
+    ops::Range,
 };
+use tokio::sync::RwLock;
+
+// The library do not request a milestone from the node if we have one in the (x / 100, x/ 100 + 100) range
+const MILESTONE_CACHE_RANGE: u32 = 100;
+/// The node issue a milestone every 10 seconds.
+const MILESTONE_ISSUE_RATE_SECS: i64 = 10;
+
+type MilestoneCache = RwLock<HashMap<Range<u32>, MilestoneResponse>>;
+fn milestone_cache() -> &'static MilestoneCache {
+    static MILESTONE_CACHE: Lazy<MilestoneCache> = Lazy::new(Default::default);
+    &MILESTONE_CACHE
+}
 
 /// The strategy to use for the remainder value management when sending funds.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -445,11 +463,14 @@ impl TransactionRegularEssence {
                         } else {
                             let client = crate::client::get_client(metadata.client_options).await?;
                             let client = client.read().await;
-                            if let Ok(output) = client.get_output(&i).await {
-                                let output = AddressOutput::from_output_response(output, metadata.bech32_hrp.clone())?;
-                                Some(output)
-                            } else {
-                                None
+                            match client.get_output(&i).await {
+                                Ok(output) => {
+                                    let output =
+                                        AddressOutput::from_output_response(output, metadata.bech32_hrp.clone())?;
+                                    Some(output)
+                                }
+                                Err(iota::client::Error::ResponseError(status_code, _)) if status_code == 404 => None,
+                                Err(e) => return Err(e.into()),
                             }
                         }
                     };
@@ -1151,13 +1172,46 @@ impl<'a> MessageBuilder<'a> {
             None => None,
         };
 
+        let mut timestamp = Utc::now();
+        let client_guard = crate::client::get_client(self.client_options).await?;
+        let client = client_guard.read().await;
+        if let Ok(metadata) = client.get_message().metadata(&self.id).await {
+            timestamp = match metadata.referenced_by_milestone_index {
+                Some(ms_index) => {
+                    let mut date_time = Utc::now();
+                    let initial = ms_index / MILESTONE_CACHE_RANGE;
+                    let range = initial..initial + MILESTONE_CACHE_RANGE;
+                    match milestone_cache().write().await.entry(range) {
+                        Entry::Vacant(entry) => {
+                            if let Ok(milestone) = client.get_milestone(ms_index).await {
+                                date_time = DateTime::from_utc(
+                                    NaiveDateTime::from_timestamp(milestone.timestamp as i64, 0),
+                                    Utc,
+                                );
+                                entry.insert(milestone);
+                            }
+                        }
+                        Entry::Occupied(entry) => {
+                            let milestone = *entry.get();
+                            let index_diff = ms_index as i64 - milestone.index as i64;
+                            let approx_timestamp =
+                                milestone.timestamp as i64 + (index_diff * MILESTONE_ISSUE_RATE_SECS);
+                            date_time = DateTime::from_utc(NaiveDateTime::from_timestamp(approx_timestamp, 0), Utc);
+                        }
+                    }
+                    date_time
+                }
+                _ => Utc::now(),
+            };
+        }
+
         let message = Message {
             id: self.id,
             version: 1,
             parents: (*self.iota_message.parents()).to_vec(),
             payload_length: packed_payload.len(),
             payload,
-            timestamp: Utc::now(),
+            timestamp,
             nonce: self.iota_message.nonce(),
             confirmed: self.confirmed,
             broadcasted: true,

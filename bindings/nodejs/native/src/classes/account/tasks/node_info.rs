@@ -1,22 +1,26 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota::bee_rest_api::types::responses::InfoResponse;
+use iota::client::NodeInfoWrapper;
 use iota_wallet::Error;
 use neon::prelude::*;
 
 pub struct NodeInfoTask {
     pub account_id: String,
+    pub url: Option<String>,
 }
 
 impl Task for NodeInfoTask {
-    type Output = InfoResponse;
+    type Output = NodeInfoWrapper;
     type Error = Error;
     type JsEvent = JsValue;
 
     fn perform(&self) -> Result<Self::Output, Self::Error> {
         crate::block_on(crate::convert_async_panics(|| async {
-            crate::get_account(&self.account_id).await.get_node_info().await
+            crate::get_account(&self.account_id)
+                .await
+                .get_node_info(self.url.as_deref())
+                .await
         }))
     }
 

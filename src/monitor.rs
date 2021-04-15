@@ -3,7 +3,7 @@
 
 use crate::{
     account::{AccountHandle, AccountSynchronizeStep},
-    account_manager::AccountsSynchronizer,
+    account_manager::{AccountStore, AccountsSynchronizer},
     address::{AddressOutput, AddressWrapper, IotaAddress},
     client::ClientOptions,
     message::{Message, MessagePayload, TransactionEssence, TransactionInput, TransactionOutput},
@@ -74,12 +74,14 @@ async fn subscribe_to_topics<C: Fn(&TopicEvent) + Send + Sync + 'static>(
 
 /// Monitor account addresses for balance changes.
 pub async fn monitor_account_addresses_balance(account_handle: AccountHandle) {
-    let account = account_handle.read().await;
-    monitor_address_balance(
-        account_handle.clone(),
-        account.addresses().iter().map(|a| a.address().clone()).collect(),
-    )
-    .await;
+    let addresses = account_handle
+        .read()
+        .await
+        .addresses()
+        .iter()
+        .map(|a| a.address().clone())
+        .collect();
+    monitor_address_balance(account_handle.clone(), addresses).await;
 }
 
 /// Monitor address for balance changes.
@@ -236,7 +238,7 @@ async fn process_output(payload: String, account_handle: AccountHandle) -> crate
     // sync associated accounts
     AccountsSynchronizer::new(
         account_handle.sync_accounts_lock.clone(),
-        Arc::new(RwLock::new(accounts_to_sync)),
+        AccountStore::new(Arc::new(RwLock::new(accounts_to_sync))),
         storage_path,
         account_handle.account_options,
     )
