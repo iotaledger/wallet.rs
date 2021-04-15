@@ -239,8 +239,8 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
     )
     .await?;
     let mut crackability = None;
+    let mut spent_bundle_hashes = Vec::new();
     if bundle_mine && address_inputs.iter().any(|i| i.spent) {
-        let mut spent_bundle_hashes = Vec::new();
         for input in &address_inputs {
             if let Some(bundle_hashes) = input.spent_bundlehashes.clone() {
                 spent_bundle_hashes.extend(bundle_hashes);
@@ -263,8 +263,7 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
             let mining_result = mine(
                 prepared_bundle,
                 data.security_level,
-                false,
-                spent_bundle_hashes,
+                spent_bundle_hashes.clone(),
                 timeout.as_secs(),
                 offset,
             )
@@ -359,6 +358,11 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
         )
         .as_bytes(),
     )?;
+    let spent_bundle_hashes = match spent_bundle_hashes.is_empty(){
+        true => format!("{:?}", spent_bundle_hashes),
+        false => "null".to_string(),
+    };
+    log.write_all(format!("spentBundleHashes: {}\n", spent_bundle_hashes).as_bytes())?;
     log.write_all(format!("mine: {}\n", bundle_mine).as_bytes())?;
     log.write_all(
         format!(
