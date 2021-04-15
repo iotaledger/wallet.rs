@@ -155,6 +155,11 @@ impl AccountHandle {
         crate::block_on(async { self.account_handle.transfer(transfer_obj.transfer).await?.try_into() })
     }
 
+    /// Send messages.
+    fn transfer_with_outputs(&self, transfer_obj: TransferWithOutputs) -> Result<WalletMessage> {
+        crate::block_on(async { self.account_handle.transfer(transfer_obj.transfer).await?.try_into() })
+    }
+
     /// Retry message.
     fn retry(&self, message_id: &str) -> Result<WalletMessage> {
         crate::block_on(async {
