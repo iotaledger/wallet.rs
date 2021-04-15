@@ -553,6 +553,9 @@
 <span id="550">550</span>
 <span id="551">551</span>
 <span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -888,6 +891,9 @@
                 <span class="ident">account_handle</span>.<span class="ident">set_client_options</span>(<span class="kw-2">*</span><span class="ident">options</span>.<span class="ident">clone</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::UpdatedClientOptions</span>)
             }
+            <span class="ident">AccountMethod::GetNodeInfo</span>(<span class="ident">options</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::NodeInfo</span>(
+                <span class="ident">account_handle</span>.<span class="ident">get_node_info</span>(<span class="ident">options</span>.<span class="ident">as_deref</span>()).<span class="kw">await</span><span class="question-mark">?</span>,
+            )),
         }
     }
 

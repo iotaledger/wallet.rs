@@ -250,13 +250,15 @@
 <span id="247">247</span>
 <span id="248">248</span>
 <span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">account</span>::{<span class="ident">AccountHandle</span>, <span class="ident">AccountSynchronizeStep</span>},
-    <span class="ident">account_manager::AccountsSynchronizer</span>,
+    <span class="ident">account_manager</span>::{<span class="ident">AccountStore</span>, <span class="ident">AccountsSynchronizer</span>},
     <span class="ident">address</span>::{<span class="ident">AddressOutput</span>, <span class="ident">AddressWrapper</span>, <span class="ident">IotaAddress</span>},
     <span class="ident">client::ClientOptions</span>,
     <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessagePayload</span>, <span class="ident">TransactionEssence</span>, <span class="ident">TransactionInput</span>, <span class="ident">TransactionOutput</span>},
@@ -327,12 +329,14 @@
 
 <span class="doccomment">/// Monitor account addresses for balance changes.</span>
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">monitor_account_addresses_balance</span>(<span class="ident">account_handle</span>: <span class="ident">AccountHandle</span>) {
-    <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>;
-    <span class="ident">monitor_address_balance</span>(
-        <span class="ident">account_handle</span>.<span class="ident">clone</span>(),
-        <span class="ident">account</span>.<span class="ident">addresses</span>().<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">address</span>().<span class="ident">clone</span>()).<span class="ident">collect</span>(),
-    )
-    .<span class="kw">await</span>;
+    <span class="kw">let</span> <span class="ident">addresses</span> <span class="op">=</span> <span class="ident">account_handle</span>
+        .<span class="ident">read</span>()
+        .<span class="kw">await</span>
+        .<span class="ident">addresses</span>()
+        .<span class="ident">iter</span>()
+        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">address</span>().<span class="ident">clone</span>())
+        .<span class="ident">collect</span>();
+    <span class="ident">monitor_address_balance</span>(<span class="ident">account_handle</span>.<span class="ident">clone</span>(), <span class="ident">addresses</span>).<span class="kw">await</span>;
 }
 
 <span class="doccomment">/// Monitor address for balance changes.</span>
@@ -489,7 +493,7 @@
     <span class="comment">// sync associated accounts</span>
     <span class="ident">AccountsSynchronizer::new</span>(
         <span class="ident">account_handle</span>.<span class="ident">sync_accounts_lock</span>.<span class="ident">clone</span>(),
-        <span class="ident">Arc::new</span>(<span class="ident">RwLock::new</span>(<span class="ident">accounts_to_sync</span>)),
+        <span class="ident">AccountStore::new</span>(<span class="ident">Arc::new</span>(<span class="ident">RwLock::new</span>(<span class="ident">accounts_to_sync</span>))),
         <span class="ident">storage_path</span>,
         <span class="ident">account_handle</span>.<span class="ident">account_options</span>,
     )
