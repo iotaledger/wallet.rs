@@ -422,6 +422,7 @@ async fn check_confirmation(
     bundle_hash: &iota_migration::crypto::ternary::Hash,
     bundle_hash_string: &str,
 ) -> crate::Result<bool> {
+    log::debug!("[MIGRATION] checking confirmation for bundle `{}`", bundle_hash_string);
     let hashes = legacy_client
         .find_transactions()
         .bundles(&[*bundle_hash])
@@ -439,6 +440,7 @@ async fn check_confirmation(
 
     // check if the transaction was confirmed
     if infos.iter().any(|(_, i)| i.confirmed) {
+        log::debug!("[MIGRATION] bundle `{}` confirmed", bundle_hash_string);
         emit_migration_progress(MigrationProgressType::TransactionConfirmed {
             bundle_hash: bundle_hash_string.to_string(),
         })
@@ -447,14 +449,33 @@ async fn check_confirmation(
     }
 
     // Check if there exists a non-lazy tip (requiring no promotion or reattachment)
-    if infos
+    if let Some((hash, _)) = infos
         .iter()
-        .any(|(_, i)| !i.should_promote && !i.should_reattach && !i.conflicting)
+        .find(|(_, i)| !i.should_promote && !i.should_reattach && !i.conflicting)
     {
+        log::debug!(
+            "[MIGRATION] bundle `{}` has a non-lazy tip, tail transaction hash: `{}`",
+            bundle_hash_string,
+            hash.to_inner()
+                .encode::<T3B1Buf>()
+                .iter_trytes()
+                .map(char::from)
+                .collect::<String>()
+        );
         tokio::time::sleep(std::time::Duration::from_secs(5)).await;
     } else {
         for (tail_transaction_hash, info) in infos {
             if info.should_promote {
+                log::debug!(
+                    "[MIGRATION] promoting bundle `{}`, tail transaction hash: `{}`",
+                    bundle_hash_string,
+                    tail_transaction_hash
+                        .to_inner()
+                        .encode::<T3B1Buf>()
+                        .iter_trytes()
+                        .map(char::from)
+                        .collect::<String>()
+                );
                 legacy_client
                     .send(None)
                     .with_transfers(vec![Transfer {
@@ -475,6 +496,16 @@ async fn check_confirmation(
                     .await?;
                 break;
             } else if info.should_reattach {
+                log::debug!(
+                    "[MIGRATION] reattaching bundle `{}`, tail transaction hash: `{}`",
+                    bundle_hash_string,
+                    tail_transaction_hash
+                        .to_inner()
+                        .encode::<T3B1Buf>()
+                        .iter_trytes()
+                        .map(char::from)
+                        .collect::<String>()
+                );
                 legacy_client.reattach(&tail_transaction_hash).await?.finish().await?;
                 break;
             }
