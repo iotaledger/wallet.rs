@@ -454,7 +454,7 @@ async fn check_confirmation(
             transaction.as_trits_allocated(&mut trits);
             let tail_transaction_hash = TernaryHash::from_inner_unchecked(curl.digest(&trits).unwrap());
             let info = legacy_client.get_tip_info(&tail_transaction_hash).await?;
-            infos.push((*transaction.bundle(), info));
+            infos.push((tail_transaction_hash, info));
         }
     }
 
@@ -484,37 +484,7 @@ async fn check_confirmation(
         );
     } else {
         for (tail_transaction_hash, info) in infos {
-            if info.should_promote {
-                log::debug!(
-                    "[MIGRATION] promoting bundle `{}`, tail transaction hash: `{}`",
-                    bundle_hash_string,
-                    tail_transaction_hash
-                        .to_inner()
-                        .encode::<T3B1Buf>()
-                        .iter_trytes()
-                        .map(char::from)
-                        .collect::<String>()
-                );
-                legacy_client
-                    .send(None)
-                    .with_transfers(vec![Transfer {
-                        address: BundleAddress::from_inner_unchecked(
-                            TryteBuf::try_from_str(
-                                "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU",
-                            )
-                            .unwrap()
-                            .as_trits()
-                            .encode(),
-                        ),
-                        value: 0,
-                        message: None,
-                        tag: None,
-                    }])
-                    .with_reference(tail_transaction_hash)
-                    .finish()
-                    .await?;
-                break;
-            } else if info.should_reattach {
+            if info.should_reattach {
                 log::debug!(
                     "[MIGRATION] reattaching bundle `{}`, tail transaction hash: `{}`",
                     bundle_hash_string,
