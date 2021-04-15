@@ -212,7 +212,7 @@ impl TryFrom<RustWalletTransactionEssence> for Essence {
                         if let RustWalletOutput::SignatureLockedSingle(output) = output {
                             Output {
                                 address: output.address().to_bech32(),
-                                amount: *output.amount(),
+                                amount: output.amount(),
                             }
                         } else {
                             unreachable!()

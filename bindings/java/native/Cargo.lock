@@ -351,7 +351,7 @@ dependencies = [
 [[package]]
 name = "bee-message"
 version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#275e12004875146b13a2cde3d2f4a3efbed500fa"
+source = "git+https://github.com/iotaledger/bee.git?branch=chrysalis-pt-2#256b8531e4b8c132b4cadd3f5d80172b94124a92"
 dependencies = [
  "bech32 0.8.0",
  "bee-common",
@@ -1761,7 +1761,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=ce39274fb2a12e123e234dd69192225b7d0e5cf3#ce39274fb2a12e123e234dd69192225b7d0e5cf3"
+source = "git+https://github.com/iotaledger/iota.rs?rev=f84c97ddccb4a4323d300b32cc6028ff9eabe98b#f84c97ddccb4a4323d300b32cc6028ff9eabe98b"
 dependencies = [
  "async-trait",
  "bee-common",
@@ -1833,9 +1833,9 @@ dependencies = [
 [[package]]
 name = "iota-core"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=ce39274fb2a12e123e234dd69192225b7d0e5cf3#ce39274fb2a12e123e234dd69192225b7d0e5cf3"
+source = "git+https://github.com/iotaledger/iota.rs?rev=f84c97ddccb4a4323d300b32cc6028ff9eabe98b#f84c97ddccb4a4323d300b32cc6028ff9eabe98b"
 dependencies = [
- "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=ce39274fb2a12e123e234dd69192225b7d0e5cf3)",
+ "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=f84c97ddccb4a4323d300b32cc6028ff9eabe98b)",
 ]
 
 [[package]]
@@ -1976,7 +1976,7 @@ dependencies = [
  "getset",
  "hex",
  "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=3ce17d74a60f75d44151a334b12e509129a39f43)",
- "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=ce39274fb2a12e123e234dd69192225b7d0e5cf3)",
+ "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=f84c97ddccb4a4323d300b32cc6028ff9eabe98b)",
  "iota-crypto 0.4.2 (git+https://github.com/iotaledger/crypto.rs?branch=dev)",
  "iota-ledger",
  "iota-stronghold",
@@ -2007,7 +2007,7 @@ dependencies = [
  "flapigen",
  "getset",
  "hex",
- "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=ce39274fb2a12e123e234dd69192225b7d0e5cf3)",
+ "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=f84c97ddccb4a4323d300b32cc6028ff9eabe98b)",
  "iota-wallet",
  "jni",
  "log",
