@@ -21,6 +21,9 @@ pub(crate) use iota_migration::{
     ternary::{T1B1Buf, T3B1Buf, TritBuf, TryteBuf},
     transaction::bundled::{Address as BundleAddress, BundledTransaction, BundledTransactionField},
 };
+use iota_migration::crypto::ternary::sponge::CurlP81;
+use iota_migration::crypto::ternary::sponge::Sponge;
+use iota_migration::crypto::ternary::Hash as TernaryHash;
 
 use std::{
     collections::{hash_map::DefaultHasher, HashMap},
@@ -432,10 +435,14 @@ async fn check_confirmation(
         .hashes;
     let bundles = legacy_client.get_trytes(&hashes).await?.trytes;
     let mut infos = Vec::new();
-    for bundle in bundles {
-        if bundle.is_tail() {
-            let info = legacy_client.get_tip_info(&bundle.bundle()).await?;
-            infos.push((*bundle.bundle(), info));
+    for transaction in bundles {
+        if transaction.is_tail() {
+            let mut trits = TritBuf::<T1B1Buf>::zeros(BundledTransaction::trit_len());
+            let mut curl = CurlP81::new();
+            transaction.as_trits_allocated(&mut trits);
+            let tail_transaction_hash = TernaryHash::from_inner_unchecked(curl.digest(&trits).unwrap());
+            let info = legacy_client.get_tip_info(&tail_transaction_hash).await?;
+            infos.push((*transaction.bundle(), info));
         }
     }
 
