@@ -411,6 +411,7 @@ pub(crate) async fn send_bundle(nodes: &[&str], bundle: Vec<BundledTransaction>,
                     break;
                 }
             }
+            tokio::time::sleep(std::time::Duration::from_secs(10)).await;
         }
     });
 
@@ -462,7 +463,6 @@ async fn check_confirmation(
                 .map(char::from)
                 .collect::<String>()
         );
-        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
     } else {
         for (tail_transaction_hash, info) in infos {
             if info.should_promote {
