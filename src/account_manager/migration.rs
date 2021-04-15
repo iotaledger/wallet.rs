@@ -9,6 +9,10 @@ use crate::{
 use chrono::prelude::Utc;
 use serde::Serialize;
 
+use iota_migration::crypto::ternary::{
+    sponge::{CurlP81, Sponge},
+    Hash as TernaryHash,
+};
 pub(crate) use iota_migration::{
     client::{
         migration::{
@@ -21,9 +25,6 @@ pub(crate) use iota_migration::{
     ternary::{T1B1Buf, T3B1Buf, TritBuf, TryteBuf},
     transaction::bundled::{Address as BundleAddress, BundledTransaction, BundledTransactionField},
 };
-use iota_migration::crypto::ternary::sponge::CurlP81;
-use iota_migration::crypto::ternary::sponge::Sponge;
-use iota_migration::crypto::ternary::Hash as TernaryHash;
 
 use std::{
     collections::{hash_map::DefaultHasher, HashMap},
@@ -358,7 +359,7 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
         )
         .as_bytes(),
     )?;
-    let spent_bundle_hashes = match spent_bundle_hashes.is_empty(){
+    let spent_bundle_hashes = match spent_bundle_hashes.is_empty() {
         true => format!("{:?}", spent_bundle_hashes),
         false => "null".to_string(),
     };
@@ -383,7 +384,11 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
     })
 }
 
-pub(crate) async fn send_bundle(nodes: &[&str], bundle: Vec<BundledTransaction>, mwm: u8) -> crate::Result<()> {
+pub(crate) async fn send_bundle(
+    nodes: &[&str],
+    bundle: Vec<BundledTransaction>,
+    mwm: u8,
+) -> crate::Result<iota_migration::crypto::ternary::Hash> {
     let mut builder = iota_migration::ClientBuilder::new();
     for node in nodes {
         builder = builder.node(node)?;
@@ -403,7 +408,7 @@ pub(crate) async fn send_bundle(nodes: &[&str], bundle: Vec<BundledTransaction>,
     })
     .await;
 
-    let _send_trytes = legacy_client
+    let send_trytes = legacy_client
         .send_trytes()
         .with_trytes(bundle)
         .with_depth(2)
@@ -421,8 +426,11 @@ pub(crate) async fn send_bundle(nodes: &[&str], bundle: Vec<BundledTransaction>,
             tokio::time::sleep(std::time::Duration::from_secs(10)).await;
         }
     });
-
-    Ok(())
+    let mut trits = TritBuf::<T1B1Buf>::zeros(BundledTransaction::trit_len());
+    let mut curl = CurlP81::new();
+    send_trytes[0].as_trits_allocated(&mut trits);
+    let tail_transaction_hash = TernaryHash::from_inner_unchecked(curl.digest(&trits).unwrap());
+    Ok(tail_transaction_hash)
 }
 
 async fn check_confirmation(
@@ -437,9 +445,9 @@ async fn check_confirmation(
         .send()
         .await?
         .hashes;
-    let bundles = legacy_client.get_trytes(&hashes).await?.trytes;
+    let transactions = legacy_client.get_trytes(&hashes).await?.trytes;
     let mut infos = Vec::new();
-    for transaction in bundles {
+    for transaction in transactions {
         if transaction.is_tail() {
             let mut trits = TritBuf::<T1B1Buf>::zeros(BundledTransaction::trit_len());
             let mut curl = CurlP81::new();

@@ -48,9 +48,6 @@ use zeroize::Zeroize;
 
 mod migration;
 pub use migration::*;
-use iota_migration::crypto::ternary::sponge::CurlP81;
-use iota_migration::crypto::ternary::sponge::Sponge;
-use iota_migration::crypto::ternary::Hash as TernaryHash;
 
 /// The default storage folder.
 pub const DEFAULT_STORAGE_FOLDER: &str = "./storage";
@@ -484,11 +481,7 @@ impl AccountManager {
             .get(hash)
             .ok_or(crate::Error::MigrationBundleNotFound)?
             .clone();
-        let mut trits = TritBuf::<T1B1Buf>::zeros(BundledTransaction::trit_len());
-        let mut curl = CurlP81::new();
-        bundle.iter().find(|b| b.is_tail()).unwrap().as_trits_allocated(&mut trits);
-        let tail_transaction_hash = TernaryHash::from_inner_unchecked(curl.digest(&trits).unwrap());
-        migration::send_bundle(nodes, bundle.to_vec(), mwm).await?;
+        let tail_transaction_hash = migration::send_bundle(nodes, bundle.to_vec(), mwm).await?;
         self.cached_migration_bundles.lock().await.remove(hash);
 
         Ok(MigratedBundle {
