@@ -279,6 +279,7 @@ pub struct MigrationBundle {
 #[getset(get = "pub")]
 pub struct MigratedBundle {
     /// Hash of the tail transaction.
+    #[serde(rename = "tailTransactionHash")]
     tail_transaction_hash: String,
     /// The deposit address.
     #[serde(with = "crate::serde::iota_address_serde")]
