@@ -278,6 +278,8 @@ pub struct MigrationBundle {
 #[derive(Debug, Getters, Serialize)]
 #[getset(get = "pub")]
 pub struct MigratedBundle {
+    /// Hash of the tail transaction.
+    tail_transaction_hash: String,
     /// The deposit address.
     #[serde(with = "crate::serde::iota_address_serde")]
     address: AddressWrapper,
@@ -478,10 +480,20 @@ impl AccountManager {
             .get(hash)
             .ok_or(crate::Error::MigrationBundleNotFound)?
             .clone();
+        let tail_transaction_hash = *bundle.iter().find(|b| b.is_tail()).unwrap().bundle();
         migration::send_bundle(nodes, bundle.to_vec(), mwm).await?;
         self.cached_migration_bundles.lock().await.remove(hash);
 
-        Ok(MigratedBundle { address, value })
+        Ok(MigratedBundle {
+            tail_transaction_hash: tail_transaction_hash
+                .to_inner()
+                .encode::<T3B1Buf>()
+                .iter_trytes()
+                .map(char::from)
+                .collect::<String>(),
+            address,
+            value,
+        })
     }
 
     async fn load_accounts(

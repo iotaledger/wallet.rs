@@ -17,12 +17,12 @@ pub use iota::{
     TreasuryInput, TreasuryOutput, TreasuryTransactionPayload, UnlockBlock, UtxoInput, MILESTONE_MERKLE_PROOF_LENGTH,
     MILESTONE_PUBLIC_KEY_LENGTH,
 };
-use serde::{de::Deserializer, Deserialize, Serialize};
+use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
 use std::{
     cmp::Ordering,
     collections::hash_map::DefaultHasher,
-    convert::TryInto,
+    convert::{TryFrom, TryInto},
     fmt,
     hash::{Hash, Hasher},
     num::NonZeroU64,
@@ -761,13 +761,65 @@ impl MessageMilestonePayload {
     }
 }
 
+/// Tail transaction hash.
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct MessageTailTransactionHash(TailTransactionHash);
+
+impl<'de> Deserialize<'de> for MessageTailTransactionHash {
+    fn deserialize<D>(deserializer: D) -> Result<MessageTailTransactionHash, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum TailTransactionHashOptions {
+            Raw(TailTransactionHash),
+            Trytes(String),
+        }
+        let tail = TailTransactionHashOptions::deserialize(deserializer)?;
+        let hash = match tail {
+            TailTransactionHashOptions::Raw(hash) => MessageTailTransactionHash(hash),
+            TailTransactionHashOptions::Trytes(trytes) => {
+                let buf = trytes
+                    .chars()
+                    .map(iota_migration::ternary::Tryte::try_from)
+                    .collect::<Result<iota_migration::ternary::TryteBuf, _>>()
+                    .map_err(|_| serde::de::Error::custom("invalid tail transaction hash"))?
+                    .as_trits()
+                    .encode::<iota_migration::ternary::T5B1Buf>();
+                MessageTailTransactionHash(
+                    TailTransactionHash::new(bytemuck::cast_slice(buf.as_slice().as_i8_slice()).try_into().unwrap())
+                        .map_err(|_| serde::de::Error::custom("invalid tail transaction hash"))?,
+                )
+            }
+        };
+        Ok(hash)
+    }
+}
+
+impl Serialize for MessageTailTransactionHash {
+    fn serialize<S: Serializer>(&self, s: S) -> std::result::Result<S::Ok, S::Error> {
+        s.serialize_str(
+            &iota_migration::ternary::Trits::<iota_migration::ternary::T5B1>::try_from_raw(
+                bytemuck::cast_slice(self.0.as_ref()),
+                243,
+            )
+            .map_err(|_| serde::ser::Error::custom("invalid tail transaction hash"))?
+            .to_buf::<iota_migration::ternary::T5B1Buf>()
+            .iter_trytes()
+            .map(char::from)
+            .collect::<String>(),
+        )
+    }
+}
+
 /// Migrated funds entry.
 #[derive(Debug, Clone, Serialize, Deserialize, Getters, Eq, PartialEq)]
 #[getset(get = "pub")]
 pub struct MessageMigratedFundsEntry {
     /// Tail transaction hash.
     #[serde(rename = "tailTransactionHash")]
-    tail_transaction_hash: TailTransactionHash,
+    tail_transaction_hash: MessageTailTransactionHash,
     /// Output.
     output: TransactionSignatureLockedSingleOutput,
 }
@@ -776,7 +828,7 @@ impl MessageMigratedFundsEntry {
     #[doc(hidden)]
     pub fn new(entry: &MigratedFundsEntry, metadata: &TransactionBuilderMetadata<'_>) -> Self {
         Self {
-            tail_transaction_hash: entry.tail_transaction_hash().clone(),
+            tail_transaction_hash: MessageTailTransactionHash(entry.tail_transaction_hash().clone()),
             output: TransactionSignatureLockedSingleOutput::new(entry.output(), metadata.bech32_hrp.clone(), false),
         }
     }

@@ -383,7 +383,7 @@ pub(crate) async fn send_bundle(nodes: &[&str], bundle: Vec<BundledTransaction>,
     }
     let legacy_client = builder.build()?;
 
-    let bundle_hash = bundle.first().unwrap().bundle().clone();
+    let bundle_hash = *bundle.first().unwrap().bundle();
     let bundle_hash_string = bundle_hash
         .to_inner()
         .encode::<T3B1Buf>()
@@ -433,7 +433,7 @@ async fn check_confirmation(
     for bundle in bundles {
         if bundle.is_tail() {
             let info = legacy_client.get_tip_info(&bundle.bundle()).await?;
-            infos.push((bundle.bundle().clone(), info));
+            infos.push((*bundle.bundle(), info));
         }
     }
 
