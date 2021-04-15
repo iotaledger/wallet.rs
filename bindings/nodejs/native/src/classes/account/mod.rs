@@ -7,7 +7,7 @@ use std::{num::NonZeroU64, str::FromStr};
 
 use iota_wallet::{
     address::parse as parse_address,
-    message::{TransferOutput, IndexationPayload, MessageId, RemainderValueStrategy, Transfer},
+    message::{IndexationPayload, MessageId, RemainderValueStrategy, Transfer, TransferOutput},
 };
 use neon::prelude::*;
 use serde::Deserialize;

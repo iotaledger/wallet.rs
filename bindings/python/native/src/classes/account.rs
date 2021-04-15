@@ -13,7 +13,12 @@ use iota_wallet::{
     signing::SignerType as RustSingerType,
 };
 use pyo3::prelude::*;
-use std::{convert::{Into, TryInto}, num::NonZeroU64, str::FromStr, vec};
+use std::{
+    convert::{Into, TryInto},
+    num::NonZeroU64,
+    str::FromStr,
+    vec,
+};
 
 #[pymethods]
 impl AccountSynchronizer {
@@ -101,8 +106,6 @@ impl Transfer {
             transfer: builder.finish(),
         })
     }
-
-
 }
 #[pymethods]
 impl TransferWithOutputs {
@@ -113,7 +116,6 @@ impl TransferWithOutputs {
         remainder_value_strategy: Option<&str>,
         skip_sync: Option<bool>,
     ) -> Result<Self> {
-
         let mut rust_outputs = Vec::new();
         for output in outputs {
             rust_outputs.push(output.try_into()?);

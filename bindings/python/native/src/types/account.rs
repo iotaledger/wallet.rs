@@ -7,7 +7,6 @@ use core::convert::TryFrom;
 use dict_derive::{FromPyObject as DeriveFromPyObject, IntoPyObject as DeriveIntoPyObject};
 use iota::client::NodeInfoWrapper as RustNodeInfoWrapper;
 use iota_wallet::{
-    address::parse as parse_address,
     account::{
         AccountBalance as RustAccountBalance, AccountHandle as RustAccountHandle,
         AccountInitialiser as RustAccountInitialiser, AccountSynchronizer as RustAccountSynchronizer,
@@ -16,12 +15,14 @@ use iota_wallet::{
     account_manager::{
         AccountManager as RustAccountManager, AccountStore, AccountsSynchronizer as RustAccountsSynchronizer,
     },
-    address::Address as RustWalletAddress,
-    message::Transfer as RustTransfer,
-    message::TransferOutput as RustTransferOutput,
+    address::{parse as parse_address, Address as RustWalletAddress},
+    message::{Transfer as RustTransfer, TransferOutput as RustTransferOutput},
 };
 use pyo3::prelude::*;
-use std::{convert::{From, Into}, num::NonZeroU64};
+use std::{
+    convert::{From, Into},
+    num::NonZeroU64,
+};
 
 #[pyclass]
 pub struct AccountManager {
