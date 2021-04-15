@@ -15,10 +15,11 @@ pub(crate) use iota_migration::{
             create_migration_bundle, encode_migration_address, mine, sign_migration_bundle, Address as MigrationAddress,
         },
         response::InputData,
+        Transfer,
     },
     signing::ternary::seed::Seed as TernarySeed,
     ternary::{T1B1Buf, T3B1Buf, TritBuf, TryteBuf},
-    transaction::bundled::{BundledTransaction, BundledTransactionField},
+    transaction::bundled::{Address as BundleAddress, BundledTransaction, BundledTransactionField},
 };
 
 use std::{
@@ -382,17 +383,18 @@ pub(crate) async fn send_bundle(nodes: &[&str], bundle: Vec<BundledTransaction>,
     }
     let legacy_client = builder.build()?;
 
-    let bundle_hash = bundle
-        .first()
-        .unwrap()
-        .bundle()
+    let bundle_hash = bundle.first().unwrap().bundle().clone();
+    let bundle_hash_string = bundle_hash
         .to_inner()
         .encode::<T3B1Buf>()
         .iter_trytes()
         .map(char::from)
         .collect::<String>();
 
-    emit_migration_progress(MigrationProgressType::BroadcastingBundle { bundle_hash }).await;
+    emit_migration_progress(MigrationProgressType::BroadcastingBundle {
+        bundle_hash: bundle_hash_string.clone(),
+    })
+    .await;
 
     let _send_trytes = legacy_client
         .send_trytes()
@@ -401,5 +403,83 @@ pub(crate) async fn send_bundle(nodes: &[&str], bundle: Vec<BundledTransaction>,
         .with_min_weight_magnitude(mwm)
         .finish()
         .await?;
+
+    tokio::spawn(async move {
+        loop {
+            if let Ok(r) = check_confirmation(&legacy_client, &bundle_hash, &bundle_hash_string).await {
+                if r {
+                    break;
+                }
+            }
+        }
+    });
+
     Ok(())
+}
+
+async fn check_confirmation(
+    legacy_client: &iota_migration::Client,
+    bundle_hash: &iota_migration::crypto::ternary::Hash,
+    bundle_hash_string: &str,
+) -> crate::Result<bool> {
+    let hashes = legacy_client
+        .find_transactions()
+        .bundles(&[*bundle_hash])
+        .send()
+        .await?
+        .hashes;
+    let bundles = legacy_client.get_trytes(&hashes).await?.trytes;
+    let mut infos = Vec::new();
+    for bundle in bundles {
+        if bundle.is_tail() {
+            let info = legacy_client.get_tip_info(&bundle.bundle()).await?;
+            infos.push((bundle.bundle().clone(), info));
+        }
+    }
+
+    // check if the transaction was confirmed
+    if infos.iter().any(|(_, i)| i.confirmed) {
+        emit_migration_progress(MigrationProgressType::TransactionConfirmed {
+            bundle_hash: bundle_hash_string.to_string(),
+        })
+        .await;
+        return Ok(true);
+    }
+
+    // Check if there exists a non-lazy tip (requiring no promotion or reattachment)
+    if infos
+        .iter()
+        .any(|(_, i)| !i.should_promote && !i.should_reattach && !i.conflicting)
+    {
+        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+    } else {
+        for (tail_transaction_hash, info) in infos {
+            if info.should_promote {
+                legacy_client
+                    .send(None)
+                    .with_transfers(vec![Transfer {
+                        address: BundleAddress::from_inner_unchecked(
+                            TryteBuf::try_from_str(
+                                "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU",
+                            )
+                            .unwrap()
+                            .as_trits()
+                            .encode(),
+                        ),
+                        value: 0,
+                        message: None,
+                        tag: None,
+                    }])
+                    .with_reference(tail_transaction_hash)
+                    .finish()
+                    .await?;
+                break;
+            } else if info.should_reattach {
+                legacy_client.reattach(&tail_transaction_hash).await?.finish().await?;
+                break;
+            }
+        }
+    }
+
+    Ok(false)
 }

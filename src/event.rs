@@ -195,6 +195,12 @@ pub enum MigrationProgressType {
         #[serde(rename = "bundleHash")]
         bundle_hash: String,
     },
+    /// Transaction confirmation event.
+    TransactionConfirmed {
+        /// The bundle hash.
+        #[serde(rename = "bundleHash")]
+        bundle_hash: String,
+    },
 }
 
 /// Migration event data.
