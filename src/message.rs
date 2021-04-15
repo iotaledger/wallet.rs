@@ -65,10 +65,10 @@ impl Default for RemainderValueStrategy {
 #[derive(Debug, Clone, Deserialize)]
 pub struct TransferOutput {
     /// The output value.
-    pub(crate) amount: NonZeroU64,
+    pub amount: NonZeroU64,
     /// The output address.
     #[serde(with = "crate::serde::iota_address_serde")]
-    pub(crate) address: AddressWrapper,
+    pub address: AddressWrapper,
 }
 
 impl TransferOutput {
@@ -258,6 +258,11 @@ impl Transfer {
     /// Initialises the transfer builder.
     pub fn builder(address: AddressWrapper, amount: NonZeroU64) -> TransferBuilder {
         TransferBuilder::new(address, amount)
+    }
+
+    /// Initialises the transfer builder with multiple outputs.
+    pub fn builder_with_outputs(outputs: Vec<TransferOutput>) -> crate::Result<TransferBuilder> {
+        TransferBuilder::with_outputs(outputs)
     }
 
     pub(crate) async fn emit_event_if_needed(&self, account_id: String, event: TransferProgressType) {

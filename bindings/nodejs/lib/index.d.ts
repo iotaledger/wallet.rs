@@ -142,6 +142,7 @@ export declare class Account {
   listAddresses(unspent?: boolean): Address[]
   sync(options?: SyncOptions): Promise<SyncedAccount>
   send(address: string, amount: number, options?: TransferOptions): Promise<Message>
+  sendToMany(outputs: TransferOutput[], options?: TransferOptions): Promise<Message>
   retry(messageId: string): Promise<Message>
   reattach(messageId: string): Promise<Message>
   promote(messageId: string): Promise<Message>
@@ -166,6 +167,11 @@ export declare class TransferOptions {
   remainderValueStrategy?: RemainderValueStrategy
   indexation?: { index: string | number[] | Uint8Array, data?: string | number[] | Uint8Array }
   skipSync?: boolean
+}
+
+export declare interface TransferOutput {
+  address: string,
+  amount: number
 }
 
 export declare class SyncedAccount { }

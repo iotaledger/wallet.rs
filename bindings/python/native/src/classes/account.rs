@@ -13,11 +13,7 @@ use iota_wallet::{
     signing::SignerType as RustSingerType,
 };
 use pyo3::prelude::*;
-use std::{
-    convert::{Into, TryInto},
-    num::NonZeroU64,
-    str::FromStr,
-};
+use std::{convert::{Into, TryInto}, num::NonZeroU64, str::FromStr, vec};
 
 #[pymethods]
 impl AccountSynchronizer {
@@ -102,6 +98,41 @@ impl Transfer {
             builder = builder.with_skip_sync();
         }
         Ok(Transfer {
+            transfer: builder.finish(),
+        })
+    }
+
+
+}
+#[pymethods]
+impl TransferWithOutputs {
+    #[new]
+    fn new(
+        outputs: Vec<TransferOutput>,
+        indexation: Option<Indexation>,
+        remainder_value_strategy: Option<&str>,
+        skip_sync: Option<bool>,
+    ) -> Result<Self> {
+
+        let mut rust_outputs = Vec::new();
+        for output in outputs {
+            rust_outputs.push(output.try_into()?);
+        }
+
+        let mut builder = RustTransfer::builder_with_outputs(rust_outputs)?;
+        let strategy = match remainder_value_strategy {
+            Some("ReuseAddress") => RustRemainderValueStrategy::ReuseAddress,
+            Some("ChangeAddress") => RustRemainderValueStrategy::ChangeAddress,
+            _ => RustRemainderValueStrategy::ChangeAddress,
+        };
+        builder = builder.with_remainder_value_strategy(strategy);
+        if let Some(indexation) = indexation {
+            builder = builder.with_indexation(indexation.try_into()?);
+        }
+        if skip_sync.unwrap_or_default() {
+            builder = builder.with_skip_sync();
+        }
+        Ok(TransferWithOutputs {
             transfer: builder.finish(),
         })
     }
