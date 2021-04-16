@@ -13,7 +13,7 @@ use crate::{
         BalanceEvent, TransactionConfirmationChangeEvent, TransactionEvent, TransactionEventType,
         TransactionReattachmentEvent,
     },
-    message::{Message, MessagePayload, MessageType, Transfer, TransactionEssence},
+    message::{Message, MessagePayload, MessageType, TransactionEssence, Transfer},
     signing::SignerType,
     storage::{StorageAdapter, Timestamp},
 };
