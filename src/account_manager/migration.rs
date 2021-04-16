@@ -360,8 +360,8 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
         .as_bytes(),
     )?;
     let spent_bundle_hashes = match spent_bundle_hashes.is_empty() {
-        true => format!("{:?}", spent_bundle_hashes),
-        false => "null".to_string(),
+        false => format!("{:?}", spent_bundle_hashes),
+        true => "null".to_string(),
     };
     log.write_all(format!("spentBundleHashes: {}\n", spent_bundle_hashes).as_bytes())?;
     log.write_all(format!("mine: {}\n", bundle_mine).as_bytes())?;
