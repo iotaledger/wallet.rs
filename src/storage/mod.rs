@@ -306,7 +306,7 @@ impl StorageManager {
                 value,
                 reattachment_message_id: None,
             };
-            if let Some(position) = message_indexation.iter().position(|i| i == &index) {
+            if let Some(position) = message_indexation.iter().position(|i| i.key == index.key) {
                 message_indexation[position] = index.clone();
             } else {
                 message_indexation.push(index.clone());
