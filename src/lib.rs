@@ -521,7 +521,7 @@ mod test_utils {
                             index: 0,
                             amount: 10000000,
                             is_spent: false,
-                            address: address,
+                            address,
                             kind: crate::address::OutputKind::SignatureLockedSingle,
                         });
                         essence.incoming = essence.is_incoming(&self.account_addresses);
