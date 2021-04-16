@@ -345,17 +345,28 @@ impl StorageManager {
         } else {
             iter.take(count).collect::<Vec<&MessageIndexation>>()
         } {
-            match &filter.ignore_ids {
+            let message: Option<Message> = match &filter.ignore_ids {
                 Some(ignore_ids) => {
                     if !ignore_ids.contains_key(&index.key) {
                         let message = self.get(&index.key.to_string()).await?;
-                        messages.push(serde_json::from_str(&message)?);
+                        Some(serde_json::from_str(&message)?)
+                    } else {
+                        None
                     }
                 }
                 None => {
                     let message = self.get(&index.key.to_string()).await?;
-                    messages.push(serde_json::from_str(&message)?);
+                    Some(serde_json::from_str(&message)?)
                 }
+            };
+            if let Some(mut message) = message {
+                // we update the `incoming` prop because we store only one copy of the message on the db
+                // so on internal transactions the `incoming` prop is wrong without this
+                if let Some(MessagePayload::Transaction(tx)) = message.payload.as_mut() {
+                    let TransactionEssence::Regular(essence) = tx.essence_mut();
+                    essence.incoming = index.incoming.unwrap_or_default();
+                }
+                messages.push(message);
             }
         }
         Ok(messages)
