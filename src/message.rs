@@ -404,6 +404,10 @@ impl TransactionRegularEssence {
         &self.inputs
     }
 
+    pub(crate) fn inputs_mut(&mut self) -> &mut [TransactionInput] {
+        &mut self.inputs
+    }
+
     /// Gets the transaction outputs.
     pub fn outputs(&self) -> &[TransactionOutput] {
         &self.outputs

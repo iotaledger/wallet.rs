@@ -438,8 +438,9 @@ mod test_utils {
         address: Address,
         confirmed: Option<bool>,
         broadcasted: bool,
-        incoming: bool,
         input_transaction_id: TransactionId,
+        input_address: Option<AddressWrapper>,
+        account_addresses: Vec<Address>,
     }
 
     impl Default for GenerateMessageBuilder {
@@ -449,8 +450,9 @@ mod test_utils {
                 address: generate_random_address(),
                 confirmed: Some(false),
                 broadcasted: false,
-                incoming: false,
                 input_transaction_id: TransactionId::new([0; 32]),
+                input_address: None,
+                account_addresses: Vec::new(),
             }
         }
     }
@@ -461,8 +463,9 @@ mod test_utils {
         address => Address,
         confirmed => Option<bool>,
         broadcasted => bool,
-        incoming => bool,
-        input_transaction_id => TransactionId
+        input_transaction_id => TransactionId,
+        input_address => Option<AddressWrapper>,
+        account_addresses => Vec<Address>
     );
 
     impl GenerateMessageBuilder {
@@ -476,7 +479,7 @@ mod test_utils {
                 bech32_hrp,
                 account_id: "",
                 accounts: AccountStore::new(Default::default()),
-                account_addresses: &[],
+                account_addresses: &self.account_addresses,
                 client_options: &ClientOptionsBuilder::new().build().unwrap(),
             };
 
@@ -509,7 +512,21 @@ mod test_utils {
             .unwrap();
             if let MessagePayload::Transaction(ref mut tx) = payload {
                 let TransactionEssence::Regular(ref mut essence) = tx.essence_mut();
-                essence.incoming = self.incoming;
+                if let Some(address) = self.input_address {
+                    let input = essence.inputs_mut().iter_mut().next().unwrap();
+                    if let crate::message::TransactionInput::Utxo(ref mut utxo) = input {
+                        utxo.metadata.replace(crate::address::AddressOutput {
+                            transaction_id: self.input_transaction_id,
+                            message_id: iota::MessageId::from([0; 32]),
+                            index: 0,
+                            amount: 10000000,
+                            is_spent: false,
+                            address: address,
+                            kind: crate::address::OutputKind::SignatureLockedSingle,
+                        });
+                        essence.incoming = essence.is_incoming(&self.account_addresses);
+                    }
+                }
             }
 
             Message {
