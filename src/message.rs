@@ -404,6 +404,7 @@ impl TransactionRegularEssence {
         &self.inputs
     }
 
+    #[allow(dead_code)]
     pub(crate) fn inputs_mut(&mut self) -> &mut [TransactionInput] {
         &mut self.inputs
     }
