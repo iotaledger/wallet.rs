@@ -292,7 +292,12 @@ impl StorageManager {
             let (value, internal, incoming) = match message.payload() {
                 Some(MessagePayload::Transaction(tx)) => {
                     let TransactionEssence::Regular(essence) = tx.essence();
-                    (essence.value(), Some(essence.internal()), Some(essence.incoming()))
+                    (
+                        essence.value(),
+                        Some(essence.internal()),
+                        // recompute the `incoming` flag on the indexation
+                        Some(essence.is_incoming(account.addresses())),
+                    )
                 }
                 _ => (0, None, None),
             };
