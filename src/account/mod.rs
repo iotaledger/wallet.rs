@@ -197,8 +197,6 @@ impl AccountInitialiser {
 
     /// Initialises the account.
     pub async fn initialise(mut self) -> crate::Result<AccountHandle> {
-        let accounts = self.accounts.read().await;
-
         let signer_type = self.signer_type.ok_or(crate::Error::AccountInitialiseRequiredField(
             crate::error::AccountInitialiseRequiredField::SignerType,
         ))?;
@@ -207,7 +205,7 @@ impl AccountInitialiser {
             index
         } else {
             let mut account_index = 0;
-            for account in accounts.values() {
+            for account in self.accounts.read().await.values() {
                 if account.read().await.signer_type() == &signer_type {
                     account_index += 1;
                 }
@@ -220,7 +218,7 @@ impl AccountInitialiser {
 
         let mut latest_account_handle: Option<AccountHandle> = None;
         let mut latest_account_index = 0;
-        for account_handle in accounts.values() {
+        for account_handle in self.accounts.read().await.values() {
             let account = account_handle.read().await;
             if account.alias() == &alias {
                 return Err(crate::Error::AccountAliasAlreadyExists);
@@ -354,7 +352,6 @@ impl AccountInitialiser {
                 self.account_options,
                 self.sync_accounts_lock.clone(),
             );
-            drop(accounts);
             self.accounts.write().await.insert(account_id, guard.clone());
             // monitor on a non-async function to prevent cycle computing the `monitor_address_balance` fn type
             monitor_address(guard.clone());
