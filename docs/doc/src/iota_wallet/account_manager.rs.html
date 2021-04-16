@@ -2136,6 +2136,10 @@
 <span id="2133">2133</span>
 <span id="2134">2134</span>
 <span id="2135">2135</span>
+<span id="2136">2136</span>
+<span id="2137">2137</span>
+<span id="2138">2138</span>
+<span id="2139">2139</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2152,7 +2156,7 @@
         <span class="ident">BalanceEvent</span>, <span class="ident">TransactionConfirmationChangeEvent</span>, <span class="ident">TransactionEvent</span>, <span class="ident">TransactionEventType</span>,
         <span class="ident">TransactionReattachmentEvent</span>,
     },
-    <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessagePayload</span>, <span class="ident">MessageType</span>, <span class="ident">Transfer</span>},
+    <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessagePayload</span>, <span class="ident">MessageType</span>, <span class="ident">TransactionEssence</span>, <span class="ident">Transfer</span>},
     <span class="ident">signing::SignerType</span>,
     <span class="ident">storage</span>::{<span class="ident">StorageAdapter</span>, <span class="ident">Timestamp</span>},
 };
@@ -2875,7 +2879,11 @@
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// store the message on the receive account</span>
-        <span class="kw">let</span> <span class="ident">message_</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">message_</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">clone</span>();
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">MessagePayload::Transaction</span>(<span class="ident">tx</span>)) <span class="op">=</span> <span class="ident">message_</span>.<span class="ident">payload</span>.<span class="ident">as_mut</span>() {
+            <span class="kw">let</span> <span class="ident">TransactionEssence::Regular</span>(<span class="ident">essence</span>) <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">essence_mut</span>();
+            <span class="ident">essence</span>.<span class="ident">incoming</span> <span class="op">=</span> <span class="bool-val">true</span>;
+        }
         <span class="ident">to_account_handle</span>.<span class="ident">write</span>().<span class="kw">await</span>.<span class="ident">save_messages</span>(<span class="macro">vec!</span>[<span class="ident">message_</span>]).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="ident">message</span>)
