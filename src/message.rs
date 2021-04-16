@@ -404,6 +404,11 @@ impl TransactionRegularEssence {
         &self.inputs
     }
 
+    #[allow(dead_code)]
+    pub(crate) fn inputs_mut(&mut self) -> &mut [TransactionInput] {
+        &mut self.inputs
+    }
+
     /// Gets the transaction outputs.
     pub fn outputs(&self) -> &[TransactionOutput] {
         &self.outputs
@@ -436,6 +441,16 @@ impl TransactionRegularEssence {
 }
 
 impl TransactionRegularEssence {
+    pub(crate) fn is_incoming(&self, account_addresses: &[Address]) -> bool {
+        !self.inputs().iter().any(|i| match i {
+            crate::message::TransactionInput::Utxo(input) => match input.metadata {
+                Some(ref input_metadata) => account_addresses.iter().any(|a| &input_metadata.address == a.address()),
+                None => false,
+            },
+            _ => false,
+        })
+    }
+
     async fn new(regular_essence: &RegularEssence, metadata: &TransactionBuilderMetadata<'_>) -> crate::Result<Self> {
         let mut inputs = Vec::new();
         for input in regular_essence.inputs() {
@@ -611,17 +626,6 @@ impl TransactionRegularEssence {
             remainder_value,
         };
 
-        let sent = essence.inputs().iter().any(|i| match i {
-            TransactionInput::Utxo(input) => match input.metadata {
-                Some(ref input_metadata) => metadata
-                    .account_addresses
-                    .iter()
-                    .any(|a| &input_metadata.address == a.address()),
-                None => false,
-            },
-            _ => false,
-        });
-
         let is_internal = is_internal(
             &essence,
             metadata.accounts.clone(),
@@ -630,7 +634,7 @@ impl TransactionRegularEssence {
         )
         .await;
         essence.internal = is_internal;
-        essence.incoming = !sent;
+        essence.incoming = essence.is_incoming(&metadata.account_addresses);
 
         Ok(essence)
     }

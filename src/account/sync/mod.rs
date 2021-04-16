@@ -556,11 +556,7 @@ async fn perform_sync(
     let mut new_messages = vec![];
     for found_message in found_messages {
         let message_exists = account
-            .with_messages(|messages| {
-                messages
-                    .iter()
-                    .any(|message| message.key == found_message.id && message.confirmed == Some(true))
-            })
+            .with_messages(|messages| messages.iter().any(|message| message.key == found_message.id))
             .await;
         if !message_exists {
             new_messages.push(found_message);

@@ -292,7 +292,12 @@ impl StorageManager {
             let (value, internal, incoming) = match message.payload() {
                 Some(MessagePayload::Transaction(tx)) => {
                     let TransactionEssence::Regular(essence) = tx.essence();
-                    (essence.value(), Some(essence.internal()), Some(essence.incoming()))
+                    (
+                        essence.value(),
+                        Some(essence.internal()),
+                        // recompute the `incoming` flag on the indexation
+                        Some(essence.is_incoming(account.addresses())),
+                    )
                 }
                 _ => (0, None, None),
             };
@@ -306,7 +311,7 @@ impl StorageManager {
                 value,
                 reattachment_message_id: None,
             };
-            if let Some(position) = message_indexation.iter().position(|i| i == &index) {
+            if let Some(position) = message_indexation.iter().position(|i| i.key == index.key) {
                 message_indexation[position] = index.clone();
             } else {
                 message_indexation.push(index.clone());
@@ -345,17 +350,28 @@ impl StorageManager {
         } else {
             iter.take(count).collect::<Vec<&MessageIndexation>>()
         } {
-            match &filter.ignore_ids {
+            let message: Option<Message> = match &filter.ignore_ids {
                 Some(ignore_ids) => {
                     if !ignore_ids.contains_key(&index.key) {
                         let message = self.get(&index.key.to_string()).await?;
-                        messages.push(serde_json::from_str(&message)?);
+                        Some(serde_json::from_str(&message)?)
+                    } else {
+                        None
                     }
                 }
                 None => {
                     let message = self.get(&index.key.to_string()).await?;
-                    messages.push(serde_json::from_str(&message)?);
+                    Some(serde_json::from_str(&message)?)
                 }
+            };
+            if let Some(mut message) = message {
+                // we update the `incoming` prop because we store only one copy of the message on the db
+                // so on internal transactions the `incoming` prop is wrong without this
+                if let Some(MessagePayload::Transaction(tx)) = message.payload.as_mut() {
+                    let TransactionEssence::Regular(essence) = tx.essence_mut();
+                    essence.incoming = index.incoming.unwrap_or_default();
+                }
+                messages.push(message);
             }
         }
         Ok(messages)
