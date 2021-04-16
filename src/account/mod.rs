@@ -235,7 +235,7 @@ impl AccountInitialiser {
             if latest_account.with_messages(|messages| messages.is_empty()).await
                 && latest_account.addresses().iter().all(|a| a.outputs.is_empty())
             {
-                return Err(crate::Error::LatestAccountIsEmpty);
+                // return Err(crate::Error::LatestAccountIsEmpty);
             }
         }
 

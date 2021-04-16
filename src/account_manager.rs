@@ -1027,6 +1027,7 @@ pub struct AccountsSynchronizer {
     gap_limit: Option<usize>,
     account_options: AccountOptions,
     discover_accounts: bool,
+    account_discovery_threshold: usize,
     skip_change_addresses: bool,
     ran_account_discovery: bool,
     steps: Option<Vec<AccountSynchronizeStep>>,
@@ -1047,6 +1048,7 @@ impl AccountsSynchronizer {
             gap_limit: None,
             account_options,
             discover_accounts: true,
+            account_discovery_threshold: 1,
             skip_change_addresses: false,
             ran_account_discovery: false,
             steps: None,
@@ -1074,6 +1076,12 @@ impl AccountsSynchronizer {
     /// Skip syncing existing change addresses.
     pub fn skip_change_addresses(mut self) -> Self {
         self.skip_change_addresses = true;
+        self
+    }
+
+    /// Sets the minimum number of accounts to check on the discovery process.
+    pub fn account_discovery_threshold(mut self, account_discovery_threshold: usize) -> Self {
+        self.account_discovery_threshold = account_discovery_threshold;
         self
     }
 
@@ -1170,11 +1178,12 @@ impl AccountsSynchronizer {
 
         let discovered_accounts_res = match last_account {
             Some((is_empty, client_options, signer_type)) => {
-                if !is_empty {
+                if !is_empty || self.account_discovery_threshold > 0 {
                     if self.discover_accounts {
                         log::debug!("[SYNC] running account discovery because the latest account is not empty");
                         discover_accounts(
                             self.accounts.clone(),
+                            self.account_discovery_threshold,
                             &self.storage_file_path,
                             &client_options,
                             Some(signer_type),
@@ -1378,6 +1387,7 @@ async fn poll(
 
 async fn discover_accounts(
     accounts: AccountStore,
+    threshold: usize,
     storage_path: &Path,
     client_options: &ClientOptions,
     signer_type: Option<SignerType>,
@@ -1385,7 +1395,8 @@ async fn discover_accounts(
     sync_accounts_lock: Arc<Mutex<()>>,
 ) -> crate::Result<Vec<(AccountHandle, SyncedAccountData)>> {
     let mut synced_accounts = vec![];
-    let mut index = accounts.read().await.len();
+    let last_account_index = accounts.read().await.len() - 1;
+    let mut index = last_account_index + 1;
     loop {
         let mut account_initialiser = AccountInitialiser::new(
             client_options.clone(),
@@ -1413,11 +1424,13 @@ async fn discover_accounts(
                     .all(|a| a.balance() == 0 && a.outputs().is_empty());
                 log::debug!("[SYNC] discovered account is empty? {}", is_empty);
                 if is_empty {
-                    break;
+                    if index - last_account_index >= threshold {
+                        break;
+                    }
                 } else {
-                    index += 1;
                     synced_accounts.push((account_handle, synced_account_data));
                 }
+                index += 1;
             }
             Err(e) => {
                 log::error!("[SYNC] failed to sync to discover account: {:?}", e);
