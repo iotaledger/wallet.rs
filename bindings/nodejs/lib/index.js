@@ -77,6 +77,28 @@ Account.prototype.send = function (address, amount, options) {
   }
 }
 
+const sendToMany = Account.prototype.sendToMany
+Account.prototype.sendToMany = function (outputs, options) {
+  if (options && (typeof options === 'object')) {
+    const formattedOptions = options
+    if (options.indexation) {
+      let index = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.index) :  options.indexation.index
+      let data = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.data) :  options.indexation.data
+      formattedOptions.indexation = {
+        index: Array.from(index),
+        data: data ? Array.from(data) : null,
+      }
+    }
+    if (options.remainderValueStrategy) {
+      formattedOptions.remainderValueStrategy = options.remainderValueStrategy
+    }
+    return promisify(sendToMany).apply(this, [outputs, formattedOptions])
+  } else {
+    return promisify(sendToMany).apply(this, options ? [outputs, options] : [outputs])
+  }
+}
+
+
 Account.prototype.retry = promisify(Account.prototype.retry)
 Account.prototype.reattach = promisify(Account.prototype.reattach)
 Account.prototype.promote = promisify(Account.prototype.promote)

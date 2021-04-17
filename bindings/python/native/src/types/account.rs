@@ -1,6 +1,9 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use super::error::{Error, Result};
+
+use core::convert::TryFrom;
 use dict_derive::{FromPyObject as DeriveFromPyObject, IntoPyObject as DeriveIntoPyObject};
 use iota::client::NodeInfoWrapper as RustNodeInfoWrapper;
 use iota_wallet::{
@@ -12,11 +15,14 @@ use iota_wallet::{
     account_manager::{
         AccountManager as RustAccountManager, AccountStore, AccountsSynchronizer as RustAccountsSynchronizer,
     },
-    address::Address as RustWalletAddress,
-    message::Transfer as RustTransfer,
+    address::{parse as parse_address, Address as RustWalletAddress},
+    message::{Transfer as RustTransfer, TransferOutput as RustTransferOutput},
 };
 use pyo3::prelude::*;
-use std::convert::{From, Into};
+use std::{
+    convert::{From, Into},
+    num::NonZeroU64,
+};
 
 #[pyclass]
 pub struct AccountManager {
@@ -56,6 +62,12 @@ pub struct Transfer {
     pub transfer: RustTransfer,
 }
 
+#[pyclass]
+#[derive(Debug, Clone)]
+pub struct TransferWithOutputs {
+    pub transfer: RustTransfer,
+}
+
 #[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct AccountBalance {
     /// Account's total balance.
@@ -80,6 +92,22 @@ impl From<RustAccountBalance> for AccountBalance {
             incoming: acount_balance.incoming,
             outgoing: acount_balance.outgoing,
         }
+    }
+}
+
+#[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
+pub struct TransferOutput {
+    pub address: String,
+    pub amount: u64,
+}
+
+impl TryFrom<TransferOutput> for RustTransferOutput {
+    type Error = Error;
+    fn try_from(info: TransferOutput) -> Result<Self> {
+        Ok(RustTransferOutput {
+            address: parse_address(info.address)?,
+            amount: NonZeroU64::new(info.amount).unwrap(),
+        })
     }
 }
 

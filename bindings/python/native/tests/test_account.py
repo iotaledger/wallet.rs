@@ -62,6 +62,18 @@ def test_account_handle_transfer():
     except ValueError as e:
         assert 'insufficient funds' in str(e)
 
+def test_account_handle_transfer_with_outputs():
+    pat = tv['transfer']
+    transfer_outputs = [{ "address": pat['address'], "amount": pat['amount'] }]
+    transfer = iw.TransferWithOutputs(outputs=transfer_outputs,
+                           remainder_value_strategy=pat['remainder_value_strategy'])
+
+    try:
+        node_response = account.transfer_with_outputs(transfer)
+        # Should be insufficient funds
+        assert False
+    except ValueError as e:
+        assert 'insufficient funds' in str(e)
 
 def test_account_handle_retry():
     message_id = tv['account_handle']['message_id']
