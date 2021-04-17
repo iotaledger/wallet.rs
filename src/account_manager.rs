@@ -1386,6 +1386,7 @@ async fn poll(
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn discover_accounts(
     accounts: AccountStore,
     threshold: usize,
