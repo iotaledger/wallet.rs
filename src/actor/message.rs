@@ -132,6 +132,9 @@ pub enum MessageType {
         /// The gap limit.
         #[serde(rename = "gapLimit")]
         gap_limit: Option<usize>,
+        /// Minimum number of accounts to check on discovery.
+        #[serde(rename = "accountDiscoveryThreshold")]
+        account_discovery_threshold: Option<usize>,
     },
     /// Reattach message.
     Reattach {
@@ -246,6 +249,7 @@ impl Serialize for MessageType {
             MessageType::SyncAccounts {
                 address_index: _,
                 gap_limit: _,
+                account_discovery_threshold: _,
             } => serializer.serialize_unit_variant("MessageType", 5, "SyncAccounts"),
             MessageType::Reattach {
                 account_id: _,
