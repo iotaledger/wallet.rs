@@ -1359,6 +1359,7 @@ impl AccountsSynchronizer {
                         log::debug!("[SYNC] running account discovery because the latest account is not empty");
                         discover_accounts(
                             self.accounts.clone(),
+                            self.gap_limit,
                             &self.storage_file_path,
                             &client_options,
                             Some(signer_type),
@@ -1562,6 +1563,7 @@ async fn poll(
 
 async fn discover_accounts(
     accounts: AccountStore,
+    gap_limit: Option<usize>,
     storage_path: &Path,
     client_options: &ClientOptions,
     signer_type: Option<SignerType>,
@@ -1589,7 +1591,11 @@ async fn discover_accounts(
             account_handle.read().await.alias(),
             account_handle.read().await.signer_type()
         );
-        match account_handle.sync().await.get_new_history().await {
+        let mut synchronizer = account_handle.sync().await;
+        if let Some(gap_limit) = gap_limit {
+            synchronizer = synchronizer.gap_limit(gap_limit);
+        }
+        match synchronizer.get_new_history().await {
             Ok(synced_account_data) => {
                 let is_empty = synced_account_data
                     .addresses
