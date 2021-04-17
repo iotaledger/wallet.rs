@@ -197,8 +197,6 @@ impl AccountInitialiser {
 
     /// Initialises the account.
     pub async fn initialise(mut self) -> crate::Result<AccountHandle> {
-        let accounts = self.accounts.read().await;
-
         let signer_type = self.signer_type.ok_or(crate::Error::AccountInitialiseRequiredField(
             crate::error::AccountInitialiseRequiredField::SignerType,
         ))?;
@@ -207,7 +205,7 @@ impl AccountInitialiser {
             index
         } else {
             let mut account_index = 0;
-            for account in accounts.values() {
+            for account in self.accounts.read().await.values() {
                 if account.read().await.signer_type() == &signer_type {
                     account_index += 1;
                 }
@@ -220,7 +218,7 @@ impl AccountInitialiser {
 
         let mut latest_account_handle: Option<AccountHandle> = None;
         let mut latest_account_index = 0;
-        for account_handle in accounts.values() {
+        for account_handle in self.accounts.read().await.values() {
             let account = account_handle.read().await;
             if account.alias() == &alias {
                 return Err(crate::Error::AccountAliasAlreadyExists);
@@ -354,7 +352,6 @@ impl AccountInitialiser {
                 self.account_options,
                 self.sync_accounts_lock.clone(),
             );
-            drop(accounts);
             self.accounts.write().await.insert(account_id, guard.clone());
             // monitor on a non-async function to prevent cycle computing the `monitor_address_balance` fn type
             monitor_address(guard.clone());
@@ -1246,6 +1243,9 @@ mod tests {
             .address(first_address.clone())
             .value(15)
             .input_transaction_id(first_address.outputs.values().next().unwrap().transaction_id)
+            .input_address(Some(second_address.address().clone()))
+            .account_addresses(account_handle.addresses().await)
+            .confirmed(None)
             .build()
             .await;
         let confirmed_message = crate::test_utils::GenerateMessageBuilder::default()
@@ -1285,7 +1285,7 @@ mod tests {
         let latest_address = account_handle.read().await.latest_address().clone();
         let received_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
-            .incoming(true)
+            .input_address(Some(crate::test_utils::generate_random_iota_address()))
             .build()
             .await;
         let failed_message = crate::test_utils::GenerateMessageBuilder::default()
@@ -1331,35 +1331,33 @@ mod tests {
 
         let received_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
-            .incoming(true)
+            .input_address(Some(external_address.address().clone()))
             .confirmed(Some(true))
             .broadcasted(true)
             .build()
             .await;
         let sent_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(external_address.clone())
-            .incoming(false)
+            .input_address(Some(latest_address.address().clone()))
+            .account_addresses(account_handle.addresses().await)
             .confirmed(Some(true))
             .broadcasted(true)
             .build()
             .await;
         let failed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
-            .incoming(false)
             .confirmed(Some(true))
             .broadcasted(false)
             .build()
             .await;
         let unconfirmed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
-            .incoming(false)
             .confirmed(None)
             .broadcasted(true)
             .build()
             .await;
         let value_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
-            .incoming(false)
             .confirmed(Some(true))
             .broadcasted(true)
             .build()
@@ -1391,7 +1389,7 @@ mod tests {
             assert_eq!(
                 messages.len(),
                 match tx_type {
-                    MessageType::Sent => 4,
+                    MessageType::Received => 4,
                     MessageType::Confirmed => 4,
                     MessageType::Value => 5,
                     _ => 1,
@@ -1434,7 +1432,7 @@ mod tests {
 
                 let spent_tx = crate::test_utils::GenerateMessageBuilder::default()
                     .address(spent_address.clone())
-                    .incoming(false)
+                    .input_address(Some(unspent_address1.address().clone()))
                     .build()
                     .await;
 
