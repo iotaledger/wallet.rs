@@ -1937,6 +1937,15 @@
 <span id="1934">1934</span>
 <span id="1935">1935</span>
 <span id="1936">1936</span>
+<span id="1937">1937</span>
+<span id="1938">1938</span>
+<span id="1939">1939</span>
+<span id="1940">1940</span>
+<span id="1941">1941</span>
+<span id="1942">1942</span>
+<span id="1943">1943</span>
+<span id="1944">1944</span>
+<span id="1945">1945</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -3030,13 +3039,13 @@
         <span class="ident">transfer_obj</span>: <span class="kw-2">&amp;</span><span class="ident">Transfer</span>,
         <span class="ident">sent_messages</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">Message</span>],
         <span class="ident">addresses</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">Address</span>],
-        <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">AddressWrapper</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">input_selection::Input</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">input_selection::Input</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">available_addresses</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">input_selection::Input</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">addresses</span>
             .<span class="ident">iter</span>()
             .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> {
                 <span class="comment">// we allow an input equal to the deposit address only if it has more than one output</span>
-                (<span class="ident">a</span>.<span class="ident">address</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">address</span> <span class="op">|</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">available_outputs</span>(<span class="kw-2">&amp;</span><span class="ident">sent_messages</span>).<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">1</span>)
+                (<span class="op">!</span><span class="ident">transfer_obj</span>.<span class="ident">outputs</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">o</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">o</span>.<span class="ident">address</span> <span class="op">=</span><span class="op">=</span> <span class="ident">a</span>.<span class="ident">address</span>())
+                    <span class="op">|</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">available_outputs</span>(<span class="kw-2">&amp;</span><span class="ident">sent_messages</span>).<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">1</span>)
                     <span class="op">&amp;&amp;</span> <span class="ident">a</span>.<span class="ident">available_balance</span>(<span class="kw-2">&amp;</span><span class="ident">sent_messages</span>) <span class="op">&gt;</span> <span class="number">0</span>
                     <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">locked_addresses</span>.<span class="ident">contains</span>(<span class="ident">a</span>.<span class="ident">address</span>())
             })
@@ -3046,21 +3055,24 @@
                 <span class="ident">balance</span>: <span class="ident">a</span>.<span class="ident">available_balance</span>(<span class="kw-2">&amp;</span><span class="ident">sent_messages</span>),
             })
             .<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">selected_addresses</span> <span class="op">=</span> <span class="ident">input_selection::select_input</span>(<span class="ident">transfer_obj</span>.<span class="ident">amount</span>.<span class="ident">get</span>(), <span class="ident">available_addresses</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">has_remainder</span> <span class="op">=</span> <span class="ident">selected_addresses</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">a</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">a</span>.<span class="ident">balance</span>) <span class="op">&gt;</span> <span class="ident">transfer_obj</span>.<span class="ident">amount</span>.<span class="ident">get</span>();
+        <span class="kw">let</span> <span class="ident">transfer_amount</span> <span class="op">=</span> <span class="ident">transfer_obj</span>.<span class="ident">amount</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">selected_addresses</span> <span class="op">=</span> <span class="ident">input_selection::select_input</span>(<span class="ident">transfer_amount</span>, <span class="ident">available_addresses</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">has_remainder</span> <span class="op">=</span> <span class="ident">selected_addresses</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">a</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">a</span>.<span class="ident">balance</span>) <span class="op">&gt;</span> <span class="ident">transfer_amount</span>;
 
         <span class="comment">// if we&#39;re reusing the input address for remainder output</span>
         <span class="comment">// and we have remainder value, we should run the input selection again</span>
         <span class="comment">// without the output address.</span>
         <span class="kw">if</span> <span class="ident">has_remainder</span>
             <span class="op">&amp;&amp;</span> <span class="ident">transfer_obj</span>.<span class="ident">remainder_value_strategy</span> <span class="op">=</span><span class="op">=</span> <span class="ident">RemainderValueStrategy::ReuseAddress</span>
-            <span class="op">&amp;&amp;</span> <span class="ident">addresses</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">input</span><span class="op">|</span> <span class="ident">input</span>.<span class="ident">address</span>() <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">transfer_obj</span>.<span class="ident">address</span>)
+            <span class="op">&amp;&amp;</span> <span class="ident">addresses</span>
+                .<span class="ident">iter</span>()
+                .<span class="ident">any</span>(<span class="op">|</span><span class="ident">input</span><span class="op">|</span> <span class="ident">transfer_obj</span>.<span class="ident">outputs</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">o</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">o</span>.<span class="ident">address</span> <span class="op">=</span><span class="op">=</span> <span class="ident">input</span>.<span class="ident">address</span>()))
         {
             <span class="kw">let</span> <span class="ident">available_addresses</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">input_selection::Input</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">addresses</span>
                 .<span class="ident">iter</span>()
                 .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> {
                     <span class="comment">// we do not allow the deposit address as input address</span>
-                    <span class="ident">a</span>.<span class="ident">address</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">address</span>
+                    <span class="op">!</span><span class="ident">transfer_obj</span>.<span class="ident">outputs</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">o</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">o</span>.<span class="ident">address</span> <span class="op">=</span><span class="op">=</span> <span class="ident">a</span>.<span class="ident">address</span>())
                         <span class="op">&amp;&amp;</span> <span class="ident">a</span>.<span class="ident">available_balance</span>(<span class="kw-2">&amp;</span><span class="ident">sent_messages</span>) <span class="op">&gt;</span> <span class="number">0</span>
                         <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">locked_addresses</span>.<span class="ident">contains</span>(<span class="ident">a</span>.<span class="ident">address</span>())
                 })
@@ -3070,7 +3082,7 @@
                     <span class="ident">balance</span>: <span class="ident">a</span>.<span class="ident">available_balance</span>(<span class="kw-2">&amp;</span><span class="ident">sent_messages</span>),
                 })
                 .<span class="ident">collect</span>();
-            <span class="ident">selected_addresses</span> <span class="op">=</span> <span class="ident">input_selection::select_input</span>(<span class="ident">transfer_obj</span>.<span class="ident">amount</span>.<span class="ident">get</span>(), <span class="ident">available_addresses</span>)<span class="question-mark">?</span>;
+            <span class="ident">selected_addresses</span> <span class="op">=</span> <span class="ident">input_selection::select_input</span>(<span class="ident">transfer_obj</span>.<span class="ident">amount</span>(), <span class="ident">available_addresses</span>)<span class="question-mark">?</span>;
         }
 
         <span class="ident">locked_addresses</span>.<span class="ident">extend</span>(
@@ -3142,13 +3154,13 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">transfer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">transfer_obj</span>: <span class="ident">Transfer</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">account_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>;
 
-        <span class="comment">// if the deposit address belongs to the account, we&#39;ll reuse the input address</span>
+        <span class="comment">// if any of the deposit addresses belongs to the account, we&#39;ll reuse the input address</span>
         <span class="comment">// for remainder value output. This is the only way to know the transaction value for</span>
         <span class="comment">// transactions between account addresses.</span>
         <span class="kw">if</span> <span class="ident">account_</span>
             .<span class="ident">addresses</span>()
             .<span class="ident">iter</span>()
-            .<span class="ident">any</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">address</span>() <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">transfer_obj</span>.<span class="ident">address</span>)
+            .<span class="ident">any</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">transfer_obj</span>.<span class="ident">outputs</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">o</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">o</span>.<span class="ident">address</span> <span class="op">=</span><span class="op">=</span> <span class="ident">a</span>.<span class="ident">address</span>()))
         {
             <span class="ident">transfer_obj</span>.<span class="ident">remainder_value_strategy</span> <span class="op">=</span> <span class="ident">RemainderValueStrategy::ReuseAddress</span>;
         }
@@ -3160,7 +3172,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">locked_addresses</span> <span class="op">=</span> <span class="ident">account_address_locker</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
 
         <span class="comment">// prepare the transfer getting some needed objects and values</span>
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">transfer_obj</span>.<span class="ident">amount</span>.<span class="ident">get</span>();
+        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">transfer_obj</span>.<span class="ident">amount</span>();
 
         <span class="kw">let</span> <span class="ident">sent_messages</span> <span class="op">=</span> <span class="ident">account_</span>.<span class="ident">list_messages</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="ident">MessageType::Sent</span>)).<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -3215,7 +3227,6 @@
                     <span class="kw-2">&amp;</span><span class="ident">transfer_obj</span>,
                     <span class="kw-2">&amp;</span><span class="ident">sent_messages</span>,
                     <span class="ident">account_</span>.<span class="ident">addresses</span>(),
-                    <span class="kw-2">&amp;</span><span class="ident">transfer_obj</span>.<span class="ident">address</span>,
                 )<span class="question-mark">?</span>;
                 (
                     <span class="ident">input_addresses</span>
@@ -3294,9 +3305,12 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">transaction_inputs</span> <span class="op">=</span> <span class="macro">vec!</span>[];
     <span class="comment">// store (amount, address, new_created) to check later if dust is allowed</span>
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dust_and_allowance_recorders</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+    <span class="kw">let</span> <span class="ident">transfer_amount</span> <span class="op">=</span> <span class="ident">transfer_obj</span>.<span class="ident">amount</span>();
 
-    <span class="kw">if</span> <span class="ident">transfer_obj</span>.<span class="ident">amount</span>.<span class="ident">get</span>() <span class="op">&lt;</span> <span class="ident">DUST_ALLOWANCE_VALUE</span> {
-        <span class="ident">dust_and_allowance_recorders</span>.<span class="ident">push</span>((<span class="ident">transfer_obj</span>.<span class="ident">amount</span>.<span class="ident">get</span>(), <span class="ident">transfer_obj</span>.<span class="ident">address</span>.<span class="ident">to_bech32</span>(), <span class="bool-val">true</span>));
+    <span class="kw">if</span> <span class="ident">transfer_amount</span> <span class="op">&lt;</span> <span class="ident">DUST_ALLOWANCE_VALUE</span> {
+        <span class="kw">for</span> <span class="ident">output</span> <span class="kw">in</span> <span class="ident">transfer_obj</span>.<span class="ident">outputs</span>.<span class="ident">iter</span>() {
+            <span class="ident">dust_and_allowance_recorders</span>.<span class="ident">push</span>((<span class="ident">output</span>.<span class="ident">amount</span>.<span class="ident">get</span>(), <span class="ident">output</span>.<span class="ident">address</span>.<span class="ident">to_bech32</span>(), <span class="bool-val">true</span>));
+        }
     }
 
     <span class="kw">let</span> <span class="ident">account_</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>;
@@ -3320,8 +3334,11 @@
         <span class="ident">utxos</span>.<span class="ident">extend</span>(<span class="ident">outputs</span>.<span class="ident">into_iter</span>());
     }
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">outputs_for_essence</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Output</span><span class="op">&gt;</span> <span class="op">=</span>
-        <span class="macro">vec!</span>[<span class="ident">SignatureLockedSingleOutput::new</span>(<span class="kw-2">*</span><span class="ident">transfer_obj</span>.<span class="ident">address</span>.<span class="ident">as_ref</span>(), <span class="ident">transfer_obj</span>.<span class="ident">amount</span>.<span class="ident">get</span>())<span class="question-mark">?</span>.<span class="ident">into</span>()];
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">outputs_for_essence</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Output</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+    <span class="kw">for</span> <span class="ident">output</span> <span class="kw">in</span> <span class="ident">transfer_obj</span>.<span class="ident">outputs</span>.<span class="ident">iter</span>() {
+        <span class="ident">outputs_for_essence</span>
+            .<span class="ident">push</span>(<span class="ident">SignatureLockedSingleOutput::new</span>(<span class="kw-2">*</span><span class="ident">output</span>.<span class="ident">address</span>.<span class="ident">as_ref</span>(), <span class="ident">output</span>.<span class="ident">amount</span>.<span class="ident">get</span>())<span class="question-mark">?</span>.<span class="ident">into</span>());
+    }
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inputs_for_essence</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Input</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current_output_sum</span> <span class="op">=</span> <span class="number">0</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">remainder_value</span> <span class="op">=</span> <span class="number">0</span>;
@@ -3346,7 +3363,7 @@
             <span class="ident">address_index</span>,
             <span class="ident">address_internal</span>,
         });
-        <span class="kw">if</span> <span class="ident">current_output_sum</span> <span class="op">=</span><span class="op">=</span> <span class="ident">transfer_obj</span>.<span class="ident">amount</span>.<span class="ident">get</span>() {
+        <span class="kw">if</span> <span class="ident">current_output_sum</span> <span class="op">=</span><span class="op">=</span> <span class="ident">transfer_amount</span> {
             <span class="macro">log::debug!</span>(
                     <span class="string">&quot;[TRANSFER] current output sum matches the transfer value, adding {} to the remainder value (currently at {})&quot;</span>,
                     <span class="ident">utxo</span>.<span class="ident">amount</span>(),
@@ -3354,7 +3371,7 @@
                 );
             <span class="comment">// already filled the transfer value; just collect the output value as remainder</span>
             <span class="ident">remainder_value</span> <span class="op">+</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">utxo</span>.<span class="ident">amount</span>();
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">current_output_sum</span> <span class="op">+</span> <span class="kw-2">*</span><span class="ident">utxo</span>.<span class="ident">amount</span>() <span class="op">&gt;</span> <span class="ident">transfer_obj</span>.<span class="ident">amount</span>.<span class="ident">get</span>() {
+        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">current_output_sum</span> <span class="op">+</span> <span class="kw-2">*</span><span class="ident">utxo</span>.<span class="ident">amount</span>() <span class="op">&gt;</span> <span class="ident">transfer_amount</span> {
             <span class="macro">log::debug!</span>(
                 <span class="string">&quot;[TRANSFER] current output sum ({}) would exceed the transfer value if added to the output amount ({})&quot;</span>,
                 <span class="ident">current_output_sum</span>,
@@ -3362,7 +3379,7 @@
             );
             <span class="comment">// if the used UTXO amount is greater than the transfer value,</span>
             <span class="comment">// this is the last iteration and we&#39;ll have remainder value</span>
-            <span class="kw">let</span> <span class="ident">missing_value</span> <span class="op">=</span> <span class="ident">transfer_obj</span>.<span class="ident">amount</span>.<span class="ident">get</span>() <span class="op">-</span> <span class="ident">current_output_sum</span>;
+            <span class="kw">let</span> <span class="ident">missing_value</span> <span class="op">=</span> <span class="ident">transfer_amount</span> <span class="op">-</span> <span class="ident">current_output_sum</span>;
             <span class="ident">remainder_value</span> <span class="op">+</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">utxo</span>.<span class="ident">amount</span>() <span class="op">-</span> <span class="ident">missing_value</span>;
             <span class="ident">current_output_sum</span> <span class="op">+</span><span class="op">=</span> <span class="ident">missing_value</span>;
             <span class="macro">log::debug!</span>(
@@ -3371,7 +3388,7 @@
                 <span class="ident">remainder_value</span>
             );
 
-            <span class="kw">let</span> <span class="ident">remaining_balance_on_source</span> <span class="op">=</span> <span class="ident">current_output_sum</span> <span class="op">-</span> <span class="ident">transfer_obj</span>.<span class="ident">amount</span>.<span class="ident">get</span>();
+            <span class="kw">let</span> <span class="ident">remaining_balance_on_source</span> <span class="op">=</span> <span class="ident">current_output_sum</span> <span class="op">-</span> <span class="ident">transfer_amount</span>;
             <span class="kw">if</span> <span class="ident">remaining_balance_on_source</span> <span class="op">&lt;</span> <span class="ident">DUST_ALLOWANCE_VALUE</span> <span class="op">&amp;&amp;</span> <span class="ident">remaining_balance_on_source</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
                 <span class="ident">dust_and_allowance_recorders</span>.<span class="ident">push</span>((<span class="ident">remaining_balance_on_source</span>, <span class="ident">utxo</span>.<span class="ident">address</span>().<span class="ident">to_bech32</span>(), <span class="bool-val">true</span>));
             }
@@ -3383,8 +3400,8 @@
             );
             <span class="ident">current_output_sum</span> <span class="op">+</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">utxo</span>.<span class="ident">amount</span>();
 
-            <span class="kw">if</span> <span class="ident">current_output_sum</span> <span class="op">&gt;</span> <span class="ident">transfer_obj</span>.<span class="ident">amount</span>.<span class="ident">get</span>() {
-                <span class="kw">let</span> <span class="ident">remaining_balance_on_source</span> <span class="op">=</span> <span class="ident">current_output_sum</span> <span class="op">-</span> <span class="ident">transfer_obj</span>.<span class="ident">amount</span>.<span class="ident">get</span>();
+            <span class="kw">if</span> <span class="ident">current_output_sum</span> <span class="op">&gt;</span> <span class="ident">transfer_amount</span> {
+                <span class="kw">let</span> <span class="ident">remaining_balance_on_source</span> <span class="op">=</span> <span class="ident">current_output_sum</span> <span class="op">-</span> <span class="ident">transfer_amount</span>;
                 <span class="kw">if</span> <span class="ident">remaining_balance_on_source</span> <span class="op">&lt;</span> <span class="ident">DUST_ALLOWANCE_VALUE</span> <span class="op">&amp;&amp;</span> <span class="ident">remaining_balance_on_source</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
                     <span class="ident">dust_and_allowance_recorders</span>.<span class="ident">push</span>((<span class="ident">remaining_balance_on_source</span>, <span class="ident">utxo</span>.<span class="ident">address</span>().<span class="ident">to_bech32</span>(), <span class="bool-val">true</span>));
                 }
@@ -3555,13 +3572,14 @@
     <span class="comment">// if this is a transfer to the account&#39;s latest address or we used the latest as deposit of the remainder</span>
     <span class="comment">// value, we generate a new one to keep the latest address unused</span>
     <span class="kw">let</span> <span class="ident">latest_address</span> <span class="op">=</span> <span class="ident">account_</span>.<span class="ident">latest_address</span>().<span class="ident">address</span>();
-    <span class="kw">if</span> <span class="ident">latest_address</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">transfer_obj</span>.<span class="ident">address</span>
+    <span class="kw">let</span> <span class="ident">latest_address_in_transfer_output</span> <span class="op">=</span> <span class="ident">transfer_obj</span>.<span class="ident">outputs</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">o</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">o</span>.<span class="ident">address</span> <span class="op">=</span><span class="op">=</span> <span class="ident">latest_address</span>);
+    <span class="kw">if</span> <span class="ident">latest_address_in_transfer_output</span>
         <span class="op">|</span><span class="op">|</span> (<span class="ident">remainder_value_deposit_address</span>.<span class="ident">is_some</span>() <span class="op">&amp;&amp;</span> <span class="kw-2">&amp;</span><span class="ident">remainder_value_deposit_address</span>.<span class="ident">unwrap</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">latest_address</span>)
     {
         <span class="macro">log::debug!</span>(
             <span class="string">&quot;[TRANSFER] generating new address since {}&quot;</span>,
-            <span class="kw">if</span> <span class="ident">latest_address</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">transfer_obj</span>.<span class="ident">address</span> {
-                <span class="string">&quot;latest address equals the transfer address&quot;</span>
+            <span class="kw">if</span> <span class="ident">latest_address_in_transfer_output</span> {
+                <span class="string">&quot;latest address is part of the transfer output&quot;</span>
             } <span class="kw">else</span> {
                 <span class="string">&quot;latest address equals the remainder value deposit address&quot;</span>
             }
