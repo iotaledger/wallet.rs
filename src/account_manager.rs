@@ -13,7 +13,7 @@ use crate::{
         BalanceEvent, TransactionConfirmationChangeEvent, TransactionEvent, TransactionEventType,
         TransactionReattachmentEvent,
     },
-    message::{Message, MessagePayload, MessageType, Transfer},
+    message::{Message, MessagePayload, MessageType, TransactionEssence, Transfer},
     signing::SignerType,
     storage::{StorageAdapter, Timestamp},
 };
@@ -914,7 +914,11 @@ impl AccountManager {
             .await?;
 
         // store the message on the receive account
-        let message_ = message.clone();
+        let mut message_ = message.clone();
+        if let Some(MessagePayload::Transaction(tx)) = message_.payload.as_mut() {
+            let TransactionEssence::Regular(essence) = tx.essence_mut();
+            essence.incoming = true;
+        }
         to_account_handle.write().await.save_messages(vec![message_]).await?;
 
         Ok(message)
