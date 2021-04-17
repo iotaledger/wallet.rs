@@ -556,6 +556,21 @@
 <span id="553">553</span>
 <span id="554">554</span>
 <span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -648,7 +663,14 @@
             <span class="ident">MessageType::SyncAccounts</span> {
                 <span class="ident">address_index</span>,
                 <span class="ident">gap_limit</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> { <span class="self">self</span>.<span class="ident">sync_accounts</span>(<span class="ident">address_index</span>, <span class="ident">gap_limit</span>).<span class="kw">await</span> }).<span class="kw">await</span>,
+                <span class="ident">account_discovery_threshold</span>,
+            } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> {
+                    <span class="self">self</span>.<span class="ident">sync_accounts</span>(<span class="ident">address_index</span>, <span class="ident">gap_limit</span>, <span class="ident">account_discovery_threshold</span>)
+                        .<span class="kw">await</span>
+                })
+                .<span class="kw">await</span>
+            }
             <span class="ident">MessageType::Reattach</span> { <span class="ident">account_id</span>, <span class="ident">message_id</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> { <span class="self">self</span>.<span class="ident">reattach</span>(<span class="ident">account_id</span>, <span class="ident">message_id</span>).<span class="kw">await</span> }).<span class="kw">await</span>
             }
@@ -804,13 +826,21 @@
         <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::Reattached</span>(<span class="ident">message_id</span>.<span class="ident">to_string</span>()))
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">sync_accounts</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address_index</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>, <span class="ident">gap_limit</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ResponseType</span><span class="op">&gt;</span> {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">sync_accounts</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">address_index</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
+        <span class="ident">gap_limit</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
+        <span class="ident">account_discovery_threshold</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ResponseType</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">synchronizer</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">sync_accounts</span>()<span class="question-mark">?</span>;
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">address_index</span>) <span class="op">=</span> <span class="ident">address_index</span> {
             <span class="ident">synchronizer</span> <span class="op">=</span> <span class="ident">synchronizer</span>.<span class="ident">address_index</span>(<span class="kw-2">*</span><span class="ident">address_index</span>);
         }
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">gap_limit</span>) <span class="op">=</span> <span class="ident">gap_limit</span> {
             <span class="ident">synchronizer</span> <span class="op">=</span> <span class="ident">synchronizer</span>.<span class="ident">gap_limit</span>(<span class="kw-2">*</span><span class="ident">gap_limit</span>);
+        }
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">account_discovery_threshold</span>) <span class="op">=</span> <span class="ident">account_discovery_threshold</span> {
+            <span class="ident">synchronizer</span> <span class="op">=</span> <span class="ident">synchronizer</span>.<span class="ident">account_discovery_threshold</span>(<span class="kw-2">*</span><span class="ident">account_discovery_threshold</span>);
         }
         <span class="kw">let</span> <span class="ident">synced</span> <span class="op">=</span> <span class="ident">synchronizer</span>.<span class="ident">execute</span>().<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::SyncedAccounts</span>(<span class="ident">synced</span>))

@@ -463,6 +463,10 @@
 <span id="460">460</span>
 <span id="461">461</span>
 <span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -598,6 +602,9 @@
         <span class="doccomment">/// The gap limit.</span>
         <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;gapLimit&quot;</span>)]</span>
         <span class="ident">gap_limit</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
+        <span class="doccomment">/// Minimum number of accounts to check on discovery.</span>
+        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;accountDiscoveryThreshold&quot;</span>)]</span>
+        <span class="ident">account_discovery_threshold</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
     },
     <span class="doccomment">/// Reattach message.</span>
     <span class="ident">Reattach</span> {
@@ -712,6 +719,7 @@
             <span class="ident">MessageType::SyncAccounts</span> {
                 <span class="ident">address_index</span>: <span class="kw">_</span>,
                 <span class="ident">gap_limit</span>: <span class="kw">_</span>,
+                <span class="ident">account_discovery_threshold</span>: <span class="kw">_</span>,
             } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">5</span>, <span class="string">&quot;SyncAccounts&quot;</span>),
             <span class="ident">MessageType::Reattach</span> {
                 <span class="ident">account_id</span>: <span class="kw">_</span>,
