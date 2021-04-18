@@ -3,7 +3,10 @@
 
 use crate::types::*;
 use iota::MessageId as RustMessageId;
-use iota_wallet::{account_manager::AccountManager as RustAccountManager, signing::SignerType as RustSingerType};
+use iota_wallet::{
+    account_manager::{AccountManager as RustAccountManager, MigrationDataFinder},
+    signing::SignerType as RustSingerType,
+};
 use pyo3::prelude::*;
 use std::{
     convert::{Into, TryInto},
@@ -11,6 +14,8 @@ use std::{
     str::FromStr,
     time::Duration,
 };
+
+const DEFAULT_MWM: u8 = 14;
 
 #[pymethods]
 impl AccountsSynchronizer {
@@ -102,6 +107,60 @@ impl AccountManager {
         }
         let account_manager = crate::block_on(async { account_manager.finish().await })?;
         Ok(AccountManager { account_manager })
+    }
+
+    // Migration APIs
+    fn get_migration_data(
+        &self,
+        nodes: Vec<&str>,
+        seed: &str,
+        permanode: Option<&str>,
+        security_level: Option<u8>,
+        initial_address_index: Option<u64>,
+    ) -> Result<MigrationData> {
+        let mut finder = MigrationDataFinder::new(&nodes, seed)?;
+        if let Some(permanode) = permanode {
+            finder = finder.with_permanode(permanode);
+        }
+        if let Some(initial_address_index) = initial_address_index {
+            finder = finder.with_initial_address_index(initial_address_index);
+        }
+        if let Some(security_level) = security_level {
+            finder = finder.with_security_level(security_level);
+        }
+        crate::block_on(self.account_manager.get_migration_data(finder))
+            .map(Into::into)
+            .map_err(Into::into)
+    }
+
+    fn create_migration_bundle(
+        &self,
+        seed: &str,
+        input_address_indexes: Vec<u64>,
+        mine: Option<bool>,
+        timeout_seconds: Option<u64>,
+        offset: i64,
+        log_file_name: Option<&str>,
+    ) -> Result<MigrationBundle> {
+        crate::block_on(self.account_manager.create_migration_bundle(
+            seed,
+            &input_address_indexes,
+            mine.unwrap_or(true),
+            Duration::from_secs(timeout_seconds.unwrap_or(10 * 60)),
+            offset,
+            log_file_name.unwrap_or("migration.log"),
+        ))
+        .map(Into::into)
+        .map_err(Into::into)
+    }
+
+    fn send_migration_bundle(&self, nodes: Vec<&str>, bundle_hash: &str, mwm: Option<u8>) -> Result<()> {
+        crate::block_on(
+            self.account_manager
+                .send_migration_bundle(&nodes, bundle_hash, mwm.unwrap_or(DEFAULT_MWM)),
+        )
+        .map(|_| ())
+        .map_err(Into::into)
     }
 
     /// Stops the background polling and MQTT monitoring.

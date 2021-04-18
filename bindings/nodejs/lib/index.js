@@ -108,6 +108,9 @@ Account.prototype.getNodeInfo = promisify(Account.prototype.getNodeInfo)
 AccountManager.prototype.syncAccounts = promisify(AccountManager.prototype.syncAccounts)
 AccountManager.prototype.internalTransfer = promisify(AccountManager.prototype.internalTransfer)
 AccountManager.prototype.isLatestAddressUnused = promisify(AccountManager.prototype.isLatestAddressUnused)
+AccountManager.prototype.getMigrationData = promisify(AccountManager.prototype.getMigrationData)
+AccountManager.prototype.createMigrationBundle = promisify(AccountManager.prototype.createMigrationBundle)
+AccountManager.prototype.sendMigrationBundle = promisify(AccountManager.prototype.sendMigrationBundle)
 
 module.exports = {
   AccountManager,

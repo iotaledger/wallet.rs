@@ -6,7 +6,7 @@ use crate::{
         AccountHandle, AccountIdentifier, AccountInitialiser, AccountSynchronizeStep, AccountSynchronizer,
         SyncedAccount, SyncedAccountData,
     },
-    address::AddressOutput,
+    address::{AddressOutput, AddressWrapper},
     client::ClientOptions,
     event::{
         emit_balance_change, emit_confirmation_state_change, emit_reattachment_event, emit_transaction_event,
@@ -19,11 +19,12 @@ use crate::{
 };
 
 use std::{
-    collections::HashMap,
+    collections::{hash_map::DefaultHasher, HashMap},
     convert::TryInto,
     fs,
+    hash::{Hash, Hasher},
     num::NonZeroU64,
-    ops::Deref,
+    ops::{Deref, Range},
     panic::AssertUnwindSafe,
     path::{Path, PathBuf},
     sync::Arc,
@@ -35,6 +36,7 @@ use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
 use iota::{bee_rest_api::types::dtos::LedgerInclusionStateDto, MessageId, OutputId};
+use serde::Serialize;
 use tokio::{
     sync::{
         broadcast::{channel as broadcast_channel, Receiver as BroadcastReceiver, Sender as BroadcastSender},
@@ -43,6 +45,9 @@ use tokio::{
     time::interval,
 };
 use zeroize::Zeroize;
+
+mod migration;
+pub use migration::*;
 
 /// The default storage folder.
 pub const DEFAULT_STORAGE_FOLDER: &str = "./storage";
@@ -246,6 +251,8 @@ impl AccountManagerBuilder {
             generated_mnemonic: None,
             account_options: self.account_options,
             sync_accounts_lock,
+            cached_migration_data: Default::default(),
+            cached_migration_bundles: Default::default(),
         };
 
         if !self.skip_polling {
@@ -269,6 +276,41 @@ pub(crate) struct AccountOptions {
     pub(crate) persist_events: bool,
 }
 
+#[derive(Clone)]
+pub(crate) struct CachedMigrationData {
+    nodes: Vec<String>,
+    permanode: Option<String>,
+    security_level: u8,
+    inputs: HashMap<Range<u64>, Vec<InputData>>,
+}
+
+/// Created migration bundle data.
+#[derive(Debug, Clone, Getters, Serialize)]
+#[getset(get = "pub")]
+pub struct MigrationBundle {
+    /// The bundle crackability if it was mined.
+    crackability: f64,
+    /// The bundle hash.
+    #[serde(rename = "bundleHash")]
+    bundle_hash: String,
+}
+
+/// Response from `send_migration_bundle`.
+#[derive(Debug, Getters, Serialize)]
+#[getset(get = "pub")]
+pub struct MigratedBundle {
+    /// Hash of the tail transaction.
+    #[serde(rename = "tailTransactionHash")]
+    tail_transaction_hash: String,
+    /// The deposit address.
+    #[serde(with = "crate::serde::iota_address_serde")]
+    address: AddressWrapper,
+    /// The bundle input value.
+    value: u64,
+}
+
+type CachedMigrationBundle = (Vec<BundledTransaction>, AddressWrapper, u64);
+
 /// The account manager.
 ///
 /// Used to manage multiple accounts.
@@ -287,14 +329,15 @@ pub struct AccountManager {
     generated_mnemonic: Option<String>,
     account_options: AccountOptions,
     sync_accounts_lock: Arc<Mutex<()>>,
+    cached_migration_data: Mutex<HashMap<u64, CachedMigrationData>>,
+    cached_migration_bundles: Mutex<HashMap<String, CachedMigrationBundle>>,
 }
 
 impl Clone for AccountManager {
     /// Note that when cloning an AccountManager, the original reference's Drop will stop the background sync.
     /// When the cloned reference is dropped, the background sync system won't be stopped.
     ///
-    /// Additionally, the generated mnemonic isn't cloned for security reasons,
-    /// so you should store it before cloning.
+    /// Additionally, the generated mnemonic and migration data isn't cloned for security reasons.
     fn clone(&self) -> Self {
         Self {
             storage_folder: self.storage_folder.clone(),
@@ -306,6 +349,8 @@ impl Clone for AccountManager {
             generated_mnemonic: None,
             account_options: self.account_options,
             sync_accounts_lock: self.sync_accounts_lock.clone(),
+            cached_migration_data: Default::default(),
+            cached_migration_bundles: Default::default(),
         }
     }
 }
@@ -337,6 +382,139 @@ impl AccountManager {
     /// Initialises the account manager builder.
     pub fn builder() -> AccountManagerBuilder {
         AccountManagerBuilder::new()
+    }
+
+    /// Gets the legacy migration data for the seed.
+    pub async fn get_migration_data(&self, finder: MigrationDataFinder<'_>) -> crate::Result<MigrationData> {
+        if finder.initial_address_index == 0 {
+            self.cached_migration_data.lock().await.remove(&finder.seed_hash);
+        }
+        let metadata = finder
+            .finish(
+                self.cached_migration_data
+                    .lock()
+                    .await
+                    .get(&finder.seed_hash)
+                    .map(|c| c.inputs.clone())
+                    .unwrap_or_default(),
+            )
+            .await?;
+        self.cached_migration_data
+            .lock()
+            .await
+            .entry(finder.seed_hash)
+            .or_insert(CachedMigrationData {
+                nodes: finder.nodes.iter().map(|node| node.to_string()).collect(),
+                permanode: finder.permanode.map(|node| node.to_string()),
+                security_level: finder.security_level,
+                inputs: Default::default(),
+            })
+            .inputs
+            .extend(metadata.inputs.clone().into_iter());
+
+        Ok(MigrationData {
+            balance: metadata.balance,
+            last_checked_address_index: metadata.last_checked_address_index,
+            inputs: metadata.inputs.into_iter().map(|(_, v)| v).flatten().collect(),
+        })
+    }
+
+    /// Creates the bundle for migration associated with the given input indexes,
+    /// Performs bundle mining if the address is spent and `mine` is true,
+    /// And signs the bundle. Returns the bundle hash.
+    /// It logs the operations to `$storage_path.join(log_file_name)`.
+    pub async fn create_migration_bundle(
+        &self,
+        seed: &str,
+        input_address_indexes: &[u64],
+        mine: bool,
+        timeout: Duration,
+        offset: i64,
+        log_file_name: &str,
+    ) -> crate::Result<MigrationBundle> {
+        let mut hasher = DefaultHasher::new();
+        seed.hash(&mut hasher);
+        let seed_hash = hasher.finish();
+
+        let seed = TernarySeed::from_trits(TryteBuf::try_from_str(&seed).unwrap().as_trits().encode::<T1B1Buf>())
+            .map_err(|_| crate::Error::InvalidSeed)?;
+        let data = self
+            .cached_migration_data
+            .lock()
+            .await
+            .get(&seed_hash)
+            .ok_or(crate::Error::MigrationDataNotFound)?
+            .clone();
+
+        let mut address_inputs: Vec<&InputData> = Default::default();
+        let mut value = 0;
+        for index in input_address_indexes {
+            for inputs in data.inputs.values() {
+                if let Some(input) = inputs.iter().find(|i| &i.index == index) {
+                    value += input.balance;
+                    address_inputs.push(input);
+                    break;
+                }
+            }
+        }
+
+        let account_handle = self.get_account(0).await?;
+        let bundle_data = migration::create_bundle(
+            account_handle.clone(),
+            &data,
+            seed,
+            address_inputs,
+            mine,
+            timeout,
+            offset,
+            self.storage_folder.join(log_file_name),
+        )
+        .await?;
+        let crackability = bundle_data.crackability;
+        let bundle_hash = bundle_data
+            .bundle
+            .first()
+            .unwrap()
+            .bundle()
+            .to_inner()
+            .encode::<T3B1Buf>()
+            .iter_trytes()
+            .map(char::from)
+            .collect::<String>();
+        let address = account_handle.latest_address().await.address().clone();
+        self.cached_migration_bundles
+            .lock()
+            .await
+            .insert(bundle_hash.clone(), (bundle_data.bundle, address, value));
+
+        Ok(MigrationBundle {
+            crackability,
+            bundle_hash,
+        })
+    }
+
+    /// Sends the migration bundle to the given node.
+    pub async fn send_migration_bundle(&self, nodes: &[&str], hash: &str, mwm: u8) -> crate::Result<MigratedBundle> {
+        let (bundle, address, value) = self
+            .cached_migration_bundles
+            .lock()
+            .await
+            .get(hash)
+            .ok_or(crate::Error::MigrationBundleNotFound)?
+            .clone();
+        let tail_transaction_hash = migration::send_bundle(nodes, bundle.to_vec(), mwm).await?;
+        self.cached_migration_bundles.lock().await.remove(hash);
+
+        Ok(MigratedBundle {
+            tail_transaction_hash: tail_transaction_hash
+                .to_inner()
+                .encode::<T3B1Buf>()
+                .iter_trytes()
+                .map(char::from)
+                .collect::<String>(),
+            address,
+            value,
+        })
     }
 
     async fn load_accounts(
@@ -962,6 +1140,12 @@ impl AccountManager {
         message_id: &MessageId,
     ) -> crate::Result<Message> {
         self.get_account(account_id).await?.retry(message_id).await
+    }
+
+    /// Get seed checksum
+    pub fn get_seed_checksum(seed: String) -> crate::Result<String> {
+        iota_migration::client::migration::get_seed_checksum(seed)
+            .map_err(|e| crate::Error::LegacyClientError(Box::new(e)))
     }
 }
 

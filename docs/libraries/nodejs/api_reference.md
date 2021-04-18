@@ -168,6 +168,14 @@ Updates the client options for all accounts.
 | ------- | -------------------------------------------- | ----------------- | ------------------------------ |
 | options | <code>[ClientOptions](#clientoptions)</code> | <code>null</code> | The new account client options |
 
+#### generateMigrationAddress(address)
+
+Convert a Ed25519 to a Tryte migration address with checksum (last 9 Trytes)
+
+| Param   | Type                | Default           | Description                    |
+| ------- | ------------------- | ----------------- | ------------------------------ |
+| address | <code>string</code> | <code>null</code> | Bech32 encoded Ed25519 address |
+
 #### getBalanceChangeEvents([count, skip, fromTimestamp])
 
 Gets the persisted balance change events.

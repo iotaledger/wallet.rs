@@ -10,9 +10,8 @@ use core::convert::TryFrom;
 use dict_derive::{FromPyObject as DeriveFromPyObject, IntoPyObject as DeriveIntoPyObject};
 use iota::{
     Address as RustAddress, Ed25519Address as RustEd25519Address, Ed25519Signature as RustEd25519Signature,
-    Essence as RustEssence, IndexationPayload as RustIndexationPayload, Input as RustInput,
-    MilestonePayloadEssence as RustMilestonePayloadEssence, Output as RustOutput, Payload as RustPayload,
-    ReferenceUnlock as RustReferenceUnlock, RegularEssence as RustRegularEssence,
+    Essence as RustEssence, IndexationPayload as RustIndexationPayload, Input as RustInput, Output as RustOutput,
+    Payload as RustPayload, ReferenceUnlock as RustReferenceUnlock, RegularEssence as RustRegularEssence,
     SignatureLockedSingleOutput as RustSignatureLockedSingleOutput, SignatureUnlock as RustSignatureUnlock,
     TransactionId as RustTransationId, TransactionPayload as RustTransactionPayload, UnlockBlock as RustUnlockBlock,
     UnlockBlocks as RustUnlockBlocks, UtxoInput as RustUtxoInput,
@@ -27,8 +26,8 @@ use iota_wallet::{
     },
     client::ClientOptions as RustWalletClientOptions,
     message::{
-        Message as RustWalletMessage, MessagePayload as RustWalletPayload,
-        MessageTransactionPayload as RustWalletMessageTransactionPayload,
+        Message as RustWalletMessage, MessageMilestonePayloadEssence as RustWalletMilestonePayloadEssence,
+        MessagePayload as RustWalletPayload, MessageTransactionPayload as RustWalletMessageTransactionPayload,
         TransactionBuilderMetadata as RustWalletTransactionBuilderMetadata,
         TransactionEssence as RustWalletTransactionEssence, TransactionInput as RustWalletInput,
         TransactionOutput as RustWalletOutput,
@@ -213,7 +212,7 @@ impl TryFrom<RustWalletTransactionEssence> for Essence {
                         if let RustWalletOutput::SignatureLockedSingle(output) = output {
                             Output {
                                 address: output.address().to_bech32(),
-                                amount: *output.amount(),
+                                amount: output.amount(),
                             }
                         } else {
                             unreachable!()
@@ -253,14 +252,14 @@ impl TryFrom<RustWalletTransactionEssence> for Essence {
     }
 }
 
-impl TryFrom<RustMilestonePayloadEssence> for MilestonePayloadEssence {
+impl TryFrom<RustWalletMilestonePayloadEssence> for MilestonePayloadEssence {
     type Error = Error;
-    fn try_from(essence: RustMilestonePayloadEssence) -> Result<Self> {
+    fn try_from(essence: RustWalletMilestonePayloadEssence) -> Result<Self> {
         Ok(MilestonePayloadEssence {
             index: *essence.index(),
             timestamp: essence.timestamp(),
             parents: essence.parents().iter().map(|parent| parent.to_string()).collect(),
-            merkle_proof: essence.merkle_proof().try_into()?,
+            merkle_proof: *essence.merkle_proof(),
             public_keys: essence
                 .public_keys()
                 .iter()

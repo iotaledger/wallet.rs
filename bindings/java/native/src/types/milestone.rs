@@ -3,9 +3,10 @@
 
 use crate::Result;
 
-use iota_wallet::message::{MessageId, MilestonePayload as MilestonePayloadRust};
-
-use iota::MilestonePayloadEssence as RustMilestonePayloadEssence;
+use iota_wallet::message::{
+    MessageId, MessageMilestonePayload as MilestonePayloadRust,
+    MessageMilestonePayloadEssence as RustMilestonePayloadEssence,
+};
 
 use anyhow::anyhow;
 
@@ -14,16 +15,12 @@ pub struct MilestonePayload {
 }
 
 impl MilestonePayload {
-    pub fn new(essence: RustMilestonePayloadEssence, signatures: Vec<Box<[u8]>>) -> Result<MilestonePayload> {
-        let res = MilestonePayloadRust::new(essence, signatures);
+    pub async fn new(essence: RustMilestonePayloadEssence, signatures: Vec<Box<[u8]>>) -> Result<MilestonePayload> {
+        let res = MilestonePayloadRust::new(essence, signatures).await;
         match res {
             Ok(index) => Ok(MilestonePayload { payload: index }),
             Err(err) => Err(anyhow!(err.to_string())),
         }
-    }
-
-    pub fn id(&self) -> String {
-        self.payload.id().to_string()
     }
 
     pub fn essence(&self) -> MilestonePayloadEssence {
@@ -36,14 +33,6 @@ impl MilestonePayload {
 
     pub fn signatures(&self) -> &Vec<Box<[u8]>> {
         self.payload.signatures()
-    }
-
-    pub fn validate(&self, applicable_public_keys: &[String], min_threshold: usize) -> bool {
-        let res = self.payload.validate(applicable_public_keys, min_threshold);
-        match res {
-            Ok(_) => true,
-            Err(_) => false,
-        }
     }
 }
 pub struct MilestonePayloadEssence {
