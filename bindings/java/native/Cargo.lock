@@ -260,7 +260,7 @@ checksum = "6c7f7096bc256f5e5cb960f60dfc4f4ef979ca65abe7fb9d5a4f77150d3783d4"
 [[package]]
 name = "bee-common"
 version = "0.4.1"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#8200a5147f6c7c0ea3d86d5539b5c1e1c80f15be"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#7ee6cc6225d8faedb15ab0812b90001e555d984c"
 dependencies = [
  "autocfg",
  "chrono",
@@ -273,7 +273,7 @@ dependencies = [
 [[package]]
 name = "bee-common-derive"
 version = "0.1.1-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#8200a5147f6c7c0ea3d86d5539b5c1e1c80f15be"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#7ee6cc6225d8faedb15ab0812b90001e555d984c"
 dependencies = [
  "quote 1.0.9",
  "syn 1.0.69",
@@ -294,7 +294,7 @@ dependencies = [
 [[package]]
 name = "bee-crypto"
 version = "0.2.1-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#8200a5147f6c7c0ea3d86d5539b5c1e1c80f15be"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#7ee6cc6225d8faedb15ab0812b90001e555d984c"
 dependencies = [
  "bee-ternary 0.4.2-alpha",
  "byteorder",
@@ -333,8 +333,8 @@ dependencies = [
 
 [[package]]
 name = "bee-message"
-version = "0.1.0"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#8200a5147f6c7c0ea3d86d5539b5c1e1c80f15be"
+version = "0.1.1"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#7ee6cc6225d8faedb15ab0812b90001e555d984c"
 dependencies = [
  "bech32 0.8.0",
  "bee-common",
@@ -369,7 +369,7 @@ dependencies = [
 [[package]]
 name = "bee-pow"
 version = "0.1.0"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#8200a5147f6c7c0ea3d86d5539b5c1e1c80f15be"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#7ee6cc6225d8faedb15ab0812b90001e555d984c"
 dependencies = [
  "bee-crypto 0.2.1-alpha",
  "bee-ternary 0.4.2-alpha",
@@ -403,7 +403,7 @@ dependencies = [
 [[package]]
 name = "bee-signing"
 version = "0.1.1-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#8200a5147f6c7c0ea3d86d5539b5c1e1c80f15be"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#7ee6cc6225d8faedb15ab0812b90001e555d984c"
 dependencies = [
  "bee-common-derive",
  "bee-crypto 0.2.1-alpha",
@@ -426,7 +426,7 @@ dependencies = [
 [[package]]
 name = "bee-ternary"
 version = "0.4.2-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#8200a5147f6c7c0ea3d86d5539b5c1e1c80f15be"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#7ee6cc6225d8faedb15ab0812b90001e555d984c"
 dependencies = [
  "autocfg",
  "num-traits 0.2.14",
@@ -437,18 +437,6 @@ dependencies = [
 name = "bee-transaction"
 version = "0.1.0-alpha"
 source = "git+https://github.com/Alex6323/bee-p.git?rev=02965e78a5cd43d0fb773771470ab3d891066562#02965e78a5cd43d0fb773771470ab3d891066562"
-dependencies = [
- "bee-crypto 0.2.1-alpha",
- "bee-signing",
- "bee-ternary 0.4.2-alpha",
- "serde 1.0.125",
- "thiserror",
-]
-
-[[package]]
-name = "bee-transaction"
-version = "0.1.0-alpha"
-source = "git+https://github.com/Alex6323/bee-p.git#02965e78a5cd43d0fb773771470ab3d891066562"
 dependencies = [
  "bee-crypto 0.2.1-alpha",
  "bee-signing",
@@ -1685,12 +1673,12 @@ dependencies = [
 [[package]]
 name = "iota-bundle-miner"
 version = "0.1.0-alpha.0"
-source = "git+https://github.com/iotaledger/iota.rs?rev=1174485304e4667f1585bbeeada6d86211b93226#1174485304e4667f1585bbeeada6d86211b93226"
+source = "git+https://github.com/iotaledger/iota.rs?rev=f3f924718e0e0cfb09732804fbd6c66fff7a21e4#f3f924718e0e0cfb09732804fbd6c66fff7a21e4"
 dependencies = [
  "bee-crypto 0.2.1-alpha",
  "bee-signing",
  "bee-ternary 0.4.2-alpha",
- "bee-transaction 0.1.0-alpha (git+https://github.com/Alex6323/bee-p.git)",
+ "bee-transaction",
  "criterion",
  "futures",
  "serde 1.0.125",
@@ -1702,7 +1690,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=1174485304e4667f1585bbeeada6d86211b93226#1174485304e4667f1585bbeeada6d86211b93226"
+source = "git+https://github.com/iotaledger/iota.rs?rev=f3f924718e0e0cfb09732804fbd6c66fff7a21e4#f3f924718e0e0cfb09732804fbd6c66fff7a21e4"
 dependencies = [
  "bee-common",
  "bee-common-derive",
@@ -1710,7 +1698,7 @@ dependencies = [
  "bee-message 0.1.0-alpha",
  "bee-signing",
  "bee-ternary 0.4.2-alpha",
- "bee-transaction 0.1.0-alpha (git+https://github.com/Alex6323/bee-p.git?rev=02965e78a5cd43d0fb773771470ab3d891066562)",
+ "bee-transaction",
  "blake2",
  "chrono",
  "crossbeam",
@@ -1791,14 +1779,14 @@ dependencies = [
 [[package]]
 name = "iota-core"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=1174485304e4667f1585bbeeada6d86211b93226#1174485304e4667f1585bbeeada6d86211b93226"
+source = "git+https://github.com/iotaledger/iota.rs?rev=f3f924718e0e0cfb09732804fbd6c66fff7a21e4#f3f924718e0e0cfb09732804fbd6c66fff7a21e4"
 dependencies = [
  "bee-crypto 0.2.1-alpha",
  "bee-signing",
  "bee-ternary 0.4.2-alpha",
- "bee-transaction 0.1.0-alpha (git+https://github.com/Alex6323/bee-p.git?rev=02965e78a5cd43d0fb773771470ab3d891066562)",
+ "bee-transaction",
  "iota-bundle-miner",
- "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=1174485304e4667f1585bbeeada6d86211b93226)",
+ "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=f3f924718e0e0cfb09732804fbd6c66fff7a21e4)",
 ]
 
 [[package]]
@@ -1947,7 +1935,7 @@ dependencies = [
  "futures",
  "getset",
  "hex",
- "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=1174485304e4667f1585bbeeada6d86211b93226)",
+ "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=f3f924718e0e0cfb09732804fbd6c66fff7a21e4)",
  "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=f84c97ddccb4a4323d300b32cc6028ff9eabe98b)",
  "iota-crypto 0.4.2 (git+https://github.com/iotaledger/crypto.rs?branch=dev)",
  "iota-ledger",
@@ -1972,7 +1960,7 @@ name = "iota-wallet-java"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "bee-message 0.1.0",
+ "bee-message 0.1.1",
  "bindgen",
  "chrono",
  "env_logger",
