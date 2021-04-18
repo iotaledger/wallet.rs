@@ -17,6 +17,7 @@ use std::{
     convert::{Into, TryInto},
     num::NonZeroU64,
     str::FromStr,
+    vec,
 };
 
 #[pymethods]
@@ -106,6 +107,38 @@ impl Transfer {
         })
     }
 }
+#[pymethods]
+impl TransferWithOutputs {
+    #[new]
+    fn new(
+        outputs: Vec<TransferOutput>,
+        indexation: Option<Indexation>,
+        remainder_value_strategy: Option<&str>,
+        skip_sync: Option<bool>,
+    ) -> Result<Self> {
+        let mut rust_outputs = Vec::new();
+        for output in outputs {
+            rust_outputs.push(output.try_into()?);
+        }
+
+        let mut builder = RustTransfer::builder_with_outputs(rust_outputs)?;
+        let strategy = match remainder_value_strategy {
+            Some("ReuseAddress") => RustRemainderValueStrategy::ReuseAddress,
+            Some("ChangeAddress") => RustRemainderValueStrategy::ChangeAddress,
+            _ => RustRemainderValueStrategy::ChangeAddress,
+        };
+        builder = builder.with_remainder_value_strategy(strategy);
+        if let Some(indexation) = indexation {
+            builder = builder.with_indexation(indexation.try_into()?);
+        }
+        if skip_sync.unwrap_or_default() {
+            builder = builder.with_skip_sync();
+        }
+        Ok(TransferWithOutputs {
+            transfer: builder.finish(),
+        })
+    }
+}
 
 #[pymethods]
 impl AccountHandle {
@@ -119,6 +152,11 @@ impl AccountHandle {
 
     /// Send messages.
     fn transfer(&self, transfer_obj: Transfer) -> Result<WalletMessage> {
+        crate::block_on(async { self.account_handle.transfer(transfer_obj.transfer).await?.try_into() })
+    }
+
+    /// Send messages.
+    fn transfer_with_outputs(&self, transfer_obj: TransferWithOutputs) -> Result<WalletMessage> {
         crate::block_on(async { self.account_handle.transfer(transfer_obj.transfer).await?.try_into() })
     }
 

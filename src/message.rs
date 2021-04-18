@@ -65,13 +65,28 @@ impl Default for RemainderValueStrategy {
     }
 }
 
+/// Transfer output.
+#[derive(Debug, Clone, Deserialize)]
+pub struct TransferOutput {
+    /// The output value.
+    pub amount: NonZeroU64,
+    /// The output address.
+    #[serde(with = "crate::serde::iota_address_serde")]
+    pub address: AddressWrapper,
+}
+
+impl TransferOutput {
+    /// Creates a new transfer output.
+    pub fn new(address: AddressWrapper, amount: NonZeroU64) -> Self {
+        Self { address, amount }
+    }
+}
+
 /// A transfer to make a transaction.
 #[derive(Debug, Clone)]
 pub struct TransferBuilder {
-    /// The transfer value.
-    amount: NonZeroU64,
-    /// The transfer address.
-    address: AddressWrapper,
+    /// Transfer outputs.
+    outputs: Vec<TransferOutput>,
     /// (Optional) message indexation.
     indexation: Option<IndexationPayload>,
     /// The strategy to use for the remainder value.
@@ -82,6 +97,19 @@ pub struct TransferBuilder {
     with_events: bool,
     /// Whether the transfer should skip account syncing or not.
     skip_sync: bool,
+}
+
+impl Default for TransferBuilder {
+    fn default() -> Self {
+        Self {
+            outputs: Default::default(),
+            indexation: None,
+            remainder_value_strategy: RemainderValueStrategy::ChangeAddress,
+            input: None,
+            with_events: true,
+            skip_sync: false,
+        }
+    }
 }
 
 impl<'de> Deserialize<'de> for TransferBuilder {
@@ -118,21 +146,24 @@ impl<'de> Deserialize<'de> for TransferBuilder {
 
         #[derive(Debug, Clone, Deserialize)]
         pub struct TransferBuilderWrapper {
-            /// The transfer value.
-            amount: NonZeroU64,
-            /// The transfer address.
-            #[serde(with = "crate::serde::iota_address_serde")]
-            address: AddressWrapper,
+            /// Single output transfer.
+            #[serde(flatten)]
+            output: Option<TransferOutput>,
+            /// Transfer outputs.
+            #[serde(default)]
+            outputs: Vec<TransferOutput>,
             /// (Optional) message indexation.
             indexation: Option<IndexationPayloadBuilder>,
             /// The strategy to use for the remainder value.
             remainder_value_strategy: RemainderValueStrategy,
         }
 
-        TransferBuilderWrapper::deserialize(deserializer).and_then(|builder| {
+        TransferBuilderWrapper::deserialize(deserializer).and_then(|mut builder| {
+            if let Some(output) = builder.output {
+                builder.outputs.push(output);
+            }
             Ok(TransferBuilder {
-                amount: builder.amount,
-                address: builder.address,
+                outputs: builder.outputs,
                 indexation: match builder.indexation {
                     Some(i) => Some(i.finish().map_err(serde::de::Error::custom)?),
                     None => None,
@@ -150,14 +181,22 @@ impl TransferBuilder {
     /// Initialises a new transfer to the given address.
     pub fn new(address: AddressWrapper, amount: NonZeroU64) -> Self {
         Self {
-            address,
-            amount,
-            indexation: None,
-            remainder_value_strategy: RemainderValueStrategy::ChangeAddress,
-            input: None,
-            with_events: true,
-            skip_sync: false,
+            outputs: vec![TransferOutput { address, amount }],
+            ..Default::default()
         }
+    }
+
+    /// Creates a transfer with multiple outputs.
+    pub fn with_outputs(outputs: Vec<TransferOutput>) -> crate::Result<Self> {
+        if !(1..125).contains(&outputs.len()) {
+            return Err(crate::Error::BeeMessage(iota::message::Error::InvalidInputOutputCount(
+                outputs.len(),
+            )));
+        }
+        Ok(Self {
+            outputs,
+            ..Default::default()
+        })
     }
 
     /// Sets the remainder value strategy for the transfer.
@@ -192,8 +231,7 @@ impl TransferBuilder {
     /// Builds the transfer.
     pub fn finish(self) -> Transfer {
         Transfer {
-            address: self.address,
-            amount: self.amount,
+            outputs: self.outputs,
             indexation: self.indexation,
             remainder_value_strategy: self.remainder_value_strategy,
             input: self.input,
@@ -206,10 +244,8 @@ impl TransferBuilder {
 /// A transfer to make a transaction.
 #[derive(Debug, Clone)]
 pub struct Transfer {
-    /// The transfer value.
-    pub(crate) amount: NonZeroU64,
-    /// The transfer address.
-    pub(crate) address: AddressWrapper,
+    /// Transfer outputs.
+    pub(crate) outputs: Vec<TransferOutput>,
     /// (Optional) message indexation.
     pub(crate) indexation: Option<IndexationPayload>,
     /// The strategy to use for the remainder value.
@@ -228,10 +264,19 @@ impl Transfer {
         TransferBuilder::new(address, amount)
     }
 
+    /// Initialises the transfer builder with multiple outputs.
+    pub fn builder_with_outputs(outputs: Vec<TransferOutput>) -> crate::Result<TransferBuilder> {
+        TransferBuilder::with_outputs(outputs)
+    }
+
     pub(crate) async fn emit_event_if_needed(&self, account_id: String, event: TransferProgressType) {
         if self.with_events {
             emit_transfer_progress(account_id, event).await;
         }
+    }
+
+    pub(crate) fn amount(&self) -> u64 {
+        self.outputs.iter().map(|o| o.amount.get()).sum()
     }
 }
 
