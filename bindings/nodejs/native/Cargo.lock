@@ -1733,6 +1733,7 @@ name = "iota-wallet-nodejs-binding"
 version = "0.1.0"
 dependencies = [
  "backtrace",
+ "bee-message 0.1.1",
  "futures",
  "hex",
  "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=f84c97ddccb4a4323d300b32cc6028ff9eabe98b)",
