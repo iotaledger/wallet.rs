@@ -88,7 +88,7 @@ declare_types! {
                 crate::block_on(async move {
                     let account_handle = crate::get_account(id).await;
                     account_handle.balance().await
-                })
+                }).expect("failed to get account balance")
             };
             Ok(neon_serde::to_value(&mut cx, &balance)?.upcast())
         }
