@@ -1003,6 +1003,7 @@ impl Account {
     }
 
     // Gets the node info from /api/v1/info endpoint
+    // TODO: Add auth and url in one NodeInfoOptions struct.
     pub(crate) async fn get_node_info(
         &self,
         url: Option<&str>,
