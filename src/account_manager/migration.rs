@@ -19,11 +19,10 @@ pub(crate) use iota_migration::{
             create_migration_bundle, encode_migration_address, mine, sign_migration_bundle, Address as MigrationAddress,
         },
         response::InputData,
-        Transfer,
     },
     signing::ternary::seed::Seed as TernarySeed,
     ternary::{T1B1Buf, T3B1Buf, TritBuf, TryteBuf},
-    transaction::bundled::{Address as BundleAddress, BundledTransaction, BundledTransactionField},
+    transaction::bundled::{BundledTransaction, BundledTransactionField},
 };
 
 use std::{
