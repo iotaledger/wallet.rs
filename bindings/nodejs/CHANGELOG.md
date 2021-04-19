@@ -1,5 +1,10 @@
 # Changelog
 
+## \[0.2.4]
+
+- Fixes `account.balance()` return value.
+  - [a439109c](https://github.com/iotaledger/wallet.rs/commit/a439109c4008f33dddbf9ea7e41f39d90e39a8f4) fix(nodejs): `account.balance` return value ([#572](https://github.com/iotaledger/wallet.rs/pull/572)) on 2021-04-19
+
 ## \[0.2.3]
 
 - Adds an option to enable creating multiple accounts without history.
