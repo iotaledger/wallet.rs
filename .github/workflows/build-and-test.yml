@@ -196,17 +196,6 @@ jobs:
       with:
         toolchain: stable
         override: true       
-    
-    - name: Cache cargo registry
-      uses: actions/cache@v2.1.4
-      with:
-        path: ~/.cargo/registry
-        # Add date to the cache to keep it up to date
-        key: ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
-        # Restore from outdated cache for speed
-        restore-keys: |
-          ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          ${{ matrix.os }}-stable-cargo-registry-
 
     - name: Install LLVM and Clang (Windows) # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
       uses: KyleMayes/install-llvm-action@32c4866ebb71e0949e8833eb49beeebed48532bd
@@ -242,6 +231,17 @@ jobs:
       run: |
         python -m pip install --upgrade setuptools pip wheel
         python -m pip install tox-gh-actions
+    
+    - name: Cache cargo registry
+      uses: actions/cache@v2.1.4
+      with:
+        path: ~/.cargo/registry
+        # Add date to the cache to keep it up to date
+        key: ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+        # Restore from outdated cache for speed
+        restore-keys: |
+          ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          ${{ matrix.os }}-stable-cargo-registry-
 
     - name: Cache cargo index
       uses: actions/cache@v2.1.4
