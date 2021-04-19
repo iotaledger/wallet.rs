@@ -86,15 +86,16 @@ Also for all the optional values, the default values are the same as the ones in
 
 Creates a new instance of the AccountManager.
 
-| Param                            | Type                 | Default                  | Description                                                                                    |
-| -------------------------------- | -------------------- | ------------------------ | ---------------------------------------------------------------------------------------------- |
-| [storage_path]                   | <code>str</code>     | <code>`./storage`</code> | The path where the database file will be saved                                                 |
-| [storage_password]               | <code>str</code>     | <code>undefined</code>   | The storage password to encrypt/decrypt accounts                                               |
-| [polling_interval]               | <code>int</code>     | <code>30000</code>       | The polling interval in milliseconds                                                           |
-| [automatic_output_consolidation] | <code>bool</code>    | <code>true</code>        | Disables the automatic output consolidation process                                            |
-| [output_consolidation_threshold] | <code>int</code>     | <code>100</code>         | Sets the number of outputs an address must have to trigger the automatic consolidation process |
-| [sync_spent_outputs]             | <code>boolean</code> | <code>false</code>       | Enables fetching spent output history on account sync                                          |
-| [persist_events]                 | <code>boolean</code> | <code>false</code>       | Enables event persistence                                                                      |
+| Param                                  | Type                 | Default                  | Description                                                                                    |
+| -------------------------------------- | -------------------- | ------------------------ | ---------------------------------------------------------------------------------------------- |
+| [storage_path]                         | <code>str</code>     | <code>`./storage`</code> | The path where the database file will be saved                                                 |
+| [storage_password]                     | <code>str</code>     | <code>undefined</code>   | The storage password to encrypt/decrypt accounts                                               |
+| [polling_interval]                     | <code>int</code>     | <code>30000</code>       | The polling interval in milliseconds                                                           |
+| [automatic_output_consolidation]       | <code>bool</code>    | <code>true</code>        | Disables the automatic output consolidation process                                            |
+| [output_consolidation_threshold]       | <code>int</code>     | <code>100</code>         | Sets the number of outputs an address must have to trigger the automatic consolidation process |
+| [sync_spent_outputs]                   | <code>boolean</code> | <code>false</code>       | Enables fetching spent output history on account sync                                          |
+| [persist_events]                       | <code>boolean</code> | <code>false</code>       | Enables event persistence                                                                      |
+| [allow_create_multiple_empty_accounts] | <code>boolean</code> | code<false>              | Enables creating accounts with latest account being empty                                      |
 
 Note: if the `storage_path` is set, then the `storage` needs to be set too. An exception will be thrown when errors happened.
 
@@ -564,9 +565,9 @@ Gets the account balance information.
 
 Gets information about the node.
 
-| Param        | Type             | Default                | Description  |
-| ------------ | ---------------- | ---------------------- | ------------ |
-| url          | <code>str</code> | <code>undefined</code> | The node url |
+| Param | Type             | Default                | Description  |
+| ----- | ---------------- | ---------------------- | ------------ |
+| url   | <code>str</code> | <code>undefined</code> | The node url |
 
 **Returns** the [NodeInfoWrapper](#nodeinfowrapper)
 

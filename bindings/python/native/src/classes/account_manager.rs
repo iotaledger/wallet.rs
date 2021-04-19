@@ -85,6 +85,7 @@ impl AccountManager {
         output_consolidation_threshold: Option<usize>,
         sync_spent_outputs: Option<bool>,
         persist_events: Option<bool>,
+        allow_create_multiple_empty_accounts: Option<bool>,
     ) -> Result<Self> {
         let mut account_manager = RustAccountManager::builder();
         if let Some(storage_path) = storage_path {
@@ -98,6 +99,9 @@ impl AccountManager {
         }
         if persist_events.unwrap_or(false) {
             account_manager = account_manager.with_event_persistence();
+        }
+        if allow_create_multiple_empty_accounts.unwrap_or(false) {
+            account_manager = account_manager.with_multiple_empty_accounts();
         }
         if let Some(threshold) = output_consolidation_threshold {
             account_manager = account_manager.with_output_consolidation_threshold(threshold);

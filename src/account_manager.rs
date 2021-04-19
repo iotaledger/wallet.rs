@@ -122,6 +122,7 @@ impl Default for AccountManagerBuilder {
                 automatic_output_consolidation: true,
                 sync_spent_outputs: false,
                 persist_events: false,
+                allow_create_multiple_empty_accounts: false,
             },
         }
     }
@@ -183,6 +184,13 @@ impl AccountManagerBuilder {
     /// Enables event persistence.
     pub fn with_event_persistence(mut self) -> Self {
         self.account_options.persist_events = true;
+        self
+    }
+
+    /// Enables creating multiple accounts without history.
+    /// The wallet disables it by default to simplify account discovery.
+    pub fn with_multiple_empty_accounts(mut self) -> Self {
+        self.account_options.allow_create_multiple_empty_accounts = true;
         self
     }
 
@@ -274,6 +282,7 @@ pub(crate) struct AccountOptions {
     pub(crate) automatic_output_consolidation: bool,
     pub(crate) sync_spent_outputs: bool,
     pub(crate) persist_events: bool,
+    pub(crate) allow_create_multiple_empty_accounts: bool,
 }
 
 #[derive(Clone)]

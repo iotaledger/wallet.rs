@@ -36,15 +36,16 @@ Supported event names:
 
 Creates a new instance of the AccountManager.
 
-| Param                          | Type                 | Default                | Description                                                                               |
-| ------------------------------ | -------------------- | ---------------------- | ----------------------------------------------------------------------------------------- |
-| [options]                      | <code>object</code>  | <code>undefined</code> | The options to configure the account manager                                              |
-| [storagePath]                  | <code>string</code>  | <code>undefined</code> | The path where the database file will be saved                                            |
-| [storagePassword]              | <code>string</code>  | <code>undefined</code> | The storage password                                                                      |
-| [outputConsolidationThreshold] | <code>number</code>  | <code>100</code>       | The number of outputs an address must have to trigger the automatic consolidation process |
-| [automaticOutputConsolidation] | <code>boolean</code> | <code>true</code>      | Disables the automatic output consolidation if false                                      |
-| [syncSpentOutputs]             | <code>boolean</code> | <code>false</code>     | Enables fetching spent output history on account sync                                     |
-| [persistEvents]                | <code>boolean</code> | <code>false</code>     | Enables event persistence                                                                 |
+| Param                              | Type                 | Default                | Description                                                                               |
+| ---------------------------------- | -------------------- | ---------------------- | ----------------------------------------------------------------------------------------- |
+| [options]                          | <code>object</code>  | <code>undefined</code> | The options to configure the account manager                                              |
+| [storagePath]                      | <code>string</code>  | <code>undefined</code> | The path where the database file will be saved                                            |
+| [storagePassword]                  | <code>string</code>  | <code>undefined</code> | The storage password                                                                      |
+| [outputConsolidationThreshold]     | <code>number</code>  | <code>100</code>       | The number of outputs an address must have to trigger the automatic consolidation process |
+| [automaticOutputConsolidation]     | <code>boolean</code> | <code>true</code>      | Disables the automatic output consolidation if false                                      |
+| [syncSpentOutputs]                 | <code>boolean</code> | <code>false</code>     | Enables fetching spent output history on account sync                                     |
+| [persistEvents]                    | <code>boolean</code> | <code>false</code>     | Enables event persistence                                                                 |
+| [allowCreateMultipleEmptyAccounts] | <code>boolean</code> | code<false>            | Enables creating accounts with latest account being empty                                 |
 
 #### setStrongholdPassword(password): void
 
