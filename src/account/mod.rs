@@ -692,8 +692,8 @@ impl AccountHandle {
     }
 
     /// Bridge to [Account#get_node_info](struct.Account.html#method.get_node_info).
-    pub async fn get_node_info(&self, url: Option<&str>) -> crate::Result<NodeInfoWrapper> {
-        self.inner.read().await.get_node_info(url).await
+    pub async fn get_node_info(&self, url: Option<&str>, auth: Option<(&str, &str)>) -> crate::Result<NodeInfoWrapper> {
+        self.inner.read().await.get_node_info(url, auth).await
     }
 }
 
@@ -1003,10 +1003,14 @@ impl Account {
     }
 
     // Gets the node info from /api/v1/info endpoint
-    pub(crate) async fn get_node_info(&self, url: Option<&str>) -> crate::Result<NodeInfoWrapper> {
+    pub(crate) async fn get_node_info(
+        &self,
+        url: Option<&str>,
+        auth: Option<(&str, &str)>,
+    ) -> crate::Result<NodeInfoWrapper> {
         let info = match url {
             Some(url) => NodeInfoWrapper {
-                nodeinfo: iota::Client::get_node_info(url, None)
+                nodeinfo: iota::Client::get_node_info(url, auth)
                     .await
                     .map_err(|e| crate::Error::ClientError(Box::new(e)))?,
                 url: url.to_string(),
@@ -1473,7 +1477,7 @@ mod tests {
             .create()
             .await;
 
-        let node_info = account_handle.get_node_info(None).await.unwrap();
+        let node_info = account_handle.get_node_info(None, None).await.unwrap();
         println!("{:#?}", node_info);
     }
 }

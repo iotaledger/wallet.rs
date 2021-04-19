@@ -101,12 +101,24 @@ declare_types! {
                 None => Default::default(),
             };
 
+            let auth = match cx.argument_opt(2) {
+                Some(_arg) => {
+                    let js_object = cx.argument::<JsObject>(1)?;
+                    let address = js_object.get(&mut cx, "username")?.downcast::<JsString>().or_throw(&mut cx)?;
+                    let amount = js_object.get(&mut cx, "password")?.downcast::<JsString>().or_throw(&mut cx)?;
+
+                    Some((address.value(), amount.value()))
+                },
+                None => Default::default(),
+            };
+
             let cb = cx.argument::<JsFunction>(cx.len()-1)?;
             let this = cx.this();
             let account_id = cx.borrow(&this, |r| r.0.clone());
             let task = tasks::NodeInfoTask {
                 account_id,
                 url,
+                auth
             };
             task.schedule(cb);
             Ok(cx.undefined().upcast())

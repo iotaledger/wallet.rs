@@ -171,8 +171,7 @@ dependencies = [
 [[package]]
 name = "bee-common-derive"
 version = "0.1.1-alpha"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29f96e90b3678de0ef73b7260538706ee195a13480cf601a0bf1542fa27e3abb"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#2a0be9db39b19ede223642c5bed0588d9c3272b1"
 dependencies = [
  "quote 1.0.9",
  "syn 1.0.70",
@@ -232,8 +231,7 @@ dependencies = [
 [[package]]
 name = "bee-pow"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "612452ebcbc440512f0131a7058db63470b13828f1dc9c9b2024302673c767de"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#2a0be9db39b19ede223642c5bed0588d9c3272b1"
 dependencies = [
  "bee-crypto",
  "bee-ternary",
@@ -272,9 +270,13 @@ version = "0.4.2-alpha"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ec0259535d34f1bfd0c41bf5a6f0e3e33268dc9433e2ac3707e66715b51ce05"
 dependencies = [
- "autocfg",
- "num-traits 0.2.14",
- "serde 1.0.125",
+ "bee-common-derive",
+ "bee-crypto",
+ "bee-ternary",
+ "rand 0.8.3",
+ "sha3",
+ "thiserror",
+ "zeroize",
 ]
 
 [[package]]
@@ -1481,7 +1483,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=07f4e420edfa1f48f90fc0e75cb7758f4a3c6e3f#07f4e420edfa1f48f90fc0e75cb7758f4a3c6e3f"
+source = "git+https://github.com/iotaledger/iota.rs?rev=ec57d1607ac9a1fabf240539c04a57b52fa58f33#ec57d1607ac9a1fabf240539c04a57b52fa58f33"
 dependencies = [
  "bee-common",
  "bee-common-derive",
@@ -1493,17 +1495,18 @@ dependencies = [
  "crossbeam",
  "failure",
  "hex",
- "iota-bundle-miner",
- "iota-conversion 0.5.1",
- "iota-crypto 0.5.0",
- "iota-model",
+ "iota-crypto 0.3.0 (git+https://github.com/iotaledger/crypto.rs.git?rev=b849861b86c3f7357b7477de4253b7352b363627)",
+ "log",
  "num_cpus",
  "once_cell",
+ "regex",
+ "reqwest",
+ "rumqttc",
  "serde 1.0.125",
  "serde_json",
- "slip10",
+ "thiserror",
  "tokio",
- "ureq",
+ "url",
 ]
 
 [[package]]
@@ -1522,26 +1525,23 @@ dependencies = [
  "log",
  "num_cpus",
  "once_cell",
- "regex",
- "reqwest",
- "rumqttc",
  "serde 1.0.125",
  "serde_json",
- "thiserror",
+ "slip10",
  "tokio",
- "url",
+ "ureq",
 ]
+
+[[package]]
+name = "iota-constants"
+version = "0.2.1"
+source = "git+https://github.com/iotaledger/iota.rs?rev=0aa7e11b075bea17ae52b1f7dff51f3a13c9d914#0aa7e11b075bea17ae52b1f7dff51f3a13c9d914"
 
 [[package]]
 name = "iota-constants"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "87bd27fb99929629a01f3b596c93aec5b6609854c882c45f9b5ded9cc0e24f61"
-
-[[package]]
-name = "iota-constants"
-version = "0.2.1"
-source = "git+https://github.com/iotaledger/iota.rs?rev=0aa7e11b075bea17ae52b1f7dff51f3a13c9d914#0aa7e11b075bea17ae52b1f7dff51f3a13c9d914"
 
 [[package]]
 name = "iota-conversion"
@@ -1567,7 +1567,7 @@ dependencies = [
 [[package]]
 name = "iota-core"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=07f4e420edfa1f48f90fc0e75cb7758f4a3c6e3f#07f4e420edfa1f48f90fc0e75cb7758f4a3c6e3f"
+source = "git+https://github.com/iotaledger/iota.rs?rev=ec57d1607ac9a1fabf240539c04a57b52fa58f33#ec57d1607ac9a1fabf240539c04a57b52fa58f33"
 dependencies = [
  "bee-ternary",
  "bee-transaction",
@@ -1594,6 +1594,17 @@ dependencies = [
  "iota-constants 0.2.1 (git+https://github.com/iotaledger/iota.rs?rev=0aa7e11b075bea17ae52b1f7dff51f3a13c9d914)",
  "iota-conversion 0.3.0",
  "lazy_static",
+]
+
+[[package]]
+name = "iota-crypto"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "558466ca403e13e2b849f6b1aa0ec98a602dd21a49421a24d69aa265261c2290"
+dependencies = [
+ "blake2",
+ "digest 0.9.0",
+ "ed25519-zebra",
 ]
 
 [[package]]

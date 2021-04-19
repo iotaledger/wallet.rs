@@ -131,12 +131,17 @@ export declare interface NodeInfo {
   features: string[]
 }
 
+export declare interface Auth {
+  username: string
+  password: string
+}
+
 export declare class Account {
   id(): string;
   index(): number;
   alias(): string;
   balance(): AccountBalance;
-  getNodeInfo(url?: string): Promise<NodeInfoWrapper>;
+  getNodeInfo(url?: string, auth?: Auth): Promise<NodeInfoWrapper>;
   messageCount(messageType?: MessageType): number;
   listMessages(count?: number, from?: number, messageType?: MessageType): Message[]
   listAddresses(unspent?: boolean): Address[]

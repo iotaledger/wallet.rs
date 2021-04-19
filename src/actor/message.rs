@@ -86,7 +86,7 @@ pub enum AccountMethod {
     /// Updates the account client options.
     SetClientOptions(Box<ClientOptions>),
     /// Gets the node information.
-    GetNodeInfo(Option<String>),
+    GetNodeInfo(Option<String>, Option<(String, String)>),
 }
 
 /// The returned account.

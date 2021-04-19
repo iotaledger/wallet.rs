@@ -8,6 +8,7 @@ use neon::prelude::*;
 pub struct NodeInfoTask {
     pub account_id: String,
     pub url: Option<String>,
+    pub auth: Option<(String, String)>,
 }
 
 impl Task for NodeInfoTask {
@@ -17,9 +18,10 @@ impl Task for NodeInfoTask {
 
     fn perform(&self) -> Result<Self::Output, Self::Error> {
         crate::block_on(crate::convert_async_panics(|| async {
+            let auth = self.auth.as_ref().map(|a| (a.0.as_str(), a.1.as_str()));
             crate::get_account(&self.account_id)
                 .await
-                .get_node_info(self.url.as_deref())
+                .get_node_info(self.url.as_deref(), auth)
                 .await
         }))
     }

@@ -391,8 +391,15 @@ impl AccountHandle {
     }
 
     /// Bridge to [Account#get_node_info](struct.Account.html#method.get_node_info).
-    fn get_node_info(&self, url: Option<&str>) -> Result<NodeInfoWrapper> {
-        Ok(crate::block_on(async { self.account_handle.get_node_info(url).await })?.into())
+    fn get_node_info(&self, url: Option<&str>, auth: Option<Vec<&str>>) -> Result<NodeInfoWrapper> {
+        if let Some(auth) = auth {
+            return Ok(crate::block_on(async {
+                self.account_handle.get_node_info(url, Some((auth[0], auth[1]))).await
+            })?
+            .into());
+        }
+
+        Ok(crate::block_on(async { self.account_handle.get_node_info(url, None).await })?.into())
     }
 }
 
