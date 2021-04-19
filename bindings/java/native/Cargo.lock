@@ -333,6 +333,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "bee-network"
+version = "0.1.0-alpha"
+source = "git+https://github.com/iotaledger/bee.git?rev=3e7938048174570b1acb555d1cf36b69ee46d70b#3e7938048174570b1acb555d1cf36b69ee46d70b"
+dependencies = [
+ "libp2p",
+]
+
+[[package]]
 name = "bee-pow"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -203,6 +203,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "bee-ledger"
+version = "0.1.0-alpha"
+source = "git+https://github.com/iotaledger/bee.git?rev=3e7938048174570b1acb555d1cf36b69ee46d70b#3e7938048174570b1acb555d1cf36b69ee46d70b"
+dependencies = [
+ "bee-common 0.4.1 (git+https://github.com/iotaledger/bee.git?branch=dev)",
+ "bee-message 0.1.2",
+ "thiserror",
+]
+
+[[package]]
 name = "bee-message"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -221,10 +231,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "bee-message"
+version = "0.1.2"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#2a0be9db39b19ede223642c5bed0588d9c3272b1"
+dependencies = [
+ "bech32 0.8.0",
+ "bee-common 0.4.1 (git+https://github.com/iotaledger/bee.git?branch=dev)",
+ "bee-pow 0.1.0 (git+https://github.com/iotaledger/bee.git?branch=dev)",
+ "bee-ternary 0.4.2-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
+ "bytemuck",
+ "digest 0.9.0",
+ "hex",
+ "iota-crypto 0.4.2",
+ "serde 1.0.125",
+ "thiserror",
+]
+
+[[package]]
 name = "bee-network"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d73a7e1695d5b1ae4ae8355dbbf5635cc4b97a37e49c8ec8355328da212a5bee"
+dependencies = [
+ "libp2p",
+]
+
+[[package]]
+name = "bee-network"
+version = "0.1.0-alpha"
+source = "git+https://github.com/iotaledger/bee.git?rev=3e7938048174570b1acb555d1cf36b69ee46d70b#3e7938048174570b1acb555d1cf36b69ee46d70b"
 dependencies = [
  "libp2p",
 ]
@@ -237,6 +272,17 @@ checksum = "612452ebcbc440512f0131a7058db63470b13828f1dc9c9b2024302673c767de"
 dependencies = [
  "bee-crypto",
  "bee-ternary",
+ "iota-crypto 0.4.2",
+ "thiserror",
+]
+
+[[package]]
+name = "bee-pow"
+version = "0.1.0"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#2a0be9db39b19ede223642c5bed0588d9c3272b1"
+dependencies = [
+ "bee-crypto 0.2.1-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
+ "bee-ternary 0.4.2-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
  "iota-crypto 0.4.2",
  "thiserror",
 ]
