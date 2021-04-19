@@ -505,7 +505,6 @@
 <span id="502">502</span>
 <span id="503">503</span>
 <span id="504">504</span>
-<span id="505">505</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -528,11 +527,10 @@
             <span class="ident">create_migration_bundle</span>, <span class="ident">encode_migration_address</span>, <span class="ident">mine</span>, <span class="ident">sign_migration_bundle</span>, <span class="ident">Address</span> <span class="kw">as</span> <span class="ident">MigrationAddress</span>,
         },
         <span class="ident">response::InputData</span>,
-        <span class="ident">Transfer</span>,
     },
     <span class="ident">signing::ternary::seed::Seed</span> <span class="kw">as</span> <span class="ident">TernarySeed</span>,
     <span class="ident">ternary</span>::{<span class="ident">T1B1Buf</span>, <span class="ident">T3B1Buf</span>, <span class="ident">TritBuf</span>, <span class="ident">TryteBuf</span>},
-    <span class="ident">transaction::bundled</span>::{<span class="ident">Address</span> <span class="kw">as</span> <span class="ident">BundleAddress</span>, <span class="ident">BundledTransaction</span>, <span class="ident">BundledTransactionField</span>},
+    <span class="ident">transaction::bundled</span>::{<span class="ident">BundledTransaction</span>, <span class="ident">BundledTransactionField</span>},
 };
 
 <span class="kw">use</span> <span class="ident">std</span>::{
