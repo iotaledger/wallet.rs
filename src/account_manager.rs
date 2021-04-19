@@ -1042,6 +1042,7 @@ impl AccountManager {
             account.set_storage_path(self.storage_path.clone());
             account.save().await?;
             account.save_messages(messages).await?;
+            account.cached_messages = Default::default();
         }
         // wait for stronghold to finish its tasks
         let _ = crate::stronghold::actor_runtime().lock().await;
@@ -1478,12 +1479,14 @@ impl AccountsSynchronizer {
                     .await?;
                 }
             }
+            drop(account);
 
             let mut synced_account = SyncedAccount::from(account_handle.clone()).await;
             let mut updated_messages = new_messages;
             updated_messages.extend(confirmation_changed_messages);
             synced_account.messages = updated_messages;
 
+            let account = account_handle.read().await;
             synced_account.addresses = account
                 .addresses()
                 .iter()

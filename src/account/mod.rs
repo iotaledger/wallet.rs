@@ -406,7 +406,7 @@ pub struct Account {
     skip_persistence: bool,
     #[getset(get = "pub(crate)")]
     #[serde(skip)]
-    cached_messages: Arc<Mutex<HashMap<MessageId, Message>>>,
+    pub(crate) cached_messages: Arc<Mutex<HashMap<MessageId, Message>>>,
 }
 
 impl PartialEq for Account {
