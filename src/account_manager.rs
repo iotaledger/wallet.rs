@@ -1478,12 +1478,14 @@ impl AccountsSynchronizer {
                     .await?;
                 }
             }
+            drop(account);
 
             let mut synced_account = SyncedAccount::from(account_handle.clone()).await;
             let mut updated_messages = new_messages;
             updated_messages.extend(confirmation_changed_messages);
             synced_account.messages = updated_messages;
 
+            let account = account_handle.read().await;
             synced_account.addresses = account
                 .addresses()
                 .iter()
