@@ -9,10 +9,7 @@ use crate::{
 use chrono::prelude::Utc;
 use serde::Serialize;
 
-use iota_migration::crypto::ternary::{
-    sponge::{CurlP81, Sponge},
-    Hash as TernaryHash,
-};
+use iota_migration::crypto::hashes::ternary::{curl_p::CurlP, Hash as TernaryHash};
 pub(crate) use iota_migration::{
     client::{
         migration::{
@@ -20,7 +17,7 @@ pub(crate) use iota_migration::{
         },
         response::InputData,
     },
-    signing::ternary::seed::Seed as TernarySeed,
+    crypto::keys::ternary::seed::Seed as TernarySeed,
     ternary::{T1B1Buf, T3B1Buf, TritBuf, TryteBuf},
     transaction::bundled::{BundledTransaction, BundledTransactionField},
 };
@@ -387,7 +384,7 @@ pub(crate) async fn send_bundle(
     nodes: &[&str],
     bundle: Vec<BundledTransaction>,
     mwm: u8,
-) -> crate::Result<iota_migration::crypto::ternary::Hash> {
+) -> crate::Result<iota_migration::crypto::hashes::ternary::Hash> {
     let mut builder = iota_migration::ClientBuilder::new();
     for node in nodes {
         builder = builder.node(node)?;
@@ -426,15 +423,15 @@ pub(crate) async fn send_bundle(
         }
     });
     let mut trits = TritBuf::<T1B1Buf>::zeros(BundledTransaction::trit_len());
-    let mut curl = CurlP81::new();
+    let mut curl = CurlP::new();
     send_trytes[0].as_trits_allocated(&mut trits);
-    let tail_transaction_hash = TernaryHash::from_inner_unchecked(curl.digest(&trits).unwrap());
+    let tail_transaction_hash = TernaryHash::from_inner_unchecked(curl.digest(&trits));
     Ok(tail_transaction_hash)
 }
 
 async fn check_confirmation(
     legacy_client: &iota_migration::Client,
-    bundle_hash: &iota_migration::crypto::ternary::Hash,
+    bundle_hash: &iota_migration::crypto::hashes::ternary::Hash,
     bundle_hash_string: &str,
 ) -> crate::Result<bool> {
     log::debug!("[MIGRATION] checking confirmation for bundle `{}`", bundle_hash_string);
@@ -449,9 +446,9 @@ async fn check_confirmation(
     for transaction in transactions {
         if transaction.is_tail() {
             let mut trits = TritBuf::<T1B1Buf>::zeros(BundledTransaction::trit_len());
-            let mut curl = CurlP81::new();
+            let mut curl = CurlP::new();
             transaction.as_trits_allocated(&mut trits);
-            let tail_transaction_hash = TernaryHash::from_inner_unchecked(curl.digest(&trits).unwrap());
+            let tail_transaction_hash = TernaryHash::from_inner_unchecked(curl.digest(&trits));
             let info = legacy_client.get_tip_info(&tail_transaction_hash).await?;
             infos.push((tail_transaction_hash, info));
         }
