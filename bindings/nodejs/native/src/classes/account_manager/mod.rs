@@ -90,6 +90,8 @@ struct ManagerOptions {
     sync_spent_outputs: bool,
     #[serde(rename = "persistEvents", default)]
     persist_events: bool,
+    #[serde(rename = "allowCreateMultipleEmptyAccounts", default)]
+    allow_create_multiple_empty_accounts: bool,
 }
 
 fn default_automatic_output_consolidation() -> bool {
@@ -176,6 +178,9 @@ declare_types! {
             }
             if options.persist_events {
                 manager = manager.with_event_persistence();
+            }
+            if options.allow_create_multiple_empty_accounts {
+                manager = manager.with_multiple_empty_accounts();
             }
             if let Some(threshold) = options.output_consolidation_threshold {
                 manager = manager.with_output_consolidation_threshold(threshold);

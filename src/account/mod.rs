@@ -228,12 +228,14 @@ impl AccountInitialiser {
                 latest_account_handle.replace(account_handle.clone());
             }
         }
-        if let Some(ref latest_account_handle) = latest_account_handle {
-            let latest_account = latest_account_handle.read().await;
-            if latest_account.with_messages(|messages| messages.is_empty()).await
-                && latest_account.addresses().iter().all(|a| a.outputs.is_empty())
-            {
-                return Err(crate::Error::LatestAccountIsEmpty);
+        if !self.account_options.allow_create_multiple_empty_accounts {
+            if let Some(ref latest_account_handle) = latest_account_handle {
+                let latest_account = latest_account_handle.read().await;
+                if latest_account.with_messages(|messages| messages.is_empty()).await
+                    && latest_account.addresses().iter().all(|a| a.outputs.is_empty())
+                {
+                    return Err(crate::Error::LatestAccountIsEmpty);
+                }
             }
         }
 

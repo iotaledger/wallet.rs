@@ -216,6 +216,7 @@ export declare interface ManagerOptions {
   automaticOutputConsolidation?: boolean
   syncSpentOutputs?: boolean
   persistEvents?: boolean
+  allowCreateMultipleEmptyAccounts?: boolean
 }
 
 export declare interface BalanceChangeEvent {

@@ -151,6 +151,7 @@ foreign_class!(class AccountManagerBuilder {
     fn AccountManagerBuilder::with_automatic_output_consolidation_disabled(&mut self) -> AccountManagerBuilder; alias withAutomaticOutputConsolidationDisabled;
     fn AccountManagerBuilder::with_sync_spent_outputs(&mut self) -> AccountManagerBuilder; alias withSyncSpentOutputs;
     fn AccountManagerBuilder::with_event_persistence(&mut self) -> AccountManagerBuilder; alias withEventPersistence;
+    fn AccountManagerBuilder::with_multiple_empty_accounts(&mut self) -> AccountManagerBuilder; alias withMultipleEmptyAccounts;
     fn AccountManagerBuilder::finish(&mut self) -> Result<AccountManager>;
 });
 

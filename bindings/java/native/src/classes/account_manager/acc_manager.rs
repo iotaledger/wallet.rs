@@ -119,6 +119,11 @@ impl AccountManagerBuilder {
         AccountManagerBuilder::new_with_builder(new_builder)
     }
 
+    pub fn with_multiple_empty_accounts(&mut self) -> Self {
+        let new_builder = self.builder.borrow_mut().take().unwrap().with_multiple_empty_accounts();
+        AccountManagerBuilder::new_with_builder(new_builder)
+    }
+
     /// Builds the manager.
     pub fn finish(&mut self) -> Result<AccountManager> {
         match crate::block_on(async move { self.builder.borrow_mut().take().unwrap().finish().await }) {
