@@ -2353,6 +2353,7 @@
 <span id="2350">2350</span>
 <span id="2351">2351</span>
 <span id="2352">2352</span>
+<span id="2353">2353</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -3398,6 +3399,7 @@
             <span class="ident">account</span>.<span class="ident">set_storage_path</span>(<span class="self">self</span>.<span class="ident">storage_path</span>.<span class="ident">clone</span>());
             <span class="ident">account</span>.<span class="ident">save</span>().<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="ident">account</span>.<span class="ident">save_messages</span>(<span class="ident">messages</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="ident">account</span>.<span class="ident">cached_messages</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         }
         <span class="comment">// wait for stronghold to finish its tasks</span>
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::stronghold::actor_runtime</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
