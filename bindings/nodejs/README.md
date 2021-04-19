@@ -12,19 +12,11 @@ Currently the package isn't published so you'd need to link it to your project u
 
 - Using NPM:
 ```
-$ git clone https://github.com/iotaledger/wallet.rs
-$ cd wallet.rs/bindings/nodejs
-$ npm link
-$ cd /path/to/nodejs/project/
-$ npm link iota-wallet
+$ npm i @iota/wallet
 ```
 - Using yarn: 
 ```
-$ git clone https://github.com/iotaledger/wallet.rs
-$ cd wallet.rs/bindings/nodejs
-$ yarn link
-$ cd /path/to/nodejs/project/
-$ yarn link iota-wallet
+$ yarn @iota/wallet
 ```
 
 ## Documentation
