@@ -16,7 +16,7 @@ $ npm i @iota/wallet
 ```
 - Using yarn: 
 ```
-$ yarn @iota/wallet
+$ yarn add @iota/wallet
 ```
 
 ## Documentation
