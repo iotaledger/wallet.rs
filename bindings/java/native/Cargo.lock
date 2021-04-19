@@ -260,7 +260,7 @@ checksum = "6c7f7096bc256f5e5cb960f60dfc4f4ef979ca65abe7fb9d5a4f77150d3783d4"
 [[package]]
 name = "bee-common"
 version = "0.4.1"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#7ee6cc6225d8faedb15ab0812b90001e555d984c"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#2a0be9db39b19ede223642c5bed0588d9c3272b1"
 dependencies = [
  "autocfg",
  "chrono",
@@ -273,7 +273,7 @@ dependencies = [
 [[package]]
 name = "bee-common-derive"
 version = "0.1.1-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#7ee6cc6225d8faedb15ab0812b90001e555d984c"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#2a0be9db39b19ede223642c5bed0588d9c3272b1"
 dependencies = [
  "quote 1.0.9",
  "syn 1.0.69",
@@ -294,7 +294,7 @@ dependencies = [
 [[package]]
 name = "bee-crypto"
 version = "0.2.1-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#7ee6cc6225d8faedb15ab0812b90001e555d984c"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#2a0be9db39b19ede223642c5bed0588d9c3272b1"
 dependencies = [
  "bee-ternary 0.4.2-alpha",
  "byteorder",
@@ -333,8 +333,8 @@ dependencies = [
 
 [[package]]
 name = "bee-message"
-version = "0.1.1"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#7ee6cc6225d8faedb15ab0812b90001e555d984c"
+version = "0.1.2"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#2a0be9db39b19ede223642c5bed0588d9c3272b1"
 dependencies = [
  "bech32 0.8.0",
  "bee-common",
@@ -369,7 +369,7 @@ dependencies = [
 [[package]]
 name = "bee-pow"
 version = "0.1.0"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#7ee6cc6225d8faedb15ab0812b90001e555d984c"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#2a0be9db39b19ede223642c5bed0588d9c3272b1"
 dependencies = [
  "bee-crypto 0.2.1-alpha",
  "bee-ternary 0.4.2-alpha",
@@ -403,7 +403,7 @@ dependencies = [
 [[package]]
 name = "bee-signing"
 version = "0.1.1-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#7ee6cc6225d8faedb15ab0812b90001e555d984c"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#2a0be9db39b19ede223642c5bed0588d9c3272b1"
 dependencies = [
  "bee-common-derive",
  "bee-crypto 0.2.1-alpha",
@@ -426,7 +426,7 @@ dependencies = [
 [[package]]
 name = "bee-ternary"
 version = "0.4.2-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#7ee6cc6225d8faedb15ab0812b90001e555d984c"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#2a0be9db39b19ede223642c5bed0588d9c3272b1"
 dependencies = [
  "autocfg",
  "num-traits 0.2.14",
@@ -1855,8 +1855,9 @@ dependencies = [
 
 [[package]]
 name = "iota-crypto"
-version = "0.4.2"
-source = "git+https://github.com/iotaledger/crypto.rs?branch=dev#317a138a263621c1861613dee9531e958f652c6e"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "090f40e08f0e8f068691dbd3ba3d518b27c4582044efa33c9ef07b803344444f"
 dependencies = [
  "aead",
  "blake2",
@@ -1908,12 +1909,12 @@ dependencies = [
 [[package]]
 name = "iota-stronghold"
 version = "0.3.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=65ec786b9da4e084c719aac8eb8159e0ca118969#65ec786b9da4e084c719aac8eb8159e0ca118969"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=ab6fea59a81c9ad84e8bd79d482833dc3df249c8#ab6fea59a81c9ad84e8bd79d482833dc3df249c8"
 dependencies = [
  "anyhow",
  "bincode",
  "futures",
- "iota-crypto 0.4.2 (git+https://github.com/iotaledger/crypto.rs?branch=dev)",
+ "iota-crypto 0.5.0",
  "riker",
  "serde 1.0.125",
  "stronghold-engine",
@@ -1937,7 +1938,7 @@ dependencies = [
  "hex",
  "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=f3f924718e0e0cfb09732804fbd6c66fff7a21e4)",
  "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=f84c97ddccb4a4323d300b32cc6028ff9eabe98b)",
- "iota-crypto 0.4.2 (git+https://github.com/iotaledger/crypto.rs?branch=dev)",
+ "iota-crypto 0.5.0",
  "iota-ledger",
  "iota-stronghold",
  "log",
@@ -1960,7 +1961,7 @@ name = "iota-wallet-java"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "bee-message 0.1.1",
+ "bee-message 0.1.2",
  "bindgen",
  "chrono",
  "env_logger",
@@ -3167,7 +3168,7 @@ dependencies = [
 [[package]]
 name = "runtime"
 version = "0.3.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=65ec786b9da4e084c719aac8eb8159e0ca118969#65ec786b9da4e084c719aac8eb8159e0ca118969"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=ab6fea59a81c9ad84e8bd79d482833dc3df249c8#ab6fea59a81c9ad84e8bd79d482833dc3df249c8"
 dependencies = [
  "libsodium-sys",
  "serde 1.0.125",
@@ -3508,11 +3509,11 @@ checksum = "6ca0f7ce3a29234210f0f4f0b56f8be2e722488b95cb522077943212da3b32eb"
 [[package]]
 name = "snapshot"
 version = "0.3.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=65ec786b9da4e084c719aac8eb8159e0ca118969#65ec786b9da4e084c719aac8eb8159e0ca118969"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=ab6fea59a81c9ad84e8bd79d482833dc3df249c8#ab6fea59a81c9ad84e8bd79d482833dc3df249c8"
 dependencies = [
  "dirs-next",
  "hex",
- "iota-crypto 0.4.2 (git+https://github.com/iotaledger/crypto.rs?branch=dev)",
+ "iota-crypto 0.5.0",
  "thiserror",
 ]
 
@@ -3541,7 +3542,7 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 [[package]]
 name = "store"
 version = "0.3.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=65ec786b9da4e084c719aac8eb8159e0ca118969#65ec786b9da4e084c719aac8eb8159e0ca118969"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=ab6fea59a81c9ad84e8bd79d482833dc3df249c8#ab6fea59a81c9ad84e8bd79d482833dc3df249c8"
 dependencies = [
  "once_cell",
  "paste",
@@ -3551,7 +3552,7 @@ dependencies = [
 [[package]]
 name = "stronghold-engine"
 version = "0.3.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=65ec786b9da4e084c719aac8eb8159e0ca118969#65ec786b9da4e084c719aac8eb8159e0ca118969"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=ab6fea59a81c9ad84e8bd79d482833dc3df249c8#ab6fea59a81c9ad84e8bd79d482833dc3df249c8"
 dependencies = [
  "runtime",
  "snapshot",
@@ -3562,7 +3563,7 @@ dependencies = [
 [[package]]
 name = "stronghold-utils"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=65ec786b9da4e084c719aac8eb8159e0ca118969#65ec786b9da4e084c719aac8eb8159e0ca118969"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=ab6fea59a81c9ad84e8bd79d482833dc3df249c8#ab6fea59a81c9ad84e8bd79d482833dc3df249c8"
 dependencies = [
  "futures",
  "rand 0.8.3",
@@ -3965,10 +3966,10 @@ dependencies = [
 [[package]]
 name = "vault"
 version = "0.3.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=65ec786b9da4e084c719aac8eb8159e0ca118969#65ec786b9da4e084c719aac8eb8159e0ca118969"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=ab6fea59a81c9ad84e8bd79d482833dc3df249c8#ab6fea59a81c9ad84e8bd79d482833dc3df249c8"
 dependencies = [
  "anyhow",
- "iota-crypto 0.4.2 (git+https://github.com/iotaledger/crypto.rs?branch=dev)",
+ "iota-crypto 0.5.0",
  "runtime",
  "serde 1.0.125",
  "thiserror",

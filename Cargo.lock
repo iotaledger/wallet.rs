@@ -1525,7 +1525,7 @@ dependencies = [
  "hex",
  "iota-bundle-miner",
  "iota-conversion 0.5.1",
- "iota-crypto 0.4.2 (git+https://github.com/iotaledger/crypto.rs.git?rev=5fea3481907da9bb333a31012aab0df01009cb37)",
+ "iota-crypto 0.4.2",
  "iota-model",
  "num_cpus",
  "once_cell",
@@ -1663,8 +1663,9 @@ dependencies = [
 
 [[package]]
 name = "iota-crypto"
-version = "0.4.2"
-source = "git+https://github.com/iotaledger/crypto.rs?branch=dev#317a138a263621c1861613dee9531e958f652c6e"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "090f40e08f0e8f068691dbd3ba3d518b27c4582044efa33c9ef07b803344444f"
 dependencies = [
  "aead",
  "blake2",
@@ -1716,12 +1717,12 @@ dependencies = [
 [[package]]
 name = "iota-stronghold"
 version = "0.3.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=65ec786b9da4e084c719aac8eb8159e0ca118969#65ec786b9da4e084c719aac8eb8159e0ca118969"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=ab6fea59a81c9ad84e8bd79d482833dc3df249c8#ab6fea59a81c9ad84e8bd79d482833dc3df249c8"
 dependencies = [
  "anyhow",
  "bincode",
  "futures",
- "iota-crypto 0.4.2 (git+https://github.com/iotaledger/crypto.rs?branch=dev)",
+ "iota-crypto 0.5.0",
  "riker",
  "serde 1.0.125",
  "stronghold-engine",
@@ -1746,7 +1747,7 @@ dependencies = [
  "hex",
  "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=f3f924718e0e0cfb09732804fbd6c66fff7a21e4)",
  "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=f84c97ddccb4a4323d300b32cc6028ff9eabe98b)",
- "iota-crypto 0.4.2 (git+https://github.com/iotaledger/crypto.rs?branch=dev)",
+ "iota-crypto 0.5.0",
  "iota-ledger",
  "iota-stronghold",
  "log",
@@ -2997,7 +2998,7 @@ dependencies = [
 [[package]]
 name = "runtime"
 version = "0.3.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=65ec786b9da4e084c719aac8eb8159e0ca118969#65ec786b9da4e084c719aac8eb8159e0ca118969"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=ab6fea59a81c9ad84e8bd79d482833dc3df249c8#ab6fea59a81c9ad84e8bd79d482833dc3df249c8"
 dependencies = [
  "libsodium-sys",
  "serde 1.0.125",
@@ -3349,11 +3350,11 @@ checksum = "fe0f37c9e8f3c5a4a66ad655a93c74daac4ad00c441533bf5c6e7990bb42604e"
 [[package]]
 name = "snapshot"
 version = "0.3.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=65ec786b9da4e084c719aac8eb8159e0ca118969#65ec786b9da4e084c719aac8eb8159e0ca118969"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=ab6fea59a81c9ad84e8bd79d482833dc3df249c8#ab6fea59a81c9ad84e8bd79d482833dc3df249c8"
 dependencies = [
  "dirs-next",
  "hex",
- "iota-crypto 0.4.2 (git+https://github.com/iotaledger/crypto.rs?branch=dev)",
+ "iota-crypto 0.5.0",
  "thiserror",
 ]
 
@@ -3382,7 +3383,7 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 [[package]]
 name = "store"
 version = "0.3.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=65ec786b9da4e084c719aac8eb8159e0ca118969#65ec786b9da4e084c719aac8eb8159e0ca118969"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=ab6fea59a81c9ad84e8bd79d482833dc3df249c8#ab6fea59a81c9ad84e8bd79d482833dc3df249c8"
 dependencies = [
  "once_cell",
  "paste",
@@ -3392,7 +3393,7 @@ dependencies = [
 [[package]]
 name = "stronghold-engine"
 version = "0.3.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=65ec786b9da4e084c719aac8eb8159e0ca118969#65ec786b9da4e084c719aac8eb8159e0ca118969"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=ab6fea59a81c9ad84e8bd79d482833dc3df249c8#ab6fea59a81c9ad84e8bd79d482833dc3df249c8"
 dependencies = [
  "runtime",
  "snapshot",
@@ -3403,7 +3404,7 @@ dependencies = [
 [[package]]
 name = "stronghold-utils"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=65ec786b9da4e084c719aac8eb8159e0ca118969#65ec786b9da4e084c719aac8eb8159e0ca118969"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=ab6fea59a81c9ad84e8bd79d482833dc3df249c8#ab6fea59a81c9ad84e8bd79d482833dc3df249c8"
 dependencies = [
  "futures",
  "rand 0.8.3",
@@ -3780,10 +3781,10 @@ dependencies = [
 [[package]]
 name = "vault"
 version = "0.3.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=65ec786b9da4e084c719aac8eb8159e0ca118969#65ec786b9da4e084c719aac8eb8159e0ca118969"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=ab6fea59a81c9ad84e8bd79d482833dc3df249c8#ab6fea59a81c9ad84e8bd79d482833dc3df249c8"
 dependencies = [
  "anyhow",
- "iota-crypto 0.4.2 (git+https://github.com/iotaledger/crypto.rs?branch=dev)",
+ "iota-crypto 0.5.0",
  "runtime",
  "serde 1.0.125",
  "thiserror",
