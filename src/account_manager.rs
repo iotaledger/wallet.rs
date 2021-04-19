@@ -1042,6 +1042,7 @@ impl AccountManager {
             account.set_storage_path(self.storage_path.clone());
             account.save().await?;
             account.save_messages(messages).await?;
+            account.cached_messages = Default::default();
         }
         // wait for stronghold to finish its tasks
         let _ = crate::stronghold::actor_runtime().lock().await;
