@@ -274,7 +274,7 @@ dependencies = [
 [[package]]
 name = "bee-common"
 version = "0.4.1"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#2a0be9db39b19ede223642c5bed0588d9c3272b1"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#868f395e432830f3903e387eea5c7016afa44f6e"
 dependencies = [
  "autocfg",
  "chrono",
@@ -322,7 +322,7 @@ dependencies = [
 [[package]]
 name = "bee-crypto"
 version = "0.2.1-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#2a0be9db39b19ede223642c5bed0588d9c3272b1"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#868f395e432830f3903e387eea5c7016afa44f6e"
 dependencies = [
  "bee-ternary 0.4.2-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
  "byteorder",
@@ -379,7 +379,7 @@ dependencies = [
 [[package]]
 name = "bee-message"
 version = "0.1.2"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#2a0be9db39b19ede223642c5bed0588d9c3272b1"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#868f395e432830f3903e387eea5c7016afa44f6e"
 dependencies = [
  "bech32 0.8.0",
  "bee-common 0.4.1 (git+https://github.com/iotaledger/bee.git?branch=dev)",
@@ -426,7 +426,7 @@ dependencies = [
 [[package]]
 name = "bee-pow"
 version = "0.1.0"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#2a0be9db39b19ede223642c5bed0588d9c3272b1"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#868f395e432830f3903e387eea5c7016afa44f6e"
 dependencies = [
  "bee-crypto 0.2.1-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
  "bee-ternary 0.4.2-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
@@ -480,7 +480,7 @@ dependencies = [
 [[package]]
 name = "bee-ternary"
 version = "0.4.2-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#2a0be9db39b19ede223642c5bed0588d9c3272b1"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#868f395e432830f3903e387eea5c7016afa44f6e"
 dependencies = [
  "autocfg",
  "num-traits 0.2.14",
@@ -1957,7 +1957,7 @@ dependencies = [
 [[package]]
 name = "iota-stronghold"
 version = "0.3.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=ab6fea59a81c9ad84e8bd79d482833dc3df249c8#ab6fea59a81c9ad84e8bd79d482833dc3df249c8"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=0e25ee9930ab25132f7eb3db23ee147f146e959d#0e25ee9930ab25132f7eb3db23ee147f146e959d"
 dependencies = [
  "anyhow",
  "bincode",
@@ -3216,7 +3216,7 @@ dependencies = [
 [[package]]
 name = "runtime"
 version = "0.3.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=ab6fea59a81c9ad84e8bd79d482833dc3df249c8#ab6fea59a81c9ad84e8bd79d482833dc3df249c8"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=0e25ee9930ab25132f7eb3db23ee147f146e959d#0e25ee9930ab25132f7eb3db23ee147f146e959d"
 dependencies = [
  "libsodium-sys",
  "serde 1.0.125",
@@ -3557,7 +3557,7 @@ checksum = "6ca0f7ce3a29234210f0f4f0b56f8be2e722488b95cb522077943212da3b32eb"
 [[package]]
 name = "snapshot"
 version = "0.3.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=ab6fea59a81c9ad84e8bd79d482833dc3df249c8#ab6fea59a81c9ad84e8bd79d482833dc3df249c8"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=0e25ee9930ab25132f7eb3db23ee147f146e959d#0e25ee9930ab25132f7eb3db23ee147f146e959d"
 dependencies = [
  "dirs-next",
  "hex",
@@ -3590,7 +3590,7 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 [[package]]
 name = "store"
 version = "0.3.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=ab6fea59a81c9ad84e8bd79d482833dc3df249c8#ab6fea59a81c9ad84e8bd79d482833dc3df249c8"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=0e25ee9930ab25132f7eb3db23ee147f146e959d#0e25ee9930ab25132f7eb3db23ee147f146e959d"
 dependencies = [
  "once_cell",
  "paste",
@@ -3600,7 +3600,7 @@ dependencies = [
 [[package]]
 name = "stronghold-engine"
 version = "0.3.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=ab6fea59a81c9ad84e8bd79d482833dc3df249c8#ab6fea59a81c9ad84e8bd79d482833dc3df249c8"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=0e25ee9930ab25132f7eb3db23ee147f146e959d#0e25ee9930ab25132f7eb3db23ee147f146e959d"
 dependencies = [
  "runtime",
  "snapshot",
@@ -3611,11 +3611,12 @@ dependencies = [
 [[package]]
 name = "stronghold-utils"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=ab6fea59a81c9ad84e8bd79d482833dc3df249c8#ab6fea59a81c9ad84e8bd79d482833dc3df249c8"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=0e25ee9930ab25132f7eb3db23ee147f146e959d#0e25ee9930ab25132f7eb3db23ee147f146e959d"
 dependencies = [
  "futures",
  "rand 0.8.3",
  "riker",
+ "utils-derive",
 ]
 
 [[package]]
@@ -4003,6 +4004,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "utils-derive"
+version = "0.1.0"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=0e25ee9930ab25132f7eb3db23ee147f146e959d#0e25ee9930ab25132f7eb3db23ee147f146e959d"
+dependencies = [
+ "quote 1.0.9",
+ "syn 1.0.69",
+]
+
+[[package]]
 name = "uuid"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4014,7 +4024,7 @@ dependencies = [
 [[package]]
 name = "vault"
 version = "0.3.0"
-source = "git+https://github.com/iotaledger/stronghold.rs?rev=ab6fea59a81c9ad84e8bd79d482833dc3df249c8#ab6fea59a81c9ad84e8bd79d482833dc3df249c8"
+source = "git+https://github.com/iotaledger/stronghold.rs?rev=0e25ee9930ab25132f7eb3db23ee147f146e959d#0e25ee9930ab25132f7eb3db23ee147f146e959d"
 dependencies = [
  "anyhow",
  "iota-crypto 0.5.0",
@@ -4288,18 +4298,18 @@ dependencies = [
 
 [[package]]
 name = "zeroize"
-version = "1.2.0"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81a974bcdd357f0dca4d41677db03436324d45a4c9ed2d0b873a5a360ce41c36"
+checksum = "4756f7db3f7b5574938c3eb1c117038b8e07f95ee6718c0efad4ac21508f1efd"
 dependencies = [
  "zeroize_derive",
 ]
 
 [[package]]
 name = "zeroize_derive"
-version = "1.0.1"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3f369ddb18862aba61aa49bf31e74d29f0f162dec753063200e1dc084345d16"
+checksum = "a2c1e130bebaeab2f23886bf9acbaca14b092408c452543c857f66399cd6dab1"
 dependencies = [
  "proc-macro2 1.0.26",
  "quote 1.0.9",

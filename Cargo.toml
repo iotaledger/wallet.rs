@@ -30,7 +30,7 @@ rocksdb = { version = "0.15", default-features = false, features = ["lz4"] }
 zeroize = { version = "1.2", features = ["zeroize_derive"] }
 
 # stronghold
-iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "ab6fea59a81c9ad84e8bd79d482833dc3df249c8" }
+iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "0e25ee9930ab25132f7eb3db23ee147f146e959d" }
 riker = "0.4"
 slog = "2.7"
 
