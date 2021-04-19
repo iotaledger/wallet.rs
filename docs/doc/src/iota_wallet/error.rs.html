@@ -297,6 +297,43 @@
 <span id="294">294</span>
 <span id="295">295</span>
 <span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -474,6 +511,29 @@
     <span class="doccomment">/// Node not synced when creating account or updating client options.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;nodes {0} not synced&quot;</span>)]</span>
     <span class="ident">NodesNotSynced</span>(<span class="ident">String</span>),
+    <span class="doccomment">/// iota 1.0 client error</span>
+    <span class="comment">// #[cfg(feature = &quot;migration&quot;)]</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
+    <span class="ident">LegacyClientError</span>(<span class="ident">Box</span><span class="op">&lt;</span><span class="ident">iota_migration::client::Error</span><span class="op">&gt;</span>),
+    <span class="doccomment">/// Invalid legacy seed.</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;invalid seed&quot;</span>)]</span>
+    <span class="ident">InvalidSeed</span>,
+    <span class="doccomment">/// Migration data not found.</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;migration data not found for the provided seed; call `get_migration_data` first.&quot;</span>)]</span>
+    <span class="ident">MigrationDataNotFound</span>,
+    <span class="doccomment">/// Migration bundle not found.</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;migration bundle not found with the provided bundle hash&quot;</span>)]</span>
+    <span class="ident">MigrationBundleNotFound</span>,
+    <span class="doccomment">/// Input not found with given index.</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;input not found with the provided index&quot;</span>)]</span>
+    <span class="ident">InputNotFound</span>,
+    <span class="doccomment">/// Empty input list on migration bundle creation.</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;can&#39;t create migration bundle: input list is empty&quot;</span>)]</span>
+    <span class="ident">EmptyInputList</span>,
+    <span class="doccomment">/// Cannot create bundle when the number of inputs is larger than 1 and there&#39;s a spent input.</span>
+    <span class="doccomment">/// Spent addresses must be the only input in a bundle.</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;can&#39;t create migration bundle: the bundle has more than one input and one of them are spent&quot;</span>)]</span>
+    <span class="ident">SpentAddressOnBundle</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Error</span> {
@@ -485,6 +545,12 @@
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">iota::client::Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">error</span>: <span class="ident">iota::client::Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span><span class="ident">::ClientError</span>(<span class="ident">Box::new</span>(<span class="ident">error</span>))
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">iota_migration::client::Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">error</span>: <span class="ident">iota_migration::client::Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span><span class="ident">::LegacyClientError</span>(<span class="ident">Box::new</span>(<span class="ident">error</span>))
     }
 }
 
@@ -591,9 +657,17 @@
             <span class="self">Self</span><span class="ident">::DustError</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;DustError&quot;</span>),
             <span class="self">Self</span><span class="ident">::InvalidOutputKind</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;InvalidOutputKind&quot;</span>),
             <span class="self">Self</span><span class="ident">::NodesNotSynced</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;NodesNotSynced&quot;</span>),
+            <span class="comment">// #[cfg(feature = &quot;migration&quot;)]</span>
+            <span class="self">Self</span><span class="ident">::LegacyClientError</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;LegacyClientError&quot;</span>),
+            <span class="self">Self</span><span class="ident">::InvalidSeed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;InvalidSeed&quot;</span>),
+            <span class="self">Self</span><span class="ident">::MigrationDataNotFound</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;MigrationDataNotFound&quot;</span>),
+            <span class="self">Self</span><span class="ident">::MigrationBundleNotFound</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;MigrationBundleNotFound&quot;</span>),
+            <span class="self">Self</span><span class="ident">::InputNotFound</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;InputNotFound&quot;</span>),
+            <span class="self">Self</span><span class="ident">::EmptyInputList</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;EmptyInputList&quot;</span>),
+            <span class="self">Self</span><span class="ident">::SpentAddressOnBundle</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;SpentAddressOnBundle&quot;</span>),
         }
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="iota_wallet" data-search-js="../../search-index.js"></div>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="iota_wallet" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
     <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>

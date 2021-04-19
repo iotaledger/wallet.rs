@@ -571,13 +571,83 @@
 <span id="568">568</span>
 <span id="569">569</span>
 <span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">account::AccountIdentifier</span>,
-    <span class="ident">account_manager::AccountManager</span>,
+    <span class="ident">account_manager</span>::{<span class="ident">AccountManager</span>, <span class="ident">MigrationDataFinder</span>},
     <span class="ident">message</span>::{<span class="ident">Message</span> <span class="kw">as</span> <span class="ident">WalletMessage</span>, <span class="ident">Transfer</span>},
     <span class="prelude-ty">Result</span>,
 };
@@ -591,6 +661,7 @@
     <span class="ident">num::NonZeroU64</span>,
     <span class="ident">panic</span>::{<span class="ident">catch_unwind</span>, <span class="ident">AssertUnwindSafe</span>},
     <span class="ident">path::Path</span>,
+    <span class="ident">time::Duration</span>,
 };
 
 <span class="kw">mod</span> <span class="ident">message</span>;
@@ -793,6 +864,75 @@
                 })
                 .<span class="kw">await</span>
             }
+            <span class="ident">MessageType::GetMigrationData</span> {
+                <span class="ident">nodes</span>,
+                <span class="ident">permanode</span>,
+                <span class="ident">seed</span>,
+                <span class="ident">security_level</span>,
+                <span class="ident">initial_address_index</span>,
+            } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> {
+                    <span class="kw">let</span> <span class="ident">nodes</span> <span class="op">=</span> <span class="ident">nodes</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="ident">String::as_ref</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">finder</span> <span class="op">=</span> <span class="ident">MigrationDataFinder::new</span>(<span class="kw-2">&amp;</span><span class="ident">nodes</span>, <span class="kw-2">&amp;</span><span class="ident">seed</span>)<span class="question-mark">?</span>;
+                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">level</span>) <span class="op">=</span> <span class="ident">security_level</span> {
+                        <span class="ident">finder</span> <span class="op">=</span> <span class="ident">finder</span>.<span class="ident">with_security_level</span>(<span class="kw-2">*</span><span class="ident">level</span>);
+                    }
+                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">permanode</span>) <span class="op">=</span> <span class="ident">permanode</span> {
+                        <span class="ident">finder</span> <span class="op">=</span> <span class="ident">finder</span>.<span class="ident">with_permanode</span>(<span class="ident">permanode</span>);
+                    }
+                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">initial_address_index</span>) <span class="op">=</span> <span class="ident">initial_address_index</span> {
+                        <span class="ident">finder</span> <span class="op">=</span> <span class="ident">finder</span>.<span class="ident">with_initial_address_index</span>(<span class="kw-2">*</span><span class="ident">initial_address_index</span>);
+                    }
+                    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">get_migration_data</span>(<span class="ident">finder</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="ident">seed</span>.<span class="ident">zeroize</span>();
+                    <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::MigrationData</span>(<span class="ident">data</span>.<span class="ident">into</span>()))
+                })
+                .<span class="kw">await</span>
+            }
+            <span class="ident">MessageType::CreateMigrationBundle</span> {
+                <span class="ident">seed</span>,
+                <span class="ident">input_address_indexes</span>,
+                <span class="ident">mine</span>,
+                <span class="ident">timeout_secs</span>,
+                <span class="ident">offset</span>,
+                <span class="ident">log_file_name</span>,
+            } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> {
+                    <span class="kw">let</span> <span class="ident">bundle</span> <span class="op">=</span> <span class="self">self</span>
+                        .<span class="ident">account_manager</span>
+                        .<span class="ident">create_migration_bundle</span>(
+                            <span class="kw-2">&amp;</span><span class="ident">seed</span>,
+                            <span class="kw-2">&amp;</span><span class="ident">input_address_indexes</span>,
+                            <span class="kw-2">*</span><span class="ident">mine</span>,
+                            <span class="ident">Duration::from_secs</span>(<span class="kw-2">*</span><span class="ident">timeout_secs</span>),
+                            <span class="kw-2">*</span><span class="ident">offset</span>,
+                            <span class="kw-2">&amp;</span><span class="ident">log_file_name</span>,
+                        )
+                        .<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="ident">seed</span>.<span class="ident">zeroize</span>();
+                    <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::CreatedMigrationBundle</span>(<span class="ident">bundle</span>))
+                })
+                .<span class="kw">await</span>
+            }
+            <span class="ident">MessageType::SendMigrationBundle</span> {
+                <span class="ident">nodes</span>,
+                <span class="ident">bundle_hash</span>,
+                <span class="ident">mwm</span>,
+            } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> {
+                    <span class="kw">let</span> <span class="ident">nodes</span> <span class="op">=</span> <span class="ident">nodes</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="ident">String::as_ref</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+                    <span class="kw">let</span> <span class="ident">migrated_bundle</span> <span class="op">=</span> <span class="self">self</span>
+                        .<span class="ident">account_manager</span>
+                        .<span class="ident">send_migration_bundle</span>(<span class="kw-2">&amp;</span><span class="ident">nodes</span>, <span class="ident">bundle_hash</span>, <span class="kw-2">*</span><span class="ident">mwm</span>)
+                        .<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::SentMigrationBundle</span>(<span class="ident">migrated_bundle</span>))
+                })
+                .<span class="kw">await</span>
+            }
+            <span class="ident">MessageType::GetSeedChecksum</span>(<span class="ident">seed</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">convert_panics</span>(<span class="op">|</span><span class="op">|</span> {
+                <span class="kw">let</span> <span class="ident">checksum</span> <span class="op">=</span> <span class="ident">AccountManager::get_seed_checksum</span>(<span class="ident">seed</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
+                <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::SeedChecksum</span>(<span class="ident">checksum</span>))
+            }),
         };
 
         <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">response</span> {
@@ -1143,5 +1283,5 @@
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="iota_wallet" data-search-js="../../../search-index.js"></div>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="iota_wallet" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
     <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>

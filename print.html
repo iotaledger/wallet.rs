@@ -827,6 +827,11 @@ Supported event names:</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>options</td><td><code><a href="libraries/nodejs/api_reference.html#clientoptions">ClientOptions</a></code></td><td><code>null</code></td><td>The new account client options</td></tr>
 </tbody></table>
+<h4 id="generatemigrationaddressaddress"><a class="header" href="#generatemigrationaddressaddress">generateMigrationAddress(address)</a></h4>
+<p>Convert a Ed25519 to a Tryte migration address with checksum (last 9 Trytes)</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>address</td><td><code>string</code></td><td><code>null</code></td><td>Bech32 encoded Ed25519 address</td></tr>
+</tbody></table>
 <h4 id="getbalancechangeeventscount-skip-fromtimestamp"><a class="header" href="#getbalancechangeeventscount-skip-fromtimestamp">getBalanceChangeEvents([count, skip, fromTimestamp])</a></h4>
 <p>Gets the persisted balance change events.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
