@@ -748,6 +748,7 @@ Supported event names:</p>
 <tr><td>[automaticOutputConsolidation]</td><td><code>boolean</code></td><td><code>true</code></td><td>Disables the automatic output consolidation if false</td></tr>
 <tr><td>[syncSpentOutputs]</td><td><code>boolean</code></td><td><code>false</code></td><td>Enables fetching spent output history on account sync</td></tr>
 <tr><td>[persistEvents]</td><td><code>boolean</code></td><td><code>false</code></td><td>Enables event persistence</td></tr>
+<tr><td>[allowCreateMultipleEmptyAccounts]</td><td><code>boolean</code></td><td>code<false></td><td>Enables creating accounts with latest account being empty</td></tr>
 </tbody></table>
 <h4 id="setstrongholdpasswordpassword-void"><a class="header" href="#setstrongholdpasswordpassword-void">setStrongholdPassword(password): void</a></h4>
 <p>Sets the stronghold password and initialises it.</p>
@@ -1652,6 +1653,7 @@ Also for all the optional values, the default values are the same as the ones in
 <tr><td>[output_consolidation_threshold]</td><td><code>int</code></td><td><code>100</code></td><td>Sets the number of outputs an address must have to trigger the automatic consolidation process</td></tr>
 <tr><td>[sync_spent_outputs]</td><td><code>boolean</code></td><td><code>false</code></td><td>Enables fetching spent output history on account sync</td></tr>
 <tr><td>[persist_events]</td><td><code>boolean</code></td><td><code>false</code></td><td>Enables event persistence</td></tr>
+<tr><td>[allow_create_multiple_empty_accounts]</td><td><code>boolean</code></td><td>code<false></td><td>Enables creating accounts with latest account being empty</td></tr>
 </tbody></table>
 <p>Note: if the <code>storage_path</code> is set, then the <code>storage</code> needs to be set too. An exception will be thrown when errors happened.</p>
 <p><strong>Returns</strong> The constructed <a href="libraries/python/api_reference.html#accountmanager">AccountManager</a>.</p>
