@@ -2354,6 +2354,8 @@
 <span id="2351">2351</span>
 <span id="2352">2352</span>
 <span id="2353">2353</span>
+<span id="2354">2354</span>
+<span id="2355">2355</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -3836,12 +3838,14 @@
                     .<span class="kw">await</span><span class="question-mark">?</span>;
                 }
             }
+            <span class="ident">drop</span>(<span class="ident">account</span>);
 
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">synced_account</span> <span class="op">=</span> <span class="ident">SyncedAccount::from</span>(<span class="ident">account_handle</span>.<span class="ident">clone</span>()).<span class="kw">await</span>;
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">updated_messages</span> <span class="op">=</span> <span class="ident">new_messages</span>;
             <span class="ident">updated_messages</span>.<span class="ident">extend</span>(<span class="ident">confirmation_changed_messages</span>);
             <span class="ident">synced_account</span>.<span class="ident">messages</span> <span class="op">=</span> <span class="ident">updated_messages</span>;
 
+            <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>;
             <span class="ident">synced_account</span>.<span class="ident">addresses</span> <span class="op">=</span> <span class="ident">account</span>
                 .<span class="ident">addresses</span>()
                 .<span class="ident">iter</span>()
