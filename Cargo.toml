@@ -30,7 +30,7 @@ rocksdb = { version = "0.15", default-features = false, features = ["lz4"] }
 zeroize = { version = "1.2", features = ["zeroize_derive"] }
 
 # stronghold
-iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "65ec786b9da4e084c719aac8eb8159e0ca118969" }
+iota-stronghold = { git = "https://github.com/iotaledger/stronghold.rs", rev = "ab6fea59a81c9ad84e8bd79d482833dc3df249c8" }
 riker = "0.4"
 slog = "2.7"
 
@@ -42,8 +42,7 @@ iota-migration = { git = "https://github.com/iotaledger/iota.rs", rev = "f3f9247
 bytemuck = "1.5"
 
 [dependencies.iota-crypto]
-git = "https://github.com/iotaledger/crypto.rs"
-branch = "dev"
+version = "0.5.0"
 features = ["random", "sha", "pbkdf", "hmac", "bip39", "bip39-en", "chacha", "blake2b", "slip10"]
 
 [dev-dependencies]
