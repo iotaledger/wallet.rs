@@ -1,5 +1,12 @@
 # Changelog
 
+## \[0.2.3]
+
+- Adds an option to enable creating multiple accounts without history.
+  - [5e9e2c92](https://github.com/iotaledger/wallet.rs/commit/5e9e2c92999f0261442f2b875ff8483d631088c9) feat(manager): add option to allow creating multiple empty accounts ([#567](https://github.com/iotaledger/wallet.rs/pull/567)) on 2021-04-19
+- Implement `sendToMany` API on the `Account` object.
+  - [73656767](https://github.com/iotaledger/wallet.rs/commit/73656767f25f7e5ba3097f83a5fc788024c87c9c) Added multi output transfer API ([#557](https://github.com/iotaledger/wallet.rs/pull/557)) on 2021-04-17
+
 ## \[0.2.2]
 
 - Updates Testnet breaking changes and includes several fixes to syncing and change address management.
