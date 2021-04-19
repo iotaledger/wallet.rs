@@ -1,5 +1,10 @@
 # Changelog
 
+## \[0.3.0]
+
+- Updates Stronghold to latest refactor (breaking change).
+  - [2a1cb6e3](https://github.com/iotaledger/wallet.rs/commit/2a1cb6e3a7a578e5cc93f45b439ce680b54d31ac) chore(deps): update to latest stronghold.rs ([#577](https://github.com/iotaledger/wallet.rs/pull/577)) on 2021-04-19
+
 ## \[0.2.4]
 
 - Fixes `account.balance()` return value.
