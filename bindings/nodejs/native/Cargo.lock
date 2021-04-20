@@ -254,7 +254,7 @@ dependencies = [
 [[package]]
 name = "bee-pow"
 version = "0.1.0"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#2a0be9db39b19ede223642c5bed0588d9c3272b1"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#d8679eef2db1cf9a04623bbbb9b9d46e00232717"
 dependencies = [
  "bee-crypto",
  "bee-ternary",

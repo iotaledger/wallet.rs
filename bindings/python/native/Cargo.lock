@@ -233,7 +233,7 @@ dependencies = [
 [[package]]
 name = "bee-message"
 version = "0.1.2"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#2a0be9db39b19ede223642c5bed0588d9c3272b1"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#d8679eef2db1cf9a04623bbbb9b9d46e00232717"
 dependencies = [
  "bech32 0.8.0",
  "bee-common 0.4.1 (git+https://github.com/iotaledger/bee.git?branch=dev)",
@@ -279,7 +279,7 @@ dependencies = [
 [[package]]
 name = "bee-pow"
 version = "0.1.0"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#2a0be9db39b19ede223642c5bed0588d9c3272b1"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#d8679eef2db1cf9a04623bbbb9b9d46e00232717"
 dependencies = [
  "bee-crypto 0.2.1-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
  "bee-ternary 0.4.2-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
