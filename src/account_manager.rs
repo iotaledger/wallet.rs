@@ -1917,7 +1917,7 @@ mod tests {
                 .messages(vec![Message::from_iota_message(
                     MessageId::new([0; 32]),
                     MessageBuilder::new()
-                        .with_nonce_provider(crate::test_utils::NoopNonceProvider {}, 4000f64, None)
+                        .with_nonce_provider(crate::test_utils::NoopNonceProvider {}, 4000f64)
                         .with_parents(Parents::new(vec![MessageId::new([0; 32])]).unwrap())
                         .with_payload(Payload::Indexation(Box::new(
                             IndexationPayload::new(b"index", &[0; 16]).unwrap(),

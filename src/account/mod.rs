@@ -1005,7 +1005,7 @@ impl Account {
     pub(crate) async fn get_node_info(&self, url: Option<&str>) -> crate::Result<NodeInfoWrapper> {
         let info = match url {
             Some(url) => NodeInfoWrapper {
-                nodeinfo: iota::Client::get_node_info(url)
+                nodeinfo: iota::Client::get_node_info(url, None)
                     .await
                     .map_err(|e| crate::Error::ClientError(Box::new(e)))?,
                 url: url.to_string(),

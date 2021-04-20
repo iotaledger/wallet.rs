@@ -78,7 +78,7 @@ pub struct TransferOutput {
 impl TransferOutput {
     /// Creates a new transfer output.
     pub fn new(address: AddressWrapper, amount: NonZeroU64) -> Self {
-        Self { address, amount }
+        Self { amount, address }
     }
 }
 
@@ -181,7 +181,7 @@ impl TransferBuilder {
     /// Initialises a new transfer to the given address.
     pub fn new(address: AddressWrapper, amount: NonZeroU64) -> Self {
         Self {
-            outputs: vec![TransferOutput { address, amount }],
+            outputs: vec![TransferOutput { amount, address }],
             ..Default::default()
         }
     }

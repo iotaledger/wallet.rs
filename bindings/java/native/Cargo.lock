@@ -227,9 +227,9 @@ checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
 name = "backtrace"
-version = "0.3.56"
+version = "0.3.57"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9d117600f438b1707d4e4ae15d3595657288f8235a0eb593e80ecc98ab34e1bc"
+checksum = "78ed203b9ba68b242c62b3fb7480f589dd49829be1edb3fe8fc8b4ffda2dcb8d"
 dependencies = [
  "addr2line",
  "cfg-if 1.0.0",
@@ -274,7 +274,7 @@ dependencies = [
 [[package]]
 name = "bee-common"
 version = "0.4.1"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#868f395e432830f3903e387eea5c7016afa44f6e"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#c36340aa0e463417d50aa409f90764499f8de7ed"
 dependencies = [
  "autocfg",
  "chrono",
@@ -322,7 +322,7 @@ dependencies = [
 [[package]]
 name = "bee-crypto"
 version = "0.2.1-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#868f395e432830f3903e387eea5c7016afa44f6e"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#c36340aa0e463417d50aa409f90764499f8de7ed"
 dependencies = [
  "bee-ternary 0.4.2-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
  "byteorder",
@@ -338,6 +338,17 @@ source = "git+https://github.com/iotaledger/bee.git?rev=25d05419389acdd2fbd93719
 dependencies = [
  "bee-common 0.4.1 (git+https://github.com/iotaledger/bee.git?branch=dev)",
  "bee-message 0.1.0-alpha",
+ "thiserror",
+]
+
+[[package]]
+name = "bee-ledger"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c8645ed0a1e1e22952351b12cd0147553bd1e3507c71383a60d19bef9ac18b12"
+dependencies = [
+ "bee-common 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bee-message 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror",
 ]
 
@@ -361,9 +372,9 @@ dependencies = [
 
 [[package]]
 name = "bee-message"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50b7481be33edb86a22bacdf698e0384cf9a90dabfc87457ad98a8a52fcb6cb2"
+checksum = "be42cf0d7be4b6e82abffec3208cf44c830a57935fd54173e7c8d9b89e4639a1"
 dependencies = [
  "bech32 0.8.0",
  "bee-common 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -373,13 +384,14 @@ dependencies = [
  "digest 0.9.0",
  "hex",
  "iota-crypto 0.4.2",
+ "serde 1.0.125",
  "thiserror",
 ]
 
 [[package]]
 name = "bee-message"
 version = "0.1.2"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#868f395e432830f3903e387eea5c7016afa44f6e"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#c36340aa0e463417d50aa409f90764499f8de7ed"
 dependencies = [
  "bech32 0.8.0",
  "bee-common 0.4.1 (git+https://github.com/iotaledger/bee.git?branch=dev)",
@@ -397,7 +409,16 @@ name = "bee-network"
 version = "0.1.0-alpha"
 source = "git+https://github.com/iotaledger/bee.git?rev=25d05419389acdd2fbd9371976c7c3460685d5a0#25d05419389acdd2fbd9371976c7c3460685d5a0"
 dependencies = [
- "libp2p",
+ "libp2p 0.36.0",
+]
+
+[[package]]
+name = "bee-network"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d73a7e1695d5b1ae4ae8355dbbf5635cc4b97a37e49c8ec8355328da212a5bee"
+dependencies = [
+ "libp2p 0.37.1",
 ]
 
 [[package]]
@@ -426,7 +447,7 @@ dependencies = [
 [[package]]
 name = "bee-pow"
 version = "0.1.0"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#868f395e432830f3903e387eea5c7016afa44f6e"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#c36340aa0e463417d50aa409f90764499f8de7ed"
 dependencies = [
  "bee-crypto 0.2.1-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
  "bee-ternary 0.4.2-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
@@ -440,7 +461,17 @@ version = "0.1.0-alpha"
 source = "git+https://github.com/iotaledger/bee.git?rev=25d05419389acdd2fbd9371976c7c3460685d5a0#25d05419389acdd2fbd9371976c7c3460685d5a0"
 dependencies = [
  "bee-message 0.1.0-alpha",
- "bee-network",
+ "bee-network 0.1.0-alpha",
+]
+
+[[package]]
+name = "bee-protocol"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "27b135df2f2aa58952bf229909ba1d3638fe0522f0b60cb828f3c118e56608bf"
+dependencies = [
+ "bee-message 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bee-network 0.1.0",
 ]
 
 [[package]]
@@ -448,13 +479,28 @@ name = "bee-rest-api"
 version = "0.1.0-alpha"
 source = "git+https://github.com/iotaledger/bee.git?rev=25d05419389acdd2fbd9371976c7c3460685d5a0#25d05419389acdd2fbd9371976c7c3460685d5a0"
 dependencies = [
- "bee-ledger",
+ "bee-ledger 0.1.0-alpha",
  "bee-message 0.1.0-alpha",
  "bee-pow 0.1.0-alpha",
- "bee-protocol",
+ "bee-protocol 0.1.0-alpha",
  "hex",
  "serde 1.0.125",
  "serde_json",
+]
+
+[[package]]
+name = "bee-rest-api"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2deddccfe0540d6d98598055015117b2df7d81c393b32eec7cfe9595725384de"
+dependencies = [
+ "bee-ledger 0.1.0",
+ "bee-message 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bee-protocol 0.1.0",
+ "hex",
+ "serde 1.0.125",
+ "serde_json",
+ "thiserror",
 ]
 
 [[package]]
@@ -480,7 +526,7 @@ dependencies = [
 [[package]]
 name = "bee-ternary"
 version = "0.4.2-alpha"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#868f395e432830f3903e387eea5c7016afa44f6e"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#c36340aa0e463417d50aa409f90764499f8de7ed"
 dependencies = [
  "autocfg",
  "num-traits 0.2.14",
@@ -1746,7 +1792,7 @@ source = "git+https://github.com/iotaledger/iota.rs?rev=07f4e420edfa1f48f90fc0e7
 dependencies = [
  "bee-common 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "bee-common-derive",
- "bee-message 0.1.1",
+ "bee-message 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "bee-ternary 0.4.2-alpha (registry+https://github.com/rust-lang/crates.io-index)",
  "bee-transaction",
  "blake2",
@@ -1770,6 +1816,32 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
+source = "git+https://github.com/iotaledger/iota.rs?rev=a9862e0d1f860b27052ac9834a2441fac6730e74#a9862e0d1f860b27052ac9834a2441fac6730e74"
+dependencies = [
+ "async-trait",
+ "bee-common 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bee-message 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bee-pow 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bee-rest-api 0.1.0",
+ "futures",
+ "hex",
+ "iota-crypto 0.5.0",
+ "log",
+ "num_cpus",
+ "once_cell",
+ "regex",
+ "reqwest",
+ "rumqttc",
+ "serde 1.0.125",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "url",
+]
+
+[[package]]
+name = "iota-client"
+version = "0.5.0-alpha.3"
 source = "git+https://github.com/iotaledger/iota.rs?rev=f84c97ddccb4a4323d300b32cc6028ff9eabe98b#f84c97ddccb4a4323d300b32cc6028ff9eabe98b"
 dependencies = [
  "async-trait",
@@ -1777,7 +1849,7 @@ dependencies = [
  "bee-crypto 0.2.0-alpha",
  "bee-message 0.1.0-alpha",
  "bee-pow 0.1.0-alpha",
- "bee-rest-api",
+ "bee-rest-api 0.1.0-alpha",
  "futures",
  "hex",
  "iota-crypto 0.3.0 (git+https://github.com/iotaledger/crypto.rs.git?rev=b849861b86c3f7357b7477de4253b7352b363627)",
@@ -1836,6 +1908,14 @@ dependencies = [
  "iota-bundle-miner",
  "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=07f4e420edfa1f48f90fc0e75cb7758f4a3c6e3f)",
  "iota-crypto 0.5.0",
+]
+
+[[package]]
+name = "iota-core"
+version = "0.2.0-alpha.3"
+source = "git+https://github.com/iotaledger/iota.rs?rev=a9862e0d1f860b27052ac9834a2441fac6730e74#a9862e0d1f860b27052ac9834a2441fac6730e74"
+dependencies = [
+ "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=a9862e0d1f860b27052ac9834a2441fac6730e74)",
 ]
 
 [[package]]
@@ -1978,14 +2058,14 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "backtrace",
- "bee-common 0.4.1 (git+https://github.com/iotaledger/bee.git?branch=dev)",
+ "bee-common 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "bytemuck",
  "chrono",
  "futures",
  "getset",
  "hex",
  "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=07f4e420edfa1f48f90fc0e75cb7758f4a3c6e3f)",
- "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=f84c97ddccb4a4323d300b32cc6028ff9eabe98b)",
+ "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=a9862e0d1f860b27052ac9834a2441fac6730e74)",
  "iota-crypto 0.5.0",
  "iota-ledger",
  "iota-stronghold",
@@ -2009,7 +2089,7 @@ name = "iota-wallet-java"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "bee-message 0.1.2",
+ "bee-message 0.1.2 (git+https://github.com/iotaledger/bee.git?branch=dev)",
  "bindgen",
  "chrono",
  "env_logger",
@@ -2203,8 +2283,28 @@ dependencies = [
  "futures",
  "lazy_static",
  "libp2p-core",
- "libp2p-swarm",
- "libp2p-swarm-derive",
+ "libp2p-swarm 0.28.0",
+ "libp2p-swarm-derive 0.22.0",
+ "parity-multiaddr",
+ "parking_lot",
+ "pin-project 1.0.7",
+ "smallvec",
+ "wasm-timer",
+]
+
+[[package]]
+name = "libp2p"
+version = "0.37.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "08053fbef67cd777049ef7a95ebaca2ece370b4ed7712c3fa404d69a88cb741b"
+dependencies = [
+ "atomic",
+ "bytes",
+ "futures",
+ "lazy_static",
+ "libp2p-core",
+ "libp2p-swarm 0.29.0",
+ "libp2p-swarm-derive 0.23.0",
  "parity-multiaddr",
  "parking_lot",
  "pin-project 1.0.7",
@@ -2263,10 +2363,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "libp2p-swarm"
+version = "0.29.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e04d8e1eef675029ec728ba14e8d0da7975d84b6679b699b4ae91a1de9c3a92"
+dependencies = [
+ "either",
+ "futures",
+ "libp2p-core",
+ "log",
+ "rand 0.7.3",
+ "smallvec",
+ "void",
+ "wasm-timer",
+]
+
+[[package]]
 name = "libp2p-swarm-derive"
 version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c564ebaa36a64839f51eaddb0243aaaa29ce64affb56129193cc3248b72af273"
+dependencies = [
+ "quote 1.0.9",
+ "syn 1.0.69",
+]
+
+[[package]]
+name = "libp2p-swarm-derive"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "365b0a699fea5168676840567582a012ea297b1ca02eee467e58301b9c9c5eed"
 dependencies = [
  "quote 1.0.9",
  "syn 1.0.69",
@@ -3481,9 +3607,9 @@ checksum = "0f0242b8e50dd9accdd56170e94ca1ebd223b098eb9c83539a6e367d0f36ae68"
 
 [[package]]
 name = "slab"
-version = "0.4.2"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c111b5bd5695e56cffe5129854aa230b39c93a305372fdbb2668ca2394eea9f8"
+checksum = "f173ac3d1a7e3b28003f40de0b5ce7fe2710f9b9dc3fc38664cebee46b3b6527"
 
 [[package]]
 name = "slip10"
