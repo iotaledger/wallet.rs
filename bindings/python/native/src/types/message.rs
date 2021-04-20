@@ -434,9 +434,8 @@ impl TryFrom<Ed25519Signature> for RustSignatureUnlock {
     fn try_from(signature: Ed25519Signature) -> Result<Self> {
         let mut public_key = [0u8; 32];
         hex::decode_to_slice(signature.public_key, &mut public_key)?;
-        let mut signature_bytes = [0u8; 64];
-        hex::decode_to_slice(signature.signature, &mut signature_bytes)?;
-        Ok(RustEd25519Signature::new(public_key, signature_bytes).into())
+        let signature = hex::decode(signature.signature)?[..].try_into()?;
+        Ok(RustEd25519Signature::new(public_key, signature).into())
     }
 }
 

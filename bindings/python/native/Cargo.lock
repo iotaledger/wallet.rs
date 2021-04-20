@@ -157,8 +157,7 @@ checksum = "6c7f7096bc256f5e5cb960f60dfc4f4ef979ca65abe7fb9d5a4f77150d3783d4"
 [[package]]
 name = "bee-common"
 version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e70a15b5cdc7f8fc726fb18c4c4cc8bb725e56f27706d9254fdc94363bc883d3"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#d8679eef2db1cf9a04623bbbb9b9d46e00232717"
 dependencies = [
  "autocfg",
  "chrono",
@@ -181,8 +180,7 @@ dependencies = [
 [[package]]
 name = "bee-crypto"
 version = "0.2.1-alpha"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e9be03c91825c26fa8c93613362341df1136da233c8462ec2c59fe1be81c237"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#d8679eef2db1cf9a04623bbbb9b9d46e00232717"
 dependencies = [
  "bee-ternary",
  "byteorder",
@@ -267,8 +265,7 @@ dependencies = [
 [[package]]
 name = "bee-pow"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "612452ebcbc440512f0131a7058db63470b13828f1dc9c9b2024302673c767de"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#d8679eef2db1cf9a04623bbbb9b9d46e00232717"
 dependencies = [
  "bee-crypto",
  "bee-ternary",
@@ -279,10 +276,11 @@ dependencies = [
 [[package]]
 name = "bee-pow"
 version = "0.1.0"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#d8679eef2db1cf9a04623bbbb9b9d46e00232717"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "612452ebcbc440512f0131a7058db63470b13828f1dc9c9b2024302673c767de"
 dependencies = [
- "bee-crypto 0.2.1-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
- "bee-ternary 0.4.2-alpha (git+https://github.com/iotaledger/bee.git?branch=dev)",
+ "bee-crypto 0.2.1-alpha (registry+https://github.com/rust-lang/crates.io-index)",
+ "bee-ternary 0.4.2-alpha (registry+https://github.com/rust-lang/crates.io-index)",
  "iota-crypto 0.4.2",
  "thiserror",
 ]
@@ -315,8 +313,7 @@ dependencies = [
 [[package]]
 name = "bee-ternary"
 version = "0.4.2-alpha"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ec0259535d34f1bfd0c41bf5a6f0e3e33268dc9433e2ac3707e66715b51ce05"
+source = "git+https://github.com/iotaledger/bee.git?branch=dev#d8679eef2db1cf9a04623bbbb9b9d46e00232717"
 dependencies = [
  "autocfg",
  "num-traits 0.2.14",
@@ -1604,13 +1601,13 @@ dependencies = [
 [[package]]
 name = "iota-constants"
 version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "87bd27fb99929629a01f3b596c93aec5b6609854c882c45f9b5ded9cc0e24f61"
+source = "git+https://github.com/iotaledger/iota.rs?rev=0aa7e11b075bea17ae52b1f7dff51f3a13c9d914#0aa7e11b075bea17ae52b1f7dff51f3a13c9d914"
 
 [[package]]
 name = "iota-constants"
 version = "0.2.1"
-source = "git+https://github.com/iotaledger/iota.rs?rev=0aa7e11b075bea17ae52b1f7dff51f3a13c9d914#0aa7e11b075bea17ae52b1f7dff51f3a13c9d914"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "87bd27fb99929629a01f3b596c93aec5b6609854c882c45f9b5ded9cc0e24f61"
 
 [[package]]
 name = "iota-conversion"
