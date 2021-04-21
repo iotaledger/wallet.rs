@@ -258,6 +258,7 @@ impl AccountInitialiser {
         let bech32_hrp = match account.client_options.network().as_deref() {
             Some("testnet") => "atoi".to_string(),
             Some("mainnet") => "iota".to_string(),
+            Some("chrysalis-mainnet") => "iota".to_string(),
             _ => {
                 let client_options = account.client_options.clone();
                 let get_from_client_task = async {
