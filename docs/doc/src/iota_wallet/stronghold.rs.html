@@ -1522,7 +1522,7 @@
         .<span class="kw">await</span>;
     <span class="kw">if</span> <span class="kw">let</span> <span class="ident">ProcResult::Ed25519Sign</span>(<span class="ident">response</span>) <span class="op">=</span> <span class="ident">res</span> {
         <span class="kw">let</span> <span class="ident">signature</span> <span class="op">=</span> <span class="ident">stronghold_response_to_result</span>(<span class="ident">response</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident">Ed25519Signature::new</span>(<span class="ident">public_key</span>, <span class="ident">Box::new</span>(<span class="ident">signature</span>)))
+        <span class="prelude-val">Ok</span>(<span class="ident">Ed25519Signature::new</span>(<span class="ident">public_key</span>, <span class="ident">signature</span>))
     } <span class="kw">else</span> {
         <span class="prelude-val">Err</span>(<span class="ident">Error::FailedToPerformAction</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">res</span>)))
     }

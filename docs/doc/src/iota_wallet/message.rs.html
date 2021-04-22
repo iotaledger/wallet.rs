@@ -1422,7 +1422,7 @@
 <span class="kw">impl</span> <span class="ident">TransferOutput</span> {
     <span class="doccomment">/// Creates a new transfer output.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">address</span>: <span class="ident">AddressWrapper</span>, <span class="ident">amount</span>: <span class="ident">NonZeroU64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">address</span>, <span class="ident">amount</span> }
+        <span class="self">Self</span> { <span class="ident">amount</span>, <span class="ident">address</span> }
     }
 }
 
@@ -1525,7 +1525,7 @@
     <span class="doccomment">/// Initialises a new transfer to the given address.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">address</span>: <span class="ident">AddressWrapper</span>, <span class="ident">amount</span>: <span class="ident">NonZeroU64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">outputs</span>: <span class="macro">vec!</span>[<span class="ident">TransferOutput</span> { <span class="ident">address</span>, <span class="ident">amount</span> }],
+            <span class="ident">outputs</span>: <span class="macro">vec!</span>[<span class="ident">TransferOutput</span> { <span class="ident">amount</span>, <span class="ident">address</span> }],
             ..<span class="ident">Default::default</span>()
         }
     }
