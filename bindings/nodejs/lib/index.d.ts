@@ -202,7 +202,6 @@ export declare enum SignerType {
 
 export declare interface AccountToCreate {
   clientOptions: ClientOptions;
-  mnemonic?: string;
   alias?: string;
   createdAt?: string;
   signerType?: SignerType;
