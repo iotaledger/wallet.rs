@@ -108,7 +108,7 @@ mod test_utils {
         signing::SignerType,
     };
     use iota::{
-        pow::providers::{Provider as PowProvider, ProviderBuilder as PowProviderBuilder},
+        pow::providers::{NonceProvider, NonceProviderBuilder},
         Address as IotaAddress, Ed25519Address, Ed25519Signature, Essence, MessageId, Payload,
         SignatureLockedSingleOutput, SignatureUnlock, TransactionId, TransactionPayloadBuilder, UnlockBlock,
         UnlockBlocks, UtxoInput,
@@ -118,7 +118,6 @@ mod test_utils {
     use std::{
         collections::HashMap,
         path::{Path, PathBuf},
-        sync::{atomic::AtomicBool, Arc},
     };
     use tokio::sync::Mutex;
 
@@ -323,7 +322,7 @@ mod test_utils {
     #[derive(Default)]
     pub struct NoopNonceProviderBuilder;
 
-    impl PowProviderBuilder for NoopNonceProviderBuilder {
+    impl NonceProviderBuilder for NoopNonceProviderBuilder {
         type Provider = NoopNonceProvider;
 
         fn new() -> Self {
@@ -338,16 +337,11 @@ mod test_utils {
     /// The miner used for PoW
     pub struct NoopNonceProvider;
 
-    impl PowProvider for NoopNonceProvider {
+    impl NonceProvider for NoopNonceProvider {
         type Builder = NoopNonceProviderBuilder;
         type Error = crate::Error;
 
-        fn nonce(
-            &self,
-            _bytes: &[u8],
-            _target_score: f64,
-            _done: Option<Arc<AtomicBool>>,
-        ) -> std::result::Result<u64, Self::Error> {
+        fn nonce(&self, _bytes: &[u8], _target_score: f64) -> std::result::Result<u64, Self::Error> {
             Ok(0)
         }
     }
@@ -500,7 +494,7 @@ mod test_utils {
                         ))
                         .with_unlock_blocks(
                             UnlockBlocks::new(vec![UnlockBlock::Signature(SignatureUnlock::Ed25519(
-                                Ed25519Signature::new([0; 32], Box::new([0])),
+                                Ed25519Signature::new([0; 32], [0; 64]),
                             ))])
                             .unwrap(),
                         )
