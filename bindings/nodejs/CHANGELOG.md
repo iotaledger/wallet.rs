@@ -1,5 +1,10 @@
 # Changelog
 
+## \[0.3.1]
+
+- Prevent `storage adapter not set` errors.
+  - [af8c4195](https://github.com/iotaledger/wallet.rs/commit/af8c419525c97164578187cd748d622616ff9f6c) fix(manager): prevent `storage adapter not set` errors ([#584](https://github.com/iotaledger/wallet.rs/pull/584)) on 2021-04-22
+
 ## \[0.3.0]
 
 - Updates Stronghold to latest refactor (breaking change).

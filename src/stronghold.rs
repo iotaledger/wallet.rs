@@ -630,7 +630,7 @@ pub async fn sign_transaction(
         .await;
     if let ProcResult::Ed25519Sign(response) = res {
         let signature = stronghold_response_to_result(response)?;
-        Ok(Ed25519Signature::new(public_key, Box::new(signature)))
+        Ok(Ed25519Signature::new(public_key, signature))
     } else {
         Err(Error::FailedToPerformAction(format!("{:?}", res)))
     }
