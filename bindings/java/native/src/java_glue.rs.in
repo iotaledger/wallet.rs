@@ -635,6 +635,9 @@ foreign_class!(
         fn MessagePayload::payload_type(&self) -> MessagePayloadType; alias payloadType;
         fn MessagePayload::get_as_indexation(&self) -> Option<IndexationPayload>; alias getAsIndexation;
         fn MessagePayload::get_as_milestone(&self) -> Option<MilestonePayload>; alias getAsMilestone;
+        fn MessagePayload::get_as_transaction(&self) -> Option<MessageTransactionPayload>; alias getAsTransaction;
+        fn MessagePayload::get_as_receipt(&self) -> Option<ReceiptPayload>; alias getAsReceipt;
+        fn MessagePayload::get_as_treasury(&self) -> Option<TreasuryTransactionPayload>; alias getAsTreasury;
     }
 );
 
@@ -653,7 +656,15 @@ foreign_class!(
         self_type MilestonePayload;
         private constructor = empty;
         fn MilestonePayload::essence(&self) -> MilestonePayloadEssence;
-        //fn MilestonePayload::signatures(&self) -> Vec<Box<[u8]>>;
+        fn MilestonePayload::signatures(&self) -> Vec<MilestoneSignature>;
+    }
+);
+
+foreign_class!(
+    class MilestoneSignature {
+        self_type MilestoneSignature;
+        private constructor = empty;
+        fn MilestoneSignature::get_signature(&self) -> Vec<u8>; alias getSignature;
     }
 );
 
@@ -665,6 +676,18 @@ foreign_class!(
         fn MilestonePayloadEssence::timestamp(&self) -> u64;
         fn MilestonePayloadEssence::parents(&self) -> Vec<MessageId>;
         fn MilestonePayloadEssence::merkle_proof(&self) -> Vec<u8>; alias merkleProof;
+        fn MilestonePayloadEssence::next_pow_score(&self) -> u32; alias nextPowScore;
+        fn MilestonePayloadEssence::next_pow_score_milestone(&self) -> u32; alias nextPowScoreMilestone;
+        fn MilestonePayloadEssence::public_keys(&self) -> Vec<PublicKey>; alias publicKeys;
+        fn MilestonePayloadEssence::receipt(&self) -> Option<ReceiptPayload>;
+    }
+);
+
+foreign_class!(
+    class PublicKey {
+        self_type PublicKey;
+        private constructor = empty;
+        fn PublicKey::get_public_key(&self) -> Vec<u8>; alias getPublicKey;
     }
 );
 

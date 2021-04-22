@@ -883,6 +883,12 @@ impl Serialize for MessageTailTransactionHash {
     }
 }
 
+impl AsRef<[u8]> for MessageTailTransactionHash {
+    fn as_ref(&self) -> &[u8] {
+        self.0.as_ref()
+    }
+}
+
 /// Migrated funds entry.
 #[derive(Debug, Clone, Serialize, Deserialize, Getters, Eq, PartialEq)]
 #[getset(get = "pub")]
