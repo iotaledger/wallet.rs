@@ -2350,12 +2350,6 @@
 <span id="2347">2347</span>
 <span id="2348">2348</span>
 <span id="2349">2349</span>
-<span id="2350">2350</span>
-<span id="2351">2351</span>
-<span id="2352">2352</span>
-<span id="2353">2353</span>
-<span id="2354">2354</span>
-<span id="2355">2355</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2726,12 +2720,6 @@
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">AccountManager</span> {
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="self">self</span>.<span class="ident">stop_background_sync</span>();
-        <span class="kw">let</span> <span class="ident">storage_path</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">storage_path</span>.<span class="ident">clone</span>();
-        <span class="ident">thread::spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-            <span class="kw">crate</span><span class="ident">::block_on</span>(<span class="kw">crate</span><span class="ident">::storage::remove</span>(<span class="kw-2">&amp;</span><span class="ident">storage_path</span>));
-        })
-        .<span class="ident">join</span>()
-        .<span class="ident">expect</span>(<span class="string">&quot;failed to drop manager storage&quot;</span>);
     }
 }
 
