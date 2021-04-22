@@ -19,13 +19,6 @@ $ cd wallet.rs/bindings/java/native
 $ cargo build
 ```
 
-
-- Makign a library jar using gradle:
-```
-$ cd wallet.rs/bindings/java/lib
-$ ./gradlew assemble
-```
-
 - Running an example usign gradle
 ```
 $ cd wallet.rs/bindings/java
