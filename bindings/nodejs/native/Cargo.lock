@@ -195,16 +195,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bee-ledger"
-version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=3e7938048174570b1acb555d1cf36b69ee46d70b#3e7938048174570b1acb555d1cf36b69ee46d70b"
-dependencies = [
- "bee-common 0.4.1 (git+https://github.com/iotaledger/bee.git?branch=dev)",
- "bee-message 0.1.2",
- "thiserror",
-]
-
-[[package]]
 name = "bee-message"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -232,29 +222,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "bee-network"
-version = "0.1.0-alpha"
-source = "git+https://github.com/iotaledger/bee.git?rev=3e7938048174570b1acb555d1cf36b69ee46d70b#3e7938048174570b1acb555d1cf36b69ee46d70b"
-dependencies = [
- "libp2p",
-]
-
-[[package]]
 name = "bee-pow"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "612452ebcbc440512f0131a7058db63470b13828f1dc9c9b2024302673c767de"
-dependencies = [
- "bee-crypto 0.2.1-alpha (registry+https://github.com/rust-lang/crates.io-index)",
- "bee-ternary 0.4.2-alpha (registry+https://github.com/rust-lang/crates.io-index)",
- "iota-crypto 0.4.2",
- "thiserror",
-]
-
-[[package]]
-name = "bee-pow"
-version = "0.1.0"
-source = "git+https://github.com/iotaledger/bee.git?branch=dev#d8679eef2db1cf9a04623bbbb9b9d46e00232717"
 dependencies = [
  "bee-crypto",
  "bee-ternary",
@@ -1521,18 +1492,6 @@ name = "iota-core"
 version = "0.2.0-alpha.3"
 source = "git+https://github.com/iotaledger/iota.rs?rev=07f4e420edfa1f48f90fc0e75cb7758f4a3c6e3f#07f4e420edfa1f48f90fc0e75cb7758f4a3c6e3f"
 dependencies = [
- "bee-ternary 0.4.2-alpha (registry+https://github.com/rust-lang/crates.io-index)",
- "bee-transaction",
- "iota-bundle-miner",
- "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=07f4e420edfa1f48f90fc0e75cb7758f4a3c6e3f)",
- "iota-crypto 0.5.0",
-]
-
-[[package]]
-name = "iota-core"
-version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=ec57d1607ac9a1fabf240539c04a57b52fa58f33#ec57d1607ac9a1fabf240539c04a57b52fa58f33"
-dependencies = [
  "bee-ternary",
  "bee-transaction",
  "iota-bundle-miner",
@@ -2420,9 +2379,9 @@ dependencies = [
 
 [[package]]
 name = "pollster"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6cce106fd2646acbe31a0e4006f75779d535c26a44f153ada196e9edcfc6d944"
+checksum = "bb20dcc30536a1508e75d47dd0e399bb2fe7354dcf35cda9127f2bf1ed92e30e"
 
 [[package]]
 name = "poly1305"
@@ -2699,9 +2658,9 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.4.5"
+version = "1.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "957056ecddbeba1b26965114e191d2e8589ce74db242b6ea25fc4062427a5c19"
+checksum = "2a26af418b574bd56588335b3a3659a65725d4e636eb1016c2f9e3b38c7cc759"
 dependencies = [
  "aho-corasick",
  "memchr",
