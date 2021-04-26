@@ -1,5 +1,10 @@
 # Changelog
 
+## \[0.3.2]
+
+- Drop `.stronghold` extension requirement on wallet backup.
+  - [0e849b30](https://github.com/iotaledger/wallet.rs/commit/0e849b3048ce4dc6639b9eddf35ac8d878f20fe2) chore(manager): simplify backup API, dropping extension requirement ([#588](https://github.com/iotaledger/wallet.rs/pull/588)) on 2021-04-26
+
 ## \[0.3.1]
 
 - Prevent `storage adapter not set` errors.
