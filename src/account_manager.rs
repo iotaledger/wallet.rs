@@ -663,7 +663,9 @@ impl AccountManager {
 
     /// Sets the stronghold password.
     pub async fn set_stronghold_password<P: Into<String>>(&mut self, password: P) -> crate::Result<()> {
-        let stronghold_path = if self.storage_path.extension().unwrap_or_default() == "stronghold" {
+        let stronghold_path = if crate::storage::get(&self.storage_path).await.unwrap().lock().await.id()
+            == crate::storage::stronghold::STORAGE_ID
+        {
             self.storage_path.clone()
         } else {
             self.storage_folder.join(STRONGHOLD_FILENAME)
@@ -997,7 +999,7 @@ impl AccountManager {
         stronghold_password: String,
     ) -> crate::Result<()> {
         let source = source.as_ref();
-        if source.is_dir() || !source.exists() || source.extension().unwrap_or_default() != "stronghold" {
+        if source.is_dir() || !source.exists() {
             return Err(crate::Error::InvalidBackupFile);
         }
         if !self.accounts.read().await.is_empty() {
