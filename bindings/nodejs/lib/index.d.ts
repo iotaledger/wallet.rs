@@ -316,7 +316,8 @@ export declare type Event = 'ErrorThrown' |
   'ConfirmationStateChange' |
   'Reattachment' |
   'Broadcast' |
-  'TransferProgress'
+  'TransferProgress' |
+  'MigrationProgress'
 
 export interface LoggerOutput {
   name?: string

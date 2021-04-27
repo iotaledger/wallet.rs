@@ -29,6 +29,7 @@ Supported event names:
 - Reattachment
 - Broadcast
 - TransferProgress
+- MigrationProgress
 
 ### AccountManager
 
