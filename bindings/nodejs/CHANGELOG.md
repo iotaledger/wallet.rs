@@ -1,5 +1,10 @@
 # Changelog
 
+## \[0.3.4]
+
+- Fix `rocksdb` publish issue on v0.3.3
+  - [203ede63](https://github.com/iotaledger/wallet.rs/commit/203ede633c3f22c1773240beef3c2100b5953bbd) fix: publish ([#594](https://github.com/iotaledger/wallet.rs/pull/594)) on 2021-04-27
+
 ## \[0.3.3]
 
 - Fixes `account.sync` generating a change address on each call.
