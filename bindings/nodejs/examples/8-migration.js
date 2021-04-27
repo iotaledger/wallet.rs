@@ -51,14 +51,14 @@ async function run() {
 
     console.log('Account created:', account.alias())
     // Nodes for the legacy network
-    const nodes = ['https://nodes-migration3-legacy.iota.cafe']
+    const nodes = ['https://nodes.iota.org']
     const seed = process.env.MIGRATION_SEED
     const migrationData = await manager.getMigrationData(
       nodes,
       seed,
       {
         // permanode for the legacy network
-        // permanode: 'https://chronicle.iota.org/api',
+        permanode: 'https://chronicle.iota.org/api',
         securityLevel: ADDRESS_SECURITY_LEVEL,
         // this is the default and from there it will check addresses for balance until 30 in a row have 0 balance
         // if not all balance got detected because a higher address index was used it needs to be increased here
