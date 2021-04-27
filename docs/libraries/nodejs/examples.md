@@ -22,7 +22,9 @@ The storage is encrypted at rest and so you need a strong password and location 
 
 > Please note: deal with the password with utmost care
 
-Technically speaking, the storage means a single file called `wallet.stronghold`. The generated seed (mnemonic) serves as a cryptographic key from which all accounts and related addresses are generated.
+Technically speaking, the storage means two things:
+* Single file called `wallet.stronghold` which contains `seed` secured by stronghold and encrypted at rest. The generated seed (mnemonic) serves as a cryptographic key from which all accounts and related addresses are generated
+* Other data used by library that is stored under `db` sub directory that includes account information, generated addresses, fetched messages, etc. This data is leveraged in order to speed up some operations, such as account creation, address generation, etc.
 
 One of the key principle behind the `stronghold`-based storage is that no one can get a seed from the storage. You deal with all accounts purely via `AccountManager` instance and all complexities are hidden under the hood and are dealt with in a secure way.
 
@@ -100,13 +102,13 @@ Please note, there is also implemented a [dust protection](https://chrysalis.doc
 That's why we did send 1Mi in the given example to comply with the protection."
 
 ## Backup database
-Underlying database (provided by `Stronghold` by default) is encrypted at rest and there is no way how to get a seed from it due to security practices that are incorporated in the Stronghold's DNA. It means you are dealing with the database as an atomic unit that includes all wallet information.
+Underlying seed storage (provided by `Stronghold` by default) is encrypted at rest and there is no way how to get a seed from it due to security practices that are incorporated in the Stronghold's DNA.
 
-So backing up the database is very important task from this respect:
+So backing up the seed storage is very important task from this respect:
 ```javascript
 {{ #include ../../../bindings/nodejs/examples/5-backup.js }}
 ```
-Alternatively, a simple copy of the `wallet.stronghold` file works as a backup. (e.g. a daily cronjob rsync / scp with a datetime suffix for example).
+Alternatively, a simple copy of the `wallet.stronghold` file works as a seed backup. (e.g. a daily cronjob rsync / scp with a datetime suffix for example).
 
 ## Restore database
 The process of restoring underlying database via `wallet.rs` can be described as follows:
