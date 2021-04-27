@@ -39,7 +39,7 @@ use iota_wallet::{
         Api,
     },
     event::{
-        EventId, TransferProgressType, BalanceChange,
+        EventId, TransferProgressType, MigrationProgressType, BalanceChange,
         TransactionEvent as WalletTransactionEvent,
         TransactionConfirmationChangeEvent as WalletTransactionConfirmationChangeEvent,
         AddressConsolidationNeeded as WalletAddressConsolidationNeeded,
@@ -431,6 +431,16 @@ foreign_enum!(
 );
 
 foreign_enum!(
+    enum MigrationProgressType {
+        FETCHING_MIGRATION_DATA = MigrationProgressType::FetchingMigrationData,
+        MINING_BUNDLE = MigrationProgressType::MiningBundle,
+        SIGNING_BUNDLE = MigrationProgressType::SigningBundle,
+        BROADCASTING_BUNDLE = MigrationProgressType::BroadcastingBundle,
+        TRANSACTION_CONFIRMED = MigrationProgressType::TransactionConfirmed,
+    }
+);
+
+foreign_enum!(
     enum StrongholdStatusType {
         UNLOCKED = StrongholdStatusType::Unlocked,
         LOCKED = StrongholdStatusType::Locked,
@@ -491,6 +501,16 @@ foreign_class!(
         private constructor = empty;
         fn WalletTransferProgress::account_id(&self) -> &str; alias accountId;
         fn WalletTransferProgress::event(&self) -> TransferProgressType {
+            this.event().clone()
+        }
+    }
+);
+
+foreign_class!(
+    class MigrationProgressEvent {
+        self_type WalletMigrationProgress;
+        private constructor = empty;
+        fn WalletMigrationProgress::event(&self) -> MigrationProgressType {
             this.event().clone()
         }
     }

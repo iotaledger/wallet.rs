@@ -9,9 +9,10 @@ use anyhow::anyhow;
 use iota_wallet::{
     event::{
         AddressConsolidationNeeded as WalletAddressConsolidationNeeded, BalanceEvent as WalletBalanceEvent, EventId,
+        MigrationProgress as WalletMigrationProgress,
         TransactionConfirmationChangeEvent as WalletTransactionConfirmationChangeEvent,
         TransactionEvent as WalletTransactionEvent, TransactionReattachmentEvent as WalletTransactionReattachmentEvent,
-        TransferProgress as WalletTransferProgress, MigrationProgress as WalletMigrationProgress,
+        TransferProgress as WalletTransferProgress,
     },
     StrongholdSnapshotStatus as SnapshotStatus, StrongholdStatus as StrongholdStatusWallet,
 };

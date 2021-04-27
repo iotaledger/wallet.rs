@@ -10,8 +10,8 @@ use std::{
 };
 
 use iota_wallet::event::{
-    on_balance_change, on_broadcast, on_confirmation_state_change, on_error, on_new_transaction, on_reattachment,
-    on_transfer_progress, EventId, on_migration_progress,
+    on_balance_change, on_broadcast, on_confirmation_state_change, on_error, on_migration_progress, on_new_transaction,
+    on_reattachment, on_transfer_progress, EventId,
 };
 use neon::prelude::*;
 
