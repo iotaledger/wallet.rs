@@ -25,17 +25,17 @@ async fn main() -> iota_wallet::Result<()> {
     // update alias
     account.set_alias("the new alias").await?;
     // get unspent addresses
-    let _ = account.list_unspent_addresses();
+    let _ = account.list_unspent_addresses().await;
     // get spent addresses
-    let _ = account.list_spent_addresses();
+    let _ = account.list_spent_addresses().await;
     // get all addresses
-    let _ = account.addresses();
+    let _ = account.addresses().await;
 
     // generate a new unused address
     let _ = account.generate_address().await?;
 
     // list messages
-    let _ = account.list_messages(5, 0, Some(MessageType::Failed));
+    let _ = account.list_messages(5, 0, Some(MessageType::Failed)).await?;
 
     Ok(())
 }
