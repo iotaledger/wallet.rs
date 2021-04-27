@@ -31,18 +31,20 @@ async function run() {
   manager.storeMnemonic(SignerType.Stronghold, mnemonic)
 
   const account = await manager.createAccount({
+    // Node url for the new network
     clientOptions: { node: "https://chrysalis-nodes.iota.cafe", localPow: true, network: "chrysalis-mainnet" },
     alias: 'Migration',
   })
 
   console.log('Account created:', account.alias())
-
+  // Nodes for the legacy network
   const nodes = ['https://nodes.iota.org']
   const seed = process.env.MIGRATION_SEED
   const migrationData = await manager.getMigrationData(
     nodes,
     seed,
     {
+      //permanode for the legacy network
       permanode: 'https://chronicle.iota.org/api',
       securityLevel: ADDRESS_SECURITY_LEVEL,
       // this is the default and from there it will check addresses for balance until 30 in a row have 0 balance
