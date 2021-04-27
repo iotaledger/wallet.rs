@@ -13,7 +13,14 @@ const MAX_INPUTS_PER_BUNDLE = 10
 
 
 async function run() {
-  const { AccountManager, SignerType } = require('@iota/wallet')
+  const { AccountManager, SignerType, addEventListener } = require('@iota/wallet')
+
+  // Log migration events
+  const callback = function (err, data) {
+    console.log("MigrationProgress:", data)
+  }
+  addEventListener("MigrationProgress", callback)
+
   const manager = new AccountManager({
     storagePath: './migration-database',
   })
@@ -37,7 +44,10 @@ async function run() {
     seed,
     {
       permanode: 'https://chronicle.iota.org/api',
-      securityLevel: ADDRESS_SECURITY_LEVEL
+      securityLevel: ADDRESS_SECURITY_LEVEL,
+      // this is the default and from there it will check addresses for balance until 30 in a row have 0 balance
+      // if not all balance got detected because a higher address index was used it needs to be increased here
+      initialAddressIndex: 0
     }
   )
   console.log(migrationData)
