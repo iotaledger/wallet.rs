@@ -26,7 +26,7 @@ thiserror = "1.0"
 tokio = { version = "1.3", features = ["macros", "sync", "time", "rt", "rt-multi-thread"] }
 url = { version = "2.2", features = ["serde"] }
 rand = "0.8"
-rocksdb = { version = "0.15", default-features = false, features = ["lz4"] }
+rocksdb = { git="https://github.com/obany/rust-rocksdb", rev = "9ab27f60f9e1b1cf40b61e3bb85ca794c0e08beb", default-features = false, features = ["lz4"] }
 zeroize = { version = "1.2", features = ["zeroize_derive"] }
 
 # stronghold
