@@ -669,7 +669,7 @@ run()
 require('dotenv').config()
 
 async function run() {
-	const { AccountManager, addEventListener } = require('@iota/wallet')
+    const { AccountManager, addEventListener } = require('@iota/wallet')
     const manager = new AccountManager({
         storagePath: './alice-database'
     })
@@ -683,17 +683,17 @@ async function run() {
     const synced = await account.sync()
     console.log('Syncing...')
     // let address = account.generateAddress()
-    
+
     // get latest address
     let addressObject = account.latestAddress()
 
     console.log(&quot;Address:&quot;, addressObject.address)
-    
+
     // Use the Chrysalis Faucet to send testnet tokens to your address:
     console.log(&quot;Fill your address with the Faucet: https://faucet.testnet.chrysalis2.com/&quot;)
 
 
-    const callback = function(data) {
+    const callback = function (err, data) {
         console.log(&quot;data:&quot;, data)
     }
 
@@ -736,6 +736,7 @@ Supported event names:</p>
 <li>Reattachment</li>
 <li>Broadcast</li>
 <li>TransferProgress</li>
+<li>MigrationProgress</li>
 </ul>
 <h3 id="accountmanager"><a class="header" href="#accountmanager">AccountManager</a></h3>
 <h4 id="constructoroptions"><a class="header" href="#constructoroptions">constructor([options])</a></h4>
@@ -2072,6 +2073,28 @@ The account can be initialised with locally stored address history.</p>
 <p><strong>Returns</strong> the event id as list[int].</p>
 <h4 id="remove_stronghold_status_change_listenerlistint-void"><a class="header" href="#remove_stronghold_status_change_listenerlistint-void">remove_stronghold_status_change_listener(list[int]): void</a></h4>
 <p>Removes the stronghold status change listener associated with the given identifier.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[id]</td><td><code>list[int]</code></td><td><code>undefined</code></td><td>The event id</td></tr>
+</tbody></table>
+<h4 id="on_transfer_progresscallback-listint"><a class="header" href="#on_transfer_progresscallback-listint">on_transfer_progress(callback): list[int]</a></h4>
+<p>Listen to transfer progress events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[callback]</td><td><code>function</code></td><td><code>undefined</code></td><td>The callback function</td></tr>
+</tbody></table>
+<p><strong>Returns</strong> the event id as list[int].</p>
+<h4 id="remove_transfer_progress_listenerlistint-void"><a class="header" href="#remove_transfer_progress_listenerlistint-void">remove_transfer_progress_listener(list[int]): void</a></h4>
+<p>Removes the transfer progress listener associated with the given identifier.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[id]</td><td><code>list[int]</code></td><td><code>undefined</code></td><td>The event id</td></tr>
+</tbody></table>
+<h4 id="on_migration_progresscallback-listint"><a class="header" href="#on_migration_progresscallback-listint">on_migration_progress(callback): list[int]</a></h4>
+<p>Listen to migration progress events.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[callback]</td><td><code>function</code></td><td><code>undefined</code></td><td>The callback function</td></tr>
+</tbody></table>
+<p><strong>Returns</strong> the event id as list[int].</p>
+<h4 id="remove_migration_progress_listenerlistint-void"><a class="header" href="#remove_migration_progress_listenerlistint-void">remove_migration_progress_listener(list[int]): void</a></h4>
+<p>Removes the migration progress listener associated with the given identifier.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>[id]</td><td><code>list[int]</code></td><td><code>undefined</code></td><td>The event id</td></tr>
 </tbody></table>
