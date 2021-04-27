@@ -44,6 +44,7 @@ use iota_wallet::{
         TransactionConfirmationChangeEvent as WalletTransactionConfirmationChangeEvent,
         AddressConsolidationNeeded as WalletAddressConsolidationNeeded,
         TransferProgress as WalletTransferProgress,
+        MigrationProgress as WalletMigrationProgress,
         BalanceEvent as WalletBalanceEvent,
         TransactionReattachmentEvent as WalletTransactionReattachmentEvent
     },
