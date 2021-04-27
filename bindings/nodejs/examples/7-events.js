@@ -5,7 +5,7 @@
 require('dotenv').config()
 
 async function run() {
-	const { AccountManager, addEventListener } = require('@iota/wallet')
+    const { AccountManager, addEventListener } = require('@iota/wallet')
     const manager = new AccountManager({
         storagePath: './alice-database'
     })
@@ -19,17 +19,17 @@ async function run() {
     const synced = await account.sync()
     console.log('Syncing...')
     // let address = account.generateAddress()
-    
+
     // get latest address
     let addressObject = account.latestAddress()
 
     console.log("Address:", addressObject.address)
-    
+
     // Use the Chrysalis Faucet to send testnet tokens to your address:
     console.log("Fill your address with the Faucet: https://faucet.testnet.chrysalis2.com/")
 
 
-    const callback = function(data) {
+    const callback = function (err, data) {
         console.log("data:", data)
     }
 

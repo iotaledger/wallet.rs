@@ -3,6 +3,7 @@
 
 mod index;
 mod info_response;
+mod migration;
 mod milestone;
 mod payloads;
 mod receipt;
@@ -11,6 +12,7 @@ mod treasury;
 
 pub use index::*;
 pub use info_response::*;
+pub use migration::*;
 pub use milestone::*;
 pub use payloads::*;
 pub use receipt::*;

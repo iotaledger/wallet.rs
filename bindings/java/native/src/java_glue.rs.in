@@ -30,7 +30,7 @@ use iota_wallet::{
         AccountBalance,
     },
     message::{
-        MessageType, Value, ValueUnit, MessageId
+        MessageType, Value, ValueUnit, MessageId, TransactionSignatureLockedSingleOutput
     },
     address::{
         OutputKind, AddressWrapper, IotaAddress,
@@ -39,18 +39,15 @@ use iota_wallet::{
         Api,
     },
     event::{
-        EventId, TransferProgressType, BalanceChange,
+        EventId, TransferProgressType, MigrationProgressType, BalanceChange,
         TransactionEvent as WalletTransactionEvent,
         TransactionConfirmationChangeEvent as WalletTransactionConfirmationChangeEvent,
         AddressConsolidationNeeded as WalletAddressConsolidationNeeded,
         TransferProgress as WalletTransferProgress,
+        MigrationProgress as WalletMigrationProgress,
         BalanceEvent as WalletBalanceEvent,
         TransactionReattachmentEvent as WalletTransactionReattachmentEvent
     },
-};
-
-use iota::{
-    SignatureLockedSingleOutput,
 };
 
 foreign_class!(class RustLogging {
@@ -155,6 +152,7 @@ foreign_class!(class AccountManagerBuilder {
     fn AccountManagerBuilder::with_automatic_output_consolidation_disabled(&mut self) -> AccountManagerBuilder; alias withAutomaticOutputConsolidationDisabled;
     fn AccountManagerBuilder::with_sync_spent_outputs(&mut self) -> AccountManagerBuilder; alias withSyncSpentOutputs;
     fn AccountManagerBuilder::with_event_persistence(&mut self) -> AccountManagerBuilder; alias withEventPersistence;
+    fn AccountManagerBuilder::with_multiple_empty_accounts(&mut self) -> AccountManagerBuilder; alias withMultipleEmptyAccounts;
     fn AccountManagerBuilder::finish(&mut self) -> Result<AccountManager>;
 });
 
@@ -284,6 +282,17 @@ foreign_class!(
 
 foreign_class!(
     #[derive(PartialEq)]
+    class NodeInfoWrapper {
+        self_type NodeInfoWrapper;
+        private constructor = empty;
+        private fn NodeInfoWrapper::eq(&self, o: &NodeInfoWrapper) -> bool; alias rustEq;
+        fn NodeInfoWrapper::url(&self) -> &str;
+        fn NodeInfoWrapper::nodeinfo(&self) -> InfoResponse; alias nodeInfo;
+    }
+);
+
+foreign_class!(
+    #[derive(PartialEq)]
     class InfoResponse {
         self_type InfoResponse;
         private constructor = empty;
@@ -292,6 +301,10 @@ foreign_class!(
         fn InfoResponse::version(&self) -> &str;
         fn InfoResponse::network_id(&self) -> &str; alias networkId;
         fn InfoResponse::bech32_hrp(&self) -> &str; alias bech32HRP;
+        fn InfoResponse::messages_per_second(&self) -> f64; alias messagesPerSecond;
+        fn InfoResponse::referenced_messages_per_second(&self) -> f64; alias referencedMessagesPerSecond;
+        fn InfoResponse::referenced_rate(&self) -> f64; alias referencedRate;
+        fn InfoResponse::latest_milestone_timestamp(&self) -> u64; alias latestMilestoneTimestamp;
         fn InfoResponse::min_pow_score(&self) -> f64; alias minPoWScore;
         fn InfoResponse::latest_milestone_index(&self) -> u32; alias latestMilestoneIndex;
         fn InfoResponse::confirmed_milestone_index(&self) -> u32; alias confirmedMilestoneIndex;
@@ -418,6 +431,16 @@ foreign_enum!(
 );
 
 foreign_enum!(
+    enum MigrationProgressType {
+        FETCHING_MIGRATION_DATA = MigrationProgressType::FetchingMigrationData,
+        MINING_BUNDLE = MigrationProgressType::MiningBundle,
+        SIGNING_BUNDLE = MigrationProgressType::SigningBundle,
+        BROADCASTING_BUNDLE = MigrationProgressType::BroadcastingBundle,
+        TRANSACTION_CONFIRMED = MigrationProgressType::TransactionConfirmed,
+    }
+);
+
+foreign_enum!(
     enum StrongholdStatusType {
         UNLOCKED = StrongholdStatusType::Unlocked,
         LOCKED = StrongholdStatusType::Locked,
@@ -478,6 +501,16 @@ foreign_class!(
         private constructor = empty;
         fn WalletTransferProgress::account_id(&self) -> &str; alias accountId;
         fn WalletTransferProgress::event(&self) -> TransferProgressType {
+            this.event().clone()
+        }
+    }
+);
+
+foreign_class!(
+    class MigrationProgressEvent {
+        self_type WalletMigrationProgress;
+        private constructor = empty;
+        fn WalletMigrationProgress::event(&self) -> MigrationProgressType {
             this.event().clone()
         }
     }
@@ -567,6 +600,11 @@ foreign_callback!(callback TransferProgressListener {
     onTransferProgress = TransferProgressListener::on_transfer_progress(&self, event: WalletTransferProgress);
 });
 
+foreign_callback!(callback MigrationProgressListener {
+    self_type MigrationProgressListener + Send + 'static;
+    onMigrationProgress = MigrationProgressListener::on_migration_progress(&self, event: WalletMigrationProgress);
+});
+
 foreign_callback!(callback TransactionConfirmationChangeListener {
     self_type TransactionConfirmationChangeListener + Send + 'static;
     onConfirmationStateChange = TransactionConfirmationChangeListener::on_confirmation_state_change(&self, event: WalletTransactionConfirmationChangeEvent);
@@ -597,6 +635,7 @@ foreign_class!(
         fn EventManager::subscribe_reattachment(cb: Box<dyn ReattachTransactionListener + Send + 'static>) -> EventId; alias subscribeReattachement;
         fn EventManager::subscribe_broadcast(cb: Box<dyn BroadcastTransactionListener + Send + 'static>) -> EventId; alias subscribeBroadcast;
         fn EventManager::subscribe_transfer_progress(cb: Box<dyn TransferProgressListener + Send + 'static>) -> EventId; alias subscribeTransferProgress;
+        fn EventManager::subscribe_migration_progress(cb: Box<dyn MigrationProgressListener + Send + 'static>) -> EventId; alias subscribeMigrationProgress;
         fn EventManager::subscribe_balance_change(cb: Box<dyn BalanceChangeListener + Send + 'static>) -> EventId; alias subscribeBalanceChange;
         fn EventManager::subscribe_stronghold_status_change(cb: Box<dyn StrongholdStatusListener + Send + 'static>) -> Result<EventId>; alias subscribeStrongholdStatusChange;
         fn EventManager::subscribe_address_consolidation_needed(cb: Box<dyn AddressConsolidationNeededListener + Send + 'static>) -> Result<EventId>; alias subscribeAddressConsolidationNeeded;
@@ -607,6 +646,7 @@ foreign_class!(
         fn EventManager::remove_reattachment_listener(event: EventId); alias removeReattachementListener;
         fn EventManager::remove_broadcast_listener(event: EventId); alias removeBroadcastListener;
         fn EventManager::remove_transfer_progress_listener(event: EventId); alias removeTransferProgressListener;
+        fn EventManager::remove_migration_progress_listener(event: EventId); alias removeMigrationProgressListener;
         fn EventManager::remove_balance_change_listener(event: EventId); alias removeBalanceChangeListener;
         fn EventManager::remove_stronghold_status_change_listener(event: EventId); alias removeStrongholdStatusChangeListener;
         fn EventManager::remove_address_consolidation_needed_listener(event: EventId); alias removeAddressConsolidationNeededListener;
@@ -623,6 +663,9 @@ foreign_class!(
         fn MessagePayload::payload_type(&self) -> MessagePayloadType; alias payloadType;
         fn MessagePayload::get_as_indexation(&self) -> Option<IndexationPayload>; alias getAsIndexation;
         fn MessagePayload::get_as_milestone(&self) -> Option<MilestonePayload>; alias getAsMilestone;
+        fn MessagePayload::get_as_transaction(&self) -> Option<MessageTransactionPayload>; alias getAsTransaction;
+        fn MessagePayload::get_as_receipt(&self) -> Option<ReceiptPayload>; alias getAsReceipt;
+        fn MessagePayload::get_as_treasury(&self) -> Option<TreasuryTransactionPayload>; alias getAsTreasury;
     }
 );
 
@@ -640,10 +683,16 @@ foreign_class!(
     class MilestonePayload {
         self_type MilestonePayload;
         private constructor = empty;
-        fn MilestonePayload::id(&self) -> String;
         fn MilestonePayload::essence(&self) -> MilestonePayloadEssence;
-        fn MilestonePayload::validate(&self, applicable_public_keys: &[String], min_threshold: usize) -> bool;
-        //fn MilestonePayload::signatures(&self) -> Vec<Box<[u8]>>;
+        fn MilestonePayload::signatures(&self) -> Vec<MilestoneSignature>;
+    }
+);
+
+foreign_class!(
+    class MilestoneSignature {
+        self_type MilestoneSignature;
+        private constructor = empty;
+        fn MilestoneSignature::get_signature(&self) -> Vec<u8>; alias getSignature;
     }
 );
 
@@ -655,6 +704,18 @@ foreign_class!(
         fn MilestonePayloadEssence::timestamp(&self) -> u64;
         fn MilestonePayloadEssence::parents(&self) -> Vec<MessageId>;
         fn MilestonePayloadEssence::merkle_proof(&self) -> Vec<u8>; alias merkleProof;
+        fn MilestonePayloadEssence::next_pow_score(&self) -> u32; alias nextPowScore;
+        fn MilestonePayloadEssence::next_pow_score_milestone(&self) -> u32; alias nextPowScoreMilestone;
+        fn MilestonePayloadEssence::public_keys(&self) -> Vec<PublicKey>; alias publicKeys;
+        fn MilestonePayloadEssence::receipt(&self) -> Option<ReceiptPayload>;
+    }
+);
+
+foreign_class!(
+    class PublicKey {
+        self_type PublicKey;
+        private constructor = empty;
+        fn PublicKey::get_public_key(&self) -> Vec<u8>; alias getPublicKey;
     }
 );
 
@@ -726,10 +787,10 @@ foreign_class!(
 );
 
 foreign_class!(
-    class SignatureLockedSingleOutput {
-        self_type SignatureLockedSingleOutput;
+    class TransactionSignatureLockedSingleOutput {
+        self_type TransactionSignatureLockedSingleOutput;
         private constructor = empty;
-        fn SignatureLockedSingleOutput::amount(&self) -> u64;
+        fn TransactionSignatureLockedSingleOutput::amount(&self) -> u64;
     }
 );
 
@@ -740,7 +801,6 @@ foreign_class!(
         fn ReceiptPayload::migrated_at(&self) -> u32; alias migratedAt;
         fn ReceiptPayload::last(&self) -> bool;
         fn ReceiptPayload::funds(&self) -> Vec<MigratedFundsEntry>;
-        fn ReceiptPayload::amount(&self) -> u64;
     }
 );
 
@@ -749,7 +809,7 @@ foreign_class!(
         self_type MigratedFundsEntry;
         private constructor = empty;
         fn MigratedFundsEntry::tail_transaction_hash(&self) -> Vec<u8>; alias tailTransactionHash;
-        fn MigratedFundsEntry::output(&self) -> SignatureLockedSingleOutput;
+        fn MigratedFundsEntry::output(&self) -> TransactionSignatureLockedSingleOutput;
     }
 );
 
@@ -757,7 +817,6 @@ foreign_class!(
     class TreasuryTransactionPayload {
         self_type TreasuryTransactionPayload;
         private constructor = empty;
-        fn TreasuryTransactionPayload::input(&self) -> MessageId;
         fn TreasuryTransactionPayload::output(&self) -> u64;
     }
 );

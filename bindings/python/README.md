@@ -86,15 +86,16 @@ Also for all the optional values, the default values are the same as the ones in
 
 Creates a new instance of the AccountManager.
 
-| Param                            | Type                 | Default                  | Description                                                                                    |
-| -------------------------------- | -------------------- | ------------------------ | ---------------------------------------------------------------------------------------------- |
-| [storage_path]                   | <code>str</code>     | <code>`./storage`</code> | The path where the database file will be saved                                                 |
-| [storage_password]               | <code>str</code>     | <code>undefined</code>   | The storage password to encrypt/decrypt accounts                                               |
-| [polling_interval]               | <code>int</code>     | <code>30000</code>       | The polling interval in milliseconds                                                           |
-| [automatic_output_consolidation] | <code>bool</code>    | <code>true</code>        | Disables the automatic output consolidation process                                            |
-| [output_consolidation_threshold] | <code>int</code>     | <code>100</code>         | Sets the number of outputs an address must have to trigger the automatic consolidation process |
-| [sync_spent_outputs]             | <code>boolean</code> | <code>false</code>       | Enables fetching spent output history on account sync                                          |
-| [persist_events]                 | <code>boolean</code> | <code>false</code>       | Enables event persistence                                                                      |
+| Param                                  | Type                 | Default                  | Description                                                                                    |
+| -------------------------------------- | -------------------- | ------------------------ | ---------------------------------------------------------------------------------------------- |
+| [storage_path]                         | <code>str</code>     | <code>`./storage`</code> | The path where the database file will be saved                                                 |
+| [storage_password]                     | <code>str</code>     | <code>undefined</code>   | The storage password to encrypt/decrypt accounts                                               |
+| [polling_interval]                     | <code>int</code>     | <code>30000</code>       | The polling interval in milliseconds                                                           |
+| [automatic_output_consolidation]       | <code>bool</code>    | <code>true</code>        | Disables the automatic output consolidation process                                            |
+| [output_consolidation_threshold]       | <code>int</code>     | <code>100</code>         | Sets the number of outputs an address must have to trigger the automatic consolidation process |
+| [sync_spent_outputs]                   | <code>boolean</code> | <code>false</code>       | Enables fetching spent output history on account sync                                          |
+| [persist_events]                       | <code>boolean</code> | <code>false</code>       | Enables event persistence                                                                      |
+| [allow_create_multiple_empty_accounts] | <code>boolean</code> | code<false>              | Enables creating accounts with latest account being empty                                      |
 
 Note: if the `storage_path` is set, then the `storage` needs to be set too. An exception will be thrown when errors happened.
 
@@ -560,11 +561,15 @@ Gets the account balance information.
 
 **Returns** the [AccountBalance](#accountbalance) in this account.
 
-#### get_node_info(): InfoResponse
+#### get_node_info(url (optional)): NodeInfoWrapper
 
 Gets information about the node.
 
-**Returns** the [InfoResponse](#inforesponse)
+| Param | Type             | Default                | Description  |
+| ----- | ---------------- | ---------------------- | ------------ |
+| url   | <code>str</code> | <code>undefined</code> | The node url |
+
+**Returns** the [NodeInfoWrapper](#nodeinfowrapper)
 
 #### set_alias(alias): void
 
@@ -787,6 +792,42 @@ Listen to stronghold status change events.
 #### remove_stronghold_status_change_listener(list[int]): void
 
 Removes the stronghold status change listener associated with the given identifier.
+
+| Param | Type                   | Default                | Description  |
+| ----- | ---------------------- | ---------------------- | ------------ |
+| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+
+#### on_transfer_progress(callback): list[int]
+
+Listen to transfer progress events.
+
+| Param      | Type                  | Default                | Description           |
+| ---------- | --------------------- | ---------------------- | --------------------- |
+| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+
+**Returns** the event id as list[int].
+
+#### remove_transfer_progress_listener(list[int]): void
+
+Removes the transfer progress listener associated with the given identifier.
+
+| Param | Type                   | Default                | Description  |
+| ----- | ---------------------- | ---------------------- | ------------ |
+| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+
+#### on_migration_progress(callback): list[int]
+
+Listen to migration progress events.
+
+| Param      | Type                  | Default                | Description           |
+| ---------- | --------------------- | ---------------------- | --------------------- |
+| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+
+**Returns** the event id as list[int].
+
+#### remove_migration_progress_listener(list[int]): void
+
+Removes the migration progress listener associated with the given identifier.
 
 | Param | Type                   | Default                | Description  |
 | ----- | ---------------------- | ---------------------- | ------------ |

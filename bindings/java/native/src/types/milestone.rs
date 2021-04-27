@@ -1,53 +1,52 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::Result;
+use iota_wallet::message::{
+    MessageId, MessageMilestonePayloadEssence as MilestonePayloadEssenceRust, MessagePayload as MessagePayloadRust,
+};
 
-use iota_wallet::message::{MessageId, MilestonePayload as MilestonePayloadRust};
-
-use iota::MilestonePayloadEssence as RustMilestonePayloadEssence;
-
-use anyhow::anyhow;
+use crate::ReceiptPayload;
 
 pub struct MilestonePayload {
-    payload: MilestonePayloadRust,
+    essence: MilestonePayloadEssenceRust,
+    signatures: Vec<Box<[u8]>>,
 }
 
 impl MilestonePayload {
-    pub fn new(essence: RustMilestonePayloadEssence, signatures: Vec<Box<[u8]>>) -> Result<MilestonePayload> {
-        let res = MilestonePayloadRust::new(essence, signatures);
-        match res {
-            Ok(index) => Ok(MilestonePayload { payload: index }),
-            Err(err) => Err(anyhow!(err.to_string())),
-        }
-    }
-
-    pub fn id(&self) -> String {
-        self.payload.id().to_string()
+    pub fn new(essence: MilestonePayloadEssenceRust, signatures: Vec<Box<[u8]>>) -> MilestonePayload {
+        MilestonePayload { essence, signatures }
     }
 
     pub fn essence(&self) -> MilestonePayloadEssence {
-        let ess_ref = self.payload.essence();
-
         MilestonePayloadEssence {
-            essence: ess_ref.clone(),
+            essence: self.essence.clone(),
         }
     }
 
-    pub fn signatures(&self) -> &Vec<Box<[u8]>> {
-        self.payload.signatures()
-    }
-
-    pub fn validate(&self, applicable_public_keys: &[String], min_threshold: usize) -> bool {
-        let res = self.payload.validate(applicable_public_keys, min_threshold);
-        match res {
-            Ok(_) => true,
-            Err(_) => false,
-        }
+    pub fn signatures(&self) -> Vec<MilestoneSignature> {
+        // Vec of vec, or vec of box isnt implemented as a generatable type
+        self.signatures
+            .clone()
+            .iter()
+            .map(|signature| MilestoneSignature {
+                signature: (*signature).to_vec(),
+            })
+            .collect()
     }
 }
+
+pub struct MilestoneSignature {
+    signature: Vec<u8>,
+}
+
+impl MilestoneSignature {
+    pub fn get_signature(&self) -> Vec<u8> {
+        self.signature.clone()
+    }
+}
+
 pub struct MilestonePayloadEssence {
-    essence: RustMilestonePayloadEssence,
+    essence: MilestonePayloadEssenceRust,
 }
 
 impl MilestonePayloadEssence {
@@ -65,5 +64,45 @@ impl MilestonePayloadEssence {
 
     pub fn merkle_proof(&self) -> Vec<u8> {
         self.essence.merkle_proof().to_vec()
+    }
+
+    pub fn next_pow_score(&self) -> u32 {
+        self.essence.next_pow_score()
+    }
+
+    pub fn next_pow_score_milestone(&self) -> u32 {
+        self.essence.next_pow_score_milestone_index()
+    }
+
+    pub fn public_keys(&self) -> Vec<PublicKey> {
+        // Vec of vec isnt implemented as a generatable type
+        self.essence
+            .public_keys()
+            .iter()
+            .map(|key| PublicKey {
+                public_key: key.to_vec(),
+            })
+            .collect()
+    }
+
+    pub fn receipt(&self) -> Option<ReceiptPayload> {
+        let option = self.essence.receipt();
+        if let Some(payload) = option {
+            if let MessagePayloadRust::Receipt(receipt) = payload {
+                return Some((*receipt.clone()).into());
+            }
+        }
+
+        None
+    }
+}
+
+pub struct PublicKey {
+    public_key: Vec<u8>,
+}
+
+impl PublicKey {
+    pub fn get_public_key(&self) -> Vec<u8> {
+        self.public_key.clone()
     }
 }

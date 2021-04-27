@@ -8,22 +8,43 @@ use crate::{
     event::{emit_transfer_progress, TransferProgressType},
 };
 use bee_common::packable::Packable;
-use chrono::prelude::{DateTime, Utc};
-use getset::{Getters, Setters};
+use getset::{CopyGetters, Getters, Setters};
+
+use chrono::prelude::{DateTime, NaiveDateTime, Utc};
 pub use iota::{
-    Essence, IndexationPayload, Input, Message as IotaMessage, MessageId, MilestonePayload, Output, Payload,
-    ReceiptPayload, RegularEssence, SignatureLockedDustAllowanceOutput, SignatureLockedSingleOutput,
+    Essence, IndexationPayload, Input, Message as IotaMessage, MessageId, MigratedFundsEntry, MilestoneIndex,
+    MilestonePayload, MilestonePayloadEssence, MilestoneResponse, Output, Parents, Payload, ReceiptPayload,
+    RegularEssence, SignatureLockedDustAllowanceOutput, SignatureLockedSingleOutput, TailTransactionHash,
     TransactionPayload, TreasuryInput, TreasuryOutput, TreasuryTransactionPayload, UnlockBlock, UtxoInput,
+    MILESTONE_MERKLE_PROOF_LENGTH, MILESTONE_PUBLIC_KEY_LENGTH,
 };
-use serde::{de::Deserializer, Deserialize, Serialize};
+use once_cell::sync::Lazy;
+use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
 use std::{
     cmp::Ordering,
-    collections::hash_map::DefaultHasher,
+    collections::{
+        hash_map::{DefaultHasher, Entry},
+        HashMap,
+    },
+    convert::{TryFrom, TryInto},
     fmt,
     hash::{Hash, Hasher},
     num::NonZeroU64,
+    ops::Range,
 };
+use tokio::sync::RwLock;
+
+// The library do not request a milestone from the node if we have one in the (x / 100, x/ 100 + 100) range
+const MILESTONE_CACHE_RANGE: u32 = 100;
+/// The node issue a milestone every 10 seconds.
+const MILESTONE_ISSUE_RATE_SECS: i64 = 10;
+
+type MilestoneCache = RwLock<HashMap<Range<u32>, MilestoneResponse>>;
+fn milestone_cache() -> &'static MilestoneCache {
+    static MILESTONE_CACHE: Lazy<MilestoneCache> = Lazy::new(Default::default);
+    &MILESTONE_CACHE
+}
 
 /// The strategy to use for the remainder value management when sending funds.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -44,13 +65,28 @@ impl Default for RemainderValueStrategy {
     }
 }
 
+/// Transfer output.
+#[derive(Debug, Clone, Deserialize)]
+pub struct TransferOutput {
+    /// The output value.
+    pub amount: NonZeroU64,
+    /// The output address.
+    #[serde(with = "crate::serde::iota_address_serde")]
+    pub address: AddressWrapper,
+}
+
+impl TransferOutput {
+    /// Creates a new transfer output.
+    pub fn new(address: AddressWrapper, amount: NonZeroU64) -> Self {
+        Self { amount, address }
+    }
+}
+
 /// A transfer to make a transaction.
 #[derive(Debug, Clone)]
 pub struct TransferBuilder {
-    /// The transfer value.
-    amount: NonZeroU64,
-    /// The transfer address.
-    address: AddressWrapper,
+    /// Transfer outputs.
+    outputs: Vec<TransferOutput>,
     /// (Optional) message indexation.
     indexation: Option<IndexationPayload>,
     /// The strategy to use for the remainder value.
@@ -61,6 +97,19 @@ pub struct TransferBuilder {
     with_events: bool,
     /// Whether the transfer should skip account syncing or not.
     skip_sync: bool,
+}
+
+impl Default for TransferBuilder {
+    fn default() -> Self {
+        Self {
+            outputs: Default::default(),
+            indexation: None,
+            remainder_value_strategy: RemainderValueStrategy::ChangeAddress,
+            input: None,
+            with_events: true,
+            skip_sync: false,
+        }
+    }
 }
 
 impl<'de> Deserialize<'de> for TransferBuilder {
@@ -97,21 +146,24 @@ impl<'de> Deserialize<'de> for TransferBuilder {
 
         #[derive(Debug, Clone, Deserialize)]
         pub struct TransferBuilderWrapper {
-            /// The transfer value.
-            amount: NonZeroU64,
-            /// The transfer address.
-            #[serde(with = "crate::serde::iota_address_serde")]
-            address: AddressWrapper,
+            /// Single output transfer.
+            #[serde(flatten)]
+            output: Option<TransferOutput>,
+            /// Transfer outputs.
+            #[serde(default)]
+            outputs: Vec<TransferOutput>,
             /// (Optional) message indexation.
             indexation: Option<IndexationPayloadBuilder>,
             /// The strategy to use for the remainder value.
             remainder_value_strategy: RemainderValueStrategy,
         }
 
-        TransferBuilderWrapper::deserialize(deserializer).and_then(|builder| {
+        TransferBuilderWrapper::deserialize(deserializer).and_then(|mut builder| {
+            if let Some(output) = builder.output {
+                builder.outputs.push(output);
+            }
             Ok(TransferBuilder {
-                amount: builder.amount,
-                address: builder.address,
+                outputs: builder.outputs,
                 indexation: match builder.indexation {
                     Some(i) => Some(i.finish().map_err(serde::de::Error::custom)?),
                     None => None,
@@ -129,14 +181,22 @@ impl TransferBuilder {
     /// Initialises a new transfer to the given address.
     pub fn new(address: AddressWrapper, amount: NonZeroU64) -> Self {
         Self {
-            address,
-            amount,
-            indexation: None,
-            remainder_value_strategy: RemainderValueStrategy::ChangeAddress,
-            input: None,
-            with_events: true,
-            skip_sync: false,
+            outputs: vec![TransferOutput { amount, address }],
+            ..Default::default()
         }
+    }
+
+    /// Creates a transfer with multiple outputs.
+    pub fn with_outputs(outputs: Vec<TransferOutput>) -> crate::Result<Self> {
+        if !(1..125).contains(&outputs.len()) {
+            return Err(crate::Error::BeeMessage(iota::message::Error::InvalidInputOutputCount(
+                outputs.len(),
+            )));
+        }
+        Ok(Self {
+            outputs,
+            ..Default::default()
+        })
     }
 
     /// Sets the remainder value strategy for the transfer.
@@ -171,8 +231,7 @@ impl TransferBuilder {
     /// Builds the transfer.
     pub fn finish(self) -> Transfer {
         Transfer {
-            address: self.address,
-            amount: self.amount,
+            outputs: self.outputs,
             indexation: self.indexation,
             remainder_value_strategy: self.remainder_value_strategy,
             input: self.input,
@@ -185,10 +244,8 @@ impl TransferBuilder {
 /// A transfer to make a transaction.
 #[derive(Debug, Clone)]
 pub struct Transfer {
-    /// The transfer value.
-    pub(crate) amount: NonZeroU64,
-    /// The transfer address.
-    pub(crate) address: AddressWrapper,
+    /// Transfer outputs.
+    pub(crate) outputs: Vec<TransferOutput>,
     /// (Optional) message indexation.
     pub(crate) indexation: Option<IndexationPayload>,
     /// The strategy to use for the remainder value.
@@ -207,10 +264,19 @@ impl Transfer {
         TransferBuilder::new(address, amount)
     }
 
+    /// Initialises the transfer builder with multiple outputs.
+    pub fn builder_with_outputs(outputs: Vec<TransferOutput>) -> crate::Result<TransferBuilder> {
+        TransferBuilder::with_outputs(outputs)
+    }
+
     pub(crate) async fn emit_event_if_needed(&self, account_id: String, event: TransferProgressType) {
         if self.with_events {
             emit_transfer_progress(account_id, event).await;
         }
+    }
+
+    pub(crate) fn amount(&self) -> u64 {
+        self.outputs.iter().map(|o| o.amount.get()).sum()
     }
 }
 
@@ -280,15 +346,17 @@ impl Value {
 }
 
 /// Signature locked single output.
-#[derive(Debug, Clone, Serialize, Deserialize, Getters, Eq, PartialEq)]
-#[getset(get = "pub")]
+#[derive(Debug, Clone, Serialize, Deserialize, Getters, CopyGetters, Eq, PartialEq)]
 pub struct TransactionSignatureLockedSingleOutput {
     /// The output adrress.
+    #[getset(get = "pub")]
     #[serde(with = "crate::serde::iota_address_serde")]
     address: AddressWrapper,
     /// The output amount.
+    #[getset(get_copy = "pub")]
     amount: u64,
     /// Whether the output is a remander value output or not.
+    #[getset(get_copy = "pub")]
     remainder: bool,
 }
 
@@ -387,6 +455,11 @@ impl TransactionRegularEssence {
         &self.inputs
     }
 
+    #[allow(dead_code)]
+    pub(crate) fn inputs_mut(&mut self) -> &mut [TransactionInput] {
+        &mut self.inputs
+    }
+
     /// Gets the transaction outputs.
     pub fn outputs(&self) -> &[TransactionOutput] {
         &self.outputs
@@ -419,6 +492,16 @@ impl TransactionRegularEssence {
 }
 
 impl TransactionRegularEssence {
+    pub(crate) fn is_incoming(&self, account_addresses: &[Address]) -> bool {
+        !self.inputs().iter().any(|i| match i {
+            crate::message::TransactionInput::Utxo(input) => match input.metadata {
+                Some(ref input_metadata) => account_addresses.iter().any(|a| &input_metadata.address == a.address()),
+                None => false,
+            },
+            _ => false,
+        })
+    }
+
     async fn new(regular_essence: &RegularEssence, metadata: &TransactionBuilderMetadata<'_>) -> crate::Result<Self> {
         let mut inputs = Vec::new();
         for input in regular_essence.inputs() {
@@ -440,11 +523,14 @@ impl TransactionRegularEssence {
                         } else {
                             let client = crate::client::get_client(metadata.client_options).await?;
                             let client = client.read().await;
-                            if let Ok(output) = client.get_output(&i).await {
-                                let output = AddressOutput::from_output_response(output, metadata.bech32_hrp.clone())?;
-                                Some(output)
-                            } else {
-                                None
+                            match client.get_output(&i).await {
+                                Ok(output) => {
+                                    let output =
+                                        AddressOutput::from_output_response(output, metadata.bech32_hrp.clone())?;
+                                    Some(output)
+                                }
+                                Err(iota::client::Error::ResponseError(status_code, _)) if status_code == 404 => None,
+                                Err(e) => return Err(e.into()),
                             }
                         }
                     };
@@ -591,17 +677,6 @@ impl TransactionRegularEssence {
             remainder_value,
         };
 
-        let sent = essence.inputs().iter().any(|i| match i {
-            TransactionInput::Utxo(input) => match input.metadata {
-                Some(ref input_metadata) => metadata
-                    .account_addresses
-                    .iter()
-                    .any(|a| &input_metadata.address == a.address()),
-                None => false,
-            },
-            _ => false,
-        });
-
         let is_internal = is_internal(
             &essence,
             metadata.accounts.clone(),
@@ -610,7 +685,7 @@ impl TransactionRegularEssence {
         )
         .await;
         essence.internal = is_internal;
-        essence.incoming = !sent;
+        essence.incoming = essence.is_incoming(&metadata.account_addresses);
 
         Ok(essence)
     }
@@ -670,6 +745,209 @@ impl MessageTransactionPayload {
     }
 }
 
+/// Milestone payload essence.
+#[derive(Debug, Clone, Serialize, Deserialize, Getters, CopyGetters, Eq, PartialEq)]
+pub struct MessageMilestonePayloadEssence {
+    /// Milestone index.
+    #[getset(get_copy = "pub")]
+    index: MilestoneIndex,
+    /// Milestone timestamp.
+    #[getset(get_copy = "pub")]
+    timestamp: u64,
+    /// Message parents.
+    #[getset(get = "pub")]
+    parents: Parents,
+    /// Milestone merkle proof.
+    #[getset(get = "pub")]
+    #[serde(rename = "merkleProof")]
+    merkle_proof: [u8; MILESTONE_MERKLE_PROOF_LENGTH],
+    /// Next PoW score.
+    #[getset(get_copy = "pub")]
+    #[serde(rename = "nextPowScore")]
+    next_pow_score: u32,
+    /// Milestone index where the PoW score will change.
+    #[getset(get_copy = "pub")]
+    #[serde(rename = "nextPowScoreMilestone")]
+    next_pow_score_milestone_index: u32,
+    /// Milestone public keys.
+    #[getset(get = "pub")]
+    #[serde(rename = "publicKey")]
+    public_keys: Vec<[u8; MILESTONE_PUBLIC_KEY_LENGTH]>,
+    /// Milestone receipt.
+    #[getset(get = "pub")]
+    receipt: Option<MessagePayload>,
+}
+
+impl MessageMilestonePayloadEssence {
+    async fn new(essence: &MilestonePayloadEssence, metadata: &TransactionBuilderMetadata<'_>) -> crate::Result<Self> {
+        Ok(Self {
+            index: essence.index(),
+            timestamp: essence.timestamp(),
+            parents: essence.parents().clone(),
+            merkle_proof: essence.merkle_proof().try_into().unwrap(),
+            next_pow_score: essence.next_pow_score(),
+            next_pow_score_milestone_index: essence.next_pow_score_milestone_index(),
+            public_keys: essence.public_keys().to_vec(),
+            receipt: match essence.receipt() {
+                Some(p) => {
+                    if let Payload::Receipt(receipt) = p {
+                        Some(MessagePayload::Receipt(Box::new(MessageReceiptPayload::new(
+                            &receipt, metadata,
+                        ))))
+                    } else {
+                        None
+                    }
+                }
+                None => None,
+            },
+        })
+    }
+}
+
+/// Message milestone payload.
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
+pub struct MessageMilestonePayload {
+    essence: MessageMilestonePayloadEssence,
+    signatures: Vec<Box<[u8]>>,
+}
+
+impl MessageMilestonePayload {
+    /// The milestone essence.
+    pub fn essence(&self) -> &MessageMilestonePayloadEssence {
+        &self.essence
+    }
+
+    /// The milestone signatures.
+    pub fn signatures(&self) -> &Vec<Box<[u8]>> {
+        &self.signatures
+    }
+
+    #[doc(hidden)]
+    pub async fn new(payload: &MilestonePayload, metadata: &TransactionBuilderMetadata<'_>) -> crate::Result<Self> {
+        Ok(Self {
+            essence: MessageMilestonePayloadEssence::new(payload.essence(), metadata).await?,
+            signatures: payload.signatures().to_vec(),
+        })
+    }
+}
+
+/// Tail transaction hash.
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct MessageTailTransactionHash(TailTransactionHash);
+
+impl<'de> Deserialize<'de> for MessageTailTransactionHash {
+    fn deserialize<D>(deserializer: D) -> Result<MessageTailTransactionHash, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum TailTransactionHashOptions {
+            Raw(TailTransactionHash),
+            Trytes(String),
+        }
+        let tail = TailTransactionHashOptions::deserialize(deserializer)?;
+        let hash = match tail {
+            TailTransactionHashOptions::Raw(hash) => MessageTailTransactionHash(hash),
+            TailTransactionHashOptions::Trytes(trytes) => {
+                let buf = trytes
+                    .chars()
+                    .map(iota_migration::ternary::Tryte::try_from)
+                    .collect::<Result<iota_migration::ternary::TryteBuf, _>>()
+                    .map_err(|_| serde::de::Error::custom("invalid tail transaction hash"))?
+                    .as_trits()
+                    .encode::<iota_migration::ternary::T5B1Buf>();
+                MessageTailTransactionHash(
+                    TailTransactionHash::new(bytemuck::cast_slice(buf.as_slice().as_i8_slice()).try_into().unwrap())
+                        .map_err(|_| serde::de::Error::custom("invalid tail transaction hash"))?,
+                )
+            }
+        };
+        Ok(hash)
+    }
+}
+
+impl Serialize for MessageTailTransactionHash {
+    fn serialize<S: Serializer>(&self, s: S) -> std::result::Result<S::Ok, S::Error> {
+        s.serialize_str(
+            &iota_migration::ternary::Trits::<iota_migration::ternary::T5B1>::try_from_raw(
+                bytemuck::cast_slice(self.0.as_ref()),
+                243,
+            )
+            .map_err(|_| serde::ser::Error::custom("invalid tail transaction hash"))?
+            .to_buf::<iota_migration::ternary::T5B1Buf>()
+            .iter_trytes()
+            .map(char::from)
+            .collect::<String>(),
+        )
+    }
+}
+
+impl AsRef<[u8]> for MessageTailTransactionHash {
+    fn as_ref(&self) -> &[u8] {
+        self.0.as_ref()
+    }
+}
+
+/// Migrated funds entry.
+#[derive(Debug, Clone, Serialize, Deserialize, Getters, Eq, PartialEq)]
+#[getset(get = "pub")]
+pub struct MessageMigratedFundsEntry {
+    /// Tail transaction hash.
+    #[serde(rename = "tailTransactionHash")]
+    tail_transaction_hash: MessageTailTransactionHash,
+    /// Output.
+    output: TransactionSignatureLockedSingleOutput,
+}
+
+impl MessageMigratedFundsEntry {
+    #[doc(hidden)]
+    pub fn new(entry: &MigratedFundsEntry, metadata: &TransactionBuilderMetadata<'_>) -> Self {
+        Self {
+            tail_transaction_hash: MessageTailTransactionHash(entry.tail_transaction_hash().clone()),
+            output: TransactionSignatureLockedSingleOutput::new(entry.output(), metadata.bech32_hrp.clone(), false),
+        }
+    }
+}
+
+/// Receipt payload.
+#[derive(Debug, Clone, Serialize, Deserialize, Getters, CopyGetters, Eq, PartialEq)]
+pub struct MessageReceiptPayload {
+    /// Migrated at milestone index.
+    #[getset(get_copy = "pub")]
+    #[serde(rename = "migratedAt")]
+    migrated_at: MilestoneIndex,
+    /// Last flag.
+    #[getset(get_copy = "pub")]
+    last: bool,
+    /// Funds.
+    #[getset(get = "pub")]
+    funds: Vec<MessageMigratedFundsEntry>,
+    /// Receipt transaction.
+    #[getset(get = "pub")]
+    transaction: MessagePayload,
+}
+
+impl MessageReceiptPayload {
+    #[doc(hidden)]
+    pub fn new(payload: &ReceiptPayload, metadata: &TransactionBuilderMetadata<'_>) -> Self {
+        Self {
+            migrated_at: payload.migrated_at(),
+            last: payload.last(),
+            funds: payload
+                .funds()
+                .iter()
+                .map(|e| MessageMigratedFundsEntry::new(e, metadata))
+                .collect(),
+            transaction: if let Payload::TreasuryTransaction(tx) = payload.transaction() {
+                MessagePayload::TreasuryTransaction(tx.clone())
+            } else {
+                unreachable!()
+            },
+        }
+    }
+}
+
 /// The message's payload.
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(tag = "type", content = "data")]
@@ -677,11 +955,11 @@ pub enum MessagePayload {
     /// Transaction payload.
     Transaction(Box<MessageTransactionPayload>),
     /// Milestone payload.
-    Milestone(Box<MilestonePayload>),
+    Milestone(Box<MessageMilestonePayload>),
     /// Indexation payload.
     Indexation(Box<IndexationPayload>),
     /// Receipt payload.
-    Receipt(Box<ReceiptPayload>),
+    Receipt(Box<MessageReceiptPayload>),
     /// Treasury Transaction payload.
     TreasuryTransaction(Box<TreasuryTransactionPayload>),
 }
@@ -692,9 +970,11 @@ impl MessagePayload {
             Payload::Transaction(tx) => {
                 Self::Transaction(Box::new(MessageTransactionPayload::new(&tx, metadata).await?))
             }
-            Payload::Milestone(milestone) => Self::Milestone(milestone),
+            Payload::Milestone(milestone) => {
+                Self::Milestone(Box::new(MessageMilestonePayload::new(&milestone, metadata).await?))
+            }
             Payload::Indexation(indexation) => Self::Indexation(indexation),
-            Payload::Receipt(receipt) => Self::Receipt(receipt),
+            Payload::Receipt(receipt) => Self::Receipt(Box::new(MessageReceiptPayload::new(&receipt, metadata))),
             Payload::TreasuryTransaction(treasury_tx) => Self::TreasuryTransaction(treasury_tx),
             _ => unimplemented!(),
         };
@@ -947,13 +1227,46 @@ impl<'a> MessageBuilder<'a> {
             None => None,
         };
 
+        let mut timestamp = Utc::now();
+        let client_guard = crate::client::get_client(self.client_options).await?;
+        let client = client_guard.read().await;
+        if let Ok(metadata) = client.get_message().metadata(&self.id).await {
+            timestamp = match metadata.referenced_by_milestone_index {
+                Some(ms_index) => {
+                    let mut date_time = Utc::now();
+                    let initial = ms_index / MILESTONE_CACHE_RANGE;
+                    let range = initial..initial + MILESTONE_CACHE_RANGE;
+                    match milestone_cache().write().await.entry(range) {
+                        Entry::Vacant(entry) => {
+                            if let Ok(milestone) = client.get_milestone(ms_index).await {
+                                date_time = DateTime::from_utc(
+                                    NaiveDateTime::from_timestamp(milestone.timestamp as i64, 0),
+                                    Utc,
+                                );
+                                entry.insert(milestone);
+                            }
+                        }
+                        Entry::Occupied(entry) => {
+                            let milestone = *entry.get();
+                            let index_diff = ms_index as i64 - milestone.index as i64;
+                            let approx_timestamp =
+                                milestone.timestamp as i64 + (index_diff * MILESTONE_ISSUE_RATE_SECS);
+                            date_time = DateTime::from_utc(NaiveDateTime::from_timestamp(approx_timestamp, 0), Utc);
+                        }
+                    }
+                    date_time
+                }
+                _ => Utc::now(),
+            };
+        }
+
         let message = Message {
             id: self.id,
             version: 1,
             parents: (*self.iota_message.parents()).to_vec(),
             payload_length: packed_payload.len(),
             payload,
-            timestamp: Utc::now(),
+            timestamp,
             nonce: self.iota_message.nonce(),
             confirmed: self.confirmed,
             broadcasted: true,

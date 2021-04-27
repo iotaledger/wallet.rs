@@ -410,18 +410,11 @@ pub(crate) async fn get_new_address(account: &Account, metadata: GenerateAddress
 /// Gets an unused change address for the given account and address.
 pub(crate) async fn get_new_change_address(
     account: &Account,
-    address: &Address,
+    key_index: usize,
+    bech32_hrp: String,
     metadata: GenerateAddressMetadata,
 ) -> crate::Result<Address> {
-    let key_index = *address.key_index();
-    let iota_address = get_iota_address(
-        &account,
-        key_index,
-        true,
-        address.address().bech32_hrp().to_string(),
-        metadata,
-    )
-    .await?;
+    let iota_address = get_iota_address(&account, key_index, true, bech32_hrp, metadata).await?;
     let address = Address {
         address: iota_address,
         key_index,
@@ -445,10 +438,12 @@ mod tests {
     async fn is_unspent_false() {
         let manager = crate::test_utils::get_account_manager().await;
         let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+        let account_address = account_handle.generate_address().await.unwrap();
         let address = crate::test_utils::generate_random_address();
         let spent_tx = crate::test_utils::GenerateMessageBuilder::default()
             .address(address.clone())
-            .incoming(false)
+            .input_address(Some(account_address.address().clone()))
+            .account_addresses(account_handle.addresses().await)
             .build()
             .await;
 

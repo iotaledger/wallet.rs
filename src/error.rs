@@ -174,6 +174,29 @@ pub enum Error {
     /// Node not synced when creating account or updating client options.
     #[error("nodes {0} not synced")]
     NodesNotSynced(String),
+    /// iota 1.0 client error
+    // #[cfg(feature = "migration")]
+    #[error(transparent)]
+    LegacyClientError(Box<iota_migration::client::Error>),
+    /// Invalid legacy seed.
+    #[error("invalid seed")]
+    InvalidSeed,
+    /// Migration data not found.
+    #[error("migration data not found for the provided seed; call `get_migration_data` first.")]
+    MigrationDataNotFound,
+    /// Migration bundle not found.
+    #[error("migration bundle not found with the provided bundle hash")]
+    MigrationBundleNotFound,
+    /// Input not found with given index.
+    #[error("input not found with the provided index")]
+    InputNotFound,
+    /// Empty input list on migration bundle creation.
+    #[error("can't create migration bundle: input list is empty")]
+    EmptyInputList,
+    /// Cannot create bundle when the number of inputs is larger than 1 and there's a spent input.
+    /// Spent addresses must be the only input in a bundle.
+    #[error("can't create migration bundle: the bundle has more than one input and one of them are spent")]
+    SpentAddressOnBundle,
 }
 
 impl Drop for Error {
@@ -185,6 +208,12 @@ impl Drop for Error {
 impl From<iota::client::Error> for Error {
     fn from(error: iota::client::Error) -> Self {
         Self::ClientError(Box::new(error))
+    }
+}
+
+impl From<iota_migration::client::Error> for Error {
+    fn from(error: iota_migration::client::Error) -> Self {
+        Self::LegacyClientError(Box::new(error))
     }
 }
 
@@ -291,6 +320,14 @@ impl serde::Serialize for Error {
             Self::DustError(_) => serialize_variant(self, serializer, "DustError"),
             Self::InvalidOutputKind(_) => serialize_variant(self, serializer, "InvalidOutputKind"),
             Self::NodesNotSynced(_) => serialize_variant(self, serializer, "NodesNotSynced"),
+            // #[cfg(feature = "migration")]
+            Self::LegacyClientError(_) => serialize_variant(self, serializer, "LegacyClientError"),
+            Self::InvalidSeed => serialize_variant(self, serializer, "InvalidSeed"),
+            Self::MigrationDataNotFound => serialize_variant(self, serializer, "MigrationDataNotFound"),
+            Self::MigrationBundleNotFound => serialize_variant(self, serializer, "MigrationBundleNotFound"),
+            Self::InputNotFound => serialize_variant(self, serializer, "InputNotFound"),
+            Self::EmptyInputList => serialize_variant(self, serializer, "EmptyInputList"),
+            Self::SpentAddressOnBundle => serialize_variant(self, serializer, "SpentAddressOnBundle"),
         }
     }
 }

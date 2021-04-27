@@ -7,7 +7,7 @@ use std::{num::NonZeroU64, str::FromStr};
 
 use iota_wallet::{
     address::parse as parse_address,
-    message::{IndexationPayload, MessageId, RemainderValueStrategy, Transfer},
+    message::{IndexationPayload, MessageId, RemainderValueStrategy, Transfer, TransferOutput},
 };
 use neon::prelude::*;
 use serde::Deserialize;
@@ -88,17 +88,25 @@ declare_types! {
                 crate::block_on(async move {
                     let account_handle = crate::get_account(id).await;
                     account_handle.balance().await
-                })
+                }).expect("failed to get account balance")
             };
             Ok(neon_serde::to_value(&mut cx, &balance)?.upcast())
         }
 
         method getNodeInfo(mut cx) {
-            let cb = cx.argument::<JsFunction>(0)?;
+            let url: Option<String> = match cx.argument_opt(1) {
+                Some(_arg) => {
+                    Some(cx.argument::<JsString>(0)?.value())
+                },
+                None => Default::default(),
+            };
+
+            let cb = cx.argument::<JsFunction>(cx.len()-1)?;
             let this = cx.this();
             let account_id = cx.borrow(&this, |r| r.0.clone());
             let task = tasks::NodeInfoTask {
                 account_id,
+                url,
             };
             task.schedule(cb);
             Ok(cx.undefined().upcast())
@@ -341,6 +349,52 @@ declare_types! {
                 parse_address(address).expect("invalid address format"),
                 NonZeroU64::new(amount).expect("amount can't be zero")
             ).with_remainder_value_strategy(options.remainder_value_strategy);
+            if let Some(indexation) = options.indexation {
+                transfer_builder = transfer_builder.with_indexation(
+                    IndexationPayload::new(&indexation.index, &indexation.data.unwrap_or_default()).expect("index can't be empty")
+                );
+            }
+            if options.skip_sync {
+                transfer_builder = transfer_builder.with_skip_sync();
+            }
+
+            let this = cx.this();
+            let account_id = cx.borrow(&this, |r| r.0.clone());
+            let task = tasks::SendTask {
+                account_id,
+                transfer: transfer_builder.finish(),
+            };
+            task.schedule(cb);
+            Ok(cx.undefined().upcast())
+        }
+
+        method sendToMany(mut cx) {
+            let js_arr_handle: Handle<JsArray> = cx.argument(0)?;
+            let vec: Vec<Handle<JsValue>> = js_arr_handle.to_vec(&mut cx)?;
+            let mut outputs = Vec::new();
+
+            for js_value in vec {
+                let js_object = js_value.downcast::<JsObject>().unwrap();
+                let address = js_object.get(&mut cx, "address")?.downcast::<JsString>().or_throw(&mut cx)?;
+                let amount = js_object.get(&mut cx, "amount")?.downcast::<JsNumber>().or_throw(&mut cx)?;
+                outputs.push(TransferOutput::new(
+                    parse_address(address.value()).expect("invalid address format"),
+                    NonZeroU64::new(amount.value() as u64).expect("amount can't be zero"),
+                ));
+            }
+
+            let (options, cb) = match cx.argument_opt(2) {
+                Some(arg) => {
+                    let cb = arg.downcast::<JsFunction>().or_throw(&mut cx)?;
+                    let options = cx.argument::<JsValue>(1)?;
+                    let options = neon_serde::from_value(&mut cx, options)?;
+                    (options, cb)
+                }
+                None => (TransferOptions::default(), cx.argument::<JsFunction>(1)?),
+            };
+
+            let mut transfer_builder = Transfer::builder_with_outputs(outputs).expect("Outputs must be less then 125")
+                .with_remainder_value_strategy(options.remainder_value_strategy);
             if let Some(indexation) = options.indexation {
                 transfer_builder = transfer_builder.with_indexation(
                     IndexationPayload::new(&indexation.index, &indexation.data.unwrap_or_default()).expect("index can't be empty")

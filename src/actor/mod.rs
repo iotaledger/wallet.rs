@@ -3,7 +3,7 @@
 
 use crate::{
     account::AccountIdentifier,
-    account_manager::AccountManager,
+    account_manager::{AccountManager, MigrationDataFinder},
     message::{Message as WalletMessage, Transfer},
     Result,
 };
@@ -17,6 +17,7 @@ use std::{
     num::NonZeroU64,
     panic::{catch_unwind, AssertUnwindSafe},
     path::Path,
+    time::Duration,
 };
 
 mod message;
@@ -89,7 +90,14 @@ impl WalletMessageHandler {
             MessageType::SyncAccounts {
                 address_index,
                 gap_limit,
-            } => convert_async_panics(|| async { self.sync_accounts(address_index, gap_limit).await }).await,
+                account_discovery_threshold,
+            } => {
+                convert_async_panics(|| async {
+                    self.sync_accounts(address_index, gap_limit, account_discovery_threshold)
+                        .await
+                })
+                .await
+            }
             MessageType::Reattach { account_id, message_id } => {
                 convert_async_panics(|| async { self.reattach(account_id, message_id).await }).await
             }
@@ -212,6 +220,75 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            MessageType::GetMigrationData {
+                nodes,
+                permanode,
+                seed,
+                security_level,
+                initial_address_index,
+            } => {
+                convert_async_panics(|| async {
+                    let nodes = nodes.iter().map(String::as_ref).collect::<Vec<&str>>();
+                    let mut finder = MigrationDataFinder::new(&nodes, &seed)?;
+                    if let Some(level) = security_level {
+                        finder = finder.with_security_level(*level);
+                    }
+                    if let Some(permanode) = permanode {
+                        finder = finder.with_permanode(permanode);
+                    }
+                    if let Some(initial_address_index) = initial_address_index {
+                        finder = finder.with_initial_address_index(*initial_address_index);
+                    }
+                    let data = self.account_manager.get_migration_data(finder).await?;
+                    seed.zeroize();
+                    Ok(ResponseType::MigrationData(data.into()))
+                })
+                .await
+            }
+            MessageType::CreateMigrationBundle {
+                seed,
+                input_address_indexes,
+                mine,
+                timeout_secs,
+                offset,
+                log_file_name,
+            } => {
+                convert_async_panics(|| async {
+                    let bundle = self
+                        .account_manager
+                        .create_migration_bundle(
+                            &seed,
+                            &input_address_indexes,
+                            *mine,
+                            Duration::from_secs(*timeout_secs),
+                            *offset,
+                            &log_file_name,
+                        )
+                        .await?;
+                    seed.zeroize();
+                    Ok(ResponseType::CreatedMigrationBundle(bundle))
+                })
+                .await
+            }
+            MessageType::SendMigrationBundle {
+                nodes,
+                bundle_hash,
+                mwm,
+            } => {
+                convert_async_panics(|| async {
+                    let nodes = nodes.iter().map(String::as_ref).collect::<Vec<&str>>();
+                    let migrated_bundle = self
+                        .account_manager
+                        .send_migration_bundle(&nodes, bundle_hash, *mwm)
+                        .await?;
+                    Ok(ResponseType::SentMigrationBundle(migrated_bundle))
+                })
+                .await
+            }
+            MessageType::GetSeedChecksum(seed) => convert_panics(|| {
+                let checksum = AccountManager::get_seed_checksum(seed.clone())?;
+                Ok(ResponseType::SeedChecksum(checksum))
+            }),
         };
 
         let response = match response {
@@ -245,13 +322,21 @@ impl WalletMessageHandler {
         Ok(ResponseType::Reattached(message_id.to_string()))
     }
 
-    async fn sync_accounts(&self, address_index: &Option<usize>, gap_limit: &Option<usize>) -> Result<ResponseType> {
+    async fn sync_accounts(
+        &self,
+        address_index: &Option<usize>,
+        gap_limit: &Option<usize>,
+        account_discovery_threshold: &Option<usize>,
+    ) -> Result<ResponseType> {
         let mut synchronizer = self.account_manager.sync_accounts()?;
         if let Some(address_index) = address_index {
             synchronizer = synchronizer.address_index(*address_index);
         }
         if let Some(gap_limit) = gap_limit {
             synchronizer = synchronizer.gap_limit(*gap_limit);
+        }
+        if let Some(account_discovery_threshold) = account_discovery_threshold {
+            synchronizer = synchronizer.account_discovery_threshold(*account_discovery_threshold);
         }
         let synced = synchronizer.execute().await?;
         Ok(ResponseType::SyncedAccounts(synced))
@@ -332,6 +417,9 @@ impl WalletMessageHandler {
                 account_handle.set_client_options(*options.clone()).await?;
                 Ok(ResponseType::UpdatedClientOptions)
             }
+            AccountMethod::GetNodeInfo(options) => Ok(ResponseType::NodeInfo(
+                account_handle.get_node_info(options.as_deref()).await?,
+            )),
         }
     }
 

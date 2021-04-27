@@ -1,5 +1,49 @@
 # Changelog
 
+## \[0.3.4]
+
+- Fix `rocksdb` publish issue on v0.3.3
+  - [203ede63](https://github.com/iotaledger/wallet.rs/commit/203ede633c3f22c1773240beef3c2100b5953bbd) fix: publish ([#594](https://github.com/iotaledger/wallet.rs/pull/594)) on 2021-04-27
+
+## \[0.3.3]
+
+- Fixes `account.sync` generating a change address on each call.
+  - [8afe3deb](https://github.com/iotaledger/wallet.rs/commit/8afe3deb021fc2b31be6045ed3d4c1d35de149ec) fix(sync): initial address index should be the max on internal addresses ([#592](https://github.com/iotaledger/wallet.rs/pull/592)) on 2021-04-27
+- Adds `MigrationProgress` event type.
+  - [5b72899c](https://github.com/iotaledger/wallet.rs/commit/5b72899c942b99d67ddfa3bd2fb6a0261c646e0c) feat(bindings): implement migration progress events ([#591](https://github.com/iotaledger/wallet.rs/pull/591)) on 2021-04-27
+
+## \[0.3.2]
+
+- Drop `.stronghold` extension requirement on wallet backup.
+  - [0e849b30](https://github.com/iotaledger/wallet.rs/commit/0e849b3048ce4dc6639b9eddf35ac8d878f20fe2) chore(manager): simplify backup API, dropping extension requirement ([#588](https://github.com/iotaledger/wallet.rs/pull/588)) on 2021-04-26
+
+## \[0.3.1]
+
+- Prevent `storage adapter not set` errors.
+  - [af8c4195](https://github.com/iotaledger/wallet.rs/commit/af8c419525c97164578187cd748d622616ff9f6c) fix(manager): prevent `storage adapter not set` errors ([#584](https://github.com/iotaledger/wallet.rs/pull/584)) on 2021-04-22
+
+## \[0.3.0]
+
+- Updates Stronghold to latest refactor (breaking change).
+  - [2a1cb6e3](https://github.com/iotaledger/wallet.rs/commit/2a1cb6e3a7a578e5cc93f45b439ce680b54d31ac) chore(deps): update to latest stronghold.rs ([#577](https://github.com/iotaledger/wallet.rs/pull/577)) on 2021-04-19
+
+## \[0.2.4]
+
+- Fixes `account.balance()` return value.
+  - [a439109c](https://github.com/iotaledger/wallet.rs/commit/a439109c4008f33dddbf9ea7e41f39d90e39a8f4) fix(nodejs): `account.balance` return value ([#572](https://github.com/iotaledger/wallet.rs/pull/572)) on 2021-04-19
+
+## \[0.2.3]
+
+- Adds an option to enable creating multiple accounts without history.
+  - [5e9e2c92](https://github.com/iotaledger/wallet.rs/commit/5e9e2c92999f0261442f2b875ff8483d631088c9) feat(manager): add option to allow creating multiple empty accounts ([#567](https://github.com/iotaledger/wallet.rs/pull/567)) on 2021-04-19
+- Implement `sendToMany` API on the `Account` object.
+  - [73656767](https://github.com/iotaledger/wallet.rs/commit/73656767f25f7e5ba3097f83a5fc788024c87c9c) Added multi output transfer API ([#557](https://github.com/iotaledger/wallet.rs/pull/557)) on 2021-04-17
+
+## \[0.2.2]
+
+- Updates Testnet breaking changes and includes several fixes to syncing and change address management.
+  - [90ca9368](https://github.com/iotaledger/wallet.rs/commit/90ca9368c28a04ed9289bb10bc05d3800bc1a47e) chore: add change file ([#546](https://github.com/iotaledger/wallet.rs/pull/546)) on 2021-04-13
+
 ## \[0.2.1]
 
 - Fix Windows CI

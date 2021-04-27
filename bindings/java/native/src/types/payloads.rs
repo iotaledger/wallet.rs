@@ -63,10 +63,10 @@ impl MessagePayload {
 
     pub fn get_as_milestone(&self) -> Option<MilestonePayload> {
         if let MessagePayloadRust::Milestone(payload) = &self.payload {
-            match MilestonePayload::new(payload.essence().to_owned(), payload.signatures().to_owned()) {
-                Ok(i) => Some(i),
-                Err(_) => None,
-            }
+            Some(MilestonePayload::new(
+                payload.essence().to_owned(),
+                payload.signatures().to_owned(),
+            ))
         } else {
             None
         }

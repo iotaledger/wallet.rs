@@ -3,6 +3,7 @@
 
 use crate::{
     account::{Account, AccountBalance, AccountIdentifier, SyncedAccount},
+    account_manager::{MigratedBundle, MigrationBundle, MigrationData},
     address::Address,
     client::ClientOptions,
     message::{Message as WalletMessage, MessageType as WalletMessageType, TransferBuilder},
@@ -10,6 +11,8 @@ use crate::{
     Error,
 };
 use chrono::{DateTime, Local};
+use iota::client::NodeInfoWrapper;
+use iota_migration::{ternary::T3B1Buf, transaction::bundled::BundledTransactionField};
 use serde::{ser::Serializer, Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -82,6 +85,8 @@ pub enum AccountMethod {
     SetAlias(String),
     /// Updates the account client options.
     SetClientOptions(Box<ClientOptions>),
+    /// Gets the node information.
+    GetNodeInfo(Option<String>),
 }
 
 /// The returned account.
@@ -129,6 +134,9 @@ pub enum MessageType {
         /// The gap limit.
         #[serde(rename = "gapLimit")]
         gap_limit: Option<usize>,
+        /// Minimum number of accounts to check on discovery.
+        #[serde(rename = "accountDiscoveryThreshold")]
+        account_discovery_threshold: Option<usize>,
     },
     /// Reattach message.
     Reattach {
@@ -224,6 +232,51 @@ pub enum MessageType {
     },
     /// Updates the client options for all accounts.
     SetClientOptions(Box<ClientOptions>),
+    /// Get legacy network balance for the seed.
+    GetMigrationData {
+        /// The nodes to connect to.
+        nodes: Vec<String>,
+        /// The permanode to use.
+        permanode: Option<String>,
+        /// The legacy seed.
+        seed: String,
+        /// The WOTS address security level.
+        #[serde(rename = "securityLevel")]
+        security_level: Option<u8>,
+        /// The initial address index.
+        #[serde(rename = "initialAddressIndex")]
+        initial_address_index: Option<u64>,
+    },
+    /// Creates the bundle for migration, performs bundle mining if the address was spent and signs the bundle.
+    CreateMigrationBundle {
+        /// The legacy seed.
+        seed: String,
+        /// The bundle input address indexes.
+        #[serde(rename = "inputAddressIndexes")]
+        input_address_indexes: Vec<u64>,
+        /// Whether we should perform bundle mining or not.
+        mine: bool,
+        /// Timeout in seconds for the bundle mining process.
+        #[serde(rename = "timeoutSeconds")]
+        timeout_secs: u64,
+        /// Offset for the bundle mining process.
+        offset: i64,
+        /// The name of the log file (stored on the storage folder).
+        #[serde(rename = "logFileName")]
+        log_file_name: String,
+    },
+    /// Sends the migration bundle associated with the hash.
+    SendMigrationBundle {
+        /// Node URLs.
+        nodes: Vec<String>,
+        /// Bundle hash returned on `CreateMigrationBundle`.
+        #[serde(rename = "bundleHash")]
+        bundle_hash: String,
+        /// Minimum weight magnitude.
+        mwm: u8,
+    },
+    /// Get seed checksum.
+    GetSeedChecksum(String),
 }
 
 impl Serialize for MessageType {
@@ -243,6 +296,7 @@ impl Serialize for MessageType {
             MessageType::SyncAccounts {
                 address_index: _,
                 gap_limit: _,
+                account_discovery_threshold: _,
             } => serializer.serialize_unit_variant("MessageType", 5, "SyncAccounts"),
             MessageType::Reattach {
                 account_id: _,
@@ -302,6 +356,27 @@ impl Serialize for MessageType {
             MessageType::SetClientOptions(_) => {
                 serializer.serialize_unit_variant("MessageType", 23, "SetClientOptions")
             }
+            MessageType::GetMigrationData {
+                nodes: _,
+                permanode: _,
+                seed: _,
+                initial_address_index: _,
+                security_level: _,
+            } => serializer.serialize_unit_variant("MessageType", 24, "GetMigrationData"),
+            MessageType::CreateMigrationBundle {
+                seed: _,
+                input_address_indexes: _,
+                mine: _,
+                timeout_secs: _,
+                offset: _,
+                log_file_name: _,
+            } => serializer.serialize_unit_variant("MessageType", 25, "CreateMigrationBundle"),
+            MessageType::SendMigrationBundle {
+                nodes: _,
+                bundle_hash: _,
+                mwm: _,
+            } => serializer.serialize_unit_variant("MessageType", 26, "SendMigrationBundle"),
+            MessageType::GetSeedChecksum(_) => serializer.serialize_unit_variant("MessageType", 27, "GetSeedChecksum"),
         }
     }
 }
@@ -328,6 +403,61 @@ impl Response {
     /// The response's type.
     pub fn response(&self) -> &ResponseType {
         &self.response
+    }
+}
+
+/// Spent address data.
+#[derive(Debug, Serialize)]
+pub struct MigrationInputDto {
+    /// Input address.
+    address: String,
+    /// Security level.
+    #[serde(rename = "securityLevel")]
+    security_level: u8,
+    /// Balance of the address.
+    balance: u64,
+    /// Index of the address.
+    index: u64,
+    /// Spent status.
+    spent: bool,
+    #[serde(rename = "spentBundleHashes")]
+    spent_bundle_hashes: Option<Vec<String>>,
+}
+
+/// Legacy information fetched.
+#[derive(Debug, Serialize)]
+pub struct MigrationDataDto {
+    balance: u64,
+    #[serde(rename = "lastCheckedAddressIndex")]
+    last_checked_address_index: u64,
+    inputs: Vec<MigrationInputDto>,
+}
+
+impl From<MigrationData> for MigrationDataDto {
+    fn from(data: MigrationData) -> Self {
+        let mut inputs: Vec<MigrationInputDto> = Vec::new();
+        for input in data.inputs {
+            let address = input
+                .address
+                .to_inner()
+                .encode::<T3B1Buf>()
+                .iter_trytes()
+                .map(char::from)
+                .collect::<String>();
+            inputs.push(MigrationInputDto {
+                address,
+                security_level: input.security_lvl,
+                balance: input.balance,
+                index: input.index,
+                spent: input.spent,
+                spent_bundle_hashes: input.spent_bundlehashes,
+            });
+        }
+        Self {
+            balance: data.balance,
+            last_checked_address_index: data.last_checked_address_index,
+            inputs,
+        }
     }
 }
 
@@ -415,6 +545,16 @@ pub enum ResponseType {
     StrongholdPasswordChanged,
     /// SetClientOptions response.
     UpdatedAllClientOptions,
+    /// GetNodeInfo response.
+    NodeInfo(NodeInfoWrapper),
+    /// GetMigrationData response.
+    MigrationData(MigrationDataDto),
+    /// CreateMigrationBundle response (bundle hash).
+    CreatedMigrationBundle(MigrationBundle),
+    /// SendMigrationBundle response.
+    SentMigrationBundle(MigratedBundle),
+    /// GetSeedChecksum response.
+    SeedChecksum(String),
 }
 
 /// The message type.

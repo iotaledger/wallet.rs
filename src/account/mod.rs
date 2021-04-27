@@ -11,7 +11,7 @@ use crate::{
     storage::{MessageIndexation, MessageQueryFilter},
 };
 
-use iota::bee_rest_api::types::responses::InfoResponse as NodeInfoResponse;
+use iota::client::NodeInfoWrapper;
 
 use chrono::prelude::{DateTime, Local};
 use getset::{Getters, Setters};
@@ -197,8 +197,6 @@ impl AccountInitialiser {
 
     /// Initialises the account.
     pub async fn initialise(mut self) -> crate::Result<AccountHandle> {
-        let accounts = self.accounts.read().await;
-
         let signer_type = self.signer_type.ok_or(crate::Error::AccountInitialiseRequiredField(
             crate::error::AccountInitialiseRequiredField::SignerType,
         ))?;
@@ -207,7 +205,7 @@ impl AccountInitialiser {
             index
         } else {
             let mut account_index = 0;
-            for account in accounts.values() {
+            for account in self.accounts.read().await.values() {
                 if account.read().await.signer_type() == &signer_type {
                     account_index += 1;
                 }
@@ -220,7 +218,7 @@ impl AccountInitialiser {
 
         let mut latest_account_handle: Option<AccountHandle> = None;
         let mut latest_account_index = 0;
-        for account_handle in accounts.values() {
+        for account_handle in self.accounts.read().await.values() {
             let account = account_handle.read().await;
             if account.alias() == &alias {
                 return Err(crate::Error::AccountAliasAlreadyExists);
@@ -230,12 +228,14 @@ impl AccountInitialiser {
                 latest_account_handle.replace(account_handle.clone());
             }
         }
-        if let Some(ref latest_account_handle) = latest_account_handle {
-            let latest_account = latest_account_handle.read().await;
-            if latest_account.with_messages(|messages| messages.is_empty()).await
-                && latest_account.addresses().iter().all(|a| a.outputs.is_empty())
-            {
-                return Err(crate::Error::LatestAccountIsEmpty);
+        if !self.account_options.allow_create_multiple_empty_accounts {
+            if let Some(ref latest_account_handle) = latest_account_handle {
+                let latest_account = latest_account_handle.read().await;
+                if latest_account.with_messages(|messages| messages.is_empty()).await
+                    && latest_account.addresses().iter().all(|a| a.outputs.is_empty())
+                {
+                    return Err(crate::Error::LatestAccountIsEmpty);
+                }
             }
         }
 
@@ -258,6 +258,7 @@ impl AccountInitialiser {
         let bech32_hrp = match account.client_options.network().as_deref() {
             Some("testnet") => "atoi".to_string(),
             Some("mainnet") => "iota".to_string(),
+            Some("chrysalis-mainnet") => "iota".to_string(),
             _ => {
                 let client_options = account.client_options.clone();
                 let get_from_client_task = async {
@@ -354,7 +355,6 @@ impl AccountInitialiser {
                 self.account_options,
                 self.sync_accounts_lock.clone(),
             );
-            drop(accounts);
             self.accounts.write().await.insert(account_id, guard.clone());
             // monitor on a non-async function to prevent cycle computing the `monitor_address_balance` fn type
             monitor_address(guard.clone());
@@ -407,7 +407,7 @@ pub struct Account {
     skip_persistence: bool,
     #[getset(get = "pub(crate)")]
     #[serde(skip)]
-    cached_messages: Arc<Mutex<HashMap<MessageId, Message>>>,
+    pub(crate) cached_messages: Arc<Mutex<HashMap<MessageId, Message>>>,
 }
 
 impl PartialEq for Account {
@@ -692,8 +692,8 @@ impl AccountHandle {
     }
 
     /// Bridge to [Account#get_node_info](struct.Account.html#method.get_node_info).
-    pub async fn get_node_info(&self) -> crate::Result<NodeInfoResponse> {
-        self.inner.read().await.get_node_info().await
+    pub async fn get_node_info(&self, url: Option<&str>) -> crate::Result<NodeInfoWrapper> {
+        self.inner.read().await.get_node_info(url).await
     }
 }
 
@@ -762,6 +762,14 @@ impl Account {
             .filter(|a| !a.internal())
             .max_by_key(|a| a.key_index())
             .unwrap()
+    }
+
+    /// Returns the most recent change address of the account.
+    pub(crate) fn latest_change_address(&self) -> Option<&Address> {
+        self.addresses
+            .iter()
+            .filter(|a| *a.internal())
+            .max_by_key(|a| a.key_index())
     }
 
     fn latest_address_mut(&mut self) -> &mut Address {
@@ -995,15 +1003,25 @@ impl Account {
     }
 
     // Gets the node info from /api/v1/info endpoint
-    pub(crate) async fn get_node_info(&self) -> crate::Result<NodeInfoResponse> {
-        let client_guard = crate::client::get_client(self.client_options()).await?;
-        let client = client_guard.read().await;
+    pub(crate) async fn get_node_info(&self, url: Option<&str>) -> crate::Result<NodeInfoWrapper> {
+        let info = match url {
+            Some(url) => NodeInfoWrapper {
+                nodeinfo: iota::Client::get_node_info(url, None)
+                    .await
+                    .map_err(|e| crate::Error::ClientError(Box::new(e)))?,
+                url: url.to_string(),
+            },
+            None => {
+                let client_guard = crate::client::get_client(self.client_options()).await?;
+                let client = client_guard.read().await;
 
-        let info = client
-            .get_info()
-            .await
-            .map_err(|e| crate::Error::ClientError(Box::new(e)))?
-            .nodeinfo;
+                client
+                    .get_info()
+                    .await
+                    .map_err(|e| crate::Error::ClientError(Box::new(e)))?
+            }
+        };
+
         Ok(info)
     }
 
@@ -1228,6 +1246,9 @@ mod tests {
             .address(first_address.clone())
             .value(15)
             .input_transaction_id(first_address.outputs.values().next().unwrap().transaction_id)
+            .input_address(Some(second_address.address().clone()))
+            .account_addresses(account_handle.addresses().await)
+            .confirmed(None)
             .build()
             .await;
         let confirmed_message = crate::test_utils::GenerateMessageBuilder::default()
@@ -1267,7 +1288,7 @@ mod tests {
         let latest_address = account_handle.read().await.latest_address().clone();
         let received_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
-            .incoming(true)
+            .input_address(Some(crate::test_utils::generate_random_iota_address()))
             .build()
             .await;
         let failed_message = crate::test_utils::GenerateMessageBuilder::default()
@@ -1313,35 +1334,33 @@ mod tests {
 
         let received_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
-            .incoming(true)
+            .input_address(Some(external_address.address().clone()))
             .confirmed(Some(true))
             .broadcasted(true)
             .build()
             .await;
         let sent_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(external_address.clone())
-            .incoming(false)
+            .input_address(Some(latest_address.address().clone()))
+            .account_addresses(account_handle.addresses().await)
             .confirmed(Some(true))
             .broadcasted(true)
             .build()
             .await;
         let failed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
-            .incoming(false)
             .confirmed(Some(true))
             .broadcasted(false)
             .build()
             .await;
         let unconfirmed_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
-            .incoming(false)
             .confirmed(None)
             .broadcasted(true)
             .build()
             .await;
         let value_message = crate::test_utils::GenerateMessageBuilder::default()
             .address(latest_address.clone())
-            .incoming(false)
             .confirmed(Some(true))
             .broadcasted(true)
             .build()
@@ -1373,7 +1392,7 @@ mod tests {
             assert_eq!(
                 messages.len(),
                 match tx_type {
-                    MessageType::Sent => 4,
+                    MessageType::Received => 4,
                     MessageType::Confirmed => 4,
                     MessageType::Value => 5,
                     _ => 1,
@@ -1416,7 +1435,7 @@ mod tests {
 
                 let spent_tx = crate::test_utils::GenerateMessageBuilder::default()
                     .address(spent_address.clone())
-                    .incoming(false)
+                    .input_address(Some(unspent_address1.address().clone()))
                     .build()
                     .await;
 
@@ -1454,7 +1473,7 @@ mod tests {
             .create()
             .await;
 
-        let node_info = account_handle.get_node_info().await.unwrap();
+        let node_info = account_handle.get_node_info(None).await.unwrap();
         println!("{:#?}", node_info);
     }
 }

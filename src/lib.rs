@@ -44,6 +44,7 @@ pub use stronghold::{
 /// The wallet Result type.
 pub type Result<T> = std::result::Result<T, Error>;
 pub use chrono::prelude::{DateTime, Local, Utc};
+pub use iota_migration;
 use once_cell::sync::OnceCell;
 use tokio::runtime::Runtime;
 
@@ -100,14 +101,14 @@ pub fn get_ledger_status(is_simulator: bool) -> LedgerStatus {
 mod test_utils {
     use super::{
         account::AccountHandle,
-        account_manager::AccountManager,
+        account_manager::{AccountManager, AccountStore},
         address::{Address, AddressBuilder, AddressWrapper},
         client::ClientOptionsBuilder,
         message::{Message, MessagePayload, TransactionBuilderMetadata, TransactionEssence},
         signing::SignerType,
     };
     use iota::{
-        pow::providers::{Provider as PowProvider, ProviderBuilder as PowProviderBuilder},
+        pow::providers::{NonceProvider, NonceProviderBuilder},
         Address as IotaAddress, Ed25519Address, Ed25519Signature, Essence, MessageId, Payload,
         SignatureLockedSingleOutput, SignatureUnlock, TransactionId, TransactionPayloadBuilder, UnlockBlock,
         UnlockBlocks, UtxoInput,
@@ -117,7 +118,6 @@ mod test_utils {
     use std::{
         collections::HashMap,
         path::{Path, PathBuf},
-        sync::{atomic::AtomicBool, Arc},
     };
     use tokio::sync::Mutex;
 
@@ -322,7 +322,7 @@ mod test_utils {
     #[derive(Default)]
     pub struct NoopNonceProviderBuilder;
 
-    impl PowProviderBuilder for NoopNonceProviderBuilder {
+    impl NonceProviderBuilder for NoopNonceProviderBuilder {
         type Provider = NoopNonceProvider;
 
         fn new() -> Self {
@@ -337,16 +337,11 @@ mod test_utils {
     /// The miner used for PoW
     pub struct NoopNonceProvider;
 
-    impl PowProvider for NoopNonceProvider {
+    impl NonceProvider for NoopNonceProvider {
         type Builder = NoopNonceProviderBuilder;
         type Error = crate::Error;
 
-        fn nonce(
-            &self,
-            _bytes: &[u8],
-            _target_score: f64,
-            _done: Option<Arc<AtomicBool>>,
-        ) -> std::result::Result<u64, Self::Error> {
+        fn nonce(&self, _bytes: &[u8], _target_score: f64) -> std::result::Result<u64, Self::Error> {
             Ok(0)
         }
     }
@@ -438,8 +433,9 @@ mod test_utils {
         address: Address,
         confirmed: Option<bool>,
         broadcasted: bool,
-        incoming: bool,
         input_transaction_id: TransactionId,
+        input_address: Option<AddressWrapper>,
+        account_addresses: Vec<Address>,
     }
 
     impl Default for GenerateMessageBuilder {
@@ -449,8 +445,9 @@ mod test_utils {
                 address: generate_random_address(),
                 confirmed: Some(false),
                 broadcasted: false,
-                incoming: false,
                 input_transaction_id: TransactionId::new([0; 32]),
+                input_address: None,
+                account_addresses: Vec::new(),
             }
         }
     }
@@ -461,8 +458,9 @@ mod test_utils {
         address => Address,
         confirmed => Option<bool>,
         broadcasted => bool,
-        incoming => bool,
-        input_transaction_id => TransactionId
+        input_transaction_id => TransactionId,
+        input_address => Option<AddressWrapper>,
+        account_addresses => Vec<Address>
     );
 
     impl GenerateMessageBuilder {
@@ -475,8 +473,8 @@ mod test_utils {
                 id: &id,
                 bech32_hrp,
                 account_id: "",
-                accounts: Default::default(),
-                account_addresses: &[],
+                accounts: AccountStore::new(Default::default()),
+                account_addresses: &self.account_addresses,
                 client_options: &ClientOptionsBuilder::new().build().unwrap(),
             };
 
@@ -496,7 +494,7 @@ mod test_utils {
                         ))
                         .with_unlock_blocks(
                             UnlockBlocks::new(vec![UnlockBlock::Signature(SignatureUnlock::Ed25519(
-                                Ed25519Signature::new([0; 32], Box::new([0])),
+                                Ed25519Signature::new([0; 32], [0; 64]),
                             ))])
                             .unwrap(),
                         )
@@ -509,7 +507,21 @@ mod test_utils {
             .unwrap();
             if let MessagePayload::Transaction(ref mut tx) = payload {
                 let TransactionEssence::Regular(ref mut essence) = tx.essence_mut();
-                essence.incoming = self.incoming;
+                if let Some(address) = self.input_address {
+                    let input = essence.inputs_mut().iter_mut().next().unwrap();
+                    if let crate::message::TransactionInput::Utxo(ref mut utxo) = input {
+                        utxo.metadata.replace(crate::address::AddressOutput {
+                            transaction_id: self.input_transaction_id,
+                            message_id: iota::MessageId::from([0; 32]),
+                            index: 0,
+                            amount: 10000000,
+                            is_spent: false,
+                            address,
+                            kind: crate::address::OutputKind::SignatureLockedSingle,
+                        });
+                        essence.incoming = essence.is_incoming(&self.account_addresses);
+                    }
+                }
             }
 
             Message {

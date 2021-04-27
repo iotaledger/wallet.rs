@@ -9,6 +9,7 @@ use anyhow::anyhow;
 use iota_wallet::{
     event::{
         AddressConsolidationNeeded as WalletAddressConsolidationNeeded, BalanceEvent as WalletBalanceEvent, EventId,
+        MigrationProgress as WalletMigrationProgress,
         TransactionConfirmationChangeEvent as WalletTransactionConfirmationChangeEvent,
         TransactionEvent as WalletTransactionEvent, TransactionReattachmentEvent as WalletTransactionReattachmentEvent,
         TransferProgress as WalletTransferProgress,
@@ -50,37 +51,41 @@ pub trait ErrorListener {
 }
 
 pub trait NewTransactionListener {
-    fn on_new_transaction(&self, error: WalletTransactionEvent);
+    fn on_new_transaction(&self, event: WalletTransactionEvent);
 }
 
 pub trait ReattachTransactionListener {
-    fn on_reattachment(&self, error: WalletTransactionReattachmentEvent);
+    fn on_reattachment(&self, event: WalletTransactionReattachmentEvent);
 }
 
 pub trait BroadcastTransactionListener {
-    fn on_broadcast(&self, error: WalletTransactionEvent);
+    fn on_broadcast(&self, event: WalletTransactionEvent);
 }
 
 pub trait TransactionConfirmationChangeListener {
-    fn on_confirmation_state_change(&self, error: WalletTransactionConfirmationChangeEvent);
+    fn on_confirmation_state_change(&self, event: WalletTransactionConfirmationChangeEvent);
 }
 
 pub trait TransferProgressListener {
-    fn on_transfer_progress(&self, error: WalletTransferProgress);
+    fn on_transfer_progress(&self, event: WalletTransferProgress);
+}
+
+pub trait MigrationProgressListener {
+    fn on_migration_progress(&self, event: WalletMigrationProgress);
 }
 
 pub trait BalanceChangeListener {
-    fn on_balance_change(&self, error: WalletBalanceEvent);
+    fn on_balance_change(&self, event: WalletBalanceEvent);
 }
 
 // Ledger
 pub trait AddressConsolidationNeededListener {
-    fn on_address_consolidation_needed(&self, error: WalletAddressConsolidationNeeded);
+    fn on_address_consolidation_needed(&self, event: WalletAddressConsolidationNeeded);
 }
 
 // Stronghold
 pub trait StrongholdStatusListener {
-    fn on_stronghold_status_change(&self, error: StrongholdStatusEvent);
+    fn on_stronghold_status_change(&self, event: StrongholdStatusEvent);
 }
 
 impl EventManager {
@@ -149,6 +154,19 @@ impl EventManager {
 
     pub fn remove_transfer_progress_listener(event: EventId) {
         crate::block_on(async move { iota_wallet::event::remove_transfer_progress_listener(&event).await })
+    }
+
+    pub fn subscribe_migration_progress(cb: Box<dyn MigrationProgressListener + Send + 'static>) -> EventId {
+        crate::block_on(async move {
+            iota_wallet::event::on_migration_progress(move |event| {
+                cb.on_migration_progress(event.clone());
+            })
+            .await
+        })
+    }
+
+    pub fn remove_migration_progress_listener(event: EventId) {
+        crate::block_on(async move { iota_wallet::event::remove_migration_progress_listener(&event).await })
     }
 
     pub fn subscribe_balance_change(cb: Box<dyn BalanceChangeListener + Send + 'static>) -> EventId {
