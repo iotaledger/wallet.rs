@@ -17,8 +17,6 @@ async function run() {
     const { AccountManager, SignerType, addEventListener } = require('@iota/wallet')
 
     // We store all bundle hashes here and check later if the bundles got confirmed
-    let amountMigrationBundles = 0;
-    let amountConfirmedMigrationBundles = 0;
     let migrationBundleHashes = [];
     // Log migration events
     const callback = function (err, data) {
@@ -28,11 +26,10 @@ async function run() {
       if (data.event.type === 'TransactionConfirmed') {
         console.log("MigrationProgress:", data)
         migrationBundleHashes = migrationBundleHashes.filter(hash => hash !== data.event.data.bundleHash)
-        console.log("Still unconfirmed bundles: ", migrationBundleHashes);
-        amountConfirmedMigrationBundles += 1;
-        if (amountMigrationBundles == amountConfirmedMigrationBundles) {
+        if (migrationBundleHashes.length == 0) {
           process.exit()
         }
+        console.log("Still unconfirmed bundles: ", migrationBundleHashes);
       }
     }
     addEventListener("MigrationProgress", callback)
@@ -71,24 +68,28 @@ async function run() {
     console.log(migrationData)
 
     let input_batches = getMigrationBundles(migrationData.inputs)
-    // store the amount of bundles
-    amountMigrationBundles = input_batches.length;
+    // create bundles with the inputs
     for (inputs of input_batches) {
       try {
-
         const bundle = await manager.createMigrationBundle(seed, migrationData.inputs.map(input => input.index), {
           logFileName: 'iota-migration.log',
           // if the input is a spent address we do a bundle mining process which takes 10 minutes to reduce the amount 
           // of the parts of the private key which get revealed
           mine: inputs.inputs[0].spent
         })
-        await manager.sendMigrationBundle(nodes, bundle.bundleHash)
-        // add bundle hash to keep track of the confirmation
         migrationBundleHashes.push(bundle.bundleHash)
       } catch (e) {
         console.error(e);
       }
     }
+
+    // Send all bundles to the Tangle and reattach them until they are confirmed
+    for (bundleHash of migrationBundleHashes) {
+      try {
+        await manager.sendMigrationBundle(nodes, bundleHash)
+      } catch (e) { console.error(e) }
+    }
+
   } catch (e) {
     console.error(e);
   }
