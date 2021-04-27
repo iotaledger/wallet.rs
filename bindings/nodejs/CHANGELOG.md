@@ -1,5 +1,12 @@
 # Changelog
 
+## \[0.3.3]
+
+- Fixes `account.sync` generating a change address on each call.
+  - [8afe3deb](https://github.com/iotaledger/wallet.rs/commit/8afe3deb021fc2b31be6045ed3d4c1d35de149ec) fix(sync): initial address index should be the max on internal addresses ([#592](https://github.com/iotaledger/wallet.rs/pull/592)) on 2021-04-27
+- Adds `MigrationProgress` event type.
+  - [5b72899c](https://github.com/iotaledger/wallet.rs/commit/5b72899c942b99d67ddfa3bd2fb6a0261c646e0c) feat(bindings): implement migration progress events ([#591](https://github.com/iotaledger/wallet.rs/pull/591)) on 2021-04-27
+
 ## \[0.3.2]
 
 - Drop `.stronghold` extension requirement on wallet backup.
