@@ -539,8 +539,21 @@ async fn perform_sync(
             } else {
                 let (found_public_addresses, mut messages) =
                     sync_addresses(&account, false, address_index, gap_limit, options).await?;
-                let (found_change_addresses, synced_messages) =
-                    sync_addresses(&account, true, address_index, gap_limit, options).await?;
+                let (found_change_addresses, synced_messages) = sync_addresses(
+                    &account,
+                    true,
+                    account
+                        .addresses()
+                        .iter()
+                        .filter(|a| *a.internal())
+                        .map(|a| a.key_index())
+                        .max()
+                        .copied()
+                        .unwrap_or_default(),
+                    gap_limit,
+                    options,
+                )
+                .await?;
                 let mut found_addresses = found_public_addresses;
                 found_addresses.extend(found_change_addresses);
                 messages.extend(synced_messages);
