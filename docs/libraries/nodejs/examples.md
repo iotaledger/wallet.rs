@@ -99,3 +99,16 @@ Code:
 ```javascript
 {{ #include ../../../bindings/nodejs/examples/7-events.js }}
 ```
+
+
+## 8. Migration 
+
+Run
+```
+node 8-migration.js
+```
+
+Code:
+```javascript
+{{ #include ../../../bindings/nodejs/examples/8-migration.js }}
+```
