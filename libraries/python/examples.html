@@ -200,8 +200,9 @@ account_manager.store_mnemonic(&quot;Stronghold&quot;)
 <p>One of the key principle behind the <code>stronghold</code>-based storage is that no one can get a seed from the storage. You deal with all accounts purely via <code>Account_Manager</code> instance and all complexities are hidden under the hood and are dealt with in a secure way.</p>
 <p>In case one would like to store a seed also somewhere else, there is a method <code>AccountManager.generate_mnemonic()</code> that generates random seed and it can be leveraged before the actual account initialization.</p>
 <p>Please note, it is highly recommended to store <code>stronghold</code> password and <code>stronghold</code> database on separate devices.</p>
+<p>More detailed information about seed generation is available at <a href="https://chrysalis.docs.iota.org/guides/dev_guide.html#seed">Developer guide to Chrysalis</a>.</p>
 <h3 id="accounts"><a class="header" href="#accounts">Accounts</a></h3>
-<p>The library uses a model of individual accounts to separate individual users/clients from each other. It is possible to generate multiple addresses for each account deterministically. </p>
+<p>The library uses a model of individual accounts to separate individual users/clients from each other. It is possible to generate multiple addresses for each account deterministically based on seed mnemonic. </p>
 <p>Please note, it is important to declare on which IOTA network should be the given account created (argument <code>node</code>).</p>
 <pre><code class="language-python"># ... continue from prev example 1a
 
@@ -255,7 +256,6 @@ An account can be then referred to via <code>index</code>, <code>alias</code> or
 <li>internal addresses (<code>internal=true</code>) are so called <code>change</code> addresses and are used to send the excess funds to</li>
 <li>the approach is also known as a <em>BIP32 Hierarchical Deterministic wallet (HD Wallet)</em>.</li>
 </ul>
-<p><em>Note: You may remember IOTA 1.0 network in which addresses were not reusable. It is no longer true and addresses can be reused multiple times in IOTA 1.5 (Chrysalis) network.</em></p>
 <p>Addresses are generated via instance of <code>account</code> that is gotten from the <code>account_manager</code> instance:</p>
 <pre><code class="language-python"># Copyright 2020 IOTA Stiftung
 # SPDX-License-Identifier: Apache-2.0
@@ -310,7 +310,8 @@ print(f&quot;Last address: {last_address_obj['address']}&quot;)
   'internal': False,
   'outputs': []}]
 </code></pre>
-<p>Take a closer look at the output above and check the beginning of both addresses. As mentioned in <a href="../../welcome.html">overview chapter</a> there are two human-readable prefixes in IOTA 1.5 network: <code>iota</code> (mainnet) and <code>atoi</code> (testnet).</p>
+<p>Take a closer look at the output above and check the beginning of both addresses. As mentioned in <a href="https://chrysalis.docs.iota.org/guides/dev_guide.html#iota-15-address-anatomy">Developer guide to Chrysalis</a> there are two human-readable prefixes in IOTA 1.5 network: <code>iota</code> (mainnet) and <code>atoi</code> (testnet).</p>
+<p>More detailed information about generating addresses is available at <a href="https://chrysalis.docs.iota.org/guides/dev_guide.html#addresskey-space">Developer guide to Chrysalis</a>.</p>
 <h2 id="checking-the-balance"><a class="header" href="#checking-the-balance">Checking the balance</a></h2>
 <p>Before we continue further, go to <a href="https://faucet.testnet.chrysalis2.com/">IOTA testnet faucet service</a> and send to your testnet addresses some tokens:
 <img src="screenshot_faucet.png" alt="faucet screenshot" /></p>
@@ -377,6 +378,7 @@ Balance per individual addresses:
   'outputs': []}]
 </code></pre>
 <p>In the detailed view per individual addresses, there is also <code>outputs</code> section that indicates transaction(s) (also known as <code>wallet message(s)</code>) &quot;responsible&quot; for the current amount. The amount can be also double checked using <a href="https://explorer.iota.org/chrysalis/addr/atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg">Tangle Explorer</a>.</p>
+<p>IOTA is based on <code>Unspent Transaction Output</code> model which is explained at <a href="https://chrysalis.docs.iota.org/guides/dev_guide.html#unspent-transaction-output-utxo">Developer guide to Chrysalis</a>.</p>
 <h2 id="sending-tokens"><a class="header" href="#sending-tokens">Sending tokens</a></h2>
 <p>The process of sending tokens via <code>wallet.rs</code> can be described as follows:</p>
 <ul>
@@ -464,9 +466,10 @@ print(
  'remainder_value': 9000000}
 </code></pre>
 <p>It is a <code>wallet message</code> that fully describes the given transaction.</p>
-<p>Please, kindly get yourself familiar with a concept of <a href="https://chrysalis.docs.iota.org/introduction/what_is_chrysalis.html#switch-to-utxo-model">UTXO</a> to understand all aspects of messages.</p>
+<p>Please, kindly get yourself familiar with a concept of <a href="https://chrysalis.docs.iota.org/guides/dev_guide.html#unspent-transaction-output-utxo">UTXO</a> to understand all aspects of messages.</p>
 <p>The given message can be double checked via Tangle Explorer using <code>node_response['id']</code> field (<a href="https://explorer.iota.org/chrysalis/message/9d3c401d59b0a87f6fbaa58582bb71e1858d63336421ccbae834821d9be113d3">Tangle Explorer</a>).</p>
 <p>Needless to say, if <code>remainder_value_strategy</code> == <code>ChangeAddress</code> is used, the given message transfer tokens to target address as well as new <code>internal</code> address within the given account (<code>internal=True</code>). </p>
+<p>Messages and payloads are described at <a href="https://chrysalis.docs.iota.org/guides/dev_guide.html#messages-payloads-and-transactions">Developer guide to Chrysalis</a>.</p>
 <h3 id="reattachments"><a class="header" href="#reattachments">Reattachments</a></h3>
 <p>If message reattachment is needed then <code>account_id</code> and <code>message_id</code> is passed to <code>iota_wallet.promote(account_id, message_id)</code> or <code>iota_wallet.reattach(account_id, message_id)</code>.</p>
 <h3 id="list-of-messages-transactions"><a class="header" href="#list-of-messages-transactions">List of messages (transactions)</a></h3>
@@ -508,6 +511,7 @@ for ac in account.list_messages():
 <p>&quot;... microtransaction below 1Mi of IOTA tokens [can be sent] to another address if there is already at least 1Mi on that address&quot;
 That's why we did send 1Mi in the given example to comply with the protection.&quot;</p>
 </blockquote>
+<p>Dust protection also means you can't leave (return back) less than 1Mi on a spent address (leave a dust behind).</p>
 <h2 id="backup-database"><a class="header" href="#backup-database">Backup database</a></h2>
 <p>Underlying database (provided by <code>Stronghold</code> by default) is encrypted at rest and there is no way how to get a seed from it due to security practices that are incorporated in the Stronghold's DNA. It means you are dealing with the database as an atomic unit that includes all wallet information.</p>
 <p>So backing up the database is very important task from this respect.</p>
