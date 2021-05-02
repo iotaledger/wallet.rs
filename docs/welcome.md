@@ -8,49 +8,9 @@ This is the documentation for the official IOTA Wallet Library Software. It can 
 With the `wallet.rs` library, developers do not need to use a self-generated seed anymore. By default, the seed is created and stored in Stronghold encrypted at rest. It is not possible to extract the seed from Stronghold for security purposes. Stronghold uses encrypted snapshots that can easily be backed up and securely shared between devices. These snapshots are further secured with a password.
 
 ## IOTA 1.5 (Chrysalis) in a nutshell
-* IOTA network uses a DAG (Directed Acyclic Graph) to store its transactions. Each transaction can reference up to 8 parent transactions
-* There is a breaking change moving from IOTA 1.0 to IOTA 1.5 (Chrysalis). IOTA address was originally based on WOTS signature scheme (81 trytes) and it has been replaced by a Ed25519 signature scheme
-* In contrast to IOTA 1.0, IOTA 1.5 addresses are perfectly reusable: so even if one spent funds from the given address it can be used again
-* There are new client libraries developed in rust, specifically `iota.rs`, `wallet.rs` and `stronghold.rs` that serve as `one-source-code-of-truth` to IOTA users and providing binding to other programming languages 
+All main concepts behind the IOTA Chrysalis are explained in detail at [Developer guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html).
 
-### IOTA 1.5 address anatomy
-IOTA address is based on Ed25519 signature scheme and it is usually represented by Bech32 (checksummed base32) format string of 64 characters:
-
-<table>
-    <thead>
-        <tr>
-            <th colspan=4><center>iota11qykf7rrdjzhgynfkw6z7360avhaaywf5a4vtyvvk6a06gcv5y7sksu7n5cs</center></th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td colspan=4><center>three distinguished parts</center></td>
-        </tr>
-        <tr>
-            <td><center><strong>human-readable id</strong></center></td>
-            <td><center><strong>separator</strong></center></td>
-            <td><center><strong>data</strong></center></td>
-            <td><center><strong>checksum</strong></center></td>
-        </tr>
-        <tr>
-            <td><center>iota | atoi</center></td>
-            <td><center>1</center></td>
-            <td><center>48 bytes [0..9a..z]</center></td>
-            <td><center>6 characters [0..9a..z]</center></td>
-        </tr>
-        <tr>
-            <td><center>iota</center></td>
-            <td><center>1</center></td>
-            <td><center>1qykf7rrdjzhgynfkw6z7360avhaaywf5a4vtyvvk6a06gcv5y7sks</center></td>
-            <td><center>u7n5cs</center></td>
-        </tr>
-        <tr>
-            <td colspan=4>iota = mainnet; atoi = testnet</td>
-        </tr>
-    </tbody>
-</table>
-
-More details: [RFC: Bech32 Address Format](https://github.com/iotaledger/protocol-rfcs/pull/20)
+Please, see a summary of changes in comparison to IOTA 1.0 at [Chrysalis documentation](https://chrysalis.docs.iota.org/guides/index.html).
 
 ## Warning
 This library is in active development. The library targets the Chrysalis testnet and does not work with current IOTA mainnet.
@@ -64,7 +24,7 @@ If you want to get involved in discussions about this library, or you're looking
 ## What you will find here
 This documentation has five paths:
 1. The Overview, an detailed overview of the wallet library. 
-2. Libraries, all avaiable programming languages and their resources.
-3. The Specification, detailed explaination requirements and functionality.
+2. Libraries, all available programming languages and their resources.
+3. The Specification, detailed explanation requirements and functionality.
 4. Contribute, how you can work on the wallet software.
 5. Get in touch, join the community and become part of the X-Team!
