@@ -12,9 +12,6 @@ All main concepts behind the IOTA Chrysalis are explained in detail at [Develope
 
 Please, see a summary of changes in comparison to IOTA 1.0 at [Chrysalis documentation](https://chrysalis.docs.iota.org/guides/index.html).
 
-## Warning
-This library is in active development. The library targets the Chrysalis testnet and does not work with current IOTA mainnet.
-
 ## Testnet
 To join the Chrysalis public testnet checkout [this link](https://blog.iota.org/chrysalis-phase-2-testnet-out-now/). More information about Chrysalis components is available at [documentation portal](https://chrysalis.docs.iota.org/).
 
