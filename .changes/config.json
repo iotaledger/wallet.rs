@@ -13,7 +13,7 @@
       "getPublishedVersion": "npm view ${ pkgFile.pkg.name } version",
       "prepublish": [
         {
-          "command": "dasel put object -f native/Cargo.toml '.dependencies.iota-wallet' -t string -t string git='https://github.com/iotaledger/wallet.rs' rev=$GITHUB_SHA"
+          "command": "false || dasel put object -f native/Cargo.toml '.dependencies.iota-wallet' -t string -t string git='https://github.com/iotaledger/wallet.rs' rev=$GITHUB_SHA"
         },
         {
           "command": "dasel put string -f native/Cargo.toml '.dependencies.iota-wallet.features.[]' stronghold"
