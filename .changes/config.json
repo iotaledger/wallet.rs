@@ -11,6 +11,17 @@
       "path": "./bindings/nodejs",
       "manager": "javascript",
       "getPublishedVersion": "npm view ${ pkgFile.pkg.name } version",
+      "prepublish": [
+        {
+          "command": "cd native && dasel put object -f Cargo.toml '.dependencies.iota-wallet' -t string -t string git='https://github.com/iotaledger/wallet.rs' rev=$GITHUB_SHA && cd .."
+        },
+        {
+          "command": "cd native && dasel put string -f Cargo.toml '.dependencies.iota-wallet.features.[]' stronghold && cd .."
+        },
+        {
+          "command": "cat native/Cargo.toml"
+        }
+      ],
       "publish": [
         {
           "command": "yarn publish --access public --loglevel silly"

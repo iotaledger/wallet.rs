@@ -27,13 +27,8 @@ jobs:
           git config --global user.name "${{ github.event.pusher.name }}"
           git config --global user.email "${{ github.event.pusher.email }}"
       
-      - name: Set wallet.rs repository in JS bindings
-        working-directory: bindings/nodejs/native
-        run: |
-          brew install dasel
-          dasel put object -f Cargo.toml '.dependencies.iota-wallet' -t string -t string git="https://github.com/iotaledger/wallet.rs" rev=$GITHUB_SHA
-          dasel put string -f Cargo.toml '.dependencies.iota-wallet.features.[]' stronghold
-          cat Cargo.toml
+      - name: Install Dasel
+        run: brew install dasel
 
       - name: covector version or publish (publish when no change files present)
         uses: jbolda/covector/packages/action@covector-v0
