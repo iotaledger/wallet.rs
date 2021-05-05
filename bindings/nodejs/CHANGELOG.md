@@ -1,5 +1,10 @@
 # Changelog
 
+## \[0.3.5]
+
+- Set git repo and rev to allow JS bindings to be built from source
+  - [ab7556e8](https://github.com/iotaledger/wallet.rs/commit/ab7556e88322e89fb37876186a5bca1329c752fc) fix(bindings/nodejs): Set rev to allow building from source ([#601](https://github.com/iotaledger/wallet.rs/pull/601)) on 2021-05-05
+
 ## \[0.3.4]
 
 - Fix `rocksdb` publish issue on v0.3.3
