@@ -1,5 +1,10 @@
 # Changelog
 
+## \[0.3.6]
+
+- Fix rev in `native/Cargo.toml`
+  - [c2caecaa](https://github.com/iotaledger/wallet.rs/commit/c2caecaaa69ad5fd9a98c346f3c3a599573679cc) fix(ci): Fix covector config on 2021-05-05
+
 ## \[0.3.5]
 
 - Set git repo and rev to allow JS bindings to be built from source
