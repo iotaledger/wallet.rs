@@ -7,14 +7,14 @@ use crate::{
     signing::GenerateAddressMetadata,
 };
 use getset::{Getters, Setters};
-use iota::{
+pub use iota_client::bee_message::prelude::{Address as IotaAddress, Ed25519Address, Input, UtxoInput};
+use iota_client::{
+    bee_message::prelude::{MessageId, OutputId, TransactionId},
     bee_rest_api::types::{
         dtos::{AddressDto, OutputDto},
         responses::OutputResponse,
     },
-    MessageId, OutputId, TransactionId,
 };
-pub use iota::{Address as IotaAddress, Ed25519Address, Input, UtxoInput};
 use serde::{ser::Serializer, Deserialize, Serialize};
 use std::{
     cmp::Ordering,
@@ -363,7 +363,7 @@ pub fn parse<A: AsRef<str>>(address: A) -> crate::Result<AddressWrapper> {
     let address = address.as_ref();
     let mut tokens = address.split('1');
     let hrp = tokens.next().ok_or(crate::Error::InvalidAddress)?;
-    let address = iota::Address::try_from_bech32(address)?;
+    let address = iota_client::bee_message::address::Address::try_from_bech32(address)?;
     Ok(AddressWrapper::new(address, hrp.to_string()))
 }
 

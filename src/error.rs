@@ -51,7 +51,7 @@ pub enum Error {
     StrongholdError(crate::stronghold::Error),
     /// iota.rs error.
     #[error("`{0}`")]
-    ClientError(Box<iota::client::Error>),
+    ClientError(Box<iota_client::Error>),
     /// url parse error (client options builder).
     #[error("`{0}`")]
     UrlError(#[from] url::ParseError),
@@ -106,7 +106,7 @@ pub enum Error {
     AccountInitialiseRequiredField(AccountInitialiseRequiredField),
     /// Error from bee_message crate.
     #[error("{0}")]
-    BeeMessage(iota::message::Error),
+    BeeMessage(iota_client::bee_message::Error),
     /// Path provided to `import_accounts` isn't a valid file
     #[error("provided backup path isn't a valid file")]
     InvalidBackupFile,
@@ -205,8 +205,8 @@ impl Drop for Error {
     }
 }
 
-impl From<iota::client::Error> for Error {
-    fn from(error: iota::client::Error) -> Self {
+impl From<iota_client::Error> for Error {
+    fn from(error: iota_client::Error) -> Self {
         Self::ClientError(Box::new(error))
     }
 }
@@ -217,8 +217,8 @@ impl From<iota_migration::client::Error> for Error {
     }
 }
 
-impl From<iota::message::Error> for Error {
-    fn from(error: iota::message::Error) -> Self {
+impl From<iota_client::bee_message::Error> for Error {
+    fn from(error: iota_client::bee_message::Error) -> Self {
         Self::BeeMessage(error)
     }
 }

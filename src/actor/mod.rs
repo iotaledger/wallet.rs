@@ -8,7 +8,7 @@ use crate::{
     Result,
 };
 use futures::{Future, FutureExt};
-use iota::message::prelude::MessageId;
+use iota_client::bee_message::MessageId;
 use zeroize::Zeroize;
 
 use std::{

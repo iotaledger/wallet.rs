@@ -1509,7 +1509,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=a9862e0d1f860b27052ac9834a2441fac6730e74#a9862e0d1f860b27052ac9834a2441fac6730e74"
+source = "git+https://github.com/iotaledger/iota.rs?rev=ee7245dfe056b6bc9d59739865d25ebd431f6e9b#ee7245dfe056b6bc9d59739865d25ebd431f6e9b"
 dependencies = [
  "async-trait",
  "bee-common",
@@ -1530,6 +1530,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "url",
+ "zeroize",
 ]
 
 [[package]]
@@ -1574,14 +1575,6 @@ dependencies = [
  "iota-bundle-miner",
  "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=07f4e420edfa1f48f90fc0e75cb7758f4a3c6e3f)",
  "iota-crypto 0.5.0",
-]
-
-[[package]]
-name = "iota-core"
-version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=a9862e0d1f860b27052ac9834a2441fac6730e74#a9862e0d1f860b27052ac9834a2441fac6730e74"
-dependencies = [
- "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=a9862e0d1f860b27052ac9834a2441fac6730e74)",
 ]
 
 [[package]]
@@ -1681,8 +1674,8 @@ dependencies = [
  "futures",
  "getset",
  "hex",
- "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=07f4e420edfa1f48f90fc0e75cb7758f4a3c6e3f)",
- "iota-core 0.2.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=a9862e0d1f860b27052ac9834a2441fac6730e74)",
+ "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=ee7245dfe056b6bc9d59739865d25ebd431f6e9b)",
+ "iota-core",
  "iota-crypto 0.5.0",
  "iota-ledger",
  "iota_stronghold",

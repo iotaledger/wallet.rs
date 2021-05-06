@@ -9,7 +9,7 @@ use crate::{
     message::{Message, MessagePayload, TransactionEssence, TransactionInput, TransactionOutput},
 };
 
-use iota::{
+use iota_client::{
     bee_rest_api::types::{dtos::OutputDto, responses::OutputResponse},
     Topic, TopicEvent,
 };
