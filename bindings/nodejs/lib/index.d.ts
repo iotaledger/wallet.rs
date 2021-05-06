@@ -289,7 +289,7 @@ export declare class AccountManager {
   removeAccount(accountId: string | number): void
   syncAccounts(options?: SyncOptions): Promise<SyncedAccount[]>
   internalTransfer(fromAccount: Account, toAccount: Account, amount: number): Promise<Message>
-  backup(destination: string): string
+  backup(destination: string, password: string): string
   importAccounts(source: string, password: string): void
   isLatestAddressUnused(): Promise<boolean>
   setClientOptions(options: ClientOptions): void
