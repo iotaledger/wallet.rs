@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@iota/wallet@0.0.2":
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/@iota/wallet/-/wallet-0.0.2.tgz#3c18309e7b7ffe09d2a619866df57ac0aa0898d0"
-  integrity sha512-g0zeNDYe2ykM+p8yfaLhl648aqUmE+BEHO2+rL/dQFx7cNWnp5RZikbaILR9gSeaeTY13cr78nwsowac4F3EyA==
+"@iota/wallet@^0.3.2":
+  version "0.3.6"
+  resolved "https://registry.yarnpkg.com/@iota/wallet/-/wallet-0.3.6.tgz#ef419d68942b93d0d432646872feadf1959196d4"
+  integrity sha512-TMEgQLGndHCeOAlhua/Z0dPZqqUogaKcllN/nJqfii2FJtJno6K1mHWkB7e1AONcxZMEeYYOhWpIvhq/9OBB5Q==
   dependencies:
     neon-cli "^0.4.0"
     prebuild-install "^5.3.3"
@@ -448,9 +448,9 @@ lodash.camelcase@^4.3.0:
   integrity sha1-soqmKIorn8ZRA1x3EfZathkDMaY=
 
 lodash@^4.17.19:
-  version "4.17.20"
-  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.20.tgz#b44a9b6297bcb698f1c51a3545a2b3b368d59c52"
-  integrity sha512-PlhdFcillOINfeV7Ni6oF1TAEayyZBoZ8bcshTHqOYJYlrqzRK5hagpagky5o4HfCzzd1TRkXPMFq6cKk9rGmA==
+  version "4.17.21"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
+  integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
 
 lru-cache@^6.0.0:
   version "6.0.0"
