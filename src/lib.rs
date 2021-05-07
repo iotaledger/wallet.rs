@@ -108,10 +108,12 @@ mod test_utils {
         signing::SignerType,
     };
     use iota_client::{
+        bee_message::prelude::{
+            Address as IotaAddress, Ed25519Address, Ed25519Signature, Essence, MessageId, Payload,
+            SignatureLockedSingleOutput, SignatureUnlock, TransactionId, TransactionPayloadBuilder, UnlockBlock,
+            UnlockBlocks, UtxoInput,
+        },
         pow::providers::{NonceProvider, NonceProviderBuilder},
-        Address as IotaAddress, Ed25519Address, Ed25519Signature, Essence, MessageId, Payload,
-        SignatureLockedSingleOutput, SignatureUnlock, TransactionId, TransactionPayloadBuilder, UnlockBlock,
-        UnlockBlocks, UtxoInput,
     };
     use once_cell::sync::OnceCell;
     use rand::{distributions::Alphanumeric, thread_rng, Rng};
@@ -121,7 +123,7 @@ mod test_utils {
     };
     use tokio::sync::Mutex;
 
-    type GeneratedAddressMap = HashMap<(String, usize, bool), iota_client::Ed25519Address>;
+    type GeneratedAddressMap = HashMap<(String, usize, bool), iota_client::bee_message::address::Ed25519Address>;
     static TEST_SIGNER_GENERATED_ADDRESSES: OnceCell<Mutex<GeneratedAddressMap>> = OnceCell::new();
 
     #[derive(Default)]
@@ -139,29 +141,29 @@ mod test_utils {
             address_index: usize,
             internal: bool,
             _metadata: crate::signing::GenerateAddressMetadata,
-        ) -> crate::Result<iota_client::bee_message::Address> {
+        ) -> crate::Result<iota_client::bee_message::address::Address> {
             // store and read the generated addresses from the static map so the generation is deterministic
             let generated_addresses = TEST_SIGNER_GENERATED_ADDRESSES.get_or_init(Default::default);
             let mut generated_addresses = generated_addresses.lock().await;
             let key = (account.id().clone(), address_index, internal);
             if let Some(address) = generated_addresses.get(&key) {
-                Ok(iota_client::bee_message::Address::Ed25519(*address))
+                Ok(iota_client::bee_message::address::Address::Ed25519(*address))
             } else {
-                let mut address = [0; iota_client::ED25519_ADDRESS_LENGTH];
+                let mut address = [0; iota_client::bee_message::address::ED25519_ADDRESS_LENGTH];
                 crypto::utils::rand::fill(&mut address).unwrap();
-                let address = iota_client::Ed25519Address::new(address);
+                let address = iota_client::bee_message::address::Ed25519Address::new(address);
                 generated_addresses.insert(key, address);
-                Ok(iota_client::bee_message::Address::Ed25519(address))
+                Ok(iota_client::bee_message::address::Address::Ed25519(address))
             }
         }
 
         async fn sign_message<'a>(
             &mut self,
             _account: &crate::account::Account,
-            _essence: &iota_client::bee_message::Essence,
+            _essence: &iota_client::bee_message::prelude::Essence,
             _inputs: &mut Vec<crate::signing::TransactionInput>,
             _metadata: crate::signing::SignMessageMetadata<'a>,
-        ) -> crate::Result<Vec<iota_client::bee_message::UnlockBlock>> {
+        ) -> crate::Result<Vec<iota_client::bee_message::prelude::UnlockBlock>> {
             Ok(Vec::new())
         }
     }
@@ -482,7 +484,7 @@ mod test_utils {
                 Payload::Transaction(Box::new(
                     TransactionPayloadBuilder::new()
                         .with_essence(Essence::Regular(
-                            iota_client::RegularEssence::builder()
+                            iota_client::bee_message::prelude::RegularEssence::builder()
                                 .add_output(
                                     SignatureLockedSingleOutput::new(*self.address.address().as_ref(), self.value)
                                         .unwrap()
@@ -512,7 +514,7 @@ mod test_utils {
                     if let crate::message::TransactionInput::Utxo(ref mut utxo) = input {
                         utxo.metadata.replace(crate::address::AddressOutput {
                             transaction_id: self.input_transaction_id,
-                            message_id: iota_client::MessageId::from([0; 32]),
+                            message_id: iota_client::bee_message::MessageId::from([0; 32]),
                             index: 0,
                             amount: 10000000,
                             is_spent: false,

@@ -1745,7 +1745,9 @@ mod tests {
         event::*,
         message::Message,
     };
-    use iota_client::{Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Parents, Payload, TransactionId};
+    use iota_client::bee_message::prelude::{
+        Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Parents, Payload, TransactionId,
+    };
     use std::{collections::HashMap, path::PathBuf};
 
     #[tokio::test]

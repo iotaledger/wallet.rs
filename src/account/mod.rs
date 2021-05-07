@@ -11,7 +11,7 @@ use crate::{
     storage::{MessageIndexation, MessageQueryFilter},
 };
 
-use iota_client::client::NodeInfoWrapper;
+use iota_client::NodeInfoWrapper;
 
 use chrono::prelude::{DateTime, Local};
 use getset::{Getters, Setters};
@@ -1066,7 +1066,7 @@ mod tests {
         client::ClientOptionsBuilder,
         message::{Message, MessagePayload, MessageType, TransactionEssence},
     };
-    use iota_client::{MessageId, TransactionId};
+    use iota_client::bee_message::prelude::{MessageId, TransactionId};
     use std::collections::HashMap;
 
     // asserts that the `set_alias` function updates the account alias in storage

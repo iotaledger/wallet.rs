@@ -1822,7 +1822,7 @@ mod tests {
         address::{AddressOutput, OutputKind},
         client::ClientOptionsBuilder,
     };
-    use iota_client::{MessageId, TransactionId};
+    use iota_client::bee_message::prelude::{MessageId, TransactionId};
     use quickcheck_macros::quickcheck;
     use std::collections::HashMap;
 
@@ -1856,8 +1856,8 @@ mod tests {
         // first we create an address with balance - the source address
         let mut address1 = crate::test_utils::generate_random_address();
         let output = crate::address::AddressOutput {
-            transaction_id: iota_client::TransactionId::from([0; 32]),
-            message_id: iota_client::MessageId::from([0; 32]),
+            transaction_id: iota_client::bee_message::prelude::TransactionId::from([0; 32]),
+            message_id: iota_client::bee_message::MessageId::from([0; 32]),
             index: 0,
             amount: 10000000,
             is_spent: false,
@@ -1873,8 +1873,8 @@ mod tests {
         address3.set_key_index(0);
         address3.set_internal(true);
         let output = crate::address::AddressOutput {
-            transaction_id: iota_client::TransactionId::from([0; 32]),
-            message_id: iota_client::MessageId::from([0; 32]),
+            transaction_id: iota_client::bee_message::prelude::TransactionId::from([0; 32]),
+            message_id: iota_client::bee_message::MessageId::from([0; 32]),
             index: 0,
             amount: 10000000,
             is_spent: false,
