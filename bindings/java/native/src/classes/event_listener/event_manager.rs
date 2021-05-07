@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{path::PathBuf, time::Duration};
+use getset::{CopyGetters, Getters};
 
 use crate::Result;
 use anyhow::anyhow;
@@ -38,26 +39,18 @@ pub fn migration_progress_type_enum_to_type(migration_type: &WalletMigrationProg
     }
 }
 
+#[derive(Getters, CopyGetters)]
 pub struct FetchingMigrationData {
+    #[getset(get_copy = "pub")]
     initial_address_index: u64,
+    #[getset(get_copy = "pub")]
     final_address_index: u64,
 }
-impl FetchingMigrationData {
-    pub fn initial_address_index(&self) -> u64 {
-        self.initial_address_index.clone()
-    }
-    pub fn final_address_index(&self) -> u64 {
-        self.final_address_index.clone()
-    }
-}
 
+#[derive(Getters, CopyGetters)]
 pub struct MiningBundle {
+    #[getset(get = "pub")]
     address: String,
-}
-impl MiningBundle {
-    pub fn address(&self) -> String {
-        self.address.clone()
-    }
 }
 
 pub struct SigningBundle {
@@ -69,23 +62,18 @@ impl SigningBundle {
     }
 }
 
+#[derive(Getters, CopyGetters)]
 pub struct BroadcastingBundle {
+    #[getset(get = "pub")]
     bundle_hash: String,
-}
-impl BroadcastingBundle {
-    pub fn bundle_hash(&self) -> String {
-        self.bundle_hash.clone()
-    }
 }
 
+#[derive(Getters, CopyGetters)]
 pub struct TransactionConfirmed {
+    #[getset(get = "pub")]
     bundle_hash: String,
 }
-impl TransactionConfirmed {
-    pub fn bundle_hash(&self) -> String {
-        self.bundle_hash.clone()
-    }
-}
+
 pub enum StrongholdStatusType {
     Unlocked = 0,
     Locked = 1,
