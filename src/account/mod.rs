@@ -1090,7 +1090,6 @@ mod tests {
 
     // asserts that the `set_client_options` function updates the account client options in storage
     #[tokio::test]
-    #[ignore]
     async fn set_client_options() {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
             let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
