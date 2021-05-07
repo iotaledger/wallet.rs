@@ -69,9 +69,9 @@ async function run() {
 
     let input_batches = getMigrationBundles(migrationData.inputs)
     // create bundles with the inputs
-    for (inputs of input_batches) {
+    for (batch of input_batches) {
       try {
-        const bundle = await manager.createMigrationBundle(seed, inputs.map(input => input.index), {
+        const bundle = await manager.createMigrationBundle(seed, batch.inputs.map(input => input.index), {
           logFileName: 'iota-migration.log',
           // if the input is a spent address we do a bundle mining process which takes 10 minutes to reduce the amount 
           // of the parts of the private key which get revealed
