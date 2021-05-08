@@ -75,7 +75,7 @@ async function run() {
           logFileName: 'iota-migration.log',
           // if the input is a spent address we do a bundle mining process which takes 10 minutes to reduce the amount 
           // of the parts of the private key which get revealed
-          mine: inputs.inputs[0].spent
+          mine: batch.inputs[0].spent
         })
         migrationBundleHashes.push(bundle.bundleHash)
       } catch (e) {
