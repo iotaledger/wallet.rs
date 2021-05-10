@@ -35,7 +35,10 @@ use std::{
 use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
-use iota::{bee_rest_api::types::dtos::LedgerInclusionStateDto, MessageId, OutputId};
+use iota_client::{
+    bee_message::prelude::{MessageId, OutputId},
+    bee_rest_api::types::dtos::LedgerInclusionStateDto,
+};
 use serde::Serialize;
 use tokio::{
     sync::{
@@ -1704,7 +1707,7 @@ async fn retry_unconfirmed_transactions(synced_accounts: &[SyncedAccount]) -> cr
                     }
                 }
                 Err(crate::Error::ClientError(ref e)) => {
-                    if let iota::client::Error::NoNeedPromoteOrReattach(_) = e.as_ref() {
+                    if let iota_client::Error::NoNeedPromoteOrReattach(_) = e.as_ref() {
                         no_need_promote_or_reattach.push(message_id);
                     }
                 }
@@ -1742,7 +1745,9 @@ mod tests {
         event::*,
         message::Message,
     };
-    use iota::{Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Parents, Payload, TransactionId};
+    use iota_client::bee_message::prelude::{
+        Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Parents, Payload, TransactionId,
+    };
     use std::{collections::HashMap, path::PathBuf};
 
     #[tokio::test]

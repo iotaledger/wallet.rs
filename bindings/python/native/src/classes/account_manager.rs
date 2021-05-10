@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::types::*;
-use iota::MessageId as RustMessageId;
+use iota_client::bee_message::MessageId as RustMessageId;
 use iota_wallet::{
     account_manager::{AccountManager as RustAccountManager, MigrationDataFinder},
     signing::SignerType as RustSingerType,
