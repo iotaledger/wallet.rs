@@ -66,7 +66,9 @@ async fn subscribe_to_topics<C: Fn(&TopicEvent) + Send + Sync + 'static>(
         tokio::spawn(async move {
             let client = crate::client::get_client(&client_options).await?;
             let mut client = client.write().await;
-            client.subscriber().with_topics(topics).subscribe(handler).await?;
+            if let Err(err) = client.subscriber().with_topics(topics).subscribe(handler).await {
+                log::debug!("[MQTT] subscribe error: {:?}", err);
+            }
             crate::Result::Ok(())
         });
     }
