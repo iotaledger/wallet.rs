@@ -1,5 +1,10 @@
 # Changelog
 
+## \[0.3.7]
+
+- Fixes updating client options.
+  - [8124c3de](https://github.com/iotaledger/wallet.rs/commit/8124c3de93f006c20a1e0640d89fbfb6ab42d325) use iota_client ([#611](https://github.com/iotaledger/wallet.rs/pull/611)) on 2021-05-10
+
 ## \[0.3.6]
 
 - Fix rev in `native/Cargo.toml`
