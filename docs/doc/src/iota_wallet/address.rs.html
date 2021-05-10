@@ -493,14 +493,14 @@
     <span class="ident">signing::GenerateAddressMetadata</span>,
 };
 <span class="kw">use</span> <span class="ident">getset</span>::{<span class="ident">Getters</span>, <span class="ident">Setters</span>};
-<span class="kw">use</span> <span class="ident">iota</span>::{
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">iota_client::bee_message::prelude</span>::{<span class="ident">Address</span> <span class="kw">as</span> <span class="ident">IotaAddress</span>, <span class="ident">Ed25519Address</span>, <span class="ident">Input</span>, <span class="ident">UtxoInput</span>};
+<span class="kw">use</span> <span class="ident">iota_client</span>::{
+    <span class="ident">bee_message::prelude</span>::{<span class="ident">MessageId</span>, <span class="ident">OutputId</span>, <span class="ident">TransactionId</span>},
     <span class="ident">bee_rest_api::types</span>::{
         <span class="ident">dtos</span>::{<span class="ident">AddressDto</span>, <span class="ident">OutputDto</span>},
         <span class="ident">responses::OutputResponse</span>,
     },
-    <span class="ident">MessageId</span>, <span class="ident">OutputId</span>, <span class="ident">TransactionId</span>,
 };
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">iota</span>::{<span class="ident">Address</span> <span class="kw">as</span> <span class="ident">IotaAddress</span>, <span class="ident">Ed25519Address</span>, <span class="ident">Input</span>, <span class="ident">UtxoInput</span>};
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">ser::Serializer</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">cmp::Ordering</span>,
@@ -849,7 +849,7 @@
     <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">address</span>.<span class="ident">as_ref</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tokens</span> <span class="op">=</span> <span class="ident">address</span>.<span class="ident">split</span>(<span class="string">&#39;1&#39;</span>);
     <span class="kw">let</span> <span class="ident">hrp</span> <span class="op">=</span> <span class="ident">tokens</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="kw">crate</span><span class="ident">::Error::InvalidAddress</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">iota::Address::try_from_bech32</span>(<span class="ident">address</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">iota_client::bee_message::address::Address::try_from_bech32</span>(<span class="ident">address</span>)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(<span class="ident">AddressWrapper::new</span>(<span class="ident">address</span>, <span class="ident">hrp</span>.<span class="ident">to_string</span>()))
 }
 

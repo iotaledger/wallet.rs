@@ -1341,6 +1341,9 @@
 <span id="1338">1338</span>
 <span id="1339">1339</span>
 <span id="1340">1340</span>
+<span id="1341">1341</span>
+<span id="1342">1342</span>
+<span id="1343">1343</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1355,12 +1358,15 @@
 <span class="kw">use</span> <span class="ident">getset</span>::{<span class="ident">CopyGetters</span>, <span class="ident">Getters</span>, <span class="ident">Setters</span>};
 
 <span class="kw">use</span> <span class="ident">chrono::prelude</span>::{<span class="ident">DateTime</span>, <span class="ident">NaiveDateTime</span>, <span class="ident">Utc</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">iota</span>::{
-    <span class="ident">Essence</span>, <span class="ident">IndexationPayload</span>, <span class="ident">Input</span>, <span class="ident">Message</span> <span class="kw">as</span> <span class="ident">IotaMessage</span>, <span class="ident">MessageId</span>, <span class="ident">MigratedFundsEntry</span>, <span class="ident">MilestoneIndex</span>,
-    <span class="ident">MilestonePayload</span>, <span class="ident">MilestonePayloadEssence</span>, <span class="ident">MilestoneResponse</span>, <span class="ident">Output</span>, <span class="ident">Parents</span>, <span class="ident">Payload</span>, <span class="ident">ReceiptPayload</span>,
-    <span class="ident">RegularEssence</span>, <span class="ident">SignatureLockedDustAllowanceOutput</span>, <span class="ident">SignatureLockedSingleOutput</span>, <span class="ident">TailTransactionHash</span>,
-    <span class="ident">TransactionPayload</span>, <span class="ident">TreasuryInput</span>, <span class="ident">TreasuryOutput</span>, <span class="ident">TreasuryTransactionPayload</span>, <span class="ident">UnlockBlock</span>, <span class="ident">UtxoInput</span>,
-    <span class="ident">MILESTONE_MERKLE_PROOF_LENGTH</span>, <span class="ident">MILESTONE_PUBLIC_KEY_LENGTH</span>,
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">iota_client</span>::{
+    <span class="ident">bee_message::prelude</span>::{
+        <span class="ident">Essence</span>, <span class="ident">IndexationPayload</span>, <span class="ident">Input</span>, <span class="ident">Message</span> <span class="kw">as</span> <span class="ident">IotaMessage</span>, <span class="ident">MessageId</span>, <span class="ident">MigratedFundsEntry</span>, <span class="ident">MilestoneIndex</span>,
+        <span class="ident">MilestonePayload</span>, <span class="ident">MilestonePayloadEssence</span>, <span class="ident">Output</span>, <span class="ident">Parents</span>, <span class="ident">Payload</span>, <span class="ident">ReceiptPayload</span>, <span class="ident">RegularEssence</span>,
+        <span class="ident">SignatureLockedDustAllowanceOutput</span>, <span class="ident">SignatureLockedSingleOutput</span>, <span class="ident">TailTransactionHash</span>, <span class="ident">TransactionPayload</span>,
+        <span class="ident">TreasuryInput</span>, <span class="ident">TreasuryOutput</span>, <span class="ident">TreasuryTransactionPayload</span>, <span class="ident">UnlockBlock</span>, <span class="ident">UtxoInput</span>,
+        <span class="ident">MILESTONE_MERKLE_PROOF_LENGTH</span>, <span class="ident">MILESTONE_PUBLIC_KEY_LENGTH</span>,
+    },
+    <span class="ident">MilestoneResponse</span>,
 };
 <span class="kw">use</span> <span class="ident">once_cell::sync::Lazy</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">de::Deserializer</span>, <span class="ident">ser::Serializer</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
@@ -1533,9 +1539,9 @@
     <span class="doccomment">/// Creates a transfer with multiple outputs.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_outputs</span>(<span class="ident">outputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TransferOutput</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="op">!</span>(<span class="number">1</span>..<span class="number">125</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">outputs</span>.<span class="ident">len</span>()) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::Error::BeeMessage</span>(<span class="ident">iota::message::Error::InvalidInputOutputCount</span>(
-                <span class="ident">outputs</span>.<span class="ident">len</span>(),
-            )));
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::Error::BeeMessage</span>(
+                <span class="ident">iota_client::bee_message::Error::InvalidInputOutputCount</span>(<span class="ident">outputs</span>.<span class="ident">len</span>()),
+            ));
         }
         <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
             <span class="ident">outputs</span>,
@@ -1873,7 +1879,7 @@
                                         <span class="ident">AddressOutput::from_output_response</span>(<span class="ident">output</span>, <span class="ident">metadata</span>.<span class="ident">bech32_hrp</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
                                     <span class="prelude-val">Some</span>(<span class="ident">output</span>)
                                 }
-                                <span class="prelude-val">Err</span>(<span class="ident">iota::client::Error::ResponseError</span>(<span class="ident">status_code</span>, <span class="kw">_</span>)) <span class="kw">if</span> <span class="ident">status_code</span> <span class="op">=</span><span class="op">=</span> <span class="number">404</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+                                <span class="prelude-val">Err</span>(<span class="ident">iota_client::Error::ResponseError</span>(<span class="ident">status_code</span>, <span class="kw">_</span>)) <span class="kw">if</span> <span class="ident">status_code</span> <span class="op">=</span><span class="op">=</span> <span class="number">404</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
                                 <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>.<span class="ident">into</span>()),
                             }
                         }

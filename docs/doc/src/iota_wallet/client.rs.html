@@ -661,7 +661,7 @@
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
 <span class="kw">use</span> <span class="ident">getset::Getters</span>;
-<span class="kw">use</span> <span class="ident">iota::client</span>::{<span class="ident">Client</span>, <span class="ident">ClientBuilder</span>};
+<span class="kw">use</span> <span class="ident">iota_client</span>::{<span class="ident">Client</span>, <span class="ident">ClientBuilder</span>};
 <span class="kw">use</span> <span class="ident">once_cell::sync::Lazy</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">de::Visitor</span>, <span class="ident">Deserialize</span>, <span class="ident">Deserializer</span>, <span class="ident">Serialize</span>, <span class="ident">Serializer</span>};
 <span class="kw">use</span> <span class="ident">tokio::sync</span>::{<span class="ident">Mutex</span>, <span class="ident">RwLock</span>};
@@ -693,7 +693,7 @@
                     .<span class="ident">mqtt_broker_options</span>()
                     .<span class="ident">as_ref</span>()
                     .<span class="ident">map</span>(<span class="op">|</span><span class="ident">options</span><span class="op">|</span> <span class="ident">options</span>.<span class="ident">clone</span>().<span class="ident">into</span>())
-                    .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">iota::BrokerOptions::new</span>().<span class="ident">automatic_disconnect</span>(<span class="bool-val">false</span>)),
+                    .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">iota_client::BrokerOptions::new</span>().<span class="ident">automatic_disconnect</span>(<span class="bool-val">false</span>)),
             )
             .<span class="ident">with_local_pow</span>(<span class="kw-2">*</span><span class="ident">options</span>.<span class="ident">local_pow</span>())
             .<span class="ident">with_node_pool_urls</span>(
@@ -1020,12 +1020,12 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Api</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">iota::Api</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">api</span>: <span class="ident">Api</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">iota::Api</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Api</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">iota_client::Api</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">api</span>: <span class="ident">Api</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">iota_client::Api</span> {
         <span class="kw">match</span> <span class="ident">api</span> {
-            <span class="ident">Api::GetTips</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">iota::Api::GetTips</span>,
-            <span class="ident">Api::PostMessage</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">iota::Api::PostMessage</span>,
-            <span class="ident">Api::GetOutput</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">iota::Api::GetOutput</span>,
+            <span class="ident">Api::GetTips</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">iota_client::Api::GetTips</span>,
+            <span class="ident">Api::PostMessage</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">iota_client::Api::PostMessage</span>,
+            <span class="ident">Api::GetOutput</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">iota_client::Api::GetOutput</span>,
         }
     }
 }
@@ -1041,9 +1041,9 @@
     <span class="kw">pub</span> <span class="ident">timeout</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">BrokerOptions</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">iota::BrokerOptions</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">BrokerOptions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">iota::BrokerOptions</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">iota::BrokerOptions::new</span>();
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">BrokerOptions</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">iota_client::BrokerOptions</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">BrokerOptions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">iota_client::BrokerOptions</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">iota_client::BrokerOptions::new</span>();
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">automatic_disconnect</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">automatic_disconnect</span> {
             <span class="ident">options</span> <span class="op">=</span> <span class="ident">options</span>.<span class="ident">automatic_disconnect</span>(<span class="ident">automatic_disconnect</span>);
         }
