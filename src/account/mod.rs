@@ -11,11 +11,11 @@ use crate::{
     storage::{MessageIndexation, MessageQueryFilter},
 };
 
-use iota::client::NodeInfoWrapper;
+use iota_client::NodeInfoWrapper;
 
 use chrono::prelude::{DateTime, Local};
 use getset::{Getters, Setters};
-use iota::message::prelude::MessageId;
+use iota_client::bee_message::prelude::MessageId;
 use serde::{Deserialize, Serialize};
 use tokio::sync::{Mutex, RwLock, RwLockWriteGuard};
 
@@ -269,7 +269,7 @@ impl AccountInitialiser {
                         .get_network_info()
                         .await
                         .map_err(|e| match e {
-                            iota::client::Error::SyncedNodePoolEmpty => crate::Error::NodesNotSynced(
+                            iota_client::Error::SyncedNodePoolEmpty => crate::Error::NodesNotSynced(
                                 client_options
                                     .nodes()
                                     .iter()
@@ -330,7 +330,7 @@ impl AccountInitialiser {
 
         let mut digest = [0; 32];
         let raw = match address.as_ref() {
-            iota::Address::Ed25519(a) => a.as_ref().to_vec(),
+            iota_client::bee_message::address::Address::Ed25519(a) => a.as_ref().to_vec(),
             _ => unimplemented!(),
         };
         crypto::hashes::sha::SHA256(&raw, &mut digest);
@@ -1006,7 +1006,7 @@ impl Account {
     pub(crate) async fn get_node_info(&self, url: Option<&str>) -> crate::Result<NodeInfoWrapper> {
         let info = match url {
             Some(url) => NodeInfoWrapper {
-                nodeinfo: iota::Client::get_node_info(url, None)
+                nodeinfo: iota_client::Client::get_node_info(url, None)
                     .await
                     .map_err(|e| crate::Error::ClientError(Box::new(e)))?,
                 url: url.to_string(),
@@ -1066,7 +1066,7 @@ mod tests {
         client::ClientOptionsBuilder,
         message::{Message, MessagePayload, MessageType, TransactionEssence},
     };
-    use iota::{MessageId, TransactionId};
+    use iota_client::bee_message::prelude::{MessageId, TransactionId};
     use std::collections::HashMap;
 
     // asserts that the `set_alias` function updates the account alias in storage
@@ -1090,7 +1090,6 @@ mod tests {
 
     // asserts that the `set_client_options` function updates the account client options in storage
     #[tokio::test]
-    #[ignore]
     async fn set_client_options() {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
             let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;

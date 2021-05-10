@@ -7,7 +7,7 @@ use crypto::hashes::{blake2b::Blake2b256, Digest};
 
 use crypto::keys::slip10::Chain;
 use getset::Getters;
-use iota::{Address, Ed25519Address, Ed25519Signature};
+use iota_client::bee_message::prelude::{Address, Ed25519Address, Ed25519Signature};
 use iota_stronghold::{
     Location, ProcResult, Procedure, RecordHint, ResultMessage, SLIP10DeriveInput, Stronghold, StrongholdFlags,
 };

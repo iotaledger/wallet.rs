@@ -8,7 +8,7 @@ use crate::{
     address::{Address, IotaAddress},
 };
 use getset::Getters;
-use iota::Input;
+use iota_client::bee_message::input::Input;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
@@ -89,10 +89,10 @@ pub trait Signer {
     async fn sign_message<'a>(
         &mut self,
         account: &Account,
-        essence: &iota::Essence,
+        essence: &iota_client::bee_message::prelude::Essence,
         inputs: &mut Vec<TransactionInput>,
         metadata: SignMessageMetadata<'a>,
-    ) -> crate::Result<Vec<iota::UnlockBlock>>;
+    ) -> crate::Result<Vec<iota_client::bee_message::prelude::UnlockBlock>>;
 }
 
 fn default_signers() -> Signers {

@@ -5,7 +5,7 @@ use super::error::{Error, Result};
 
 use core::convert::TryFrom;
 use dict_derive::{FromPyObject as DeriveFromPyObject, IntoPyObject as DeriveIntoPyObject};
-use iota::client::NodeInfoWrapper as RustNodeInfoWrapper;
+use iota_client::NodeInfoWrapper as RustNodeInfoWrapper;
 use iota_wallet::{
     account::{
         AccountBalance as RustAccountBalance, AccountHandle as RustAccountHandle,

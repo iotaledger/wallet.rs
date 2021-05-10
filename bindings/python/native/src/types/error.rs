@@ -1,7 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota::bee_message;
+use iota_client::bee_message;
 use iota_wallet::Error as RustError;
 use pyo3::{exceptions, prelude::*};
 use std::convert::From;

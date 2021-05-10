@@ -3,7 +3,7 @@
 
 use iota_wallet::message::TreasuryTransactionPayload as TreasuryTransactionPayloadRust;
 
-use iota::Output;
+use iota_client::bee_message::output::Output;
 
 pub struct TreasuryTransactionPayload {
     payload: TreasuryTransactionPayloadRust,

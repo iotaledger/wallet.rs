@@ -11,7 +11,7 @@ use std::{
 };
 
 use futures::{Future, FutureExt};
-use iota::common::logger::{logger_init, LoggerConfigBuilder};
+use iota_client::common::logger::{logger_init, LoggerConfigBuilder};
 use iota_wallet::{
     account::{AccountHandle, SyncedAccount},
     Error,

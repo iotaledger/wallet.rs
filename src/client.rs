@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use getset::Getters;
-use iota::client::{Client, ClientBuilder};
+use iota_client::{Client, ClientBuilder};
 use once_cell::sync::Lazy;
 use serde::{de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
 use tokio::sync::{Mutex, RwLock};
@@ -34,7 +34,7 @@ pub(crate) async fn get_client(options: &ClientOptions) -> crate::Result<Arc<RwL
                     .mqtt_broker_options()
                     .as_ref()
                     .map(|options| options.clone().into())
-                    .unwrap_or_else(|| iota::BrokerOptions::new().automatic_disconnect(false)),
+                    .unwrap_or_else(|| iota_client::BrokerOptions::new().automatic_disconnect(false)),
             )
             .with_local_pow(*options.local_pow())
             .with_node_pool_urls(
@@ -361,12 +361,12 @@ impl<'de> Deserialize<'de> for Api {
     }
 }
 
-impl From<Api> for iota::Api {
-    fn from(api: Api) -> iota::Api {
+impl From<Api> for iota_client::Api {
+    fn from(api: Api) -> iota_client::Api {
         match api {
-            Api::GetTips => iota::Api::GetTips,
-            Api::PostMessage => iota::Api::PostMessage,
-            Api::GetOutput => iota::Api::GetOutput,
+            Api::GetTips => iota_client::Api::GetTips,
+            Api::PostMessage => iota_client::Api::PostMessage,
+            Api::GetOutput => iota_client::Api::GetOutput,
         }
     }
 }
@@ -382,9 +382,9 @@ pub struct BrokerOptions {
     pub timeout: Option<Duration>,
 }
 
-impl From<BrokerOptions> for iota::BrokerOptions {
-    fn from(value: BrokerOptions) -> iota::BrokerOptions {
-        let mut options = iota::BrokerOptions::new();
+impl From<BrokerOptions> for iota_client::BrokerOptions {
+    fn from(value: BrokerOptions) -> iota_client::BrokerOptions {
+        let mut options = iota_client::BrokerOptions::new();
         if let Some(automatic_disconnect) = value.automatic_disconnect {
             options = options.automatic_disconnect(automatic_disconnect);
         }

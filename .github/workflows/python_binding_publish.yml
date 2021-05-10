@@ -5,6 +5,12 @@ on:
     branches:
       - master
       - develop
+    paths:
+      - .github/workflows/python_binding_publish.yml
+      - bindings/python/**
+      - src/**
+      - Cargo.lock
+      - Cargo.toml
 
 jobs:
 
