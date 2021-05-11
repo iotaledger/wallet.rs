@@ -463,7 +463,7 @@ foreign_class!(
         self_type MiningBundle;
         private constructor = empty;
         /// The spent address.
-        fn MiningBundle::address(&self) -> String; alias getAddress;
+        fn MiningBundle::address(&self) -> &str; alias getAddress;
     }
 );
 foreign_class!(
@@ -481,7 +481,7 @@ foreign_class!(
         self_type BroadcastingBundle;
         private constructor = empty;
         /// The bundle hash.
-        fn BroadcastingBundle::bundle_hash(&self) -> String; alias getBundleHash;
+        fn BroadcastingBundle::bundle_hash(&self) -> &str; alias getBundleHash;
     }
 );
 foreign_class!(
@@ -490,7 +490,7 @@ foreign_class!(
         self_type TransactionConfirmed;
         private constructor = empty;
         /// The bundle hash.
-        fn TransactionConfirmed::bundle_hash(&self) -> String; alias getBundleHash;
+        fn TransactionConfirmed::bundle_hash(&self) -> &str; alias getBundleHash;
     }
 );
 
