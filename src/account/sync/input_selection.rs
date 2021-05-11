@@ -132,7 +132,7 @@ fn branch_and_bound(
 mod tests {
     use super::*;
     use crate::address::{AddressBuilder, AddressOutput, AddressWrapper, IotaAddress, OutputKind};
-    use iota::message::prelude::{Ed25519Address, MessageId, TransactionId};
+    use iota_client::bee_message::prelude::{Ed25519Address, MessageId, TransactionId};
     use rand::prelude::{Rng, SeedableRng, SliceRandom, StdRng};
 
     fn generate_random_utxos(rng: &mut StdRng, utxos_number: usize) -> Vec<Input> {

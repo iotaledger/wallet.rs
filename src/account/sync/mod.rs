@@ -16,16 +16,16 @@ use crate::{
 
 use bee_common::packable::Packable;
 use getset::Getters;
-use iota::{
-    client::{api::finish_pow, AddressOutputsOptions, Client},
-    message::{
+use iota_client::{
+    api::finish_pow,
+    bee_message::{
         constants::INPUT_OUTPUT_COUNT_MAX,
         prelude::{
-            Essence, Input, Message as IotaMessage, MessageId, Output, Payload, RegularEssence,
+            Essence, Input, Message as IotaMessage, MessageId, Output, OutputId, Payload, RegularEssence,
             SignatureLockedSingleOutput, TransactionPayload, UnlockBlocks, UtxoInput,
         },
     },
-    OutputId,
+    AddressOutputsOptions, Client,
 };
 use serde::Serialize;
 use tokio::sync::MutexGuard;
@@ -92,7 +92,7 @@ async fn get_address_outputs(
 async fn get_message(client: &Client, message_id: &MessageId) -> crate::Result<Option<IotaMessage>> {
     match client.get_message().data(message_id).await {
         Ok(message) => Ok(Some(message)),
-        Err(iota::client::Error::ResponseError(status_code, _)) if status_code == 404 => Ok(None),
+        Err(iota_client::Error::ResponseError(status_code, _)) if status_code == 404 => Ok(None),
         Err(e) => Err(e.into()),
     }
 }
@@ -1694,7 +1694,7 @@ async fn perform_transfer(
 // one (true)
 async fn is_dust_allowed(
     account: &Account,
-    client: &iota::Client,
+    client: &iota_client::Client,
     address: String,
     outputs: Vec<(u64, bool)>,
 ) -> crate::Result<()> {
@@ -1779,7 +1779,7 @@ pub(crate) async fn repost_message(
                         message_to_repost = m.clone();
                         if message_to_repost.confirmed().unwrap_or(false) {
                             return Err(crate::Error::ClientError(Box::new(
-                                iota::client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
+                                iota_client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
                             )));
                         }
                     }
@@ -1822,7 +1822,7 @@ mod tests {
         address::{AddressOutput, OutputKind},
         client::ClientOptionsBuilder,
     };
-    use iota::{MessageId, TransactionId};
+    use iota_client::bee_message::prelude::{MessageId, TransactionId};
     use quickcheck_macros::quickcheck;
     use std::collections::HashMap;
 
@@ -1856,8 +1856,8 @@ mod tests {
         // first we create an address with balance - the source address
         let mut address1 = crate::test_utils::generate_random_address();
         let output = crate::address::AddressOutput {
-            transaction_id: iota::TransactionId::from([0; 32]),
-            message_id: iota::MessageId::from([0; 32]),
+            transaction_id: iota_client::bee_message::prelude::TransactionId::from([0; 32]),
+            message_id: iota_client::bee_message::MessageId::from([0; 32]),
             index: 0,
             amount: 10000000,
             is_spent: false,
@@ -1873,8 +1873,8 @@ mod tests {
         address3.set_key_index(0);
         address3.set_internal(true);
         let output = crate::address::AddressOutput {
-            transaction_id: iota::TransactionId::from([0; 32]),
-            message_id: iota::MessageId::from([0; 32]),
+            transaction_id: iota_client::bee_message::prelude::TransactionId::from([0; 32]),
+            message_id: iota_client::bee_message::MessageId::from([0; 32]),
             index: 0,
             amount: 10000000,
             is_spent: false,

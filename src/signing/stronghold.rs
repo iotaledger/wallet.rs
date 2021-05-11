@@ -3,7 +3,7 @@
 
 use crate::account::Account;
 
-use iota::{ReferenceUnlock, UnlockBlock};
+use iota_client::bee_message::unlock::{ReferenceUnlock, UnlockBlock};
 
 use std::{
     collections::HashMap,
@@ -38,7 +38,7 @@ impl super::Signer for StrongholdSigner {
         address_index: usize,
         internal: bool,
         _: super::GenerateAddressMetadata,
-    ) -> crate::Result<iota::Address> {
+    ) -> crate::Result<iota_client::bee_message::address::Address> {
         let address = crate::stronghold::generate_address(
             &stronghold_path(account.storage_path()).await?,
             *account.index(),
@@ -52,10 +52,10 @@ impl super::Signer for StrongholdSigner {
     async fn sign_message<'a>(
         &mut self,
         account: &Account,
-        essence: &iota::Essence,
+        essence: &iota_client::bee_message::prelude::Essence,
         inputs: &mut Vec<super::TransactionInput>,
         _: super::SignMessageMetadata<'a>,
-    ) -> crate::Result<Vec<iota::UnlockBlock>> {
+    ) -> crate::Result<Vec<iota_client::bee_message::unlock::UnlockBlock>> {
         let mut unlock_blocks = vec![];
         let mut signature_indexes = HashMap::<String, usize>::new();
         inputs.sort_by(|a, b| a.input.cmp(&b.input));

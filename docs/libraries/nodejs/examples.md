@@ -148,3 +148,16 @@ data: {
 `accountId` can then be used to identify the given account via `AccountManager.getAccount(accountId)`.
 
 Read more about Events in the [API reference](https://wallet-lib.docs.iota.org/libraries/nodejs/api_reference.html#addeventlistenerevent-cb).
+
+
+## Migration 
+
+Run
+```
+node 8-migration.js
+```
+
+Code:
+```javascript
+{{ #include ../../../bindings/nodejs/examples/8-migration.js }}
+```

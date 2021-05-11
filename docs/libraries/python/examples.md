@@ -26,8 +26,10 @@ In case one would like to store a seed also somewhere else, there is a method `A
 
 Please note: it is highly recommended to store `stronghold` password encrypted on rest and separated from `stronghold` snapshots.
 
+More detailed information about seed generation is available at [Developer guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#seed).
+
 ### Accounts
-The library uses a model of individual accounts to separate individual users/clients from each other. It is possible to generate multiple addresses for each account deterministically. 
+The library uses a model of individual accounts to separate individual users/clients from each other. It is possible to generate multiple addresses for each account deterministically based on seed mnemonic. 
 
 Please note, it is important to declare on which IOTA network should be the given account created (argument `node`).
 
@@ -70,8 +72,6 @@ Addresses are of two types: `internal` and `public` (external):
 * internal addresses (`internal=true`) are so called `change` addresses and are used to send the excess funds to
 * the approach is also known as a *BIP32 Hierarchical Deterministic wallet (HD Wallet)*.
 
-_Note: You may remember IOTA 1.0 network in which addresses were not reusable. It is no longer true and addresses can be reused multiple times in IOTA 1.5 (Chrysalis) network._
-
 Addresses are generated via instance of `account` that is gotten from the `account_manager` instance:
 
 ```python
@@ -91,7 +91,9 @@ Output example:
   'internal': False,
   'outputs': []}]
 ```
-Take a closer look at the output above and check the beginning of both addresses. As mentioned in [overview chapter](../../welcome.md) there are two human-readable prefixes in IOTA 1.5 network: `iota` (mainnet) and `atoi` (testnet).
+Take a closer look at the output above and check the beginning of both addresses. As mentioned in [Developer guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#iota-15-address-anatomy) there are two human-readable prefixes in IOTA 1.5 network: `iota` (mainnet) and `atoi` (testnet).
+
+More detailed information about generating addresses is available at [Developer guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#addresskey-space).
 
 ## Checking the balance
 Before we continue further, go to [IOTA testnet faucet service](https://faucet.testnet.chrysalis2.com/) and send to your testnet addresses some tokens:
@@ -129,6 +131,8 @@ Balance per individual addresses:
   'outputs': []}]
 ```
 In the detailed view per individual addresses, there is also `outputs` section that indicates transaction(s) (also known as `wallet message(s)`) "responsible" for the current amount. The amount can be also double checked using [Tangle Explorer](https://explorer.iota.org/chrysalis/addr/atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg).
+
+IOTA is based on `Unspent Transaction Output` model which is explained at [Developer guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#unspent-transaction-output-utxo).
 
 ## Sending tokens
 The process of sending tokens via `wallet.rs` can be described as follows:
@@ -178,11 +182,13 @@ You receive an output similar to the following one:
 ```
 It is a `wallet message` that fully describes the given transaction.
 
-Please, kindly get yourself familiar with a concept of [UTXO](https://chrysalis.docs.iota.org/introduction/what_is_chrysalis.html#switch-to-utxo-model) to understand all aspects of messages.
+Please, kindly get yourself familiar with a concept of [UTXO](https://chrysalis.docs.iota.org/guides/dev_guide.html#unspent-transaction-output-utxo) to understand all aspects of messages.
 
 The given message can be double checked via Tangle Explorer using `node_response['id']` field ([Tangle Explorer](https://explorer.iota.org/chrysalis/message/9d3c401d59b0a87f6fbaa58582bb71e1858d63336421ccbae834821d9be113d3)).
 
 Needless to say, if `remainder_value_strategy` == `ChangeAddress` is used, the given message transfer tokens to target address as well as new `internal` address within the given account (`internal=True`). 
+
+Messages and payloads are described at [Developer guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#messages-payloads-and-transactions).
 
 ### Reattachments
 If message reattachment is needed then `account_id` and `message_id` is passed to `iota_wallet.promote(account_id, message_id)` or `iota_wallet.reattach(account_id, message_id)`.
@@ -199,6 +205,8 @@ Those can be used also to check whether the given message was confirmed/broadcas
 Please note, there is also implemented a [dust protection](https://chrysalis.docs.iota.org/guides/dev_guide.html#dust-protection) mechanism in the network protocol to avoid malicious actors to spam network in order to decrease node performance while keeping track of unspent amount (`UTXO`):
 > "... microtransaction below 1Mi of IOTA tokens [can be sent] to another address if there is already at least 1Mi on that address"
 That's why we did send 1Mi in the given example to comply with the protection."
+
+Dust protection also means you can't leave (return back) less than 1Mi on a spent address (leave a dust behind).
 
 ## Backup database
 Underlying seed storage (provided by `Stronghold` by default) is encrypted at rest and there is no way how to get a seed from it due to security practices that are incorporated in the Stronghold's DNA.
