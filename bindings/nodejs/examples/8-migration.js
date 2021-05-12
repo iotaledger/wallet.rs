@@ -17,9 +17,8 @@ const DB_STORAGE_PATH = './migration-database'
 const LEGACY_NETWORK_NODES = ['https://nodes.iota.org']
 // Legacy permanode
 const LEGACY_PERMANODE = 'https://chronicle.iota.org/api'
-// Chrysalis ndoe
+// Chrysalis node
 const CHRYSALIS_NODE = 'https://chrysalis-nodes.iota.cafe'
-
 
 async function run() {
   try {
