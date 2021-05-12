@@ -184,12 +184,12 @@
 <li>Contribute, how you can work on the wallet software.</li>
 <li>Get in touch, join the community and become part of the X-Team!</li>
 </ol>
-<h1 id="overview"><a class="header" href="#overview">Overview</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="overview"><a class="header" href="#overview">Overview</a></h1>
 <p>The wallet library is a stateful package with a standardized interface for developers to build applications involving IOTA value transactions. It provides abstractions to handle IOTA payments and can optionally interact with <a href="https://github.com/iotaledger/stronghold.rs/">IOTA Stronghold enclave</a> for seed handling, seed storage and state backup. </p>
 <p>See the full specification <a href="https://github.com/iotaledger/wallet.rs/blob/master/specs/wallet-ENGINEERING-SPEC-0000.md">here</a>.</p>
 <h2 id="high-level-layered-overview"><a class="header" href="#high-level-layered-overview">High level layered overview:</a></h2>
 <p><img src="overview/iota_layers_overview.svg" alt="iota layers overview" /></p>
-<h1 id="iota-wallet-libraries"><a class="header" href="#iota-wallet-libraries">IOTA Wallet Libraries</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="iota-wallet-libraries"><a class="header" href="#iota-wallet-libraries">IOTA Wallet Libraries</a></h1>
 <p>There are currently available the following official bindings to <code>wallet.rs</code>:</p>
 <ul>
 <li><a href="libraries/./rust/">Rust</a> </li>
@@ -204,7 +204,7 @@
 <p>In the <code>wallet.rs</code>, we use an account model, so you can create an account for each of your users. The other approach would be to use one account and generate many addresses, which you can link to your users in your database. The library allows users to assign a meaningful alias to each account. It also leaves the choice to users if they want to segregate their funds across multiple accounts or multiple addresses. So basically it is up to a developer to decide whether <code>single-account approach</code> or <code>multi-account approach</code> is chosen. The library provides a support to any of the scenarios.</p>
 <p>The library is based on a <a href="https://chrysalis.docs.iota.org/guides/dev_guide.html#addresskey-space">derivation for multiple accounts from a single seed</a>. An account is simply a deterministic identifier from which multiple addresses can be further derived. The following illustrates the relationships between seed, accounts and addresses:</p>
 <p><img src="libraries/accounts_addresses.svg" alt="accounts" /></p>
-<h1 id="iota-wallet-rust-library"><a class="header" href="#iota-wallet-rust-library">IOTA Wallet Rust Library</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="iota-wallet-rust-library"><a class="header" href="#iota-wallet-rust-library">IOTA Wallet Rust Library</a></h1>
 <p><a href="https://github.com/iotaledger/wallet.rs"><img src="https://img.shields.io/badge/Status-Alpha-yellow.svg" alt="status" /></a></p>
 <h2 id="joining-the-discussion-1"><a class="header" href="#joining-the-discussion-1">Joining the discussion</a></h2>
 <p>If you want to get involved in discussions about this library, or you're looking for support, go to the #clients-discussion channel on <a href="https://discord.iota.org">Discord</a>.</p>
@@ -215,7 +215,7 @@
 <li><a href="libraries/rust/">API Reference</a></li>
 <li><a href="libraries/rust/">Troubleshooting</a></li>
 </ul>
-<h1 id="getting-started-with-rust"><a class="header" href="#getting-started-with-rust">Getting Started with Rust</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="getting-started-with-rust"><a class="header" href="#getting-started-with-rust">Getting Started with Rust</a></h1>
 <h2 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h2>
 <p><code>Rust</code> and <code>Cargo</code> are required. Install them <a href="https://doc.rust-lang.org/cargo/getting-started/installation.html">here</a>.</p>
 <p>We recommend you update Rust to the latest stable version <a href="https://github.com/rust-lang/rustup.rs#keeping-rust-up-to-date"><code>rustup update stable</code></a>. Nightly should be fine but there's a chance some changes are not compatible.</p>
@@ -277,7 +277,7 @@ async fn main() -&gt; iota_wallet::Result&lt;()&gt; {
     Ok(())
 }
 </code></pre></pre>
-<h1 id="examples"><a class="header" href="#examples">Examples</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="examples"><a class="header" href="#examples">Examples</a></h1>
 <p>You can see the examples in the <a href="libraries/rust/examples/">examples</a> directory and try them with:</p>
 <pre><code>cargo run --example # lists the available examples
 cargo run --example transfer # execute the `transfer` example
@@ -335,12 +335,12 @@ let imported_account = imported_account_handle.read().await;
 </span></code></pre></pre>
 <p>That's it! Now you know, how do backup and restore your account!</p>
 <p>See the full example <a href="https://github.com/iotaledger/wallet.rs/blob/develop/examples/backup_and_restore.rs">here</a></p>
-<h1 id="api-reference"><a class="header" href="#api-reference">API Reference</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="api-reference"><a class="header" href="#api-reference">API Reference</a></h1>
 <p>Link to hosted api documentation: TODO</p>
 <p>If you'd like to explore the implementation in more depth, the following command generates docs for the whole crate:</p>
 <pre><code>cargo doc --document-private-items --no-deps --open
 </code></pre>
-<h1 id="troubleshooting"><a class="header" href="#troubleshooting">Troubleshooting</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="troubleshooting"><a class="header" href="#troubleshooting">Troubleshooting</a></h1>
 <h2 id="stackexchange"><a class="header" href="#stackexchange">StackExchange</a></h2>
 <blockquote>
 <p><a href="https://iota.stackexchange.com/">https://iota.stackexchange.com</a></p>
@@ -348,7 +348,7 @@ let imported_account = imported_account_handle.read().await;
 <p>The IOTA StackExchange a a nice Tool for developers to find  Answers for a problem. Just search your problem and find your answer! If there is no one, submit your question and share it in the discussion channel below.</p>
 <h2 id="joining-the-discussion-2"><a class="header" href="#joining-the-discussion-2">Joining the discussion</a></h2>
 <p>If you want to get involved in discussions about this library, or you're looking for support, go to the #clients-discussion channel on <a href="https://discord.iota.org">Discord</a>.</p>
-<h1 id="iota-wallet-nodejs-library"><a class="header" href="#iota-wallet-nodejs-library">IOTA Wallet Node.js Library</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="iota-wallet-nodejs-library"><a class="header" href="#iota-wallet-nodejs-library">IOTA Wallet Node.js Library</a></h1>
 <p><a href="https://github.com/iotaledger/wallet.rs"><img src="https://img.shields.io/badge/Status-Alpha-yellow.svg" alt="status" /></a></p>
 <h2 id="joining-the-discussion-3"><a class="header" href="#joining-the-discussion-3">Joining the discussion</a></h2>
 <p>If you want to get involved in discussions about this library, or you're looking for support, go to the #clients-discussion channel on <a href="https://discord.iota.org">Discord</a>.</p>
@@ -359,7 +359,7 @@ let imported_account = imported_account_handle.read().await;
 <li><a href="libraries/nodejs/./api_reference.html">API Reference</a></li>
 <li><a href="libraries/nodejs/./troubleshooting.html">Troubleshooting</a></li>
 </ul>
-<h1 id="getting-started-with-nodejs"><a class="header" href="#getting-started-with-nodejs">Getting Started with Node.js</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="getting-started-with-nodejs"><a class="header" href="#getting-started-with-nodejs">Getting Started with Node.js</a></h1>
 <p>The <a href="https://www.npmjs.com/package/@iota/wallet">IOTA Wallet Node.js binding</a> is published on npmjs.org.</p>
 <h2 id="installation"><a class="header" href="#installation">Installation</a></h2>
 <p>Currently the package isn't published so you'd need to link it to your project using <code>npm</code> or <code>yarn</code>.</p>
@@ -399,7 +399,7 @@ async function run() {
 
 run()
 </code></pre>
-<h1 id="examples-1"><a class="header" href="#examples-1">Examples</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="examples-1"><a class="header" href="#examples-1">Examples</a></h1>
 <p>There are several examples to show the usage of the library.</p>
 <blockquote>
 <p>All examples can be found in <a href="https://github.com/iotaledger/wallet.rs/bindings/nodejs/examples/">/bindings/nodejs/examples</a></p>
@@ -677,11 +677,20 @@ run()
 
 require('dotenv').config()
 
+// Address security level
 const ADDRESS_SECURITY_LEVEL = 2
 // Minimum balance that is required for a migration bundle, because of the dust protection in the new network
 const MINIMUM_MIGRATION_BALANCE = 1000000
 // This value shouldn't be too high, because then the PoW could take to long to get it confirmed
 const MAX_INPUTS_PER_BUNDLE = 10
+// Wallet.rs database storage path. Stronghold and database file would be stored in this path.
+const DB_STORAGE_PATH = './migration-database'
+// Legacy network nodes
+const LEGACY_NETWORK_NODES = ['https://nodes.iota.org']
+// Legacy permanode
+const LEGACY_PERMANODE = 'https://chronicle.iota.org/api'
+// Chrysalis ndoe
+const CHRYSALIS_NODE = 'https://chrysalis-nodes.iota.cafe'
 
 
 async function run() {
@@ -690,6 +699,7 @@ async function run() {
 
     // We store all bundle hashes here and check later if the bundles got confirmed
     let migrationBundleHashes = [];
+
     // Log migration events
     const callback = function (err, data) {
       // After a successful broadcast of this bundle, the library will automatically reattach bundle to 
@@ -698,70 +708,86 @@ async function run() {
       if (data.event.type === 'TransactionConfirmed') {
         console.log(&quot;MigrationProgress:&quot;, data)
         migrationBundleHashes = migrationBundleHashes.filter(hash =&gt; hash !== data.event.data.bundleHash)
+
         if (migrationBundleHashes.length == 0) {
           process.exit()
         }
+
         console.log(&quot;Still unconfirmed bundles: &quot;, migrationBundleHashes);
       }
     }
+
+    // Attach an event listener to keep track of the migration process
     addEventListener(&quot;MigrationProgress&quot;, callback)
 
     const manager = new AccountManager({
-      storagePath: './migration-database',
+      storagePath: DB_STORAGE_PATH,
     })
+
+    // Set stronghold password
     manager.setStrongholdPassword(process.env.SH_PASSWORD)
-    // Save this mnemonic securely. If you lose it, you potentially lose everything.
+
+    // IMPORTANT: SAVE THIS MNEMONIC SECURELY. IF YOU LOSE IT, YOU POTENTIALLY LOSE EVERYTHING.
     const mnemonic = manager.generateMnemonic()
-    console.log(&quot;Save this mnemonic securely. If you lose it, you potentially lose everything:&quot;, mnemonic);
+
+    console.log(&quot;IMPORTANT: SAVE THIS MNEMONIC SECURELY. IF YOU LOSE IT, YOU POTENTIALLY LOSE EVERYTHING.&quot;, mnemonic);
+
     manager.storeMnemonic(SignerType.Stronghold, mnemonic)
 
     const account = await manager.createAccount({
       // Node url for the new network
-      clientOptions: { node: &quot;https://chrysalis-nodes.iota.cafe&quot;, localPow: true, network: &quot;chrysalis-mainnet&quot; },
+      clientOptions: { node: CHRYSALIS_NODE, localPow: true, network: &quot;chrysalis-mainnet&quot; },
       alias: 'Migration',
     })
 
     console.log('Account created:', account.alias())
     // Nodes for the legacy network
-    const nodes = ['https://nodes.iota.org']
+    const nodes = LEGACY_NETWORK_NODES
     const seed = process.env.MIGRATION_SEED
+
     const migrationData = await manager.getMigrationData(
       nodes,
       seed,
       {
         // permanode for the legacy network
-        permanode: 'https://chronicle.iota.org/api',
+        permanode: LEGACY_PERMANODE,
         securityLevel: ADDRESS_SECURITY_LEVEL,
         // this is the default and from there it will check addresses for balance until 30 in a row have 0 balance
         // if not all balance got detected because a higher address index was used it needs to be increased here
         initialAddressIndex: 0
       }
     )
+
     console.log(migrationData)
 
-    let input_batches = getMigrationBundles(migrationData.inputs)
-    // create bundles with the inputs
-    for (batch of input_batches) {
-      try {
-        const bundle = await manager.createMigrationBundle(seed, batch.inputs.map(input =&gt; input.index), {
-          logFileName: 'iota-migration.log',
-          // if the input is a spent address we do a bundle mining process which takes 10 minutes to reduce the amount 
-          // of the parts of the private key which get revealed
-          mine: batch.inputs[0].spent
-        })
-        migrationBundleHashes.push(bundle.bundleHash)
-      } catch (e) {
-        console.error(e);
+    if (migrationData.balance &gt; 0) {
+      let input_batches = getMigrationBundles(migrationData.inputs)
+      // create bundles with the inputs
+      for (batch of input_batches) {
+        try {
+          const bundle = await manager.createMigrationBundle(seed, batch.inputs.map(input =&gt; input.index), {
+            logFileName: 'iota-migration.log',
+            // if the input is a spent address we do a bundle mining process which takes 10 minutes to reduce the amount 
+            // of the parts of the private key which get revealed
+            mine: batch.inputs[0].spent
+          })
+          migrationBundleHashes.push(bundle.bundleHash)
+        } catch (e) {
+          console.error(e);
+        }
       }
-    }
 
-    // Send all bundles to the Tangle and reattach them until they are confirmed
-    for (bundleHash of migrationBundleHashes) {
-      try {
-        await manager.sendMigrationBundle(nodes, bundleHash)
-      } catch (e) { console.error(e) }
-    }
+      // Send all bundles to the Tangle and reattach them until they are confirmed
+      for (bundleHash of migrationBundleHashes) {
+        try {
+          await manager.sendMigrationBundle(nodes, bundleHash)
+        } catch (e) { console.error(e) }
+      }
+    } else {
+      console.log('Detected 0 balance. Exiting.')
 
+      process.exit(0)
+    }
   } catch (e) {
     console.error(e);
   }
@@ -789,6 +815,7 @@ const getMigrationBundles = (inputs) =&gt; {
     ...unspentInputChunks.map((inputs) =&gt; ({ inputs }))
   ]
 };
+
 /**
  * Prepares inputs (as bundles) for unspent addresses.
  * Steps:
@@ -892,7 +919,7 @@ const selectInputsForUnspentAddresses = (inputs) =&gt; {
   return chunks;
 };
 </code></pre>
-<h1 id="api-reference-1"><a class="header" href="#api-reference-1">API Reference</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="api-reference-1"><a class="header" href="#api-reference-1">API Reference</a></h1>
 <h3 id="initloggerconfig-logoptions"><a class="header" href="#initloggerconfig-logoptions">initLogger(config: LogOptions)</a></h3>
 <p>Initializes the logging system.</p>
 <h4 id="logoptions"><a class="header" href="#logoptions">LogOptions</a></h4>
@@ -1194,7 +1221,7 @@ which is an address without balance.</p>
 <tr><td>[quorumThreshold]</td><td><code>number</code></td><td><code>undefined</code></td><td>Minimum number of nodes from the quorum pool that need to agree to consider a result true.</td></tr>
 <tr><td>[localPow]</td><td><code>boolean</code></td><td><code>true</code></td><td>Whether to use local or remote PoW.</td></tr>
 </tbody></table>
-<h1 id="troubleshooting-1"><a class="header" href="#troubleshooting-1">Troubleshooting</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="troubleshooting-1"><a class="header" href="#troubleshooting-1">Troubleshooting</a></h1>
 <h2 id="stackexchange-1"><a class="header" href="#stackexchange-1">StackExchange</a></h2>
 <blockquote>
 <p><a href="https://iota.stackexchange.com/">https://iota.stackexchange.com</a></p>
@@ -1202,7 +1229,7 @@ which is an address without balance.</p>
 <p>The IOTA StackExchange a a nice Tool for developers to find  Answers for a problem. Just search your problem and find your answer! If there is no one, submit your question and share it in the discussion channel below.</p>
 <h2 id="joining-the-discussion-4"><a class="header" href="#joining-the-discussion-4">Joining the discussion</a></h2>
 <p>If you want to get involved in discussions about this library, or you're looking for support, go to the #clients-discussion channel on <a href="https://discord.iota.org">Discord</a>.</p>
-<h1 id="iota-wallet-python-library"><a class="header" href="#iota-wallet-python-library">IOTA Wallet Python Library</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="iota-wallet-python-library"><a class="header" href="#iota-wallet-python-library">IOTA Wallet Python Library</a></h1>
 <p><a href="https://github.com/iotaledger/wallet.rs"><img src="https://img.shields.io/badge/Status-Alpha-yellow.svg" alt="status" /></a></p>
 <h2 id="joining-the-discussion-5"><a class="header" href="#joining-the-discussion-5">Joining the discussion</a></h2>
 <p>If you want to get involved in discussions about this library, or you're looking for support, go to the #clients-discussion channel on <a href="https://discord.iota.org">Discord</a>.</p>
@@ -1213,7 +1240,7 @@ which is an address without balance.</p>
 <li><a href="libraries/python/./api_reference.html">API Reference</a></li>
 <li><a href="libraries/python/./troubleshooting.html">Troubleshooting</a></li>
 </ul>
-<h1 id="getting-started-with-iota-wallet-python-binding"><a class="header" href="#getting-started-with-iota-wallet-python-binding">Getting Started with IOTA Wallet Python binding</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="getting-started-with-iota-wallet-python-binding"><a class="header" href="#getting-started-with-iota-wallet-python-binding">Getting Started with IOTA Wallet Python binding</a></h1>
 <h2 id="installation-1"><a class="header" href="#installation-1">Installation</a></h2>
 <p>Easiest way how to get python binding up and running is to leverage pre-built python libraries for linux/macos/windows that can be installed to your python environment (3.6+) via <code>pip</code>. The binding is automagically generated using github <a href="https://github.com/iotaledger/wallet.rs/actions/workflows/python_binding_publish.yml">actions</a>.</p>
 <p>The latest artifacts for major python versions can be also grabbed using <a href="https://nightly.link/iotaledger/wallet.rs/workflows/python_binding_publish/develop">nighly.link service</a>. Download zip file for the given os and pyversion, unpack wheel file (<code>.whl</code>) and install it via <code>pip</code>:</p>
@@ -1232,7 +1259,7 @@ iota-wallet-python-binding 0.1.0
 <pre><code class="language-python">import iota_wallet
 print(iota_wallet.__doc__)
 </code></pre>
-<h1 id="examples-2"><a class="header" href="#examples-2">Examples</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="examples-2"><a class="header" href="#examples-2">Examples</a></h1>
 <h2 id="account-manager-and-individual-accounts"><a class="header" href="#account-manager-and-individual-accounts">Account manager and individual accounts</a></h2>
 <p>First of all, let's initialize (open) a secure storage for individual accounts (backed up by Stronghold by default) using <code>AccountManager</code> instance:</p>
 <pre><code class="language-python"># Copyright 2020 IOTA Stiftung
@@ -1823,7 +1850,7 @@ time.sleep(60)
 q.join()
 print('All work completed')
 </code></pre>
-<h1 id="api-reference-2"><a class="header" href="#api-reference-2">API Reference</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="api-reference-2"><a class="header" href="#api-reference-2">API Reference</a></h1>
 <p>Note that in the following APIs, the corresponding exception will be returned if an error occurs.
 Also for all the optional values, the default values are the same as the ones in the Rust version.</p>
 <h3 id="accountmanager-1"><a class="header" href="#accountmanager-1">AccountManager</a></h3>
@@ -2484,7 +2511,7 @@ The account can be initialised with locally stored address history.</p>
     'public_key': bytes
 }
 </code></pre>
-<h1 id="troubleshooting-2"><a class="header" href="#troubleshooting-2">Troubleshooting</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="troubleshooting-2"><a class="header" href="#troubleshooting-2">Troubleshooting</a></h1>
 <h2 id="stackexchange-2"><a class="header" href="#stackexchange-2">StackExchange</a></h2>
 <blockquote>
 <p><a href="https://iota.stackexchange.com/">https://iota.stackexchange.com</a></p>
@@ -2492,7 +2519,7 @@ The account can be initialised with locally stored address history.</p>
 <p>The IOTA StackExchange a a nice Tool for developers to find  Answers for a problem. Just search your problem and find your answer! If there is no one, submit your question and share it in the discussion channel below.</p>
 <h2 id="joining-the-discussion-6"><a class="header" href="#joining-the-discussion-6">Joining the discussion</a></h2>
 <p>If you want to get involved in discussions about this library, or you're looking for support, go to the #clients-discussion channel on <a href="https://discord.iota.org">Discord</a>.</p>
-<h1 id="wallet-library-spec"><a class="header" href="#wallet-library-spec">Wallet Library Spec</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="wallet-library-spec"><a class="header" href="#wallet-library-spec">Wallet Library Spec</a></h1>
 <h2 id="table-of-contents----omit-in-toc---"><a class="header" href="#table-of-contents----omit-in-toc---">Table of Contents <!-- omit in toc --></a></h2>
 <ul>
 <li><a href="specs/index.html#wallet-library-spec">Wallet Library Spec</a>
@@ -5269,7 +5296,7 @@ The following should be considered when implementing this method:</p>
 <li>Errors during the polling process should be communicated to subscribers via error events.</li>
 </ul>
 <p>The background process should have a recurring checker that sequentially performs all the above tasks. The implementation should ensure that future tasks can easily be added to the background process. For reference, see Trinity’s <a href="https://github.com/iotaledger/trinity-wallet/blob/develop/src/mobile/src/ui/components/Poll.js">implementation</a> of the poll component. </p>
-<h1 id="contribute-to-the-project"><a class="header" href="#contribute-to-the-project">Contribute to the project</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="contribute-to-the-project"><a class="header" href="#contribute-to-the-project">Contribute to the project</a></h1>
 <p><strong>Thanks for thinking about contributing to the project! We have the following ways that you can contribute.</strong></p>
 <h2 id="join-the-iota-libraries-initiative"><a class="header" href="#join-the-iota-libraries-initiative">Join the IOTA Libraries Initiative</a></h2>
 <p>The <a href="https://github.com/iota-community/X-Team_IOTA_Libraries">IOTA Libraries Initiative</a> is a collaborative effort to help improve the developer experience.</p>

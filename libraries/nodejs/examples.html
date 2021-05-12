@@ -437,11 +437,20 @@ run()
 
 require('dotenv').config()
 
+// Address security level
 const ADDRESS_SECURITY_LEVEL = 2
 // Minimum balance that is required for a migration bundle, because of the dust protection in the new network
 const MINIMUM_MIGRATION_BALANCE = 1000000
 // This value shouldn't be too high, because then the PoW could take to long to get it confirmed
 const MAX_INPUTS_PER_BUNDLE = 10
+// Wallet.rs database storage path. Stronghold and database file would be stored in this path.
+const DB_STORAGE_PATH = './migration-database'
+// Legacy network nodes
+const LEGACY_NETWORK_NODES = ['https://nodes.iota.org']
+// Legacy permanode
+const LEGACY_PERMANODE = 'https://chronicle.iota.org/api'
+// Chrysalis ndoe
+const CHRYSALIS_NODE = 'https://chrysalis-nodes.iota.cafe'
 
 
 async function run() {
@@ -450,6 +459,7 @@ async function run() {
 
     // We store all bundle hashes here and check later if the bundles got confirmed
     let migrationBundleHashes = [];
+
     // Log migration events
     const callback = function (err, data) {
       // After a successful broadcast of this bundle, the library will automatically reattach bundle to 
@@ -458,70 +468,86 @@ async function run() {
       if (data.event.type === 'TransactionConfirmed') {
         console.log(&quot;MigrationProgress:&quot;, data)
         migrationBundleHashes = migrationBundleHashes.filter(hash =&gt; hash !== data.event.data.bundleHash)
+
         if (migrationBundleHashes.length == 0) {
           process.exit()
         }
+
         console.log(&quot;Still unconfirmed bundles: &quot;, migrationBundleHashes);
       }
     }
+
+    // Attach an event listener to keep track of the migration process
     addEventListener(&quot;MigrationProgress&quot;, callback)
 
     const manager = new AccountManager({
-      storagePath: './migration-database',
+      storagePath: DB_STORAGE_PATH,
     })
+
+    // Set stronghold password
     manager.setStrongholdPassword(process.env.SH_PASSWORD)
-    // Save this mnemonic securely. If you lose it, you potentially lose everything.
+
+    // IMPORTANT: SAVE THIS MNEMONIC SECURELY. IF YOU LOSE IT, YOU POTENTIALLY LOSE EVERYTHING.
     const mnemonic = manager.generateMnemonic()
-    console.log(&quot;Save this mnemonic securely. If you lose it, you potentially lose everything:&quot;, mnemonic);
+
+    console.log(&quot;IMPORTANT: SAVE THIS MNEMONIC SECURELY. IF YOU LOSE IT, YOU POTENTIALLY LOSE EVERYTHING.&quot;, mnemonic);
+
     manager.storeMnemonic(SignerType.Stronghold, mnemonic)
 
     const account = await manager.createAccount({
       // Node url for the new network
-      clientOptions: { node: &quot;https://chrysalis-nodes.iota.cafe&quot;, localPow: true, network: &quot;chrysalis-mainnet&quot; },
+      clientOptions: { node: CHRYSALIS_NODE, localPow: true, network: &quot;chrysalis-mainnet&quot; },
       alias: 'Migration',
     })
 
     console.log('Account created:', account.alias())
     // Nodes for the legacy network
-    const nodes = ['https://nodes.iota.org']
+    const nodes = LEGACY_NETWORK_NODES
     const seed = process.env.MIGRATION_SEED
+
     const migrationData = await manager.getMigrationData(
       nodes,
       seed,
       {
         // permanode for the legacy network
-        permanode: 'https://chronicle.iota.org/api',
+        permanode: LEGACY_PERMANODE,
         securityLevel: ADDRESS_SECURITY_LEVEL,
         // this is the default and from there it will check addresses for balance until 30 in a row have 0 balance
         // if not all balance got detected because a higher address index was used it needs to be increased here
         initialAddressIndex: 0
       }
     )
+
     console.log(migrationData)
 
-    let input_batches = getMigrationBundles(migrationData.inputs)
-    // create bundles with the inputs
-    for (batch of input_batches) {
-      try {
-        const bundle = await manager.createMigrationBundle(seed, batch.inputs.map(input =&gt; input.index), {
-          logFileName: 'iota-migration.log',
-          // if the input is a spent address we do a bundle mining process which takes 10 minutes to reduce the amount 
-          // of the parts of the private key which get revealed
-          mine: batch.inputs[0].spent
-        })
-        migrationBundleHashes.push(bundle.bundleHash)
-      } catch (e) {
-        console.error(e);
+    if (migrationData.balance &gt; 0) {
+      let input_batches = getMigrationBundles(migrationData.inputs)
+      // create bundles with the inputs
+      for (batch of input_batches) {
+        try {
+          const bundle = await manager.createMigrationBundle(seed, batch.inputs.map(input =&gt; input.index), {
+            logFileName: 'iota-migration.log',
+            // if the input is a spent address we do a bundle mining process which takes 10 minutes to reduce the amount 
+            // of the parts of the private key which get revealed
+            mine: batch.inputs[0].spent
+          })
+          migrationBundleHashes.push(bundle.bundleHash)
+        } catch (e) {
+          console.error(e);
+        }
       }
-    }
 
-    // Send all bundles to the Tangle and reattach them until they are confirmed
-    for (bundleHash of migrationBundleHashes) {
-      try {
-        await manager.sendMigrationBundle(nodes, bundleHash)
-      } catch (e) { console.error(e) }
-    }
+      // Send all bundles to the Tangle and reattach them until they are confirmed
+      for (bundleHash of migrationBundleHashes) {
+        try {
+          await manager.sendMigrationBundle(nodes, bundleHash)
+        } catch (e) { console.error(e) }
+      }
+    } else {
+      console.log('Detected 0 balance. Exiting.')
 
+      process.exit(0)
+    }
   } catch (e) {
     console.error(e);
   }
@@ -549,6 +575,7 @@ const getMigrationBundles = (inputs) =&gt; {
     ...unspentInputChunks.map((inputs) =&gt; ({ inputs }))
   ]
 };
+
 /**
  * Prepares inputs (as bundles) for unspent addresses.
  * Steps:
