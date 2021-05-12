@@ -3,10 +3,10 @@
 
 use crate::account::Account;
 
-use std::{collections::HashMap, fmt, path::PathBuf};
+use std::{collections::HashMap, fmt, path::Path};
 
 use bee_common::packable::Packable;
-use iota::UnlockBlock;
+use iota_client::bee_message::unlock::UnlockBlock;
 use iota_ledger::LedgerBIP32Index;
 use tokio::sync::Mutex;
 
@@ -23,7 +23,7 @@ pub struct LedgerNanoSigner {
 #[derive(Debug)]
 struct AddressIndexRecorder {
     /// the input
-    pub input: iota::Input,
+    pub input: iota_client::bee_message::input::Input,
 
     /// bip32 index
     pub bip32: LedgerBIP32Index,
@@ -48,7 +48,7 @@ impl fmt::Display for AddressPoolEntry {
 
 #[async_trait::async_trait]
 impl super::Signer for LedgerNanoSigner {
-    async fn store_mnemonic(&mut self, _: &PathBuf, _mnemonic: String) -> crate::Result<()> {
+    async fn store_mnemonic(&mut self, _: &Path, _mnemonic: String) -> crate::Result<()> {
         Err(crate::Error::InvalidMnemonic(String::from("")))
     }
 
@@ -58,7 +58,7 @@ impl super::Signer for LedgerNanoSigner {
         address_index: usize,
         internal: bool,
         meta: super::GenerateAddressMetadata,
-    ) -> crate::Result<iota::Address> {
+    ) -> crate::Result<iota_client::bee_message::address::Address> {
         // lock the mutex
         let _lock = self.mutex.lock().await;
 
@@ -79,9 +79,9 @@ impl super::Signer for LedgerNanoSigner {
 
             // and generate a single address that is shown to the user
             let addr = ledger.get_addresses(true, bip32, 1)?;
-            return Ok(iota::Address::Ed25519(iota::Ed25519Address::new(
-                *addr.first().unwrap(),
-            )));
+            return Ok(iota_client::bee_message::address::Address::Ed25519(
+                iota_client::bee_message::address::Ed25519Address::new(*addr.first().unwrap()),
+            ));
         }
 
         let pool_key = AddressPoolEntry {
@@ -123,16 +123,18 @@ impl super::Signer for LedgerNanoSigner {
         } else {
             log::info!("Got {} from pool", pool_key);
         }
-        Ok(iota::Address::Ed25519(iota::Ed25519Address::new(addr_pool[&pool_key])))
+        Ok(iota_client::bee_message::address::Address::Ed25519(
+            iota_client::bee_message::address::Ed25519Address::new(addr_pool[&pool_key]),
+        ))
     }
 
     async fn sign_message<'a>(
         &mut self,
         account: &Account,
-        essence: &iota::Essence,
+        essence: &iota_client::bee_message::prelude::Essence,
         inputs: &mut Vec<super::TransactionInput>,
         meta: super::SignMessageMetadata<'a>,
-    ) -> crate::Result<Vec<iota::UnlockBlock>> {
+    ) -> crate::Result<Vec<iota_client::bee_message::unlock::UnlockBlock>> {
         // lock the mutex
         let _lock = self.mutex.lock().await;
 
@@ -163,23 +165,26 @@ impl super::Signer for LedgerNanoSigner {
         }
 
         // figure out the remainder address and bip32 index (if there is one)
-        let (has_remainder, remainder_address, remainder_bip32): (bool, Option<&iota::Address>, LedgerBIP32Index) =
-            match meta.remainder_deposit_address {
-                Some(a) => (
-                    true,
-                    Some(a.address().as_ref()),
-                    LedgerBIP32Index {
-                        bip32_index: *a.key_index() as u32 | HARDENED,
-                        bip32_change: if *a.internal() { 1 } else { 0 } | HARDENED,
-                    },
-                ),
-                None => (false, None, LedgerBIP32Index::default()),
-            };
+        let (has_remainder, remainder_address, remainder_bip32): (
+            bool,
+            Option<&iota_client::bee_message::address::Address>,
+            LedgerBIP32Index,
+        ) = match meta.remainder_deposit_address {
+            Some(a) => (
+                true,
+                Some(a.address().as_ref()),
+                LedgerBIP32Index {
+                    bip32_index: *a.key_index() as u32 | HARDENED,
+                    bip32_change: if *a.internal() { 1 } else { 0 } | HARDENED,
+                },
+            ),
+            None => (false, None, LedgerBIP32Index::default()),
+        };
 
         let mut remainder_index = 0u16;
         if has_remainder {
             match essence {
-                iota::Essence::Regular(essence) => {
+                iota_client::bee_message::prelude::Essence::Regular(essence) => {
                     // find the index of the remainder in the essence
                     // this has to be done because outputs in essences are sorted
                     // lexically and therefore the remainder is not always the last output.
@@ -189,7 +194,7 @@ impl super::Signer for LedgerNanoSigner {
                     // at this place, so we can rely on their order and don't have to sort it again.
                     for output in essence.outputs().iter() {
                         match output {
-                            iota::Output::SignatureLockedSingle(s) => {
+                            iota_client::bee_message::output::Output::SignatureLockedSingle(s) => {
                                 if *remainder_address.unwrap() == *s.address() {
                                     break;
                                 }

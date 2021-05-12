@@ -7,15 +7,14 @@ require('dotenv').config();
 
 async function run() {
 
-    const { AccountManager, StorageType } = require('@iota/wallet')
+    const { AccountManager } = require('@iota/wallet')
     const manager = new AccountManager({
-        storagePath: './alice-database',
-        storageType: StorageType.Stronghold
+        storagePath: './alice-database'
     })
 
     manager.setStrongholdPassword(process.env.SH_PASSWORD)
 
-    let backup_path = await manager.backup("./backup")
+    let backup_path = await manager.backup("./backup", process.env.SH_PASSWORD)
     
     console.log('Backup path:', backup_path)
 }

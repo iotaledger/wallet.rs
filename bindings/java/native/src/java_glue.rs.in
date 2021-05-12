@@ -1,0 +1,872 @@
+use std::{
+    path::PathBuf,
+    time::Duration,
+    str::FromStr,
+};
+
+use chrono::prelude::{
+    DateTime, Utc, Local
+};
+
+use crate::{
+    jni_c_header::*,
+    types::*,
+    acc::*,
+    client_options::*,
+    sync::*,
+    acc_manager::*,
+    event_manager::*,
+    message::*,
+    address::*,
+};
+
+use anyhow::{
+    Result,
+    anyhow,
+};
+
+use iota_wallet::{
+    account::{
+        AccountBalance,
+    },
+    message::{
+        MessageType, Value, ValueUnit, MessageId, TransactionSignatureLockedSingleOutput
+    },
+    address::{
+        OutputKind, AddressWrapper, IotaAddress,
+    },
+    client::{
+        Api,
+    },
+    event::{
+        EventId, TransferProgressType, BalanceChange,
+        TransactionEvent as WalletTransactionEvent,
+        TransactionConfirmationChangeEvent as WalletTransactionConfirmationChangeEvent,
+        AddressConsolidationNeeded as WalletAddressConsolidationNeeded,
+        TransferProgress as WalletTransferProgress,
+        BalanceEvent as WalletBalanceEvent,
+        TransactionReattachmentEvent as WalletTransactionReattachmentEvent
+    },
+};
+
+foreign_class!(class RustLogging {
+    fn init() {
+        env_logger::init();
+    }
+});
+
+foreign_enum!(
+    enum RemainderValueStrategy {
+        REUSE_ADDRESS = RemainderValueStrategy::ReuseAddress,
+        CHANGE_ADDRESS = RemainderValueStrategy::ChangeAddress,
+    }
+);
+
+foreign_enum!(
+    enum AccountSignerType {
+        STRONGHOLD = AccountSignerType::Stronghold,
+        LEDGER_NANO = AccountSignerType::LedgerNano,
+        LEDGER_NANO_SIMULATOR = AccountSignerType::LedgerNanoSimulator,
+    }
+);
+
+foreign_enum!(
+    enum Api {
+        GET_TIPS = Api::GetTips,
+        POST_MESSAGE = Api::PostMessage,
+        GET_OUTPUT = Api::GetOutput,
+    }
+);
+
+foreign_enum!(
+    enum MessageType {
+        RECEIVED = MessageType::Received,
+        SENT = MessageType::Sent,
+        FAILED = MessageType::Failed,
+        UNCONFIRMED = MessageType::Unconfirmed,
+        VALUE = MessageType::Value,
+        CONFIRMED = MessageType::Confirmed,
+    }
+);
+
+foreign_enum!(
+    enum MessagePayloadType {
+        TRANSACTION = MessagePayloadType::Transaction,
+        MILESTONE = MessagePayloadType::Milestone,
+        INDEXATION = MessagePayloadType::Indexation,
+        RECEIPT = MessagePayloadType::Receipt,
+        TREASURY_TRANSACTION = MessagePayloadType::TreasuryTransaction,
+    }
+);
+
+foreign_enum!(
+    enum ValueUnit {
+        I = ValueUnit::I,
+        Ki = ValueUnit::Ki,
+        Mi = ValueUnit::Mi,
+        Gi = ValueUnit::Gi,
+        Ti = ValueUnit::Ti,
+        Pi = ValueUnit::Pi,
+    }
+);
+
+foreign_enum!(
+    enum OutputKind {
+        SIGNATURE_LOCKED_SINGLE = OutputKind::SignatureLockedSingle,
+        SIGNATURE_LOCKED_DUST_ALLOWANCE = OutputKind::SignatureLockedDustAllowance,
+        TREASURY = OutputKind::Treasury,
+    }
+);
+
+foreign_enum!(
+    enum InputKind {
+        UTXO = InputKind::Utxo,
+        TREASURY = InputKind::Treasury,
+    }
+);
+foreign_enum!(
+    enum UnlockBlockKind {
+        ED25519 = UnlockBlockKind::Ed25519,
+        REFERENCE = UnlockBlockKind::Reference,
+    }
+);
+
+foreign_class!(class RustHex {
+    fn hex::encode(_ : String) -> String;
+    fn decode(s : String) -> Result<Vec<u8>> {
+        let res = hex::decode(s);
+        match res {
+            Ok(s) => Ok(s),
+            Err(e) => Err(anyhow!("Hex error {:?}", e.to_string()))
+        }
+    }
+});
+
+foreign_class!(class AccountManagerBuilder {
+    self_type AccountManagerBuilder;
+    constructor AccountManagerBuilder::new() -> AccountManagerBuilder;
+    fn AccountManagerBuilder::with_storage(&mut self, storage_path: PathBuf, password: Option<&str>) -> Result<AccountManagerBuilder>; alias withStorage;
+    fn AccountManagerBuilder::with_polling_interval(&mut self, polling_interval: Duration) -> AccountManagerBuilder; alias withPollingInterval;
+    fn AccountManagerBuilder::with_output_consolidation_threshold(&mut self, threshold: usize) -> AccountManagerBuilder; alias withOutputConsolidationThreshold;
+    fn AccountManagerBuilder::with_automatic_output_consolidation_disabled(&mut self) -> AccountManagerBuilder; alias withAutomaticOutputConsolidationDisabled;
+    fn AccountManagerBuilder::with_sync_spent_outputs(&mut self) -> AccountManagerBuilder; alias withSyncSpentOutputs;
+    fn AccountManagerBuilder::with_event_persistence(&mut self) -> AccountManagerBuilder; alias withEventPersistence;
+    fn AccountManagerBuilder::with_multiple_empty_accounts(&mut self) -> AccountManagerBuilder; alias withMultipleEmptyAccounts;
+    fn AccountManagerBuilder::finish(&mut self) -> Result<AccountManager>;
+});
+
+foreign_class!(class AccountManager {
+    self_type AccountManager;
+    private constructor = empty;
+    fn AccountManagerBuilder::new() -> AccountManagerBuilder; alias Builder;
+    fn AccountManager::stop_background_sync(&mut self,) -> Result<()>; alias stopBackgroundSync;
+    fn AccountManager::set_storage_password(&mut self, password: &str) -> Result<()>; alias setStoragePassword;
+    fn AccountManager::set_stronghold_password(&mut self, password: &str) -> Result<()>; alias setStrongholdPassword;
+    fn AccountManager::change_stronghold_password(&mut self, current_password: &str, new_password: &str) -> Result<()>; alias changeStrongholdPassword;
+    fn AccountManager::generate_mnemonic(&mut self) -> Result<String>; alias generateMnemonic;
+    fn AccountManager::store_mnemonic(&mut self, signer_type_enum: AccountSignerType, mnemonic: String) -> Result<()>; alias storeMnemonic;
+    fn AccountManager::verify_mnemonic(&mut self, mnemonic: String) -> Result<()>; alias verifyMnemonic;
+    fn AccountManager::create_account(&mut self, client_options: ClientOptions) -> Result<AccountInitialiser>; alias createAccount;
+    fn AccountManager::remove_account(&self, account_id: String) -> Result<()>; alias removeAccount;
+    fn AccountManager::get_account(&self, account_id: String) -> Result<Account>; alias getAccount;
+    fn AccountManager::get_accounts(&self) -> Result<Vec<Account>>; alias getAccounts;
+    fn AccountManager::reattach(&self, account_id: String, message_id: MessageId) -> Result<Message>;
+    fn AccountManager::promote(&self, account_id: String, message_id: MessageId) -> Result<Message>;
+    fn AccountManager::retry(&self, account_id: String, message_id: MessageId) -> Result<Message>;
+    fn AccountManager::internal_transfer(&self, from_account_id: String, to_account_id: String, amount: u64) -> Result<Message>; alias internalTransfer;
+    fn AccountManager::backup(&self, destination: PathBuf, stronghold_password: String) -> Result<PathBuf>;
+    fn AccountManager::import_accounts(&mut self, source: PathBuf, stronghold_password: String) -> Result<()>; alias importAccounts;
+    fn AccountManager::sync_accounts(&self) -> Result<AccountsSynchronizer>; alias syncAccounts;
+});
+
+foreign_class!(
+    class AccountSynchronizer {
+        self_type AccountSynchronizer;
+        private constructor = empty;
+
+        fn AccountSynchronizer::gap_limit(&mut self, limit: usize) -> AccountSynchronizer; alias gapLimit;
+        fn AccountSynchronizer::skip_persistence(&mut self) -> AccountSynchronizer; alias skipPersistence;
+        fn AccountSynchronizer::address_index(&mut self, address_index: usize) -> AccountSynchronizer; alias addressIndex;
+        fn AccountSynchronizer::execute(&mut self) -> Result<SyncedAccount>;
+    }
+);
+
+foreign_class!(
+    class AccountsSynchronizer {
+        self_type AccountsSynchronizer;
+        private constructor = empty;
+
+        fn AccountsSynchronizer::gap_limit(&mut self, limit: usize) -> AccountsSynchronizer; alias gapLimit;
+        fn AccountsSynchronizer::address_index(&mut self, address_index: usize) -> AccountsSynchronizer; alias addressIndex;
+        fn AccountsSynchronizer::execute(&mut self) -> Result<Vec<SyncedAccount>>;
+    }
+);
+
+foreign_class!(
+    class SyncedAccount {
+        self_type SyncedAccount;
+        private constructor = empty;
+
+        fn SyncedAccount::deposit_address(&mut self) -> Address;
+    }
+);
+
+foreign_class!(class BrokerOptions {
+    self_type BrokerOptions;
+    constructor BrokerOptions::new() -> BrokerOptions;
+    fn BrokerOptions::automatic_disconnect(&self, disconnect: bool) -> BrokerOptions; alias automaticDisconnect;
+    fn BrokerOptions::timeout(&self, timeout: Duration) -> BrokerOptions;
+});
+
+foreign_class!(class ClientOptionsBuilder {
+    self_type ClientOptionsBuilder;
+    constructor ClientOptionsBuilder::new() -> ClientOptionsBuilder;
+    fn ClientOptionsBuilder::with_node(&mut self, node: &str) -> ClientOptionsBuilder; alias withNode;
+    fn ClientOptionsBuilder::with_node_pool_urls(&mut self, node_pool_urls: Vec<String>) -> ClientOptionsBuilder; alias withNodePoolUrls;
+    fn ClientOptionsBuilder::with_network(&mut self, network: String) -> ClientOptionsBuilder; alias withNetwork;
+    fn ClientOptionsBuilder::with_node_sync_interval(&mut self, node_sync_interval: Duration) -> ClientOptionsBuilder; alias withNodeSyncInterval;
+    fn ClientOptionsBuilder::with_node_sync_disabled(&mut self) -> ClientOptionsBuilder; alias withNodeSyncDisabled;
+    fn ClientOptionsBuilder::with_mqtt_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientOptionsBuilder; alias withMqttBrokerOptions;
+    fn ClientOptionsBuilder::with_local_pow(&mut self, local: bool) -> ClientOptionsBuilder; alias withLocalPow;
+    fn ClientOptionsBuilder::with_request_timeout(&mut self, timeout: Duration) -> ClientOptionsBuilder; alias withRequestTimeout;
+    fn ClientOptionsBuilder::with_api_timeout(&mut self, api: Api, timeout: Duration) -> ClientOptionsBuilder; alias withApiTimeout;
+    fn ClientOptionsBuilder::build(&mut self) -> Result<ClientOptions>;
+});
+
+foreign_class!(class ClientOptions{
+    self_type ClientOptions;
+    private constructor = empty;
+});
+
+foreign_class!(
+    #[derive(Display)]
+    class Value {
+        self_type Value;
+        constructor Value::new(value: u64, unit: ValueUnit) -> Value;
+        private fn Value::with_denomination(&self) -> String; alias to_string;
+        fn Value::with_denomination(&self) -> String; alias withDenomination;
+        fn Value::without_denomination(&self) -> u64; alias withoutDenomination;
+        fn Value::value(&self) -> &u64;
+    }
+);
+foreign_class!(
+    #[derive(Display)]
+    class MessageId {
+        self_type MessageId;
+        constructor MessageId::null() -> MessageId;
+        private fn MessageId::to_string(&self) -> String;
+        fn MessageId::fromString(str_rep: &str) -> MessageId {
+            MessageId::from_str(str_rep).unwrap()
+        }
+    }
+);
+
+foreign_class!(
+    #[derive(PartialEq)]
+    class Message {
+        self_type Message;
+        private constructor = empty;
+        private fn Message::eq(&self, o: &Message) -> bool; alias rustEq;
+        fn Message::id(&self) -> MessageId;
+        fn Message::version(&self) -> u64;
+        fn Message::parents(&self) -> Vec<MessageId>;
+        fn Message::payload_length(&self) -> usize; alias payloadLength;
+        fn Message::payload(&self) -> Option<MessagePayload>;
+        fn Message::timestamp(&self) -> DateTime<Utc>;
+        fn Message::nonce(&self) -> u64;
+        fn Message::confirmed(&self) -> Option<bool>;
+        fn Message::broadcasted(&self) -> bool;
+    }
+);
+
+foreign_class!(
+    #[derive(PartialEq)]
+    class NodeInfoWrapper {
+        self_type NodeInfoWrapper;
+        private constructor = empty;
+        private fn NodeInfoWrapper::eq(&self, o: &NodeInfoWrapper) -> bool; alias rustEq;
+        fn NodeInfoWrapper::url(&self) -> &str;
+        fn NodeInfoWrapper::nodeinfo(&self) -> InfoResponse; alias nodeInfo;
+    }
+);
+
+foreign_class!(
+    #[derive(PartialEq)]
+    class InfoResponse {
+        self_type InfoResponse;
+        private constructor = empty;
+        private fn InfoResponse::eq(&self, o: &InfoResponse) -> bool; alias rustEq;
+        fn InfoResponse::name(&self) -> &str;
+        fn InfoResponse::version(&self) -> &str;
+        fn InfoResponse::network_id(&self) -> &str; alias networkId;
+        fn InfoResponse::bech32_hrp(&self) -> &str; alias bech32HRP;
+        fn InfoResponse::messages_per_second(&self) -> f64; alias messagesPerSecond;
+        fn InfoResponse::referenced_messages_per_second(&self) -> f64; alias referencedMessagesPerSecond;
+        fn InfoResponse::referenced_rate(&self) -> f64; alias referencedRate;
+        fn InfoResponse::latest_milestone_timestamp(&self) -> u64; alias latestMilestoneTimestamp;
+        fn InfoResponse::min_pow_score(&self) -> f64; alias minPoWScore;
+        fn InfoResponse::latest_milestone_index(&self) -> u32; alias latestMilestoneIndex;
+        fn InfoResponse::confirmed_milestone_index(&self) -> u32; alias confirmedMilestoneIndex;
+        fn InfoResponse::pruning_index(&self) -> u32; alias pruningIndex;
+        fn InfoResponse::features(&self) -> Vec<String>;
+    }
+);
+
+foreign_class!(
+    #[derive(PartialEq, Display)]
+    class Address {
+        self_type Address;
+        private constructor = empty;
+        private fn Address::eq(&self, o: &Address) -> bool; alias rustEq;
+        private fn Address::to_string(&self) -> String;
+        fn Address::balance(&self) -> u64; alias getBalance;
+        fn Address::readable(&self) -> String; alias getReadable;
+        fn Address::address(&self) -> AddressWrapper;
+    }
+);
+
+foreign_class!(
+    class AddressWrapper {
+        self_type AddressWrapper;
+        private constructor = empty;
+        fn AddressWrapper::from(address: &str, bech32_hrp: String) -> Result<AddressWrapper> {
+            match IotaAddress::try_from_bech32(address) {
+                Ok(addr) => Ok(AddressWrapper::new(addr, bech32_hrp)),
+                Err(e) => Err(anyhow!(e)),
+            }
+        }
+        fn AddressWrapper::to_bech32(&self) -> String; alias toBech32;
+    }
+);
+
+foreign_class!(
+    class AccountInitialiser{
+        self_type AccountInitialiser;
+        private constructor = empty;
+        fn AccountInitialiser::signer_type(&mut self, signer_type_enum: AccountSignerType) -> AccountInitialiser; alias signerType;
+        fn AccountInitialiser::alias(&mut self, alias: String) -> AccountInitialiser;
+        fn AccountInitialiser::created_at(&mut self, created_at: DateTime<Local>) -> AccountInitialiser; alias createdAt;
+        fn AccountInitialiser::messages(&mut self, messages: Vec<Message>) -> AccountInitialiser;
+        fn AccountInitialiser::addresses(&mut self, addresses: Vec<Address>) -> AccountInitialiser;
+        fn AccountInitialiser::skip_persistence(&mut self) -> AccountInitialiser; alias skipPersistence;
+        fn AccountInitialiser::initialise(&mut self) -> Result<Account>;
+    }
+);
+
+foreign_class!(
+    class AccountBalance {
+        self_type AccountBalance;
+        private constructor = empty;
+        fn AccountBalance::getTotal(&self) -> u64 {
+            this.total
+        }
+        fn AccountBalance::getAvailable(&self) -> u64 {
+            this.available
+        }
+        fn AccountBalance::getIncoming(&self) -> u64 {
+            this.incoming
+        }
+        fn AccountBalance::getOutgoing(&self) -> u64 {
+            this.outgoing
+        }
+    }
+);
+
+foreign_class!(
+    class Account {
+        self_type Account;
+        private constructor = empty;
+        fn Account::transfer(&mut self, transfer: Transfer) -> Result<Message>;
+        fn Account::generate_address(&self) -> Result<Address>; alias generateAddress;
+        fn Account::get_unused_address(&self) -> Result<Address>; alias getUnusedAddress;
+        fn Account::is_latest_address_unused(&self) -> Result<bool>; alias isLatestAddressUnused;
+        fn Account::latest_address(&self) -> Address; alias latestAddress;
+        fn Account::set_alias(&self, alias: String) -> Result<()>; alias setAlias;
+        fn Account::set_client_options(&self, options: ClientOptions) -> Result<()>; alias setClientOptions;
+        fn Account::list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Result<Vec<Message>>; alias listMessages;
+        fn Account::list_spent_addresses(&self) -> Result<Vec<Address>>; alias listSpentAddresses;
+        fn Account::list_unspent_addresses(&self) -> Result<Vec<Address>>; alias listUnspentAddresses;
+        fn Account::get_message(&self, message_id: MessageId) -> Option<Message>; alias getMessage;
+        fn Account::alias(&self) -> String;
+        fn Account::balance(&self) -> Result<AccountBalance>;
+
+        fn Account::id(&self) -> String;
+        fn Account::created_at(&self) -> DateTime<Local>; alias createdAt;
+        fn Account::last_synced_at(&self) -> Option<DateTime<Local>>; alias lastSyncedAt;
+    }
+);
+
+foreign_class!(
+    class Transfer {
+        self_type Transfer;
+        private constructor = empty;
+        fn Transfer::builder(address: AddressWrapper, amount: u64) -> TransferBuilder;
+    }
+);
+
+foreign_class!(
+    class TransferBuilder {
+        self_type TransferBuilder;
+        constructor TransferBuilder::new(address: AddressWrapper, amount: u64) -> TransferBuilder;
+        fn TransferBuilder::with_remainder_value_strategy(&mut self, strategy: RemainderValueStrategy) -> TransferBuilder; alias withRemainderValueStrategy;
+        fn TransferBuilder::with_remainder_to_account_with_address(&mut self, address: AddressWrapper) -> TransferBuilder; alias withRemainderToAccountWithAddress;
+        fn TransferBuilder::with_indexation(&mut self, indexation: IndexationPayload) -> TransferBuilder; alias withIndexation;
+        fn TransferBuilder::with_skip_sync(&mut self) -> TransferBuilder; alias withSkipSync;
+        fn TransferBuilder::finish(&self) -> Transfer;
+    }
+);
+
+// Events
+
+foreign_enum!(
+    enum TransferProgressType {
+        SYNCING_ACCOUNT = TransferProgressType::SyncingAccount,
+        SELECTING_INPUTS = TransferProgressType::SelectingInputs,
+        GENERATING_REMAINDER_DEPOST_ADDRESS = TransferProgressType::GeneratingRemainderDepositAddress,
+        SIGNING_TRANSACTION = TransferProgressType::SigningTransaction,
+        PERFORMING_POW = TransferProgressType::PerformingPoW,
+        BROADCASTING = TransferProgressType::Broadcasting,
+    }
+);
+
+foreign_enum!(
+    enum MigrationProgressType {
+        FETCHING_MIGRATION_DATA = MigrationProgressType::FetchingMigrationData,
+        MINING_BUNDLE = MigrationProgressType::MiningBundle,
+        SIGNING_BUNDLE = MigrationProgressType::SigningBundle,
+        BROADCASTING_BUNDLE = MigrationProgressType::BroadcastingBundle,
+        TRANSACTION_CONFIRMED = MigrationProgressType::TransactionConfirmed,
+    }
+);
+
+foreign_enum!(
+    enum StrongholdStatusType {
+        UNLOCKED = StrongholdStatusType::Unlocked,
+        LOCKED = StrongholdStatusType::Locked,
+    }
+);
+
+foreign_class!(
+    /// Fetching migration data on the given address range.
+    class FetchingMigrationData {
+        self_type FetchingMigrationData;
+        private constructor = empty;
+        /// The initial address index on the fetch range.
+        fn FetchingMigrationData::initial_address_index(&self) -> u64; alias getInitialAddressIndex;
+        /// The final address index on the fetch range.
+        fn FetchingMigrationData::final_address_index(&self) -> u64; alias getFinalAddressIndex;
+    }
+);
+foreign_class!(
+    /// Mining the bundle with the given spent address.
+    class MiningBundle {
+        self_type MiningBundle;
+        private constructor = empty;
+        /// The spent address.
+        fn MiningBundle::address(&self) -> &str; alias getAddress;
+    }
+);
+foreign_class!(
+    /// Signing the bundle.
+    class SigningBundle {
+        self_type SigningBundle;
+        private constructor = empty;
+        /// The addresses associated with the bundle.
+        fn SigningBundle::addresses(&self) -> Vec<String>; alias getAddresses;
+    }
+);
+foreign_class!(
+    /// Broadcasting the given bundle hash.
+    class BroadcastingBundle {
+        self_type BroadcastingBundle;
+        private constructor = empty;
+        /// The bundle hash.
+        fn BroadcastingBundle::bundle_hash(&self) -> &str; alias getBundleHash;
+    }
+);
+foreign_class!(
+    /// Transaction confirmation event.
+    class TransactionConfirmed {
+        self_type TransactionConfirmed;
+        private constructor = empty;
+        /// The bundle hash.
+        fn TransactionConfirmed::bundle_hash(&self) -> &str; alias getBundleHash;
+    }
+);
+
+foreign_class!(
+    class StrongholdStatusEvent {
+        self_type StrongholdStatusEvent;
+        private constructor = empty;
+        fn StrongholdStatusEvent::snapshot_path(&self) -> PathBuf; alias snapshotPath;
+        fn StrongholdStatusEvent::status(&self) -> StrongholdStatusType;
+        fn StrongholdStatusEvent::unlocked_duration(&self) -> Result<Duration>; alias unlockedDuration;
+    }
+);
+
+foreign_class!(
+    class AddressConsolidationNeededEvent {
+        self_type WalletAddressConsolidationNeeded;
+        private constructor = empty;
+        fn WalletAddressConsolidationNeeded::account_id(&self) -> &str; alias accountId;
+        fn WalletAddressConsolidationNeeded::address(&self) -> AddressWrapper {
+            this.address().clone()
+        }
+    }
+);
+
+foreign_class!(
+    class TransactionEvent {
+        self_type WalletTransactionEvent;
+        private constructor = empty;
+        fn WalletTransactionEvent::indexation_id(&self) -> &str; alias indexationId;
+        fn WalletTransactionEvent::account_id(&self) -> &str; alias accountId;
+        fn WalletTransactionEvent::message(&self) -> Message {
+            this.message().clone().into()
+        }
+    }
+);
+
+foreign_class!(
+    class TransactionConfirmationChangeEvent {
+        self_type WalletTransactionConfirmationChangeEvent;
+        private constructor = empty;
+        fn WalletTransactionConfirmationChangeEvent::indexation_id(&self) -> &str; alias indexationId;
+        fn WalletTransactionConfirmationChangeEvent::account_id(&self) -> &str; alias accountId;
+        fn WalletTransactionConfirmationChangeEvent::message(&self) -> Message {
+            this.message().clone().into()
+        }
+        fn WalletTransactionConfirmationChangeEvent::confirmed(&self) -> bool {
+            *this.confirmed()
+        }
+    }
+);
+
+foreign_class!(
+    class TransferProgressEvent {
+        self_type WalletTransferProgress;
+        private constructor = empty;
+        fn WalletTransferProgress::account_id(&self) -> &str; alias accountId;
+        fn WalletTransferProgress::event(&self) -> TransferProgressType {
+            this.event().clone()
+        }
+    }
+);
+
+foreign_class!(
+    class MigrationProgressEvent {
+        self_type MigrationProgressEvent;
+        private constructor = empty;
+        fn MigrationProgressEvent::get_type(&self) -> MigrationProgressType; alias getType;
+        fn MigrationProgressEvent::as_fetching_migration_data(&self) -> Result<FetchingMigrationData>; alias asFetchingMigrationData;
+        fn MigrationProgressEvent::as_mining_bundle(&self) -> Result<MiningBundle>; alias asMiningBundle;
+        fn MigrationProgressEvent::as_signing_bundle(&self) -> Result<SigningBundle>; alias asSigningBundle;
+        fn MigrationProgressEvent::as_broadcasting_bundle(&self) -> Result<BroadcastingBundle>; alias asBroadcastingBundle;
+        fn MigrationProgressEvent::as_transaction_confirmed(&self) -> Result<TransactionConfirmed>; alias asTransactionConfirmed;
+    }
+);
+
+foreign_class!(
+    class BalanceChange {
+        self_type BalanceChange;
+        private constructor = empty;
+        fn BalanceChange::isSpent(&self) -> bool {
+            this.spent != 0
+        }
+        fn BalanceChange::spent(&self) -> u64 {
+            this.spent
+        }
+        fn BalanceChange::received(&self) -> u64 {
+            this.received
+        }
+    }
+);
+
+foreign_class!(
+    class BalanceEvent {
+        self_type WalletBalanceEvent;
+        private constructor = empty;
+        fn WalletBalanceEvent::indexation_id(&self) -> &str; alias indexationId;
+        fn WalletBalanceEvent::account_id(&self) -> &str; alias accountId;
+        fn WalletBalanceEvent::messageId(&self) -> Option<MessageId> {
+            this.message_id().clone()
+        }
+        fn WalletBalanceEvent::address(&self) -> AddressWrapper {
+            this.address().clone()
+        }
+        fn WalletBalanceEvent::remainder(&self) -> Option<bool> {
+            this.remainder().clone()
+        }
+        fn WalletBalanceEvent::balanceChange(&self) -> BalanceChange {
+            this.balance_change().clone()
+        }
+    }
+);
+
+foreign_class!(
+    class TransactionReattachmentEvent {
+        self_type WalletTransactionReattachmentEvent;
+        private constructor = empty;
+        fn WalletTransactionReattachmentEvent::indexation_id(&self) -> &str; alias indexationId;
+        fn WalletTransactionReattachmentEvent::account_id(&self) -> &str; alias accountId;
+        fn WalletTransactionReattachmentEvent::message(&self) -> Message {
+            this.message().clone().into()
+        }
+        fn WalletTransactionReattachmentEvent::reattachedMessageId(&self) -> MessageId {
+            this.reattached_message_id().clone()
+        }
+    }
+);
+
+foreign_class!(
+    class EventId {
+        self_type EventId;
+        private constructor = empty;
+    }
+);
+
+foreign_callback!(callback ErrorListener {
+    self_type ErrorListener + Send + 'static;
+    onError = ErrorListener::on_error(&self, error: String);
+});
+
+foreign_callback!(callback NewTransactionListener {
+    self_type NewTransactionListener + Send + 'static;
+    onNewTransaction = NewTransactionListener::on_new_transaction(&self, event: WalletTransactionEvent);
+});
+
+foreign_callback!(callback ReattachTransactionListener {
+    self_type ReattachTransactionListener + Send + 'static;
+    onReattachTransaction = ReattachTransactionListener::on_reattachment(&self, event: WalletTransactionReattachmentEvent);
+});
+
+foreign_callback!(callback BroadcastTransactionListener {
+    self_type BroadcastTransactionListener + Send + 'static;
+    onBroadcastTransaction = BroadcastTransactionListener::on_broadcast(&self, event: WalletTransactionEvent);
+});
+
+foreign_callback!(callback TransferProgressListener {
+    self_type TransferProgressListener + Send + 'static;
+    onTransferProgress = TransferProgressListener::on_transfer_progress(&self, event: WalletTransferProgress);
+});
+
+foreign_callback!(callback MigrationProgressListener {
+    self_type MigrationProgressListener + Send + 'static;
+    onMigrationProgress = MigrationProgressListener::on_migration_progress(&self, event: MigrationProgressEvent);
+});
+
+foreign_callback!(callback TransactionConfirmationChangeListener {
+    self_type TransactionConfirmationChangeListener + Send + 'static;
+    onConfirmationStateChange = TransactionConfirmationChangeListener::on_confirmation_state_change(&self, event: WalletTransactionConfirmationChangeEvent);
+});
+
+foreign_callback!(callback BalanceChangeListener {
+    self_type BalanceChangeListener + Send + 'static;
+    onBalanceChange = BalanceChangeListener::on_balance_change(&self, event: WalletBalanceEvent);
+});
+
+foreign_callback!(callback StrongholdStatusListener {
+    self_type StrongholdStatusListener + Send + 'static;
+    onStrongholdStatusChange = StrongholdStatusListener::on_stronghold_status_change(&self, event: StrongholdStatusEvent);
+});
+
+foreign_callback!(callback AddressConsolidationNeededListener {
+    self_type AddressConsolidationNeededListener + Send + 'static;
+    onAddressConsolidationNeeded = AddressConsolidationNeededListener::on_address_consolidation_needed(&self, event: WalletAddressConsolidationNeeded);
+});
+
+foreign_class!(
+    class EventManager {
+        self_type EventManager;
+        private constructor = empty;
+        fn EventManager::subscribe_errors(cb: Box<dyn ErrorListener + Send + 'static>) -> EventId; alias subscribeErrors;
+        fn EventManager::subscribe_new_transaction(cb: Box<dyn NewTransactionListener + Send + 'static>) -> EventId; alias subscribeNewTransaction;
+        fn EventManager::subscribe_confirmation_state_change(cb: Box<dyn TransactionConfirmationChangeListener + Send + 'static>) -> EventId; alias subscribeConfirmationStateChange;
+        fn EventManager::subscribe_reattachment(cb: Box<dyn ReattachTransactionListener + Send + 'static>) -> EventId; alias subscribeReattachement;
+        fn EventManager::subscribe_broadcast(cb: Box<dyn BroadcastTransactionListener + Send + 'static>) -> EventId; alias subscribeBroadcast;
+        fn EventManager::subscribe_transfer_progress(cb: Box<dyn TransferProgressListener + Send + 'static>) -> EventId; alias subscribeTransferProgress;
+        fn EventManager::subscribe_migration_progress(cb: Box<dyn MigrationProgressListener + Send + 'static>) -> EventId; alias subscribeMigrationProgress;
+        fn EventManager::subscribe_balance_change(cb: Box<dyn BalanceChangeListener + Send + 'static>) -> EventId; alias subscribeBalanceChange;
+        fn EventManager::subscribe_stronghold_status_change(cb: Box<dyn StrongholdStatusListener + Send + 'static>) -> Result<EventId>; alias subscribeStrongholdStatusChange;
+        fn EventManager::subscribe_address_consolidation_needed(cb: Box<dyn AddressConsolidationNeededListener + Send + 'static>) -> Result<EventId>; alias subscribeAddressConsolidationNeeded;
+
+        fn EventManager::remove_error_listener(event: EventId); alias removeErrorListener;
+        fn EventManager::remove_new_transaction_listener(event: EventId); alias removeNewTransactionListener;
+        fn EventManager::remove_confirmation_state_change_listener(event: EventId); alias removeConfirmationStateChangeListener;
+        fn EventManager::remove_reattachment_listener(event: EventId); alias removeReattachementListener;
+        fn EventManager::remove_broadcast_listener(event: EventId); alias removeBroadcastListener;
+        fn EventManager::remove_transfer_progress_listener(event: EventId); alias removeTransferProgressListener;
+        fn EventManager::remove_migration_progress_listener(event: EventId); alias removeMigrationProgressListener;
+        fn EventManager::remove_balance_change_listener(event: EventId); alias removeBalanceChangeListener;
+        fn EventManager::remove_stronghold_status_change_listener(event: EventId); alias removeStrongholdStatusChangeListener;
+        fn EventManager::remove_address_consolidation_needed_listener(event: EventId); alias removeAddressConsolidationNeededListener;
+    }
+);
+
+// Bee types wrapping
+foreign_class!(
+    #[derive(Display)]
+    class MessagePayload {
+        self_type MessagePayload;
+        private constructor = empty;
+        private fn MessagePayload::to_string(&self) -> String;
+        fn MessagePayload::payload_type(&self) -> MessagePayloadType; alias payloadType;
+        fn MessagePayload::get_as_indexation(&self) -> Option<IndexationPayload>; alias getAsIndexation;
+        fn MessagePayload::get_as_milestone(&self) -> Option<MilestonePayload>; alias getAsMilestone;
+        fn MessagePayload::get_as_transaction(&self) -> Option<MessageTransactionPayload>; alias getAsTransaction;
+        fn MessagePayload::get_as_receipt(&self) -> Option<ReceiptPayload>; alias getAsReceipt;
+        fn MessagePayload::get_as_treasury(&self) -> Option<TreasuryTransactionPayload>; alias getAsTreasury;
+    }
+);
+
+foreign_class!(
+    class IndexationPayload {
+        self_type IndexationPayload;
+        private constructor = empty;
+        fn IndexationPayload::new(index: &[u8], data: &[u8]) -> Result<IndexationPayload>; alias new_with;
+        fn IndexationPayload::index(&self) -> &[u8];
+        fn IndexationPayload::data(&self) -> &[u8];
+    }
+);
+
+foreign_class!(
+    class MilestonePayload {
+        self_type MilestonePayload;
+        private constructor = empty;
+        fn MilestonePayload::essence(&self) -> MilestonePayloadEssence;
+        fn MilestonePayload::signatures(&self) -> Vec<MilestoneSignature>;
+    }
+);
+
+foreign_class!(
+    class MilestoneSignature {
+        self_type MilestoneSignature;
+        private constructor = empty;
+        fn MilestoneSignature::get_signature(&self) -> Vec<u8>; alias getSignature;
+    }
+);
+
+foreign_class!(
+    class MilestonePayloadEssence {
+        self_type MilestonePayloadEssence;
+        private constructor = empty;
+        fn MilestonePayloadEssence::index(&self) -> u32;
+        fn MilestonePayloadEssence::timestamp(&self) -> u64;
+        fn MilestonePayloadEssence::parents(&self) -> Vec<MessageId>;
+        fn MilestonePayloadEssence::merkle_proof(&self) -> Vec<u8>; alias merkleProof;
+        fn MilestonePayloadEssence::next_pow_score(&self) -> u32; alias nextPowScore;
+        fn MilestonePayloadEssence::next_pow_score_milestone(&self) -> u32; alias nextPowScoreMilestone;
+        fn MilestonePayloadEssence::public_keys(&self) -> Vec<PublicKey>; alias publicKeys;
+        fn MilestonePayloadEssence::receipt(&self) -> Option<ReceiptPayload>;
+    }
+);
+
+foreign_class!(
+    class PublicKey {
+        self_type PublicKey;
+        private constructor = empty;
+        fn PublicKey::get_public_key(&self) -> Vec<u8>; alias getPublicKey;
+    }
+);
+
+// TransactionEssence
+
+foreign_class!(
+    class MessageTransactionPayload {
+        self_type MessageTransactionPayload;
+        private constructor = empty;
+        fn MessageTransactionPayload::essence(&self) -> Essence;
+        fn MessageTransactionPayload::unlock_blocks(&self) -> Vec<UnlockBlock>; alias unlockBlocks;
+    }
+);
+
+foreign_class!(
+    class Essence {
+        self_type Essence;
+        private constructor = empty;
+        fn Essence::get_as_regular(&self) -> Option<RegularEssence>; alias getAsRegular;
+    }
+);
+
+foreign_class!(
+    class RegularEssence {
+        self_type RegularEssence;
+        private constructor = empty;
+        fn RegularEssence::inputs(&self) -> Vec<TransactionInput>;
+        fn RegularEssence::outputs(&self) -> Vec<TransactionOutput>;
+        fn RegularEssence::internal(&self) -> bool;
+
+        fn RegularEssence::incoming(&self) -> bool;
+
+        /// The transactions's value.
+        fn RegularEssence::value(&self) -> u64;
+
+        /// The transactions's remainder value sum.
+        fn RegularEssence::remainder_value(&self) -> u64; alias remainderValue;
+    }
+);
+
+foreign_class!(
+    #[derive(Display)]
+    class TransactionInput {
+        self_type TransactionInput;
+        private constructor = empty;
+        private fn TransactionInput::to_string(&self) -> String;
+        fn TransactionInput::kind(&self) -> InputKind;
+    }
+);
+
+foreign_class!(
+    #[derive(Display)]
+    class TransactionOutput {
+        self_type TransactionOutput;
+        private constructor = empty;
+        private fn TransactionOutput::to_string(&self) -> String;
+        fn TransactionOutput::kind(&self) -> OutputKind;
+    }
+);
+
+foreign_class!(
+    #[derive(Display)]
+    class UnlockBlock {
+        self_type UnlockBlock;
+        private constructor = empty;
+        private fn UnlockBlock::to_string(&self) -> String;
+        fn UnlockBlock::kind(&self) -> UnlockBlockKind;
+    }
+);
+
+foreign_class!(
+    class TransactionSignatureLockedSingleOutput {
+        self_type TransactionSignatureLockedSingleOutput;
+        private constructor = empty;
+        fn TransactionSignatureLockedSingleOutput::amount(&self) -> u64;
+    }
+);
+
+foreign_class!(
+    class ReceiptPayload {
+        self_type ReceiptPayload;
+        private constructor = empty;
+        fn ReceiptPayload::migrated_at(&self) -> u32; alias migratedAt;
+        fn ReceiptPayload::last(&self) -> bool;
+        fn ReceiptPayload::funds(&self) -> Vec<MigratedFundsEntry>;
+    }
+);
+
+foreign_class!(
+    class MigratedFundsEntry {
+        self_type MigratedFundsEntry;
+        private constructor = empty;
+        fn MigratedFundsEntry::tail_transaction_hash(&self) -> Vec<u8>; alias tailTransactionHash;
+        fn MigratedFundsEntry::output(&self) -> TransactionSignatureLockedSingleOutput;
+    }
+);
+
+foreign_class!(
+    class TreasuryTransactionPayload {
+        self_type TreasuryTransactionPayload;
+        private constructor = empty;
+        fn TreasuryTransactionPayload::output(&self) -> u64;
+    }
+);

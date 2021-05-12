@@ -1,4 +1,4 @@
-// Copyright 2021 IOTA Stiftung
+// Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use super::{
@@ -8,17 +8,16 @@ use super::{
 use chrono::prelude::{DateTime, NaiveDateTime, Utc};
 use core::convert::TryFrom;
 use dict_derive::{FromPyObject as DeriveFromPyObject, IntoPyObject as DeriveIntoPyObject};
-use iota::{
+use iota_client::bee_message::prelude::{
     Address as RustAddress, Ed25519Address as RustEd25519Address, Ed25519Signature as RustEd25519Signature,
-    Essence as RustEssence, IndexationPayload as RustIndexationPayload, Input as RustInput,
-    MilestonePayloadEssence as RustMilestonePayloadEssence, Output as RustOutput, Payload as RustPayload,
-    ReferenceUnlock as RustReferenceUnlock, RegularEssence as RustRegularEssence,
+    Essence as RustEssence, IndexationPayload as RustIndexationPayload, Input as RustInput, Output as RustOutput,
+    Payload as RustPayload, ReferenceUnlock as RustReferenceUnlock, RegularEssence as RustRegularEssence,
     SignatureLockedSingleOutput as RustSignatureLockedSingleOutput, SignatureUnlock as RustSignatureUnlock,
-    TransactionId as RustTransationId, TransactionPayload as RustTransactionPayload, UTXOInput as RustUTXOInput,
-    UnlockBlock as RustUnlockBlock, UnlockBlocks as RustUnlockBlocks,
+    TransactionId as RustTransationId, TransactionPayload as RustTransactionPayload, UnlockBlock as RustUnlockBlock,
+    UnlockBlocks as RustUnlockBlocks, UtxoInput as RustUtxoInput,
 };
-// use iota::MessageId as RustMessageId,
-use iota::{Address as IotaAddress, MessageId, TransactionId};
+// use iota_client::bee_message::MessageId as RustMessageId,
+use iota_client::bee_message::prelude::{Address as IotaAddress, MessageId, TransactionId};
 use iota_wallet::{
     account_manager::AccountStore,
     address::{
@@ -27,8 +26,8 @@ use iota_wallet::{
     },
     client::ClientOptions as RustWalletClientOptions,
     message::{
-        Message as RustWalletMessage, MessagePayload as RustWalletPayload,
-        MessageTransactionPayload as RustWalletMessageTransactionPayload,
+        Message as RustWalletMessage, MessageMilestonePayloadEssence as RustWalletMilestonePayloadEssence,
+        MessagePayload as RustWalletPayload, MessageTransactionPayload as RustWalletMessageTransactionPayload,
         TransactionBuilderMetadata as RustWalletTransactionBuilderMetadata,
         TransactionEssence as RustWalletTransactionEssence, TransactionInput as RustWalletInput,
         TransactionOutput as RustWalletOutput,
@@ -42,7 +41,7 @@ use std::{
 pub const MILESTONE_MERKLE_PROOF_LENGTH: usize = 32;
 pub const MILESTONE_PUBLIC_KEY_LENGTH: usize = 32;
 
-type Bech32HRP = String;
+type Bech32Hrp = String;
 
 #[derive(Debug, Clone, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct WalletAddressOutput {
@@ -74,7 +73,6 @@ impl TryFrom<WalletAddressOutput> for RustWalletAddressOutput {
 #[derive(Debug, Clone, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct WalletAddress {
     pub address: String,
-    pub balance: u64,
     pub key_index: usize,
     pub internal: bool,
     pub outputs: Vec<WalletAddressOutput>,
@@ -93,7 +91,6 @@ impl TryFrom<WalletAddress> for RustWalletAddress {
                 IotaAddress::try_from_bech32(&address.address)?,
                 "".to_string(),
             ))
-            .balance(address.balance)
             .key_index(address.key_index)
             .internal(address.internal)
             .outputs(outputs)
@@ -196,7 +193,7 @@ impl TryFrom<RustWalletTransactionEssence> for Essence {
                     .iter()
                     .cloned()
                     .map(|input| {
-                        if let RustWalletInput::UTXO(input) = input {
+                        if let RustWalletInput::Utxo(input) = input {
                             Input {
                                 transaction_id: input.input.output_id().transaction_id().to_string(),
                                 index: input.input.output_id().index(),
@@ -215,7 +212,7 @@ impl TryFrom<RustWalletTransactionEssence> for Essence {
                         if let RustWalletOutput::SignatureLockedSingle(output) = output {
                             Output {
                                 address: output.address().to_bech32(),
-                                amount: *output.amount(),
+                                amount: output.amount(),
                             }
                         } else {
                             unreachable!()
@@ -255,14 +252,14 @@ impl TryFrom<RustWalletTransactionEssence> for Essence {
     }
 }
 
-impl TryFrom<RustMilestonePayloadEssence> for MilestonePayloadEssence {
+impl TryFrom<RustWalletMilestonePayloadEssence> for MilestonePayloadEssence {
     type Error = Error;
-    fn try_from(essence: RustMilestonePayloadEssence) -> Result<Self> {
+    fn try_from(essence: RustWalletMilestonePayloadEssence) -> Result<Self> {
         Ok(MilestonePayloadEssence {
-            index: essence.index(),
+            index: *essence.index(),
             timestamp: essence.timestamp(),
-            parents: essence.parents().map(|parent| parent.to_string()).collect(),
-            merkle_proof: essence.merkle_proof().try_into()?,
+            parents: essence.parents().iter().map(|parent| parent.to_string()).collect(),
+            merkle_proof: *essence.merkle_proof(),
             public_keys: essence
                 .public_keys()
                 .iter()
@@ -346,6 +343,7 @@ pub async fn to_rust_message(
         nonce: msg.nonce,
         confirmed: msg.confirmed,
         broadcasted: msg.broadcasted,
+        reattachment_message_id: None,
     })
 }
 
@@ -359,10 +357,10 @@ impl TryFrom<Essence> for RustEssence {
                 .inputs
                 .iter()
                 .map(|input| {
-                    RustUTXOInput::new(
+                    RustUtxoInput::new(
                         RustTransationId::from_str(&input.transaction_id[..]).unwrap_or_else(|_| {
                             panic!(
-                                "invalid UTXOInput transaction_id: {} with input index {}",
+                                "invalid UtxoInput transaction_id: {} with input index {}",
                                 input.transaction_id, input.index
                             )
                         }),
@@ -370,7 +368,7 @@ impl TryFrom<Essence> for RustEssence {
                     )
                     .unwrap_or_else(|_| {
                         panic!(
-                            "invalid UTXOInput transaction_id: {} with input index {}",
+                            "invalid UtxoInput transaction_id: {} with input index {}",
                             input.transaction_id, input.index
                         )
                     })
@@ -436,8 +434,9 @@ impl TryFrom<Ed25519Signature> for RustSignatureUnlock {
     fn try_from(signature: Ed25519Signature) -> Result<Self> {
         let mut public_key = [0u8; 32];
         hex::decode_to_slice(signature.public_key, &mut public_key)?;
-        let signature = hex::decode(signature.signature)?.into_boxed_slice();
-        Ok(RustEd25519Signature::new(public_key, signature).into())
+        let mut signature_bytes = [0u8; 64];
+        hex::decode_to_slice(signature.signature, &mut signature_bytes)?;
+        Ok(RustEd25519Signature::new(public_key, signature_bytes).into())
     }
 }
 
@@ -461,7 +460,7 @@ impl TryFrom<UnlockBlock> for RustUnlockBlock {
 pub async fn to_rust_payload(
     message_id: &MessageId,
     payload: Payload,
-    bech32_hrp: Bech32HRP,
+    bech32_hrp: Bech32Hrp,
     accounts: AccountStore,
     account_id: &str,
     account_addresses: &[RustWalletAddress],

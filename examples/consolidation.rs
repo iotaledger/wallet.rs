@@ -1,15 +1,9 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota::{
-    bee_rest_api::endpoints::api::v1::message_metadata::LedgerInclusionStateDto, Client, ClientBuilder, MessageId,
-};
+use iota_client::{bee_message::MessageId, bee_rest_api::types::dtos::LedgerInclusionStateDto, Client, ClientBuilder};
 use iota_wallet::{
-    account_manager::{AccountManager, ManagerStorage},
-    address::Address,
-    client::ClientOptionsBuilder,
-    signing::SignerType,
-    Result,
+    account_manager::AccountManager, address::Address, client::ClientOptionsBuilder, signing::SignerType, Result,
 };
 use serde::Deserialize;
 
@@ -37,7 +31,7 @@ async fn main() -> Result<()> {
 
     // setup the account manager
     let mut manager = AccountManager::builder()
-        .with_storage(storage_path, ManagerStorage::Stronghold, None)?
+        .with_storage(storage_path, None)?
         .with_output_consolidation_threshold(OUTPUT_CONSOLIDATION_THRESHOLD)
         .with_automatic_output_consolidation_disabled()
         .finish()
@@ -106,7 +100,7 @@ async fn wait_for_message_confirmation(client: &Client, message_id: MessageId) {
             if state == &LedgerInclusionStateDto::Included {
                 break;
             } else {
-                panic!(format!("message wasn't confirmed; {:?}", metadata));
+                panic!("message wasn't confirmed; {:?}", metadata);
             }
         } else {
             tokio::time::sleep(Duration::from_secs(2)).await;

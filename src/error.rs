@@ -23,8 +23,6 @@ impl std::fmt::Display for AccountInitialiseRequiredField {
 pub enum AddressBuildRequiredField {
     /// address field.
     Address,
-    /// balance field.
-    Balance,
     /// key_index field.
     KeyIndex,
     /// outputs field.
@@ -47,13 +45,13 @@ pub enum Error {
     #[error("`{0}`")]
     JsonError(#[from] serde_json::error::Error),
     /// stronghold client error.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     #[error("`{0}`")]
     StrongholdError(crate::stronghold::Error),
     /// iota.rs error.
     #[error("`{0}`")]
-    ClientError(Box<iota::client::Error>),
+    ClientError(Box<iota_client::Error>),
     /// url parse error (client options builder).
     #[error("`{0}`")]
     UrlError(#[from] url::ParseError),
@@ -108,16 +106,13 @@ pub enum Error {
     AccountInitialiseRequiredField(AccountInitialiseRequiredField),
     /// Error from bee_message crate.
     #[error("{0}")]
-    BeeMessage(iota::message::Error),
+    BeeMessage(iota_client::bee_message::Error),
     /// Path provided to `import_accounts` isn't a valid file
     #[error("provided backup path isn't a valid file")]
     InvalidBackupFile,
     /// Backup `destination` argument is invalid
-    #[error("backup destination must be a directory and it must exist")]
+    #[error("backup destination must be an existing directory or a file on an existing directory")]
     InvalidBackupDestination,
-    /// the storage adapter isn't set
-    #[error("the storage adapter isn't set; use the AccountManagerBuilder's `with_storage` method or one of the default storages with the crate features `sqlite-storage` and `stronghold-storage`.")]
-    StorageAdapterNotDefined,
     /// Mnemonic generation error.
     #[error("mnemonic encode error: {0}")]
     MnemonicEncode(String),
@@ -179,6 +174,29 @@ pub enum Error {
     /// Node not synced when creating account or updating client options.
     #[error("nodes {0} not synced")]
     NodesNotSynced(String),
+    /// iota 1.0 client error
+    // #[cfg(feature = "migration")]
+    #[error(transparent)]
+    LegacyClientError(Box<iota_migration::client::Error>),
+    /// Invalid legacy seed.
+    #[error("invalid seed")]
+    InvalidSeed,
+    /// Migration data not found.
+    #[error("migration data not found for the provided seed; call `get_migration_data` first.")]
+    MigrationDataNotFound,
+    /// Migration bundle not found.
+    #[error("migration bundle not found with the provided bundle hash")]
+    MigrationBundleNotFound,
+    /// Input not found with given index.
+    #[error("input not found with the provided index")]
+    InputNotFound,
+    /// Empty input list on migration bundle creation.
+    #[error("can't create migration bundle: input list is empty")]
+    EmptyInputList,
+    /// Cannot create bundle when the number of inputs is larger than 1 and there's a spent input.
+    /// Spent addresses must be the only input in a bundle.
+    #[error("can't create migration bundle: the bundle has more than one input and one of them are spent")]
+    SpentAddressOnBundle,
 }
 
 impl Drop for Error {
@@ -187,19 +205,25 @@ impl Drop for Error {
     }
 }
 
-impl From<iota::client::Error> for Error {
-    fn from(error: iota::client::Error) -> Self {
+impl From<iota_client::Error> for Error {
+    fn from(error: iota_client::Error) -> Self {
         Self::ClientError(Box::new(error))
     }
 }
 
-impl From<iota::message::Error> for Error {
-    fn from(error: iota::message::Error) -> Self {
+impl From<iota_migration::client::Error> for Error {
+    fn from(error: iota_migration::client::Error) -> Self {
+        Self::LegacyClientError(Box::new(error))
+    }
+}
+
+impl From<iota_client::bee_message::Error> for Error {
+    fn from(error: iota_client::bee_message::Error) -> Self {
         Self::BeeMessage(error)
     }
 }
 
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+#[cfg(feature = "stronghold")]
 impl From<crate::stronghold::Error> for Error {
     fn from(error: crate::stronghold::Error) -> Self {
         match error {
@@ -249,7 +273,7 @@ impl serde::Serialize for Error {
         match self {
             Self::IoError(_) => serialize_variant(self, serializer, "IoError"),
             Self::JsonError(_) => serialize_variant(self, serializer, "JsonError"),
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             Self::StrongholdError(_) => serialize_variant(self, serializer, "StrongholdError"),
             Self::ClientError(_) => serialize_variant(self, serializer, "ClientError"),
             Self::UrlError(_) => serialize_variant(self, serializer, "UrlError"),
@@ -276,7 +300,6 @@ impl serde::Serialize for Error {
             Self::InvalidMnemonic(_) => serialize_variant(self, serializer, "InvalidMnemonic"),
             Self::InvalidBackupFile => serialize_variant(self, serializer, "InvalidBackupFile"),
             Self::InvalidBackupDestination => serialize_variant(self, serializer, "InvalidBackupDestination"),
-            Self::StorageAdapterNotDefined => serialize_variant(self, serializer, "StorageAdapterNotDefined"),
             Self::StorageExists => serialize_variant(self, serializer, "StorageExists"),
             Self::StorageAdapterNotSet(_) => serialize_variant(self, serializer, "StorageAdapterNotSet"),
             Self::RecordDecrypt(_) => serialize_variant(self, serializer, "RecordDecrypt"),
@@ -297,6 +320,14 @@ impl serde::Serialize for Error {
             Self::DustError(_) => serialize_variant(self, serializer, "DustError"),
             Self::InvalidOutputKind(_) => serialize_variant(self, serializer, "InvalidOutputKind"),
             Self::NodesNotSynced(_) => serialize_variant(self, serializer, "NodesNotSynced"),
+            // #[cfg(feature = "migration")]
+            Self::LegacyClientError(_) => serialize_variant(self, serializer, "LegacyClientError"),
+            Self::InvalidSeed => serialize_variant(self, serializer, "InvalidSeed"),
+            Self::MigrationDataNotFound => serialize_variant(self, serializer, "MigrationDataNotFound"),
+            Self::MigrationBundleNotFound => serialize_variant(self, serializer, "MigrationBundleNotFound"),
+            Self::InputNotFound => serialize_variant(self, serializer, "InputNotFound"),
+            Self::EmptyInputList => serialize_variant(self, serializer, "EmptyInputList"),
+            Self::SpentAddressOnBundle => serialize_variant(self, serializer, "SpentAddressOnBundle"),
         }
     }
 }

@@ -58,11 +58,12 @@ Account.prototype.isLatestAddressUnused = promisify(Account.prototype.isLatestAd
 
 const send = Account.prototype.send
 Account.prototype.send = function (address, amount, options) {
-  if (options && (typeof options === 'object') && options.indexation) {
-    let index = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.index) :  options.indexation.index
-    let data = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.data) :  options.indexation.data
-    const formattedOptions = {
-      indexation: {
+  if (options && (typeof options === 'object')) {
+    const formattedOptions = options
+    if (options.indexation) {
+      let index = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.index) :  options.indexation.index
+      let data = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.data) :  options.indexation.data
+      formattedOptions.indexation = {
         index: Array.from(index),
         data: data ? Array.from(data) : null,
       }
@@ -76,40 +77,40 @@ Account.prototype.send = function (address, amount, options) {
   }
 }
 
+const sendToMany = Account.prototype.sendToMany
+Account.prototype.sendToMany = function (outputs, options) {
+  if (options && (typeof options === 'object')) {
+    const formattedOptions = options
+    if (options.indexation) {
+      let index = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.index) :  options.indexation.index
+      let data = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.data) :  options.indexation.data
+      formattedOptions.indexation = {
+        index: Array.from(index),
+        data: data ? Array.from(data) : null,
+      }
+    }
+    if (options.remainderValueStrategy) {
+      formattedOptions.remainderValueStrategy = options.remainderValueStrategy
+    }
+    return promisify(sendToMany).apply(this, [outputs, formattedOptions])
+  } else {
+    return promisify(sendToMany).apply(this, options ? [outputs, options] : [outputs])
+  }
+}
+
+
 Account.prototype.retry = promisify(Account.prototype.retry)
 Account.prototype.reattach = promisify(Account.prototype.reattach)
 Account.prototype.promote = promisify(Account.prototype.promote)
 Account.prototype.consolidateOutputs = promisify(Account.prototype.consolidateOutputs)
+Account.prototype.getNodeInfo = promisify(Account.prototype.getNodeInfo)
 
-const managerClass = AccountManager
-
-/** This is a description of AccountManagern. */
-AccountManager = function () {
-  const instance = new managerClass(arguments[0])
-
-  // workaround to force the manager to cleanup
-  // this is needed because somehow the manager `drop` impl isn't being called - issue on Neon
-  const cleanup = () => {
-    try {
-      instance.stopBackgroundSync()
-    }
-    finally {
-      process.exit()
-    }
-  }
-
-  process.on('exit', cleanup)
-  process.on('SIGINT', cleanup)
-  process.on('SIGTERM', cleanup)
-  process.on('SIGHUP', cleanup)
-  process.on('SIGBREAK', cleanup)
-
-  return instance
-}
-AccountManager.prototype = managerClass.prototype
 AccountManager.prototype.syncAccounts = promisify(AccountManager.prototype.syncAccounts)
 AccountManager.prototype.internalTransfer = promisify(AccountManager.prototype.internalTransfer)
 AccountManager.prototype.isLatestAddressUnused = promisify(AccountManager.prototype.isLatestAddressUnused)
+AccountManager.prototype.getMigrationData = promisify(AccountManager.prototype.getMigrationData)
+AccountManager.prototype.createMigrationBundle = promisify(AccountManager.prototype.createMigrationBundle)
+AccountManager.prototype.sendMigrationBundle = promisify(AccountManager.prototype.sendMigrationBundle)
 
 module.exports = {
   AccountManager,
@@ -118,10 +119,6 @@ module.exports = {
   RemainderValueStrategy,
   SignerType: {
     Stronghold: 1
-  },
-  StorageType: {
-    Sqlite: { type: 'Sqlite' },
-    Stronghold: { type: 'Stronghold' }
   },
   MessageType: {
     Received: 1,

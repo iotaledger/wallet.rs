@@ -3,30 +3,31 @@
 
 use crate::account::Account;
 
-use iota::{ReferenceUnlock, UnlockBlock};
+use iota_client::bee_message::unlock::{ReferenceUnlock, UnlockBlock};
 
-use std::{collections::HashMap, path::PathBuf};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+};
 
 #[derive(Default)]
 pub struct StrongholdSigner;
 
-pub(crate) async fn stronghold_path(storage_path: &PathBuf) -> crate::Result<PathBuf> {
+pub(crate) async fn stronghold_path(storage_path: &Path) -> crate::Result<PathBuf> {
     let storage_id = crate::storage::get(&storage_path).await?.lock().await.id();
     let path = if storage_id == crate::storage::stronghold::STORAGE_ID {
-        storage_path.clone()
-    } else if storage_path.is_dir() {
-        storage_path.join(crate::account_manager::STRONGHOLD_FILENAME)
+        storage_path.to_path_buf()
     } else if let Some(parent) = storage_path.parent() {
         parent.join(crate::account_manager::STRONGHOLD_FILENAME)
     } else {
-        storage_path.clone()
+        storage_path.join(crate::account_manager::STRONGHOLD_FILENAME)
     };
     Ok(path)
 }
 
 #[async_trait::async_trait]
 impl super::Signer for StrongholdSigner {
-    async fn store_mnemonic(&mut self, storage_path: &PathBuf, mnemonic: String) -> crate::Result<()> {
+    async fn store_mnemonic(&mut self, storage_path: &Path, mnemonic: String) -> crate::Result<()> {
         crate::stronghold::store_mnemonic(&stronghold_path(storage_path).await?, mnemonic).await?;
         Ok(())
     }
@@ -37,7 +38,7 @@ impl super::Signer for StrongholdSigner {
         address_index: usize,
         internal: bool,
         _: super::GenerateAddressMetadata,
-    ) -> crate::Result<iota::Address> {
+    ) -> crate::Result<iota_client::bee_message::address::Address> {
         let address = crate::stronghold::generate_address(
             &stronghold_path(account.storage_path()).await?,
             *account.index(),
@@ -51,10 +52,10 @@ impl super::Signer for StrongholdSigner {
     async fn sign_message<'a>(
         &mut self,
         account: &Account,
-        essence: &iota::Essence,
+        essence: &iota_client::bee_message::prelude::Essence,
         inputs: &mut Vec<super::TransactionInput>,
         _: super::SignMessageMetadata<'a>,
-    ) -> crate::Result<Vec<iota::UnlockBlock>> {
+    ) -> crate::Result<Vec<iota_client::bee_message::unlock::UnlockBlock>> {
         let mut unlock_blocks = vec![];
         let mut signature_indexes = HashMap::<String, usize>::new();
         inputs.sort_by(|a, b| a.input.cmp(&b.input));

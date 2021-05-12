@@ -1,0 +1,109 @@
+{
+    "account_manager": {
+        "client_options": {
+            "nodes": [
+                {
+                    "url": "https://api.hornet-0.testnet.chrysalis2.com",
+                    "auth": null,
+                    "disabled": false
+                }
+            ],
+            "local_pow": true,
+            "request_timeout": 60000,
+            "api_timeout": {
+                "PostMessage": 3000
+            }
+        },
+        "account_manager": {
+            "storage_path": "./alice-database",
+            "password": "password",
+            "store_mnemonic": "Stronghold"
+        },
+        "alias": "Alice",
+        "message_id": "f541e53e98ccffdd94036f08af07f9eb060449ee7838c2279f230acc933de6d8",
+        "backup_restore": {
+            "account_manager": {
+                "storage_path": "./backup-test-database",
+                "storage_path_backup": "./alice-database_backup",
+                "storage_path_2nd_backup": "./alice-database_2nd_backup",
+                "storage_password": "storage_password",
+                "password": "password",
+                "store_mnemonic": "Stronghold"
+            },
+            "alias": "Alice",
+            "backup_dir_path": "./backup"
+        }
+    },
+    "account_initialiser": {
+        "client_options": {
+            "nodes": [
+                {
+                    "url": "https://api.hornet-0.testnet.chrysalis2.com",
+                    "auth": null,
+                    "disabled": false
+                }
+            ],
+            "local_pow": true,
+            "request_timeout": 60000,
+            "api_timeout": {
+                "PostMessage": 3000
+            }
+        },
+        "account_manager": {
+            "storage_path": "./david-database",
+            "store_mnemonic": "Stronghold",
+            "password": "password"
+        },
+        "signer_type": "Stronghold",
+        "alias": "David"
+    },
+    "account_handle": {
+        "message_id": "f541e53e98ccffdd94036f08af07f9eb060449ee7838c2279f230acc933de6d8",
+        "signer_type": "Stronghold",
+        "alias": "David",
+        "updated_alias": "Kevin",
+        "client_options": {
+            "nodes": [
+                {
+                    "url": "https://api.hornet-0.testnet.chrysalis2.com/",
+                    "auth": null,
+                    "disabled": false
+                }
+            ],
+            "local_pow": true,
+            "request_timeout": 60000,
+            "api_timeout": {
+                "PostMessage": 3000
+            },
+            "mqtt_broker_options": null,
+            "network": null,
+            "node_pool_urls": [],
+            "node_sync_enabled": true,
+            "node_sync_interval": null
+        },
+        "updated_client_options": {
+            "nodes": [
+                {
+                    "url": "https://api.hornet-2.testnet.chrysalis2.com/",
+                    "auth": null,
+                    "disabled": false
+                }
+            ],
+            "local_pow": true,
+            "request_timeout": 60000,
+            "api_timeout": {
+                "PostMessage": 60000
+            },
+            "mqtt_broker_options": null,
+            "network": null,
+            "node_pool_urls": [],
+            "node_sync_enabled": true,
+            "node_sync_interval": null
+        }
+    },
+    "transfer": {
+        "amount": 10000000,
+        "address": "atoi1qzt0nhsf38nh6rs4p6zs5knqp6psgha9wsv74uajqgjmwc75ugupx3y7x0r",
+        "remainder_value_strategy": "ReuseAddress"
+    }
+}

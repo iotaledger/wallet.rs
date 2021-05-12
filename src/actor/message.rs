@@ -3,6 +3,7 @@
 
 use crate::{
     account::{Account, AccountBalance, AccountIdentifier, SyncedAccount},
+    account_manager::{MigratedBundle, MigrationBundle, MigrationData},
     address::Address,
     client::ClientOptions,
     message::{Message as WalletMessage, MessageType as WalletMessageType, TransferBuilder},
@@ -10,10 +11,12 @@ use crate::{
     Error,
 };
 use chrono::{DateTime, Local};
+use iota_client::NodeInfoWrapper;
+use iota_migration::{ternary::T3B1Buf, transaction::bundled::BundledTransactionField};
 use serde::{ser::Serializer, Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
 
-use std::{num::NonZeroU64, time::Duration};
+use std::{num::NonZeroU64, path::PathBuf, time::Duration};
 
 /// An account to create.
 #[derive(Clone, Debug, Deserialize)]
@@ -82,6 +85,25 @@ pub enum AccountMethod {
     SetAlias(String),
     /// Updates the account client options.
     SetClientOptions(Box<ClientOptions>),
+    /// Gets the node information.
+    GetNodeInfo(Option<String>),
+}
+
+/// The returned account.
+#[derive(Debug, Serialize)]
+pub struct AccountDto {
+    /// Inner account object.
+    #[serde(flatten)]
+    pub account: Account,
+    /// Message history.
+    pub messages: Vec<WalletMessage>,
+}
+
+impl AccountDto {
+    /// Creates a new instance of the account DTO.
+    pub fn new(account: Account, messages: Vec<WalletMessage>) -> Self {
+        Self { account, messages }
+    }
 }
 
 /// The messages that can be sent to the actor.
@@ -112,6 +134,9 @@ pub enum MessageType {
         /// The gap limit.
         #[serde(rename = "gapLimit")]
         gap_limit: Option<usize>,
+        /// Minimum number of accounts to check on discovery.
+        #[serde(rename = "accountDiscoveryThreshold")]
+        account_discovery_threshold: Option<usize>,
     },
     /// Reattach message.
     Reattach {
@@ -123,38 +148,37 @@ pub enum MessageType {
         message_id: String,
     },
     /// Backup storage.
-    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))))]
-    Backup(String),
+    Backup {
+        /// The backup destination.
+        destination: PathBuf,
+        /// Stronghold file password.
+        password: String,
+    },
     /// Import accounts from storage.
-    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))))]
     RestoreBackup {
         /// The path to the backed up storage.
         #[serde(rename = "backupPath")]
         backup_path: String,
-        /// The backup stronghold password.
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-        #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+        /// Stronghold file password.
         password: String,
     },
     /// Sets the password used to encrypt/decrypt the storage.
     SetStoragePassword(String),
     /// Set stronghold snapshot password.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     SetStrongholdPassword(String),
     /// Sets the password clear interval.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     SetStrongholdPasswordClearInterval(Duration),
     /// Get stronghold status.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     GetStrongholdStatus,
     /// Lock the stronghold snapshot (clears password and unload snapshot from memory).
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     LockStronghold,
     /// Send funds.
     SendTransfer {
@@ -196,8 +220,8 @@ pub enum MessageType {
     /// Deletes the storage.
     DeleteStorage,
     /// Changes stronghold snapshot password.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     ChangeStrongholdPassword {
         /// The current stronghold password.
         #[serde(rename = "currentPassword")]
@@ -208,6 +232,51 @@ pub enum MessageType {
     },
     /// Updates the client options for all accounts.
     SetClientOptions(Box<ClientOptions>),
+    /// Get legacy network balance for the seed.
+    GetMigrationData {
+        /// The nodes to connect to.
+        nodes: Vec<String>,
+        /// The permanode to use.
+        permanode: Option<String>,
+        /// The legacy seed.
+        seed: String,
+        /// The WOTS address security level.
+        #[serde(rename = "securityLevel")]
+        security_level: Option<u8>,
+        /// The initial address index.
+        #[serde(rename = "initialAddressIndex")]
+        initial_address_index: Option<u64>,
+    },
+    /// Creates the bundle for migration, performs bundle mining if the address was spent and signs the bundle.
+    CreateMigrationBundle {
+        /// The legacy seed.
+        seed: String,
+        /// The bundle input address indexes.
+        #[serde(rename = "inputAddressIndexes")]
+        input_address_indexes: Vec<u64>,
+        /// Whether we should perform bundle mining or not.
+        mine: bool,
+        /// Timeout in seconds for the bundle mining process.
+        #[serde(rename = "timeoutSeconds")]
+        timeout_secs: u64,
+        /// Offset for the bundle mining process.
+        offset: i64,
+        /// The name of the log file (stored on the storage folder).
+        #[serde(rename = "logFileName")]
+        log_file_name: String,
+    },
+    /// Sends the migration bundle associated with the hash.
+    SendMigrationBundle {
+        /// Node URLs.
+        nodes: Vec<String>,
+        /// Bundle hash returned on `CreateMigrationBundle`.
+        #[serde(rename = "bundleHash")]
+        bundle_hash: String,
+        /// Minimum weight magnitude.
+        mwm: u8,
+    },
+    /// Get seed checksum.
+    GetSeedChecksum(String),
 }
 
 impl Serialize for MessageType {
@@ -227,35 +296,36 @@ impl Serialize for MessageType {
             MessageType::SyncAccounts {
                 address_index: _,
                 gap_limit: _,
+                account_discovery_threshold: _,
             } => serializer.serialize_unit_variant("MessageType", 5, "SyncAccounts"),
             MessageType::Reattach {
                 account_id: _,
                 message_id: _,
             } => serializer.serialize_unit_variant("MessageType", 6, "Reattach"),
-            #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-            MessageType::Backup(_) => serializer.serialize_unit_variant("MessageType", 7, "Backup"),
-            #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
+            MessageType::Backup {
+                destination: _,
+                password: _,
+            } => serializer.serialize_unit_variant("MessageType", 7, "Backup"),
             MessageType::RestoreBackup {
                 backup_path: _,
-                #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-                    password: _,
+                password: _,
             } => serializer.serialize_unit_variant("MessageType", 8, "RestoreBackup"),
             MessageType::SetStoragePassword(_) => {
                 serializer.serialize_unit_variant("MessageType", 9, "SetStoragePassword")
             }
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             MessageType::SetStrongholdPassword(_) => {
                 serializer.serialize_unit_variant("MessageType", 10, "SetStrongholdPassword")
             }
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             MessageType::SetStrongholdPasswordClearInterval(_) => {
                 serializer.serialize_unit_variant("MessageType", 11, "SetStrongholdPasswordClearInterval")
             }
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             MessageType::GetStrongholdStatus => {
                 serializer.serialize_unit_variant("MessageType", 12, "GetStrongholdStatus")
             }
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             MessageType::LockStronghold => serializer.serialize_unit_variant("MessageType", 13, "LockStronghold"),
             MessageType::SendTransfer {
                 account_id: _,
@@ -278,7 +348,7 @@ impl Serialize for MessageType {
             #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
             MessageType::GetLedgerStatus(_) => serializer.serialize_unit_variant("MessageType", 20, "GetLedgerStatus"),
             MessageType::DeleteStorage => serializer.serialize_unit_variant("MessageType", 21, "DeleteStorage"),
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             MessageType::ChangeStrongholdPassword {
                 current_password: _,
                 new_password: _,
@@ -286,6 +356,27 @@ impl Serialize for MessageType {
             MessageType::SetClientOptions(_) => {
                 serializer.serialize_unit_variant("MessageType", 23, "SetClientOptions")
             }
+            MessageType::GetMigrationData {
+                nodes: _,
+                permanode: _,
+                seed: _,
+                initial_address_index: _,
+                security_level: _,
+            } => serializer.serialize_unit_variant("MessageType", 24, "GetMigrationData"),
+            MessageType::CreateMigrationBundle {
+                seed: _,
+                input_address_indexes: _,
+                mine: _,
+                timeout_secs: _,
+                offset: _,
+                log_file_name: _,
+            } => serializer.serialize_unit_variant("MessageType", 25, "CreateMigrationBundle"),
+            MessageType::SendMigrationBundle {
+                nodes: _,
+                bundle_hash: _,
+                mwm: _,
+            } => serializer.serialize_unit_variant("MessageType", 26, "SendMigrationBundle"),
+            MessageType::GetSeedChecksum(_) => serializer.serialize_unit_variant("MessageType", 27, "GetSeedChecksum"),
         }
     }
 }
@@ -315,6 +406,61 @@ impl Response {
     }
 }
 
+/// Spent address data.
+#[derive(Debug, Serialize)]
+pub struct MigrationInputDto {
+    /// Input address.
+    address: String,
+    /// Security level.
+    #[serde(rename = "securityLevel")]
+    security_level: u8,
+    /// Balance of the address.
+    balance: u64,
+    /// Index of the address.
+    index: u64,
+    /// Spent status.
+    spent: bool,
+    #[serde(rename = "spentBundleHashes")]
+    spent_bundle_hashes: Option<Vec<String>>,
+}
+
+/// Legacy information fetched.
+#[derive(Debug, Serialize)]
+pub struct MigrationDataDto {
+    balance: u64,
+    #[serde(rename = "lastCheckedAddressIndex")]
+    last_checked_address_index: u64,
+    inputs: Vec<MigrationInputDto>,
+}
+
+impl From<MigrationData> for MigrationDataDto {
+    fn from(data: MigrationData) -> Self {
+        let mut inputs: Vec<MigrationInputDto> = Vec::new();
+        for input in data.inputs {
+            let address = input
+                .address
+                .to_inner()
+                .encode::<T3B1Buf>()
+                .iter_trytes()
+                .map(char::from)
+                .collect::<String>();
+            inputs.push(MigrationInputDto {
+                address,
+                security_level: input.security_lvl,
+                balance: input.balance,
+                index: input.index,
+                spent: input.spent,
+                spent_bundle_hashes: input.spent_bundlehashes,
+            });
+        }
+        Self {
+            balance: data.balance,
+            last_checked_address_index: data.last_checked_address_index,
+            inputs,
+        }
+    }
+}
+
 /// The response message.
 #[derive(Serialize, Debug)]
 #[serde(tag = "type", content = "payload")]
@@ -322,11 +468,11 @@ pub enum ResponseType {
     /// Account succesfully removed.
     RemovedAccount(AccountIdentifier),
     /// Account succesfully created.
-    CreatedAccount(Account),
+    CreatedAccount(AccountDto),
     /// GetAccount response.
-    ReadAccount(Account),
+    ReadAccount(AccountDto),
     /// GetAccounts response.
-    ReadAccounts(Vec<Account>),
+    ReadAccounts(Vec<AccountDto>),
     /// ListMessages response.
     Messages(Vec<WalletMessage>),
     /// ListAddresses/ListSpentAddresses/ListUnspentAddresses response.
@@ -346,30 +492,26 @@ pub enum ResponseType {
     /// Reattach response.
     Reattached(String),
     /// Backup response.
-    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))))]
     BackupSuccessful,
     /// ImportAccounts response.
-    #[cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold-storage", feature = "sqlite-storage"))))]
     BackupRestored,
     /// SetStoragePassword response.
     StoragePasswordSet,
     /// SetStrongholdPassword response.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     StrongholdPasswordSet,
     /// SetStrongholdPasswordClearInterval response.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     StrongholdPasswordClearIntervalSet,
     /// GetStrongholdStatus response.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     StrongholdStatus(crate::stronghold::Status),
     /// LockStronghold response.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     LockedStronghold,
     /// SendTransfer and InternalTransfer response.
     SentTransfer(WalletMessage),
@@ -398,11 +540,21 @@ pub enum ResponseType {
     /// DeleteStorage response.
     DeletedStorage,
     /// ChangeStrongholdPassword response.
-    #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+    #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     StrongholdPasswordChanged,
     /// SetClientOptions response.
     UpdatedAllClientOptions,
+    /// GetNodeInfo response.
+    NodeInfo(NodeInfoWrapper),
+    /// GetMigrationData response.
+    MigrationData(MigrationDataDto),
+    /// CreateMigrationBundle response (bundle hash).
+    CreatedMigrationBundle(MigrationBundle),
+    /// SendMigrationBundle response.
+    SentMigrationBundle(MigratedBundle),
+    /// GetSeedChecksum response.
+    SeedChecksum(String),
 }
 
 /// The message type.

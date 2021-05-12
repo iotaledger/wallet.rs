@@ -30,7 +30,7 @@ To use the pre-built libraries for linux/macos/windows, please check the `Artifa
 
 The following shows an exmaple to use the python library.
 
-### Example 
+### Example
 
 ```python
 # Copyright 2020 IOTA Stiftung
@@ -41,7 +41,7 @@ import iota_wallet
 
 # Create a AccountManager
 manager = iota_wallet.AccountManager(
-    storage='Stronghold', storage_path='./storage')
+    storage_path='./storage')
 manager.set_stronghold_password("password")
 manager.store_mnemonic("Stronghold")
 
@@ -82,20 +82,20 @@ Also for all the optional values, the default values are the same as the ones in
 
 ### AccountManager
 
-#### constructor(storage_path (optional), storage (optional), password (optional), polling_interval (optional), automatic_output_consolidation(optional), output_consolidation_threshold(optional), sync_spent_outputs(optional), persist_events(optional)): [AccountManager](#accountmanager)
+#### constructor(storage_path (optional), password (optional), polling_interval (optional), automatic_output_consolidation(optional), output_consolidation_threshold(optional), sync_spent_outputs(optional), persist_events(optional)): [AccountManager](#accountmanager)
 
 Creates a new instance of the AccountManager.
 
-| Param                            | Type                 | Default                   | Description                                                                                    |
-| -------------------------------- | -------------------- | ------------------------- | ---------------------------------------------------------------------------------------------- |
-| [storage_path]                   | <code>str</code>     | <code>`./storage`</code>  | The path where the database file will be saved                                                 |
-| [storage]                        | <code>str</code>     | <code>`Stronghold`</code> | The storage implementation to use. Should be `Stronghold` or `Sqlite`                          |
-| [storage_password]               | <code>str</code>     | <code>undefined</code>    | The storage password to encrypt/decrypt accounts                                               |
-| [polling_interval]               | <code>int</code>     | <code>30000</code>        | The polling interval in milliseconds                                                           |
-| [automatic_output_consolidation] | <code>bool</code>    | <code>true</code>         | Disables the automatic output consolidation process                                            |
-| [output_consolidation_threshold] | <code>int</code>     | <code>100</code>          | Sets the number of outputs an address must have to trigger the automatic consolidation process |
-| [sync_spent_outputs]             | <code>boolean</code> | <code>false</code>        | Enables fetching spent output history on account sync                                          |
-| [persist_events]                 | <code>boolean</code> | <code>false</code>        | Enables event persistence                                                                      |
+| Param                                  | Type                 | Default                  | Description                                                                                    |
+| -------------------------------------- | -------------------- | ------------------------ | ---------------------------------------------------------------------------------------------- |
+| [storage_path]                         | <code>str</code>     | <code>`./storage`</code> | The path where the database file will be saved                                                 |
+| [storage_password]                     | <code>str</code>     | <code>undefined</code>   | The storage password to encrypt/decrypt accounts                                               |
+| [polling_interval]                     | <code>int</code>     | <code>30000</code>       | The polling interval in milliseconds                                                           |
+| [automatic_output_consolidation]       | <code>bool</code>    | <code>true</code>        | Disables the automatic output consolidation process                                            |
+| [output_consolidation_threshold]       | <code>int</code>     | <code>100</code>         | Sets the number of outputs an address must have to trigger the automatic consolidation process |
+| [sync_spent_outputs]                   | <code>boolean</code> | <code>false</code>       | Enables fetching spent output history on account sync                                          |
+| [persist_events]                       | <code>boolean</code> | <code>false</code>       | Enables event persistence                                                                      |
+| [allow_create_multiple_empty_accounts] | <code>boolean</code> | code<false>              | Enables creating accounts with latest account being empty                                      |
 
 Note: if the `storage_path` is set, then the `storage` needs to be set too. An exception will be thrown when errors happened.
 
@@ -185,13 +185,14 @@ Transfers an amount from an account to another.
 
 **Returns** The transfer's [WalletMessage](#walletmessage).
 
-#### backup(destination): str
+#### backup(destination, stronghold_password): str
 
 Backups the storage to the given destination.
 
-| Param       | Type             | Default                | Description                 |
-| ----------- | ---------------- | ---------------------- | --------------------------- |
-| destination | <code>str</code> | <code>undefined</code> | The path to the backup file |
+| Param               | Type             | Default                | Description                    |
+| ------------------- | ---------------- | ---------------------- | ------------------------------ |
+| destination         | <code>str</code> | <code>undefined</code> | The path to the backup file    |
+| stronghold_password | <code>str</code> | <code>undefined</code> | The backup stronghold password |
 
 **Returns** The full path to the backup file.
 
@@ -253,6 +254,106 @@ Promote the given message.
 
 **Returns** the promoted [WalletMessage](#walletmessage).
 
+#### get_balance_change_events(count (optional), skip (optional), from_timestamp (optional))
+
+Gets the persisted balance change events.
+
+| Param          | Type                | Default           | Description                                                  |
+| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| count          | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| skip           | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, address: string, balanceChange: { spent: number, received: number } }
+
+#### get_balance_change_event_count(from_timestamp (optional))
+
+Gets the number of persisted balance change events.
+
+| Param          | Type                | Default           | Description                                                  |
+| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+#### get_transaction_confirmation_events(count (optional), skip (optional), from_timestamp (optional))
+
+Gets the persisted transaction confirmation change events.
+
+| Param          | Type                | Default           | Description                                                  |
+| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| count          | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| skip           | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, message: Message, confirmed: boolean }
+
+#### get_transaction_confirmation_event_count(from_timestamp (optional))
+
+Gets the number of persisted transaction confirmation change events.
+
+| Param          | Type                | Default           | Description                                                  |
+| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+#### get_new_transaction_events(count (optional), skip (optional), from_timestamp (optional))
+
+Gets the persisted new transaction events.
+
+| Param          | Type                | Default           | Description                                                  |
+| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| count          | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| skip           | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, message: Message }
+
+#### get_new_transaction_event_count(from_timestamp (optional))
+
+Gets the number of persisted new transaction events.
+
+| Param          | Type                | Default           | Description                                                  |
+| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+#### get_reattachment_events(count (optional), skip (optional), from_timestamp (optional))
+
+Gets the persisted transaction reattachment events.
+
+| Param          | Type                | Default           | Description                                                  |
+| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| count          | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| skip           | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, message: Message }
+
+#### get_reattachment_event_count(from_timestamp (optional))
+
+Gets the number of persisted transaction reattachment events.
+
+| Param          | Type                | Default           | Description                                                  |
+| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+#### get_broadcast_events(count (optional), skip (optional), from_timestamp (optional))
+
+Gets the persisted transaction broadcast events.
+
+| Param          | Type                | Default           | Description                                                  |
+| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| count          | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
+| skip           | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
+| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
+Event object: { accountId: string, message: Message }
+
+#### get_broadcast_event_count(from_timestamp (optional))
+
+Gets the number of persisted transaction broadcast events.
+
+| Param          | Type                | Default           | Description                                                  |
+| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
+| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+
 ### AccountSynchronizer
 
 #### gap_limit(limit): void
@@ -305,7 +406,7 @@ Syncs the accounts with the tangle.
 
 ### Transfer
 
-#### constructor(amount, address, bench32_hrp, indexation (optional), remainder_value_strategy: str): [Transfer](#transfer)
+#### constructor(amount, address, indexation (optional), remainder_value_strategy: str): [Transfer](#transfer)
 
 The `Transfer` object used in [SyncedAccount](#syncedaccount)
 
@@ -313,7 +414,6 @@ The `Transfer` object used in [SyncedAccount](#syncedaccount)
 | ------------------------ | -------------------------------------- | ---------------------- | ------------------------------------------- |
 | amount                   | <code>int</code>                       | <code>undefined</code> | The amount to transfer                      |
 | address                  | <code>str</code>                       | <code>undefined</code> | The addree to send                          |
-| bench32_hrp              | <code>str</code>                       | <code>undefined</code> | the bench32_hrp of the address              |
 | indexation               | <code>[Indexation](#indexation)</code> | <code>undefined</code> | The indexation payload                      |
 | remainder_value_strategy | <code>str</code>                       | <code>undefined</code> | Should be `ReuseAddress` or `ChangeAddress` |
 
@@ -321,105 +421,29 @@ The `Transfer` object used in [SyncedAccount](#syncedaccount)
 
 The result of a `sync` operation on an Account.
 
-#### get_balance_change_events(count (optional), skip (optional), from_timestamp (optional))
+#### account_handle(): [AccountHandle](#accounthandle)
 
-Gets the persisted balance change events.
+Get the [AccountHandle](#accounthandle) of this account
 
-| Param          | Type                | Default           | Description                                                  |
-| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| count          | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
-| count          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
-| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+**Returns** the [AccountHandle](#accounthandle).
 
-Event object: { accountId: string, address: string, balanceChange: { spent: number, received: number } }
+#### deposit_address(): [Address](#address)
 
-#### get_balance_change_event_count(from_timestamp (optional))
+Get the deposit_address of this account.
 
-Gets the number of persisted balance change events.
+**Returns** the [Address](#address).
 
-| Param          | Type                | Default           | Description                                                  |
-| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+#### messages(): [WalletMessage](#walletmessage)
 
-#### get_transaction_confirmation_events(count (optional), skip (optional), from_timestamp (optional))
+Get the messages of this account.
 
-Gets the persisted transaction confirmation change events.
+**Returns** the [WalletMessage](#walletmessage).
 
-| Param          | Type                | Default           | Description                                                  |
-| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| count          | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
-| count          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
-| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+#### addresses()
 
-Event object: { accountId: string, message: Message, confirmed: boolean }
+Get the addresses of this account.
 
-#### get_transaction_confirmation_event_count(from_timestamp (optional))
-
-Gets the number of persisted transaction confirmation change events.
-
-| Param          | Type                | Default           | Description                                                  |
-| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
-
-#### get_new_transaction_events(count (optional), skip (optional), from_timestamp (optional))
-
-Gets the persisted new transaction events.
-
-| Param          | Type                | Default           | Description                                                  |
-| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| count          | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
-| count          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
-| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
-
-Event object: { accountId: string, message: Message }
-
-#### get_new_transaction_event_count(from_timestamp (optional))
-
-Gets the number of persisted new transaction events.
-
-| Param          | Type                | Default           | Description                                                  |
-| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
-
-#### get_reattachment_events(count (optional), skip (optional), from_timestamp (optional))
-
-Gets the persisted transaction reattachment events.
-
-| Param          | Type                | Default           | Description                                                  |
-| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| count          | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
-| count          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
-| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
-
-Event object: { accountId: string, message: Message }
-
-#### get_reattachment_event_count(from_timestamp (optional))
-
-Gets the number of persisted transaction reattachment events.
-
-| Param          | Type                | Default           | Description                                                  |
-| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
-
-#### get_broadcast_events(count (optional), skip (optional), from_timestamp (optional))
-
-Gets the persisted transaction broadcast events.
-
-| Param          | Type                | Default           | Description                                                  |
-| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| count          | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
-| count          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
-| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
-
-Event object: { accountId: string, message: Message }
-
-#### get_broadcast_event_count(from_timestamp (optional))
-
-Gets the number of persisted transaction broadcast events.
-
-| Param          | Type                | Default           | Description                                                  |
-| -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+**Returns** the list of [WalletMessage](#walletmessage).
 
 ### AccountHandle
 
@@ -536,6 +560,16 @@ Note that such address might have been used in the past, because the message his
 Gets the account balance information.
 
 **Returns** the [AccountBalance](#accountbalance) in this account.
+
+#### get_node_info(url (optional)): NodeInfoWrapper
+
+Gets information about the node.
+
+| Param | Type             | Default                | Description  |
+| ----- | ---------------- | ---------------------- | ------------ |
+| url   | <code>str</code> | <code>undefined</code> | The node url |
+
+**Returns** the [NodeInfoWrapper](#nodeinfowrapper)
 
 #### set_alias(alias): void
 
@@ -763,6 +797,42 @@ Removes the stronghold status change listener associated with the given identifi
 | ----- | ---------------------- | ---------------------- | ------------ |
 | [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
 
+#### on_transfer_progress(callback): list[int]
+
+Listen to transfer progress events.
+
+| Param      | Type                  | Default                | Description           |
+| ---------- | --------------------- | ---------------------- | --------------------- |
+| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+
+**Returns** the event id as list[int].
+
+#### remove_transfer_progress_listener(list[int]): void
+
+Removes the transfer progress listener associated with the given identifier.
+
+| Param | Type                   | Default                | Description  |
+| ----- | ---------------------- | ---------------------- | ------------ |
+| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+
+#### on_migration_progress(callback): list[int]
+
+Listen to migration progress events.
+
+| Param      | Type                  | Default                | Description           |
+| ---------- | --------------------- | ---------------------- | --------------------- |
+| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+
+**Returns** the event id as list[int].
+
+#### remove_migration_progress_listener(list[int]): void
+
+Removes the migration progress listener associated with the given identifier.
+
+| Param | Type                   | Default                | Description  |
+| ----- | ---------------------- | ---------------------- | ------------ |
+| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+
 ### WalletAddress
 
 A dict with the following key/value pairs.
@@ -773,7 +843,7 @@ wallet_address = {
     'balance': int,
     'key_index': int,
     'internal': bool,
-    'outputs': list[WalletAddressOutput],
+    'outputs': dict[(string, WalletAddressOutput)],
 }
 ```
 
@@ -861,7 +931,7 @@ client_options = {
     'nodes': list[[Node](#node)] (optional),
     'node_pool_urls': list[str] (optional),
     'network': str (optional),
-    'mqtt_broker_options': [BrokerOptions](#brokeroptions) (optional), 
+    'mqtt_broker_options': [BrokerOptions](#brokeroptions) (optional),
     'local_pow': bool (optional),
     'node_sync_interval': int (optional), # in milliseconds
     'node_sync_enabled': bool (optional),

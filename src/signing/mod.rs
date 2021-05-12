@@ -1,17 +1,16 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{collections::HashMap, path::PathBuf, sync::Arc};
+use std::{collections::HashMap, path::Path, sync::Arc};
 
 use crate::{
     account::Account,
     address::{Address, IotaAddress},
 };
 use getset::Getters;
-use iota::Input;
+use iota_client::bee_message::input::Input;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
-use slip10::BIP32Path;
 use tokio::sync::Mutex;
 
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
@@ -48,8 +47,6 @@ pub struct TransactionInput {
     pub input: Input,
     /// Input's address index.
     pub address_index: usize,
-    /// Input's address BIP32 derivation path.
-    pub address_path: BIP32Path,
     /// Whether the input address is a change address or a public address.
     pub address_internal: bool,
 }
@@ -79,7 +76,7 @@ pub struct SignMessageMetadata<'a> {
 #[async_trait::async_trait]
 pub trait Signer {
     /// Initialises a mnemonic.
-    async fn store_mnemonic(&mut self, storage_path: &PathBuf, mnemonic: String) -> crate::Result<()>;
+    async fn store_mnemonic(&mut self, storage_path: &Path, mnemonic: String) -> crate::Result<()>;
     /// Generates an address.
     async fn generate_address(
         &mut self,
@@ -92,10 +89,10 @@ pub trait Signer {
     async fn sign_message<'a>(
         &mut self,
         account: &Account,
-        essence: &iota::Essence,
+        essence: &iota_client::bee_message::prelude::Essence,
         inputs: &mut Vec<TransactionInput>,
         metadata: SignMessageMetadata<'a>,
-    ) -> crate::Result<Vec<iota::UnlockBlock>>;
+    ) -> crate::Result<Vec<iota_client::bee_message::prelude::UnlockBlock>>;
 }
 
 fn default_signers() -> Signers {

@@ -1,19 +1,21 @@
-// Copyright 2021 IOTA Stiftung
+// Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::types::*;
-use iota::MessageId as RustMessageId;
+use iota_client::bee_message::MessageId as RustMessageId;
 use iota_wallet::{
-    account_manager::{AccountManager as RustAccountManager, ManagerStorage as RustManagerStorage},
+    account_manager::{AccountManager as RustAccountManager, MigrationDataFinder},
     signing::SignerType as RustSingerType,
 };
-use pyo3::{exceptions, prelude::*};
+use pyo3::prelude::*;
 use std::{
     convert::{Into, TryInto},
     num::NonZeroU64,
     str::FromStr,
     time::Duration,
 };
+
+const DEFAULT_MWM: u8 = 14;
 
 #[pymethods]
 impl AccountsSynchronizer {
@@ -77,37 +79,17 @@ impl AccountManager {
     /// The constructor of account manager.
     fn new(
         storage_path: Option<&str>,
-        storage: Option<&str>, // 'Stronghold' or 'Sqlite'
         storage_password: Option<&str>,
         polling_interval: Option<u64>,
         automatic_output_consolidation: Option<bool>,
         output_consolidation_threshold: Option<usize>,
         sync_spent_outputs: Option<bool>,
         persist_events: Option<bool>,
+        allow_create_multiple_empty_accounts: Option<bool>,
     ) -> Result<Self> {
         let mut account_manager = RustAccountManager::builder();
-        if storage_path.is_some() & storage.is_some() {
-            match storage {
-                Some("Stronghold") => {
-                    account_manager = account_manager.with_storage(
-                        storage_path.unwrap_or_else(|| panic!("invalid Stronghold storage path: {:?}", storage_path)),
-                        RustManagerStorage::Stronghold,
-                        storage_password,
-                    )?
-                }
-                Some("Sqlite") => {
-                    account_manager = account_manager.with_storage(
-                        storage_path.unwrap_or_else(|| panic!("invalid Sqlite storage path: {:?}", storage_path)),
-                        RustManagerStorage::Sqlite,
-                        storage_password,
-                    )?
-                }
-                _ => {
-                    return Err(Error {
-                        error: PyErr::new::<exceptions::PyValueError, _>("Unsupported storage type!"),
-                    })
-                }
-            }
+        if let Some(storage_path) = storage_path {
+            account_manager = account_manager.with_storage(storage_path, storage_password)?;
         }
         if !automatic_output_consolidation.unwrap_or(true) {
             account_manager = account_manager.with_automatic_output_consolidation_disabled();
@@ -118,6 +100,9 @@ impl AccountManager {
         if persist_events.unwrap_or(false) {
             account_manager = account_manager.with_event_persistence();
         }
+        if allow_create_multiple_empty_accounts.unwrap_or(false) {
+            account_manager = account_manager.with_multiple_empty_accounts();
+        }
         if let Some(threshold) = output_consolidation_threshold {
             account_manager = account_manager.with_output_consolidation_threshold(threshold);
         }
@@ -126,6 +111,60 @@ impl AccountManager {
         }
         let account_manager = crate::block_on(async { account_manager.finish().await })?;
         Ok(AccountManager { account_manager })
+    }
+
+    // Migration APIs
+    fn get_migration_data(
+        &self,
+        nodes: Vec<&str>,
+        seed: &str,
+        permanode: Option<&str>,
+        security_level: Option<u8>,
+        initial_address_index: Option<u64>,
+    ) -> Result<MigrationData> {
+        let mut finder = MigrationDataFinder::new(&nodes, seed)?;
+        if let Some(permanode) = permanode {
+            finder = finder.with_permanode(permanode);
+        }
+        if let Some(initial_address_index) = initial_address_index {
+            finder = finder.with_initial_address_index(initial_address_index);
+        }
+        if let Some(security_level) = security_level {
+            finder = finder.with_security_level(security_level);
+        }
+        crate::block_on(self.account_manager.get_migration_data(finder))
+            .map(Into::into)
+            .map_err(Into::into)
+    }
+
+    fn create_migration_bundle(
+        &self,
+        seed: &str,
+        input_address_indexes: Vec<u64>,
+        mine: Option<bool>,
+        timeout_seconds: Option<u64>,
+        offset: i64,
+        log_file_name: Option<&str>,
+    ) -> Result<MigrationBundle> {
+        crate::block_on(self.account_manager.create_migration_bundle(
+            seed,
+            &input_address_indexes,
+            mine.unwrap_or(true),
+            Duration::from_secs(timeout_seconds.unwrap_or(10 * 60)),
+            offset,
+            log_file_name.unwrap_or("migration.log"),
+        ))
+        .map(Into::into)
+        .map_err(Into::into)
+    }
+
+    fn send_migration_bundle(&self, nodes: Vec<&str>, bundle_hash: &str, mwm: Option<u8>) -> Result<()> {
+        crate::block_on(
+            self.account_manager
+                .send_migration_bundle(&nodes, bundle_hash, mwm.unwrap_or(DEFAULT_MWM)),
+        )
+        .map(|_| ())
+        .map_err(Into::into)
     }
 
     /// Stops the background polling and MQTT monitoring.
@@ -216,9 +255,9 @@ impl AccountManager {
     }
 
     /// Backups the storage to the given destination
-    fn backup(&self, destination: &str) -> Result<String> {
+    fn backup(&self, destination: &str, password: &str) -> Result<String> {
         Ok(
-            crate::block_on(async { self.account_manager.backup(destination).await })?
+            crate::block_on(async { self.account_manager.backup(destination, password.to_string()).await })?
                 .into_os_string()
                 .into_string()
                 .unwrap_or_else(|os_string| {
@@ -297,9 +336,13 @@ event_getters_impl!(
     get_transaction_confirmation_event_count
 );
 event_getters_impl!(
+    TransactionReattachmentEvent,
+    get_reattachment_events,
+    get_reattachment_event_count
+);
+event_getters_impl!(
     TransactionEvent,
     get_new_transaction_events,
     get_new_transaction_event_count
 );
-event_getters_impl!(TransactionEvent, get_reattachment_events, get_reattachment_event_count);
 event_getters_impl!(TransactionEvent, get_broadcast_events, get_broadcast_event_count);

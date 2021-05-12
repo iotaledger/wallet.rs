@@ -27,15 +27,15 @@ pub(crate) mod serde;
 /// Signing interfaces.
 pub mod signing;
 /// The storage module.
-pub mod storage;
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+pub(crate) mod storage;
+#[cfg(feature = "stronghold")]
+#[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
 pub(crate) mod stronghold;
 
 pub use error::Error;
 
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+#[cfg(feature = "stronghold")]
+#[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
 pub use stronghold::{
     get_status as get_stronghold_status, set_password_clear_interval as set_stronghold_password_clear_interval,
     unload_snapshot as lock_stronghold, SnapshotStatus as StrongholdSnapshotStatus, Status as StrongholdStatus,
@@ -44,15 +44,15 @@ pub use stronghold::{
 /// The wallet Result type.
 pub type Result<T> = std::result::Result<T, Error>;
 pub use chrono::prelude::{DateTime, Local, Utc};
+pub use iota_migration;
 use once_cell::sync::OnceCell;
-use std::sync::Mutex;
 use tokio::runtime::Runtime;
 
-static RUNTIME: OnceCell<Mutex<Runtime>> = OnceCell::new();
+static RUNTIME: OnceCell<Runtime> = OnceCell::new();
 
 pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
-    let runtime = RUNTIME.get_or_init(|| Mutex::new(Runtime::new().unwrap()));
-    runtime.lock().unwrap().block_on(cb)
+    let runtime = RUNTIME.get_or_init(|| Runtime::new().unwrap());
+    runtime.block_on(cb)
 }
 
 pub(crate) fn spawn<F>(future: F)
@@ -60,13 +60,13 @@ where
     F: futures::Future + Send + 'static,
     F::Output: Send + 'static,
 {
-    let runtime = RUNTIME.get_or_init(|| Mutex::new(Runtime::new().unwrap()));
-    runtime.lock().unwrap().spawn(future);
+    let runtime = RUNTIME.get_or_init(|| Runtime::new().unwrap());
+    runtime.spawn(future);
 }
 
 /// Access the stronghold's actor system.
-#[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "stronghold", feature = "stronghold-storage"))))]
+#[cfg(feature = "stronghold")]
+#[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
 pub async fn with_actor_system<F: FnOnce(&riker::actors::ActorSystem)>(cb: F) {
     let runtime = self::stronghold::actor_runtime().lock().await;
     cb(&runtime.stronghold.system)
@@ -101,28 +101,29 @@ pub fn get_ledger_status(is_simulator: bool) -> LedgerStatus {
 mod test_utils {
     use super::{
         account::AccountHandle,
-        account_manager::{AccountManager, ManagerStorage},
+        account_manager::{AccountManager, AccountStore},
         address::{Address, AddressBuilder, AddressWrapper},
         client::ClientOptionsBuilder,
         message::{Message, MessagePayload, TransactionBuilderMetadata, TransactionEssence},
         signing::SignerType,
     };
-    use iota::{
-        pow::providers::{Provider as PowProvider, ProviderBuilder as PowProviderBuilder},
-        Address as IotaAddress, Ed25519Address, Ed25519Signature, Essence, MessageId, Payload,
-        SignatureLockedSingleOutput, SignatureUnlock, TransactionId, TransactionPayloadBuilder, UTXOInput, UnlockBlock,
-        UnlockBlocks,
+    use iota_client::{
+        bee_message::prelude::{
+            Address as IotaAddress, Ed25519Address, Ed25519Signature, Essence, MessageId, Payload,
+            SignatureLockedSingleOutput, SignatureUnlock, TransactionId, TransactionPayloadBuilder, UnlockBlock,
+            UnlockBlocks, UtxoInput,
+        },
+        pow::providers::{NonceProvider, NonceProviderBuilder},
     };
     use once_cell::sync::OnceCell;
     use rand::{distributions::Alphanumeric, thread_rng, Rng};
     use std::{
         collections::HashMap,
-        path::PathBuf,
-        sync::{atomic::AtomicBool, Arc},
+        path::{Path, PathBuf},
     };
     use tokio::sync::Mutex;
 
-    type GeneratedAddressMap = HashMap<(String, usize, bool), iota::Ed25519Address>;
+    type GeneratedAddressMap = HashMap<(String, usize, bool), iota_client::bee_message::address::Ed25519Address>;
     static TEST_SIGNER_GENERATED_ADDRESSES: OnceCell<Mutex<GeneratedAddressMap>> = OnceCell::new();
 
     #[derive(Default)]
@@ -130,7 +131,7 @@ mod test_utils {
 
     #[async_trait::async_trait]
     impl crate::signing::Signer for TestSigner {
-        async fn store_mnemonic(&mut self, _: &PathBuf, _mnemonic: String) -> crate::Result<()> {
+        async fn store_mnemonic(&mut self, _: &Path, _mnemonic: String) -> crate::Result<()> {
             Ok(())
         }
 
@@ -140,29 +141,29 @@ mod test_utils {
             address_index: usize,
             internal: bool,
             _metadata: crate::signing::GenerateAddressMetadata,
-        ) -> crate::Result<iota::Address> {
+        ) -> crate::Result<iota_client::bee_message::address::Address> {
             // store and read the generated addresses from the static map so the generation is deterministic
             let generated_addresses = TEST_SIGNER_GENERATED_ADDRESSES.get_or_init(Default::default);
             let mut generated_addresses = generated_addresses.lock().await;
             let key = (account.id().clone(), address_index, internal);
             if let Some(address) = generated_addresses.get(&key) {
-                Ok(iota::Address::Ed25519(*address))
+                Ok(iota_client::bee_message::address::Address::Ed25519(*address))
             } else {
-                let mut address = [0; iota::ED25519_ADDRESS_LENGTH];
+                let mut address = [0; iota_client::bee_message::address::ED25519_ADDRESS_LENGTH];
                 crypto::utils::rand::fill(&mut address).unwrap();
-                let address = iota::Ed25519Address::new(address);
+                let address = iota_client::bee_message::address::Ed25519Address::new(address);
                 generated_addresses.insert(key, address);
-                Ok(iota::Address::Ed25519(address))
+                Ok(iota_client::bee_message::address::Address::Ed25519(address))
             }
         }
 
         async fn sign_message<'a>(
             &mut self,
             _account: &crate::account::Account,
-            _essence: &iota::Essence,
+            _essence: &iota_client::bee_message::prelude::Essence,
             _inputs: &mut Vec<crate::signing::TransactionInput>,
             _metadata: crate::signing::SignMessageMetadata<'a>,
-        ) -> crate::Result<Vec<iota::UnlockBlock>> {
+        ) -> crate::Result<Vec<iota_client::bee_message::prelude::UnlockBlock>> {
             Ok(Vec::new())
         }
     }
@@ -174,20 +175,27 @@ mod test_utils {
 
     #[async_trait::async_trait]
     impl crate::storage::StorageAdapter for TestStorage {
-        async fn get(&self, account_id: &str) -> crate::Result<String> {
-            match self.cache.get(account_id) {
+        async fn get(&self, id: &str) -> crate::Result<String> {
+            match self.cache.get(id) {
                 Some(value) => Ok(value.to_string()),
                 None => Err(crate::Error::RecordNotFound),
             }
         }
 
-        async fn set(&mut self, account_id: &str, account: String) -> crate::Result<()> {
-            self.cache.insert(account_id.to_string(), account);
+        async fn set(&mut self, id: &str, record: String) -> crate::Result<()> {
+            self.cache.insert(id.to_string(), record);
             Ok(())
         }
 
-        async fn remove(&mut self, account_id: &str) -> crate::Result<()> {
-            self.cache.remove(account_id).ok_or(crate::Error::RecordNotFound)?;
+        async fn batch_set(&mut self, records: HashMap<String, String>) -> crate::Result<()> {
+            for (id, record) in records {
+                self.cache.insert(id, record);
+            }
+            Ok(())
+        }
+
+        async fn remove(&mut self, id: &str) -> crate::Result<()> {
+            self.cache.remove(id).ok_or(crate::Error::RecordNotFound)?;
             Ok(())
         }
     }
@@ -205,15 +213,8 @@ mod test_utils {
             }
         };
 
-        #[cfg(all(feature = "stronghold-storage", feature = "sqlite-storage"))]
-        let default_storage = ManagerStorage::Stronghold;
-        #[cfg(all(feature = "stronghold-storage", not(feature = "sqlite-storage")))]
-        let default_storage = ManagerStorage::Stronghold;
-        #[cfg(all(feature = "sqlite-storage", not(feature = "stronghold-storage")))]
-        let default_storage = ManagerStorage::Sqlite;
-
         let mut manager = AccountManager::builder()
-            .with_storage(storage_path, default_storage, None)
+            .with_storage(storage_path, None)
             .unwrap()
             .skip_polling()
             .finish()
@@ -224,7 +225,7 @@ mod test_utils {
         crate::signing::set_signer(signer_type.clone(), TestSigner::default()).await;
         manager.store_mnemonic(signer_type, None).await.unwrap();
 
-        #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+        #[cfg(feature = "stronghold")]
         manager.set_stronghold_password("password").await.unwrap();
 
         #[cfg(feature = "stronghold")]
@@ -235,7 +236,6 @@ mod test_utils {
 
     struct StorageTestCase {
         storage_password: Option<String>,
-        storage: ManagerStorage,
     }
 
     enum ManagerTestCase {
@@ -265,33 +265,10 @@ mod test_utils {
         }
 
         if test_type == TestType::Storage || test_type == TestType::SigningAndStorage {
-            // ---- Stronghold storage ----
-            #[cfg(feature = "stronghold-storage")]
-            {
-                test_cases.push(ManagerTestCase::Storage(StorageTestCase {
-                    storage_password: None,
-                    storage: ManagerStorage::Stronghold,
-                }));
-
-                test_cases.push(ManagerTestCase::Storage(StorageTestCase {
-                    storage_password: Some("password".to_string()),
-                    storage: ManagerStorage::Stronghold,
-                }));
-            }
-
-            // ---- SQLite storage ----
-            #[cfg(feature = "sqlite-storage")]
-            {
-                test_cases.push(ManagerTestCase::Storage(StorageTestCase {
-                    storage_password: None,
-                    storage: ManagerStorage::Sqlite,
-                }));
-
-                test_cases.push(ManagerTestCase::Storage(StorageTestCase {
-                    storage_password: Some("password".to_string()),
-                    storage: ManagerStorage::Sqlite,
-                }));
-            }
+            test_cases.push(ManagerTestCase::Storage(StorageTestCase { storage_password: None }));
+            test_cases.push(ManagerTestCase::Storage(StorageTestCase {
+                storage_password: Some("password".to_string()),
+            }));
         }
 
         for test_case in test_cases {
@@ -313,18 +290,12 @@ mod test_utils {
             let signer_type = match test_case {
                 ManagerTestCase::Signer(signer_type) => {
                     crate::signing::set_signer(signer_type.clone(), TestSigner::default()).await;
-                    manager_builder = manager_builder
-                        .with_storage(
-                            storage_path,
-                            ManagerStorage::Custom(Box::new(TestStorage::default())),
-                            None,
-                        )
-                        .unwrap();
+                    manager_builder = manager_builder.with_storage(storage_path, None).unwrap();
                     signer_type
                 }
                 ManagerTestCase::Storage(config) => {
                     manager_builder = manager_builder
-                        .with_storage(storage_path, config.storage, config.storage_password.as_deref())
+                        .with_storage(storage_path, config.storage_password.as_deref())
                         .unwrap();
                     #[cfg(feature = "stronghold")]
                     let signer_type = SignerType::Stronghold;
@@ -340,7 +311,7 @@ mod test_utils {
 
             let mut manager = manager_builder.skip_polling().finish().await.unwrap();
 
-            #[cfg(any(feature = "stronghold", feature = "stronghold-storage"))]
+            #[cfg(feature = "stronghold")]
             manager.set_stronghold_password("password").await.unwrap();
 
             manager.store_mnemonic(signer_type.clone(), None).await.unwrap();
@@ -353,7 +324,7 @@ mod test_utils {
     #[derive(Default)]
     pub struct NoopNonceProviderBuilder;
 
-    impl PowProviderBuilder for NoopNonceProviderBuilder {
+    impl NonceProviderBuilder for NoopNonceProviderBuilder {
         type Provider = NoopNonceProvider;
 
         fn new() -> Self {
@@ -368,16 +339,11 @@ mod test_utils {
     /// The miner used for PoW
     pub struct NoopNonceProvider;
 
-    impl PowProvider for NoopNonceProvider {
+    impl NonceProvider for NoopNonceProvider {
         type Builder = NoopNonceProviderBuilder;
         type Error = crate::Error;
 
-        fn nonce(
-            &self,
-            _bytes: &[u8],
-            _target_score: f64,
-            _done: Option<Arc<AtomicBool>>,
-        ) -> std::result::Result<u64, Self::Error> {
+        fn nonce(&self, _bytes: &[u8], _target_score: f64) -> std::result::Result<u64, Self::Error> {
             Ok(0)
         }
     }
@@ -446,7 +412,6 @@ mod test_utils {
         AddressBuilder::new()
             .key_index(0)
             .address(generate_random_iota_address())
-            .balance(0)
             .outputs(Vec::new())
             .build()
             .unwrap()
@@ -470,8 +435,9 @@ mod test_utils {
         address: Address,
         confirmed: Option<bool>,
         broadcasted: bool,
-        incoming: bool,
         input_transaction_id: TransactionId,
+        input_address: Option<AddressWrapper>,
+        account_addresses: Vec<Address>,
     }
 
     impl Default for GenerateMessageBuilder {
@@ -481,8 +447,9 @@ mod test_utils {
                 address: generate_random_address(),
                 confirmed: Some(false),
                 broadcasted: false,
-                incoming: false,
                 input_transaction_id: TransactionId::new([0; 32]),
+                input_address: None,
+                account_addresses: Vec::new(),
             }
         }
     }
@@ -493,8 +460,9 @@ mod test_utils {
         address => Address,
         confirmed => Option<bool>,
         broadcasted => bool,
-        incoming => bool,
-        input_transaction_id => TransactionId
+        input_transaction_id => TransactionId,
+        input_address => Option<AddressWrapper>,
+        account_addresses => Vec<Address>
     );
 
     impl GenerateMessageBuilder {
@@ -507,8 +475,8 @@ mod test_utils {
                 id: &id,
                 bech32_hrp,
                 account_id: "",
-                accounts: Default::default(),
-                account_addresses: &[],
+                accounts: AccountStore::new(Default::default()),
+                account_addresses: &self.account_addresses,
                 client_options: &ClientOptionsBuilder::new().build().unwrap(),
             };
 
@@ -516,19 +484,19 @@ mod test_utils {
                 Payload::Transaction(Box::new(
                     TransactionPayloadBuilder::new()
                         .with_essence(Essence::Regular(
-                            iota::RegularEssence::builder()
+                            iota_client::bee_message::prelude::RegularEssence::builder()
                                 .add_output(
                                     SignatureLockedSingleOutput::new(*self.address.address().as_ref(), self.value)
                                         .unwrap()
                                         .into(),
                                 )
-                                .add_input(UTXOInput::new(self.input_transaction_id, 0).unwrap().into())
+                                .add_input(UtxoInput::new(self.input_transaction_id, 0).unwrap().into())
                                 .finish()
                                 .unwrap(),
                         ))
                         .with_unlock_blocks(
                             UnlockBlocks::new(vec![UnlockBlock::Signature(SignatureUnlock::Ed25519(
-                                Ed25519Signature::new([0; 32], Box::new([0])),
+                                Ed25519Signature::new([0; 32], [0; 64]),
                             ))])
                             .unwrap(),
                         )
@@ -541,7 +509,21 @@ mod test_utils {
             .unwrap();
             if let MessagePayload::Transaction(ref mut tx) = payload {
                 let TransactionEssence::Regular(ref mut essence) = tx.essence_mut();
-                essence.incoming = self.incoming;
+                if let Some(address) = self.input_address {
+                    let input = essence.inputs_mut().iter_mut().next().unwrap();
+                    if let crate::message::TransactionInput::Utxo(ref mut utxo) = input {
+                        utxo.metadata.replace(crate::address::AddressOutput {
+                            transaction_id: self.input_transaction_id,
+                            message_id: iota_client::bee_message::MessageId::from([0; 32]),
+                            index: 0,
+                            amount: 10000000,
+                            is_spent: false,
+                            address,
+                            kind: crate::address::OutputKind::SignatureLockedSingle,
+                        });
+                        essence.incoming = essence.is_incoming(&self.account_addresses);
+                    }
+                }
             }
 
             Message {
@@ -554,6 +536,7 @@ mod test_utils {
                 nonce: 0,
                 confirmed: self.confirmed,
                 broadcasted: self.broadcasted,
+                reattachment_message_id: None,
             }
         }
     }

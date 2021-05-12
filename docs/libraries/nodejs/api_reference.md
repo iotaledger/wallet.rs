@@ -29,6 +29,7 @@ Supported event names:
 - Reattachment
 - Broadcast
 - TransferProgress
+- MigrationProgress
 
 ### AccountManager
 
@@ -36,16 +37,16 @@ Supported event names:
 
 Creates a new instance of the AccountManager.
 
-| Param                          | Type                 | Default                | Description                                                                               |
-| ------------------------------ | -------------------- | ---------------------- | ----------------------------------------------------------------------------------------- |
-| [options]                      | <code>object</code>  | <code>undefined</code> | The options to configure the account manager                                              |
-| [storagePath]                  | <code>string</code>  | <code>undefined</code> | The path where the database file will be saved                                            |
-| [storageType]                  | <code>number</code>  | <code>undefined</code> | The type of the database.  Stronghold = 1, Sqlite = 2                                     |
-| [storagePassword]              | <code>string</code>  | <code>undefined</code> | The storage password                                                                      |
-| [outputConsolidationThreshold] | <code>number</code>  | <code>100</code>       | The number of outputs an address must have to trigger the automatic consolidation process |
-| [automaticOutputConsolidation] | <code>boolean</code> | <code>true</code>      | Disables the automatic output consolidation if false                                      |
-| [syncSpentOutputs]             | <code>boolean</code> | <code>false</code>     | Enables fetching spent output history on account sync                                     |
-| [persistEvents]                | <code>boolean</code> | <code>false</code>     | Enables event persistence                                                                 |
+| Param                              | Type                 | Default                | Description                                                                               |
+| ---------------------------------- | -------------------- | ---------------------- | ----------------------------------------------------------------------------------------- |
+| [options]                          | <code>object</code>  | <code>undefined</code> | The options to configure the account manager                                              |
+| [storagePath]                      | <code>string</code>  | <code>undefined</code> | The path where the database file will be saved                                            |
+| [storagePassword]                  | <code>string</code>  | <code>undefined</code> | The storage password                                                                      |
+| [outputConsolidationThreshold]     | <code>number</code>  | <code>100</code>       | The number of outputs an address must have to trigger the automatic consolidation process |
+| [automaticOutputConsolidation]     | <code>boolean</code> | <code>true</code>      | Disables the automatic output consolidation if false                                      |
+| [syncSpentOutputs]                 | <code>boolean</code> | <code>false</code>     | Enables fetching spent output history on account sync                                     |
+| [persistEvents]                    | <code>boolean</code> | <code>false</code>     | Enables event persistence                                                                 |
+| [allowCreateMultipleEmptyAccounts] | <code>boolean</code> | code<false>            | Enables creating accounts with latest account being empty                                 |
 
 #### setStrongholdPassword(password): void
 
@@ -135,13 +136,14 @@ Transfers an amount from one subaccount to another.
 
 **Returns** A promise resolving to the transfer's Message.
 
-#### backup(destination)
+#### backup(destination, password)
 
 Backups the database.
 
-| Param       | Type                | Default                | Description                 |
-| ----------- | ------------------- | ---------------------- | --------------------------- |
-| destination | <code>string</code> | <code>undefined</code> | The path to the backup file |
+| Param       | Type                | Default                | Description                    |
+| ----------- | ------------------- | ---------------------- | ------------------------------ |
+| destination | <code>string</code> | <code>undefined</code> | The path to the backup file    |
+| password    | <code>string</code> | <code>undefined</code> | The backup stronghold password |
 
 **Returns** The full path to the backup file.
 
@@ -167,6 +169,14 @@ Updates the client options for all accounts.
 | Param   | Type                                         | Default           | Description                    |
 | ------- | -------------------------------------------- | ----------------- | ------------------------------ |
 | options | <code>[ClientOptions](#clientoptions)</code> | <code>null</code> | The new account client options |
+
+#### generateMigrationAddress(address)
+
+Convert a Ed25519 to a Tryte migration address with checksum (last 9 Trytes)
+
+| Param   | Type                | Default           | Description                    |
+| ------- | ------------------- | ----------------- | ------------------------------ |
+| address | <code>string</code> | <code>null</code> | Bech32 encoded Ed25519 address |
 
 #### getBalanceChangeEvents([count, skip, fromTimestamp])
 
@@ -319,7 +329,7 @@ Returns the account's addresses.
 | --------- | -------------------- | ----------------- | --------------------------- |
 | [unspent] | <code>boolean</code> | <code>null</code> | The `unspent` status filter |
 
-Address object: { address: string, balance: number, keyIndex: number }
+Address object: { address: string, keyIndex: number }
 
 #### sync([options])
 

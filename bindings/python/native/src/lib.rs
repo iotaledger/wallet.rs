@@ -1,4 +1,4 @@
-// Copyright 2021 IOTA Stiftung
+// Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 pub mod classes;
@@ -26,6 +26,7 @@ fn iota_wallet(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<SyncedAccount>()?;
     m.add_class::<AccountSynchronizer>()?;
     m.add_class::<Transfer>()?;
+    m.add_class::<TransferWithOutputs>()?;
     m.add_class::<AccountManager>()?;
     m.add_function(wrap_pyfunction!(on_balance_change, m)?).unwrap();
     m.add_function(wrap_pyfunction!(remove_balance_change_listener, m)?)

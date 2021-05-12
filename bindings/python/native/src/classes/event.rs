@@ -1,4 +1,4 @@
-// Copyright 2021 IOTA Stiftung
+// Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_wallet::event::EventId;
@@ -203,5 +203,61 @@ pub fn on_stronghold_status_change(callback: PyObject) -> PyResult<EventId> {
 pub fn remove_stronghold_status_change_listener(id: &[u8]) -> PyResult<()> {
     let event_id = py_slice_to_event_id(id)?;
     crate::block_on(async { iota_wallet::event::remove_stronghold_status_change_listener(&event_id).await });
+    Ok(())
+}
+
+/// Listen to transfer progress events.
+#[pyfunction]
+pub fn on_transfer_progress(callback: PyObject) -> PyResult<EventId> {
+    crate::block_on(async {
+        Ok(iota_wallet::event::on_transfer_progress(move |event| {
+            let event_string = serde_json::to_string(&event).unwrap();
+            let gil = Python::acquire_gil();
+            let py = gil.python();
+            let args = PyTuple::new(py, &[event_string]);
+            callback.call1(py, args).unwrap_or_else(|_| {
+                PyErr::new::<exceptions::PyTypeError, _>(
+                    "Unable to use the python callback function for on_transfer_progress()!",
+                )
+                .to_object(py)
+            });
+        })
+        .await)
+    })
+}
+
+/// Removes the transfer progress listener associated with the given identifier.
+#[pyfunction]
+pub fn remove_transfer_progress_listener(id: &[u8]) -> PyResult<()> {
+    let event_id = py_slice_to_event_id(id)?;
+    crate::block_on(async { iota_wallet::event::remove_transfer_progress_listener(&event_id).await });
+    Ok(())
+}
+
+/// Listen to migration progress events.
+#[pyfunction]
+pub fn on_migration_progress(callback: PyObject) -> PyResult<EventId> {
+    crate::block_on(async {
+        Ok(iota_wallet::event::on_migration_progress(move |event| {
+            let event_string = serde_json::to_string(&event).unwrap();
+            let gil = Python::acquire_gil();
+            let py = gil.python();
+            let args = PyTuple::new(py, &[event_string]);
+            callback.call1(py, args).unwrap_or_else(|_| {
+                PyErr::new::<exceptions::PyTypeError, _>(
+                    "Unable to use the python callback function for on_migration_progress()!",
+                )
+                .to_object(py)
+            });
+        })
+        .await)
+    })
+}
+
+/// Removes the migration progress listener associated with the given identifier.
+#[pyfunction]
+pub fn remove_migration_progress_listener(id: &[u8]) -> PyResult<()> {
+    let event_id = py_slice_to_event_id(id)?;
+    crate::block_on(async { iota_wallet::event::remove_migration_progress_listener(&event_id).await });
     Ok(())
 }

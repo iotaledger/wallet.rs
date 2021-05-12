@@ -28,7 +28,7 @@ export declare type Essence = {
   data: RegularEssence
 }
 
-export declare interface UTXOInput {
+export declare interface UtxoInput {
   input: string
   metadata?: {
     transactionId: string
@@ -40,7 +40,7 @@ export declare interface UTXOInput {
   }
 }
 
-export declare type Input = { type: 'UTXO', data: UTXOInput }
+export declare type Input = { type: 'Utxo', data: UtxoInput }
 
 export declare interface SignatureLockedSingleOutput {
   address: string
@@ -80,10 +80,21 @@ export declare interface Message {
   broadcasted: boolean;
 }
 
+export declare interface AddressOutput {
+  transactionId: string;
+  messageId: string;
+  index: number;
+  amount: number;
+  isSpent: boolean;
+  address: string;
+}
+
 export declare interface Address {
   address: string;
   balance: number;
   keyIndex: number;
+  internal: boolean;
+  outputs: AddressOutput[];
 }
 
 export declare interface SyncOptions {
@@ -98,16 +109,40 @@ export declare interface AccountBalance {
   outgoing: number
 }
 
+export declare interface NodeInfoWrapper {
+  url: string
+  nodeinfo: NodeInfo
+}
+
+export declare interface NodeInfo {
+  name: string
+  version: string
+  isHealthy: boolean
+  networkId: string
+  bech32HRP: string
+  minPoWScore: number
+  messagesPerSecond: number
+  referencedMessagesPerSecond: number
+  referencedRate: number
+  latestMilestoneTimestamp: number
+  latestMilestoneIndex: number
+  confirmedMilestoneIndex: number
+  pruningIndex: number
+  features: string[]
+}
+
 export declare class Account {
   id(): string;
   index(): number;
   alias(): string;
   balance(): AccountBalance;
+  getNodeInfo(url?: string): Promise<NodeInfoWrapper>;
   messageCount(messageType?: MessageType): number;
   listMessages(count?: number, from?: number, messageType?: MessageType): Message[]
   listAddresses(unspent?: boolean): Address[]
   sync(options?: SyncOptions): Promise<SyncedAccount>
   send(address: string, amount: number, options?: TransferOptions): Promise<Message>
+  sendToMany(outputs: TransferOutput[], options?: TransferOptions): Promise<Message>
   retry(messageId: string): Promise<Message>
   reattach(messageId: string): Promise<Message>
   promote(messageId: string): Promise<Message>
@@ -131,6 +166,12 @@ export declare class RemainderValueStrategy {
 export declare class TransferOptions {
   remainderValueStrategy?: RemainderValueStrategy
   indexation?: { index: string | number[] | Uint8Array, data?: string | number[] | Uint8Array }
+  skipSync?: boolean
+}
+
+export declare interface TransferOutput {
+  address: string,
+  amount: number
 }
 
 export declare class SyncedAccount { }
@@ -143,11 +184,12 @@ export declare interface Node {
     username: string
     password: string
   }
+  disabled?: boolean
 }
 
 export declare interface ClientOptions {
   node?: NodeUrl | Node;
-  nodes?: string[];
+  nodes?: Array<NodeUrl | Node>;
   network?: string;
   quorumSize?: number;
   quorumThreshold?: number;
@@ -160,26 +202,20 @@ export declare enum SignerType {
 
 export declare interface AccountToCreate {
   clientOptions: ClientOptions;
-  mnemonic?: string;
   alias?: string;
   createdAt?: string;
   signerType?: SignerType;
   skipPersistence?: boolean;
 }
 
-export declare enum StorageType {
-  Sqlite,
-  Stronghold
-}
-
 export declare interface ManagerOptions {
   storagePath?: string
-  storageType?: StorageType
   storagePassword?: string
   outputConsolidationThreshold?: number
   automaticOutputConsolidation?: boolean
   syncSpentOutputs?: boolean
   persistEvents?: boolean
+  allowCreateMultipleEmptyAccounts?: boolean
 }
 
 export declare interface BalanceChangeEvent {
@@ -203,6 +239,43 @@ export declare interface TransactionEvent {
   message: Message
 }
 
+export declare interface MigrationDataOptions {
+  permanode?: string
+  securityLevel?: number
+  initialAddressIndex?: number
+}
+
+export declare interface MigrationDataInput {
+  address: string
+  securityLevel: number
+  balance: number
+  index: number
+  spent: boolean
+  spentBundleHashes?: string[]
+}
+
+export declare interface MigrationData {
+  balance: number
+  lastCheckedAddressIndex: number
+  inputs: MigrationDataInput[]
+}
+
+export declare interface CreateMigrationBundleOptions {
+  mine?: boolean
+  timeoutSeconds?: number
+  offset?: number
+  logFileName?: string
+}
+
+export declare interface MigrationBundle {
+  crackability: number
+  bundleHash: string
+}
+
+export declare interface SendMigrationBundleOptions {
+  mwm?: string
+}
+
 export declare class AccountManager {
   constructor(options: ManagerOptions)
   setStoragePassword(password: string): void
@@ -216,10 +289,14 @@ export declare class AccountManager {
   removeAccount(accountId: string | number): void
   syncAccounts(options?: SyncOptions): Promise<SyncedAccount[]>
   internalTransfer(fromAccount: Account, toAccount: Account, amount: number): Promise<Message>
-  backup(destination: string): string
+  backup(destination: string, password: string): string
   importAccounts(source: string, password: string): void
   isLatestAddressUnused(): Promise<boolean>
   setClientOptions(options: ClientOptions): void
+  // migration
+  getMigrationData(nodes: string[], seed: string, options?: MigrationDataOptions): Promise<MigrationData>
+  createMigrationBundle(seed: string, inputAddressIndexes: number[], options?: CreateMigrationBundleOptions): Promise<MigrationBundle>
+  sendMigrationBundle(nodes: string[], bundleHash: string, options?: SendMigrationBundleOptions): Promise<void>
   // events
   getBalanceChangeEvents(count?: number, skip?: number, fromTimestamp?: number): BalanceChangeEvent[]
   getBalanceChangeEventCount(fromTimestamp?: number): number
@@ -239,7 +316,8 @@ export declare type Event = 'ErrorThrown' |
   'ConfirmationStateChange' |
   'Reattachment' |
   'Broadcast' |
-  'TransferProgress'
+  'TransferProgress' |
+  'MigrationProgress'
 
 export interface LoggerOutput {
   name?: string
