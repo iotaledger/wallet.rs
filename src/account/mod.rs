@@ -331,7 +331,6 @@ impl AccountInitialiser {
         let mut digest = [0; 32];
         let raw = match address.as_ref() {
             iota_client::bee_message::address::Address::Ed25519(a) => a.as_ref().to_vec(),
-            _ => unimplemented!(),
         };
         crypto::hashes::sha::SHA256(&raw, &mut digest);
         account.set_id(format!("{}{}", ACCOUNT_ID_PREFIX, hex::encode(digest)));
