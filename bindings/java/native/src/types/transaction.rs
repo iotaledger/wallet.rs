@@ -10,7 +10,7 @@ use iota_wallet::{
     },
 };
 
-use iota::{Payload as RustPayload, UnlockBlock as RustUnlockBlock};
+use iota_client::bee_message::prelude::{Payload as RustPayload, UnlockBlock as RustUnlockBlock};
 
 pub enum InputKind {
     Utxo = 0,

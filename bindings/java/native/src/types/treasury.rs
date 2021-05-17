@@ -1,9 +1,9 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_wallet::message::{TreasuryTransactionPayload as TreasuryTransactionPayloadRust};
+use iota_wallet::message::TreasuryTransactionPayload as TreasuryTransactionPayloadRust;
 
-use iota::Output;
+use iota_client::bee_message::output::Output;
 
 pub struct TreasuryTransactionPayload {
     payload: TreasuryTransactionPayloadRust,

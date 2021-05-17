@@ -2,7 +2,6 @@ import iota_wallet as iw
 import json
 import datetime
 import os
-import pytest
 
 # Read the test vector
 tv = dict()
@@ -181,7 +180,6 @@ def test_account_handle_set_alias():
     assert alias == tv['account_handle']['updated_alias']
 
 
-@pytest.mark.skip(reason="https://github.com/iotaledger/wallet.rs/issues/527")
 def test_account_handle_set_client_options():
     account.set_client_options(tv['account_handle']['updated_client_options'])
     client_options = account.client_options()

@@ -8,7 +8,7 @@ use super::{
 use chrono::prelude::{DateTime, NaiveDateTime, Utc};
 use core::convert::TryFrom;
 use dict_derive::{FromPyObject as DeriveFromPyObject, IntoPyObject as DeriveIntoPyObject};
-use iota::{
+use iota_client::bee_message::prelude::{
     Address as RustAddress, Ed25519Address as RustEd25519Address, Ed25519Signature as RustEd25519Signature,
     Essence as RustEssence, IndexationPayload as RustIndexationPayload, Input as RustInput, Output as RustOutput,
     Payload as RustPayload, ReferenceUnlock as RustReferenceUnlock, RegularEssence as RustRegularEssence,
@@ -16,8 +16,8 @@ use iota::{
     TransactionId as RustTransationId, TransactionPayload as RustTransactionPayload, UnlockBlock as RustUnlockBlock,
     UnlockBlocks as RustUnlockBlocks, UtxoInput as RustUtxoInput,
 };
-// use iota::MessageId as RustMessageId,
-use iota::{Address as IotaAddress, MessageId, TransactionId};
+// use iota_client::bee_message::MessageId as RustMessageId,
+use iota_client::bee_message::prelude::{Address as IotaAddress, MessageId, TransactionId};
 use iota_wallet::{
     account_manager::AccountStore,
     address::{

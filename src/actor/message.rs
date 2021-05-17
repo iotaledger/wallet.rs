@@ -11,7 +11,7 @@ use crate::{
     Error,
 };
 use chrono::{DateTime, Local};
-use iota::client::NodeInfoWrapper;
+use iota_client::NodeInfoWrapper;
 use iota_migration::{ternary::T3B1Buf, transaction::bundled::BundledTransactionField};
 use serde::{ser::Serializer, Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;

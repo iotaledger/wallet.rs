@@ -798,6 +798,42 @@ Removes the stronghold status change listener associated with the given identifi
 | ----- | ---------------------- | ---------------------- | ------------ |
 | [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
 
+#### on_transfer_progress(callback): list[int]
+
+Listen to transfer progress events.
+
+| Param      | Type                  | Default                | Description           |
+| ---------- | --------------------- | ---------------------- | --------------------- |
+| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+
+**Returns** the event id as list[int].
+
+#### remove_transfer_progress_listener(list[int]): void
+
+Removes the transfer progress listener associated with the given identifier.
+
+| Param | Type                   | Default                | Description  |
+| ----- | ---------------------- | ---------------------- | ------------ |
+| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+
+#### on_migration_progress(callback): list[int]
+
+Listen to migration progress events.
+
+| Param      | Type                  | Default                | Description           |
+| ---------- | --------------------- | ---------------------- | --------------------- |
+| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+
+**Returns** the event id as list[int].
+
+#### remove_migration_progress_listener(list[int]): void
+
+Removes the migration progress listener associated with the given identifier.
+
+| Param | Type                   | Default                | Description  |
+| ----- | ---------------------- | ---------------------- | ------------ |
+| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+
 ### WalletAddress
 
 A dict with the following key/value pairs.

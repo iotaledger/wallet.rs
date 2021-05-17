@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{path::PathBuf, time::Duration};
+use getset::{CopyGetters, Getters};
 
 use crate::Result;
 use anyhow::anyhow;
@@ -12,11 +13,66 @@ use iota_wallet::{
         TransactionConfirmationChangeEvent as WalletTransactionConfirmationChangeEvent,
         TransactionEvent as WalletTransactionEvent, TransactionReattachmentEvent as WalletTransactionReattachmentEvent,
         TransferProgress as WalletTransferProgress,
+        MigrationProgressType as WalletMigrationProgressType,
     },
     StrongholdSnapshotStatus as SnapshotStatus, StrongholdStatus as StrongholdStatusWallet,
 };
 
 pub struct EventManager {}
+
+#[derive(Copy, Clone)]
+pub enum MigrationProgressType {
+    FetchingMigrationData = 0,
+    MiningBundle = 1,
+    SigningBundle = 2,
+    BroadcastingBundle = 3,
+    TransactionConfirmed = 4,
+}
+
+pub fn migration_progress_type_enum_to_type(migration_type: &WalletMigrationProgressType) -> MigrationProgressType {
+    match migration_type {
+        WalletMigrationProgressType::FetchingMigrationData{..} => MigrationProgressType::FetchingMigrationData,
+        WalletMigrationProgressType::MiningBundle{..} => MigrationProgressType::MiningBundle,
+        WalletMigrationProgressType::SigningBundle{..} => MigrationProgressType::SigningBundle,
+        WalletMigrationProgressType::BroadcastingBundle{..} => MigrationProgressType::BroadcastingBundle,
+        WalletMigrationProgressType::TransactionConfirmed{..} => MigrationProgressType::TransactionConfirmed,
+    }
+}
+
+#[derive(Getters, CopyGetters)]
+pub struct FetchingMigrationData {
+    #[getset(get_copy = "pub")]
+    initial_address_index: u64,
+    #[getset(get_copy = "pub")]
+    final_address_index: u64,
+}
+
+#[derive(Getters, CopyGetters)]
+pub struct MiningBundle {
+    #[getset(get = "pub")]
+    address: String,
+}
+
+pub struct SigningBundle {
+    addresses: Vec<String>,
+}
+impl SigningBundle {
+    pub fn addresses(&self) -> Vec<String> {
+        self.addresses.clone()
+    }
+}
+
+#[derive(Getters, CopyGetters)]
+pub struct BroadcastingBundle {
+    #[getset(get = "pub")]
+    bundle_hash: String,
+}
+
+#[derive(Getters, CopyGetters)]
+pub struct TransactionConfirmed {
+    #[getset(get = "pub")]
+    bundle_hash: String,
+}
 
 pub enum StrongholdStatusType {
     Unlocked = 0,
@@ -45,42 +101,115 @@ impl StrongholdStatusEvent {
     }
 }
 
+pub struct MigrationProgressEvent {
+    migration_type: MigrationProgressType,
+    event: WalletMigrationProgressType
+}
+
+impl MigrationProgressEvent {
+    pub fn get_type(&self) -> MigrationProgressType {
+        self.migration_type
+    }
+
+    pub fn as_fetching_migration_data(&self) -> Result<FetchingMigrationData> {
+        if let WalletMigrationProgressType::FetchingMigrationData { 
+            initial_address_index,
+            final_address_index
+        } = &self.event {
+            Ok(FetchingMigrationData {
+                initial_address_index: *initial_address_index,
+                final_address_index: *final_address_index
+            })
+        } else {
+            Err(anyhow!("wrong migration type"))
+        }
+    }
+    pub fn as_mining_bundle(&self) -> Result<MiningBundle> {
+        if let WalletMigrationProgressType::MiningBundle {
+            address,
+        } = &self.event {
+            Ok(MiningBundle {
+                address: address.clone()
+            })
+        } else {
+            Err(anyhow!("wrong migration type"))
+        }
+    }
+    pub fn as_signing_bundle(&self) -> Result<SigningBundle> {
+        if let WalletMigrationProgressType::SigningBundle {
+            addresses,
+        } = &self.event {
+            Ok(SigningBundle {
+                addresses: addresses.clone(),
+            })
+        } else {
+            Err(anyhow!("wrong migration type"))
+        }
+    }
+    pub fn as_broadcasting_bundle(&self) -> Result<BroadcastingBundle> {
+        if let WalletMigrationProgressType::BroadcastingBundle {
+            bundle_hash,
+        } = &self.event {
+            Ok(BroadcastingBundle {
+                bundle_hash: bundle_hash.clone(),
+            })
+        } else {
+            Err(anyhow!("wrong migration type"))
+        }
+    }
+    pub fn as_transaction_confirmed(&self) -> Result<TransactionConfirmed> {
+        if let WalletMigrationProgressType::TransactionConfirmed {
+            bundle_hash,
+        } = &self.event {
+            Ok(TransactionConfirmed {
+                bundle_hash: bundle_hash.clone(),
+            })
+        } else {
+            Err(anyhow!("wrong migration type"))
+        }
+    }
+}
+
 pub trait ErrorListener {
     fn on_error(&self, error: String);
 }
 
 pub trait NewTransactionListener {
-    fn on_new_transaction(&self, error: WalletTransactionEvent);
+    fn on_new_transaction(&self, event: WalletTransactionEvent);
 }
 
 pub trait ReattachTransactionListener {
-    fn on_reattachment(&self, error: WalletTransactionReattachmentEvent);
+    fn on_reattachment(&self, event: WalletTransactionReattachmentEvent);
 }
 
 pub trait BroadcastTransactionListener {
-    fn on_broadcast(&self, error: WalletTransactionEvent);
+    fn on_broadcast(&self, event: WalletTransactionEvent);
 }
 
 pub trait TransactionConfirmationChangeListener {
-    fn on_confirmation_state_change(&self, error: WalletTransactionConfirmationChangeEvent);
+    fn on_confirmation_state_change(&self, event: WalletTransactionConfirmationChangeEvent);
 }
 
 pub trait TransferProgressListener {
-    fn on_transfer_progress(&self, error: WalletTransferProgress);
+    fn on_transfer_progress(&self, event: WalletTransferProgress);
+}
+
+pub trait MigrationProgressListener {
+    fn on_migration_progress(&self, event: MigrationProgressEvent);
 }
 
 pub trait BalanceChangeListener {
-    fn on_balance_change(&self, error: WalletBalanceEvent);
+    fn on_balance_change(&self, event: WalletBalanceEvent);
 }
 
 // Ledger
 pub trait AddressConsolidationNeededListener {
-    fn on_address_consolidation_needed(&self, error: WalletAddressConsolidationNeeded);
+    fn on_address_consolidation_needed(&self, event: WalletAddressConsolidationNeeded);
 }
 
 // Stronghold
 pub trait StrongholdStatusListener {
-    fn on_stronghold_status_change(&self, error: StrongholdStatusEvent);
+    fn on_stronghold_status_change(&self, event: StrongholdStatusEvent);
 }
 
 impl EventManager {
@@ -149,6 +278,22 @@ impl EventManager {
 
     pub fn remove_transfer_progress_listener(event: EventId) {
         crate::block_on(async move { iota_wallet::event::remove_transfer_progress_listener(&event).await })
+    }
+
+    pub fn subscribe_migration_progress(cb: Box<dyn MigrationProgressListener + Send + 'static>) -> EventId {
+        crate::block_on(async move {
+            iota_wallet::event::on_migration_progress(move |event| {
+                cb.on_migration_progress(MigrationProgressEvent {
+                    migration_type: migration_progress_type_enum_to_type(&event.event),
+                    event: event.event.clone()
+                });
+            })
+            .await
+        })
+    }
+
+    pub fn remove_migration_progress_listener(event: EventId) {
+        crate::block_on(async move { iota_wallet::event::remove_migration_progress_listener(&event).await })
     }
 
     pub fn subscribe_balance_change(cb: Box<dyn BalanceChangeListener + Send + 'static>) -> EventId {

@@ -430,9 +430,67 @@ foreign_enum!(
 );
 
 foreign_enum!(
+    enum MigrationProgressType {
+        FETCHING_MIGRATION_DATA = MigrationProgressType::FetchingMigrationData,
+        MINING_BUNDLE = MigrationProgressType::MiningBundle,
+        SIGNING_BUNDLE = MigrationProgressType::SigningBundle,
+        BROADCASTING_BUNDLE = MigrationProgressType::BroadcastingBundle,
+        TRANSACTION_CONFIRMED = MigrationProgressType::TransactionConfirmed,
+    }
+);
+
+foreign_enum!(
     enum StrongholdStatusType {
         UNLOCKED = StrongholdStatusType::Unlocked,
         LOCKED = StrongholdStatusType::Locked,
+    }
+);
+
+foreign_class!(
+    /// Fetching migration data on the given address range.
+    class FetchingMigrationData {
+        self_type FetchingMigrationData;
+        private constructor = empty;
+        /// The initial address index on the fetch range.
+        fn FetchingMigrationData::initial_address_index(&self) -> u64; alias getInitialAddressIndex;
+        /// The final address index on the fetch range.
+        fn FetchingMigrationData::final_address_index(&self) -> u64; alias getFinalAddressIndex;
+    }
+);
+foreign_class!(
+    /// Mining the bundle with the given spent address.
+    class MiningBundle {
+        self_type MiningBundle;
+        private constructor = empty;
+        /// The spent address.
+        fn MiningBundle::address(&self) -> &str; alias getAddress;
+    }
+);
+foreign_class!(
+    /// Signing the bundle.
+    class SigningBundle {
+        self_type SigningBundle;
+        private constructor = empty;
+        /// The addresses associated with the bundle.
+        fn SigningBundle::addresses(&self) -> Vec<String>; alias getAddresses;
+    }
+);
+foreign_class!(
+    /// Broadcasting the given bundle hash.
+    class BroadcastingBundle {
+        self_type BroadcastingBundle;
+        private constructor = empty;
+        /// The bundle hash.
+        fn BroadcastingBundle::bundle_hash(&self) -> &str; alias getBundleHash;
+    }
+);
+foreign_class!(
+    /// Transaction confirmation event.
+    class TransactionConfirmed {
+        self_type TransactionConfirmed;
+        private constructor = empty;
+        /// The bundle hash.
+        fn TransactionConfirmed::bundle_hash(&self) -> &str; alias getBundleHash;
     }
 );
 
@@ -492,6 +550,19 @@ foreign_class!(
         fn WalletTransferProgress::event(&self) -> TransferProgressType {
             this.event().clone()
         }
+    }
+);
+
+foreign_class!(
+    class MigrationProgressEvent {
+        self_type MigrationProgressEvent;
+        private constructor = empty;
+        fn MigrationProgressEvent::get_type(&self) -> MigrationProgressType; alias getType;
+        fn MigrationProgressEvent::as_fetching_migration_data(&self) -> Result<FetchingMigrationData>; alias asFetchingMigrationData;
+        fn MigrationProgressEvent::as_mining_bundle(&self) -> Result<MiningBundle>; alias asMiningBundle;
+        fn MigrationProgressEvent::as_signing_bundle(&self) -> Result<SigningBundle>; alias asSigningBundle;
+        fn MigrationProgressEvent::as_broadcasting_bundle(&self) -> Result<BroadcastingBundle>; alias asBroadcastingBundle;
+        fn MigrationProgressEvent::as_transaction_confirmed(&self) -> Result<TransactionConfirmed>; alias asTransactionConfirmed;
     }
 );
 
@@ -579,6 +650,11 @@ foreign_callback!(callback TransferProgressListener {
     onTransferProgress = TransferProgressListener::on_transfer_progress(&self, event: WalletTransferProgress);
 });
 
+foreign_callback!(callback MigrationProgressListener {
+    self_type MigrationProgressListener + Send + 'static;
+    onMigrationProgress = MigrationProgressListener::on_migration_progress(&self, event: MigrationProgressEvent);
+});
+
 foreign_callback!(callback TransactionConfirmationChangeListener {
     self_type TransactionConfirmationChangeListener + Send + 'static;
     onConfirmationStateChange = TransactionConfirmationChangeListener::on_confirmation_state_change(&self, event: WalletTransactionConfirmationChangeEvent);
@@ -609,6 +685,7 @@ foreign_class!(
         fn EventManager::subscribe_reattachment(cb: Box<dyn ReattachTransactionListener + Send + 'static>) -> EventId; alias subscribeReattachement;
         fn EventManager::subscribe_broadcast(cb: Box<dyn BroadcastTransactionListener + Send + 'static>) -> EventId; alias subscribeBroadcast;
         fn EventManager::subscribe_transfer_progress(cb: Box<dyn TransferProgressListener + Send + 'static>) -> EventId; alias subscribeTransferProgress;
+        fn EventManager::subscribe_migration_progress(cb: Box<dyn MigrationProgressListener + Send + 'static>) -> EventId; alias subscribeMigrationProgress;
         fn EventManager::subscribe_balance_change(cb: Box<dyn BalanceChangeListener + Send + 'static>) -> EventId; alias subscribeBalanceChange;
         fn EventManager::subscribe_stronghold_status_change(cb: Box<dyn StrongholdStatusListener + Send + 'static>) -> Result<EventId>; alias subscribeStrongholdStatusChange;
         fn EventManager::subscribe_address_consolidation_needed(cb: Box<dyn AddressConsolidationNeededListener + Send + 'static>) -> Result<EventId>; alias subscribeAddressConsolidationNeeded;
@@ -619,6 +696,7 @@ foreign_class!(
         fn EventManager::remove_reattachment_listener(event: EventId); alias removeReattachementListener;
         fn EventManager::remove_broadcast_listener(event: EventId); alias removeBroadcastListener;
         fn EventManager::remove_transfer_progress_listener(event: EventId); alias removeTransferProgressListener;
+        fn EventManager::remove_migration_progress_listener(event: EventId); alias removeMigrationProgressListener;
         fn EventManager::remove_balance_change_listener(event: EventId); alias removeBalanceChangeListener;
         fn EventManager::remove_stronghold_status_change_listener(event: EventId); alias removeStrongholdStatusChangeListener;
         fn EventManager::remove_address_consolidation_needed_listener(event: EventId); alias removeAddressConsolidationNeededListener;

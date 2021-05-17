@@ -3,7 +3,7 @@
 
 use crate::types::*;
 use chrono::prelude::{Local, TimeZone};
-use iota::MessageId as RustMessageId;
+use iota_client::bee_message::MessageId as RustMessageId;
 use iota_wallet::{
     address::parse as parse_address,
     message::{

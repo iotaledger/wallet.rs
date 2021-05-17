@@ -11,12 +11,15 @@ use bee_common::packable::Packable;
 use getset::{CopyGetters, Getters, Setters};
 
 use chrono::prelude::{DateTime, NaiveDateTime, Utc};
-pub use iota::{
-    Essence, IndexationPayload, Input, Message as IotaMessage, MessageId, MigratedFundsEntry, MilestoneIndex,
-    MilestonePayload, MilestonePayloadEssence, MilestoneResponse, Output, Parents, Payload, ReceiptPayload,
-    RegularEssence, SignatureLockedDustAllowanceOutput, SignatureLockedSingleOutput, TailTransactionHash,
-    TransactionPayload, TreasuryInput, TreasuryOutput, TreasuryTransactionPayload, UnlockBlock, UtxoInput,
-    MILESTONE_MERKLE_PROOF_LENGTH, MILESTONE_PUBLIC_KEY_LENGTH,
+pub use iota_client::{
+    bee_message::prelude::{
+        Essence, IndexationPayload, Input, Message as IotaMessage, MessageId, MigratedFundsEntry, MilestoneIndex,
+        MilestonePayload, MilestonePayloadEssence, Output, Parents, Payload, ReceiptPayload, RegularEssence,
+        SignatureLockedDustAllowanceOutput, SignatureLockedSingleOutput, TailTransactionHash, TransactionPayload,
+        TreasuryInput, TreasuryOutput, TreasuryTransactionPayload, UnlockBlock, UtxoInput,
+        MILESTONE_MERKLE_PROOF_LENGTH, MILESTONE_PUBLIC_KEY_LENGTH,
+    },
+    MilestoneResponse,
 };
 use once_cell::sync::Lazy;
 use serde::{de::Deserializer, ser::Serializer, Deserialize, Serialize};
@@ -189,9 +192,9 @@ impl TransferBuilder {
     /// Creates a transfer with multiple outputs.
     pub fn with_outputs(outputs: Vec<TransferOutput>) -> crate::Result<Self> {
         if !(1..125).contains(&outputs.len()) {
-            return Err(crate::Error::BeeMessage(iota::message::Error::InvalidInputOutputCount(
-                outputs.len(),
-            )));
+            return Err(crate::Error::BeeMessage(
+                iota_client::bee_message::Error::InvalidInputOutputCount(outputs.len()),
+            ));
         }
         Ok(Self {
             outputs,
@@ -529,7 +532,7 @@ impl TransactionRegularEssence {
                                         AddressOutput::from_output_response(output, metadata.bech32_hrp.clone())?;
                                     Some(output)
                                 }
-                                Err(iota::client::Error::ResponseError(status_code, _)) if status_code == 404 => None,
+                                Err(iota_client::Error::ResponseError(status_code, _)) if status_code == 404 => None,
                                 Err(e) => return Err(e.into()),
                             }
                         }

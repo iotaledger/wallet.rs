@@ -35,7 +35,10 @@ use std::{
 use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
-use iota::{bee_rest_api::types::dtos::LedgerInclusionStateDto, MessageId, OutputId};
+use iota_client::{
+    bee_message::prelude::{MessageId, OutputId},
+    bee_rest_api::types::dtos::LedgerInclusionStateDto,
+};
 use serde::Serialize;
 use tokio::{
     sync::{
@@ -663,7 +666,9 @@ impl AccountManager {
 
     /// Sets the stronghold password.
     pub async fn set_stronghold_password<P: Into<String>>(&mut self, password: P) -> crate::Result<()> {
-        let stronghold_path = if self.storage_path.extension().unwrap_or_default() == "stronghold" {
+        let stronghold_path = if crate::storage::get(&self.storage_path).await.unwrap().lock().await.id()
+            == crate::storage::stronghold::STORAGE_ID
+        {
             self.storage_path.clone()
         } else {
             self.storage_folder.join(STRONGHOLD_FILENAME)
@@ -997,7 +1002,7 @@ impl AccountManager {
         stronghold_password: String,
     ) -> crate::Result<()> {
         let source = source.as_ref();
-        if source.is_dir() || !source.exists() || source.extension().unwrap_or_default() != "stronghold" {
+        if source.is_dir() || !source.exists() {
             return Err(crate::Error::InvalidBackupFile);
         }
         if !self.accounts.read().await.is_empty() {
@@ -1702,7 +1707,7 @@ async fn retry_unconfirmed_transactions(synced_accounts: &[SyncedAccount]) -> cr
                     }
                 }
                 Err(crate::Error::ClientError(ref e)) => {
-                    if let iota::client::Error::NoNeedPromoteOrReattach(_) = e.as_ref() {
+                    if let iota_client::Error::NoNeedPromoteOrReattach(_) = e.as_ref() {
                         no_need_promote_or_reattach.push(message_id);
                     }
                 }
@@ -1740,7 +1745,9 @@ mod tests {
         event::*,
         message::Message,
     };
-    use iota::{Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Parents, Payload, TransactionId};
+    use iota_client::bee_message::prelude::{
+        Ed25519Address, IndexationPayload, MessageBuilder, MessageId, Parents, Payload, TransactionId,
+    };
     use std::{collections::HashMap, path::PathBuf};
 
     #[tokio::test]

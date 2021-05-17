@@ -5,7 +5,7 @@ use super::JsAccount;
 use crate::types::ClientOptionsDto;
 use std::{num::NonZeroU64, path::PathBuf, sync::Arc};
 
-// use iota::Address;
+// use iota_client::Address;
 use bee_message::address::Address;
 use iota_wallet::{
     account::AccountIdentifier,

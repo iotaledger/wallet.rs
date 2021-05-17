@@ -1,5 +1,37 @@
 # Changelog
 
+## \[0.3.7]
+
+- Fixes updating client options.
+  - [8124c3de](https://github.com/iotaledger/wallet.rs/commit/8124c3de93f006c20a1e0640d89fbfb6ab42d325) use iota_client ([#611](https://github.com/iotaledger/wallet.rs/pull/611)) on 2021-05-10
+
+## \[0.3.6]
+
+- Fix rev in `native/Cargo.toml`
+  - [c2caecaa](https://github.com/iotaledger/wallet.rs/commit/c2caecaaa69ad5fd9a98c346f3c3a599573679cc) fix(ci): Fix covector config on 2021-05-05
+
+## \[0.3.5]
+
+- Set git repo and rev to allow JS bindings to be built from source
+  - [ab7556e8](https://github.com/iotaledger/wallet.rs/commit/ab7556e88322e89fb37876186a5bca1329c752fc) fix(bindings/nodejs): Set rev to allow building from source ([#601](https://github.com/iotaledger/wallet.rs/pull/601)) on 2021-05-05
+
+## \[0.3.4]
+
+- Fix `rocksdb` publish issue on v0.3.3
+  - [203ede63](https://github.com/iotaledger/wallet.rs/commit/203ede633c3f22c1773240beef3c2100b5953bbd) fix: publish ([#594](https://github.com/iotaledger/wallet.rs/pull/594)) on 2021-04-27
+
+## \[0.3.3]
+
+- Fixes `account.sync` generating a change address on each call.
+  - [8afe3deb](https://github.com/iotaledger/wallet.rs/commit/8afe3deb021fc2b31be6045ed3d4c1d35de149ec) fix(sync): initial address index should be the max on internal addresses ([#592](https://github.com/iotaledger/wallet.rs/pull/592)) on 2021-04-27
+- Adds `MigrationProgress` event type.
+  - [5b72899c](https://github.com/iotaledger/wallet.rs/commit/5b72899c942b99d67ddfa3bd2fb6a0261c646e0c) feat(bindings): implement migration progress events ([#591](https://github.com/iotaledger/wallet.rs/pull/591)) on 2021-04-27
+
+## \[0.3.2]
+
+- Drop `.stronghold` extension requirement on wallet backup.
+  - [0e849b30](https://github.com/iotaledger/wallet.rs/commit/0e849b3048ce4dc6639b9eddf35ac8d878f20fe2) chore(manager): simplify backup API, dropping extension requirement ([#588](https://github.com/iotaledger/wallet.rs/pull/588)) on 2021-04-26
+
 ## \[0.3.1]
 
 - Prevent `storage adapter not set` errors.

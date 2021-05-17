@@ -2,9 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_wallet::message::{
-    MessageId,
-    MessageMilestonePayloadEssence as MilestonePayloadEssenceRust,
-    MessagePayload as MessagePayloadRust,
+    MessageId, MessageMilestonePayloadEssence as MilestonePayloadEssenceRust, MessagePayload as MessagePayloadRust,
 };
 
 use crate::ReceiptPayload;
@@ -16,10 +14,7 @@ pub struct MilestonePayload {
 
 impl MilestonePayload {
     pub fn new(essence: MilestonePayloadEssenceRust, signatures: Vec<Box<[u8]>>) -> MilestonePayload {
-        MilestonePayload {
-            essence,
-            signatures
-        }
+        MilestonePayload { essence, signatures }
     }
 
     pub fn essence(&self) -> MilestonePayloadEssence {
@@ -30,10 +25,11 @@ impl MilestonePayload {
 
     pub fn signatures(&self) -> Vec<MilestoneSignature> {
         // Vec of vec, or vec of box isnt implemented as a generatable type
-        self.signatures.clone()
+        self.signatures
+            .clone()
             .iter()
-            .map(|signature| MilestoneSignature { 
-                signature: (*signature).to_vec()
+            .map(|signature| MilestoneSignature {
+                signature: (*signature).to_vec(),
             })
             .collect()
     }
@@ -80,14 +76,20 @@ impl MilestonePayloadEssence {
 
     pub fn public_keys(&self) -> Vec<PublicKey> {
         // Vec of vec isnt implemented as a generatable type
-        self.essence.public_keys().iter().map(|key| PublicKey {public_key: key.to_vec()}).collect()
+        self.essence
+            .public_keys()
+            .iter()
+            .map(|key| PublicKey {
+                public_key: key.to_vec(),
+            })
+            .collect()
     }
 
     pub fn receipt(&self) -> Option<ReceiptPayload> {
         let option = self.essence.receipt();
         if let Some(payload) = option {
             if let MessagePayloadRust::Receipt(receipt) = payload {
-                return Some((*receipt.clone()).into())
+                return Some((*receipt.clone()).into());
             }
         }
 
