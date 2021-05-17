@@ -174,6 +174,15 @@ pub enum Error {
     /// Node not synced when creating account or updating client options.
     #[error("nodes {0} not synced")]
     NodesNotSynced(String),
+    /// Failed to get remainder
+    #[error("Failed to get remainder address")]
+    FailedToGetRemainder,
+    /// Too many outputs
+    #[error("Too many outputs: {0}, max is {1}")]
+    TooManyOutputs(usize, usize),
+    /// Funds are spread over too many outputs
+    #[error("Funds are spread over too many outputs, consolidation required")]
+    ConsolidationRequired,
     /// iota 1.0 client error
     // #[cfg(feature = "migration")]
     #[error(transparent)]
@@ -320,6 +329,9 @@ impl serde::Serialize for Error {
             Self::DustError(_) => serialize_variant(self, serializer, "DustError"),
             Self::InvalidOutputKind(_) => serialize_variant(self, serializer, "InvalidOutputKind"),
             Self::NodesNotSynced(_) => serialize_variant(self, serializer, "NodesNotSynced"),
+            Self::FailedToGetRemainder => serialize_variant(self, serializer, "FailedToGetRemainder"),
+            Self::TooManyOutputs(_, _) => serialize_variant(self, serializer, "TooManyOutputs"),
+            Self::ConsolidationRequired => serialize_variant(self, serializer, "ConsolidationRequired"),
             // #[cfg(feature = "migration")]
             Self::LegacyClientError(_) => serialize_variant(self, serializer, "LegacyClientError"),
             Self::InvalidSeed => serialize_variant(self, serializer, "InvalidSeed"),

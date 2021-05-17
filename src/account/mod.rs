@@ -3,7 +3,7 @@
 
 use crate::{
     account_manager::{AccountOptions, AccountStore},
-    address::{Address, AddressBuilder, AddressWrapper},
+    address::{Address, AddressBuilder, AddressOutput, AddressWrapper},
     client::{ClientOptions, Node},
     event::TransferProgressType,
     message::{Message, MessagePayload, MessageType, TransactionEssence, Transfer},
@@ -420,7 +420,7 @@ impl PartialEq for Account {
 pub struct AccountHandle {
     inner: Arc<RwLock<Account>>,
     pub(crate) accounts: AccountStore,
-    pub(crate) locked_addresses: Arc<Mutex<Vec<AddressWrapper>>>,
+    pub(crate) locked_outputs: Arc<Mutex<Vec<AddressOutput>>>,
     pub(crate) account_options: AccountOptions,
     is_mqtt_enabled: Arc<AtomicBool>,
     pub(crate) change_addresses_to_sync: Arc<Mutex<HashSet<AddressWrapper>>>,
@@ -437,7 +437,7 @@ impl AccountHandle {
         Self {
             inner: Arc::new(RwLock::new(account)),
             accounts,
-            locked_addresses: Default::default(),
+            locked_outputs: Default::default(),
             account_options,
             is_mqtt_enabled: Arc::new(AtomicBool::new(true)),
             change_addresses_to_sync: Default::default(),

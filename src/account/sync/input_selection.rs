@@ -1,7 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::address::AddressWrapper;
+use crate::address::{AddressOutput, AddressWrapper, OutputKind};
 use rand::{prelude::SliceRandom, thread_rng};
 use std::{
     cmp::Ordering,
@@ -12,14 +12,29 @@ const DUST_ALLOWANCE_VALUE: u64 = 1_000_000;
 const MAX_INPUT_SELECTION_TRIES: i64 = 10_000_000;
 
 #[derive(Debug, Clone)]
-pub struct Input {
+pub struct AddressInputs {
     pub address: AddressWrapper,
     pub internal: bool,
-    pub balance: u64,
+    pub outputs: Vec<AddressOutput>,
 }
 
-pub fn select_input(target: u64, mut available_utxos: Vec<Input>) -> crate::Result<Vec<Input>> {
-    let total_available_balance = available_utxos.iter().fold(0, |acc, address| acc + address.balance);
+#[derive(Debug, Clone)]
+pub struct Input {
+    pub internal: bool,
+    pub output: AddressOutput,
+}
+
+#[derive(Debug, Clone)]
+pub struct Remainder {
+    pub address: AddressWrapper,
+    pub internal: bool,
+    pub amount: u64,
+}
+
+pub fn select_input(target: u64, available_utxos: Vec<Input>, max_inputs: usize) -> crate::Result<Vec<Input>> {
+    let total_available_balance = available_utxos
+        .iter()
+        .fold(0, |acc, address| acc + address.output.amount);
     if target > total_available_balance {
         return Err(crate::Error::InsufficientFunds);
     }
@@ -32,7 +47,19 @@ pub fn select_input(target: u64, mut available_utxos: Vec<Input>) -> crate::Resu
         )));
     }
 
-    available_utxos.sort_by(|a, b| match b.balance.cmp(&a.balance) {
+    // Split outputs, so we only try to select dust allowance outputs as inputs if we have all signature locked outputs
+    // already as input
+    let mut signature_locked_outputs: Vec<Input> = Vec::new();
+    let mut dust_allowance_outputs: Vec<Input> = Vec::new();
+    for input in available_utxos {
+        match input.output.kind {
+            OutputKind::SignatureLockedSingle => signature_locked_outputs.push(input),
+            OutputKind::SignatureLockedDustAllowance => dust_allowance_outputs.push(input),
+            _ => {}
+        }
+    }
+
+    signature_locked_outputs.sort_by(|a, b| match b.output.amount.cmp(&a.output.amount) {
         // if the balances are equal, we prioritise change addresses
         Ordering::Equal => b.internal.cmp(&a.internal),
         Ordering::Greater => Ordering::Greater,
@@ -41,36 +68,59 @@ pub fn select_input(target: u64, mut available_utxos: Vec<Input>) -> crate::Resu
     let mut selected_coins = Vec::new();
     let result = branch_and_bound(
         target,
-        &mut available_utxos,
+        &signature_locked_outputs,
         0,
         &mut selected_coins,
         0,
         &mut AtomicI64::new(MAX_INPUT_SELECTION_TRIES),
     );
 
-    let selected_balance = selected_coins.iter().fold(0, |acc, address| acc + address.balance);
+    let selected_balance = selected_coins.iter().fold(0, |acc, input| acc + input.output.amount);
     let remaining_value = if selected_balance >= target {
         selected_balance - target
     } else {
         0
     };
 
-    if result && selected_balance >= target && (remaining_value == 0 || remaining_value > DUST_ALLOWANCE_VALUE) {
+    if result
+        && selected_balance >= target
+        && selected_coins.len() <= max_inputs
+        && (remaining_value == 0 || remaining_value > DUST_ALLOWANCE_VALUE)
+    {
         Ok(selected_coins)
     } else {
         // If no match, Single Random Draw
-        Ok(single_random_draw(target, available_utxos))
+        let mut signature_locked_outputs_ = signature_locked_outputs.clone();
+        let mut dust_allowance_outputs_ = dust_allowance_outputs.clone();
+        signature_locked_outputs_.shuffle(&mut thread_rng());
+        dust_allowance_outputs_.shuffle(&mut thread_rng());
+        let mut inputs = single_draw(target, signature_locked_outputs_, dust_allowance_outputs_);
+        if inputs.len() > max_inputs {
+            // first time the inputs are shuffled, so if we had many outputs it could happen that we selected more than
+            // max_inputs even if it would be possible with <=
+            inputs = single_draw(target, signature_locked_outputs, dust_allowance_outputs);
+            if inputs.len() > max_inputs {
+                return Err(crate::Error::ConsolidationRequired);
+            }
+        }
+        Ok(inputs)
     }
 }
 
-fn single_random_draw(target: u64, mut available_utxos: Vec<Input>) -> Vec<Input> {
-    available_utxos.shuffle(&mut thread_rng());
+fn single_draw(
+    target: u64,
+    available_signature_locked_utxos: Vec<Input>,
+    available_dust_allowance_utxos: Vec<Input>,
+) -> Vec<Input> {
     let mut sum = 0;
 
-    available_utxos
+    // Add signature locked outputs first so we don't use dust allowance outputs when not needed
+    // and also don't use dust allowance outputs because we could still have dust
+    available_signature_locked_utxos
         .into_iter()
-        .take_while(|address| {
-            let value = address.balance;
+        .chain(available_dust_allowance_utxos.into_iter())
+        .take_while(|input| {
+            let value = input.output.amount;
             let old_sum = sum;
             sum += value;
             old_sum < target || (old_sum - target < DUST_ALLOWANCE_VALUE && old_sum != target)
@@ -80,7 +130,7 @@ fn single_random_draw(target: u64, mut available_utxos: Vec<Input>) -> Vec<Input
 
 fn branch_and_bound(
     target: u64,
-    available_utxos: &mut Vec<Input>,
+    available_utxos: &[Input],
     depth: usize,
     current_selection: &mut Vec<Input>,
     effective_value: u64,
@@ -101,7 +151,7 @@ fn branch_and_bound(
     *tries.get_mut() -= 1;
 
     // Exploring omission and inclusion branch
-    let current_utxo_value = available_utxos[depth].balance;
+    let current_utxo_value = available_utxos[depth].output.amount;
     current_selection.push(available_utxos[depth].clone());
 
     if branch_and_bound(
@@ -156,9 +206,8 @@ mod tests {
                 .build()
                 .unwrap();
             available_utxos.push(super::Input {
-                address: address.address().clone(),
-                balance: address.balance(),
                 internal: false,
+                output: address.outputs().iter().next().expect("No output").1.clone(),
             });
         }
         available_utxos
@@ -169,7 +218,7 @@ mod tests {
         available_utxos.shuffle(&mut thread_rng());
         available_utxos[..utxos_picked_len]
             .iter()
-            .fold(0, |acc, address| acc + address.balance)
+            .fold(0, |acc, input| acc + input.output.amount)
     }
 
     #[test]
@@ -179,9 +228,9 @@ mod tests {
         for _i in 0..20 {
             let mut available_utxos = generate_random_utxos(&mut rng, 25);
             let sum_utxos_picked = sum_random_utxos(&mut rng, &mut available_utxos);
-            let selected = select_input(sum_utxos_picked, available_utxos).unwrap();
+            let selected = select_input(sum_utxos_picked, available_utxos, 127).unwrap();
             assert_eq!(
-                selected.iter().fold(0, |acc, address| { acc + address.balance }),
+                selected.iter().fold(0, |acc, input| { acc + input.output.amount }),
                 sum_utxos_picked
             );
         }
@@ -193,11 +242,11 @@ mod tests {
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         for _i in 0..20 {
             let available_utxos = generate_random_utxos(&mut rng, 5);
-            let available_balance = available_utxos.iter().fold(0, |acc, address| acc + address.balance);
+            let available_balance = available_utxos.iter().fold(0, |acc, input| acc + input.output.amount);
             let target = available_balance / 2;
             if available_balance - target >= DUST_ALLOWANCE_VALUE {
-                let selected = select_input(target, available_utxos).unwrap();
-                assert!(selected.into_iter().fold(0, |acc, address| acc + address.balance) >= target);
+                let selected = select_input(target, available_utxos, 127).unwrap();
+                assert!(selected.into_iter().fold(0, |acc, input| acc + input.output.amount) >= target);
             }
         }
     }
@@ -207,8 +256,8 @@ mod tests {
         let seed: [u8; 32] = [1; 32];
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         let available_utxos = generate_random_utxos(&mut rng, 30);
-        let target = available_utxos.iter().fold(0, |acc, address| acc + address.balance) + 1;
-        let response = select_input(target, available_utxos);
+        let target = available_utxos.iter().fold(0, |acc, input| acc + input.output.amount) + 1;
+        let response = select_input(target, available_utxos, 127);
         assert!(response.is_err());
     }
 
@@ -218,15 +267,15 @@ mod tests {
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         for _ in 0..20 {
             let available_utxos = generate_random_utxos(&mut rng, 30);
-            let sum_utxos = available_utxos.iter().fold(0, |acc, address| acc + address.balance);
+            let sum_utxos = available_utxos.iter().fold(0, |acc, input| acc + input.output.amount);
             let target = rng.gen_range(sum_utxos / 2..sum_utxos * 2);
-            let response = select_input(target, available_utxos);
+            let response = select_input(target, available_utxos, 127);
             if target > sum_utxos {
                 assert!(response.is_err());
             } else {
                 assert!(response.is_ok());
                 let selected = response.unwrap();
-                assert!(selected.into_iter().fold(0, |acc, address| acc + address.balance) >= target);
+                assert!(selected.into_iter().fold(0, |acc, input| acc + input.output.amount) >= target);
             }
         }
     }
@@ -237,9 +286,9 @@ mod tests {
         let mut rng: StdRng = SeedableRng::from_seed(seed);
         for _ in 0..20 {
             let available_utxos = generate_random_utxos(&mut rng, 30);
-            let sum_utxos = available_utxos.iter().fold(0, |acc, address| acc + address.balance);
+            let sum_utxos = available_utxos.iter().fold(0, |acc, input| acc + input.output.amount);
             let target = rng.gen_range(sum_utxos / 2..sum_utxos * 2);
-            let response = select_input(target, available_utxos);
+            let response = select_input(target, available_utxos, 127);
 
             if target > sum_utxos
                 || (target != sum_utxos && target as i64 > (sum_utxos as i64 - DUST_ALLOWANCE_VALUE as i64))
@@ -248,7 +297,7 @@ mod tests {
             } else {
                 assert!(response.is_ok());
                 let selected = response.unwrap();
-                let selected_balance = selected.into_iter().fold(0, |acc, address| acc + address.balance);
+                let selected_balance = selected.into_iter().fold(0, |acc, input| acc + input.output.amount);
                 assert!(selected_balance == target || selected_balance >= target + DUST_ALLOWANCE_VALUE);
             }
         }

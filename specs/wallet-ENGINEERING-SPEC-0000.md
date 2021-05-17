@@ -1265,9 +1265,9 @@ The following should be considered when implementing this method:
 
 #### select_inputs() 
 
-Selects input addresses for funds transfer.
+Selects inputs for funds transfer.
 
-Note: This method should only be used internally by [send()](#send). Also, the input selection method should ensure that the recipient address doesn’t match any of the selected inputs or the remainder address. 
+Note: This method should only be used internally by [send()](#send). Also, the input selection method should ensure that the recipient address doesn’t match the remainder address. 
 
 See [Input Selection Process](#input-selection) for implementation details.
 
