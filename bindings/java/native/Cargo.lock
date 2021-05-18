@@ -1778,33 +1778,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "iota-client"
-version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=8188e457797400609be410af189334949a54b002#8188e457797400609be410af189334949a54b002"
-dependencies = [
- "async-trait",
- "bee-common",
- "bee-message",
- "bee-pow",
- "bee-rest-api",
- "futures",
- "hex",
- "iota-crypto 0.5.1",
- "log",
- "num_cpus",
- "once_cell",
- "regex",
- "reqwest",
- "rumqttc",
- "serde 1.0.126",
- "serde_json",
- "thiserror",
- "tokio",
- "url",
- "zeroize",
-]
-
-[[package]]
 name = "iota-constants"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1976,7 +1949,7 @@ dependencies = [
  "flapigen",
  "getset",
  "hex",
- "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=8188e457797400609be410af189334949a54b002)",
+ "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=57c5a33d83be4b8286a54156e9f0d2ac4345e9b9)",
  "iota-wallet",
  "jni",
  "log",
