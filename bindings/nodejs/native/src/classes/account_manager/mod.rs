@@ -464,7 +464,7 @@ declare_types! {
 
         method setClientOptions(mut cx) {
             let client_options = cx.argument::<JsValue>(0)?;
-            let client_options = neon_serde::from_value(&mut cx, client_options)?;
+            let client_options: ClientOptionsDto = neon_serde::from_value(&mut cx, client_options)?;
 
             {
                 let this = cx.this();
@@ -472,7 +472,7 @@ declare_types! {
                 let ref_ = &this.borrow(&guard).0;
                 crate::block_on(async move {
                     let manager = ref_.read().await;
-                    manager.set_client_options(client_options).await
+                    manager.set_client_options(client_options.into()).await
                 }).expect("failed to update client options");
             }
 
