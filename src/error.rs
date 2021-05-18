@@ -71,8 +71,8 @@ pub enum Error {
     #[error("storage file doesn't exist")]
     StorageDoesntExist,
     /// Insufficient funds to send transfer.
-    #[error("insufficient funds")]
-    InsufficientFunds,
+    #[error("insufficient funds {0}/{1}")]
+    InsufficientFunds(u64, u64),
     /// Account isn't empty (has history or balance) - can't delete account.
     #[error("can't delete account: account has history or balance")]
     AccountNotEmpty,
@@ -181,8 +181,8 @@ pub enum Error {
     #[error("Too many outputs: {0}, max is {1}")]
     TooManyOutputs(usize, usize),
     /// Funds are spread over too many outputs
-    #[error("Funds are spread over too many outputs, consolidation required")]
-    ConsolidationRequired,
+    #[error("Funds are spread over too many outputs {0}/{1}, consolidation required")]
+    ConsolidationRequired(usize, usize),
     /// iota 1.0 client error
     // #[cfg(feature = "migration")]
     #[error(transparent)]
@@ -291,7 +291,7 @@ impl serde::Serialize for Error {
             Self::InvalidAddress => serialize_variant(self, serializer, "InvalidAddress"),
             Self::InvalidAddressLength => serialize_variant(self, serializer, "InvalidAddressLength"),
             Self::StorageDoesntExist => serialize_variant(self, serializer, "StorageDoesntExist"),
-            Self::InsufficientFunds => serialize_variant(self, serializer, "InsufficientFunds"),
+            Self::InsufficientFunds(_, _) => serialize_variant(self, serializer, "InsufficientFunds"),
             Self::AccountNotEmpty => serialize_variant(self, serializer, "AccountNotEmpty"),
             Self::LatestAccountIsEmpty => serialize_variant(self, serializer, "LatestAccountIsEmpty"),
             Self::RecordNotFound => serialize_variant(self, serializer, "RecordNotFound"),
@@ -331,7 +331,7 @@ impl serde::Serialize for Error {
             Self::NodesNotSynced(_) => serialize_variant(self, serializer, "NodesNotSynced"),
             Self::FailedToGetRemainder => serialize_variant(self, serializer, "FailedToGetRemainder"),
             Self::TooManyOutputs(_, _) => serialize_variant(self, serializer, "TooManyOutputs"),
-            Self::ConsolidationRequired => serialize_variant(self, serializer, "ConsolidationRequired"),
+            Self::ConsolidationRequired(_, _) => serialize_variant(self, serializer, "ConsolidationRequired"),
             // #[cfg(feature = "migration")]
             Self::LegacyClientError(_) => serialize_variant(self, serializer, "LegacyClientError"),
             Self::InvalidSeed => serialize_variant(self, serializer, "InvalidSeed"),

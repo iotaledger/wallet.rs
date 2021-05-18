@@ -37,6 +37,9 @@ use std::{
 
 mod input_selection;
 
+// https://github.com/GalRogozinski/protocol-rfcs/blob/dust/text/0032-dust-protection/0032-dust-protection.md
+const MAX_ALLOWED_DUST_OUTPUTS: i64 = 100;
+const DUST_DIVISOR: i64 = 100_000;
 const DUST_ALLOWANCE_VALUE: u64 = 1_000_000;
 const DEFAULT_GAP_LIMIT: usize = 10;
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
@@ -1291,7 +1294,7 @@ impl SyncedAccount {
         let balance = account_.balance_internal(&sent_messages).await;
 
         if value > balance.total {
-            return Err(crate::Error::InsufficientFunds);
+            return Err(crate::Error::InsufficientFunds(balance.total, value));
         }
 
         if let RemainderValueStrategy::AccountAddress(ref remainder_deposit_address) =
@@ -1323,7 +1326,7 @@ impl SyncedAccount {
                     )
                 } else {
                     // TODO
-                    return Err(crate::Error::InsufficientFunds);
+                    return Err(crate::Error::InsufficientFunds(0, value));
                 }
             }
             None => {
@@ -1759,14 +1762,32 @@ async fn is_dust_allowed(
         }
     }
 
+    let address_data = client.get_address().balance(&address).await?;
+    // If we create a dust output and a dust allowance output we don't need to check more outputs if the balance/100_000
+    // is < 100 because then we are sure that we didn't reach the max dust outputs
+    if address_data.dust_allowed
+        && dust_outputs_amount == 1
+        && dust_allowance_balance >= 0
+        && address_data.balance as i64 / DUST_DIVISOR < MAX_ALLOWED_DUST_OUTPUTS
+    {
+        return Ok(());
+    } else if !address_data.dust_allowed && dust_outputs_amount == 1 && dust_allowance_balance <= 0 {
+        return Err(crate::Error::DustError(format!(
+            "No dust output allowed on address {}",
+            address
+        )));
+    }
+
     // Get outputs from address and apply values
     let address_outputs = if let Some(address) = account.addresses().iter().find(|a| a.address().to_bech32() == address)
     {
-        address
+        let outputs = address
             .outputs()
             .values()
+            .filter(|output| !output.is_spent)
             .map(|output| (output.amount, output.kind.clone()))
-            .collect()
+            .collect();
+        outputs
     } else {
         let outputs = client.find_outputs(&[], &[address.to_string()]).await?;
         let mut address_outputs = Vec::new();
@@ -1792,7 +1813,7 @@ async fn is_dust_allowed(
 
     // Here dust_allowance_balance and dust_outputs_amount should be as if this transaction gets confirmed
     // Max allowed dust outputs is 100
-    let allowed_dust_amount = std::cmp::min(dust_allowance_balance / 100_000, 100);
+    let allowed_dust_amount = std::cmp::min(dust_allowance_balance / DUST_DIVISOR, MAX_ALLOWED_DUST_OUTPUTS);
     if dust_outputs_amount > allowed_dust_amount {
         return Err(crate::Error::DustError(format!(
             "No dust output allowed on address {}",

@@ -124,7 +124,7 @@ Balance per individual addresses:
   'internal': False,
   'outputs': []}]
 ```
-In the detailed view per individual addresses, there is also `outputs` section that indicates transaction(s) (also known as `wallet message(s)`) "responsible" for the current amount. The amount can be also double checked using [Tangle Explorer](https://explorer.iota.org/chrysalis/addr/atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg).
+In the detailed view per individual addresses, there is also `outputs` section that indicates transaction(s) (also known as `wallet message(s)`) "responsible" for the current amount. The amount can be also double checked using [Tangle Explorer](https://explorer.iota.org/testnet/addr/atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg).
 
 IOTA is based on `Unspent Transaction Output` model which is explained at [Developer guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#unspent-transaction-output-utxo).
 
@@ -178,7 +178,7 @@ It is a `wallet message` that fully describes the given transaction.
 
 Please, kindly get yourself familiar with a concept of [UTXO](https://chrysalis.docs.iota.org/guides/dev_guide.html#unspent-transaction-output-utxo) to understand all aspects of messages.
 
-The given message can be double checked via Tangle Explorer using `node_response['id']` field ([Tangle Explorer](https://explorer.iota.org/chrysalis/message/9d3c401d59b0a87f6fbaa58582bb71e1858d63336421ccbae834821d9be113d3)).
+The given message can be double checked via Tangle Explorer using `node_response['id']` field ([Tangle Explorer](https://explorer.iota.org/testnet/message/9d3c401d59b0a87f6fbaa58582bb71e1858d63336421ccbae834821d9be113d3)).
 
 Needless to say, if `remainder_value_strategy` == `ChangeAddress` is used, the given message transfer tokens to target address as well as new `internal` address within the given account (`internal=True`). 
 

@@ -36,7 +36,7 @@ pub fn select_input(target: u64, available_utxos: Vec<Input>, max_inputs: usize)
         .iter()
         .fold(0, |acc, address| acc + address.output.amount);
     if target > total_available_balance {
-        return Err(crate::Error::InsufficientFunds);
+        return Err(crate::Error::InsufficientFunds(total_available_balance, target));
     }
 
     // Not insufficient funds, but still not possible to create this transaction because it would create dust
@@ -100,7 +100,7 @@ pub fn select_input(target: u64, available_utxos: Vec<Input>, max_inputs: usize)
             // max_inputs even if it would be possible with <=
             inputs = single_draw(target, signature_locked_outputs, dust_allowance_outputs);
             if inputs.len() > max_inputs {
-                return Err(crate::Error::ConsolidationRequired);
+                return Err(crate::Error::ConsolidationRequired(inputs.len(), max_inputs));
             }
         }
         Ok(inputs)
