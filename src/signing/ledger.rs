@@ -211,7 +211,6 @@ impl super::Signer for LedgerNanoSigner {
                         return Err(crate::Error::LedgerMiscError);
                     }
                 }
-                _ => unimplemented!(),
             }
         }
 

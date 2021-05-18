@@ -16,15 +16,15 @@ use url::Url;
 
 #[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct NodeAuth {
-    username: String,
-    password: String,
+    jwt: Option<String>,
+    basic_auth_name_pwd: Option<(String, String)>,
 }
 
 impl From<NodeAuth> for RustNodeAuth {
     fn from(auth: NodeAuth) -> Self {
         Self {
-            username: auth.username,
-            password: auth.password,
+            jwt: auth.jwt,
+            basic_auth_name_pwd: auth.basic_auth_name_pwd,
         }
     }
 }
@@ -32,8 +32,8 @@ impl From<NodeAuth> for RustNodeAuth {
 impl From<RustNodeAuth> for NodeAuth {
     fn from(auth: RustNodeAuth) -> Self {
         Self {
-            username: auth.username,
-            password: auth.password,
+            jwt: auth.jwt,
+            basic_auth_name_pwd: auth.basic_auth_name_pwd,
         }
     }
 }
@@ -106,7 +106,11 @@ impl From<ClientOptions> for RustClientOptions {
                 let node: RustNode = node.into();
                 if let Some(auth) = node.auth {
                     builder = builder
-                        .with_node_auth(node.url.as_str(), &auth.username, &auth.password)
+                        .with_node_auth(
+                            node.url.as_str(),
+                            auth.jwt.as_deref(),
+                            auth.basic_auth_name_pwd.as_ref().map(|(ref x, ref y)| (&x[..], &y[..])),
+                        )
                         .unwrap();
                 } else {
                     builder = builder.with_node(node.url.as_str()).unwrap();
