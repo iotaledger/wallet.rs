@@ -391,17 +391,17 @@ impl AccountHandle {
     }
 
     /// Bridge to [Account#get_node_info](struct.Account.html#method.get_node_info).
-    fn get_node_info(&self, url: Option<&str>, auth: Option<Vec<&str>>) -> Result<NodeInfoWrapper> {
+    fn get_node_info(&self, url: Option<&str>, auth_options: Option<Vec<&str>>) -> Result<NodeInfoWrapper> {
         let mut jwt = None;
         let mut auth = None;
-        if let Some(auth) = auth {
-            if auth.len() == 1 {
-                jwt = Some(auth[0]);
-            } else if auth.len() == 2 {
-                auth = Some((auth[0], auth[1]));
-            } else if auth.len() == 3 {
-                jwt = Some(auth[0]);
-                auth = Some((auth[1], auth[2]));
+        if let Some(opt) = auth_options {
+            if opt.len() == 1 {
+                jwt = Some(opt[0]);
+            } else if opt.len() == 2 {
+                auth = Some((opt[0], opt[1]));
+            } else if opt.len() == 3 {
+                jwt = Some(opt[0]);
+                auth = Some((opt[1], opt[2]));
             }
         }
 
