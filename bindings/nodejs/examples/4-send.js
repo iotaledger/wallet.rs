@@ -23,7 +23,7 @@ async function run() {
 	const addr = 'atoi1qykf7rrdjzhgynfkw6z7360avhaaywf5a4vtyvvk6a06gcv5y7sksu7n5cs'
 	const amount = 10000000
 
-	const node_response = await synced.send(
+	const node_response = await account.send(
 		addr,
 		amount
     ) 
