@@ -83,7 +83,11 @@ impl From<ClientOptionsDto> for ClientOptions {
             let node: Node = node.into();
             if let Some(auth) = node.auth {
                 client_builder = client_builder
-                    .with_node_auth(node.url.as_str(), &auth.username, &auth.password)
+                    .with_node_auth(
+                        node.url.as_str(),
+                        auth.jwt.as_deref(),
+                        auth.basic_auth_name_pwd.as_ref().map(|(ref x, ref y)| (&x[..], &y[..])),
+                    )
                     .unwrap();
             } else {
                 client_builder = client_builder.with_node(node.url.as_str()).unwrap();

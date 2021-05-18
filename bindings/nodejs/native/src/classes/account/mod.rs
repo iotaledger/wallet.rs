@@ -108,9 +108,9 @@ declare_types! {
                     let amount = js_object.get(&mut cx, "password")?.downcast::<JsString>().or_throw(&mut cx)?;
                     let jwt = js_object.get(&mut cx, "jwt")?.downcast::<JsString>().or_throw(&mut cx)?;
 
-                    (jwt, Some((address.value(), amount.value())))
+                    (Some(jwt.value()), Some((address.value(), amount.value())))
                 },
-                None => Default::default(),
+                None => (Default::default(), Default::default()),
             };
 
             let cb = cx.argument::<JsFunction>(cx.len()-1)?;
