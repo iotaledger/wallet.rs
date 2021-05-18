@@ -468,7 +468,7 @@ All fields are optional.
 
 | Field                   | Type                | Description                                                                                           |
 | ----------------------- | ------------------- | ----------------------------------------------------------------------------------------------------- |
-| automaticDisconnect     | <code>number</code> | Whether the MQTT broker should be automatically disconnected when all topics are unsubscribed or not. |
+| automaticDisconnect     | <code>boolean</code> | Whether the MQTT broker should be automatically disconnected when all topics are unsubscribed or not. |
 | timeout                 | <code>number</code> | MQTT connection timeout in secods                                                                     |
 | useWs                   | <code>bool</code>   | Defines if websockets should be used (true) or TCP (false)                                            |
 | maxReconnectionAttempts | <code>number</code> | Defines the maximum reconnection attempts before it returns an error                                  |
