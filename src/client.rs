@@ -403,7 +403,7 @@ pub struct BrokerOptions {
     pub port: Option<u16>,
     /// Defines the maximum reconnection attempts before it returns an error
     #[serde(rename = "maxReconnectionAttempts")]
-    pub max_reconnection_attempts: Option<usize>
+    pub max_reconnection_attempts: Option<usize>,
 }
 
 impl From<BrokerOptions> for iota_client::BrokerOptions {
