@@ -216,6 +216,9 @@ foreign_class!(class BrokerOptions {
     constructor BrokerOptions::new() -> BrokerOptions;
     fn BrokerOptions::automatic_disconnect(&self, disconnect: bool) -> BrokerOptions; alias automaticDisconnect;
     fn BrokerOptions::timeout(&self, timeout: Duration) -> BrokerOptions;
+    fn BrokerOptions::use_ws(&self, use_ws: bool) -> BrokerOptions; alias useWs;
+    fn BrokerOptions::port(&self, port: u16) -> BrokerOptions;
+    fn BrokerOptions::max_reconnection_attempts(&self, max_reconnection_attempts: usize) -> BrokerOptions; alias maxReconnectionAttempts;
 });
 
 foreign_class!(class ClientOptionsBuilder {

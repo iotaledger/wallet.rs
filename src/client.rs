@@ -392,10 +392,18 @@ impl From<Api> for iota_client::Api {
 pub struct BrokerOptions {
     // We need to use `pub` here or these is no way to let the user create BrokerOptions
     #[serde(rename = "automaticDisconnect")]
-    /// automatic disconnect.
+    /// Whether the MQTT broker should be automatically disconnected when all topics are unsubscribed or not.
     pub automatic_disconnect: Option<bool>,
     /// timeout of the mqtt broker.
     pub timeout: Option<Duration>,
+    /// Defines if websockets should be used (true) or TCP (false)
+    #[serde(rename = "useWs")]
+    pub use_ws: Option<bool>,
+    /// Defines the port to be used for the MQTT connection
+    pub port: Option<u16>,
+    /// Defines the maximum reconnection attempts before it returns an error
+    #[serde(rename = "maxReconnectionAttempts")]
+    pub max_reconnection_attempts: Option<usize>
 }
 
 impl From<BrokerOptions> for iota_client::BrokerOptions {
@@ -406,6 +414,15 @@ impl From<BrokerOptions> for iota_client::BrokerOptions {
         }
         if let Some(timeout) = value.timeout {
             options = options.timeout(timeout);
+        }
+        if let Some(use_ws) = value.use_ws {
+            options = options.use_ws(use_ws);
+        }
+        if let Some(port) = value.port {
+            options = options.port(port);
+        }
+        if let Some(max_reconnection_attempts) = value.max_reconnection_attempts {
+            options = options.max_reconnection_attempts(max_reconnection_attempts);
         }
         options
     }

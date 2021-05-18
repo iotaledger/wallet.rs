@@ -87,6 +87,12 @@ pub struct BrokerOptions {
     pub automatic_disconnect: Option<bool>,
     /// broker timeout in secs
     pub timeout: Option<u64>,
+    /// Defines if websockets should be used (true) or TCP (false)
+    pub(crate) use_ws: bool,
+    /// Defines the port to be used for the MQTT connection
+    pub(crate) port: u16,
+    /// Defines the maximum reconnection attempts before it returns an error
+    pub(crate) max_reconnection_attempts: usize,
 }
 
 impl From<BrokerOptions> for RustBrokerOptions {
@@ -94,6 +100,9 @@ impl From<BrokerOptions> for RustBrokerOptions {
         Self {
             automatic_disconnect: broker_options.automatic_disconnect,
             timeout: broker_options.timeout.map(Duration::from_secs),
+            use_ws: broker_options.use_ws,
+            port: broker_options.port,
+            max_reconnection_attempts: broker_options.max_reconnection_attempts,
         }
     }
 }
@@ -155,6 +164,9 @@ impl From<&RustBrokerOptions> for BrokerOptions {
         Self {
             automatic_disconnect: broker_options.automatic_disconnect,
             timeout: broker_options.timeout.map(|s| s.as_secs()),
+            use_ws: broker_options.use_ws,
+            port: broker_options.port,
+            max_reconnection_attempts: broker_options.max_reconnection_attempts,
         }
     }
 }
