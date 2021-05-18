@@ -132,8 +132,9 @@ export declare interface NodeInfo {
 }
 
 export declare interface Auth {
-  username: string
-  password: string
+  jwt?: string
+  username?: string
+  password?: string
 }
 
 export declare class Account {

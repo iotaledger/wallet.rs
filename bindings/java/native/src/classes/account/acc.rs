@@ -109,12 +109,17 @@ impl Account {
         }
     }
 
-    pub fn get_node_info(&self, url: Option<&str>, auth: Option<(&str, &str)>) -> Result<NodeInfoWrapper> {
+    pub fn get_node_info(
+        &self,
+        url: Option<&str>,
+        jwt: Option<&str>,
+        auth: Option<(&str, &str)>,
+    ) -> Result<NodeInfoWrapper> {
         let msgs_res = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
             .unwrap()
-            .block_on(async move { self.handle.get_node_info(url, auth).await });
+            .block_on(async move { self.handle.get_node_info(url, jwt, auth).await });
 
         match msgs_res {
             Err(e) => Err(anyhow!(e.to_string())),

@@ -415,7 +415,6 @@ impl TransactionOutput {
                 TransactionSignatureLockedDustAllowanceOutput::new(output, bech32_hrp),
             ),
             Output::Treasury(output) => Self::Treasury(output.clone()),
-            _ => unimplemented!(),
         }
     }
 }
@@ -540,7 +539,6 @@ impl TransactionRegularEssence {
                     TransactionInput::Utxo(TransactionUtxoInput { input: i, metadata })
                 }
                 Input::Treasury(treasury) => TransactionInput::Treasury(treasury),
-                _ => unimplemented!(),
             };
             inputs.push(input);
         }
@@ -707,7 +705,6 @@ impl TransactionEssence {
     pub async fn new(essence: &Essence, metadata: &TransactionBuilderMetadata<'_>) -> crate::Result<Self> {
         let essence = match essence {
             Essence::Regular(regular) => Self::Regular(TransactionRegularEssence::new(regular, metadata).await?),
-            _ => unimplemented!(),
         };
         Ok(essence)
     }
@@ -979,7 +976,6 @@ impl MessagePayload {
             Payload::Indexation(indexation) => Self::Indexation(indexation),
             Payload::Receipt(receipt) => Self::Receipt(Box::new(MessageReceiptPayload::new(&receipt, metadata))),
             Payload::TreasuryTransaction(treasury_tx) => Self::TreasuryTransaction(treasury_tx),
-            _ => unimplemented!(),
         };
         Ok(payload)
     }

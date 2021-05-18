@@ -8,6 +8,7 @@ use neon::prelude::*;
 pub struct NodeInfoTask {
     pub account_id: String,
     pub url: Option<String>,
+    pub jwt: Option<String>,
     pub auth: Option<(String, String)>,
 }
 
@@ -21,7 +22,7 @@ impl Task for NodeInfoTask {
             let auth = self.auth.as_ref().map(|a| (a.0.as_str(), a.1.as_str()));
             crate::get_account(&self.account_id)
                 .await
-                .get_node_info(self.url.as_deref(), auth)
+                .get_node_info(self.url.as_deref(), self.jwt.as_deref(), auth)
                 .await
         }))
     }

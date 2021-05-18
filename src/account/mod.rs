@@ -331,7 +331,6 @@ impl AccountInitialiser {
         let mut digest = [0; 32];
         let raw = match address.as_ref() {
             iota_client::bee_message::address::Address::Ed25519(a) => a.as_ref().to_vec(),
-            _ => unimplemented!(),
         };
         crypto::hashes::sha::SHA256(&raw, &mut digest);
         account.set_id(format!("{}{}", ACCOUNT_ID_PREFIX, hex::encode(digest)));
@@ -692,8 +691,13 @@ impl AccountHandle {
     }
 
     /// Bridge to [Account#get_node_info](struct.Account.html#method.get_node_info).
-    pub async fn get_node_info(&self, url: Option<&str>, auth: Option<(&str, &str)>) -> crate::Result<NodeInfoWrapper> {
-        self.inner.read().await.get_node_info(url, auth).await
+    pub async fn get_node_info(
+        &self,
+        url: Option<&str>,
+        jwt: Option<&str>,
+        auth: Option<(&str, &str)>,
+    ) -> crate::Result<NodeInfoWrapper> {
+        self.inner.read().await.get_node_info(url, jwt, auth).await
     }
 }
 
@@ -839,8 +843,8 @@ impl Account {
                 .collect();
             let unsynced_diff_nodes: Vec<&str> = unsynced_nodes
                 .into_iter()
-                .filter(|url| diff_nodes.iter().any(|node| &&node.url == url))
-                .map(|url| url.as_str())
+                .filter(|url| diff_nodes.iter().any(|node| node.url == url.url))
+                .map(|url| url.url.as_str())
                 .collect();
             if !unsynced_diff_nodes.is_empty() {
                 return Err(crate::Error::NodesNotSynced(unsynced_diff_nodes.join(", ")));
@@ -1007,11 +1011,12 @@ impl Account {
     pub(crate) async fn get_node_info(
         &self,
         url: Option<&str>,
+        jwt: Option<&str>,
         auth: Option<(&str, &str)>,
     ) -> crate::Result<NodeInfoWrapper> {
         let info = match url {
             Some(url) => NodeInfoWrapper {
-                nodeinfo: iota_client::Client::get_node_info(url, auth)
+                nodeinfo: iota_client::Client::get_node_info(url, jwt.map(Into::into), auth)
                     .await
                     .map_err(|e| crate::Error::ClientError(Box::new(e)))?,
                 url: url.to_string(),
@@ -1477,7 +1482,7 @@ mod tests {
             .create()
             .await;
 
-        let node_info = account_handle.get_node_info(None, None).await.unwrap();
+        let node_info = account_handle.get_node_info(None, None, None).await.unwrap();
         println!("{:#?}", node_info);
     }
 }

@@ -417,10 +417,12 @@ impl WalletMessageHandler {
                 account_handle.set_client_options(*options.clone()).await?;
                 Ok(ResponseType::UpdatedClientOptions)
             }
-            AccountMethod::GetNodeInfo(url, auth) => {
+            AccountMethod::GetNodeInfo(url, jwt, auth) => {
                 let auth = auth.as_ref().map(|a| (a.0.as_str(), a.1.as_str()));
 
-                let info = account_handle.get_node_info(url.as_deref(), auth).await?;
+                let info = account_handle
+                    .get_node_info(url.as_deref(), jwt.as_deref(), auth)
+                    .await?;
                 Ok(ResponseType::NodeInfo(info))
             }
         }
