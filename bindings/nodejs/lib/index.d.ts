@@ -194,9 +194,19 @@ export declare interface ClientOptions {
   node?: NodeUrl | Node;
   nodes?: Array<NodeUrl | Node>;
   network?: string;
+  mqttBrokerOptions?: MqttBrokerOptions;
   quorumSize?: number;
   quorumThreshold?: number;
   localPow?: boolean;
+}
+
+export declare interface MqttBrokerOptions {
+  automaticDisconnect?: boolean
+  // timeout in seconds
+  timeout?: number
+  useWs?: boolean
+  port?: number
+  maxReconnectionAttempts?: number
 }
 
 export declare enum SignerType {

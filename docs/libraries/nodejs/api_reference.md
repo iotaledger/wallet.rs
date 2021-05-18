@@ -452,11 +452,24 @@ which is an address without balance.
 
 ### ClientOptions
 
-| Field             | Type                  | Default                | Description                                                                                              |
-| ----------------- | --------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------- |
-| [network]         | <code>number</code>   | <code>undefined</code> | The tangle network to connect to (Mainnet = 1, Devnet = 1, Comnet = 3)                                   |
-| [node]            | <code>string</code>   | <code>undefined</code> | A node URL to connect to                                                                                 |
-| [nodes]           | <code>string[]</code> | <code>undefined</code> | A list node URL to connect to                                                                            |
-| [quorumSize]      | <code>number</code>   | <code>undefined</code> | If multiple nodes are provided, quorum size determines the number of nodes to query to check for quorum. |
-| [quorumThreshold] | <code>number</code>   | <code>undefined</code> | Minimum number of nodes from the quorum pool that need to agree to consider a result true.               |
-| [localPow]        | <code>boolean</code>  | <code>true</code>      | Whether to use local or remote PoW.                                                                      |
+| Field               | Type                             | Default                | Description                                                                                              |
+| ------------------- | -------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------- |
+| [network]           | <code>number</code>              | <code>undefined</code> | The tangle network to connect to (Mainnet = 1, Devnet = 1, Comnet = 3)                                   |
+| [node]              | <code>string</code>              | <code>undefined</code> | A node URL to connect to                                                                                 |
+| [nodes]             | <code>string[]</code>            | <code>undefined</code> | A list node URL to connect to                                                                            |
+| [quorumSize]        | <code>number</code>              | <code>undefined</code> | If multiple nodes are provided, quorum size determines the number of nodes to query to check for quorum. |
+| [quorumThreshold]   | <code>number</code>              | <code>undefined</code> | Minimum number of nodes from the quorum pool that need to agree to consider a result true.               |
+| [localPow]          | <code>boolean</code>             | <code>true</code>      | Whether to use local or remote PoW.                                                                      |
+| [MqttBrokerOptions] | <code>MqttBrokerOptions</code>   | <code>undefined</code> | Options for the MQTT broker                                                                              |
+
+### MqttBrokerOptions
+
+All fields are optional.
+
+| Field                   | Type                | Description                                                                                           |
+| ----------------------- | ------------------- | ----------------------------------------------------------------------------------------------------- |
+| automaticDisconnect     | <code>number</code> | Whether the MQTT broker should be automatically disconnected when all topics are unsubscribed or not. |
+| timeout                 | <code>number</code> | MQTT connection timeout in secods                                                                     |
+| useWs                   | <code>bool</code>   | Defines if websockets should be used (true) or TCP (false)                                            |
+| maxReconnectionAttempts | <code>number</code> | Defines the maximum reconnection attempts before it returns an error                                  |
+| port                    | <code>number</code> | Defines the port to be used for the MQTT connection                                                   |
