@@ -1488,7 +1488,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=8188e457797400609be410af189334949a54b002#8188e457797400609be410af189334949a54b002"
+source = "git+https://github.com/iotaledger/iota.rs?rev=57c5a33d83be4b8286a54156e9f0d2ac4345e9b9#57c5a33d83be4b8286a54156e9f0d2ac4345e9b9"
 dependencies = [
  "async-trait",
  "bee-common",
@@ -1515,13 +1515,13 @@ dependencies = [
 [[package]]
 name = "iota-constants"
 version = "0.2.1"
-source = "git+https://github.com/iotaledger/iota.rs?rev=0aa7e11b075bea17ae52b1f7dff51f3a13c9d914#0aa7e11b075bea17ae52b1f7dff51f3a13c9d914"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "87bd27fb99929629a01f3b596c93aec5b6609854c882c45f9b5ded9cc0e24f61"
 
 [[package]]
 name = "iota-constants"
 version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "87bd27fb99929629a01f3b596c93aec5b6609854c882c45f9b5ded9cc0e24f61"
+source = "git+https://github.com/iotaledger/iota.rs?rev=0aa7e11b075bea17ae52b1f7dff51f3a13c9d914#0aa7e11b075bea17ae52b1f7dff51f3a13c9d914"
 
 [[package]]
 name = "iota-conversion"
@@ -1633,7 +1633,7 @@ dependencies = [
  "futures",
  "getset",
  "hex",
- "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=8188e457797400609be410af189334949a54b002)",
+ "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=57c5a33d83be4b8286a54156e9f0d2ac4345e9b9)",
  "iota-core",
  "iota-crypto 0.5.1",
  "iota_stronghold",
@@ -1660,7 +1660,7 @@ dependencies = [
  "bee-message",
  "futures",
  "hex",
- "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=8188e457797400609be410af189334949a54b002)",
+ "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=57c5a33d83be4b8286a54156e9f0d2ac4345e9b9)",
  "iota-wallet",
  "neon",
  "neon-build",

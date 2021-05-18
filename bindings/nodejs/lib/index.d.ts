@@ -186,10 +186,7 @@ export declare type NodeUrl = string
 
 export declare interface Node {
   url: NodeUrl
-  auth?: {
-    username: string
-    password: string
-  }
+  auth?: Auth
   disabled?: boolean
 }
 
