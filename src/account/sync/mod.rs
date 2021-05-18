@@ -1125,7 +1125,7 @@ impl SyncedAccount {
                 if output_amount >= LEDGER_MAX_IN_OUTPUTS - 1 {
                     return Err(crate::Error::TooManyOutputs(output_amount, LEDGER_MAX_IN_OUTPUTS - 1));
                 }
-                LEDGER_MAX_IN_OUTPUTS - toutput_amount
+                LEDGER_MAX_IN_OUTPUTS - output_amount
             }
             _ => {
                 if output_amount >= INPUT_OUTPUT_COUNT_MAX {
