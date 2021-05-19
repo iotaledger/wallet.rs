@@ -16,15 +16,15 @@ use url::Url;
 
 #[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct NodeAuth {
-    username: String,
-    password: String,
+    jwt: Option<String>,
+    basic_auth_name_pwd: Option<(String, String)>,
 }
 
 impl From<NodeAuth> for RustNodeAuth {
     fn from(auth: NodeAuth) -> Self {
         Self {
-            username: auth.username,
-            password: auth.password,
+            jwt: auth.jwt,
+            basic_auth_name_pwd: auth.basic_auth_name_pwd,
         }
     }
 }
@@ -32,8 +32,8 @@ impl From<NodeAuth> for RustNodeAuth {
 impl From<RustNodeAuth> for NodeAuth {
     fn from(auth: RustNodeAuth) -> Self {
         Self {
-            username: auth.username,
-            password: auth.password,
+            jwt: auth.jwt,
+            basic_auth_name_pwd: auth.basic_auth_name_pwd,
         }
     }
 }
@@ -87,6 +87,12 @@ pub struct BrokerOptions {
     pub automatic_disconnect: Option<bool>,
     /// broker timeout in secs
     pub timeout: Option<u64>,
+    /// Defines if websockets should be used (true) or TCP (false)
+    pub use_ws: Option<bool>,
+    /// Defines the port to be used for the MQTT connection
+    pub port: Option<u16>,
+    /// Defines the maximum reconnection attempts before it returns an error
+    pub max_reconnection_attempts: Option<usize>,
 }
 
 impl From<BrokerOptions> for RustBrokerOptions {
@@ -94,6 +100,9 @@ impl From<BrokerOptions> for RustBrokerOptions {
         Self {
             automatic_disconnect: broker_options.automatic_disconnect,
             timeout: broker_options.timeout.map(Duration::from_secs),
+            use_ws: broker_options.use_ws,
+            port: broker_options.port,
+            max_reconnection_attempts: broker_options.max_reconnection_attempts,
         }
     }
 }
@@ -106,7 +115,11 @@ impl From<ClientOptions> for RustClientOptions {
                 let node: RustNode = node.into();
                 if let Some(auth) = node.auth {
                     builder = builder
-                        .with_node_auth(node.url.as_str(), &auth.username, &auth.password)
+                        .with_node_auth(
+                            node.url.as_str(),
+                            auth.jwt.as_deref(),
+                            auth.basic_auth_name_pwd.as_ref().map(|(ref x, ref y)| (&x[..], &y[..])),
+                        )
                         .unwrap();
                 } else {
                     builder = builder.with_node(node.url.as_str()).unwrap();
@@ -151,6 +164,9 @@ impl From<&RustBrokerOptions> for BrokerOptions {
         Self {
             automatic_disconnect: broker_options.automatic_disconnect,
             timeout: broker_options.timeout.map(|s| s.as_secs()),
+            use_ws: broker_options.use_ws,
+            port: broker_options.port,
+            max_reconnection_attempts: broker_options.max_reconnection_attempts,
         }
     }
 }

@@ -1,8 +1,8 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{path::PathBuf, time::Duration};
 use getset::{CopyGetters, Getters};
+use std::{path::PathBuf, time::Duration};
 
 use crate::Result;
 use anyhow::anyhow;
@@ -10,10 +10,10 @@ use anyhow::anyhow;
 use iota_wallet::{
     event::{
         AddressConsolidationNeeded as WalletAddressConsolidationNeeded, BalanceEvent as WalletBalanceEvent, EventId,
+        MigrationProgressType as WalletMigrationProgressType,
         TransactionConfirmationChangeEvent as WalletTransactionConfirmationChangeEvent,
         TransactionEvent as WalletTransactionEvent, TransactionReattachmentEvent as WalletTransactionReattachmentEvent,
         TransferProgress as WalletTransferProgress,
-        MigrationProgressType as WalletMigrationProgressType,
     },
     StrongholdSnapshotStatus as SnapshotStatus, StrongholdStatus as StrongholdStatusWallet,
 };
@@ -31,11 +31,11 @@ pub enum MigrationProgressType {
 
 pub fn migration_progress_type_enum_to_type(migration_type: &WalletMigrationProgressType) -> MigrationProgressType {
     match migration_type {
-        WalletMigrationProgressType::FetchingMigrationData{..} => MigrationProgressType::FetchingMigrationData,
-        WalletMigrationProgressType::MiningBundle{..} => MigrationProgressType::MiningBundle,
-        WalletMigrationProgressType::SigningBundle{..} => MigrationProgressType::SigningBundle,
-        WalletMigrationProgressType::BroadcastingBundle{..} => MigrationProgressType::BroadcastingBundle,
-        WalletMigrationProgressType::TransactionConfirmed{..} => MigrationProgressType::TransactionConfirmed,
+        WalletMigrationProgressType::FetchingMigrationData { .. } => MigrationProgressType::FetchingMigrationData,
+        WalletMigrationProgressType::MiningBundle { .. } => MigrationProgressType::MiningBundle,
+        WalletMigrationProgressType::SigningBundle { .. } => MigrationProgressType::SigningBundle,
+        WalletMigrationProgressType::BroadcastingBundle { .. } => MigrationProgressType::BroadcastingBundle,
+        WalletMigrationProgressType::TransactionConfirmed { .. } => MigrationProgressType::TransactionConfirmed,
     }
 }
 
@@ -103,7 +103,7 @@ impl StrongholdStatusEvent {
 
 pub struct MigrationProgressEvent {
     migration_type: MigrationProgressType,
-    event: WalletMigrationProgressType
+    event: WalletMigrationProgressType,
 }
 
 impl MigrationProgressEvent {
@@ -112,33 +112,30 @@ impl MigrationProgressEvent {
     }
 
     pub fn as_fetching_migration_data(&self) -> Result<FetchingMigrationData> {
-        if let WalletMigrationProgressType::FetchingMigrationData { 
+        if let WalletMigrationProgressType::FetchingMigrationData {
             initial_address_index,
-            final_address_index
-        } = &self.event {
+            final_address_index,
+        } = &self.event
+        {
             Ok(FetchingMigrationData {
                 initial_address_index: *initial_address_index,
-                final_address_index: *final_address_index
+                final_address_index: *final_address_index,
             })
         } else {
             Err(anyhow!("wrong migration type"))
         }
     }
     pub fn as_mining_bundle(&self) -> Result<MiningBundle> {
-        if let WalletMigrationProgressType::MiningBundle {
-            address,
-        } = &self.event {
+        if let WalletMigrationProgressType::MiningBundle { address } = &self.event {
             Ok(MiningBundle {
-                address: address.clone()
+                address: address.clone(),
             })
         } else {
             Err(anyhow!("wrong migration type"))
         }
     }
     pub fn as_signing_bundle(&self) -> Result<SigningBundle> {
-        if let WalletMigrationProgressType::SigningBundle {
-            addresses,
-        } = &self.event {
+        if let WalletMigrationProgressType::SigningBundle { addresses } = &self.event {
             Ok(SigningBundle {
                 addresses: addresses.clone(),
             })
@@ -147,9 +144,7 @@ impl MigrationProgressEvent {
         }
     }
     pub fn as_broadcasting_bundle(&self) -> Result<BroadcastingBundle> {
-        if let WalletMigrationProgressType::BroadcastingBundle {
-            bundle_hash,
-        } = &self.event {
+        if let WalletMigrationProgressType::BroadcastingBundle { bundle_hash } = &self.event {
             Ok(BroadcastingBundle {
                 bundle_hash: bundle_hash.clone(),
             })
@@ -158,9 +153,7 @@ impl MigrationProgressEvent {
         }
     }
     pub fn as_transaction_confirmed(&self) -> Result<TransactionConfirmed> {
-        if let WalletMigrationProgressType::TransactionConfirmed {
-            bundle_hash,
-        } = &self.event {
+        if let WalletMigrationProgressType::TransactionConfirmed { bundle_hash } = &self.event {
             Ok(TransactionConfirmed {
                 bundle_hash: bundle_hash.clone(),
             })
@@ -285,7 +278,7 @@ impl EventManager {
             iota_wallet::event::on_migration_progress(move |event| {
                 cb.on_migration_progress(MigrationProgressEvent {
                     migration_type: migration_progress_type_enum_to_type(&event.event),
-                    event: event.event.clone()
+                    event: event.event.clone(),
                 });
             })
             .await

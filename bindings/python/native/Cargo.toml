@@ -13,11 +13,11 @@ crate-type = ["cdylib"]
 
 [dependencies]
 iota-wallet = { path = "../../../", version = "0.1.0", features = ["stronghold", "ledger-nano", "ledger-nano-simulator"] }
-iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "a0fd8bab1fb36bc8bafdfdbc4d7d030481ed7ff8", features = ["mqtt"] }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "57c5a33d83be4b8286a54156e9f0d2ac4345e9b9", features = ["mqtt"] }
 chrono = "0.4"
 serde_json = "1.0"
 serde = "1.0"
-tokio = { version = "1.3", features = ["rt", "rt-multi-thread"] }
+tokio = { version = "1.5", features = ["rt", "rt-multi-thread"] }
 hex = "0.4"
 dict_derive = "0.3.0"
 futures = "0.3"

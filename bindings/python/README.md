@@ -561,13 +561,14 @@ Gets the account balance information.
 
 **Returns** the [AccountBalance](#accountbalance) in this account.
 
-#### get_node_info(url (optional)): NodeInfoWrapper
+#### get_node_info(url (optional), auth (optional)): NodeInfoWrapper
 
 Gets information about the node.
 
-| Param | Type             | Default                | Description  |
-| ----- | ---------------- | ---------------------- | ------------ |
-| url   | <code>str</code> | <code>undefined</code> | The node url |
+| Param  | Type                   | Default                | Description           |
+| ------ | ---------------------- | ---------------------- | --------------------- |
+| url    | <code>str</code>       | <code>undefined</code> | The node url          |
+| auth   | <code>list[str]</code> | <code>undefined</code> | The node auth options |
 
 **Returns** the [NodeInfoWrapper](#nodeinfowrapper)
 
@@ -975,7 +976,10 @@ A dict with the following key/value pairs.
 ```python
 broker_options = {
     'automatic_disconnect': bool (optional),
-    'timeout': int (optional)
+    'timeout': int (optional),
+    'use_ws': bool (optional),
+    'port': u16 (optional),
+    'max_reconnection_attempts': u64 (optional),
 }
 ```
 

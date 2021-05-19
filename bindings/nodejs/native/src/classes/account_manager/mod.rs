@@ -464,7 +464,7 @@ declare_types! {
 
         method setClientOptions(mut cx) {
             let client_options = cx.argument::<JsValue>(0)?;
-            let client_options = neon_serde::from_value(&mut cx, client_options)?;
+            let client_options: ClientOptionsDto = neon_serde::from_value(&mut cx, client_options)?;
 
             {
                 let this = cx.this();
@@ -472,7 +472,7 @@ declare_types! {
                 let ref_ = &this.borrow(&guard).0;
                 crate::block_on(async move {
                     let manager = ref_.read().await;
-                    manager.set_client_options(client_options).await
+                    manager.set_client_options(client_options.into()).await
                 }).expect("failed to update client options");
             }
 
@@ -614,10 +614,7 @@ declare_types! {
             let address_wrapper = parse_address(cx.argument::<JsString>(0)?.value()).expect("invalid address");
             crate::block_on(async move {
                 let address = Address::try_from_bech32(&address_wrapper.to_bech32()).unwrap();
-                let ed25519_address = match address {
-                    Address::Ed25519(a) => a,
-                    _ => panic!("Unsupported address type"),
-                };
+                let Address::Ed25519(ed25519_address) = address;
                 let migration_address = encode_migration_address(ed25519_address).unwrap();
                 let migration_address = add_tryte_checksum(migration_address).unwrap();
                 Ok(neon_serde::to_value(&mut cx, &migration_address)?)

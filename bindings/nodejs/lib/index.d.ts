@@ -131,12 +131,18 @@ export declare interface NodeInfo {
   features: string[]
 }
 
+export declare interface Auth {
+  jwt?: string
+  username?: string
+  password?: string
+}
+
 export declare class Account {
   id(): string;
   index(): number;
   alias(): string;
   balance(): AccountBalance;
-  getNodeInfo(url?: string): Promise<NodeInfoWrapper>;
+  getNodeInfo(url?: string, auth?: Auth): Promise<NodeInfoWrapper>;
   messageCount(messageType?: MessageType): number;
   listMessages(count?: number, from?: number, messageType?: MessageType): Message[]
   listAddresses(unspent?: boolean): Address[]
@@ -180,10 +186,7 @@ export declare type NodeUrl = string
 
 export declare interface Node {
   url: NodeUrl
-  auth?: {
-    username: string
-    password: string
-  }
+  auth?: Auth
   disabled?: boolean
 }
 
@@ -191,9 +194,19 @@ export declare interface ClientOptions {
   node?: NodeUrl | Node;
   nodes?: Array<NodeUrl | Node>;
   network?: string;
+  mqttBrokerOptions?: MqttBrokerOptions;
   quorumSize?: number;
   quorumThreshold?: number;
   localPow?: boolean;
+}
+
+export declare interface MqttBrokerOptions {
+  automaticDisconnect?: boolean
+  // timeout in seconds
+  timeout?: number
+  useWs?: boolean
+  port?: number
+  maxReconnectionAttempts?: number
 }
 
 export declare enum SignerType {

@@ -16,14 +16,14 @@ chrono = { version = "0.4", features = ["serde"] }
 futures = "0.3"
 getset = "0.1"
 hex = "0.4"
-iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "a0fd8bab1fb36bc8bafdfdbc4d7d030481ed7ff8", features = ["mqtt"] }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "57c5a33d83be4b8286a54156e9f0d2ac4345e9b9", features = ["mqtt"] }
 log = "0.4"
 once_cell = "1.5"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_repr = "0.1"
 thiserror = "1.0"
-tokio = { version = "1.3", features = ["macros", "sync", "time", "rt", "rt-multi-thread"] }
+tokio = { version = "1.5", features = ["macros", "sync", "time", "rt", "rt-multi-thread"] }
 url = { version = "2.2", features = ["serde"] }
 rand = "0.8"
 rocksdb = { git="https://github.com/iotaledger/rust-rocksdb", rev = "70f2a53529ecc1853a2c025cec7f9d00bd50352c", default-features = false, features = ["lz4"] }
@@ -49,7 +49,7 @@ features = ["random", "sha", "pbkdf", "hmac", "bip39", "bip39-en", "chacha", "bl
 anyhow = "1.0"
 reqwest = { version = "0.11", features = ["json"] }
 rusty-fork = "0.3"
-tokio = { version = "1.0", features = ["full"] }
+tokio = { version = "1.5", features = ["full"] }
 quickcheck = "1.0"
 quickcheck_macros = "1.0"
 
