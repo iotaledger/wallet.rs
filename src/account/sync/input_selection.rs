@@ -59,12 +59,6 @@ pub fn select_input(target: u64, available_utxos: Vec<Input>, max_inputs: usize)
         }
     }
 
-    signature_locked_outputs.sort_by(|a, b| match b.output.amount.cmp(&a.output.amount) {
-        // if the balances are equal, we prioritise change addresses
-        Ordering::Equal => b.internal.cmp(&a.internal),
-        Ordering::Greater => Ordering::Greater,
-        Ordering::Less => Ordering::Less,
-    });
     let mut selected_coins = Vec::new();
     let result = branch_and_bound(
         target,
@@ -90,12 +84,26 @@ pub fn select_input(target: u64, available_utxos: Vec<Input>, max_inputs: usize)
         Ok(selected_coins)
     } else {
         // If no match, Single Random Draw
-        let mut signature_locked_outputs_ = signature_locked_outputs.clone();
-        let mut dust_allowance_outputs_ = dust_allowance_outputs.clone();
-        signature_locked_outputs_.shuffle(&mut thread_rng());
-        dust_allowance_outputs_.shuffle(&mut thread_rng());
-        let mut inputs = single_draw(target, signature_locked_outputs_, dust_allowance_outputs_);
+        // let mut signature_locked_outputs_ = signature_locked_outputs.clone();
+        // let mut dust_allowance_outputs_ = dust_allowance_outputs.clone();
+        signature_locked_outputs.shuffle(&mut thread_rng());
+        dust_allowance_outputs.shuffle(&mut thread_rng());
+        let mut inputs = single_draw(target, signature_locked_outputs.clone(), dust_allowance_outputs.clone());
         if inputs.len() > max_inputs {
+            // Sort inputs so we can get the biggest inputs first and don't reach the input limit, if we don't have the
+            // funds spread over too many outputs
+            signature_locked_outputs.sort_by(|a, b| match b.output.amount.cmp(&a.output.amount) {
+                // if the balances are equal, we prioritise change addresses
+                Ordering::Equal => b.internal.cmp(&a.internal),
+                Ordering::Greater => Ordering::Greater,
+                Ordering::Less => Ordering::Less,
+            });
+            dust_allowance_outputs.sort_by(|a, b| match b.output.amount.cmp(&a.output.amount) {
+                // if the balances are equal, we prioritise change addresses
+                Ordering::Equal => b.internal.cmp(&a.internal),
+                Ordering::Greater => Ordering::Greater,
+                Ordering::Less => Ordering::Less,
+            });
             // first time the inputs are shuffled, so if we had many outputs it could happen that we selected more than
             // max_inputs even if it would be possible with <=
             inputs = single_draw(target, signature_locked_outputs, dust_allowance_outputs);
@@ -181,20 +189,16 @@ fn branch_and_bound(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::address::{AddressBuilder, AddressOutput, AddressWrapper, IotaAddress, OutputKind};
-    use iota_client::bee_message::prelude::{Ed25519Address, MessageId, TransactionId};
+    use crate::address::{AddressOutput, OutputKind};
+    use iota_client::bee_message::prelude::{MessageId, TransactionId};
     use rand::prelude::{Rng, SeedableRng, SliceRandom, StdRng};
 
     fn generate_random_utxos(rng: &mut StdRng, utxos_number: usize) -> Vec<Input> {
         let mut available_utxos = Vec::new();
-        for i in 0..utxos_number {
-            let address = AddressBuilder::new()
-                .address(AddressWrapper::new(
-                    IotaAddress::Ed25519(Ed25519Address::new([0; 32])),
-                    "iota".to_string(),
-                ))
-                .key_index(i)
-                .outputs(vec![AddressOutput {
+        for _ in 0..utxos_number {
+            available_utxos.push(super::Input {
+                internal: false,
+                output: AddressOutput {
                     transaction_id: TransactionId::new([0; 32]),
                     message_id: MessageId::new([0; 32]),
                     index: 0,
@@ -202,12 +206,7 @@ mod tests {
                     is_spent: false,
                     address: crate::test_utils::generate_random_iota_address(),
                     kind: OutputKind::SignatureLockedSingle,
-                }])
-                .build()
-                .unwrap();
-            available_utxos.push(super::Input {
-                internal: false,
-                output: address.outputs().iter().next().expect("No output").1.clone(),
+                },
             });
         }
         available_utxos

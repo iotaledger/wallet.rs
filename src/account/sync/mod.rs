@@ -1325,8 +1325,7 @@ impl SyncedAccount {
                         None,
                     )
                 } else {
-                    // TODO
-                    return Err(crate::Error::InsufficientFunds(0, value));
+                    return Err(crate::Error::InputAddressNotFound);
                 }
             }
             None => {
