@@ -88,11 +88,11 @@ pub struct BrokerOptions {
     /// broker timeout in secs
     pub timeout: Option<u64>,
     /// Defines if websockets should be used (true) or TCP (false)
-    pub(crate) use_ws: bool,
+    pub use_ws: Option<bool>,
     /// Defines the port to be used for the MQTT connection
-    pub(crate) port: u16,
+    pub port: Option<u16>,
     /// Defines the maximum reconnection attempts before it returns an error
-    pub(crate) max_reconnection_attempts: usize,
+    pub max_reconnection_attempts: Option<usize>,
 }
 
 impl From<BrokerOptions> for RustBrokerOptions {

@@ -978,7 +978,7 @@ broker_options = {
     'automatic_disconnect': bool (optional),
     'timeout': int (optional),
     'use_ws': bool (optional),
-    'port': u64 (optional),
+    'port': u16 (optional),
     'max_reconnection_attempts': u64 (optional),
 }
 ```
