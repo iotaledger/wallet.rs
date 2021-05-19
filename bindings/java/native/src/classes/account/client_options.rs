@@ -20,6 +20,9 @@ impl BrokerOptions {
             builder: Rc::new(RefCell::new(Option::from(BrokerOptionsRust {
                 automatic_disconnect: None,
                 timeout: None,
+                use_ws: None,
+                port: None,
+                max_reconnection_attempts: None,
             }))),
         }
     }
@@ -39,6 +42,21 @@ impl BrokerOptions {
     pub fn timeout(&self, timeout: Duration) -> BrokerOptions {
         let mut builder = self.builder.borrow_mut().take().unwrap();
         builder.timeout = Some(timeout);
+        BrokerOptions::new_with(builder)
+    }
+    pub fn use_ws(&self, use_ws: bool) -> BrokerOptions {
+        let mut builder = self.builder.borrow_mut().take().unwrap();
+        builder.use_ws = Some(use_ws);
+        BrokerOptions::new_with(builder)
+    }
+    pub fn port(&self, port: u16) -> BrokerOptions {
+        let mut builder = self.builder.borrow_mut().take().unwrap();
+        builder.port = Some(port);
+        BrokerOptions::new_with(builder)
+    }
+    pub fn max_reconnection_attempts(&self, max_reconnection_attempts: usize) -> BrokerOptions {
+        let mut builder = self.builder.borrow_mut().take().unwrap();
+        builder.max_reconnection_attempts = Some(max_reconnection_attempts);
         BrokerOptions::new_with(builder)
     }
 }

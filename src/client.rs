@@ -55,8 +55,11 @@ pub(crate) async fn get_client(options: &ClientOptions) -> crate::Result<Arc<RwL
         for node in options.nodes() {
             if !node.disabled {
                 if let Some(auth) = &node.auth {
-                    client_builder =
-                        client_builder.with_node_auth(node.url.as_str(), &auth.username, &auth.password)?;
+                    client_builder = client_builder.with_node_auth(
+                        node.url.as_str(),
+                        auth.jwt.clone(),
+                        auth.basic_auth_name_pwd.as_ref().map(|(ref x, ref y)| (&x[..], &y[..])),
+                    )?;
                 } else {
                     // safe to unwrap since we're sure we have valid URLs
                     client_builder = client_builder.with_node(node.url.as_str()).unwrap();
@@ -67,12 +70,15 @@ pub(crate) async fn get_client(options: &ClientOptions) -> crate::Result<Arc<RwL
         if let Some(primary_node) = options.primary_node() {
             if !primary_node.disabled {
                 if let Some(auth) = &primary_node.auth {
-                    client_builder = client_builder
-                        .with_primary_node(primary_node.url.as_str(), Some((&auth.username, &auth.password)))?;
+                    client_builder = client_builder.with_primary_node(
+                        primary_node.url.as_str(),
+                        auth.jwt.clone(),
+                        auth.basic_auth_name_pwd.as_ref().map(|(ref x, ref y)| (&x[..], &y[..])),
+                    )?;
                 } else {
                     // safe to unwrap since we're sure we have valid URLs
                     client_builder = client_builder
-                        .with_primary_node(primary_node.url.as_str(), None)
+                        .with_primary_node(primary_node.url.as_str(), None, None)
                         .unwrap();
                 }
             }
@@ -175,12 +181,17 @@ impl ClientOptionsBuilder {
     }
 
     /// Sets the primary node with authentication.
-    pub fn with_primary_node_auth(mut self, node: &str, username: &str, password: &str) -> crate::Result<Self> {
+    pub fn with_primary_node_auth(
+        mut self,
+        node: &str,
+        jwt: Option<&str>,
+        basic_auth_name_pwd: Option<(&str, &str)>,
+    ) -> crate::Result<Self> {
         self.primary_node.replace(Node {
             url: Url::parse(node)?,
             auth: NodeAuth {
-                username: username.into(),
-                password: password.into(),
+                jwt: jwt.map(|r| r.to_string()),
+                basic_auth_name_pwd: basic_auth_name_pwd.map(|(l, r)| (l.to_string(), r.to_string())),
             }
             .into(),
             disabled: false,
@@ -215,12 +226,17 @@ impl ClientOptionsBuilder {
     }
 
     /// Adds a node with authentication to the node list.
-    pub fn with_node_auth(mut self, node: &str, username: &str, password: &str) -> crate::Result<Self> {
+    pub fn with_node_auth(
+        mut self,
+        node: &str,
+        jwt: Option<&str>,
+        basic_auth_name_pwd: Option<(&str, &str)>,
+    ) -> crate::Result<Self> {
         self.nodes.push(Node {
             url: Url::parse(node)?,
             auth: NodeAuth {
-                username: username.into(),
-                password: password.into(),
+                jwt: jwt.map(|r| r.to_string()),
+                basic_auth_name_pwd: basic_auth_name_pwd.map(|(l, r)| (l.to_string(), r.to_string())),
             }
             .into(),
             disabled: false,
@@ -376,10 +392,18 @@ impl From<Api> for iota_client::Api {
 pub struct BrokerOptions {
     // We need to use `pub` here or these is no way to let the user create BrokerOptions
     #[serde(rename = "automaticDisconnect")]
-    /// automatic disconnect.
+    /// Whether the MQTT broker should be automatically disconnected when all topics are unsubscribed or not.
     pub automatic_disconnect: Option<bool>,
     /// timeout of the mqtt broker.
     pub timeout: Option<Duration>,
+    /// Defines if websockets should be used (true) or TCP (false)
+    #[serde(rename = "useWs")]
+    pub use_ws: Option<bool>,
+    /// Defines the port to be used for the MQTT connection
+    pub port: Option<u16>,
+    /// Defines the maximum reconnection attempts before it returns an error
+    #[serde(rename = "maxReconnectionAttempts")]
+    pub max_reconnection_attempts: Option<usize>,
 }
 
 impl From<BrokerOptions> for iota_client::BrokerOptions {
@@ -391,6 +415,15 @@ impl From<BrokerOptions> for iota_client::BrokerOptions {
         if let Some(timeout) = value.timeout {
             options = options.timeout(timeout);
         }
+        if let Some(use_ws) = value.use_ws {
+            options = options.use_ws(use_ws);
+        }
+        if let Some(port) = value.port {
+            options = options.port(port);
+        }
+        if let Some(max_reconnection_attempts) = value.max_reconnection_attempts {
+            options = options.max_reconnection_attempts(max_reconnection_attempts);
+        }
         options
     }
 }
@@ -398,10 +431,10 @@ impl From<BrokerOptions> for iota_client::BrokerOptions {
 /// Node authentication object.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct NodeAuth {
-    /// Username.
-    pub username: String,
-    /// Password.
-    pub password: String,
+    /// JWT.
+    pub jwt: Option<String>,
+    /// Username and password.
+    pub basic_auth_name_pwd: Option<(String, String)>,
 }
 
 /// Node definition.
