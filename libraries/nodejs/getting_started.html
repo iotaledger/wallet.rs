@@ -161,17 +161,22 @@
                     <main>
                         <h1 id="getting-started-with-nodejs"><a class="header" href="#getting-started-with-nodejs">Getting Started with Node.js</a></h1>
 <p>The <a href="https://www.npmjs.com/package/@iota/wallet">IOTA Wallet Node.js binding</a> is published on npmjs.org.</p>
+<blockquote>
+<p>There is a guide for exchanges <a href="https://chrysalis.docs.iota.org/guides/exchange_guide.html">available</a> which is based on <code>wallet.rs</code> and <code>Node.js</code>. It also covers several most common use cases.</p>
+</blockquote>
+<h2 id="security"><a class="header" href="#security">Security</a></h2>
+<p>Please note: In is not recommended to store passwords on host's environment variables or in the source code in a production setup! Please make sure you follow our <a href="https://chrysalis.docs.iota.org/guides/backup_security.html">backup and security</a> recommendations for production use!</p>
 <h2 id="installation"><a class="header" href="#installation">Installation</a></h2>
-<p>Currently the package isn't published so you'd need to link it to your project using <code>npm</code> or <code>yarn</code>.</p>
+<p>Currently the package isn't published so you'd need to link it to your project using <code>npm</code> or <code>yarn</code>. We also use <code>dotenv</code> for password management in the examples.</p>
 <ul>
 <li>Using NPM:</li>
 </ul>
-<pre><code>$ npm install @iota/wallet
+<pre><code>$ npm install @iota/wallet dotenv
 </code></pre>
 <ul>
 <li>Using yarn: </li>
 </ul>
-<pre><code>$ yarn install @iota/wallet
+<pre><code>$ yarn install @iota/wallet dotenv
 </code></pre>
 <h2 id="usage"><a class="header" href="#usage">Usage</a></h2>
 <pre><code class="language-javascript">/**

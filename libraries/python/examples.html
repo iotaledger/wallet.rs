@@ -160,6 +160,9 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="examples"><a class="header" href="#examples">Examples</a></h1>
+<blockquote>
+<p>Please note: In is not recommended to store passwords on host's environment variables or in the source code in a production setup! Please make sure you follow our <a href="https://chrysalis.docs.iota.org/guides/backup_security.html">backup and security</a> recommendations for production use!</p>
+</blockquote>
 <h2 id="account-manager-and-individual-accounts"><a class="header" href="#account-manager-and-individual-accounts">Account manager and individual accounts</a></h2>
 <p>First of all, let's initialize (open) a secure storage for individual accounts (backed up by Stronghold by default) using <code>AccountManager</code> instance:</p>
 <pre><code class="language-python"># Copyright 2020 IOTA Stiftung
@@ -196,10 +199,14 @@ account_manager.store_mnemonic(&quot;Stronghold&quot;)
 <blockquote>
 <p>Please note: deal with the password with utmost care</p>
 </blockquote>
-<p>Technically speaking, the storage means a single file called <code>wallet.stronghold</code>. It is also needed to generate a seed (mnemonic) that serves as a cryptographic key from which all accounts and related addresses are generated.</p>
+<p>Technically speaking, the storage means two things:</p>
+<ul>
+<li>Single file called <code>wallet.stronghold</code> which contains <code>seed</code> secured by stronghold and encrypted at rest. The generated seed (mnemonic) serves as a cryptographic key from which all accounts and related addresses are generated</li>
+<li>Other data used by library that is stored under <code>db</code> sub directory that includes account information, generated addresses, fetched messages, etc. This data is leveraged in order to speed up some operations, such as account creation, address generation, etc.</li>
+</ul>
 <p>One of the key principle behind the <code>stronghold</code>-based storage is that no one can get a seed from the storage. You deal with all accounts purely via <code>Account_Manager</code> instance and all complexities are hidden under the hood and are dealt with in a secure way.</p>
 <p>In case one would like to store a seed also somewhere else, there is a method <code>AccountManager.generate_mnemonic()</code> that generates random seed and it can be leveraged before the actual account initialization.</p>
-<p>Please note, it is highly recommended to store <code>stronghold</code> password and <code>stronghold</code> database on separate devices.</p>
+<p>Please note: it is highly recommended to store <code>stronghold</code> password encrypted on rest and separated from <code>stronghold</code> snapshots.</p>
 <p>More detailed information about seed generation is available at <a href="https://chrysalis.docs.iota.org/guides/dev_guide.html#seed">Developer guide to Chrysalis</a>.</p>
 <h3 id="accounts"><a class="header" href="#accounts">Accounts</a></h3>
 <p>The library uses a model of individual accounts to separate individual users/clients from each other. It is possible to generate multiple addresses for each account deterministically based on seed mnemonic. </p>
@@ -236,7 +243,10 @@ An account can be then referred to via <code>index</code>, <code>alias</code> or
 <p>Get the instance of a specific account:</p>
 <pre><code class="language-python">account = account_manager.get_account(&quot;Alice&quot;)
 </code></pre>
-<p>Several api calls can be performed via <code>account</code> instance. Note: it is a good practice to sync the given account with the Tangle every time you work with <code>account</code> instance to rely on the latest information available: <code>account.sync().execute()</code>.</p>
+<p>Several api calls can be performed via <code>account</code> instance.</p>
+<blockquote>
+<p>Note: it is a good practice to sync the given account with the Tangle every time you work with <code>account</code> instance to rely on the latest information available: <code>account.sync().execute()</code>. By default, <code>account.sync().execute()</code> is performed automatically on <code>send</code>, <code>retry</code>, <code>reattach</code> and <code>promote</code> api calls.</p>
+</blockquote>
 <p>The most common methods:</p>
 <ul>
 <li><code>account.alias()</code>: returns an alias of the given account</li>
@@ -513,8 +523,8 @@ That's why we did send 1Mi in the given example to comply with the protection.&q
 </blockquote>
 <p>Dust protection also means you can't leave (return back) less than 1Mi on a spent address (leave a dust behind).</p>
 <h2 id="backup-database"><a class="header" href="#backup-database">Backup database</a></h2>
-<p>Underlying database (provided by <code>Stronghold</code> by default) is encrypted at rest and there is no way how to get a seed from it due to security practices that are incorporated in the Stronghold's DNA. It means you are dealing with the database as an atomic unit that includes all wallet information.</p>
-<p>So backing up the database is very important task from this respect.</p>
+<p>Underlying seed storage (provided by <code>Stronghold</code> by default) is encrypted at rest and there is no way how to get a seed from it due to security practices that are incorporated in the Stronghold's DNA.</p>
+<p>So backing up the seed storage is very important task from this respect.</p>
 <pre><code class="language-python"># Copyright 2020 IOTA Stiftung
 # SPDX-License-Identifier: Apache-2.0
 

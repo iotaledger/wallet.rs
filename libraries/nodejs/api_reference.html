@@ -460,6 +460,16 @@ which is an address without balance.</p>
 <tr><td>[quorumSize]</td><td><code>number</code></td><td><code>undefined</code></td><td>If multiple nodes are provided, quorum size determines the number of nodes to query to check for quorum.</td></tr>
 <tr><td>[quorumThreshold]</td><td><code>number</code></td><td><code>undefined</code></td><td>Minimum number of nodes from the quorum pool that need to agree to consider a result true.</td></tr>
 <tr><td>[localPow]</td><td><code>boolean</code></td><td><code>true</code></td><td>Whether to use local or remote PoW.</td></tr>
+<tr><td>[MqttBrokerOptions]</td><td><code>MqttBrokerOptions</code></td><td><code>undefined</code></td><td>Options for the MQTT broker</td></tr>
+</tbody></table>
+<h3 id="mqttbrokeroptions"><a class="header" href="#mqttbrokeroptions">MqttBrokerOptions</a></h3>
+<p>All fields are optional.</p>
+<table><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>automaticDisconnect</td><td><code>boolean</code></td><td>Whether the MQTT broker should be automatically disconnected when all topics are unsubscribed or not.</td></tr>
+<tr><td>timeout</td><td><code>number</code></td><td>MQTT connection timeout in secods</td></tr>
+<tr><td>useWs</td><td><code>boolean</code></td><td>Defines if websockets should be used (true) or TCP (false)</td></tr>
+<tr><td>maxReconnectionAttempts</td><td><code>number</code></td><td>Defines the maximum reconnection attempts before it returns an error</td></tr>
+<tr><td>port</td><td><code>number</code></td><td>Defines the port to be used for the MQTT connection</td></tr>
 </tbody></table>
 
                     </main>

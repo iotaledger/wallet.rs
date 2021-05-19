@@ -452,10 +452,11 @@ Note that such address might have been used in the past, because the message his
 <h4 id="balance-a-hrefaccountbalanceaccountbalancea"><a class="header" href="#balance-a-hrefaccountbalanceaccountbalancea">balance(): <a href="#accountbalance">AccountBalance</a></a></h4>
 <p>Gets the account balance information.</p>
 <p><strong>Returns</strong> the <a href="#accountbalance">AccountBalance</a> in this account.</p>
-<h4 id="get_node_infourl-optional-nodeinfowrapper"><a class="header" href="#get_node_infourl-optional-nodeinfowrapper">get_node_info(url (optional)): NodeInfoWrapper</a></h4>
+<h4 id="get_node_infourl-optional-auth-optional-nodeinfowrapper"><a class="header" href="#get_node_infourl-optional-auth-optional-nodeinfowrapper">get_node_info(url (optional), auth (optional)): NodeInfoWrapper</a></h4>
 <p>Gets information about the node.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>url</td><td><code>str</code></td><td><code>undefined</code></td><td>The node url</td></tr>
+<tr><td>auth</td><td><code>list[str]</code></td><td><code>undefined</code></td><td>The node auth options</td></tr>
 </tbody></table>
 <p><strong>Returns</strong> the <a href="#nodeinfowrapper">NodeInfoWrapper</a></p>
 <h4 id="set_aliasalias-void"><a class="header" href="#set_aliasalias-void">set_alias(alias): void</a></h4>
@@ -716,7 +717,10 @@ The account can be initialised with locally stored address history.</p>
 <p>A dict with the following key/value pairs.</p>
 <pre><code class="language-python">broker_options = {
     'automatic_disconnect': bool (optional),
-    'timeout': int (optional)
+    'timeout': int (optional),
+    'use_ws': bool (optional),
+    'port': u16 (optional),
+    'max_reconnection_attempts': u64 (optional),
 }
 </code></pre>
 <h3 id="walletmessage"><a class="header" href="#walletmessage">WalletMessage</a></h3>
