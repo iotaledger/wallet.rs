@@ -1,5 +1,14 @@
 # Changelog
 
+## \[0.4.0]
+
+- Websocket is used as default now and new fields are added to the BrokerOptions.
+  - [b7c74521](https://github.com/iotaledger/wallet.rs/commit/b7c74521cb6cb6126d3c8338c74132ad40d6ff23) add changes files ([#626](https://github.com/iotaledger/wallet.rs/pull/626)) on 2021-05-20
+- Added auth options to getNodeInfo.
+  - [b7c74521](https://github.com/iotaledger/wallet.rs/commit/b7c74521cb6cb6126d3c8338c74132ad40d6ff23) add changes files ([#626](https://github.com/iotaledger/wallet.rs/pull/626)) on 2021-05-20
+- Accept client options only with url instead of node object also for the manager.
+  - [ba4e3b66](https://github.com/iotaledger/wallet.rs/commit/ba4e3b669599510faceed6bcc9465124e0a77f2b) manager accept same client options as the account ([#622](https://github.com/iotaledger/wallet.rs/pull/622)) on 2021-05-18
+
 ## \[0.3.7]
 
 - Fixes updating client options.
