@@ -236,6 +236,7 @@ export declare interface BalanceChangeEvent {
   accountId: string
   address: string
   messageId?: string
+  remainder?: boolean
   balanceChange: { spent: number, received: number }
 }
 
