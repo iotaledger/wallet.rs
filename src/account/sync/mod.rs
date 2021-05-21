@@ -1142,16 +1142,16 @@ impl SyncedAccount {
                 .clone()
                 .into_iter()
                 .filter(|output| {
-                    (!transfer_obj.outputs.iter().any(|o| &o.address == output.address())
-                && *output.amount() > 0
-                && !locked_outputs.iter().any(|output|&output.transaction_id == output.transaction_id() && &output.index == output.index())
-                // we allow an input equal to a deposit address only if it has balance <= transfer amount, so there
-                // can't be a remainder value with this address as input alone
+                    (!transfer_obj.outputs.iter().any(|transfer_output| transfer_output.address == output.address)
+                        && *output.amount() > 0
+                        && !locked_outputs.iter().any(|locked_output| locked_output.transaction_id == output.transaction_id && locked_output.index == output.index)
+                        // we allow an input equal to a deposit address only if it has balance <= transfer amount, so there
+                        // can't be a remainder value with this address as input alone
                     || transfer_obj.outputs.iter().any(|o| &o.address == output.address())
                         && *output.amount() <= transfer_obj.amount())
                         && *output.amount() > 0
-                        && !locked_outputs.iter().any(|output| {
-                            &output.transaction_id == output.transaction_id() && &output.index == output.index()
+                        && !locked_outputs.iter().any(|locked_output| {
+                            locked_output.transaction_id == output.transaction_id && locked_output.index == output.index
                         })
                 }).collect();
             for output in filtered {
