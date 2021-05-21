@@ -11,7 +11,7 @@ use crate::{
         TransactionEventType, TransferProgressType,
     },
     message::{Message, MessageType, RemainderValueStrategy, Transfer},
-    signing::{GenerateAddressMetadata, SignMessageMetadata},
+    signing::{GenerateAddressMetadata, SignMessageMetadata, SignerType},
 };
 
 use bee_common::packable::Packable;
@@ -37,8 +37,13 @@ use std::{
 
 mod input_selection;
 
+// https://github.com/GalRogozinski/protocol-rfcs/blob/dust/text/0032-dust-protection/0032-dust-protection.md
+const MAX_ALLOWED_DUST_OUTPUTS: i64 = 100;
+const DUST_DIVISOR: i64 = 100_000;
 const DUST_ALLOWANCE_VALUE: u64 = 1_000_000;
 const DEFAULT_GAP_LIMIT: usize = 10;
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+const LEDGER_MAX_IN_OUTPUTS: usize = 17;
 
 #[derive(Debug, Clone)]
 pub(crate) struct SyncedMessage {
@@ -1086,7 +1091,7 @@ impl SyncedAccount {
     }
 
     /// Selects input addresses for a value transaction.
-    /// The method ensures that the recipient address doesn’t match any of the selected inputs or the remainder address.
+    /// The method ensures that the recipient address doesn’t match the remainder address.
     ///
     /// # Arguments
     ///
@@ -1099,70 +1104,116 @@ impl SyncedAccount {
     /// needed.
     fn select_inputs<'a>(
         &self,
-        locked_addresses: &'a mut MutexGuard<'_, Vec<AddressWrapper>>,
+        locked_outputs: &'a mut MutexGuard<'_, Vec<AddressOutput>>,
         transfer_obj: &Transfer,
-        sent_messages: &'a [Message],
-        addresses: &'a [Address],
-    ) -> crate::Result<(Vec<input_selection::Input>, Option<input_selection::Input>)> {
-        let available_addresses: Vec<input_selection::Input> = addresses
-            .iter()
-            .filter(|a| {
-                // we allow an input equal to the deposit address only if it has more than one output
-                (!transfer_obj.outputs.iter().any(|o| &o.address == a.address())
-                    || a.available_outputs(&sent_messages).len() > 1)
-                    && a.available_balance(&sent_messages) > 0
-                    && !locked_addresses.contains(a.address())
-            })
-            .map(|a| input_selection::Input {
-                address: a.address().clone(),
-                internal: *a.internal(),
-                balance: a.available_balance(&sent_messages),
-            })
-            .collect();
-        let transfer_amount = transfer_obj.amount();
-        let mut selected_addresses = input_selection::select_input(transfer_amount, available_addresses)?;
-        let has_remainder = selected_addresses.iter().fold(0, |acc, a| acc + a.balance) > transfer_amount;
+        available_outputs: Vec<input_selection::AddressInputs>,
+        signer_type: SignerType,
+    ) -> crate::Result<(Vec<input_selection::AddressInputs>, Option<input_selection::Remainder>)> {
+        let output_amount = transfer_obj.outputs.len();
+        let max_inputs = match signer_type {
+            #[cfg(feature = "ledger-nano")]
+            SignerType::LedgerNano => {
+                // -1 because we need at least one input and the limit is for inputs and outputs together
+                if output_amount >= LEDGER_MAX_IN_OUTPUTS - 1 {
+                    return Err(crate::Error::TooManyOutputs(output_amount, LEDGER_MAX_IN_OUTPUTS - 1));
+                }
+                LEDGER_MAX_IN_OUTPUTS - output_amount
+            }
+            #[cfg(feature = "ledger-nano-simulator")]
+            SignerType::LedgerNanoSimulator => {
+                // -1 because we need at least one input and the limit is for inputs and outputs together
+                if output_amount >= LEDGER_MAX_IN_OUTPUTS - 1 {
+                    return Err(crate::Error::TooManyOutputs(output_amount, LEDGER_MAX_IN_OUTPUTS - 1));
+                }
+                LEDGER_MAX_IN_OUTPUTS - output_amount
+            }
+            _ => {
+                if output_amount >= INPUT_OUTPUT_COUNT_MAX {
+                    return Err(crate::Error::TooManyOutputs(output_amount, INPUT_OUTPUT_COUNT_MAX));
+                }
+                INPUT_OUTPUT_COUNT_MAX
+            }
+        };
 
-        // if we're reusing the input address for remainder output
-        // and we have remainder value, we should run the input selection again
-        // without the output address.
-        if has_remainder
-            && transfer_obj.remainder_value_strategy == RemainderValueStrategy::ReuseAddress
-            && addresses
-                .iter()
-                .any(|input| transfer_obj.outputs.iter().any(|o| &o.address == input.address()))
-        {
-            let available_addresses: Vec<input_selection::Input> = addresses
-                .iter()
-                .filter(|a| {
-                    // we do not allow the deposit address as input address
-                    !transfer_obj.outputs.iter().any(|o| &o.address == a.address())
-                        && a.available_balance(&sent_messages) > 0
-                        && !locked_addresses.contains(a.address())
-                })
-                .map(|a| input_selection::Input {
-                    address: a.address().clone(),
-                    internal: *a.internal(),
-                    balance: a.available_balance(&sent_messages),
-                })
-                .collect();
-            selected_addresses = input_selection::select_input(transfer_obj.amount(), available_addresses)?;
+        let mut available_inputs: Vec<input_selection::Input> = Vec::new();
+        for address_input in available_outputs {
+            let filtered: Vec<AddressOutput> = address_input.clone()
+                .outputs
+                .clone()
+                .into_iter()
+                .filter(|output| {
+                    (!transfer_obj.outputs.iter().any(|transfer_output| transfer_output.address == output.address)
+                        && *output.amount() > 0
+                        && !locked_outputs.iter().any(|locked_output| locked_output.transaction_id == output.transaction_id && locked_output.index == output.index)
+                        // we allow an input equal to a deposit address only if it has balance <= transfer amount, so there
+                        // can't be a remainder value with this address as input alone
+                    || transfer_obj.outputs.iter().any(|o| &o.address == output.address())
+                        && *output.amount() <= transfer_obj.amount())
+                        && *output.amount() > 0
+                        && !locked_outputs.iter().any(|locked_output| {
+                            locked_output.transaction_id == output.transaction_id && locked_output.index == output.index
+                        })
+                }).collect();
+            for output in filtered {
+                available_inputs.push(input_selection::Input {
+                    internal: address_input.internal,
+                    output: output.clone(),
+                });
+            }
         }
 
-        locked_addresses.extend(
-            selected_addresses
-                .iter()
-                .map(|a| a.address.clone())
-                .collect::<Vec<AddressWrapper>>(),
-        );
+        let selected_outputs = input_selection::select_input(transfer_obj.amount(), available_inputs, max_inputs)?;
+        locked_outputs.extend(selected_outputs.iter().map(|input| input.output.clone()));
+
+        let inputs_amount = selected_outputs.iter().fold(0, |acc, a| acc + a.output.amount);
+        let has_remainder = inputs_amount > transfer_obj.amount();
 
         let remainder = if has_remainder {
-            selected_addresses.last().cloned()
+            let input_for_remainder = selected_outputs
+                .iter()
+                // We filter the output addresses, but since we checked that this address balance <=
+                // transfer_obj.amount.get() we need to have another input address
+                .filter(|input| !transfer_obj.outputs.iter().any(|o| o.address == input.output.address))
+                .collect::<Vec<&input_selection::Input>>()
+                .last()
+                .cloned()
+                .cloned();
+            if let Some(remainder) = input_for_remainder {
+                Some(input_selection::Remainder {
+                    address: remainder.output.address,
+                    internal: remainder.internal,
+                    amount: inputs_amount,
+                })
+            } else {
+                return Err(crate::Error::FailedToGetRemainder);
+            }
         } else {
             None
         };
+        let mut selected_address_outputs: HashMap<AddressWrapper, input_selection::AddressInputs> = HashMap::new();
+        for input in selected_outputs {
+            match selected_address_outputs.get_mut(&input.output.address) {
+                Some(entry) => entry.outputs.push(input.output),
+                None => {
+                    selected_address_outputs.insert(
+                        input.output.address.clone(),
+                        input_selection::AddressInputs {
+                            address: input.output.address.clone(),
+                            internal: input.internal,
+                            outputs: vec![input.output.clone()],
+                        },
+                    );
+                }
+            }
+        }
 
-        Ok((selected_addresses, remainder))
+        Ok((
+            selected_address_outputs
+                .into_iter()
+                .map(|(_id, address_inputs)| address_inputs)
+                .collect(),
+            remainder,
+        ))
     }
 
     async fn get_output_consolidation_transfers(&self) -> crate::Result<Vec<Transfer>> {
@@ -1229,11 +1280,11 @@ impl SyncedAccount {
             transfer_obj.remainder_value_strategy = RemainderValueStrategy::ReuseAddress;
         }
 
-        // lock the transfer process until we select the input addresses
+        // lock the transfer process until we select the input (outputs)
         // we do this to prevent multiple threads trying to transfer at the same time
-        // so it doesn't consume the same addresses multiple times, which leads to a conflict state
-        let account_address_locker = self.account_handle.locked_addresses.clone();
-        let mut locked_addresses = account_address_locker.lock().await;
+        // so it doesn't consume the same outputs multiple times, which leads to a conflict state
+        let account_outputs_locker = self.account_handle.locked_outputs.clone();
+        let mut locked_outputs = account_outputs_locker.lock().await;
 
         // prepare the transfer getting some needed objects and values
         let value = transfer_obj.amount();
@@ -1243,7 +1294,7 @@ impl SyncedAccount {
         let balance = account_.balance_internal(&sent_messages).await;
 
         if value > balance.total {
-            return Err(crate::Error::InsufficientFunds);
+            return Err(crate::Error::InsufficientFunds(balance.total, value));
         }
 
         if let RemainderValueStrategy::AccountAddress(ref remainder_deposit_address) =
@@ -1259,62 +1310,54 @@ impl SyncedAccount {
         }
 
         let (input_addresses, remainder_address): (
-            Vec<(input_selection::Input, Vec<AddressOutput>)>,
-            Option<input_selection::Input>,
+            Vec<input_selection::AddressInputs>,
+            Option<input_selection::Remainder>,
         ) = match transfer_obj.input.take() {
             Some((address, address_inputs)) => {
                 if let Some(address) = account_.addresses().iter().find(|a| a.address() == &address) {
-                    locked_addresses.push(address.address().clone());
+                    locked_outputs.extend(address_inputs.iter().cloned());
                     (
-                        vec![(
-                            input_selection::Input {
-                                internal: *address.internal(),
-                                balance: address_inputs.iter().fold(0, |acc, input| acc + input.amount),
-                                address: address.address().clone(),
-                            },
-                            address_inputs,
-                        )],
+                        vec![input_selection::AddressInputs {
+                            internal: *address.internal(),
+                            address: address.address().clone(),
+                            outputs: address_inputs,
+                        }],
                         None,
                     )
                 } else {
-                    // TODO
-                    return Err(crate::Error::InsufficientFunds);
+                    return Err(crate::Error::InputAddressNotFound);
                 }
             }
             None => {
                 transfer_obj
                     .emit_event_if_needed(account_.id().to_string(), TransferProgressType::SelectingInputs)
                     .await;
+                // Get all available outputs
+                let available_outputs = account_
+                    .addresses()
+                    .iter()
+                    .map(|address| input_selection::AddressInputs {
+                        address: address.address().clone(),
+                        internal: *address.internal(),
+                        outputs: address
+                            .available_outputs(&sent_messages)
+                            .iter()
+                            .map(|o| (*o).clone())
+                            .collect::<Vec<AddressOutput>>(),
+                    })
+                    .collect();
+
+                let signer_type = account_.signer_type().clone();
+
                 // select the input addresses and check if a remainder address is needed
-                let (input_addresses, remainder_address) = self.select_inputs(
-                    &mut locked_addresses,
-                    &transfer_obj,
-                    &sent_messages,
-                    account_.addresses(),
-                )?;
-                (
-                    input_addresses
-                        .into_iter()
-                        .map(|input_address| {
-                            let outputs = account_
-                                .addresses()
-                                .iter()
-                                .find(|a| a.address() == &input_address.address)
-                                .unwrap() // safe to unwrap since we know the address belongs to the account
-                                .available_outputs(&sent_messages)
-                                .iter()
-                                .map(|o| (*o).clone())
-                                .collect();
-                            (input_address, outputs)
-                        })
-                        .collect(),
-                    remainder_address,
-                )
+                let (selected_inputs, remainder_address) =
+                    self.select_inputs(&mut locked_outputs, &transfer_obj, available_outputs, signer_type)?;
+                (selected_inputs, remainder_address)
             }
         };
 
         // unlock the transfer process since we already selected the input addresses and locked them
-        drop(locked_addresses);
+        drop(locked_outputs);
         drop(account_);
 
         log::debug!(
@@ -1331,13 +1374,18 @@ impl SyncedAccount {
         )
         .await;
 
-        let mut locked_addresses = account_address_locker.lock().await;
-        for (input_address, _) in &input_addresses {
-            let index = locked_addresses
+        let mut locked_outputs = account_outputs_locker.lock().await;
+        for input_address in &input_addresses {
+            let index = locked_outputs
                 .iter()
-                .position(|a| &input_address.address == a)
+                .position(|a| {
+                    input_address
+                        .outputs
+                        .iter()
+                        .any(|output| output.transaction_id == a.transaction_id && output.index == a.index)
+                })
                 .unwrap();
-            locked_addresses.remove(index);
+            locked_outputs.remove(index);
         }
 
         res
@@ -1361,9 +1409,9 @@ impl SyncedAccount {
 
 async fn perform_transfer(
     transfer_obj: Transfer,
-    input_addresses: &[(input_selection::Input, Vec<AddressOutput>)],
+    input_addresses: &[input_selection::AddressInputs],
     account_handle: AccountHandle,
-    remainder_address: Option<input_selection::Input>,
+    remainder_address: Option<input_selection::Remainder>,
 ) -> crate::Result<Message> {
     let mut utxos = vec![];
     let mut transaction_inputs = vec![];
@@ -1379,18 +1427,18 @@ async fn perform_transfer(
 
     let account_ = account_handle.read().await;
 
-    for (input_address, address_outputs) in input_addresses.iter() {
+    for address_input in input_addresses.iter() {
         let account_address = account_
             .addresses()
             .iter()
-            .find(|a| a.address() == &input_address.address)
+            .find(|a| a.address() == &address_input.address)
             .unwrap();
 
         let mut outputs = vec![];
 
-        for address_output in address_outputs {
+        for address_output in address_input.outputs.iter() {
             outputs.push((
-                (*address_output).clone(),
+                address_output.clone(),
                 *account_address.key_index(),
                 *account_address.internal(),
             ));
@@ -1667,7 +1715,7 @@ async fn perform_transfer(
     .finish()
     .await?;
     account_.save_messages(vec![message.clone()]).await?;
-    for (input_address, _) in input_addresses {
+    for input_address in input_addresses {
         if input_address.internal {
             account_handle
                 .change_addresses_to_sync
@@ -1713,14 +1761,32 @@ async fn is_dust_allowed(
         }
     }
 
+    let address_data = client.get_address().balance(&address).await?;
+    // If we create a dust output and a dust allowance output we don't need to check more outputs if the balance/100_000
+    // is < 100 because then we are sure that we didn't reach the max dust outputs
+    if address_data.dust_allowed
+        && dust_outputs_amount == 1
+        && dust_allowance_balance >= 0
+        && address_data.balance as i64 / DUST_DIVISOR < MAX_ALLOWED_DUST_OUTPUTS
+    {
+        return Ok(());
+    } else if !address_data.dust_allowed && dust_outputs_amount == 1 && dust_allowance_balance <= 0 {
+        return Err(crate::Error::DustError(format!(
+            "No dust output allowed on address {}",
+            address
+        )));
+    }
+
     // Get outputs from address and apply values
     let address_outputs = if let Some(address) = account.addresses().iter().find(|a| a.address().to_bech32() == address)
     {
-        address
+        let outputs = address
             .outputs()
             .values()
+            .filter(|output| !output.is_spent)
             .map(|output| (output.amount, output.kind.clone()))
-            .collect()
+            .collect();
+        outputs
     } else {
         let outputs = client.find_outputs(&[], &[address.to_string()]).await?;
         let mut address_outputs = Vec::new();
@@ -1746,7 +1812,7 @@ async fn is_dust_allowed(
 
     // Here dust_allowance_balance and dust_outputs_amount should be as if this transaction gets confirmed
     // Max allowed dust outputs is 100
-    let allowed_dust_amount = std::cmp::min(dust_allowance_balance / 100_000, 100);
+    let allowed_dust_amount = std::cmp::min(dust_allowance_balance / DUST_DIVISOR, MAX_ALLOWED_DUST_OUTPUTS);
     if dust_outputs_amount > allowed_dust_amount {
         return Err(crate::Error::DustError(format!(
             "No dust output allowed on address {}",
