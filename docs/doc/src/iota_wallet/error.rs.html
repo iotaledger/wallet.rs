@@ -334,6 +334,22 @@
 <span id="331">331</span>
 <span id="332">332</span>
 <span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
 </pre><pre class="rust">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -408,8 +424,8 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;storage file doesn&#39;t exist&quot;</span>)]</span>
     <span class="ident">StorageDoesntExist</span>,
     <span class="doccomment">/// Insufficient funds to send transfer.</span>
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;insufficient funds&quot;</span>)]</span>
-    <span class="ident">InsufficientFunds</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;insufficient funds {0}/{1}&quot;</span>)]</span>
+    <span class="ident">InsufficientFunds</span>(<span class="ident">u64</span>, <span class="ident">u64</span>),
     <span class="doccomment">/// Account isn&#39;t empty (has history or balance) - can&#39;t delete account.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;can&#39;t delete account: account has history or balance&quot;</span>)]</span>
     <span class="ident">AccountNotEmpty</span>,
@@ -511,6 +527,18 @@
     <span class="doccomment">/// Node not synced when creating account or updating client options.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;nodes {0} not synced&quot;</span>)]</span>
     <span class="ident">NodesNotSynced</span>(<span class="ident">String</span>),
+    <span class="doccomment">/// Failed to get remainder</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to get remainder address&quot;</span>)]</span>
+    <span class="ident">FailedToGetRemainder</span>,
+    <span class="doccomment">/// Too many outputs</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;too many outputs: {0}, max is {1}&quot;</span>)]</span>
+    <span class="ident">TooManyOutputs</span>(<span class="ident">usize</span>, <span class="ident">usize</span>),
+    <span class="doccomment">/// Funds are spread over too many outputs</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;funds are spread over too many outputs {0}/{1}, consolidation required&quot;</span>)]</span>
+    <span class="ident">ConsolidationRequired</span>(<span class="ident">usize</span>, <span class="ident">usize</span>),
+    <span class="doccomment">/// Provided input address not found</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;provided input address not found&quot;</span>)]</span>
+    <span class="ident">InputAddressNotFound</span>,
     <span class="doccomment">/// iota 1.0 client error</span>
     <span class="comment">// #[cfg(feature = &quot;migration&quot;)]</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
@@ -619,7 +647,7 @@
             <span class="self">Self</span><span class="ident">::InvalidAddress</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;InvalidAddress&quot;</span>),
             <span class="self">Self</span><span class="ident">::InvalidAddressLength</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;InvalidAddressLength&quot;</span>),
             <span class="self">Self</span><span class="ident">::StorageDoesntExist</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;StorageDoesntExist&quot;</span>),
-            <span class="self">Self</span><span class="ident">::InsufficientFunds</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;InsufficientFunds&quot;</span>),
+            <span class="self">Self</span><span class="ident">::InsufficientFunds</span>(<span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;InsufficientFunds&quot;</span>),
             <span class="self">Self</span><span class="ident">::AccountNotEmpty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;AccountNotEmpty&quot;</span>),
             <span class="self">Self</span><span class="ident">::LatestAccountIsEmpty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;LatestAccountIsEmpty&quot;</span>),
             <span class="self">Self</span><span class="ident">::RecordNotFound</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;RecordNotFound&quot;</span>),
@@ -657,6 +685,10 @@
             <span class="self">Self</span><span class="ident">::DustError</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;DustError&quot;</span>),
             <span class="self">Self</span><span class="ident">::InvalidOutputKind</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;InvalidOutputKind&quot;</span>),
             <span class="self">Self</span><span class="ident">::NodesNotSynced</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;NodesNotSynced&quot;</span>),
+            <span class="self">Self</span><span class="ident">::FailedToGetRemainder</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;FailedToGetRemainder&quot;</span>),
+            <span class="self">Self</span><span class="ident">::TooManyOutputs</span>(<span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;TooManyOutputs&quot;</span>),
+            <span class="self">Self</span><span class="ident">::ConsolidationRequired</span>(<span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;ConsolidationRequired&quot;</span>),
+            <span class="self">Self</span><span class="ident">::InputAddressNotFound</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;InputAddressNotFound&quot;</span>),
             <span class="comment">// #[cfg(feature = &quot;migration&quot;)]</span>
             <span class="self">Self</span><span class="ident">::LegacyClientError</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;LegacyClientError&quot;</span>),
             <span class="self">Self</span><span class="ident">::InvalidSeed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;InvalidSeed&quot;</span>),

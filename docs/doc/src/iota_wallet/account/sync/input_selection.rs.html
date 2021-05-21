@@ -257,11 +257,59 @@
 <span id="254">254</span>
 <span id="255">255</span>
 <span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
 </pre><pre class="rust">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::address::AddressWrapper</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::address</span>::{<span class="ident">AddressOutput</span>, <span class="ident">AddressWrapper</span>, <span class="ident">OutputKind</span>};
 <span class="kw">use</span> <span class="ident">rand</span>::{<span class="ident">prelude::SliceRandom</span>, <span class="ident">thread_rng</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">cmp::Ordering</span>,
@@ -272,16 +320,31 @@
 <span class="kw">const</span> <span class="ident">MAX_INPUT_SELECTION_TRIES</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="number">10_000_000</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Input</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AddressInputs</span> {
     <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">AddressWrapper</span>,
     <span class="kw">pub</span> <span class="ident">internal</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">balance</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span> <span class="ident">outputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressOutput</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">select_input</span>(<span class="ident">target</span>: <span class="ident">u64</span>, <span class="kw-2">mut</span> <span class="ident">available_utxos</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Input</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Input</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">total_available_balance</span> <span class="op">=</span> <span class="ident">available_utxos</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">address</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">address</span>.<span class="ident">balance</span>);
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Input</span> {
+    <span class="kw">pub</span> <span class="ident">internal</span>: <span class="ident">bool</span>,
+    <span class="kw">pub</span> <span class="ident">output</span>: <span class="ident">AddressOutput</span>,
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Remainder</span> {
+    <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">AddressWrapper</span>,
+    <span class="kw">pub</span> <span class="ident">internal</span>: <span class="ident">bool</span>,
+    <span class="kw">pub</span> <span class="ident">amount</span>: <span class="ident">u64</span>,
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">select_input</span>(<span class="ident">target</span>: <span class="ident">u64</span>, <span class="ident">available_utxos</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Input</span><span class="op">&gt;</span>, <span class="ident">max_inputs</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Input</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="ident">total_available_balance</span> <span class="op">=</span> <span class="ident">available_utxos</span>
+        .<span class="ident">iter</span>()
+        .<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">address</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">address</span>.<span class="ident">output</span>.<span class="ident">amount</span>);
     <span class="kw">if</span> <span class="ident">target</span> <span class="op">&gt;</span> <span class="ident">total_available_balance</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::Error::InsufficientFunds</span>);
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::Error::InsufficientFunds</span>(<span class="ident">total_available_balance</span>, <span class="ident">target</span>));
     }
 
     <span class="comment">// Not insufficient funds, but still not possible to create this transaction because it would create dust</span>
@@ -292,45 +355,88 @@
         )));
     }
 
-    <span class="ident">available_utxos</span>.<span class="ident">sort_by</span>(<span class="op">|</span><span class="ident">a</span>, <span class="ident">b</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">b</span>.<span class="ident">balance</span>.<span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="ident">balance</span>) {
-        <span class="comment">// if the balances are equal, we prioritise change addresses</span>
-        <span class="ident">Ordering::Equal</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">b</span>.<span class="ident">internal</span>.<span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="ident">internal</span>),
-        <span class="ident">Ordering::Greater</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Ordering::Greater</span>,
-        <span class="ident">Ordering::Less</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Ordering::Less</span>,
-    });
+    <span class="comment">// Split outputs, so we only try to select dust allowance outputs as inputs if we have all signature locked outputs</span>
+    <span class="comment">// already as input</span>
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">signature_locked_outputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Input</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dust_allowance_outputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Input</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+    <span class="kw">for</span> <span class="ident">input</span> <span class="kw">in</span> <span class="ident">available_utxos</span> {
+        <span class="kw">match</span> <span class="ident">input</span>.<span class="ident">output</span>.<span class="ident">kind</span> {
+            <span class="ident">OutputKind::SignatureLockedSingle</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">signature_locked_outputs</span>.<span class="ident">push</span>(<span class="ident">input</span>),
+            <span class="ident">OutputKind::SignatureLockedDustAllowance</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">dust_allowance_outputs</span>.<span class="ident">push</span>(<span class="ident">input</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        }
+    }
+
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">selected_coins</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
     <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">branch_and_bound</span>(
         <span class="ident">target</span>,
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">available_utxos</span>,
+        <span class="kw-2">&amp;</span><span class="ident">signature_locked_outputs</span>,
         <span class="number">0</span>,
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">selected_coins</span>,
         <span class="number">0</span>,
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">AtomicI64::new</span>(<span class="ident">MAX_INPUT_SELECTION_TRIES</span>),
     );
 
-    <span class="kw">let</span> <span class="ident">selected_balance</span> <span class="op">=</span> <span class="ident">selected_coins</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">address</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">address</span>.<span class="ident">balance</span>);
+    <span class="kw">let</span> <span class="ident">selected_balance</span> <span class="op">=</span> <span class="ident">selected_coins</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">input</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">input</span>.<span class="ident">output</span>.<span class="ident">amount</span>);
     <span class="kw">let</span> <span class="ident">remaining_value</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">selected_balance</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">target</span> {
         <span class="ident">selected_balance</span> <span class="op">-</span> <span class="ident">target</span>
     } <span class="kw">else</span> {
         <span class="number">0</span>
     };
 
-    <span class="kw">if</span> <span class="ident">result</span> <span class="op">&amp;&amp;</span> <span class="ident">selected_balance</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">target</span> <span class="op">&amp;&amp;</span> (<span class="ident">remaining_value</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">remaining_value</span> <span class="op">&gt;</span> <span class="ident">DUST_ALLOWANCE_VALUE</span>) {
+    <span class="kw">if</span> <span class="ident">result</span>
+        <span class="op">&amp;&amp;</span> <span class="ident">selected_balance</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">target</span>
+        <span class="op">&amp;&amp;</span> <span class="ident">selected_coins</span>.<span class="ident">len</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="ident">max_inputs</span>
+        <span class="op">&amp;&amp;</span> (<span class="ident">remaining_value</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">remaining_value</span> <span class="op">&gt;</span> <span class="ident">DUST_ALLOWANCE_VALUE</span>)
+    {
         <span class="prelude-val">Ok</span>(<span class="ident">selected_coins</span>)
     } <span class="kw">else</span> {
         <span class="comment">// If no match, Single Random Draw</span>
-        <span class="prelude-val">Ok</span>(<span class="ident">single_random_draw</span>(<span class="ident">target</span>, <span class="ident">available_utxos</span>))
+        <span class="comment">// let mut signature_locked_outputs_ = signature_locked_outputs.clone();</span>
+        <span class="comment">// let mut dust_allowance_outputs_ = dust_allowance_outputs.clone();</span>
+        <span class="ident">signature_locked_outputs</span>.<span class="ident">shuffle</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">thread_rng</span>());
+        <span class="ident">dust_allowance_outputs</span>.<span class="ident">shuffle</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">thread_rng</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">single_draw</span>(<span class="ident">target</span>, <span class="ident">signature_locked_outputs</span>.<span class="ident">clone</span>(), <span class="ident">dust_allowance_outputs</span>.<span class="ident">clone</span>());
+        <span class="kw">if</span> <span class="ident">inputs</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">max_inputs</span> {
+            <span class="comment">// Sort inputs so we can get the biggest inputs first and don&#39;t reach the input limit, if we don&#39;t have the</span>
+            <span class="comment">// funds spread over too many outputs</span>
+            <span class="ident">signature_locked_outputs</span>.<span class="ident">sort_by</span>(<span class="op">|</span><span class="ident">a</span>, <span class="ident">b</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">b</span>.<span class="ident">output</span>.<span class="ident">amount</span>.<span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="ident">output</span>.<span class="ident">amount</span>) {
+                <span class="comment">// if the balances are equal, we prioritise change addresses</span>
+                <span class="ident">Ordering::Equal</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">b</span>.<span class="ident">internal</span>.<span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="ident">internal</span>),
+                <span class="ident">Ordering::Greater</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Ordering::Greater</span>,
+                <span class="ident">Ordering::Less</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Ordering::Less</span>,
+            });
+            <span class="ident">dust_allowance_outputs</span>.<span class="ident">sort_by</span>(<span class="op">|</span><span class="ident">a</span>, <span class="ident">b</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">b</span>.<span class="ident">output</span>.<span class="ident">amount</span>.<span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="ident">output</span>.<span class="ident">amount</span>) {
+                <span class="comment">// if the balances are equal, we prioritise change addresses</span>
+                <span class="ident">Ordering::Equal</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">b</span>.<span class="ident">internal</span>.<span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="ident">internal</span>),
+                <span class="ident">Ordering::Greater</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Ordering::Greater</span>,
+                <span class="ident">Ordering::Less</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Ordering::Less</span>,
+            });
+            <span class="comment">// first time the inputs are shuffled, so if we had many outputs it could happen that we selected more than</span>
+            <span class="comment">// max_inputs even if it would be possible with &lt;=</span>
+            <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">single_draw</span>(<span class="ident">target</span>, <span class="ident">signature_locked_outputs</span>, <span class="ident">dust_allowance_outputs</span>);
+            <span class="kw">if</span> <span class="ident">inputs</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">max_inputs</span> {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::Error::ConsolidationRequired</span>(<span class="ident">inputs</span>.<span class="ident">len</span>(), <span class="ident">max_inputs</span>));
+            }
+        }
+        <span class="prelude-val">Ok</span>(<span class="ident">inputs</span>)
     }
 }
 
-<span class="kw">fn</span> <span class="ident">single_random_draw</span>(<span class="ident">target</span>: <span class="ident">u64</span>, <span class="kw-2">mut</span> <span class="ident">available_utxos</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Input</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Input</span><span class="op">&gt;</span> {
-    <span class="ident">available_utxos</span>.<span class="ident">shuffle</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">thread_rng</span>());
+<span class="kw">fn</span> <span class="ident">single_draw</span>(
+    <span class="ident">target</span>: <span class="ident">u64</span>,
+    <span class="ident">available_signature_locked_utxos</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Input</span><span class="op">&gt;</span>,
+    <span class="ident">available_dust_allowance_utxos</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Input</span><span class="op">&gt;</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Input</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sum</span> <span class="op">=</span> <span class="number">0</span>;
 
-    <span class="ident">available_utxos</span>
+    <span class="comment">// Add signature locked outputs first so we don&#39;t use dust allowance outputs when not needed</span>
+    <span class="comment">// and also don&#39;t use dust allowance outputs because we could still have dust</span>
+    <span class="ident">available_signature_locked_utxos</span>
         .<span class="ident">into_iter</span>()
-        .<span class="ident">take_while</span>(<span class="op">|</span><span class="ident">address</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">address</span>.<span class="ident">balance</span>;
+        .<span class="ident">chain</span>(<span class="ident">available_dust_allowance_utxos</span>.<span class="ident">into_iter</span>())
+        .<span class="ident">take_while</span>(<span class="op">|</span><span class="ident">input</span><span class="op">|</span> {
+            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">output</span>.<span class="ident">amount</span>;
             <span class="kw">let</span> <span class="ident">old_sum</span> <span class="op">=</span> <span class="ident">sum</span>;
             <span class="ident">sum</span> <span class="op">+</span><span class="op">=</span> <span class="ident">value</span>;
             <span class="ident">old_sum</span> <span class="op">&lt;</span> <span class="ident">target</span> <span class="op">|</span><span class="op">|</span> (<span class="ident">old_sum</span> <span class="op">-</span> <span class="ident">target</span> <span class="op">&lt;</span> <span class="ident">DUST_ALLOWANCE_VALUE</span> <span class="op">&amp;&amp;</span> <span class="ident">old_sum</span> <span class="op">!</span><span class="op">=</span> <span class="ident">target</span>)
@@ -340,7 +446,7 @@
 
 <span class="kw">fn</span> <span class="ident">branch_and_bound</span>(
     <span class="ident">target</span>: <span class="ident">u64</span>,
-    <span class="ident">available_utxos</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Input</span><span class="op">&gt;</span>,
+    <span class="ident">available_utxos</span>: <span class="kw-2">&amp;</span>[<span class="ident">Input</span>],
     <span class="ident">depth</span>: <span class="ident">usize</span>,
     <span class="ident">current_selection</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Input</span><span class="op">&gt;</span>,
     <span class="ident">effective_value</span>: <span class="ident">u64</span>,
@@ -361,7 +467,7 @@
     <span class="kw-2">*</span><span class="ident">tries</span>.<span class="ident">get_mut</span>() <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
 
     <span class="comment">// Exploring omission and inclusion branch</span>
-    <span class="kw">let</span> <span class="ident">current_utxo_value</span> <span class="op">=</span> <span class="ident">available_utxos</span>[<span class="ident">depth</span>].<span class="ident">balance</span>;
+    <span class="kw">let</span> <span class="ident">current_utxo_value</span> <span class="op">=</span> <span class="ident">available_utxos</span>[<span class="ident">depth</span>].<span class="ident">output</span>.<span class="ident">amount</span>;
     <span class="ident">current_selection</span>.<span class="ident">push</span>(<span class="ident">available_utxos</span>[<span class="ident">depth</span>].<span class="ident">clone</span>());
 
     <span class="kw">if</span> <span class="ident">branch_and_bound</span>(
@@ -391,20 +497,16 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::address</span>::{<span class="ident">AddressBuilder</span>, <span class="ident">AddressOutput</span>, <span class="ident">AddressWrapper</span>, <span class="ident">IotaAddress</span>, <span class="ident">OutputKind</span>};
-    <span class="kw">use</span> <span class="ident">iota_client::bee_message::prelude</span>::{<span class="ident">Ed25519Address</span>, <span class="ident">MessageId</span>, <span class="ident">TransactionId</span>};
+    <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::address</span>::{<span class="ident">AddressOutput</span>, <span class="ident">OutputKind</span>};
+    <span class="kw">use</span> <span class="ident">iota_client::bee_message::prelude</span>::{<span class="ident">MessageId</span>, <span class="ident">TransactionId</span>};
     <span class="kw">use</span> <span class="ident">rand::prelude</span>::{<span class="ident">Rng</span>, <span class="ident">SeedableRng</span>, <span class="ident">SliceRandom</span>, <span class="ident">StdRng</span>};
 
     <span class="kw">fn</span> <span class="ident">generate_random_utxos</span>(<span class="ident">rng</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">StdRng</span>, <span class="ident">utxos_number</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Input</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">available_utxos</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">utxos_number</span> {
-            <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">AddressBuilder::new</span>()
-                .<span class="ident">address</span>(<span class="ident">AddressWrapper::new</span>(
-                    <span class="ident">IotaAddress::Ed25519</span>(<span class="ident">Ed25519Address::new</span>([<span class="number">0</span>; <span class="number">32</span>])),
-                    <span class="string">&quot;iota&quot;</span>.<span class="ident">to_string</span>(),
-                ))
-                .<span class="ident">key_index</span>(<span class="ident">i</span>)
-                .<span class="ident">outputs</span>(<span class="macro">vec!</span>[<span class="ident">AddressOutput</span> {
+        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">utxos_number</span> {
+            <span class="ident">available_utxos</span>.<span class="ident">push</span>(<span class="kw">super</span><span class="ident">::Input</span> {
+                <span class="ident">internal</span>: <span class="bool-val">false</span>,
+                <span class="ident">output</span>: <span class="ident">AddressOutput</span> {
                     <span class="ident">transaction_id</span>: <span class="ident">TransactionId::new</span>([<span class="number">0</span>; <span class="number">32</span>]),
                     <span class="ident">message_id</span>: <span class="ident">MessageId::new</span>([<span class="number">0</span>; <span class="number">32</span>]),
                     <span class="ident">index</span>: <span class="number">0</span>,
@@ -412,13 +514,7 @@
                     <span class="ident">is_spent</span>: <span class="bool-val">false</span>,
                     <span class="ident">address</span>: <span class="kw">crate</span><span class="ident">::test_utils::generate_random_iota_address</span>(),
                     <span class="ident">kind</span>: <span class="ident">OutputKind::SignatureLockedSingle</span>,
-                }])
-                .<span class="ident">build</span>()
-                .<span class="ident">unwrap</span>();
-            <span class="ident">available_utxos</span>.<span class="ident">push</span>(<span class="kw">super</span><span class="ident">::Input</span> {
-                <span class="ident">address</span>: <span class="ident">address</span>.<span class="ident">address</span>().<span class="ident">clone</span>(),
-                <span class="ident">balance</span>: <span class="ident">address</span>.<span class="ident">balance</span>(),
-                <span class="ident">internal</span>: <span class="bool-val">false</span>,
+                },
             });
         }
         <span class="ident">available_utxos</span>
@@ -429,7 +525,7 @@
         <span class="ident">available_utxos</span>.<span class="ident">shuffle</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">thread_rng</span>());
         <span class="ident">available_utxos</span>[..<span class="ident">utxos_picked_len</span>]
             .<span class="ident">iter</span>()
-            .<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">address</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">address</span>.<span class="ident">balance</span>)
+            .<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">input</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">input</span>.<span class="ident">output</span>.<span class="ident">amount</span>)
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
@@ -439,9 +535,9 @@
         <span class="kw">for</span> <span class="ident">_i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">20</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">available_utxos</span> <span class="op">=</span> <span class="ident">generate_random_utxos</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>, <span class="number">25</span>);
             <span class="kw">let</span> <span class="ident">sum_utxos_picked</span> <span class="op">=</span> <span class="ident">sum_random_utxos</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">available_utxos</span>);
-            <span class="kw">let</span> <span class="ident">selected</span> <span class="op">=</span> <span class="ident">select_input</span>(<span class="ident">sum_utxos_picked</span>, <span class="ident">available_utxos</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">selected</span> <span class="op">=</span> <span class="ident">select_input</span>(<span class="ident">sum_utxos_picked</span>, <span class="ident">available_utxos</span>, <span class="number">127</span>).<span class="ident">unwrap</span>();
             <span class="macro">assert_eq!</span>(
-                <span class="ident">selected</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">address</span><span class="op">|</span> { <span class="ident">acc</span> <span class="op">+</span> <span class="ident">address</span>.<span class="ident">balance</span> }),
+                <span class="ident">selected</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">input</span><span class="op">|</span> { <span class="ident">acc</span> <span class="op">+</span> <span class="ident">input</span>.<span class="ident">output</span>.<span class="ident">amount</span> }),
                 <span class="ident">sum_utxos_picked</span>
             );
         }
@@ -453,11 +549,11 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span>: <span class="ident">StdRng</span> <span class="op">=</span> <span class="ident">SeedableRng::from_seed</span>(<span class="ident">seed</span>);
         <span class="kw">for</span> <span class="ident">_i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">20</span> {
             <span class="kw">let</span> <span class="ident">available_utxos</span> <span class="op">=</span> <span class="ident">generate_random_utxos</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>, <span class="number">5</span>);
-            <span class="kw">let</span> <span class="ident">available_balance</span> <span class="op">=</span> <span class="ident">available_utxos</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">address</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">address</span>.<span class="ident">balance</span>);
+            <span class="kw">let</span> <span class="ident">available_balance</span> <span class="op">=</span> <span class="ident">available_utxos</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">input</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">input</span>.<span class="ident">output</span>.<span class="ident">amount</span>);
             <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">available_balance</span> <span class="op">/</span> <span class="number">2</span>;
             <span class="kw">if</span> <span class="ident">available_balance</span> <span class="op">-</span> <span class="ident">target</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">DUST_ALLOWANCE_VALUE</span> {
-                <span class="kw">let</span> <span class="ident">selected</span> <span class="op">=</span> <span class="ident">select_input</span>(<span class="ident">target</span>, <span class="ident">available_utxos</span>).<span class="ident">unwrap</span>();
-                <span class="macro">assert!</span>(<span class="ident">selected</span>.<span class="ident">into_iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">address</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">address</span>.<span class="ident">balance</span>) <span class="op">&gt;</span><span class="op">=</span> <span class="ident">target</span>);
+                <span class="kw">let</span> <span class="ident">selected</span> <span class="op">=</span> <span class="ident">select_input</span>(<span class="ident">target</span>, <span class="ident">available_utxos</span>, <span class="number">127</span>).<span class="ident">unwrap</span>();
+                <span class="macro">assert!</span>(<span class="ident">selected</span>.<span class="ident">into_iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">input</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">input</span>.<span class="ident">output</span>.<span class="ident">amount</span>) <span class="op">&gt;</span><span class="op">=</span> <span class="ident">target</span>);
             }
         }
     }
@@ -467,8 +563,8 @@
         <span class="kw">let</span> <span class="ident">seed</span>: [<span class="ident">u8</span>; <span class="number">32</span>] <span class="op">=</span> [<span class="number">1</span>; <span class="number">32</span>];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span>: <span class="ident">StdRng</span> <span class="op">=</span> <span class="ident">SeedableRng::from_seed</span>(<span class="ident">seed</span>);
         <span class="kw">let</span> <span class="ident">available_utxos</span> <span class="op">=</span> <span class="ident">generate_random_utxos</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>, <span class="number">30</span>);
-        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">available_utxos</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">address</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">address</span>.<span class="ident">balance</span>) <span class="op">+</span> <span class="number">1</span>;
-        <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">select_input</span>(<span class="ident">target</span>, <span class="ident">available_utxos</span>);
+        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">available_utxos</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">input</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">input</span>.<span class="ident">output</span>.<span class="ident">amount</span>) <span class="op">+</span> <span class="number">1</span>;
+        <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">select_input</span>(<span class="ident">target</span>, <span class="ident">available_utxos</span>, <span class="number">127</span>);
         <span class="macro">assert!</span>(<span class="ident">response</span>.<span class="ident">is_err</span>());
     }
 
@@ -478,15 +574,15 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span>: <span class="ident">StdRng</span> <span class="op">=</span> <span class="ident">SeedableRng::from_seed</span>(<span class="ident">seed</span>);
         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">20</span> {
             <span class="kw">let</span> <span class="ident">available_utxos</span> <span class="op">=</span> <span class="ident">generate_random_utxos</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>, <span class="number">30</span>);
-            <span class="kw">let</span> <span class="ident">sum_utxos</span> <span class="op">=</span> <span class="ident">available_utxos</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">address</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">address</span>.<span class="ident">balance</span>);
+            <span class="kw">let</span> <span class="ident">sum_utxos</span> <span class="op">=</span> <span class="ident">available_utxos</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">input</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">input</span>.<span class="ident">output</span>.<span class="ident">amount</span>);
             <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="ident">sum_utxos</span> <span class="op">/</span> <span class="number">2</span>..<span class="ident">sum_utxos</span> <span class="op">*</span> <span class="number">2</span>);
-            <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">select_input</span>(<span class="ident">target</span>, <span class="ident">available_utxos</span>);
+            <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">select_input</span>(<span class="ident">target</span>, <span class="ident">available_utxos</span>, <span class="number">127</span>);
             <span class="kw">if</span> <span class="ident">target</span> <span class="op">&gt;</span> <span class="ident">sum_utxos</span> {
                 <span class="macro">assert!</span>(<span class="ident">response</span>.<span class="ident">is_err</span>());
             } <span class="kw">else</span> {
                 <span class="macro">assert!</span>(<span class="ident">response</span>.<span class="ident">is_ok</span>());
                 <span class="kw">let</span> <span class="ident">selected</span> <span class="op">=</span> <span class="ident">response</span>.<span class="ident">unwrap</span>();
-                <span class="macro">assert!</span>(<span class="ident">selected</span>.<span class="ident">into_iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">address</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">address</span>.<span class="ident">balance</span>) <span class="op">&gt;</span><span class="op">=</span> <span class="ident">target</span>);
+                <span class="macro">assert!</span>(<span class="ident">selected</span>.<span class="ident">into_iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">input</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">input</span>.<span class="ident">output</span>.<span class="ident">amount</span>) <span class="op">&gt;</span><span class="op">=</span> <span class="ident">target</span>);
             }
         }
     }
@@ -497,9 +593,9 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span>: <span class="ident">StdRng</span> <span class="op">=</span> <span class="ident">SeedableRng::from_seed</span>(<span class="ident">seed</span>);
         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">20</span> {
             <span class="kw">let</span> <span class="ident">available_utxos</span> <span class="op">=</span> <span class="ident">generate_random_utxos</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">rng</span>, <span class="number">30</span>);
-            <span class="kw">let</span> <span class="ident">sum_utxos</span> <span class="op">=</span> <span class="ident">available_utxos</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">address</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">address</span>.<span class="ident">balance</span>);
+            <span class="kw">let</span> <span class="ident">sum_utxos</span> <span class="op">=</span> <span class="ident">available_utxos</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">input</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">input</span>.<span class="ident">output</span>.<span class="ident">amount</span>);
             <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="ident">sum_utxos</span> <span class="op">/</span> <span class="number">2</span>..<span class="ident">sum_utxos</span> <span class="op">*</span> <span class="number">2</span>);
-            <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">select_input</span>(<span class="ident">target</span>, <span class="ident">available_utxos</span>);
+            <span class="kw">let</span> <span class="ident">response</span> <span class="op">=</span> <span class="ident">select_input</span>(<span class="ident">target</span>, <span class="ident">available_utxos</span>, <span class="number">127</span>);
 
             <span class="kw">if</span> <span class="ident">target</span> <span class="op">&gt;</span> <span class="ident">sum_utxos</span>
                 <span class="op">|</span><span class="op">|</span> (<span class="ident">target</span> <span class="op">!</span><span class="op">=</span> <span class="ident">sum_utxos</span> <span class="op">&amp;&amp;</span> <span class="ident">target</span> <span class="kw">as</span> <span class="ident">i64</span> <span class="op">&gt;</span> (<span class="ident">sum_utxos</span> <span class="kw">as</span> <span class="ident">i64</span> <span class="op">-</span> <span class="ident">DUST_ALLOWANCE_VALUE</span> <span class="kw">as</span> <span class="ident">i64</span>))
@@ -508,7 +604,7 @@
             } <span class="kw">else</span> {
                 <span class="macro">assert!</span>(<span class="ident">response</span>.<span class="ident">is_ok</span>());
                 <span class="kw">let</span> <span class="ident">selected</span> <span class="op">=</span> <span class="ident">response</span>.<span class="ident">unwrap</span>();
-                <span class="kw">let</span> <span class="ident">selected_balance</span> <span class="op">=</span> <span class="ident">selected</span>.<span class="ident">into_iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">address</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">address</span>.<span class="ident">balance</span>);
+                <span class="kw">let</span> <span class="ident">selected_balance</span> <span class="op">=</span> <span class="ident">selected</span>.<span class="ident">into_iter</span>().<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">input</span><span class="op">|</span> <span class="ident">acc</span> <span class="op">+</span> <span class="ident">input</span>.<span class="ident">output</span>.<span class="ident">amount</span>);
                 <span class="macro">assert!</span>(<span class="ident">selected_balance</span> <span class="op">=</span><span class="op">=</span> <span class="ident">target</span> <span class="op">|</span><span class="op">|</span> <span class="ident">selected_balance</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">target</span> <span class="op">+</span> <span class="ident">DUST_ALLOWANCE_VALUE</span>);
             }
         }

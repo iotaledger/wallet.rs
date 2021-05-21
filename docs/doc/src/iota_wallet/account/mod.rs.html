@@ -1495,7 +1495,7 @@
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">account_manager</span>::{<span class="ident">AccountOptions</span>, <span class="ident">AccountStore</span>},
-    <span class="ident">address</span>::{<span class="ident">Address</span>, <span class="ident">AddressBuilder</span>, <span class="ident">AddressWrapper</span>},
+    <span class="ident">address</span>::{<span class="ident">Address</span>, <span class="ident">AddressBuilder</span>, <span class="ident">AddressOutput</span>, <span class="ident">AddressWrapper</span>},
     <span class="ident">client</span>::{<span class="ident">ClientOptions</span>, <span class="ident">Node</span>},
     <span class="ident">event::TransferProgressType</span>,
     <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessagePayload</span>, <span class="ident">MessageType</span>, <span class="ident">TransactionEssence</span>, <span class="ident">Transfer</span>},
@@ -1912,7 +1912,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AccountHandle</span> {
     <span class="ident">inner</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">accounts</span>: <span class="ident">AccountStore</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">locked_addresses</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressWrapper</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">locked_outputs</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressOutput</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">account_options</span>: <span class="ident">AccountOptions</span>,
     <span class="ident">is_mqtt_enabled</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">change_addresses_to_sync</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">AddressWrapper</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -1929,7 +1929,7 @@
         <span class="self">Self</span> {
             <span class="ident">inner</span>: <span class="ident">Arc::new</span>(<span class="ident">RwLock::new</span>(<span class="ident">account</span>)),
             <span class="ident">accounts</span>,
-            <span class="ident">locked_addresses</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">locked_outputs</span>: <span class="ident">Default::default</span>(),
             <span class="ident">account_options</span>,
             <span class="ident">is_mqtt_enabled</span>: <span class="ident">Arc::new</span>(<span class="ident">AtomicBool::new</span>(<span class="bool-val">true</span>)),
             <span class="ident">change_addresses_to_sync</span>: <span class="ident">Default::default</span>(),

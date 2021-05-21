@@ -198,7 +198,7 @@
 </ul>
 <h2 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h2>
 <p>It is a recommended approach to start your interactions with IOTA on a <code>testnet</code> network.  API load balancer: api.lb-0.testnet.chrysalis2.com</p>
-<p>Network explorer is available at <a href="https://explorer.iota.org/chrysalis">IOTA Tangle Explorer</a>.</p>
+<p>Network explorer is available at <a href="https://explorer.iota.org/testnet">IOTA Tangle Explorer</a>.</p>
 <p>In order to properly test value-based transactions on testnet network, you are going to need some tokens! You can get some testnet tokens using the <a href="https://faucet.testnet.chrysalis2.com/">faucet</a>.</p>
 <h2 id="the-library-in-a-nutshell"><a class="header" href="#the-library-in-a-nutshell">The library in a nutshell</a></h2>
 <p>In the <code>wallet.rs</code>, we use an account model, so you can create an account for each of your users. The other approach would be to use one account and generate many addresses, which you can link to your users in your database. The library allows users to assign a meaningful alias to each account. It also leaves the choice to users if they want to segregate their funds across multiple accounts or multiple addresses. So basically it is up to a developer to decide whether <code>single-account approach</code> or <code>multi-account approach</code> is chosen. The library provides a support to any of the scenarios.</p>
@@ -1563,7 +1563,7 @@ Balance per individual addresses:
   'internal': False,
   'outputs': []}]
 </code></pre>
-<p>In the detailed view per individual addresses, there is also <code>outputs</code> section that indicates transaction(s) (also known as <code>wallet message(s)</code>) &quot;responsible&quot; for the current amount. The amount can be also double checked using <a href="https://explorer.iota.org/chrysalis/addr/atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg">Tangle Explorer</a>.</p>
+<p>In the detailed view per individual addresses, there is also <code>outputs</code> section that indicates transaction(s) (also known as <code>wallet message(s)</code>) &quot;responsible&quot; for the current amount. The amount can be also double checked using <a href="https://explorer.iota.org/testnet/addr/atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg">Tangle Explorer</a>.</p>
 <p>IOTA is based on <code>Unspent Transaction Output</code> model which is explained at <a href="https://chrysalis.docs.iota.org/guides/dev_guide.html#unspent-transaction-output-utxo">Developer guide to Chrysalis</a>.</p>
 <h2 id="sending-tokens-1"><a class="header" href="#sending-tokens-1">Sending tokens</a></h2>
 <p>The process of sending tokens via <code>wallet.rs</code> can be described as follows:</p>
@@ -1653,7 +1653,7 @@ print(
 </code></pre>
 <p>It is a <code>wallet message</code> that fully describes the given transaction.</p>
 <p>Please, kindly get yourself familiar with a concept of <a href="https://chrysalis.docs.iota.org/guides/dev_guide.html#unspent-transaction-output-utxo">UTXO</a> to understand all aspects of messages.</p>
-<p>The given message can be double checked via Tangle Explorer using <code>node_response['id']</code> field (<a href="https://explorer.iota.org/chrysalis/message/9d3c401d59b0a87f6fbaa58582bb71e1858d63336421ccbae834821d9be113d3">Tangle Explorer</a>).</p>
+<p>The given message can be double checked via Tangle Explorer using <code>node_response['id']</code> field (<a href="https://explorer.iota.org/testnet/message/9d3c401d59b0a87f6fbaa58582bb71e1858d63336421ccbae834821d9be113d3">Tangle Explorer</a>).</p>
 <p>Needless to say, if <code>remainder_value_strategy</code> == <code>ChangeAddress</code> is used, the given message transfer tokens to target address as well as new <code>internal</code> address within the given account (<code>internal=True</code>). </p>
 <p>Messages and payloads are described at <a href="https://chrysalis.docs.iota.org/guides/dev_guide.html#messages-payloads-and-transactions">Developer guide to Chrysalis</a>.</p>
 <h3 id="reattachments"><a class="header" href="#reattachments">Reattachments</a></h3>
@@ -3828,8 +3828,8 @@ There are several scenarios in which an account can be initialised:</p>
   </tr>
 </table>
 <h4 id="select_inputs"><a class="header" href="#select_inputs">select_inputs()</a></h4>
-<p>Selects input addresses for funds transfer.</p>
-<p>Note: This method should only be used internally by <a href="specs/index.html#send">send()</a>. Also, the input selection method should ensure that the recipient address doesn’t match any of the selected inputs or the remainder address. </p>
+<p>Selects inputs for funds transfer.</p>
+<p>Note: This method should only be used internally by <a href="specs/index.html#send">send()</a>. Also, the input selection method should ensure that the recipient address doesn’t match the remainder address. </p>
 <p>See <a href="specs/index.html#input-selection">Input Selection Process</a> for implementation details.</p>
 <table>
   <tr>
