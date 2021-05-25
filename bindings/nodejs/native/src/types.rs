@@ -80,10 +80,32 @@ impl From<ClientOptionsDto> for ClientOptions {
             .unwrap()
             .with_local_pow(options.local_pow);
         if let Some(primary_node) = options.primary_node {
-            client_builder = client_builder.with_primary_node(primary_node);
+            let node: Node = primary_node.into();
+            if let Some(auth) = node.auth {
+                client_builder = client_builder
+                    .with_primary_node_auth(
+                        node.url.as_str(),
+                        auth.jwt.as_deref(),
+                        auth.basic_auth_name_pwd.as_ref().map(|(ref x, ref y)| (&x[..], &y[..])),
+                    )
+                    .unwrap();
+            } else {
+                client_builder = client_builder.with_primary_node(node.url.as_str()).unwrap();
+            }
         }
         if let Some(primary_pow_node) = options.primary_pow_node {
-            client_builder = client_builder.with_primary_pow_node(primary_pow_node);
+            let node: Node = primary_pow_node.into();
+            if let Some(auth) = node.auth {
+                client_builder = client_builder
+                    .with_primary_pow_node_auth(
+                        node.url.as_str(),
+                        auth.jwt.as_deref(),
+                        auth.basic_auth_name_pwd.as_ref().map(|(ref x, ref y)| (&x[..], &y[..])),
+                    )
+                    .unwrap();
+            } else {
+                client_builder = client_builder.with_primary_pow_node(node.url.as_str()).unwrap();
+            }
         }
         let mut nodes = options.nodes;
         if let Some(node) = options.node {
