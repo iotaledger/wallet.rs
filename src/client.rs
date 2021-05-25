@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use getset::Getters;
-use iota_client::{Client, ClientBuilder};
+use iota_client::{node_manager::validate_url, Client, ClientBuilder};
 use once_cell::sync::Lazy;
 use serde::{de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
 use tokio::sync::{Mutex, RwLock};
@@ -134,11 +134,18 @@ fn convert_urls(urls: &[&str]) -> crate::Result<Vec<Url>> {
     let mut err = None;
     let urls: Vec<Option<Url>> = urls
         .iter()
-        .map(|node| {
-            Url::parse(node).map(Some).unwrap_or_else(|e| {
-                err.replace(e);
+        .map(|node| match Url::parse(node) {
+            Ok(url) => match validate_url(url) {
+                Ok(url) => Some(url),
+                Err(e) => {
+                    err.replace(e);
+                    None
+                }
+            },
+            Err(e) => {
+                err.replace(e.into());
                 None
-            })
+            }
         })
         .collect();
 
@@ -176,7 +183,7 @@ impl ClientOptionsBuilder {
 
     /// Sets the primary node.
     pub fn with_primary_node(mut self, node: &str) -> crate::Result<Self> {
-        self.primary_node.replace(Url::parse(node)?.into());
+        self.primary_node.replace(validate_url(Url::parse(node)?)?.into());
         Ok(self)
     }
 
@@ -188,7 +195,7 @@ impl ClientOptionsBuilder {
         basic_auth_name_pwd: Option<(&str, &str)>,
     ) -> crate::Result<Self> {
         self.primary_node.replace(Node {
-            url: Url::parse(node)?,
+            url: validate_url(Url::parse(node)?)?,
             auth: NodeAuth {
                 jwt: jwt.map(|r| r.to_string()),
                 basic_auth_name_pwd: basic_auth_name_pwd.map(|(l, r)| (l.to_string(), r.to_string())),
@@ -221,7 +228,7 @@ impl ClientOptionsBuilder {
 
     /// Adds a node to the node list.
     pub fn with_node(mut self, node: &str) -> crate::Result<Self> {
-        self.nodes.push(Url::parse(node)?.into());
+        self.nodes.push(validate_url(Url::parse(node)?)?.into());
         Ok(self)
     }
 
@@ -233,7 +240,7 @@ impl ClientOptionsBuilder {
         basic_auth_name_pwd: Option<(&str, &str)>,
     ) -> crate::Result<Self> {
         self.nodes.push(Node {
-            url: Url::parse(node)?,
+            url: validate_url(Url::parse(node)?)?,
             auth: NodeAuth {
                 jwt: jwt.map(|r| r.to_string()),
                 basic_auth_name_pwd: basic_auth_name_pwd.map(|(l, r)| (l.to_string(), r.to_string())),
