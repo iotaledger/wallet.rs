@@ -224,6 +224,8 @@ foreign_class!(class BrokerOptions {
 foreign_class!(class ClientOptionsBuilder {
     self_type ClientOptionsBuilder;
     constructor ClientOptionsBuilder::new() -> ClientOptionsBuilder;
+    fn ClientOptionsBuilder::with_primary_node(&mut self, node: &str) -> ClientOptionsBuilder; alias withPrimaryNode;
+    fn ClientOptionsBuilder::with_primary_pow_node(&mut self, node: &str) -> ClientOptionsBuilder; alias withPrimaryPoWNode;
     fn ClientOptionsBuilder::with_node(&mut self, node: &str) -> ClientOptionsBuilder; alias withNode;
     fn ClientOptionsBuilder::with_node_pool_urls(&mut self, node_pool_urls: Vec<String>) -> ClientOptionsBuilder; alias withNodePoolUrls;
     fn ClientOptionsBuilder::with_network(&mut self, network: String) -> ClientOptionsBuilder; alias withNetwork;
