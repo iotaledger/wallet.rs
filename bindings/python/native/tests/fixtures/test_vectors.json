@@ -1,6 +1,8 @@
 {
     "account_manager": {
         "client_options": {
+            "primary_node": [],
+            "primary_pow_node": [],
             "nodes": [
                 {
                     "url": "https://api.hornet-0.testnet.chrysalis2.com",
@@ -36,6 +38,8 @@
     },
     "account_initialiser": {
         "client_options": {
+            "primary_node": [],
+            "primary_pow_node": [],
             "nodes": [
                 {
                     "url": "https://api.hornet-0.testnet.chrysalis2.com",
@@ -63,6 +67,8 @@
         "alias": "David",
         "updated_alias": "Kevin",
         "client_options": {
+            "primary_node": [],
+            "primary_pow_node": [],
             "nodes": [
                 {
                     "url": "https://api.hornet-0.testnet.chrysalis2.com/",

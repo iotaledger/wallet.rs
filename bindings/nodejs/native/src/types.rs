@@ -79,11 +79,11 @@ impl From<ClientOptionsDto> for ClientOptions {
             )
             .unwrap()
             .with_local_pow(options.local_pow);
-        if let Some(primary_node) = options.primaryNode {
-            options.with_primary_node(primary_node);
+        if let Some(primary_node) = options.primary_node {
+            client_builder = client_builder.with_primary_node(primary_node);
         }
-        if let Some(primary_pow_node) = options.primaryPoWNode {
-            options.with_primary_pow_node(primary_pow_node);
+        if let Some(primary_pow_node) = options.primary_pow_node {
+            client_builder = client_builder.with_primary_pow_node(primary_pow_node);
         }
         let mut nodes = options.nodes;
         if let Some(node) = options.node {
