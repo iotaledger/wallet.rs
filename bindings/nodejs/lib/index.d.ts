@@ -229,6 +229,8 @@ export declare interface ManagerOptions {
   syncSpentOutputs?: boolean
   persistEvents?: boolean
   allowCreateMultipleEmptyAccounts?: boolean
+  pollingInterval?: number
+  skipPolling?: boolean
 }
 
 export declare interface BalanceChangeEvent {

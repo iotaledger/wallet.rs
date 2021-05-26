@@ -150,7 +150,8 @@ impl AccountManagerBuilder {
         self
     }
 
-    pub(crate) fn skip_polling(mut self) -> Self {
+    /// Skip polling
+    pub fn with_skip_polling(mut self) -> Self {
         self.skip_polling = true;
         self
     }
@@ -944,7 +945,7 @@ impl AccountManager {
             let mut manager = Self::builder()
                 .with_storage(&self.storage_folder, None)
                 .unwrap() // safe to unwrap - password is None
-                .skip_polling()
+                .with_skip_polling()
                 .with_stronghold_storage()
                 .finish()
                 .await?;
@@ -1023,7 +1024,7 @@ impl AccountManager {
                     .to_str()
                     .ok_or(crate::Error::InvalidBackupFile)?,
             ) // safe to unwrap since we checked the path
-            .skip_polling()
+            .with_skip_polling()
             .with_stronghold_storage()
             .finish()
             .await?;
