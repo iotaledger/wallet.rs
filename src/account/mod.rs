@@ -311,7 +311,8 @@ impl AccountInitialiser {
                     0,
                     false,
                     bech32_hrp,
-                    GenerateAddressMetadata { syncing: false },
+                    // We set it to syncing: true so it will not be shown on the ledger
+                    GenerateAddressMetadata { syncing: true },
                 )
                 .await?;
 
