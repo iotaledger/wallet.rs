@@ -595,7 +595,6 @@ async fn perform_sync(
                     options,
                 )
                 .await?;
-                drop(account);
                 let mut found_addresses = found_public_addresses;
                 found_addresses.extend(found_change_addresses);
                 messages.extend(synced_messages);
