@@ -45,7 +45,7 @@ use tokio::{
         broadcast::{channel as broadcast_channel, Receiver as BroadcastReceiver, Sender as BroadcastSender},
         Mutex, RwLock,
     },
-    time::interval,
+    time::sleep,
 };
 use zeroize::Zeroize;
 
@@ -745,13 +745,11 @@ impl AccountManager {
                 .build()
                 .unwrap();
             runtime.block_on(async {
-                let mut interval = interval(polling_interval);
                 let mut synced = false;
                 let mut discovered_accounts = false;
                 loop {
                     tokio::select! {
                         _ = async {
-                            interval.tick().await;
 
                             let storage_file_path_ = storage_file_path.clone();
                             let account_options = account_options;
@@ -774,6 +772,8 @@ impl AccountManager {
                                                 }
                                                 synced = response.synced_accounts_len > 0;
                                             }
+                                            // wait polling_interval so it doesn't start syncing immediately again
+                                            sleep(polling_interval).await;
                                         }
                                         Err(error) => {
                                             // if the error isn't a crate::Error type
@@ -788,6 +788,8 @@ impl AccountManager {
                                                 log::error!("[POLLING] error: {}", msg);
                                                 let _error = crate::Error::Panic(msg);
                                                 // when the error is dropped, the on_error event will be triggered
+                                                // wait polling_interval so it doesn't start syncing immediately again
+                                                sleep(polling_interval).await;
                                             }
                                         }
                                     }
