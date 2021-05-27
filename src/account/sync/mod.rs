@@ -44,6 +44,7 @@ const DUST_ALLOWANCE_VALUE: u64 = 1_000_000;
 const DEFAULT_GAP_LIMIT: usize = 10;
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 const LEDGER_MAX_IN_OUTPUTS: usize = 17;
+const SYNC_CHUNK_SIZE: usize = 500;
 
 #[derive(Debug, Clone)]
 pub(crate) struct SyncedMessage {
@@ -239,38 +240,50 @@ async fn sync_address_list(
     options: AccountOptions,
     client_options: ClientOptions,
 ) -> crate::Result<(Vec<Address>, Vec<SyncedMessage>)> {
-    let mut tasks = Vec::new();
-    for mut address in addresses {
-        let account_messages = account_messages.clone();
-        let mut outputs = address.outputs().clone();
-        let client_options = client_options.clone();
-        tasks.push(async move {
-            tokio::spawn(async move {
-                let messages = sync_address(
-                    account_messages,
-                    &client_options,
-                    &mut outputs,
-                    address.address().clone(),
-                    address.address().bech32_hrp.clone(),
-                    options,
-                )
-                .await?;
-                address.set_outputs(outputs);
-                crate::Result::Ok((messages, address))
-            })
-            .await
-        });
-    }
     let mut found_addresses = Vec::new();
     let mut found_messages = Vec::new();
-    let results = futures::future::try_join_all(tasks)
-        .await
-        .expect("failed to sync addresses");
-    for res in results {
-        let (messages, address) = res?;
-        found_addresses.push(address);
-        found_messages.extend(messages);
+
+    log::debug!("[SYNC] address_list length: {}", addresses.len());
+
+    // We split the addresses into chunks so we don't get timeouts if we have thousands
+    for addresses_chunk in addresses
+        .chunks(SYNC_CHUNK_SIZE)
+        .map(|x: &[Address]| x.to_vec())
+        .into_iter()
+    {
+        let mut tasks = Vec::new();
+        for address in addresses_chunk {
+            let mut address = address.clone();
+            let account_messages = account_messages.clone();
+            let mut outputs = address.outputs().clone();
+            let client_options = client_options.clone();
+            tasks.push(async move {
+                tokio::spawn(async move {
+                    let messages = sync_address(
+                        account_messages,
+                        &client_options,
+                        &mut outputs,
+                        address.address().clone(),
+                        address.address().bech32_hrp.clone(),
+                        options,
+                    )
+                    .await?;
+                    address.set_outputs(outputs);
+                    crate::Result::Ok((messages, address))
+                })
+                .await
+            });
+        }
+        let results = futures::future::try_join_all(tasks)
+            .await
+            .expect("failed to sync addresses");
+        for res in results {
+            let (messages, address) = res?;
+            found_addresses.push(address);
+            found_messages.extend(messages);
+        }
     }
+
     Ok((found_addresses, found_messages))
 }
 
@@ -403,92 +416,105 @@ async fn sync_messages(
 
     let client = crate::client::get_client(&client_options).await?;
 
-    let mut tasks = Vec::new();
-    for mut address in account.addresses().to_vec() {
-        if skip_addresses.contains(&address)
-            || (*address.internal() && skip_change_addresses && !change_addresses_to_sync.contains(address.address()))
-        {
-            continue;
-        }
-        let client = client.clone();
-        let messages_with_known_confirmation = messages_with_known_confirmation.clone();
-        let mut outputs = account
-            .addresses()
-            .iter()
-            .find(|a| a == &&address)
-            .map(|a| a.outputs().clone())
-            .unwrap_or_default();
-        tasks.push(async move {
-            tokio::spawn(async move {
-                let client = client.read().await;
+    log::debug!("[SYNC] sync_messages for {} addresses", account.addresses().len());
 
-                let address_outputs =
-                    get_address_outputs(address.address().to_bech32(), &client, options.sync_spent_outputs).await?;
-
-                for (output_id, output) in outputs.iter_mut() {
-                    // if we previously had an output that wasn't returned by the node, mark it as spent
-                    if !address_outputs
-                        .iter()
-                        .any(|(utxo_input, _)| utxo_input.output_id() == output_id)
-                    {
-                        output.set_is_spent(true);
-                    }
-                }
-
-                log::debug!(
-                    "[SYNC] syncing messages and outputs for address {}, got {} outputs",
-                    address.address().to_bech32(),
-                    address_outputs.len(),
-                );
-
-                let mut messages = vec![];
-                for (utxo_input, is_spent) in address_outputs.iter() {
-                    let output = match address.outputs().get(utxo_input.output_id()) {
-                        // if we already have the output we don't need to get the info from the node
-                        Some(output) => {
-                            let mut output = output.clone();
-                            output.set_is_spent(*is_spent);
-                            output
-                        }
-                        None => {
-                            let output = client.get_output(utxo_input).await?;
-                            AddressOutput::from_output_response(output, address.address().bech32_hrp().to_string())?
-                        }
-                    };
-
-                    let output_message_id = *output.message_id();
-                    outputs.insert(output.id()?, output);
-
-                    // if we already have the message stored
-                    // and the confirmation state is known
-                    // we skip the `get_message` call
-                    if messages_with_known_confirmation.contains(&output_message_id) {
-                        continue;
-                    }
-
-                    if let Some(message) = get_message(&client, &output_message_id).await? {
-                        messages.push(SyncedMessage {
-                            id: output_message_id,
-                            inner: message,
-                        });
-                    }
-                }
-
-                address.set_outputs(outputs);
-
-                crate::Result::Ok((address, messages))
-            })
-            .await
-        });
-    }
-
-    for res in futures::future::try_join_all(tasks)
-        .await
-        .expect("failed to sync messages")
+    // We split the addresses into chunks so we don't get timeouts if we have thousands
+    for addresses_chunk in account
+        .addresses()
+        .to_vec()
+        .chunks(SYNC_CHUNK_SIZE)
+        .map(|x: &[Address]| x.to_vec())
+        .into_iter()
     {
-        let (address, found_messages) = res?;
-        addresses.push(address);
-        messages.extend(found_messages);
+        let mut tasks = Vec::new();
+        for address in addresses_chunk {
+            let mut address = address.clone();
+            if skip_addresses.contains(&address)
+                || (*address.internal()
+                    && skip_change_addresses
+                    && !change_addresses_to_sync.contains(address.address()))
+            {
+                continue;
+            }
+            let client = client.clone();
+            let messages_with_known_confirmation = messages_with_known_confirmation.clone();
+            let mut outputs = account
+                .addresses()
+                .iter()
+                .find(|a| a == &&address)
+                .map(|a| a.outputs().clone())
+                .unwrap_or_default();
+            tasks.push(async move {
+                tokio::spawn(async move {
+                    let client = client.read().await;
+
+                    let address_outputs =
+                        get_address_outputs(address.address().to_bech32(), &client, options.sync_spent_outputs).await?;
+
+                    for (output_id, output) in outputs.iter_mut() {
+                        // if we previously had an output that wasn't returned by the node, mark it as spent
+                        if !address_outputs
+                            .iter()
+                            .any(|(utxo_input, _)| utxo_input.output_id() == output_id)
+                        {
+                            output.set_is_spent(true);
+                        }
+                    }
+
+                    log::debug!(
+                        "[SYNC] syncing messages and outputs for address {}, got {} outputs",
+                        address.address().to_bech32(),
+                        address_outputs.len(),
+                    );
+
+                    let mut messages = vec![];
+                    for (utxo_input, is_spent) in address_outputs.iter() {
+                        let output = match address.outputs().get(utxo_input.output_id()) {
+                            // if we already have the output we don't need to get the info from the node
+                            Some(output) => {
+                                let mut output = output.clone();
+                                output.set_is_spent(*is_spent);
+                                output
+                            }
+                            None => {
+                                let output = client.get_output(utxo_input).await?;
+                                AddressOutput::from_output_response(output, address.address().bech32_hrp().to_string())?
+                            }
+                        };
+
+                        let output_message_id = *output.message_id();
+                        outputs.insert(output.id()?, output);
+
+                        // if we already have the message stored
+                        // and the confirmation state is known
+                        // we skip the `get_message` call
+                        if messages_with_known_confirmation.contains(&output_message_id) {
+                            continue;
+                        }
+
+                        if let Some(message) = get_message(&client, &output_message_id).await? {
+                            messages.push(SyncedMessage {
+                                id: output_message_id,
+                                inner: message,
+                            });
+                        }
+                    }
+
+                    address.set_outputs(outputs);
+
+                    crate::Result::Ok((address, messages))
+                })
+                .await
+            });
+        }
+        for res in futures::future::try_join_all(tasks)
+            .await
+            .expect("failed to sync messages")
+        {
+            let (address, found_messages) = res?;
+            addresses.push(address);
+            messages.extend(found_messages);
+        }
     }
 
     Ok((addresses, messages))
