@@ -3,7 +3,7 @@
 
 use super::JsAccount;
 use crate::types::ClientOptionsDto;
-use std::{num::NonZeroU64, path::PathBuf, sync::Arc};
+use std::{num::NonZeroU64, path::PathBuf, sync::Arc, time::Duration};
 
 // use iota_client::Address;
 use bee_message::address::Address;
@@ -93,10 +93,19 @@ struct ManagerOptions {
     persist_events: bool,
     #[serde(rename = "allowCreateMultipleEmptyAccounts", default)]
     allow_create_multiple_empty_accounts: bool,
+
+    #[serde(rename = "skipPolling", default = "default_skip_polling")]
+    skip_polling: bool,
+    #[serde(rename = "pollingInterval")]
+    polling_interval: Option<u64>,
 }
 
 fn default_automatic_output_consolidation() -> bool {
     true
+}
+
+fn default_skip_polling() -> bool {
+    false
 }
 
 macro_rules! event_getter {
@@ -182,6 +191,12 @@ declare_types! {
             }
             if options.allow_create_multiple_empty_accounts {
                 manager = manager.with_multiple_empty_accounts();
+            }
+            if options.skip_polling {
+                manager = manager.with_skip_polling();
+            }
+            if let Some(polling_interval) = options.polling_interval {
+                manager = manager.with_polling_interval(Duration::from_secs(polling_interval));
             }
             if let Some(threshold) = options.output_consolidation_threshold {
                 manager = manager.with_output_consolidation_threshold(threshold);

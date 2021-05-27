@@ -46,7 +46,9 @@ Creates a new instance of the AccountManager.
 | [automaticOutputConsolidation]     | <code>boolean</code> | <code>true</code>      | Disables the automatic output consolidation if false                                      |
 | [syncSpentOutputs]                 | <code>boolean</code> | <code>false</code>     | Enables fetching spent output history on account sync                                     |
 | [persistEvents]                    | <code>boolean</code> | <code>false</code>     | Enables event persistence                                                                 |
-| [allowCreateMultipleEmptyAccounts] | <code>boolean</code> | code<false>            | Enables creating accounts with latest account being empty                                 |
+| [allowCreateMultipleEmptyAccounts] | <code>boolean</code> | <code>false</code>     | Enables creating accounts with latest account being empty                                 |
+| [skipPolling]                      | <code>boolean</code> | <code>false</code>     | Enables creating accounts without automatic polling (background syncing)                  |
+| [pollingInterval]                  | <code>number</code>  | <code>30</code>        | Sets the polling interval in seconds                                                      |
 
 #### setStrongholdPassword(password): void
 

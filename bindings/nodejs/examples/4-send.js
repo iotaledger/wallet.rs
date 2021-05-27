@@ -5,7 +5,7 @@
  require('dotenv').config();
 
 async function run() {
-	const { AccountManager } = require('@iota/wallet')
+	const { AccountManager, RemainderValueStrategy } = require('@iota/wallet')
     const manager = new AccountManager({
         storagePath: './alice-database'
     })
@@ -25,7 +25,8 @@ async function run() {
 
 	const node_response = await account.send(
 		addr,
-		amount
+		amount,
+        {remainderValueStrategy: RemainderValueStrategy.reuseAddress()}
     ) 
 
     console.log(`Check your message on https://explorer.iota.org/chrysalis/message/${node_response.id}`)
