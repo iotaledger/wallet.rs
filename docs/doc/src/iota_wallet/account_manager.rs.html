@@ -2358,6 +2358,8 @@
 <span id="2355">2355</span>
 <span id="2356">2356</span>
 <span id="2357">2357</span>
+<span id="2358">2358</span>
+<span id="2359">2359</span>
 </pre><pre class="rust">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2406,7 +2408,7 @@
         <span class="ident">broadcast</span>::{<span class="ident">channel</span> <span class="kw">as</span> <span class="ident">broadcast_channel</span>, <span class="ident">Receiver</span> <span class="kw">as</span> <span class="ident">BroadcastReceiver</span>, <span class="ident">Sender</span> <span class="kw">as</span> <span class="ident">BroadcastSender</span>},
         <span class="ident">Mutex</span>, <span class="ident">RwLock</span>,
     },
-    <span class="ident">time::interval</span>,
+    <span class="ident">time::sleep</span>,
 };
 <span class="kw">use</span> <span class="ident">zeroize::Zeroize</span>;
 
@@ -3106,13 +3108,11 @@
                 .<span class="ident">build</span>()
                 .<span class="ident">unwrap</span>();
             <span class="ident">runtime</span>.<span class="ident">block_on</span>(<span class="kw">async</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">interval</span> <span class="op">=</span> <span class="ident">interval</span>(<span class="ident">polling_interval</span>);
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">synced</span> <span class="op">=</span> <span class="bool-val">false</span>;
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">discovered_accounts</span> <span class="op">=</span> <span class="bool-val">false</span>;
                 <span class="kw">loop</span> {
                     <span class="macro">tokio::select!</span> {
                         <span class="kw">_</span> <span class="op">=</span> <span class="kw">async</span> {
-                            <span class="ident">interval</span>.<span class="ident">tick</span>().<span class="kw">await</span>;
 
                             <span class="kw">let</span> <span class="ident">storage_file_path_</span> <span class="op">=</span> <span class="ident">storage_file_path</span>.<span class="ident">clone</span>();
                             <span class="kw">let</span> <span class="ident">account_options</span> <span class="op">=</span> <span class="ident">account_options</span>;
@@ -3135,6 +3135,8 @@
                                                 }
                                                 <span class="ident">synced</span> <span class="op">=</span> <span class="ident">response</span>.<span class="ident">synced_accounts_len</span> <span class="op">&gt;</span> <span class="number">0</span>;
                                             }
+                                            <span class="comment">// wait polling_interval so it doesn&#39;t start syncing immediately again</span>
+                                            <span class="ident">sleep</span>(<span class="ident">polling_interval</span>).<span class="kw">await</span>;
                                         }
                                         <span class="prelude-val">Err</span>(<span class="ident">error</span>) <span class="op">=</span><span class="op">&gt;</span> {
                                             <span class="comment">// if the error isn&#39;t a crate::Error type</span>
@@ -3149,6 +3151,8 @@
                                                 <span class="macro">log::error!</span>(<span class="string">&quot;[POLLING] error: {}&quot;</span>, <span class="ident">msg</span>);
                                                 <span class="kw">let</span> <span class="ident">_error</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::Error::Panic</span>(<span class="ident">msg</span>);
                                                 <span class="comment">// when the error is dropped, the on_error event will be triggered</span>
+                                                <span class="comment">// wait polling_interval so it doesn&#39;t start syncing immediately again</span>
+                                                <span class="ident">sleep</span>(<span class="ident">polling_interval</span>).<span class="kw">await</span>;
                                             }
                                         }
                                     }
