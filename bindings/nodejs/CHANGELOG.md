@@ -1,5 +1,17 @@
 # Changelog
 
+## \[0.4.1]
+
+- Added optional remainder property in BalanceChangeEvent.
+  - [a8bb9306](https://github.com/iotaledger/wallet.rs/commit/a8bb9306861bb7e965354ce3c94e6de2df5e28fd) add remainder property in BalanceChangeEvent ([#627](https://github.com/iotaledger/wallet.rs/pull/627)) on 2021-05-21
+- Change input selection to not always use all outputs from an address, but only the required ones.
+  - [bc977be6](https://github.com/iotaledger/wallet.rs/commit/bc977be636261bbd1dc0da0d42ce7048343960aa) Change input selection ([#424](https://github.com/iotaledger/wallet.rs/pull/424)) on 2021-05-21
+- Added skipPolling and pollingInterval options to the ManagerOptions.
+  - [58dda772](https://github.com/iotaledger/wallet.rs/commit/58dda7726e2c728a81faff4316c9dd14357c4d44) add skipPolling and pollingInterval options ([#630](https://github.com/iotaledger/wallet.rs/pull/630)) on 2021-05-27
+- Send sync requests in chunks to prevent timeouts, make background sync not blocking the whole time.
+  Changed polling interval to wait after each sync operations, so it doesn't start immediately if the syncing takes longer than the polling interval.
+  - [3b51dd95](https://github.com/iotaledger/wallet.rs/commit/3b51dd95998968867655fe2c4ec44d41aa252178) Improve syncing ([#633](https://github.com/iotaledger/wallet.rs/pull/633)) on 2021-05-27
+
 ## \[0.4.0]
 
 - Websocket is used as default now and new fields are added to the BrokerOptions.
