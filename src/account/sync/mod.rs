@@ -304,7 +304,7 @@ async fn sync_address_list(
 /// Returns a (addresses, messages) tuples representing the address history up to latest unused address,
 /// and the messages associated with the addresses.
 async fn sync_addresses(
-    account: &Account,
+    account_handle: &AccountHandle,
     internal: bool,
     address_index: usize,
     gap_limit: usize,
@@ -315,24 +315,29 @@ async fn sync_addresses(
     let mut generated_addresses = vec![];
     let mut found_messages = vec![];
 
+    let account = account_handle.read().await.clone();
     let bech32_hrp = account.bech32_hrp().clone();
+    drop(account);
 
     loop {
         let mut address_generation_locked = false;
         let mut generated_iota_addresses = vec![]; // collection of (address_index, address) pairs
         for i in address_index..(address_index + gap_limit) {
             // generate addresses
+            let account = account_handle.read().await.clone();
             if let Some(address) = get_address_for_sync(&account, bech32_hrp.to_string(), i, internal).await? {
                 generated_iota_addresses.push((i, address));
             } else {
                 address_generation_locked = true;
                 break;
             }
+            drop(account);
         }
 
         let mut curr_generated_addresses = vec![];
         let mut curr_found_messages = vec![];
 
+        let account = account_handle.read().await.clone();
         let account_addresses: Vec<(AddressWrapper, HashMap<OutputId, AddressOutput>)> = account
             .addresses()
             .iter()
@@ -342,6 +347,7 @@ async fn sync_addresses(
             .with_messages(|messages| messages.iter().map(|m| (m.key, m.confirmed)).collect())
             .await;
         let client_options = account.client_options().clone();
+        drop(account);
 
         let mut addresses_to_sync = Vec::new();
         for (iota_address_index, iota_address) in generated_iota_addresses.to_vec() {
@@ -393,13 +399,15 @@ async fn sync_addresses(
 /// Syncs messages with the tangle.
 /// The method should ensures that the wallet local state has messages associated with the address history.
 async fn sync_messages(
-    account: &Account,
+    account_handle: &AccountHandle,
     skip_addresses: &[Address],
     options: AccountOptions,
     skip_change_addresses: bool,
     change_addresses_to_sync: HashSet<AddressWrapper>,
 ) -> crate::Result<(Vec<Address>, Vec<SyncedMessage>)> {
     let mut messages = vec![];
+
+    let account = account_handle.read().await.clone();
     let client_options = account.client_options().clone();
 
     let messages_with_known_confirmation: Vec<MessageId> = account
@@ -419,8 +427,9 @@ async fn sync_messages(
     log::debug!("[SYNC] sync_messages for {} addresses", account.addresses().len());
 
     // We split the addresses into chunks so we don't get timeouts if we have thousands
-    for addresses_chunk in account
-        .addresses()
+    let account_ddresses = account.addresses().clone();
+    drop(account);
+    for addresses_chunk in account_ddresses
         .to_vec()
         .chunks(SYNC_CHUNK_SIZE)
         .map(|x: &[Address]| x.to_vec())
@@ -438,8 +447,7 @@ async fn sync_messages(
             }
             let client = client.clone();
             let messages_with_known_confirmation = messages_with_known_confirmation.clone();
-            let mut outputs = account
-                .addresses()
+            let mut outputs = account_ddresses
                 .iter()
                 .find(|a| a == &&address)
                 .map(|a| a.outputs().clone())
@@ -447,7 +455,6 @@ async fn sync_messages(
             tasks.push(async move {
                 tokio::spawn(async move {
                     let client = client.read().await;
-
                     let address_outputs =
                         get_address_outputs(address.address().to_bech32(), &client, options.sync_spent_outputs).await?;
 
@@ -521,7 +528,7 @@ async fn sync_messages(
 }
 
 async fn perform_sync(
-    account: Account,
+    account_handle: AccountHandle,
     address_index: usize,
     gap_limit: usize,
     skip_change_addresses: bool,
@@ -544,6 +551,7 @@ async fn perform_sync(
                     "[SYNC] syncing specific addresses: {:?}",
                     addresses.iter().map(|a| a.to_bech32()).collect::<Vec<String>>()
                 );
+                let account = account_handle.read().await.clone();
                 let account_messages: Vec<(MessageId, Option<bool>)> = account
                     .with_messages(|messages| messages.iter().map(|m| (m.key, m.confirmed)).collect())
                     .await;
@@ -560,18 +568,20 @@ async fn perform_sync(
                         .build()?;
                     addresses_to_sync.push(address);
                 }
+                drop(account);
                 sync_address_list(
                     addresses_to_sync,
                     account_messages,
                     options,
-                    account.client_options().clone(),
+                    account_handle.read().await.clone().client_options().clone(),
                 )
                 .await?
             } else {
                 let (found_public_addresses, mut messages) =
-                    sync_addresses(&account, false, address_index, gap_limit, options).await?;
+                    sync_addresses(&account_handle, false, address_index, gap_limit, options).await?;
+                let account = account_handle.read().await.clone();
                 let (found_change_addresses, synced_messages) = sync_addresses(
-                    &account,
+                    &account_handle,
                     true,
                     account
                         .addresses()
@@ -585,6 +595,7 @@ async fn perform_sync(
                     options,
                 )
                 .await?;
+                drop(account);
                 let mut found_addresses = found_public_addresses;
                 found_addresses.extend(found_change_addresses);
                 messages.extend(synced_messages);
@@ -597,6 +608,7 @@ async fn perform_sync(
         (Vec::new(), Vec::new())
     };
 
+    let account = account_handle.read().await.clone();
     let mut new_messages = vec![];
     for found_message in found_messages {
         let message_exists = account
@@ -609,7 +621,7 @@ async fn perform_sync(
 
     if steps.contains(&AccountSynchronizeStep::SyncMessages) {
         let (synced_addresses, synced_messages) = sync_messages(
-            &account,
+            &account_handle,
             &found_addresses,
             options,
             skip_change_addresses,
@@ -878,7 +890,7 @@ impl AccountSynchronizer {
     pub(crate) async fn get_new_history(&self) -> crate::Result<SyncedAccountData> {
         let change_addresses_to_sync = self.account_handle.change_addresses_to_sync.lock().await.clone();
         perform_sync(
-            self.account_handle.read().await.clone(),
+            self.account_handle.clone(),
             self.address_index,
             self.gap_limit,
             self.skip_change_addresses,
