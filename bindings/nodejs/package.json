@@ -1,6 +1,6 @@
 {
   "name": "@iota/wallet",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Node.js binding to the wallet library",
   "main": "lib/index.js",
   "repository": {
