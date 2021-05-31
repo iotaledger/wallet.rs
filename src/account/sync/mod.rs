@@ -1733,7 +1733,8 @@ async fn perform_transfer(
                 "latest address equals the remainder value deposit address"
             }
         );
-        let addr = crate::address::get_new_address(&account_, GenerateAddressMetadata { syncing: false }).await?;
+        // We set it to syncing: true so it will not be shown on the ledger
+        let addr = crate::address::get_new_address(&account_, GenerateAddressMetadata { syncing: true }).await?;
         addresses_to_watch.push(addr.address().clone());
         account_.append_addresses(vec![addr]);
     }
