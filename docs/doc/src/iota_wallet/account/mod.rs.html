@@ -1489,6 +1489,7 @@
 <span id="1486">1486</span>
 <span id="1487">1487</span>
 <span id="1488">1488</span>
+<span id="1489">1489</span>
 </pre><pre class="rust">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1803,7 +1804,8 @@
                     <span class="number">0</span>,
                     <span class="bool-val">false</span>,
                     <span class="ident">bech32_hrp</span>,
-                    <span class="ident">GenerateAddressMetadata</span> { <span class="ident">syncing</span>: <span class="bool-val">false</span> },
+                    <span class="comment">// We set it to syncing: true so it will not be shown on the ledger</span>
+                    <span class="ident">GenerateAddressMetadata</span> { <span class="ident">syncing</span>: <span class="bool-val">true</span> },
                 )
                 .<span class="kw">await</span><span class="question-mark">?</span>;
 
