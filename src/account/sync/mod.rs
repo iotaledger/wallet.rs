@@ -461,8 +461,7 @@ async fn sync_messages(
                         .iter()
                         .map(|(_, o)| o.is_spent)
                         .filter(|is_spent| !is_spent)
-                        .collect::<Vec<bool>>()
-                        .len();
+                        .count();
 
                     log::debug!(
                         "[SYNC] syncing messages and outputs for address {} index: {}, got balance: {}, known unspent outputs: {}",
