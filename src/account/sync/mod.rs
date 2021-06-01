@@ -279,7 +279,9 @@ async fn sync_address_list(
             .expect("failed to sync addresses");
         for res in results {
             let (messages, address) = res?;
-            found_addresses.push(address);
+            if !address.outputs().is_empty() {
+                found_addresses.push(address);
+            }
             found_messages.extend(messages);
         }
     }
@@ -427,9 +429,9 @@ async fn sync_messages(
     log::debug!("[SYNC] sync_messages for {} addresses", account.addresses().len());
 
     // We split the addresses into chunks so we don't get timeouts if we have thousands
-    let account_ddresses = account.addresses().clone();
+    let account_addresses = account.addresses().clone();
     drop(account);
-    for addresses_chunk in account_ddresses
+    for addresses_chunk in account_addresses
         .to_vec()
         .chunks(SYNC_CHUNK_SIZE)
         .map(|x: &[Address]| x.to_vec())
@@ -447,14 +449,33 @@ async fn sync_messages(
             }
             let client = client.clone();
             let messages_with_known_confirmation = messages_with_known_confirmation.clone();
-            let mut outputs = account_ddresses
-                .iter()
-                .find(|a| a == &&address)
-                .map(|a| a.outputs().clone())
-                .unwrap_or_default();
+            let mut outputs = address.outputs.clone();
+
             tasks.push(async move {
-                tokio::spawn(async move {
+                    tokio::spawn(async move {
                     let client = client.read().await;
+                    // get address balance first, because it's faster than the outputs endpoint
+                    let address_balance = client.get_address().balance(&address.address().to_bech32()).await?;
+                    let unspent_output_amount = address
+                        .outputs()
+                        .iter()
+                        .map(|(_, o)| o.is_spent)
+                        .filter(|is_spent| !is_spent)
+                        .collect::<Vec<bool>>()
+                        .len();
+
+                    log::debug!(
+                        "[SYNC] syncing messages and outputs for address {} index: {}, got balance: {}, known unspent outputs: {}",
+                        address.address().to_bech32(),
+                        address.key_index(),
+                        address_balance.balance,
+                        unspent_output_amount
+                    );
+                    // return early if the address has no balance and we don't have any unspent outputs
+                    if address_balance.balance == 0 && unspent_output_amount == 0 {
+                        return crate::Result::Ok((address, vec![]));
+                    }
+
                     let address_outputs =
                         get_address_outputs(address.address().to_bech32(), &client, options.sync_spent_outputs).await?;
 
@@ -519,7 +540,9 @@ async fn sync_messages(
             .expect("failed to sync messages")
         {
             let (address, found_messages) = res?;
-            addresses.push(address);
+            if !address.outputs().is_empty() {
+                addresses.push(address);
+            }
             messages.extend(found_messages);
         }
     }
@@ -963,6 +986,7 @@ impl AccountSynchronizer {
     /// associated with an account is fetched from the tangle and is stored locally.
     pub async fn execute(self) -> crate::Result<SyncedAccount> {
         self.account_handle.disable_mqtt();
+        let syc_start_time = std::time::Instant::now();
         let return_value = match self.get_new_history().await {
             Ok(data) => {
                 let is_empty = data
@@ -1042,28 +1066,17 @@ impl AccountSynchronizer {
 
                 let mut updated_messages = new_messages;
                 updated_messages.extend(confirmation_changed_messages);
+
                 let synced_account = SyncedAccount {
                     id: account.id().to_string(),
                     index: *account.index(),
                     account_handle: self.account_handle.clone(),
                     deposit_address: account.latest_address().clone(),
                     is_empty,
-                    addresses: account
-                        .addresses()
-                        .iter()
-                        .filter(|a| {
-                            match addresses_before_sync
-                                .iter()
-                                .find(|(addr, _, _)| addr == &a.address().to_bech32())
-                            {
-                                Some((_, balance, outputs)) => *balance != a.balance() || outputs != a.outputs(),
-                                None => true,
-                            }
-                        })
-                        .cloned()
-                        .collect(),
+                    addresses: new_addresses,
                     messages: updated_messages,
                 };
+                log::debug!("[SYNC] syncing took: {:.2?}", syc_start_time.elapsed());
                 Ok(synced_account)
             }
             Err(e) => Err(e),
