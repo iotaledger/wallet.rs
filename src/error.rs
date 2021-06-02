@@ -165,9 +165,12 @@ pub enum Error {
     /// Account alias must be unique.
     #[error("can't create account: account alias already exists")]
     AccountAliasAlreadyExists,
-    /// Dust error, for example not enough balance on an address.
+    /// Dust error, for example no dust allowance ouptut on an address.
     #[error("Dust error: {0}")]
     DustError(String),
+    /// Leaving dust error, for example sending 2.5 from 3 Mi, would leave 0.5 (dust) behind.
+    #[error("Leaving dust error: {0}")]
+    LeavingDustError(String),
     /// Invalid output kind.
     #[error("invalid output kind: {0}")]
     InvalidOutputKind(String),
@@ -330,6 +333,7 @@ impl serde::Serialize for Error {
             Self::LedgerEssenceTooLarge => serialize_variant(self, serializer, "LedgerEssenceTooLarge"),
             Self::AccountAliasAlreadyExists => serialize_variant(self, serializer, "AccountAliasAlreadyExists"),
             Self::DustError(_) => serialize_variant(self, serializer, "DustError"),
+            Self::LeavingDustError(_) => serialize_variant(self, serializer, "LeavingDustError"),
             Self::InvalidOutputKind(_) => serialize_variant(self, serializer, "InvalidOutputKind"),
             Self::NodesNotSynced(_) => serialize_variant(self, serializer, "NodesNotSynced"),
             Self::FailedToGetRemainder => serialize_variant(self, serializer, "FailedToGetRemainder"),

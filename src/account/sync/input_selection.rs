@@ -41,7 +41,7 @@ pub fn select_input(target: u64, available_utxos: Vec<Input>, max_inputs: usize)
 
     // Not insufficient funds, but still not possible to create this transaction because it would create dust
     if target != total_available_balance && total_available_balance - target < DUST_ALLOWANCE_VALUE {
-        return Err(crate::Error::DustError(format!(
+        return Err(crate::Error::LeavingDustError(format!(
             "Transaction would leave dust behind ({}i)",
             total_available_balance - target
         )));
