@@ -350,6 +350,10 @@
 <span id="347">347</span>
 <span id="348">348</span>
 <span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
 </pre><pre class="rust">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -518,9 +522,12 @@
     <span class="doccomment">/// Account alias must be unique.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;can&#39;t create account: account alias already exists&quot;</span>)]</span>
     <span class="ident">AccountAliasAlreadyExists</span>,
-    <span class="doccomment">/// Dust error, for example not enough balance on an address.</span>
+    <span class="doccomment">/// Dust error, for example no dust allowance ouptut on an address.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Dust error: {0}&quot;</span>)]</span>
     <span class="ident">DustError</span>(<span class="ident">String</span>),
+    <span class="doccomment">/// Leaving dust error, for example sending 2.5 from 3 Mi, would leave 0.5 (dust) behind.</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Leaving dust error: {0}&quot;</span>)]</span>
+    <span class="ident">LeavingDustError</span>(<span class="ident">String</span>),
     <span class="doccomment">/// Invalid output kind.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;invalid output kind: {0}&quot;</span>)]</span>
     <span class="ident">InvalidOutputKind</span>(<span class="ident">String</span>),
@@ -683,6 +690,7 @@
             <span class="self">Self</span><span class="ident">::LedgerEssenceTooLarge</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;LedgerEssenceTooLarge&quot;</span>),
             <span class="self">Self</span><span class="ident">::AccountAliasAlreadyExists</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;AccountAliasAlreadyExists&quot;</span>),
             <span class="self">Self</span><span class="ident">::DustError</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;DustError&quot;</span>),
+            <span class="self">Self</span><span class="ident">::LeavingDustError</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;LeavingDustError&quot;</span>),
             <span class="self">Self</span><span class="ident">::InvalidOutputKind</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;InvalidOutputKind&quot;</span>),
             <span class="self">Self</span><span class="ident">::NodesNotSynced</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;NodesNotSynced&quot;</span>),
             <span class="self">Self</span><span class="ident">::FailedToGetRemainder</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;FailedToGetRemainder&quot;</span>),
