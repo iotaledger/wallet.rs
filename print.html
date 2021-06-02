@@ -1942,6 +1942,12 @@ print('All work completed')
 <div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="api-reference-2"><a class="header" href="#api-reference-2">API Reference</a></h1>
 <p>Note that in the following APIs, the corresponding exception will be returned if an error occurs.
 Also for all the optional values, the default values are the same as the ones in the Rust version.</p>
+<h3 id="init_loggerconfig"><a class="header" href="#init_loggerconfig">init_logger(config)</a></h3>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>config</td><td><code>str</code></td><td><code>undefined</code></td><td>The logger configuration</td></tr>
+</tbody></table>
+<p>The config is the dumped string from the JSON, which key/value pairs are from the <a href="https://github.com/iotaledger/bee/blob/dev/bee-common/bee-common/src/logger/config.rs">bee logger</a>.</p>
+<p>Please check the <code>example/logger_example.py</code> to see how to use it.</p>
 <h3 id="accountmanager-1"><a class="header" href="#accountmanager-1">AccountManager</a></h3>
 <h4 id="constructorstorage_path-optional-password-optional-polling_interval-optional-automatic_output_consolidationoptional-output_consolidation_thresholdoptional-sync_spent_outputsoptional-persist_eventsoptional-a-hreflibrariespythonapi_referencehtmlaccountmanageraccountmanagera"><a class="header" href="#constructorstorage_path-optional-password-optional-polling_interval-optional-automatic_output_consolidationoptional-output_consolidation_thresholdoptional-sync_spent_outputsoptional-persist_eventsoptional-a-hreflibrariespythonapi_referencehtmlaccountmanageraccountmanagera">constructor(storage_path (optional), password (optional), polling_interval (optional), automatic_output_consolidation(optional), output_consolidation_threshold(optional), sync_spent_outputs(optional), persist_events(optional)): <a href="libraries/python/api_reference.html#accountmanager">AccountManager</a></a></h4>
 <p>Creates a new instance of the AccountManager.</p>
