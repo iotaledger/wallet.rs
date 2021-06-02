@@ -5,6 +5,7 @@ pub mod classes;
 pub mod types;
 
 use classes::event::*;
+use iota_client::common::logger::{logger_init, LoggerConfigBuilder};
 use once_cell::sync::OnceCell;
 use pyo3::{prelude::*, wrap_pyfunction};
 use tokio::runtime::Runtime;
@@ -16,6 +17,14 @@ pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
     static INSTANCE: OnceCell<Mutex<Runtime>> = OnceCell::new();
     let runtime = INSTANCE.get_or_init(|| Mutex::new(Runtime::new().unwrap()));
     runtime.lock().unwrap().block_on(cb)
+}
+
+#[pyfunction]
+/// Init the logger of wallet library
+pub fn init_logger(config: String) -> PyResult<()> {
+    let config: LoggerConfigBuilder = serde_json::from_str(&config).expect("invalid logger config");
+    logger_init(config.finish()).expect("failed to init logger");
+    Ok(())
 }
 
 /// IOTA Wallet implemented in Rust and binded by Python.
@@ -49,5 +58,6 @@ fn iota_wallet(_py: Python, m: &PyModule) -> PyResult<()> {
         .unwrap();
     m.add_function(wrap_pyfunction!(remove_stronghold_status_change_listener, m)?)
         .unwrap();
+    m.add_function(wrap_pyfunction!(init_logger, m)?).unwrap();
     Ok(())
 }

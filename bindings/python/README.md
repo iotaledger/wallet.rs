@@ -80,6 +80,16 @@ print(f'Messages: {messages}')
 Note that in the following APIs, the corresponding exception will be returned if an error occurs.
 Also for all the optional values, the default values are the same as the ones in the Rust version.
 
+### init_logger(config)
+
+| Param  | Type             | Default                | Description              |
+| ------ | ---------------- | ---------------------- | ------------------------ |
+| config | <code>str</code> | <code>undefined</code> | The logger configuration |
+
+The config is the dumped string from the JSON, which key/value pairs are from the [bee logger](https://github.com/iotaledger/bee/blob/dev/bee-common/bee-common/src/logger/config.rs).
+
+Please check the `example/logger_example.py` to see how to use it.
+
 ### AccountManager
 
 #### constructor(storage_path (optional), password (optional), polling_interval (optional), automatic_output_consolidation(optional), output_consolidation_threshold(optional), sync_spent_outputs(optional), persist_events(optional)): [AccountManager](#accountmanager)
@@ -565,10 +575,10 @@ Gets the account balance information.
 
 Gets information about the node.
 
-| Param  | Type                   | Default                | Description           |
-| ------ | ---------------------- | ---------------------- | --------------------- |
-| url    | <code>str</code>       | <code>undefined</code> | The node url          |
-| auth   | <code>list[str]</code> | <code>undefined</code> | The node auth options |
+| Param | Type                   | Default                | Description           |
+| ----- | ---------------------- | ---------------------- | --------------------- |
+| url   | <code>str</code>       | <code>undefined</code> | The node url          |
+| auth  | <code>list[str]</code> | <code>undefined</code> | The node auth options |
 
 **Returns** the [NodeInfoWrapper](#nodeinfowrapper)
 
