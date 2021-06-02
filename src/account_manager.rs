@@ -1489,20 +1489,7 @@ impl AccountsSynchronizer {
             synced_account.messages = updated_messages;
 
             let account = account_handle.read().await;
-            synced_account.addresses = account
-                .addresses()
-                .iter()
-                .filter(|a| {
-                    match addresses_before_sync
-                        .iter()
-                        .find(|(addr, _, _)| addr == &a.address().to_bech32())
-                    {
-                        Some((_, balance, outputs)) => *balance != a.balance() || outputs != a.outputs(),
-                        None => true,
-                    }
-                })
-                .cloned()
-                .collect();
+            synced_account.addresses = account.addresses().clone();
             synced_accounts.push(synced_account);
         }
 
@@ -1522,6 +1509,7 @@ async fn poll(
     account_options: AccountOptions,
     automatic_output_consolidation: bool,
 ) -> crate::Result<PollResponse> {
+    let polling_start_time = std::time::Instant::now();
     let mut synchronizer =
         AccountsSynchronizer::new(sync_accounts_lock, accounts.clone(), storage_file_path, account_options);
     synchronizer = synchronizer.skip_account_discovery().skip_change_addresses();
@@ -1578,6 +1566,7 @@ async fn poll(
         }
         account.save().await?;
     }
+    log::debug!("[POLLING] took: {:.2?}", polling_start_time.elapsed());
     Ok(PollResponse {
         ran_account_discovery: synchronizer.ran_account_discovery,
         synced_accounts_len: synced_accounts.len(),

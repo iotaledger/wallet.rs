@@ -9,3 +9,4 @@ book
 .vscode
 *.ipynb
 *.stronghold
+wallet.log
