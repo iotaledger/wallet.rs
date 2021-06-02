@@ -1,5 +1,12 @@
 # Changelog
 
+## \[0.4.2]
+
+- Improve syncing speed.
+  - [3b51dd95](https://github.com/iotaledger/wallet.rs/commit/3b51dd95998968867655fe2c4ec44d41aa252178) Improve syncing ([#633](https://github.com/iotaledger/wallet.rs/pull/633)) on 2021-05-27
+  - [c39362f3](https://github.com/iotaledger/wallet.rs/commit/c39362f3f2ea2975754a623884d8d7a7ae09ce6c) apply version updates ([#628](https://github.com/iotaledger/wallet.rs/pull/628)) on 2021-05-27
+  - [e09167ae](https://github.com/iotaledger/wallet.rs/commit/e09167ae97493961980d5ab9f8d448ae46c53799) improve syncing speed and add logger example ([#638](https://github.com/iotaledger/wallet.rs/pull/638)) on 2021-06-02
+
 ## \[0.4.1]
 
 - Added optional remainder property in BalanceChangeEvent.
