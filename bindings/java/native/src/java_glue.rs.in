@@ -159,6 +159,7 @@ foreign_class!(class AccountManager {
     self_type AccountManager;
     private constructor = empty;
     fn AccountManagerBuilder::new() -> AccountManagerBuilder; alias Builder;
+    fn AccountManager::start_background_sync(&mut self, polling_interval: Duration, automatic_output_consolidation: bool) -> Result<()>; alias startBackgroundSync;
     fn AccountManager::stop_background_sync(&mut self,) -> Result<()>; alias stopBackgroundSync;
     fn AccountManager::set_storage_password(&mut self, password: &str) -> Result<()>; alias setStoragePassword;
     fn AccountManager::set_stronghold_password(&mut self, password: &str) -> Result<()>; alias setStrongholdPassword;
