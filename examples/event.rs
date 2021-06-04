@@ -27,8 +27,9 @@ async fn main() -> Result<()> {
         .initialise()
         .await?;
 
-    //Possible events are: on_balance_change, on_broadcast, on_confirmation_state_change, on_error, on_migration_progress, on_new_transaction,
-    // on_reattachment, on_stronghold_status_change, on_transfer_progress,
+    // Possible events are: on_balance_change, on_broadcast, on_confirmation_state_change, on_error,
+    // on_migration_progress, on_new_transaction, on_reattachment, on_stronghold_status_change,
+    // on_transfer_progress,
     on_balance_change(move |event| {
         println!("BalanceEvent: {:?}", event);
         println!("Press enter to exit");
