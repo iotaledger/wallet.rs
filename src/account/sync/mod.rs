@@ -227,7 +227,10 @@ async fn get_address_for_sync(
             index,
             internal,
             bech32_hrp,
-            GenerateAddressMetadata { syncing: true },
+            GenerateAddressMetadata {
+                syncing: true,
+                network: account.network(),
+            },
         )
         .await?;
         Ok(Some(generated_address))
@@ -1611,7 +1614,10 @@ async fn perform_transfer(
                         &account_,
                         0,
                         account_.bech32_hrp(),
-                        GenerateAddressMetadata { syncing: false },
+                        GenerateAddressMetadata {
+                            syncing: false,
+                            network: account_.network(),
+                        },
                     )
                     .await?;
                     let addr = change_address.address().clone();
@@ -1708,6 +1714,7 @@ async fn perform_transfer(
                 remainder_value,
                 remainder_deposit_address: remainder_deposit_address
                     .map(|address| account_.addresses().iter().find(|a| a.address() == &address).unwrap()),
+                network: account_.network(),
             },
         )
         .await?;
@@ -1746,7 +1753,14 @@ async fn perform_transfer(
             }
         );
         // We set it to syncing: true so it will not be shown on the ledger
-        let addr = crate::address::get_new_address(&account_, GenerateAddressMetadata { syncing: true }).await?;
+        let addr = crate::address::get_new_address(
+            &account_,
+            GenerateAddressMetadata {
+                syncing: true,
+                network: account_.network(),
+            },
+        )
+        .await?;
         addresses_to_watch.push(addr.address().clone());
         account_.append_addresses(vec![addr]);
     }
