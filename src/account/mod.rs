@@ -1213,15 +1213,18 @@ mod tests {
                     .signer_type(signer_type)
                     .create()
                     .await;
-                let account_next_address = crate::address::get_new_address(
-                    &*account_handle.read().await,
-                    crate::signing::GenerateAddressMetadata {
-                        syncing: false,
-                        network: account_handle.read().await.network(),
-                    },
-                )
-                .await
-                .unwrap();
+                let account_next_address = {
+                    let account = account_handle.read().await;
+                    crate::address::get_new_address(
+                        &account,
+                        crate::signing::GenerateAddressMetadata {
+                            syncing: false,
+                            network: account.network(),
+                        },
+                    )
+                    .await
+                    .unwrap()
+                };
                 let generated_address = account_handle.generate_address().await.unwrap();
 
                 assert_eq!(generated_address, account_next_address);
