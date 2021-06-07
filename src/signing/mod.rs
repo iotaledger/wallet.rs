@@ -51,6 +51,15 @@ pub struct TransactionInput {
     pub address_internal: bool,
 }
 
+/// Network enum for ledger metadata
+#[derive(Debug, Clone)]
+pub enum Network {
+    /// Mainnet
+    Mainnet,
+    /// Testnet
+    Testnet,
+}
+
 /// Metadata provided to [generate_address](trait.Signer.html#method.generate_address).
 #[derive(Getters, Clone)]
 #[getset(get = "pub")]
@@ -58,6 +67,9 @@ pub struct GenerateAddressMetadata {
     /// Indicates that the address is being generated as part of the account syncing process.
     /// This means that the account might not be saved.
     pub syncing: bool,
+    /// The network which is used so the correct BIP32 path is used for the ledger. Debug mode starts with 44'/1' and
+    /// in mainnet-mode it's 44'/4218'
+    pub network: Network,
 }
 
 /// Metadata provided to [sign_message](trait.Signer.html#method.sign_message).
@@ -70,6 +82,9 @@ pub struct SignMessageMetadata<'a> {
     pub remainder_value: u64,
     /// The transfer's deposit address for the remainder value if any.
     pub remainder_deposit_address: Option<&'a Address>,
+    /// The network which is used so the correct BIP32 path is used for the ledger. Debug mode starts with 44'/1' and
+    /// in mainnet-mode it's 44'/4218'
+    pub network: Network,
 }
 
 /// Signer interface.
