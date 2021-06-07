@@ -306,13 +306,17 @@ impl AccountInitialiser {
         let address = match account.addresses.first() {
             Some(address) => address.address().clone(),
             None => {
+                let network = match bech32_hrp.as_ref() {
+                    "iota" => crate::signing::Network::Mainnet,
+                    _ => crate::signing::Network::Testnet,
+                };
                 let address = crate::address::get_iota_address(
                     &account,
                     0,
                     false,
                     bech32_hrp,
                     // We set it to syncing: true so it will not be shown on the ledger
-                    GenerateAddressMetadata { syncing: true },
+                    GenerateAddressMetadata { syncing: true, network },
                 )
                 .await?;
 
@@ -562,7 +566,14 @@ impl AccountHandle {
         &self,
         account: &mut RwLockWriteGuard<'_, Account>,
     ) -> crate::Result<Address> {
-        let address = crate::address::get_new_address(&account, GenerateAddressMetadata { syncing: false }).await?;
+        let address = crate::address::get_new_address(
+            &account,
+            GenerateAddressMetadata {
+                syncing: false,
+                network: account.network(),
+            },
+        )
+        .await?;
 
         account
             .do_mut(|account| {
@@ -757,6 +768,14 @@ impl Account {
     /// Returns the address bech32 human readable part.
     pub fn bech32_hrp(&self) -> String {
         self.addresses().first().unwrap().address().bech32_hrp().to_string()
+    }
+
+    /// Returns the address bech32 human readable part.
+    fn network(&self) -> crate::signing::Network {
+        match self.addresses().first().unwrap().address().bech32_hrp() {
+            "iota" => crate::signing::Network::Mainnet,
+            _ => crate::signing::Network::Testnet,
+        }
     }
 
     /// Returns the most recent address of the account.
@@ -1194,10 +1213,12 @@ mod tests {
                     .signer_type(signer_type)
                     .create()
                     .await;
-
                 let account_next_address = crate::address::get_new_address(
                     &*account_handle.read().await,
-                    crate::signing::GenerateAddressMetadata { syncing: false },
+                    crate::signing::GenerateAddressMetadata {
+                        syncing: false,
+                        network: account_handle.read().await.network(),
+                    },
                 )
                 .await
                 .unwrap();
