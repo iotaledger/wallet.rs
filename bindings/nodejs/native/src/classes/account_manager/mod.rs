@@ -205,6 +205,19 @@ declare_types! {
             Ok(AccountManagerWrapper(Arc::new(RwLock::new(manager))))
         }
 
+        method startBackgroundSync(mut cx) {
+            let polling_interval = cx.argument::<JsNumber>(0)?.value() as u64;
+            let automatic_output_consolidation = cx.argument::<JsBoolean>(0)?.value();
+            {
+                let this = cx.this();
+                let guard = cx.lock();
+                let ref_ = &this.borrow(&guard).0;
+                let mut manager = crate::block_on(ref_.write());
+                crate::block_on( manager.start_background_sync(Duration::from_secs(polling_interval), automatic_output_consolidation))
+            }
+            Ok(cx.undefined().upcast())
+        }
+
         method stopBackgroundSync(mut cx) {
             {
                 let this = cx.this();

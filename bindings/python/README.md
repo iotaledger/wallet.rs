@@ -100,7 +100,7 @@ Creates a new instance of the AccountManager.
 | -------------------------------------- | -------------------- | ------------------------ | ---------------------------------------------------------------------------------------------- |
 | [storage_path]                         | <code>str</code>     | <code>`./storage`</code> | The path where the database file will be saved                                                 |
 | [storage_password]                     | <code>str</code>     | <code>undefined</code>   | The storage password to encrypt/decrypt accounts                                               |
-| [polling_interval]                     | <code>int</code>     | <code>30000</code>       | The polling interval in milliseconds                                                           |
+| [polling_interval]                     | <code>int</code>     | <code>30000</code>       | The polling interval in seconds                                                                |
 | [automatic_output_consolidation]       | <code>bool</code>    | <code>true</code>        | Disables the automatic output consolidation process                                            |
 | [output_consolidation_threshold]       | <code>int</code>     | <code>100</code>         | Sets the number of outputs an address must have to trigger the automatic consolidation process |
 | [sync_spent_outputs]                   | <code>boolean</code> | <code>false</code>       | Enables fetching spent output history on account sync                                          |
@@ -110,6 +110,15 @@ Creates a new instance of the AccountManager.
 Note: if the `storage_path` is set, then the `storage` needs to be set too. An exception will be thrown when errors happened.
 
 **Returns** The constructed [AccountManager](#accountmanager).
+
+#### start_background_sync(polling_interval, automatic_output_consolidation): void
+
+Starts the background polling and MQTT monitoring.
+
+| Param                          | Type                 | Default                | Description                                      |
+| ------------------------------ | -------------------- | ---------------------- | ------------------------------------------------ |
+| polling_interval               | <code>number</code>  | <code>undefined</code> | The polling interval in seconds                  |
+| automatic_output_consolidation | <code>boolean</code> | <code>undefined</code> | If outputs should get consolidated automatically |
 
 #### stop_background_sync(): void
 
