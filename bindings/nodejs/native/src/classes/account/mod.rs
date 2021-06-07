@@ -304,6 +304,20 @@ declare_types! {
             Ok(neon_serde::to_value(&mut cx, &address)?)
         }
 
+        method generateAddresses(mut cx) {
+            let amount = cx.argument::<JsNumber>(0)?.value() as usize;
+            let address = {
+                let this = cx.this();
+                let guard = cx.lock();
+                let id = &this.borrow(&guard).0;
+                crate::block_on(async move {
+                    let account_handle = crate::get_account(id).await;
+                    account_handle.generate_addresses(amount).await.expect("error generating address")
+                })
+            };
+            Ok(neon_serde::to_value(&mut cx, &address)?)
+        }
+
         method latestAddress(mut cx) {
             let this = cx.this();
             let id = cx.borrow(&this, |r| r.0.clone());

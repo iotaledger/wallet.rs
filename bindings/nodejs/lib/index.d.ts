@@ -158,6 +158,7 @@ export declare class Account {
   getMessage(id: string): Message | undefined
   getAddress(addressBech32: string): Address | undefined
   generateAddress(): Address
+  generateAddresses(amount: number): Address[]
   latestAddress(): Address
   getUnusedAddress(): Address
   isLatestAddressUnused(): Promise<boolean>

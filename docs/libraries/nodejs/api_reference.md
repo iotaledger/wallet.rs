@@ -443,6 +443,13 @@ Gets the address object by its bech32 representation.
 
 Generates a new unused address and returns it.
 
+#### generateAddresses(amount)
+
+Generates amount new unused address and returns it.
+
+| Param  | Type                | Default                | Description             |
+| ------ | ------------------- | ---------------------- | ----------------------- |
+| amount | <code>number</code> | <code>undefined</code> | The amount of addresses |
 #### latestAddress()
 
 Returns the latest address (the one with the biggest keyIndex).

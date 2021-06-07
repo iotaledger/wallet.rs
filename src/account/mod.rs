@@ -577,6 +577,63 @@ impl AccountHandle {
         Ok(address)
     }
 
+    /// Gets amount new unused addresses and links them to this account.
+    pub async fn generate_addresses(&self, amount: usize) -> crate::Result<Vec<Address>> {
+        let mut account = self.inner.write().await;
+        self.generate_addresses_internal(&mut account, amount).await
+    }
+
+    /// Generates an address without locking the account.
+    pub(crate) async fn generate_addresses_internal(
+        &self,
+        account: &mut RwLockWriteGuard<'_, Account>,
+        amount: usize,
+    ) -> crate::Result<Vec<Address>> {
+        let key_index = account.addresses().iter().filter(|a| !a.internal()).count();
+        let bech32_hrp = match account.addresses().first() {
+            Some(address) => address.address().bech32_hrp().to_string(),
+            None => {
+                crate::client::get_client(account.client_options())
+                    .await?
+                    .read()
+                    .await
+                    .get_network_info()
+                    .await?
+                    .bech32_hrp
+            }
+        };
+
+        let mut addresses = Vec::new();
+        for key_index in key_index..amount + key_index {
+            addresses.push(
+                crate::address::get_address_with_index(
+                    &account,
+                    key_index,
+                    bech32_hrp.clone(),
+                    GenerateAddressMetadata { syncing: false },
+                )
+                .await?,
+            );
+        }
+
+        account
+            .do_mut(|account| {
+                account.addresses.extend(addresses.clone());
+                Ok(())
+            })
+            .await?;
+
+        // Don't monitor if too many addresses
+        if addresses.len() < 1000 {
+            for address in &addresses {
+                // monitor on a non-async function to prevent cycle computing the `monitor_address_balance` fn type
+                self.monitor_address(address.address().clone());
+            }
+        }
+
+        Ok(addresses)
+    }
+
     fn monitor_address(&self, address: AddressWrapper) {
         let handle = self.clone();
         crate::spawn(async move {
