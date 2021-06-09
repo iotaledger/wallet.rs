@@ -114,6 +114,20 @@ Removes the account with the given identifier or index.
 | --------- | ----------------------------- | ----------------- | --------------------------------------- |
 | accountId | <code>string \| number</code> | <code>null</code> | The account identifier or account index |
 
+
+#### startBackgroundSync(pollingInterval, automaticOutputConsolidation): Promise<void>
+
+Starts the background polling and MQTT monitoring.
+
+| Param                        | Type                 | Default           | Description                                      |
+| ---------------------------- | -------------------- | ----------------- | ------------------------------------------------ |
+| pollingInterval              | <code>number</code>  | <code>null</code> | The polling interval in seconds                  |
+| automaticOutputConsolidation | <code>boolean</code> | <code>null</code> | If outputs should get consolidated automatically |
+
+#### stop_background_sync(): void
+
+Stops the background polling and MQTT monitoring.
+
 #### syncAccounts([options])
 
 Synchronize all stored accounts with the Tangle.

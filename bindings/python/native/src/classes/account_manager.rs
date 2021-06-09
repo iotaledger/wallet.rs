@@ -107,7 +107,7 @@ impl AccountManager {
             account_manager = account_manager.with_output_consolidation_threshold(threshold);
         }
         if let Some(polling_interval) = polling_interval {
-            account_manager = account_manager.with_polling_interval(Duration::from_millis(polling_interval));
+            account_manager = account_manager.with_polling_interval(Duration::from_secs(polling_interval));
         }
         let account_manager = crate::block_on(async { account_manager.finish().await })?;
         Ok(AccountManager { account_manager })
@@ -165,6 +165,14 @@ impl AccountManager {
         )
         .map(|_| ())
         .map_err(Into::into)
+    }
+
+    /// Starts the background polling and MQTT monitoring.
+    fn start_background_sync(&mut self, polling_interval: u64, automatic_output_consolidation: bool) {
+        crate::block_on(
+            self.account_manager
+                .start_background_sync(Duration::from_secs(polling_interval), automatic_output_consolidation),
+        );
     }
 
     /// Stops the background polling and MQTT monitoring.

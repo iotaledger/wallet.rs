@@ -295,6 +295,8 @@ export declare interface SendMigrationBundleOptions {
 
 export declare class AccountManager {
   constructor(options: ManagerOptions)
+  startBackgroundSync(pollingInterval: number, automaticOutputConsolidation: boolean): Promise<void>
+  stopBackgroundSync(): void
   setStoragePassword(password: string): void
   setStrongholdPassword(password: string): void
   changeStrongholdPassword(currentPassword: string, newPassword: string): void

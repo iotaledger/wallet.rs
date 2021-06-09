@@ -155,6 +155,11 @@ impl AccountManager {
         self.manager.storage_path()
     }
 
+    pub fn start_background_sync(&mut self, polling_interval: Duration, automatic_output_consolidation: bool) -> Result<()> {
+        crate::block_on(self.manager.start_background_sync(polling_interval, automatic_output_consolidation));
+        Ok(())
+    }
+
     pub fn stop_background_sync(&mut self) -> Result<()> {
         self.manager.stop_background_sync();
         Ok(())

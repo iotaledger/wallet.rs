@@ -186,5 +186,8 @@ def test_account_manager_import_accounts():
     assert account.alias() == pat['backup_restore']['alias']
 
 
+def test_account_manager_start_background_sync():
+    manager.start_background_sync(30, True)
+
 def test_account_manager_stop_background_sync():
     manager.stop_background_sync()
