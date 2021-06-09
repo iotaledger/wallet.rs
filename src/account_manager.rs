@@ -50,6 +50,9 @@ use tokio::{
 use zeroize::Zeroize;
 
 mod migration;
+use iota_migration::client::migration::{
+    add_tryte_checksum, encode_migration_address, get_trytes_from_bundle, mine_bundle,
+};
 pub use migration::*;
 
 /// The default storage folder.
@@ -322,6 +325,16 @@ pub struct MigratedBundle {
     value: u64,
 }
 
+/// Response from `mine_bundle`.
+#[derive(Debug, Getters, Serialize)]
+#[getset(get = "pub")]
+pub struct MinedBundle {
+    /// Crackability
+    crackability: f64,
+    /// The mined bundle.
+    bundle: Vec<String>,
+}
+
 type CachedMigrationBundle = (Vec<BundledTransaction>, AddressWrapper, u64);
 
 /// The account manager.
@@ -424,6 +437,44 @@ impl AccountManager {
             last_checked_address_index: metadata.last_checked_address_index,
             inputs: metadata.inputs.into_iter().map(|(_, v)| v).flatten().collect(),
         })
+    }
+
+    /// Convert the first address from the first account to a migration tryte address
+    pub async fn get_migration_address(&self) -> crate::Result<String> {
+        let deposit_address = self.get_account(0).await?.latest_address().await;
+        let deposit_address = match MigrationAddress::try_from_bech32(&deposit_address.address().to_bech32()) {
+            Ok(MigrationAddress::Ed25519(a)) => a,
+            _ => return Err(crate::Error::InvalidAddress),
+        };
+        let deposit_address_trytes = encode_migration_address(deposit_address)?;
+        Ok(add_tryte_checksum(deposit_address_trytes)?)
+    }
+
+    /// Mine bundle
+    pub async fn mine_bundle(
+        &self,
+        prepared_bundle: Vec<String>,
+        spent_bundle_hashes: Vec<String>,
+        security_level: u8,
+        timeout: u64,
+        offset: i64,
+    ) -> crate::Result<MinedBundle> {
+        // Convert Tryte Strings back to Transactions
+        let mut prepared_bundle: Vec<BundledTransaction> = prepared_bundle
+            .into_iter()
+            .map(|tx| {
+                BundledTransaction::from_trits(&TryteBuf::try_from_str(&tx).unwrap().as_trits())
+                    .expect("Can't build transaction from String")
+            })
+            .collect();
+        // Reverse for correct attachment order
+        prepared_bundle.reverse();
+
+        let mining_result = mine_bundle(prepared_bundle, security_level, spent_bundle_hashes, timeout, offset).await?;
+        let crackability = mining_result.0.crackability;
+        let bundle = get_trytes_from_bundle(mining_result.1)?;
+
+        Ok(MinedBundle { crackability, bundle })
     }
 
     /// Creates the bundle for migration associated with the given input indexes,
