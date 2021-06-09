@@ -621,7 +621,10 @@ impl AccountHandle {
                     &account,
                     key_index,
                     bech32_hrp.clone(),
-                    GenerateAddressMetadata { syncing: false },
+                    GenerateAddressMetadata {
+                        syncing: false,
+                        network: account.network(),
+                    },
                 )
                 .await?,
             );
