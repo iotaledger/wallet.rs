@@ -213,7 +213,7 @@ mod test_utils {
             }
         };
 
-        let mut manager = AccountManager::builder()
+        let manager = AccountManager::builder()
             .with_storage(storage_path, None)
             .unwrap()
             .with_skip_polling()
@@ -309,7 +309,7 @@ mod test_utils {
                 }
             };
 
-            let mut manager = manager_builder.with_skip_polling().finish().await.unwrap();
+            let manager = manager_builder.with_skip_polling().finish().await.unwrap();
 
             #[cfg(feature = "stronghold")]
             manager.set_stronghold_password("password").await.unwrap();
