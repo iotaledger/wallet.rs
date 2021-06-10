@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use getset::Getters;
-use iota_client::{Client, ClientBuilder};
+use iota_client::{node_manager::validate_url, Client, ClientBuilder};
 use once_cell::sync::Lazy;
 use serde::{de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
 use tokio::sync::{Mutex, RwLock};
@@ -84,6 +84,23 @@ pub(crate) async fn get_client(options: &ClientOptions) -> crate::Result<Arc<RwL
             }
         }
 
+        if let Some(primary_pow_node) = options.primary_pow_node() {
+            if !primary_pow_node.disabled {
+                if let Some(auth) = &primary_pow_node.auth {
+                    client_builder = client_builder.with_primary_pow_node(
+                        primary_pow_node.url.as_str(),
+                        auth.jwt.clone(),
+                        auth.basic_auth_name_pwd.as_ref().map(|(ref x, ref y)| (&x[..], &y[..])),
+                    )?;
+                } else {
+                    // safe to unwrap since we're sure we have valid URLs
+                    client_builder = client_builder
+                        .with_primary_pow_node(primary_pow_node.url.as_str(), None, None)
+                        .unwrap();
+                }
+            }
+        }
+
         if let Some(node_sync_interval) = options.node_sync_interval() {
             client_builder = client_builder.with_node_sync_interval(*node_sync_interval);
         }
@@ -119,6 +136,7 @@ pub async fn drop_all() {
 /// The options builder for a client connected to multiple nodes.
 pub struct ClientOptionsBuilder {
     primary_node: Option<Node>,
+    primary_pow_node: Option<Node>,
     nodes: Vec<Node>,
     node_pool_urls: Vec<Url>,
     network: Option<String>,
@@ -134,11 +152,18 @@ fn convert_urls(urls: &[&str]) -> crate::Result<Vec<Url>> {
     let mut err = None;
     let urls: Vec<Option<Url>> = urls
         .iter()
-        .map(|node| {
-            Url::parse(node).map(Some).unwrap_or_else(|e| {
-                err.replace(e);
+        .map(|node| match Url::parse(node) {
+            Ok(url) => match validate_url(url) {
+                Ok(url) => Some(url),
+                Err(e) => {
+                    err.replace(e);
+                    None
+                }
+            },
+            Err(e) => {
+                err.replace(e.into());
                 None
-            })
+            }
         })
         .collect();
 
@@ -155,6 +180,7 @@ impl Default for ClientOptionsBuilder {
     fn default() -> Self {
         Self {
             primary_node: None,
+            primary_pow_node: None,
             nodes: Vec::new(),
             node_pool_urls: Vec::new(),
             network: None,
@@ -176,7 +202,13 @@ impl ClientOptionsBuilder {
 
     /// Sets the primary node.
     pub fn with_primary_node(mut self, node: &str) -> crate::Result<Self> {
-        self.primary_node.replace(Url::parse(node)?.into());
+        self.primary_node.replace(validate_url(Url::parse(node)?)?.into());
+        Ok(self)
+    }
+
+    /// Sets the primary PoW node.
+    pub fn with_primary_pow_node(mut self, node: &str) -> crate::Result<Self> {
+        self.primary_pow_node.replace(validate_url(Url::parse(node)?)?.into());
         Ok(self)
     }
 
@@ -188,7 +220,26 @@ impl ClientOptionsBuilder {
         basic_auth_name_pwd: Option<(&str, &str)>,
     ) -> crate::Result<Self> {
         self.primary_node.replace(Node {
-            url: Url::parse(node)?,
+            url: validate_url(Url::parse(node)?)?,
+            auth: NodeAuth {
+                jwt: jwt.map(|r| r.to_string()),
+                basic_auth_name_pwd: basic_auth_name_pwd.map(|(l, r)| (l.to_string(), r.to_string())),
+            }
+            .into(),
+            disabled: false,
+        });
+        Ok(self)
+    }
+
+    /// Sets the primary pow node with authentication.
+    pub fn with_primary_pow_node_auth(
+        mut self,
+        node: &str,
+        jwt: Option<&str>,
+        basic_auth_name_pwd: Option<(&str, &str)>,
+    ) -> crate::Result<Self> {
+        self.primary_pow_node.replace(Node {
+            url: validate_url(Url::parse(node)?)?,
             auth: NodeAuth {
                 jwt: jwt.map(|r| r.to_string()),
                 basic_auth_name_pwd: basic_auth_name_pwd.map(|(l, r)| (l.to_string(), r.to_string())),
@@ -221,7 +272,7 @@ impl ClientOptionsBuilder {
 
     /// Adds a node to the node list.
     pub fn with_node(mut self, node: &str) -> crate::Result<Self> {
-        self.nodes.push(Url::parse(node)?.into());
+        self.nodes.push(validate_url(Url::parse(node)?)?.into());
         Ok(self)
     }
 
@@ -233,7 +284,7 @@ impl ClientOptionsBuilder {
         basic_auth_name_pwd: Option<(&str, &str)>,
     ) -> crate::Result<Self> {
         self.nodes.push(Node {
-            url: Url::parse(node)?,
+            url: validate_url(Url::parse(node)?)?,
             auth: NodeAuth {
                 jwt: jwt.map(|r| r.to_string()),
                 basic_auth_name_pwd: basic_auth_name_pwd.map(|(l, r)| (l.to_string(), r.to_string())),
@@ -304,6 +355,7 @@ impl ClientOptionsBuilder {
     pub fn build(self) -> crate::Result<ClientOptions> {
         let options = ClientOptions {
             primary_node: self.primary_node,
+            primary_pow_node: self.primary_pow_node,
             nodes: self.nodes,
             node_pool_urls: self.node_pool_urls,
             network: self.network,
@@ -468,6 +520,9 @@ pub struct ClientOptions {
     /// The primary node to connect to.
     #[serde(rename = "node")] // here just for DB compatibility; can be changed when migrations are implemented
     primary_node: Option<Node>,
+    /// The primary PoW node to connect to.
+    #[serde(rename = "primaryPoWNode")]
+    primary_pow_node: Option<Node>,
     /// The nodes to connect to.
     #[serde(default)]
     nodes: Vec<Node>,
@@ -506,6 +561,7 @@ impl ClientOptions {
 impl Hash for ClientOptions {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.primary_node.hash(state);
+        self.primary_pow_node.hash(state);
         self.nodes.hash(state);
         self.node_pool_urls.hash(state);
         self.network.hash(state);
@@ -518,6 +574,7 @@ impl Hash for ClientOptions {
 impl PartialEq for ClientOptions {
     fn eq(&self, other: &Self) -> bool {
         self.primary_node == other.primary_node
+            && self.primary_pow_node == other.primary_pow_node
             && self.nodes == other.nodes
             && self.node_pool_urls == other.node_pool_urls
             && self.network == other.network
@@ -548,6 +605,17 @@ mod tests {
     #[test]
     fn primary_node_invalid_url() {
         let builder_res = ClientOptionsBuilder::new().with_primary_node("some.invalid url");
+        assert!(builder_res.is_err());
+    }
+    #[test]
+    fn primary_pow_node_valid_url() {
+        let builder_res = ClientOptionsBuilder::new().with_primary_pow_node("https://api.lb-0.testnet.chrysalis2.com");
+        assert!(builder_res.is_ok());
+    }
+
+    #[test]
+    fn primary_pow_node_invalid_url() {
+        let builder_res = ClientOptionsBuilder::new().with_primary_pow_node("some.invalid url");
         assert!(builder_res.is_err());
     }
 
