@@ -55,6 +55,10 @@ print(f'All addresses: {addresses}')
 new_address = account.generate_address()
 print(f'New address: {new_address}')
 
+# Generate multiple new unused addresses
+new_addresses = account.generate_addresses(2)
+print(f'New addresses: {new_addresses}')
+
 # List messages
 messages = account.list_messages(5, 0, message_type='Failed')
 print(f'Messages: {messages}')

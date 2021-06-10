@@ -260,6 +260,16 @@ impl AccountHandle {
         Ok(crate::block_on(async { self.account_handle.generate_address().await })?.into())
     }
 
+    /// Gets a new unused address and links it to this account.
+    fn generate_addresses(&self, amount: usize) -> Result<Vec<Address>> {
+        Ok(
+            crate::block_on(async { self.account_handle.generate_addresses(amount).await })?
+                .into_iter()
+                .map(|a| a.into())
+                .collect(),
+        )
+    }
+
     /// Synchronizes the account addresses with the Tangle and returns the latest address in the account,
     /// which is an address without balance.
     fn get_unused_address(&self) -> Result<Address> {

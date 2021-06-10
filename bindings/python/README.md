@@ -552,6 +552,14 @@ Consolidates the account addresses outputs.
 
 **Returns** a new unused address and links it to this account.
 
+#### generate_addresses(amount): list[[Address](#address)]
+
+| Param  | Type             | Default                | Description                        |
+| ------ | ---------------- | ---------------------- | ---------------------------------- |
+| amount | <code>int</code> | <code>undefined</code> | The amount of addresses to generate|
+
+**Returns** list with amount of new unused addresses and links them to this account.
+
 #### get_unused_address(): [Address](#address)
 
 Synchronizes the account addresses with the Tangle and returns the latest address in the account, which is an address without balance.

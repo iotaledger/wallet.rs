@@ -52,6 +52,7 @@
       - [list_addresses()](#list_addresses)
       - [list_unspent_addresses()](#list_unspent_addresses)
       - [generate_address()](#generate_address)
+      - [generate_addresses()](#generate_addresses)
   - [Account Manager](#account-manager)
     - [API](#api-1)
       - [Initialisation](#initialisation-1)
@@ -2194,6 +2195,62 @@ Gets the latest unused address.
     <td>address</td>
     <td><a href="#address">Address</a></td>
     <td>A new address object.</td>
+  </tr>
+  <tr>
+    <td colspan="3"><strong>Additional Information</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>Access modifiers</td>
+    <td colspan="3">Public</td>
+  </tr>
+  <tr>
+    <td>Errors</td>
+    <td colspan="3">List of error messages [TBD]</td>
+  </tr>
+  <tr>
+    <td>Required client library methods</td>
+    <td colspan="3">None</td>
+  </tr>
+</table>
+
+#### generate_addresses()
+
+Generate amount of unused addresses.
+
+<table>
+  <tr>
+    <td colspan="4"><strong>Parameters</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Required</strong></td>
+    <td><strong>Type</strong></td>
+    <td><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>amount</td>
+    <td>&#10004;</td>
+    <td>
+      u64
+    </td>
+    <td>Amount of addresses.</td>
+  </tr>
+  <tr>
+    <td colspan="4"><strong>Returns</strong></td>
+  </tr>
+  <tr>
+    <td><strong>Name</strong></td>
+    <td><strong>Type</strong></td>
+    <td colspan="3"><strong>Description</strong></td>
+  </tr>
+  <tr>
+    <td>address</td>
+    <td><a href="#address">Address</a>[]</td>
+    <td>An array of new address objects.</td>
   </tr>
   <tr>
     <td colspan="3"><strong>Additional Information</strong></td>
