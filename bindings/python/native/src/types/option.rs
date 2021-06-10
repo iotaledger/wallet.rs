@@ -121,9 +121,11 @@ impl From<ClientOptions> for RustClientOptions {
                         auth.jwt.as_deref(),
                         auth.basic_auth_name_pwd.as_ref().map(|(ref x, ref y)| (&x[..], &y[..])),
                     )
-                    .unwrap();
+                    .expect("with_primary_node_auth failed");
             } else {
-                builder = builder.with_primary_node(primary_node.url.as_str()).unwrap();
+                builder = builder
+                    .with_primary_node(primary_node.url.as_str())
+                    .expect("with_primary_node failed");
             }
         }
         if let Some(primary_pow_node) = client_options.primary_pow_node {
@@ -135,9 +137,11 @@ impl From<ClientOptions> for RustClientOptions {
                         auth.jwt.as_deref(),
                         auth.basic_auth_name_pwd.as_ref().map(|(ref x, ref y)| (&x[..], &y[..])),
                     )
-                    .unwrap();
+                    .expect("with_primary_pow_node_auth failed");
             } else {
-                builder = builder.with_primary_pow_node(primary_pow_node.url.as_str()).unwrap();
+                builder = builder
+                    .with_primary_pow_node(primary_pow_node.url.as_str())
+                    .expect("with_primary_pow_node failed");
             }
         }
         if let Some(nodes) = client_options.nodes {
@@ -150,16 +154,16 @@ impl From<ClientOptions> for RustClientOptions {
                             auth.jwt.as_deref(),
                             auth.basic_auth_name_pwd.as_ref().map(|(ref x, ref y)| (&x[..], &y[..])),
                         )
-                        .unwrap();
+                        .expect("with_node_auth failed");
                 } else {
-                    builder = builder.with_node(node.url.as_str()).unwrap();
+                    builder = builder.with_node(node.url.as_str()).expect("with_node failed");
                 }
             }
         }
         if let Some(node_pool_urls) = client_options.node_pool_urls {
             builder = builder
                 .with_node_pool_urls(&(node_pool_urls.iter().map(|url| &url[..]).collect::<Vec<&str>>()))
-                .unwrap();
+                .expect("with_node_pool_urls failed");
         }
         if let Some(network) = client_options.network {
             builder = builder.with_network(network);
