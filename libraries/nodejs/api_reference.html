@@ -242,6 +242,14 @@ Supported event names:</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>accountId</td><td><code>string | number</code></td><td><code>null</code></td><td>The account identifier or account index</td></tr>
 </tbody></table>
+<h4 id="startbackgroundsyncpollinginterval-automaticoutputconsolidation-promisevoid"><a class="header" href="#startbackgroundsyncpollinginterval-automaticoutputconsolidation-promisevoid">startBackgroundSync(pollingInterval, automaticOutputConsolidation): Promise<void></a></h4>
+<p>Starts the background polling and MQTT monitoring.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>pollingInterval</td><td><code>number</code></td><td><code>null</code></td><td>The polling interval in seconds</td></tr>
+<tr><td>automaticOutputConsolidation</td><td><code>boolean</code></td><td><code>null</code></td><td>If outputs should get consolidated automatically</td></tr>
+</tbody></table>
+<h4 id="stop_background_sync-void"><a class="header" href="#stop_background_sync-void">stop_background_sync(): void</a></h4>
+<p>Stops the background polling and MQTT monitoring.</p>
 <h4 id="syncaccountsoptions"><a class="header" href="#syncaccountsoptions">syncAccounts([options])</a></h4>
 <p>Synchronize all stored accounts with the Tangle.</p>
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
@@ -449,6 +457,11 @@ Supported event names:</p>
 </tbody></table>
 <h4 id="generateaddress"><a class="header" href="#generateaddress">generateAddress()</a></h4>
 <p>Generates a new unused address and returns it.</p>
+<h4 id="generateaddressesamount"><a class="header" href="#generateaddressesamount">generateAddresses(amount)</a></h4>
+<p>Generates the given amount of new unused addresses and returns it.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>amount</td><td><code>number</code></td><td><code>undefined</code></td><td>The amount of addresses</td></tr>
+</tbody></table>
 <h4 id="latestaddress"><a class="header" href="#latestaddress">latestAddress()</a></h4>
 <p>Returns the latest address (the one with the biggest keyIndex).</p>
 <h4 id="getunusedaddress"><a class="header" href="#getunusedaddress">getUnusedAddress()</a></h4>
@@ -457,8 +470,10 @@ which is an address without balance.</p>
 <h3 id="clientoptions"><a class="header" href="#clientoptions">ClientOptions</a></h3>
 <table><thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>[network]</td><td><code>number</code></td><td><code>undefined</code></td><td>The tangle network to connect to (Mainnet = 1, Devnet = 1, Comnet = 3)</td></tr>
-<tr><td>[node]</td><td><code>string</code></td><td><code>undefined</code></td><td>A node URL to connect to</td></tr>
-<tr><td>[nodes]</td><td><code>string[]</code></td><td><code>undefined</code></td><td>A list node URL to connect to</td></tr>
+<tr><td>[primaryNode]</td><td><code>NodeUrl</td><td><a href="#node">Node</a></code></td><td><code>undefined</code></td></tr>
+<tr><td>[primaryPoWNode]</td><td><code>NodeUrl</td><td><a href="#node">Node</a></code></td><td><code>undefined</code></td></tr>
+<tr><td>[node]</td><td><code>NodeUrl</td><td><a href="#node">Node</a></code></td><td><code>undefined</code></td></tr>
+<tr><td>[nodes]</td><td><code>NodeUrl</td><td><a href="#node">Node</a>[]</code></td><td><code>undefined</code></td></tr>
 <tr><td>[quorumSize]</td><td><code>number</code></td><td><code>undefined</code></td><td>If multiple nodes are provided, quorum size determines the number of nodes to query to check for quorum.</td></tr>
 <tr><td>[quorumThreshold]</td><td><code>number</code></td><td><code>undefined</code></td><td>Minimum number of nodes from the quorum pool that need to agree to consider a result true.</td></tr>
 <tr><td>[localPow]</td><td><code>boolean</code></td><td><code>true</code></td><td>Whether to use local or remote PoW.</td></tr>
@@ -472,6 +487,19 @@ which is an address without balance.</p>
 <tr><td>useWs</td><td><code>boolean</code></td><td>Defines if websockets should be used (true) or TCP (false)</td></tr>
 <tr><td>maxReconnectionAttempts</td><td><code>number</code></td><td>Defines the maximum reconnection attempts before it returns an error</td></tr>
 <tr><td>port</td><td><code>number</code></td><td>Defines the port to be used for the MQTT connection</td></tr>
+</tbody></table>
+<h3 id="auth"><a class="header" href="#auth">Auth</a></h3>
+<table><thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[jwt]</td><td><code>string</code></td><td><code>undefined</code></td><td>Optional JSON Web Token.</td></tr>
+<tr><td>[username]</td><td><code>string</code></td><td><code>undefined</code></td><td>Optional name for basic authentication</td></tr>
+<tr><td>[password]</td><td><code>string</code></td><td><code>undefined</code></td><td>Optional password for basic authentication</td></tr>
+</tbody></table>
+<h3 id="node"><a class="header" href="#node">Node</a></h3>
+<p>NodeUrl = string</p>
+<table><thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>[url]</td><td><code>NodeUrl</code></td><td><code>undefined</code></td><td>Node url</td></tr>
+<tr><td>[auth]</td><td><code>Auth</code></td><td><code>undefined</code></td><td>Optional authentication options</td></tr>
+<tr><td>[disabled]</td><td><code>boolean</code></td><td><code>false</code></td><td>Optional password for basic authentication</td></tr>
 </tbody></table>
 
                     </main>

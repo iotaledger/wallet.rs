@@ -161,7 +161,7 @@
                     <main>
                         <h1 id="examples"><a class="header" href="#examples">Examples</a></h1>
 <p>You can see the examples in the <a href="examples/">examples</a> directory and try them with:</p>
-<pre><code>cargo run --example # lists the available examples
+<pre><code class="language-bash">cargo run --example # lists the available examples
 cargo run --example transfer # execute the `transfer` example
 </code></pre>
 <h2 id="backup-and-restore-example"><a class="header" href="#backup-and-restore-example">Backup and restore example</a></h2>
@@ -217,6 +217,175 @@ let imported_account = imported_account_handle.read().await;
 </span></code></pre></pre>
 <p>That's it! Now you know, how do backup and restore your account!</p>
 <p>See the full example <a href="https://github.com/iotaledger/wallet.rs/blob/develop/examples/backup_and_restore.rs">here</a></p>
+<p>Transfer example:</p>
+<pre><pre class="playground"><code class="language-rust">// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+use iota_wallet::{
+    account_manager::AccountManager, client::ClientOptionsBuilder, message::Transfer, signing::SignerType,
+};
+use std::num::NonZeroU64;
+
+#[tokio::main]
+async fn main() -&gt; iota_wallet::Result&lt;()&gt; {
+    let mut manager = AccountManager::builder().finish().await.unwrap();
+    manager.set_stronghold_password(&quot;password&quot;).await.unwrap();
+    manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
+
+    // first we'll create an example account and store it
+    let client_options = ClientOptionsBuilder::new()
+        .with_node(&quot;https://api.lb-0.testnet.chrysalis2.com&quot;)?
+        .build()
+        .unwrap();
+    let account = manager
+        .create_account(client_options)?
+        .alias(&quot;alias&quot;)
+        .initialise()
+        .await?;
+
+    let address = account.generate_address().await?;
+    println!(
+        &quot;Send iotas from the faucet to {} and press enter after the transaction got confirmed&quot;,
+        address.address().to_bech32()
+    );
+    let mut message = String::new();
+    std::io::stdin().read_line(&amp;mut message).unwrap();
+    println!(&quot;Sending transfer...&quot;);
+    let message = account
+        .transfer(
+            Transfer::builder(
+                account.latest_address().await.address().clone(),
+                NonZeroU64::new(1500000).unwrap(),
+            )
+            .finish(),
+        )
+        .await?;
+    println!(&quot;Message sent: {}&quot;, message.id());
+
+    Ok(())
+}
+</code></pre></pre>
+<p>Events example:</p>
+<pre><pre class="playground"><code class="language-rust">// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+//! cargo run --example event --release
+
+use iota_wallet::{
+    account_manager::AccountManager, address::Address, client::ClientOptionsBuilder, event::on_balance_change,
+    message::MessageId, signing::SignerType, Result,
+};
+use serde::Deserialize;
+use std::str::FromStr;
+
+#[tokio::main]
+async fn main() -&gt; Result&lt;()&gt; {
+    let mut manager = AccountManager::builder().finish().await?;
+    manager.set_stronghold_password(&quot;password&quot;).await?;
+    manager.store_mnemonic(SignerType::Stronghold, None).await?;
+
+    // first we'll create an example account and store it
+    let client_options = ClientOptionsBuilder::new()
+        .with_node(&quot;https://api.lb-0.testnet.chrysalis2.com&quot;)?
+        .build()?;
+
+    let account = manager
+        .create_account(client_options)?
+        .alias(&quot;alias&quot;)
+        .initialise()
+        .await?;
+
+    // Possible events are: on_balance_change, on_broadcast, on_confirmation_state_change, on_error,
+    // on_migration_progress, on_new_transaction, on_reattachment, on_stronghold_status_change,
+    // on_transfer_progress,
+    on_balance_change(move |event| {
+        println!(&quot;BalanceEvent: {:?}&quot;, event);
+        println!(&quot;Press enter to exit&quot;);
+    })
+    .await;
+
+    let address = account.generate_address().await?;
+    println!(&quot;Requesting funds from the faucet to {}&quot;, address.address().to_bech32());
+    get_funds(&amp;address).await?;
+
+    // Wait for event before exit
+    let mut exit = String::new();
+    std::io::stdin().read_line(&amp;mut exit).unwrap();
+    Ok(())
+}
+
+#[derive(Deserialize)]
+struct FaucetMessageResponse {
+    id: String,
+}
+
+#[derive(Deserialize)]
+struct FaucetResponse {
+    data: FaucetMessageResponse,
+}
+
+async fn get_funds(address: &amp;Address) -&gt; Result&lt;MessageId&gt; {
+    // use the faucet to get funds on the address
+    let response = reqwest::get(&amp;format!(
+        &quot;https://faucet.testnet.chrysalis2.com/api?address={}&quot;,
+        address.address().to_bech32()
+    ))
+    .await
+    .unwrap()
+    .json::&lt;FaucetResponse&gt;()
+    .await
+    .unwrap();
+    let faucet_message_id = MessageId::from_str(&amp;response.data.id)?;
+
+    println!(&quot;Got funds from faucet, message id: {:?}&quot;, faucet_message_id);
+
+    Ok(faucet_message_id)
+}
+</code></pre></pre>
+<p>Logger example:</p>
+<pre><pre class="playground"><code class="language-rust">// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+//! cargo run --example logger --release
+
+use iota_client::common::logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
+use iota_wallet::account_manager::AccountManager;
+use log::LevelFilter;
+use std::time::Instant;
+
+#[tokio::main]
+async fn main() -&gt; iota_wallet::Result&lt;()&gt; {
+    // Generates a wallet.log file with logs for debugging
+    let output_config = LoggerOutputConfigBuilder::new()
+        .name(&quot;wallet.log&quot;)
+        .level_filter(LevelFilter::Debug);
+    let config = LoggerConfig::build().with_output(output_config).finish();
+    logger_init(config).unwrap();
+
+    let mut manager = AccountManager::builder()
+        .with_storage(&quot;./backup&quot;, None)?
+        .with_skip_polling()
+        .finish()
+        .await?;
+    manager.set_stronghold_password(&quot;password&quot;).await?;
+
+    let account = manager.get_account(&quot;Alice&quot;).await?;
+
+    let now = Instant::now();
+    account.sync().await.execute().await?;
+    println!(&quot;Syncing took: {:.2?}&quot;, now.elapsed());
+
+    println!(&quot;Balance: {:?}&quot;, account.balance().await?);
+
+    let addresses = account.list_unspent_addresses().await?;
+    println!(&quot;Addresses: {}&quot;, addresses.len());
+
+    let address = account.generate_address().await?;
+    println!(&quot;Generated a new address: {:?}&quot;, address);
+
+    Ok(())
+}
+</code></pre></pre>
 
                     </main>
 

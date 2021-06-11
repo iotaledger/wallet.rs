@@ -174,7 +174,7 @@ Also for all the optional values, the default values are the same as the ones in
 <table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
 <tr><td>[storage_path]</td><td><code>str</code></td><td><code><code>./storage</code></code></td><td>The path where the database file will be saved</td></tr>
 <tr><td>[storage_password]</td><td><code>str</code></td><td><code>undefined</code></td><td>The storage password to encrypt/decrypt accounts</td></tr>
-<tr><td>[polling_interval]</td><td><code>int</code></td><td><code>30000</code></td><td>The polling interval in milliseconds</td></tr>
+<tr><td>[polling_interval]</td><td><code>int</code></td><td><code>30000</code></td><td>The polling interval in seconds</td></tr>
 <tr><td>[automatic_output_consolidation]</td><td><code>bool</code></td><td><code>true</code></td><td>Disables the automatic output consolidation process</td></tr>
 <tr><td>[output_consolidation_threshold]</td><td><code>int</code></td><td><code>100</code></td><td>Sets the number of outputs an address must have to trigger the automatic consolidation process</td></tr>
 <tr><td>[sync_spent_outputs]</td><td><code>boolean</code></td><td><code>false</code></td><td>Enables fetching spent output history on account sync</td></tr>
@@ -183,6 +183,12 @@ Also for all the optional values, the default values are the same as the ones in
 </tbody></table>
 <p>Note: if the <code>storage_path</code> is set, then the <code>storage</code> needs to be set too. An exception will be thrown when errors happened.</p>
 <p><strong>Returns</strong> The constructed <a href="#accountmanager">AccountManager</a>.</p>
+<h4 id="start_background_syncpolling_interval-automatic_output_consolidation-void"><a class="header" href="#start_background_syncpolling_interval-automatic_output_consolidation-void">start_background_sync(polling_interval, automatic_output_consolidation): void</a></h4>
+<p>Starts the background polling and MQTT monitoring.</p>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>polling_interval</td><td><code>number</code></td><td><code>undefined</code></td><td>The polling interval in seconds</td></tr>
+<tr><td>automatic_output_consolidation</td><td><code>boolean</code></td><td><code>undefined</code></td><td>If outputs should get consolidated automatically</td></tr>
+</tbody></table>
 <h4 id="stop_background_sync-void"><a class="header" href="#stop_background_sync-void">stop_background_sync(): void</a></h4>
 <p>Stops the background polling and MQTT monitoring.</p>
 <h4 id="set_storage_passwordpassword-void"><a class="header" href="#set_storage_passwordpassword-void">set_storage_password(password): void</a></h4>
@@ -443,6 +449,11 @@ The account syncing process ensures that the latest metadata (balance, transacti
 <p><strong>Returns</strong> the list of generated <a href="#walletmessage">WalletMessage</a>.</p>
 <h4 id="generate_address-a-hrefaddressaddressa"><a class="header" href="#generate_address-a-hrefaddressaddressa">generate_address(): <a href="#address">Address</a></a></h4>
 <p><strong>Returns</strong> a new unused address and links it to this account.</p>
+<h4 id="generate_addressesamount-lista-hrefaddressaddressa"><a class="header" href="#generate_addressesamount-lista-hrefaddressaddressa">generate_addresses(amount): list[<a href="#address">Address</a>]</a></h4>
+<table><thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td>amount</td><td><code>int</code></td><td><code>undefined</code></td><td>The amount of addresses to generate</td></tr>
+</tbody></table>
+<p><strong>Returns</strong> list with amount of new unused addresses and links them to this account.</p>
 <h4 id="get_unused_address-a-hrefaddressaddressa"><a class="header" href="#get_unused_address-a-hrefaddressaddressa">get_unused_address(): <a href="#address">Address</a></a></h4>
 <p>Synchronizes the account addresses with the Tangle and returns the latest address in the account, which is an address without balance.</p>
 <p><strong>Returns</strong> the latest address in the account.</p>
@@ -689,6 +700,8 @@ The account can be initialised with locally stored address history.</p>
 <h3 id="clientoptions"><a class="header" href="#clientoptions">ClientOptions</a></h3>
 <p>A dict with the following key/value pairs.</p>
 <pre><code class="language-python">client_options = {
+    'primary_node': [Node](#node)] (optional),
+    'primary_pow_node': [Node](#node)] (optional),
     'nodes': list[[Node](#node)] (optional),
     'node_pool_urls': list[str] (optional),
     'network': str (optional),
