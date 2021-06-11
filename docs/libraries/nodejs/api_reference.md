@@ -459,7 +459,7 @@ Generates a new unused address and returns it.
 
 #### generateAddresses(amount)
 
-Generates amount new unused address and returns it.
+Generates the given amount of new unused addresses and returns it.
 
 | Param  | Type                | Default                | Description             |
 | ------ | ------------------- | ---------------------- | ----------------------- |
