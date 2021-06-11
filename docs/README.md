@@ -1,21 +1,33 @@
-# Documentation Area
-Everything related to the IOTA Wallet library.
+# Website
 
-## Run locally
-You can run a local server to run the documentation page.
+This website is built using [Docusaurus 2](https://docusaurus.io/), a modern static website generator.
 
-### Dependencies
+## Installation
 
-[mdBook]https://github.com/rust-lang/mdBook is a utility to create modern online books from Markdown files.
-
-```bash
-cargo install mdbook
+```console
+yarn install
 ```
 
-### Run it
+## Local Development
 
-```bash
-mdbook serve
+```console
+yarn start
 ```
 
-Now you can visit `http://localhost:3000`.
+This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
+
+## Build
+
+```console
+yarn build
+```
+
+This command generates static content into the `build` directory and can be served using any static contents hosting service.
+
+## Deployment
+
+```console
+GIT_USER=<Your GitHub username> USE_SSH=true yarn deploy
+```
+
+If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.

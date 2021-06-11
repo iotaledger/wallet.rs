@@ -1,12 +1,12 @@
 # IOTA Wallet Libraries
 
 There are currently available the following official bindings to `wallet.rs`:
-- [Rust](./rust/) 
-- [Node.js](./nodejs/) 
-- [Python](./python/)
+- [Rust](rust/README.md) 
+- [Node.js](nodejs/README.md) 
+- [Python](python/README.md)
 
 ## Getting Started
-It is a recommended approach to start your interactions with IOTA on a `testnet` network.  API load balancer: api.lb-0.testnet.chrysalis2.com  
+It is a recommended approach to start your interactions with IOTA on a `testnet` network.  API load balancer: `api.lb-0.testnet.chrysalis2.com`  
 
 Network explorer is available at [IOTA Tangle Explorer](https://explorer.iota.org/testnet).
 
