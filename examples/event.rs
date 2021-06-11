@@ -12,7 +12,7 @@ use std::str::FromStr;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut manager = AccountManager::builder().finish().await?;
+    let manager = AccountManager::builder().finish().await?;
     manager.set_stronghold_password("password").await?;
     manager.store_mnemonic(SignerType::Stronghold, None).await?;
 
