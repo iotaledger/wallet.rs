@@ -1037,7 +1037,7 @@ impl AccountSynchronizer {
                 let events = Self::get_events(
                     self.account_handle.account_options,
                     &addresses_before_sync,
-                    account.addresses(),
+                    &new_addresses,
                     &new_messages,
                     &confirmation_changed_messages,
                 )

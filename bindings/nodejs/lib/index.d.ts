@@ -192,6 +192,8 @@ export declare interface Node {
 }
 
 export declare interface ClientOptions {
+  primaryNode?: NodeUrl | Node;
+  primaryPoWNode?: NodeUrl | Node;
   node?: NodeUrl | Node;
   nodes?: Array<NodeUrl | Node>;
   network?: string;

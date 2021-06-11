@@ -79,7 +79,7 @@ pub struct BalanceEvent {
 }
 
 /// The `address consolidation needed` data.
-#[derive(Getters, Serialize, Deserialize)]
+#[derive(Debug, Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct AddressConsolidationNeeded {
     /// The associated account identifier.
@@ -91,7 +91,7 @@ pub struct AddressConsolidationNeeded {
 }
 
 /// A transaction-related event data.
-#[derive(Clone, Getters, Serialize, Deserialize)]
+#[derive(Clone, Debug, Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct TransactionEvent {
     /// Event unique identifier.
@@ -105,7 +105,7 @@ pub struct TransactionEvent {
 }
 
 /// A transaction confirmation state change event data.
-#[derive(Clone, Getters, Serialize, Deserialize)]
+#[derive(Clone, Debug, Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct TransactionConfirmationChangeEvent {
     /// Event unique identifier.
@@ -121,7 +121,7 @@ pub struct TransactionConfirmationChangeEvent {
 }
 
 /// Transaction reattachment event data.
-#[derive(Clone, Getters, Serialize, Deserialize)]
+#[derive(Clone, Debug, Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct TransactionReattachmentEvent {
     /// Event unique identifier.
@@ -156,7 +156,7 @@ pub enum TransferProgressType {
 }
 
 /// Transfer event data.
-#[derive(Clone, Getters, Serialize, Deserialize)]
+#[derive(Clone, Debug, Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct TransferProgress {
     #[serde(rename = "accountId")]
@@ -204,7 +204,7 @@ pub enum MigrationProgressType {
 }
 
 /// Migration event data.
-#[derive(Clone, Getters, Serialize, Deserialize)]
+#[derive(Clone, Debug, Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct MigrationProgress {
     /// The transfer event type.

@@ -33,6 +33,10 @@ fn default_local_pow() -> bool {
 
 #[derive(Deserialize)]
 pub struct ClientOptionsDto {
+    #[serde(rename = "primaryNode")]
+    primary_node: Option<NodeDto>,
+    #[serde(rename = "primaryPoWNode")]
+    primary_pow_node: Option<NodeDto>,
     node: Option<NodeDto>,
     #[serde(default)]
     nodes: Vec<NodeDto>,
@@ -75,6 +79,34 @@ impl From<ClientOptionsDto> for ClientOptions {
             )
             .unwrap()
             .with_local_pow(options.local_pow);
+        if let Some(primary_node) = options.primary_node {
+            let node: Node = primary_node.into();
+            if let Some(auth) = node.auth {
+                client_builder = client_builder
+                    .with_primary_node_auth(
+                        node.url.as_str(),
+                        auth.jwt.as_deref(),
+                        auth.basic_auth_name_pwd.as_ref().map(|(ref x, ref y)| (&x[..], &y[..])),
+                    )
+                    .unwrap();
+            } else {
+                client_builder = client_builder.with_primary_node(node.url.as_str()).unwrap();
+            }
+        }
+        if let Some(primary_pow_node) = options.primary_pow_node {
+            let node: Node = primary_pow_node.into();
+            if let Some(auth) = node.auth {
+                client_builder = client_builder
+                    .with_primary_pow_node_auth(
+                        node.url.as_str(),
+                        auth.jwt.as_deref(),
+                        auth.basic_auth_name_pwd.as_ref().map(|(ref x, ref y)| (&x[..], &y[..])),
+                    )
+                    .unwrap();
+            } else {
+                client_builder = client_builder.with_primary_pow_node(node.url.as_str()).unwrap();
+            }
+        }
         let mut nodes = options.nodes;
         if let Some(node) = options.node {
             nodes.push(node);

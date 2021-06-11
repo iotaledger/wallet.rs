@@ -94,6 +94,28 @@ impl ClientOptionsBuilder {
         }
     }
 
+    pub fn with_primary_node(&mut self, node: &str) -> ClientOptionsBuilder {
+        let new_builder = self
+            .builder
+            .borrow_mut()
+            .take()
+            .unwrap()
+            .with_primary_node(node)
+            .unwrap();
+        ClientOptionsBuilder::new_with_builder(new_builder)
+    }
+
+    pub fn with_primary_pow_node(&mut self, node: &str) -> ClientOptionsBuilder {
+        let new_builder = self
+            .builder
+            .borrow_mut()
+            .take()
+            .unwrap()
+            .with_primary_pow_node(node)
+            .unwrap();
+        ClientOptionsBuilder::new_with_builder(new_builder)
+    }
+
     pub fn with_node(&mut self, node: &str) -> ClientOptionsBuilder {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_node(node).unwrap();
         ClientOptionsBuilder::new_with_builder(new_builder)

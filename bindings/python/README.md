@@ -956,6 +956,8 @@ A dict with the following key/value pairs.
 
 ```python
 client_options = {
+    'primary_node': [Node](#node)] (optional),
+    'primary_pow_node': [Node](#node)] (optional),
     'nodes': list[[Node](#node)] (optional),
     'node_pool_urls': list[str] (optional),
     'network': str (optional),

@@ -475,24 +475,43 @@ which is an address without balance.
 
 ### ClientOptions
 
-| Field               | Type                             | Default                | Description                                                                                              |
-| ------------------- | -------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------- |
-| [network]           | <code>number</code>              | <code>undefined</code> | The tangle network to connect to (Mainnet = 1, Devnet = 1, Comnet = 3)                                   |
-| [node]              | <code>string</code>              | <code>undefined</code> | A node URL to connect to                                                                                 |
-| [nodes]             | <code>string[]</code>            | <code>undefined</code> | A list node URL to connect to                                                                            |
-| [quorumSize]        | <code>number</code>              | <code>undefined</code> | If multiple nodes are provided, quorum size determines the number of nodes to query to check for quorum. |
-| [quorumThreshold]   | <code>number</code>              | <code>undefined</code> | Minimum number of nodes from the quorum pool that need to agree to consider a result true.               |
-| [localPow]          | <code>boolean</code>             | <code>true</code>      | Whether to use local or remote PoW.                                                                      |
-| [MqttBrokerOptions] | <code>MqttBrokerOptions</code>   | <code>undefined</code> | Options for the MQTT broker                                                                              |
+| Field               | Type                                   | Default                | Description                                                                                              |
+| ------------------- | -------------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------- |
+| [network]           | <code>number</code>                    | <code>undefined</code> | The tangle network to connect to (Mainnet = 1, Devnet = 1, Comnet = 3)                                   |
+| [primaryNode]       | <code>NodeUrl | [Node](#node)</code>   | <code>undefined</code> | A node URL to alway connect to first                                                                     |
+| [primaryPoWNode]    | <code>NodeUrl | [Node](#node)</code>   | <code>undefined</code> | A node URL to alway connect to first when using remote PoW, will be used before primaryNode              |
+| [node]              | <code>NodeUrl | [Node](#node)</code>   | <code>undefined</code> | A node URL to connect to                                                                                 |
+| [nodes]             | <code>NodeUrl | [Node](#node)[]</code> | <code>undefined</code> | A list node URL to connect to                                                                            |
+| [quorumSize]        | <code>number</code>                    | <code>undefined</code> | If multiple nodes are provided, quorum size determines the number of nodes to query to check for quorum. |
+| [quorumThreshold]   | <code>number</code>                    | <code>undefined</code> | Minimum number of nodes from the quorum pool that need to agree to consider a result true.               |
+| [localPow]          | <code>boolean</code>                   | <code>true</code>      | Whether to use local or remote PoW.                                                                      |
+| [MqttBrokerOptions] | <code>MqttBrokerOptions</code>         | <code>undefined</code> | Options for the MQTT broker                                                                              |
 
 ### MqttBrokerOptions
 
 All fields are optional.
 
-| Field                   | Type                | Description                                                                                           |
-| ----------------------- | ------------------- | ----------------------------------------------------------------------------------------------------- |
+| Field                   | Type                 | Description                                                                                           |
+| ----------------------- | -------------------- | ----------------------------------------------------------------------------------------------------- |
 | automaticDisconnect     | <code>boolean</code> | Whether the MQTT broker should be automatically disconnected when all topics are unsubscribed or not. |
-| timeout                 | <code>number</code> | MQTT connection timeout in secods                                                                     |
-| useWs                   | <code>boolean</code>   | Defines if websockets should be used (true) or TCP (false)                                            |
-| maxReconnectionAttempts | <code>number</code> | Defines the maximum reconnection attempts before it returns an error                                  |
-| port                    | <code>number</code> | Defines the port to be used for the MQTT connection                                                   |
+| timeout                 | <code>number</code>  | MQTT connection timeout in secods                                                                     |
+| useWs                   | <code>boolean</code> | Defines if websockets should be used (true) or TCP (false)                                            |
+| maxReconnectionAttempts | <code>number</code>  | Defines the maximum reconnection attempts before it returns an error                                  |
+| port                    | <code>number</code>  | Defines the port to be used for the MQTT connection                                                   |
+
+### Auth
+| Field      | Type                 | Default                | Description                                |
+| ---------- | -------------------- | ---------------------- | ------------------------------------------ |
+| [jwt]      | <code>string</code>  | <code>undefined</code> | Optional JSON Web Token.                   |
+| [username] | <code>string</code>  | <code>undefined</code> | Optional name for basic authentication     |
+| [password] | <code>string</code>  | <code>undefined</code> | Optional password for basic authentication |
+
+### Node
+
+NodeUrl = string
+
+| Field      | Type                 | Default                | Description                                |
+| ---------- | -------------------- | ---------------------- | ------------------------------------------ |
+| [url]      | <code>NodeUrl</code> | <code>undefined</code> | Node url                                   |
+| [auth]     | <code>Auth</code>    | <code>undefined</code> | Optional authentication options            |
+| [disabled] | <code>boolean</code> | <code>false</code>     | Optional password for basic authentication |
