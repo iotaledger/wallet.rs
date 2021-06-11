@@ -10,7 +10,7 @@ cargo run --example transfer # execute the `transfer` example
 
 Create an account manager and set an password:
 ```rust
-let mut manager = AccountManager::builder().finish().await.unwrap();
+let manager = AccountManager::builder().finish().await.unwrap();
 
 manager.set_stronghold_password("password").await.unwrap();
 manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
