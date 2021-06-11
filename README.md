@@ -59,7 +59,7 @@ To use the library, add this to your `Cargo.toml`:
 
 ```
 [dependencies]
-iota-wallet = { git = "https://github.com/iotaledger/wallet.rs" }
+iota-wallet = { git = "https://github.com/iotaledger/wallet.rs", branch = "develop", default-features = false, features = ["stronghold"] }
 ```
 
 ### Initialisation

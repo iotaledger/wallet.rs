@@ -1,5 +1,18 @@
 # Changelog
 
+## \[0.5.0]
+
+- Added generateAddresses function.
+  - [ee3c0fa0](https://github.com/iotaledger/wallet.rs/commit/ee3c0fa0ae12cf80161d351a9f0af83c7c49f4a6) Add generateAddresses change file ([#660](https://github.com/iotaledger/wallet.rs/pull/660)) on 2021-06-11
+- Added primaryNode and primaryPoWNode to the ClientOptions.
+  - [3d66485c](https://github.com/iotaledger/wallet.rs/commit/3d66485ca11d21fbd64fafec9e68b377235c8c9b) Bindings/primary node ([#629](https://github.com/iotaledger/wallet.rs/pull/629)) on 2021-06-10
+- Added startBackgroundSync.
+  - [bd44d4b0](https://github.com/iotaledger/wallet.rs/commit/bd44d4b04c46f6560404761615f78ba36774d726) Expose start_background_sync ([#640](https://github.com/iotaledger/wallet.rs/pull/640)) on 2021-06-07
+- Improve syncing speed.
+  - [72e6d649](https://github.com/iotaledger/wallet.rs/commit/72e6d6493ae497172190300b8da8cdecd5d47d52) improve syncing speed ([#648](https://github.com/iotaledger/wallet.rs/pull/648)) on 2021-06-10
+- Build bindings on Ubuntu 18.04 to support older versions of glibc
+  - [359eed9c](https://github.com/iotaledger/wallet.rs/commit/359eed9c42e5e8f92f215b9d3a724b85e1837a87) fix(ci): Build Node.js bindings on Ubuntu 18.04 ([#636](https://github.com/iotaledger/wallet.rs/pull/636)) on 2021-06-10
+
 ## \[0.4.2]
 
 - Improve syncing speed.

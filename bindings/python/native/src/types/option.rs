@@ -67,6 +67,8 @@ impl From<RustNode> for Node {
 
 #[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
 pub struct ClientOptions {
+    pub primary_node: Option<Node>,
+    pub primary_pow_node: Option<Node>,
     pub nodes: Option<Vec<Node>>,
     pub node_pool_urls: Option<Vec<String>>,
     pub network: Option<String>,
@@ -110,6 +112,38 @@ impl From<BrokerOptions> for RustBrokerOptions {
 impl From<ClientOptions> for RustClientOptions {
     fn from(client_options: ClientOptions) -> Self {
         let mut builder = RustClientOptions::builder();
+        if let Some(primary_node) = client_options.primary_node {
+            let primary_node: RustNode = primary_node.into();
+            if let Some(auth) = primary_node.auth {
+                builder = builder
+                    .with_primary_node_auth(
+                        primary_node.url.as_str(),
+                        auth.jwt.as_deref(),
+                        auth.basic_auth_name_pwd.as_ref().map(|(ref x, ref y)| (&x[..], &y[..])),
+                    )
+                    .expect("with_primary_node_auth failed");
+            } else {
+                builder = builder
+                    .with_primary_node(primary_node.url.as_str())
+                    .expect("with_primary_node failed");
+            }
+        }
+        if let Some(primary_pow_node) = client_options.primary_pow_node {
+            let primary_pow_node: RustNode = primary_pow_node.into();
+            if let Some(auth) = primary_pow_node.auth {
+                builder = builder
+                    .with_primary_pow_node_auth(
+                        primary_pow_node.url.as_str(),
+                        auth.jwt.as_deref(),
+                        auth.basic_auth_name_pwd.as_ref().map(|(ref x, ref y)| (&x[..], &y[..])),
+                    )
+                    .expect("with_primary_pow_node_auth failed");
+            } else {
+                builder = builder
+                    .with_primary_pow_node(primary_pow_node.url.as_str())
+                    .expect("with_primary_pow_node failed");
+            }
+        }
         if let Some(nodes) = client_options.nodes {
             for node in nodes {
                 let node: RustNode = node.into();
@@ -120,16 +154,16 @@ impl From<ClientOptions> for RustClientOptions {
                             auth.jwt.as_deref(),
                             auth.basic_auth_name_pwd.as_ref().map(|(ref x, ref y)| (&x[..], &y[..])),
                         )
-                        .unwrap();
+                        .expect("with_node_auth failed");
                 } else {
-                    builder = builder.with_node(node.url.as_str()).unwrap();
+                    builder = builder.with_node(node.url.as_str()).expect("with_node failed");
                 }
             }
         }
         if let Some(node_pool_urls) = client_options.node_pool_urls {
             builder = builder
                 .with_node_pool_urls(&(node_pool_urls.iter().map(|url| &url[..]).collect::<Vec<&str>>()))
-                .unwrap();
+                .expect("with_node_pool_urls failed");
         }
         if let Some(network) = client_options.network {
             builder = builder.with_network(network);
@@ -174,6 +208,8 @@ impl From<&RustBrokerOptions> for BrokerOptions {
 impl From<RustClientOptions> for ClientOptions {
     fn from(client_options: RustClientOptions) -> Self {
         Self {
+            primary_node: client_options.primary_node().as_ref().map(|n| n.clone().into()),
+            primary_pow_node: client_options.primary_pow_node().as_ref().map(|n| n.clone().into()),
             nodes: Some(client_options.nodes().iter().map(|s| s.clone().into()).collect()),
             node_pool_urls: Some(
                 client_options

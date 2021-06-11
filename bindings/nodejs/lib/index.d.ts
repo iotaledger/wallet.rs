@@ -158,6 +158,7 @@ export declare class Account {
   getMessage(id: string): Message | undefined
   getAddress(addressBech32: string): Address | undefined
   generateAddress(): Address
+  generateAddresses(amount: number): Address[]
   latestAddress(): Address
   getUnusedAddress(): Address
   isLatestAddressUnused(): Promise<boolean>
@@ -191,6 +192,8 @@ export declare interface Node {
 }
 
 export declare interface ClientOptions {
+  primaryNode?: NodeUrl | Node;
+  primaryPoWNode?: NodeUrl | Node;
   node?: NodeUrl | Node;
   nodes?: Array<NodeUrl | Node>;
   network?: string;

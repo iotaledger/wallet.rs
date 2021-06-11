@@ -552,6 +552,14 @@ Consolidates the account addresses outputs.
 
 **Returns** a new unused address and links it to this account.
 
+#### generate_addresses(amount): list[[Address](#address)]
+
+| Param  | Type             | Default                | Description                        |
+| ------ | ---------------- | ---------------------- | ---------------------------------- |
+| amount | <code>int</code> | <code>undefined</code> | The amount of addresses to generate|
+
+**Returns** list with amount of new unused addresses and links them to this account.
+
 #### get_unused_address(): [Address](#address)
 
 Synchronizes the account addresses with the Tangle and returns the latest address in the account, which is an address without balance.
@@ -948,6 +956,8 @@ A dict with the following key/value pairs.
 
 ```python
 client_options = {
+    'primary_node': [Node](#node)] (optional),
+    'primary_pow_node': [Node](#node)] (optional),
     'nodes': list[[Node](#node)] (optional),
     'node_pool_urls': list[str] (optional),
     'network': str (optional),

@@ -13,6 +13,7 @@ use std::str::FromStr;
 #[tokio::main]
 async fn main() -> Result<()> {
     let manager = AccountManager::builder().finish().await?;
+
     manager.set_stronghold_password("password").await?;
     manager.store_mnemonic(SignerType::Stronghold, None).await?;
 
@@ -73,3 +74,4 @@ async fn get_funds(address: &Address) -> Result<MessageId> {
 
     Ok(faucet_message_id)
 }
+
