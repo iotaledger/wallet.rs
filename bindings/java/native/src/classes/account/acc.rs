@@ -149,6 +149,15 @@ impl Account {
         }
     }
 
+    pub fn generate_addresses(&self, amount: usize) -> Result<Vec<Address>> {
+        let addr_res = crate::block_on(async move { self.handle.generate_addresses(amount).await });
+
+        match addr_res {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(addr) => Ok(addr.into_iter().map(|addr| addr.into()).collect()),
+        }
+    }
+
     pub fn get_unused_address(&self) -> Result<Address> {
         let addr_res = crate::block_on(async move { self.handle.get_unused_address().await });
 

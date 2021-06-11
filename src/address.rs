@@ -407,6 +407,23 @@ pub(crate) async fn get_new_address(account: &Account, metadata: GenerateAddress
     Ok(address)
 }
 
+/// Gets a public address for the given account.
+pub(crate) async fn get_address_with_index(
+    account: &Account,
+    key_index: usize,
+    bech32_hrp: String,
+    metadata: GenerateAddressMetadata,
+) -> crate::Result<Address> {
+    let iota_address = get_iota_address(&account, key_index, false, bech32_hrp, metadata).await?;
+    let address = Address {
+        address: iota_address,
+        key_index,
+        internal: false,
+        outputs: Default::default(),
+    };
+    Ok(address)
+}
+
 /// Gets an unused change address for the given account and address.
 pub(crate) async fn get_new_change_address(
     account: &Account,
