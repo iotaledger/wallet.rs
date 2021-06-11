@@ -216,6 +216,9 @@ pub enum Error {
     /// Spent addresses must be the only input in a bundle.
     #[error("can't create migration bundle: the bundle has more than one input and one of them are spent")]
     SpentAddressOnBundle,
+    /// Mutex lock failed.
+    #[error("Mutex lock failed")]
+    PoisonError,
 }
 
 impl Drop for Error {
@@ -354,6 +357,7 @@ impl serde::Serialize for Error {
             Self::InputNotFound => serialize_variant(self, serializer, "InputNotFound"),
             Self::EmptyInputList => serialize_variant(self, serializer, "EmptyInputList"),
             Self::SpentAddressOnBundle => serialize_variant(self, serializer, "SpentAddressOnBundle"),
+            Self::PoisonError => serialize_variant(self, serializer, "PoisonError"),
         }
     }
 }

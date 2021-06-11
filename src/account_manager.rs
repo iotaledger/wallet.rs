@@ -826,7 +826,7 @@ impl AccountManager {
         if let Some(mut mnemonic) = self
             .generated_mnemonic
             .lock()
-            .expect("generated_mnemonic mutex lock failed.")
+            .map_err(|_| crate::Error::PoisonError)?
             .take()
         {
             mnemonic.zeroize();
@@ -843,7 +843,7 @@ impl AccountManager {
             .map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
         self.generated_mnemonic
             .lock()
-            .expect("generated_mnemonic mutex lock failed.")
+            .map_err(|_| crate::Error::PoisonError)?
             .replace(mnemonic.clone());
         Ok(mnemonic)
     }
@@ -860,7 +860,7 @@ impl AccountManager {
         if let Some(generated_mnemonic) = self
             .generated_mnemonic
             .lock()
-            .expect("generated_mnemonic mutex lock failed.")
+            .map_err(|_| crate::Error::PoisonError)?
             .as_ref()
         {
             if generated_mnemonic != mnemonic.as_ref() {
