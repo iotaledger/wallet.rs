@@ -5,7 +5,7 @@ use iota_wallet::{account_manager::AccountManager, client::ClientOptionsBuilder,
 
 #[tokio::main]
 async fn main() -> iota_wallet::Result<()> {
-    let mut manager = AccountManager::builder().finish().await.unwrap();
+    let manager = AccountManager::builder().finish().await.unwrap();
     manager.set_stronghold_password("password").await.unwrap();
     manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
 

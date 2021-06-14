@@ -30,7 +30,7 @@ async fn main() -> Result<()> {
     let _ = fs::remove_dir_all(storage_path);
 
     // setup the account manager
-    let mut manager = AccountManager::builder()
+    let manager = AccountManager::builder()
         .with_storage(storage_path, None)?
         .with_output_consolidation_threshold(OUTPUT_CONSOLIDATION_THRESHOLD)
         .with_automatic_output_consolidation_disabled()

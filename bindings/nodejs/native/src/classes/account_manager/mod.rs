@@ -236,7 +236,7 @@ declare_types! {
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
                 crate::block_on(async move {
-                    let mut manager = ref_.write().await;
+                    let manager = ref_.write().await;
                     manager.set_storage_password(password).await
                 }).expect("error setting storage password");
             }
@@ -250,7 +250,7 @@ declare_types! {
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
                 crate::block_on(async move {
-                    let mut manager = ref_.write().await;
+                    let manager = ref_.write().await;
                     manager.set_stronghold_password(password).await
                 }).expect("error setting stronghold password");
             }
@@ -277,7 +277,7 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let mut manager = crate::block_on(ref_.write());
+                let manager = crate::block_on(ref_.write());
                 manager.generate_mnemonic().expect("failed to generate mnemonic")
             };
             Ok(cx.string(&mnemonic).upcast())
@@ -299,7 +299,7 @@ declare_types! {
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
                 crate::block_on(async move {
-                    let mut manager = ref_.write().await;
+                    let manager = ref_.write().await;
                     manager.store_mnemonic(signer_type, mnemonic).await
                 }).expect("failed to store mnemonic");
             }
@@ -471,7 +471,7 @@ declare_types! {
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
                 crate::block_on(async move {
-                    let mut manager = ref_.write().await;
+                    let manager = ref_.write().await;
                     manager.import_accounts(source, password).await
                 }).expect("error importing accounts");
             };
