@@ -6,7 +6,7 @@ Please note: In is not recommended to store passwords on host's environment vari
 ## Installation
 Easiest way how to get python binding up and running is to leverage pre-built python libraries for linux/macos/windows that can be installed to your python environment (3.6+) via `pip`. The binding is automagically generated using github [actions](https://github.com/iotaledger/wallet.rs/actions/workflows/python_binding_publish.yml).
 
-The latest artifacts for major python versions can be also grabbed using [nighly.link service](https://nightly.link/iotaledger/wallet.rs/workflows/python_binding_publish/develop). Download zip file for the given os and pyversion, unpack wheel file (`.whl`) and install it via `pip`:
+The latest artifacts for major python versions can be also grabbed using [nighly.link service](https://nightly.link/iotaledger/wallet.rs/workflows/python_binding_publish/dev). Download zip file for the given os and pyversion, unpack wheel file (`.whl`) and install it via `pip`:
 
 ```bash
 pip install <wheel_file>
