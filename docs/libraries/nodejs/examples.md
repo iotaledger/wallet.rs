@@ -1,6 +1,6 @@
 # Examples
 
-There are several examples to show the usage of the library. All examples below can be also found in [/bindings/nodejs/examples](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/nodejs/examples)
+There are several examples to show the usage of the library. All examples below can be also found in [/bindings/nodejs/examples](https://github.com/iotaledger/wallet.rs/tree/dev/bindings/nodejs/examples)
 
 All examples below expect your custom password in the `.env` file:
 ```bash
