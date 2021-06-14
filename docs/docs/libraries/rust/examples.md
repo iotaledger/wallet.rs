@@ -1,14 +1,17 @@
 # Examples
-You can see the examples in the [examples](examples/) directory and try them with:
-
+You can see the examples in the library's [examples directory](https://github.com/iotaledger/wallet.rs/tree/dev/examples).
+You can list all available examples by running the following command:
 ```
 cargo run --example # lists the available examples
+```
+To run an example, you can use the following command, replacing `transfer` with the desired example:
+```
 cargo run --example transfer # execute the `transfer` example
 ```
 
 ## Backup and restore example
 
-Create an account manager and set an password:
+1. Create an account manager and set a password:
 ```rust
 let mut manager = AccountManager::builder().finish().await.unwrap();
 
@@ -17,7 +20,7 @@ manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
 
 ```
 
-Create your account:
+2. Create your account:
 
 ```rust
 let client_options = ClientOptionsBuilder::new()
@@ -33,7 +36,7 @@ let id = account_handle.id().await;
 
 ```
 
-Now you can secure your account in a backup file:
+3. You can secure your account in a backup file:
 ```rust
 // backup the stored accounts to ./backup/${backup_name}
 let backup_path = manager.backup("./backup").await?;
@@ -41,7 +44,7 @@ let backup_path = manager.backup("./backup").await?;
 ```
 
 
-You can import the backup later or by another application like here:
+4. You can import the backup later, or in another application using the following snippet:
 ```rust
 manager.import_accounts(backup_path, "password").await?;
 
@@ -52,6 +55,6 @@ let imported_account = imported_account_handle.read().await;
 
 ```
 
-That's it! Now you know, how do backup and restore your account!
+That's it! You can now backup and restore your account!
 
-See the full example [here](https://github.com/iotaledger/wallet.rs/blob/develop/examples/backup_and_restore.rs)
+You can see the full code for the example in the [`wallet.rs` repository](https://github.com/iotaledger/wallet.rs/blob/develop/examples/backup_and_restore.rs)
