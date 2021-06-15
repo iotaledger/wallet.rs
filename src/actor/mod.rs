@@ -289,6 +289,35 @@ impl WalletMessageHandler {
                 let checksum = AccountManager::get_seed_checksum(seed.clone())?;
                 Ok(ResponseType::SeedChecksum(checksum))
             }),
+            MessageType::GetMigrationAddress => {
+                convert_async_panics(|| async {
+                    let address = self.account_manager.get_migration_address().await?;
+                    Ok(ResponseType::MigrationAddress(address))
+                })
+                .await
+            }
+            MessageType::MineBundle {
+                prepared_bundle,
+                spent_bundle_hashes,
+                security_level,
+                timeout,
+                offset,
+            } => {
+                convert_async_panics(|| async {
+                    let mined_bundle = self
+                        .account_manager
+                        .mine_bundle(
+                            prepared_bundle.to_vec(),
+                            spent_bundle_hashes.to_vec(),
+                            *security_level,
+                            *timeout,
+                            *offset,
+                        )
+                        .await?;
+                    Ok(ResponseType::MineBundle(mined_bundle))
+                })
+                .await
+            }
         };
 
         let response = match response {
