@@ -9,6 +9,11 @@ use crate::{
 };
 use futures::{Future, FutureExt};
 use iota_client::bee_message::MessageId;
+use iota_migration::{
+    client::extended::AddressInput,
+    ternary::TryteBuf,
+    transaction::bundled::{Address as TryteAddress, BundledTransactionField},
+};
 use zeroize::Zeroize;
 
 use std::{
@@ -245,6 +250,46 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            MessageType::GetLedgerMigrationData {
+                nodes,
+                permanode,
+                addresses,
+                security_level,
+            } => {
+                convert_async_panics(|| async {
+                    use serde::Deserialize;
+                    #[derive(Deserialize)]
+                    struct AddressIndex {
+                        pub address: String,
+                        pub index: u64,
+                    }
+                    let address_inputs = addresses
+                        .iter()
+                        .map(|address| {
+                            let address_index: AddressIndex = serde_json::from_str(address)?;
+                            Ok(AddressInput {
+                                address: TryteAddress::from_inner_unchecked(
+                                    TryteBuf::try_from_str(&address_index.address)
+                                        .map_err(|_| crate::error::Error::TernaryError)?
+                                        .as_trits()
+                                        .encode(),
+                                ),
+                                index: address_index.index,
+                                security_lvl: security_level.unwrap_or(2),
+                            })
+                        })
+                        .collect::<Result<Vec<AddressInput>>>();
+
+                    let nodes = nodes.iter().map(String::as_ref).collect::<Vec<&str>>();
+
+                    let data = self
+                        .account_manager
+                        .get_ledger_migration_data(address_inputs?, nodes, permanode.clone())
+                        .await?;
+                    Ok(ResponseType::MigrationData(data.into()))
+                })
+                .await
+            }
             MessageType::CreateMigrationBundle {
                 seed,
                 input_address_indexes,
@@ -280,6 +325,17 @@ impl WalletMessageHandler {
                     let migrated_bundle = self
                         .account_manager
                         .send_migration_bundle(&nodes, bundle_hash, *mwm)
+                        .await?;
+                    Ok(ResponseType::SentMigrationBundle(migrated_bundle))
+                })
+                .await
+            }
+            MessageType::SendLedgerMigrationBundle { nodes, bundle, mwm } => {
+                convert_async_panics(|| async {
+                    let nodes = nodes.iter().map(String::as_ref).collect::<Vec<&str>>();
+                    let migrated_bundle = self
+                        .account_manager
+                        .send_ledger_migration_bundle(&nodes, bundle.clone(), *mwm)
                         .await?;
                     Ok(ResponseType::SentMigrationBundle(migrated_bundle))
                 })

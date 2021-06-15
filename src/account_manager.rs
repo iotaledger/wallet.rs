@@ -39,7 +39,7 @@ use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
 use iota_client::{
-    bee_message::prelude::{MessageId, OutputId},
+    bee_message::prelude::{Address, MessageId, OutputId},
     bee_rest_api::types::dtos::LedgerInclusionStateDto,
 };
 use serde::Serialize;
@@ -54,7 +54,7 @@ use zeroize::Zeroize;
 
 mod migration;
 use iota_migration::client::migration::{
-    add_tryte_checksum, encode_migration_address, get_trytes_from_bundle, mine_bundle,
+    add_tryte_checksum, decode_migration_address, encode_migration_address, get_trytes_from_bundle, mine_bundle,
 };
 pub use migration::*;
 
@@ -442,6 +442,40 @@ impl AccountManager {
         })
     }
 
+    /// Gets ledger legacy migration data for provided addresses.
+    pub async fn get_ledger_migration_data(
+        &self,
+        addresses: Vec<iota_migration::client::extended::AddressInput>,
+        nodes: Vec<&str>,
+        permanode: Option<String>,
+    ) -> crate::Result<MigrationData> {
+        let mut legacy_client_builder = iota_migration::ClientBuilder::new().quorum(true);
+        if let Some(permanode) = permanode {
+            legacy_client_builder = legacy_client_builder.permanode(&permanode)?;
+        }
+        for node in nodes {
+            legacy_client_builder = legacy_client_builder.node(node)?;
+        }
+        let mut legacy_client = legacy_client_builder.build()?;
+
+        let last_checked_address_index = match addresses.last() {
+            Some(address) => address.index,
+            None => 0,
+        };
+
+        let migration_inputs = legacy_client
+            .get_ledger_account_data_for_migration()
+            .with_addresses(addresses)
+            .finish()
+            .await?;
+
+        Ok(MigrationData {
+            balance: migration_inputs.0,
+            last_checked_address_index,
+            inputs: migration_inputs.1,
+        })
+    }
+
     /// Convert the first address from the first account to a migration tryte address
     pub async fn get_migration_address(&self) -> crate::Result<String> {
         let deposit_address = self.get_account(0).await?.latest_address().await;
@@ -575,6 +609,45 @@ impl AccountManager {
                 .collect::<String>(),
             address,
             value,
+        })
+    }
+
+    /// Sends the migration bundle to the given node.
+    pub async fn send_ledger_migration_bundle(
+        &self,
+        nodes: &[&str],
+        bundle: Vec<String>,
+        mwm: u8,
+    ) -> crate::Result<MigratedBundle> {
+        let trytes = bundle
+            .into_iter()
+            .map(|tx| {
+                BundledTransaction::from_trits(
+                    &TryteBuf::try_from_str(&tx)
+                        .map_err(|_| crate::error::Error::TernaryError)?
+                        .as_trits(),
+                )
+                .map_err(|_| crate::error::Error::TernaryError)
+            })
+            .collect::<crate::Result<Vec<BundledTransaction>>>()?;
+        if trytes.is_empty() {
+            return Err(crate::Error::MigrationDataNotFound);
+        }
+        let output_tx = trytes[0].clone();
+        let tail_transaction_hash = migration::send_bundle(nodes, trytes, mwm).await?;
+
+        Ok(MigratedBundle {
+            tail_transaction_hash: tail_transaction_hash
+                .to_inner()
+                .encode::<T3B1Buf>()
+                .iter_trytes()
+                .map(char::from)
+                .collect::<String>(),
+            value: *output_tx.value().to_inner() as u64,
+            address: AddressWrapper::new(
+                Address::Ed25519(decode_migration_address(output_tx.address().clone())?),
+                "iota".to_string(),
+            ),
         })
     }
 
