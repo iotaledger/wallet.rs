@@ -60,6 +60,8 @@ One of the key principles behind `stronghold` based storage is that no one can e
 
 If you also want to store a seed somewhere else, you can use the `AccountManager.generateMnemonic()` method. This method will generate a random seed, and it can be used before the actual account initialization.
 
+You can find detailed information about seed generation at [Developer guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#seed).
+
 ### Accounts
 The `wallet` library uses a model of individual accounts to separate individual users/clients from each other. It is possible to generate multiple addresses for each account deterministically. 
 
@@ -147,6 +149,8 @@ run()
 ## Checking balance
 Before we continue further, please visit the [IOTA testnet faucet service](https://faucet.testnet.chrysalis2.com/) and send to your testnet addresses some tokens.
 
+![faucet screenshot](../../../static/img/libraries/screenshot_faucet.png)
+
 You can use the following example to generate a new database and account:
 
 ```javascript
@@ -174,6 +178,7 @@ async function run() {
 
 run()
 ```
+IOTA is based on `Unspent Transaction Output` model. You can find a detailed explanation in the [Developer guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#unspent-transaction-output-utxo).
 
 ## Sending tokens
 You can use the following example to send tokens using an `Account` instance to any desired `address`:
@@ -225,6 +230,8 @@ The network uses a [dust protection](https://chrysalis.docs.iota.org/guides/dev_
 "... micro-transaction below 1Mi of IOTA tokens can be sent to another address if there is already at least 1Mi on that address. 
 That's why we sent 1Mi in the last example to comply with the protection."
 :::
+
+Dust protection also means you can't leave less than 1Mi on a spent address (leave a dust behind).
 
 ## Backup a database
 

@@ -1,7 +1,7 @@
 # API Reference
 
-Note that in the following APIs, the corresponding exception will be returned if an error occurs.
-Also for all the optional values, the default values are the same as the ones in the Rust version.
+Please note that in the following APIs, the corresponding exception will be returned if an error occurs.
+For all the optional values, the default values are the same as the ones in the Rust version.
 
 ## init_logger(config)
 

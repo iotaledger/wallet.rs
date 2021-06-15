@@ -1,10 +1,22 @@
 # Examples
+This section will guide you through several examples using the python binding of the `wallet.rs` library. You can also find the code for the examples in the `/bindings/python/examples` folder in the [official GitHub repository](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/python/examples).
 
-> Please note: In is not recommended to store passwords on host's environment variables or in the source code in a production setup! Please make sure you follow our [backup and security](https://chrysalis.docs.iota.org/guides/backup_security.html) recommendations for production use!
+All the examples in this section expect your custom password  to be set in the `.env` file:
+```bash
+SH_PASSWORD="here is your super secure password"
+```
+
+## Security
+:::warning
+It is not recommended to store passwords on the host's environment variables, or in the source code in a production setup. 
+Please make sure you follow our [backup and security recommendations](https://chrysalis.docs.iota.org/guides/backup_security.html) for production use.
+:::
+
 
 ## Account manager and individual accounts
-First of all, let's initialize (open) a secure storage for individual accounts (backed up by Stronghold by default) using `AccountManager` instance:
+You can initialize (open) a secure storage for individual accounts.  The storage is backed up by `Stronghold` by default, using an AccountManager instance.  
 
+The following example creates a new database and account:
 ```python
 # Copyright 2020 IOTA Stiftung
 # SPDX-License-Identifier: Apache-2.0
@@ -32,29 +44,35 @@ account_manager.set_stronghold_password(STRONGHOLD_PASSWORD)
 account_manager.store_mnemonic("Stronghold")
 ```
 * Storage is initialized under the given path (`./alice-database`)
-* Password is set (`password`)
-* Only during the initialization new database: stronghold mnemonic (seed) is automatically generated and stored by default
+* The password is set based on your password in `.env` file (`manager.setStrongholdPassword(process.env.SH_PASSWORD)`)
+* When you initialize the new database, a stronghold mnemonic (seed) is automatically generated and stored by default (`manager.storeMnemonic(SignerType.Stronghold)`).
+* The seed should be set only for the first time. In order to open already initialized database, you can simply use your password.
 
-The storage is encrypted at rest and so you need a strong password and location where to put your storage. 
+The storage is encrypted at rest, so you need a strong password and location where to place your storage. 
 
-> Please note: deal with the password with utmost care
+:::warning
+We highly recommended you store your `stronghold` password encrypted on rest and separated from `stronghold` snapshots. 
 
-Technically speaking, the storage means two things:
-* Single file called `wallet.stronghold` which contains `seed` secured by stronghold and encrypted at rest. The generated seed (mnemonic) serves as a cryptographic key from which all accounts and related addresses are generated
-* Other data used by library that is stored under `db` sub directory that includes account information, generated addresses, fetched messages, etc. This data is leveraged in order to speed up some operations, such as account creation, address generation, etc.
+Deal with the password with utmost care
+:::
 
-One of the key principle behind the `stronghold`-based storage is that no one can get a seed from the storage. You deal with all accounts purely via `Account_Manager` instance and all complexities are hidden under the hood and are dealt with in a secure way.
+Technically speaking, the storage comprises two things:
+* A single file called `wallet.stronghold`, which contains `seed` and is secured by `stronghold` and encrypted at rest. The generated seed (mnemonic) serves as a cryptographic key from which all accounts and related addresses are generated.
+* Other data used by library that is stored under `db` sub-directory.  The includes account information, generated addresses, fetched messages, etc. This data is used to speed up some operations, such as account creation, address generation, etc.
 
-In case one would like to store a seed also somewhere else, there is a method `AccountManager.generate_mnemonic()` that generates random seed and it can be leveraged before the actual account initialization.
+One of the key principles behind `stronghold` based storage is that no one can extract a seed from the storage. You deal with all accounts purely via an `AccountManager` instance and all complexities are hidden under the hood and are dealt with securely.
 
-Please note: it is highly recommended to store `stronghold` password encrypted on rest and separated from `stronghold` snapshots.
+If you also want to store a seed somewhere else, you can use the `AccountManager.generateMnemonic()` method. This method will generate a random seed, and it can be used before the actual account initialization.
 
-More detailed information about seed generation is available at [Developer guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#seed).
+You can find detailed information about seed generation at [Developer guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#seed).
 
 ### Accounts
-The library uses a model of individual accounts to separate individual users/clients from each other. It is possible to generate multiple addresses for each account deterministically based on seed mnemonic. 
+The `wallet` library uses a model of individual accounts to separate individual users/clients from each other. It is possible to generate multiple addresses for each account deterministically. 
 
-Please note, it is important to declare on which IOTA network should be the given account created (argument `node`).
+Each account is related to a specific IOTA network (mainnet / devnet), which is referenced by a node properties such as node url.  In this example, the `Chrysalis` testnet balancer.
+
+For more information about `client_options`, please refer to [Wallet Python API Reference](api_reference.md#clientoptions).
+
 
 ```python
 # ... continue from prev example 1a
@@ -80,25 +98,32 @@ account_initialiser.alias('Alice')
 account = account_initialiser.initialise()
 print(f'Account created: {account.alias()}')
 ```
-Once an account has been created you get an instance of it using the following methods: `get_account(account_id: str)` or `get_accounts()`.
-An account can be then referred to via `index`, `alias` or one of its generated `addresses`. The network against which the account is active can be checked via `account.bech32_hrp()`.
+`Alias` should be unique, and it can be any string that you see fit. The `alias` is usually used to identify the account later on. Each account is also represented by an `index` which is incremented by 1 every time new account is created. 
+Any account can be then referred to by its `index`, `alias` or one of its generated `addresses`.
 
-Overview of all accounts:
+Once an account has been created, you retrieve an instance of it using the following methods: 
+- `get_account(account_id: str)`
+- `get_accounts()`.
+
+
+You can get an overview of all available accounts by running the following snippet:
 ```python
 for acc in account_manager.get_accounts():
   print(f"Account alias: {acc.alias()}; network: {acc.bech32_hrp()}")
 ```
 
-Get the instance of a specific account:
+You can get and instance of a specific account using the `account_manager.get_account("ALIAS")`, replacing "ALIAS" for the given alias:
 ```python
 account = account_manager.get_account("Alice")
 ```
 
-Several api calls can be performed via `account` instance.
+Several API calls can be performed via an `account` instance.
 
-> Note: it is a good practice to sync the given account with the Tangle every time you work with `account` instance to rely on the latest information available: `account.sync().execute()`. By default, `account.sync().execute()` is performed automatically on `send`, `retry`, `reattach` and `promote` api calls.
+:::info
+It is a good practice to sync the given account with the Tangle every time you work with an `account` instance to rely on the latest information available.  You can do this using `account.sync()`. By default, `account.sync()` is performed automatically on `send`, `retry`, `reattach` and `promote` API calls.
+:::
 
-The most common methods:
+The most common methods of `account` instance are:
 * `account.alias()`: returns an alias of the given account
 * `account.addresses()`: returns list of addresses related to the account
 * `account.get_unused_address()`: returns a first unused address
@@ -108,15 +133,20 @@ The most common methods:
 * `account.sync()`: sync the account information with the tangle
 
 ## Generating address(es)
-Each account can posses multiple addresses. Addresses are generated deterministically based on the account and address index. It means that the combination of account and index uniquely identifies the given address.
+Each account can have multiple addresses. Addresses are generated deterministically based on the account and address index. This means that the combination of account and index uniquely identifies the given address.
 
-Addresses are of two types: `internal` and `public` (external):
-* each set of addresses is independent from each other and has independent `index` id
-* addresses that are created by `account.generate_address()` are indicated as `internal=false` (public)
-* internal addresses (`internal=true`) are so called `change` addresses and are used to send the excess funds to
-* the approach is also known as a *BIP32 Hierarchical Deterministic wallet (HD Wallet)*.
+There are two types of addresses, _internal_ and _public_ (external), and each set of addresses is independent of each other and has independent `index` id.
 
-Addresses are generated via instance of `account` that is gotten from the `account_manager` instance:
+* _Public_ addresses are created by `account.generateAddress()` and  are indicated as `internal=false` (public)
+* _Internal_ addresses are also called `change` addresses. _Internal_ addresses are used to store the excess funds and are indicated as `internal=false`.
+
+This approach is also known as a *BIP32 Hierarchical Deterministic wallet (HD Wallet)*.
+
+:::info
+ You may remember IOTA 1.0 network in which addresses were not reusable. This is no longer true and addresses can be reused multiple times in the IOTA 1.5 (Chrysalis) network._
+::: 
+
+You can use the following example to generate a new address via an instance of `account` which was retrieved using an `account_manager` instance:
 
 ```python
 # Copyright 2020 IOTA Stiftung
@@ -161,26 +191,38 @@ last_address_obj = account.latest_address()
 print(f"Last address: {last_address_obj['address']}")
 ```
 
-Output example:
+Example output:
 ```json
-[{'address': {'inner': 'atoi1qzy79ew8x4hn4dsr0t3j8ce8hdwdrh8xzx85x2gkse6k0fx2jkyaqdgd2rn'},
-  'balance': 0,
-  'key_index': 0,
-  'internal': False,
-  'outputs': []},
- {'address': {'inner': 'atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg'},
-  'balance': 0,
-  'key_index': 1,
-  'internal': False,
-  'outputs': []}]
+[{
+        'address': {
+            'inner': 'atoi1qzy79ew8x4hn4dsr0t3j8ce8hdwdrh8xzx85x2gkse6k0fx2jkyaqdgd2rn'
+        },
+        'balance': 0,
+        'key_index': 0,
+        'internal': False,
+        'outputs': []
+    },
+    {
+        'address': {
+            'inner': 'atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg'
+        },
+        'balance': 0,
+        'key_index': 1,
+        'internal': False,
+        'outputs': []
+    }
+]
 ```
-Take a closer look at the output above and check the beginning of both addresses. As mentioned in [Developer guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#iota-15-address-anatomy) there are two human-readable prefixes in IOTA 1.5 network: `iota` (mainnet) and `atoi` (testnet).
+there are two human-readable prefixes in IOTA 1.5 network: `iota` (mainnet) and `atoi` (testnet). If you take a close look at the addresses in the output, you will be able to notice that both of them start with `atoi`, and are therefore testnet addresses. 
 
-More detailed information about generating addresses is available at [Developer guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#addresskey-space).
+You can find detailed information about generating addresses at the [Developer guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#addresskey-space).
 
 ## Checking the balance
-Before we continue further, go to [IOTA testnet faucet service](https://faucet.testnet.chrysalis2.com/) and send to your testnet addresses some tokens:
-![faucet screenshot](../../../static/img/libraries/python/screenshot_faucet.png)
+Before we continue further, please visit the [IOTA testnet faucet service](https://faucet.testnet.chrysalis2.com/) and send to your testnet addresses some tokens.
+
+![faucet screenshot](../../../static/img/libraries/screenshot_faucet.png)
+
+You can use the following example to generate a new database and account:
 
 ```python
 # Copyright 2020 IOTA Stiftung
@@ -220,43 +262,72 @@ print("Balance per individual addresses:")
 print(account.addresses())
 ```
 
-Output:
+Example output:
 ```json
 Total balance:
-{'total': 10000000, 'available': 10000000, 'incoming': 10000000, 'outgoing': 0}
-
+{
+    'total': 10000000,
+    'available': 10000000,
+    'incoming': 10000000,
+    'outgoing': 0
+}
+        
 Balance per individual addresses:
-[{'address': {'inner': 'atoi1qzy79ew8x4hn4dsr0t3j8ce8hdwdrh8xzx85x2gkse6k0fx2jkyaqdgd2rn'},
-  'balance': 0,
-  'key_index': 0,
-  'internal': False,
-  'outputs': []},
- {'address': {'inner': 'atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg'},
-  'balance': 10000000,
-  'key_index': 1,
-  'internal': False,
-  'outputs': [{'transaction_id': '1c88c91fe0a8eed074b5ccdfdad52403d7908d157b231ae1ef28b0e20ba14e8e',
-    'message_id': 'f1575f984f7fda6e9b3e23e96ef3304fcd0ba4ce323af3920856a427fabe1abe',
-    'index': 0,
-    'amount': 10000000,
-    'is_spent': False,
-    'address': {'inner': 'atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg'}}]},
- {'address': {'inner': 'atoi1qpvnsgygzal4vkxhlc0ew7c6c6csnjr72x5rgn3txqswrsa2xfrec8v04f7'},
-  'balance': 0,
-  'key_index': 2,
-  'internal': False,
-  'outputs': []}]
+[{
+        'address': {
+            'inner': 'atoi1qzy79ew8x4hn4dsr0t3j8ce8hdwdrh8xzx85x2gkse6k0fx2jkyaqdgd2rn'
+        },
+        'balance': 0,
+        'key_index': 0,
+        'internal': False,
+        'outputs': []
+    },
+    {
+        'address': {
+            'inner': 'atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg'
+        },
+        'balance': 10000000,
+        'key_index': 1,
+        'internal': False,
+        'outputs': [{
+            'transaction_id': '1c88c91fe0a8eed074b5ccdfdad52403d7908d157b231ae1ef28b0e20ba14e8e',
+            'message_id': 'f1575f984f7fda6e9b3e23e96ef3304fcd0ba4ce323af3920856a427fabe1abe',
+            'index': 0,
+            'amount': 10000000,
+            'is_spent': False,
+            'address': {
+                'inner': 'atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg'
+            }
+        }]
+    },
+    {
+        'address': {
+            'inner': 'atoi1qpvnsgygzal4vkxhlc0ew7c6c6csnjr72x5rgn3txqswrsa2xfrec8v04f7'
+        },
+        'balance': 0,
+        'key_index': 2,
+        'internal': False,
+        'outputs': []
+    }
+]
 ```
-In the detailed view per individual addresses, there is also `outputs` section that indicates transaction(s) (also known as `wallet message(s)`) "responsible" for the current amount. The amount can be also double checked using [Tangle Explorer](https://explorer.iota.org/testnet/addr/atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg).
+In the detailed view per individual addresses, there is also `outputs` section that shows all the transaction(s) (also known as `wallet message(s)`) which are related to that address, and therefore account for the balance. 
 
-IOTA is based on `Unspent Transaction Output` model which is explained at [Developer guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#unspent-transaction-output-utxo).
+You can also check the amount using the [Tangle Explorer](https://explorer.iota.org/testnet/addr/atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg).
+
+IOTA is based on `Unspent Transaction Output` model. You can find a detailed explanation in the [Developer guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#unspent-transaction-output-utxo).
 
 ## Sending tokens
 The process of sending tokens via `wallet.rs` can be described as follows:
-* Create instance of `iota_wallet.Transfer()` class with the following mandatory arguments: `amount`, `address` and `remainder_value_strategy`
-* `remainder_value_strategy` can be: `ReuseAddress` or `ChangeAddress`. You may be familiar with a concept `changing address with every spent` in IOTA 1.0. It is not an issue in IOTA 1.5 world but it may still become handy depending on your use case
-* once instance of `iota_wallet.Transfer()` is created, it can be sent via `transfer()` function of the `Account` instance
-* needless to repeat, always sync the account information with the Tangle before do anything with the account
+1. Create instance of `iota_wallet.Transfer()` class with the following mandatory arguments: `amount`, `address` and `remainder_value_strategy`. 
+The `remainder_value_strategy` argument can be either: 
+   - `ReuseAddress`
+   - `ChangeAddress`
+2. Once and instance of `iota_wallet.Transfer()` is created, it can be sent via the `transfer()` function of the `Account` instance
+
+:::info
+We highly recommend that you sync the account information with the Tangle before do anything with the account by running the `account.sync().execute()` method.
+:::
 
 ```python
 # Copyright 2020 IOTA Stiftung
@@ -304,58 +375,86 @@ print(
 )
 ```
 
-You receive an output similar to the following one:
+The previous snippet should have a similar output to the following JSON object:
 ```json
-{'id': '9d3c401d59b0a87f6fbaa58582bb71e1858d63336421ccbae834821d9be113d3',
- 'version': 1,
- 'parents': ['66009ff08637c3e74340fb9e09e30e3c4453728c857fd425df2d2e0587af6426',
-  '6da392ac35f73594bf5509fb5c3304e972b36313ce98f2cc63def7cde2054b53',
-  '9157b29cbffcd5c9669cf22004fbc557354e5ade7268f5bfe25fbc75ab29e3b1',
-  'bfe860e09350cd3b8db90611e78e03fdda654139a4b34e68e4b1bb07528b2bef'],
- 'payload_length': 233,
- 'payload': {'transaction': [{'essence': {'regular': {'inputs': [{'transaction_id': '692d6660084dd3b6341ef4f761bc8b8bb27ac35bb0b352bfb030f2c80753815b',
-        'index': 0,
-        'metadata': {'transaction_id': '692d6660084dd3b6341ef4f761bc8b8bb27ac35bb0b352bfb030f2c80753815b',
-         'message_id': 'c6284e0cc2a6383474782d4e6b6cfaf16c1831c8875cca262982782758a248c0',
-         'index': 0,
-         'amount': 10000000,
-         'is_spent': False,
-         'address': {'inner': 'atoi1qq24vlx53qdskyfw6940xa2vg55ma5egzyqv6glq23udx3e0zkmmg97cwze'}}}],
-      'outputs': [{'address': 'atoi1qq24vlx53qdskyfw6940xa2vg55ma5egzyqv6glq23udx3e0zkmmg97cwze',
-        'amount': 9000000},
-       {'address': 'atoi1qpvnsgygzal4vkxhlc0ew7c6c6csnjr72x5rgn3txqswrsa2xfrec8v04f7',
-        'amount': 1000000}],
-      'payload': None}},
-    'unlock_blocks': [{'signature': {'public_key': [15...<TRIMMED>...],
-       'signature': [210...<TRIMMED>...]},
-      'reference': None}]}],
-  'milestone': None,
-  'indexation': None},
- 'timestamp': 1615132552,
- 'nonce': 274654,
- 'confirmed': None,
- 'broadcasted': True,
- 'incoming': False,
- 'value': 1000000,
- 'remainder_value': 9000000}
+{
+    'id': '9d3c401d59b0a87f6fbaa58582bb71e1858d63336421ccbae834821d9be113d3',
+    'version': 1,
+    'parents': ['66009ff08637c3e74340fb9e09e30e3c4453728c857fd425df2d2e0587af6426',
+        '6da392ac35f73594bf5509fb5c3304e972b36313ce98f2cc63def7cde2054b53',
+        '9157b29cbffcd5c9669cf22004fbc557354e5ade7268f5bfe25fbc75ab29e3b1',
+        'bfe860e09350cd3b8db90611e78e03fdda654139a4b34e68e4b1bb07528b2bef'
+    ],
+    'payload_length': 233,
+    'payload': {
+        'transaction': [{
+            'essence': {
+                'regular': {
+                    'inputs': [{
+                        'transaction_id': '692d6660084dd3b6341ef4f761bc8b8bb27ac35bb0b352bfb030f2c80753815b',
+                        'index': 0,
+                        'metadata': {
+                            'transaction_id': '692d6660084dd3b6341ef4f761bc8b8bb27ac35bb0b352bfb030f2c80753815b',
+                            'message_id': 'c6284e0cc2a6383474782d4e6b6cfaf16c1831c8875cca262982782758a248c0',
+                            'index': 0,
+                            'amount': 10000000,
+                            'is_spent': False,
+                            'address': {
+                                'inner': 'atoi1qq24vlx53qdskyfw6940xa2vg55ma5egzyqv6glq23udx3e0zkmmg97cwze'
+                            }
+                        }
+                    }],
+                    'outputs': [{
+                            'address': 'atoi1qq24vlx53qdskyfw6940xa2vg55ma5egzyqv6glq23udx3e0zkmmg97cwze',
+                            'amount': 9000000
+                        },
+                        {
+                            'address': 'atoi1qpvnsgygzal4vkxhlc0ew7c6c6csnjr72x5rgn3txqswrsa2xfrec8v04f7',
+                            'amount': 1000000
+                        }
+                    ],
+                    'payload': None
+                }
+            },
+            'unlock_blocks': [{
+                'signature': {
+                    'public_key': [15... < TRIMMED > ...],
+                    'signature': [210... < TRIMMED > ...]
+                },
+                'reference': None
+            }]
+        }],
+        'milestone': None,
+        'indexation': None
+    },
+    'timestamp': 1615132552,
+    'nonce': 274654,
+    'confirmed': None,
+    'broadcasted': True,
+    'incoming': False,
+    'value': 1000000,
+    'remainder_value': 9000000
+}}
 ```
-It is a `wallet message` that fully describes the given transaction.
+This is a `wallet message` that fully describes the given transaction.
 
-Please, kindly get yourself familiar with a concept of [UTXO](https://chrysalis.docs.iota.org/guides/dev_guide.html#unspent-transaction-output-utxo) to understand all aspects of messages.
+To understand all aspects of messages, you will need to get familiar with concept of `UTXO`. You can find detailed information in the [UTXO section in the Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#unspent-transaction-output-utxo).
 
-The given message can be double checked via Tangle Explorer using `node_response['id']` field ([Tangle Explorer](https://explorer.iota.org/testnet/message/9d3c401d59b0a87f6fbaa58582bb71e1858d63336421ccbae834821d9be113d3)).
+You can double-check the message using [Tangle Explorer](https://explorer.iota.org/) using it's `node_response['id']`.  Please make sure you select the right network.
 
-Needless to say, if `remainder_value_strategy` == `ChangeAddress` is used, the given message transfer tokens to target address as well as new `internal` address within the given account (`internal=True`). 
+If you've used the `ChangeAddress` `remainder_value_strategy`, the message will transfer tokens to the target address as well as new `internal` address within the given account (`internal=True`). 
 
-Messages and payloads are described at [Developer guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#messages-payloads-and-transactions).
+You can find detailed information about messages and payloads in the [Developer guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#messages-payloads-and-transactions).
 
 ### Reattachments
-If message reattachment is needed then `account_id` and `message_id` is passed to `iota_wallet.promote(account_id, message_id)` or `iota_wallet.reattach(account_id, message_id)`.
+If you need to reattach a message, you use the [`iota_wallet.promote(account_id, message_id)`](api_reference.md#promoteaccount_id-message_id-walletmessagewalletmessage) or [`iota_wallet.reattach(account_id, message_id)`](api_reference.md#reattachmessage_id-walletmessagewalletmessage) methods, sending your  `account_id` and `message_id` as arguments.
 
 ### List of messages (transactions)
-List of all particular messages (transactions) related to the given account get be obtained via: `account.list_messages()` and related `account.message_count()`.
+You can query for a list of all particular messages (transactions) related to the given account using [`account.list_messages()`](api_reference.md#list_messagescount-from-message_type-optional-listwalletmessagewalletmessage) method, and the related [`account.message_count()`](api_reference.md#message_countmessage_type-optional-int) method.
 
-Those can be used also to check whether the given message was confirmed/broadcasted, etc. Needless to say, sync the account with the Tangle before checking confirmation status:
+You can use those methods to check whether a message is confirmed, broadcast, etc. You should always `Sync` the account with the Tangle before checking confirmation status.
+
+You can use the following example to `sync` an `account`, and list all the messages related to the `account`. 
 ```python
 # Copyright 2020 IOTA Stiftung
 # SPDX-License-Identifier: Apache-2.0
@@ -389,16 +488,19 @@ for ac in account.list_messages():
 ```
 
 ### Dust protection
-Please note, there is also implemented a [dust protection](https://chrysalis.docs.iota.org/guides/dev_guide.html#dust-protection) mechanism in the network protocol to avoid malicious actors to spam network in order to decrease node performance while keeping track of unspent amount (`UTXO`):
-> "... microtransaction below 1Mi of IOTA tokens [can be sent] to another address if there is already at least 1Mi on that address"
-That's why we did send 1Mi in the given example to comply with the protection."
+The network uses a [dust protection](https://chrysalis.docs.iota.org/guides/dev_guide.html#dust-protection) protocol to prevent malicious actors from spamming the network while also keeping track of the unspent amount (`UTXO`).
 
-Dust protection also means you can't leave (return back) less than 1Mi on a spent address (leave a dust behind).
+:::info
+"... micro-transaction below 1Mi of IOTA tokens can be sent to another address if there is already at least 1Mi on that address. 
+That's why we sent 1Mi in the last example to comply with the protection."
+:::
+
+Dust protection also means you can't leave less than 1Mi on a spent address (leave a dust behind).
 
 ## Backup database
-Underlying seed storage (provided by `Stronghold` by default) is encrypted at rest and there is no way how to get a seed from it due to security practices that are incorporated in the Stronghold's DNA.
+Due to security practices that are incorporated in the `Stronghold's` DNA, there's no way to retrieve a seed, as it is encrypted at rest.  Therefore, if you're using the default options,  backing up the seed storage is a very important task. 
 
-So backing up the seed storage is very important task from this respect.
+The following example will guide you in backing up your data in secure files. You can move this file to another app or device, and restore it.
 
 ```python
 # Copyright 2020 IOTA Stiftung
@@ -434,11 +536,14 @@ Output:
 ```plaintext
 Backup path: ./backup/2021-03-07T18-24-06-iota-wallet-backup-wallet.stronghold
 ```
+Alternatively, you can create a copy of the `wallet.stronghold` file and use it as seed backup. This can be achieved by a daily _cronjob_, _rsync_ or _scp_ with a datetime suffix for example.
 
 ## Restore database
-The process of restoring underlying database via `wallet.rs` can be described as follows:
-* create new empty database with a password (without mnemonic [seed])
-* import all accounts from the file that has been backed up earlier
+To restore a database via `wallet.rs`, you will need to:
+1. Create new empty database with a password (without mnemonic seed)
+2. Import all accounts from the file that has been backed up earlier
+
+The following example restores a secured backup file:
 
 ```python
 # Copyright 2020 IOTA Stiftung
@@ -473,7 +578,8 @@ account = account_manager.get_account('Alice')
 print(f'Account: {account.alias()}')
 ```
 
-Since the backup file is just a copy of the original database it can be alternatively also renamed to `wallet.stronghold` and opened in a standard way:
+Since the backup file is just a copy of the original database it can be also be renamed to `wallet.stronghold` and opened in a standard way.
+
 ```python
 account_manager = iw.AccountManager(
     storage_path='./alice-database'
@@ -482,9 +588,10 @@ account_manager.set_stronghold_password("password")
 ```
 
 ## Listening to events
-`Wallet.rs` also supports asynchronous event listeners to be listened to. In the python binding it is currently implemented in a way the provided callback is executed as soon as the event is triggered; `event` details are passed as an argument to the callback method. *No coroutines (async/await) are implemented in the python binding.*
 
-There are following event listeners supported:
+`Wallet.rs` library is able to listen to several supported event. As soon as the event occurs, a provided callback will be triggered.
+
+You can add any of the following event listeners:
 * `on_balance_change(callback): id`
 * `on_new_transaction(callback): id`
 * `on_confirmation_state_change(callback): id`
@@ -493,7 +600,9 @@ There are following event listeners supported:
 * `on_error(callback): id`
 * `on_stronghold_status_change(callback): id`
 
-When the event listener is registered by calling function above, it returns `id` of the listener as a `list[Bytes]`. This `id` can be then leveraged to deregister the given listener:
+Once you have registered an event listener using, the function will return an `id` for the listener as a list[Bytes].  
+You can later use this `id` to remove a listener by using the corresponding method described below:
+
 * `remove_balance_change_listener(id)`
 * `remove_new_transaction_listener(id)`
 * `remove_confirmation_state_change_listener(id)`
@@ -502,8 +611,7 @@ When the event listener is registered by calling function above, it returns `id`
 * `remove_error_listener(id)`
 * `remove_stronghold_status_change_listener(id)`
 
-Example of listening to `on_balance_change` via simple event-based pattern in python:
-
+The following example set's up a listener for the `on_balance_change` event using an event-based pattern:
 ```python
 # Copyright 2020 IOTA Stiftung
 # SPDX-License-Identifier: Apache-2.0
@@ -560,7 +668,7 @@ result_available.wait(timeout=360)
 print("Done.")
 ```
 
-Output:
+Expected output:
 ```plaintext
 Account: Alice
 Syncing...
@@ -571,7 +679,7 @@ On balanced changed: {"indexationId":"c3a7a1ab8ba78460954223a704693d088ddd038868
 Done.
 ```
 
-Alternatively it can be consumed via queue-base pattern:
+Alternatively, events can be consumed via queue-base pattern as shown in the following example:
 
 ```python
 # Copyright 2020 IOTA Stiftung
