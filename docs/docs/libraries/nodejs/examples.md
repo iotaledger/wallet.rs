@@ -1,20 +1,23 @@
 # Examples
 
-There are several examples to show the usage of the library. All examples below can be also found in [/bindings/nodejs/examples](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/nodejs/examples)
+This section will guide you through several examples using the node.js binding of the `wallet.rs` library. You can also find the code for the examples in the `/bindings/nodejs/examples` folder in the [official GitHub repository](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/nodejs/examples).
 
-All examples below expect your custom password in the `.env` file:
+All the examples in this section expect your custom password  to be set in the `.env` file:
 ```bash
 SH_PASSWORD="here is your super secure password"
 ```
-> Please note: It is not recommended to store passwords on host's environment variables or in the source code in a production setup! Please make sure you follow our [backup and security](https://chrysalis.docs.iota.org/guides/backup_security.html) recommendations for production use!
+
+## Security
+:::warning
+It is not recommended to store passwords on the host's environment variables, or in the source code in a production setup. 
+Please make sure you follow our [backup and security recommendations](https://chrysalis.docs.iota.org/guides/backup_security.html) for production use.
+:::
 
 ## Account manager and individual accounts
-First of all, let's initialize (open) a secure storage for individual accounts (backed up by Stronghold by default) using `AccountManager` instance:
-```javascript
-/**
- * This example creates a new database and account
- */
+You can initialize (open) a secure storage for individual accounts.  The storage is backed up by `Stronghold` by default, using an AccountManager instance.  
 
+The following example creates a new database and account:
+```javascript
 require('dotenv').config()
 
 async function run() {
@@ -37,69 +40,79 @@ async function run() {
 run()
 ```
 * Storage is initialized under the given path (`./alice-database`)
-* Password is set based on your password in `.env` file (`manager.setStrongholdPassword(process.env.SH_PASSWORD)`)
-* Only during the initialization new database: stronghold mnemonic (seed) is automatically generated and stored by default (`manager.storeMnemonic(SignerType.Stronghold)`)
-* Needless to say, the seed should be set only for the first time. In order to open already initialized database, just a password is enough
+* The password is set based on your password in `.env` file (`manager.setStrongholdPassword(process.env.SH_PASSWORD)`)
+* When you initialize the new database, a stronghold mnemonic (seed) is automatically generated and stored by default (`manager.storeMnemonic(SignerType.Stronghold)`).
+* The seed should be set only for the first time. In order to open already initialized database, you can simply use your password.
 
-The storage is encrypted at rest and so you need a strong password and location where to put your storage. Please note: it is highly recommended to store `stronghold` password encrypted on rest and separated from `stronghold` snapshots.
+The storage is encrypted at rest, so you need a strong password and location where to place your storage. 
 
-> Please note: deal with the password with utmost care
+:::warning
+We highly recommended you store your `stronghold` password encrypted on rest and separated from `stronghold` snapshots. 
 
-Technically speaking, the storage means two things:
-* Single file called `wallet.stronghold` which contains `seed` secured by stronghold and encrypted at rest. The generated seed (mnemonic) serves as a cryptographic key from which all accounts and related addresses are generated
-* Other data used by library that is stored under `db` sub directory that includes account information, generated addresses, fetched messages, etc. This data is leveraged in order to speed up some operations, such as account creation, address generation, etc.
+Deal with the password with utmost care
+:::
 
-One of the key principle behind the `stronghold`-based storage is that no one can get a seed from the storage. You deal with all accounts purely via `AccountManager` instance and all complexities are hidden under the hood and are dealt with in a secure way.
+Technically speaking, the storage comprises two things:
+* A single file called `wallet.stronghold`, which contains `seed` and is secured by `stronghold` and encrypted at rest. The generated seed (mnemonic) serves as a cryptographic key from which all accounts and related addresses are generated.
+* Other data used by library that is stored under `db` sub-directory.  The includes account information, generated addresses, fetched messages, etc. This data is used to speed up some operations, such as account creation, address generation, etc.
 
-In case one would like to store a seed also somewhere else, there is a method `AccountManager.generateMnemonic()` that generates random seed and it can be leveraged before the actual account initialization.
+One of the key principles behind `stronghold` based storage is that no one can extract a seed from the storage. You deal with all accounts purely via an `AccountManager` instance and all complexities are hidden under the hood and are dealt with securely.
+
+If you also want to store a seed somewhere else, you can use the `AccountManager.generateMnemonic()` method. This method will generate a random seed, and it can be used before the actual account initialization.
 
 ### Accounts
-The library uses a model of individual accounts to separate individual users/clients from each other. It is possible to generate multiple addresses for each account deterministically. 
+The `wallet` library uses a model of individual accounts to separate individual users/clients from each other. It is possible to generate multiple addresses for each account deterministically. 
 
-Once the backend storage is created, individual accounts for individual users can be created:
+Once the backend storage has been created, individual accounts for individual users can be created by running the `manager.createAccount()` method:
+
 ```javascript
     let account = await manager.createAccount({
         alias: 'Alice',  // an unique id from your existing user
         clientOptions: { node: 'http://api.lb-0.testnet.chrysalis2.com', localPow: false }
     })
 ```
-Each account is related to a specific IOTA network (mainnet / devnet) which is referenced by a node properties, such as node url (in this example, Chrysalis testnet balancer).
+Each account is related to a specific IOTA network (mainnet / devnet), which is referenced by a node properties such as node url.  In this example, the `Chrysalis` testnet balancer.
 
-For more information about `clientOptions`, please refer to [Wallet NodeJs API Reference](https://wallet-lib.docs.iota.org/libraries/nodejs/api_reference.html).
+For more information about `clientOptions`, please refer to [Wallet NodeJs API Reference](api_reference.md).
 
-`Alias` can be whatever fits to the given use case and should be unique. The `alias` is usually used to identify the given account later on. Each account is also represented by `index` which is incremented (by 1) every time new account is created. 
-Any account can be then referred to via `index`, `alias` or one of its generated `addresses`.
+`Alias` should be unique, and it can be any string that you see fit. The `alias` is usually used to identify the account later on. Each account is also represented by an `index` which is incremented by 1 every time new account is created. 
+Any account can be then referred to by its `index`, `alias` or one of its generated `addresses`.
 
-Several api calls can be performed via `account` instance.
+Several API calls can be performed via an `account` instance.
 
-> Note: it is a good practice to sync the given account with the Tangle every time you work with `account` instance to rely on the latest information available: `account.sync()`. By default, `account.sync()` is performed automatically on `send`, `retry`, `reattach` and `promote` api calls.
+:::info
+It is a good practice to sync the given account with the Tangle every time you work with an `account` instance to rely on the latest information available.  You can do this using `account.sync()`. By default, `account.sync()` is performed automatically on `send`, `retry`, `reattach` and `promote` API calls.
+:::
 
-Once an account has been created you get an instance of it using the following methods: `AccountManager.getAccount(accountId)`, `AccountManager.getAccountByAlias(alias)` or `AccountManager.getAccounts()`.
+Once an account has been created, you can retrieve an instance using the following methods: 
+- [`AccountManager.getAccount(accountId)`](api_reference.md#getaccountaccountid)
+- [`AccountManager.getAccountByAlias(alias)`](api_reference.md#getaccountbyaliasalias)
+- [`AccountManager.getAccounts()`.](api_reference.md#getaccounts)
 
-The most common methods of `account` instance:
-* `account.alias()`: returns an alias of the given account
-* `account.listAddresses()`: returns list of addresses related to the account
-* `account.getUnusedAddress()`: returns a first unused address
-* `account.generateAddress()`: generate a new address for the address index incremented by 1
-* `account.balance()`: returns the balance for the given account
-* `account.sync()`: sync the account information with the tangle
+The most common methods of `account` instance are:
+* `account.alias()`: returns an alias of the given account.
+* `account.listAddresses()`: returns list of addresses related to the account.
+* `account.getUnusedAddress()`: returns a first unused address.
+* `account.generateAddress()`: generate a new address for the address index incremented by 1.
+* `account.balance()`: returns the balance for the given account.
+* `account.sync()`: sync the account information with the tangle.
 
 ## Generating address(es)
-Each account can posses multiple addresses. Addresses are generated deterministically based on the account and address index. It means that the combination of account and index uniquely identifies the given address.
+Each account can have multiple addresses. Addresses are generated deterministically based on the account and address index. This means that the combination of account and index uniquely identifies the given address.
 
-Addresses are of two types: `internal` and `public` (external):
-* each set of addresses is independent from each other and has independent `index` id
-* addresses that are created by `account.generateAddress()` are indicated as `internal=false` (public)
-* internal addresses (`internal=true`) are so called `change` addresses and are used to send the excess funds to
-* the approach is also known as a *BIP32 Hierarchical Deterministic wallet (HD Wallet)*.
+There are two types of addresses, _internal_ and _public_ (external), and each set of addresses is independent of each other and has independent `index` id.
 
-_Note: You may remember IOTA 1.0 network in which addresses were not reusable. It is no longer true and addresses can be reused multiple times in IOTA 1.5 (Chrysalis) network._
+* _Public_ addresses are created by `account.generateAddress()` and  are indicated as `internal=false` (public)
+* _Internal_ addresses are also called `change` addresses. _Internal_ addresses are used to store the excess funds and are indicated as `internal=false`.
 
+This approach is also known as a *BIP32 Hierarchical Deterministic wallet (HD Wallet)*.
+
+:::info
+ You may remember IOTA 1.0 network in which addresses were not reusable. This is no longer true and addresses can be reused multiple times in the IOTA 1.5 (Chrysalis) network._
+::: 
+
+You can use the following example to generate a new address:
 ```javascript
-/**
- * This example genrates a new address.
- */
-
 require('dotenv').config()
 
 async function run() {
@@ -132,12 +145,11 @@ run()
 ```
 
 ## Checking balance
-Before we continue further, go to [IOTA testnet faucet service](https://faucet.testnet.chrysalis2.com/) and send to your testnet addresses some tokens.
+Before we continue further, please visit the [IOTA testnet faucet service](https://faucet.testnet.chrysalis2.com/) and send to your testnet addresses some tokens.
+
+You can use the following example to generate a new database and account:
 
 ```javascript
-/**
- * This example creates a new database and account
- */
 
 require('dotenv').config()
 
@@ -164,13 +176,9 @@ run()
 ```
 
 ## Sending tokens
-Sending tokens is performed via `Account` instance:
+You can use the following example to send tokens using an `Account` instance to any desired `address`:
 
 ```javascript
-/**
- * This example sends IOTA Toens to an address.
- */
-
  require('dotenv').config();
 
 async function run() {
@@ -203,28 +211,28 @@ async function run() {
 
 run()
 ```
-The full function signature is `Account.send(address, amount[, options])`.
-Default options are perfectly fine and do the job done, however additional options can be provided, such as `remainderValueStrategy`:
-* `changeAddress`: Send the remainder value to an internal address
-* `reuseAddress`: Send the remainder value back to its original address
+The full function signature is `Account.send(address, amount, [options])`.
+You can use the default options, however additional options can be provided, such as `remainderValueStrategy` which has the following options:
+* `changeAddress()`: Send the remainder value to an internal address
+* `reuseAddress()`: Send the remainder value back to its original address
 
-`Account.send()` function returns a `wallet message` that fully describes the given transaction. Especially `messageId` can later be used for checking a confirmation status. Individual messages related to the given account can be obtained via `Account.listMessages()` function.
+The `Account.send()` function returns a `wallet message` that fully describes the given transaction. You can use the `messageId` to check confirmation status. You can retrieve individual messages related to any given account using the `Account.listMessages()` function.
 
 ### Dust protection
-Please note, there is also implemented a [dust protection](https://chrysalis.docs.iota.org/guides/dev_guide.html#dust-protection) mechanism in the network protocol to avoid malicious actors to spam network in order to decrease node performance while keeping track of unspent amount (`UTXO`):
-> "... microtransaction below 1Mi of IOTA tokens [can be sent] to another address if there is already at least 1Mi on that address"
-That's why we did send 1Mi in the given example to comply with the protection."
+The network uses a [dust protection](https://chrysalis.docs.iota.org/guides/dev_guide.html#dust-protection) protocol to prevent malicious actors from spamming the network while also keeping track of the unspent amount (`UTXO`).
 
-## Backup database
-Underlying seed storage (provided by `Stronghold` by default) is encrypted at rest and there is no way how to get a seed from it due to security practices that are incorporated in the Stronghold's DNA.
+:::info
+"... micro-transaction below 1Mi of IOTA tokens can be sent to another address if there is already at least 1Mi on that address. 
+That's why we sent 1Mi in the last example to comply with the protection."
+:::
 
-So backing up the seed storage is very important task from this respect:
+## Backup a database
+
+Due to security practices that are incorporated in the `Stronghold's` DNA, there's no way to retrieve a seed, as it is encrypted at rest.  Therefore, if you're using the default options,  backing up the seed storage is a very important task. 
+
+The following example will guide you in backing up your data in secure files. You can move this file to another app or device, and restore it.
+
 ```javascript
-/**
- * This example backups your data in a secure file. 
- * You can move this file to another app or device and restore it.
- */
-
 require('dotenv').config();
 
 async function run() {
@@ -243,18 +251,15 @@ async function run() {
 
 run()
 ```
-Alternatively, a simple copy of the `wallet.stronghold` file works as a seed backup. (e.g. a daily cronjob rsync / scp with a datetime suffix for example).
+Alternatively, you can create a copy of the `wallet.stronghold` file and use it as seed backup. This can be achieved by a daily _cronjob_, _rsync_ or _scp_ with a datetime suffix for example.
 
 ## Restore database
-The process of restoring underlying database via `wallet.rs` can be described as follows:
-* create new empty database with a password (without mnemonic [seed])
-* import all accounts from the file that has been backed up earlier
+To restore a database via `wallet.rs`, you will need to:
+1. Create new empty database with a password (without mnemonic seed)
+2. Import all accounts from the file that has been backed up earlier
 
+The following example restores a secured backup file:
 ```javascript
-/**
- * This example restores a secured backup file. 
- */
-
 require('dotenv').config();
 
 async function run() {
@@ -276,16 +281,13 @@ async function run() {
 run()
 ```
 
-Since the backup file is just a copy of the original database it can be alternatively also renamed to `wallet.stronghold` and opened in a standard way.
+Since the backup file is just a copy of the original database it can be also be renamed to `wallet.stronghold` and opened in a standard way.
 
 ## Listening to events
-`Wallet.rs` library supports several events to be listened to. As soon as the given even occurs, a provided callback is triggered.
+`Wallet.rs` library is able to listen to several supported event. As soon as the event occurs, a provided callback will be triggered.
 
-Example of fetching existing accounts and listen to transaction events coming into the account:
+You can use the following example to fetch an existing `Account` and listen to transaction events related to that `Account`:
 ```javascript
-/**
- * This example shows some events.
- */
 
 require('dotenv').config()
 
@@ -349,25 +351,21 @@ data: {
 }
 ```
 
-`accountId` can then be used to identify the given account via `AccountManager.getAccount(accountId)`.
+You can then use the `accountId` to identify the account via `AccountManager.getAccount(accountId)`.
 
-Read more about Events in the [API reference](https://wallet-lib.docs.iota.org/libraries/nodejs/api_reference.html#addeventlistenerevent-cb).
+Read more about Events in the [API reference](api_reference.md#addeventlistenerevent-cb).
 
 
 ## Migration 
+You can use the following example to create a new database and account, and migrate funds from the legacy network to the `Chrysalis` network.
 
-Run
+Run:
 ```
 node 8-migration.js
 ```
 
 Code:
 ```javascript
-/**
- * This example creates a new database and account,
- * and migrate funds from the legacy network to the chrysalis network
- */
-
 require('dotenv').config()
 
 // Address security level

@@ -1,16 +1,16 @@
 # API Reference
-### initLogger(config: LogOptions)
+## initLogger(config: LogOptions)
 
 Initializes the logging system.
 
-#### LogOptions
+### LogOptions
 
 | Param         | Type                     | Default                | Description                             |
 | ------------- | ------------------------ | ---------------------- | --------------------------------------- |
 | color_enabled | <code>boolean</code>     | <code>undefined</code> | Whether to enable colored output or not |
 | outputs       | <code>LogOutput[]</code> | <code>undefined</code> | The log outputs                         |
 
-#### LogOutput
+### LogOutput
 
 | Param          | Type                  | Default                | Description                                          |
 | -------------- | --------------------- | ---------------------- | ---------------------------------------------------- |
@@ -18,7 +18,7 @@ Initializes the logging system.
 | level_filter   | <code>string</code>   | <code>'info'</code>    | The maximum log level that this output accepts       |
 | target_filters | <code>string[]</code> | <code>[]</code>        | Filters on the log target (library and module names) |
 
-### addEventListener(event, cb)
+## addEventListener(event, cb)
 
 Adds a new event listener with a callback in the form of `(err, data) => {}`.
 Supported event names:
@@ -31,9 +31,9 @@ Supported event names:
 - TransferProgress
 - MigrationProgress
 
-### AccountManager
+## AccountManager
 
-#### constructor([options])
+### constructor([options])
 
 Creates a new instance of the AccountManager.
 
@@ -50,7 +50,7 @@ Creates a new instance of the AccountManager.
 | [skipPolling]                      | <code>boolean</code> | <code>false</code>     | Enables creating accounts without automatic polling (background syncing)                  |
 | [pollingInterval]                  | <code>number</code>  | <code>30</code>        | Sets the polling interval in seconds                                                      |
 
-#### setStrongholdPassword(password): void
+### setStrongholdPassword(password): void
 
 Sets the stronghold password and initialises it.
 
@@ -58,7 +58,7 @@ Sets the stronghold password and initialises it.
 | -------- | ------------------- | ---------------------- | -------------------------------- |
 | password | <code>string</code> | <code>undefined</code> | The stronghold snapshot password |
 
-#### changeStrongholdPassword(currentPassword, newPassword): void
+### changeStrongholdPassword(currentPassword, newPassword): void
 
 Changes the stronghold password.
 
@@ -67,7 +67,7 @@ Changes the stronghold password.
 | currentPassword | <code>string</code> | <code>undefined</code> | The current stronghold password |
 | newPassword     | <code>string</code> | <code>undefined</code> | The new stronghold password     |
 
-#### createAccount(account): Account
+### createAccount(account): Account
 
 Creates a new account.
 
@@ -80,7 +80,7 @@ Creates a new account.
 | [account.createdAt]   | <code>string</code>                          | the current date and time         | The ISO 8601 date string of the account creation         |
 | [account.signerType]  | <code>number</code>                          | 1 = Stronghold                    | The account signer type. 1 = Stronghold, 2 = EnvMnemonic |
 
-#### getAccount(accountId)
+### getAccount(accountId)
 
 Gets the account with the given identifier or index.
 
@@ -88,25 +88,25 @@ Gets the account with the given identifier or index.
 | --------- | ----------------------------- | ----------------- | --------------------------------------- |
 | accountId | <code>string \| number</code> | <code>null</code> | The account identifier or account index |
 
-**Returns** the associated Account instance or undefined if the account wasn't found.
+Returns the associated Account instance or undefined if the account wasn't found.
 
-#### getAccountByAlias(alias)
+### getAccountByAlias(alias)
 
-Gets the account with the given alias (case insensitive).
+Gets the account with the given alias (case-insensitive).
 
 | Param | Type                | Default           | Description       |
 | ----- | ------------------- | ----------------- | ----------------- |
 | alias | <code>string</code> | <code>null</code> | The account alias |
 
-**Returns** the associated Account instance or undefined if the account wasn't found.
+Returns the associated Account instance or undefined if the account wasn't found.
 
-#### getAccounts()
+### getAccounts()
 
 Gets all stored accounts.
 
-**Returns** an array of [Account objects](#account).
+Returns an array of [Account objects](#account).
 
-#### removeAccount(accountId)
+### removeAccount(accountId)
 
 Removes the account with the given identifier or index.
 
@@ -115,7 +115,7 @@ Removes the account with the given identifier or index.
 | accountId | <code>string \| number</code> | <code>null</code> | The account identifier or account index |
 
 
-#### startBackgroundSync(pollingInterval, automaticOutputConsolidation): Promise<void/>
+### startBackgroundSync(pollingInterval, automaticOutputConsolidation): Promise<void/>
 
 Starts the background polling and MQTT monitoring.
 
@@ -124,11 +124,11 @@ Starts the background polling and MQTT monitoring.
 | pollingInterval              | <code>number</code>  | <code>null</code> | The polling interval in seconds                  |
 | automaticOutputConsolidation | <code>boolean</code> | <code>null</code> | If outputs should get consolidated automatically |
 
-#### stop_background_sync(): void
+### stop_background_sync(): void
 
 Stops the background polling and MQTT monitoring.
 
-#### syncAccounts([options])
+### syncAccounts([options])
 
 Synchronize all stored accounts with the Tangle.
 
@@ -138,11 +138,11 @@ Synchronize all stored accounts with the Tangle.
 | [options.addressIndex] | <code>number</code> | <code>latest address index</code> | The index of the first account address to sync        |
 | [options.gapLimit]     | <code>number</code> | <code>10</code>                   | The number of addresses to check on each account sync |
 
-**Returns** A promise resolving to an array of [SyncedAccount](#syncedaccount).
+Returns A promise resolving to an array of [SyncedAccount](#syncedaccount).
 
-#### internalTransfer(fromAccount, toAccount, amount)
+### internalTransfer(fromAccount, toAccount, amount)
 
-Transfers an amount from one subaccount to another.
+Transfers an amount from one sub-account to another.
 
 | Param       | Type                             | Default                | Description             |
 | ----------- | -------------------------------- | ---------------------- | ----------------------- |
@@ -150,9 +150,9 @@ Transfers an amount from one subaccount to another.
 | toAccount   | <code>[Account](#account)</code> | <code>null</code>      | The destination account |
 | amount      | <code>number</code>              | <code>undefined</code> | The transfer amount     |
 
-**Returns** A promise resolving to the transfer's Message.
+Returns A promise resolving to the transfer's Message.
 
-#### backup(destination, password)
+### backup(destination, password)
 
 Backups the database.
 
@@ -161,9 +161,9 @@ Backups the database.
 | destination | <code>string</code> | <code>undefined</code> | The path to the backup file    |
 | password    | <code>string</code> | <code>undefined</code> | The backup stronghold password |
 
-**Returns** The full path to the backup file.
+Returns The full path to the backup file.
 
-#### importAccounts(source)
+### importAccounts(source)
 
 Imports a database file.
 
@@ -172,13 +172,13 @@ Imports a database file.
 | source   | <code>string</code> | <code>undefined</code> | The path to the backup file    |
 | password | <code>string</code> | <code>undefined</code> | The backup stronghold password |
 
-#### isLatestAddressUnused()
+### isLatestAddressUnused()
 
-Determines whether all accounts has unused latest address after syncing with the Tangle.
+Determines whether all accounts have unused their latest address after syncing with the Tangle.
 
-**Returns** A promise resolving to the boolean value.
+Returns a promise resolving to the boolean value.
 
-#### setClientOptions(options)
+### setClientOptions(options)
 
 Updates the client options for all accounts.
 
@@ -186,7 +186,7 @@ Updates the client options for all accounts.
 | ------- | -------------------------------------------- | ----------------- | ------------------------------ |
 | options | <code>[ClientOptions](#clientoptions)</code> | <code>null</code> | The new account client options |
 
-#### generateMigrationAddress(address)
+### generateMigrationAddress(address)
 
 Convert a Ed25519 to a Tryte migration address with checksum (last 9 Trytes)
 
@@ -194,7 +194,7 @@ Convert a Ed25519 to a Tryte migration address with checksum (last 9 Trytes)
 | ------- | ------------------- | ----------------- | ------------------------------ |
 | address | <code>string</code> | <code>null</code> | Bech32 encoded Ed25519 address |
 
-#### getBalanceChangeEvents([count, skip, fromTimestamp])
+### getBalanceChangeEvents([count, skip, fromTimestamp])
 
 Gets the persisted balance change events.
 
@@ -206,7 +206,7 @@ Gets the persisted balance change events.
 
 Event object: { indexationId: string, accountId: string, messageId?: string, remainder?: boolean, balanceChange: { spent: number, received: number } }
 
-#### getBalanceChangeEventCount([fromTimestamp])
+### getBalanceChangeEventCount([fromTimestamp])
 
 Gets the number of persisted balance change events.
 
@@ -214,7 +214,7 @@ Gets the number of persisted balance change events.
 | --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
 | [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
 
-#### getTransactionConfirmationEvents([count, skip, fromTimestamp])
+### getTransactionConfirmationEvents([count, skip, fromTimestamp])
 
 Gets the persisted transaction confirmation change events.
 
@@ -226,7 +226,7 @@ Gets the persisted transaction confirmation change events.
 
 Event object: { indexationId: string, accountId: string, message: Message, confirmed: boolean }
 
-#### getTransactionConfirmationEventCount([fromTimestamp])
+### getTransactionConfirmationEventCount([fromTimestamp])
 
 Gets the number of persisted transaction confirmation change events.
 
@@ -234,7 +234,7 @@ Gets the number of persisted transaction confirmation change events.
 | --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
 | [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
 
-#### getNewTransactionEvents([count, skip, fromTimestamp])
+### getNewTransactionEvents([count, skip, fromTimestamp])
 
 Gets the persisted new transaction events.
 
@@ -246,7 +246,7 @@ Gets the persisted new transaction events.
 
 Event object: { indexationId: string, accountId: string, message: Message }
 
-#### getNewTransactionEventCount([fromTimestamp])
+### getNewTransactionEventCount([fromTimestamp])
 
 Gets the number of persisted new transaction events.
 
@@ -254,7 +254,7 @@ Gets the number of persisted new transaction events.
 | --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
 | [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
 
-#### getReattachmentEvents([count, skip, fromTimestamp])
+### getReattachmentEvents([count, skip, fromTimestamp])
 
 Gets the persisted transaction reattachment events.
 
@@ -266,7 +266,7 @@ Gets the persisted transaction reattachment events.
 
 Event object: { indexationId: string, accountId: string, message: Message }
 
-#### getReattachmentEventCount([fromTimestamp])
+### getReattachmentEventCount([fromTimestamp])
 
 Gets the number of persisted transaction reattachment events.
 
@@ -274,7 +274,7 @@ Gets the number of persisted transaction reattachment events.
 | --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
 | [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
 
-#### getBroadcastEvents([count, skip, fromTimestamp])
+### getBroadcastEvents([count, skip, fromTimestamp])
 
 Gets the persisted transaction broadcast events.
 
@@ -286,7 +286,7 @@ Gets the persisted transaction broadcast events.
 
 Event object: { indexationId: string, accountId: string, message: Message }
 
-#### getBroadcastEventCount([fromTimestamp])
+### getBroadcastEventCount([fromTimestamp])
 
 Gets the number of persisted transaction broadcast events.
 
@@ -294,41 +294,41 @@ Gets the number of persisted transaction broadcast events.
 | --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
 | [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
 
-### SyncedAccount
+## SyncedAccount
 
 The result of a `sync` operation on an Account.
 
-### Account
+## Account
 
-#### id()
+### id()
 
-Returns the account's identifier.
+Returns: the account's identifier.
 
-#### index()
+### index()
 
-Returns the account's index.
+Returns: the account's index.
 
-#### alias()
+### alias()
 
-Returns the account's alias.
+Returns: the account's alias.
 
-#### balance(): AccountBalance
+### balance(): AccountBalance
 
-Returns the account's balance information object.
+Returns: the account's balance information object.
 
 Balance object: { total: number, available: number, incoming: number, outgoing: number }
 
-#### messageCount([type])
+### messageCount([type])
 
-Returns the number of messages associated with the account.
+Returns: the number of messages associated with the account.
 
 | Param  | Type                | Default           | Description                                                                              |
 | ------ | ------------------- | ----------------- | ---------------------------------------------------------------------------------------- |
 | [type] | <code>number</code> | <code>null</code> | The message type filter (Received = 1, Sent = 2, Failed = 3, Unconfirmed = 4, Value = 5) |
 
-#### listMessages([count, from, type])
+### listMessages([count, from, type])
 
-Returns the account's messages.
+Returns: the account's messages.
 
 | Param   | Type                | Default           | Description                                                                              |
 | ------- | ------------------- | ----------------- | ---------------------------------------------------------------------------------------- |
@@ -338,8 +338,8 @@ Returns the account's messages.
 
 Message object: { confirmed: boolean, broadcasted: boolean, incoming: boolean, value: number }
 
-#### listAddresses([unspent])
-Returns the account's addresses.
+### listAddresses([unspent])
+Returns: the account's addresses.
 
 | Param     | Type                 | Default           | Description                 |
 | --------- | -------------------- | ----------------- | --------------------------- |
@@ -347,7 +347,7 @@ Returns the account's addresses.
 
 Address object: { address: string, keyIndex: number }
 
-#### sync([options])
+### sync([options])
 
 Synchronizes the account with the Tangle.
 
@@ -357,9 +357,9 @@ Synchronizes the account with the Tangle.
 | [options.addressIndex] | <code>number</code> | <code>latest address index</code> | The index of the first address to sync |
 | [options.gapLimit]     | <code>number</code> | <code>10</code>                   | The number of addresses to check       |
 
-**Returns** a [SyncedAccount](#syncedaccount) instance.
+Returns: a [SyncedAccount](#syncedaccount) instance.
 
-#### send(address, amount[, options])
+### send(address, amount[, options])
 
 Send funds to the given address.
 
@@ -369,16 +369,16 @@ Send funds to the given address.
 | amount  | <code>number</code>          | <code>undefined</code> | The transfer amount                       |
 | options | <code>TransferOptions</code> | <code>undefined</code> | The transfer options                      |
 
-##### TransferOptions
+#### TransferOptions
 
 | Param                  | Type                                              | Default           | Description                                        |
 | ---------------------- | ------------------------------------------------- | ----------------- | -------------------------------------------------- |
 | remainderValueStrategy | <code>RemainderValueStrategy</code>               | <code>null</code> | The strategy to use for the remainder value if any |
 | indexation             | <code>{ index: string, data?: Uint8Array }</code> | <code>null</code> | Message indexation                                 |
 
-##### RemainderValueStrategy
+#### RemainderValueStrategy
 
-###### changeAddress()
+##### changeAddress()
 Send the remainder value to an internal address.
 
 ###### reuseAddress()
@@ -387,7 +387,7 @@ Send the remainder value to its original address.
 ###### accountAddress(address: string)
 Send the remainder value to a specific address that must belong to the account.
 
-#### retry(messageId)
+### retry(messageId)
 
 Retries (promotes or reattaches) the given message.
 
@@ -395,7 +395,7 @@ Retries (promotes or reattaches) the given message.
 | --------- | ------------------- | ----------------- | ------------------------ |
 | messageId | <code>string</code> | <code>null</code> | The message's identifier |
 
-#### reattach(messageId)
+### reattach(messageId)
 
 Reattach the given message.
 
@@ -403,7 +403,7 @@ Reattach the given message.
 | --------- | ------------------- | ----------------- | ------------------------ |
 | messageId | <code>string</code> | <code>null</code> | The message's identifier |
 
-#### promote(messageId)
+### promote(messageId)
 
 Promote the given message.
 
@@ -411,17 +411,17 @@ Promote the given message.
 | --------- | ------------------- | ----------------- | ------------------------ |
 | messageId | <code>string</code> | <code>null</code> | The message's identifier |
 
-#### consolidateOutputs()
+### consolidateOutputs()
 
 Consolidate the outputs on all account addresses.
 
-#### isLatestAddressUnused()
+### isLatestAddressUnused()
 
 Determines whether the account has unused latest address after syncing with the Tangle.
 
-**Returns** A promise resolving to the boolean value.
+Returns: a promise resolving to the boolean value.
 
-#### setAlias(alias)
+### setAlias(alias)
 
 Updates the account alias.
 
@@ -429,7 +429,7 @@ Updates the account alias.
 | ----- | ------------------- | ----------------- | --------------------- |
 | alias | <code>string</code> | <code>null</code> | The new account alias |
 
-#### setClientOptions(options)
+### setClientOptions(options)
 
 Updates the account client options.
 
@@ -437,7 +437,7 @@ Updates the account client options.
 | ------- | -------------------------------------------- | ----------------- | ------------------------------ |
 | options | <code>[ClientOptions](#clientoptions)</code> | <code>null</code> | The new account client options |
 
-#### getMessage(messageId)
+### getMessage(messageId)
 
 Gets the message associated with the given identifier.
 
@@ -445,7 +445,7 @@ Gets the message associated with the given identifier.
 | --------- | ------------------- | ----------------- | ------------------------ |
 | messageId | <code>string</code> | <code>null</code> | The message's identifier |
 
-#### getAddress(addressBech32)
+### getAddress(addressBech32)
 
 Gets the address object by its bech32 representation.
 
@@ -453,20 +453,20 @@ Gets the address object by its bech32 representation.
 | ------------- | ------------------- | ----------------- | --------------------------------- |
 | addressBech32 | <code>string</code> | <code>null</code> | The address bech32 representation |
 
-#### generateAddress()
+### generateAddress()
 
 Generates a new unused address and returns it.
 
-#### latestAddress()
+### latestAddress()
 
-Returns the latest address (the one with the biggest keyIndex).
+Returns: the latest address (the one with the biggest keyIndex).
 
-#### getUnusedAddress()
+### getUnusedAddress()
 
 Synchronizes the account addresses with the Tangle and returns the latest address in the account,
 which is an address without balance.
 
-### ClientOptions
+## ClientOptions
 
 | Field               | Type                             | Default                | Description                                                                                              |
 | ------------------- | -------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------- |
@@ -478,14 +478,14 @@ which is an address without balance.
 | [localPow]          | <code>boolean</code>             | <code>true</code>      | Whether to use local or remote PoW.                                                                      |
 | [MqttBrokerOptions] | <code>MqttBrokerOptions</code>   | <code>undefined</code> | Options for the MQTT broker                                                                              |
 
-### MqttBrokerOptions
+## MqttBrokerOptions
 
 All fields are optional.
 
 | Field                   | Type                | Description                                                                                           |
 | ----------------------- | ------------------- | ----------------------------------------------------------------------------------------------------- |
 | automaticDisconnect     | <code>boolean</code> | Whether the MQTT broker should be automatically disconnected when all topics are unsubscribed or not. |
-| timeout                 | <code>number</code> | MQTT connection timeout in secods                                                                     |
+| timeout                 | <code>number</code> | MQTT connection timeout in seconds                                                                     |
 | useWs                   | <code>boolean</code>   | Defines if websockets should be used (true) or TCP (false)                                            |
 | maxReconnectionAttempts | <code>number</code> | Defines the maximum reconnection attempts before it returns an error                                  |
 | port                    | <code>number</code> | Defines the port to be used for the MQTT connection                                                   |

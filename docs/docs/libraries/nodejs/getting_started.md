@@ -1,50 +1,28 @@
 # Getting Started with Node.js
 
-The [IOTA Wallet Node.js binding](https://www.npmjs.com/package/@iota/wallet) is published on npmjs.org.
+The [IOTA Wallet Node.js binding](https://www.npmjs.com/package/@iota/wallet) is published on [npmjs.com](https://www.npmjs.com/).
 
-> There is a guide for exchanges [available](https://chrysalis.docs.iota.org/guides/exchange_guide.html) which is based on `wallet.rs` and `Node.js`. It also covers several most common use cases.
+:::info
+You can find a guide for exchanges and the most common use cases in the [Chrysalis documentation](https://chrysalis.docs.iota.org/guides/exchange_guide.html), which is based on `wallet.rs` and `Node.js`. 
+:::
 
 ## Security
-Please note: In is not recommended to store passwords on host's environment variables or in the source code in a production setup! Please make sure you follow our [backup and security](https://chrysalis.docs.iota.org/guides/backup_security.html) recommendations for production use!
-
+:::warning
+It is not recommended to store passwords on the host's environment variables, or in the source code in a production setup. 
+Please make sure you follow our [backup and security recommendations](https://chrysalis.docs.iota.org/guides/backup_security.html) for production use.
+:::
 ## Installation
 
-Currently the package isn't published so you'd need to link it to your project using `npm` or `yarn`. We also use `dotenv` for password management in the examples.
+Currently, the package isn't published,  so you'll need to link it to your project using `npm` or `yarn`. We also use `dotenv` for password management in the examples.
 
-- Using NPM:
+- To install with NPM, you can run the following command:
 ```
 $ npm install @iota/wallet dotenv
 ```
-- Using yarn: 
+- To install with yarn, you can run the following command:
 ```
 $ yarn install @iota/wallet dotenv
 ```
 
 ## Usage
-
-```javascript
-/**
- * This example creates a new database and account
- */
-
-require('dotenv').config()
-
-async function run() {
-    const { AccountManager, SignerType } = require('@iota/wallet')
-    const manager = new AccountManager({
-        storagePath: './alice-database',
-    })
-    manager.setStrongholdPassword(process.env.SH_PASSWORD)
-    manager.storeMnemonic(SignerType.Stronghold)
-
-    const account = await manager.createAccount({
-        clientOptions: { node: "https://api.lb-0.testnet.chrysalis2.com", localPow: true },
-        alias: 'Alice',
-    })
-
-    console.log('Account created:', account.alias())
-      
-}
-
-run()
-```
+You can find more information on using the `wallet.rs` library's node.js binding in the [examples section](examples.md).
