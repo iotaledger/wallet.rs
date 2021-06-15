@@ -613,8 +613,6 @@ pub enum ResponseType {
     CreatedMigrationBundle(MigrationBundle),
     /// SendMigrationBundle response.
     SentMigrationBundle(MigratedBundle),
-    /// SendLedgerMigrationBundle response.
-    SentLedgerMigrationBundle(MigratedBundle),
     /// GetSeedChecksum response.
     SeedChecksum(String),
     /// GetMigrationAddress response.
