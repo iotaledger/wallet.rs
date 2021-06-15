@@ -1,4 +1,4 @@
-# IOTA Wallet Python Library
+# IOTA Wallet Node.js Library
 
 [![status](https://img.shields.io/badge/Status-Alpha-yellow.svg)](https://github.com/iotaledger/wallet.rs)
 
@@ -7,7 +7,7 @@ If you want to get involved in discussions about this library, or you're looking
 
 ## Overview
 
-- [Getting Started with wallet and python](./getting_started.md)
+- [Getting Started with IOTA Wallet Python binding](./getting_started.md)
 - [Examples](./examples.md)
 - [API Reference](./api_reference.md)
 - [Troubleshooting](./troubleshooting.md)

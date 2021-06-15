@@ -180,7 +180,7 @@ More detailed information about generating addresses is available at [Developer 
 
 ## Checking the balance
 Before we continue further, go to [IOTA testnet faucet service](https://faucet.testnet.chrysalis2.com/) and send to your testnet addresses some tokens:
-![faucet screenshot](screenshot_faucet.png)
+![faucet screenshot](../../../static/img/libraries/python/screenshot_faucet.png)
 
 ```python
 # Copyright 2020 IOTA Stiftung
