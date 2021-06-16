@@ -1,4 +1,4 @@
-# IOTA Wallet Node.js Library
+# IOTA Wallet Python Library
 
 [![status](https://img.shields.io/badge/Status-Alpha-yellow.svg)](https://github.com/iotaledger/wallet.rs)
 
