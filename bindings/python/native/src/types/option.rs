@@ -223,6 +223,7 @@ impl From<RustClientOptions> for ClientOptions {
                     .collect(),
             ),
             network: client_options.network().as_ref().map(|s| s.to_string()),
+            mqtt_enabled: Some(*client_options.mqtt_enabled()),
             mqtt_broker_options: client_options
                 .mqtt_broker_options()
                 .as_ref()
