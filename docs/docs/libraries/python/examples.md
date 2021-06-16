@@ -58,9 +58,9 @@ Deal with the password with utmost care
 
 Technically speaking, the storage comprises two things:
 * A single file called `wallet.stronghold`, which contains `seed` and is secured by `stronghold` and encrypted at rest. The generated seed (mnemonic) serves as a cryptographic key from which all accounts and related addresses are generated.
-* Other data used by library that is stored under `db` sub-directory.  The includes account information, generated addresses, fetched messages, etc. This data is used to speed up some operations, such as account creation, address generation, etc.
+* Other data used by library that is stored under the `db` sub-directory.  The includes account information, generated addresses, fetched messages, etc.  This data is used to speed up some operations, such as account creation, address generation, etc.
 
-One of the key principles behind `stronghold` based storage is that no one can extract a seed from the storage. You deal with all accounts purely via an `AccountManager` instance and all complexities are hidden under the hood and are dealt with securely.
+One of the key principles behind `stronghold` based storage is that no one can extract a seed from the storage. You deal with all accounts purely via an `AccountManager` instance.  All complexities are hidden under the hood and dealt with securely.
 
 If you also want to store a seed somewhere else, you can use the `AccountManager.generateMnemonic()` method. This method will generate a random seed, and it can be used before the actual account initialization.
 
@@ -69,7 +69,7 @@ You can find detailed information about seed generation at [Developer guide to C
 ### Accounts
 The `wallet` library uses a model of individual accounts to separate individual users/clients from each other. It is possible to generate multiple addresses for each account deterministically. 
 
-Each account is related to a specific IOTA network (mainnet / devnet), which is referenced by a node properties such as node url.  In this example, the `Chrysalis` testnet balancer.
+Each account is related to a specific IOTA network (mainnet / devnet), which is referenced by node properties such as node url.  In this example, the `Chrysalis` testnet balancer.
 
 For more information about `client_options`, please refer to [Wallet Python API Reference](api_reference.md#clientoptions).
 
@@ -120,25 +120,25 @@ account = account_manager.get_account("Alice")
 Several API calls can be performed via an `account` instance.
 
 :::info
-It is a good practice to sync the given account with the Tangle every time you work with an `account` instance to rely on the latest information available.  You can do this using `account.sync()`. By default, `account.sync()` is performed automatically on `send`, `retry`, `reattach` and `promote` API calls.
+It is a good practice to sync the given `account` with the Tangle every time you work with an `account` instance to retrieve the latest information available.  You can do this using the `account.sync()` method.  By default, `account.sync()` is performed automatically on `send`, `retry`, `reattach` and `promote` API calls.
 :::
 
 The most common methods of `account` instance are:
-* `account.alias()`: returns an alias of the given account
-* `account.addresses()`: returns list of addresses related to the account
-* `account.get_unused_address()`: returns a first unused address
-* `account.is_latest_address_unused()`: it queries the Tangle and returns `bool` whether latest address was already used
-* `account.generate_address()`: generate a new address for the address index incremented by 1
-* `account.balance()`: returns the balance for the given account
-* `account.sync()`: sync the account information with the tangle
+* `account.alias()`: returns an alias of the given account.
+* `account.addresses()`: returns list of addresses related to the account.
+* `account.get_unused_address()`: returns a first unused address.
+* `account.is_latest_address_unused()`: queries the Tangle and returns `bool` whether latest address was already used.
+* `account.generate_address()`: generates a new address for the address index incremented by 1.
+* `account.balance()`: returns the balance for the given account.
+* `account.sync()`: syncs the account information with the tangle.
 
 ## Generating address(es)
-Each account can have multiple addresses. Addresses are generated deterministically based on the account and address index. This means that the combination of account and index uniquely identifies the given address.
+Each `account` can have multiple `addresses`. `Addresses` are generated deterministically based on the `account` and `address` index. This means that the combination of `account` and index uniquely identifies the given address.
 
 There are two types of addresses, _internal_ and _public_ (external), and each set of addresses is independent of each other and has independent `index` id.
 
-* _Public_ addresses are created by `account.generateAddress()` and  are indicated as `internal=false` (public)
-* _Internal_ addresses are also called `change` addresses. _Internal_ addresses are used to store the excess funds and are indicated as `internal=false`.
+* _Public_ addresses are created by `account.generateAddress()` and are indicated as `internal=false` (public)
+* _Internal_ addresses are also called `change` addresses. _Internal_ addresses are used to store the excess funds and are indicated as `internal=true`.
 
 This approach is also known as a *BIP32 Hierarchical Deterministic wallet (HD Wallet)*.
 
@@ -213,7 +213,7 @@ Example output:
     }
 ]
 ```
-there are two human-readable prefixes in IOTA 1.5 network: `iota` (mainnet) and `atoi` (testnet). If you take a close look at the addresses in the output, you will be able to notice that both of them start with `atoi`, and are therefore testnet addresses. 
+There are two human-readable prefixes in IOTA 1.5 network: `iota` (mainnet) and `atoi` (testnet). If you take a close look at the addresses in the output, you will be able to notice that both of them start with `atoi`, and are therefore testnet addresses. 
 
 You can find detailed information about generating addresses at the [Developer guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#addresskey-space).
 
@@ -222,7 +222,8 @@ Before we continue further, please visit the [IOTA testnet faucet service](https
 
 ![faucet screenshot](../../../static/img/libraries/screenshot_faucet.png)
 
-You can use the following example to generate a new database and account:
+You can use the following example to sync your accounts and retrieve their balances.
+
 
 ```python
 # Copyright 2020 IOTA Stiftung
@@ -311,11 +312,13 @@ Balance per individual addresses:
     }
 ]
 ```
-In the detailed view per individual addresses, there is also `outputs` section that shows all the transaction(s) (also known as `wallet message(s)`) which are related to that address, and therefore account for the balance. 
+In the detailed view per individual addresses, there is also `outputs` section that shows all the transactions (also known as `wallet message(s)`) which are related to that `address`, and therefore account for the balance. 
 
-You can also check the amount using the [Tangle Explorer](https://explorer.iota.org/testnet/addr/atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg).
+You can also check the balance using the [Tangle Explorer](https://explorer.iota.org/testnet/addr/atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg).
 
+:::info
 IOTA is based on `Unspent Transaction Output` model. You can find a detailed explanation in the [Developer guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#unspent-transaction-output-utxo).
+:::
 
 ## Sending tokens
 The process of sending tokens via `wallet.rs` can be described as follows:
@@ -326,7 +329,7 @@ The `remainder_value_strategy` argument can be either:
 2. Once and instance of `iota_wallet.Transfer()` is created, it can be sent via the `transfer()` function of the `Account` instance
 
 :::info
-We highly recommend that you sync the account information with the Tangle before do anything with the account by running the `account.sync().execute()` method.
+We highly recommend that you sync the account information with the Tangle by running the `account.sync().execute()` method before do anything with the account.
 :::
 
 ```python
@@ -440,14 +443,14 @@ This is a `wallet message` that fully describes the given transaction.
 
 To understand all aspects of messages, you will need to get familiar with concept of `UTXO`. You can find detailed information in the [UTXO section in the Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#unspent-transaction-output-utxo).
 
-You can double-check the message using [Tangle Explorer](https://explorer.iota.org/) using it's `node_response['id']`.  Please make sure you select the right network.
+You can double-check the message using [Tangle Explorer](https://explorer.iota.org/) using its `node_response['id']`.  Please make sure you select the right network.
 
-If you've used the `ChangeAddress` `remainder_value_strategy`, the message will transfer tokens to the target address as well as new `internal` address within the given account (`internal=True`). 
+If you have used the `ChangeAddress` `remainder_value_strategy`, the message will transfer tokens to the target address as well as new `internal` address within the given account (`internal=True`). 
 
 You can find detailed information about messages and payloads in the [Developer guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#messages-payloads-and-transactions).
 
 ### Reattachments
-If you need to reattach a message, you use the [`iota_wallet.promote(account_id, message_id)`](api_reference.md#promoteaccount_id-message_id-walletmessagewalletmessage) or [`iota_wallet.reattach(account_id, message_id)`](api_reference.md#reattachmessage_id-walletmessagewalletmessage) methods, sending your  `account_id` and `message_id` as arguments.
+If you need to reattach a message, you should use the [`iota_wallet.promote(account_id, message_id)`](api_reference.md#promoteaccount_id-message_id-walletmessagewalletmessage) or [`iota_wallet.reattach(account_id, message_id)`](api_reference.md#reattachmessage_id-walletmessagewalletmessage) methods, sending your `account_id` and `message_id` as arguments.
 
 ### List of messages (transactions)
 You can query for a list of all particular messages (transactions) related to the given account using [`account.list_messages()`](api_reference.md#list_messagescount-from-message_type-optional-listwalletmessagewalletmessage) method, and the related [`account.message_count()`](api_reference.md#message_countmessage_type-optional-int) method.
@@ -491,14 +494,14 @@ for ac in account.list_messages():
 The network uses a [dust protection](https://chrysalis.docs.iota.org/guides/dev_guide.html#dust-protection) protocol to prevent malicious actors from spamming the network while also keeping track of the unspent amount (`UTXO`).
 
 :::info
-"... micro-transaction below 1Mi of IOTA tokens can be sent to another address if there is already at least 1Mi on that address. 
-That's why we sent 1Mi in the last example to comply with the protection."
+“... micro-transaction below 1Mi of IOTA tokens can be sent to another address if there is already at least 1Mi on that address. 
+That's why we sent 1Mi in the last example to comply with the protection.”
 :::
 
 Dust protection also means you can't leave less than 1Mi on a spent address (leave a dust behind).
 
 ## Backup database
-Due to security practices that are incorporated in the `Stronghold's` DNA, there's no way to retrieve a seed, as it is encrypted at rest.  Therefore, if you're using the default options,  backing up the seed storage is a very important task. 
+Due to security practices that are incorporated in the `Stronghold's` DNA, there's no way to retrieve a seed, as seeds are encrypted at rest.  Therefore, if you're using the default options, backing up the seed storage is a very important task. 
 
 The following example will guide you in backing up your data in secure files. You can move this file to another app or device, and restore it.
 

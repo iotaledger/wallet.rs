@@ -1,6 +1,6 @@
 # Contribute to the project
 
-**Thanks for thinking about contributing to the project! We have the following ways that you can contribute.**
+Thank you for thinking about contributing to the project! We have the following ways that you can contribute.
 
 ## Join the IOTA Libraries Initiative
 

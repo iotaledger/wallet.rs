@@ -1,7 +1,9 @@
 # API Reference
 
-Please note that in the following APIs, the corresponding exception will be returned if an error occurs.
-For all the optional values, the default values are the same as the ones in the Rust version.
+:::info
+Please note that in the following APIs will throw an exception if an error occurs.
+For all the optional values, the default values are the same as the ones in the [Rust API](../rust/api_reference.md).
+:::
 
 ## init_logger(config)
 
@@ -30,7 +32,9 @@ Creates a new instance of the AccountManager.
 | [persist_events]                       | <code>boolean</code> | <code>false</code>       | Enables event persistence                                                                      |
 | [allow_create_multiple_empty_accounts] | <code>boolean</code> | <code>false</code>              | Enables creating accounts with latest account being empty                                      |
 
-Note: if the `storage_path` is set, then the `storage` needs to be set too. An exception will be thrown when errors happened.
+:::info
+If the `storage_path` is set, then the `storage` needs to be set too. An exception will be thrown when errors happened.
+:::
 
 **Returns** The constructed [AccountManager](#accountmanager).
 

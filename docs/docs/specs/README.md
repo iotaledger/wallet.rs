@@ -2,22 +2,22 @@
 
 ## Introduction
 
-The wallet library is a stateful package with a standardised interface to build applications with IOTA value transactions. The package will be compatible with different platforms such as web, desktop and mobile. 
+The `Wallet.rs` library is a stateful package with a standardized interface to build applications with IOTA value transactions. The package will be compatible with different platforms such as web, desktop and mobile. 
 
-The package introduces the concept of an _account_. An account is a reference or a label to a [seed](https://docs.iota.org/docs/getting-started/0.1/clients/seeds). An account has certain properties such as [addresses](https://github.com/Wollac/protocol-rfcs/blob/bech32-address-format/text/0020-bech32-address-format/0020-bech32-address-format.md) and [messages](https://github.com/GalRogozinski/protocol-rfcs/blob/message/text/0017-message/0017-message.md). An account has various possible behaviours, including moving funds, looking for new messages, and making copies of message histories. An account should also be able to provide a degree of financial privacy and this should not incur any overhead. 
+The package introduces the concept of an `account`. An `account` is a reference to, or a label for, a [seed](https://docs.iota.org/docs/getting-started/0.1/clients/seeds). An account has certain properties such as [addresses](https://github.com/Wollac/protocol-rfcs/blob/bech32-address-format/text/0020-bech32-address-format/0020-bech32-address-format.md) and [messages](https://github.com/GalRogozinski/protocol-rfcs/blob/message/text/0017-message/0017-message.md). An account has various possible behaviours, including moving funds, looking for new messages, and making copies of message histories. An account should also be able to provide a degree of financial privacy and this should not incur any overhead. 
 
-A similar [package](https://docs.iota.org/docs/client-libraries/0.1/account-module/introduction/overview) was previously developed but this becomes obsolete with the introduction of Ed25519 signatures. The previous account package was limited to a single account. As an improvement, the (new) package will be able to manage multiple accounts. 
+A similar [account package](https://docs.iota.org/docs/client-libraries/0.1/account-module/introduction/overview) was previously developed but this became obsolete with the introduction of Ed25519 signatures. The previous account package was limited to a single account. As an improvement, the new package will be able to manage multiple accounts. 
 
 To summarize, the main motivation behind this package is to offer a simplified (stateful) approach to handle IOTA payments.
 
 ## Considerations
 
-*   Seeds should be stored and managed separately in a secure enclave and should never leave the secure environment. Secure enclaves include software enclaves such as IOTA’s Rust-based Stronghold library or hardware enclaves such as a Ledger Nano;
-*   The secure enclave should have the ability to generate addresses and sign messages upon receipt of a message, and return the output in a message. If the secure enclave is initialised with a pre-generated seed, the sender process should immediately remove the seed traces from memory. 
+*   Seeds should be stored and managed separately in a secure enclave and should never leave the secure environment. Secure enclaves include software enclaves such as IOTA’s Rust-based `Stronghold` library or hardware enclaves such as a `Ledger Nano`.
+*   The secure enclave should have the ability to generate addresses and sign messages upon receipt, and return the output in a new message. If the secure enclave is initialized with a pre-generated seed, the sender process should immediately remove the seed traces from memory. 
 
 ## Naming Conventions
 
-The primary language is [Rust](https://github.com/rust-lang/rust). Therefore, standard Rust naming [conventions](https://doc.rust-lang.org/1.0.0/style/style/naming/README.html) are followed. All interfaces (types) use _CamelCase_ while all function and variable names use _snake\_case_.
+The primary language is [Rust](https://github.com/rust-lang/rust). Therefore, standard [Rust naming conventions](https://doc.rust-lang.org/1.0.0/style/style/naming/README.html) are followed. All interfaces (types) use _CamelCase_ while all function and variable names use _snake\_case_.
 
 ## Interfaces
 
@@ -50,7 +50,7 @@ Account configuration or initialization object. It should support parameters acc
     <td>id</td>
     <td>&#10008;</td>
     <td>string</td>
-    <td>SHA-256 hash of the first address on the seed (m/44'/0'/0'/0'/0'). Required for referencing a seed in Stronghold. The id should be provided by Stronghold.</td>
+    <td>SHA-256 hash of the first address on the seed (m/44'/0'/0'/0'/0'). Required for referencing a seed in Stronghold. The ID should be provided by Stronghold.</td>
   </tr>
   <tr>
     <td>index</td>
@@ -122,13 +122,13 @@ Account configuration or initialization object. It should support parameters acc
     <td>messages</td>
     <td>&#10008;</td>
     <td><a href="#message">Message</a>[]</td>
-    <td>Messages associated with account. Accounts can be initialised with locally stored messages.</td>
+    <td>Messages associated with account. Accounts can be initialized with locally stored messages.</td>
   </tr>
   <tr>
     <td>addresses</td>
     <td>&#10008;</td>
     <td><a href="#address">Address</a>[]</td>
-    <td>Address history associated with the account. Accounts can be initialised with locally stored address history.</td>
+    <td>Address history associated with the account. Accounts can be initialized with locally stored address history.</td>
   </tr>
 </table>
 
@@ -229,7 +229,7 @@ Account configuration or initialization object. It should support parameters acc
     <td><a href="#getmessage">get_message()</a></td>
     <td>&#10004;</td>
     <td>function</td>
-    <td>Gets message for provided id.</td>
+    <td>Gets message for providedID.</td>
   </tr>
   <tr>
     <td><a href="#listaddresses">list_addresses()</a></td>
@@ -450,7 +450,9 @@ Useful [reference](https://medium.com/@harshagoli/hd-wallets-explained-from-high
 
 Transfer object required for creating a transaction. It allows end-users to specify the transaction amount and recipient address.
 
-Note: Currently, it is not possible to send multiple payloads as part of the message. That is why tag property is omitted from this interface. See [this](https://github.com/iotaledger/protocol-rfcs/pull/18#discussion_r468432794) for details.
+:::info
+Currently, it is not possible to send multiple payloads as part of the message. That is why the `tag` property is omitted from this interface. You can find more details in this [GitHub pull request](https://github.com/iotaledger/protocol-rfcs/pull/18#discussion_r468432794).
+:::
 
 <table>
   <tr>
@@ -855,7 +857,7 @@ Note: Currently, it is not possible to send multiple payloads as part of the mes
     <td>parents</td>
     <td>&#10004;</td>
     <td>string[]</td>
-    <td>Message ids this message references.</td>
+    <td>Message IDs this message references.</td>
   </tr>
   <tr>
     <td>payload_length</td>
@@ -901,7 +903,7 @@ Note: Currently, it is not possible to send multiple payloads as part of the mes
         <li>If the transaction was fetched from the network;</li>
         <li>If the transaction was successfully broadcasted from the client itself.</li>
       </ul>
-      Note: This property may only be required for clients with persistent storage.
+      *Note*: This property may only be required for clients with persistent storage.
     </td>
   </tr>
   <tr>
@@ -931,7 +933,7 @@ Note: Currently, it is not possible to send multiple payloads as part of the mes
     <td>get(key: string):<a href="#account">Account</a></td>
     <td>&#10004;</td>
     <td>function</td>
-    <td>Gets the account object for provided account name or id.</td>
+    <td>Gets the account object for provided account name or ID.</td>
   </tr>
   <tr>
     <td>getAll(): <a href="#account">Account</a>[]</td>
@@ -955,11 +957,17 @@ Note: Currently, it is not possible to send multiple payloads as part of the mes
 
 ## Storage 
 
-*Note: Using Stronghold for storage is currently under research/development.*
+:::warning
+Using Stronghold for storage is currently under research/development.
+:::
 
-Multiple storage options should be considered for managing data that requires persistence. For wallet basic metadata, such as user settings or theming options, a simple key-value [storage](https://capacitor.ionicframework.com/docs/apis/storage/) could be leveraged. For transactions and address data management a relational database such as [SQLite](https://github.com/jepiqueau/capacitor-sqlite) can be used. What follows is an Entity Relationship (ERD) diagram that shows the logical representation of the data. An _account_ is the basic entity in this database design. It has a one-to-many relationship with _addresses_ i.e. an account could have multiple _addresses_ but also an _address_ can only belong to a single _account_. An _account_ has a many-to-many relationship with _transactions_ i.e. an _account_ could have multiple _transactions_ but it’s possible that a _transaction_ belongs to multiple _accounts_. To accommodate for that, an additional table is added that stores account ids against transaction ids (hashes).  
+You should consider multiple storage options should for managing data that requires persistence:
+- You can use a simple key-value [storage](https://capacitor.ionicframework.com/docs/apis/storage/) could be leveraged for wallet basic metadata, such as user settings or theming options. 
+- For transactions and address data management you could use a relational database such as [SQLite](https://github.com/jepiqueau/capacitor-sqlite). 
 
-A storage adapter is required by the Rust layer because the storage operations (read/write) will be (mostly) done from that layer. A generic storage adapter is defined [here](#storageadapter).  
+What follows is an Entity Relationship Diagram (ERD)  that shows the logical representation of the data. An `account` is the basic entity in this database design. It has a one-to-many relationship with `addresses` (i.e. an `account` could have multiple `addresses`, but an `_address_` can only belong to a single `account`. An `account` has a many-to-many relationship with `transactions`(i.e. an `account` could have multiple `transactions`, but it’s possible that a `transaction` belongs to multiple `accounts`. To accommodate this behaviour, an additional table that stores account IDs against transaction IDs (hashes) was added.  
+
+A `storage adapter` is required by the Rust layer to handle all the storage operations (read/write) from that layer. A generic storage adapter is defined in the [storage adapter section](#storage-adapter).  
 
 ![Entity Relationship Diagram](../../static/img/specs/erd.jpg)
 
@@ -967,7 +975,7 @@ A storage adapter is required by the Rust layer because the storage operations (
 
 The package should have a default opinionated storage mechanism but should also provide the ability for users to override the storage by specifying an adapter. As a default option, a relational database such as [SQLite](https://www.sqlite.org/index.html) can be used.  
 
-See <a href="#storageAdapter">storage adapter</a> for adapter interface.
+See [storage adapter](#storageadapter) for adapter interface.
 
 ## Account
 
@@ -975,22 +983,22 @@ See <a href="#storageAdapter">storage adapter</a> for adapter interface.
 
 #### Initialisation 
 
-Initialises account
-There are several scenarios in which an account can be initialised:
+Initializes account
+There are several scenarios in which an account can be initialized:
 
-*   _Seed generated outside the Stronghold_:  In this case, the account should be initialised with a seed. It should communicate with the Stronghold using its “importAccount” method and should expect an “id” as a response; 
-*   _Seed generated inside the Stronghold_: In this case, the account should be initialised without a seed. It should communicate with the Stronghold using its “createAccount” method and should expect an “id” in response;
-*   _Importing accounts from Stronghold backup_: In this case, the account should receive all initialisation properties from the Stronghold. Note that during backup, these configuration settings should be passed to the Stronghold. See [import_accounts()](#import_accounts).
+- *Seed generated outside the Stronghold*: In this case, the `account` should be initialized with a seed. It should communicate with the Stronghold using the `import_accounts` method and should expect an ID as a response. 
+- *Seed generated inside the Stronghold8*: In this case, the `account` should be initialized without a seed. It should communicate with the Stronghold using its `create_account` method and should expect an “id” in response;
+- *Importing accounts from Stronghold backup*: In this case, the `account` should receive all the initialization properties from the `Stronghold`. Please note that during backup, these configuration settings should be passed to the `Stronghold`. See [import_accounts()](#import_accounts).
 
-The following should be considered when initialising an account:
+The following should be considered when initializing an account:
 
-*   An account should never be initialised directly. The only way an account can be initialized is through the [add_account()](#add_account) method;
-*   An account should always be initialised after a successful response from the Stronghold. If the Stronghold fails to create an account, the account initialisation should error out. If the Stronghold successfully creates an account, the account should be stored in the persistent storage. Upon a successful store operation, the user should be returned an account object;
-*   If a `provider` property is not passed, a random node should be selected from the `nodes` property;
-*   If a `type` property is not passed, `"default”` should be used as an account type;
-*   `quorum_size` and `quorum_threshold` should be validated. For example, `quorum_size` should not be greater than the number of nodes provided by the user.
-*   The `nodes` property should validate and remove duplicate node URLs;
-*   All the properties of the returned account object should be read-only. It should not be possible to manipulate them directly.
+- An `account` should never be initialized directly. The only way an `account` can be initialized is through the [add_account()](#add_account) method.
+- An `account` should always be initialized after a successful response from the `Stronghold`. If the `Stronghold` fails to create an `account`, the `account` initialization should error out. If the `Stronghold` successfully creates an `account`, the `account` should be stored in the persistent storage. Upon a successful store operation, the user should be returned an `account` object.
+- If a `provider` property is not passed, a random node should be selected from the `nodes` property.
+- If a `type` property is not passed, `"default”` should be used as an account type.
+- `quorum_size` and `quorum_threshold` should be validated. For example, `quorum_size` should not be greater than the number of nodes provided by the user.
+- The `nodes` property should validate and remove duplicate node URLs.
+- All the properties of the returned account object should be read-only. It should not be possible to manipulate them directly.
 
 <table>
   <tr>
@@ -1006,7 +1014,7 @@ The following should be considered when initialising an account:
     <td>config</td>
     <td>&#10004;</td>
     <td><a href="#accountconfiguration">AccountConfig</a></td>
-    <td>Initialisation method receives a configuration object.</td>
+    <td>Initialization method receives a configuration object.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Returns</strong></td>
@@ -1044,13 +1052,13 @@ The following should be considered when initialising an account:
 
 #### sync_addresses() 
 
-Syncs addresses with the Tangle. The method should ensure that the wallet's local state contains all used addresses and an unused address. 
+Sync addresses with the Tangle. The method ensures that the wallet's local state contains all used addresses and an unused address. 
  
 The following should be considered when implementing this method:
 
-*   The updated address history should not be written down in the database/persistent storage. Instead the method should only return the updated address history (with transaction hashes).  This will ensure that there are no partial writes to the database;
-*   To sync addresses for an account from scratch, index = 0 and gap_limit = 10 should be provided;
-*   To sync addresses from the latest address, index = latest address index and gap_limit = 1 should be provided. 
+- The updated address history should not be written down in the database/persistent storage. Instead, the method should only return the updated address history (with transaction hashes).  This ensures that there are no partial writes to the database.
+- To sync addresses for an account from scratch, `index = 0` and `gap_limit = 10` should be sent as arguments.
+*   To sync addresses from the latest address, `index = latest address index` and `gap_limit = 1` should be sent as arguments. 
 
 <table>
   <tr>
@@ -1090,7 +1098,7 @@ The following should be considered when implementing this method:
   <tr>
     <td>ids</td>
     <td>string[]</td>
-    <td colspan="3">Message ids associated with the addresses.</td>
+    <td colspan="3">Message IDs associated with the addresses.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Additional Information</strong></td>
@@ -1121,13 +1129,13 @@ The following should be considered when implementing this method:
 
 #### sync_messages() 
 
-Syncs messages with the Tangle. The method should ensure that the wallet's local state has all messages associated with the address history. 
+Sync messages with the Tangle. The method should ensure that the wallet's local state has all messages associated with the address history. 
 
 The following should be considered when implementing this method:
 
-*   The updated message history should not be written down in the database/persistent storage. Instead the method should only return the updated message history (with message ids);
-*   This method should check if there are any local messages (with “broadcasted: false”) matching the messages fetched from the network. If there are such messages, their “broadcasted” property should be set to true;
-*   For newly-confirmed messages, the method should ensure that it updates the “confirmed” property of all its reattachments.
+- The updated message history should not be written down in the database/persistent storage. Instead, the method should only return the updated message history (with message IDs).
+- This method should check if there are any local messages (with “broadcasted: false”) matching the messages fetched from the network. If there are such messages, their “broadcasted” property should be set to true.
+- For newly-confirmed messages, the method should ensure that it updates the “confirmed” property of all its reattachments.
 
 <table>
   <tr>
@@ -1143,7 +1151,7 @@ The following should be considered when implementing this method:
     <td>ids</td>
     <td>&#10004;</td>
     <td>string[]</td>
-    <td>Message ids. New message ids should be calculated by running a difference of local message ids with latest message ids on the Tangle.</td>
+    <td>Message IDs. New message IDs should be calculated by running a difference of local message IDs with latest message IDs on the Tangle.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Returns</strong></td>
@@ -1185,9 +1193,11 @@ The following should be considered when implementing this method:
 
 #### select_inputs() 
 
-Selects inputs for funds transfer.
+Select inputs for funds transfer.
 
-Note: This method should only be used internally by [send()](#send). Also, the input selection method should ensure that the recipient address doesn’t match the remainder address. 
+:::info
+This method should only be used internally by [send()](#send). The input selection method should also ensure that the recipient address doesn’t match the remainder address. 
+:::
 
 See [Input Selection Process](#input-selection) for implementation details.
 
@@ -1256,21 +1266,23 @@ See [Input Selection Process](#input-selection) for implementation details.
 
 Sends a message to the Tangle.  
 
-Note: This method should only be exposed as a successful response from [sync()](#sync). 
+:::info
+This method should only be used after a successful response from [sync()](#sync). 
+:::
 
 Currently, it is not possible to send multiple payloads. 
 
-The process for sending a value transaction:
-*   Ensure `amount` is not set to zero;
-*   Ensure `amount` does not exceed the total balance;
-*   Ensure recipient address has correct checksum;
-*   Validate `data` property semantics and size;
-*   Select inputs by using [select_inputs()](#selectinputs);
-*   Pass the seralized [unsigned transaction](#unsignedtransaction) to the Stronghold for signing with its “signTransaction” method;
-*   Perform proof-of-work. `pow` property in the account object should determine if the proof of work should be offloaded;
-*   Once proof-of-work is successfully performed, the message should be validated and stored in the persistent storage;
-*   After persisting the transaction, it should be broadcasted to the network;
-*   In the event of a broadcast error, there should be (three) attempts for automatic rebroadcasting. If all attempts fail, the send process should terminate and it should be left to the user to retry the failed message. For failed messages, the “broadcasted” property in the transaction objects should be set to false. 
+If you want to send a value transaction, please follow this process:
+1. Ensure `amount` is not set to zero.
+2. Ensure `amount` does not exceed the total balance.
+3. Ensure recipient address has correct checksum.
+4. Validate `data` property semantics and size.
+5. Select inputs by using [select_inputs()](#selectinputs).
+6. Pass the serialized [unsigned transaction](#unsignedtransaction) to the `Stronghold` for signing with its “signTransaction” method.
+7. Perform proof-of-work. The `pow` property in the account object should determine if the proof of work should be offloaded.
+8. Once proof-of-work is successfully performed, the message should be validated and stored in the persistent storage.
+9. After persisting the transaction, the transaction should be broadcast to the network.
+10.  In the event of a broadcast error, there should be three attempts for automatic rebroadcasting. If all attempts fail, the send process should terminate, and it should be left to the user to retry the failed message. For failed messages, the “broadcasted” property in the transaction objects should be set to false. 
 
 <table>
   <tr>
@@ -1331,13 +1343,15 @@ The process for sending a value transaction:
 
 Rebroadcasts failed message.
 
-Note: This method should only be exposed as a successful response from [sync()](#sync). 
+:::info
+This method should only be used after a successful response from [sync()](#sync). 
+:::
 
-The process for retrying a failed message:
+If you want to retry broadcasting a failed message, you can use the following process:
 
-*   Get message by using [get_message()](#getmessage);
-*   Rebroadcast message;
-*   Update account in persistent storage.
+1. Get the message by using [get_message()](#getmessage).
+2. Rebroadcast the message.
+3. Update the account in persistent storage.
 
 <table>
   <tr>
@@ -1353,7 +1367,7 @@ The process for retrying a failed message:
     <td>id</td>
     <td>&#10004;</td>
     <td>string</td>
-    <td>Message id</td>
+    <td>Message ID</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Returns</strong></td>
@@ -1395,14 +1409,14 @@ The process for retrying a failed message:
 
 #### sync()
 
-Syncs account with the Tangle. The account syncing process should ensure that the latest metadata (balance, messages) associated with an account is fetched from the Tangle and stored locally.  
-Note that it is a proposed design decision to enforce account syncing before every send. An alternative way would be to have the _send_ method always exposed and internally ensuring that the account is synced before every message. 
+Syncs an account with the Tangle. The account syncing process should ensure that the latest metadata (balance, messages) associated with an account is retrieved from the Tangle and stored locally.  
+Please note that it is a proposed design decision to enforce account syncing before every send. An alternative way would be to have the _send_ method always exposed and internally ensuring that the account is synced before every message. 
 
-The process for account syncing:_
+If you want to sync an account, you can use the following process:
 
-*   Sync addresses using [sync_addresses()](#syncaddresses);
-*   Sync messages using [sync_messages()](#syncmessages);
-*   Store updated addresses and messages information in persistent storage (if not explicitly set otherwise by the user). 
+1. Sync addresses using [sync_addresses()](#syncaddresses).
+2. Sync messages using [sync_messages()](#syncmessages).
+3. Store updated addresses and messages information in persistent storage (if not explicitly set otherwise by the user). 
 
 <table>
   <tr>
@@ -1431,8 +1445,7 @@ The process for account syncing:_
     <td>&#10008;</td>
     <td>boolean</td>
     <td>
-      Skips write to the database. This will be useful if a user wants to scan the Tangle for further addresses to find balance. See the
-      <a href="https://docs.iota.org/docs/wallets/0.1/trinity/how-to-guides/perform-a-snapshot-transition">snapshot transition</a> feature provided by Trinity.
+      Skips write to the database. This will be useful if a user wants to scan the Tangle for further addresses to find balance. You can find more details in the [snapshot transition feature](https://docs.iota.org/docs/wallets/0.1/trinity/how-to-guides/perform-a-snapshot-transition") provided by Trinity.
     </td>
   </tr>
   <tr>
@@ -1479,10 +1492,10 @@ The process for account syncing:_
 Reattaches unconfirmed message to the Tangle. 
 The following should be considered when implementing this method:
 
-*   Only an unconfirmed message can be reattached. The method should validate the confirmation state of the provided transaction. If a confirmed message id is provided, the method should error out;
-*   The method should also validate if reattachment is necessary, by checking if the message falls below max depth. The criteria for whether the message has fallen below max depth is determined through its timestamp. If 11 minutes have passed since the timestamp of the most recent (reattachment), the message can be be reattached. See [this](https://github.com/iotaledger/trinity-wallet/blob/3fab4f671c97e805a2b0ade99b4abb8b508c2842/src/shared/libs/iota/transfers.js#L141) implementation for reference;
-*   Once reattached, the message should be stored in the persistent storage;
-*   If the message was reattached via polling, a [reattachment](#monitor-for-reattachments) event should be emitted to notify all subscribers. 
+- Only an unconfirmed message can be reattached. The method should validate the confirmation state of the provided transaction. If a confirmed message ID is provided, the method should throw an error.
+- The method should also validate if a reattachment is necessary, by checking if the message falls below max depth. The criteria for whether the message has fallen below max depth is determined through its timestamp. If 11 minutes have passed since the timestamp of the most recent reattachment, the message can be reattached. See [this implementation](https://github.com/iotaledger/trinity-wallet/blob/3fab4f671c97e805a2b0ade99b4abb8b508c2842/src/shared/libs/iota/transfers.js#L141) for reference.
+- Once reattached, the message should be stored in the persistent storage.
+- If the message was reattached via polling, a [reattachment](#monitor-for-reattachments) event should be emitted to notify all subscribers. 
 
 <table>
   <tr>
@@ -1498,7 +1511,7 @@ The following should be considered when implementing this method:
     <td>id</td>
     <td>&#10004;</td>
     <td>string</td>
-    <td>Message id.</td>
+    <td>Message ID.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Returns</strong></td>
@@ -1542,7 +1555,7 @@ The following should be considered when implementing this method:
 
 Gets total account balance.
 
-Total balance should be read directly from the local storage. To read the latest account balance from the network, [sync()](#sync) should be used first. 
+The total balance should be read directly from local storage. To read the latest account balance from the network, [sync()](#sync) should be used first. 
 
 <table>
   <tr>
@@ -1579,11 +1592,11 @@ Total balance should be read directly from the local storage. To read the latest
 
 #### available_balance()
 
-Gets available account balance. Available account balance is the amount users are allowed to spend. It should subtract the pending balance from the total balance. 
+Gets available account balance. The available account balance is the amount users are allowed to spend. It should subtract the pending balance from the total balance. 
 
 For example, if a user with _50i_ total account balance has made a transaction spending _30i_, the available balance should be _20i_ (i.e. 50i - 30i).
 
-Available balance should be read directly from the local storage. To read the latest account balance from the network, [sync()](#sync) should be used first.
+The available balance should be read directly from local storage. If you want to read the latest account balance from the network, you should use [sync()](#sync) first.
 
 <table>
   <tr>
@@ -1595,7 +1608,7 @@ Available balance should be read directly from the local storage. To read the la
   </tr>
   <tr>
     <td><a href="#value">Value</a></td>
-    <td>Account available balance.</td>
+    <td>The accounts available balance.</td>
   </tr>
   <tr>
     <td colspan="3"><strong>Additional Information</strong></td>
@@ -1620,7 +1633,7 @@ Available balance should be read directly from the local storage. To read the la
 
 #### set_alias() 
 
-Updates account name
+Updates an account's alias/name.
 
 <table>
   <tr>
@@ -1661,7 +1674,7 @@ Updates account name
 
 #### list_messages() 
 
-Gets messages. Messages should be read directly from the local storage. To ensure the local database is updated with the latest messages, [sync()](#sync) should be used first.
+Gets messages. Messages should be read directly from local storage. To ensure the local database is updated with the latest messages, you should use [sync()](#sync) first.
 
 <table>
   <tr>
@@ -1723,7 +1736,7 @@ Gets messages. Messages should be read directly from the local storage. To ensur
 
 Gets all received messages.
 
-Messages should be read directly from the local storage. To ensure the local database is updated with the latest messages, [sync()](#sync) should be used first. 
+Messages should be read directly from local storage. To ensure the local database is updated with the latest messages, you should use [sync()](#sync) first. 
 
 <table>
   <tr>
@@ -1739,7 +1752,7 @@ Messages should be read directly from the local storage. To ensure the local dat
     <td>count</td>
     <td>&#10004;</td>
     <td>number</td>
-    <td>Number of (most recent) received messages.</td>
+    <td>Number of most recent received messages.</td>
   </tr>
   <tr>
     <td>from</td>
@@ -1785,7 +1798,7 @@ Messages should be read directly from the local storage. To ensure the local dat
 
 Gets all sent messages.
 
-Messages should be directly read from the local storage. To ensure the local database is updated with the latest messages, [sync()](#sync) should be used first.
+Messages should be read directly from local storage. To ensure the local database is updated with the latest messages, you should use [sync()](#sync) first. 
 
 <table>
   <tr>
@@ -1845,7 +1858,7 @@ Messages should be directly read from the local storage. To ensure the local dat
 
 #### list_failed_messages()
 
-Gets all failed (broadcasted = false) messages. Messages should be read directly from the local storage.
+Gets all failed (broadcasted = false) messages. Messages should be read directly from local storage.
 
 <table>
   <tr>
@@ -1905,7 +1918,7 @@ Gets all failed (broadcasted = false) messages. Messages should be read directly
 
 #### list_unconfirmed_messages()
 
-Gets all unconfirmed (confirmed = false) messages. Messages should be read directly from the local storage.  
+Gets all unconfirmed (confirmed = false) messages. Messages should be read directly from local storage.  
 
 <table>
   <tr>
@@ -1965,9 +1978,9 @@ Gets all unconfirmed (confirmed = false) messages. Messages should be read direc
 
 #### get_message()
 
-Gets message for provided id.
+Gets message for provided ID.
 
-Messages should be read directly from the local storage. To ensure the local database is updated with the latest messages, [sync()](#sync) should be used first. 
+Messages should be read directly from local storage.  To ensure the local database is updated with the latest messages, you should use [sync()](#sync) first.
 
 <table>
   <tr>
@@ -1983,7 +1996,7 @@ Messages should be read directly from the local storage. To ensure the local dat
     <td>id</td>
     <td>&#10004;</td>
     <td>string</td>
-    <td>Message id.</td>
+    <td>Message ID.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Returns</strong></td>
@@ -2138,13 +2151,13 @@ Gets the latest unused address.
 
 ## Account Manager
 
-An account manager class should be publicly available for users. With the account manager, the user can create, update, delete or manage multiple accounts. The implementation details of a specific account should be abstracted away using this account manager wrapper. 
+An account manager class should be publicly available for users. With the account manager, the user can create, update, delete or manage multiple accounts. The implementation details of a specific account should be abstracted using this account manager wrapper. 
 
 ### API
 
 #### Initialisation 
 
-Initialises the account manager. Account manager initialisation should validate the adapter object semantics and should return an instance of the account manager.
+Initializes the account manager. Account manager initialization should validate the adapter object semantics and return an `AccountManager` instance.
 
 <table>
   <tr>
@@ -2261,8 +2274,8 @@ See account [initialisation](#initialisation) for detailed implementation guidel
 Removes an account.
 
 The following should be considered when removing an account:
-*   An account should first be removed from the Stronghold using its “removeAccount” method;
-*   Once the account references have been removed from the Stronghold, the account should be deleted from the persistent storage.
+- An account should first be removed from the `Stronghold` using its “removeAccount” method.
+- Once the account references have been removed from the `Stronghold`, the account should be deleted from the persistent storage.
 
 <table>
   <tr>
@@ -2280,13 +2293,13 @@ The following should be considered when removing an account:
     <td>
       &#x7B; address: &lt;string> } | &#x7B; alias: &lt;string> } |
       <p>
-        &#x7B; id: &lt;number> } |
+        &#x7B; ID: &lt;number> } |
       </p>
       <p>
         &#x7B; index: &lt;number }
       </p>
     </td>
-    <td>Identifier. Could be one of address, alias, id or index.</td>
+    <td>Identifier. Could be one of address, alias, ID or index.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Additional Information</strong></td>
@@ -2313,7 +2326,7 @@ The following should be considered when removing an account:
 
 Syncs all stored accounts with the Tangle. Syncing should get the latest balance for all accounts and should find any new messages associated with the stored account.
 
-See [Accounts Syncing Process](#accounts-syncing-process).
+See [Accounts Syncing Process](#accounts-syncing-process) for further details.
 
 <table>
   <tr>
@@ -2356,7 +2369,7 @@ See [Accounts Syncing Process](#accounts-syncing-process).
 
 #### move()
 
-Moves funds from one account to another. This method should leverage the [send()](#send) method from the sender account and should initiate a message to the receiver account.
+Moves funds from one account to another. This method should use the [send()](#send) method from the sender account and initiate a message to the receiver account.
 
 <table>
   <tr>
@@ -2374,13 +2387,13 @@ Moves funds from one account to another. This method should leverage the [send()
     <td>
       &#x7B; address: &lt;string> } | \ &#x7B; alias: &lt;string> } |
       <p>
-        &#x7B; id: &lt;number> } |
+        &#x7B; ID: &lt;number> } |
       </p>
       <p>
         &#x7B; index: &lt;number }
       </p>
     </td>
-    <td>Identifier. Could be one of address, alias, id or index.</td>
+    <td>Identifier. Could be one of address, alias, ID or index.</td>
   </tr>
   <tr>
     <td>to</td>
@@ -2388,13 +2401,13 @@ Moves funds from one account to another. This method should leverage the [send()
     <td>
       &#x7B; address: &lt;string> } | \ &#x7B; alias: &lt;string> } |
       <p>
-        &#x7B; id: &lt;number> } |
+        &#x7B; ID: &lt;number> } |
       </p>
       <p>
         &#x7B; index: &lt;number }
       </p>
     </td>
-    <td>Identifier. Could be one of address, alias, id or index.</td>
+    <td>Identifier. Could be one of address, alias, ID or index.</td>
   </tr>
   <tr>
     <td>amount</td>
@@ -2427,7 +2440,7 @@ Moves funds from one account to another. This method should leverage the [send()
 
 Safely creates a backup of the accounts to a destination. The file could simply be JSON containing the address & transaction histories for accounts.
 
-This method should provide the Stronghold instance with the metadata of all accounts. 
+This method should provide the `Stronghold` instance with the metadata of all accounts. 
 
 <table>
   <tr>
@@ -2470,7 +2483,7 @@ This method should provide the Stronghold instance with the metadata of all acco
 
 Import (backed up) accounts.
 
-**Implementation details are not finalised.**
+**The implementation details are not finalized.**
 
 <table>
   <tr>
@@ -2531,11 +2544,11 @@ Returns the account associated with the provided identifier.
    <td>&#x7B; address: &lt;string> } |  \
 &#x7B; alias: &lt;string>  } |
 <p>
-&#x7B; id: &lt;number> }</p> |
+&#x7B; ID: &lt;number> }</p> |
 <p>
 &#x7B; index: &lt;number }</p>
    </td>
-   <td>Identifier. Could be one of address, alias, id or index. 
+   <td>Identifier. Could be one of address, alias, ID or index. 
    </td>
   </tr>
   <tr>
@@ -2555,7 +2568,7 @@ Returns the account associated with the provided identifier.
    <td>
 <a href="#account">Account</a>
    </td>
-   <td colspan="3">Account associated with identifier.</td>
+   <td colspan="3">Account associated with IDentifier.</td>
   </tr>
   <tr>
 <td colspan="4"><strong>Additional Information</strong></td>
@@ -2600,19 +2613,19 @@ See [reattach()](#reattach) method for implementation details. This method is a 
     <td>
       &#x7B; address: &lt;string> } | \ &#x7B; alias: &lt;string> } |
       <p>
-        &#x7B; id: &lt;number> } |
+        &#x7B; ID: &lt;number> } |
       </p>
       <p>
         &#x7B; index: &lt;number }
       </p>
     </td>
-    <td>Identifier. Could be one of address, alias, id or index.</td>
+    <td>Identifier. Could be one of address, alias, ID or index.</td>
   </tr>
   <tr>
     <td>id</td>
     <td>&#10004;</td>
     <td>string</td>
-    <td>Message id.</td>
+    <td>Message ID.</td>
   </tr>
   <tr>
     <td colspan="4"><strong>Returns</strong></td>
@@ -2650,15 +2663,15 @@ See [reattach()](#reattach) method for implementation details. This method is a 
 
 ## Events 
 
-Events are categorised as the following:
+Events can have two categories:
 
-1. Reactive messages emitted from the node software whenever the state on the node changes. For example, emitting new messages received by the node. Clients (Wallet) can subscribe to these events to get notified if any relevant change occurs on the node. See [example](https://github.com/iotaledger/wallet-spec/tree/events).
+1. Reactive messages emitted from the node software whenever the state on the node changes. For example, emitting new messages received by the node. Clients (Wallet) can subscribe to these events to get notified if any relevant change occurs on the node. For further details, please visit the [Firefly GitHub repository](https://github.com/iotaledger/wallet-spec/tree/events).
    
-2. Messages emitted from the wallet library whenever there are any important state changes. Note that in cases where a user triggered action leads to a state change, the messages would not be emitted. For example, if a user explicitly triggers a [sync()](#sync) action leading to a state change, an explicit event is not necessary.
+2. Messages emitted from the wallet library whenever there are any important state changes. Please note that in cases where a user triggered action leads to a state change, the messages will not be emitted. For example, if a user explicitly triggers a [sync()](#sync) action leading to a state change, an explicit event is not necessary.
 
 ### Category 1 events
 
-On every update sent from the node software via an event, the wallet library should update internal (persistent) storage and should also emit events via **category 2**. 
+On every update sent from the node software via an event, the wallet library should update internal (persistent) storage and should also emit events via [category 2 events](#category-2-events). 
 
 #### Monitor address for balance changes
 
@@ -2721,7 +2734,7 @@ On every update sent from the node software via an event, the wallet library sho
 
 ### Category 2 events
 
-They could be triggered via events from **category 1** or through [polling](#polling). 
+They could be triggered via events from [category 1](#category-1-events) or through [polling](#polling). 
 
 #### Monitor for balance changes
 
@@ -2807,61 +2820,64 @@ They could be triggered via events from **category 1** or through [polling](#pol
 
 ## Privacy
 
-To maintain the financial privacy of wallet users, the application/wallet should enforce strategies that will guarantee a certain level of anonymity. These strategies should be followed:
+To maintain the financial privacy of wallet users, you should enforce strategies in the application/wallet that will guarantee a certain level of anonymity:
 
-<ul>
-  <li>The wallet should only use a single address per message i.e. if an address is already used in a message, it should not be used as a deposit address and instead a new address should be generated;</li>
-  <li>The input selection strategy should expose as little information as possible. See input selection for details.</li>
-</ul>
+- The wallet should only use a single address per message.  If an address has already been used in a message, it should not be used as a deposit address.  Instead, a new address should be generated.- The input selection strategy should expose as little information as possible. Please see the [input selection process](#input-selection) for further details.
 
-Some other privacy enhancing techniques can be found [here](https://docs.google.com/document/d/1frk4r1Eq4hnGGOiKWkDiGTK5QQxKbfrvl7Iol7OZ-dc/edit#). 
+Some other privacy enhancing techniques can be found [in this document](https://docs.google.com/document/d/1frk4r1Eq4hnGGOiKWkDiGTK5QQxKbfrvl7Iol7OZ-dc/edit#). 
 
 ## Input Selection
 
-The goal of input selection is to avoid remainder addresses. The remainder output leaves a clue to the user's future spends. There should be a standardised input selection strategy used by the wallet. The steps for input selection are as follows:
+The goal of input selection is to avoid remainder addresses. The remainder output leaves a clue to the user's future spends. There should be a standardized input selection strategy used by the wallet. 
 
-1. Try to select an input with an exact match. For example, if a user intends to spend _X_ iotas, the wallet should try to find an address that has _X_ iotas as available balance;
-2. If the previous step fails, try to select a combination of inputs that satisfy the amount leaving no change. For example, consider a scenario where the wallet with account name _Foo_ has three addresses _A_, _B_ and _C_ with _10_, _20_ and _50_ IOTA respectively. If a user intends to spend _X = 30_ IOTA, the application should search for an exact match (step no. 1). Clearly, in this case, no address balance matches _X_, therefore, the wallet should search for a subset of addresses with an accumulated balance of _X_. In this scenario, _A_ and _B_;
+The steps for input selection are as follows:
+
+1. Try to select an input with an exact match. For example, if a user intends to spend _X_ iotas, the wallet should try to find an address that has _X_ iotas as available balance.
+2. If the previous step fails, try to select a combination of inputs that satisfy the amount leaving no change. For example, consider a scenario where the wallet with account name _Foo_ has three addresses _A_, _B_ and _C_ with _10_, _20_ and _50_ IOTA respectively. If a user intends to spend _X = 30_ IOTA, the application should search for an exact match (step no. 1). In this case, no address balance matches _X_. Therefore, the wallet should search for a subset of addresses with an accumulated balance of _X_. In this scenario, _A_ and _B_.
 3. If both the previous steps fail, the wallet should select a combination of inputs that produce the minimum remainder. 
 
-A reference implementation of different input selection algorithms for Bitcoin can be found [here](https://github.com/bitcoinjs/coinselect).
+A reference implementation of different input selection algorithms for Bitcoin can be found [in this project](https://github.com/bitcoinjs/coinselect).
 
-Also, the implementation of step no. 2 is quite similar to the [subset sum problem](https://en.wikipedia.org/wiki/Subset_sum_problem). Given a _total_ and a set of non-negative numbers (_inputs_), we need to determine if there is a subset which adds up to the _total_.
+The implementation of step no. 2 is also quite similar to the [subset sum problem](https://en.wikipedia.org/wiki/Subset_sum_problem). Given a _total_ and a set of non-negative numbers (_inputs_), we need to determine if there is a subset which adds up to the _total_.
 
 ## Account Syncing Process
 
-The account syncing process should detect all (used) accounts on a seed with their corresponding address and message history. Once, all accounts and histories are detected, the wallet should accumulate total balance. The syncing process should work as follows: 
+The account syncing process should detect all used accounts on a seed with their corresponding address and message history. Once, all accounts and histories are detected, the wallet should accumulate the total balance. The syncing process should work as follows: 
 
-1. Start with the account at index 0, generate [gap limit](https://blog.blockonomics.co/bitcoin-what-is-this-gap-limit-4f098e52d7e1) number of addresses, default to 20;
-2. Check for messages and balances on the generated addresses;
-3. If there are no messages and balances of 0 on all addresses, the process for generating addresses and finding messages and balances should be stopped; 
-4. If any address has balance or associated messages, generate gap limit number of addresses from the index of the last address with messages or balance; 
-5. Steps (1-4) should also be peformed for account at index 1. The general idea is that _n + 1_ accounts should be checked if account _n_ has any messages or balance.
+1. Start with the account at index 0, generate [gap limit](https://blog.blockonomics.co/bitcoin-what-is-this-gap-limit-4f098e52d7e1) number of addresses. This defaults to 20.
+2. Check for messages and balances on the generated addresses.
+3. If there are no messages and balances of 0 on all addresses, the process for generating addresses and finding messages and balances should be stopped.
+4. If any address has balance or associated messages, generate gap limit number of addresses from the index of the last address with messages or balance.
+5. Steps (1-4) should also be performed for the account at index 1. The general idea is that _n + 1_ accounts should be checked if account _n_ has any messages or balance.
 
 Treat accounts like addresses. Only allow 1 latest unused account.
 
-_Scenario 1_: Wallet message and address history stored in Stronghold backup
+*Scenario 1*: The wallet message and address history stored in Stronghold backup
 
-*   Start syncing from the latest address index stored in the Stronghold backup
-*   Also provide a “Full sync” function to resync from index 0 across all accounts
-*   Also provide “Find more history” function to sync a further 50 addresses
+1. Start syncing from the latest address index stored in the Stronghold backup
+2.  Run the “Full sync” function to resync from index 0 across all accounts
+3.  Run the “Find more history” function to sync a further 50 addresses
 
-_Scenario 2_: User has no backup file
+*Scenario 2*: User has no backup file
 
-*   Start syncing from account 0 address 0
+1. Start syncing from account 0 address 0
 
 ## Polling
 
  A background process that automatically performs several tasks periodically should be part of the wallet library. The goal of the background process is to perform the following tasks:  
 
-*   _Sync accounts_: The background process should sync all accounts with the network. This should be done using the [sync_accounts()](#syncaccounts) method. If new messages are detected, a [messages](#monitor-for-new-messages) event should be used to notify all subscribers. If new balances are detected, a [balances](#monitor-for-balance-changes) event should be used to notify all subscribers. If new confirmations are detected, a [confirmations](#monitor-for-confirmation-state) event should be used to notify all subscribers; 
-
-Note that if there are multiple failed messages, priority should be given to the old ones. 
-*   _Reattach_: The background process should check if there are any (unconfirmed) messages that require reattachments. The detailed implementation flow for reattachment can be found [here](#reattach). 
+- *Sync accounts*: The background process should sync all accounts with the network. This should be done using the [sync_accounts()](#syncaccounts) method. 
+  - If new messages are detected, a [messages](#monitor-for-new-messages) event should be used to notify all subscribers. 
+  - If new balances are detected, a [balances](#monitor-for-balance-changes) event should be used to notify all subscribers. 
+  - If new confirmations are detected, a [confirmations](#monitor-for-confirmation-state) event should be used to notify all subscribers.
+:::info
+If there are multiple failed messages, priority should be given to the old ones. 
+:::
+- *Reattach*: The background process should check if there are any unconfirmed messages that require reattachment. The detailed implementation flow for reattachment can be found in the [reattach section](#reattach). 
 
 The following should be considered for implementation:
 
-*   Invoking a task explicitly that is already being performed through polling should lead to an error. For example, if the polling process is already syncing accounts and a user explicitly calls [sync()](#sync), it should throw an error;
+*   Invoking a task explicitly that is already being performed through polling should lead to an error. For example, if the polling process is already syncing accounts and a user explicitly calls [sync()](#sync), it should throw an error.
 *   Errors during the polling process should be communicated to subscribers via error events.
 
-The background process should have a recurring checker that sequentially performs all the above tasks. The implementation should ensure that future tasks can easily be added to the background process. For reference, see Trinity’s [implementation](https://github.com/iotaledger/trinity-wallet/blob/develop/src/mobile/src/ui/components/Poll.js) of the poll component. 
+The background process should have a recurring checker that sequentially performs all the above tasks. The implementation should ensure that future tasks can easily be added to the background process. For reference, see [Trinity’s implementation](https://github.com/iotaledger/trinity-wallet/blob/develop/src/mobile/src/ui/components/Poll.js) of the poll component. 

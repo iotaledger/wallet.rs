@@ -21,6 +21,7 @@ Initializes the logging system.
 ## addEventListener(event, cb)
 
 Adds a new event listener with a callback in the form of `(err, data) => {}`.
+
 Supported event names:
 - ErrorThrown
 - BalanceChange
@@ -33,22 +34,28 @@ Supported event names:
 
 ## AccountManager
 
-### constructor([options])
+### constructor([ManagerOptions])
 
 Creates a new instance of the AccountManager.
 
 | Param                              | Type                 | Default                | Description                                                                               |
 | ---------------------------------- | -------------------- | ---------------------- | ----------------------------------------------------------------------------------------- |
-| [options]                          | <code>object</code>  | <code>undefined</code> | The options to configure the account manager                                              |
-| [storagePath]                      | <code>string</code>  | <code>undefined</code> | The path where the database file will be saved                                            |
-| [storagePassword]                  | <code>string</code>  | <code>undefined</code> | The storage password                                                                      |
-| [outputConsolidationThreshold]     | <code>number</code>  | <code>100</code>       | The number of outputs an address must have to trigger the automatic consolidation process |
-| [automaticOutputConsolidation]     | <code>boolean</code> | <code>true</code>      | Disables the automatic output consolidation if false                                      |
-| [syncSpentOutputs]                 | <code>boolean</code> | <code>false</code>     | Enables fetching spent output history on account sync                                     |
-| [persistEvents]                    | <code>boolean</code> | <code>false</code>     | Enables event persistence                                                                 |
-| [allowCreateMultipleEmptyAccounts] | <code>boolean</code> | <code>false</code>     | Enables creating accounts with latest account being empty                                 |
-| [skipPolling]                      | <code>boolean</code> | <code>false</code>     | Enables creating accounts without automatic polling (background syncing)                  |
-| [pollingInterval]                  | <code>number</code>  | <code>30</code>        | Sets the polling interval in seconds                                                      |
+| [ManagerOptions](#manageroptions)                   | <code>object</code>  | <code>undefined</code> | The options to configure the account manager                                              |
+
+#### ManagerOptions 
+You can use any of the following parameters when constructing the ManagerOptions. All the parameters are optional.   
+
+| Param                            | Type                 | Default                | Description                                                                               |
+| -------------------------------- | -------------------- | ---------------------- | ----------------------------------------------------------------------------------------- |
+| storagePath                      | <code>string</code>  | <code>undefined</code> | The path where the database file will be saved                                            |
+| storagePassword                  | <code>string</code>  | <code>undefined</code> | The storage password                                                                      |
+| outputConsolidationThreshold     | <code>number</code>  | <code>100</code>       | The number of outputs an address must have to trigger the automatic consolidation process |
+| automaticOutputConsolidation     | <code>boolean</code> | <code>true</code>      | Disables the automatic output consolidation if false                                      |
+| syncSpentOutputs                 | <code>boolean</code> | <code>false</code>     | Enables fetching spent output history on account sync                                     |
+| persistEvents                    | <code>boolean</code> | <code>false</code>     | Enables event persistence                                                                 |
+| allowCreateMultipleEmptyAccounts | <code>boolean</code> | <code>false</code>     | Enables creating accounts with latest account being empty                                 |
+| skipPolling                      | <code>boolean</code> | <code>false</code>     | Enables creating accounts without automatic polling (background syncing)                  |
+| pollingInterval                  | <code>number</code>  | <code>30</code>        | Sets the polling interval in seconds                                                      |
 
 ### setStrongholdPassword(password): void
 
