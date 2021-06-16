@@ -4,7 +4,7 @@ You can list all available examples by running the following command:
 ```
 cargo run --example # lists the available examples
 ```
-To run an example, you can use the following command, replacing `transfer` with the desired example:
+To run an example, you can use the following command, replacing  _transfer_  with the desired example:
 ```
 cargo run --example transfer # execute the `transfer` example
 ```

@@ -13,7 +13,7 @@ Please make sure you follow our [backup and security recommendations](https://ch
 :::
 ## Installation
 
-Currently, the package isn't published,  so you'll need to link it to your project using `npm` or `yarn`. We also use `dotenv` for password management in the examples.
+Currently, the package isn't published,  so you'll need to link it to your project using  _npm_  or  _yarn_ . We also use  _dotenv_  for password management in the examples.
 
 - To install with NPM, you can run the following command:
 ```

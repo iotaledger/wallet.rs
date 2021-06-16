@@ -33,7 +33,7 @@ Creates a new instance of the AccountManager.
 | [allow_create_multiple_empty_accounts] | <code>boolean</code> | <code>false</code>              | Enables creating accounts with latest account being empty                                      |
 
 :::info
-If the `storage_path` is set, then the `storage` needs to be set too. An exception will be thrown when errors happened.
+If the  _storage_path_  is set, then the  _storage_  needs to be set too. An exception will be thrown when errors happened.
 :::
 
 **Returns** The constructed [AccountManager](#accountmanager).
@@ -71,7 +71,7 @@ Sets the Stronghold password.
 
 Determines whether all accounts have the latest address unused.
 
-**Returns** `true` if the latest address is unused.
+**Returns**  _true_  if the latest address is unused.
 
 ### store_mnemonic(signer_type, mnemonic (optional)): bool
 
@@ -80,7 +80,7 @@ If the mnemonic is not provided, we'll generate one.
 
 | Param       | Type             | Default                         | Description                                                    |
 | ----------- | ---------------- | ------------------------------- | -------------------------------------------------------------- |
-| signer_type | <code>str</code> | <code>undefined</code>          | Should be `Stronghold`, `LedgerNano`, or `LedgerNanoSimulator` |
+| signer_type | <code>str</code> | <code>undefined</code>          | Should be  _Stronghold_ ,  _LedgerNano_ , or  _LedgerNanoSimulator_  |
 | mnemonic    | <code>str</code> | <code>randomly generated</code> | The provided mnemonic or the randomly generated one            |
 
 ### generate_mnemonic(): str
@@ -91,7 +91,7 @@ Generates a new mnemonic.
 
 ### verify_mnemonic(mnemonic): void
 
-Checks is the mnemonic is valid. If a mnemonic was generated with `generate_mnemonic()`, the mnemonic here should match the generated.
+Checks is the mnemonic is valid. If a mnemonic was generated with  _generate_mnemonic()_ , the mnemonic here should match the generated.
 
 | Param    | Type             | Default                | Description           |
 | -------- | ---------------- | ---------------------- | --------------------- |
@@ -313,7 +313,7 @@ Set the number of address indexes that are generated.
 ### skip_persistence(): void
 
 Skip saving new messages and addresses on the account object.
-The found [SyncedAccount](#syncedaccount) is returned on the `execute` call but won't be persisted on the database.
+The found [SyncedAccount](#syncedaccount) is returned on the  _execute_  call but won't be persisted on the database.
 
 ### address_index(address_index): void
 
@@ -354,18 +354,18 @@ Syncs the accounts with the tangle.
 
 ### constructor(amount, address, indexation (optional), remainder_value_strategy: str): [Transfer](#transfer)
 
-The `Transfer` object used in [SyncedAccount](#syncedaccount)
+The  _Transfer_  object used in [SyncedAccount](#syncedaccount)
 
 | Param                    | Type                                   | Default                | Description                                 |
 | ------------------------ | -------------------------------------- | ---------------------- | ------------------------------------------- |
 | amount                   | <code>int</code>                       | <code>undefined</code> | The amount to transfer                      |
 | address                  | <code>str</code>                       | <code>undefined</code> | The addree to send                          |
 | indexation               | <code>[Indexation](#indexation)</code> | <code>undefined</code> | The indexation payload                      |
-| remainder_value_strategy | <code>str</code>                       | <code>undefined</code> | Should be `ReuseAddress` or `ChangeAddress` |
+| remainder_value_strategy | <code>str</code>                       | <code>undefined</code> | Should be  _ReuseAddress_  or  _ChangeAddress_  |
 
 ## SyncedAccount
 
-The result of a `sync` operation on an Account.
+The result of a  _sync_  operation on an Account.
 
 ### account_handle(): [AccountHandle](#accounthandle)
 
@@ -491,7 +491,7 @@ Syncs the latest address with the Tangle and determines whether it's unused or n
 An unused address is an address without balance and associated message history.
 Note that such address might have been used in the past, because the message history might have been pruned by the node.
 
-**Returns** `true` if the latest address in the account is unused.
+**Returns**  _true_  if the latest address in the account is unused.
 
 ### latest_address(): [Address](#address)
 
@@ -540,7 +540,7 @@ Returns the number of messages associated with the account.
 
 | Param        | Type             | Default                | Description                                                       |
 | ------------ | ---------------- | ---------------------- | ----------------------------------------------------------------- |
-| message_type | <code>str</code> | <code>undefined</code> | Should be `Received`, `Sent`, `Failed`, `Unconfirmed`, or `Value` |
+| message_type | <code>str</code> | <code>undefined</code> | Should be  _Received_ ,  _Sent_ ,  _Failed_ ,  _Unconfirmed_ , or  _Value_  |
 
 ### list_messages(count, from, message_type (optional)): list([WalletMessage](#walletmessage))
 
@@ -550,7 +550,7 @@ Get the list of messages of this account.
 | ------------ | ---------------- | ---------------------- | ----------------------------------------------------------------- |
 | count        | <code>int</code> | <code>undefined</code> | The count of the messages to get                                  |
 | from         | <code>int</code> | <code>undefined</code> | The iniital address index                                         |
-| message_type | <code>str</code> | <code>undefined</code> | Should be `Received`, `Sent`, `Failed`, `Unconfirmed`, or `Value` |
+| message_type | <code>str</code> | <code>undefined</code> | Should be  _Received_ ,  _Sent_ ,  _Failed_ ,  _Unconfirmed_ , or  _Value_  |
 
 ### list_spent_addresses(): list[[Address](#address)]
 
@@ -568,7 +568,7 @@ Sets the account type.
 
 | Param       | Type             | Default                  | Description                                                    |
 | ----------- | ---------------- | ------------------------ | -------------------------------------------------------------- |
-| signer_type | <code>str</code> | <code>signer_type</code> | Should be `Stronghold`, `LedgerNano`, or `LedgerNanoSimulator` |
+| signer_type | <code>str</code> | <code>signer_type</code> | Should be  _Stronghold_ ,  _LedgerNano_ , or  _LedgerNanoSimulator_  |
 
 ### alias(alias): void
 
@@ -891,7 +891,7 @@ client_options = {
 }
 ```
 
-Note that this message object in `Wallet.rs` is not the same as the message object in `iota.rs`.
+Note that this message object in `Wallet.rs` is not the same as the message object in `Iota.rs`.
 
 ## Node
 

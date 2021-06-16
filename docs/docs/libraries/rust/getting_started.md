@@ -2,22 +2,22 @@
 
 ## Prerequisites
 
-`Rust` and `Cargo` are required. You can find installation instructions in the [Rust documentation](https://doc.rust-lang.org/cargo/getting-started/installation.html).
+ _Rust_  and  _Cargo_  are required to use Wallet.rs. You can find installation instructions in the [Rust documentation](https://doc.rust-lang.org/cargo/getting-started/installation.html).
 
-We recommend you update `Rust` to the latest stable version [`rustup update stable`](https://github.com/rust-lang/rustup.rs#keeping-rust-up-to-date). The nightly version should be fine, but there is a chance some changes are not compatible.
+We recommend you update  _Rust_  to the latest stable version [rustup update stable](https://github.com/rust-lang/rustup.rs#keeping-rust-up-to-date). The nightly version should be fine, but there is a chance some changes are not compatible.
 
-`no_std` is not currently supported, but we are working on it, and we will provide it as a feature once the new implementation is ready.
+ _no_std_  is not currently supported, but we are working on it, and we will provide it as a feature once the new implementation is ready.
 
 ### Dependencies
 
-`cmake` and `openssl` are required. In order to run the build process successfully using Cargo you may need install additional build tools on your system. 
+ _cmake_  and  _openssl_  are required. In order to run the build process successfully using Cargo you may need install additional build tools on your system. 
 
 ### Windows
 
-`cmake` can be downloaded from the [official cmake website](https://cmake.org/download/).
-`openssl` can be installed with [vcpkg](https://github.com/microsoft/vcpkg) or [chocolatey](https://chocolatey.org/).
+ _cmake_  can be downloaded from the [official cmake website](https://cmake.org/download/).
+ _openssl_  can be installed with [vcpkg](https://github.com/microsoft/vcpkg) or [chocolatey](https://chocolatey.org/).
 
-- Installing `openssl` with `vcpkg`:
+- Installing  _openssl_  with  _vcpkg_ :
 
     ```
     $ ./vcpkg.exe install openssl:x64-windows
@@ -26,7 +26,7 @@ We recommend you update `Rust` to the latest stable version [`rustup update stab
     $ set VCPKGRS_DYNAMIC=1
     ```
 
-- Installing `openssl` with `chocolatey`:
+- Installing  _openssl_  with  _chocolatey_ :
 
     ```
     $ choco install openssl
@@ -36,7 +36,7 @@ We recommend you update `Rust` to the latest stable version [`rustup update stab
 
 ### macOS
 
-`cmake` and `openssl` can be installed with `Homebrew` by running the following commands:
+ _cmake_  and  _openssl_  can be installed with  _Homebrew_  by running the following commands:
 
 ```
 $ brew install cmake
@@ -47,11 +47,11 @@ $ OPENSSL_ROOT_DIR=$(brew --prefix openssl@1.1)
 
 ### Linux
 
-You can install `cmake` and `openssl` with your distro's package manager or download from their websites. On Debian and Ubuntu you will also need `build-essential`.
+You can install  _cmake_  and  _openssl_  with your distro's package manager or download from their websites. On Debian and Ubuntu you will also need the `build-essential` meta-package.
 
 ## Usage
 
-To use the library, add this to your `Cargo.toml`:
+To use the library, add this to your  _Cargo.toml_ :
 
 ```
 [dependencies]
@@ -60,7 +60,7 @@ iota-wallet = { git = "https://github.com/iotaledger/wallet.rs" }
 
 ### Initialisation
 
-In order to use the library, you first need to create an `AccountManager`:
+In order to use the library, you first need to create an  _AccountManager_ :
 
 ```rust
 use iota_wallet::{

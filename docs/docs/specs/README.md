@@ -4,7 +4,7 @@
 
 The `Wallet.rs` library is a stateful package with a standardized interface to build applications with IOTA value transactions. The package will be compatible with different platforms such as web, desktop and mobile. 
 
-The package introduces the concept of an `account`. An `account` is a reference to, or a label for, a [seed](https://docs.iota.org/docs/getting-started/0.1/clients/seeds). An account has certain properties such as [addresses](https://github.com/Wollac/protocol-rfcs/blob/bech32-address-format/text/0020-bech32-address-format/0020-bech32-address-format.md) and [messages](https://github.com/GalRogozinski/protocol-rfcs/blob/message/text/0017-message/0017-message.md). An account has various possible behaviours, including moving funds, looking for new messages, and making copies of message histories. An account should also be able to provide a degree of financial privacy and this should not incur any overhead. 
+The package introduces the concept of an  _account_ . An  _account_  is a reference to, or a label for, a [seed](https://docs.iota.org/docs/getting-started/0.1/clients/seeds). An account has certain properties such as [addresses](https://github.com/Wollac/protocol-rfcs/blob/bech32-address-format/text/0020-bech32-address-format/0020-bech32-address-format.md) and [messages](https://github.com/GalRogozinski/protocol-rfcs/blob/message/text/0017-message/0017-message.md). An account has various possible behaviours, including moving funds, looking for new messages, and making copies of message histories. An account should also be able to provide a degree of financial privacy and this should not incur any overhead. 
 
 A similar [account package](https://docs.iota.org/docs/client-libraries/0.1/account-module/introduction/overview) was previously developed but this became obsolete with the introduction of Ed25519 signatures. The previous account package was limited to a single account. As an improvement, the new package will be able to manage multiple accounts. 
 
@@ -451,7 +451,7 @@ Useful [reference](https://medium.com/@harshagoli/hd-wallets-explained-from-high
 Transfer object required for creating a transaction. It allows end-users to specify the transaction amount and recipient address.
 
 :::info
-Currently, it is not possible to send multiple payloads as part of the message. That is why the `tag` property is omitted from this interface. You can find more details in this [GitHub pull request](https://github.com/iotaledger/protocol-rfcs/pull/18#discussion_r468432794).
+Currently, it is not possible to send multiple payloads as part of the message. That is why the  _tag_  property is omitted from this interface. You can find more details in this [GitHub pull request](https://github.com/iotaledger/protocol-rfcs/pull/18#discussion_r468432794).
 :::
 
 <table>
@@ -965,9 +965,9 @@ You should consider multiple storage options should for managing data that requi
 - You can use a simple key-value [storage](https://capacitor.ionicframework.com/docs/apis/storage/) could be leveraged for wallet basic metadata, such as user settings or theming options. 
 - For transactions and address data management you could use a relational database such as [SQLite](https://github.com/jepiqueau/capacitor-sqlite). 
 
-What follows is an Entity Relationship Diagram (ERD)  that shows the logical representation of the data. An `account` is the basic entity in this database design. It has a one-to-many relationship with `addresses` (i.e. an `account` could have multiple `addresses`, but an `_address_` can only belong to a single `account`. An `account` has a many-to-many relationship with `transactions`(i.e. an `account` could have multiple `transactions`, but it’s possible that a `transaction` belongs to multiple `accounts`. To accommodate this behaviour, an additional table that stores account IDs against transaction IDs (hashes) was added.  
+What follows is an Entity Relationship Diagram (ERD)  that shows the logical representation of the data. An  _account_  is the basic entity in this database design. It has a one-to-many relationship with  _addresses_  (i.e. an  _account_  could have multiple  _addresses_ , but an  __address__  can only belong to a single  _account_ . An  _account_  has a many-to-many relationship with  _transactions_ (i.e. an  _account_  could have multiple  _transactions_ , but it’s possible that a  _transaction_  belongs to multiple  _accounts_ . To accommodate this behaviour, an additional table that stores account IDs against transaction IDs (hashes) was added.  
 
-A `storage adapter` is required by the Rust layer to handle all the storage operations (read/write) from that layer. A generic storage adapter is defined in the [storage adapter section](#storage-adapter).  
+A  _storage adapter_  is required by the Rust layer to handle all the storage operations (read/write) from that layer. A generic storage adapter is defined in the [storage adapter section](#storage-adapter).  
 
 ![Storage - Entity Relationship Diagram](../../static/img/specs/erd.jpg)
 
@@ -986,18 +986,18 @@ See [storage adapter](#storageadapter) for adapter interface.
 Initializes account
 There are several scenarios in which an account can be initialized:
 
-- *Seed generated outside the Stronghold*: In this case, the `account` should be initialized with a seed. It should communicate with the Stronghold using the `import_accounts` method and should expect an ID as a response. 
-- *Seed generated inside the Stronghold8*: In this case, the `account` should be initialized without a seed. It should communicate with the Stronghold using its `create_account` method and should expect an “id” in response;
-- *Importing accounts from Stronghold backup*: In this case, the `account` should receive all the initialization properties from the `Stronghold`. Please note that during backup, these configuration settings should be passed to the `Stronghold`. See [import_accounts()](#import_accounts).
+- *Seed generated outside the Stronghold*: In this case, the  _account_  should be initialized with a seed. It should communicate with the Stronghold using the  _import_accounts_  method and should expect an ID as a response. 
+- *Seed generated inside the Stronghold8*: In this case, the  _account_  should be initialized without a seed. It should communicate with the Stronghold using its  _create_account_  method and should expect an “id” in response;
+- *Importing accounts from Stronghold backup*: In this case, the  _account_  should receive all the initialization properties from the `Stronghold`. Please note that during backup, these configuration settings should be passed to the `Stronghold`. See [import_accounts()](#import_accounts).
 
 The following should be considered when initializing an account:
 
-- An `account` should never be initialized directly. The only way an `account` can be initialized is through the [add_account()](#add_account) method.
-- An `account` should always be initialized after a successful response from the `Stronghold`. If the `Stronghold` fails to create an `account`, the `account` initialization should error out. If the `Stronghold` successfully creates an `account`, the `account` should be stored in the persistent storage. Upon a successful store operation, the user should be returned an `account` object.
-- If a `provider` property is not passed, a random node should be selected from the `nodes` property.
-- If a `type` property is not passed, `"default”` should be used as an account type.
-- `quorum_size` and `quorum_threshold` should be validated. For example, `quorum_size` should not be greater than the number of nodes provided by the user.
-- The `nodes` property should validate and remove duplicate node URLs.
+- An  _account_  should never be initialized directly. The only way an  _account_  can be initialized is through the [add_account()](#add_account) method.
+- An  _account_  should always be initialized after a successful response from the `Stronghold`. If the `Stronghold` fails to create an  _account_ , the  _account_  initialization should error out. If the `Stronghold` successfully creates an  _account_ , the  _account_  should be stored in the persistent storage. Upon a successful store operation, the user should be returned an  _account_  object.
+- If a  _provider_  property is not passed, a random node should be selected from the  _nodes_  property.
+- If a  _type_  property is not passed, _default_ should be used as an account type.
+-  _quorum_size_  and  _quorum_threshold_  should be validated. For example,  _quorum_size_  should not be greater than the number of nodes provided by the user.
+- The  _nodes_  property should validate and remove duplicate node URLs.
 - All the properties of the returned account object should be read-only. It should not be possible to manipulate them directly.
 
 <table>
@@ -1057,8 +1057,8 @@ Sync addresses with the Tangle. The method ensures that the wallet's local state
 The following should be considered when implementing this method:
 
 - The updated address history should not be written down in the database/persistent storage. Instead, the method should only return the updated address history (with transaction hashes).  This ensures that there are no partial writes to the database.
-- To sync addresses for an account from scratch, `index = 0` and `gap_limit = 10` should be sent as arguments.
-*   To sync addresses from the latest address, `index = latest address index` and `gap_limit = 1` should be sent as arguments. 
+- To sync addresses for an account from scratch, _index = 0_ and _gap_limit = 10_ should be sent as arguments.
+*   To sync addresses from the latest address, _index = latest address index_ and _gap_limit = 1_ should be sent as arguments. 
 
 <table>
   <tr>
@@ -1273,13 +1273,13 @@ This method should only be used after a successful response from [sync()](#sync)
 Currently, it is not possible to send multiple payloads. 
 
 If you want to send a value transaction, please follow this process:
-1. Ensure `amount` is not set to zero.
-2. Ensure `amount` does not exceed the total balance.
+1. Ensure  _amount_  is not set to zero.
+2. Ensure  _amount_  does not exceed the total balance.
 3. Ensure recipient address has correct checksum.
-4. Validate `data` property semantics and size.
+4. Validate  _data_  property semantics and size.
 5. Select inputs by using [select_inputs()](#selectinputs).
 6. Pass the serialized [unsigned transaction](#unsignedtransaction) to the `Stronghold` for signing with its “signTransaction” method.
-7. Perform proof-of-work. The `pow` property in the account object should determine if the proof of work should be offloaded.
+7. Perform proof-of-work. The  _pow_  property in the account object should determine if the proof of work should be offloaded.
 8. Once proof-of-work is successfully performed, the message should be validated and stored in the persistent storage.
 9. After persisting the transaction, the transaction should be broadcast to the network.
 10.  In the event of a broadcast error, there should be three attempts for automatic rebroadcasting. If all attempts fail, the send process should terminate, and it should be left to the user to retry the failed message. For failed messages, the “broadcasted” property in the transaction objects should be set to false. 
@@ -2157,7 +2157,7 @@ An account manager class should be publicly available for users. With the accoun
 
 #### Initialisation 
 
-Initializes the account manager. Account manager initialization should validate the adapter object semantics and return an `AccountManager` instance.
+Initializes the account manager. Account manager initialization should validate the adapter object semantics and return an  _AccountManager_  instance.
 
 <table>
   <tr>
@@ -2274,7 +2274,7 @@ See account [initialisation](#initialisation) for detailed implementation guidel
 Removes an account.
 
 The following should be considered when removing an account:
-- An account should first be removed from the `Stronghold` using its “removeAccount” method.
+- An account should first be removed from the  `Stronghold`  using its _removeAccount_ method.
 - Once the account references have been removed from the `Stronghold`, the account should be deleted from the persistent storage.
 
 <table>

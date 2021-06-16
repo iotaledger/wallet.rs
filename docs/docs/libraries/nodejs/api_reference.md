@@ -303,7 +303,7 @@ Gets the number of persisted transaction broadcast events.
 
 ## SyncedAccount
 
-The result of a `sync` operation on an Account.
+The result of a  _sync_  operation on an Account.
 
 ## Account
 
@@ -350,7 +350,7 @@ Returns: the account's addresses.
 
 | Param     | Type                 | Default           | Description                 |
 | --------- | -------------------- | ----------------- | --------------------------- |
-| [unspent] | <code>boolean</code> | <code>null</code> | The `unspent` status filter |
+| [unspent] | <code>boolean</code> | <code>null</code> | The unspent status filter |
 
 Address object: { address: string, keyIndex: number }
 
