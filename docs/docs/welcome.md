@@ -7,10 +7,10 @@ This is the documentation for the official IOTA Wallet Library Software. The doc
 `Wallet.rs` is a general wallet library written in Rust. It is being utilized by our wallet software `Firefly` and other software components across IOTA ecosystem. `Wallet.rs` contains all the logic to safely build wallets or integrations that require value-based transfers (such as exchanges, pay-as-you-go systems, etc.). `Wallet.rs` includes account state management and backup, account creation, transferring tokens and much more. Needless to say, it is also based on our official _one-source-code-of-truth_ [IOTA Rust library](https://github.com/iotaledger/iota.rs) and can be integrated with the [Stronghold enclave](https://blog.iota.org/iota-stronghold-6ce55d311d7c/) to achieve a maximum level of security.
 
 :::caution
-Using `Stronghold` is a recommended approach to store account data using `wallet.rs`, as `Stronghold` integrates the best security practices for free.
+Using `Stronghold` is a recommended approach to store account data using `Wallet.rs`, as `Stronghold` integrates the best security practices for free.
 :::
 
-With the `wallet.rs` library, developers do not need to use a self-generated seed anymore. By default, `Stronghold` will create and store the encrypted seed at rest. It is not possible to extract the seed from `Stronghold` for security purposes. `Stronghold` uses encrypted snapshots that can easily be backed up and securely shared between devices. These snapshots are further secured with a password.
+With the `Wallet.rs` library, developers do not need to use a self-generated seed anymore. By default, `Stronghold` will create and store the encrypted seed at rest. It is not possible to extract the seed from `Stronghold` for security purposes. `Stronghold` uses encrypted snapshots that can easily be backed up and securely shared between devices. These snapshots are further secured with a password.
 
 ## IOTA 1.5 (Chrysalis) in a Nutshell
 The [Developer guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html) explains all the main concepts behind the IOTA Chrysalis in detail .

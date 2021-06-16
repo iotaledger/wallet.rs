@@ -1,7 +1,7 @@
 # API Reference
 
 :::info
-Please note that in the following APIs will throw an exception if an error occurs.
+The following APIs will throw an exception if an error occurs.
 For all the optional values, the default values are the same as the ones in the [Rust API](../rust/api_reference.md).
 :::
 
@@ -61,7 +61,7 @@ Sets the password used for encrypting the storage.
 
 ### set_stronghold_password(password): void
 
-Sets the stronghold password.
+Sets the Stronghold password.
 
 | Param    | Type             | Default                | Description          |
 | -------- | ---------------- | ---------------------- | -------------------- |
@@ -131,25 +131,25 @@ Transfers an amount from an account to another.
 
 **Returns** The transfer's [WalletMessage](#walletmessage).
 
-### backup(destination, stronghold_password): str
+### backup(destination, Stronghold_password): str
 
 Backups the storage to the given destination.
 
 | Param               | Type             | Default                | Description                    |
 | ------------------- | ---------------- | ---------------------- | ------------------------------ |
 | destination         | <code>str</code> | <code>undefined</code> | The path to the backup file    |
-| stronghold_password | <code>str</code> | <code>undefined</code> | The backup stronghold password |
+| Stronghold_password | <code>str</code> | <code>undefined</code> | The backup Stronghold password |
 
 **Returns** The full path to the backup file.
 
-### import_accounts(source, stronghold_password): void
+### import_accounts(source, Stronghold_password): void
 
 Imports a database file.
 
 | Param               | Type             | Default                | Description                    |
 | ------------------- | ---------------- | ---------------------- | ------------------------------ |
 | source              | <code>str</code> | <code>undefined</code> | The path to the backup file    |
-| stronghold_password | <code>str</code> | <code>undefined</code> | The backup stronghold password |
+| Stronghold_password | <code>str</code> | <code>undefined</code> | The backup Stronghold password |
 
 ### get_account(account_id): [AccountHandle](#accounthandle)
 
@@ -728,7 +728,7 @@ Removes the error listener associated with the given identifier.
 
 ### on_stronghold_status_change(callback): list[int]
 
-Listen to stronghold status change events.
+Listen to Stronghold status change events.
 
 | Param      | Type                  | Default                | Description           |
 | ---------- | --------------------- | ---------------------- | --------------------- |
@@ -738,7 +738,7 @@ Listen to stronghold status change events.
 
 ### remove_stronghold_status_change_listener(list[int]): void
 
-Removes the stronghold status change listener associated with the given identifier.
+Removes the Stronghold status change listener associated with the given identifier.
 
 | Param | Type                   | Default                | Description  |
 | ----- | ---------------------- | ---------------------- | ------------ |
@@ -891,7 +891,7 @@ client_options = {
 }
 ```
 
-Note that this message object in `wallet.rs` is not the same as the message object in `iota.rs`.
+Note that this message object in `Wallet.rs` is not the same as the message object in `iota.rs`.
 
 ## Node
 

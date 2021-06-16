@@ -59,20 +59,20 @@ You can use any of the following parameters when constructing the ManagerOptions
 
 ### setStrongholdPassword(password): void
 
-Sets the stronghold password and initialises it.
+Sets the Stronghold password and initialises it.
 
 | Param    | Type                | Default                | Description                      |
 | -------- | ------------------- | ---------------------- | -------------------------------- |
-| password | <code>string</code> | <code>undefined</code> | The stronghold snapshot password |
+| password | <code>string</code> | <code>undefined</code> | The Stronghold snapshot password |
 
 ### changeStrongholdPassword(currentPassword, newPassword): void
 
-Changes the stronghold password.
+Changes the Stronghold password.
 
 | Param           | Type                | Default                | Description                     |
 | --------------- | ------------------- | ---------------------- | ------------------------------- |
-| currentPassword | <code>string</code> | <code>undefined</code> | The current stronghold password |
-| newPassword     | <code>string</code> | <code>undefined</code> | The new stronghold password     |
+| currentPassword | <code>string</code> | <code>undefined</code> | The current Stronghold password |
+| newPassword     | <code>string</code> | <code>undefined</code> | The new Stronghold password     |
 
 ### createAccount(account): Account
 
@@ -166,7 +166,7 @@ Backups the database.
 | Param       | Type                | Default                | Description                    |
 | ----------- | ------------------- | ---------------------- | ------------------------------ |
 | destination | <code>string</code> | <code>undefined</code> | The path to the backup file    |
-| password    | <code>string</code> | <code>undefined</code> | The backup stronghold password |
+| password    | <code>string</code> | <code>undefined</code> | The backup Stronghold password |
 
 Returns The full path to the backup file.
 
@@ -177,7 +177,7 @@ Imports a database file.
 | Param    | Type                | Default                | Description                    |
 | -------- | ------------------- | ---------------------- | ------------------------------ |
 | source   | <code>string</code> | <code>undefined</code> | The path to the backup file    |
-| password | <code>string</code> | <code>undefined</code> | The backup stronghold password |
+| password | <code>string</code> | <code>undefined</code> | The backup Stronghold password |
 
 ### isLatestAddressUnused()
 

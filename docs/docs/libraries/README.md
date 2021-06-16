@@ -1,6 +1,6 @@
 # IOTA Wallet Libraries
 
-There are currently available the following official bindings to `wallet.rs`:
+There are currently available the following official bindings to `Wallet.rs`:
 - [Rust](rust/README.md) 
 - [Node.js](nodejs/README.md) 
 - [Python](python/README.md)

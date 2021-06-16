@@ -1,6 +1,6 @@
 # Examples
 
-This section will guide you through several examples using the node.js binding of the `wallet.rs` library. You can also find the code for the examples in the `/bindings/nodejs/examples` folder in the [official GitHub repository](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/nodejs/examples).
+This section will guide you through several examples using the node.js binding of the `Wallet.rs` library. You can also find the code for the examples in the `/bindings/nodejs/examples` folder in the [official GitHub repository](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/nodejs/examples).
 
 All the examples in this section expect your custom password  to be set in the `.env` file:
 ```bash
@@ -41,22 +41,22 @@ run()
 ```
 * Storage is initialized under the given path (`./alice-database`)
 * The password is set based on your password in `.env` file (`manager.setStrongholdPassword(process.env.SH_PASSWORD)`)
-* When you initialize the new database, a stronghold mnemonic (seed) is automatically generated and stored by default (`manager.storeMnemonic(SignerType.Stronghold)`).
+* When you initialize the new database, a Stronghold mnemonic (seed) is automatically generated and stored by default (`manager.storeMnemonic(SignerType.Stronghold)`).
 * The seed should be set only for the first time. In order to open already initialized database, you can simply use your password.
 
 The storage is encrypted at rest, so you need a strong password and location where to place your storage. 
 
 :::warning
-We highly recommended you store your `stronghold` password encrypted on rest and separated from `stronghold` snapshots. 
+We highly recommended you store your `Stronghold` password encrypted on rest and separated from `Stronghold` snapshots. 
 
 Deal with the password with utmost care
 :::
 
 Technically speaking, the storage comprises two things:
-* A single file called `wallet.stronghold`, which contains `seed` and is secured by `stronghold` and encrypted at rest. The generated seed (mnemonic) serves as a cryptographic key from which all accounts and related addresses are generated.
+* A single file called `wallet.stronghold`, which contains `seed` and is secured by `Stronghold` and encrypted at rest. The generated seed (mnemonic) serves as a cryptographic key from which all accounts and related addresses are generated.
 * Other data used by library that is stored under `db` sub-directory.  The includes account information, generated addresses, fetched messages, etc. This data is used to speed up some operations, such as account creation, address generation, etc.
 
-One of the key principles behind `stronghold` based storage is that no one can extract a seed from the storage. You deal with all accounts purely via an `AccountManager` instance and all complexities are hidden under the hood and are dealt with securely.
+One of the key principles behind `Stronghold` based storage is that no one can extract a seed from the storage. You deal with all accounts purely via an `AccountManager` instance and all complexities are hidden under the hood and are dealt with securely.
 
 If you also want to store a seed somewhere else, you can use the `AccountManager.generateMnemonic()` method. This method will generate a random seed, and it can be used before the actual account initialization.
 
@@ -261,7 +261,7 @@ run()
 Alternatively, you can create a copy of the `wallet.stronghold` file and use it as seed backup. This can be achieved by a daily _cronjob_, _rsync_ or _scp_ with a datetime suffix for example.
 
 ## Restore database
-To restore a database via `wallet.rs`, you will need to:
+To restore a database via `Wallet.rs`, you will need to:
 1. Create new empty database with a password (without mnemonic seed)
 2. Import all accounts from the file that has been backed up earlier
 
@@ -421,7 +421,7 @@ async function run() {
       storagePath: DB_STORAGE_PATH,
     })
 
-    // Set stronghold password
+    // Set Stronghold password
     manager.setStrongholdPassword(process.env.SH_PASSWORD)
 
     // IMPORTANT: SAVE THIS MNEMONIC SECURELY. IF YOU LOSE IT, YOU POTENTIALLY LOSE EVERYTHING.

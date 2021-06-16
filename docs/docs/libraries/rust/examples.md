@@ -57,4 +57,4 @@ let imported_account = imported_account_handle.read().await;
 
 That's it! You can now backup and restore your account!
 
-You can see the full code for the example in the [`wallet.rs` repository](https://github.com/iotaledger/wallet.rs/blob/develop/examples/backup_and_restore.rs)
+You can see the full code for the example in the [`Wallet.rs` repository](https://github.com/iotaledger/wallet.rs/blob/develop/examples/backup_and_restore.rs)
