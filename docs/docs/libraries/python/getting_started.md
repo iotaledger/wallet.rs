@@ -7,7 +7,7 @@ Please make sure you follow our [backup and security recommendations](https://ch
 :::
 
 ## Installation
-The easiest way to get python binding up and running is to leverage pre-built python libraries for linux, MacOs or Windows that can be installed to your python environment (3.6+) via `pip`. The binding is automagically generated using github [actions](https://github.com/iotaledger/wallet.rs/actions/workflows/python_binding_publish.yml).
+The easiest way to get python binding up and running is to leverage pre-built python libraries for linux, MacOs or Windows that can be installed to your python environment (3.6+) via  _pip_ . The binding is automagically generated using github [actions](https://github.com/iotaledger/wallet.rs/actions/workflows/python_binding_publish.yml).
 
 
 You can download the latest artifacts for major python version using the  [nighly.link service](https://nightly.link/iotaledger/wallet.rs/workflows/python_binding_publish/develop).  
