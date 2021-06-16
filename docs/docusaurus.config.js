@@ -27,7 +27,8 @@ module.exports = {
           routeBasePath:'/',
           // Please change this to your repo.
           editUrl:
-            'https://github.com/iotaledger/wallet.rs/tree/develop/docs',
+            'https://github.com/lucas-tortora/wallet.rs/blob/migrateToDocusaurus/docs/',
+            //'https://github.com/iotaledger/wallet.rs/tree/develop/docs',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
