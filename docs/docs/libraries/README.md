@@ -7,7 +7,7 @@ At the moment there are two available official bindings to `Wallet.rs`:
 As well as the [Rust](rust/README.md) source.
 
 ## Getting Started
-It is recommended to start your interactions with IOTA on a  _testnet_  network.  You can use this API load balancer: `api.lb-0.testnet.chrysalis2.com`  
+We recommended that you start your interactions with IOTA on a _testnet_ network.  You can use this API load balancer: `api.lb-0.testnet.chrysalis2.com`  
 
 A network explorer is available at [IOTA Tangle Explorer](https://explorer.iota.org/testnet).
 
