@@ -234,6 +234,7 @@ impl From<RustClientOptions> for ClientOptions {
                         RustApi::GetTips => "GetTips",
                         RustApi::PostMessage => "PostMessage",
                         RustApi::GetOutput => "GetOutput",
+                        RustApi::GetBalance => "GetBalance",
                     };
                     map.insert(api.to_string(), duration_to_millisec(*s));
                 }
